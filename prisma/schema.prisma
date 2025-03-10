@@ -9,26 +9,47 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+  // url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String      @id
+  email      String      @unique
+  name       String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  lessons    Lesson[]
+  tags       Tag[]
+  milestones Milestone[]
+
+  @@map("users")
 }
 
 model Lesson {
   id        String   @id @default(cuid())
-  title     String   @unique
+  title     String
   content   String
   tags      Tag[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
 
+  @@unique([title, userId])
   @@map("lessons")
 }
 
 model Tag {
   id      String   @id @default(cuid())
-  name    String   @unique
+  name    String
   lessons Lesson[]
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  String
 
+  @@unique([name, userId])
   @@map("tags")
 }
 
@@ -37,6 +58,8 @@ model Milestone {
   title       String
   description String?
   date        DateTime
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
 
   @@map("milestones")
 }
