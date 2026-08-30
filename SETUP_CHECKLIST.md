@@ -92,16 +92,16 @@ Useful references:
 
 User preparation:
 
-- [ ] Confirm that Xcode is installed on the development Mac.
+- [x] Confirm that Xcode is installed on the development Mac.
 - [ ] Keep a physical iPhone available for authentication, photo, offline, and lifecycle testing.
 - [ ] Confirm that the Apple ID used for local signing is available in Xcode.
-- [ ] Use bundle identifier `com.rystudio.memotrail.app`.
-- [ ] Defer App Store distribution, Sign in with Apple, and production entitlements until an Apple Developer account is available.
+- [x] Use bundle identifier `com.rystudio.memotrail.app`.
+- [x] Defer App Store distribution, Sign in with Apple, and production entitlements until an Apple Developer account is available.
 
 Phase 1 repository work:
 
-- [ ] Create the SwiftUI project under `apps/ios/`.
-- [ ] Configure safe local signing without committing developer-specific signing state.
+- [x] Create the SwiftUI project under `apps/ios/`.
+- [x] Configure safe local signing without committing developer-specific signing state.
 - [ ] Add development environment configuration without embedding server secrets.
 - [ ] Establish local persistence and a retryable synchronization queue.
 - [ ] Add unit tests and UI tests.
