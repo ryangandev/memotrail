@@ -1,8 +1,8 @@
 # MemoTrail Product Definition
 
-> Status: Discovery
+> Status: Phase 1 foundation approved
 >
-> Version: 0.12
+> Version: 0.14
 >
 > Audience: Ryan only
 >
@@ -526,6 +526,8 @@ The clients may reach parity incrementally, but neither client should become a p
 
 ## 12. Confirmed platform and language direction
 
+### 12.1 Client strategy
+
 - MemoTrail has both a native iOS app and a responsive Web app.
 - iPhone is the primary device for quick capture and a regular device for browsing and organizing old Entries.
 - The Web app is optimized for desktop organization, search, Timeline exploration, long-form writing, analytics, export, and capture.
@@ -538,6 +540,56 @@ The clients may reach parity incrementally, but neither client should become a p
 - Data is stored in a private cloud database to support cross-platform access and synchronization.
 - The initial product interface is in English.
 - Internationalization, including a Chinese interface, may be added later.
+- The iOS bundle identifier is `com.rystudio.memotrail.app`.
+
+### 12.2 Technical stack and repository
+
+- The repository is a monorepo containing both product clients and shared infrastructure.
+- The native iOS client uses SwiftUI.
+- The Web client uses Next.js and TypeScript.
+- Supabase provides Postgres, authentication, private object storage, and vector search infrastructure.
+- Vercel deploys the Next.js application from `apps/web` rather than treating the repository root as the Web application.
+- Shared cross-platform contracts use language-neutral schemas that can generate or validate TypeScript and Swift models.
+- Database migrations, Row Level Security tests, and local Supabase configuration live in a root `supabase` directory.
+- The discarded historical Next.js, Prisma, Lessons, and Milestones prototype is not restored as the new foundation.
+
+The intended high-level repository shape is:
+
+```text
+apps/
+  web/
+  ios/
+packages/
+  contracts/
+  design-tokens/
+supabase/
+  migrations/
+  tests/
+docs/
+PRODUCT.md
+SETUP_CHECKLIST.md
+```
+
+### 12.3 Visual direction
+
+- The product should feel minimal, archival, and modern.
+- Light mode and dark mode are both required in the initial release.
+- The interface should use restrained hierarchy, careful typography, generous space, and subtle archival cues.
+- Archival character should come from dates, chronology, typography, dividers, and metadata rather than decorative imitation of old paper.
+- Soft Ledger is the selected initial visual direction.
+- Soft Ledger uses calm geometry, a restrained green signal color, quiet surfaces, and approachable structure.
+- The visual direction may evolve later when stronger references or preferences emerge.
+
+### 12.4 Cross-platform design system
+
+- Web and iOS share one semantic design-token source for color intent, spacing, radii, typography roles, motion intent, and elevation intent.
+- Generated platform tokens may differ in representation while preserving the same semantic meaning.
+- Web implements tokens through generated CSS custom properties and platform-appropriate components.
+- iOS implements tokens through generated Swift values and native SwiftUI components.
+- Both platforms use the same component names, states, content hierarchy, and interaction intent when technically feasible.
+- Native platform conventions take precedence when identical rendering would reduce usability or accessibility.
+- Generated token outputs are not edited manually.
+- Changes to the design-token source must regenerate both Web and iOS outputs and pass consistency checks.
 
 ## 13. Confirmed home experience
 
@@ -635,7 +687,7 @@ Specific measurable criteria will be defined after the primary device, capture w
 
 ### 2026-08-30
 
-- Support Sign in with Apple, Sign in with Google, and email magic-link authentication.
+- Initially selected Apple, Google, and email magic-link authentication, but this was superseded later the same day by the Google-only launch scope below.
 - Move deleted content to Trash for 30 days before permanent deletion.
 - Require explicit confirmation for permanent deletion and emptying Trash.
 - Keep restorable version history for Entry content and important metadata.
@@ -659,6 +711,17 @@ Specific measurable criteria will be defined after the primary device, capture w
 - Keep core feature coverage as consistent as technically feasible across both clients.
 - Allow platform-specific interactions and integrations without creating incompatible product behavior or data.
 - Treat Progressive Web App support as an optional Web enhancement rather than the primary iPhone client.
+- Use SwiftUI, Next.js with TypeScript, and Supabase in a single monorepo.
+- Deploy the Web client to Vercel from the `apps/web` root directory.
+- Use `com.rystudio.memotrail.app` as the iOS bundle identifier.
+- Require both light and dark themes in the first release.
+- Use a minimal, archival, and modern visual direction.
+- Supersede the earlier multi-provider launch decision and use only Google Sign-In initially.
+- Defer Sign in with Apple until an Apple Developer account is available.
+- Do not include email magic-link authentication in the initial product.
+- Select Soft Ledger as the initial visual direction while allowing later refinement.
+- Establish a shared semantic design system that generates platform-specific Web and Swift tokens.
+- Approve Phase 1 foundation implementation before external projects and credentials are ready.
 
 ## 17. Privacy, security, and data ownership
 
@@ -666,11 +729,13 @@ Specific measurable criteria will be defined after the primary device, capture w
 
 MemoTrail supports the following sign-in methods:
 
-- Sign in with Apple.
 - Sign in with Google.
-- Email magic link.
 
-All authentication methods must resolve to the same private user account when they use verified matching identities or are explicitly linked by the user.
+Sign in with Apple is deferred until an Apple Developer account is available.
+
+Email magic-link authentication is not included in the initial product.
+
+The authentication model must allow additional providers to be added later without changing ownership of existing user data.
 
 ### 17.2 Trash and permanent deletion
 
