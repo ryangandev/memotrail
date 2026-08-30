@@ -1,17 +1,4 @@
-:root {
-  color-scheme: light dark;
-  --background: #f7f5ef;
-  --foreground: #24231f;
-  --muted-foreground: #746f65;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #181816;
-    --foreground: #ece8de;
-    --muted-foreground: #aaa49a;
-  }
-}
+@import "../styles/generated-tokens.css";
 
 * {
   box-sizing: border-box;
@@ -24,30 +11,37 @@ body {
 
 body {
   margin: 0;
-  color: var(--foreground);
-  background: var(--background);
-  font-family:
-    ui-sans-serif,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  color: var(--mt-color-ink);
+  background: var(--mt-color-canvas);
+  font-family: var(--mt-font-family-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 p,
-h1 {
+h1,
+h2,
+h3 {
   margin: 0;
 }
 
 button,
 input,
 textarea {
+  color: inherit;
   font: inherit;
 }
 
+button {
+  border: 0;
+}
+
 ::selection {
-  color: var(--background);
-  background: var(--foreground);
+  color: var(--mt-color-accent-ink);
+  background: var(--mt-color-accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--mt-color-accent);
+  outline-offset: 3px;
 }
