@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js and Turborepo
+.next/
+.turbo/
+out/
+
+# Tests
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.xcconfig
+!*.xcconfig.example
+
+# Supabase local state
+supabase/.branches/
+supabase/.temp/
+
+# Xcode user state and build products
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+*.moved-aside
+
+# macOS
+.DS_Store
+
+# Vercel
+.vercel/
+
+# Logs
+*.log
+pnpm-debug.log*

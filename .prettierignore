@@ -1,0 +1,7 @@
+.next
+.turbo
+DerivedData
+coverage
+pnpm-lock.yaml
+*.xcodeproj
+apps/ios/**/Generated
