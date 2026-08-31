@@ -15,6 +15,7 @@
 		B00000000000000000000006 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000006 /* DesignTokens.swift */; };
 		B00000000000000000000007 /* PreviewEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000007 /* PreviewEntry.swift */; };
 		B00000000000000000000008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000008 /* Assets.xcassets */; };
+		B00000000000000000000009 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000012 /* AppConfiguration.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +28,9 @@
 		C00000000000000000000007 /* PreviewEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewEntry.swift; sourceTree = "<group>"; };
 		C00000000000000000000008 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C00000000000000000000009 /* MemoTrail.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MemoTrail.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C00000000000000000000010 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
+		C00000000000000000000011 /* Secrets.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text; path = Secrets.xcconfig.example; sourceTree = "<group>"; };
+		C00000000000000000000012 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -44,6 +48,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000003 /* MemoTrail */,
+				A10000000000000000000012 /* Configuration */,
 				A10000000000000000000002 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -73,6 +78,7 @@
 			children = (
 				C00000000000000000000001 /* MemoTrailApp.swift */,
 				C00000000000000000000002 /* RootTabView.swift */,
+				C00000000000000000000012 /* AppConfiguration.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -133,6 +139,15 @@
 				C00000000000000000000008 /* Assets.xcassets */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000012 /* Configuration */ = {
+			isa = PBXGroup;
+			children = (
+				C00000000000000000000010 /* Base.xcconfig */,
+				C00000000000000000000011 /* Secrets.xcconfig.example */,
+			);
+			path = Configuration;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -211,6 +226,7 @@
 				B00000000000000000000005 /* EntryCard.swift in Sources */,
 				B00000000000000000000006 /* DesignTokens.swift in Sources */,
 				B00000000000000000000007 /* PreviewEntry.swift in Sources */,
+				B00000000000000000000009 /* AppConfiguration.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -268,6 +284,7 @@
 		};
 		D00000000000000000000003 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C00000000000000000000010 /* Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -277,6 +294,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = MemoTrail;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_MEMOTRAIL_GOOGLE_IOS_CLIENT_ID = "$(MEMOTRAIL_GOOGLE_IOS_CLIENT_ID)";
+				INFOPLIST_KEY_MEMOTRAIL_SUPABASE_PUBLISHABLE_KEY = "$(MEMOTRAIL_SUPABASE_PUBLISHABLE_KEY)";
+				INFOPLIST_KEY_MEMOTRAIL_SUPABASE_URL = "$(MEMOTRAIL_SUPABASE_URL)";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "MemoTrail uses the microphone only while transcribing a voice note.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -301,6 +321,7 @@
 		};
 		D00000000000000000000004 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C00000000000000000000010 /* Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -310,6 +331,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = MemoTrail;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_MEMOTRAIL_GOOGLE_IOS_CLIENT_ID = "$(MEMOTRAIL_GOOGLE_IOS_CLIENT_ID)";
+				INFOPLIST_KEY_MEMOTRAIL_SUPABASE_PUBLISHABLE_KEY = "$(MEMOTRAIL_SUPABASE_PUBLISHABLE_KEY)";
+				INFOPLIST_KEY_MEMOTRAIL_SUPABASE_URL = "$(MEMOTRAIL_SUPABASE_URL)";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "MemoTrail uses the microphone only while transcribing a voice note.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

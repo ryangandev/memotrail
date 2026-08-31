@@ -17,7 +17,7 @@ test-results/
 .env
 .env.*
 !.env.example
-*.xcconfig
+**/Secrets.xcconfig
 !*.xcconfig.example
 
 # Supabase local state

@@ -46,13 +46,13 @@ User preparation:
 
 Phase 1 repository work:
 
-- [ ] Add local Supabase configuration under `supabase/`.
-- [ ] Create version-controlled SQL migrations.
-- [ ] Enable Row Level Security on every exposed table.
-- [ ] Add allow-and-deny tests for authenticated and unauthenticated access.
-- [ ] Create private media buckets and policies through migrations.
-- [ ] Create development seed data that contains no sensitive real-world information.
-- [ ] Configure backup and recovery expectations before production data is stored.
+- [x] Add local Supabase configuration under `supabase/`.
+- [x] Create version-controlled SQL migrations.
+- [x] Enable Row Level Security on every exposed table.
+- [x] Add allow-and-deny tests for authenticated and unauthenticated access.
+- [x] Create private media buckets and policies through migrations.
+- [x] Create development seed data that contains no sensitive real-world information.
+- [x] Configure backup and recovery expectations before production data is stored.
 
 Useful references:
 
@@ -102,7 +102,7 @@ Phase 1 repository work:
 
 - [x] Create the SwiftUI project under `apps/ios/`.
 - [x] Configure safe local signing without committing developer-specific signing state.
-- [ ] Add development environment configuration without embedding server secrets.
+- [x] Add development environment configuration without embedding server secrets.
 - [ ] Establish local persistence and a retryable synchronization queue.
 - [ ] Add unit tests and UI tests.
 - [ ] Verify installation and launch separately on the physical iPhone.
@@ -236,7 +236,7 @@ Phase 1 may begin when:
 - [ ] The new Supabase project exists.
 - [ ] Google OAuth Web and iOS client IDs exist, or authentication is explicitly scheduled after the first local vertical slice.
 - [x] The monorepo and deployment approach are approved.
-- [ ] No unresolved decision blocks the initial data model, authentication, or sync strategy.
+- [x] No unresolved decision blocks the initial data model, authentication, or sync strategy.
 
 The repository, design system, Web shell, iOS shell, local Supabase configuration, examples, and tests may be created before external credentials exist.
 
