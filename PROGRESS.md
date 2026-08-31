@@ -14,16 +14,18 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- Hosted application tables and private Storage policies have not yet been created from repository migrations.
+- The linked hosted Supabase project contains both reviewed repository migrations and no development seed users.
+- Hosted verification found 21 Row Level Security-enabled application tables, 22 public policies, and a private `entry-media` bucket.
+- Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
 
 ### Hosted data foundation
 
-- Apply only version-controlled migrations to the confirmed hosted Supabase project.
-- Do not apply synthetic development seed data.
-- Verify profiles, Entries, history, default timeline tracks, private Storage, grants, and RLS after deployment.
+- [x] Apply only version-controlled migrations to the confirmed hosted Supabase project.
+- [x] Do not apply synthetic development seed data.
+- [x] Verify profiles, Entries, history, default timeline tracks, private Storage, grants, and RLS after deployment.
 
 ### Web Google authentication
 
@@ -51,15 +53,15 @@
 - `feat: add secure Supabase foundation` added the schema, RLS, private Storage, seed, tests, and CI.
 - `fix: make web typecheck independent of build` fixed clean-checkout CI type generation.
 - `docs: update credential setup checklist` recorded the first verified external credential setup.
-- Current change: verified production configuration and established commit-by-commit progress tracking.
+- `docs: establish implementation progress tracking` verified production configuration and established commit-by-commit progress tracking.
+- Current change: deployed and verified the hosted Supabase data foundation.
 
 ## Next sequence
 
-1. Deploy and validate the hosted data foundation.
-2. Implement Web Google authentication.
-3. Implement iOS Google authentication.
-4. Build the first synchronized Inbox Entry flow on both clients.
-5. Add offline persistence and retryable synchronization before expanding product areas.
+1. Implement Web Google authentication.
+2. Implement iOS Google authentication.
+3. Build the first synchronized Inbox Entry flow on both clients.
+4. Add offline persistence and retryable synchronization before expanding product areas.
 
 ## Deferred
 

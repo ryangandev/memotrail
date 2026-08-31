@@ -38,7 +38,7 @@ User preparation:
 
 - [x] Create a new Supabase organization or select the organization that should own MemoTrail.
 - [x] Create a new Supabase project named `memotrail`.
-- [ ] Select a region appropriate for the primary user.
+- [x] Select a region appropriate for the primary user. The hosted project is healthy in `us-west-1`.
 - [ ] Save the generated database password in a password manager.
 - [x] Record the project reference and project URL.
 - [x] Leave application tables and Storage buckets uncreated so repository migrations remain the source of truth.
@@ -56,9 +56,10 @@ Phase 1 repository work:
 
 Hosted project rollout:
 
-- [ ] Link the CLI to the confirmed empty hosted project.
-- [ ] Apply the version-controlled migration without development seed data.
-- [ ] Run hosted schema and security checks before authentication testing.
+- [x] Link the CLI to the confirmed empty hosted project.
+- [x] Apply the version-controlled migrations without development seed data.
+- [x] Run hosted schema and security checks before authentication testing.
+- [x] Revoke client-role access to the hosted platform-created `SECURITY DEFINER` helper reported by the security advisor.
 
 Useful references:
 
@@ -166,7 +167,7 @@ Environment configuration when the Web app exists:
 
 - [x] Add the Supabase project URL.
 - [x] Add the Supabase publishable key for browser use.
-- [ ] Add server-only Supabase credentials only where privileged server operations truly require them.
+- [x] Add the server-only Supabase credential to Vercel Production. Application code does not use it yet.
 - [ ] Add the selected AI provider key as a server-only environment variable.
 - [ ] Configure separate Preview and Production values. Production is configured; Preview is intentionally pending.
 - [x] Update Supabase and Google redirect allow lists for the stable production URL.

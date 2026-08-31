@@ -64,7 +64,9 @@ create index entries_owner_inbox_idx on public.entries (owner_id, inbox_status, 
 create index entries_owner_trash_idx on public.entries (owner_id, deleted_at desc)
   where deleted_at is not null;
 create index entries_search_document_idx on public.entries using gin (search_document);
-create index entries_title_trigram_idx on public.entries using gin (lower(title) gin_trgm_ops);
+create index entries_title_trigram_idx on public.entries using gin (
+  lower(title) extensions.gin_trgm_ops
+);
 
 create table public.entry_versions (
   id bigint generated always as identity primary key,
