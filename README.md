@@ -5,6 +5,7 @@ The repository contains a native SwiftUI iOS app, a responsive Next.js Web app, 
 
 Product behavior and confirmed decisions live in [PRODUCT.md](./PRODUCT.md).
 External account and credential preparation lives in [SETUP_CHECKLIST.md](./SETUP_CHECKLIST.md).
+Commit-by-commit implementation status lives in [PROGRESS.md](./PROGRESS.md).
 
 ## Repository structure
 

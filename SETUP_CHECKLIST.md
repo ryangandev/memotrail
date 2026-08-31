@@ -1,8 +1,8 @@
 # MemoTrail Setup Checklist
 
-> Status: Phase 1 foundation approved
+> Status: Phase 2 authentication implementation ready
 >
-> Last updated: 2026-08-30
+> Last updated: 2026-08-31
 >
 > Initial authentication: Google Sign-In only
 >
@@ -10,10 +10,10 @@
 
 ## 1. Security rules
 
-- [ ] Do not send secrets through chat.
-- [ ] Do not commit local environment files, credentials, private keys, or downloaded OAuth configuration files.
-- [ ] Keep Supabase secret keys, Google client secrets, and AI API keys on trusted server environments only.
-- [ ] Never expose a secret through a `NEXT_PUBLIC_` environment variable.
+- [x] Do not send secrets through chat.
+- [x] Do not commit local environment files, credentials, private keys, or downloaded OAuth configuration files.
+- [x] Keep Supabase secret keys, Google client secrets, and AI API keys on trusted server environments only.
+- [x] Never expose a secret through a `NEXT_PUBLIC_` environment variable.
 - [ ] Use separate development and production credentials when production setup begins.
 - [ ] Store account recovery codes and database passwords in a password manager.
 
@@ -30,7 +30,7 @@
 - [x] Use `com.rystudio.memotrail.app` as the iOS bundle identifier.
 - [x] Select Soft Ledger as the initial visual direction.
 - [x] Approve Phase 1 foundation work before external credentials are available.
-- [ ] Confirm feature-level acceptance criteria before each product feature is implemented.
+- [x] Confirm feature-level acceptance criteria before each product feature is implemented.
 
 ## 3. Supabase project
 
@@ -54,6 +54,12 @@ Phase 1 repository work:
 - [x] Create development seed data that contains no sensitive real-world information.
 - [x] Configure backup and recovery expectations before production data is stored.
 
+Hosted project rollout:
+
+- [ ] Link the CLI to the confirmed empty hosted project.
+- [ ] Apply the version-controlled migration without development seed data.
+- [ ] Run hosted schema and security checks before authentication testing.
+
 Useful references:
 
 - [Supabase local development](https://supabase.com/docs/guides/local-development)
@@ -64,12 +70,13 @@ Useful references:
 
 User preparation:
 
-- [ ] Create or select a Google Cloud project dedicated to MemoTrail.
-- [ ] Configure the Google Auth Platform branding and consent screen.
+- [x] Create or select a Google Cloud project dedicated to MemoTrail.
+- [x] Configure the Google Auth Platform branding and consent screen.
 - [x] Create a Web OAuth client.
-- [ ] Add `http://localhost:3000` as a development JavaScript origin.
-- [ ] Add the future staging and production Web origins when those URLs exist.
-- [ ] Add `https://<SUPABASE_PROJECT_REF>.supabase.co/auth/v1/callback` as the hosted Supabase redirect URI.
+- [x] Add `http://localhost:3000` as a development JavaScript origin.
+- [x] Add `https://memotrail.ryangan.me` as the production Web origin.
+- [ ] Add a stable staging or Preview Web origin when that environment is introduced.
+- [x] Add `https://<SUPABASE_PROJECT_REF>.supabase.co/auth/v1/callback` as the hosted Supabase redirect URI.
 - [x] Create an iOS OAuth client using bundle identifier `com.rystudio.memotrail.app`.
 - [x] Record the Web and iOS client IDs.
 - [ ] Store the Web client secret in a password manager.
@@ -77,10 +84,11 @@ User preparation:
 
 Supabase configuration:
 
-- [ ] Enable only the Google provider initially. Hosted verification found that Email and Google are both enabled; disable Email before authentication testing.
+- [x] Enable only the Google provider initially. Hosted verification exposes Google and no Email provider.
 - [x] Configure the Web client ID and secret in Supabase Auth. Google is enabled; end-to-end login remains unverified.
 - [ ] Include the iOS client ID in the allowed Google client IDs when native authentication is implemented.
-- [ ] Configure local, staging, and production redirect allow lists deliberately.
+- [x] Configure exact local and production redirect allow lists deliberately.
+- [ ] Add a staging or Preview redirect rule only when that environment is introduced.
 - [ ] Test that Web and iOS Google identities resolve to the same MemoTrail account.
 
 Useful references:
@@ -145,14 +153,14 @@ Vercel deploys only the Next.js application selected by its Root Directory setti
 
 User preparation when staging deployment is approved:
 
-- [ ] Create or select the Vercel team that should own MemoTrail.
-- [ ] Import the `ryangandev/memotrail` GitHub repository as a new Vercel project.
-- [ ] Set Root Directory to `apps/web`.
-- [ ] Confirm that the framework preset is Next.js.
-- [ ] Verify that source files outside the Root Directory are included when `apps/web` depends on shared workspace packages.
-- [ ] Use the repository root lockfile and workspace configuration.
+- [x] Create or select the Vercel team that should own MemoTrail.
+- [x] Import the `ryangandev/memotrail` GitHub repository as a new Vercel project.
+- [x] Set Root Directory to `apps/web`.
+- [x] Confirm that the framework preset is Next.js.
+- [x] Verify that source files outside the Root Directory are included when `apps/web` depends on shared workspace packages.
+- [x] Use the repository root lockfile and workspace configuration.
 - [ ] Create a stable staging hostname for OAuth callbacks.
-- [ ] Add a production domain only after explicit deployment approval.
+- [x] Add `https://memotrail.ryangan.me` as the production domain.
 
 Environment configuration when the Web app exists:
 
@@ -160,14 +168,14 @@ Environment configuration when the Web app exists:
 - [x] Add the Supabase publishable key for browser use.
 - [ ] Add server-only Supabase credentials only where privileged server operations truly require them.
 - [ ] Add the selected AI provider key as a server-only environment variable.
-- [ ] Configure separate Preview and Production values.
-- [ ] Update Supabase and Google redirect allow lists for the stable staging and production URLs.
+- [ ] Configure separate Preview and Production values. Production is configured; Preview is intentionally pending.
+- [x] Update Supabase and Google redirect allow lists for the stable production URL.
 
 Deployment safeguards:
 
 - [ ] Do not treat a successful build as proof that authentication, private media, or cross-device sync works.
 - [ ] Verify staging end to end before a production deployment.
-- [ ] Confirm the exact Vercel project and domain immediately before production changes.
+- [x] Confirm the exact Vercel project and domain immediately before production changes.
 - [ ] Do not deploy or change DNS without explicit approval.
 
 Useful references:
@@ -240,6 +248,6 @@ Phase 1 may begin when:
 
 The repository, design system, Web shell, iOS shell, local Supabase configuration, examples, and tests may be created before external credentials exist.
 
-Remote authentication integration remains gated on the Supabase project and Google OAuth client IDs.
+Remote authentication integration is ready to begin.
 
 Creating accounts and credentials does not authorize deployment, DNS changes, App Store submission, or production data migration.
