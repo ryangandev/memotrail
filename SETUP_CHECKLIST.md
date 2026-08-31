@@ -36,13 +36,13 @@
 
 User preparation:
 
-- [ ] Create a new Supabase organization or select the organization that should own MemoTrail.
-- [ ] Create a new Supabase project named `memotrail`.
+- [x] Create a new Supabase organization or select the organization that should own MemoTrail.
+- [x] Create a new Supabase project named `memotrail`.
 - [ ] Select a region appropriate for the primary user.
 - [ ] Save the generated database password in a password manager.
-- [ ] Record the project reference and project URL.
-- [ ] Leave application tables and Storage buckets uncreated so repository migrations remain the source of truth.
-- [ ] Do not paste the database password or secret key into chat.
+- [x] Record the project reference and project URL.
+- [x] Leave application tables and Storage buckets uncreated so repository migrations remain the source of truth.
+- [x] Do not paste the database password or secret key into chat.
 
 Phase 1 repository work:
 
@@ -66,19 +66,19 @@ User preparation:
 
 - [ ] Create or select a Google Cloud project dedicated to MemoTrail.
 - [ ] Configure the Google Auth Platform branding and consent screen.
-- [ ] Create a Web OAuth client.
+- [x] Create a Web OAuth client.
 - [ ] Add `http://localhost:3000` as a development JavaScript origin.
 - [ ] Add the future staging and production Web origins when those URLs exist.
 - [ ] Add `https://<SUPABASE_PROJECT_REF>.supabase.co/auth/v1/callback` as the hosted Supabase redirect URI.
-- [ ] Create an iOS OAuth client using bundle identifier `com.rystudio.memotrail.app`.
-- [ ] Record the Web and iOS client IDs.
+- [x] Create an iOS OAuth client using bundle identifier `com.rystudio.memotrail.app`.
+- [x] Record the Web and iOS client IDs.
 - [ ] Store the Web client secret in a password manager.
-- [ ] Do not send the Google client secret through chat or commit it.
+- [x] Do not send the Google client secret through chat or commit it.
 
 Supabase configuration:
 
-- [ ] Enable only the Google provider initially.
-- [ ] Configure the Web client ID and secret in Supabase Auth.
+- [ ] Enable only the Google provider initially. Hosted verification found that Email and Google are both enabled; disable Email before authentication testing.
+- [x] Configure the Web client ID and secret in Supabase Auth. Google is enabled; end-to-end login remains unverified.
 - [ ] Include the iOS client ID in the allowed Google client IDs when native authentication is implemented.
 - [ ] Configure local, staging, and production redirect allow lists deliberately.
 - [ ] Test that Web and iOS Google identities resolve to the same MemoTrail account.
@@ -156,8 +156,8 @@ User preparation when staging deployment is approved:
 
 Environment configuration when the Web app exists:
 
-- [ ] Add the Supabase project URL.
-- [ ] Add the Supabase publishable key for browser use.
+- [x] Add the Supabase project URL.
+- [x] Add the Supabase publishable key for browser use.
 - [ ] Add server-only Supabase credentials only where privileged server operations truly require them.
 - [ ] Add the selected AI provider key as a server-only environment variable.
 - [ ] Configure separate Preview and Production values.
@@ -233,8 +233,8 @@ Phase 1 may begin when:
 
 - [x] The Soft Ledger visual direction is approved.
 - [x] Phase 1 foundation work is explicitly authorized.
-- [ ] The new Supabase project exists.
-- [ ] Google OAuth Web and iOS client IDs exist, or authentication is explicitly scheduled after the first local vertical slice.
+- [x] The new Supabase project exists.
+- [x] Google OAuth Web and iOS client IDs exist, or authentication is explicitly scheduled after the first local vertical slice.
 - [x] The monorepo and deployment approach are approved.
 - [x] No unresolved decision blocks the initial data model, authentication, or sync strategy.
 
