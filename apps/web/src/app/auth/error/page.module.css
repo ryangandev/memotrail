@@ -1,0 +1,67 @@
+.shell {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: var(--mt-space-6);
+  background: var(--mt-color-canvas);
+}
+
+.card {
+  width: min(100%, 440px);
+  padding: 40px;
+  border: 1px solid var(--mt-color-border-strong);
+  border-radius: var(--mt-radius-xlarge);
+  background: var(--mt-color-surface-raised);
+  box-shadow: var(--mt-shadow-floating);
+}
+
+.mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 12px 12px 12px 4px;
+  color: var(--mt-color-accent-ink);
+  background: var(--mt-color-accent);
+  font-family: var(--mt-font-family-serif);
+  font-size: 20px;
+  font-weight: var(--mt-font-weight-semibold);
+}
+
+.card p {
+  margin-top: var(--mt-space-8);
+  color: var(--mt-color-warm);
+  font-size: 11px;
+  font-weight: var(--mt-font-weight-semibold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.card h1 {
+  margin-top: 10px;
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-title);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.card > span:not(.mark) {
+  display: block;
+  margin-top: var(--mt-space-3);
+  color: var(--mt-color-ink-muted);
+  font-size: 14px;
+  line-height: var(--mt-line-height-body);
+}
+
+.card a {
+  display: inline-flex;
+  height: 40px;
+  align-items: center;
+  margin-top: var(--mt-space-8);
+  padding: 0 var(--mt-space-4);
+  border-radius: var(--mt-radius-medium);
+  color: var(--mt-color-accent-ink);
+  background: var(--mt-color-accent);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-medium);
+  text-decoration: none;
+}

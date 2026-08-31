@@ -1,5 +1,11 @@
 import { Icon, type IconName } from "@/components/icon";
+import { AuthGate } from "@/components/auth-gate";
+import { signOut } from "@/app/auth/actions";
+import { getSupabasePublicConfig } from "@/lib/supabase/config";
+import { createClient } from "@/lib/supabase/server";
 import styles from "./page.module.css";
+
+export const dynamic = "force-dynamic";
 
 type NavigationItem = {
   active?: boolean;
@@ -48,10 +54,32 @@ const entries = [
   },
 ];
 
-export default function Home() {
+type Viewer = {
+  email: string;
+  initial: string;
+  name: string;
+};
+
+export default async function Home() {
+  const isConfigured = Boolean(getSupabasePublicConfig());
+
+  if (!isConfigured) {
+    return <AuthGate configured={false} />;
+  }
+
+  const viewer = await getViewer();
+
+  if (!viewer) {
+    return <AuthGate configured />;
+  }
+
+  return <Workspace viewer={viewer} />;
+}
+
+function Workspace({ viewer }: { viewer: Viewer }) {
   return (
     <div className={styles.appShell}>
-      <Sidebar />
+      <Sidebar viewer={viewer} />
 
       <main className={styles.workspace}>
         <header className={styles.topBar}>
@@ -70,13 +98,15 @@ export default function Home() {
             <span className={styles.syncStatus}>
               <span /> Saved
             </span>
-            <button
-              className={styles.avatarButton}
-              type="button"
-              aria-label="Open profile"
-            >
-              R
-            </button>
+            <form action={signOut}>
+              <button
+                className={styles.avatarButton}
+                type="submit"
+                aria-label={`Sign out ${viewer.name}`}
+              >
+                {viewer.initial}
+              </button>
+            </form>
           </div>
         </header>
 
@@ -190,7 +220,7 @@ export default function Home() {
   );
 }
 
-function Sidebar() {
+function Sidebar({ viewer }: { viewer: Viewer }) {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.brand}>
@@ -213,14 +243,16 @@ function Sidebar() {
             <span>Your trail keeps growing</span>
           </div>
         </div>
-        <button type="button">
-          <span className={styles.avatar}>R</span>
-          <span>
-            <strong>Ryan</strong>
-            <small>Private space</small>
-          </span>
-          <Icon name="more" size={17} />
-        </button>
+        <form action={signOut}>
+          <button type="submit" title={`Sign out ${viewer.email}`}>
+            <span className={styles.avatar}>{viewer.initial}</span>
+            <span>
+              <strong>{viewer.name}</strong>
+              <small>Sign out · Private space</small>
+            </span>
+            <Icon name="more" size={17} />
+          </button>
+        </form>
       </div>
     </aside>
   );
@@ -242,4 +274,41 @@ function NavGroup({ items }: { items: NavigationItem[] }) {
       ))}
     </div>
   );
+}
+
+async function getViewer(): Promise<Viewer | null> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.getClaims();
+
+    if (error || !data?.claims) {
+      return null;
+    }
+
+    const claims = data.claims as Record<string, unknown>;
+    const metadata = asRecord(claims.user_metadata);
+    const email = stringValue(claims.email) ?? "Signed-in account";
+    const name =
+      stringValue(metadata.full_name) ??
+      stringValue(metadata.name) ??
+      email.split("@")[0] ??
+      "MemoTrail";
+    const initial = name.trim().charAt(0).toLocaleUpperCase() || "M";
+
+    return { email, initial, name };
+  } catch {
+    return null;
+  }
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  if (typeof value === "object" && value !== null) {
+    return value as Record<string, unknown>;
+  }
+
+  return {};
+}
+
+function stringValue(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
 }

@@ -1,0 +1,308 @@
+.shell {
+  min-height: 100dvh;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 8% 15%,
+      color-mix(in srgb, var(--mt-color-warm-subtle) 78%, transparent) 0,
+      transparent 32%
+    ),
+    var(--mt-color-canvas);
+}
+
+.header {
+  display: flex;
+  width: min(100% - 64px, 1180px);
+  height: 84px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 auto;
+  border-bottom: 1px solid var(--mt-color-border);
+}
+
+.header > span {
+  color: var(--mt-color-ink-faint);
+  font-size: var(--mt-font-size-caption);
+  letter-spacing: 0.04em;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-family: var(--mt-font-family-serif);
+  font-size: 19px;
+  letter-spacing: -0.02em;
+}
+
+.brand > span,
+.cardMark {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  place-items: center;
+  border-radius: 9px 9px 9px 3px;
+  color: var(--mt-color-accent-ink);
+  background: var(--mt-color-accent);
+  font-family: var(--mt-font-family-serif);
+  font-size: 16px;
+  font-weight: var(--mt-font-weight-semibold);
+}
+
+.brand strong {
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.main {
+  display: grid;
+  width: min(100% - 64px, 1080px);
+  min-height: calc(100dvh - 84px);
+  grid-template-columns: minmax(0, 1.2fr) minmax(350px, 0.8fr);
+  align-items: center;
+  gap: clamp(64px, 9vw, 128px);
+  margin: 0 auto;
+  padding: 72px 0 92px;
+}
+
+.story {
+  max-width: 600px;
+}
+
+.eyebrow,
+.cardEyebrow {
+  color: var(--mt-color-accent);
+  font-size: 11px;
+  font-weight: var(--mt-font-weight-semibold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.story h1 {
+  max-width: 590px;
+  margin-top: var(--mt-space-4);
+  font-family: var(--mt-font-family-serif);
+  font-size: clamp(46px, 5.5vw, 70px);
+  font-weight: var(--mt-font-weight-medium);
+  letter-spacing: -0.045em;
+  line-height: 1.02;
+}
+
+.intro {
+  max-width: 540px;
+  margin-top: var(--mt-space-6);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-body-large);
+  line-height: var(--mt-line-height-relaxed);
+}
+
+.trail {
+  position: relative;
+  display: grid;
+  grid-template-columns: 12px 1fr;
+  column-gap: var(--mt-space-4);
+  row-gap: var(--mt-space-5);
+  margin-top: var(--mt-space-10);
+}
+
+.trail::before {
+  position: absolute;
+  top: 7px;
+  bottom: 26px;
+  left: 5px;
+  width: 1px;
+  background: var(--mt-color-border-strong);
+  content: "";
+}
+
+.trail > span {
+  z-index: 1;
+  width: 11px;
+  height: 11px;
+  margin-top: 4px;
+  border: 3px solid var(--mt-color-canvas);
+  border-radius: 50%;
+  background: var(--mt-color-accent);
+  box-shadow: 0 0 0 1px var(--mt-color-accent);
+}
+
+.trail article {
+  display: grid;
+  gap: 2px;
+}
+
+.trail time,
+.trail small {
+  color: var(--mt-color-ink-faint);
+  font-size: 11px;
+}
+
+.trail strong {
+  font-family: var(--mt-font-family-serif);
+  font-size: 16px;
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.signInCard {
+  padding: 40px;
+  border: 1px solid var(--mt-color-border-strong);
+  border-radius: var(--mt-radius-xlarge);
+  background: color-mix(
+    in srgb,
+    var(--mt-color-surface-raised) 94%,
+    transparent
+  );
+  box-shadow: var(--mt-shadow-floating);
+}
+
+.cardMark {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px 12px 12px 4px;
+  font-size: 20px;
+}
+
+.cardEyebrow {
+  margin-top: var(--mt-space-8);
+}
+
+.signInCard h2 {
+  margin-top: 10px;
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-title);
+  font-weight: var(--mt-font-weight-medium);
+  letter-spacing: -0.025em;
+}
+
+.signInCard > p:not(.cardEyebrow):not(.error) {
+  margin-top: var(--mt-space-2);
+  color: var(--mt-color-ink-muted);
+  font-size: 14px;
+  line-height: var(--mt-line-height-body);
+}
+
+.googleButton {
+  display: flex;
+  width: 100%;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mt-space-3);
+  margin-top: var(--mt-space-8);
+  border: 1px solid var(--mt-color-border-strong);
+  border-radius: var(--mt-radius-medium);
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-raised);
+  font-size: 14px;
+  font-weight: var(--mt-font-weight-medium);
+  cursor: pointer;
+  transition:
+    border-color var(--mt-motion-quick),
+    background var(--mt-motion-quick),
+    transform var(--mt-motion-quick);
+}
+
+.googleButton:hover:not(:disabled) {
+  border-color: var(--mt-color-accent);
+  background: var(--mt-color-surface);
+  transform: translateY(-1px);
+}
+
+.googleButton:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.googleButton svg {
+  width: 18px;
+  height: 18px;
+}
+
+.setupState {
+  display: grid;
+  gap: 5px;
+  margin-top: var(--mt-space-8);
+  padding: var(--mt-space-4);
+  border: 1px solid color-mix(in srgb, var(--mt-color-warning) 35%, transparent);
+  border-radius: var(--mt-radius-medium);
+  color: var(--mt-color-ink-muted);
+  background: var(--mt-color-warm-subtle);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.setupState strong {
+  color: var(--mt-color-ink);
+  font-size: 13px;
+}
+
+.error {
+  margin-top: var(--mt-space-3);
+  color: var(--mt-color-warm);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.privacyNote {
+  display: block;
+  margin-top: var(--mt-space-6);
+  color: var(--mt-color-ink-faint);
+  font-size: 10px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+@media (max-width: 820px) {
+  .main {
+    grid-template-columns: 1fr;
+    gap: var(--mt-space-12);
+  }
+
+  .story {
+    max-width: 680px;
+  }
+
+  .story h1 {
+    max-width: 680px;
+  }
+
+  .trail {
+    display: none;
+  }
+
+  .signInCard {
+    width: min(100%, 460px);
+  }
+}
+
+@media (max-width: 540px) {
+  .header,
+  .main {
+    width: min(100% - 32px, 460px);
+  }
+
+  .header {
+    height: 68px;
+  }
+
+  .header > span {
+    display: none;
+  }
+
+  .main {
+    min-height: calc(100dvh - 68px);
+    gap: var(--mt-space-8);
+    padding: 44px 0 64px;
+  }
+
+  .story h1 {
+    font-size: clamp(40px, 13vw, 54px);
+  }
+
+  .intro {
+    font-size: 15px;
+  }
+
+  .signInCard {
+    padding: var(--mt-space-6);
+  }
+}

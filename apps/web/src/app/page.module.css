@@ -145,7 +145,7 @@
   font-size: 10px;
 }
 
-.sidebarFooter > button {
+.sidebarFooter > form > button {
   display: flex;
   width: 100%;
   align-items: center;
@@ -157,11 +157,11 @@
   cursor: pointer;
 }
 
-.sidebarFooter > button:hover {
+.sidebarFooter > form > button:hover {
   background: var(--mt-color-surface-subtle);
 }
 
-.sidebarFooter > button > span:nth-child(2) {
+.sidebarFooter > form > button > span:nth-child(2) {
   display: grid;
   flex: 1;
 }

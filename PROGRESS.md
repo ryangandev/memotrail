@@ -17,6 +17,9 @@
 - The linked hosted Supabase project contains both reviewed repository migrations and no development seed users.
 - Hosted verification found 21 Row Level Security-enabled application tables, 22 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
+- Web now uses cookie-based Supabase SSR sessions, a Next.js 16 Proxy refresh path, Google OAuth, a safe callback, and explicit sign-out and setup states.
+- Browser verification reached Google's account page with the expected Web client and hosted Supabase callback on both desktop and iPhone-sized layouts.
+- Completing Google consent with the user's real account and verifying the returned identity remain a user-operated acceptance step.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -29,11 +32,11 @@
 
 ### Web Google authentication
 
-- A signed-out user can start Google Sign-In from MemoTrail.
-- The OAuth callback creates a secure server-managed session and returns to MemoTrail.
-- A signed-in user sees their real account identity and can sign out.
-- Localhost and the production domain use their own allowed callback URLs.
-- Missing public configuration produces an explicit setup state without exposing secrets.
+- [x] A signed-out user can start Google Sign-In from MemoTrail.
+- [ ] The OAuth callback creates a secure server-managed session and returns to MemoTrail. The callback is implemented, but real-account consent remains to be completed by the user.
+- [ ] A signed-in user sees their real account identity and can sign out. The authenticated state is implemented and awaits the same real-account check.
+- [x] Localhost and the production domain use their own allowed callback URLs.
+- [x] Missing public configuration produces an explicit setup state without exposing secrets.
 
 ### iOS Google authentication
 
@@ -54,12 +57,13 @@
 - `fix: make web typecheck independent of build` fixed clean-checkout CI type generation.
 - `docs: update credential setup checklist` recorded the first verified external credential setup.
 - `docs: establish implementation progress tracking` verified production configuration and established commit-by-commit progress tracking.
-- Current change: deployed and verified the hosted Supabase data foundation.
+- `feat: deploy hosted Supabase foundation` deployed and verified the hosted data foundation without seed data.
+- Current change: implemented secure Web Google authentication and its signed-out experience.
 
 ## Next sequence
 
-1. Implement Web Google authentication.
-2. Implement iOS Google authentication.
+1. Implement iOS Google authentication.
+2. Complete real-account Web and iOS authentication acceptance checks.
 3. Build the first synchronized Inbox Entry flow on both clients.
 4. Add offline persistence and retryable synchronization before expanding product areas.
 

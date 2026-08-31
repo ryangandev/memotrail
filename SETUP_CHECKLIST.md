@@ -87,6 +87,9 @@ Supabase configuration:
 
 - [x] Enable only the Google provider initially. Hosted verification exposes Google and no Email provider.
 - [x] Configure the Web client ID and secret in Supabase Auth. Google is enabled; end-to-end login remains unverified.
+- [x] Implement cookie-based Web Google OAuth with local and production callback handling.
+- [x] Verify the signed-out Web flow reaches Google with the expected Web client and Supabase callback.
+- [ ] Complete Google consent with the user's real account and verify the returned Web identity and sign-out flow.
 - [ ] Include the iOS client ID in the allowed Google client IDs when native authentication is implemented.
 - [x] Configure exact local and production redirect allow lists deliberately.
 - [ ] Add a staging or Preview redirect rule only when that environment is introduced.
