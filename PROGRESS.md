@@ -19,7 +19,10 @@
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
 - Web now uses cookie-based Supabase SSR sessions, a Next.js 16 Proxy refresh path, Google OAuth, a safe callback, and explicit sign-out and setup states.
 - Browser verification reached Google's account page with the expected Web client and hosted Supabase callback on both desktop and iPhone-sized layouts.
+- iOS now uses the native Google SDK, exchanges a nonce-bound ID token with Supabase, restores sessions, and supports explicit local sign-out.
+- Simulator verification covered build, launch, light and dark appearance, the native authorization prompt, and cancellation recovery without using a real account.
 - Completing Google consent with the user's real account and verifying the returned identity remain a user-operated acceptance step.
+- The Supabase Google provider still needs a dashboard confirmation that its allowed client ID field contains both Web and iOS client IDs, with Web first.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -40,11 +43,11 @@
 
 ### iOS Google authentication
 
-- A signed-out user can start native Google Sign-In.
-- The Google ID token is exchanged for the same Supabase identity model used by Web.
-- The session survives a normal app relaunch and can be explicitly signed out.
-- The app contains public client configuration only.
-- Simulator build and launch remain warning-free before physical-device verification.
+- [x] A signed-out user can start native Google Sign-In.
+- [ ] The Google ID token is exchanged for the same Supabase identity model used by Web. The integration is implemented and awaits real-account consent.
+- [ ] The session survives a normal app relaunch and can be explicitly signed out. Both paths are implemented and await a real session.
+- [x] The app contains public client configuration only.
+- [x] Simulator build and launch remain warning-free before physical-device verification.
 
 ## Feature history
 
@@ -58,11 +61,12 @@
 - `docs: update credential setup checklist` recorded the first verified external credential setup.
 - `docs: establish implementation progress tracking` verified production configuration and established commit-by-commit progress tracking.
 - `feat: deploy hosted Supabase foundation` deployed and verified the hosted data foundation without seed data.
-- Current change: implemented secure Web Google authentication and its signed-out experience.
+- `feat: add Web Google authentication` implemented secure Web sessions and the signed-out experience.
+- Current change: implemented native iOS Google authentication and its signed-out experience.
 
 ## Next sequence
 
-1. Implement iOS Google authentication.
+1. Confirm that Supabase allows both the Web and iOS Google client IDs.
 2. Complete real-account Web and iOS authentication acceptance checks.
 3. Build the first synchronized Inbox Entry flow on both clients.
 4. Add offline persistence and retryable synchronization before expanding product areas.

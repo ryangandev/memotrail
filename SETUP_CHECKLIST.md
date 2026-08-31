@@ -90,7 +90,10 @@ Supabase configuration:
 - [x] Implement cookie-based Web Google OAuth with local and production callback handling.
 - [x] Verify the signed-out Web flow reaches Google with the expected Web client and Supabase callback.
 - [ ] Complete Google consent with the user's real account and verify the returned Web identity and sign-out flow.
-- [ ] Include the iOS client ID in the allowed Google client IDs when native authentication is implemented.
+- [ ] In Supabase Auth, confirm the allowed Google client IDs contain the Web client ID first and the iOS client ID second, separated by a comma.
+- [x] Implement native iOS Google Sign-In and exchange its ID token for a Supabase session.
+- [x] Verify that the iOS app can open Google's native authorization flow without transmitting a real account during automated testing.
+- [ ] Complete Google consent with the user's real account and verify the returned iOS identity, session restoration, and sign-out flow.
 - [x] Configure exact local and production redirect allow lists deliberately.
 - [ ] Add a staging or Preview redirect rule only when that environment is introduced.
 - [ ] Test that Web and iOS Google identities resolve to the same MemoTrail account.
@@ -115,6 +118,9 @@ Phase 1 repository work:
 - [x] Create the SwiftUI project under `apps/ios/`.
 - [x] Configure safe local signing without committing developer-specific signing state.
 - [x] Add development environment configuration without embedding server secrets.
+- [x] Add Supabase Swift, Google Sign-In, the required callback URL scheme, and explicit setup validation.
+- [x] Verify the signed-out authentication experience in light and dark appearance on an iPhone simulator.
+- [x] Verify a warning-free simulator build and launch.
 - [ ] Establish local persistence and a retryable synchronization queue.
 - [ ] Add unit tests and UI tests.
 - [ ] Verify installation and launch separately on the physical iPhone.
@@ -252,6 +258,6 @@ Phase 1 may begin when:
 
 The repository, design system, Web shell, iOS shell, local Supabase configuration, examples, and tests may be created before external credentials exist.
 
-Remote authentication integration is ready to begin.
+Remote authentication integration is implemented on Web and iOS and awaits real-account acceptance testing.
 
 Creating accounts and credentials does not authorize deployment, DNS changes, App Store submission, or production data migration.

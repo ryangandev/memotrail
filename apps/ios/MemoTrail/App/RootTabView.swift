@@ -1,9 +1,17 @@
 import SwiftUI
 
 struct RootTabView: View {
+  let user: AuthenticatedUser
+  let isAuthenticationBusy: Bool
+  let signOut: @MainActor () async -> Void
+
   var body: some View {
     TabView {
-      InboxView()
+      InboxView(
+        user: user,
+        isAuthenticationBusy: isAuthenticationBusy,
+        signOut: signOut
+      )
         .tabItem {
           Label("Inbox", systemImage: "tray")
         }
@@ -55,5 +63,9 @@ private struct PlaceholderView: View {
 }
 
 #Preview {
-  RootTabView()
+  RootTabView(
+    user: AuthenticatedUser(email: "ryan@example.com", name: "Ryan"),
+    isAuthenticationBusy: false,
+    signOut: {}
+  )
 }

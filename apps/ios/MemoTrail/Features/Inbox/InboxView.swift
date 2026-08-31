@@ -1,7 +1,12 @@
 import SwiftUI
 
 struct InboxView: View {
+  let user: AuthenticatedUser
+  let isAuthenticationBusy: Bool
+  let signOut: @MainActor () async -> Void
+
   private let entries = PreviewEntry.samples
+  @State private var isShowingAccount = false
 
   var body: some View {
     NavigationStack {
@@ -33,11 +38,21 @@ struct InboxView: View {
 
         ToolbarItemGroup(placement: .topBarTrailing) {
           Button("Search", systemImage: "magnifyingglass") {}
-          Button("Profile", systemImage: "person.crop.circle.fill") {}
+          Button("Profile", systemImage: "person.crop.circle.fill") {
+            isShowingAccount = true
+          }
+          .accessibilityLabel("Open account for \(user.name)")
         }
       }
       .toolbarBackground(MTColor.surface, for: .navigationBar)
       .toolbarBackground(.visible, for: .navigationBar)
+      .sheet(isPresented: $isShowingAccount) {
+        AccountView(
+          user: user,
+          isBusy: isAuthenticationBusy,
+          signOut: signOut
+        )
+      }
     }
   }
 
@@ -115,5 +130,9 @@ struct InboxView: View {
 }
 
 #Preview {
-  InboxView()
+  InboxView(
+    user: AuthenticatedUser(email: "ryan@example.com", name: "Ryan"),
+    isAuthenticationBusy: false,
+    signOut: {}
+  )
 }
