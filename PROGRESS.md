@@ -19,6 +19,7 @@
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
 - Web now uses cookie-based Supabase SSR sessions, a Next.js 16 Proxy refresh path, Google OAuth, a safe callback, and explicit sign-out and setup states.
 - Browser verification reached Google's account page with the expected Web client and hosted Supabase callback on both desktop and iPhone-sized layouts.
+- Web authentication redirect safety now has an executable unit-test suite instead of a no-op repository test command.
 - iOS now uses the native Google SDK, exchanges a nonce-bound ID token with Supabase, restores sessions, and supports explicit local sign-out.
 - Simulator verification covered build, launch, light and dark appearance, the native authorization prompt, and cancellation recovery without using a real account.
 - Completing Google consent with the user's real account and verifying the returned identity remain a user-operated acceptance step.
@@ -40,6 +41,7 @@
 - [ ] A signed-in user sees their real account identity and can sign out. The authenticated state is implemented and awaits the same real-account check.
 - [x] Localhost and the production domain use their own allowed callback URLs.
 - [x] Missing public configuration produces an explicit setup state without exposing secrets.
+- [x] Unit tests reject external callback destinations and verify production-origin fallback behavior.
 
 ### iOS Google authentication
 
@@ -62,7 +64,8 @@
 - `docs: establish implementation progress tracking` verified production configuration and established commit-by-commit progress tracking.
 - `feat: deploy hosted Supabase foundation` deployed and verified the hosted data foundation without seed data.
 - `feat: add Web Google authentication` implemented secure Web sessions and the signed-out experience.
-- Current change: implemented native iOS Google authentication and its signed-out experience.
+- `feat: add iOS Google authentication` implemented native sessions and the signed-out experience.
+- Current change: added executable Web authentication redirect-safety tests.
 
 ## Next sequence
 
