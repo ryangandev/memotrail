@@ -1,8 +1,13 @@
 import { Icon, type IconName } from "@/components/icon";
 import { AuthGate } from "@/components/auth-gate";
+import { CaptureComposer } from "@/components/capture-composer";
 import { signOut } from "@/app/auth/actions";
+import {
+  getInboxWorkspace,
+  type InboxEntry,
+  type Viewer,
+} from "@/lib/data/inbox";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
-import { createClient } from "@/lib/supabase/server";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +20,7 @@ type NavigationItem = {
 };
 
 const primaryNavigation: NavigationItem[] = [
-  { icon: "inbox", label: "Inbox", count: 4, active: true },
+  { icon: "inbox", label: "Inbox", active: true },
   { icon: "timeline", label: "Timeline" },
   { icon: "star", label: "First Times" },
   { icon: "archive", label: "Collections" },
@@ -27,39 +32,6 @@ const recordNavigation: NavigationItem[] = [
   { icon: "car", label: "Vehicles" },
 ];
 
-const entries = [
-  {
-    date: "Today, 9:42 AM",
-    title: "Why do people need to keep learning?",
-    excerpt:
-      "Maybe learning is less about collecting answers and more about keeping our model of the world alive.",
-    tags: ["reflection", "learning"],
-    suggested: true,
-  },
-  {
-    date: "Yesterday, 8:16 PM",
-    title: "How clear aligners move teeth",
-    excerpt:
-      "Small, controlled forces trigger bone remodeling around each tooth. The bone changes rather than the tooth bending.",
-    tags: ["learned", "health"],
-    suggested: true,
-  },
-  {
-    date: "Jul 3, 2026",
-    title: "First time skiing",
-    excerpt:
-      "Fell more times than I can count, then finally linked three turns together before the last run.",
-    tags: ["first time", "travel"],
-    suggested: false,
-  },
-];
-
-type Viewer = {
-  email: string;
-  initial: string;
-  name: string;
-};
-
 export default async function Home() {
   const isConfigured = Boolean(getSupabasePublicConfig());
 
@@ -67,19 +39,29 @@ export default async function Home() {
     return <AuthGate configured={false} />;
   }
 
-  const viewer = await getViewer();
+  const workspace = await getInboxWorkspace();
 
-  if (!viewer) {
+  if (!workspace) {
     return <AuthGate configured />;
   }
 
-  return <Workspace viewer={viewer} />;
+  return <Workspace {...workspace} />;
 }
 
-function Workspace({ viewer }: { viewer: Viewer }) {
+function Workspace({
+  entries,
+  loadError,
+  viewer,
+}: {
+  entries: InboxEntry[];
+  loadError: string | null;
+  viewer: Viewer;
+}) {
+  const navigation = navigationWithInboxCount(entries.length);
+
   return (
     <div className={styles.appShell}>
-      <Sidebar viewer={viewer} />
+      <Sidebar navigation={navigation} viewer={viewer} />
 
       <main className={styles.workspace}>
         <header className={styles.topBar}>
@@ -113,47 +95,17 @@ function Workspace({ viewer }: { viewer: Viewer }) {
         <div className={styles.content}>
           <header className={styles.pageHeader}>
             <div>
-              <p className={styles.eyebrow}>Sunday, August 30</p>
+              <p className={styles.eyebrow}>{todayLabel()}</p>
               <h1>Inbox</h1>
               <p>Capture now. Make sense of it when you are ready.</p>
             </div>
-            <button className={styles.newEntryButton} type="button">
+            <a className={styles.newEntryButton} href="#capture-title">
               <Icon name="plus" />
               <span>New entry</span>
-            </button>
+            </a>
           </header>
 
-          <section
-            className={styles.captureCard}
-            aria-labelledby="capture-heading"
-          >
-            <div className={styles.captureIntro}>
-              <span className={styles.captureSpark}>
-                <Icon name="sparkle" size={19} />
-              </span>
-              <div>
-                <h2 id="capture-heading">What is worth keeping?</h2>
-                <p>
-                  A thought, a first, something learned, or whatever is on your
-                  mind.
-                </p>
-              </div>
-            </div>
-            <div className={styles.captureActions}>
-              <div>
-                <button className={styles.quietButton} type="button">
-                  <Icon name="mic" /> Voice
-                </button>
-                <button className={styles.quietButton} type="button">
-                  <Icon name="photo" /> Photo
-                </button>
-              </div>
-              <button className={styles.saveButton} type="button">
-                Save to Inbox
-                <Icon name="chevron" size={16} />
-              </button>
-            </div>
-          </section>
+          <CaptureComposer />
 
           <section
             className={styles.entrySection}
@@ -162,50 +114,58 @@ function Workspace({ viewer }: { viewer: Viewer }) {
             <div className={styles.sectionHeader}>
               <div>
                 <h2 id="recent-heading">Unsorted</h2>
-                <span>4 entries</span>
+                <span>{entryCountLabel(entries.length)}</span>
               </div>
-              <button type="button">Select</button>
             </div>
 
             <div className={styles.entryList}>
-              {entries.map((entry) => (
-                <article className={styles.entryCard} key={entry.title}>
-                  <div className={styles.entryMeta}>
-                    <time>{entry.date}</time>
-                    <button
-                      type="button"
-                      aria-label={`More actions for ${entry.title}`}
-                    >
-                      <Icon name="more" />
-                    </button>
+              {loadError ? (
+                <div className={styles.inboxMessage} role="alert">
+                  <Icon name="clock" size={20} />
+                  <div>
+                    <strong>Inbox unavailable</strong>
+                    <p>{loadError}</p>
                   </div>
-                  <h3>{entry.title}</h3>
-                  <p>{entry.excerpt}</p>
-                  <footer>
-                    <div className={styles.tags}>
-                      {entry.tags.map((tag) => (
-                        <span key={tag}>{tag}</span>
-                      ))}
-                    </div>
-                    {entry.suggested ? (
-                      <span className={styles.aiLabel}>
-                        <Icon name="sparkle" size={13} /> AI suggested
-                      </span>
-                    ) : null}
-                  </footer>
-                </article>
-              ))}
+                </div>
+              ) : null}
 
-              <button className={styles.moreEntries} type="button">
-                Show 1 more entry
-              </button>
+              {!loadError && entries.length === 0 ? (
+                <div className={styles.inboxMessage}>
+                  <Icon name="inbox" size={22} />
+                  <div>
+                    <strong>Your Inbox is ready</strong>
+                    <p>Save a thought above and it will appear here.</p>
+                  </div>
+                </div>
+              ) : null}
+
+              {entries.map((entry) => {
+                const excerpt = entryExcerpt(entry);
+
+                return (
+                  <article className={styles.entryCard} key={entry.id}>
+                    <div className={styles.entryMeta}>
+                      <time dateTime={entry.occurredAt}>
+                        {entryDateLabel(entry.occurredAt)}
+                      </time>
+                    </div>
+                    <h3>{entryTitle(entry)}</h3>
+                    {excerpt ? <p>{excerpt}</p> : null}
+                    <footer>
+                      <div className={styles.tags}>
+                        <span>Unreviewed</span>
+                      </div>
+                    </footer>
+                  </article>
+                );
+              })}
             </div>
           </section>
         </div>
       </main>
 
       <nav className={styles.mobileNavigation} aria-label="Mobile navigation">
-        {primaryNavigation.map((item) => (
+        {navigation.map((item) => (
           <button
             className={item.active ? styles.mobileActive : undefined}
             key={item.label}
@@ -220,7 +180,13 @@ function Workspace({ viewer }: { viewer: Viewer }) {
   );
 }
 
-function Sidebar({ viewer }: { viewer: Viewer }) {
+function Sidebar({
+  navigation,
+  viewer,
+}: {
+  navigation: NavigationItem[];
+  viewer: Viewer;
+}) {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.brand}>
@@ -229,7 +195,7 @@ function Sidebar({ viewer }: { viewer: Viewer }) {
       </div>
 
       <nav className={styles.sidebarNav} aria-label="Primary navigation">
-        <NavGroup items={primaryNavigation} />
+        <NavGroup items={navigation} />
         <div className={styles.navDivider} />
         <p className={styles.navLabel}>Records</p>
         <NavGroup items={recordNavigation} />
@@ -239,8 +205,8 @@ function Sidebar({ viewer }: { viewer: Viewer }) {
         <div className={styles.archiveNote}>
           <Icon name="clock" size={17} />
           <div>
-            <strong>12 years recorded</strong>
-            <span>Your trail keeps growing</span>
+            <strong>Private cloud sync</strong>
+            <span>Available on Web and iPhone</span>
           </div>
         </div>
         <form action={signOut}>
@@ -276,39 +242,61 @@ function NavGroup({ items }: { items: NavigationItem[] }) {
   );
 }
 
-async function getViewer(): Promise<Viewer | null> {
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.getClaims();
-
-    if (error || !data?.claims) {
-      return null;
-    }
-
-    const claims = data.claims as Record<string, unknown>;
-    const metadata = asRecord(claims.user_metadata);
-    const email = stringValue(claims.email) ?? "Signed-in account";
-    const name =
-      stringValue(metadata.full_name) ??
-      stringValue(metadata.name) ??
-      email.split("@")[0] ??
-      "MemoTrail";
-    const initial = name.trim().charAt(0).toLocaleUpperCase() || "M";
-
-    return { email, initial, name };
-  } catch {
-    return null;
-  }
+function navigationWithInboxCount(count: number) {
+  return primaryNavigation.map((item) =>
+    item.label === "Inbox" ? { ...item, count } : item,
+  );
 }
 
-function asRecord(value: unknown): Record<string, unknown> {
-  if (typeof value === "object" && value !== null) {
-    return value as Record<string, unknown>;
-  }
-
-  return {};
+function todayLabel() {
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "long",
+    weekday: "long",
+  }).format(new Date());
 }
 
-function stringValue(value: unknown) {
-  return typeof value === "string" && value.trim() ? value.trim() : null;
+function entryCountLabel(count: number) {
+  return `${count} ${count === 1 ? "entry" : "entries"}`;
+}
+
+function entryDateLabel(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function entryTitle(entry: InboxEntry) {
+  if (entry.title) {
+    return entry.title;
+  }
+
+  const body = entry.body.trim();
+  const firstLine = body.split(/\r?\n/, 1)[0]?.trim() ?? "";
+  return truncate(firstLine || "Untitled Entry", 90);
+}
+
+function entryExcerpt(entry: InboxEntry) {
+  const body = entry.body.trim();
+
+  if (!body) {
+    return "";
+  }
+
+  if (entry.title) {
+    return truncate(body, 280);
+  }
+
+  const firstLineEnd = body.indexOf("\n");
+
+  if (firstLineEnd >= 0) {
+    return truncate(body.slice(firstLineEnd + 1).trim(), 280);
+  }
+
+  return body.length > 90 ? truncate(body.slice(90).trim(), 280) : "";
+}
+
+function truncate(value: string, limit: number) {
+  return value.length > limit ? `${value.slice(0, limit).trimEnd()}…` : value;
 }

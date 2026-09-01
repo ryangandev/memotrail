@@ -1,8 +1,8 @@
 # MemoTrail Setup Checklist
 
-> Status: Phase 2 authentication implementation ready
+> Status: Authentication accepted; synchronized Inbox implementation underway
 >
-> Last updated: 2026-08-31
+> Last updated: 2026-09-01
 >
 > Initial authentication: Google Sign-In only
 >
@@ -86,17 +86,17 @@ User preparation:
 Supabase configuration:
 
 - [x] Enable only the Google provider initially. Hosted verification exposes Google and no Email provider.
-- [x] Configure the Web client ID and secret in Supabase Auth. Google is enabled; end-to-end login remains unverified.
+- [x] Configure the Web client ID and secret in Supabase Auth and complete end-to-end login.
 - [x] Implement cookie-based Web Google OAuth with local and production callback handling.
 - [x] Verify the signed-out Web flow reaches Google with the expected Web client and Supabase callback.
-- [ ] Complete Google consent with the user's real account and verify the returned Web identity and sign-out flow.
-- [ ] In Supabase Auth, confirm the allowed Google client IDs contain the Web client ID first and the iOS client ID second, separated by a comma.
+- [x] Complete Google consent with the user's real account and verify the returned Web identity and sign-out flow.
+- [x] In Supabase Auth, confirm the allowed Google client IDs contain the Web client ID first and the iOS client ID second, separated by a comma.
 - [x] Implement native iOS Google Sign-In and exchange its ID token for a Supabase session.
 - [x] Verify that the iOS app can open Google's native authorization flow without transmitting a real account during automated testing.
-- [ ] Complete Google consent with the user's real account and verify the returned iOS identity, session restoration, and sign-out flow.
+- [x] Complete Google consent with the user's real account and verify the returned iOS identity, session restoration, and sign-out flow.
 - [x] Configure exact local and production redirect allow lists deliberately.
 - [ ] Add a staging or Preview redirect rule only when that environment is introduced.
-- [ ] Test that Web and iOS Google identities resolve to the same MemoTrail account.
+- [x] Test that Web and iOS Google identities resolve to the same MemoTrail account.
 
 Useful references:
 
@@ -258,6 +258,6 @@ Phase 1 may begin when:
 
 The repository, design system, Web shell, iOS shell, local Supabase configuration, examples, and tests may be created before external credentials exist.
 
-Remote authentication integration is implemented on Web and iOS and awaits real-account acceptance testing.
+Remote authentication integration is implemented and accepted on Web and iOS.
 
 Creating accounts and credentials does not authorize deployment, DNS changes, App Store submission, or production data migration.
