@@ -1,3 +1,4 @@
+import Supabase
 import SwiftUI
 
 struct InboxView: View {
@@ -5,20 +6,45 @@ struct InboxView: View {
   let isAuthenticationBusy: Bool
   let signOut: @MainActor () async -> Void
 
-  private let entries = PreviewEntry.samples
+  @State private var controller: InboxController
+  @State private var captureTitle = ""
+  @State private var captureBody = ""
   @State private var isShowingAccount = false
+  @FocusState private var isTitleFocused: Bool
+
+  init(
+    client: SupabaseClient,
+    user: AuthenticatedUser,
+    isAuthenticationBusy: Bool,
+    signOut: @escaping @MainActor () async -> Void
+  ) {
+    self.user = user
+    self.isAuthenticationBusy = isAuthenticationBusy
+    self.signOut = signOut
+    _controller = State(initialValue: InboxController(client: client))
+  }
 
   var body: some View {
     NavigationStack {
       ScrollView {
         LazyVStack(alignment: .leading, spacing: MTSpacing.s8) {
           header
-          CaptureCard()
+          CaptureCard(
+            title: $captureTitle,
+            note: $captureBody,
+            isSaving: controller.isSaving,
+            message: controller.captureMessage,
+            titleFocus: $isTitleFocused,
+            save: saveCapture
+          )
           entrySection
         }
         .padding(.horizontal, MTSpacing.s4)
         .padding(.top, MTSpacing.s6)
         .padding(.bottom, MTSpacing.s12)
+      }
+      .refreshable {
+        await controller.load()
       }
       .background(MTColor.canvas)
       .toolbar {
@@ -28,7 +54,17 @@ struct InboxView: View {
               .font(.system(size: 14, weight: .semibold, design: .serif))
               .foregroundStyle(MTColor.accentInk)
               .frame(width: 28, height: 28)
-              .background(MTColor.accent, in: UnevenRoundedRectangle(cornerRadii: .init(topLeading: 8, bottomLeading: 3, bottomTrailing: 8, topTrailing: 8)))
+              .background(
+                MTColor.accent,
+                in: UnevenRoundedRectangle(
+                  cornerRadii: .init(
+                    topLeading: 8,
+                    bottomLeading: 3,
+                    bottomTrailing: 8,
+                    topTrailing: 8
+                  )
+                )
+              )
 
             Text("MemoTrail")
               .font(.system(size: 18, weight: .medium, design: .serif))
@@ -36,8 +72,7 @@ struct InboxView: View {
           }
         }
 
-        ToolbarItemGroup(placement: .topBarTrailing) {
-          Button("Search", systemImage: "magnifyingglass") {}
+        ToolbarItem(placement: .topBarTrailing) {
           Button("Profile", systemImage: "person.crop.circle.fill") {
             isShowingAccount = true
           }
@@ -53,13 +88,18 @@ struct InboxView: View {
           signOut: signOut
         )
       }
+      .task {
+        if !controller.hasLoaded {
+          await controller.load()
+        }
+      }
     }
   }
 
   private var header: some View {
     HStack(alignment: .bottom) {
       VStack(alignment: .leading, spacing: MTSpacing.s2) {
-        Text("SUNDAY, AUGUST 30")
+        Text(Date.now.formatted(.dateTime.weekday(.wide).month(.wide).day()).uppercased())
           .font(MTTypography.caption)
           .tracking(1.1)
           .foregroundStyle(MTColor.inkFaint)
@@ -71,13 +111,15 @@ struct InboxView: View {
 
       Spacer()
 
-      Button("New entry", systemImage: "plus") {}
-        .labelStyle(.iconOnly)
-        .font(.system(size: 18, weight: .medium))
-        .foregroundStyle(MTColor.accentInk)
-        .frame(width: 42, height: 42)
-        .background(MTColor.accent, in: RoundedRectangle(cornerRadius: MTRadius.medium))
-        .accessibilityLabel("New entry")
+      Button("New entry", systemImage: "plus") {
+        isTitleFocused = true
+      }
+      .labelStyle(.iconOnly)
+      .font(.system(size: 18, weight: .medium))
+      .foregroundStyle(MTColor.accentInk)
+      .frame(width: 42, height: 42)
+      .background(MTColor.accent, in: RoundedRectangle(cornerRadius: MTRadius.medium))
+      .accessibilityLabel("New entry")
     }
   }
 
@@ -89,35 +131,30 @@ struct InboxView: View {
           .tracking(0.7)
           .foregroundStyle(MTColor.ink)
 
-        Text("4 entries")
+        Text(entryCountLabel)
           .font(MTTypography.caption)
           .foregroundStyle(MTColor.inkFaint)
 
         Spacer()
 
-        Button("Select") {}
-          .font(MTTypography.label)
-          .foregroundStyle(MTColor.accent)
+        if controller.isLoading, controller.hasLoaded {
+          ProgressView()
+            .controlSize(.small)
+        }
       }
 
-      LazyVStack(spacing: 0) {
-        ForEach(entries) { entry in
-          EntryCard(entry: entry)
-
-          if entry.id != entries.last?.id {
-            Divider()
-              .overlay(MTColor.border)
-          }
+      Group {
+        if !controller.hasLoaded, controller.isLoading {
+          loadingState
+        } else if let loadErrorMessage = controller.loadErrorMessage,
+          controller.entries.isEmpty
+        {
+          errorState(loadErrorMessage)
+        } else if controller.entries.isEmpty {
+          emptyState
+        } else {
+          entryList
         }
-
-        Divider()
-          .overlay(MTColor.border)
-
-        Button("Show 1 more entry") {}
-          .font(MTTypography.label)
-          .foregroundStyle(MTColor.accent)
-          .frame(maxWidth: .infinity)
-          .frame(height: 46)
       }
       .background(MTColor.surface)
       .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
@@ -125,14 +162,77 @@ struct InboxView: View {
         RoundedRectangle(cornerRadius: MTRadius.large)
           .stroke(MTColor.border, lineWidth: 1)
       }
+
+      if let loadErrorMessage = controller.loadErrorMessage,
+        !controller.entries.isEmpty
+      {
+        Label(loadErrorMessage, systemImage: "exclamationmark.circle.fill")
+          .font(MTTypography.caption)
+          .foregroundStyle(MTColor.warm)
+      }
     }
   }
-}
 
-#Preview {
-  InboxView(
-    user: AuthenticatedUser(email: "ryan@example.com", name: "Ryan"),
-    isAuthenticationBusy: false,
-    signOut: {}
-  )
+  private var entryList: some View {
+    LazyVStack(spacing: 0) {
+      ForEach(controller.entries) { entry in
+        EntryCard(entry: entry)
+
+        if entry.id != controller.entries.last?.id {
+          Divider()
+            .overlay(MTColor.border)
+        }
+      }
+    }
+  }
+
+  private var loadingState: some View {
+    HStack(spacing: MTSpacing.s3) {
+      ProgressView()
+      Text("Loading your Inbox...")
+        .font(MTTypography.body)
+        .foregroundStyle(MTColor.inkMuted)
+    }
+    .frame(maxWidth: .infinity, minHeight: 112)
+  }
+
+  private func errorState(_ message: String) -> some View {
+    VStack(spacing: MTSpacing.s3) {
+      Label("Inbox unavailable", systemImage: "exclamationmark.triangle")
+        .font(MTTypography.titleSmall)
+        .foregroundStyle(MTColor.ink)
+
+      Text(message)
+        .font(MTTypography.body)
+        .foregroundStyle(MTColor.inkMuted)
+        .multilineTextAlignment(.center)
+
+      Button("Try again") {
+        Task { await controller.load() }
+      }
+      .buttonStyle(.borderedProminent)
+    }
+    .frame(maxWidth: .infinity, minHeight: 180)
+    .padding(MTSpacing.s4)
+  }
+
+  private var emptyState: some View {
+    ContentUnavailableView(
+      "Your Inbox is ready",
+      systemImage: "tray",
+      description: Text("Save a thought above and it will appear here.")
+    )
+    .foregroundStyle(MTColor.inkMuted)
+    .frame(maxWidth: .infinity, minHeight: 190)
+  }
+
+  private var entryCountLabel: String {
+    let count = controller.entries.count
+    return "\(count) \(count == 1 ? "entry" : "entries")"
+  }
+
+  @MainActor
+  private func saveCapture() async -> Bool {
+    await controller.save(title: captureTitle, body: captureBody)
+  }
 }

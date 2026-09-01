@@ -121,8 +121,9 @@ Phase 1 repository work:
 - [x] Add Supabase Swift, Google Sign-In, the required callback URL scheme, and explicit setup validation.
 - [x] Verify the signed-out authentication experience in light and dark appearance on an iPhone simulator.
 - [x] Verify a warning-free simulator build and launch.
+- [x] Add native unit coverage for Inbox capture validation and Entry presentation rules.
 - [ ] Establish local persistence and a retryable synchronization queue.
-- [ ] Add unit tests and UI tests.
+- [ ] Add authenticated UI tests after a safe test-account strategy is defined.
 - [ ] Verify installation and launch separately on the physical iPhone.
 
 ## 6. AI provider

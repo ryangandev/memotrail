@@ -17,20 +17,30 @@ struct MemoTrailApp: App {
             signIn: authentication.signInWithGoogle
           )
         case .signedIn(let user):
-          RootTabView(
-            user: user,
-            isAuthenticationBusy: authentication.isBusy,
-            signOut: authentication.signOut
-          )
+          if let client = authentication.authenticatedClient {
+            RootTabView(
+              client: client,
+              user: user,
+              isAuthenticationBusy: authentication.isBusy,
+              signOut: authentication.signOut
+            )
+          } else {
+            AuthenticationView(
+              state: .setupRequired,
+              isBusy: false,
+              errorMessage: "MemoTrail could not open the authenticated workspace.",
+              signIn: authentication.signInWithGoogle
+            )
+          }
         }
       }
-        .tint(MTColor.accent)
-        .task {
-          await authentication.restoreSession()
-        }
-        .onOpenURL { URL in
-          GIDSignIn.sharedInstance.handle(URL)
-        }
+      .tint(MTColor.accent)
+      .task {
+        await authentication.restoreSession()
+      }
+      .onOpenURL { URL in
+        GIDSignIn.sharedInstance.handle(URL)
+      }
     }
   }
 }

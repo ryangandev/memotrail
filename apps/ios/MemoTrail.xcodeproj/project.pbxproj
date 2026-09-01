@@ -13,7 +13,7 @@
 		B00000000000000000000004 /* CaptureCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000004 /* CaptureCard.swift */; };
 		B00000000000000000000005 /* EntryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000005 /* EntryCard.swift */; };
 		B00000000000000000000006 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000006 /* DesignTokens.swift */; };
-		B00000000000000000000007 /* PreviewEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000007 /* PreviewEntry.swift */; };
+		B00000000000000000000007 /* InboxEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000007 /* InboxEntry.swift */; };
 		B00000000000000000000008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000008 /* Assets.xcassets */; };
 		B00000000000000000000009 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000012 /* AppConfiguration.swift */; };
 		B0000000000000000000000A /* AuthenticationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000013 /* AuthenticationController.swift */; };
@@ -21,7 +21,19 @@
 		B0000000000000000000000C /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = F20000000000000000000001 /* Supabase */; };
 		B0000000000000000000000D /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = F20000000000000000000002 /* GoogleSignIn */; };
 		B0000000000000000000000E /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = F20000000000000000000003 /* GoogleSignInSwift */; };
+		B0000000000000000000000F /* InboxController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000016 /* InboxController.swift */; };
+		B10000000000000000000001 /* InboxEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000001 /* InboxEntryTests.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A30000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A00000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A00000000000000000000002;
+			remoteInfo = MemoTrail;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		C00000000000000000000001 /* MemoTrailApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoTrailApp.swift; sourceTree = "<group>"; };
@@ -30,7 +42,7 @@
 		C00000000000000000000004 /* CaptureCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureCard.swift; sourceTree = "<group>"; };
 		C00000000000000000000005 /* EntryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryCard.swift; sourceTree = "<group>"; };
 		C00000000000000000000006 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
-		C00000000000000000000007 /* PreviewEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewEntry.swift; sourceTree = "<group>"; };
+		C00000000000000000000007 /* InboxEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxEntry.swift; sourceTree = "<group>"; };
 		C00000000000000000000008 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C00000000000000000000009 /* MemoTrail.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MemoTrail.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C00000000000000000000010 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
@@ -39,6 +51,9 @@
 		C00000000000000000000013 /* AuthenticationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationController.swift; sourceTree = "<group>"; };
 		C00000000000000000000014 /* AuthenticationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationView.swift; sourceTree = "<group>"; };
 		C00000000000000000000015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C00000000000000000000016 /* InboxController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxController.swift; sourceTree = "<group>"; };
+		C10000000000000000000001 /* InboxEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxEntryTests.swift; sourceTree = "<group>"; };
+		C10000000000000000000002 /* MemoTrailTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MemoTrailTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,6 +67,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A20000000000000000000005 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -59,6 +81,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000003 /* MemoTrail */,
+				A10000000000000000000014 /* MemoTrailTests */,
 				A10000000000000000000012 /* Configuration */,
 				A10000000000000000000002 /* Products */,
 			);
@@ -68,6 +91,7 @@
 			isa = PBXGroup;
 			children = (
 				C00000000000000000000009 /* MemoTrail.app */,
+				C10000000000000000000002 /* MemoTrailTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -106,6 +130,7 @@
 		A10000000000000000000006 /* Inbox */ = {
 			isa = PBXGroup;
 			children = (
+				C00000000000000000000016 /* InboxController.swift */,
 				C00000000000000000000003 /* InboxView.swift */,
 			);
 			path = Inbox;
@@ -149,7 +174,7 @@
 		A10000000000000000000010 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				C00000000000000000000007 /* PreviewEntry.swift */,
+				C00000000000000000000007 /* InboxEntry.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -170,6 +195,14 @@
 				C00000000000000000000011 /* Secrets.xcconfig.example */,
 			);
 			path = Configuration;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000014 /* MemoTrailTests */ = {
+			isa = PBXGroup;
+			children = (
+				C10000000000000000000001 /* InboxEntryTests.swift */,
+			);
+			path = MemoTrailTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -197,6 +230,26 @@
 			productReference = C00000000000000000000009 /* MemoTrail.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A00000000000000000000003 /* MemoTrailTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E00000000000000000000003 /* Build configuration list for PBXNativeTarget "MemoTrailTests" */;
+			buildPhases = (
+				A20000000000000000000004 /* Sources */,
+				A20000000000000000000005 /* Frameworks */,
+				A20000000000000000000006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A40000000000000000000001 /* PBXTargetDependency */,
+			);
+			name = MemoTrailTests;
+			packageProductDependencies = (
+			);
+			productName = MemoTrailTests;
+			productReference = C10000000000000000000002 /* MemoTrailTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -209,6 +262,10 @@
 				TargetAttributes = {
 					A00000000000000000000002 = {
 						CreatedOnToolsVersion = 26.6;
+					};
+					A00000000000000000000003 = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = A00000000000000000000002;
 					};
 				};
 			};
@@ -230,6 +287,7 @@
 			projectRoot = "";
 			targets = (
 				A00000000000000000000002 /* MemoTrail */,
+				A00000000000000000000003 /* MemoTrailTests */,
 			);
 		};
 /* End PBXProject section */
@@ -240,6 +298,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				B00000000000000000000008 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A20000000000000000000006 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -256,14 +321,31 @@
 				B00000000000000000000004 /* CaptureCard.swift in Sources */,
 				B00000000000000000000005 /* EntryCard.swift in Sources */,
 				B00000000000000000000006 /* DesignTokens.swift in Sources */,
-				B00000000000000000000007 /* PreviewEntry.swift in Sources */,
+				B00000000000000000000007 /* InboxEntry.swift in Sources */,
 				B00000000000000000000009 /* AppConfiguration.swift in Sources */,
 				B0000000000000000000000A /* AuthenticationController.swift in Sources */,
 				B0000000000000000000000B /* AuthenticationView.swift in Sources */,
+				B0000000000000000000000F /* InboxController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A20000000000000000000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10000000000000000000001 /* InboxEntryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A40000000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A00000000000000000000002 /* MemoTrail */;
+			targetProxy = A30000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		D00000000000000000000001 /* Debug */ = {
@@ -371,6 +453,40 @@
 			};
 			name = Release;
 		};
+		D00000000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rystudio.memotrail.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MemoTrail.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MemoTrail";
+			};
+			name = Debug;
+		};
+		D00000000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rystudio.memotrail.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MemoTrail.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MemoTrail";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -388,6 +504,15 @@
 			buildConfigurations = (
 				D00000000000000000000003 /* Debug */,
 				D00000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E00000000000000000000003 /* Build configuration list for PBXNativeTarget "MemoTrailTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D00000000000000000000005 /* Debug */,
+				D00000000000000000000006 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

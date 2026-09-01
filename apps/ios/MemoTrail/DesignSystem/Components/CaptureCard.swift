@@ -1,52 +1,109 @@
 import SwiftUI
 
 struct CaptureCard: View {
+  @Binding var title: String
+  @Binding var note: String
+
+  let isSaving: Bool
+  let message: InboxController.CaptureMessage?
+  let titleFocus: FocusState<Bool>.Binding
+  let save: @MainActor () async -> Bool
+
   var body: some View {
     VStack(spacing: 0) {
-      HStack(alignment: .top, spacing: MTSpacing.s3) {
-        Image(systemName: "sparkles")
-          .font(.system(size: 16, weight: .medium))
-          .foregroundStyle(MTColor.accent)
-          .frame(width: 34, height: 34)
-          .background(MTColor.accentSubtle, in: Circle())
+      VStack(alignment: .leading, spacing: MTSpacing.s3) {
+        HStack(alignment: .center, spacing: MTSpacing.s3) {
+          Image(systemName: "sparkles")
+            .font(.system(size: 16, weight: .medium))
+            .foregroundStyle(MTColor.accent)
+            .frame(width: 34, height: 34)
+            .background(MTColor.accentSubtle, in: Circle())
 
-        VStack(alignment: .leading, spacing: MTSpacing.s2) {
-          Text("What is worth keeping?")
-            .font(MTTypography.titleSmall)
-            .foregroundStyle(MTColor.ink)
+          VStack(alignment: .leading, spacing: MTSpacing.s1) {
+            Text("What is worth keeping?")
+              .font(MTTypography.titleSmall)
+              .foregroundStyle(MTColor.ink)
 
-          Text("A thought, a first, something learned, or whatever is on your mind.")
-            .font(MTTypography.body)
-            .foregroundStyle(MTColor.inkFaint)
-            .lineSpacing(3)
+            Text("A thought, a first, something learned, or whatever is on your mind.")
+              .font(MTTypography.body)
+              .foregroundStyle(MTColor.inkFaint)
+              .lineSpacing(3)
+          }
         }
 
-        Spacer(minLength: 0)
+        TextField("Optional title", text: $title)
+          .focused(titleFocus)
+          .font(MTTypography.bodyLarge)
+          .foregroundStyle(MTColor.ink)
+          .textInputAutocapitalization(.sentences)
+          .submitLabel(.next)
+          .accessibilityIdentifier("capture-title")
+
+        Divider()
+          .overlay(MTColor.border)
+
+        TextField(
+          "Write a note...",
+          text: $note,
+          axis: .vertical
+        )
+        .lineLimit(3...10)
+        .font(MTTypography.body)
+        .foregroundStyle(MTColor.ink)
+        .textInputAutocapitalization(.sentences)
+        .accessibilityIdentifier("capture-body")
+
+        if let message {
+          Label(
+            message.text,
+            systemImage: message.style == .success
+              ? "checkmark.circle.fill"
+              : "exclamationmark.circle.fill"
+          )
+          .font(MTTypography.caption)
+          .foregroundStyle(message.style == .success ? MTColor.success : MTColor.warm)
+          .accessibilityIdentifier("capture-message")
+        }
       }
-      .frame(maxWidth: .infinity, minHeight: 118, alignment: .topLeading)
+      .frame(maxWidth: .infinity, alignment: .topLeading)
       .padding(MTSpacing.s4)
 
       Divider()
         .overlay(MTColor.border)
 
       HStack(spacing: MTSpacing.s1) {
-        attachmentButton("Voice", systemImage: "mic")
-        attachmentButton("Photo", systemImage: "photo")
+        upcomingAttachment("Voice", systemImage: "mic")
+        upcomingAttachment("Photo", systemImage: "photo")
 
         Spacer()
 
-        Button {} label: {
+        Button {
+          Task {
+            if await save() {
+              title = ""
+              note = ""
+            }
+          }
+        } label: {
           HStack(spacing: MTSpacing.s2) {
-            Text("Save to Inbox")
-            Image(systemName: "chevron.right")
-              .font(.system(size: 11, weight: .semibold))
+            if isSaving {
+              ProgressView()
+                .controlSize(.small)
+                .tint(MTColor.accentInk)
+            } else {
+              Text("Save to Inbox")
+              Image(systemName: "chevron.right")
+                .font(.system(size: 11, weight: .semibold))
+            }
           }
           .font(MTTypography.label)
           .foregroundStyle(MTColor.accentInk)
           .padding(.horizontal, MTSpacing.s3)
-          .frame(height: 36)
+          .frame(minWidth: 130, minHeight: 36)
           .background(MTColor.accent, in: RoundedRectangle(cornerRadius: MTRadius.medium))
         }
+        .disabled(isSaving)
+        .accessibilityIdentifier("save-entry")
       }
       .padding(.horizontal, MTSpacing.s2)
       .padding(.vertical, MTSpacing.s2)
@@ -61,19 +118,15 @@ struct CaptureCard: View {
     .shadow(color: MTColor.scrim.opacity(0.06), radius: 16, y: 8)
   }
 
-  private func attachmentButton(_ title: String, systemImage: String) -> some View {
+  private func upcomingAttachment(_ title: String, systemImage: String) -> some View {
     Button(title, systemImage: systemImage) {}
       .labelStyle(.iconOnly)
       .font(.system(size: 17))
-      .foregroundStyle(MTColor.inkMuted)
+      .foregroundStyle(MTColor.inkFaint)
       .frame(width: 38, height: 36)
       .contentShape(Rectangle())
+      .disabled(true)
       .accessibilityLabel(title)
+      .accessibilityHint("Coming next")
   }
-}
-
-#Preview {
-  CaptureCard()
-    .padding()
-    .background(MTColor.canvas)
 }

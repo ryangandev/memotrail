@@ -1,6 +1,8 @@
+import Supabase
 import SwiftUI
 
 struct RootTabView: View {
+  let client: SupabaseClient
   let user: AuthenticatedUser
   let isAuthenticationBusy: Bool
   let signOut: @MainActor () async -> Void
@@ -8,13 +10,14 @@ struct RootTabView: View {
   var body: some View {
     TabView {
       InboxView(
+        client: client,
         user: user,
         isAuthenticationBusy: isAuthenticationBusy,
         signOut: signOut
       )
-        .tabItem {
-          Label("Inbox", systemImage: "tray")
-        }
+      .tabItem {
+        Label("Inbox", systemImage: "tray")
+      }
 
       PlaceholderView(
         title: "Timeline",
@@ -60,12 +63,4 @@ private struct PlaceholderView: View {
         .navigationTitle(title)
     }
   }
-}
-
-#Preview {
-  RootTabView(
-    user: AuthenticatedUser(email: "ryan@example.com", name: "Ryan"),
-    isAuthenticationBusy: false,
-    signOut: {}
-  )
 }

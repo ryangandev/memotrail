@@ -33,6 +33,11 @@ final class AuthenticationController {
   private(set) var isBusy = false
   private(set) var errorMessage: String?
 
+  var authenticatedClient: SupabaseClient? {
+    guard case .signedIn = state else { return nil }
+    return client
+  }
+
   private let client: SupabaseClient?
   private let configuration: AppConfiguration.Authentication?
   private var didRestoreSession = false
@@ -162,7 +167,8 @@ final class AuthenticationController {
 
   private static func user(from session: Session) -> AuthenticatedUser {
     let email = session.user.email ?? "Signed-in account"
-    let metadataName = session.user.userMetadata["full_name"]?.stringValue
+    let metadataName =
+      session.user.userMetadata["full_name"]?.stringValue
       ?? session.user.userMetadata["name"]?.stringValue
     let fallbackName = email.split(separator: "@").first.map(String.init) ?? "MemoTrail"
 
@@ -239,16 +245,17 @@ private struct GoogleCredentials: Sendable {
   let idToken: String
 }
 
-private extension String {
-  var nilIfEmpty: String? {
+extension String {
+  fileprivate var nilIfEmpty: String? {
     isEmpty ? nil : self
   }
 }
 
-private extension UIApplication {
+extension UIApplication {
   @MainActor
-  var activeViewController: UIViewController? {
-    let activeScene = connectedScenes
+  fileprivate var activeViewController: UIViewController? {
+    let activeScene =
+      connectedScenes
       .compactMap { $0 as? UIWindowScene }
       .first { $0.activationState == .foregroundActive }
     let rootViewController = activeScene?.windows
@@ -259,8 +266,8 @@ private extension UIApplication {
   }
 }
 
-private extension UIViewController {
-  var topmostViewController: UIViewController {
+extension UIViewController {
+  fileprivate var topmostViewController: UIViewController {
     if let presentedViewController {
       return presentedViewController.topmostViewController
     }
