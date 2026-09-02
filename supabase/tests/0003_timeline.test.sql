@@ -64,12 +64,11 @@ select is(
 
 select is(
   (
-    select count(*)::integer
+    select count(distinct track_id)::integer
     from public.timeline_workspace()
-    where entry_id is null
   ),
   9,
-  'Empty Timeline tracks are represented explicitly'
+  'Every visible Timeline track is represented, including empty tracks'
 );
 
 update public.timeline_tracks
@@ -213,7 +212,7 @@ select is(
   (
     select count(*)::integer
     from public.timeline_workspace()
-    where entry_id is not null
+    where title in ('Lived in Philadelphia', 'University')
   ),
   2,
   'The Timeline workspace returns overlapping Entries across tracks'

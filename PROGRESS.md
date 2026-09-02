@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Timeline
+> Current phase: First Times
 >
 > Last updated: 2026-09-02
 >
@@ -62,6 +62,8 @@
 - Native Timeline Entries can move to Trash through an explicit confirmation while retaining the shared database history and conflict behavior.
 - The shared iOS scheme now has 38 passing tests, including ten Timeline tests for workspace decoding, stable sorting, display dates, validation, and explicit RPC null encoding.
 - The native Timeline implementation passes a warning-free generic Simulator build and the full suite on an iPhone 17 Pro simulator.
+- The locally verified First Times contract supports lightweight direct creation, revision-safe editing, organization, private photo registration, and recoverable removal.
+- The local database now passes 125 pgTAP tests plus schema lint, including 43 focused First Times and private media tests.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -218,6 +220,18 @@
 - [x] Verify native decoding, sorting, formatting, validation, and RPC parameter encoding with ten focused tests.
 - [x] Pass the warning-free generic Simulator build and all 38 tests on an iPhone 17 Pro simulator.
 
+### First Times data contract
+
+- [x] Return the authenticated owner's non-Trash First Times with Collections, tags, and active private attachment metadata.
+- [x] Create an organized First Time with only a title required and preserve optional descriptions, exact or imprecise dates, labels, and time zones.
+- [x] Revision-safely edit First Time content and atomically replace its Collections and tags.
+- [x] Register only supported images that already exist under the owner's private Entry Storage path.
+- [x] Make attachment registration idempotent so an ambiguous client retry cannot duplicate metadata.
+- [x] Recoverably remove a photo without deleting its original private Storage object.
+- [x] Move a First Time to Trash while preserving Entry history and its private media.
+- [x] Verify owner isolation, unauthenticated denial, content and date rules, optimistic conflicts, media constraints, and Trash behavior with local pgTAP coverage.
+- [ ] Apply and verify the First Times contract on hosted Supabase.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -251,7 +265,8 @@
 - `feat: add Timeline data contract` implemented and locally verified the initial owner-scoped Timeline data contract.
 - `feat: deploy Timeline data contract` deployed and verified the Timeline data contract on hosted Supabase.
 - `feat: add Web Timeline experience` implemented and locally verified the authenticated Web Timeline experience.
-- Current change: implemented and simulator-verified the matching native iOS Timeline experience.
+- `feat: add iOS Timeline experience` implemented and simulator-verified the matching native iOS Timeline experience.
+- Current change: implemented and locally verified the shared First Times and private photo-attachment data contract.
 
 ## Next sequence
 

@@ -95,7 +95,11 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
 
 select is(
-  (select count(*)::integer from public.entries),
+  (
+    select count(*)::integer
+    from public.entries
+    where id = '40000000-0000-0000-0000-000000000001'
+  ),
   1,
   'A user can read their own seeded Entry'
 );
