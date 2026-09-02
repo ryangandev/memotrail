@@ -27,7 +27,12 @@ type NavigationItem = {
 const primaryNavigation: NavigationItem[] = [
   { destination: "search", href: "/search", icon: "search", label: "Search" },
   { destination: "inbox", href: "/", icon: "inbox", label: "Inbox" },
-  { destination: "timeline", icon: "timeline", label: "Timeline" },
+  {
+    destination: "timeline",
+    href: "/timeline",
+    icon: "timeline",
+    label: "Timeline",
+  },
   { destination: "first-times", icon: "star", label: "First Times" },
   { destination: "collections", icon: "archive", label: "Collections" },
 ];

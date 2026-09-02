@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Global keyword search
+> Current phase: Timeline
 >
 > Last updated: 2026-09-02
 >
@@ -53,6 +53,10 @@
 - A locally verified Timeline contract now returns empty and populated tracks, creates or revision-safely edits Stage and Event Entries, preserves overlapping and open-ended periods, and moves Timeline Entries to Trash without losing history.
 - The local database now passes 82 pgTAP tests plus schema lint, including 33 focused Timeline tests for date rules, track movement, optimistic conflicts, hidden tracks, Trash, and owner isolation.
 - Hosted verification confirms the Timeline migration, aligned five-migration ledger, warning-free schema, empty function search paths, authenticated-only execution grants, and no seed or role deployment.
+- Web now exposes Timeline as a first-class authenticated destination with all visible tracks, overlapping Stage ranges, point Events, human date labels, and responsive desktop and mobile presentations.
+- Web Timeline supports track-specific creation, revision-safe editing, track and kind changes, open-ended or bounded stages, preserved occurrence time zones, and recoverable moves to Trash.
+- The Web suite now has 57 passing tests, including Timeline input normalization, cross-time-zone calendar conversion, padded date bounds, open stages, and overlap lane assignment.
+- Synthetic localhost browser verification covered empty tracks, a multi-year Stage, a First Time Event, a revision-safe edit, desktop layout, accessible controls, and error-free server requests.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -185,6 +189,18 @@
 - [x] Verify the Timeline contract with a fresh local database, 33 focused pgTAP tests, and schema lint.
 - [x] Apply and verify the Timeline contract on hosted Supabase.
 
+### Web Timeline
+
+- [x] Require the same authenticated server session as Inbox and Search before loading Timeline data.
+- [x] Show every visible track, including empty tracks, without flattening overlapping life chapters into one sequence.
+- [x] Render bounded and open-ended Stages as ranges and Events as points on a horizontally explorable desktop Timeline.
+- [x] Provide a compact track-first mobile presentation with the same Entry content and editing access.
+- [x] Create a Stage or Event directly in a selected track with a title, notes, date precision, optional human label, and preserved occurrence time zone.
+- [x] Revision-safely edit content, occurrence, kind, and track through the shared atomic database contract.
+- [x] Move a Timeline Entry to Trash while preserving its history and future restoration path.
+- [x] Validate Timeline input and layout behavior with 15 focused Web tests.
+- [x] Verify real local creation and editing through the browser without runtime request errors.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -216,12 +232,12 @@
 - `feat: add Web keyword search` implemented the authenticated Web keyword search experience and shared application shell.
 - `feat: add iOS keyword search` implemented the matching native iOS keyword search experience.
 - `feat: add Timeline data contract` implemented and locally verified the initial owner-scoped Timeline data contract.
-- Current change: deployed and verified the Timeline data contract on hosted Supabase.
+- `feat: deploy Timeline data contract` deployed and verified the Timeline data contract on hosted Supabase.
+- Current change: implemented and locally verified the authenticated Web Timeline experience.
 
 ## Next sequence
 
-1. Add the basic Web Timeline experience.
-2. Add the matching native iOS Timeline experience.
+1. Add the matching native iOS Timeline experience.
 
 ## Deferred
 
