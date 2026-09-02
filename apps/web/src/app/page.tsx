@@ -1,6 +1,7 @@
 import { Icon, type IconName } from "@/components/icon";
 import { AuthGate } from "@/components/auth-gate";
 import { CaptureComposer } from "@/components/capture-composer";
+import { SyncStatus } from "@/components/sync-status";
 import { signOut } from "@/app/auth/actions";
 import {
   getInboxWorkspace,
@@ -77,9 +78,7 @@ function Workspace({
           </button>
 
           <div className={styles.topActions}>
-            <span className={styles.syncStatus}>
-              <span /> Saved
-            </span>
+            <SyncStatus ownerId={viewer.id} />
             <form action={signOut}>
               <button
                 className={styles.avatarButton}

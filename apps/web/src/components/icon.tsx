@@ -11,6 +11,7 @@ export type IconName =
   | "more"
   | "photo"
   | "plus"
+  | "refresh"
   | "search"
   | "sparkle"
   | "star"
@@ -102,6 +103,13 @@ const paths: Record<IconName, React.ReactNode> = {
     </>
   ),
   plus: <path d="M12 5v14M5 12h14" />,
+  refresh: (
+    <>
+      <path d="M19 8a7.5 7.5 0 0 0-12.6-2L4 8" />
+      <path d="M4 4v4h4M5 16a7.5 7.5 0 0 0 12.6 2L20 16" />
+      <path d="M20 20v-4h-4" />
+    </>
+  ),
   search: (
     <>
       <circle cx="10.5" cy="10.5" r="6.5" />

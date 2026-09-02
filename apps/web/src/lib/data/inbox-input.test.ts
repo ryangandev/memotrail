@@ -3,6 +3,7 @@ import {
   entryBodyLimit,
   entryTitleLimit,
   parseInboxEntryInput,
+  parseInboxEntryValues,
 } from "./inbox-input";
 
 describe("parseInboxEntryInput", () => {
@@ -53,5 +54,20 @@ describe("parseInboxEntryInput", () => {
     formData.set("body", "b".repeat(entryBodyLimit + 1));
 
     expect(parseInboxEntryInput(formData).success).toBe(false);
+  });
+
+  it("shares validation with local queued capture", () => {
+    expect(
+      parseInboxEntryValues({
+        body: "  Saved before the network request.  ",
+        title: " ",
+      }),
+    ).toEqual({
+      data: {
+        body: "Saved before the network request.",
+        title: null,
+      },
+      success: true,
+    });
   });
 });

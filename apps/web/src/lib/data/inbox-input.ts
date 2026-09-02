@@ -13,8 +13,18 @@ export type InboxEntryInputResult =
 export function parseInboxEntryInput(
   formData: FormData,
 ): InboxEntryInputResult {
-  const title = formValue(formData.get("title"));
-  const body = formValue(formData.get("body"));
+  return parseInboxEntryValues({
+    body: formValue(formData.get("body")),
+    title: formValue(formData.get("title")),
+  });
+}
+
+export function parseInboxEntryValues(values: {
+  body: string;
+  title: string;
+}): InboxEntryInputResult {
+  const title = values.title.trim();
+  const body = values.body.trim();
 
   if (!title && !body) {
     return {

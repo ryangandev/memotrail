@@ -1,55 +1,54 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import {
-  parseInboxEntryInput,
-  type InboxEntryInputResult,
-} from "@/lib/data/inbox-input";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
+import {
+  isQueuedInboxEntry,
+  type QueuedInboxEntry,
+} from "@/lib/data/inbox-queue";
 
-export type CaptureEntryState = {
+export type SyncInboxEntryResult = {
   message: string;
-  submissionId: string | null;
-  type: "idle" | "error" | "success";
+  status: "retry" | "synced";
 };
 
-export async function createInboxEntry(
-  _previousState: CaptureEntryState,
-  formData: FormData,
-): Promise<CaptureEntryState> {
-  const input = parseInboxEntryInput(formData);
-
-  if (!input.success) {
-    return errorState(input);
+export async function syncInboxEntry(
+  input: QueuedInboxEntry,
+): Promise<SyncInboxEntryResult> {
+  if (!isQueuedInboxEntry(input)) {
+    return {
+      message: "This queued Entry is invalid and needs your attention.",
+      status: "retry",
+    };
   }
 
   const context = await getAuthenticatedContext();
 
   if (!context) {
     return {
-      message: "Your session expired. Sign in again before saving.",
-      submissionId: crypto.randomUUID(),
-      type: "error",
+      message: "Your session expired. Sign in again to sync this Entry.",
+      status: "retry",
     };
   }
 
-  const now = new Date().toISOString();
   const { error } = await context.client.from("entries").insert({
-    body: input.data.body,
+    body: input.body,
+    client_id: `web:${input.id}`,
     date_precision: "exact",
     entry_type: "standard",
+    id: input.id,
     inbox_status: "unreviewed",
-    occurred_start: now,
-    occurred_timezone: "UTC",
+    occurred_start: input.occurredAt,
+    occurred_timezone: input.occurredTimezone,
     owner_id: context.userId,
-    title: input.data.title,
+    title: input.title,
   });
 
-  if (error) {
+  if (error && !(await entryAlreadyExists(input.id, context))) {
     return {
-      message: "MemoTrail could not save this Entry. Your text is still here.",
-      submissionId: crypto.randomUUID(),
-      type: "error",
+      message:
+        "Saved on this device. MemoTrail will retry when you are online.",
+      status: "retry",
     };
   }
 
@@ -57,15 +56,20 @@ export async function createInboxEntry(
 
   return {
     message: "Saved to Inbox.",
-    submissionId: crypto.randomUUID(),
-    type: "success",
+    status: "synced",
   };
 }
 
-function errorState(input: Extract<InboxEntryInputResult, { success: false }>) {
-  return {
-    message: input.message,
-    submissionId: crypto.randomUUID(),
-    type: "error" as const,
-  };
+async function entryAlreadyExists(
+  entryId: string,
+  context: NonNullable<Awaited<ReturnType<typeof getAuthenticatedContext>>>,
+) {
+  const { data, error } = await context.client
+    .from("entries")
+    .select("id")
+    .eq("id", entryId)
+    .eq("owner_id", context.userId)
+    .maybeSingle<{ id: string }>();
+
+  return !error && data?.id === entryId;
 }

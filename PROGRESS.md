@@ -27,7 +27,8 @@
 - iOS now reads and saves the same authenticated unreviewed Entry shape through Supabase, with native loading, empty, retry, refresh, validation, and save feedback states.
 - The user confirmed localhost, production Web, and the iOS simulator can all sign in, create Entries, and see the same Entries across clients.
 - Web and iOS now continuously preserve per-user local Inbox drafts, restore them after refresh or relaunch, and clear them only after a successful Entry save.
-- Web now has 23 passing tests, and the shared iOS scheme has nine passing native tests for capture, presentation, and draft persistence rules.
+- Web now accepts a capture into a per-user local synchronization queue before making a network request, displays pending Entries, retries on reconnect or demand, and uses stable Entry IDs for idempotent server confirmation.
+- Web now has 29 passing tests, and the shared iOS scheme has nine passing native tests for capture, presentation, and draft persistence rules.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -74,6 +75,15 @@
 - [x] A successful Entry save clears the local draft.
 - [x] Malformed, obsolete, and oversized stored draft payloads fail safely.
 
+### Offline capture and synchronization queue
+
+- [x] Web accepts a valid Entry into durable per-user local storage before attempting synchronization.
+- [x] Web visibly lists pending Entries and provides a manual retry action.
+- [x] Web automatically retries its queue when a connection returns or the authenticated workspace reloads online.
+- [x] Web gives each queued Entry a stable UUID and safely confirms a retry after an ambiguous successful insert.
+- [x] Web preserves the original capture time and device time zone when synchronization happens later.
+- [ ] iOS provides the same durable, visible, retryable synchronization queue behavior.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -91,11 +101,12 @@
 - `test: cover Web authentication redirects` added executable redirect-safety tests.
 - `feat: add synchronized Web Inbox entries` implemented authenticated Web capture and listing.
 - `feat: add synchronized iOS Inbox entries` implemented authenticated iOS capture, listing, and native rule coverage.
-- Current change: implemented per-user recoverable Inbox drafts on Web and iOS.
+- `feat: preserve recoverable Inbox drafts` implemented per-user recoverable Inbox drafts on Web and iOS.
+- Current change: implemented the Web offline capture and retryable synchronization queue.
 
 ## Next sequence
 
-1. Add offline capture with a visible, retryable synchronization queue.
+1. Add the matching offline capture and synchronization queue to iOS.
 2. Add Entry review and explicit `Done` organization behavior.
 
 ## Deferred

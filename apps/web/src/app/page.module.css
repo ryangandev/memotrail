@@ -269,6 +269,14 @@
   background: var(--mt-color-success);
 }
 
+.syncStatus.syncPending {
+  color: var(--mt-color-warm);
+}
+
+.syncStatus.syncPending > span {
+  background: var(--mt-color-warm);
+}
+
 .content {
   width: min(100% - 64px, 820px);
   margin: 0 auto;
@@ -476,6 +484,34 @@
   margin-top: var(--mt-space-10);
 }
 
+.pendingSection {
+  margin-top: var(--mt-space-8);
+}
+
+.retryButton {
+  display: flex;
+  height: 32px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--mt-space-3);
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-small);
+  color: var(--mt-color-ink-muted);
+  background: var(--mt-color-surface);
+  font-size: var(--mt-font-size-caption);
+  cursor: pointer;
+}
+
+.retryButton:hover {
+  color: var(--mt-color-ink);
+  border-color: var(--mt-color-border-strong);
+}
+
+.retryButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .sectionHeader {
   display: flex;
   align-items: center;
@@ -511,6 +547,49 @@
 .entryCard {
   padding: var(--mt-space-5) var(--mt-space-6);
   border-bottom: 1px solid var(--mt-color-border);
+}
+
+.pendingEntryCard {
+  padding: var(--mt-space-5) var(--mt-space-6);
+  border-bottom: 1px solid var(--mt-color-border);
+  background: color-mix(
+    in srgb,
+    var(--mt-color-accent-subtle) 24%,
+    var(--mt-color-surface)
+  );
+}
+
+.pendingEntryCard:last-child {
+  border-bottom: 0;
+}
+
+.pendingEntryCard h3 {
+  margin-top: var(--mt-space-2);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-body-large);
+  font-weight: var(--mt-font-weight-medium);
+  line-height: 1.35;
+}
+
+.pendingEntryCard > p {
+  display: -webkit-box;
+  max-width: 680px;
+  margin-top: 6px;
+  overflow: hidden;
+  color: var(--mt-color-ink-muted);
+  font-size: 14px;
+  line-height: var(--mt-line-height-body);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.pendingBadge {
+  padding: 3px 8px;
+  border-radius: var(--mt-radius-pill);
+  color: var(--mt-color-accent);
+  background: var(--mt-color-accent-subtle);
+  font-size: 10px;
+  line-height: 1.4;
 }
 
 .entryCard:last-child {
@@ -764,7 +843,12 @@
     margin-top: var(--mt-space-8);
   }
 
-  .entryCard {
+  .pendingSection {
+    margin-top: var(--mt-space-6);
+  }
+
+  .entryCard,
+  .pendingEntryCard {
     padding: var(--mt-space-4);
   }
 
