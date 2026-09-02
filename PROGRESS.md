@@ -42,6 +42,10 @@
 - A locally verified search contract now finds non-Trash Entries across titles, bodies, Collections, tags, occurrence dates, Types, metadata, and specialized Entry fields while returning match reasons and filter support.
 - Keyword date matching and filtering use each Entry's preserved occurrence timezone, with a safe UTC fallback for invalid legacy values.
 - Hosted verification confirms the keyword search migration, optimized indexes, empty function search paths, authenticated-only execution grants, and a warning-free public schema.
+- Web now exposes authenticated global keyword search at `/search` with durable URL parameters, Type, Collection, tag, and date filters, match explanations, and 25-result pagination.
+- The Web Inbox and Search routes now share one responsive application shell, with working Search and Inbox navigation plus a global `Command-K` or `Control-K` search shortcut.
+- The Web suite now has 42 passing tests, including seven search-request tests for normalization, validation, pagination, and URL preservation.
+- Synthetic local browser verification covered a real database result, empty and result states, desktop and iPhone-sized layouts, shortcut focus, accessible mobile naming, and a warning-free browser console.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -140,6 +144,17 @@
 - [x] Verify content matches, filters, local dates, structured fields, Trash exclusion, owner isolation, and unauthenticated denial with 21 pgTAP tests.
 - [x] Apply and verify the keyword search migration on hosted Supabase.
 
+### Web keyword search
+
+- [x] Require the same authenticated server session as the Inbox before loading search data.
+- [x] Keep the query and every filter in the URL so searches survive refresh and pagination.
+- [x] Offer Type, Collection, tag, start-date, and end-date filters through one compact search surface.
+- [x] Display Entry Type, Inbox state, local occurrence date, Collections, tags, and database-provided match reasons for every result.
+- [x] Expose idle, no-result, validation-error, unavailable-filter, and search-error states without confusing them.
+- [x] Paginate large result sets while preserving the complete search request.
+- [x] Open Search from the shared sidebar, mobile top bar, or `Command-K` and `Control-K`, with the search field focused.
+- [x] Verify search parsing with seven unit tests and inspect real local results at desktop and iPhone viewport sizes without console warnings.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -167,13 +182,14 @@
 - `feat: add iOS Entry organization` implemented the matching manual Collection and tag review controls on iOS.
 - `feat: deploy atomic Entry organization` deployed and verified the atomic Entry organization contract on hosted Supabase.
 - `feat: add keyword Entry search` added and locally verified the shared database-backed keyword Entry search contract.
-- Current change: deployed and verified the keyword Entry search contract and supporting indexes on hosted Supabase.
+- `feat: deploy keyword Entry search` deployed and verified the keyword Entry search contract and supporting indexes on hosted Supabase.
+- Current change: implemented the authenticated Web keyword search experience and shared application shell.
 
 ## Next sequence
 
-1. Add the Web search experience.
-2. Add the matching iOS search experience.
-3. Verify cross-platform search behavior against the same real Entries.
+1. Add the matching iOS search experience.
+2. Verify cross-platform search behavior against the same real Entries.
+3. Begin the basic Timeline slice after keyword search acceptance.
 
 ## Deferred
 

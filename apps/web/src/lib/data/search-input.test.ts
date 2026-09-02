@@ -1,0 +1,88 @@
+import { describe, expect, it } from "vitest";
+import {
+  SEARCH_PAGE_SIZE,
+  parseSearchRequest,
+  searchPageHref,
+} from "./search-input";
+
+describe("parseSearchRequest", () => {
+  it("trims a query and derives the first page", () => {
+    const parsed = parseSearchRequest({ q: "  skiing memories  " });
+
+    expect(parsed).toMatchObject({
+      error: null,
+      request: {
+        hasCriteria: true,
+        offset: 0,
+        page: 1,
+        query: "skiing memories",
+      },
+    });
+  });
+
+  it("preserves filters and de-duplicates them case-insensitively", () => {
+    const parsed = parseSearchRequest({
+      collection: [" Travel ", "travel"],
+      from: "2026-01-01",
+      tag: ["Snow", "snow"],
+      to: "2026-12-31",
+      type: ["first_time", "FIRST_TIME"],
+    });
+
+    expect(parsed.error).toBeNull();
+    expect(parsed.request).toMatchObject({
+      collectionNames: ["Travel"],
+      dateFrom: "2026-01-01",
+      dateTo: "2026-12-31",
+      entryTypes: ["first_time"],
+      hasCriteria: true,
+      tagNames: ["Snow"],
+    });
+  });
+
+  it("uses a bounded page to calculate the database offset", () => {
+    const parsed = parseSearchRequest({ page: "3", q: "learning" });
+
+    expect(parsed.request.page).toBe(3);
+    expect(parsed.request.offset).toBe(SEARCH_PAGE_SIZE * 2);
+    expect(parseSearchRequest({ page: "402" }).request.page).toBe(1);
+  });
+
+  it("rejects an overlong query", () => {
+    const parsed = parseSearchRequest({ q: "x".repeat(201) });
+
+    expect(parsed.error).toBe("Search phrases can be up to 200 characters.");
+  });
+
+  it("rejects impossible dates and reversed ranges", () => {
+    expect(parseSearchRequest({ from: "2026-02-30" }).error).toBe(
+      "Choose a valid start date.",
+    );
+    expect(
+      parseSearchRequest({ from: "2026-02-02", to: "2026-02-01" }).error,
+    ).toBe("The start date must be on or before the end date.");
+  });
+
+  it("keeps an empty request idle", () => {
+    const parsed = parseSearchRequest({});
+
+    expect(parsed.error).toBeNull();
+    expect(parsed.request.hasCriteria).toBe(false);
+  });
+});
+
+describe("searchPageHref", () => {
+  it("preserves the full search while changing pages", () => {
+    const request = parseSearchRequest({
+      collection: "Travel",
+      from: "2026-01-01",
+      q: "first snow",
+      tag: "skiing",
+      type: "first_time",
+    }).request;
+
+    expect(searchPageHref(request, 2)).toBe(
+      "/search?q=first+snow&type=first_time&collection=Travel&tag=skiing&from=2026-01-01&page=2",
+    );
+  });
+});
