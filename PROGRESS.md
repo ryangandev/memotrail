@@ -1,8 +1,8 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Inbox review and organization
+> Current phase: Global keyword search
 >
-> Last updated: 2026-09-01
+> Last updated: 2026-09-02
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
@@ -14,8 +14,8 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- The linked hosted Supabase project contains the two initial reviewed repository migrations and no development seed users.
-- A third migration now provides atomic Entry review, Collection, tag, and `Done` updates; it passes locally and awaits an explicitly approved hosted rollout.
+- The linked hosted Supabase project contains all three reviewed repository migrations and no development seed users.
+- The hosted atomic Entry review contract now supports content, Type, occurrence, Collection, tag, and `Done` updates in one transaction.
 - Hosted verification found 21 Row Level Security-enabled application tables, 22 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
 - Web now uses cookie-based Supabase SSR sessions, a Next.js 16 Proxy refresh path, Google OAuth, a safe callback, and explicit sign-out and setup states.
@@ -38,6 +38,7 @@
 - Web now has 35 passing tests, including organization-name normalization, case-insensitive de-duplication, and limits.
 - iOS now loads the same Collection and tag relationships, offers removable chips and existing-name choices, and uses the shared atomic organization RPC for Save and Done.
 - The shared iOS scheme now has 19 passing native tests, including organization normalization and explicit null encoding for body-only RPC reviews.
+- Hosted verification confirms the atomic review migration is recorded remotely, schema lint reports no errors, the function uses an empty `search_path`, PUBLIC execution is revoked, and only authenticated users receive execution access.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -122,7 +123,8 @@
 - [x] A stale revision or inaccessible Entry returns no result before any relationship changes occur.
 - [x] Local pgTAP coverage verifies atomic review, immutable history, `Done`, duplicate names, and cross-owner denial.
 - [x] Local schema lint reports no errors.
-- [ ] Apply the atomic review migration to hosted Supabase after explicit rollout approval.
+- [x] Apply the atomic review migration to hosted Supabase after explicit rollout approval.
+- [x] Verify the hosted migration ledger, schema lint, function search path, and execution grants after rollout.
 
 ## Feature history
 
@@ -148,13 +150,14 @@
 - `feat: add iOS Inbox review` implemented the matching iOS Entry review and explicit `Done` organization.
 - `feat: add atomic Entry organization` added and locally verified the atomic database contract for manual Entry organization.
 - `feat: add Web Entry organization` implemented manual Collections and tags in Web Entry review.
-- Current change: implemented the matching manual Collection and tag review controls on iOS.
+- `feat: add iOS Entry organization` implemented the matching manual Collection and tag review controls on iOS.
+- Current change: deployed and verified the atomic Entry organization contract on hosted Supabase.
 
 ## Next sequence
 
-1. Ask for hosted migration rollout approval before enabling the new organization contract against real data.
-2. Apply and verify the migration without seed data after approval.
-3. Add keyword search across the user's Entries.
+1. Add database-backed keyword search across the user's Entries.
+2. Add the Web search experience.
+3. Add the matching iOS search experience.
 
 ## Deferred
 

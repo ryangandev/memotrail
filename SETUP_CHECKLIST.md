@@ -1,8 +1,8 @@
 # MemoTrail Setup Checklist
 
-> Status: Synchronized Inbox accepted; reliable capture implementation underway
+> Status: Atomic Inbox organization deployed; global search implementation underway
 >
-> Last updated: 2026-09-01
+> Last updated: 2026-09-02
 >
 > Initial authentication: Google Sign-In only
 >
@@ -61,7 +61,8 @@ Hosted project rollout:
 - [x] Run hosted schema and security checks before authentication testing.
 - [x] Revoke client-role access to the hosted platform-created `SECURITY DEFINER` helper reported by the security advisor.
 - [x] Add and locally verify the atomic Entry organization migration with 28 pgTAP tests and schema lint.
-- [ ] Apply the atomic Entry organization migration to hosted Supabase after explicit rollout approval.
+- [x] Apply the atomic Entry organization migration to hosted Supabase after explicit rollout approval.
+- [x] Verify the hosted migration ledger, schema lint, function search path, and authenticated-only execution grant.
 
 Useful references:
 
