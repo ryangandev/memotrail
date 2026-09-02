@@ -12,6 +12,7 @@ struct InboxView: View {
   @State private var captureBody: String
   @State private var hasLocalDraft: Bool
   @State private var isShowingAccount = false
+  @State private var selectedEntry: InboxEntry?
   @FocusState private var isTitleFocused: Bool
   @Environment(\.scenePhase) private var scenePhase
 
@@ -39,6 +40,7 @@ struct InboxView: View {
     _captureTitle = State(initialValue: draft?.title ?? "")
     _captureBody = State(initialValue: draft?.body ?? "")
     _hasLocalDraft = State(initialValue: draft != nil)
+    _selectedEntry = State(initialValue: nil)
   }
 
   var body: some View {
@@ -108,6 +110,19 @@ struct InboxView: View {
           isBusy: isAuthenticationBusy,
           signOut: signOut
         )
+      }
+      .sheet(item: $selectedEntry) { entry in
+        InboxReviewSheet(entry: entry) { title, body, entryType, occurredAt, timezone, intent in
+          await controller.review(
+            entry: entry,
+            title: title,
+            body: body,
+            entryType: entryType,
+            occurredAt: occurredAt,
+            occurredTimezone: timezone,
+            intent: intent
+          )
+        }
       }
       .task {
         if !controller.hasLoaded {
@@ -258,7 +273,9 @@ struct InboxView: View {
   private var entryList: some View {
     LazyVStack(spacing: 0) {
       ForEach(controller.entries) { entry in
-        EntryCard(entry: entry)
+        EntryCard(entry: entry) {
+          selectedEntry = entry
+        }
 
         if entry.id != controller.entries.last?.id {
           Divider()
@@ -348,5 +365,159 @@ struct InboxView: View {
       body: captureBody,
       ownerID: user.id
     )
+  }
+}
+
+private struct InboxReviewSheet: View {
+  let entry: InboxEntry
+  let review:
+    @MainActor (
+      String,
+      String,
+      InboxEntryType,
+      Date,
+      String,
+      InboxController.ReviewIntent
+    ) async -> InboxController.ReviewResult
+
+  @Environment(\.dismiss) private var dismiss
+  @State private var title: String
+  @State private var note: String
+  @State private var entryType: InboxEntryType
+  @State private var occurredAt: Date
+  @State private var occurredTimezone: String
+  @State private var isWorking = false
+  @State private var errorMessage: String?
+
+  init(
+    entry: InboxEntry,
+    review:
+      @escaping @MainActor (
+        String,
+        String,
+        InboxEntryType,
+        Date,
+        String,
+        InboxController.ReviewIntent
+      ) async -> InboxController.ReviewResult
+  ) {
+    self.entry = entry
+    self.review = review
+    _title = State(initialValue: entry.title ?? "")
+    _note = State(initialValue: entry.body)
+    _entryType = State(initialValue: entry.entryType)
+    _occurredAt = State(initialValue: entry.occurredStart ?? entry.createdAt)
+    _occurredTimezone = State(
+      initialValue: entry.occurredTimezone ?? TimeZone.current.identifier
+    )
+  }
+
+  var body: some View {
+    NavigationStack {
+      Form {
+        Section("Content") {
+          TextField("Title", text: $title, axis: .vertical)
+            .textInputAutocapitalization(.sentences)
+            .accessibilityIdentifier("review-title")
+
+          TextEditor(text: $note)
+            .frame(minHeight: 180)
+            .accessibilityLabel("Note")
+            .accessibilityIdentifier("review-body")
+        }
+
+        Section {
+          Picker("Type", selection: $entryType) {
+            ForEach(InboxEntryType.allCases, id: \.self) { type in
+              Text(type.displayName).tag(type)
+            }
+          }
+
+          DatePicker(
+            "Occurred",
+            selection: $occurredAt,
+            displayedComponents: [.date, .hourAndMinute]
+          )
+        } header: {
+          Text("Organization")
+        } footer: {
+          Text("Collections and tags will be editable in the next organization step.")
+        }
+
+        if let errorMessage {
+          Section {
+            Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
+              .font(MTTypography.caption)
+              .foregroundStyle(MTColor.warm)
+              .accessibilityIdentifier("review-error")
+          }
+        }
+
+        Section {
+          Button("Save changes") {
+            Task { await submit(.save) }
+          }
+          .frame(maxWidth: .infinity)
+          .disabled(isWorking)
+          .accessibilityIdentifier("save-entry-review")
+        }
+      }
+      .navigationTitle("Organize Entry")
+      .navigationBarTitleDisplayMode(.inline)
+      .disabled(isWorking)
+      .onChange(of: occurredAt) {
+        occurredTimezone = TimeZone.current.identifier
+      }
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          Button("Cancel") {
+            dismiss()
+          }
+          .disabled(isWorking)
+        }
+
+        ToolbarItem(placement: .confirmationAction) {
+          Button("Done") {
+            Task { await submit(.done) }
+          }
+          .fontWeight(.semibold)
+          .disabled(isWorking)
+          .accessibilityIdentifier("organize-entry")
+        }
+      }
+      .overlay {
+        if isWorking {
+          ProgressView()
+            .padding(MTSpacing.s4)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: MTRadius.medium))
+        }
+      }
+    }
+    .presentationDetents([.large])
+    .interactiveDismissDisabled(isWorking)
+  }
+
+  @MainActor
+  private func submit(_ intent: InboxController.ReviewIntent) async {
+    isWorking = true
+    errorMessage = nil
+
+    let result = await review(
+      title,
+      note,
+      entryType,
+      occurredAt,
+      occurredTimezone,
+      intent
+    )
+
+    isWorking = false
+
+    switch result.status {
+    case .done, .saved:
+      dismiss()
+    case .conflict, .error:
+      errorMessage = result.message
+    }
   }
 }

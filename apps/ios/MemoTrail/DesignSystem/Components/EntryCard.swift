@@ -2,6 +2,7 @@ import SwiftUI
 
 struct EntryCard: View {
   let entry: InboxEntry
+  let review: () -> Void
 
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
@@ -20,13 +21,36 @@ struct EntryCard: View {
           .lineSpacing(2)
       }
 
-      Text("Unreviewed")
-        .font(.system(size: 10, weight: .medium))
-        .foregroundStyle(MTColor.inkMuted)
-        .padding(.horizontal, MTSpacing.s2)
-        .padding(.vertical, 4)
-        .background(MTColor.surfaceSubtle, in: Capsule())
-        .padding(.top, MTSpacing.s1)
+      HStack {
+        HStack(spacing: 6) {
+          Text("Unreviewed")
+            .font(.system(size: 10, weight: .medium))
+            .foregroundStyle(MTColor.inkMuted)
+            .padding(.horizontal, MTSpacing.s2)
+            .padding(.vertical, 4)
+            .background(MTColor.surfaceSubtle, in: Capsule())
+
+          if entry.entryType == .firstTime {
+            Text("First Time")
+              .font(.system(size: 10, weight: .medium))
+              .foregroundStyle(MTColor.inkMuted)
+              .padding(.horizontal, MTSpacing.s2)
+              .padding(.vertical, 4)
+              .background(MTColor.surfaceSubtle, in: Capsule())
+          }
+        }
+
+        Spacer()
+
+        Button("Review", systemImage: "chevron.right") {
+          review()
+        }
+        .labelStyle(.titleAndIcon)
+        .font(MTTypography.caption)
+        .foregroundStyle(MTColor.accent)
+        .accessibilityIdentifier("review-entry-\(entry.id.uuidString.lowercased())")
+      }
+      .padding(.top, MTSpacing.s1)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(MTSpacing.s4)

@@ -72,7 +72,9 @@ final class InboxController {
       let loadedEntries: [InboxEntry] =
         try await client
         .from("entries")
-        .select("id,title,body,created_at,occurred_start")
+        .select(
+          "id,title,body,entry_type,created_at,occurred_start,occurred_timezone,revision"
+        )
         .eq("owner_id", value: ownerID.uuidString)
         .eq("inbox_status", value: "unreviewed")
         .is("deleted_at", value: nil)
@@ -143,6 +145,84 @@ final class InboxController {
     }
 
     return true
+  }
+
+  func review(
+    entry: InboxEntry,
+    title: String,
+    body: String,
+    entryType: InboxEntryType,
+    occurredAt: Date,
+    occurredTimezone: String,
+    intent: ReviewIntent
+  ) async -> ReviewResult {
+    let input: InboxReviewInput
+
+    do {
+      input = try InboxReviewInput.validate(
+        entryID: entry.id,
+        revision: entry.revision,
+        title: title,
+        body: body,
+        entryType: entryType,
+        occurredAt: occurredAt,
+        occurredTimezone: occurredTimezone
+      )
+    } catch {
+      return ReviewResult(message: error.localizedDescription, status: .error)
+    }
+
+    do {
+      let session = try await client.auth.session
+      guard session.user.id == ownerID else {
+        throw InboxControllerError.ownerChanged
+      }
+
+      let payload = InboxEntryUpdate(
+        title: input.title,
+        body: input.body,
+        entryType: input.entryType,
+        inboxStatus: intent == .done ? "organized" : "unreviewed",
+        occurredStart: input.occurredAt,
+        occurredTimezone: input.occurredTimezone
+      )
+      let updatedEntries: [InboxEntry] =
+        try await client
+        .from("entries")
+        .update(payload)
+        .eq("id", value: input.entryID.uuidString)
+        .eq("owner_id", value: ownerID.uuidString)
+        .eq("inbox_status", value: "unreviewed")
+        .eq("revision", value: input.revision)
+        .select(
+          "id,title,body,entry_type,created_at,occurred_start,occurred_timezone,revision"
+        )
+        .execute()
+        .value
+
+      guard let updatedEntry = updatedEntries.first else {
+        return ReviewResult(
+          message:
+            "This Entry changed on another device. Close it, refresh, and review the latest version.",
+          status: .conflict
+        )
+      }
+
+      if intent == .done {
+        entries.removeAll { $0.id == updatedEntry.id }
+        return ReviewResult(message: "Entry organized.", status: .done)
+      }
+
+      if let index = entries.firstIndex(where: { $0.id == updatedEntry.id }) {
+        entries[index] = updatedEntry
+      }
+      return ReviewResult(message: "Changes saved.", status: .saved)
+    } catch {
+      return ReviewResult(
+        message: "MemoTrail could not save these changes. Try again.",
+        status: .error
+      )
+    }
   }
 
   @discardableResult
@@ -245,6 +325,23 @@ extension InboxController {
     let text: String
     let style: Style
   }
+
+  enum ReviewIntent: Sendable {
+    case done
+    case save
+  }
+
+  struct ReviewResult: Equatable, Sendable {
+    enum Status: Sendable {
+      case conflict
+      case done
+      case error
+      case saved
+    }
+
+    let message: String
+    let status: Status
+  }
 }
 
 private struct ExistingEntry: Decodable, Sendable {
@@ -274,6 +371,24 @@ private struct InboxEntryInsert: Encodable, Sendable {
     case occurredTimezone = "occurred_timezone"
     case datePrecision = "date_precision"
     case clientID = "client_id"
+  }
+}
+
+private struct InboxEntryUpdate: Encodable, Sendable {
+  let title: String?
+  let body: String
+  let entryType: InboxEntryType
+  let inboxStatus: String
+  let occurredStart: Date
+  let occurredTimezone: String
+
+  enum CodingKeys: String, CodingKey {
+    case title
+    case body
+    case entryType = "entry_type"
+    case inboxStatus = "inbox_status"
+    case occurredStart = "occurred_start"
+    case occurredTimezone = "occurred_timezone"
   }
 }
 

@@ -80,6 +80,71 @@ final class InboxEntryTests: XCTestCase {
     XCTAssertEqual(entry.displayExcerpt, "Small forces trigger bone remodeling.")
   }
 
+  func testReviewAcceptsEditableContentTypeAndOccurrence() throws {
+    let occurredAt = Date(timeIntervalSince1970: 1_788_278_400)
+    let input = try InboxReviewInput.validate(
+      entryID: UUID(),
+      revision: 2,
+      title: "  First time skiing  ",
+      body: "  A cold and brilliant day.  ",
+      entryType: .firstTime,
+      occurredAt: occurredAt,
+      occurredTimezone: "America/Los_Angeles"
+    )
+
+    XCTAssertEqual(input.title, "First time skiing")
+    XCTAssertEqual(input.body, "A cold and brilliant day.")
+    XCTAssertEqual(input.entryType, .firstTime)
+    XCTAssertEqual(input.occurredAt, occurredAt)
+    XCTAssertEqual(input.revision, 2)
+  }
+
+  func testReviewRequiresATitleForAFirstTime() {
+    XCTAssertThrowsError(
+      try InboxReviewInput.validate(
+        entryID: UUID(),
+        revision: 1,
+        title: " ",
+        body: "I tried something new.",
+        entryType: .firstTime,
+        occurredAt: Date(),
+        occurredTimezone: "UTC"
+      )
+    ) { error in
+      XCTAssertEqual(error as? InboxReviewError, .firstTimeRequiresTitle)
+    }
+  }
+
+  func testReviewRejectsInvalidRevisionAndTimezone() {
+    XCTAssertThrowsError(
+      try InboxReviewInput.validate(
+        entryID: UUID(),
+        revision: 0,
+        title: "A thought",
+        body: "",
+        entryType: .standard,
+        occurredAt: Date(),
+        occurredTimezone: "UTC"
+      )
+    ) { error in
+      XCTAssertEqual(error as? InboxReviewError, .invalidRevision)
+    }
+
+    XCTAssertThrowsError(
+      try InboxReviewInput.validate(
+        entryID: UUID(),
+        revision: 1,
+        title: "A thought",
+        body: "",
+        entryType: .standard,
+        occurredAt: Date(),
+        occurredTimezone: ""
+      )
+    ) { error in
+      XCTAssertEqual(error as? InboxReviewError, .invalidTimezone)
+    }
+  }
+
   func testDraftStoreRestoresContentForOnlyItsOwner() {
     let defaults = makeDefaults()
     let store = InboxDraftStore(defaults: defaults)

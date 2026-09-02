@@ -4,15 +4,41 @@ struct InboxEntry: Codable, Equatable, Identifiable, Sendable {
   let id: UUID
   let title: String?
   let body: String
+  let entryType: InboxEntryType
   let createdAt: Date
   let occurredStart: Date?
+  let occurredTimezone: String?
+  let revision: Int
+
+  init(
+    id: UUID,
+    title: String?,
+    body: String,
+    entryType: InboxEntryType = .standard,
+    createdAt: Date,
+    occurredStart: Date?,
+    occurredTimezone: String? = nil,
+    revision: Int = 1
+  ) {
+    self.id = id
+    self.title = title
+    self.body = body
+    self.entryType = entryType
+    self.createdAt = createdAt
+    self.occurredStart = occurredStart
+    self.occurredTimezone = occurredTimezone
+    self.revision = revision
+  }
 
   enum CodingKeys: String, CodingKey {
     case id
     case title
     case body
+    case entryType = "entry_type"
     case createdAt = "created_at"
     case occurredStart = "occurred_start"
+    case occurredTimezone = "occurred_timezone"
+    case revision
   }
 
   var displayDate: String {
@@ -61,6 +87,20 @@ struct InboxEntry: Codable, Equatable, Identifiable, Sendable {
   }
 }
 
+enum InboxEntryType: String, CaseIterable, Codable, Equatable, Sendable {
+  case standard
+  case firstTime = "first_time"
+
+  var displayName: String {
+    switch self {
+    case .standard:
+      "Standard Entry"
+    case .firstTime:
+      "First Time"
+    }
+  }
+}
+
 struct InboxCapture: Equatable, Sendable {
   static let titleLimit = 200
   static let bodyLimit = 50_000
@@ -85,6 +125,50 @@ struct InboxCapture: Equatable, Sendable {
     }
 
     return InboxCapture(title: title.nonEmpty, body: body)
+  }
+}
+
+struct InboxReviewInput: Equatable, Sendable {
+  let entryID: UUID
+  let revision: Int
+  let title: String?
+  let body: String
+  let entryType: InboxEntryType
+  let occurredAt: Date
+  let occurredTimezone: String
+
+  static func validate(
+    entryID: UUID,
+    revision: Int,
+    title: String,
+    body: String,
+    entryType: InboxEntryType,
+    occurredAt: Date,
+    occurredTimezone: String
+  ) throws -> InboxReviewInput {
+    guard revision > 0 else {
+      throw InboxReviewError.invalidRevision
+    }
+
+    let capture = try InboxCapture.validate(title: title, body: body)
+
+    if entryType == .firstTime, capture.title == nil {
+      throw InboxReviewError.firstTimeRequiresTitle
+    }
+
+    guard !occurredTimezone.isEmpty, occurredTimezone.count <= 100 else {
+      throw InboxReviewError.invalidTimezone
+    }
+
+    return InboxReviewInput(
+      entryID: entryID,
+      revision: revision,
+      title: capture.title,
+      body: capture.body,
+      entryType: entryType,
+      occurredAt: occurredAt,
+      occurredTimezone: occurredTimezone
+    )
   }
 }
 
@@ -161,8 +245,11 @@ struct QueuedInboxEntry: Codable, Equatable, Identifiable, Sendable {
       id: id,
       title: title,
       body: body,
+      entryType: .standard,
       createdAt: queuedAt,
-      occurredStart: occurredAt
+      occurredStart: occurredAt,
+      occurredTimezone: occurredTimezone,
+      revision: 1
     )
   }
 
@@ -265,6 +352,23 @@ enum InboxCaptureError: LocalizedError, Equatable {
       "Keep the title under \(InboxCapture.titleLimit) characters."
     case .bodyTooLong:
       "Keep the note under 50,000 characters."
+    }
+  }
+}
+
+enum InboxReviewError: LocalizedError, Equatable {
+  case firstTimeRequiresTitle
+  case invalidRevision
+  case invalidTimezone
+
+  var errorDescription: String? {
+    switch self {
+    case .firstTimeRequiresTitle:
+      "Add a title before marking an Entry as a First Time."
+    case .invalidRevision:
+      "This Entry review is invalid."
+    case .invalidTimezone:
+      "Choose a valid time zone."
     }
   }
 }

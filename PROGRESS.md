@@ -31,7 +31,8 @@
 - iOS now accepts captures into the same durable queue model, visibly separates pending Entries, and retries on reconnect, foreground activation, refresh, or demand.
 - Web now opens each unreviewed Entry in a focused review surface where title, body, exact occurrence time, and the initial Standard or First Time Type can be edited before saving or selecting `Done`.
 - Web review updates require the Entry's current revision, so a newer cross-device edit produces a visible conflict instead of being silently overwritten.
-- Web now has 33 passing tests, and the shared iOS scheme has 14 passing native tests for capture, presentation, draft persistence, and synchronization queue rules.
+- iOS now provides the matching native review sheet, editable fields, optimistic revision check, `Save changes`, and explicit `Done` behavior.
+- Web now has 33 passing tests, and the shared iOS scheme has 17 passing native tests for capture, presentation, draft persistence, queue, and review rules.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -99,7 +100,9 @@
 - [x] `Save changes` preserves the unreviewed Inbox state.
 - [x] `Done` marks the Entry organized and removes it from the Inbox without preventing later edits elsewhere.
 - [x] Web review uses optimistic revision matching and leaves the database history trigger responsible for preserving the previous version.
-- [ ] iOS provides the matching review, conflict, save, and explicit Done behavior.
+- [x] iOS provides the matching review, conflict, save, and explicit Done behavior.
+- [x] Web and iOS display the initial Standard Entry and First Time Type choices consistently.
+- [x] Both clients preserve the original time zone unless the occurrence date is edited locally.
 - [ ] Collections and tags are editable during review.
 
 ## Feature history
@@ -122,13 +125,13 @@
 - `feat: preserve recoverable Inbox drafts` implemented per-user recoverable Inbox drafts on Web and iOS.
 - `feat: add Web offline capture queue` implemented the Web offline capture and retryable synchronization queue.
 - `feat: add iOS offline capture queue` implemented the matching iOS offline capture and retryable synchronization queue.
-- Current change: implemented Web Entry review and explicit `Done` organization.
+- `feat: add Web Inbox review` implemented Web Entry review and explicit `Done` organization.
+- Current change: implemented the matching iOS Entry review and explicit `Done` organization.
 
 ## Next sequence
 
-1. Add the matching Entry review and explicit `Done` behavior to iOS.
-2. Add manual Collections and tags to Entry review.
-3. Add keyword search across the user's Entries.
+1. Add manual Collections and tags to Entry review.
+2. Add keyword search across the user's Entries.
 
 ## Deferred
 
