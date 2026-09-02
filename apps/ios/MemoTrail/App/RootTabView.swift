@@ -19,6 +19,11 @@ struct RootTabView: View {
         Label("Inbox", systemImage: "tray")
       }
 
+      SearchView(client: client, ownerID: user.id)
+        .tabItem {
+          Label("Search", systemImage: "magnifyingglass")
+        }
+
       PlaceholderView(
         title: "Timeline",
         subtitle: "Life stages and moments will live here.",

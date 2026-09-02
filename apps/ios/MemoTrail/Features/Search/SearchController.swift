@@ -1,0 +1,190 @@
+import Foundation
+import Observation
+import Supabase
+
+@MainActor
+@Observable
+final class SearchController {
+  var query = ""
+  var selectedEntryType: SearchEntryType?
+  var selectedCollectionName: String?
+  var selectedTagName: String?
+  var dateFrom: Date?
+  var dateTo: Date?
+
+  private(set) var entries: [SearchEntry] = []
+  private(set) var collectionOptions: [String] = []
+  private(set) var tagOptions: [String] = []
+  private(set) var totalCount = 0
+  private(set) var hasSearched = false
+  private(set) var isLoading = false
+  private(set) var isLoadingFilters = false
+  private(set) var hasLoadedFilters = false
+  private(set) var searchErrorMessage: String?
+  private(set) var filterErrorMessage: String?
+
+  private let client: SupabaseClient
+  private let ownerID: UUID
+
+  init(client: SupabaseClient, ownerID: UUID) {
+    self.client = client
+    self.ownerID = ownerID
+  }
+
+  var canLoadMore: Bool {
+    !isLoading && entries.count < totalCount && entries.count <= 10_000
+  }
+
+  var activeFilterCount: Int {
+    [
+      selectedEntryType != nil, selectedCollectionName != nil, selectedTagName != nil,
+      dateFrom != nil, dateTo != nil,
+    ]
+    .filter { $0 }
+    .count
+  }
+
+  var hasCriteria: Bool {
+    !query.trimmed.isEmpty || activeFilterCount > 0
+  }
+
+  func loadFilterOptions() async {
+    guard !hasLoadedFilters, !isLoadingFilters else { return }
+
+    isLoadingFilters = true
+    filterErrorMessage = nil
+    defer {
+      isLoadingFilters = false
+      hasLoadedFilters = true
+    }
+
+    do {
+      try await validateSessionOwner()
+
+      let collections: [SearchOrganizationName] =
+        try await client
+        .from("collections")
+        .select("name")
+        .eq("owner_id", value: ownerID.uuidString)
+        .is("archived_at", value: nil)
+        .order("name")
+        .execute()
+        .value
+      let tags: [SearchOrganizationName] =
+        try await client
+        .from("tags")
+        .select("name")
+        .eq("owner_id", value: ownerID.uuidString)
+        .order("name")
+        .execute()
+        .value
+
+      collectionOptions = collections.map(\.name)
+      tagOptions = tags.map(\.name)
+    } catch {
+      filterErrorMessage =
+        "Collection and tag filters are temporarily unavailable. Keyword search still works."
+    }
+  }
+
+  func search() async {
+    await runSearch(appending: false)
+  }
+
+  func loadMore() async {
+    guard canLoadMore else { return }
+    await runSearch(appending: true)
+  }
+
+  func clearAll() {
+    query = ""
+    selectedEntryType = nil
+    selectedCollectionName = nil
+    selectedTagName = nil
+    dateFrom = nil
+    dateTo = nil
+    entries = []
+    totalCount = 0
+    hasSearched = false
+    searchErrorMessage = nil
+  }
+
+  private func runSearch(appending: Bool) async {
+    guard !isLoading else { return }
+
+    let request: EntrySearchRequest
+    do {
+      request = try EntrySearchRequest.validate(
+        query: query,
+        entryTypes: selectedEntryType.map { [$0] } ?? [],
+        collectionNames: selectedCollectionName.map { [$0] } ?? [],
+        tagNames: selectedTagName.map { [$0] } ?? [],
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        offset: appending ? entries.count : 0
+      )
+    } catch {
+      searchErrorMessage = error.localizedDescription
+      if !appending {
+        entries = []
+        totalCount = 0
+        hasSearched = true
+      }
+      return
+    }
+
+    guard request.hasCriteria else {
+      entries = []
+      totalCount = 0
+      hasSearched = false
+      searchErrorMessage = nil
+      return
+    }
+
+    isLoading = true
+    searchErrorMessage = nil
+    if !appending {
+      hasSearched = true
+    }
+    defer { isLoading = false }
+
+    do {
+      try await validateSessionOwner()
+
+      let results: [SearchEntry] =
+        try await client
+        .rpc("search_entries", params: request.parameters)
+        .execute()
+        .value
+
+      if appending {
+        let knownIDs = Set(entries.map(\.id))
+        entries.append(contentsOf: results.filter { !knownIDs.contains($0.id) })
+      } else {
+        entries = results
+      }
+      totalCount = results.first?.totalCount ?? (appending ? totalCount : 0)
+    } catch {
+      searchErrorMessage = "MemoTrail could not search your Entries. Try again."
+      if !appending {
+        entries = []
+        totalCount = 0
+      }
+    }
+  }
+
+  private func validateSessionOwner() async throws {
+    let session = try await client.auth.session
+    guard session.user.id == ownerID else {
+      throw SearchControllerError.ownerChanged
+    }
+  }
+}
+
+private struct SearchOrganizationName: Decodable, Sendable {
+  let name: String
+}
+
+private enum SearchControllerError: Error {
+  case ownerChanged
+}

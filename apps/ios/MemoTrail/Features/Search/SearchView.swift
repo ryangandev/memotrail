@@ -1,0 +1,630 @@
+import Supabase
+import SwiftUI
+
+struct SearchView: View {
+  @State private var controller: SearchController
+  @State private var isShowingFilters = false
+
+  init(client: SupabaseClient, ownerID: UUID) {
+    _controller = State(
+      initialValue: SearchController(client: client, ownerID: ownerID)
+    )
+  }
+
+  var body: some View {
+    NavigationStack {
+      ScrollView {
+        LazyVStack(alignment: .leading, spacing: MTSpacing.s6) {
+          header
+          criteriaSummary
+          results
+        }
+        .padding(.horizontal, MTSpacing.s4)
+        .padding(.top, MTSpacing.s6)
+        .padding(.bottom, MTSpacing.s12)
+      }
+      .background(MTColor.canvas)
+      .navigationTitle("Search")
+      .navigationBarTitleDisplayMode(.inline)
+      .searchable(
+        text: $controller.query,
+        placement: .navigationBarDrawer(displayMode: .always),
+        prompt: "A phrase, place, date, Collection, or tag"
+      )
+      .onSubmit(of: .search) {
+        Task { await controller.search() }
+      }
+      .onChange(of: controller.query) {
+        if controller.query.count > EntrySearchRequest.queryLimit {
+          controller.query = String(controller.query.prefix(EntrySearchRequest.queryLimit))
+        }
+      }
+      .toolbar {
+        ToolbarItem(placement: .topBarTrailing) {
+          Button {
+            isShowingFilters = true
+          } label: {
+            Image(
+              systemName: controller.activeFilterCount > 0
+                ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+          }
+          .accessibilityLabel(filterButtonLabel)
+        }
+      }
+      .toolbarBackground(MTColor.surface, for: .navigationBar)
+      .toolbarBackground(.visible, for: .navigationBar)
+      .sheet(isPresented: $isShowingFilters) {
+        SearchFiltersSheet(controller: controller)
+      }
+      .navigationDestination(for: SearchEntry.self) { entry in
+        SearchEntryDetailView(entry: entry)
+      }
+      .task {
+        await controller.loadFilterOptions()
+      }
+    }
+  }
+
+  private var header: some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s2) {
+      Text("YOUR PERSONAL ARCHIVE")
+        .font(MTTypography.caption)
+        .tracking(1.1)
+        .foregroundStyle(MTColor.inkFaint)
+
+      Text("Search your trail")
+        .font(MTTypography.display)
+        .foregroundStyle(MTColor.ink)
+
+      Text("Find an Entry by what you wrote, when it happened, or how you organized it.")
+        .font(MTTypography.body)
+        .foregroundStyle(MTColor.inkMuted)
+        .lineSpacing(2)
+    }
+  }
+
+  private var criteriaSummary: some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s3) {
+      HStack(spacing: MTSpacing.s2) {
+        Text("Keyword search")
+          .font(MTTypography.caption)
+          .foregroundStyle(MTColor.accent)
+          .padding(.horizontal, MTSpacing.s2)
+          .padding(.vertical, 5)
+          .background(MTColor.accentSubtle, in: Capsule())
+
+        Text("Titles, notes, local dates, organization, and details")
+          .font(MTTypography.caption)
+          .foregroundStyle(MTColor.inkFaint)
+      }
+
+      if !activeFilterLabels.isEmpty {
+        ScrollView(.horizontal, showsIndicators: false) {
+          HStack(spacing: MTSpacing.s2) {
+            ForEach(activeFilterLabels, id: \.self) { label in
+              Text(label)
+                .font(MTTypography.caption)
+                .foregroundStyle(MTColor.inkMuted)
+                .padding(.horizontal, MTSpacing.s2)
+                .padding(.vertical, 5)
+                .background(MTColor.surfaceSubtle, in: Capsule())
+            }
+          }
+        }
+      }
+
+      Button {
+        Task { await controller.search() }
+      } label: {
+        if controller.isLoading && controller.entries.isEmpty {
+          ProgressView()
+            .tint(MTColor.accentInk)
+            .frame(maxWidth: .infinity)
+        } else {
+          Label("Search Entries", systemImage: "magnifyingglass")
+            .frame(maxWidth: .infinity)
+        }
+      }
+      .buttonStyle(.borderedProminent)
+      .tint(MTColor.accent)
+      .controlSize(.large)
+      .disabled(!controller.hasCriteria || controller.isLoading)
+      .accessibilityIdentifier("search-entries")
+
+      if let filterErrorMessage = controller.filterErrorMessage {
+        Label(filterErrorMessage, systemImage: "exclamationmark.circle")
+          .font(MTTypography.caption)
+          .foregroundStyle(MTColor.warm)
+      }
+    }
+    .padding(MTSpacing.s4)
+    .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.large))
+    .overlay {
+      RoundedRectangle(cornerRadius: MTRadius.large)
+        .stroke(MTColor.borderStrong, lineWidth: 1)
+    }
+  }
+
+  @ViewBuilder
+  private var results: some View {
+    if let searchErrorMessage = controller.searchErrorMessage {
+      searchMessage(
+        title: "Search unavailable",
+        message: searchErrorMessage,
+        systemImage: "exclamationmark.triangle"
+      )
+    } else if !controller.hasSearched {
+      searchMessage(
+        title: "Start with anything you remember",
+        message:
+          "A word from the note, a year, a Collection, or even part of a Chinese phrase can bring the Entry back.",
+        systemImage: "sparkles"
+      )
+    } else if controller.isLoading && controller.entries.isEmpty {
+      HStack(spacing: MTSpacing.s3) {
+        ProgressView()
+        Text("Searching your Entries...")
+          .font(MTTypography.body)
+          .foregroundStyle(MTColor.inkMuted)
+      }
+      .frame(maxWidth: .infinity, minHeight: 150)
+    } else if controller.entries.isEmpty {
+      searchMessage(
+        title: "No matching Entries",
+        message: "Try fewer words, remove a filter, or search for a broader date.",
+        systemImage: "magnifyingglass"
+      )
+    } else {
+      resultsList
+    }
+  }
+
+  private var resultsList: some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s3) {
+      HStack(alignment: .firstTextBaseline) {
+        Text("RESULTS")
+          .font(MTTypography.label)
+          .tracking(0.7)
+          .foregroundStyle(MTColor.ink)
+
+        Text(resultCountLabel)
+          .font(MTTypography.caption)
+          .foregroundStyle(MTColor.inkFaint)
+
+        Spacer()
+
+        if controller.isLoading {
+          ProgressView()
+            .controlSize(.small)
+        }
+      }
+
+      LazyVStack(spacing: 0) {
+        ForEach(controller.entries) { entry in
+          NavigationLink(value: entry) {
+            SearchResultCard(entry: entry)
+          }
+          .buttonStyle(.plain)
+
+          if entry.id != controller.entries.last?.id {
+            Divider()
+              .overlay(MTColor.border)
+          }
+        }
+      }
+      .background(MTColor.surface)
+      .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
+      .overlay {
+        RoundedRectangle(cornerRadius: MTRadius.large)
+          .stroke(MTColor.border, lineWidth: 1)
+      }
+
+      if controller.canLoadMore {
+        Button("Load more", systemImage: "arrow.down") {
+          Task { await controller.loadMore() }
+        }
+        .buttonStyle(.bordered)
+        .frame(maxWidth: .infinity)
+        .accessibilityIdentifier("load-more-search-results")
+      }
+    }
+  }
+
+  private func searchMessage(title: String, message: String, systemImage: String) -> some View {
+    HStack(alignment: .top, spacing: MTSpacing.s4) {
+      Image(systemName: systemImage)
+        .font(.system(size: 22, weight: .medium))
+        .foregroundStyle(MTColor.accent)
+
+      VStack(alignment: .leading, spacing: MTSpacing.s2) {
+        Text(title)
+          .font(MTTypography.titleSmall)
+          .foregroundStyle(MTColor.ink)
+
+        Text(message)
+          .font(MTTypography.body)
+          .foregroundStyle(MTColor.inkMuted)
+          .lineSpacing(2)
+      }
+
+      Spacer(minLength: 0)
+    }
+    .frame(maxWidth: .infinity, minHeight: 110, alignment: .topLeading)
+    .padding(MTSpacing.s6)
+    .background(MTColor.surfaceSubtle.opacity(0.45))
+    .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
+    .overlay {
+      RoundedRectangle(cornerRadius: MTRadius.large)
+        .stroke(MTColor.borderStrong, style: StrokeStyle(lineWidth: 1, dash: [5, 5]))
+    }
+  }
+
+  private var activeFilterLabels: [String] {
+    var labels: [String] = []
+
+    if let selectedEntryType = controller.selectedEntryType {
+      labels.append(selectedEntryType.displayName)
+    }
+    if let selectedCollectionName = controller.selectedCollectionName {
+      labels.append(selectedCollectionName)
+    }
+    if let selectedTagName = controller.selectedTagName {
+      labels.append("#\(selectedTagName)")
+    }
+    if controller.dateFrom != nil {
+      labels.append("Start date")
+    }
+    if controller.dateTo != nil {
+      labels.append("End date")
+    }
+
+    return labels
+  }
+
+  private var resultCountLabel: String {
+    "\(controller.totalCount) \(controller.totalCount == 1 ? "Entry" : "Entries")"
+  }
+
+  private var filterButtonLabel: String {
+    if controller.activeFilterCount == 0 {
+      return "Refine search"
+    }
+
+    return "Refine search, \(controller.activeFilterCount) active filters"
+  }
+}
+
+private struct SearchResultCard: View {
+  let entry: SearchEntry
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s3) {
+      HStack(alignment: .firstTextBaseline, spacing: 6) {
+        metadataBadge(entry.displayType)
+
+        if entry.isInInbox {
+          metadataBadge("In Inbox", isWarm: true)
+        }
+
+        Spacer()
+
+        Text(entry.displayDate)
+          .font(MTTypography.caption)
+          .foregroundStyle(MTColor.inkFaint)
+      }
+
+      Text(entry.displayTitle)
+        .font(.system(size: 19, weight: .medium, design: .serif))
+        .foregroundStyle(MTColor.ink)
+
+      if let excerpt = entry.displayExcerpt {
+        Text(excerpt)
+          .font(MTTypography.body)
+          .foregroundStyle(MTColor.inkMuted)
+          .lineSpacing(2)
+          .lineLimit(4)
+      }
+
+      if !entry.collectionNames.isEmpty || !entry.tagNames.isEmpty {
+        ScrollView(.horizontal, showsIndicators: false) {
+          HStack(spacing: 6) {
+            ForEach(entry.collectionNames, id: \.self) { name in
+              organizationBadge(name)
+            }
+
+            ForEach(entry.tagNames, id: \.self) { name in
+              organizationBadge("#\(name)")
+            }
+          }
+        }
+      }
+
+      HStack(alignment: .center, spacing: MTSpacing.s2) {
+        Text("Matched in")
+          .font(.system(size: 10, weight: .medium))
+          .foregroundStyle(MTColor.inkFaint)
+
+        ForEach(entry.matchReasons, id: \.self) { reason in
+          Text(reason)
+            .font(.system(size: 10, weight: .medium))
+            .foregroundStyle(MTColor.accent)
+        }
+
+        Spacer()
+
+        Image(systemName: "chevron.right")
+          .font(.system(size: 11, weight: .semibold))
+          .foregroundStyle(MTColor.inkFaint)
+      }
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(MTSpacing.s4)
+    .contentShape(Rectangle())
+  }
+
+  private func metadataBadge(_ title: String, isWarm: Bool = false) -> some View {
+    Text(title)
+      .font(.system(size: 10, weight: .medium))
+      .foregroundStyle(isWarm ? MTColor.warm : MTColor.inkMuted)
+      .padding(.horizontal, MTSpacing.s2)
+      .padding(.vertical, 4)
+      .background(isWarm ? MTColor.warmSubtle : MTColor.surfaceSubtle, in: Capsule())
+  }
+
+  private func organizationBadge(_ title: String) -> some View {
+    Text(title)
+      .font(.system(size: 10, weight: .medium))
+      .foregroundStyle(MTColor.inkMuted)
+      .padding(.horizontal, MTSpacing.s2)
+      .padding(.vertical, 4)
+      .background(MTColor.surfaceSubtle, in: Capsule())
+  }
+}
+
+private struct SearchEntryDetailView: View {
+  let entry: SearchEntry
+
+  var body: some View {
+    ScrollView {
+      VStack(alignment: .leading, spacing: MTSpacing.s6) {
+        VStack(alignment: .leading, spacing: MTSpacing.s3) {
+          HStack(spacing: MTSpacing.s2) {
+            Text(entry.displayType)
+              .font(MTTypography.caption)
+              .foregroundStyle(MTColor.accent)
+
+            if entry.isInInbox {
+              Text("In Inbox")
+                .font(MTTypography.caption)
+                .foregroundStyle(MTColor.warm)
+            }
+          }
+
+          Text(entry.displayTitle)
+            .font(MTTypography.title)
+            .foregroundStyle(MTColor.ink)
+
+          Text(entry.displayDate)
+            .font(MTTypography.caption)
+            .foregroundStyle(MTColor.inkFaint)
+        }
+
+        if !entry.body.trimmed.isEmpty {
+          Text(entry.body)
+            .font(MTTypography.bodyLarge)
+            .foregroundStyle(MTColor.ink)
+            .lineSpacing(4)
+            .textSelection(.enabled)
+        }
+
+        if !entry.collectionNames.isEmpty || !entry.tagNames.isEmpty {
+          VStack(alignment: .leading, spacing: MTSpacing.s2) {
+            Text("ORGANIZATION")
+              .font(MTTypography.label)
+              .tracking(0.7)
+              .foregroundStyle(MTColor.inkFaint)
+
+            FlowLayout(spacing: MTSpacing.s2) {
+              ForEach(entry.collectionNames, id: \.self) { name in
+                detailBadge(name)
+              }
+              ForEach(entry.tagNames, id: \.self) { name in
+                detailBadge("#\(name)")
+              }
+            }
+          }
+        }
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .padding(MTSpacing.s6)
+    }
+    .background(MTColor.canvas)
+    .navigationTitle("Entry")
+    .navigationBarTitleDisplayMode(.inline)
+  }
+
+  private func detailBadge(_ title: String) -> some View {
+    Text(title)
+      .font(MTTypography.caption)
+      .foregroundStyle(MTColor.inkMuted)
+      .padding(.horizontal, MTSpacing.s3)
+      .padding(.vertical, MTSpacing.s2)
+      .background(MTColor.surfaceSubtle, in: Capsule())
+  }
+}
+
+private struct FlowLayout: Layout {
+  let spacing: CGFloat
+
+  func sizeThatFits(
+    proposal: ProposedViewSize,
+    subviews: Subviews,
+    cache: inout ()
+  ) -> CGSize {
+    layout(proposal: proposal, subviews: subviews).size
+  }
+
+  func placeSubviews(
+    in bounds: CGRect,
+    proposal: ProposedViewSize,
+    subviews: Subviews,
+    cache: inout ()
+  ) {
+    let result = layout(proposal: proposal, subviews: subviews)
+
+    for (index, point) in result.points.enumerated() {
+      subviews[index].place(
+        at: CGPoint(x: bounds.minX + point.x, y: bounds.minY + point.y),
+        proposal: .unspecified
+      )
+    }
+  }
+
+  private func layout(proposal: ProposedViewSize, subviews: Subviews) -> (
+    points: [CGPoint], size: CGSize
+  ) {
+    let maximumWidth = proposal.width ?? .infinity
+    var points: [CGPoint] = []
+    var cursor = CGPoint.zero
+    var rowHeight: CGFloat = 0
+    var measuredWidth: CGFloat = 0
+
+    for subview in subviews {
+      let size = subview.sizeThatFits(.unspecified)
+
+      if cursor.x > 0, cursor.x + size.width > maximumWidth {
+        cursor.x = 0
+        cursor.y += rowHeight + spacing
+        rowHeight = 0
+      }
+
+      points.append(cursor)
+      measuredWidth = max(measuredWidth, cursor.x + size.width)
+      cursor.x += size.width + spacing
+      rowHeight = max(rowHeight, size.height)
+    }
+
+    return (points, CGSize(width: measuredWidth, height: cursor.y + rowHeight))
+  }
+}
+
+private struct SearchFiltersSheet: View {
+  let controller: SearchController
+
+  @Environment(\.dismiss) private var dismiss
+  @State private var entryType: SearchEntryType?
+  @State private var collectionName: String?
+  @State private var tagName: String?
+  @State private var dateFrom: Date?
+  @State private var dateTo: Date?
+
+  init(controller: SearchController) {
+    self.controller = controller
+    _entryType = State(initialValue: controller.selectedEntryType)
+    _collectionName = State(initialValue: controller.selectedCollectionName)
+    _tagName = State(initialValue: controller.selectedTagName)
+    _dateFrom = State(initialValue: controller.dateFrom)
+    _dateTo = State(initialValue: controller.dateTo)
+  }
+
+  var body: some View {
+    NavigationStack {
+      Form {
+        Section("Organization") {
+          Picker("Type", selection: $entryType) {
+            Text("All Types").tag(nil as SearchEntryType?)
+            ForEach(SearchEntryType.allCases, id: \.self) { type in
+              Text(type.displayName).tag(type as SearchEntryType?)
+            }
+          }
+
+          Picker("Collection", selection: $collectionName) {
+            Text("All Collections").tag(nil as String?)
+            ForEach(controller.collectionOptions, id: \.self) { name in
+              Text(name).tag(name as String?)
+            }
+          }
+          .disabled(controller.collectionOptions.isEmpty)
+
+          Picker("Tag", selection: $tagName) {
+            Text("All tags").tag(nil as String?)
+            ForEach(controller.tagOptions, id: \.self) { name in
+              Text(name).tag(name as String?)
+            }
+          }
+          .disabled(controller.tagOptions.isEmpty)
+        }
+
+        Section("Occurrence date") {
+          OptionalDateFilter(title: "From", date: $dateFrom)
+          OptionalDateFilter(title: "To", date: $dateTo)
+        }
+
+        Section {
+          Button("Clear filters", role: .destructive) {
+            entryType = nil
+            collectionName = nil
+            tagName = nil
+            dateFrom = nil
+            dateTo = nil
+          }
+          .disabled(
+            entryType == nil && collectionName == nil && tagName == nil && dateFrom == nil
+              && dateTo == nil
+          )
+        }
+      }
+      .navigationTitle("Refine Search")
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          Button("Cancel") { dismiss() }
+        }
+
+        ToolbarItem(placement: .confirmationAction) {
+          Button("Apply") {
+            controller.selectedEntryType = entryType
+            controller.selectedCollectionName = collectionName
+            controller.selectedTagName = tagName
+            controller.dateFrom = dateFrom
+            controller.dateTo = dateTo
+            dismiss()
+            Task { await controller.search() }
+          }
+          .fontWeight(.semibold)
+        }
+      }
+    }
+    .presentationDetents([.medium, .large])
+  }
+}
+
+private struct OptionalDateFilter: View {
+  let title: String
+  @Binding var date: Date?
+
+  var body: some View {
+    Toggle(title, isOn: hasDate)
+
+    if date != nil {
+      DatePicker(title, selection: selectedDate, displayedComponents: .date)
+        .labelsHidden()
+    }
+  }
+
+  private var hasDate: Binding<Bool> {
+    Binding(
+      get: { date != nil },
+      set: { isEnabled in
+        date = isEnabled ? (date ?? Date()) : nil
+      }
+    )
+  }
+
+  private var selectedDate: Binding<Date> {
+    Binding(
+      get: { date ?? Date() },
+      set: { date = $0 }
+    )
+  }
+}

@@ -1,0 +1,334 @@
+import Foundation
+
+struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
+  let id: UUID
+  let title: String?
+  let body: String
+  let entryType: String
+  let inboxStatus: String
+  let occurredAt: Date?
+  let occurredLabel: String?
+  let occurredTimezone: String?
+  let updatedAt: Date
+  let collectionNames: [String]
+  let tagNames: [String]
+  let matchReasons: [String]
+  let totalCount: Int
+
+  enum CodingKeys: String, CodingKey {
+    case id = "entry_id"
+    case title
+    case body
+    case entryType = "entry_type"
+    case inboxStatus = "inbox_status"
+    case occurredAt = "occurred_start"
+    case occurredLabel = "occurred_label"
+    case occurredTimezone = "occurred_timezone"
+    case updatedAt = "updated_at"
+    case collectionNames = "collection_names"
+    case tagNames = "tag_names"
+    case matchReasons = "match_reasons"
+    case totalCount = "total_count"
+  }
+
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+
+    id = try values.decode(UUID.self, forKey: .id)
+    title = try values.decodeIfPresent(String.self, forKey: .title)?.trimmed.nonEmpty
+    body = try values.decode(String.self, forKey: .body)
+    entryType = try values.decode(String.self, forKey: .entryType)
+    inboxStatus = try values.decode(String.self, forKey: .inboxStatus)
+    occurredAt = try values.decodeIfPresent(Date.self, forKey: .occurredAt)
+    occurredLabel = try values.decodeIfPresent(String.self, forKey: .occurredLabel)?.trimmed
+      .nonEmpty
+    occurredTimezone =
+      try values.decodeIfPresent(String.self, forKey: .occurredTimezone)?.trimmed.nonEmpty
+    updatedAt = try values.decode(Date.self, forKey: .updatedAt)
+    collectionNames = try values.decodeIfPresent([String].self, forKey: .collectionNames) ?? []
+    tagNames = try values.decodeIfPresent([String].self, forKey: .tagNames) ?? []
+    matchReasons = try values.decodeIfPresent([String].self, forKey: .matchReasons) ?? []
+    totalCount = try values.decode(Int.self, forKey: .totalCount)
+  }
+
+  var displayTitle: String {
+    if let title {
+      return title
+    }
+
+    let firstLine =
+      body.trimmed
+      .split(whereSeparator: \Character.isNewline)
+      .first
+      .map(String.init)?
+      .trimmed ?? ""
+
+    return firstLine.nonEmpty.map { $0.truncated(to: 90) } ?? "Untitled Entry"
+  }
+
+  var displayExcerpt: String? {
+    let trimmedBody = body.trimmed
+    guard !trimmedBody.isEmpty else { return nil }
+
+    if title != nil {
+      return trimmedBody.truncated(to: 280)
+    }
+
+    if let firstNewline = trimmedBody.firstIndex(where: \Character.isNewline) {
+      let remainder = trimmedBody[trimmedBody.index(after: firstNewline)...]
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+      return remainder.nonEmpty?.truncated(to: 280)
+    }
+
+    guard trimmedBody.count > 90 else { return nil }
+    let remainingIndex = trimmedBody.index(trimmedBody.startIndex, offsetBy: 90)
+    return String(trimmedBody[remainingIndex...]).trimmed.truncated(to: 280)
+  }
+
+  var displayType: String {
+    SearchEntryType(rawValue: entryType)?.displayName
+      ?? entryType
+      .split(separator: "_")
+      .map { $0.prefix(1).uppercased() + $0.dropFirst() }
+      .joined(separator: " ")
+  }
+
+  var displayDate: String {
+    if let occurredLabel {
+      return occurredLabel
+    }
+
+    guard let occurredAt else { return "Date not set" }
+
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US")
+    formatter.timeZone = occurredTimezone.flatMap(TimeZone.init(identifier:)) ?? .gmt
+    formatter.setLocalizedDateFormatFromTemplate("MMM d, yyyy")
+    return formatter.string(from: occurredAt)
+  }
+
+  var isInInbox: Bool {
+    inboxStatus == "unreviewed"
+  }
+}
+
+enum SearchEntryType: String, CaseIterable, Codable, Equatable, Hashable, Sendable {
+  case standard
+  case firstTime = "first_time"
+  case lifeStage = "life_stage"
+  case home
+  case vehicle
+  case goal
+
+  var displayName: String {
+    switch self {
+    case .standard:
+      "Standard Entry"
+    case .firstTime:
+      "First Time"
+    case .lifeStage:
+      "Life Stage"
+    case .home:
+      "Home"
+    case .vehicle:
+      "Vehicle"
+    case .goal:
+      "Goal"
+    }
+  }
+}
+
+struct EntrySearchRequest: Equatable, Sendable {
+  static let pageSize = 25
+  static let queryLimit = 200
+
+  let query: String
+  let entryTypes: [SearchEntryType]
+  let collectionNames: [String]
+  let tagNames: [String]
+  let dateFrom: String?
+  let dateTo: String?
+  let limit: Int
+  let offset: Int
+
+  var hasCriteria: Bool {
+    !query.isEmpty
+      || !entryTypes.isEmpty
+      || !collectionNames.isEmpty
+      || !tagNames.isEmpty
+      || dateFrom != nil
+      || dateTo != nil
+  }
+
+  var parameters: SearchEntryParameters {
+    SearchEntryParameters(
+      query: query,
+      entryTypes: entryTypes.map(\.rawValue),
+      collectionNames: collectionNames,
+      tagNames: tagNames,
+      dateFrom: dateFrom,
+      dateTo: dateTo,
+      limit: limit,
+      offset: offset
+    )
+  }
+
+  static func validate(
+    query: String,
+    entryTypes: [SearchEntryType],
+    collectionNames: [String],
+    tagNames: [String],
+    dateFrom: Date?,
+    dateTo: Date?,
+    limit: Int = pageSize,
+    offset: Int = 0,
+    calendar: Calendar = .current
+  ) throws -> EntrySearchRequest {
+    let normalizedQuery = query.trimmed
+    guard normalizedQuery.count <= queryLimit else {
+      throw EntrySearchError.queryTooLong
+    }
+
+    guard entryTypes.count <= 20 else {
+      throw EntrySearchError.invalidEntryTypes
+    }
+
+    guard
+      let normalizedCollections = normalizeSearchNames(
+        collectionNames,
+        maximumCount: 20,
+        maximumNameLength: 80
+      )
+    else {
+      throw EntrySearchError.invalidCollections
+    }
+
+    guard
+      let normalizedTags = normalizeSearchNames(
+        tagNames,
+        maximumCount: 50,
+        maximumNameLength: 60
+      )
+    else {
+      throw EntrySearchError.invalidTags
+    }
+
+    if let dateFrom, let dateTo,
+      calendar.compare(dateFrom, to: dateTo, toGranularity: .day) == .orderedDescending
+    {
+      throw EntrySearchError.invalidDateRange
+    }
+
+    guard limit >= 1, limit <= 100, offset >= 0, offset <= 10_000 else {
+      throw EntrySearchError.invalidPagination
+    }
+
+    return EntrySearchRequest(
+      query: normalizedQuery,
+      entryTypes: Array(Set(entryTypes)).sorted { $0.rawValue < $1.rawValue },
+      collectionNames: normalizedCollections,
+      tagNames: normalizedTags,
+      dateFrom: dateFrom.map { dateOnlyString($0, calendar: calendar) },
+      dateTo: dateTo.map { dateOnlyString($0, calendar: calendar) },
+      limit: limit,
+      offset: offset
+    )
+  }
+}
+
+struct SearchEntryParameters: Encodable, Equatable, Sendable {
+  let query: String
+  let entryTypes: [String]
+  let collectionNames: [String]
+  let tagNames: [String]
+  let dateFrom: String?
+  let dateTo: String?
+  let limit: Int
+  let offset: Int
+
+  enum CodingKeys: String, CodingKey {
+    case query = "p_query"
+    case entryTypes = "p_entry_types"
+    case collectionNames = "p_collection_names"
+    case tagNames = "p_tag_names"
+    case dateFrom = "p_date_from"
+    case dateTo = "p_date_to"
+    case limit = "p_limit"
+    case offset = "p_offset"
+  }
+
+  func encode(to encoder: Encoder) throws {
+    var values = encoder.container(keyedBy: CodingKeys.self)
+
+    try values.encode(query, forKey: .query)
+    try values.encode(entryTypes, forKey: .entryTypes)
+    try values.encode(collectionNames, forKey: .collectionNames)
+    try values.encode(tagNames, forKey: .tagNames)
+    try values.encodeIfPresent(dateFrom, forKey: .dateFrom)
+    if dateFrom == nil {
+      try values.encodeNil(forKey: .dateFrom)
+    }
+    try values.encodeIfPresent(dateTo, forKey: .dateTo)
+    if dateTo == nil {
+      try values.encodeNil(forKey: .dateTo)
+    }
+    try values.encode(limit, forKey: .limit)
+    try values.encode(offset, forKey: .offset)
+  }
+}
+
+enum EntrySearchError: LocalizedError, Equatable {
+  case invalidCollections
+  case invalidDateRange
+  case invalidEntryTypes
+  case invalidPagination
+  case invalidTags
+  case queryTooLong
+
+  var errorDescription: String? {
+    switch self {
+    case .invalidCollections:
+      "Choose up to 20 valid Collections."
+    case .invalidDateRange:
+      "The start date must be on or before the end date."
+    case .invalidEntryTypes:
+      "Choose up to 20 valid Entry Types."
+    case .invalidPagination:
+      "This result page is unavailable."
+    case .invalidTags:
+      "Choose up to 50 valid tags."
+    case .queryTooLong:
+      "Search phrases can be up to \(EntrySearchRequest.queryLimit) characters."
+    }
+  }
+}
+
+private func normalizeSearchNames(
+  _ values: [String],
+  maximumCount: Int,
+  maximumNameLength: Int
+) -> [String]? {
+  var names: [String] = []
+  var normalizedNames: Set<String> = []
+
+  for value in values {
+    let name = value.trimmed
+    guard !name.isEmpty, name.count <= maximumNameLength else { return nil }
+
+    if normalizedNames.insert(name.lowercased()).inserted {
+      names.append(name)
+    }
+  }
+
+  return names.count <= maximumCount ? names : nil
+}
+
+private func dateOnlyString(_ date: Date, calendar: Calendar) -> String {
+  let components = calendar.dateComponents([.year, .month, .day], from: date)
+  return String(
+    format: "%04d-%02d-%02d",
+    components.year ?? 0,
+    components.month ?? 0,
+    components.day ?? 0
+  )
+}

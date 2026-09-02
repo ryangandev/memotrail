@@ -46,6 +46,9 @@
 - The Web Inbox and Search routes now share one responsive application shell, with working Search and Inbox navigation plus a global `Command-K` or `Control-K` search shortcut.
 - The Web suite now has 42 passing tests, including seven search-request tests for normalization, validation, pagination, and URL preservation.
 - Synthetic local browser verification covered a real database result, empty and result states, desktop and iPhone-sized layouts, shortcut focus, accessible mobile naming, and a warning-free browser console.
+- iOS now exposes the same global search contract through a native Search tab with keyword, Type, Collection, tag, start-date, and end-date criteria.
+- Native search results preserve Entry Type, Inbox state, local occurrence date, Collections, tags, database match explanations, full Entry reading, and incremental 25-result pagination.
+- The shared iOS scheme now has 28 passing native tests, including search normalization, limits, date-only RPC parameters, pagination, response decoding, preserved time zones, and invalid legacy time-zone fallback.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -155,6 +158,18 @@
 - [x] Open Search from the shared sidebar, mobile top bar, or `Command-K` and `Control-K`, with the search field focused.
 - [x] Verify search parsing with seven unit tests and inspect real local results at desktop and iPhone viewport sizes without console warnings.
 
+### iOS keyword search
+
+- [x] Add Search as a first-class native tab backed by the shared authenticated `search_entries` RPC.
+- [x] Support keyword, Type, Collection, tag, inclusive start-date, and inclusive end-date criteria.
+- [x] Load Collection and tag choices from the signed-in owner's live organization data without preventing keyword-only search when they are unavailable.
+- [x] Display Entry Type, Inbox state, preserved local occurrence date, organization, and database-provided match reasons.
+- [x] Open a native detail destination for the full Entry body and organization.
+- [x] Load additional results in 25-Entry pages without duplicating rows.
+- [x] Expose idle, loading, empty, validation-error, filter-warning, search-error, and incremental-loading states.
+- [x] Verify native request normalization, parameter encoding, response decoding, date handling, and pagination limits with nine focused tests.
+- [ ] Confirm keyword and filtered searches against the same real Entries on Web and iOS.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -183,13 +198,13 @@
 - `feat: deploy atomic Entry organization` deployed and verified the atomic Entry organization contract on hosted Supabase.
 - `feat: add keyword Entry search` added and locally verified the shared database-backed keyword Entry search contract.
 - `feat: deploy keyword Entry search` deployed and verified the keyword Entry search contract and supporting indexes on hosted Supabase.
-- Current change: implemented the authenticated Web keyword search experience and shared application shell.
+- `feat: add Web keyword search` implemented the authenticated Web keyword search experience and shared application shell.
+- Current change: implemented the matching native iOS keyword search experience.
 
 ## Next sequence
 
-1. Add the matching iOS search experience.
-2. Verify cross-platform search behavior against the same real Entries.
-3. Begin the basic Timeline slice after keyword search acceptance.
+1. Verify cross-platform search behavior against the same real Entries.
+2. Begin the basic Timeline slice after keyword search acceptance.
 
 ## Deferred
 

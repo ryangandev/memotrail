@@ -22,7 +22,11 @@
 		B0000000000000000000000D /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = F20000000000000000000002 /* GoogleSignIn */; };
 		B0000000000000000000000E /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = F20000000000000000000003 /* GoogleSignInSwift */; };
 		B0000000000000000000000F /* InboxController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000016 /* InboxController.swift */; };
+		B00000000000000000000010 /* SearchEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000017 /* SearchEntry.swift */; };
+		B00000000000000000000011 /* SearchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000018 /* SearchController.swift */; };
+		B00000000000000000000012 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000019 /* SearchView.swift */; };
 		B10000000000000000000001 /* InboxEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000001 /* InboxEntryTests.swift */; };
+		B10000000000000000000002 /* SearchEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000003 /* SearchEntryTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,8 +56,12 @@
 		C00000000000000000000014 /* AuthenticationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationView.swift; sourceTree = "<group>"; };
 		C00000000000000000000015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C00000000000000000000016 /* InboxController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxController.swift; sourceTree = "<group>"; };
+		C00000000000000000000017 /* SearchEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchEntry.swift; sourceTree = "<group>"; };
+		C00000000000000000000018 /* SearchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchController.swift; sourceTree = "<group>"; };
+		C00000000000000000000019 /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		C10000000000000000000001 /* InboxEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000002 /* MemoTrailTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MemoTrailTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C10000000000000000000003 /* SearchEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchEntryTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -123,6 +131,7 @@
 			children = (
 				A10000000000000000000013 /* Authentication */,
 				A10000000000000000000006 /* Inbox */,
+				A10000000000000000000015 /* Search */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -175,6 +184,7 @@
 			isa = PBXGroup;
 			children = (
 				C00000000000000000000007 /* InboxEntry.swift */,
+				C00000000000000000000017 /* SearchEntry.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -201,8 +211,18 @@
 			isa = PBXGroup;
 			children = (
 				C10000000000000000000001 /* InboxEntryTests.swift */,
+				C10000000000000000000003 /* SearchEntryTests.swift */,
 			);
 			path = MemoTrailTests;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000015 /* Search */ = {
+			isa = PBXGroup;
+			children = (
+				C00000000000000000000018 /* SearchController.swift */,
+				C00000000000000000000019 /* SearchView.swift */,
+			);
+			path = Search;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -326,6 +346,9 @@
 				B0000000000000000000000A /* AuthenticationController.swift in Sources */,
 				B0000000000000000000000B /* AuthenticationView.swift in Sources */,
 				B0000000000000000000000F /* InboxController.swift in Sources */,
+				B00000000000000000000010 /* SearchEntry.swift in Sources */,
+				B00000000000000000000011 /* SearchController.swift in Sources */,
+				B00000000000000000000012 /* SearchView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -334,6 +357,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B10000000000000000000001 /* InboxEntryTests.swift in Sources */,
+				B10000000000000000000002 /* SearchEntryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
