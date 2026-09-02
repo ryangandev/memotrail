@@ -63,6 +63,8 @@ Hosted project rollout:
 - [x] Add and locally verify the atomic Entry organization migration with 28 pgTAP tests and schema lint.
 - [x] Apply the atomic Entry organization migration to hosted Supabase after explicit rollout approval.
 - [x] Verify the hosted migration ledger, schema lint, function search path, and authenticated-only execution grant.
+- [x] Add and locally verify the keyword Entry search migration with 21 focused pgTAP tests and schema lint.
+- [ ] Apply and verify the keyword Entry search migration on hosted Supabase.
 
 Useful references:
 

@@ -33,12 +33,14 @@
 - Web now opens each unreviewed Entry in a focused review surface where title, body, exact occurrence time, and the initial Standard or First Time Type can be edited before saving or selecting `Done`.
 - Web review updates require the Entry's current revision, so a newer cross-device edit produces a visible conflict instead of being silently overwritten.
 - iOS now provides the matching native review sheet, editable fields, optimistic revision check, `Save changes`, and explicit `Done` behavior.
-- The local database now passes 28 pgTAP tests plus schema lint, including atomic organization, name de-duplication, history, stale revisions, and cross-owner denial.
+- The local database now passes 49 pgTAP tests plus schema lint, including atomic organization, keyword search, bilingual substring matching, structured fields, filters, history, and cross-owner denial.
 - Web review now loads existing Entry relationships and available names, displays Collection and tag chips, and atomically replaces them alongside Entry content and `Done` state.
 - Web now has 35 passing tests, including organization-name normalization, case-insensitive de-duplication, and limits.
 - iOS now loads the same Collection and tag relationships, offers removable chips and existing-name choices, and uses the shared atomic organization RPC for Save and Done.
 - The shared iOS scheme now has 19 passing native tests, including organization normalization and explicit null encoding for body-only RPC reviews.
 - Hosted verification confirms the atomic review migration is recorded remotely, schema lint reports no errors, the function uses an empty `search_path`, PUBLIC execution is revoked, and only authenticated users receive execution access.
+- A locally verified search contract now finds non-Trash Entries across titles, bodies, Collections, tags, occurrence dates, Types, metadata, and specialized Entry fields while returning match reasons and filter support.
+- Keyword date matching and filtering use each Entry's preserved occurrence timezone, with a safe UTC fallback for invalid legacy values.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -126,6 +128,17 @@
 - [x] Apply the atomic review migration to hosted Supabase after explicit rollout approval.
 - [x] Verify the hosted migration ledger, schema lint, function search path, and execution grants after rollout.
 
+### Keyword Entry search contract
+
+- [x] Search only the authenticated owner's non-Trash Entries.
+- [x] Match titles, bodies, Collections, tags, local occurrence dates, Types, metadata, and specialized Entry fields.
+- [x] Support English full-text matching and exact bilingual substring matching for Chinese or mixed-language content.
+- [x] Return an ordered explanation of the fields that matched.
+- [x] Support Type, Collection, tag, and inclusive date-range filters through the shared database contract.
+- [x] Apply input, pagination, and organization-filter limits before executing a search.
+- [x] Verify content matches, filters, local dates, structured fields, Trash exclusion, owner isolation, and unauthenticated denial with 21 pgTAP tests.
+- [ ] Apply and verify the keyword search migration on hosted Supabase.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -151,11 +164,12 @@
 - `feat: add atomic Entry organization` added and locally verified the atomic database contract for manual Entry organization.
 - `feat: add Web Entry organization` implemented manual Collections and tags in Web Entry review.
 - `feat: add iOS Entry organization` implemented the matching manual Collection and tag review controls on iOS.
-- Current change: deployed and verified the atomic Entry organization contract on hosted Supabase.
+- `feat: deploy atomic Entry organization` deployed and verified the atomic Entry organization contract on hosted Supabase.
+- Current change: added and locally verified the shared database-backed keyword Entry search contract.
 
 ## Next sequence
 
-1. Add database-backed keyword search across the user's Entries.
+1. Apply and verify the keyword Entry search migration on hosted Supabase.
 2. Add the Web search experience.
 3. Add the matching iOS search experience.
 
