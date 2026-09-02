@@ -124,7 +124,8 @@ Phase 1 repository work:
 - [x] Add native unit coverage for Inbox capture validation and Entry presentation rules.
 - [x] Establish per-user recoverable Inbox drafts on Web and iOS.
 - [x] Establish Web offline capture with a visible, retryable synchronization queue.
-- [ ] Establish offline capture and a retryable synchronization queue.
+- [x] Establish iOS offline capture with a visible, retryable synchronization queue.
+- [x] Establish offline capture and a retryable synchronization queue across both clients.
 - [ ] Add authenticated UI tests after a safe test-account strategy is defined.
 - [ ] Verify installation and launch separately on the physical iPhone.
 

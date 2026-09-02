@@ -129,6 +129,97 @@ final class InboxEntryTests: XCTestCase {
     XCTAssertNil(store.load(ownerID: ownerID))
   }
 
+  func testQueueStoreKeepsPendingEntriesIsolatedByOwner() {
+    let defaults = makeDefaults()
+    let store = InboxQueueStore(defaults: defaults)
+    let firstOwner = UUID()
+    let secondOwner = UUID()
+    let entry = makeQueuedEntry()
+
+    XCTAssertEqual(store.enqueue(entry, ownerID: firstOwner), [entry])
+    XCTAssertEqual(store.load(ownerID: firstOwner), [entry])
+    XCTAssertTrue(store.load(ownerID: secondOwner).isEmpty)
+  }
+
+  func testQueueStoreDoesNotDuplicateAStableEntryID() {
+    let store = InboxQueueStore(defaults: makeDefaults())
+    let ownerID = UUID()
+    let entry = makeQueuedEntry()
+
+    XCTAssertEqual(store.enqueue(entry, ownerID: ownerID), [entry])
+    XCTAssertEqual(store.enqueue(entry, ownerID: ownerID), [entry])
+  }
+
+  func testQueueStoreRemovesOnlyTheConfirmedEntry() {
+    let store = InboxQueueStore(defaults: makeDefaults())
+    let ownerID = UUID()
+    let first = makeQueuedEntry()
+    let second = makeQueuedEntry(
+      id: UUID(),
+      title: "Second thought"
+    )
+
+    _ = store.enqueue(first, ownerID: ownerID)
+    _ = store.enqueue(second, ownerID: ownerID)
+
+    XCTAssertEqual(store.remove(entryID: first.id, ownerID: ownerID), [second])
+  }
+
+  func testQueueStoreDiscardsCorruptedObsoleteAndDuplicateData() throws {
+    let defaults = makeDefaults()
+    let store = InboxQueueStore(defaults: defaults)
+    let ownerID = UUID()
+    let key = InboxQueueStore.storageKey(ownerID: ownerID)
+
+    defaults.set(Data("not json".utf8), forKey: key)
+    XCTAssertTrue(store.load(ownerID: ownerID).isEmpty)
+
+    let entry = makeQueuedEntry()
+    let duplicateQueue = TestStoredInboxQueue(version: 1, entries: [entry, entry])
+    defaults.set(try JSONEncoder().encode(duplicateQueue), forKey: key)
+    XCTAssertTrue(store.load(ownerID: ownerID).isEmpty)
+
+    let obsoleteQueue = TestStoredInboxQueue(version: 2, entries: [entry])
+    defaults.set(try JSONEncoder().encode(obsoleteQueue), forKey: key)
+    XCTAssertTrue(store.load(ownerID: ownerID).isEmpty)
+  }
+
+  func testQueueStoreRejectsInvalidAndOverCapacityEntries() {
+    let store = InboxQueueStore(defaults: makeDefaults())
+    let ownerID = UUID()
+    let invalidEntry = makeQueuedEntry(body: "  not normalized  ")
+
+    XCTAssertNil(store.enqueue(invalidEntry, ownerID: ownerID))
+
+    for index in 0..<InboxQueueStore.maximumEntryCount {
+      XCTAssertNotNil(
+        store.enqueue(
+          makeQueuedEntry(id: UUID(), title: "Entry \(index)"),
+          ownerID: ownerID
+        )
+      )
+    }
+
+    XCTAssertNil(
+      store.enqueue(makeQueuedEntry(id: UUID()), ownerID: ownerID)
+    )
+  }
+
+  private func makeQueuedEntry(
+    id: UUID = UUID(uuidString: "F4D2DF16-A506-4BE6-A63E-B7B18AFE3468")!,
+    title: String? = nil,
+    body: String = "A thought worth keeping."
+  ) -> QueuedInboxEntry {
+    QueuedInboxEntry(
+      id: id,
+      title: title,
+      body: body,
+      occurredAt: Date(timeIntervalSince1970: 1_788_278_400),
+      occurredTimezone: "America/Los_Angeles",
+      queuedAt: Date(timeIntervalSince1970: 1_788_278_400)
+    )
+  }
+
   private func makeDefaults() -> UserDefaults {
     let suiteName = "InboxEntryTests.\(UUID().uuidString)"
     let defaults = UserDefaults(suiteName: suiteName)!
@@ -138,4 +229,9 @@ final class InboxEntryTests: XCTestCase {
     }
     return defaults
   }
+}
+
+private struct TestStoredInboxQueue: Encodable {
+  let version: Int
+  let entries: [QueuedInboxEntry]
 }

@@ -28,7 +28,8 @@
 - The user confirmed localhost, production Web, and the iOS simulator can all sign in, create Entries, and see the same Entries across clients.
 - Web and iOS now continuously preserve per-user local Inbox drafts, restore them after refresh or relaunch, and clear them only after a successful Entry save.
 - Web now accepts a capture into a per-user local synchronization queue before making a network request, displays pending Entries, retries on reconnect or demand, and uses stable Entry IDs for idempotent server confirmation.
-- Web now has 29 passing tests, and the shared iOS scheme has nine passing native tests for capture, presentation, and draft persistence rules.
+- iOS now accepts captures into the same durable queue model, visibly separates pending Entries, and retries on reconnect, foreground activation, refresh, or demand.
+- Web now has 29 passing tests, and the shared iOS scheme has 14 passing native tests for capture, presentation, draft persistence, and synchronization queue rules.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -82,7 +83,12 @@
 - [x] Web automatically retries its queue when a connection returns or the authenticated workspace reloads online.
 - [x] Web gives each queued Entry a stable UUID and safely confirms a retry after an ambiguous successful insert.
 - [x] Web preserves the original capture time and device time zone when synchronization happens later.
-- [ ] iOS provides the same durable, visible, retryable synchronization queue behavior.
+- [x] iOS accepts a valid Entry into durable per-user device storage before attempting synchronization.
+- [x] iOS visibly lists pending Entries and provides a manual retry action.
+- [x] iOS automatically retries its queue when connectivity returns, the app becomes active, or the Inbox refreshes.
+- [x] iOS gives each queued Entry a stable UUID and safely confirms a retry after an ambiguous successful insert.
+- [x] iOS preserves the original capture time and device time zone when synchronization happens later.
+- [x] Both clients keep a failed queue item until synchronization is confirmed and retain the editable draft if local queue persistence fails.
 
 ## Feature history
 
@@ -102,12 +108,13 @@
 - `feat: add synchronized Web Inbox entries` implemented authenticated Web capture and listing.
 - `feat: add synchronized iOS Inbox entries` implemented authenticated iOS capture, listing, and native rule coverage.
 - `feat: preserve recoverable Inbox drafts` implemented per-user recoverable Inbox drafts on Web and iOS.
-- Current change: implemented the Web offline capture and retryable synchronization queue.
+- `feat: add Web offline capture queue` implemented the Web offline capture and retryable synchronization queue.
+- Current change: implemented the matching iOS offline capture and retryable synchronization queue.
 
 ## Next sequence
 
-1. Add the matching offline capture and synchronization queue to iOS.
-2. Add Entry review and explicit `Done` organization behavior.
+1. Add Entry review and explicit `Done` organization behavior.
+2. Add keyword search across the user's Entries.
 
 ## Deferred
 

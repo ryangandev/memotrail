@@ -12,6 +12,8 @@ Cross-device synchronization is not a backup by itself.
 - A Web capture is written to per-user browser storage before synchronization starts, and its pending copy is removed only after the server confirms the stable Entry ID.
 - Browser drafts and pending Entries are protected by the browser and operating-system account boundary, but they are not separately end-to-end encrypted by MemoTrail.
 - Clearing site data removes unsynchronized Web drafts and pending Entries, so users should reconnect and confirm the pending list is empty before clearing browser storage.
+- iOS stores drafts and pending Entries inside the app sandbox, retries when connectivity or foreground activity returns, and removes a pending copy only after the stable Entry ID is confirmed by the server.
+- Deleting the iOS app removes unsynchronized drafts and pending Entries, so users should reconnect and confirm the pending list is empty before uninstalling or clearing app data.
 
 ## Hosted database expectations
 

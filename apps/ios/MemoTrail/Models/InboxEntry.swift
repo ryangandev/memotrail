@@ -148,6 +148,110 @@ struct InboxDraftStore {
   }
 }
 
+struct QueuedInboxEntry: Codable, Equatable, Identifiable, Sendable {
+  let id: UUID
+  let title: String?
+  let body: String
+  let occurredAt: Date
+  let occurredTimezone: String
+  let queuedAt: Date
+
+  var presentedEntry: InboxEntry {
+    InboxEntry(
+      id: id,
+      title: title,
+      body: body,
+      createdAt: queuedAt,
+      occurredStart: occurredAt
+    )
+  }
+
+  var isValid: Bool {
+    let normalizedTitle = title?.trimmed.nonEmpty
+
+    return normalizedTitle == title
+      && (normalizedTitle != nil || !body.isEmpty)
+      && body.trimmed == body
+      && (title?.count ?? 0) <= InboxCapture.titleLimit
+      && body.count <= InboxCapture.bodyLimit
+      && !occurredTimezone.isEmpty
+      && occurredTimezone.count <= 100
+  }
+}
+
+struct InboxQueueStore {
+  static let maximumEntryCount = 100
+
+  private let defaults: UserDefaults
+
+  init(defaults: UserDefaults = .standard) {
+    self.defaults = defaults
+  }
+
+  func load(ownerID: UUID) -> [QueuedInboxEntry] {
+    let key = Self.storageKey(ownerID: ownerID)
+
+    guard let data = defaults.data(forKey: key),
+      let queue = try? JSONDecoder().decode(StoredInboxQueue.self, from: data),
+      queue.version == 1,
+      queue.entries.count <= Self.maximumEntryCount,
+      queue.entries.allSatisfy(\.isValid),
+      Set(queue.entries.map(\.id)).count == queue.entries.count
+    else {
+      defaults.removeObject(forKey: key)
+      return []
+    }
+
+    return queue.entries
+  }
+
+  func enqueue(_ entry: QueuedInboxEntry, ownerID: UUID) -> [QueuedInboxEntry]? {
+    let currentQueue = load(ownerID: ownerID)
+
+    if currentQueue.contains(where: { $0.id == entry.id }) {
+      return currentQueue
+    }
+
+    guard entry.isValid, currentQueue.count < Self.maximumEntryCount else {
+      return nil
+    }
+
+    let nextQueue = currentQueue + [entry]
+    return save(nextQueue, ownerID: ownerID) ? nextQueue : nil
+  }
+
+  func remove(entryID: UUID, ownerID: UUID) -> [QueuedInboxEntry]? {
+    let nextQueue = load(ownerID: ownerID).filter { $0.id != entryID }
+
+    if nextQueue.isEmpty {
+      defaults.removeObject(forKey: Self.storageKey(ownerID: ownerID))
+      return []
+    }
+
+    return save(nextQueue, ownerID: ownerID) ? nextQueue : nil
+  }
+
+  static func storageKey(ownerID: UUID) -> String {
+    "memotrail.inboxQueue.\(ownerID.uuidString.lowercased())"
+  }
+
+  private func save(_ entries: [QueuedInboxEntry], ownerID: UUID) -> Bool {
+    let queue = StoredInboxQueue(version: 1, entries: entries)
+
+    guard let data = try? JSONEncoder().encode(queue) else {
+      return false
+    }
+
+    defaults.set(data, forKey: Self.storageKey(ownerID: ownerID))
+    return true
+  }
+}
+
+private struct StoredInboxQueue: Codable {
+  let version: Int
+  let entries: [QueuedInboxEntry]
+}
+
 enum InboxCaptureError: LocalizedError, Equatable {
   case empty
   case titleTooLong

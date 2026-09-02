@@ -13,13 +13,15 @@ struct InboxView: View {
   @State private var hasLocalDraft: Bool
   @State private var isShowingAccount = false
   @FocusState private var isTitleFocused: Bool
+  @Environment(\.scenePhase) private var scenePhase
 
   init(
     client: SupabaseClient,
     user: AuthenticatedUser,
     isAuthenticationBusy: Bool,
     signOut: @escaping @MainActor () async -> Void,
-    draftStore: InboxDraftStore = InboxDraftStore()
+    draftStore: InboxDraftStore = InboxDraftStore(),
+    queueStore: InboxQueueStore = InboxQueueStore()
   ) {
     let draft = draftStore.load(ownerID: user.id)
 
@@ -27,7 +29,13 @@ struct InboxView: View {
     self.isAuthenticationBusy = isAuthenticationBusy
     self.signOut = signOut
     self.draftStore = draftStore
-    _controller = State(initialValue: InboxController(client: client))
+    _controller = State(
+      initialValue: InboxController(
+        client: client,
+        ownerID: user.id,
+        queueStore: queueStore
+      )
+    )
     _captureTitle = State(initialValue: draft?.title ?? "")
     _captureBody = State(initialValue: draft?.body ?? "")
     _hasLocalDraft = State(initialValue: draft != nil)
@@ -47,6 +55,9 @@ struct InboxView: View {
             titleFocus: $isTitleFocused,
             save: saveCapture
           )
+          if !controller.pendingEntries.isEmpty {
+            pendingSection
+          }
           entrySection
         }
         .padding(.horizontal, MTSpacing.s4)
@@ -54,7 +65,7 @@ struct InboxView: View {
         .padding(.bottom, MTSpacing.s12)
       }
       .refreshable {
-        await controller.load()
+        await controller.refresh()
       }
       .background(MTColor.canvas)
       .toolbar {
@@ -100,7 +111,7 @@ struct InboxView: View {
       }
       .task {
         if !controller.hasLoaded {
-          await controller.load()
+          await controller.refresh()
         }
       }
       .onChange(of: captureTitle) {
@@ -108,6 +119,61 @@ struct InboxView: View {
       }
       .onChange(of: captureBody) {
         persistDraft()
+      }
+      .onChange(of: scenePhase) { _, newPhase in
+        guard newPhase == .active, controller.hasLoaded else { return }
+        Task { await controller.refresh() }
+      }
+    }
+  }
+
+  private var pendingSection: some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s3) {
+      HStack(alignment: .center) {
+        VStack(alignment: .leading, spacing: 2) {
+          Text("PENDING SYNC")
+            .font(MTTypography.label)
+            .tracking(0.7)
+            .foregroundStyle(MTColor.ink)
+
+          Text(pendingCountLabel)
+            .font(MTTypography.caption)
+            .foregroundStyle(MTColor.inkFaint)
+        }
+
+        Spacer()
+
+        Button {
+          Task { await controller.refresh() }
+        } label: {
+          if controller.isSyncing {
+            ProgressView()
+              .controlSize(.small)
+          } else {
+            Label("Retry now", systemImage: "arrow.clockwise")
+          }
+        }
+        .font(MTTypography.caption)
+        .buttonStyle(.bordered)
+        .disabled(controller.isSyncing)
+        .accessibilityIdentifier("retry-pending-entries")
+      }
+
+      LazyVStack(spacing: 0) {
+        ForEach(controller.pendingEntries) { entry in
+          PendingEntryCard(entry: entry)
+
+          if entry.id != controller.pendingEntries.last?.id {
+            Divider()
+              .overlay(MTColor.border)
+          }
+        }
+      }
+      .background(MTColor.accentSubtle.opacity(0.22))
+      .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
+      .overlay {
+        RoundedRectangle(cornerRadius: MTRadius.large)
+          .stroke(MTColor.border, lineWidth: 1)
       }
     }
   }
@@ -234,9 +300,13 @@ struct InboxView: View {
 
   private var emptyState: some View {
     ContentUnavailableView(
-      "Your Inbox is ready",
+      controller.pendingEntries.isEmpty ? "Your Inbox is ready" : "Waiting to sync",
       systemImage: "tray",
-      description: Text("Save a thought above and it will appear here.")
+      description: Text(
+        controller.pendingEntries.isEmpty
+          ? "Save a thought above and it will appear here."
+          : "Pending Entries will appear here after MemoTrail reconnects."
+      )
     )
     .foregroundStyle(MTColor.inkMuted)
     .frame(maxWidth: .infinity, minHeight: 190)
@@ -245,6 +315,11 @@ struct InboxView: View {
   private var entryCountLabel: String {
     let count = controller.entries.count
     return "\(count) \(count == 1 ? "entry" : "entries")"
+  }
+
+  private var pendingCountLabel: String {
+    let count = controller.pendingEntries.count
+    return "\(count) \(count == 1 ? "Entry" : "Entries") on this iPhone"
   }
 
   @MainActor
