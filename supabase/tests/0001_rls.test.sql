@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(28);
+select plan(32);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -404,6 +404,55 @@ select is(
   ),
   '42501',
   'Unauthenticated users cannot create Entries'
+);
+
+reset role;
+
+select ok(
+  not exists (
+    select 1
+    from information_schema.role_table_grants
+    where grantee = 'authenticated'
+      and table_schema = 'public'
+      and privilege_type not in ('SELECT', 'INSERT', 'UPDATE', 'DELETE')
+  ),
+  'Authenticated clients have no table privileges that bypass normal row mutations'
+);
+
+select is(
+  (
+    select array_agg(privilege_type::text order by privilege_type)::text[]
+    from information_schema.role_table_grants
+    where grantee = 'authenticated'
+      and table_schema = 'public'
+      and table_name = 'attachments'
+  ),
+  array['SELECT'],
+  'Attachment metadata is read-only outside validated functions'
+);
+
+select is(
+  (
+    select array_agg(privilege_type::text order by privilege_type)::text[]
+    from information_schema.role_table_grants
+    where grantee = 'authenticated'
+      and table_schema = 'public'
+      and table_name = 'profiles'
+  ),
+  array['SELECT', 'UPDATE'],
+  'Profiles expose only their intended authenticated privileges'
+);
+
+select is(
+  (
+    select array_agg(privilege_type::text order by privilege_type)::text[]
+    from information_schema.role_table_grants
+    where grantee = 'authenticated'
+      and table_schema = 'public'
+      and table_name = 'entries'
+  ),
+  array['DELETE', 'INSERT', 'SELECT', 'UPDATE'],
+  'Entries retain the CRUD privileges enforced by Row Level Security'
 );
 
 select * from finish();

@@ -53,6 +53,7 @@
 - A locally verified Timeline contract now returns empty and populated tracks, creates or revision-safely edits Stage and Event Entries, preserves overlapping and open-ended periods, and moves Timeline Entries to Trash without losing history.
 - The local database now passes 82 pgTAP tests plus schema lint, including 33 focused Timeline tests for date rules, track movement, optimistic conflicts, hidden tracks, Trash, and owner isolation.
 - Hosted verification confirms the Timeline migration, aligned five-migration ledger, warning-free schema, empty function search paths, authenticated-only execution grants, and no seed or role deployment.
+- Hosted schema inspection identified legacy authenticated table grants that exceeded the intended Row Level Security CRUD surface; the least-privilege correction now passes locally.
 - Web now exposes Timeline as a first-class authenticated destination with all visible tracks, overlapping Stage ranges, point Events, human date labels, and responsive desktop and mobile presentations.
 - Web Timeline supports track-specific creation, revision-safe editing, track and kind changes, open-ended or bounded stages, preserved occurrence time zones, and recoverable moves to Trash.
 - The Web suite now has 57 passing tests, including Timeline input normalization, cross-time-zone calendar conversion, padded date bounds, open stages, and overlap lane assignment.
@@ -63,7 +64,7 @@
 - The shared iOS scheme now has 38 passing tests, including ten Timeline tests for workspace decoding, stable sorting, display dates, validation, and explicit RPC null encoding.
 - The native Timeline implementation passes a warning-free generic Simulator build and the full suite on an iPhone 17 Pro simulator.
 - The locally verified First Times contract supports lightweight direct creation, revision-safe editing, organization, private photo registration, and recoverable removal.
-- The local database now passes 125 pgTAP tests plus schema lint, including 43 focused First Times and private media tests.
+- The local database now passes 129 pgTAP tests plus schema lint, including 43 focused First Times and private media tests plus exact authenticated table-grant coverage.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -232,6 +233,12 @@
 - [x] Verify owner isolation, unauthenticated denial, content and date rules, optimistic conflicts, media constraints, and Trash behavior with local pgTAP coverage.
 - [ ] Apply and verify the First Times contract on hosted Supabase.
 
+### Authenticated table grants
+
+- [x] Remove client `TRUNCATE`, `TRIGGER`, `REFERENCES`, `MAINTAIN`, and other table privileges outside the intended CRUD surface.
+- [x] Keep profiles limited to Select and Update, Entry history and attachments limited to Select, and RLS-managed application tables limited to CRUD.
+- [ ] Verify the exact local and hosted privilege inventories after migration.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -266,7 +273,8 @@
 - `feat: deploy Timeline data contract` deployed and verified the Timeline data contract on hosted Supabase.
 - `feat: add Web Timeline experience` implemented and locally verified the authenticated Web Timeline experience.
 - `feat: add iOS Timeline experience` implemented and simulator-verified the matching native iOS Timeline experience.
-- Current change: implemented and locally verified the shared First Times and private photo-attachment data contract.
+- `feat: add First Times data contract` implemented and locally verified the shared First Times and private photo-attachment data contract.
+- Current change: locally verified the authenticated table-grant restriction before hosted rollout.
 
 ## Next sequence
 
