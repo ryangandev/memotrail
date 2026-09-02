@@ -24,14 +24,10 @@ struct RootTabView: View {
           Label("Search", systemImage: "magnifyingglass")
         }
 
-      PlaceholderView(
-        title: "Timeline",
-        subtitle: "Life stages and moments will live here.",
-        systemImage: "point.bottomleft.forward.to.point.topright.scurvepath"
-      )
-      .tabItem {
-        Label("Timeline", systemImage: "point.bottomleft.forward.to.point.topright.scurvepath")
-      }
+      TimelineView(client: client, ownerID: user.id)
+        .tabItem {
+          Label("Timeline", systemImage: "point.bottomleft.forward.to.point.topright.scurvepath")
+        }
 
       PlaceholderView(
         title: "First Times",

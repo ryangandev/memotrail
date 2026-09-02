@@ -25,8 +25,12 @@
 		B00000000000000000000010 /* SearchEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000017 /* SearchEntry.swift */; };
 		B00000000000000000000011 /* SearchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000018 /* SearchController.swift */; };
 		B00000000000000000000012 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000019 /* SearchView.swift */; };
+		B00000000000000000000013 /* TimelineEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000001A /* TimelineEntry.swift */; };
+		B00000000000000000000014 /* TimelineController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000001B /* TimelineController.swift */; };
+		B00000000000000000000015 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000001C /* TimelineView.swift */; };
 		B10000000000000000000001 /* InboxEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000001 /* InboxEntryTests.swift */; };
 		B10000000000000000000002 /* SearchEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000003 /* SearchEntryTests.swift */; };
+		B10000000000000000000003 /* TimelineEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000004 /* TimelineEntryTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,9 +63,13 @@
 		C00000000000000000000017 /* SearchEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchEntry.swift; sourceTree = "<group>"; };
 		C00000000000000000000018 /* SearchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchController.swift; sourceTree = "<group>"; };
 		C00000000000000000000019 /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
+		C0000000000000000000001A /* TimelineEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineEntry.swift; sourceTree = "<group>"; };
+		C0000000000000000000001B /* TimelineController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineController.swift; sourceTree = "<group>"; };
+		C0000000000000000000001C /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
 		C10000000000000000000001 /* InboxEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000002 /* MemoTrailTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MemoTrailTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C10000000000000000000003 /* SearchEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchEntryTests.swift; sourceTree = "<group>"; };
+		C10000000000000000000004 /* TimelineEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineEntryTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -132,6 +140,7 @@
 				A10000000000000000000013 /* Authentication */,
 				A10000000000000000000006 /* Inbox */,
 				A10000000000000000000015 /* Search */,
+				A10000000000000000000016 /* Timeline */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -185,6 +194,7 @@
 			children = (
 				C00000000000000000000007 /* InboxEntry.swift */,
 				C00000000000000000000017 /* SearchEntry.swift */,
+				C0000000000000000000001A /* TimelineEntry.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -212,6 +222,7 @@
 			children = (
 				C10000000000000000000001 /* InboxEntryTests.swift */,
 				C10000000000000000000003 /* SearchEntryTests.swift */,
+				C10000000000000000000004 /* TimelineEntryTests.swift */,
 			);
 			path = MemoTrailTests;
 			sourceTree = "<group>";
@@ -223,6 +234,15 @@
 				C00000000000000000000019 /* SearchView.swift */,
 			);
 			path = Search;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000016 /* Timeline */ = {
+			isa = PBXGroup;
+			children = (
+				C0000000000000000000001B /* TimelineController.swift */,
+				C0000000000000000000001C /* TimelineView.swift */,
+			);
+			path = Timeline;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -349,6 +369,9 @@
 				B00000000000000000000010 /* SearchEntry.swift in Sources */,
 				B00000000000000000000011 /* SearchController.swift in Sources */,
 				B00000000000000000000012 /* SearchView.swift in Sources */,
+				B00000000000000000000013 /* TimelineEntry.swift in Sources */,
+				B00000000000000000000014 /* TimelineController.swift in Sources */,
+				B00000000000000000000015 /* TimelineView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -358,6 +381,7 @@
 			files = (
 				B10000000000000000000001 /* InboxEntryTests.swift in Sources */,
 				B10000000000000000000002 /* SearchEntryTests.swift in Sources */,
+				B10000000000000000000003 /* TimelineEntryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

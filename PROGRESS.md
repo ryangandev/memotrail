@@ -57,6 +57,11 @@
 - Web Timeline supports track-specific creation, revision-safe editing, track and kind changes, open-ended or bounded stages, preserved occurrence time zones, and recoverable moves to Trash.
 - The Web suite now has 57 passing tests, including Timeline input normalization, cross-time-zone calendar conversion, padded date bounds, open stages, and overlap lane assignment.
 - Synthetic localhost browser verification covered empty tracks, a multi-year Stage, a First Time Event, a revision-safe edit, desktop layout, accessible controls, and error-free server requests.
+- iOS now exposes the same Timeline workspace as a first-class native tab with track-first browsing, empty-track actions, chronological moments, and native pull-to-refresh behavior.
+- The native Timeline editor creates or revision-safely edits Stage and Event content, track placement, open or bounded occurrence dates, precision, human labels, and preserved occurrence time zones.
+- Native Timeline Entries can move to Trash through an explicit confirmation while retaining the shared database history and conflict behavior.
+- The shared iOS scheme now has 38 passing tests, including ten Timeline tests for workspace decoding, stable sorting, display dates, validation, and explicit RPC null encoding.
+- The native Timeline implementation passes a warning-free generic Simulator build and the full suite on an iPhone 17 Pro simulator.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -201,6 +206,18 @@
 - [x] Validate Timeline input and layout behavior with 15 focused Web tests.
 - [x] Verify real local creation and editing through the browser without runtime request errors.
 
+### iOS Timeline
+
+- [x] Add Timeline as a first-class native tab backed by the shared authenticated Timeline workspace RPC.
+- [x] Present every visible track as a native track-first card, including useful empty states and track-specific add actions.
+- [x] Display Stage and Event markers, chronological ordering, open-ended periods, human date labels, and preserved local occurrence dates.
+- [x] Create and revision-safely edit content, kind, track, date precision, occurrence range, and human date labels.
+- [x] Preserve the original occurrence time zone unless an occurrence date is changed locally.
+- [x] Move a Timeline Entry to Trash only after explicit confirmation and surface cross-device revision conflicts.
+- [x] Expose initial loading, refresh, empty-track, unavailable, mutation-progress, validation-error, and conflict states.
+- [x] Verify native decoding, sorting, formatting, validation, and RPC parameter encoding with ten focused tests.
+- [x] Pass the warning-free generic Simulator build and all 38 tests on an iPhone 17 Pro simulator.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -233,11 +250,14 @@
 - `feat: add iOS keyword search` implemented the matching native iOS keyword search experience.
 - `feat: add Timeline data contract` implemented and locally verified the initial owner-scoped Timeline data contract.
 - `feat: deploy Timeline data contract` deployed and verified the Timeline data contract on hosted Supabase.
-- Current change: implemented and locally verified the authenticated Web Timeline experience.
+- `feat: add Web Timeline experience` implemented and locally verified the authenticated Web Timeline experience.
+- Current change: implemented and simulator-verified the matching native iOS Timeline experience.
 
 ## Next sequence
 
-1. Add the matching native iOS Timeline experience.
+1. Add the shared First Times and private photo-attachment data contract.
+2. Add the dedicated Web First Times experience.
+3. Add the matching native iOS First Times experience.
 
 ## Deferred
 
