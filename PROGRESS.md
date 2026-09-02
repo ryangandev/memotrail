@@ -14,7 +14,7 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- The linked hosted Supabase project contains all four reviewed repository migrations and no development seed users.
+- The linked hosted Supabase project contains all seven reviewed repository migrations and no development seed users.
 - The hosted atomic Entry review contract now supports content, Type, occurrence, Collection, tag, and `Done` updates in one transaction.
 - Hosted verification found 21 Row Level Security-enabled application tables, 22 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
@@ -53,7 +53,9 @@
 - A locally verified Timeline contract now returns empty and populated tracks, creates or revision-safely edits Stage and Event Entries, preserves overlapping and open-ended periods, and moves Timeline Entries to Trash without losing history.
 - The local database now passes 82 pgTAP tests plus schema lint, including 33 focused Timeline tests for date rules, track movement, optimistic conflicts, hidden tracks, Trash, and owner isolation.
 - Hosted verification confirms the Timeline migration, aligned five-migration ledger, warning-free schema, empty function search paths, authenticated-only execution grants, and no seed or role deployment.
-- Hosted schema inspection identified legacy authenticated table grants that exceeded the intended Row Level Security CRUD surface; the least-privilege correction now passes locally.
+- Hosted First Times verification confirms the read and mutation functions, empty search paths, authenticated-only execution grants, and private attachment contract are deployed.
+- Hosted schema inspection identified and corrected legacy authenticated table grants that exceeded the intended Row Level Security CRUD surface.
+- Hosted authenticated table privileges are now limited to Select and Update for profiles, Select for Entry history and attachments, and RLS-managed CRUD for the remaining application tables.
 - Web now exposes Timeline as a first-class authenticated destination with all visible tracks, overlapping Stage ranges, point Events, human date labels, and responsive desktop and mobile presentations.
 - Web Timeline supports track-specific creation, revision-safe editing, track and kind changes, open-ended or bounded stages, preserved occurrence time zones, and recoverable moves to Trash.
 - The Web suite now has 57 passing tests, including Timeline input normalization, cross-time-zone calendar conversion, padded date bounds, open stages, and overlap lane assignment.
@@ -231,13 +233,13 @@
 - [x] Recoverably remove a photo without deleting its original private Storage object.
 - [x] Move a First Time to Trash while preserving Entry history and its private media.
 - [x] Verify owner isolation, unauthenticated denial, content and date rules, optimistic conflicts, media constraints, and Trash behavior with local pgTAP coverage.
-- [ ] Apply and verify the First Times contract on hosted Supabase.
+- [x] Apply and verify the First Times contract on hosted Supabase.
 
 ### Authenticated table grants
 
 - [x] Remove client `TRUNCATE`, `TRIGGER`, `REFERENCES`, `MAINTAIN`, and other table privileges outside the intended CRUD surface.
 - [x] Keep profiles limited to Select and Update, Entry history and attachments limited to Select, and RLS-managed application tables limited to CRUD.
-- [ ] Verify the exact local and hosted privilege inventories after migration.
+- [x] Verify the exact local and hosted privilege inventories after migration.
 
 ## Feature history
 
@@ -274,7 +276,8 @@
 - `feat: add Web Timeline experience` implemented and locally verified the authenticated Web Timeline experience.
 - `feat: add iOS Timeline experience` implemented and simulator-verified the matching native iOS Timeline experience.
 - `feat: add First Times data contract` implemented and locally verified the shared First Times and private photo-attachment data contract.
-- Current change: locally verified the authenticated table-grant restriction before hosted rollout.
+- `fix: restrict authenticated table grants` removed table privileges outside the intended RLS-managed client surface.
+- Current change: deployed and verified the First Times contract and least-privilege correction on hosted Supabase.
 
 ## Next sequence
 
