@@ -5,11 +5,13 @@ export type ReviewableEntryType = (typeof reviewableEntryTypes)[number];
 
 export type InboxReviewInput = {
   body: string;
+  collectionNames: string[];
   entryType: ReviewableEntryType;
   id: string;
   occurredAt: string;
   occurredTimezone: string;
   revision: number;
+  tagNames: string[];
   title: string | null;
 };
 
@@ -28,9 +30,25 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
   const values = input as Partial<Record<keyof InboxReviewInput, unknown>>;
   const title = typeof values.title === "string" ? values.title.trim() : "";
   const body = typeof values.body === "string" ? values.body.trim() : "";
+  const collectionNames = parseOrganizationNames(
+    values.collectionNames,
+    20,
+    80,
+  );
+  const tagNames = parseOrganizationNames(values.tagNames, 50, 60);
 
   if (!title && !body) {
     return invalidReview("Keep a title or note before saving.");
+  }
+
+  if (!collectionNames) {
+    return invalidReview(
+      "Use up to 20 Collections with names under 80 characters.",
+    );
+  }
+
+  if (!tagNames) {
+    return invalidReview("Use up to 50 tags with names under 60 characters.");
   }
 
   if (title.length > entryTitleLimit) {
@@ -84,15 +102,50 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
   return {
     data: {
       body,
+      collectionNames,
       entryType: values.entryType as ReviewableEntryType,
       id: values.id,
       occurredAt: new Date(values.occurredAt).toISOString(),
       occurredTimezone: values.occurredTimezone,
       revision: values.revision,
+      tagNames,
       title: title || null,
     },
     success: true,
   };
+}
+
+export function parseOrganizationNames(
+  input: unknown,
+  maximumCount: number,
+  maximumNameLength: number,
+) {
+  if (!Array.isArray(input) || input.length > maximumCount) {
+    return null;
+  }
+
+  const names: string[] = [];
+  const normalizedNames = new Set<string>();
+
+  for (const value of input) {
+    if (typeof value !== "string") {
+      return null;
+    }
+
+    const name = value.trim();
+    const normalizedName = name.toLocaleLowerCase();
+
+    if (!name || name.length > maximumNameLength) {
+      return null;
+    }
+
+    if (!normalizedNames.has(normalizedName)) {
+      normalizedNames.add(normalizedName);
+      names.push(name);
+    }
+  }
+
+  return names;
 }
 
 function invalidReview(message: string): InboxReviewInputResult {

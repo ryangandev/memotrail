@@ -35,6 +35,8 @@
 - iOS now provides the matching native review sheet, editable fields, optimistic revision check, `Save changes`, and explicit `Done` behavior.
 - Web now has 33 passing tests, and the shared iOS scheme has 17 passing native tests for capture, presentation, draft persistence, queue, and review rules.
 - The local database now passes 28 pgTAP tests plus schema lint, including atomic organization, name de-duplication, history, stale revisions, and cross-owner denial.
+- Web review now loads existing Entry relationships and available names, displays Collection and tag chips, and atomically replaces them alongside Entry content and `Done` state.
+- Web now has 35 passing tests, including organization-name normalization, case-insensitive de-duplication, and limits.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -105,7 +107,10 @@
 - [x] iOS provides the matching review, conflict, save, and explicit Done behavior.
 - [x] Web and iOS display the initial Standard Entry and First Time Type choices consistently.
 - [x] Both clients preserve the original time zone unless the occurrence date is edited locally.
-- [ ] Collections and tags are editable during review.
+- [x] Web review loads and displays the Entry's current Collections and tags.
+- [x] Web review supports removable chips, existing-name suggestions, and creation of new Collection or tag names.
+- [x] Pending text in an organization field is included when Save or Done is selected, even before Enter is pressed.
+- [ ] iOS provides the matching manual Collection and tag editing behavior.
 
 ### Atomic Entry organization
 
@@ -138,14 +143,14 @@
 - `feat: add iOS offline capture queue` implemented the matching iOS offline capture and retryable synchronization queue.
 - `feat: add Web Inbox review` implemented Web Entry review and explicit `Done` organization.
 - `feat: add iOS Inbox review` implemented the matching iOS Entry review and explicit `Done` organization.
-- Current change: added and locally verified the atomic database contract for manual Entry organization.
+- `feat: add atomic Entry organization` added and locally verified the atomic database contract for manual Entry organization.
+- Current change: implemented manual Collections and tags in Web Entry review.
 
 ## Next sequence
 
-1. Add manual Collections and tags to Web Entry review.
-2. Add the matching manual organization controls to iOS.
-3. Ask for hosted migration rollout approval before enabling the new contract in production.
-4. Add keyword search across the user's Entries.
+1. Add the matching manual Collection and tag controls to iOS.
+2. Ask for hosted migration rollout approval before enabling the new contract in production.
+3. Add keyword search across the user's Entries.
 
 ## Deferred
 

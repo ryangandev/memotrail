@@ -806,6 +806,65 @@
   gap: var(--mt-space-4);
 }
 
+.organizationEditor {
+  display: grid;
+  gap: var(--mt-space-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.organizationEditor legend {
+  margin-bottom: var(--mt-space-2);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.organizationEditor > input {
+  width: 100%;
+}
+
+.organizationEditor > p {
+  color: var(--mt-color-ink-faint);
+  font-size: 10px;
+  text-align: right;
+}
+
+.organizationEditor:disabled {
+  opacity: 0.65;
+}
+
+.organizationChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.organizationChips button {
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: var(--mt-radius-pill);
+  color: var(--mt-color-ink-muted);
+  background: var(--mt-color-surface-subtle);
+  font-size: var(--mt-font-size-caption);
+  cursor: pointer;
+}
+
+.organizationChips button:hover {
+  color: var(--mt-color-warm);
+}
+
+.organizationChips span {
+  color: var(--mt-color-ink-faint);
+  font-size: 16px;
+  line-height: 1;
+}
+
 .reviewHint {
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);

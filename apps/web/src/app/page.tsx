@@ -51,12 +51,16 @@ export default async function Home() {
 }
 
 function Workspace({
+  collectionOptions,
   entries,
   loadError,
+  tagOptions,
   viewer,
 }: {
+  collectionOptions: string[];
   entries: InboxEntry[];
   loadError: string | null;
+  tagOptions: string[];
   viewer: Viewer;
 }) {
   const navigation = navigationWithInboxCount(entries.length);
@@ -139,7 +143,11 @@ function Workspace({
                 </div>
               ) : null}
 
-              <EntryReviewList entries={entries} />
+              <EntryReviewList
+                collectionOptions={collectionOptions}
+                entries={entries}
+                tagOptions={tagOptions}
+              />
             </div>
           </section>
         </div>

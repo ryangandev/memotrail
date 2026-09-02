@@ -93,22 +93,18 @@ export async function reviewInboxEntry(
     };
   }
 
-  const { data, error } = await context.client
-    .from("entries")
-    .update({
-      body: parsedInput.data.body,
-      entry_type: parsedInput.data.entryType,
-      inbox_status: intent === "done" ? "organized" : "unreviewed",
-      occurred_start: parsedInput.data.occurredAt,
-      occurred_timezone: parsedInput.data.occurredTimezone,
-      title: parsedInput.data.title,
-    })
-    .eq("id", parsedInput.data.id)
-    .eq("owner_id", context.userId)
-    .eq("inbox_status", "unreviewed")
-    .eq("revision", parsedInput.data.revision)
-    .select("id")
-    .maybeSingle<{ id: string }>();
+  const { data, error } = await context.client.rpc("review_entry", {
+    p_body: parsedInput.data.body,
+    p_collection_names: parsedInput.data.collectionNames,
+    p_entry_id: parsedInput.data.id,
+    p_entry_type: parsedInput.data.entryType,
+    p_expected_revision: parsedInput.data.revision,
+    p_mark_done: intent === "done",
+    p_occurred_start: parsedInput.data.occurredAt,
+    p_occurred_timezone: parsedInput.data.occurredTimezone,
+    p_tag_names: parsedInput.data.tagNames,
+    p_title: parsedInput.data.title,
+  });
 
   if (error) {
     return {
@@ -117,7 +113,7 @@ export async function reviewInboxEntry(
     };
   }
 
-  if (!data) {
+  if (!Array.isArray(data) || data.length === 0) {
     return {
       message:
         "This Entry changed on another device. Close it, refresh, and review the latest version.",

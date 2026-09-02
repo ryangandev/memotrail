@@ -130,7 +130,8 @@ Phase 1 repository work:
 - [x] Establish offline capture and a retryable synchronization queue across both clients.
 - [x] Add Web Entry review with optimistic updates and explicit `Done` organization.
 - [x] Add the matching Entry review and explicit `Done` organization to iOS.
-- [ ] Add manual Collections and tags to Entry review on Web and iOS.
+- [x] Add manual Collections and tags to Web Entry review.
+- [ ] Add the matching manual Collection and tag controls to iOS Entry review.
 - [ ] Add authenticated UI tests after a safe test-account strategy is defined.
 - [ ] Verify installation and launch separately on the physical iPhone.
 

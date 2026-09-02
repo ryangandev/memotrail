@@ -16,7 +16,15 @@ import {
 } from "@/lib/data/inbox-review";
 import styles from "@/app/page.module.css";
 
-export function EntryReviewList({ entries }: { entries: InboxEntry[] }) {
+export function EntryReviewList({
+  collectionOptions,
+  entries,
+  tagOptions,
+}: {
+  collectionOptions: string[];
+  entries: InboxEntry[];
+  tagOptions: string[];
+}) {
   const [selectedEntry, setSelectedEntry] = useState<InboxEntry | null>(null);
 
   return (
@@ -39,6 +47,17 @@ export function EntryReviewList({ entries }: { entries: InboxEntry[] }) {
                 {entry.entryType === "first_time" ? (
                   <span>First Time</span>
                 ) : null}
+                {entry.collectionNames.map((name) => (
+                  <span key={`collection:${name.toLocaleLowerCase()}`}>
+                    {name}
+                  </span>
+                ))}
+                {entry.tagNames.slice(0, 3).map((name) => (
+                  <span key={`tag:${name.toLocaleLowerCase()}`}>#{name}</span>
+                ))}
+                {entry.tagNames.length > 3 ? (
+                  <span>+{entry.tagNames.length - 3}</span>
+                ) : null}
               </div>
               <button
                 className={styles.reviewEntryButton}
@@ -57,7 +76,9 @@ export function EntryReviewList({ entries }: { entries: InboxEntry[] }) {
         <EntryReviewDialog
           entry={selectedEntry}
           key={`${selectedEntry.id}:${selectedEntry.revision}`}
+          collectionOptions={collectionOptions}
           onClose={() => setSelectedEntry(null)}
+          tagOptions={tagOptions}
         />
       ) : null}
     </>
@@ -65,15 +86,21 @@ export function EntryReviewList({ entries }: { entries: InboxEntry[] }) {
 }
 
 function EntryReviewDialog({
+  collectionOptions,
   entry,
   onClose,
+  tagOptions,
 }: {
+  collectionOptions: string[];
   entry: InboxEntry;
   onClose: () => void;
+  tagOptions: string[];
 }) {
   const router = useRouter();
   const [title, setTitle] = useState(entry.title ?? "");
   const [body, setBody] = useState(entry.body);
+  const [collectionNames, setCollectionNames] = useState(entry.collectionNames);
+  const [collectionInput, setCollectionInput] = useState("");
   const [entryType, setEntryType] = useState<ReviewableEntryType>(
     entry.entryType,
   );
@@ -85,6 +112,8 @@ function EntryReviewDialog({
   );
   const [isPending, setIsPending] = useState(false);
   const [result, setResult] = useState<ReviewInboxEntryResult | null>(null);
+  const [tagNames, setTagNames] = useState(entry.tagNames);
+  const [tagInput, setTagInput] = useState("");
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -101,6 +130,7 @@ function EntryReviewDialog({
     const localDate = new Date(occurredAt);
     const input: InboxReviewInput = {
       body,
+      collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       entryType,
       id: entry.id,
       occurredAt: Number.isNaN(localDate.getTime())
@@ -108,6 +138,7 @@ function EntryReviewDialog({
         : localDate.toISOString(),
       occurredTimezone,
       revision: entry.revision,
+      tagNames: namesIncludingDraft(tagNames, tagInput),
       title: title || null,
     };
     const parsedInput = parseInboxReviewInput(input);
@@ -229,9 +260,31 @@ function EntryReviewDialog({
             </label>
           </div>
 
-          <p className={styles.reviewHint}>
-            Collections and tags will be editable in the next organization step.
-          </p>
+          <OrganizationNameEditor
+            disabled={isPending}
+            label="Collections"
+            maximumCount={20}
+            maximumNameLength={80}
+            names={collectionNames}
+            onChange={setCollectionNames}
+            input={collectionInput}
+            onInputChange={setCollectionInput}
+            options={collectionOptions}
+            placeholder="Add a Collection"
+          />
+
+          <OrganizationNameEditor
+            disabled={isPending}
+            label="Tags"
+            maximumCount={50}
+            maximumNameLength={60}
+            names={tagNames}
+            onChange={setTagNames}
+            input={tagInput}
+            onInputChange={setTagInput}
+            options={tagOptions}
+            placeholder="Add a tag"
+          />
 
           {result ? (
             <p className={styles.reviewError} role="alert">
@@ -271,6 +324,100 @@ function EntryReviewDialog({
       </section>
     </div>
   );
+}
+
+function OrganizationNameEditor({
+  disabled,
+  label,
+  maximumCount,
+  maximumNameLength,
+  names,
+  onChange,
+  input,
+  onInputChange,
+  options,
+  placeholder,
+}: {
+  disabled: boolean;
+  label: string;
+  maximumCount: number;
+  maximumNameLength: number;
+  names: string[];
+  onChange: (names: string[]) => void;
+  input: string;
+  onInputChange: (input: string) => void;
+  options: string[];
+  placeholder: string;
+}) {
+  const datalistId = `review-${label.toLocaleLowerCase()}-options`;
+  const selectedNames = new Set(names.map((name) => name.toLocaleLowerCase()));
+  const suggestions = options.filter(
+    (option) => !selectedNames.has(option.toLocaleLowerCase()),
+  );
+
+  function addName(value: string) {
+    const name = value.trim();
+
+    if (
+      !name ||
+      name.length > maximumNameLength ||
+      names.length >= maximumCount ||
+      selectedNames.has(name.toLocaleLowerCase())
+    ) {
+      onInputChange("");
+      return;
+    }
+
+    onChange([...names, name]);
+    onInputChange("");
+  }
+
+  return (
+    <fieldset className={styles.organizationEditor} disabled={disabled}>
+      <legend>{label}</legend>
+      {names.length > 0 ? (
+        <div className={styles.organizationChips}>
+          {names.map((name) => (
+            <button
+              aria-label={`Remove ${name} from ${label}`}
+              key={name.toLocaleLowerCase()}
+              onClick={() => onChange(names.filter((item) => item !== name))}
+              type="button"
+            >
+              {name}
+              <span aria-hidden="true">×</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
+      <input
+        list={datalistId}
+        maxLength={maximumNameLength}
+        onChange={(event) => onInputChange(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            addName(input);
+          }
+        }}
+        placeholder={`${placeholder} and press Enter`}
+        value={input}
+      />
+      <datalist id={datalistId}>
+        {suggestions.map((suggestion) => (
+          <option key={suggestion.toLocaleLowerCase()} value={suggestion} />
+        ))}
+      </datalist>
+      <p>
+        {names.length} of {maximumCount}
+      </p>
+    </fieldset>
+  );
+}
+
+function namesIncludingDraft(names: string[], draft: string) {
+  const name = draft.trim();
+  return name ? [...names, name] : names;
 }
 
 function localDateTimeValue(value: string) {

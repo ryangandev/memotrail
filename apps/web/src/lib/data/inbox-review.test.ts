@@ -3,11 +3,13 @@ import { parseInboxReviewInput } from "./inbox-review";
 
 const validInput = {
   body: "Small forces trigger bone remodeling.",
+  collectionNames: ["Learning", "Health"],
   entryType: "standard",
   id: "f4d2df16-a506-4be6-a63e-b7b18afe3468",
   occurredAt: "2026-09-01T15:00:00.000Z",
   occurredTimezone: "America/Los_Angeles",
   revision: 1,
+  tagNames: ["orthodontics"],
   title: "How aligners move teeth",
 };
 
@@ -53,6 +55,38 @@ describe("Inbox Entry review", () => {
     expect(
       parseInboxReviewInput({ ...validInput, occurredAt: "not a date" })
         .success,
+    ).toBe(false);
+  });
+
+  it("trims and de-duplicates Collections and tags case-insensitively", () => {
+    expect(
+      parseInboxReviewInput({
+        ...validInput,
+        collectionNames: [" Learning ", "learning", "Health"],
+        tagNames: [" Teeth ", "teeth", "science"],
+      }),
+    ).toMatchObject({
+      data: {
+        collectionNames: ["Learning", "Health"],
+        tagNames: ["Teeth", "science"],
+      },
+      success: true,
+    });
+  });
+
+  it("rejects blank, oversized, and excessive organization names", () => {
+    expect(
+      parseInboxReviewInput({ ...validInput, collectionNames: [" "] }).success,
+    ).toBe(false);
+    expect(
+      parseInboxReviewInput({ ...validInput, tagNames: ["t".repeat(61)] })
+        .success,
+    ).toBe(false);
+    expect(
+      parseInboxReviewInput({
+        ...validInput,
+        collectionNames: Array.from({ length: 21 }, (_, index) => `C${index}`),
+      }).success,
     ).toBe(false);
   });
 });
