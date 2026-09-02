@@ -5,8 +5,11 @@ import { createClient } from "@/lib/supabase/server";
 export type InboxEntry = {
   body: string;
   createdAt: string;
+  entryType: "first_time" | "standard";
   id: string;
   occurredAt: string;
+  occurredTimezone: string | null;
+  revision: number;
   title: string | null;
 };
 
@@ -28,8 +31,11 @@ type Claims = Record<string, unknown>;
 type EntryRow = {
   body: string;
   created_at: string;
+  entry_type: "first_time" | "standard";
   id: string;
   occurred_start: string | null;
+  occurred_timezone: string | null;
+  revision: number;
   title: string | null;
 };
 
@@ -68,7 +74,9 @@ export async function getInboxWorkspace(): Promise<InboxWorkspace | null> {
 
   const { data, error } = await context.client
     .from("entries")
-    .select("id,title,body,created_at,occurred_start")
+    .select(
+      "id,title,body,entry_type,created_at,occurred_start,occurred_timezone,revision",
+    )
     .eq("owner_id", context.userId)
     .eq("inbox_status", "unreviewed")
     .is("deleted_at", null)
@@ -89,8 +97,11 @@ function entryFromRow(row: EntryRow): InboxEntry {
   return {
     body: row.body,
     createdAt: row.created_at,
+    entryType: row.entry_type,
     id: row.id,
     occurredAt: row.occurred_start ?? row.created_at,
+    occurredTimezone: stringValue(row.occurred_timezone),
+    revision: row.revision,
     title: stringValue(row.title),
   };
 }

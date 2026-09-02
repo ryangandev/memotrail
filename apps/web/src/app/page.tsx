@@ -2,6 +2,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { AuthGate } from "@/components/auth-gate";
 import { CaptureComposer } from "@/components/capture-composer";
 import { SyncStatus } from "@/components/sync-status";
+import { EntryReviewList } from "@/components/entry-review-list";
 import { signOut } from "@/app/auth/actions";
 import {
   getInboxWorkspace,
@@ -138,26 +139,7 @@ function Workspace({
                 </div>
               ) : null}
 
-              {entries.map((entry) => {
-                const excerpt = entryExcerpt(entry);
-
-                return (
-                  <article className={styles.entryCard} key={entry.id}>
-                    <div className={styles.entryMeta}>
-                      <time dateTime={entry.occurredAt}>
-                        {entryDateLabel(entry.occurredAt)}
-                      </time>
-                    </div>
-                    <h3>{entryTitle(entry)}</h3>
-                    {excerpt ? <p>{excerpt}</p> : null}
-                    <footer>
-                      <div className={styles.tags}>
-                        <span>Unreviewed</span>
-                      </div>
-                    </footer>
-                  </article>
-                );
-              })}
+              <EntryReviewList entries={entries} />
             </div>
           </section>
         </div>
@@ -257,45 +239,4 @@ function todayLabel() {
 
 function entryCountLabel(count: number) {
   return `${count} ${count === 1 ? "entry" : "entries"}`;
-}
-
-function entryDateLabel(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
-
-function entryTitle(entry: InboxEntry) {
-  if (entry.title) {
-    return entry.title;
-  }
-
-  const body = entry.body.trim();
-  const firstLine = body.split(/\r?\n/, 1)[0]?.trim() ?? "";
-  return truncate(firstLine || "Untitled Entry", 90);
-}
-
-function entryExcerpt(entry: InboxEntry) {
-  const body = entry.body.trim();
-
-  if (!body) {
-    return "";
-  }
-
-  if (entry.title) {
-    return truncate(body, 280);
-  }
-
-  const firstLineEnd = body.indexOf("\n");
-
-  if (firstLineEnd >= 0) {
-    return truncate(body.slice(firstLineEnd + 1).trim(), 280);
-  }
-
-  return body.length > 90 ? truncate(body.slice(90).trim(), 280) : "";
-}
-
-function truncate(value: string, limit: number) {
-  return value.length > limit ? `${value.slice(0, limit).trimEnd()}…` : value;
 }

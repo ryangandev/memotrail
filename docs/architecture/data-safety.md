@@ -14,6 +14,8 @@ Cross-device synchronization is not a backup by itself.
 - Clearing site data removes unsynchronized Web drafts and pending Entries, so users should reconnect and confirm the pending list is empty before clearing browser storage.
 - iOS stores drafts and pending Entries inside the app sandbox, retries when connectivity or foreground activity returns, and removes a pending copy only after the stable Entry ID is confirmed by the server.
 - Deleting the iOS app removes unsynchronized drafts and pending Entries, so users should reconnect and confirm the pending list is empty before uninstalling or clearing app data.
+- Entry review updates include the revision originally loaded by the client, so a newer edit from another client causes a conflict instead of a silent overwrite.
+- Selecting `Done` changes organization state through a normal versioned Entry update and does not delete the Entry or its prior revision.
 
 ## Hosted database expectations
 

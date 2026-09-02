@@ -6,10 +6,19 @@ import {
   isQueuedInboxEntry,
   type QueuedInboxEntry,
 } from "@/lib/data/inbox-queue";
+import {
+  parseInboxReviewInput,
+  type InboxReviewInput,
+} from "@/lib/data/inbox-review";
 
 export type SyncInboxEntryResult = {
   message: string;
   status: "retry" | "synced";
+};
+
+export type ReviewInboxEntryResult = {
+  message: string;
+  status: "conflict" | "done" | "error" | "saved";
 };
 
 export async function syncInboxEntry(
@@ -58,6 +67,69 @@ export async function syncInboxEntry(
     message: "Saved to Inbox.",
     status: "synced",
   };
+}
+
+export async function reviewInboxEntry(
+  input: InboxReviewInput,
+  intent: "done" | "save",
+): Promise<ReviewInboxEntryResult> {
+  const parsedInput = parseInboxReviewInput(input);
+
+  if (!parsedInput.success || (intent !== "save" && intent !== "done")) {
+    return {
+      message: parsedInput.success
+        ? "Choose a valid review action."
+        : parsedInput.message,
+      status: "error",
+    };
+  }
+
+  const context = await getAuthenticatedContext();
+
+  if (!context) {
+    return {
+      message: "Your session expired. Sign in again before saving.",
+      status: "error",
+    };
+  }
+
+  const { data, error } = await context.client
+    .from("entries")
+    .update({
+      body: parsedInput.data.body,
+      entry_type: parsedInput.data.entryType,
+      inbox_status: intent === "done" ? "organized" : "unreviewed",
+      occurred_start: parsedInput.data.occurredAt,
+      occurred_timezone: parsedInput.data.occurredTimezone,
+      title: parsedInput.data.title,
+    })
+    .eq("id", parsedInput.data.id)
+    .eq("owner_id", context.userId)
+    .eq("inbox_status", "unreviewed")
+    .eq("revision", parsedInput.data.revision)
+    .select("id")
+    .maybeSingle<{ id: string }>();
+
+  if (error) {
+    return {
+      message: "MemoTrail could not save these changes. Try again.",
+      status: "error",
+    };
+  }
+
+  if (!data) {
+    return {
+      message:
+        "This Entry changed on another device. Close it, refresh, and review the latest version.",
+      status: "conflict",
+    };
+  }
+
+  revalidatePath("/");
+
+  return intent === "done"
+    ? { message: "Entry organized.", status: "done" }
+    : { message: "Changes saved.", status: "saved" };
 }
 
 async function entryAlreadyExists(

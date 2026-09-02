@@ -126,6 +126,8 @@ Phase 1 repository work:
 - [x] Establish Web offline capture with a visible, retryable synchronization queue.
 - [x] Establish iOS offline capture with a visible, retryable synchronization queue.
 - [x] Establish offline capture and a retryable synchronization queue across both clients.
+- [x] Add Web Entry review with optimistic updates and explicit `Done` organization.
+- [ ] Add the matching Entry review and explicit `Done` organization to iOS.
 - [ ] Add authenticated UI tests after a safe test-account strategy is defined.
 - [ ] Verify installation and launch separately on the physical iPhone.
 

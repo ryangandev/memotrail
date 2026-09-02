@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Reliable Inbox capture foundation
+> Current phase: Inbox review and organization
 >
 > Last updated: 2026-09-01
 >
@@ -29,7 +29,9 @@
 - Web and iOS now continuously preserve per-user local Inbox drafts, restore them after refresh or relaunch, and clear them only after a successful Entry save.
 - Web now accepts a capture into a per-user local synchronization queue before making a network request, displays pending Entries, retries on reconnect or demand, and uses stable Entry IDs for idempotent server confirmation.
 - iOS now accepts captures into the same durable queue model, visibly separates pending Entries, and retries on reconnect, foreground activation, refresh, or demand.
-- Web now has 29 passing tests, and the shared iOS scheme has 14 passing native tests for capture, presentation, draft persistence, and synchronization queue rules.
+- Web now opens each unreviewed Entry in a focused review surface where title, body, exact occurrence time, and the initial Standard or First Time Type can be edited before saving or selecting `Done`.
+- Web review updates require the Entry's current revision, so a newer cross-device edit produces a visible conflict instead of being silently overwritten.
+- Web now has 33 passing tests, and the shared iOS scheme has 14 passing native tests for capture, presentation, draft persistence, and synchronization queue rules.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -90,6 +92,16 @@
 - [x] iOS preserves the original capture time and device time zone when synchronization happens later.
 - [x] Both clients keep a failed queue item until synchronization is confirmed and retain the editable draft if local queue persistence fails.
 
+### Entry review and explicit Done
+
+- [x] Web opens an unreviewed Entry in an editable review surface.
+- [x] Web review supports title, body, exact occurrence time, Standard Entry, and First Time.
+- [x] `Save changes` preserves the unreviewed Inbox state.
+- [x] `Done` marks the Entry organized and removes it from the Inbox without preventing later edits elsewhere.
+- [x] Web review uses optimistic revision matching and leaves the database history trigger responsible for preserving the previous version.
+- [ ] iOS provides the matching review, conflict, save, and explicit Done behavior.
+- [ ] Collections and tags are editable during review.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -109,12 +121,14 @@
 - `feat: add synchronized iOS Inbox entries` implemented authenticated iOS capture, listing, and native rule coverage.
 - `feat: preserve recoverable Inbox drafts` implemented per-user recoverable Inbox drafts on Web and iOS.
 - `feat: add Web offline capture queue` implemented the Web offline capture and retryable synchronization queue.
-- Current change: implemented the matching iOS offline capture and retryable synchronization queue.
+- `feat: add iOS offline capture queue` implemented the matching iOS offline capture and retryable synchronization queue.
+- Current change: implemented Web Entry review and explicit `Done` organization.
 
 ## Next sequence
 
-1. Add Entry review and explicit `Done` organization behavior.
-2. Add keyword search across the user's Entries.
+1. Add the matching Entry review and explicit `Done` behavior to iOS.
+2. Add manual Collections and tags to Entry review.
+3. Add keyword search across the user's Entries.
 
 ## Deferred
 
