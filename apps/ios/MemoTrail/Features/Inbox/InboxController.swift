@@ -7,7 +7,9 @@ import Supabase
 @Observable
 final class InboxController {
   private(set) var entries: [InboxEntry] = []
+  private(set) var collectionOptions: [String] = []
   private(set) var pendingEntries: [QueuedInboxEntry]
+  private(set) var tagOptions: [String] = []
   private(set) var hasLoaded = false
   private(set) var isLoading = false
   private(set) var isSaving = false
@@ -83,7 +85,17 @@ final class InboxController {
         .execute()
         .value
 
-      entries = loadedEntries
+      let organization = try await loadOrganization(
+        entryIDs: loadedEntries.map(\.id)
+      )
+      collectionOptions = organization.collectionOptions
+      tagOptions = organization.tagOptions
+      entries = loadedEntries.map { entry in
+        entry.withOrganization(
+          collectionNames: organization.collectionNamesByEntry[entry.id] ?? [],
+          tagNames: organization.tagNamesByEntry[entry.id] ?? []
+        )
+      }
     } catch {
       loadErrorMessage = "MemoTrail could not load your Inbox. Pull to refresh or try again."
     }
@@ -151,9 +163,11 @@ final class InboxController {
     entry: InboxEntry,
     title: String,
     body: String,
+    collectionNames: [String],
     entryType: InboxEntryType,
     occurredAt: Date,
     occurredTimezone: String,
+    tagNames: [String],
     intent: ReviewIntent
   ) async -> ReviewResult {
     let input: InboxReviewInput
@@ -164,9 +178,11 @@ final class InboxController {
         revision: entry.revision,
         title: title,
         body: body,
+        collectionNames: collectionNames,
         entryType: entryType,
         occurredAt: occurredAt,
-        occurredTimezone: occurredTimezone
+        occurredTimezone: occurredTimezone,
+        tagNames: tagNames
       )
     } catch {
       return ReviewResult(message: error.localizedDescription, status: .error)
@@ -178,29 +194,25 @@ final class InboxController {
         throw InboxControllerError.ownerChanged
       }
 
-      let payload = InboxEntryUpdate(
+      let parameters = ReviewEntryParameters(
+        entryID: input.entryID,
+        expectedRevision: input.revision,
         title: input.title,
         body: input.body,
         entryType: input.entryType,
-        inboxStatus: intent == .done ? "organized" : "unreviewed",
         occurredStart: input.occurredAt,
-        occurredTimezone: input.occurredTimezone
+        occurredTimezone: input.occurredTimezone,
+        collectionNames: input.collectionNames,
+        tagNames: input.tagNames,
+        markDone: intent == .done
       )
-      let updatedEntries: [InboxEntry] =
+      let reviewResults: [ReviewedEntryResult] =
         try await client
-        .from("entries")
-        .update(payload)
-        .eq("id", value: input.entryID.uuidString)
-        .eq("owner_id", value: ownerID.uuidString)
-        .eq("inbox_status", value: "unreviewed")
-        .eq("revision", value: input.revision)
-        .select(
-          "id,title,body,entry_type,created_at,occurred_start,occurred_timezone,revision"
-        )
+        .rpc("review_entry", params: parameters)
         .execute()
         .value
 
-      guard let updatedEntry = updatedEntries.first else {
+      guard let reviewResult = reviewResults.first else {
         return ReviewResult(
           message:
             "This Entry changed on another device. Close it, refresh, and review the latest version.",
@@ -209,13 +221,28 @@ final class InboxController {
       }
 
       if intent == .done {
-        entries.removeAll { $0.id == updatedEntry.id }
+        entries.removeAll { $0.id == reviewResult.entryID }
         return ReviewResult(message: "Entry organized.", status: .done)
       }
 
-      if let index = entries.firstIndex(where: { $0.id == updatedEntry.id }) {
+      let updatedEntry = InboxEntry(
+        id: entry.id,
+        title: input.title,
+        body: input.body,
+        collectionNames: input.collectionNames,
+        entryType: input.entryType,
+        createdAt: entry.createdAt,
+        occurredStart: input.occurredAt,
+        occurredTimezone: input.occurredTimezone,
+        revision: reviewResult.revision,
+        tagNames: input.tagNames
+      )
+
+      if let index = entries.firstIndex(where: { $0.id == reviewResult.entryID }) {
         entries[index] = updatedEntry
       }
+      collectionOptions = mergedOptions(collectionOptions, input.collectionNames)
+      tagOptions = mergedOptions(tagOptions, input.tagNames)
       return ReviewResult(message: "Changes saved.", status: .saved)
     } catch {
       return ReviewResult(
@@ -313,6 +340,59 @@ final class InboxController {
       return false
     }
   }
+
+  private func loadOrganization(entryIDs: [UUID]) async throws -> OrganizationSnapshot {
+    let collectionRows: [OrganizationName] =
+      try await client
+      .from("collections")
+      .select("name")
+      .eq("owner_id", value: ownerID.uuidString)
+      .is("archived_at", value: nil)
+      .order("name")
+      .execute()
+      .value
+    let tagRows: [OrganizationName] =
+      try await client
+      .from("tags")
+      .select("name")
+      .eq("owner_id", value: ownerID.uuidString)
+      .order("name")
+      .execute()
+      .value
+
+    guard !entryIDs.isEmpty else {
+      return OrganizationSnapshot(
+        collectionNamesByEntry: [:],
+        tagNamesByEntry: [:],
+        collectionOptions: collectionRows.map(\.name),
+        tagOptions: tagRows.map(\.name)
+      )
+    }
+
+    let collectionRelationships: [EntryCollectionRelationship] =
+      try await client
+      .from("entry_collections")
+      .select("entry_id,collection:collections(name)")
+      .eq("owner_id", value: ownerID.uuidString)
+      .in("entry_id", values: entryIDs)
+      .execute()
+      .value
+    let tagRelationships: [EntryTagRelationship] =
+      try await client
+      .from("entry_tags")
+      .select("entry_id,tag:tags(name)")
+      .eq("owner_id", value: ownerID.uuidString)
+      .in("entry_id", values: entryIDs)
+      .execute()
+      .value
+
+    return OrganizationSnapshot(
+      collectionNamesByEntry: collectionNamesByEntry(collectionRelationships),
+      tagNamesByEntry: tagNamesByEntry(tagRelationships),
+      collectionOptions: collectionRows.map(\.name),
+      tagOptions: tagRows.map(\.name)
+    )
+  }
 }
 
 extension InboxController {
@@ -374,21 +454,125 @@ private struct InboxEntryInsert: Encodable, Sendable {
   }
 }
 
-private struct InboxEntryUpdate: Encodable, Sendable {
+struct ReviewEntryParameters: Encodable, Sendable {
+  let entryID: UUID
+  let expectedRevision: Int
   let title: String?
   let body: String
   let entryType: InboxEntryType
-  let inboxStatus: String
   let occurredStart: Date
   let occurredTimezone: String
+  let collectionNames: [String]
+  let tagNames: [String]
+  let markDone: Bool
 
   enum CodingKeys: String, CodingKey {
-    case title
-    case body
-    case entryType = "entry_type"
-    case inboxStatus = "inbox_status"
-    case occurredStart = "occurred_start"
-    case occurredTimezone = "occurred_timezone"
+    case entryID = "p_entry_id"
+    case expectedRevision = "p_expected_revision"
+    case title = "p_title"
+    case body = "p_body"
+    case entryType = "p_entry_type"
+    case occurredStart = "p_occurred_start"
+    case occurredTimezone = "p_occurred_timezone"
+    case collectionNames = "p_collection_names"
+    case tagNames = "p_tag_names"
+    case markDone = "p_mark_done"
+  }
+
+  func encode(to encoder: Encoder) throws {
+    var values = encoder.container(keyedBy: CodingKeys.self)
+
+    try values.encode(entryID, forKey: .entryID)
+    try values.encode(expectedRevision, forKey: .expectedRevision)
+    if let title {
+      try values.encode(title, forKey: .title)
+    } else {
+      try values.encodeNil(forKey: .title)
+    }
+    try values.encode(body, forKey: .body)
+    try values.encode(entryType, forKey: .entryType)
+    try values.encode(occurredStart, forKey: .occurredStart)
+    try values.encode(occurredTimezone, forKey: .occurredTimezone)
+    try values.encode(collectionNames, forKey: .collectionNames)
+    try values.encode(tagNames, forKey: .tagNames)
+    try values.encode(markDone, forKey: .markDone)
+  }
+}
+
+private struct ReviewedEntryResult: Decodable, Sendable {
+  let entryID: UUID
+  let revision: Int
+
+  enum CodingKeys: String, CodingKey {
+    case entryID = "entry_id"
+    case revision
+  }
+}
+
+private struct OrganizationName: Decodable, Sendable {
+  let name: String
+}
+
+private struct EntryCollectionRelationship: Decodable, Sendable {
+  let entryID: UUID
+  let collection: OrganizationName?
+
+  enum CodingKeys: String, CodingKey {
+    case entryID = "entry_id"
+    case collection
+  }
+}
+
+private struct EntryTagRelationship: Decodable, Sendable {
+  let entryID: UUID
+  let tag: OrganizationName?
+
+  enum CodingKeys: String, CodingKey {
+    case entryID = "entry_id"
+    case tag
+  }
+}
+
+private struct OrganizationSnapshot: Sendable {
+  let collectionNamesByEntry: [UUID: [String]]
+  let tagNamesByEntry: [UUID: [String]]
+  let collectionOptions: [String]
+  let tagOptions: [String]
+}
+
+private func collectionNamesByEntry(
+  _ relationships: [EntryCollectionRelationship]
+) -> [UUID: [String]] {
+  Dictionary(grouping: relationships, by: \.entryID)
+    .mapValues { rows in
+      rows.compactMap(\.collection?.name).sortedCaseInsensitively()
+    }
+}
+
+private func tagNamesByEntry(
+  _ relationships: [EntryTagRelationship]
+) -> [UUID: [String]] {
+  Dictionary(grouping: relationships, by: \.entryID)
+    .mapValues { rows in
+      rows.compactMap(\.tag?.name).sortedCaseInsensitively()
+    }
+}
+
+private func mergedOptions(_ existing: [String], _ added: [String]) -> [String] {
+  var optionsByName = Dictionary(
+    uniqueKeysWithValues: existing.map { ($0.lowercased(), $0) }
+  )
+
+  for name in added {
+    optionsByName[name.lowercased()] = optionsByName[name.lowercased()] ?? name
+  }
+
+  return Array(optionsByName.values).sortedCaseInsensitively()
+}
+
+extension Array where Element == String {
+  fileprivate func sortedCaseInsensitively() -> [String] {
+    sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
   }
 }
 

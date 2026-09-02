@@ -112,14 +112,28 @@ struct InboxView: View {
         )
       }
       .sheet(item: $selectedEntry) { entry in
-        InboxReviewSheet(entry: entry) { title, body, entryType, occurredAt, timezone, intent in
+        InboxReviewSheet(
+          entry: entry,
+          collectionOptions: controller.collectionOptions,
+          tagOptions: controller.tagOptions
+        ) {
+          title,
+          body,
+          collectionNames,
+          entryType,
+          occurredAt,
+          timezone,
+          tagNames,
+          intent in
           await controller.review(
             entry: entry,
             title: title,
             body: body,
+            collectionNames: collectionNames,
             entryType: entryType,
             occurredAt: occurredAt,
             occurredTimezone: timezone,
+            tagNames: tagNames,
             intent: intent
           )
         }
@@ -370,46 +384,62 @@ struct InboxView: View {
 
 private struct InboxReviewSheet: View {
   let entry: InboxEntry
+  let collectionOptions: [String]
+  let tagOptions: [String]
   let review:
     @MainActor (
       String,
       String,
+      [String],
       InboxEntryType,
       Date,
       String,
+      [String],
       InboxController.ReviewIntent
     ) async -> InboxController.ReviewResult
 
   @Environment(\.dismiss) private var dismiss
   @State private var title: String
   @State private var note: String
+  @State private var collectionNames: [String]
+  @State private var collectionInput = ""
   @State private var entryType: InboxEntryType
   @State private var occurredAt: Date
   @State private var occurredTimezone: String
   @State private var isWorking = false
   @State private var errorMessage: String?
+  @State private var tagNames: [String]
+  @State private var tagInput = ""
 
   init(
     entry: InboxEntry,
+    collectionOptions: [String],
+    tagOptions: [String],
     review:
       @escaping @MainActor (
         String,
         String,
+        [String],
         InboxEntryType,
         Date,
         String,
+        [String],
         InboxController.ReviewIntent
       ) async -> InboxController.ReviewResult
   ) {
     self.entry = entry
+    self.collectionOptions = collectionOptions
+    self.tagOptions = tagOptions
     self.review = review
     _title = State(initialValue: entry.title ?? "")
     _note = State(initialValue: entry.body)
+    _collectionNames = State(initialValue: entry.collectionNames)
     _entryType = State(initialValue: entry.entryType)
     _occurredAt = State(initialValue: entry.occurredStart ?? entry.createdAt)
     _occurredTimezone = State(
       initialValue: entry.occurredTimezone ?? TimeZone.current.identifier
     )
+    _tagNames = State(initialValue: entry.tagNames)
   }
 
   var body: some View {
@@ -441,7 +471,37 @@ private struct InboxReviewSheet: View {
         } header: {
           Text("Organization")
         } footer: {
-          Text("Collections and tags will be editable in the next organization step.")
+          Text("Save changes keeps this Entry in Inbox. Done marks it organized.")
+        }
+
+        Section {
+          OrganizationNameEditor(
+            names: $collectionNames,
+            input: $collectionInput,
+            options: collectionOptions,
+            placeholder: "Add a Collection",
+            maximumCount: 20,
+            maximumNameLength: 80
+          )
+        } header: {
+          Text("Collections")
+        } footer: {
+          Text("\(collectionNames.count) of 20")
+        }
+
+        Section {
+          OrganizationNameEditor(
+            names: $tagNames,
+            input: $tagInput,
+            options: tagOptions,
+            placeholder: "Add a tag",
+            maximumCount: 50,
+            maximumNameLength: 60
+          )
+        } header: {
+          Text("Tags")
+        } footer: {
+          Text("\(tagNames.count) of 50")
         }
 
         if let errorMessage {
@@ -505,9 +565,11 @@ private struct InboxReviewSheet: View {
     let result = await review(
       title,
       note,
+      namesIncludingDraft(collectionNames, collectionInput),
       entryType,
       occurredAt,
       occurredTimezone,
+      namesIncludingDraft(tagNames, tagInput),
       intent
     )
 
@@ -519,5 +581,94 @@ private struct InboxReviewSheet: View {
     case .conflict, .error:
       errorMessage = result.message
     }
+  }
+
+  private func namesIncludingDraft(_ names: [String], _ draft: String) -> [String] {
+    let name = draft.trimmed
+    return name.isEmpty ? names : names + [name]
+  }
+}
+
+private struct OrganizationNameEditor: View {
+  @Binding var names: [String]
+  @Binding var input: String
+
+  let options: [String]
+  let placeholder: String
+  let maximumCount: Int
+  let maximumNameLength: Int
+
+  private var selectedNames: Set<String> {
+    Set(names.map { $0.lowercased() })
+  }
+
+  private var suggestions: [String] {
+    options.filter { !selectedNames.contains($0.lowercased()) }
+  }
+
+  var body: some View {
+    if !names.isEmpty {
+      ScrollView(.horizontal, showsIndicators: false) {
+        HStack(spacing: MTSpacing.s2) {
+          ForEach(names, id: \.self) { name in
+            Button {
+              names.removeAll { $0 == name }
+            } label: {
+              Label(name, systemImage: "xmark")
+                .font(MTTypography.caption)
+            }
+            .buttonStyle(.bordered)
+            .buttonBorderShape(.capsule)
+            .accessibilityLabel("Remove \(name)")
+          }
+        }
+      }
+    }
+
+    HStack {
+      TextField(placeholder, text: $input)
+        .textInputAutocapitalization(.words)
+        .submitLabel(.done)
+        .onSubmit(addInput)
+        .onChange(of: input) {
+          if input.count > maximumNameLength {
+            input = String(input.prefix(maximumNameLength))
+          }
+        }
+
+      Button("Add", systemImage: "plus") {
+        addInput()
+      }
+      .labelStyle(.iconOnly)
+      .disabled(input.trimmed.isEmpty || names.count >= maximumCount)
+    }
+
+    if !suggestions.isEmpty, names.count < maximumCount {
+      Menu("Add existing", systemImage: "tag") {
+        ForEach(suggestions, id: \.self) { suggestion in
+          Button(suggestion) {
+            add(suggestion)
+          }
+        }
+      }
+      .font(MTTypography.caption)
+    }
+  }
+
+  private func addInput() {
+    add(input)
+    input = ""
+  }
+
+  private func add(_ value: String) {
+    let name = value.trimmed
+
+    guard !name.isEmpty,
+      name.count <= maximumNameLength,
+      names.count < maximumCount,
+      !selectedNames.contains(name.lowercased())
+    else { return }
+
+    names.append(name)
   }
 }

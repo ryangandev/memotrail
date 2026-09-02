@@ -21,6 +21,24 @@ struct EntryCard: View {
           .lineSpacing(2)
       }
 
+      if !entry.collectionNames.isEmpty || !entry.tagNames.isEmpty {
+        ScrollView(.horizontal, showsIndicators: false) {
+          HStack(spacing: 6) {
+            ForEach(entry.collectionNames, id: \.self) { name in
+              organizationBadge(name)
+            }
+
+            ForEach(entry.tagNames.prefix(3), id: \.self) { name in
+              organizationBadge("#\(name)")
+            }
+
+            if entry.tagNames.count > 3 {
+              organizationBadge("+\(entry.tagNames.count - 3)")
+            }
+          }
+        }
+      }
+
       HStack {
         HStack(spacing: 6) {
           Text("Unreviewed")
@@ -54,6 +72,15 @@ struct EntryCard: View {
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(MTSpacing.s4)
+  }
+
+  private func organizationBadge(_ title: String) -> some View {
+    Text(title)
+      .font(.system(size: 10, weight: .medium))
+      .foregroundStyle(MTColor.inkMuted)
+      .padding(.horizontal, MTSpacing.s2)
+      .padding(.vertical, 4)
+      .background(MTColor.surfaceSubtle, in: Capsule())
   }
 }
 

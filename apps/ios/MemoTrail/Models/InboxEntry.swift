@@ -1,33 +1,39 @@
 import Foundation
 
-struct InboxEntry: Codable, Equatable, Identifiable, Sendable {
+struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
   let id: UUID
   let title: String?
   let body: String
+  let collectionNames: [String]
   let entryType: InboxEntryType
   let createdAt: Date
   let occurredStart: Date?
   let occurredTimezone: String?
   let revision: Int
+  let tagNames: [String]
 
   init(
     id: UUID,
     title: String?,
     body: String,
+    collectionNames: [String] = [],
     entryType: InboxEntryType = .standard,
     createdAt: Date,
     occurredStart: Date?,
     occurredTimezone: String? = nil,
-    revision: Int = 1
+    revision: Int = 1,
+    tagNames: [String] = []
   ) {
     self.id = id
     self.title = title
     self.body = body
+    self.collectionNames = collectionNames
     self.entryType = entryType
     self.createdAt = createdAt
     self.occurredStart = occurredStart
     self.occurredTimezone = occurredTimezone
     self.revision = revision
+    self.tagNames = tagNames
   }
 
   enum CodingKeys: String, CodingKey {
@@ -39,6 +45,36 @@ struct InboxEntry: Codable, Equatable, Identifiable, Sendable {
     case occurredStart = "occurred_start"
     case occurredTimezone = "occurred_timezone"
     case revision
+  }
+
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+
+    id = try values.decode(UUID.self, forKey: .id)
+    title = try values.decodeIfPresent(String.self, forKey: .title)
+    body = try values.decode(String.self, forKey: .body)
+    collectionNames = []
+    entryType = try values.decode(InboxEntryType.self, forKey: .entryType)
+    createdAt = try values.decode(Date.self, forKey: .createdAt)
+    occurredStart = try values.decodeIfPresent(Date.self, forKey: .occurredStart)
+    occurredTimezone = try values.decodeIfPresent(String.self, forKey: .occurredTimezone)
+    revision = try values.decode(Int.self, forKey: .revision)
+    tagNames = []
+  }
+
+  func withOrganization(collectionNames: [String], tagNames: [String]) -> InboxEntry {
+    InboxEntry(
+      id: id,
+      title: title,
+      body: body,
+      collectionNames: collectionNames,
+      entryType: entryType,
+      createdAt: createdAt,
+      occurredStart: occurredStart,
+      occurredTimezone: occurredTimezone,
+      revision: revision,
+      tagNames: tagNames
+    )
   }
 
   var displayDate: String {
@@ -133,18 +169,22 @@ struct InboxReviewInput: Equatable, Sendable {
   let revision: Int
   let title: String?
   let body: String
+  let collectionNames: [String]
   let entryType: InboxEntryType
   let occurredAt: Date
   let occurredTimezone: String
+  let tagNames: [String]
 
   static func validate(
     entryID: UUID,
     revision: Int,
     title: String,
     body: String,
+    collectionNames: [String],
     entryType: InboxEntryType,
     occurredAt: Date,
-    occurredTimezone: String
+    occurredTimezone: String,
+    tagNames: [String]
   ) throws -> InboxReviewInput {
     guard revision > 0 else {
       throw InboxReviewError.invalidRevision
@@ -160,15 +200,59 @@ struct InboxReviewInput: Equatable, Sendable {
       throw InboxReviewError.invalidTimezone
     }
 
+    guard
+      let normalizedCollections = normalizeNames(
+        collectionNames,
+        maximumCount: 20,
+        maximumNameLength: 80
+      )
+    else {
+      throw InboxReviewError.invalidCollections
+    }
+
+    guard
+      let normalizedTags = normalizeNames(
+        tagNames,
+        maximumCount: 50,
+        maximumNameLength: 60
+      )
+    else {
+      throw InboxReviewError.invalidTags
+    }
+
     return InboxReviewInput(
       entryID: entryID,
       revision: revision,
       title: capture.title,
       body: capture.body,
+      collectionNames: normalizedCollections,
       entryType: entryType,
       occurredAt: occurredAt,
-      occurredTimezone: occurredTimezone
+      occurredTimezone: occurredTimezone,
+      tagNames: normalizedTags
     )
+  }
+
+  private static func normalizeNames(
+    _ values: [String],
+    maximumCount: Int,
+    maximumNameLength: Int
+  ) -> [String]? {
+    guard values.count <= maximumCount else { return nil }
+
+    var names: [String] = []
+    var normalizedNames: Set<String> = []
+
+    for value in values {
+      let name = value.trimmed
+      guard !name.isEmpty, name.count <= maximumNameLength else { return nil }
+
+      if normalizedNames.insert(name.lowercased()).inserted {
+        names.append(name)
+      }
+    }
+
+    return names
   }
 }
 
@@ -358,15 +442,21 @@ enum InboxCaptureError: LocalizedError, Equatable {
 
 enum InboxReviewError: LocalizedError, Equatable {
   case firstTimeRequiresTitle
+  case invalidCollections
   case invalidRevision
+  case invalidTags
   case invalidTimezone
 
   var errorDescription: String? {
     switch self {
     case .firstTimeRequiresTitle:
       "Add a title before marking an Entry as a First Time."
+    case .invalidCollections:
+      "Use up to 20 Collections with names under 80 characters."
     case .invalidRevision:
       "This Entry review is invalid."
+    case .invalidTags:
+      "Use up to 50 tags with names under 60 characters."
     case .invalidTimezone:
       "Choose a valid time zone."
     }

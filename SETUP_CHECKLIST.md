@@ -131,7 +131,7 @@ Phase 1 repository work:
 - [x] Add Web Entry review with optimistic updates and explicit `Done` organization.
 - [x] Add the matching Entry review and explicit `Done` organization to iOS.
 - [x] Add manual Collections and tags to Web Entry review.
-- [ ] Add the matching manual Collection and tag controls to iOS Entry review.
+- [x] Add the matching manual Collection and tag controls to iOS Entry review.
 - [ ] Add authenticated UI tests after a safe test-account strategy is defined.
 - [ ] Verify installation and launch separately on the physical iPhone.
 

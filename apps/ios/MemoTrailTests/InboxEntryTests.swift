@@ -87,14 +87,18 @@ final class InboxEntryTests: XCTestCase {
       revision: 2,
       title: "  First time skiing  ",
       body: "  A cold and brilliant day.  ",
+      collectionNames: [" Travel ", "travel", "First Times"],
       entryType: .firstTime,
       occurredAt: occurredAt,
-      occurredTimezone: "America/Los_Angeles"
+      occurredTimezone: "America/Los_Angeles",
+      tagNames: [" Skiing ", "skiing", "snow"]
     )
 
     XCTAssertEqual(input.title, "First time skiing")
     XCTAssertEqual(input.body, "A cold and brilliant day.")
     XCTAssertEqual(input.entryType, .firstTime)
+    XCTAssertEqual(input.collectionNames, ["Travel", "First Times"])
+    XCTAssertEqual(input.tagNames, ["Skiing", "snow"])
     XCTAssertEqual(input.occurredAt, occurredAt)
     XCTAssertEqual(input.revision, 2)
   }
@@ -106,9 +110,11 @@ final class InboxEntryTests: XCTestCase {
         revision: 1,
         title: " ",
         body: "I tried something new.",
+        collectionNames: [],
         entryType: .firstTime,
         occurredAt: Date(),
-        occurredTimezone: "UTC"
+        occurredTimezone: "UTC",
+        tagNames: []
       )
     ) { error in
       XCTAssertEqual(error as? InboxReviewError, .firstTimeRequiresTitle)
@@ -122,9 +128,11 @@ final class InboxEntryTests: XCTestCase {
         revision: 0,
         title: "A thought",
         body: "",
+        collectionNames: [],
         entryType: .standard,
         occurredAt: Date(),
-        occurredTimezone: "UTC"
+        occurredTimezone: "UTC",
+        tagNames: []
       )
     ) { error in
       XCTAssertEqual(error as? InboxReviewError, .invalidRevision)
@@ -136,13 +144,69 @@ final class InboxEntryTests: XCTestCase {
         revision: 1,
         title: "A thought",
         body: "",
+        collectionNames: [],
         entryType: .standard,
         occurredAt: Date(),
-        occurredTimezone: ""
+        occurredTimezone: "",
+        tagNames: []
       )
     ) { error in
       XCTAssertEqual(error as? InboxReviewError, .invalidTimezone)
     }
+  }
+
+  func testReviewRejectsInvalidOrganizationNames() {
+    XCTAssertThrowsError(
+      try InboxReviewInput.validate(
+        entryID: UUID(),
+        revision: 1,
+        title: "A thought",
+        body: "",
+        collectionNames: [""],
+        entryType: .standard,
+        occurredAt: Date(),
+        occurredTimezone: "UTC",
+        tagNames: []
+      )
+    ) { error in
+      XCTAssertEqual(error as? InboxReviewError, .invalidCollections)
+    }
+
+    XCTAssertThrowsError(
+      try InboxReviewInput.validate(
+        entryID: UUID(),
+        revision: 1,
+        title: "A thought",
+        body: "",
+        collectionNames: [],
+        entryType: .standard,
+        occurredAt: Date(),
+        occurredTimezone: "UTC",
+        tagNames: [String(repeating: "t", count: 61)]
+      )
+    ) { error in
+      XCTAssertEqual(error as? InboxReviewError, .invalidTags)
+    }
+  }
+
+  func testReviewRPCParametersEncodeANilTitleExplicitly() throws {
+    let parameters = ReviewEntryParameters(
+      entryID: UUID(),
+      expectedRevision: 1,
+      title: nil,
+      body: "A body-only Entry",
+      entryType: .standard,
+      occurredStart: Date(timeIntervalSince1970: 1_788_278_400),
+      occurredTimezone: "UTC",
+      collectionNames: [],
+      tagNames: [],
+      markDone: false
+    )
+    let data = try JSONEncoder().encode(parameters)
+    let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+    XCTAssertTrue(json.keys.contains("p_title"))
+    XCTAssertTrue(json["p_title"] is NSNull)
   }
 
   func testDraftStoreRestoresContentForOnlyItsOwner() {
