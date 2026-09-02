@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(16);
+select plan(28);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -156,6 +156,145 @@ select is(
   'Updating an Entry advances its revision'
 );
 
+select lives_ok(
+  $$
+    select *
+    from public.review_entry(
+      '40000000-0000-0000-0000-000000000002',
+      2,
+      'First time skiing',
+      'A cold and brilliant day.',
+      'first_time',
+      '2026-07-03T18:30:00Z',
+      'America/Los_Angeles',
+      array['Travel', 'Learning', 'travel'],
+      array['skiing', 'learning', 'Skiing'],
+      false
+    )
+  $$,
+  'An owner can atomically review an Entry with Collections and tags'
+);
+
+select is(
+  (
+    select revision
+    from public.entries
+    where id = '40000000-0000-0000-0000-000000000002'
+  ),
+  3,
+  'Atomic review advances the Entry revision once'
+);
+
+select is(
+  (
+    select entry_type
+    from public.entries
+    where id = '40000000-0000-0000-0000-000000000002'
+  ),
+  'first_time',
+  'Atomic review updates the Entry type'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from public.entry_versions
+    where entry_id = '40000000-0000-0000-0000-000000000002'
+  ),
+  2,
+  'Atomic review preserves the previous Entry revision'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from public.entry_collections
+    where entry_id = '40000000-0000-0000-0000-000000000002'
+  ),
+  2,
+  'Atomic review de-duplicates and links Collections'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from public.entry_tags
+    where entry_id = '40000000-0000-0000-0000-000000000002'
+  ),
+  2,
+  'Atomic review de-duplicates and links tags'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from public.review_entry(
+      '40000000-0000-0000-0000-000000000002',
+      2,
+      'Stale overwrite',
+      '',
+      'standard',
+      '2026-07-03T18:30:00Z',
+      'UTC',
+      array['Wrong Collection'],
+      array['wrong-tag'],
+      true
+    )
+  ),
+  0,
+  'A stale review returns no row'
+);
+
+select is(
+  (
+    select title
+    from public.entries
+    where id = '40000000-0000-0000-0000-000000000002'
+  ),
+  'First time skiing',
+  'A stale review does not partially change the Entry'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from public.review_entry(
+      '40000000-0000-0000-0000-000000000002',
+      3,
+      'First time skiing',
+      'A cold and brilliant day.',
+      'first_time',
+      '2026-07-03T18:30:00Z',
+      'America/Los_Angeles',
+      array['Travel', 'Learning'],
+      array['skiing', 'learning'],
+      true
+    )
+  ),
+  1,
+  'The current revision can be explicitly marked Done'
+);
+
+select is(
+  (
+    select inbox_status
+    from public.entries
+    where id = '40000000-0000-0000-0000-000000000002'
+  ),
+  'organized',
+  'Done marks the Entry organized'
+);
+
+select is(
+  (
+    select revision
+    from public.entries
+    where id = '40000000-0000-0000-0000-000000000002'
+  ),
+  4,
+  'Done preserves history through one additional revision'
+);
+
 reset role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000002', true);
@@ -191,6 +330,26 @@ select is(
   ),
   0,
   'Another authenticated user cannot delete the first user''s Entries'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from public.review_entry(
+      '40000000-0000-0000-0000-000000000001',
+      1,
+      'Changed by another user',
+      '',
+      'standard',
+      '2026-07-03T18:30:00Z',
+      'UTC',
+      '{}'::text[],
+      '{}'::text[],
+      false
+    )
+  ),
+  0,
+  'Another authenticated user cannot review the first user''s Entry'
 );
 
 select lives_ok(

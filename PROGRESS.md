@@ -14,7 +14,8 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- The linked hosted Supabase project contains both reviewed repository migrations and no development seed users.
+- The linked hosted Supabase project contains the two initial reviewed repository migrations and no development seed users.
+- A third migration now provides atomic Entry review, Collection, tag, and `Done` updates; it passes locally and awaits an explicitly approved hosted rollout.
 - Hosted verification found 21 Row Level Security-enabled application tables, 22 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
 - Web now uses cookie-based Supabase SSR sessions, a Next.js 16 Proxy refresh path, Google OAuth, a safe callback, and explicit sign-out and setup states.
@@ -33,6 +34,7 @@
 - Web review updates require the Entry's current revision, so a newer cross-device edit produces a visible conflict instead of being silently overwritten.
 - iOS now provides the matching native review sheet, editable fields, optimistic revision check, `Save changes`, and explicit `Done` behavior.
 - Web now has 33 passing tests, and the shared iOS scheme has 17 passing native tests for capture, presentation, draft persistence, queue, and review rules.
+- The local database now passes 28 pgTAP tests plus schema lint, including atomic organization, name de-duplication, history, stale revisions, and cross-owner denial.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -105,6 +107,15 @@
 - [x] Both clients preserve the original time zone unless the occurrence date is edited locally.
 - [ ] Collections and tags are editable during review.
 
+### Atomic Entry organization
+
+- [x] One authenticated database function updates Entry content, Type, exact occurrence, Collections, tags, and Inbox status in a single transaction.
+- [x] Collection and tag names are trimmed, case-insensitively de-duplicated, length-limited, and scoped to the authenticated owner.
+- [x] A stale revision or inaccessible Entry returns no result before any relationship changes occur.
+- [x] Local pgTAP coverage verifies atomic review, immutable history, `Done`, duplicate names, and cross-owner denial.
+- [x] Local schema lint reports no errors.
+- [ ] Apply the atomic review migration to hosted Supabase after explicit rollout approval.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -126,12 +137,15 @@
 - `feat: add Web offline capture queue` implemented the Web offline capture and retryable synchronization queue.
 - `feat: add iOS offline capture queue` implemented the matching iOS offline capture and retryable synchronization queue.
 - `feat: add Web Inbox review` implemented Web Entry review and explicit `Done` organization.
-- Current change: implemented the matching iOS Entry review and explicit `Done` organization.
+- `feat: add iOS Inbox review` implemented the matching iOS Entry review and explicit `Done` organization.
+- Current change: added and locally verified the atomic database contract for manual Entry organization.
 
 ## Next sequence
 
-1. Add manual Collections and tags to Entry review.
-2. Add keyword search across the user's Entries.
+1. Add manual Collections and tags to Web Entry review.
+2. Add the matching manual organization controls to iOS.
+3. Ask for hosted migration rollout approval before enabling the new contract in production.
+4. Add keyword search across the user's Entries.
 
 ## Deferred
 

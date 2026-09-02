@@ -60,6 +60,8 @@ Hosted project rollout:
 - [x] Apply the version-controlled migrations without development seed data.
 - [x] Run hosted schema and security checks before authentication testing.
 - [x] Revoke client-role access to the hosted platform-created `SECURITY DEFINER` helper reported by the security advisor.
+- [x] Add and locally verify the atomic Entry organization migration with 28 pgTAP tests and schema lint.
+- [ ] Apply the atomic Entry organization migration to hosted Supabase after explicit rollout approval.
 
 Useful references:
 
@@ -128,6 +130,7 @@ Phase 1 repository work:
 - [x] Establish offline capture and a retryable synchronization queue across both clients.
 - [x] Add Web Entry review with optimistic updates and explicit `Done` organization.
 - [x] Add the matching Entry review and explicit `Done` organization to iOS.
+- [ ] Add manual Collections and tags to Entry review on Web and iOS.
 - [ ] Add authenticated UI tests after a safe test-account strategy is defined.
 - [ ] Verify installation and launch separately on the physical iPhone.
 
