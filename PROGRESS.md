@@ -52,6 +52,7 @@
 - The user confirmed keyword and filtered searches return the expected real Entries across Web and iOS.
 - A locally verified Timeline contract now returns empty and populated tracks, creates or revision-safely edits Stage and Event Entries, preserves overlapping and open-ended periods, and moves Timeline Entries to Trash without losing history.
 - The local database now passes 82 pgTAP tests plus schema lint, including 33 focused Timeline tests for date rules, track movement, optimistic conflicts, hidden tracks, Trash, and owner isolation.
+- Hosted verification confirms the Timeline migration, aligned five-migration ledger, warning-free schema, empty function search paths, authenticated-only execution grants, and no seed or role deployment.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -182,7 +183,7 @@
 - [x] Preserve Entry history during Timeline edits and moves to Trash.
 - [x] Exclude Trash and other owners' data from the Timeline workspace.
 - [x] Verify the Timeline contract with a fresh local database, 33 focused pgTAP tests, and schema lint.
-- [ ] Apply and verify the Timeline contract on hosted Supabase.
+- [x] Apply and verify the Timeline contract on hosted Supabase.
 
 ## Feature history
 
@@ -214,13 +215,13 @@
 - `feat: deploy keyword Entry search` deployed and verified the keyword Entry search contract and supporting indexes on hosted Supabase.
 - `feat: add Web keyword search` implemented the authenticated Web keyword search experience and shared application shell.
 - `feat: add iOS keyword search` implemented the matching native iOS keyword search experience.
-- Current change: implemented the initial owner-scoped Timeline data contract.
+- `feat: add Timeline data contract` implemented and locally verified the initial owner-scoped Timeline data contract.
+- Current change: deployed and verified the Timeline data contract on hosted Supabase.
 
 ## Next sequence
 
-1. Verify and deploy the Timeline data contract.
-2. Add the basic Web Timeline experience.
-3. Add the matching native iOS Timeline experience.
+1. Add the basic Web Timeline experience.
+2. Add the matching native iOS Timeline experience.
 
 ## Deferred
 
