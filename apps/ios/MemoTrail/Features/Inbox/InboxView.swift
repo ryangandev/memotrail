@@ -6,9 +6,11 @@ struct InboxView: View {
   let isAuthenticationBusy: Bool
   let signOut: @MainActor () async -> Void
 
+  private let draftStore: InboxDraftStore
   @State private var controller: InboxController
-  @State private var captureTitle = ""
-  @State private var captureBody = ""
+  @State private var captureTitle: String
+  @State private var captureBody: String
+  @State private var hasLocalDraft: Bool
   @State private var isShowingAccount = false
   @FocusState private var isTitleFocused: Bool
 
@@ -16,12 +18,19 @@ struct InboxView: View {
     client: SupabaseClient,
     user: AuthenticatedUser,
     isAuthenticationBusy: Bool,
-    signOut: @escaping @MainActor () async -> Void
+    signOut: @escaping @MainActor () async -> Void,
+    draftStore: InboxDraftStore = InboxDraftStore()
   ) {
+    let draft = draftStore.load(ownerID: user.id)
+
     self.user = user
     self.isAuthenticationBusy = isAuthenticationBusy
     self.signOut = signOut
+    self.draftStore = draftStore
     _controller = State(initialValue: InboxController(client: client))
+    _captureTitle = State(initialValue: draft?.title ?? "")
+    _captureBody = State(initialValue: draft?.body ?? "")
+    _hasLocalDraft = State(initialValue: draft != nil)
   }
 
   var body: some View {
@@ -33,6 +42,7 @@ struct InboxView: View {
             title: $captureTitle,
             note: $captureBody,
             isSaving: controller.isSaving,
+            hasLocalDraft: hasLocalDraft,
             message: controller.captureMessage,
             titleFocus: $isTitleFocused,
             save: saveCapture
@@ -92,6 +102,12 @@ struct InboxView: View {
         if !controller.hasLoaded {
           await controller.load()
         }
+      }
+      .onChange(of: captureTitle) {
+        persistDraft()
+      }
+      .onChange(of: captureBody) {
+        persistDraft()
       }
     }
   }
@@ -232,7 +248,30 @@ struct InboxView: View {
   }
 
   @MainActor
-  private func saveCapture() async -> Bool {
-    await controller.save(title: captureTitle, body: captureBody)
+  private func saveCapture() async {
+    let didSave = await controller.save(title: captureTitle, body: captureBody)
+
+    if didSave {
+      draftStore.clear(ownerID: user.id)
+      captureTitle = ""
+      captureBody = ""
+      hasLocalDraft = false
+    }
+  }
+
+  private func persistDraft() {
+    if captureTitle.count > InboxCapture.titleLimit {
+      captureTitle = String(captureTitle.prefix(InboxCapture.titleLimit))
+    }
+
+    if captureBody.count > InboxCapture.bodyLimit {
+      captureBody = String(captureBody.prefix(InboxCapture.bodyLimit))
+    }
+
+    hasLocalDraft = draftStore.save(
+      title: captureTitle,
+      body: captureBody,
+      ownerID: user.id
+    )
   }
 }

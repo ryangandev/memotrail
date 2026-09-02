@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: First synchronized Inbox vertical slice
+> Current phase: Reliable Inbox capture foundation
 >
 > Last updated: 2026-09-01
 >
@@ -25,7 +25,9 @@
 - The user confirmed the same real Google account passes Web and iOS login, session restoration, and sign-out, and that Supabase allows both client IDs in the required order.
 - Web now reads the authenticated user's real unreviewed Entries and saves validated title/body captures directly to hosted Supabase through an authenticated Server Action.
 - iOS now reads and saves the same authenticated unreviewed Entry shape through Supabase, with native loading, empty, retry, refresh, validation, and save feedback states.
-- The shared iOS scheme now runs six native unit tests for capture validation and Entry presentation rules.
+- The user confirmed localhost, production Web, and the iOS simulator can all sign in, create Entries, and see the same Entries across clients.
+- Web and iOS now continuously preserve per-user local Inbox drafts, restore them after refresh or relaunch, and clear them only after a successful Entry save.
+- Web now has 23 passing tests, and the shared iOS scheme has nine passing native tests for capture, presentation, and draft persistence rules.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -61,7 +63,16 @@
 - [x] Web lists only the signed-in user's unreviewed, non-Trash Entries through RLS and exposes loading, empty, and error states.
 - [x] Web capture parsing has unit coverage for body-only, title-only, empty, and oversized submissions.
 - [x] iOS saves and lists the same Entry shape through the authenticated Supabase client.
-- [ ] A real Entry created on one client is visible on the other after refresh.
+- [x] A real Entry created on one client is visible on the other after refresh.
+
+### Recoverable Inbox draft
+
+- [x] Web preserves the exact title and body locally for the current MemoTrail user.
+- [x] iOS preserves the exact title and body locally for the current Supabase user ID.
+- [x] Refreshing, navigating away, or relaunching restores an unfinished draft without exposing it to another signed-in user.
+- [x] A failed or rejected save leaves the draft intact.
+- [x] A successful Entry save clears the local draft.
+- [x] Malformed, obsolete, and oversized stored draft payloads fail safely.
 
 ## Feature history
 
@@ -79,13 +90,13 @@
 - `feat: add iOS Google authentication` implemented native sessions and the signed-out experience.
 - `test: cover Web authentication redirects` added executable redirect-safety tests.
 - `feat: add synchronized Web Inbox entries` implemented authenticated Web capture and listing.
-- Current change: implemented authenticated iOS Inbox capture, listing, and native rule coverage.
+- `feat: add synchronized iOS Inbox entries` implemented authenticated iOS capture, listing, and native rule coverage.
+- Current change: implemented per-user recoverable Inbox drafts on Web and iOS.
 
 ## Next sequence
 
-1. Verify one real Entry can travel from either client to the other.
-2. Add recoverable drafts, offline persistence, and a retryable synchronization queue.
-3. Add Entry review and explicit `Done` organization behavior.
+1. Add offline capture with a visible, retryable synchronization queue.
+2. Add Entry review and explicit `Done` organization behavior.
 
 ## Deferred
 

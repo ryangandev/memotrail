@@ -79,4 +79,63 @@ final class InboxEntryTests: XCTestCase {
     XCTAssertEqual(entry.displayTitle, "How aligners move teeth")
     XCTAssertEqual(entry.displayExcerpt, "Small forces trigger bone remodeling.")
   }
+
+  func testDraftStoreRestoresContentForOnlyItsOwner() {
+    let defaults = makeDefaults()
+    let store = InboxDraftStore(defaults: defaults)
+    let firstOwner = UUID()
+    let secondOwner = UUID()
+
+    XCTAssertTrue(
+      store.save(
+        title: " Draft title ",
+        body: "  Keep my spacing.\n",
+        ownerID: firstOwner
+      )
+    )
+    XCTAssertEqual(store.load(ownerID: firstOwner)?.title, " Draft title ")
+    XCTAssertEqual(store.load(ownerID: firstOwner)?.body, "  Keep my spacing.\n")
+    XCTAssertNil(store.load(ownerID: secondOwner))
+  }
+
+  func testDraftStoreClearsEmptyAndAcceptedDrafts() {
+    let defaults = makeDefaults()
+    let store = InboxDraftStore(defaults: defaults)
+    let ownerID = UUID()
+
+    store.save(title: "", body: "Keep me", ownerID: ownerID)
+    store.clear(ownerID: ownerID)
+    XCTAssertNil(store.load(ownerID: ownerID))
+
+    XCTAssertFalse(store.save(title: "", body: "", ownerID: ownerID))
+    XCTAssertNil(store.load(ownerID: ownerID))
+  }
+
+  func testDraftStoreDiscardsCorruptedOrOversizedData() throws {
+    let defaults = makeDefaults()
+    let store = InboxDraftStore(defaults: defaults)
+    let ownerID = UUID()
+    let key = InboxDraftStore.storageKey(ownerID: ownerID)
+
+    defaults.set(Data("not json".utf8), forKey: key)
+    XCTAssertNil(store.load(ownerID: ownerID))
+
+    let oversizedDraft = InboxDraft(
+      title: String(repeating: "t", count: InboxCapture.titleLimit + 1),
+      body: "",
+      updatedAt: Date()
+    )
+    defaults.set(try JSONEncoder().encode(oversizedDraft), forKey: key)
+    XCTAssertNil(store.load(ownerID: ownerID))
+  }
+
+  private func makeDefaults() -> UserDefaults {
+    let suiteName = "InboxEntryTests.\(UUID().uuidString)"
+    let defaults = UserDefaults(suiteName: suiteName)!
+    defaults.removePersistentDomain(forName: suiteName)
+    addTeardownBlock {
+      UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName)
+    }
+    return defaults
+  }
 }

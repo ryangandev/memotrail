@@ -88,6 +88,66 @@ struct InboxCapture: Equatable, Sendable {
   }
 }
 
+struct InboxDraft: Codable, Equatable, Sendable {
+  let title: String
+  let body: String
+  let updatedAt: Date
+
+  var hasContent: Bool {
+    !title.isEmpty || !body.isEmpty
+  }
+}
+
+struct InboxDraftStore {
+  private let defaults: UserDefaults
+
+  init(defaults: UserDefaults = .standard) {
+    self.defaults = defaults
+  }
+
+  func load(ownerID: UUID) -> InboxDraft? {
+    let key = Self.storageKey(ownerID: ownerID)
+
+    guard let data = defaults.data(forKey: key),
+      let draft = try? JSONDecoder().decode(InboxDraft.self, from: data),
+      draft.hasContent,
+      draft.title.count <= InboxCapture.titleLimit,
+      draft.body.count <= InboxCapture.bodyLimit
+    else {
+      defaults.removeObject(forKey: key)
+      return nil
+    }
+
+    return draft
+  }
+
+  @discardableResult
+  func save(title: String, body: String, ownerID: UUID) -> Bool {
+    let key = Self.storageKey(ownerID: ownerID)
+    let draft = InboxDraft(title: title, body: body, updatedAt: Date())
+
+    guard draft.hasContent else {
+      defaults.removeObject(forKey: key)
+      return false
+    }
+
+    guard let data = try? JSONEncoder().encode(draft) else {
+      return false
+    }
+
+    defaults.set(data, forKey: key)
+    return true
+  }
+
+  func clear(ownerID: UUID) {
+    defaults.removeObject(forKey: Self.storageKey(ownerID: ownerID))
+  }
+
+  static func storageKey(ownerID: UUID) -> String {
+    "memotrail.inboxDraft.\(ownerID.uuidString.lowercased())"
+  }
+}
+
 enum InboxCaptureError: LocalizedError, Equatable {
   case empty
   case titleTooLong

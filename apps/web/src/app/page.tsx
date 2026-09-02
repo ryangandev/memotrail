@@ -105,7 +105,7 @@ function Workspace({
             </a>
           </header>
 
-          <CaptureComposer />
+          <CaptureComposer ownerId={viewer.id} />
 
           <section
             className={styles.entrySection}

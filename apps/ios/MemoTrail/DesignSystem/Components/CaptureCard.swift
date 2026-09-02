@@ -5,9 +5,10 @@ struct CaptureCard: View {
   @Binding var note: String
 
   let isSaving: Bool
+  let hasLocalDraft: Bool
   let message: InboxController.CaptureMessage?
   let titleFocus: FocusState<Bool>.Binding
-  let save: @MainActor () async -> Bool
+  let save: @MainActor () async -> Void
 
   var body: some View {
     VStack(spacing: 0) {
@@ -63,6 +64,11 @@ struct CaptureCard: View {
           .font(MTTypography.caption)
           .foregroundStyle(message.style == .success ? MTColor.success : MTColor.warm)
           .accessibilityIdentifier("capture-message")
+        } else if hasLocalDraft {
+          Label("Draft saved on this iPhone.", systemImage: "clock.arrow.circlepath")
+            .font(MTTypography.caption)
+            .foregroundStyle(MTColor.inkMuted)
+            .accessibilityIdentifier("draft-message")
         }
       }
       .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -79,10 +85,7 @@ struct CaptureCard: View {
 
         Button {
           Task {
-            if await save() {
-              title = ""
-              note = ""
-            }
+            await save()
           }
         } label: {
           HStack(spacing: MTSpacing.s2) {

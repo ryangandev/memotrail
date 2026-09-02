@@ -7,6 +7,7 @@ import Supabase
 import UIKit
 
 struct AuthenticatedUser: Equatable, Sendable {
+  let id: UUID
   let email: String
   let name: String
 
@@ -173,6 +174,7 @@ final class AuthenticationController {
     let fallbackName = email.split(separator: "@").first.map(String.init) ?? "MemoTrail"
 
     return AuthenticatedUser(
+      id: session.user.id,
       email: email,
       name: metadataName?.trimmingCharacters(in: .whitespacesAndNewlines)
         .nilIfEmpty ?? fallbackName

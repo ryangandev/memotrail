@@ -1,6 +1,6 @@
 # MemoTrail Setup Checklist
 
-> Status: Authentication accepted; synchronized Inbox implementation underway
+> Status: Synchronized Inbox accepted; reliable capture implementation underway
 >
 > Last updated: 2026-09-01
 >
@@ -122,7 +122,8 @@ Phase 1 repository work:
 - [x] Verify the signed-out authentication experience in light and dark appearance on an iPhone simulator.
 - [x] Verify a warning-free simulator build and launch.
 - [x] Add native unit coverage for Inbox capture validation and Entry presentation rules.
-- [ ] Establish local persistence and a retryable synchronization queue.
+- [x] Establish per-user recoverable Inbox drafts on Web and iOS.
+- [ ] Establish offline capture and a retryable synchronization queue.
 - [ ] Add authenticated UI tests after a safe test-account strategy is defined.
 - [ ] Verify installation and launch separately on the physical iPhone.
 
