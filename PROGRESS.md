@@ -14,7 +14,7 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- The linked hosted Supabase project contains all three reviewed repository migrations and no development seed users.
+- The linked hosted Supabase project contains all four reviewed repository migrations and no development seed users.
 - The hosted atomic Entry review contract now supports content, Type, occurrence, Collection, tag, and `Done` updates in one transaction.
 - Hosted verification found 21 Row Level Security-enabled application tables, 22 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
@@ -41,6 +41,7 @@
 - Hosted verification confirms the atomic review migration is recorded remotely, schema lint reports no errors, the function uses an empty `search_path`, PUBLIC execution is revoked, and only authenticated users receive execution access.
 - A locally verified search contract now finds non-Trash Entries across titles, bodies, Collections, tags, occurrence dates, Types, metadata, and specialized Entry fields while returning match reasons and filter support.
 - Keyword date matching and filtering use each Entry's preserved occurrence timezone, with a safe UTC fallback for invalid legacy values.
+- Hosted verification confirms the keyword search migration, optimized indexes, empty function search paths, authenticated-only execution grants, and a warning-free public schema.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -137,7 +138,7 @@
 - [x] Support Type, Collection, tag, and inclusive date-range filters through the shared database contract.
 - [x] Apply input, pagination, and organization-filter limits before executing a search.
 - [x] Verify content matches, filters, local dates, structured fields, Trash exclusion, owner isolation, and unauthenticated denial with 21 pgTAP tests.
-- [ ] Apply and verify the keyword search migration on hosted Supabase.
+- [x] Apply and verify the keyword search migration on hosted Supabase.
 
 ## Feature history
 
@@ -165,13 +166,14 @@
 - `feat: add Web Entry organization` implemented manual Collections and tags in Web Entry review.
 - `feat: add iOS Entry organization` implemented the matching manual Collection and tag review controls on iOS.
 - `feat: deploy atomic Entry organization` deployed and verified the atomic Entry organization contract on hosted Supabase.
-- Current change: added and locally verified the shared database-backed keyword Entry search contract.
+- `feat: add keyword Entry search` added and locally verified the shared database-backed keyword Entry search contract.
+- Current change: deployed and verified the keyword Entry search contract and supporting indexes on hosted Supabase.
 
 ## Next sequence
 
-1. Apply and verify the keyword Entry search migration on hosted Supabase.
-2. Add the Web search experience.
-3. Add the matching iOS search experience.
+1. Add the Web search experience.
+2. Add the matching iOS search experience.
+3. Verify cross-platform search behavior against the same real Entries.
 
 ## Deferred
 
