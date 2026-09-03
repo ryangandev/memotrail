@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Homes and moves data contract
+> Current phase: Deploy Homes and moves data contract
 >
 > Last updated: 2026-09-03
 >
@@ -183,6 +183,11 @@
 - Voice status and error feedback remain visible and accessible while conflicting title, body, date, photo, and save controls stay unavailable until listening ends.
 - The Web suite now has 134 passing tests, including ten focused voice-capability, transcript, limit, and failure tests, and the implementation passes formatting, design-token, lint, typecheck, and production-build checks.
 - Authenticated localhost browser verification covered live start, listening, stop, empty-result feedback, existing-draft preservation across navigation, and cleanup without creating an Entry.
+- A locally verified Homes contract now creates or revision-safely edits an organized Home Entry, its reusable Place, Homes Timeline Stage, Collections, tags, and range dates in one transaction.
+- Homes browsing returns active and completed residences in deterministic order with reusable Place details, move context, organization, private attachment metadata, and pagination totals.
+- Home version history now preserves the previous specialized Home, Place, and Timeline state in addition to the shared Entry snapshot before an edit or Trash mutation.
+- The contract supports open-ended current residences, exact or approximate date precision, recoverable Trash restoration, global structured search, optimistic conflicts, and owner isolation.
+- The local database now passes 422 pgTAP tests plus warning-free schema lint, including 59 focused Homes tests for validation, ranges, Place reuse, organization, history, Timeline, Search, Trash, grants, and privacy.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -676,6 +681,21 @@
 - [x] Verify capability detection, transcript extraction and merging, limits, and failure messages with ten focused tests while keeping all 134 Web tests passing.
 - [x] Pass formatting, design-token, lint, typecheck, production-build, and authenticated localhost browser checks without leaving test data.
 
+### Homes and moves data contract
+
+- [x] Create an organized Home Entry together with a reusable Place and Homes Timeline Stage in one transaction.
+- [x] Require a Home name, reusable Place name, best-known move-in date, valid occurrence timezone, and valid date range.
+- [x] Support open-ended current residences plus exact, day, month, year, range, age, and approximate date context.
+- [x] Preserve optional address, city, region, country, coordinates, Place notes, move-in reason, and move-out reason.
+- [x] Atomically normalize and replace Collections and tags alongside Home content and relationships.
+- [x] Return active and completed Homes in deterministic order with pagination totals, organization, Timeline, and active private attachment metadata.
+- [x] Preserve previous Entry, Home, Place, and Timeline state inside Entry version history before edits and Trash mutations.
+- [x] Reuse global structured search and the shared recoverable Trash restoration path without losing Home relationships.
+- [x] Reject stale revisions and cross-owner Place, Home, edit, and Trash access without partial mutations.
+- [x] Keep every contract function authenticated-only, security-invoker, Row Level Security-backed, empty-search-path, and supported by focused indexes.
+- [x] Verify the contract with 59 focused pgTAP tests while keeping all 422 database tests and warning-level schema lint passing.
+- [ ] Apply and verify the additive Homes migration on hosted Supabase.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -743,13 +763,14 @@
 - `feat: add Web Home memory resurfacing` added and locally browser-verified the quiet Web Home memory resurfacing experience.
 - `feat: add iOS Home memory resurfacing` added and simulator-verified the matching native iOS Home memory resurfacing experience.
 - `feat: add iOS voice capture` added and simulator-verified live voice-to-text across every shared native capture surface.
-- Current change: added progressive live Web voice-to-text with recoverable drafts and authenticated localhost verification.
+- `feat: add Web voice capture` added progressive live Web voice-to-text with recoverable drafts and authenticated localhost verification.
+- Current change: added and locally verified the shared Homes and moves data contract.
 
 ## Next sequence
 
-1. Add a shared owner-scoped Homes and moves contract using specialized Home fields on the existing Entry model.
-2. Verify date precision, open-ended residences, duration-ready ranges, Timeline relationships, history, Trash, grants, and owner isolation locally.
-3. Apply and verify the additive Homes migration on hosted Supabase before implementing matching Web and iOS archives.
+1. Apply and verify the additive Homes migration on hosted Supabase.
+2. Add the authenticated Web Homes archive, creation, editing, organization, private-photo, Timeline, and Trash experience.
+3. Add the matching native iOS Homes archive and editor after the Web interaction contract is locally proven.
 
 ## Deferred
 

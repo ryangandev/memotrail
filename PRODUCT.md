@@ -324,6 +324,14 @@ Privacy controls will be especially important if exact addresses are stored.
 
 Homes are personal-history Entries rather than property-management records.
 
+A directly created Home requires a name, a reusable Place name, and the best-known move-in date.
+
+The date may use exact, day, month, year, age, range, or approximate precision, while a Home without a move-out date remains an active residence.
+
+Every Home is an organized Home Entry and a Stage on the Homes Timeline track, so the same life chapter appears consistently in Homes, Timeline, Search, Collections, tags, and Trash.
+
+Editing a Home updates its shared Place details intentionally and retains the prior Entry, Home, Place, and Timeline state in version history.
+
 The initial scope excludes rent, utilities, documents, and household tasks.
 
 ### 5.8 Vehicles
