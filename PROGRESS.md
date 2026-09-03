@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Library navigation
+> Current phase: Habits data contract
 >
 > Last updated: 2026-09-02
 >
@@ -91,6 +91,9 @@
 - Library exposes only implemented archives as interactive routes while keeping Goals, Homes, Vehicles, Places, and People visibly marked as planned.
 - First Times and Collections can render inside the shared Library navigation stack without nested navigation containers or duplicated feature implementations.
 - The shared iOS scheme now has 65 passing tests, including four Library destination-contract tests, and the refactored app passes a warning-free generic Simulator build.
+- The locally verified Habits contract supports check-off and measured Habits, daily, selected-weekday, weekly-target, and interval schedules, revision-safe definitions and occurrences, recoverable Trash, and immutable history.
+- Habit workspaces derive pending and not-scheduled states for one local date, while the yearly calendar distinguishes completed, skipped, missed, pending, upcoming, and not-scheduled dates without storing synthetic misses.
+- The local database now passes 213 pgTAP tests plus warning-free schema lint, including 49 focused Habits tests for schedule validation, creation, measurement rules, occurrence correction, optimistic conflicts, history, Trash, access boundaries, and function hardening.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -337,6 +340,21 @@
 - [x] Verify stable destination identity, user-facing metadata, and implemented-versus-planned grouping with four focused tests.
 - [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, and all 65 native tests.
 
+### Habits data contract
+
+- [x] Support check-off and measured Habits with validated names, units, and positive measurement targets.
+- [x] Support daily, selected-weekday, weekly-target, and custom day-interval schedules with explicit active date bounds.
+- [x] Return every active owned Habit and its explicit or derived state for one local calendar date.
+- [x] Record completed, missed, or skipped occurrences and revision-safely correct existing records.
+- [x] Preserve previous Habit definitions and occurrence records in owner-readable immutable history.
+- [x] Move a Habit to recoverable Trash without deleting its occurrence or version history.
+- [x] Return a complete yearly calendar with completed, skipped, missed, pending, upcoming, and not-scheduled states.
+- [x] Keep other owners and anonymous callers outside the contract through RLS-backed security-invoker functions.
+- [x] Restrict new history tables to authenticated Select access and every function to the minimum authenticated execution grant.
+- [x] Verify the shared contract with 49 focused pgTAP tests and warning-free local schema lint.
+- [ ] Apply the additive Habits migration to hosted Supabase without seed or role changes.
+- [ ] Verify the hosted migration ledger, schema lint, function definitions, execution grants, table privileges, and indexes after rollout.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -380,12 +398,14 @@
 - `feat: deploy Collections browsing contract` deployed and verified the Collections browsing contract on hosted Supabase.
 - `feat: add Web Collections experience` implemented and locally browser-verified the authenticated Web Collections experience.
 - `feat: add iOS Collections experience` implemented and simulator-verified the matching native iOS Collections experience.
-- Current change: consolidated native archive navigation under a scalable Library destination.
+- `feat: add iOS Library navigation` consolidated native archive navigation under a scalable Library destination.
+- Current change: added and locally verified the shared Habits data contract.
 
 ## Next sequence
 
-1. Add the shared Habits data contract because Habits is the next confirmed primary mobile destination.
-2. Add matching Web and iOS Habits experiences after the contract is locally verified and deployed.
+1. Deploy and verify the additive Habits data contract on hosted Supabase.
+2. Add the authenticated Web Habits experience.
+3. Add the matching native iOS Habits experience as a primary tab.
 
 ## Deferred
 
