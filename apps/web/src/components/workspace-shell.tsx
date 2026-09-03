@@ -47,7 +47,7 @@ const recordNavigation: NavigationItem[] = [
   { destination: "habits", href: "/habits", icon: "check", label: "Habits" },
   { destination: "goals", href: "/goals", icon: "target", label: "Goals" },
   { destination: "homes", href: "/homes", icon: "home", label: "Homes" },
-  { destination: "places", icon: "map", label: "Places" },
+  { destination: "places", href: "/places", icon: "map", label: "Places" },
   {
     destination: "vehicles",
     href: "/vehicles",

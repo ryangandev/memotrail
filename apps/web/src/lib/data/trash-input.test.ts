@@ -34,7 +34,7 @@ describe("Trash route input", () => {
 });
 
 describe("Trash item input", () => {
-  it("accepts revisioned Entry and Habit identities", () => {
+  it("accepts revisioned Entry, Habit, and Place identities", () => {
     expect(
       parseTrashItemInput({
         deletedAt,
@@ -49,6 +49,14 @@ describe("Trash item input", () => {
         itemId,
         itemKind: "habit",
         revision: 1,
+      }),
+    ).toMatchObject({ success: true });
+    expect(
+      parseTrashItemInput({
+        deletedAt,
+        itemId,
+        itemKind: "place",
+        revision: 4,
       }),
     ).toMatchObject({ success: true });
   });

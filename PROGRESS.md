@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Web Places experience
+> Current phase: iOS Places experience
 >
 > Last updated: 2026-09-03
 >
@@ -245,6 +245,12 @@
 - The compatibility changes retain all 170 Web tests, lint, typecheck, production build, strict Swift formatting, and a warning-free generic Simulator build.
 - Hosted Supabase now contains the additive Places migration with an aligned seventeen-migration ledger and no seed or role deployment.
 - Hosted verification confirms revision and recoverable deletion on Places, owner-readable immutable Place history, the archive trigger, all three Place functions, four supporting indexes, expanded shared Trash functions, empty function search paths, authenticated-only execution, least-privilege history grants, and warning-free schema lint.
+- Web now exposes Places as a dedicated authenticated archive with reusable location details, coordinate context, notes, linked Entry and Home context, and private photo covers.
+- The Web Place editor creates or revision-safely updates address fields, optional Map-ready coordinates, notes, and up to 100 related Entries while preserving protected Home relationships.
+- Places with persisted Entry or Home links cannot move to Trash until the relationship is safely removed and saved, while unlinked Places use the shared recoverable Trash experience.
+- Places are available through Records and Library navigation, and the shared Web Trash archive now presents, restores, and permanently deletes Place records through the common optimistic contract.
+- The Web suite now has 179 passing tests, including nine focused Place input and response tests, and the implementation passes formatting, lint, typecheck, and production-build checks.
+- Isolated localhost browser verification covered real Place creation and revision-safe editing, desktop and 390-pixel layouts, coordinate presentation, responsive overflow, and an error-free browser console before exact disposable-account cleanup.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -859,6 +865,15 @@
 - [x] Verify the contract with 73 focused pgTAP tests while keeping all 617 database tests and warning-level schema lint passing.
 - [x] Apply and verify the additive Places migration on hosted Supabase.
 
+### Web Places experience
+
+- [x] Present reusable Places in linked and unlinked archive sections with full location context, optional coordinates, notes, Entry and Home context, and a private photo cover.
+- [x] Create or revision-safely edit Place details and up to 100 owner-scoped related Entry links while keeping Home relationships protected.
+- [x] Prevent a Place with persisted Entry or Home relationships from entering Trash until those links are safely removed and saved.
+- [x] Restore or permanently delete an unlinked Place through the shared Web Trash experience.
+- [x] Expose Places through Records and Library navigation without prematurely adding a Map view or external geocoding dependency.
+- [x] Verify validation, response parsing, shared Trash handling, formatting, lint, typecheck, production build, real localhost mutations, desktop layout, mobile layout, and browser-console behavior while keeping all 179 Web tests passing.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -940,13 +955,14 @@
 - `feat: add Web Goals experience` added and locally browser-verified the complete Web Goals experience.
 - `feat: add iOS Goals experience` added and simulator-verified the complete native iOS Goals experience.
 - `feat: add Places data contract` added and locally verified the shared reusable Places and future Map data contract.
-- Current change: deployed and verified the additive Places contract on hosted Supabase.
+- `feat: deploy Places data contract` deployed and verified the additive Places contract on hosted Supabase.
+- Current change: implemented and locally browser-verified the complete Web Places experience.
 
 ## Next sequence
 
-1. Build the Web Places archive with location, coordinate, linked Entry, Home, and private attachment context.
-2. Add a revision-safe Web Place editor, relationship-aware Trash protection, and Place support to the shared Web Trash experience.
-3. Verify parsing, mutations, responsive layout, production build, and real localhost behavior before committing and pushing the feature.
+1. Build the matching native Places archive and editor with location, coordinate, notes, linked Entry, Home, and signed private attachment context.
+2. Add Place support to the shared native Trash experience and expose Places as an implemented Library destination.
+3. Verify decoding, validation, mutations, navigation, native tests, generic build, simulator behavior, and visual consistency before committing and pushing the feature.
 
 ## Deferred
 

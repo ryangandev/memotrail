@@ -1,6 +1,6 @@
 export const TRASH_PAGE_SIZE = 25;
 
-export type TrashItemKind = "attachment" | "entry" | "habit";
+export type TrashItemKind = "attachment" | "entry" | "habit" | "place";
 
 export type TrashItemInput = {
   deletedAt: string;
@@ -44,7 +44,8 @@ export function parseTrashItemInput(value: unknown): ParseResult {
   if (
     (itemKind !== "attachment" &&
       itemKind !== "entry" &&
-      itemKind !== "habit") ||
+      itemKind !== "habit" &&
+      itemKind !== "place") ||
     typeof itemId !== "string" ||
     !uuidPattern.test(itemId) ||
     typeof deletedAt !== "string" ||

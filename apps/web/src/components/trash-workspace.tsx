@@ -142,7 +142,8 @@ export function TrashWorkspace({
           <Icon name="trash" size={25} />
           <h2>Nothing in Trash</h2>
           <p>
-            Removed Entries, Habits, and individual photos will appear here.
+            Removed Entries, Habits, Places, and individual photos will appear
+            here.
           </p>
         </section>
       ) : (
@@ -304,9 +305,15 @@ export function TrashWorkspace({
   );
 }
 
-function iconForKind(kind: TrashItem["kind"]): "check" | "photo" | "timeline" {
+function iconForKind(
+  kind: TrashItem["kind"],
+): "check" | "map" | "photo" | "timeline" {
   if (kind === "habit") {
     return "check";
+  }
+
+  if (kind === "place") {
+    return "map";
   }
 
   return kind === "attachment" ? "photo" : "timeline";
@@ -319,6 +326,10 @@ function labelForItem(item: TrashItem) {
 
   if (item.kind === "habit") {
     return "Habit";
+  }
+
+  if (item.kind === "place") {
+    return "Place";
   }
 
   return item.entryType === "first_time" ? "First Time" : "Entry";
@@ -349,6 +360,10 @@ function deletionDescription(item: TrashItem) {
 
   if (item.kind === "habit") {
     return "The Habit, check-ins, relationships, and version history will be removed.";
+  }
+
+  if (item.kind === "place") {
+    return "The Place and its version history will be removed.";
   }
 
   return "The Entry, private photos, relationships, specialized details, and version history will be removed.";
