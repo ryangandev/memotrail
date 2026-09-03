@@ -78,6 +78,7 @@
 - A locally verified Collections contract now returns every active owned Collection, including empty ones, with active Entry counts, Inbox counts, stable ordering, and recency.
 - Collection detail returns paginated non-Trash Entries with Types, occurrence context, full organization, and active private attachment metadata while enforcing owner isolation.
 - The local database now passes 164 pgTAP tests plus schema lint, including 35 focused Collections tests and a data-independent First Times suite that tolerates existing local records.
+- Hosted verification confirms the Collections migration, aligned eight-migration ledger, warning-free schema, authenticated-only execution grants, empty function search paths, and both supporting indexes.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -289,6 +290,8 @@
 - [x] Enforce owner isolation and unauthenticated denial through RLS-backed security-invoker functions.
 - [x] Restrict function execution to authenticated users and use empty function search paths.
 - [x] Verify the shared contract with 35 focused pgTAP tests and warning-free local schema lint.
+- [x] Apply the additive Collections migration to hosted Supabase without seed or role changes.
+- [x] Verify the hosted migration ledger, schema lint, function definitions, execution grants, and indexes after rollout.
 
 ## Feature history
 
@@ -329,13 +332,13 @@
 - `feat: deploy First Times data contract` deployed and verified the First Times contract and least-privilege correction on hosted Supabase.
 - `feat: add Web First Times experience` implemented and locally browser-verified the dedicated Web First Times experience.
 - `feat: add iOS First Times experience` implemented and simulator-verified the matching native iOS First Times experience.
-- Current change: implemented and locally verified the shared Collections browsing contract.
+- `feat: add Collections browsing contract` implemented and locally verified the shared Collections browsing contract.
+- Current change: deployed and verified the Collections browsing contract on hosted Supabase.
 
 ## Next sequence
 
-1. Deploy and verify the Collections browsing contract on hosted Supabase.
-2. Add the authenticated Web Collections experience.
-3. Add the matching native iOS Collections experience, then revisit Library navigation with real content behind it.
+1. Add the authenticated Web Collections experience.
+2. Add the matching native iOS Collections experience, then revisit Library navigation with real content behind it.
 
 ## Deferred
 
