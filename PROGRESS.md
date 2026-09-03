@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: iOS Places experience
+> Current phase: iOS CI reliability
 >
 > Last updated: 2026-09-03
 >
@@ -88,7 +88,7 @@
 - The shared iOS scheme now has 61 passing tests, including ten focused Collections tests, and passes a warning-free generic Simulator build.
 - The current native build installs and launches on an iPhone 17 Pro simulator while preserving the existing signed-out authentication gate.
 - Native navigation now groups Collections and First Times under one Library tab, leaving room for Habits as a future primary destination without overflowing the iPhone tab bar.
-- Library exposes implemented archives as interactive routes while keeping Places and People visibly marked as planned.
+- Library exposes implemented archives as interactive routes while keeping People visibly marked as planned.
 - Collections, First Times, Homes, Vehicles, Goals, and Trash render inside the shared Library navigation stack without nested navigation containers or duplicated feature implementations.
 - The shared iOS scheme now has 65 passing tests, including four Library destination-contract tests, and the refactored app passes a warning-free generic Simulator build.
 - The locally verified Habits contract supports check-off and measured Habits, daily, selected-weekday, weekly-target, and interval schedules, revision-safe definitions and occurrences, recoverable Trash, and immutable history.
@@ -251,6 +251,11 @@
 - Places are available through Records and Library navigation, and the shared Web Trash archive now presents, restores, and permanently deletes Place records through the common optimistic contract.
 - The Web suite now has 179 passing tests, including nine focused Place input and response tests, and the implementation passes formatting, lint, typecheck, and production-build checks.
 - Isolated localhost browser verification covered real Place creation and revision-safe editing, desktop and 390-pixel layouts, coordinate presentation, responsive overflow, and an error-free browser console before exact disposable-account cleanup.
+- iOS now exposes Places inside Library with native linked and unlinked archive sections, full address and coordinate context, notes, connected Entry and protected Home relationships, and one-hour signed private photo covers.
+- The native Place editor creates or revision-safely updates reusable location details and up to 100 editable related Entry links while preserving Home-managed links and preventing linked Places from entering Trash.
+- Native Trash now decodes, presents, restores, and permanently deletes unlinked Places through the same optimistic revision and recoverable-deletion contract used by Web.
+- The shared iOS scheme now has 151 passing tests, including nine focused Places tests for decoding, sorting, location presentation, private photo context, validation, relationship limits, and mutation encoding.
+- The native Places implementation passes strict Swift formatting, project validation, a generic Simulator build, and the complete suite on an iPhone 17 Pro simulator.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -874,6 +879,16 @@
 - [x] Expose Places through Records and Library navigation without prematurely adding a Map view or external geocoding dependency.
 - [x] Verify validation, response parsing, shared Trash handling, formatting, lint, typecheck, production build, real localhost mutations, desktop layout, mobile layout, and browser-console behavior while keeping all 179 Web tests passing.
 
+### iOS Places experience
+
+- [x] Present reusable Places in linked and unlinked archive sections with full location context, optional coordinates, notes, connected Entry and protected Home context, and a signed private photo cover.
+- [x] Create or revision-safely edit Place details and up to 100 owner-scoped related Entry links while keeping Home relationships protected.
+- [x] Prevent a Place with persisted Entry or Home relationships from entering Trash until those links are safely removed and saved.
+- [x] Restore or permanently delete an unlinked Place through the shared native Trash experience.
+- [x] Expose Places as an implemented Library destination without adding another primary tab, a premature Map view, or an external geocoding dependency.
+- [x] Verify decoding, deterministic ordering, location presentation, private photo context, validation, relationship limits, optimistic mutation encoding, Library routing, and shared Trash handling with nine focused tests while keeping all 151 native tests passing.
+- [x] Pass strict Swift formatting, project validation, a generic Simulator build, and the complete iPhone 17 Pro suite.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -956,13 +971,14 @@
 - `feat: add iOS Goals experience` added and simulator-verified the complete native iOS Goals experience.
 - `feat: add Places data contract` added and locally verified the shared reusable Places and future Map data contract.
 - `feat: deploy Places data contract` deployed and verified the additive Places contract on hosted Supabase.
-- Current change: implemented and locally browser-verified the complete Web Places experience.
+- `feat: add Web Places experience` implemented and locally browser-verified the complete Web Places experience.
+- Current change: implemented and simulator-verified the matching native iOS Places experience.
 
 ## Next sequence
 
-1. Build the matching native Places archive and editor with location, coordinate, notes, linked Entry, Home, and signed private attachment context.
-2. Add Place support to the shared native Trash experience and expose Places as an implemented Library destination.
-3. Verify decoding, validation, mutations, navigation, native tests, generic build, simulator behavior, and visual consistency before committing and pushing the feature.
+1. Reproduce the current GitHub Actions iOS failure against the runner's Swift and Xcode concurrency behavior.
+2. Fix the underlying compatibility problem without weakening the app's Swift 6 concurrency model.
+3. Keep local native validation green, push the narrow CI repair, and verify the resulting GitHub Actions run remotely.
 
 ## Deferred
 

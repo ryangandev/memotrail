@@ -6,7 +6,7 @@ final class LibraryDestinationTests: XCTestCase {
   func testAvailableDestinationsContainOnlyImplementedArchives() {
     XCTAssertEqual(
       LibraryDestination.available,
-      [.collections, .firstTimes, .homes, .vehicles, .goals, .trash]
+      [.collections, .firstTimes, .homes, .places, .vehicles, .goals, .trash]
     )
     XCTAssertTrue(LibraryDestination.available.allSatisfy(\.isAvailable))
   }
@@ -14,7 +14,7 @@ final class LibraryDestinationTests: XCTestCase {
   func testPlannedDestinationsRemainVisibleButUnavailable() {
     XCTAssertEqual(
       LibraryDestination.planned,
-      [.places, .people]
+      [.people]
     )
     XCTAssertTrue(LibraryDestination.planned.allSatisfy { !$0.isAvailable })
   }

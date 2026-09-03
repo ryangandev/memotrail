@@ -45,7 +45,7 @@ struct LibraryView: View {
 
   private var availableSection: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      sectionTitle("AVAILABLE NOW", subtitle: "Six ways into the archive")
+      sectionTitle("AVAILABLE NOW", subtitle: "Seven ways into the archive")
 
       ForEach(LibraryDestination.available) { destination in
         NavigationLink {
@@ -96,13 +96,15 @@ struct LibraryView: View {
       FirstTimesView(client: client, ownerID: ownerID, embedded: true)
     case .homes:
       HomesView(client: client, ownerID: ownerID, embedded: true)
+    case .places:
+      PlacesView(client: client, ownerID: ownerID, embedded: true)
     case .vehicles:
       VehiclesView(client: client, ownerID: ownerID, embedded: true)
     case .goals:
       GoalsView(client: client, ownerID: ownerID, embedded: true)
     case .trash:
       TrashView(client: client, ownerID: ownerID, embedded: true)
-    case .people, .places:
+    case .people:
       EmptyView()
     }
   }

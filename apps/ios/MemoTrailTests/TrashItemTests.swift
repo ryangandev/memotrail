@@ -6,21 +6,22 @@ final class TrashItemTests: XCTestCase {
   func testDecodesEveryTrashKindAndPreservesOptimisticTimestamp() throws {
     let items = try decodeItems()
 
-    XCTAssertEqual(items.map(\.kind), [.entry, .habit, .attachment])
+    XCTAssertEqual(items.map(\.kind), [.entry, .habit, .attachment, .place])
     XCTAssertEqual(items[0].deletedAt, "2026-09-02T12:34:56.123456+00:00")
     XCTAssertEqual(items[0].revision, 4)
     XCTAssertNil(items[2].revision)
     XCTAssertEqual(items[2].storagePaths, ["21000000/photo.png"])
-    XCTAssertEqual(items[0].totalCount, 3)
+    XCTAssertEqual(items[0].totalCount, 4)
   }
 
   func testCompositeIdentityCannotCollideAcrossTables() throws {
     let items = try decodeItems()
 
-    XCTAssertEqual(Set(items.map(\.id)).count, 3)
+    XCTAssertEqual(Set(items.map(\.id)).count, 4)
     XCTAssertTrue(items[0].id.hasPrefix("entry-"))
     XCTAssertTrue(items[1].id.hasPrefix("habit-"))
     XCTAssertTrue(items[2].id.hasPrefix("attachment-"))
+    XCTAssertTrue(items[3].id.hasPrefix("place-"))
   }
 
   func testDisplayMetadataDistinguishesFirstTimesAndRemovesDuplicateDetail() throws {
@@ -29,6 +30,7 @@ final class TrashItemTests: XCTestCase {
     XCTAssertEqual(items[0].displayKind, "First Time")
     XCTAssertEqual(items[1].displayKind, "Habit")
     XCTAssertEqual(items[2].displayKind, "Photo")
+    XCTAssertEqual(items[3].displayKind, "Place")
     XCTAssertNil(items[0].displayDetail)
     XCTAssertEqual(items[2].displayDetail, "Photo from First ski trip")
   }
@@ -93,7 +95,7 @@ final class TrashItemTests: XCTestCase {
           "entry_type": "first_time",
           "parent_entry_id": null,
           "storage_paths": ["21000000/entry/photo.png"],
-          "total_count": 3
+          "total_count": 4
         },
         {
           "item_kind": "habit",
@@ -106,7 +108,7 @@ final class TrashItemTests: XCTestCase {
           "entry_type": null,
           "parent_entry_id": null,
           "storage_paths": [],
-          "total_count": 3
+          "total_count": 4
         },
         {
           "item_kind": "attachment",
@@ -119,7 +121,20 @@ final class TrashItemTests: XCTestCase {
           "entry_type": "attachment",
           "parent_entry_id": "31000000-0000-4000-8000-000000000001",
           "storage_paths": ["21000000/photo.png"],
-          "total_count": 3
+          "total_count": 4
+        },
+        {
+          "item_kind": "place",
+          "item_id": "21000000-0000-4000-8000-000000000001",
+          "title": "Golden Gate Park",
+          "detail": "San Francisco, California",
+          "deleted_at": "2026-09-02T12:37:56.123456+00:00",
+          "expires_at": "2026-10-02T12:37:56.123456+00:00",
+          "revision": 3,
+          "entry_type": null,
+          "parent_entry_id": null,
+          "storage_paths": [],
+          "total_count": 4
         }
       ]
       """#

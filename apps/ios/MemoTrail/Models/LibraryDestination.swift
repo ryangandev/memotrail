@@ -77,11 +77,11 @@ enum LibraryDestination: String, CaseIterable, Equatable, Hashable, Identifiable
 
   var isAvailable: Bool {
     self == .collections || self == .firstTimes || self == .goals || self == .homes
-      || self == .trash || self == .vehicles
+      || self == .places || self == .trash || self == .vehicles
   }
 
   static let available: [LibraryDestination] = [
-    .collections, .firstTimes, .homes, .vehicles, .goals, .trash,
+    .collections, .firstTimes, .homes, .places, .vehicles, .goals, .trash,
   ]
-  static let planned: [LibraryDestination] = [.places, .people]
+  static let planned: [LibraryDestination] = [.people]
 }
