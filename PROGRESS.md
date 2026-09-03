@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Goals data contract
+> Current phase: Deploy Goals data contract
 >
 > Last updated: 2026-09-03
 >
@@ -217,6 +217,11 @@
 - Vehicle Timeline stages now open the specialized native Vehicle editor instead of the generic Timeline editor, and both Vehicle and individual-photo deletion remain recoverable through Trash.
 - The shared iOS scheme now has 132 passing tests, including ten focused Vehicle tests plus explicit Home and Vehicle Timeline editor routing coverage.
 - The native Vehicles implementation passes strict formatting for changed sources, project validation, a warning-free generic Simulator build, the complete suite on an iPhone 17 Pro simulator, and an install-and-launch smoke check.
+- A locally verified Goals contract now creates or revision-safely edits an organized Goal Entry with Short-term, Long-term, or Someday horizon, flexible reflective status, an optional calendar-only target date, Collections, tags, and related Entry context.
+- Goal edits preserve the previous specialized facts and related Entry links in version history, while active browsing, global structured search, and the shared recoverable Trash path remain owner-scoped.
+- A Bucket List Goal can be atomically marked Achieved and create a linked organized First Time with supplied completion context without copying the Goal description.
+- The Goals contract intentionally excludes percentages, reminders, overdue pressure, subtasks, and productivity scoring.
+- The local database now passes 544 pgTAP tests plus warning-free schema lint, including 64 focused Goals tests for validation, sorting, organization, related Entries, history, Search, Trash, Bucket List completion, grants, indexes, and privacy.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -782,6 +787,19 @@
 - [x] Verify decoding, deterministic ordering, facts, range and duration presentation, validation, organization, explicit RPC nulls, and Timeline type routing with focused tests while keeping all 132 native tests passing.
 - [x] Pass strict formatting for changed sources, project validation, a warning-free generic Simulator build, the complete iPhone 17 Pro suite, and an install-and-launch smoke check.
 
+### Goals data contract
+
+- [x] Create an organized Goal Entry with a required title, optional description, and optional calendar-only target date.
+- [x] Support Short-term, Long-term, and Someday horizons plus Considering, Active, Paused, Achieved, and Let Go reflective states without enforcing a productivity workflow.
+- [x] Atomically normalize and replace Collections, tags, and up to 100 owner-scoped related Entry links alongside Goal content and structured facts.
+- [x] Return Goals in deterministic reflective-state and target-date order with pagination totals, organization, related Entry context, and active private attachment metadata.
+- [x] Preserve previous Entry, Goal, and related Entry-link state inside immutable Entry version history before edits and Trash mutations.
+- [x] Reuse global structured search and the shared recoverable Trash path while enforcing optimistic revisions and owner isolation.
+- [x] Atomically mark a Bucket List Goal Achieved and create a linked organized First Time with supplied completion context without copying the Goal description.
+- [x] Keep every contract function authenticated-only, security-invoker, Row Level Security-backed, empty-search-path, and supported by focused indexes.
+- [x] Verify the contract with 64 focused pgTAP tests while keeping all 544 database tests and warning-level schema lint passing.
+- [ ] Apply and verify the additive Goals migration on hosted Supabase.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -857,13 +875,14 @@
 - `feat: add Vehicles data contract` added and locally verified the shared Vehicles and ownership-period data contract.
 - `feat: deploy Vehicles data contract` deployed and verified the additive Vehicles contract on hosted Supabase.
 - `feat: add Web Vehicles experience` added and locally verified the complete Web Vehicles experience.
-- Current change: added and simulator-verified the complete native iOS Vehicles experience.
+- `feat: add iOS Vehicles experience` added and simulator-verified the complete native iOS Vehicles experience.
+- Current change: added and locally verified the Goals data contract.
 
 ## Next sequence
 
-1. Define the shared Goals contract for horizon, reflective status, optional target dates, organization, and progress notes.
-2. Preserve Goal transitions in Entry history and reuse Search, Collections, tags, and recoverable Trash.
-3. Add the approved Bucket List convention without introducing reminders, subtasks, overdue pressure, or productivity scoring.
+1. Review and dry-run the additive Goals migration against the confirmed hosted Supabase project.
+2. Deploy only the version-controlled Goals migration without seed or role changes.
+3. Verify the hosted migration ledger, function hardening, indexes, history trigger, grants, and schema lint.
 
 ## Deferred
 

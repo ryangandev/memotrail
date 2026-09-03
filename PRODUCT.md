@@ -397,6 +397,14 @@ An Idea can be manually converted into a Goal if it becomes an intention the use
 
 The initial product does not include subtasks, complex project management, overdue warnings, or productivity scores.
 
+A directly created Goal requires a title, while its description and calendar-only target date remain optional.
+
+Goal status changes are intentionally flexible rather than enforcing a productivity workflow, and every edit preserves the previous Goal facts and related Entry links in version history.
+
+Progress context reuses existing Entries through owner-scoped links instead of introducing a separate checklist or percentage model.
+
+The initial `Mark as Achieved and create First Time` action is available only to a Goal in the Bucket List Collection, records an achieved status, creates a new organized First Time with the supplied best-known completion date, and links the two Entries without copying the Goal description.
+
 ### 5.10 Places, People, and Map
 
 Place and Person are lightweight reusable entities that can be linked across Entries.
