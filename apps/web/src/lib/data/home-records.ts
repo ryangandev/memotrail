@@ -34,6 +34,7 @@ export async function getHomesWorkspace(): Promise<HomesWorkspace | null> {
       .from("places")
       .select("id,name,address,city,region,country,latitude,longitude,notes")
       .eq("owner_id", context.userId)
+      .is("deleted_at", null)
       .order("name"),
     context.client
       .from("collections")

@@ -352,6 +352,7 @@ final class ResidenceController {
       .from("places")
       .select("id,name,address,city,region,country,latitude,longitude,notes")
       .eq("owner_id", value: ownerID.uuidString)
+      .is("deleted_at", value: nil)
       .order("name")
       .execute()
       .value

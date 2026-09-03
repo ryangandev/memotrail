@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Places and Map data contract
+> Current phase: Deploy Places data contract
 >
 > Last updated: 2026-09-03
 >
@@ -236,6 +236,13 @@
 - Native Goal and individual-photo removal remain recoverable through Trash, while achievement links stay visible without entering the editable related-Entry set.
 - The shared iOS scheme now has 142 passing tests, including ten focused Goals tests for decoding, sorting, sections, validation, date-only handling, organization, related Entries, explicit RPC nulls, and achievement context.
 - The native Goals implementation passes strict Swift formatting, project validation, a warning-free generic Simulator build, the complete suite on an iPhone 17 Pro simulator, and an install-and-launch authentication-boundary check.
+- A locally verified Places contract now browses and revision-safely edits reusable owned locations with optional address, city, region, country, coordinates, notes, and editable related Entry links.
+- Place history preserves each prior location record and linked Entry set, while existing Home-created Places and their protected Home relationships remain reusable and cannot be silently unlinked.
+- Place browsing returns active linked Entry context and private attachment metadata, and Map-ready coordinate indexes preserve the future Map path without requiring a Map interface now.
+- Only an unlinked Place can move to the shared recoverable Trash, preventing removal from silently breaking a Home or another Entry's location context.
+- Home Place selectors on Web and iOS now exclude recoverably removed Places without changing the existing Home create or edit contract.
+- The local database now passes 617 pgTAP tests plus warning-free schema lint, including 73 focused Places tests for browsing, relationships, coordinates, history, optimistic conflicts, Trash, grants, indexes, and owner isolation.
+- The compatibility changes retain all 170 Web tests, lint, typecheck, production build, strict Swift formatting, and a warning-free generic Simulator build.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -837,6 +844,19 @@
 - [x] Verify decoding, deterministic ordering, reflective sections, date-only context, validation, organization, related Entries, explicit RPC nulls, and achievement parameters with ten focused tests while keeping all 142 native tests passing.
 - [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, the complete iPhone 17 Pro suite, and an install-and-launch authentication-boundary check.
 
+### Places and Map data contract
+
+- [x] Extend existing reusable Places with optimistic revisions and recoverable deletion without replacing or duplicating Home-created records.
+- [x] Return active owned Places with full location details, optional Map-ready coordinates, linked Entry context, private attachment metadata, counts, and stable pagination.
+- [x] Create or revision-safely edit a Place and up to 100 editable related Entry links while preserving protected Home relationships.
+- [x] Preserve previous Place details and linked Entry sets inside owner-readable immutable Place version history.
+- [x] Allow only an unlinked Place to enter the shared thirty-day Trash so a removal cannot silently alter Home or Entry context.
+- [x] Restore or permanently delete a Place through the shared optimistic Trash contract with no direct Storage deletion requirement.
+- [x] Keep every Place function authenticated-only, security-invoker, Row Level Security-backed, empty-search-path, and supported by focused browsing, coordinate, relationship, and history indexes.
+- [x] Filter removed Places out of existing Web and iOS Home selectors without changing the Home mutation contract.
+- [x] Verify the contract with 73 focused pgTAP tests while keeping all 617 database tests and warning-level schema lint passing.
+- [ ] Apply and verify the additive Places migration on hosted Supabase.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -916,13 +936,14 @@
 - `feat: add Goals data contract` added and locally verified the shared Goals and Bucket List completion contract.
 - `feat: deploy Goals data contract` deployed and verified the additive Goals contract on hosted Supabase.
 - `feat: add Web Goals experience` added and locally browser-verified the complete Web Goals experience.
-- Current change: added and simulator-verified the complete native iOS Goals experience.
+- `feat: add iOS Goals experience` added and simulator-verified the complete native iOS Goals experience.
+- Current change: added and locally verified the shared reusable Places and future Map data contract.
 
 ## Next sequence
 
-1. Define the shared Place contract around reusable owned locations, optional address and coordinates, notes, Entry links, and future Map compatibility.
-2. Preserve existing Home-created Places while adding owner-scoped browsing, revision-safe editing, history, Search, and recoverable Trash behavior.
-3. Verify the additive migration locally before any hosted deployment, then build matching Web and iOS Places experiences.
+1. Deploy only the new version-controlled Places migration to the linked hosted Supabase project without seed data.
+2. Verify the seventeen-migration ledger, Place functions, history policy, least-privilege grants, indexes, Trash integration, and warning-level schema lint.
+3. Build the Web Places archive and editor, including linked Entry context and the expanded Place-aware Trash parser.
 
 ## Deferred
 
