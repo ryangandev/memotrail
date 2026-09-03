@@ -58,6 +58,7 @@ struct TimelineEntry: Equatable, Hashable, Identifiable, Sendable {
   let trackID: UUID
   let title: String
   let body: String
+  let entryType: String
   let kind: TimelineKind
   let occurredStart: Date
   let occurredEnd: Date?
@@ -115,6 +116,7 @@ struct TimelineWorkspaceRow: Decodable, Equatable, Sendable {
   let entryID: UUID?
   let title: String?
   let body: String?
+  let entryType: String?
   let timelineKind: String?
   let occurredStart: Date?
   let occurredEnd: Date?
@@ -133,6 +135,7 @@ struct TimelineWorkspaceRow: Decodable, Equatable, Sendable {
     case entryID = "entry_id"
     case title
     case body
+    case entryType = "entry_type"
     case timelineKind = "timeline_kind"
     case occurredStart = "occurred_start"
     case occurredEnd = "occurred_end"
@@ -148,6 +151,7 @@ struct TimelineWorkspaceRow: Decodable, Equatable, Sendable {
       let entryID,
       let title = title?.trimmed.nonEmpty,
       let body,
+      let entryType = entryType?.trimmed.nonEmpty,
       let timelineKind,
       let kind = TimelineKind(rawValue: timelineKind),
       let occurredStart,
@@ -163,6 +167,7 @@ struct TimelineWorkspaceRow: Decodable, Equatable, Sendable {
       trackID: trackID,
       title: title,
       body: body,
+      entryType: entryType,
       kind: kind,
       occurredStart: occurredStart,
       occurredEnd: kind == .stage ? occurredEnd : nil,

@@ -4,14 +4,14 @@ import XCTest
 
 final class LibraryDestinationTests: XCTestCase {
   func testAvailableDestinationsContainOnlyImplementedArchives() {
-    XCTAssertEqual(LibraryDestination.available, [.collections, .firstTimes, .trash])
+    XCTAssertEqual(LibraryDestination.available, [.collections, .firstTimes, .homes, .trash])
     XCTAssertTrue(LibraryDestination.available.allSatisfy(\.isAvailable))
   }
 
   func testPlannedDestinationsRemainVisibleButUnavailable() {
     XCTAssertEqual(
       LibraryDestination.planned,
-      [.goals, .homes, .vehicles, .places, .people]
+      [.goals, .vehicles, .places, .people]
     )
     XCTAssertTrue(LibraryDestination.planned.allSatisfy { !$0.isAvailable })
   }

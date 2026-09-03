@@ -15,6 +15,7 @@ final class TimelineEntryTests: XCTestCase {
           "entry_id": "20000000-0000-4000-8000-000000000001",
           "title": "Living in Philadelphia",
           "body": "A long chapter.",
+          "entry_type": "home",
           "timeline_kind": "stage",
           "occurred_start": "2012-08-15T19:00:00Z",
           "occurred_end": null,
@@ -33,6 +34,7 @@ final class TimelineEntryTests: XCTestCase {
           "entry_id": null,
           "title": null,
           "body": null,
+          "entry_type": null,
           "timeline_kind": null,
           "occurred_start": null,
           "occurred_end": null,
@@ -49,6 +51,7 @@ final class TimelineEntryTests: XCTestCase {
 
     XCTAssertEqual(tracks.map(\.name), ["Places", "Education"])
     XCTAssertEqual(tracks[0].entries.first?.title, "Living in Philadelphia")
+    XCTAssertEqual(tracks[0].entries.first?.entryType, "home")
     XCTAssertEqual(tracks[0].entries.first?.revision, 3)
     XCTAssertTrue(tracks[1].entries.isEmpty)
   }
@@ -239,6 +242,7 @@ final class TimelineEntryTests: XCTestCase {
       entryID: entryID,
       title: title,
       body: entryID == nil ? nil : "Notes",
+      entryType: entryID == nil ? nil : "life_stage",
       timelineKind: entryID == nil ? nil : "stage",
       occurredStart: occurredStart,
       occurredEnd: nil,

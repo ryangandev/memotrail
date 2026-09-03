@@ -3,11 +3,17 @@ import SwiftUI
 
 struct TimelineView: View {
   @State private var controller: TimelineController
+  @State private var residenceController: ResidenceController
   @State private var editorSelection: TimelineEditorSelection?
+  @State private var residenceEditorSelection: ResidenceEditorSelection?
+  @State private var residenceErrorMessage: String?
 
   init(client: SupabaseClient, ownerID: UUID) {
     _controller = State(
       initialValue: TimelineController(client: client, ownerID: ownerID)
+    )
+    _residenceController = State(
+      initialValue: ResidenceController(client: client, ownerID: ownerID)
     )
   }
 
@@ -50,6 +56,25 @@ struct TimelineView: View {
           initialTrackID: selection.initialTrackID,
           tracks: controller.tracks
         )
+      }
+      .sheet(
+        item: $residenceEditorSelection,
+        onDismiss: {
+          Task { await controller.load() }
+        }
+      ) { selection in
+        ResidenceEditorSheet(controller: residenceController, entry: selection.entry)
+      }
+      .alert(
+        "Home unavailable",
+        isPresented: Binding(
+          get: { residenceErrorMessage != nil },
+          set: { if !$0 { residenceErrorMessage = nil } }
+        )
+      ) {
+        Button("OK", role: .cancel) { residenceErrorMessage = nil }
+      } message: {
+        Text(residenceErrorMessage ?? "")
       }
       .task {
         if !controller.hasLoaded {
@@ -123,10 +148,14 @@ struct TimelineView: View {
             track: track,
             addMoment: { openEditor(trackID: track.id) },
             selectEntry: { entry in
-              editorSelection = TimelineEditorSelection(
-                entry: entry,
-                initialTrackID: entry.trackID
-              )
+              if entry.entryType == "home" {
+                Task { await openResidence(entryID: entry.id) }
+              } else {
+                editorSelection = TimelineEditorSelection(
+                  entry: entry,
+                  initialTrackID: entry.trackID
+                )
+              }
             }
           )
         }
@@ -170,6 +199,18 @@ struct TimelineView: View {
   private func openEditor(trackID: UUID?) {
     guard let trackID else { return }
     editorSelection = TimelineEditorSelection(entry: nil, initialTrackID: trackID)
+  }
+
+  @MainActor
+  private func openResidence(entryID: UUID) async {
+    await residenceController.load()
+    guard let entry = residenceController.entry(id: entryID) else {
+      residenceErrorMessage =
+        residenceController.loadErrorMessage
+        ?? "This Home could not be opened. Refresh the Timeline and try again."
+      return
+    }
+    residenceEditorSelection = ResidenceEditorSelection(entry: entry)
   }
 
   private var trackCountLabel: String {

@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: iOS Homes experience
+> Current phase: Vehicles data contract
 >
 > Last updated: 2026-09-03
 >
@@ -195,6 +195,11 @@
 - Home Timeline stages now open the specialized Home editor instead of the generic Timeline editor, while Homes is available from both Records navigation and Library.
 - The Web suite now has 148 passing tests, including 14 focused Home input, response, duration, location, and Place-decoding tests, and passes lint and typecheck checks.
 - Authenticated localhost verification covered Home creation, revision-safe editing, Timeline deep linking, structured exact-address search, and exact hosted cleanup of the disposable Entry, Place, Collection, and tag.
+- iOS now exposes Homes inside Library with distinct current and earlier residence chapters, human date context, elapsed duration, location summaries, memories, organization, and signed private photo covers.
+- The native Home editor creates or revision-safely updates a reusable Place, move dates and reasons, Collections, tags, memories, coordinates, and private Entry photos through the shared hosted contract.
+- Home Timeline stages now open the specialized native Home editor instead of the generic Timeline editor, and both Home and individual-photo deletion remain recoverable through Trash.
+- The shared iOS scheme now has 121 passing tests, including ten focused Homes tests for decoding, ordering, range and duration presentation, validation, organization, explicit RPC nulls, and universal attachment metadata.
+- The iOS Homes implementation passes strict Swift formatting, project validation, a warning-free generic Simulator build, the complete suite on an iPhone 17 Pro simulator, and an install-and-launch smoke check.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -436,7 +441,7 @@
 - [x] Replace separate First Times and Collections tabs with one scalable Library destination.
 - [x] Keep Collections and First Times fully interactive through native push navigation.
 - [x] Reuse each archive inside the Library navigation stack without nesting another `NavigationStack`.
-- [x] Show Goals, Homes, Vehicles, Places, and People as clearly non-interactive planned destinations.
+- [x] Show Goals, Vehicles, Places, and People as clearly non-interactive planned destinations.
 - [x] Preserve direct primary access to Inbox, Search, and Timeline while reserving tab-bar capacity for Habits.
 - [x] Verify stable destination identity, user-facing metadata, and implemented-versus-planned grouping with four focused tests.
 - [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, and all 65 native tests.
@@ -714,6 +719,18 @@
 - [x] Route Home stages from Timeline to the specialized Home editor and expose Homes through Records and Library navigation.
 - [x] Verify Home parsing, duration, location, Place decoding, create, edit, Timeline, structured search, and exact disposable-data cleanup while keeping all 148 Web tests passing.
 
+### iOS Homes experience
+
+- [x] Present current and earlier Homes as distinct native residence chapters with date range, duration, location, memories, organization, and a signed private photo cover.
+- [x] Create a Home together with a new Place or reuse and intentionally update an existing owned Place.
+- [x] Edit move dates and reasons, precision, human labels, Place details, coordinates, Collections, tags, and memories through one revision-safe mutation.
+- [x] Upload supported private Entry photos to deterministic owner-scoped Storage paths and register metadata only after a successful upload.
+- [x] Move a Home or individual photo to recoverable Trash without deleting the underlying private original.
+- [x] Keep exact addresses inside the authenticated editor and route Home stages from Timeline to that specialized editor.
+- [x] Expose Homes as an implemented Library destination without adding another primary tab.
+- [x] Verify decoding, deterministic ordering, duration, location, validation, organization, explicit RPC nulls, Timeline type routing, and attachment metadata with ten focused tests while keeping all 121 native tests passing.
+- [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, the complete iPhone 17 Pro suite, and an install-and-launch smoke check.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -784,13 +801,14 @@
 - `feat: add Web voice capture` added progressive live Web voice-to-text with recoverable drafts and authenticated localhost verification.
 - `feat: add Homes data contract` added and locally verified the shared Homes and moves data contract.
 - `feat: deploy Homes data contract` deployed and verified the additive Homes and moves contract on hosted Supabase.
-- Current change: added and authenticated-browser-verified the complete Web Homes experience.
+- `feat: add Web Homes experience` added and authenticated-browser-verified the complete Web Homes experience.
+- Current change: added and simulator-verified the complete native iOS Homes experience.
 
 ## Next sequence
 
-1. Add the matching native Homes archive inside Library with current and earlier residence context.
-2. Add native Home creation and revision-safe editing across reusable Place, dates, move context, Collections, tags, memories, private photos, and recoverable Trash.
-3. Verify the complete iOS experience with focused tests, a warning-free build, and an iPhone simulator interaction pass.
+1. Define the shared Vehicles and ownership-period data contract around organized Entries, reusable vehicle facts, Timeline, Search, version history, and Trash.
+2. Verify the contract locally with focused pgTAP coverage, schema lint, and exact privilege inspection before hosted deployment.
+3. Build matching Web and iOS Vehicles experiences after the shared contract is deployed.
 
 ## Deferred
 
