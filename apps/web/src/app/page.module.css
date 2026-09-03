@@ -221,6 +221,7 @@
 }
 
 .mobileBrand,
+.mobileTrashButton,
 .avatarButton {
   display: none;
 }
@@ -1001,8 +1002,24 @@
   }
 
   .mobileBrand,
+  .mobileTrashButton,
   .avatarButton {
     display: flex;
+  }
+
+  .mobileTrashButton {
+    width: 38px;
+    height: 38px;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--mt-radius-medium);
+    color: var(--mt-color-ink-faint);
+    text-decoration: none;
+  }
+
+  .mobileTrashButton[aria-current="page"] {
+    color: var(--mt-color-accent);
+    background: var(--mt-color-accent-subtle);
   }
 
   .mobileBrand {

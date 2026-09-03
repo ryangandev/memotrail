@@ -15,7 +15,8 @@ export type IconName =
   | "search"
   | "sparkle"
   | "star"
-  | "timeline";
+  | "timeline"
+  | "trash";
 
 type IconProps = {
   name: IconName;
@@ -128,6 +129,11 @@ const paths: Record<IconName, React.ReactNode> = {
       <circle cx="6" cy="7" fill="currentColor" r="1.5" stroke="none" />
       <circle cx="6" cy="16" fill="currentColor" r="1.5" stroke="none" />
       <path d="M10 7h9M10 16h7" />
+    </>
+  ),
+  trash: (
+    <>
+      <path d="M4 7h16M9 3h6l1 4H8l1-4ZM6.5 7l1 14h9l1-14M10 11v6M14 11v6" />
     </>
   ),
 };

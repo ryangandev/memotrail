@@ -14,6 +14,7 @@ export type WorkspaceDestination =
   | "places"
   | "search"
   | "timeline"
+  | "trash"
   | "vehicles"
   | "first-times";
 
@@ -51,6 +52,10 @@ const recordNavigation: NavigationItem[] = [
   { destination: "habits", href: "/habits", icon: "check", label: "Habits" },
   { destination: "places", icon: "map", label: "Places" },
   { destination: "vehicles", icon: "car", label: "Vehicles" },
+];
+
+const archiveNavigation: NavigationItem[] = [
+  { destination: "trash", href: "/trash", icon: "trash", label: "Trash" },
 ];
 
 const mobileNavigation = [
@@ -95,6 +100,14 @@ export function WorkspaceShell({
 
           <div className={styles.topActions}>
             <SyncStatus ownerId={viewer.id} />
+            <Link
+              aria-current={activeDestination === "trash" ? "page" : undefined}
+              aria-label="Open Trash"
+              className={styles.mobileTrashButton}
+              href="/trash"
+            >
+              <Icon name="trash" size={19} />
+            </Link>
             <form action={signOut}>
               <button
                 className={styles.avatarButton}
@@ -152,6 +165,12 @@ function Sidebar({
         <NavGroup
           activeDestination={activeDestination}
           items={recordNavigation}
+        />
+        <div className={styles.navDivider} />
+        <p className={styles.navLabel}>Archive</p>
+        <NavGroup
+          activeDestination={activeDestination}
+          items={archiveNavigation}
         />
       </nav>
 

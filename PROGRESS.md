@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Trash data contract
+> Current phase: iOS Trash experience
 >
 > Last updated: 2026-09-02
 >
@@ -108,6 +108,12 @@
 - Permanent deletion requires the same optimistic state, exposes every private Storage path for client removal first, cascades relational data, and removes version history under the approved deletion policy.
 - The local database now passes 270 pgTAP tests plus warning-free schema lint, including 57 focused Trash tests for pagination, titles, retention, media paths, restoration, history, permanent deletion, grants, and owner isolation.
 - Hosted verification confirms the Trash migration, aligned ten-migration ledger, warning-free schema, empty function search paths, authenticated-only execution grants, hardened definer boundaries, and unchanged least-privilege table grants.
+- Web now exposes Trash as an authenticated archive for removed Entries, Habits, and individual photos with signed private thumbnails, per-item retention dates, and stable pagination.
+- Web restoration and permanent deletion submit the current revision and deletion timestamp, surface cross-device conflicts, and require explicit confirmation before an irreversible action.
+- Permanent Web deletion verifies every returned private object path, removes private Storage objects before database metadata, and revalidates every affected archive route.
+- Desktop navigation places Trash under Archive while the compact header exposes it without overflowing the five-item mobile tab bar.
+- The Web suite now has 101 passing tests, including eight focused Trash input tests for kinds, identifiers, timestamps, revisions, page parsing, and pagination links.
+- Isolated localhost Chrome verification covered the populated desktop and mobile layouts, signed private image display, Entry restoration, permanent Habit deletion, permanent photo deletion, and confirmed database and private Storage cleanup without application or server errors.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -413,6 +419,18 @@
 - [x] Apply the additive Trash migration to hosted Supabase without seed or role changes.
 - [x] Verify the hosted migration ledger, schema lint, function definitions, execution grants, and unchanged table privileges.
 
+### Web Trash
+
+- [x] Require the shared authenticated Web session before browsing or mutating Trash.
+- [x] Show removed Entries, Habits, and individual photos together with clear kind, removal, and retention context.
+- [x] Display expiring signed URLs for private photo thumbnails without exposing raw object paths.
+- [x] Restore an item only when its revision and deletion timestamp still match the visible state.
+- [x] Permanently delete only after explicit confirmation and remove every private Storage object before database metadata.
+- [x] Surface load, empty, success, conflict, offline, and deletion-failure states without claiming automatic retention cleanup.
+- [x] Preserve a five-item compact navigation while exposing Trash through the mobile header and desktop Archive section.
+- [x] Validate Trash inputs and pagination with eight focused tests and keep all 101 Web tests passing.
+- [x] Verify desktop and mobile presentation, signed media, restoration, permanent deletion, and Storage cleanup against isolated local data.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -462,12 +480,12 @@
 - `feat: add Web Habits experience` implemented and locally browser-verified the authenticated Web Habits experience.
 - `feat: add iOS Habits experience` implemented and simulator-verified the matching native iOS Habits experience.
 - `feat: add Trash data contract` added and locally verified the shared Trash browsing, restoration, and permanent deletion contract.
-- Current change: deployed and verified the Trash contract on hosted Supabase.
+- `feat: deploy Trash data contract` deployed and verified the Trash contract on hosted Supabase.
+- Current change: implemented and locally browser-verified the authenticated Web Trash experience.
 
 ## Next sequence
 
-1. Add the authenticated Web Trash experience.
-2. Add the matching native iOS Trash experience inside Library.
+1. Add the matching native iOS Trash experience inside Library.
 
 ## Deferred
 
