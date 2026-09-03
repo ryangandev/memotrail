@@ -38,8 +38,8 @@ struct MemoTrailApp: App {
       .task {
         await authentication.restoreSession()
       }
-      .onOpenURL { URL in
-        GIDSignIn.sharedInstance.handle(URL)
+      .onOpenURL { url in
+        GIDSignIn.sharedInstance.handle(url)
       }
     }
   }

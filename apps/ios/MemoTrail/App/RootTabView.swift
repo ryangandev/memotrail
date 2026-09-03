@@ -33,6 +33,11 @@ struct RootTabView: View {
         .tabItem {
           Label("Library", systemImage: "books.vertical")
         }
+
+      HabitsView(client: client, ownerID: user.id)
+        .tabItem {
+          Label("Habits", systemImage: "checkmark.circle")
+        }
     }
   }
 }

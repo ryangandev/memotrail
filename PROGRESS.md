@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Web Habits experience
+> Current phase: iOS Habits experience
 >
 > Last updated: 2026-09-02
 >
@@ -99,6 +99,10 @@
 - The selected Habit includes a full-year contribution calendar and current streak, longest streak, completion, missed, and intentional-skip statistics without treating skips as failures.
 - The Web suite now has 93 passing tests, including 19 focused Habits tests for input normalization, request parsing, date handling, statistics, and calendar placement.
 - Isolated localhost browser verification covered Check completion and correction, a measured value with notes, a preserved occurrence across a schedule edit, responsive presentation, and a warning-free application console without touching hosted user data.
+- iOS now exposes Habits as a primary native tab with Check and Measure creation, all four schedules, selected-date check-ins, quick completion, notes, revision-safe corrections, editing, and recoverable Trash actions.
+- Native Habit history includes a compact twelve-month calendar, tappable eligible dates, current and longest streaks, completion rate, misses, and intentional skips with shared status semantics.
+- The shared iOS scheme now has 78 passing tests, including 13 focused Habits tests for decoding, schedule JSON, input rules, date-only handling, explicit RPC nulls, and analytics.
+- The native Habits implementation passes strict Swift formatting, project-file validation, a warning-free generic Simulator build, and the full suite on an iPhone 17 Pro simulator.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -374,6 +378,20 @@
 - [x] Verify parsing and analytics with 19 focused tests and keep all 93 Web tests passing.
 - [x] Verify Check, Measure, correction, schedule editing, responsive layout, and console behavior against isolated local Supabase data.
 
+### iOS Habits
+
+- [x] Add Habits as a fifth primary native tab backed by the shared authenticated data contract.
+- [x] Create Check or Measure Habits with daily, selected-weekday, weekly-target, or custom-interval schedules.
+- [x] Select a local calendar date and record completed, skipped, or missed check-ins with optional notes and measured values.
+- [x] Provide a one-tap completion action for pending Check Habits and a focused value editor for Measure Habits.
+- [x] Revision-safely correct existing check-ins while preserving immutable database history.
+- [x] Revision-safely edit Habit definitions or move them to recoverable Trash after explicit confirmation.
+- [x] Show a compact twelve-month calendar with tappable eligible dates and every shared calendar state.
+- [x] Calculate current and longest streaks, completion rate, misses, and intentional skips while keeping skips neutral.
+- [x] Preserve local date values across time zones and queue a newer date selection if a previous load is still running.
+- [x] Verify decoding, schedule JSON, validation, explicit RPC nulls, date-only handling, and analytics with 13 focused tests.
+- [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, and all 78 native tests.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -420,11 +438,14 @@
 - `feat: add iOS Library navigation` consolidated native archive navigation under a scalable Library destination.
 - `feat: add Habits data contract` added and locally verified the shared Habits data contract.
 - `feat: deploy Habits data contract` deployed and verified the Habits data contract on hosted Supabase.
-- Current change: implemented and locally browser-verified the authenticated Web Habits experience.
+- `feat: add Web Habits experience` implemented and locally browser-verified the authenticated Web Habits experience.
+- Current change: implemented and simulator-verified the matching native iOS Habits experience.
 
 ## Next sequence
 
-1. Add the matching native iOS Habits experience as a primary tab.
+1. Add a shared Trash browsing and restoration contract for recoverably deleted content.
+2. Add the authenticated Web Trash experience.
+3. Add the matching native iOS Trash experience inside Library.
 
 ## Deferred
 
