@@ -352,6 +352,18 @@ Each vehicle may include:
 
 Vehicles are personal-history Entries rather than vehicle-management records.
 
+A directly created Vehicle requires a name or nickname and the best-known date when its ownership or regular-use chapter began.
+
+The start and optional end may use exact, day, month, year, age, range, or approximate precision, while a Vehicle without an end date remains a current chapter.
+
+Make, model, model year, and color are optional facts, so an incomplete older memory can still be saved and improved later.
+
+The end date may represent a sale, retirement, return, or simply when the user stopped regularly using the vehicle.
+
+Every Vehicle is an organized Vehicle Entry and a Stage on the Vehicles Timeline track, so the same chapter appears consistently in Vehicles, Timeline, Search, Collections, tags, and Trash.
+
+Editing a Vehicle retains the previous Entry, Vehicle, and Timeline state in version history.
+
 The initial scope excludes maintenance, fuel, expenses, insurance, and documents.
 
 ### 5.9 Goals, Bucket List, and Ideas

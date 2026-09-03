@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Vehicles data contract
+> Current phase: Hosted Vehicles contract deployment
 >
 > Last updated: 2026-09-03
 >
@@ -88,7 +88,7 @@
 - The shared iOS scheme now has 61 passing tests, including ten focused Collections tests, and passes a warning-free generic Simulator build.
 - The current native build installs and launches on an iPhone 17 Pro simulator while preserving the existing signed-out authentication gate.
 - Native navigation now groups Collections and First Times under one Library tab, leaving room for Habits as a future primary destination without overflowing the iPhone tab bar.
-- Library exposes only implemented archives as interactive routes while keeping Goals, Homes, Vehicles, Places, and People visibly marked as planned.
+- Library exposes only implemented archives as interactive routes while keeping Goals, Vehicles, Places, and People visibly marked as planned.
 - First Times and Collections can render inside the shared Library navigation stack without nested navigation containers or duplicated feature implementations.
 - The shared iOS scheme now has 65 passing tests, including four Library destination-contract tests, and the refactored app passes a warning-free generic Simulator build.
 - The locally verified Habits contract supports check-off and measured Habits, daily, selected-weekday, weekly-target, and interval schedules, revision-safe definitions and occurrences, recoverable Trash, and immutable history.
@@ -200,6 +200,11 @@
 - Home Timeline stages now open the specialized native Home editor instead of the generic Timeline editor, and both Home and individual-photo deletion remain recoverable through Trash.
 - The shared iOS scheme now has 121 passing tests, including ten focused Homes tests for decoding, ordering, range and duration presentation, validation, organization, explicit RPC nulls, and universal attachment metadata.
 - The iOS Homes implementation passes strict Swift formatting, project validation, a warning-free generic Simulator build, the complete suite on an iPhone 17 Pro simulator, and an install-and-launch smoke check.
+- A locally verified Vehicles contract now creates or revision-safely edits an organized Vehicle Entry, its optional make, model, year and color facts, a Vehicles Timeline Stage, Collections, tags, and ownership or regular-use dates in one transaction.
+- Vehicles browsing returns current and earlier chapters in deterministic order with duration-ready ranges, organization, private attachment metadata, and pagination totals.
+- Vehicle version history now preserves the previous specialized facts and Timeline state without regressing the previously enriched Home and Place snapshots.
+- The contract supports incomplete historical facts, open-ended current periods, recoverable Trash restoration, global structured search, optimistic conflicts, and owner isolation while excluding operational vehicle management.
+- The local database now passes 480 pgTAP tests plus warning-free schema lint, including 58 focused Vehicles tests for validation, ordering, organization, history, Timeline, Search, Trash, grants, Home-history regression, and privacy.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -731,6 +736,21 @@
 - [x] Verify decoding, deterministic ordering, duration, location, validation, organization, explicit RPC nulls, Timeline type routing, and attachment metadata with ten focused tests while keeping all 121 native tests passing.
 - [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, the complete iPhone 17 Pro suite, and an install-and-launch smoke check.
 
+### Vehicles and ownership-period data contract
+
+- [x] Create an organized Vehicle Entry and Vehicles Timeline Stage in one transaction.
+- [x] Require a Vehicle name and best-known start date while allowing make, model, model year, and color to remain incomplete.
+- [x] Support open-ended current periods plus exact, day, month, year, range, age, and approximate date context.
+- [x] Atomically normalize and replace Collections and tags alongside Vehicle content and structured facts.
+- [x] Return current and earlier Vehicles in deterministic order with pagination totals, organization, Timeline, and active private attachment metadata.
+- [x] Preserve previous Entry, Vehicle, and Timeline state inside Entry version history before edits and Trash mutations.
+- [x] Preserve the existing enriched Home and Place version snapshots after extending the shared history trigger.
+- [x] Reuse global structured search and the shared recoverable Trash path without losing Vehicle facts or relationships.
+- [x] Reject invalid years and date ranges, stale revisions, cross-owner edits, and cross-owner Trash access without partial mutations.
+- [x] Keep every contract function authenticated-only, security-invoker, Row Level Security-backed, empty-search-path, and supported by focused indexes.
+- [x] Verify the contract with 58 focused pgTAP tests while keeping all 480 database tests and warning-level schema lint passing.
+- [ ] Apply and verify the additive Vehicles migration on hosted Supabase.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -802,13 +822,14 @@
 - `feat: add Homes data contract` added and locally verified the shared Homes and moves data contract.
 - `feat: deploy Homes data contract` deployed and verified the additive Homes and moves contract on hosted Supabase.
 - `feat: add Web Homes experience` added and authenticated-browser-verified the complete Web Homes experience.
-- Current change: added and simulator-verified the complete native iOS Homes experience.
+- `feat: add iOS Homes experience` added and simulator-verified the complete native iOS Homes experience.
+- Current change: added and locally verified the shared Vehicles and ownership-period data contract.
 
 ## Next sequence
 
-1. Define the shared Vehicles and ownership-period data contract around organized Entries, reusable vehicle facts, Timeline, Search, version history, and Trash.
-2. Verify the contract locally with focused pgTAP coverage, schema lint, and exact privilege inspection before hosted deployment.
-3. Build matching Web and iOS Vehicles experiences after the shared contract is deployed.
+1. Apply only the version-controlled additive Vehicles migration to the linked hosted Supabase project.
+2. Verify the hosted migration ledger, function definitions, grants, indexes, history trigger, and schema lint without adding seed data.
+3. Build the Web Vehicles archive and editor against the verified shared contract.
 
 ## Deferred
 
