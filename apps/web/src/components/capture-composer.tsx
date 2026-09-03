@@ -36,7 +36,15 @@ type CaptureFeedback = {
 
 const idleFeedback: CaptureFeedback = { isError: false, message: "" };
 
-export function CaptureComposer({ ownerId }: { ownerId: string }) {
+export function CaptureComposer({
+  idPrefix = "capture",
+  ownerId,
+  variant = "page",
+}: {
+  idPrefix?: string;
+  ownerId: string;
+  variant?: "dialog" | "page";
+}) {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -221,8 +229,8 @@ export function CaptureComposer({ ownerId }: { ownerId: string }) {
   return (
     <>
       <form
-        className={styles.captureCard}
-        aria-labelledby="capture-heading"
+        className={`${styles.captureCard} ${variant === "dialog" ? styles.dialogCaptureCard : ""}`}
+        aria-label="Quick capture"
         onSubmit={handleSubmit}
       >
         <div className={styles.captureIntro}>
@@ -230,27 +238,33 @@ export function CaptureComposer({ ownerId }: { ownerId: string }) {
             <Icon name="sparkle" size={19} />
           </span>
           <div className={styles.captureFields}>
-            <label className={styles.visuallyHidden} htmlFor="capture-title">
+            <label
+              className={styles.visuallyHidden}
+              htmlFor={`${idPrefix}-title`}
+            >
               Entry title
             </label>
             <input
               autoComplete="off"
               className={styles.captureTitle}
               disabled={isSaving || !isLocalStateReady}
-              id="capture-title"
+              id={`${idPrefix}-title`}
               maxLength={entryTitleLimit}
               name="title"
               onChange={(event) => updateDraft(event.target.value, body)}
               placeholder="What is worth keeping?"
               value={title}
             />
-            <label className={styles.visuallyHidden} htmlFor="capture-body">
+            <label
+              className={styles.visuallyHidden}
+              htmlFor={`${idPrefix}-body`}
+            >
               Entry text
             </label>
             <textarea
               className={styles.captureBody}
               disabled={isSaving || !isLocalStateReady}
-              id="capture-body"
+              id={`${idPrefix}-body`}
               maxLength={entryBodyLimit}
               name="body"
               onChange={(event) => updateDraft(title, event.target.value)}
@@ -305,11 +319,11 @@ export function CaptureComposer({ ownerId }: { ownerId: string }) {
       {pendingEntries.length > 0 ? (
         <section
           className={styles.pendingSection}
-          aria-labelledby="pending-heading"
+          aria-labelledby={`${idPrefix}-pending-heading`}
         >
           <div className={styles.sectionHeader}>
             <div>
-              <h2 id="pending-heading">Pending sync</h2>
+              <h2 id={`${idPrefix}-pending-heading`}>Pending sync</h2>
               <span>{pendingCountLabel(pendingEntries.length)}</span>
             </div>
             <button

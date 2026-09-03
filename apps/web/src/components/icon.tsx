@@ -6,6 +6,7 @@ export type IconName =
   | "chevron"
   | "clock"
   | "inbox"
+  | "home"
   | "map"
   | "mic"
   | "more"
@@ -75,6 +76,12 @@ const paths: Record<IconName, React.ReactNode> = {
     <>
       <path d="M4.5 5.5h15l1.5 9v4H3v-4l1.5-9Z" />
       <path d="M3 14.5h5l1.5 2h5l1.5-2h5" />
+    </>
+  ),
+  home: (
+    <>
+      <path d="m3.5 10.5 8.5-7 8.5 7" />
+      <path d="M5.5 9v11h13V9M9.5 20v-6h5v6" />
     </>
   ),
   map: (

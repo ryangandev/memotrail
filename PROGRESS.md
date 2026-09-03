@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Web Home experience
+> Current phase: iOS Home experience
 >
 > Last updated: 2026-09-03
 >
@@ -123,6 +123,12 @@
 - Home returns recent non-Trash Entries with organization and private attachment metadata plus current stage context for shared Web and iOS presentation.
 - The local database now passes 306 pgTAP tests plus warning-free schema lint, including 36 focused Home tests for counts, ordering, time zones, visibility, input limits, grants, and function hardening.
 - Hosted verification confirms the Home migration, aligned eleven-migration ledger, warning-free schema, authenticated-only execution, invoker security, empty function search path, and supporting partial index.
+- Web now opens on an authenticated Home workspace with a local-time greeting, inline capture, Inbox and archive counts, today's Habit progress, current Timeline chapters, and recent Entries with organization and signed private photos.
+- Inbox now has a durable `/inbox` route, while responsive navigation presents Home, Inbox, Timeline, Habits, and Library as the five mobile destinations and retains full desktop access to Search and archive areas.
+- A shared Quick Capture dialog is available from every non-Home and non-Inbox workspace, with a focused desktop modal and full-screen mobile presentation backed by the existing offline-first queue.
+- The browser's IANA time zone is stored as a non-sensitive cookie so server-rendered Home dates, Habit progress, and Timeline ranges follow the device without weakening session security.
+- The Web suite now has 106 passing tests, including five focused Home date, time-zone, and greeting tests, and continues to pass formatting, design-token, lint, typecheck, and production-build checks.
+- Authenticated localhost browser verification covered populated Home data, a global Library capture synchronized into Home, desktop and iPhone layouts, the exact five-item mobile navigation, the full-screen capture dialog, and an error-free browser console.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -466,6 +472,19 @@
 - [x] Apply the additive Home migration to hosted Supabase without seed or role changes.
 - [x] Verify the hosted migration ledger, schema lint, function definition, execution grant, security mode, search path, and index after rollout.
 
+### Web Home
+
+- [x] Require the shared authenticated Web session before loading the Home workspace.
+- [x] Render a device-local greeting, inline Inbox capture, archive counts, today's Habit progress, current Timeline chapters, and recent Entries from one shared snapshot.
+- [x] Display recent private photos through expiring signed URLs without exposing Storage object paths.
+- [x] Keep Inbox on a durable route and expose Home, Inbox, Timeline, Habits, and Library as the exact five mobile destinations.
+- [x] Preserve full desktop access to Search, First Times, Collections, Trash, and future record areas.
+- [x] Offer one shared Quick Capture surface from every workspace without mounting competing capture queues on Home or Inbox.
+- [x] Synchronize the browser's valid IANA time zone to server rendering through a non-sensitive cookie with a safe UTC fallback.
+- [x] Verify date and time-zone behavior with five focused tests and keep all 106 Web tests passing.
+- [x] Pass formatting, design-token, lint, typecheck, and production-build checks.
+- [x] Verify populated Home, global capture, responsive navigation, full-screen mobile capture, synchronization, and console behavior against isolated local Supabase data.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -519,12 +538,12 @@
 - `feat: add Web Trash experience` implemented and locally browser-verified the authenticated Web Trash experience.
 - `feat: add iOS Trash experience` implemented and simulator-verified the matching native iOS Trash experience.
 - `feat: add Home workspace contract` added and locally verified the shared Home workspace data contract.
-- Current change: deployed and verified the Home workspace contract on hosted Supabase.
+- `feat: deploy Home workspace contract` deployed and verified the Home workspace contract on hosted Supabase.
+- Current change: implemented and locally browser-verified the authenticated Web Home experience and global Quick Capture access.
 
 ## Next sequence
 
-1. Add the responsive Web Home experience and global quick-capture access.
-2. Add the matching native Home experience and align the five-item mobile navigation.
+1. Add the matching native Home experience and align the five-item mobile navigation.
 
 ## Deferred
 

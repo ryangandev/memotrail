@@ -32,7 +32,7 @@ export function CollectionsWorkspace({
               : "Open a theme to revisit the Entries, moments, and firsts you filed together."}
           </p>
         </div>
-        <Link className={styles.newEntryButton} href="/#capture-title">
+        <Link className={styles.newEntryButton} href="/inbox#capture-title">
           <Icon name="plus" />
           <span>New entry</span>
         </Link>
@@ -72,7 +72,7 @@ function CollectionOverview({
           Add a Collection while organizing an Inbox Entry or saving a First
           Time. It will appear here automatically.
         </p>
-        <Link href="/">Open Inbox</Link>
+        <Link href="/inbox">Open Inbox</Link>
       </div>
     );
   }
@@ -187,7 +187,7 @@ function CollectionDetail({
             Assign “{collection.name}” while organizing an Entry and it will
             appear here.
           </p>
-          <Link href="/">Open Inbox</Link>
+          <Link href="/inbox">Open Inbox</Link>
         </div>
       ) : (
         <section

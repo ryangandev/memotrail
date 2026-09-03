@@ -3,14 +3,18 @@ import type { ReactNode } from "react";
 import { signOut } from "@/app/auth/actions";
 import styles from "@/app/page.module.css";
 import { Icon, type IconName } from "@/components/icon";
+import { QuickCaptureDialog } from "@/components/quick-capture-dialog";
 import { SearchShortcutLink } from "@/components/search-shortcut-link";
 import { SyncStatus } from "@/components/sync-status";
+import { TimezoneSync } from "@/components/timezone-sync";
 import type { Viewer } from "@/lib/data/inbox";
 
 export type WorkspaceDestination =
   | "collections"
   | "habits"
+  | "home"
   | "inbox"
+  | "library"
   | "places"
   | "search"
   | "timeline"
@@ -26,14 +30,24 @@ type NavigationItem = {
 };
 
 const primaryNavigation: NavigationItem[] = [
+  { destination: "home", href: "/", icon: "home", label: "Home" },
   { destination: "search", href: "/search", icon: "search", label: "Search" },
-  { destination: "inbox", href: "/", icon: "inbox", label: "Inbox" },
+  { destination: "inbox", href: "/inbox", icon: "inbox", label: "Inbox" },
   {
     destination: "timeline",
     href: "/timeline",
     icon: "timeline",
     label: "Timeline",
   },
+];
+
+const recordNavigation: NavigationItem[] = [
+  { destination: "habits", href: "/habits", icon: "check", label: "Habits" },
+  { destination: "places", icon: "map", label: "Places" },
+  { destination: "vehicles", icon: "car", label: "Vehicles" },
+];
+
+const archiveNavigation: NavigationItem[] = [
   {
     destination: "first-times",
     href: "/first-times",
@@ -46,21 +60,25 @@ const primaryNavigation: NavigationItem[] = [
     icon: "archive",
     label: "Collections",
   },
-];
-
-const recordNavigation: NavigationItem[] = [
-  { destination: "habits", href: "/habits", icon: "check", label: "Habits" },
-  { destination: "places", icon: "map", label: "Places" },
-  { destination: "vehicles", icon: "car", label: "Vehicles" },
-];
-
-const archiveNavigation: NavigationItem[] = [
   { destination: "trash", href: "/trash", icon: "trash", label: "Trash" },
 ];
 
-const mobileNavigation = [
-  ...primaryNavigation.filter((item) => item.destination !== "search"),
-  recordNavigation[0],
+const mobileNavigation: NavigationItem[] = [
+  { destination: "home", href: "/", icon: "home", label: "Home" },
+  { destination: "inbox", href: "/inbox", icon: "inbox", label: "Inbox" },
+  {
+    destination: "timeline",
+    href: "/timeline",
+    icon: "timeline",
+    label: "Timeline",
+  },
+  { destination: "habits", href: "/habits", icon: "check", label: "Habits" },
+  {
+    destination: "library",
+    href: "/library",
+    icon: "archive",
+    label: "Library",
+  },
 ];
 
 export function WorkspaceShell({
@@ -76,6 +94,7 @@ export function WorkspaceShell({
 }) {
   return (
     <div className={styles.appShell}>
+      <TimezoneSync />
       <Sidebar
         activeDestination={activeDestination}
         inboxCount={inboxCount}
@@ -100,6 +119,14 @@ export function WorkspaceShell({
 
           <div className={styles.topActions}>
             <SyncStatus ownerId={viewer.id} />
+            <div className={styles.mobileCaptureButton}>
+              <CaptureControl
+                activeDestination={activeDestination}
+                compact
+                idPrefix="mobile-capture"
+                ownerId={viewer.id}
+              />
+            </div>
             <Link
               aria-current={activeDestination === "trash" ? "page" : undefined}
               aria-label="Open Trash"
@@ -126,7 +153,7 @@ export function WorkspaceShell({
       <nav className={styles.mobileNavigation} aria-label="Mobile navigation">
         {mobileNavigation.map((item) => (
           <NavigationControl
-            active={item.destination === activeDestination}
+            active={isNavigationActive(item, activeDestination)}
             inboxCount={item.destination === "inbox" ? inboxCount : undefined}
             item={item}
             key={item.destination}
@@ -154,6 +181,14 @@ function Sidebar({
         <span>MemoTrail</span>
       </Link>
 
+      <div className={styles.sidebarCaptureButton}>
+        <CaptureControl
+          activeDestination={activeDestination}
+          idPrefix="sidebar-capture"
+          ownerId={viewer.id}
+        />
+      </div>
+
       <nav className={styles.sidebarNav} aria-label="Primary navigation">
         <NavGroup
           activeDestination={activeDestination}
@@ -167,7 +202,7 @@ function Sidebar({
           items={recordNavigation}
         />
         <div className={styles.navDivider} />
-        <p className={styles.navLabel}>Archive</p>
+        <p className={styles.navLabel}>Library</p>
         <NavGroup
           activeDestination={activeDestination}
           items={archiveNavigation}
@@ -262,5 +297,49 @@ function NavigationControl({
     <button aria-disabled="true" className={className} disabled type="button">
       {content}
     </button>
+  );
+}
+
+function isNavigationActive(
+  item: NavigationItem,
+  activeDestination: WorkspaceDestination,
+) {
+  return (
+    item.destination === activeDestination ||
+    (item.destination === "library" &&
+      ["collections", "first-times", "trash"].includes(activeDestination))
+  );
+}
+
+function CaptureControl({
+  activeDestination,
+  compact = false,
+  idPrefix,
+  ownerId,
+}: {
+  activeDestination: WorkspaceDestination;
+  compact?: boolean;
+  idPrefix: string;
+  ownerId: string;
+}) {
+  if (activeDestination === "home" || activeDestination === "inbox") {
+    return (
+      <Link
+        aria-label={compact ? "New entry" : undefined}
+        className={`${styles.captureNavigationLink} ${compact ? styles.compactCaptureNavigationLink : ""}`}
+        href="#capture-title"
+      >
+        <Icon name="plus" size={17} />
+        <span>New entry</span>
+      </Link>
+    );
+  }
+
+  return (
+    <QuickCaptureDialog
+      compact={compact}
+      idPrefix={idPrefix}
+      ownerId={ownerId}
+    />
   );
 }

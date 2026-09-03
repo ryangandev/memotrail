@@ -70,7 +70,7 @@ export default async function SearchPage({
               organized it.
             </p>
           </div>
-          <Link className={styles.newEntryButton} href="/#capture-title">
+          <Link className={styles.newEntryButton} href="/inbox#capture-title">
             <Icon name="plus" />
             <span>New entry</span>
           </Link>
