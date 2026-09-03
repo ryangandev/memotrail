@@ -518,6 +518,53 @@
   background: color-mix(in srgb, var(--mt-color-surface) 55%, transparent);
 }
 
+.capturePhotoStrip {
+  display: flex;
+  gap: var(--mt-space-3);
+  padding: var(--mt-space-4) var(--mt-space-6);
+  overflow-x: auto;
+  border-top: 1px solid var(--mt-color-border);
+  background: var(--mt-color-surface-subtle);
+}
+
+.capturePhoto {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 1px solid var(--mt-color-border-strong);
+  border-radius: var(--mt-radius-medium);
+  background: var(--mt-color-surface);
+}
+
+.capturePhoto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.capturePhoto button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, white 40%, transparent);
+  border-radius: 50%;
+  color: white;
+  background: color-mix(in srgb, black 64%, transparent);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.capturePhoto button:hover {
+  background: color-mix(in srgb, black 78%, transparent);
+}
+
 .captureActions {
   display: flex;
   min-height: 58px;
@@ -625,6 +672,15 @@
 .retryButton:disabled {
   cursor: wait;
   opacity: 0.65;
+}
+
+.pendingPhotoCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--mt-space-3);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
 }
 
 .sectionHeader {
@@ -1222,6 +1278,15 @@
   .captureDatePanel input {
     width: 100%;
     min-width: 0;
+  }
+
+  .capturePhotoStrip {
+    padding: var(--mt-space-3) var(--mt-space-5);
+  }
+
+  .capturePhoto {
+    width: 76px;
+    height: 76px;
   }
 
   .removeCaptureDateButton {

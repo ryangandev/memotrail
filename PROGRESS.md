@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Web universal capture photos
+> Current phase: iOS universal capture photos
 >
 > Last updated: 2026-09-03
 >
@@ -14,7 +14,7 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- The linked hosted Supabase project contains all eleven reviewed repository migrations and no development seed users.
+- The linked hosted Supabase project contains all twelve reviewed repository migrations and no development seed users.
 - The hosted atomic Entry review contract now supports content, Type, occurrence, Collection, tag, and `Done` updates in one transaction.
 - Hosted verification found 21 Row Level Security-enabled application tables, 22 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
@@ -148,6 +148,12 @@
 - The local database now passes 335 pgTAP tests plus warning-free schema lint, including 29 focused universal media tests for grants, paths, metadata, idempotency, ownership, Trash, and anonymous denial.
 - Hosted Supabase now contains the universal Entry media migration with an aligned twelve-migration ledger and warning-free public and extensions schema lint.
 - Hosted schema inspection confirms both universal media functions use empty-search-path definer boundaries, are executable only by authenticated users, and do not broaden direct client attachment-table writes.
+- Web universal capture now accepts up to twelve private JPEG, PNG, WebP, HEIC, or HEIF originals from Home, Inbox, and every global Quick Capture surface.
+- Selected Web photos are written to owner-scoped IndexedDB before they appear as recoverable draft media, survive a browser reload, and remain separate from already queued photos.
+- Web photo queues preserve stable Entry and attachment identities, synchronize the Entry first, upload each original to its deterministic private Storage path, and idempotently register metadata before clearing local data.
+- Existing version-one text queues migrate to the photo-capable version-two shape without data loss, while photo-only Entries are now valid captures.
+- The Web suite now has 118 passing tests, and the universal photo implementation passes formatting, design-token, lint, typecheck, and production-build checks.
+- Isolated localhost browser verification covered a photo draft across reload, deliberate offline queueing, automatic reconnect synchronization, one database Entry and attachment, signed Home image display, responsive desktop and mobile presentation, and disposable-account cleanup.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -553,6 +559,19 @@
 - [x] Apply the additive migration locally and pass all 335 database tests plus warning-free schema lint.
 - [x] Apply and verify the universal Entry media migration on hosted Supabase.
 
+### Web universal capture photos
+
+- [x] Accept up to twelve supported private image originals from Home, Inbox, and every global Quick Capture surface.
+- [x] Persist selected photo blobs in owner-scoped IndexedDB before presenting them as recoverable draft media.
+- [x] Preserve unfinished photo drafts across reload while keeping already queued photos out of the active draft.
+- [x] Accept photo-only Entries and migrate existing text-only queues to the photo-capable queue shape without data loss.
+- [x] Preserve stable Entry and attachment identifiers across offline retries and ambiguous network outcomes.
+- [x] Synchronize the Entry first, upload each original to a deterministic private Storage path, and register metadata idempotently before clearing the queue.
+- [x] Keep missing or failed local photos visibly pending instead of claiming that synchronization completed.
+- [x] Show selected-photo previews, removal controls, photo counts, and responsive desktop and mobile presentation.
+- [x] Verify validation, queue migration, photo-only input, and attachment metadata while keeping all 118 Web tests passing.
+- [x] Pass formatting, design-token, lint, typecheck, production-build, real browser, database, private Storage, signed-image, responsive-layout, and cleanup checks.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -612,13 +631,14 @@
 - `feat: add Web capture dates` added and locally browser-verified an optional exact relevant date to every Web capture surface.
 - `feat: add iOS capture dates` added the matching optional relevant date, shared draft state, and offline occurrence semantics to every native capture surface.
 - `feat: add universal Entry media contract` added and locally verified universal private Entry photo registration and recoverable removal.
-- Current change: deployed and verified the universal Entry media contract on hosted Supabase.
+- `feat: deploy universal Entry media contract` deployed and verified the universal Entry media contract on hosted Supabase.
+- Current change: added recoverable, offline-first private photos to every Web universal capture surface.
 
 ## Next sequence
 
-1. Add private photo selection, upload, and recoverable draft behavior to Web universal capture.
-2. Add matching private photo capture and retry behavior to iOS.
-3. Add Home resurfacing after the shared capture path supports the complete initial Entry shape.
+1. Add matching private photo capture and retry behavior to iOS.
+2. Add Home resurfacing after the shared capture path supports the complete initial Entry shape.
+3. Continue toward universal voice-to-text capture after choosing the transcription boundary.
 
 ## Deferred
 

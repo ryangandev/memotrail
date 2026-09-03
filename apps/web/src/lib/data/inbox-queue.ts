@@ -1,12 +1,25 @@
 import { entryBodyLimit, entryTitleLimit } from "./inbox-input";
+import {
+  inboxPhotoLimit,
+  isQueuedInboxAttachment,
+  type QueuedInboxAttachment,
+} from "./inbox-photo";
 
 export type QueuedInboxEntry = {
+  attachments: QueuedInboxAttachment[];
   body: string;
   id: string;
   occurredAt: string;
   occurredTimezone: string;
   queuedAt: string;
   title: string | null;
+  version: 2;
+};
+
+type LegacyQueuedInboxEntry = Omit<
+  QueuedInboxEntry,
+  "attachments" | "version"
+> & {
   version: 1;
 };
 
@@ -93,7 +106,17 @@ export function parseInboxQueue(value: string | null): QueuedInboxEntry[] {
       return [];
     }
 
-    const parsedQueue = queue.filter(isQueuedInboxEntry);
+    const parsedQueue = queue.flatMap((entry) => {
+      if (isQueuedInboxEntry(entry)) {
+        return [entry];
+      }
+
+      if (isLegacyQueuedInboxEntry(entry)) {
+        return [{ ...entry, attachments: [], version: 2 as const }];
+      }
+
+      return [];
+    });
     const uniqueIds = new Set(parsedQueue.map((entry) => entry.id));
 
     return uniqueIds.size === parsedQueue.length ? parsedQueue : [];
@@ -108,6 +131,46 @@ export function isQueuedInboxEntry(value: unknown): value is QueuedInboxEntry {
   }
 
   const entry = value as Partial<QueuedInboxEntry>;
+  const attachments = Array.isArray(entry.attachments)
+    ? entry.attachments.filter(isQueuedInboxAttachment)
+    : [];
+  const uniqueAttachmentIds = new Set(
+    attachments.map((attachment) => attachment.id),
+  );
+
+  return (
+    entry.version === 2 &&
+    typeof entry.id === "string" &&
+    uuidPattern.test(entry.id) &&
+    (entry.title === null ||
+      (typeof entry.title === "string" &&
+        entry.title.length > 0 &&
+        entry.title.length <= entryTitleLimit)) &&
+    typeof entry.body === "string" &&
+    entry.body.length <= entryBodyLimit &&
+    Array.isArray(entry.attachments) &&
+    attachments.length === entry.attachments.length &&
+    attachments.length <= inboxPhotoLimit &&
+    uniqueAttachmentIds.size === attachments.length &&
+    Boolean(entry.title || entry.body || attachments.length > 0) &&
+    typeof entry.occurredAt === "string" &&
+    !Number.isNaN(Date.parse(entry.occurredAt)) &&
+    typeof entry.queuedAt === "string" &&
+    !Number.isNaN(Date.parse(entry.queuedAt)) &&
+    typeof entry.occurredTimezone === "string" &&
+    entry.occurredTimezone.length > 0 &&
+    entry.occurredTimezone.length <= maximumTimezoneLength
+  );
+}
+
+function isLegacyQueuedInboxEntry(
+  value: unknown,
+): value is LegacyQueuedInboxEntry {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const entry = value as Partial<LegacyQueuedInboxEntry>;
 
   return (
     entry.version === 1 &&

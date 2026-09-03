@@ -21,14 +21,15 @@ export function parseInboxEntryInput(
 
 export function parseInboxEntryValues(values: {
   body: string;
+  hasAttachments?: boolean;
   title: string;
 }): InboxEntryInputResult {
   const title = values.title.trim();
   const body = values.body.trim();
 
-  if (!title && !body) {
+  if (!title && !body && !values.hasAttachments) {
     return {
-      message: "Write a title or a note before saving.",
+      message: "Write a title, a note, or add a photo before saving.",
       success: false,
     };
   }

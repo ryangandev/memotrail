@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
+  parseFirstTimeAttachmentInput,
+  type FirstTimeAttachmentInput,
+} from "@/lib/data/first-time-input";
+import {
   isQueuedInboxEntry,
   type QueuedInboxEntry,
 } from "@/lib/data/inbox-queue";
@@ -20,6 +24,53 @@ export type ReviewInboxEntryResult = {
   message: string;
   status: "conflict" | "done" | "error" | "saved";
 };
+
+export async function registerEntryAttachment(
+  input: FirstTimeAttachmentInput,
+): Promise<SyncInboxEntryResult> {
+  const parsed = parseFirstTimeAttachmentInput(input);
+
+  if (!parsed.success) {
+    return { message: parsed.message, status: "retry" };
+  }
+
+  const context = await getAuthenticatedContext();
+
+  if (!context) {
+    return {
+      message: "Your session expired before the photo could be attached.",
+      status: "retry",
+    };
+  }
+
+  const { data, error } = await context.client.rpc(
+    "register_entry_attachment",
+    {
+      p_attachment_id: parsed.data.attachmentId,
+      p_byte_size: parsed.data.byteSize,
+      p_entry_id: parsed.data.entryId,
+      p_mime_type: parsed.data.mimeType,
+      p_object_path: parsed.data.objectPath,
+      p_original_filename: parsed.data.originalFilename,
+      p_pixel_height: parsed.data.pixelHeight,
+      p_pixel_width: parsed.data.pixelWidth,
+    },
+  );
+
+  if (error || !Array.isArray(data) || data.length === 0) {
+    return {
+      message:
+        "The photo is saved on this device. MemoTrail will retry attaching it.",
+      status: "retry",
+    };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/inbox");
+  revalidatePath("/search");
+
+  return { message: "Photo attached.", status: "synced" };
+}
 
 export async function syncInboxEntry(
   input: QueuedInboxEntry,

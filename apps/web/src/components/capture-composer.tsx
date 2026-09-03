@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type ChangeEvent,
   useCallback,
   useEffect,
   useRef,
@@ -8,7 +9,11 @@ import {
   type FormEvent,
 } from "react";
 import { useRouter } from "next/navigation";
-import { syncInboxEntry, type SyncInboxEntryResult } from "@/app/inbox/actions";
+import {
+  registerEntryAttachment,
+  syncInboxEntry,
+  type SyncInboxEntryResult,
+} from "@/app/inbox/actions";
 import { Icon } from "@/components/icon";
 import {
   clearInboxDraft,
@@ -26,12 +31,27 @@ import {
   parseInboxEntryValues,
 } from "@/lib/data/inbox-input";
 import {
+  createFirstTimeObjectPath,
+  type FirstTimeAttachmentInput,
+} from "@/lib/data/first-time-input";
+import {
   enqueueInboxEntry,
   inboxQueueChangedEvent,
   loadInboxQueue,
   removeInboxQueueEntry,
   type QueuedInboxEntry,
 } from "@/lib/data/inbox-queue";
+import {
+  queuedInboxAttachment,
+  validateInboxPhotoFiles,
+  type InboxPhotoDraft,
+} from "@/lib/data/inbox-photo";
+import {
+  loadInboxPhotoDrafts,
+  persistInboxPhotoDrafts,
+  removeInboxPhotoDrafts,
+} from "@/lib/data/inbox-photo-store";
+import { createClient } from "@/lib/supabase/client";
 import styles from "@/app/page.module.css";
 
 type CaptureFeedback = {
@@ -59,9 +79,12 @@ export function CaptureComposer({
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [feedback, setFeedback] = useState<CaptureFeedback>(idleFeedback);
+  const [photos, setPhotos] = useState<InboxPhotoDraft[]>([]);
+  const [isPhotoStorageAvailable, setIsPhotoStorageAvailable] = useState(true);
   const [pendingEntries, setPendingEntries] = useState<QueuedInboxEntry[]>([]);
   const pendingEntriesRef = useRef<QueuedInboxEntry[]>([]);
   const syncInFlightRef = useRef(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const replacePendingEntries = useCallback(
     (entries: QueuedInboxEntry[]) => {
@@ -99,6 +122,22 @@ export function CaptureComposer({
 
       if (latestResult.status === "retry") {
         break;
+      }
+
+      if (entry.attachments.length > 0) {
+        try {
+          latestResult = await synchronizeAttachments(ownerId, entry);
+        } catch {
+          latestResult = {
+            message:
+              "Photos are saved on this device. MemoTrail will retry when you are online.",
+            status: "retry",
+          };
+        }
+
+        if (latestResult.status === "retry") {
+          break;
+        }
       }
 
       const nextQueue = removeInboxQueueEntry(
@@ -141,20 +180,45 @@ export function CaptureComposer({
     let isCanceled = false;
 
     queueMicrotask(() => {
-      if (isCanceled) {
-        return;
-      }
+      void (async () => {
+        let storedPhotos: InboxPhotoDraft[] = [];
 
-      setTitle(draft?.title ?? "");
-      setBody(draft?.body ?? "");
-      setOccurredAt(draft?.occurredAt ?? null);
-      setHasLocalDraft(Boolean(draft));
-      replacePendingEntries(queue);
-      setIsLocalStateReady(true);
+        try {
+          storedPhotos = await loadInboxPhotoDrafts(ownerId);
+        } catch {
+          setIsPhotoStorageAvailable(false);
+          setFeedback({
+            isError: true,
+            message:
+              "Photo drafts are unavailable in this browser. Text capture still works.",
+          });
+        }
 
-      if (queue.length > 0 && navigator.onLine) {
-        void synchronizeQueue();
-      }
+        if (isCanceled) {
+          return;
+        }
+
+        const queuedPhotoIds = new Set(
+          queue.flatMap((entry) =>
+            entry.attachments.map((attachment) => attachment.id),
+          ),
+        );
+        const draftPhotos = storedPhotos.filter(
+          (photo) => !queuedPhotoIds.has(photo.id),
+        );
+
+        setTitle(draft?.title ?? "");
+        setBody(draft?.body ?? "");
+        setOccurredAt(draft?.occurredAt ?? null);
+        setPhotos(draftPhotos);
+        setHasLocalDraft(Boolean(draft) || draftPhotos.length > 0);
+        replacePendingEntries(queue);
+        setIsLocalStateReady(true);
+
+        if (queue.length > 0 && navigator.onLine) {
+          void synchronizeQueue();
+        }
+      })();
     });
 
     function handleOnline() {
@@ -182,7 +246,7 @@ export function CaptureComposer({
         body: nextBody,
         occurredAt: nextOccurredAt,
         title: nextTitle,
-      }),
+      }) || photos.length > 0,
     );
     setFeedback(idleFeedback);
   }
@@ -195,9 +259,63 @@ export function CaptureComposer({
     );
   }
 
+  async function handlePhotoSelection(event: ChangeEvent<HTMLInputElement>) {
+    const selection = validateInboxPhotoFiles(
+      Array.from(event.target.files ?? []),
+      photos.length,
+    );
+    event.target.value = "";
+
+    if (selection.accepted.length === 0) {
+      if (selection.message) {
+        setFeedback({ isError: true, message: selection.message });
+      }
+      return;
+    }
+
+    try {
+      await persistInboxPhotoDrafts(ownerId, selection.accepted);
+      setPhotos((current) => [...current, ...selection.accepted]);
+      setHasLocalDraft(true);
+      setFeedback({
+        isError: Boolean(selection.message),
+        message: selection.message ?? "Photos saved in this draft.",
+      });
+    } catch {
+      setIsPhotoStorageAvailable(false);
+      setFeedback({
+        isError: true,
+        message:
+          "This browser could not keep those photos safely. Try another browser or device.",
+      });
+    }
+  }
+
+  async function removePhoto(photoId: string) {
+    try {
+      await removeInboxPhotoDrafts(ownerId, [photoId]);
+      const nextPhotos = photos.filter((photo) => photo.id !== photoId);
+      setPhotos(nextPhotos);
+      setHasLocalDraft(
+        Boolean(loadInboxDraft(window.localStorage, ownerId)) ||
+          nextPhotos.length > 0,
+      );
+      setFeedback(idleFeedback);
+    } catch {
+      setFeedback({
+        isError: true,
+        message: "MemoTrail could not remove that local photo. Try again.",
+      });
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const parsedInput = parseInboxEntryValues({ body, title });
+    const parsedInput = parseInboxEntryValues({
+      body,
+      hasAttachments: photos.length > 0,
+      title,
+    });
 
     if (!parsedInput.success) {
       setFeedback({ isError: true, message: parsedInput.message });
@@ -215,6 +333,7 @@ export function CaptureComposer({
     setIsSaving(true);
     const queuedAt = now.toISOString();
     const entry: QueuedInboxEntry = {
+      attachments: photos.map(queuedInboxAttachment),
       body: parsedInput.data.body,
       id: crypto.randomUUID(),
       occurredAt: parsedDate.occurredAt,
@@ -222,7 +341,7 @@ export function CaptureComposer({
         Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
       queuedAt,
       title: parsedInput.data.title,
-      version: 1,
+      version: 2,
     };
     const nextQueue = enqueueInboxEntry(window.localStorage, ownerId, entry);
 
@@ -241,6 +360,7 @@ export function CaptureComposer({
     setTitle("");
     setBody("");
     setOccurredAt(null);
+    setPhotos([]);
     setHasLocalDraft(false);
     setFeedback({
       isError: false,
@@ -252,9 +372,11 @@ export function CaptureComposer({
     await synchronizeQueue();
   }
 
-  const composerFeedback = hasLocalDraft
-    ? { isError: false, message: "Draft saved on this device." }
-    : feedback;
+  const composerFeedback = feedback.isError
+    ? feedback
+    : hasLocalDraft
+      ? { isError: false, message: "Draft saved on this device." }
+      : feedback;
 
   return (
     <>
@@ -332,6 +454,17 @@ export function CaptureComposer({
             </button>
           </div>
         ) : null}
+        {photos.length > 0 ? (
+          <div className={styles.capturePhotoStrip} aria-label="Draft photos">
+            {photos.map((photo) => (
+              <CapturePhoto
+                key={photo.id}
+                photo={photo}
+                onRemove={() => void removePhoto(photo.id)}
+              />
+            ))}
+          </div>
+        ) : null}
         <div className={styles.captureActions}>
           <div>
             <button
@@ -353,13 +486,31 @@ export function CaptureComposer({
               <Icon name="mic" /> Voice
             </button>
             <button
-              aria-label="Photo capture is coming next"
-              className={styles.quietButton}
-              disabled
+              aria-label="Add photos"
+              aria-pressed={photos.length > 0}
+              className={`${styles.quietButton} ${photos.length > 0 ? styles.activeQuietButton : ""}`}
+              disabled={
+                isSaving || !isLocalStateReady || !isPhotoStorageAvailable
+              }
+              onClick={() => photoInputRef.current?.click()}
               type="button"
             >
-              <Icon name="photo" /> Photo
+              <Icon name="photo" />
+              <span>
+                {photos.length > 0 ? `Photo · ${photos.length}` : "Photo"}
+              </span>
             </button>
+            <input
+              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+              className={styles.visuallyHidden}
+              disabled={
+                isSaving || !isLocalStateReady || !isPhotoStorageAvailable
+              }
+              multiple
+              onChange={(event) => void handlePhotoSelection(event)}
+              ref={photoInputRef}
+              type="file"
+            />
           </div>
           <div className={styles.captureSubmitGroup}>
             <p
@@ -415,6 +566,12 @@ export function CaptureComposer({
                 </div>
                 <h3>{entry.title ?? "Untitled Entry"}</h3>
                 {entry.body ? <p>{entry.body}</p> : null}
+                {entry.attachments.length > 0 ? (
+                  <span className={styles.pendingPhotoCount}>
+                    <Icon name="photo" size={14} />
+                    {photoCountLabel(entry.attachments.length)}
+                  </span>
+                ) : null}
               </article>
             ))}
           </div>
@@ -424,8 +581,141 @@ export function CaptureComposer({
   );
 }
 
+function CapturePhoto({
+  onRemove,
+  photo,
+}: {
+  onRemove: () => void;
+  photo: InboxPhotoDraft;
+}) {
+  const [previewUrl] = useState(() => URL.createObjectURL(photo.file));
+
+  useEffect(() => {
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
+
+  return (
+    <div className={styles.capturePhoto}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img alt={`Selected ${photo.file.name}`} src={previewUrl} />
+      <button
+        aria-label={`Remove selected ${photo.file.name}`}
+        onClick={onRemove}
+        type="button"
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
+async function synchronizeAttachments(
+  ownerId: string,
+  entry: QueuedInboxEntry,
+): Promise<SyncInboxEntryResult> {
+  const storedPhotos = await loadInboxPhotoDrafts(ownerId);
+  const photosById = new Map(storedPhotos.map((photo) => [photo.id, photo]));
+  const client = createClient();
+
+  for (const attachment of entry.attachments) {
+    const photo = photosById.get(attachment.id);
+    const objectPath = createFirstTimeObjectPath(
+      ownerId,
+      entry.id,
+      attachment.id,
+      attachment.mimeType,
+    );
+
+    if (!objectPath) {
+      return {
+        message:
+          "A pending photo reference is invalid and needs your attention.",
+        status: "retry",
+      };
+    }
+
+    const attachmentInput: FirstTimeAttachmentInput = {
+      attachmentId: attachment.id,
+      byteSize: attachment.size,
+      entryId: entry.id,
+      mimeType: attachment.mimeType,
+      objectPath,
+      originalFilename: attachment.name || null,
+      pixelHeight: null,
+      pixelWidth: null,
+    };
+
+    if (!photo) {
+      const registered = await registerEntryAttachment(attachmentInput);
+
+      if (registered.status === "synced") {
+        continue;
+      }
+
+      return {
+        message:
+          "A pending photo is missing from this device. Keep this page open and select the photo again if needed.",
+        status: "retry",
+      };
+    }
+
+    if (
+      photo.file.name !== attachment.name ||
+      photo.file.size !== attachment.size ||
+      photo.file.lastModified !== attachment.lastModified ||
+      photo.mimeType !== attachment.mimeType
+    ) {
+      return {
+        message: "A pending photo changed on this device and cannot be synced.",
+        status: "retry",
+      };
+    }
+
+    const upload = await client.storage
+      .from("entry-media")
+      .upload(objectPath, photo.file, {
+        cacheControl: "3600",
+        contentType: attachment.mimeType,
+        upsert: true,
+      });
+
+    if (upload.error) {
+      return {
+        message:
+          "Photos are saved on this device. MemoTrail will retry when you are online.",
+        status: "retry",
+      };
+    }
+
+    const registered = await registerEntryAttachment(attachmentInput);
+
+    if (registered.status === "retry") {
+      return registered;
+    }
+
+    try {
+      await removeInboxPhotoDrafts(ownerId, [attachment.id]);
+    } catch {
+      return {
+        message:
+          "This photo reached MemoTrail, but its local pending copy could not be cleared. Retry to finish.",
+        status: "retry",
+      };
+    }
+  }
+
+  return {
+    message: `Saved to Inbox with ${photoCountLabel(entry.attachments.length)}.`,
+    status: "synced",
+  };
+}
+
 function pendingCountLabel(count: number) {
   return count === 1 ? "1 Entry" : `${count} Entries`;
+}
+
+function photoCountLabel(count: number) {
+  return count === 1 ? "1 photo" : `${count} photos`;
 }
 
 function pendingDateLabel(date: string) {

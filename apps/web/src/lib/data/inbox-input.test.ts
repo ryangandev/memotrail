@@ -37,8 +37,17 @@ describe("parseInboxEntryInput", () => {
     const formData = new FormData();
 
     expect(parseInboxEntryInput(formData)).toEqual({
-      message: "Write a title or a note before saving.",
+      message: "Write a title, a note, or add a photo before saving.",
       success: false,
+    });
+  });
+
+  it("accepts a photo-only local capture", () => {
+    expect(
+      parseInboxEntryValues({ body: "", hasAttachments: true, title: "" }),
+    ).toEqual({
+      data: { body: "", title: null },
+      success: true,
     });
   });
 
