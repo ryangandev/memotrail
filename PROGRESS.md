@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Deploy Homes and moves data contract
+> Current phase: Web Homes experience
 >
 > Last updated: 2026-09-03
 >
@@ -188,6 +188,8 @@
 - Home version history now preserves the previous specialized Home, Place, and Timeline state in addition to the shared Entry snapshot before an edit or Trash mutation.
 - The contract supports open-ended current residences, exact or approximate date precision, recoverable Trash restoration, global structured search, optimistic conflicts, and owner isolation.
 - The local database now passes 422 pgTAP tests plus warning-free schema lint, including 59 focused Homes tests for validation, ranges, Place reuse, organization, history, Timeline, Search, Trash, grants, and privacy.
+- Hosted Supabase now contains the additive Homes migration with an aligned fourteen-migration ledger and no seed or role deployment.
+- Hosted verification confirms all three Homes functions, the enriched Entry-history trigger, both supporting indexes, empty function search paths, authenticated-only execution grants, and warning-free public and extensions schema lint.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -694,7 +696,7 @@
 - [x] Reject stale revisions and cross-owner Place, Home, edit, and Trash access without partial mutations.
 - [x] Keep every contract function authenticated-only, security-invoker, Row Level Security-backed, empty-search-path, and supported by focused indexes.
 - [x] Verify the contract with 59 focused pgTAP tests while keeping all 422 database tests and warning-level schema lint passing.
-- [ ] Apply and verify the additive Homes migration on hosted Supabase.
+- [x] Apply and verify the additive Homes migration on hosted Supabase.
 
 ## Feature history
 
@@ -764,13 +766,14 @@
 - `feat: add iOS Home memory resurfacing` added and simulator-verified the matching native iOS Home memory resurfacing experience.
 - `feat: add iOS voice capture` added and simulator-verified live voice-to-text across every shared native capture surface.
 - `feat: add Web voice capture` added progressive live Web voice-to-text with recoverable drafts and authenticated localhost verification.
-- Current change: added and locally verified the shared Homes and moves data contract.
+- `feat: add Homes data contract` added and locally verified the shared Homes and moves data contract.
+- Current change: deployed and verified the additive Homes and moves contract on hosted Supabase.
 
 ## Next sequence
 
-1. Apply and verify the additive Homes migration on hosted Supabase.
-2. Add the authenticated Web Homes archive, creation, editing, organization, private-photo, Timeline, and Trash experience.
-3. Add the matching native iOS Homes archive and editor after the Web interaction contract is locally proven.
+1. Add the authenticated Web Homes archive with current and completed residence context.
+2. Add Home creation and revision-safe editing across Place, dates, move context, Collections, tags, and recoverable Trash.
+3. Reuse private Entry photos and verify the full interaction against hosted data on desktop and iPhone-sized layouts before starting native iOS parity.
 
 ## Deferred
 
