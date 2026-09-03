@@ -263,6 +263,7 @@
 - All file-scope SwiftUI helpers in that feature are now explicitly main-actor isolated, matching the `View` protocol and newer SDK behavior without changing the interface.
 - The independent Home pgTAP failure was traced to four assertions that assumed development seed content would sort behind their fixtures.
 - The Home suite now clears mutable data for its fixture owner inside the rollback transaction, so all 617 database tests and warning-level schema lint pass with or without seed content.
+- GitHub Actions run `33784735025` passes Web and shared checks, all Supabase database tests, and the iOS build on `macos-15` with Xcode 16.4.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -902,14 +903,14 @@
 - [x] Mark Supabase imports as pre-concurrency compatibility boundaries without lowering MemoTrail's Swift language mode or concurrency checks.
 - [x] Main-actor isolate the file-scope Collections view helpers required by the Xcode 16.4 SwiftUI SDK.
 - [x] Pass strict formatting for every touched Swift file, a complete-concurrency generic Simulator build, and all 151 native tests.
-- [ ] Push the compatibility fix and confirm the GitHub Actions iOS job succeeds on `macos-15` with Xcode 16.4.
+- [x] Push the compatibility fix and confirm the GitHub Actions iOS job succeeds on `macos-15` with Xcode 16.4.
 
 ### Database CI fixture isolation
 
 - [x] Reproduce the four failing Home assertions against the same development seed loaded by GitHub Actions.
 - [x] Isolate the Home fixtures inside their rollback transaction instead of depending on global seed counts or recency ordering.
 - [x] Keep all 36 Home assertions and all 617 database tests passing with warning-level schema lint.
-- [ ] Push the isolated test and confirm the complete GitHub Actions workflow succeeds.
+- [x] Push the isolated test and confirm the complete GitHub Actions workflow succeeds.
 
 ## Feature history
 
@@ -997,13 +998,13 @@
 - `feat: add iOS Places experience` implemented and simulator-verified the matching native iOS Places experience.
 - `fix: restore iOS CI concurrency compatibility` added a narrow Supabase compatibility boundary for the Xcode 16.4 GitHub Actions build.
 - `test: isolate Home database fixtures` isolated the Home suite from development seed content that made four CI assertions order-dependent.
-- Current change: aligned the remaining file-scope Collections view helpers with Xcode 16.4 main-actor isolation.
+- `fix: isolate Collections views to main actor` aligned the remaining file-scope SwiftUI helpers with Xcode 16.4 main-actor isolation and restored the complete remote workflow.
+- Current change: recorded the remotely verified green CI result before pausing for product review.
 
 ## Next sequence
 
-1. Push the remaining Xcode 16.4 actor-isolation repair together with the committed Home test isolation.
-2. Verify the complete GitHub Actions workflow remotely.
-3. Pause for product review once the remote workflow and local working tree are both clean.
+1. Pause for product review with Places complete on Web and iOS and the remote workflow green.
+2. Resume the roadmap only after review feedback defines the next product slice.
 
 ## Deferred
 
