@@ -71,6 +71,10 @@
 - Web First Times uploads originals directly to the owner's private Storage path, registers metadata only after upload, uses expiring signed URLs for display, and retries failed photo attachment without losing saved content.
 - The Web suite now has 68 passing tests, including First Time content, organization, date precision, identity, MIME type, file-size, and private object-path validation.
 - Synthetic localhost browser verification covered creation, Collections and tags, an exact local date, private PNG upload, signed image display, revision-safe editing, desktop layout, and an iPhone-sized responsive layout.
+- iOS now exposes First Times as a dedicated native archive with dated and unknown-date cards, photo covers, Collections, tags, pull-to-refresh, and one-hour signed private image URLs.
+- The native First Time editor supports title-only creation, optional and imprecise dates, human labels, reflection, organization, multi-photo selection, preview, revision-safe edits, and recoverable Trash actions.
+- Native photo uploads preserve supported originals, validate file signatures and picker metadata, use owner-scoped private paths, register only after upload, and retain failed selections for retry without losing saved content.
+- The shared iOS scheme now has 51 passing tests, including 13 First Times tests, and passes a warning-free generic Simulator build.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -257,6 +261,19 @@
 - [x] Recoverably remove a photo or move the full First Time to Trash with an explicit confirmation.
 - [x] Verify input normalization with 11 focused tests and the full create, photo, display, and edit path against local Supabase in a real browser.
 
+### iOS First Times
+
+- [x] Add First Times as a first-class native tab backed by the shared authenticated workspace RPC.
+- [x] Show dated and unknown-date First Times in a photo-forward native archive with loading, empty, unavailable, and refresh states.
+- [x] Create a First Time with only a title required and optional reflection, date precision, human date label, Collections, and tags.
+- [x] Revision-safely edit First Time content and organization and surface cross-device conflicts.
+- [x] Select and preview up to 12 supported photos, validate signatures and size, and preserve original image bytes.
+- [x] Upload photos to private owner and Entry paths, register metadata only afterward, and retain failed selections for retry.
+- [x] Display private photos through one-hour signed URLs without persisting public URLs.
+- [x] Recoverably remove a photo or move the full First Time to Trash only after explicit confirmation.
+- [x] Verify decoding, sorting, date display, validation, photo detection, private paths, and RPC parameters with 13 focused tests.
+- [x] Pass the warning-free generic Simulator build and all 51 tests on an iPhone 17 Pro simulator.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -294,12 +311,13 @@
 - `feat: add First Times data contract` implemented and locally verified the shared First Times and private photo-attachment data contract.
 - `fix: restrict authenticated table grants` removed table privileges outside the intended RLS-managed client surface.
 - `feat: deploy First Times data contract` deployed and verified the First Times contract and least-privilege correction on hosted Supabase.
-- Current change: implemented and locally browser-verified the dedicated Web First Times experience.
+- `feat: add Web First Times experience` implemented and locally browser-verified the dedicated Web First Times experience.
+- Current change: implemented and simulator-verified the matching native iOS First Times experience.
 
 ## Next sequence
 
-1. Add the matching native iOS First Times experience.
-2. Revisit Library navigation after First Times, Collections, and the remaining record types have real destinations.
+1. Define and locally verify the shared Collections browsing contract.
+2. Add matching Web and iOS Collections destinations, then revisit Library navigation with real content behind it.
 
 ## Deferred
 

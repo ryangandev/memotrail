@@ -29,14 +29,10 @@ struct RootTabView: View {
           Label("Timeline", systemImage: "point.bottomleft.forward.to.point.topright.scurvepath")
         }
 
-      PlaceholderView(
-        title: "First Times",
-        subtitle: "A record of things you did for the first time.",
-        systemImage: "star"
-      )
-      .tabItem {
-        Label("Firsts", systemImage: "star")
-      }
+      FirstTimesView(client: client, ownerID: user.id)
+        .tabItem {
+          Label("Firsts", systemImage: "star")
+        }
 
       PlaceholderView(
         title: "Collections",
