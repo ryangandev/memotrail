@@ -31,10 +31,14 @@
 		B00000000000000000000016 /* FirstTimeEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000001D /* FirstTimeEntry.swift */; };
 		B00000000000000000000017 /* FirstTimesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000001E /* FirstTimesController.swift */; };
 		B00000000000000000000018 /* FirstTimesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000001F /* FirstTimesView.swift */; };
+		B00000000000000000000019 /* CollectionEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000020 /* CollectionEntry.swift */; };
+		B0000000000000000000001A /* CollectionsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000021 /* CollectionsController.swift */; };
+		B0000000000000000000001B /* CollectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000022 /* CollectionsView.swift */; };
 		B10000000000000000000001 /* InboxEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000001 /* InboxEntryTests.swift */; };
 		B10000000000000000000002 /* SearchEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000003 /* SearchEntryTests.swift */; };
 		B10000000000000000000003 /* TimelineEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000004 /* TimelineEntryTests.swift */; };
 		B10000000000000000000004 /* FirstTimeEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000005 /* FirstTimeEntryTests.swift */; };
+		B10000000000000000000005 /* CollectionEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000006 /* CollectionEntryTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -73,11 +77,15 @@
 		C0000000000000000000001D /* FirstTimeEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstTimeEntry.swift; sourceTree = "<group>"; };
 		C0000000000000000000001E /* FirstTimesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstTimesController.swift; sourceTree = "<group>"; };
 		C0000000000000000000001F /* FirstTimesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstTimesView.swift; sourceTree = "<group>"; };
+		C00000000000000000000020 /* CollectionEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionEntry.swift; sourceTree = "<group>"; };
+		C00000000000000000000021 /* CollectionsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionsController.swift; sourceTree = "<group>"; };
+		C00000000000000000000022 /* CollectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionsView.swift; sourceTree = "<group>"; };
 		C10000000000000000000001 /* InboxEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000002 /* MemoTrailTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MemoTrailTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C10000000000000000000003 /* SearchEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000004 /* TimelineEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000005 /* FirstTimeEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstTimeEntryTests.swift; sourceTree = "<group>"; };
+		C10000000000000000000006 /* CollectionEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionEntryTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -150,6 +158,7 @@
 				A10000000000000000000015 /* Search */,
 				A10000000000000000000016 /* Timeline */,
 				A10000000000000000000017 /* FirstTimes */,
+				A10000000000000000000018 /* Collections */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -205,6 +214,7 @@
 				C00000000000000000000017 /* SearchEntry.swift */,
 				C0000000000000000000001A /* TimelineEntry.swift */,
 				C0000000000000000000001D /* FirstTimeEntry.swift */,
+				C00000000000000000000020 /* CollectionEntry.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -234,6 +244,7 @@
 				C10000000000000000000003 /* SearchEntryTests.swift */,
 				C10000000000000000000004 /* TimelineEntryTests.swift */,
 				C10000000000000000000005 /* FirstTimeEntryTests.swift */,
+				C10000000000000000000006 /* CollectionEntryTests.swift */,
 			);
 			path = MemoTrailTests;
 			sourceTree = "<group>";
@@ -263,6 +274,15 @@
 				C0000000000000000000001F /* FirstTimesView.swift */,
 			);
 			path = FirstTimes;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000018 /* Collections */ = {
+			isa = PBXGroup;
+			children = (
+				C00000000000000000000021 /* CollectionsController.swift */,
+				C00000000000000000000022 /* CollectionsView.swift */,
+			);
+			path = Collections;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -395,6 +415,9 @@
 				B00000000000000000000016 /* FirstTimeEntry.swift in Sources */,
 				B00000000000000000000017 /* FirstTimesController.swift in Sources */,
 				B00000000000000000000018 /* FirstTimesView.swift in Sources */,
+				B00000000000000000000019 /* CollectionEntry.swift in Sources */,
+				B0000000000000000000001A /* CollectionsController.swift in Sources */,
+				B0000000000000000000001B /* CollectionsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -406,6 +429,7 @@
 				B10000000000000000000002 /* SearchEntryTests.swift in Sources */,
 				B10000000000000000000003 /* TimelineEntryTests.swift in Sources */,
 				B10000000000000000000004 /* FirstTimeEntryTests.swift in Sources */,
+				B10000000000000000000005 /* CollectionEntryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

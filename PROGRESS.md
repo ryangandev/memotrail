@@ -83,6 +83,10 @@
 - Web Collection detail preserves complete Entry text, Type, occurrence context, Inbox state, every Collection and tag, and expiring private image URLs across paginated routes.
 - The Web suite now has 74 passing tests, including Collection identifier, page, and stable pagination-link validation.
 - Authenticated localhost browser verification covered the overview, a Collection deep link, private signed image display, desktop and narrow responsive layouts, complete mobile navigation, and an error-free application console.
+- iOS now exposes Collections as a first-class native tab with stable archive ordering, Entry and Inbox counts, recency, empty states, and pull-to-refresh behavior.
+- Native Collection detail supports complete Entry reading, Types, occurrence context, Inbox state, every Collection and tag, one-hour signed private image URLs, and incremental 25-Entry pagination.
+- The shared iOS scheme now has 61 passing tests, including ten focused Collections tests, and passes a warning-free generic Simulator build.
+- The current native build installs and launches on an iPhone 17 Pro simulator while preserving the existing signed-out authentication gate.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -308,6 +312,17 @@
 - [x] Pass formatting, design-token, lint, typecheck, and production-build checks.
 - [x] Verify overview, detail, private image, desktop, narrow responsive, mobile navigation, and console behavior against local Supabase.
 
+### iOS Collections
+
+- [x] Replace the native Collections placeholder with a working first-class tab backed by the shared authenticated workspace RPC.
+- [x] Show every active Collection with Entry counts, Inbox counts, recency, stable ordering, loading, empty, unavailable, and refresh states.
+- [x] Open Collection detail and preserve complete Entry content, Type, Inbox state, occurrence context, Collections, and tags.
+- [x] Display active private Entry photos through one-hour signed URLs without persisting public URLs.
+- [x] Load Collection detail in validated 25-Entry pages without duplicating Entries during incremental pagination.
+- [x] Verify summary decoding, ordering, Entry decoding, title and excerpt fallbacks, date labels, time zones, attachments, and RPC pagination with ten focused tests.
+- [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, and all 61 native tests.
+- [x] Install and launch the current build on an iPhone 17 Pro simulator without bypassing the existing authentication boundary.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -349,12 +364,13 @@
 - `feat: add iOS First Times experience` implemented and simulator-verified the matching native iOS First Times experience.
 - `feat: add Collections browsing contract` implemented and locally verified the shared Collections browsing contract.
 - `feat: deploy Collections browsing contract` deployed and verified the Collections browsing contract on hosted Supabase.
-- Current change: implemented and locally browser-verified the authenticated Web Collections experience.
+- `feat: add Web Collections experience` implemented and locally browser-verified the authenticated Web Collections experience.
+- Current change: implemented and simulator-verified the matching native iOS Collections experience.
 
 ## Next sequence
 
-1. Add the matching native iOS Collections experience.
-2. Revisit Library navigation with real content behind it.
+1. Revisit Library navigation now that Timeline, First Times, and Collections all contain real content.
+2. Choose the next record area from Habits, Places, and Vehicles based on the approved product scope.
 
 ## Deferred
 

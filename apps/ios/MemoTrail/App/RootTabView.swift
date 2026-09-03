@@ -34,30 +34,10 @@ struct RootTabView: View {
           Label("Firsts", systemImage: "star")
         }
 
-      PlaceholderView(
-        title: "Collections",
-        subtitle: "Entries will gather here through categories and tags.",
-        systemImage: "archivebox"
-      )
-      .tabItem {
-        Label("Collections", systemImage: "archivebox")
-      }
-    }
-  }
-}
-
-private struct PlaceholderView: View {
-  let title: String
-  let subtitle: String
-  let systemImage: String
-
-  var body: some View {
-    NavigationStack {
-      ContentUnavailableView(title, systemImage: systemImage, description: Text(subtitle))
-        .foregroundStyle(MTColor.inkMuted)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(MTColor.canvas)
-        .navigationTitle(title)
+      CollectionsView(client: client, ownerID: user.id)
+        .tabItem {
+          Label("Collections", systemImage: "archivebox")
+        }
     }
   }
 }
