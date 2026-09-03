@@ -4,9 +4,12 @@ import SwiftUI
 struct TimelineView: View {
   @State private var controller: TimelineController
   @State private var residenceController: ResidenceController
+  @State private var vehicleController: VehicleController
   @State private var editorSelection: TimelineEditorSelection?
   @State private var residenceEditorSelection: ResidenceEditorSelection?
+  @State private var vehicleEditorSelection: VehicleEditorSelection?
   @State private var residenceErrorMessage: String?
+  @State private var vehicleErrorMessage: String?
 
   init(client: SupabaseClient, ownerID: UUID) {
     _controller = State(
@@ -14,6 +17,9 @@ struct TimelineView: View {
     )
     _residenceController = State(
       initialValue: ResidenceController(client: client, ownerID: ownerID)
+    )
+    _vehicleController = State(
+      initialValue: VehicleController(client: client, ownerID: ownerID)
     )
   }
 
@@ -65,6 +71,14 @@ struct TimelineView: View {
       ) { selection in
         ResidenceEditorSheet(controller: residenceController, entry: selection.entry)
       }
+      .sheet(
+        item: $vehicleEditorSelection,
+        onDismiss: {
+          Task { await controller.load() }
+        }
+      ) { selection in
+        VehicleEditorSheet(controller: vehicleController, entry: selection.entry)
+      }
       .alert(
         "Home unavailable",
         isPresented: Binding(
@@ -75,6 +89,17 @@ struct TimelineView: View {
         Button("OK", role: .cancel) { residenceErrorMessage = nil }
       } message: {
         Text(residenceErrorMessage ?? "")
+      }
+      .alert(
+        "Vehicle unavailable",
+        isPresented: Binding(
+          get: { vehicleErrorMessage != nil },
+          set: { if !$0 { vehicleErrorMessage = nil } }
+        )
+      ) {
+        Button("OK", role: .cancel) { vehicleErrorMessage = nil }
+      } message: {
+        Text(vehicleErrorMessage ?? "")
       }
       .task {
         if !controller.hasLoaded {
@@ -148,9 +173,12 @@ struct TimelineView: View {
             track: track,
             addMoment: { openEditor(trackID: track.id) },
             selectEntry: { entry in
-              if entry.entryType == "home" {
+              switch entry.specializedEditor {
+              case .home:
                 Task { await openResidence(entryID: entry.id) }
-              } else {
+              case .vehicle:
+                Task { await openVehicle(entryID: entry.id) }
+              case nil:
                 editorSelection = TimelineEditorSelection(
                   entry: entry,
                   initialTrackID: entry.trackID
@@ -211,6 +239,18 @@ struct TimelineView: View {
       return
     }
     residenceEditorSelection = ResidenceEditorSelection(entry: entry)
+  }
+
+  @MainActor
+  private func openVehicle(entryID: UUID) async {
+    await vehicleController.load()
+    guard let entry = vehicleController.entry(id: entryID) else {
+      vehicleErrorMessage =
+        vehicleController.loadErrorMessage
+        ?? "This Vehicle could not be opened. Refresh the Timeline and try again."
+      return
+    }
+    vehicleEditorSelection = VehicleEditorSelection(entry: entry)
   }
 
   private var trackCountLabel: String {

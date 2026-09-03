@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: iOS Vehicles experience
+> Current phase: Goals data contract
 >
 > Last updated: 2026-09-03
 >
@@ -212,6 +212,11 @@
 - Vehicle Timeline stages now open the specialized Vehicle editor instead of the generic Timeline editor, while Vehicles is available from both Records navigation and Library.
 - The Web suite now has 160 passing tests, including 12 focused Vehicle input, response, fact, range, duration, and attachment-decoding tests, and passes lint, typecheck, and production build checks.
 - Localhost verification confirmed the signed-out authentication boundary for the new route; authenticated mutation coverage remains enforced by the shared contract and server-action validation without retaining synthetic user data.
+- iOS now exposes Vehicles inside Library with distinct current and earlier chapters, human date context, elapsed duration, structured facts, memories, organization, and signed private photo covers.
+- The native Vehicle editor creates or revision-safely updates ownership or regular-use dates, precision, human labels, optional make, model, model year and color, Collections, tags, memories, and private Entry photos through the shared hosted contract.
+- Vehicle Timeline stages now open the specialized native Vehicle editor instead of the generic Timeline editor, and both Vehicle and individual-photo deletion remain recoverable through Trash.
+- The shared iOS scheme now has 132 passing tests, including ten focused Vehicle tests plus explicit Home and Vehicle Timeline editor routing coverage.
+- The native Vehicles implementation passes strict formatting for changed sources, project validation, a warning-free generic Simulator build, the complete suite on an iPhone 17 Pro simulator, and an install-and-launch smoke check.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -767,6 +772,16 @@
 - [x] Route Vehicle stages from Timeline to the specialized Vehicle editor and expose Vehicles through Records and Library navigation.
 - [x] Verify Vehicle parsing, facts, range and duration presentation, attachment decoding, lint, typecheck, production build, and the signed-out localhost boundary while keeping all 160 Web tests passing.
 
+### iOS Vehicles experience
+
+- [x] Present current and earlier Vehicles as distinct native chapters with date range, duration, structured facts, memories, organization, and a signed private photo cover.
+- [x] Create or revision-safely edit ownership or regular-use dates, precision, human labels, make, model, model year, color, Collections, tags, and memories through one mutation.
+- [x] Upload supported private Entry photos to deterministic owner-scoped Storage paths and register metadata only after a successful upload.
+- [x] Move a Vehicle or individual photo to recoverable Trash without deleting the underlying private original.
+- [x] Route Vehicle stages from Timeline to the specialized Vehicle editor and expose Vehicles as an implemented Library destination.
+- [x] Verify decoding, deterministic ordering, facts, range and duration presentation, validation, organization, explicit RPC nulls, and Timeline type routing with focused tests while keeping all 132 native tests passing.
+- [x] Pass strict formatting for changed sources, project validation, a warning-free generic Simulator build, the complete iPhone 17 Pro suite, and an install-and-launch smoke check.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -841,13 +856,14 @@
 - `feat: add iOS Homes experience` added and simulator-verified the complete native iOS Homes experience.
 - `feat: add Vehicles data contract` added and locally verified the shared Vehicles and ownership-period data contract.
 - `feat: deploy Vehicles data contract` deployed and verified the additive Vehicles contract on hosted Supabase.
-- Current change: added and locally verified the complete Web Vehicles experience.
+- `feat: add Web Vehicles experience` added and locally verified the complete Web Vehicles experience.
+- Current change: added and simulator-verified the complete native iOS Vehicles experience.
 
 ## Next sequence
 
-1. Build the matching native Vehicles archive inside Library with current and earlier chapters.
-2. Add revision-safe native creation and editing for dates, structured facts, organization, memories, private photos, and recoverable Trash.
-3. Route native Vehicle Timeline stages to the specialized editor, add focused tests, and verify the simulator build and suite.
+1. Define the shared Goals contract for horizon, reflective status, optional target dates, organization, and progress notes.
+2. Preserve Goal transitions in Entry history and reuse Search, Collections, tags, and recoverable Trash.
+3. Add the approved Bucket List convention without introducing reminders, subtasks, overdue pressure, or productivity scoring.
 
 ## Deferred
 

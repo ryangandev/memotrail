@@ -106,6 +106,28 @@ final class TimelineEntryTests: XCTestCase {
     XCTAssertTrue(withoutLabel.entry?.displayDate.hasSuffix(" - Present") == true)
   }
 
+  func testSpecializedEntryTypesRouteToTheirOwnedEditors() throws {
+    let entryID = UUID(uuidString: "20000000-0000-4000-8000-000000000001")!
+    let home = try XCTUnwrap(
+      makeRow(entryID: entryID, title: "Home", occurredStart: Date(), entryType: "home").entry
+    )
+    let vehicle = try XCTUnwrap(
+      makeRow(
+        entryID: entryID,
+        title: "Vehicle",
+        occurredStart: Date(),
+        entryType: "vehicle"
+      ).entry
+    )
+    let lifeStage = try XCTUnwrap(
+      makeRow(entryID: entryID, title: "Stage", occurredStart: Date()).entry
+    )
+
+    XCTAssertEqual(home.specializedEditor, .home)
+    XCTAssertEqual(vehicle.specializedEditor, .vehicle)
+    XCTAssertNil(lifeStage.specializedEditor)
+  }
+
   func testValidationNormalizesAStage() throws {
     let input = try makeInput(
       title: "  College years  ",
@@ -231,7 +253,8 @@ final class TimelineEntryTests: XCTestCase {
     entryID: UUID?,
     title: String?,
     occurredStart: Date?,
-    occurredLabel: String? = nil
+    occurredLabel: String? = nil,
+    entryType: String = "life_stage"
   ) -> TimelineWorkspaceRow {
     TimelineWorkspaceRow(
       trackID: trackID,
@@ -242,7 +265,7 @@ final class TimelineEntryTests: XCTestCase {
       entryID: entryID,
       title: title,
       body: entryID == nil ? nil : "Notes",
-      entryType: entryID == nil ? nil : "life_stage",
+      entryType: entryID == nil ? nil : entryType,
       timelineKind: entryID == nil ? nil : "stage",
       occurredStart: occurredStart,
       occurredEnd: nil,

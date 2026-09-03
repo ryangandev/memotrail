@@ -53,6 +53,11 @@ enum TimelineDatePrecision: String, CaseIterable, Codable, Equatable, Hashable, 
   }
 }
 
+enum TimelineSpecializedEditor: Equatable, Sendable {
+  case home
+  case vehicle
+}
+
 struct TimelineEntry: Equatable, Hashable, Identifiable, Sendable {
   let id: UUID
   let trackID: UUID
@@ -67,6 +72,14 @@ struct TimelineEntry: Equatable, Hashable, Identifiable, Sendable {
   let occurredTimezone: String
   let revision: Int
   let updatedAt: Date
+
+  var specializedEditor: TimelineSpecializedEditor? {
+    switch entryType {
+    case "home": .home
+    case "vehicle": .vehicle
+    default: nil
+    }
+  }
 
   var displayDate: String {
     if let occurredLabel = occurredLabel?.trimmed.nonEmpty {
