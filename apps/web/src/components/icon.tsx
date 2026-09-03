@@ -17,6 +17,7 @@ export type IconName =
   | "sparkle"
   | "star"
   | "stop"
+  | "target"
   | "timeline"
   | "trash";
 
@@ -141,6 +142,13 @@ const paths: Record<IconName, React.ReactNode> = {
       x="7"
       y="7"
     />
+  ),
+  target: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="4.5" />
+      <circle cx="12" cy="12" fill="currentColor" r="1" stroke="none" />
+    </>
   ),
   timeline: (
     <>

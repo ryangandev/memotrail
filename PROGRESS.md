@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Web Goals experience
+> Current phase: iOS Goals experience
 >
 > Last updated: 2026-09-03
 >
@@ -224,6 +224,12 @@
 - The local database now passes 544 pgTAP tests plus warning-free schema lint, including 64 focused Goals tests for validation, sorting, organization, related Entries, history, Search, Trash, Bucket List completion, grants, indexes, and privacy.
 - Hosted Supabase now contains the additive Goals migration with an aligned sixteen-migration ledger and no seed or role deployment.
 - Hosted verification confirms all four Goals functions, all three supporting indexes, the enriched Home, Vehicle, and Goal history trigger, empty function search paths, authenticated-only execution grants, and warning-free public and extensions schema lint.
+- Web now exposes Goals as a dedicated authenticated archive grouped into In Motion, Considering, Paused, and Closed Chapters, with horizon, target-date, reflection, organization, related Entry, and private photo context.
+- The Web Goal editor creates or revision-safely updates reflective state, Short-term, Long-term, or Someday horizon, an optional no-pressure target date, Collections, tags, related Entries, and private Entry photos.
+- Bucket List Goals can be marked Achieved from the editor and atomically create a linked First Time after any other visible Goal edits have been saved.
+- Goals are available through Records and Library navigation, and Goal or photo removal remains recoverable through Trash.
+- The Web suite now has 170 passing tests, including ten focused Goal input and response tests, and the implementation passes formatting, lint, typecheck, and production-build checks.
+- Localhost browser verification covered the signed-out authentication boundary plus representative desktop and iPhone-sized archive and editor layouts with an error-free browser console.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -802,6 +808,17 @@
 - [x] Verify the contract with 64 focused pgTAP tests while keeping all 544 database tests and warning-level schema lint passing.
 - [x] Apply and verify the additive Goals migration on hosted Supabase.
 
+### Web Goals experience
+
+- [x] Present Goals in reflective In Motion, Considering, Paused, and Closed Chapters with horizon, target-date, reflection, organization, related Entry, and private photo context.
+- [x] Create or revision-safely edit Goal title, reflection, horizon, status, optional no-pressure target date, Collections, tags, and up to 100 related Entries through one mutation.
+- [x] Upload supported private Entry photos to owner-scoped Storage, register them only after upload, and preserve retryable failures.
+- [x] Move a Goal or individual photo to recoverable Trash without deleting the underlying private original.
+- [x] Mark a saved Bucket List Goal Achieved and atomically create a linked First Time without losing unsaved visible editor changes.
+- [x] Expose Goals through Records and Library navigation without adding productivity scores, reminders, percentages, subtasks, or overdue pressure.
+- [x] Verify input and response parsing with ten focused tests while keeping all 170 Web tests passing.
+- [x] Pass formatting, lint, typecheck, production-build, signed-out route, desktop, mobile, and browser-console checks.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -879,13 +896,14 @@
 - `feat: add Web Vehicles experience` added and locally verified the complete Web Vehicles experience.
 - `feat: add iOS Vehicles experience` added and simulator-verified the complete native iOS Vehicles experience.
 - `feat: add Goals data contract` added and locally verified the shared Goals and Bucket List completion contract.
-- Current change: deployed and verified the additive Goals contract on hosted Supabase.
+- `feat: deploy Goals data contract` deployed and verified the additive Goals contract on hosted Supabase.
+- Current change: added and locally browser-verified the complete Web Goals experience.
 
 ## Next sequence
 
-1. Build the Web Goals archive around reflective status, horizon, and optional target-date context.
-2. Add revision-safe editing, related Entries, Collections, tags, photos, and recoverable Trash actions.
-3. Add the Bucket List Achieved flow that creates a linked First Time, then verify the experience on localhost.
+1. Build native Goals inside Library with grouped reflective states, horizon, optional target-date context, and related Entries.
+2. Add revision-safe editing, Collections, tags, private photos, recoverable Trash, and the Bucket List Achieved flow that creates a linked First Time.
+3. Verify native parsing and mutation behavior, then pass strict formatting, project validation, a warning-free Simulator build, the complete native suite, and an install-and-launch smoke check.
 
 ## Deferred
 
