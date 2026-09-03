@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Deploy Places data contract
+> Current phase: Web Places experience
 >
 > Last updated: 2026-09-03
 >
@@ -14,9 +14,9 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- The linked hosted Supabase project contains all twelve reviewed repository migrations and no development seed users.
+- The linked hosted Supabase project contains all seventeen reviewed repository migrations and no development seed users.
 - The hosted atomic Entry review contract now supports content, Type, occurrence, Collection, tag, and `Done` updates in one transaction.
-- Hosted verification found 21 Row Level Security-enabled application tables, 22 public policies, and a private `entry-media` bucket.
+- Hosted verification found 24 Row Level Security-enabled application tables, 25 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
 - Web now uses cookie-based Supabase SSR sessions, a Next.js 16 Proxy refresh path, Google OAuth, a safe callback, and explicit sign-out and setup states.
 - Browser verification reached Google's account page with the expected Web client and hosted Supabase callback on both desktop and iPhone-sized layouts.
@@ -243,6 +243,8 @@
 - Home Place selectors on Web and iOS now exclude recoverably removed Places without changing the existing Home create or edit contract.
 - The local database now passes 617 pgTAP tests plus warning-free schema lint, including 73 focused Places tests for browsing, relationships, coordinates, history, optimistic conflicts, Trash, grants, indexes, and owner isolation.
 - The compatibility changes retain all 170 Web tests, lint, typecheck, production build, strict Swift formatting, and a warning-free generic Simulator build.
+- Hosted Supabase now contains the additive Places migration with an aligned seventeen-migration ledger and no seed or role deployment.
+- Hosted verification confirms revision and recoverable deletion on Places, owner-readable immutable Place history, the archive trigger, all three Place functions, four supporting indexes, expanded shared Trash functions, empty function search paths, authenticated-only execution, least-privilege history grants, and warning-free schema lint.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -855,7 +857,7 @@
 - [x] Keep every Place function authenticated-only, security-invoker, Row Level Security-backed, empty-search-path, and supported by focused browsing, coordinate, relationship, and history indexes.
 - [x] Filter removed Places out of existing Web and iOS Home selectors without changing the Home mutation contract.
 - [x] Verify the contract with 73 focused pgTAP tests while keeping all 617 database tests and warning-level schema lint passing.
-- [ ] Apply and verify the additive Places migration on hosted Supabase.
+- [x] Apply and verify the additive Places migration on hosted Supabase.
 
 ## Feature history
 
@@ -937,13 +939,14 @@
 - `feat: deploy Goals data contract` deployed and verified the additive Goals contract on hosted Supabase.
 - `feat: add Web Goals experience` added and locally browser-verified the complete Web Goals experience.
 - `feat: add iOS Goals experience` added and simulator-verified the complete native iOS Goals experience.
-- Current change: added and locally verified the shared reusable Places and future Map data contract.
+- `feat: add Places data contract` added and locally verified the shared reusable Places and future Map data contract.
+- Current change: deployed and verified the additive Places contract on hosted Supabase.
 
 ## Next sequence
 
-1. Deploy only the new version-controlled Places migration to the linked hosted Supabase project without seed data.
-2. Verify the seventeen-migration ledger, Place functions, history policy, least-privilege grants, indexes, Trash integration, and warning-level schema lint.
-3. Build the Web Places archive and editor, including linked Entry context and the expanded Place-aware Trash parser.
+1. Build the Web Places archive with location, coordinate, linked Entry, Home, and private attachment context.
+2. Add a revision-safe Web Place editor, relationship-aware Trash protection, and Place support to the shared Web Trash experience.
+3. Verify parsing, mutations, responsive layout, production build, and real localhost behavior before committing and pushing the feature.
 
 ## Deferred
 
