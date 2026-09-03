@@ -214,17 +214,39 @@ final class InboxEntryTests: XCTestCase {
     let store = InboxDraftStore(defaults: defaults)
     let firstOwner = UUID()
     let secondOwner = UUID()
+    let occurredAt = Date(timeIntervalSince1970: 1_783_088_200)
 
     XCTAssertTrue(
       store.save(
         title: " Draft title ",
         body: "  Keep my spacing.\n",
+        occurredAt: occurredAt,
         ownerID: firstOwner
       )
     )
     XCTAssertEqual(store.load(ownerID: firstOwner)?.title, " Draft title ")
     XCTAssertEqual(store.load(ownerID: firstOwner)?.body, "  Keep my spacing.\n")
+    XCTAssertEqual(store.load(ownerID: firstOwner)?.occurredAt, occurredAt)
     XCTAssertNil(store.load(ownerID: secondOwner))
+  }
+
+  func testDraftStoreLoadsLegacyTextDraftWithoutInventingADate() throws {
+    let defaults = makeDefaults()
+    let store = InboxDraftStore(defaults: defaults)
+    let ownerID = UUID()
+    let legacyDraft = LegacyInboxDraft(
+      title: "",
+      body: "An earlier draft",
+      updatedAt: Date(timeIntervalSince1970: 1_788_278_400)
+    )
+    defaults.set(
+      try JSONEncoder().encode(legacyDraft),
+      forKey: InboxDraftStore.storageKey(ownerID: ownerID)
+    )
+
+    let loadedDraft = try XCTUnwrap(store.load(ownerID: ownerID))
+    XCTAssertEqual(loadedDraft.body, "An earlier draft")
+    XCTAssertNil(loadedDraft.occurredAt)
   }
 
   func testDraftStoreClearsEmptyAndAcceptedDrafts() {
@@ -363,4 +385,10 @@ final class InboxEntryTests: XCTestCase {
 private struct TestStoredInboxQueue: Encodable {
   let version: Int
   let entries: [QueuedInboxEntry]
+}
+
+private struct LegacyInboxDraft: Encodable {
+  let title: String
+  let body: String
+  let updatedAt: Date
 }

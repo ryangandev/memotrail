@@ -12,6 +12,7 @@ struct RootTabView: View {
   @State private var inboxController: InboxController
   @State private var captureTitle: String
   @State private var captureBody: String
+  @State private var captureOccurredAt: Date?
   @State private var hasLocalDraft: Bool
   @State private var selectedTab = RootTabDestination.home
   @State private var isShowingQuickCapture = false
@@ -39,6 +40,7 @@ struct RootTabView: View {
     )
     _captureTitle = State(initialValue: draft?.title ?? "")
     _captureBody = State(initialValue: draft?.body ?? "")
+    _captureOccurredAt = State(initialValue: draft?.occurredAt)
     _hasLocalDraft = State(initialValue: draft != nil)
   }
 
@@ -53,6 +55,7 @@ struct RootTabView: View {
         captureController: inboxController,
         captureTitle: $captureTitle,
         captureBody: $captureBody,
+        captureOccurredAt: $captureOccurredAt,
         hasLocalDraft: $hasLocalDraft
       )
       .tabItem {
@@ -67,6 +70,7 @@ struct RootTabView: View {
         controller: inboxController,
         captureTitle: $captureTitle,
         captureBody: $captureBody,
+        captureOccurredAt: $captureOccurredAt,
         hasLocalDraft: $hasLocalDraft
       )
       .tabItem {
@@ -120,6 +124,7 @@ struct RootTabView: View {
         controller: inboxController,
         title: $captureTitle,
         draftBody: $captureBody,
+        occurredAt: $captureOccurredAt,
         hasLocalDraft: $hasLocalDraft
       )
     }
@@ -127,6 +132,9 @@ struct RootTabView: View {
       persistDraft()
     }
     .onChange(of: captureBody) {
+      persistDraft()
+    }
+    .onChange(of: captureOccurredAt) {
       persistDraft()
     }
     .onChange(of: inboxController.pendingEntries.count) { previousCount, count in
@@ -147,6 +155,7 @@ struct RootTabView: View {
     hasLocalDraft = draftStore.save(
       title: captureTitle,
       body: captureBody,
+      occurredAt: captureOccurredAt,
       ownerID: user.id
     )
   }
@@ -196,6 +205,7 @@ private struct QuickCaptureView: View {
   @Bindable var controller: InboxController
   @Binding var title: String
   @Binding var draftBody: String
+  @Binding var occurredAt: Date?
   @Binding var hasLocalDraft: Bool
 
   @Environment(\.dismiss) private var dismiss
@@ -219,6 +229,7 @@ private struct QuickCaptureView: View {
           CaptureCard(
             title: $title,
             note: $draftBody,
+            occurredAt: $occurredAt,
             isSaving: controller.isSaving,
             hasLocalDraft: hasLocalDraft,
             message: controller.captureMessage,
@@ -257,11 +268,16 @@ private struct QuickCaptureView: View {
 
   @MainActor
   private func save() async {
-    let didSave = await controller.save(title: title, body: draftBody)
+    let didSave = await controller.save(
+      title: title,
+      body: draftBody,
+      occurredAt: occurredAt
+    )
 
     if didSave {
       title = ""
       draftBody = ""
+      occurredAt = nil
       hasLocalDraft = false
       dismiss()
     }

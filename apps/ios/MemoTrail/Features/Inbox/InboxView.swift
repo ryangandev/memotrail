@@ -9,6 +9,7 @@ struct InboxView: View {
   @Bindable private var controller: InboxController
   @Binding private var captureTitle: String
   @Binding private var captureBody: String
+  @Binding private var captureOccurredAt: Date?
   @Binding private var hasLocalDraft: Bool
   @State private var isShowingAccount = false
   @State private var selectedEntry: InboxEntry?
@@ -22,6 +23,7 @@ struct InboxView: View {
     controller: InboxController,
     captureTitle: Binding<String>,
     captureBody: Binding<String>,
+    captureOccurredAt: Binding<Date?>,
     hasLocalDraft: Binding<Bool>
   ) {
     self.user = user
@@ -30,6 +32,7 @@ struct InboxView: View {
     self.controller = controller
     _captureTitle = captureTitle
     _captureBody = captureBody
+    _captureOccurredAt = captureOccurredAt
     _hasLocalDraft = hasLocalDraft
     _selectedEntry = State(initialValue: nil)
   }
@@ -42,6 +45,7 @@ struct InboxView: View {
           CaptureCard(
             title: $captureTitle,
             note: $captureBody,
+            occurredAt: $captureOccurredAt,
             isSaving: controller.isSaving,
             hasLocalDraft: hasLocalDraft,
             message: controller.captureMessage,
@@ -340,11 +344,16 @@ struct InboxView: View {
 
   @MainActor
   private func saveCapture() async {
-    let didSave = await controller.save(title: captureTitle, body: captureBody)
+    let didSave = await controller.save(
+      title: captureTitle,
+      body: captureBody,
+      occurredAt: captureOccurredAt
+    )
 
     if didSave {
       captureTitle = ""
       captureBody = ""
+      captureOccurredAt = nil
       hasLocalDraft = false
     }
   }

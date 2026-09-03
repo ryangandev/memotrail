@@ -106,7 +106,7 @@ final class InboxController {
     await load()
   }
 
-  func save(title: String, body: String) async -> Bool {
+  func save(title: String, body: String, occurredAt: Date? = nil) async -> Bool {
     guard !isSaving, !isSyncing else { return false }
 
     let capture: InboxCapture
@@ -129,7 +129,7 @@ final class InboxController {
       id: UUID(),
       title: capture.title,
       body: capture.body,
-      occurredAt: now,
+      occurredAt: occurredAt ?? now,
       occurredTimezone: TimeZone.current.identifier,
       queuedAt: now
     )

@@ -3,6 +3,7 @@ import SwiftUI
 struct CaptureCard: View {
   @Binding var title: String
   @Binding var note: String
+  @Binding var occurredAt: Date?
 
   let isSaving: Bool
   let hasLocalDraft: Bool
@@ -74,10 +75,60 @@ struct CaptureCard: View {
       .frame(maxWidth: .infinity, alignment: .topLeading)
       .padding(MTSpacing.s4)
 
+      if occurredAt != nil {
+        Divider()
+          .overlay(MTColor.border)
+
+        VStack(alignment: .leading, spacing: MTSpacing.s3) {
+          Text("Relevant date and time")
+            .font(MTTypography.caption)
+            .foregroundStyle(MTColor.inkMuted)
+
+          HStack(spacing: MTSpacing.s3) {
+            DatePicker(
+              "Relevant date and time",
+              selection: occurredAtBinding,
+              displayedComponents: [.date, .hourAndMinute]
+            )
+            .labelsHidden()
+            .datePickerStyle(.compact)
+            .accessibilityIdentifier("capture-occurred-at")
+
+            Spacer(minLength: 0)
+
+            Button("Use capture time") {
+              occurredAt = nil
+            }
+            .font(MTTypography.caption)
+            .foregroundStyle(MTColor.inkMuted)
+            .accessibilityIdentifier("capture-use-current-time")
+          }
+        }
+        .padding(.horizontal, MTSpacing.s4)
+        .padding(.vertical, MTSpacing.s3)
+        .background(MTColor.accentSubtle.opacity(0.72))
+      }
+
       Divider()
         .overlay(MTColor.border)
 
       HStack(spacing: MTSpacing.s1) {
+        Button {
+          occurredAt = occurredAt == nil ? Date() : nil
+        } label: {
+          Image(systemName: "calendar")
+            .font(.system(size: 17))
+            .foregroundStyle(occurredAt == nil ? MTColor.inkFaint : MTColor.accent)
+            .frame(width: 38, height: 36)
+            .background(
+              occurredAt == nil ? Color.clear : MTColor.accentSubtle,
+              in: RoundedRectangle(cornerRadius: MTRadius.small)
+            )
+            .contentShape(Rectangle())
+        }
+        .accessibilityLabel(occurredAt == nil ? "Add relevant date" : "Remove relevant date")
+        .accessibilityIdentifier("capture-date")
+
         upcomingAttachment("Voice", systemImage: "mic")
         upcomingAttachment("Photo", systemImage: "photo")
 
@@ -119,6 +170,13 @@ struct CaptureCard: View {
         .stroke(MTColor.borderStrong, lineWidth: 1)
     }
     .shadow(color: MTColor.scrim.opacity(0.06), radius: 16, y: 8)
+  }
+
+  private var occurredAtBinding: Binding<Date> {
+    Binding(
+      get: { occurredAt ?? Date() },
+      set: { occurredAt = $0 }
+    )
   }
 
   private func upcomingAttachment(_ title: String, systemImage: String) -> some View {

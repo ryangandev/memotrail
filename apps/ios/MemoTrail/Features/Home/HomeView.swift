@@ -11,6 +11,7 @@ struct HomeView: View {
   @Bindable private var captureController: InboxController
   @Binding private var captureTitle: String
   @Binding private var captureBody: String
+  @Binding private var captureOccurredAt: Date?
   @Binding private var hasLocalDraft: Bool
   @State private var isShowingAccount = false
   @FocusState private var isTitleFocused: Bool
@@ -25,6 +26,7 @@ struct HomeView: View {
     captureController: InboxController,
     captureTitle: Binding<String>,
     captureBody: Binding<String>,
+    captureOccurredAt: Binding<Date?>,
     hasLocalDraft: Binding<Bool>
   ) {
     self.client = client
@@ -35,6 +37,7 @@ struct HomeView: View {
     self.captureController = captureController
     _captureTitle = captureTitle
     _captureBody = captureBody
+    _captureOccurredAt = captureOccurredAt
     _hasLocalDraft = hasLocalDraft
   }
 
@@ -46,6 +49,7 @@ struct HomeView: View {
           CaptureCard(
             title: $captureTitle,
             note: $captureBody,
+            occurredAt: $captureOccurredAt,
             isSaving: captureController.isSaving,
             hasLocalDraft: hasLocalDraft,
             message: captureController.captureMessage,
@@ -332,11 +336,16 @@ struct HomeView: View {
 
   @MainActor
   private func saveCapture() async {
-    let didSave = await captureController.save(title: captureTitle, body: captureBody)
+    let didSave = await captureController.save(
+      title: captureTitle,
+      body: captureBody,
+      occurredAt: captureOccurredAt
+    )
 
     if didSave {
       captureTitle = ""
       captureBody = ""
+      captureOccurredAt = nil
       hasLocalDraft = false
     }
   }

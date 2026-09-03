@@ -259,7 +259,15 @@ struct InboxReviewInput: Equatable, Sendable {
 struct InboxDraft: Codable, Equatable, Sendable {
   let title: String
   let body: String
+  let occurredAt: Date?
   let updatedAt: Date
+
+  init(title: String, body: String, occurredAt: Date? = nil, updatedAt: Date) {
+    self.title = title
+    self.body = body
+    self.occurredAt = occurredAt
+    self.updatedAt = updatedAt
+  }
 
   var hasContent: Bool {
     !title.isEmpty || !body.isEmpty
@@ -290,9 +298,9 @@ struct InboxDraftStore {
   }
 
   @discardableResult
-  func save(title: String, body: String, ownerID: UUID) -> Bool {
+  func save(title: String, body: String, occurredAt: Date? = nil, ownerID: UUID) -> Bool {
     let key = Self.storageKey(ownerID: ownerID)
-    let draft = InboxDraft(title: title, body: body, updatedAt: Date())
+    let draft = InboxDraft(title: title, body: body, occurredAt: occurredAt, updatedAt: Date())
 
     guard draft.hasContent else {
       defaults.removeObject(forKey: key)
