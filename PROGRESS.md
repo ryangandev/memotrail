@@ -107,6 +107,7 @@
 - Trash restoration matches the latest revision and deletion timestamp, preserves a recoverable version, and prevents nested photo restoration while its parent Entry remains deleted.
 - Permanent deletion requires the same optimistic state, exposes every private Storage path for client removal first, cascades relational data, and removes version history under the approved deletion policy.
 - The local database now passes 270 pgTAP tests plus warning-free schema lint, including 57 focused Trash tests for pagination, titles, retention, media paths, restoration, history, permanent deletion, grants, and owner isolation.
+- Hosted verification confirms the Trash migration, aligned ten-migration ledger, warning-free schema, empty function search paths, authenticated-only execution grants, hardened definer boundaries, and unchanged least-privilege table grants.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -409,8 +410,8 @@
 - [x] Avoid the Habit occurrence-history trigger conflict by deleting occurrences while the parent Habit still exists.
 - [x] Restrict every Trash function to authenticated users, use empty function search paths, and keep browsing behind Row Level Security.
 - [x] Verify the shared contract with 57 focused pgTAP tests and warning-free local schema lint.
-- [ ] Apply the additive Trash migration to hosted Supabase without seed or role changes.
-- [ ] Verify the hosted migration ledger, schema lint, function definitions, execution grants, and unchanged table privileges.
+- [x] Apply the additive Trash migration to hosted Supabase without seed or role changes.
+- [x] Verify the hosted migration ledger, schema lint, function definitions, execution grants, and unchanged table privileges.
 
 ## Feature history
 
@@ -460,13 +461,13 @@
 - `feat: deploy Habits data contract` deployed and verified the Habits data contract on hosted Supabase.
 - `feat: add Web Habits experience` implemented and locally browser-verified the authenticated Web Habits experience.
 - `feat: add iOS Habits experience` implemented and simulator-verified the matching native iOS Habits experience.
-- Current change: added and locally verified the shared Trash browsing, restoration, and permanent deletion contract.
+- `feat: add Trash data contract` added and locally verified the shared Trash browsing, restoration, and permanent deletion contract.
+- Current change: deployed and verified the Trash contract on hosted Supabase.
 
 ## Next sequence
 
-1. Deploy and verify the Trash contract on hosted Supabase.
-2. Add the authenticated Web Trash experience.
-3. Add the matching native iOS Trash experience inside Library.
+1. Add the authenticated Web Trash experience.
+2. Add the matching native iOS Trash experience inside Library.
 
 ## Deferred
 
