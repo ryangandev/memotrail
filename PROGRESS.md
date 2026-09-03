@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: iOS Habits experience
+> Current phase: Trash data contract
 >
 > Last updated: 2026-09-02
 >
@@ -103,6 +103,10 @@
 - Native Habit history includes a compact twelve-month calendar, tappable eligible dates, current and longest streaks, completion rate, misses, and intentional skips with shared status semantics.
 - The shared iOS scheme now has 78 passing tests, including 13 focused Habits tests for decoding, schedule JSON, input rules, date-only handling, explicit RPC nulls, and analytics.
 - The native Habits implementation passes strict Swift formatting, project-file validation, a warning-free generic Simulator build, and the full suite on an iPhone 17 Pro simulator.
+- The locally verified Trash contract combines deleted Entries, Habits, and individually removed photos in one owner-scoped paginated feed with thirty-day retention deadlines.
+- Trash restoration matches the latest revision and deletion timestamp, preserves a recoverable version, and prevents nested photo restoration while its parent Entry remains deleted.
+- Permanent deletion requires the same optimistic state, exposes every private Storage path for client removal first, cascades relational data, and removes version history under the approved deletion policy.
+- The local database now passes 270 pgTAP tests plus warning-free schema lint, including 57 focused Trash tests for pagination, titles, retention, media paths, restoration, history, permanent deletion, grants, and owner isolation.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -392,6 +396,22 @@
 - [x] Verify decoding, schedule JSON, validation, explicit RPC nulls, date-only handling, and analytics with 13 focused tests.
 - [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, and all 78 native tests.
 
+### Trash data contract
+
+- [x] Return deleted Entries, deleted Habits, and individually removed attachments through one owner-scoped paginated feed.
+- [x] Keep a removed attachment nested under its Entry while the parent Entry is also in Trash.
+- [x] Preserve a title, concise detail, deletion time, thirty-day expiration time, revision, content kind, and private Storage paths for each item.
+- [x] Restore an Entry or Habit only when its revision and deletion timestamp still match.
+- [x] Restore an attachment only when its deletion timestamp still matches and its parent Entry is active.
+- [x] Preserve the deleted Entry or Habit state in version history when restoring it.
+- [x] Return every owned private Storage path that must be removed before permanent deletion.
+- [x] Permanently delete relational data and version history only when optimistic state still matches.
+- [x] Avoid the Habit occurrence-history trigger conflict by deleting occurrences while the parent Habit still exists.
+- [x] Restrict every Trash function to authenticated users, use empty function search paths, and keep browsing behind Row Level Security.
+- [x] Verify the shared contract with 57 focused pgTAP tests and warning-free local schema lint.
+- [ ] Apply the additive Trash migration to hosted Supabase without seed or role changes.
+- [ ] Verify the hosted migration ledger, schema lint, function definitions, execution grants, and unchanged table privileges.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -439,11 +459,12 @@
 - `feat: add Habits data contract` added and locally verified the shared Habits data contract.
 - `feat: deploy Habits data contract` deployed and verified the Habits data contract on hosted Supabase.
 - `feat: add Web Habits experience` implemented and locally browser-verified the authenticated Web Habits experience.
-- Current change: implemented and simulator-verified the matching native iOS Habits experience.
+- `feat: add iOS Habits experience` implemented and simulator-verified the matching native iOS Habits experience.
+- Current change: added and locally verified the shared Trash browsing, restoration, and permanent deletion contract.
 
 ## Next sequence
 
-1. Add a shared Trash browsing and restoration contract for recoverably deleted content.
+1. Deploy and verify the Trash contract on hosted Supabase.
 2. Add the authenticated Web Trash experience.
 3. Add the matching native iOS Trash experience inside Library.
 
