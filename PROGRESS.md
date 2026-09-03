@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Deploy universal Entry media contract
+> Current phase: Web universal capture photos
 >
 > Last updated: 2026-09-03
 >
@@ -146,6 +146,8 @@
 - Universal attachment registration validates the owner and Entry path, supported image MIME type, 50 MB limit, optional dimensions, original filename, existing Storage object, and conflict identity before writing metadata.
 - Any active Entry photo can now move to recoverable Trash without deleting its private object, while registration and removal stay behind authenticated-only hardened definer boundaries.
 - The local database now passes 335 pgTAP tests plus warning-free schema lint, including 29 focused universal media tests for grants, paths, metadata, idempotency, ownership, Trash, and anonymous denial.
+- Hosted Supabase now contains the universal Entry media migration with an aligned twelve-migration ledger and warning-free public and extensions schema lint.
+- Hosted schema inspection confirms both universal media functions use empty-search-path definer boundaries, are executable only by authenticated users, and do not broaden direct client attachment-table writes.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -549,7 +551,7 @@
 - [x] Use hardened definer boundaries with empty search paths for the minimum privileged attachment mutations.
 - [x] Verify registration, removal, idempotency, validation, ownership, grants, and anonymous denial with 29 focused pgTAP tests.
 - [x] Apply the additive migration locally and pass all 335 database tests plus warning-free schema lint.
-- [ ] Apply and verify the universal Entry media migration on hosted Supabase.
+- [x] Apply and verify the universal Entry media migration on hosted Supabase.
 
 ## Feature history
 
@@ -609,14 +611,14 @@
 - `feat: add iOS Home experience` implemented and simulator-verified the matching native iOS Home experience and shared global Quick Capture state.
 - `feat: add Web capture dates` added and locally browser-verified an optional exact relevant date to every Web capture surface.
 - `feat: add iOS capture dates` added the matching optional relevant date, shared draft state, and offline occurrence semantics to every native capture surface.
-- Current change: added and locally verified the universal private Entry photo registration and recoverable-removal contract.
+- `feat: add universal Entry media contract` added and locally verified universal private Entry photo registration and recoverable removal.
+- Current change: deployed and verified the universal Entry media contract on hosted Supabase.
 
 ## Next sequence
 
-1. Deploy and verify the universal Entry media migration on hosted Supabase.
-2. Add private photo selection, upload, and recoverable draft behavior to Web universal capture.
-3. Add matching private photo capture and retry behavior to iOS.
-4. Add Home resurfacing after the shared capture path supports the complete initial Entry shape.
+1. Add private photo selection, upload, and recoverable draft behavior to Web universal capture.
+2. Add matching private photo capture and retry behavior to iOS.
+3. Add Home resurfacing after the shared capture path supports the complete initial Entry shape.
 
 ## Deferred
 
