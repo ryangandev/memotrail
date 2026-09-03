@@ -618,6 +618,16 @@ Resurfacing formats may include:
 
 Resurfacing must not compete visually with quick capture or search.
 
+The initial non-AI resurfacing rules are deterministic and privacy-scoped:
+
+- Only the signed-in owner's organized, non-Trash, dated Entries are eligible.
+- Life Stages remain in their dedicated Home context and unreviewed Inbox Entries do not resurface.
+- On This Day takes priority and uses the Entry's original occurrence timezone to match month and day.
+- When multiple anniversaries match, the nearest prior year is selected.
+- When no anniversary matches, one Entry at least thirty days old is selected through a stable daily archive rotation.
+- The resurfaced card preserves the original Entry context, organization, and private photos.
+- Home quietly omits the section when there is no eligible memory.
+
 ## 14. Explicitly out of scope for now
 
 - Social features.
@@ -722,6 +732,13 @@ Specific measurable criteria will be defined after the primary device, capture w
 - Select Soft Ledger as the initial visual direction while allowing later refinement.
 - Establish a shared semantic design system that generates platform-specific Web and Swift tokens.
 - Approve Phase 1 foundation implementation before external projects and credentials are ready.
+
+### 2026-09-03
+
+- Start Home resurfacing without AI so it remains available before an AI provider is selected.
+- Resurface only organized, active, dated Entries and keep Inbox content, Trash, and Life Stages out of the memory card.
+- Prefer the nearest prior On This Day anniversary using the Entry's preserved occurrence timezone.
+- Use a stable daily rotation across Entries at least thirty days old when no anniversary is available.
 
 ## 17. Privacy, security, and data ownership
 

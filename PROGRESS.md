@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Home memory resurfacing contract
+> Current phase: Deploy Home memory resurfacing contract
 >
 > Last updated: 2026-09-03
 >
@@ -159,6 +159,10 @@
 - Native photo queues preserve stable Entry and attachment identities, synchronize the Entry first, upload each original to its deterministic private Storage path, and idempotently register metadata before clearing local data.
 - Existing version-one native text queues migrate to the photo-capable version-two shape without data loss, while photo-only Entries are now valid captures.
 - The shared iOS scheme now has 102 passing tests, and the universal photo implementation passes strict Swift formatting, project validation, a warning-free generic Simulator build, and an install-and-launch authentication-boundary check.
+- The locally verified Home resurfacing contract now returns at most one owner-scoped, organized memory without requiring an AI provider.
+- On This Day prioritizes the nearest prior anniversary using the Entry's preserved occurrence timezone, while days without an anniversary use a deterministic daily rotation across Entries at least thirty days old.
+- Resurfacing excludes unreviewed Inbox Entries, Life Stages, Trash, undated content, and other owners while preserving organization and active private attachment metadata for the selected Entry.
+- The local database now passes 363 pgTAP tests plus warning-free schema lint, including 28 focused resurfacing tests for selection, time zones, privacy, validation, grants, and index hardening.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -590,6 +594,19 @@
 - [x] Verify photo-only validation, queue migration, owner isolation, malformed metadata, and attachment parameter encoding while keeping all 102 native tests passing.
 - [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, and an install-and-launch authentication-boundary check.
 
+### Home memory resurfacing contract
+
+- [x] Return at most one active, organized, dated Entry for the authenticated owner.
+- [x] Prefer the nearest prior same-month-and-day anniversary and report how many years ago it occurred.
+- [x] Match anniversaries in each Entry's preserved occurrence timezone with a safe UTC fallback for invalid legacy values.
+- [x] Use a stable date-based rotation across Entries at least thirty days old when no anniversary exists.
+- [x] Exclude unreviewed Inbox Entries, Life Stages, Trash, undated content, and other owners.
+- [x] Include complete Entry text, Type, occurrence context, Collections, tags, and active private attachment metadata.
+- [x] Keep the function security-invoker, authenticated-only, and protected by Row Level Security with an empty search path.
+- [x] Add a partial owner and occurrence-time index for eligible resurfacing candidates.
+- [x] Verify the shared contract with 28 focused pgTAP tests, all 363 database tests, and warning-free local schema lint.
+- [ ] Apply and verify the additive Home resurfacing migration on hosted Supabase.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -651,13 +668,15 @@
 - `feat: add universal Entry media contract` added and locally verified universal private Entry photo registration and recoverable removal.
 - `feat: deploy universal Entry media contract` deployed and verified the universal Entry media contract on hosted Supabase.
 - `feat: add Web capture photos` added and locally browser-verified recoverable, offline-first private photos on every Web universal capture surface.
-- Current change: added matching recoverable, offline-first private photos to every iOS universal capture surface.
+- `feat: add iOS capture photos` added and simulator-verified matching recoverable, offline-first private photos on every iOS universal capture surface.
+- Current change: added and locally verified a deterministic, owner-scoped Home memory resurfacing contract.
 
 ## Next sequence
 
-1. Add an owner-scoped Home memory resurfacing contract with predictable non-AI selection rules.
-2. Add the matching quiet resurfacing experience to Web and iOS Home.
-3. Continue toward universal voice-to-text capture after choosing the transcription boundary.
+1. Deploy and verify the Home memory resurfacing contract on hosted Supabase.
+2. Add the quiet resurfacing experience to Web Home.
+3. Add the matching native resurfacing experience to iOS Home.
+4. Continue toward universal voice-to-text capture after choosing the transcription boundary.
 
 ## Deferred
 
