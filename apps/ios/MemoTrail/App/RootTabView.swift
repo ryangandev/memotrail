@@ -8,12 +8,15 @@ struct RootTabView: View {
   let signOut: @MainActor () async -> Void
 
   private let draftStore: InboxDraftStore
+  private let photoStore: InboxPhotoStore
   @State private var homeController: HomeController
   @State private var inboxController: InboxController
   @State private var captureTitle: String
   @State private var captureBody: String
   @State private var captureOccurredAt: Date?
+  @State private var capturePhotos: [FirstTimePhotoDraft]
   @State private var hasLocalDraft: Bool
+  @State private var hasLoadedCapturePhotos = false
   @State private var selectedTab = RootTabDestination.home
   @State private var isShowingQuickCapture = false
 
@@ -23,7 +26,8 @@ struct RootTabView: View {
     isAuthenticationBusy: Bool,
     signOut: @escaping @MainActor () async -> Void,
     draftStore: InboxDraftStore = InboxDraftStore(),
-    queueStore: InboxQueueStore = InboxQueueStore()
+    queueStore: InboxQueueStore = InboxQueueStore(),
+    photoStore: InboxPhotoStore = InboxPhotoStore()
   ) {
     let draft = draftStore.load(ownerID: user.id)
 
@@ -32,15 +36,22 @@ struct RootTabView: View {
     self.isAuthenticationBusy = isAuthenticationBusy
     self.signOut = signOut
     self.draftStore = draftStore
+    self.photoStore = photoStore
     _homeController = State(
       initialValue: HomeController(client: client, ownerID: user.id)
     )
     _inboxController = State(
-      initialValue: InboxController(client: client, ownerID: user.id, queueStore: queueStore)
+      initialValue: InboxController(
+        client: client,
+        ownerID: user.id,
+        queueStore: queueStore,
+        photoStore: photoStore
+      )
     )
     _captureTitle = State(initialValue: draft?.title ?? "")
     _captureBody = State(initialValue: draft?.body ?? "")
     _captureOccurredAt = State(initialValue: draft?.occurredAt)
+    _capturePhotos = State(initialValue: [])
     _hasLocalDraft = State(initialValue: draft != nil)
   }
 
@@ -56,6 +67,9 @@ struct RootTabView: View {
         captureTitle: $captureTitle,
         captureBody: $captureBody,
         captureOccurredAt: $captureOccurredAt,
+        capturePhotos: $capturePhotos,
+        addCapturePhoto: addCapturePhoto,
+        removeCapturePhoto: removeCapturePhoto,
         hasLocalDraft: $hasLocalDraft
       )
       .tabItem {
@@ -71,6 +85,9 @@ struct RootTabView: View {
         captureTitle: $captureTitle,
         captureBody: $captureBody,
         captureOccurredAt: $captureOccurredAt,
+        capturePhotos: $capturePhotos,
+        addCapturePhoto: addCapturePhoto,
+        removeCapturePhoto: removeCapturePhoto,
         hasLocalDraft: $hasLocalDraft
       )
       .tabItem {
@@ -125,6 +142,9 @@ struct RootTabView: View {
         title: $captureTitle,
         draftBody: $captureBody,
         occurredAt: $captureOccurredAt,
+        photos: $capturePhotos,
+        addPhoto: addCapturePhoto,
+        removePhoto: removeCapturePhoto,
         hasLocalDraft: $hasLocalDraft
       )
     }
@@ -141,6 +161,9 @@ struct RootTabView: View {
       guard count < previousCount else { return }
       Task { await homeController.load() }
     }
+    .task {
+      await loadCapturePhotosIfNeeded()
+    }
   }
 
   private func persistDraft() {
@@ -152,12 +175,55 @@ struct RootTabView: View {
       captureBody = String(captureBody.prefix(InboxCapture.bodyLimit))
     }
 
-    hasLocalDraft = draftStore.save(
-      title: captureTitle,
-      body: captureBody,
-      occurredAt: captureOccurredAt,
-      ownerID: user.id
+    hasLocalDraft =
+      draftStore.save(
+        title: captureTitle,
+        body: captureBody,
+        occurredAt: captureOccurredAt,
+        ownerID: user.id
+      ) || !capturePhotos.isEmpty
+  }
+
+  @MainActor
+  private func loadCapturePhotosIfNeeded() async {
+    guard !hasLoadedCapturePhotos else { return }
+    hasLoadedCapturePhotos = true
+
+    let photoStore = photoStore
+    let ownerID = user.id
+    let loadedPhotos =
+      (try? await Task.detached {
+        try photoStore.load(ownerID: ownerID)
+      }.value) ?? []
+    let queuedPhotoIDs = Set(
+      inboxController.pendingEntries.flatMap { $0.attachments.map(\.id) }
     )
+    capturePhotos = loadedPhotos.filter { !queuedPhotoIDs.contains($0.id) }
+    hasLocalDraft =
+      draftStore.load(ownerID: ownerID) != nil || !capturePhotos.isEmpty
+  }
+
+  @MainActor
+  private func addCapturePhoto(_ draft: FirstTimePhotoDraft) async throws {
+    let photoStore = photoStore
+    let ownerID = user.id
+    try await Task.detached {
+      try photoStore.save(draft, ownerID: ownerID)
+    }.value
+    capturePhotos.append(draft)
+    hasLocalDraft = true
+  }
+
+  @MainActor
+  private func removeCapturePhoto(_ photoID: UUID) async throws {
+    let photoStore = photoStore
+    let ownerID = user.id
+    try await Task.detached {
+      try photoStore.remove(photoID: photoID, ownerID: ownerID)
+    }.value
+    capturePhotos.removeAll { $0.id == photoID }
+    hasLocalDraft =
+      draftStore.load(ownerID: ownerID) != nil || !capturePhotos.isEmpty
   }
 
   private var inboxBadgeCount: Int {
@@ -206,6 +272,9 @@ private struct QuickCaptureView: View {
   @Binding var title: String
   @Binding var draftBody: String
   @Binding var occurredAt: Date?
+  @Binding var photos: [FirstTimePhotoDraft]
+  let addPhoto: @MainActor (FirstTimePhotoDraft) async throws -> Void
+  let removePhoto: @MainActor (UUID) async throws -> Void
   @Binding var hasLocalDraft: Bool
 
   @Environment(\.dismiss) private var dismiss
@@ -230,10 +299,13 @@ private struct QuickCaptureView: View {
             title: $title,
             note: $draftBody,
             occurredAt: $occurredAt,
+            photos: $photos,
             isSaving: controller.isSaving,
             hasLocalDraft: hasLocalDraft,
             message: controller.captureMessage,
             titleFocus: $isTitleFocused,
+            addPhoto: addPhoto,
+            removePhoto: removePhoto,
             save: save
           )
 
@@ -271,13 +343,15 @@ private struct QuickCaptureView: View {
     let didSave = await controller.save(
       title: title,
       body: draftBody,
-      occurredAt: occurredAt
+      occurredAt: occurredAt,
+      photos: photos
     )
 
     if didSave {
       title = ""
       draftBody = ""
       occurredAt = nil
+      photos = []
       hasLocalDraft = false
       dismiss()
     }

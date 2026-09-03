@@ -10,6 +10,9 @@ struct InboxView: View {
   @Binding private var captureTitle: String
   @Binding private var captureBody: String
   @Binding private var captureOccurredAt: Date?
+  @Binding private var capturePhotos: [FirstTimePhotoDraft]
+  private let addCapturePhoto: @MainActor (FirstTimePhotoDraft) async throws -> Void
+  private let removeCapturePhoto: @MainActor (UUID) async throws -> Void
   @Binding private var hasLocalDraft: Bool
   @State private var isShowingAccount = false
   @State private var selectedEntry: InboxEntry?
@@ -24,6 +27,9 @@ struct InboxView: View {
     captureTitle: Binding<String>,
     captureBody: Binding<String>,
     captureOccurredAt: Binding<Date?>,
+    capturePhotos: Binding<[FirstTimePhotoDraft]>,
+    addCapturePhoto: @escaping @MainActor (FirstTimePhotoDraft) async throws -> Void,
+    removeCapturePhoto: @escaping @MainActor (UUID) async throws -> Void,
     hasLocalDraft: Binding<Bool>
   ) {
     self.user = user
@@ -33,6 +39,9 @@ struct InboxView: View {
     _captureTitle = captureTitle
     _captureBody = captureBody
     _captureOccurredAt = captureOccurredAt
+    _capturePhotos = capturePhotos
+    self.addCapturePhoto = addCapturePhoto
+    self.removeCapturePhoto = removeCapturePhoto
     _hasLocalDraft = hasLocalDraft
     _selectedEntry = State(initialValue: nil)
   }
@@ -46,10 +55,13 @@ struct InboxView: View {
             title: $captureTitle,
             note: $captureBody,
             occurredAt: $captureOccurredAt,
+            photos: $capturePhotos,
             isSaving: controller.isSaving,
             hasLocalDraft: hasLocalDraft,
             message: controller.captureMessage,
             titleFocus: $isTitleFocused,
+            addPhoto: addCapturePhoto,
+            removePhoto: removeCapturePhoto,
             save: saveCapture
           )
           if !controller.pendingEntries.isEmpty {
@@ -347,13 +359,15 @@ struct InboxView: View {
     let didSave = await controller.save(
       title: captureTitle,
       body: captureBody,
-      occurredAt: captureOccurredAt
+      occurredAt: captureOccurredAt,
+      photos: capturePhotos
     )
 
     if didSave {
       captureTitle = ""
       captureBody = ""
       captureOccurredAt = nil
+      capturePhotos = []
       hasLocalDraft = false
     }
   }

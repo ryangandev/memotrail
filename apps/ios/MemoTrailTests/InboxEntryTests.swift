@@ -31,6 +31,17 @@ final class InboxEntryTests: XCTestCase {
     }
   }
 
+  func testPhotoOnlyCaptureIsAccepted() throws {
+    let capture = try InboxCapture.validate(
+      title: "",
+      body: "",
+      hasAttachments: true
+    )
+
+    XCTAssertNil(capture.title)
+    XCTAssertEqual(capture.body, "")
+  }
+
   func testOversizedTitleAndBodyAreRejected() {
     XCTAssertThrowsError(
       try InboxCapture.validate(
@@ -330,9 +341,45 @@ final class InboxEntryTests: XCTestCase {
     defaults.set(try JSONEncoder().encode(duplicateQueue), forKey: key)
     XCTAssertTrue(store.load(ownerID: ownerID).isEmpty)
 
-    let obsoleteQueue = TestStoredInboxQueue(version: 2, entries: [entry])
+    let obsoleteQueue = TestStoredInboxQueue(version: 3, entries: [entry])
     defaults.set(try JSONEncoder().encode(obsoleteQueue), forKey: key)
     XCTAssertTrue(store.load(ownerID: ownerID).isEmpty)
+  }
+
+  func testQueueStoreLoadsVersionOneEntriesWithoutInventingAttachments() throws {
+    let defaults = makeDefaults()
+    let store = InboxQueueStore(defaults: defaults)
+    let ownerID = UUID()
+    let legacyEntry = LegacyQueuedInboxEntry(
+      id: UUID(),
+      title: nil,
+      body: "An earlier queued thought",
+      occurredAt: Date(timeIntervalSince1970: 1_788_278_400),
+      occurredTimezone: "America/Los_Angeles",
+      queuedAt: Date(timeIntervalSince1970: 1_788_278_400)
+    )
+    let queue = LegacyStoredInboxQueue(version: 1, entries: [legacyEntry])
+    defaults.set(
+      try JSONEncoder().encode(queue),
+      forKey: InboxQueueStore.storageKey(ownerID: ownerID)
+    )
+
+    let loaded = try XCTUnwrap(store.load(ownerID: ownerID).first)
+    XCTAssertEqual(loaded.id, legacyEntry.id)
+    XCTAssertTrue(loaded.attachments.isEmpty)
+  }
+
+  func testQueueAcceptsPhotoOnlyEntryAndRejectsDuplicatePhotos() throws {
+    let attachment = makeQueuedAttachment()
+    let photoOnly = makeQueuedEntry(
+      body: "",
+      attachments: [attachment]
+    )
+
+    XCTAssertTrue(photoOnly.isValid)
+    XCTAssertFalse(
+      makeQueuedEntry(body: "", attachments: [attachment, attachment]).isValid
+    )
   }
 
   func testQueueStoreRejectsInvalidAndOverCapacityEntries() {
@@ -356,10 +403,60 @@ final class InboxEntryTests: XCTestCase {
     )
   }
 
+  func testPhotoStorePersistsPrivateDraftsByOwnerAndRemovesThem() throws {
+    let rootURL = makePhotoRoot()
+    let store = InboxPhotoStore(rootURL: rootURL)
+    let ownerID = UUID()
+    let otherOwnerID = UUID()
+    let draft = try makePhotoDraft()
+
+    try store.save(draft, ownerID: ownerID)
+
+    XCTAssertEqual(try store.load(ownerID: ownerID), [draft])
+    XCTAssertTrue(try store.load(ownerID: otherOwnerID).isEmpty)
+
+    try store.remove(photoID: draft.id, ownerID: ownerID)
+    XCTAssertTrue(try store.load(ownerID: ownerID).isEmpty)
+  }
+
+  func testPhotoStoreIgnoresMalformedMetadata() throws {
+    let rootURL = makePhotoRoot()
+    let store = InboxPhotoStore(rootURL: rootURL)
+    let ownerID = UUID()
+    let ownerURL = rootURL.appending(path: ownerID.uuidString.lowercased())
+    try FileManager.default.createDirectory(
+      at: ownerURL,
+      withIntermediateDirectories: true
+    )
+    try Data("not json".utf8).write(
+      to: ownerURL.appending(path: "broken.json")
+    )
+
+    XCTAssertTrue(try store.load(ownerID: ownerID).isEmpty)
+  }
+
+  func testUniversalAttachmentParametersEncodeQueuedMetadata() throws {
+    let entryID = UUID(uuidString: "10000000-0000-4000-8000-000000000001")!
+    let attachment = makeQueuedAttachment()
+    let parameters = RegisterEntryAttachmentParameters(
+      entryID: entryID,
+      attachment: attachment,
+      objectPath: attachment.objectPath(ownerID: UUID(), entryID: entryID)
+    )
+    let data = try JSONEncoder().encode(parameters)
+    let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+    XCTAssertEqual(json["p_attachment_id"] as? String, attachment.id.uuidString)
+    XCTAssertEqual(json["p_mime_type"] as? String, "image/png")
+    XCTAssertEqual(json["p_byte_size"] as? Int, 8)
+    XCTAssertTrue(json["p_original_filename"] is NSNull)
+  }
+
   private func makeQueuedEntry(
     id: UUID = UUID(uuidString: "F4D2DF16-A506-4BE6-A63E-B7B18AFE3468")!,
     title: String? = nil,
-    body: String = "A thought worth keeping."
+    body: String = "A thought worth keeping.",
+    attachments: [QueuedInboxAttachment] = []
   ) -> QueuedInboxEntry {
     QueuedInboxEntry(
       id: id,
@@ -367,8 +464,42 @@ final class InboxEntryTests: XCTestCase {
       body: body,
       occurredAt: Date(timeIntervalSince1970: 1_788_278_400),
       occurredTimezone: "America/Los_Angeles",
-      queuedAt: Date(timeIntervalSince1970: 1_788_278_400)
+      queuedAt: Date(timeIntervalSince1970: 1_788_278_400),
+      attachments: attachments
     )
+  }
+
+  private func makeQueuedAttachment() -> QueuedInboxAttachment {
+    QueuedInboxAttachment(
+      id: UUID(uuidString: "20000000-0000-4000-8000-000000000001")!,
+      mimeType: .png,
+      originalFilename: nil,
+      byteSize: 8,
+      pixelWidth: 12,
+      pixelHeight: 8
+    )
+  }
+
+  private func makePhotoDraft() throws -> FirstTimePhotoDraft {
+    try FirstTimePhotoDraft.validate(
+      id: UUID(uuidString: "20000000-0000-4000-8000-000000000001")!,
+      data: Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]),
+      mimeType: .png,
+      originalFilename: nil,
+      pixelWidth: 12,
+      pixelHeight: 8
+    )
+  }
+
+  private func makePhotoRoot() -> URL {
+    let url = FileManager.default.temporaryDirectory.appending(
+      path: "InboxEntryTests.\(UUID().uuidString)",
+      directoryHint: .isDirectory
+    )
+    addTeardownBlock {
+      try? FileManager.default.removeItem(at: url)
+    }
+    return url
   }
 
   private func makeDefaults() -> UserDefaults {
@@ -385,6 +516,20 @@ final class InboxEntryTests: XCTestCase {
 private struct TestStoredInboxQueue: Encodable {
   let version: Int
   let entries: [QueuedInboxEntry]
+}
+
+private struct LegacyStoredInboxQueue: Encodable {
+  let version: Int
+  let entries: [LegacyQueuedInboxEntry]
+}
+
+private struct LegacyQueuedInboxEntry: Encodable {
+  let id: UUID
+  let title: String?
+  let body: String
+  let occurredAt: Date
+  let occurredTimezone: String
+  let queuedAt: Date
 }
 
 private struct LegacyInboxDraft: Encodable {

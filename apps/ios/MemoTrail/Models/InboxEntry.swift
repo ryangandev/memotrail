@@ -144,11 +144,15 @@ struct InboxCapture: Equatable, Sendable {
   let title: String?
   let body: String
 
-  static func validate(title: String, body: String) throws -> InboxCapture {
+  static func validate(
+    title: String,
+    body: String,
+    hasAttachments: Bool = false
+  ) throws -> InboxCapture {
     let title = title.trimmed
     let body = body.trimmed
 
-    guard !title.isEmpty || !body.isEmpty else {
+    guard !title.isEmpty || !body.isEmpty || hasAttachments else {
       throw InboxCaptureError.empty
     }
 
@@ -331,6 +335,41 @@ struct QueuedInboxEntry: Codable, Equatable, Identifiable, Sendable {
   let occurredAt: Date
   let occurredTimezone: String
   let queuedAt: Date
+  let attachments: [QueuedInboxAttachment]
+
+  init(
+    id: UUID,
+    title: String?,
+    body: String,
+    occurredAt: Date,
+    occurredTimezone: String,
+    queuedAt: Date,
+    attachments: [QueuedInboxAttachment] = []
+  ) {
+    self.id = id
+    self.title = title
+    self.body = body
+    self.occurredAt = occurredAt
+    self.occurredTimezone = occurredTimezone
+    self.queuedAt = queuedAt
+    self.attachments = attachments
+  }
+
+  private enum CodingKeys: String, CodingKey {
+    case id, title, body, occurredAt, occurredTimezone, queuedAt, attachments
+  }
+
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    id = try values.decode(UUID.self, forKey: .id)
+    title = try values.decodeIfPresent(String.self, forKey: .title)
+    body = try values.decode(String.self, forKey: .body)
+    occurredAt = try values.decode(Date.self, forKey: .occurredAt)
+    occurredTimezone = try values.decode(String.self, forKey: .occurredTimezone)
+    queuedAt = try values.decode(Date.self, forKey: .queuedAt)
+    attachments =
+      try values.decodeIfPresent([QueuedInboxAttachment].self, forKey: .attachments) ?? []
+  }
 
   var presentedEntry: InboxEntry {
     InboxEntry(
@@ -349,12 +388,67 @@ struct QueuedInboxEntry: Codable, Equatable, Identifiable, Sendable {
     let normalizedTitle = title?.trimmed.nonEmpty
 
     return normalizedTitle == title
-      && (normalizedTitle != nil || !body.isEmpty)
       && body.trimmed == body
       && (title?.count ?? 0) <= InboxCapture.titleLimit
       && body.count <= InboxCapture.bodyLimit
       && !occurredTimezone.isEmpty
       && occurredTimezone.count <= 100
+      && attachments.count <= FirstTimePhotoDraft.maximumCount
+      && attachments.allSatisfy(\.isValid)
+      && Set(attachments.map(\.id)).count == attachments.count
+      && (normalizedTitle != nil || !body.isEmpty || !attachments.isEmpty)
+  }
+}
+
+struct QueuedInboxAttachment: Codable, Equatable, Identifiable, Sendable {
+  let id: UUID
+  let mimeType: FirstTimeImageType
+  let originalFilename: String?
+  let byteSize: Int64
+  let pixelWidth: Int?
+  let pixelHeight: Int?
+
+  init(draft: FirstTimePhotoDraft) {
+    id = draft.id
+    mimeType = draft.mimeType
+    originalFilename = draft.originalFilename
+    byteSize = Int64(draft.data.count)
+    pixelWidth = draft.pixelWidth
+    pixelHeight = draft.pixelHeight
+  }
+
+  init(
+    id: UUID,
+    mimeType: FirstTimeImageType,
+    originalFilename: String?,
+    byteSize: Int64,
+    pixelWidth: Int?,
+    pixelHeight: Int?
+  ) {
+    self.id = id
+    self.mimeType = mimeType
+    self.originalFilename = originalFilename
+    self.byteSize = byteSize
+    self.pixelWidth = pixelWidth
+    self.pixelHeight = pixelHeight
+  }
+
+  var isValid: Bool {
+    let filename = originalFilename?.trimmed.nonEmpty
+    return filename == originalFilename
+      && byteSize > 0
+      && byteSize <= Int64(FirstTimePhotoDraft.maximumByteSize)
+      && (filename?.count ?? 0) <= 255
+      && (pixelWidth.map { $0 > 0 } ?? true)
+      && (pixelHeight.map { $0 > 0 } ?? true)
+  }
+
+  func objectPath(ownerID: UUID, entryID: UUID) -> String {
+    "\(ownerID.uuidString.lowercased())/\(entryID.uuidString.lowercased())/\(id.uuidString.lowercased()).\(mimeType.fileExtension)"
+  }
+
+  func matches(_ draft: FirstTimePhotoDraft) -> Bool {
+    self == QueuedInboxAttachment(draft: draft)
   }
 }
 
@@ -372,7 +466,7 @@ struct InboxQueueStore {
 
     guard let data = defaults.data(forKey: key),
       let queue = try? JSONDecoder().decode(StoredInboxQueue.self, from: data),
-      queue.version == 1,
+      [1, 2].contains(queue.version),
       queue.entries.count <= Self.maximumEntryCount,
       queue.entries.allSatisfy(\.isValid),
       Set(queue.entries.map(\.id)).count == queue.entries.count
@@ -415,7 +509,7 @@ struct InboxQueueStore {
   }
 
   private func save(_ entries: [QueuedInboxEntry], ownerID: UUID) -> Bool {
-    let queue = StoredInboxQueue(version: 1, entries: entries)
+    let queue = StoredInboxQueue(version: 2, entries: entries)
 
     guard let data = try? JSONEncoder().encode(queue) else {
       return false
@@ -431,19 +525,223 @@ private struct StoredInboxQueue: Codable {
   let entries: [QueuedInboxEntry]
 }
 
+struct InboxPhotoStore: Sendable {
+  private let rootURL: URL
+
+  init(rootURL: URL? = nil) {
+    self.rootURL =
+      rootURL
+      ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+      .appending(path: "MemoTrail/Capture Photos", directoryHint: .isDirectory)
+  }
+
+  func load(ownerID: UUID) throws -> [FirstTimePhotoDraft] {
+    let directory = ownerDirectory(ownerID)
+    guard FileManager.default.fileExists(atPath: directory.path) else { return [] }
+
+    let metadataURLs = try FileManager.default.contentsOfDirectory(
+      at: directory,
+      includingPropertiesForKeys: nil
+    )
+    .filter { $0.pathExtension == "json" }
+
+    return metadataURLs.compactMap { metadataURL -> (Date, FirstTimePhotoDraft)? in
+      guard
+        let metadata = try? JSONDecoder().decode(
+          StoredInboxPhoto.self,
+          from: Data(contentsOf: metadataURL)
+        ),
+        metadata.isValid,
+        metadataURL.deletingPathExtension().lastPathComponent
+          == metadata.id.uuidString.lowercased(),
+        let data = try? Data(contentsOf: dataURL(metadata, ownerID: ownerID)),
+        data.count == metadata.byteSize,
+        FirstTimeImageType.detect(data: data, typeIdentifiers: []) == metadata.mimeType,
+        let draft = try? FirstTimePhotoDraft.validate(
+          id: metadata.id,
+          data: data,
+          mimeType: metadata.mimeType,
+          originalFilename: metadata.originalFilename,
+          pixelWidth: metadata.pixelWidth,
+          pixelHeight: metadata.pixelHeight
+        )
+      else {
+        return nil
+      }
+
+      return (metadata.createdAt, draft)
+    }
+    .sorted {
+      if $0.0 == $1.0 {
+        return $0.1.id.uuidString < $1.1.id.uuidString
+      }
+      return $0.0 < $1.0
+    }
+    .map { $0.1 }
+  }
+
+  func save(_ draft: FirstTimePhotoDraft, ownerID: UUID) throws {
+    let directory = ownerDirectory(ownerID)
+    try FileManager.default.createDirectory(
+      at: directory,
+      withIntermediateDirectories: true,
+      attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication]
+    )
+
+    let metadata = StoredInboxPhoto(draft: draft)
+    let photoURL = dataURL(metadata, ownerID: ownerID)
+    let metadataURL = metadataURL(draft.id, ownerID: ownerID)
+
+    do {
+      try draft.data.write(to: photoURL, options: .atomic)
+      try FileManager.default.setAttributes(
+        [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
+        ofItemAtPath: photoURL.path
+      )
+      try JSONEncoder().encode(metadata).write(to: metadataURL, options: .atomic)
+      try FileManager.default.setAttributes(
+        [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
+        ofItemAtPath: metadataURL.path
+      )
+    } catch {
+      try? FileManager.default.removeItem(at: photoURL)
+      try? FileManager.default.removeItem(at: metadataURL)
+      throw error
+    }
+  }
+
+  func remove(photoID: UUID, ownerID: UUID) throws {
+    let directory = ownerDirectory(ownerID)
+    guard FileManager.default.fileExists(atPath: directory.path) else { return }
+
+    let metadataURL = metadataURL(photoID, ownerID: ownerID)
+    let prefix = photoID.uuidString.lowercased()
+    let urls = try FileManager.default.contentsOfDirectory(
+      at: directory,
+      includingPropertiesForKeys: nil
+    )
+    .filter {
+      $0 == metadataURL
+        || ($0.deletingPathExtension().lastPathComponent == prefix
+          && $0.pathExtension != "json")
+    }
+
+    for url in urls {
+      try FileManager.default.removeItem(at: url)
+    }
+  }
+
+  private func ownerDirectory(_ ownerID: UUID) -> URL {
+    rootURL.appending(
+      path: ownerID.uuidString.lowercased(),
+      directoryHint: .isDirectory
+    )
+  }
+
+  private func metadataURL(_ photoID: UUID, ownerID: UUID) -> URL {
+    ownerDirectory(ownerID).appending(
+      path: "\(photoID.uuidString.lowercased()).json",
+      directoryHint: .notDirectory
+    )
+  }
+
+  private func dataURL(_ metadata: StoredInboxPhoto, ownerID: UUID) -> URL {
+    ownerDirectory(ownerID).appending(
+      path: "\(metadata.id.uuidString.lowercased()).\(metadata.mimeType.fileExtension)",
+      directoryHint: .notDirectory
+    )
+  }
+}
+
+private struct StoredInboxPhoto: Codable {
+  let id: UUID
+  let mimeType: FirstTimeImageType
+  let originalFilename: String?
+  let byteSize: Int
+  let pixelWidth: Int?
+  let pixelHeight: Int?
+  let createdAt: Date
+
+  init(draft: FirstTimePhotoDraft) {
+    id = draft.id
+    mimeType = draft.mimeType
+    originalFilename = draft.originalFilename
+    byteSize = draft.data.count
+    pixelWidth = draft.pixelWidth
+    pixelHeight = draft.pixelHeight
+    createdAt = Date()
+  }
+
+  var isValid: Bool {
+    QueuedInboxAttachment(
+      id: id,
+      mimeType: mimeType,
+      originalFilename: originalFilename,
+      byteSize: Int64(byteSize),
+      pixelWidth: pixelWidth,
+      pixelHeight: pixelHeight
+    ).isValid
+  }
+}
+
+struct RegisterEntryAttachmentParameters: Encodable, Equatable, Sendable {
+  let entryID: UUID
+  let attachment: QueuedInboxAttachment
+  let objectPath: String
+
+  enum CodingKeys: String, CodingKey {
+    case entryID = "p_entry_id"
+    case attachmentID = "p_attachment_id"
+    case objectPath = "p_object_path"
+    case originalFilename = "p_original_filename"
+    case mimeType = "p_mime_type"
+    case byteSize = "p_byte_size"
+    case pixelWidth = "p_pixel_width"
+    case pixelHeight = "p_pixel_height"
+  }
+
+  func encode(to encoder: Encoder) throws {
+    var values = encoder.container(keyedBy: CodingKeys.self)
+    try values.encode(entryID, forKey: .entryID)
+    try values.encode(attachment.id, forKey: .attachmentID)
+    try values.encode(objectPath, forKey: .objectPath)
+    try values.encode(attachment.mimeType, forKey: .mimeType)
+    try values.encode(attachment.byteSize, forKey: .byteSize)
+    try values.encodeIfPresent(attachment.originalFilename, forKey: .originalFilename)
+    if attachment.originalFilename == nil {
+      try values.encodeNil(forKey: .originalFilename)
+    }
+    try values.encodeIfPresent(attachment.pixelWidth, forKey: .pixelWidth)
+    if attachment.pixelWidth == nil { try values.encodeNil(forKey: .pixelWidth) }
+    try values.encodeIfPresent(attachment.pixelHeight, forKey: .pixelHeight)
+    if attachment.pixelHeight == nil { try values.encodeNil(forKey: .pixelHeight) }
+  }
+}
+
+struct RegisteredEntryAttachment: Decodable, Sendable {
+  let attachmentID: UUID
+
+  enum CodingKeys: String, CodingKey {
+    case attachmentID = "attachment_id"
+  }
+}
+
 enum InboxCaptureError: LocalizedError, Equatable {
   case empty
   case titleTooLong
   case bodyTooLong
+  case photoUnavailable
 
   var errorDescription: String? {
     switch self {
     case .empty:
-      "Write a title or a note before saving."
+      "Write a title, a note, or add a photo before saving."
     case .titleTooLong:
       "Keep the title under \(InboxCapture.titleLimit) characters."
     case .bodyTooLong:
       "Keep the note under 50,000 characters."
+    case .photoUnavailable:
+      "MemoTrail could not read that photo. Select it again."
     }
   }
 }

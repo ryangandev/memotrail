@@ -117,6 +117,15 @@ struct PendingEntryCard: View {
           .lineSpacing(2)
           .lineLimit(3)
       }
+
+      if !entry.attachments.isEmpty {
+        Label(
+          "\(entry.attachments.count) \(entry.attachments.count == 1 ? "photo" : "photos")",
+          systemImage: "photo"
+        )
+        .font(MTTypography.caption)
+        .foregroundStyle(MTColor.inkMuted)
+      }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(MTSpacing.s4)

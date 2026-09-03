@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: iOS universal capture photos
+> Current phase: Home memory resurfacing contract
 >
 > Last updated: 2026-09-03
 >
@@ -154,6 +154,11 @@
 - Existing version-one text queues migrate to the photo-capable version-two shape without data loss, while photo-only Entries are now valid captures.
 - The Web suite now has 118 passing tests, and the universal photo implementation passes formatting, design-token, lint, typecheck, and production-build checks.
 - Isolated localhost browser verification covered a photo draft across reload, deliberate offline queueing, automatic reconnect synchronization, one database Entry and attachment, signed Home image display, responsive desktop and mobile presentation, and disposable-account cleanup.
+- Native universal capture now accepts up to twelve private JPEG, PNG, WebP, HEIC, or HEIF originals from Home, Inbox, and every global Quick Capture surface.
+- Selected iOS photos are protected in owner-scoped Application Support storage before appearing in the shared recoverable draft, survive relaunch, and remain separate from already queued photos.
+- Native photo queues preserve stable Entry and attachment identities, synchronize the Entry first, upload each original to its deterministic private Storage path, and idempotently register metadata before clearing local data.
+- Existing version-one native text queues migrate to the photo-capable version-two shape without data loss, while photo-only Entries are now valid captures.
+- The shared iOS scheme now has 102 passing tests, and the universal photo implementation passes strict Swift formatting, project validation, a warning-free generic Simulator build, and an install-and-launch authentication-boundary check.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -572,6 +577,19 @@
 - [x] Verify validation, queue migration, photo-only input, and attachment metadata while keeping all 118 Web tests passing.
 - [x] Pass formatting, design-token, lint, typecheck, production-build, real browser, database, private Storage, signed-image, responsive-layout, and cleanup checks.
 
+### iOS universal capture photos
+
+- [x] Accept up to twelve supported private image originals from Home, Inbox, and every global Quick Capture surface.
+- [x] Persist selected photo binaries and metadata in protected owner-scoped Application Support storage before presenting them as recoverable draft media.
+- [x] Restore unfinished photo drafts after relaunch while keeping already queued photos out of the active composer.
+- [x] Accept photo-only Entries and migrate existing text-only queues to the photo-capable queue shape without data loss.
+- [x] Preserve stable Entry and attachment identifiers across offline retries and ambiguous network outcomes.
+- [x] Synchronize the Entry first, upload each original to a deterministic private Storage path, and register metadata idempotently before clearing the queue.
+- [x] Keep missing, changed, or failed local photos visibly pending instead of claiming that synchronization completed.
+- [x] Show native selected-photo previews, removal controls, active photo state, and pending photo counts.
+- [x] Verify photo-only validation, queue migration, owner isolation, malformed metadata, and attachment parameter encoding while keeping all 102 native tests passing.
+- [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, and an install-and-launch authentication-boundary check.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -632,12 +650,13 @@
 - `feat: add iOS capture dates` added the matching optional relevant date, shared draft state, and offline occurrence semantics to every native capture surface.
 - `feat: add universal Entry media contract` added and locally verified universal private Entry photo registration and recoverable removal.
 - `feat: deploy universal Entry media contract` deployed and verified the universal Entry media contract on hosted Supabase.
-- Current change: added recoverable, offline-first private photos to every Web universal capture surface.
+- `feat: add Web capture photos` added and locally browser-verified recoverable, offline-first private photos on every Web universal capture surface.
+- Current change: added matching recoverable, offline-first private photos to every iOS universal capture surface.
 
 ## Next sequence
 
-1. Add matching private photo capture and retry behavior to iOS.
-2. Add Home resurfacing after the shared capture path supports the complete initial Entry shape.
+1. Add an owner-scoped Home memory resurfacing contract with predictable non-AI selection rules.
+2. Add the matching quiet resurfacing experience to Web and iOS Home.
 3. Continue toward universal voice-to-text capture after choosing the transcription boundary.
 
 ## Deferred

@@ -20,6 +20,7 @@ final class InboxController {
   private let client: SupabaseClient
   private let ownerID: UUID
   private let queueStore: InboxQueueStore
+  private let photoStore: InboxPhotoStore
   private let networkMonitor: NWPathMonitor
   private let networkMonitorQueue = DispatchQueue(
     label: "com.rystudio.memotrail.inbox-connectivity"
@@ -29,11 +30,13 @@ final class InboxController {
     client: SupabaseClient,
     ownerID: UUID,
     queueStore: InboxQueueStore = InboxQueueStore(),
+    photoStore: InboxPhotoStore = InboxPhotoStore(),
     networkMonitor: NWPathMonitor = NWPathMonitor()
   ) {
     self.client = client
     self.ownerID = ownerID
     self.queueStore = queueStore
+    self.photoStore = photoStore
     self.networkMonitor = networkMonitor
     pendingEntries = queueStore.load(ownerID: ownerID)
 
@@ -106,12 +109,21 @@ final class InboxController {
     await load()
   }
 
-  func save(title: String, body: String, occurredAt: Date? = nil) async -> Bool {
+  func save(
+    title: String,
+    body: String,
+    occurredAt: Date? = nil,
+    photos: [FirstTimePhotoDraft] = []
+  ) async -> Bool {
     guard !isSaving, !isSyncing else { return false }
 
     let capture: InboxCapture
     do {
-      capture = try InboxCapture.validate(title: title, body: body)
+      capture = try InboxCapture.validate(
+        title: title,
+        body: body,
+        hasAttachments: !photos.isEmpty
+      )
     } catch {
       captureMessage = CaptureMessage(
         text: error.localizedDescription,
@@ -131,7 +143,8 @@ final class InboxController {
       body: capture.body,
       occurredAt: occurredAt ?? now,
       occurredTimezone: TimeZone.current.identifier,
-      queuedAt: now
+      queuedAt: now,
+      attachments: photos.map(QueuedInboxAttachment.init)
     )
 
     guard let nextQueue = queueStore.enqueue(pendingEntry, ownerID: ownerID) else {
@@ -273,6 +286,7 @@ final class InboxController {
     }
 
     var didSyncEntry = false
+    var lastSyncedPhotoCount = 0
 
     for entry in pendingEntries {
       do {
@@ -287,6 +301,16 @@ final class InboxController {
         }
       }
 
+      do {
+        try await synchronizeAttachments(entry)
+      } catch {
+        captureMessage = CaptureMessage(
+          text: attachmentSyncMessage(for: error),
+          style: .error
+        )
+        return didSyncEntry
+      }
+
       guard let nextQueue = queueStore.remove(entryID: entry.id, ownerID: ownerID) else {
         captureMessage = CaptureMessage(
           text: "This Entry reached MemoTrail, but its local pending copy could not be cleared.",
@@ -297,10 +321,16 @@ final class InboxController {
 
       pendingEntries = nextQueue
       didSyncEntry = true
+      lastSyncedPhotoCount = entry.attachments.count
     }
 
     if didSyncEntry {
-      captureMessage = CaptureMessage(text: "Saved to Inbox.", style: .success)
+      captureMessage = CaptureMessage(
+        text: lastSyncedPhotoCount > 0
+          ? "Saved to Inbox with \(lastSyncedPhotoCount) \(lastSyncedPhotoCount == 1 ? "photo" : "photos")."
+          : "Saved to Inbox.",
+        style: .success
+      )
     }
 
     return didSyncEntry
@@ -339,6 +369,85 @@ final class InboxController {
     } catch {
       return false
     }
+  }
+
+  private func synchronizeAttachments(_ entry: QueuedInboxEntry) async throws {
+    guard !entry.attachments.isEmpty else { return }
+
+    let photoStore = photoStore
+    let ownerID = ownerID
+    let drafts = try await Task.detached {
+      try photoStore.load(ownerID: ownerID)
+    }.value
+    let draftsByID = Dictionary(uniqueKeysWithValues: drafts.map { ($0.id, $0) })
+
+    for attachment in entry.attachments {
+      let path = attachment.objectPath(ownerID: ownerID, entryID: entry.id)
+      let draft = draftsByID[attachment.id]
+
+      if let draft {
+        guard attachment.matches(draft) else {
+          throw InboxControllerError.photoChanged
+        }
+
+        try await client.storage.from("entry-media").upload(
+          path,
+          data: draft.data,
+          options: FileOptions(
+            cacheControl: "3600",
+            contentType: attachment.mimeType.rawValue,
+            upsert: true
+          )
+        )
+      }
+
+      let registered: [RegisteredEntryAttachment]
+      do {
+        registered =
+          try await client
+          .rpc(
+            "register_entry_attachment",
+            params: RegisterEntryAttachmentParameters(
+              entryID: entry.id,
+              attachment: attachment,
+              objectPath: path
+            )
+          )
+          .execute()
+          .value
+      } catch {
+        if draft == nil {
+          throw InboxControllerError.photoMissing
+        }
+        throw error
+      }
+
+      guard registered.first?.attachmentID == attachment.id else {
+        throw draft == nil
+          ? InboxControllerError.photoMissing
+          : InboxControllerError.photoRegistrationFailed
+      }
+
+      let attachmentID = attachment.id
+      try await Task.detached {
+        try photoStore.remove(photoID: attachmentID, ownerID: ownerID)
+      }.value
+    }
+  }
+
+  private func attachmentSyncMessage(for error: Error) -> String {
+    if let error = error as? InboxControllerError {
+      switch error {
+      case .photoMissing:
+        return "A pending photo is missing from this iPhone and needs your attention."
+      case .photoChanged:
+        return "A pending photo changed on this iPhone and cannot be synced."
+      default:
+        break
+      }
+    }
+
+    return "Photos are saved on this iPhone. MemoTrail will retry when you are online."
   }
 
   private func loadOrganization(entryIDs: [UUID]) async throws -> OrganizationSnapshot {
@@ -578,4 +687,7 @@ extension Array where Element == String {
 
 private enum InboxControllerError: Error {
   case ownerChanged
+  case photoChanged
+  case photoMissing
+  case photoRegistrationFailed
 }
