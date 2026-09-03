@@ -45,6 +45,7 @@
 		B00000000000000000000024 /* HomeEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000002B /* HomeEntry.swift */; };
 		B00000000000000000000025 /* HomeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000002C /* HomeController.swift */; };
 		B00000000000000000000026 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000002D /* HomeView.swift */; };
+		B00000000000000000000027 /* VoiceTranscriptionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000002E /* VoiceTranscriptionController.swift */; };
 		B10000000000000000000001 /* InboxEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000001 /* InboxEntryTests.swift */; };
 		B10000000000000000000002 /* SearchEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000003 /* SearchEntryTests.swift */; };
 		B10000000000000000000003 /* TimelineEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000004 /* TimelineEntryTests.swift */; };
@@ -54,6 +55,7 @@
 		B10000000000000000000007 /* HabitEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000008 /* HabitEntryTests.swift */; };
 		B10000000000000000000008 /* TrashItemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000009 /* TrashItemTests.swift */; };
 		B10000000000000000000009 /* HomeEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000A /* HomeEntryTests.swift */; };
+		B1000000000000000000000A /* VoiceTranscriptTextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000B /* VoiceTranscriptTextTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -106,6 +108,7 @@
 		C0000000000000000000002B /* HomeEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeEntry.swift; sourceTree = "<group>"; };
 		C0000000000000000000002C /* HomeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeController.swift; sourceTree = "<group>"; };
 		C0000000000000000000002D /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		C0000000000000000000002E /* VoiceTranscriptionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceTranscriptionController.swift; sourceTree = "<group>"; };
 		C10000000000000000000001 /* InboxEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000002 /* MemoTrailTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MemoTrailTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C10000000000000000000003 /* SearchEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchEntryTests.swift; sourceTree = "<group>"; };
@@ -116,6 +119,7 @@
 		C10000000000000000000008 /* HabitEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000009 /* TrashItemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrashItemTests.swift; sourceTree = "<group>"; };
 		C1000000000000000000000A /* HomeEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeEntryTests.swift; sourceTree = "<group>"; };
+		C1000000000000000000000B /* VoiceTranscriptTextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceTranscriptTextTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -220,6 +224,7 @@
 			children = (
 				C00000000000000000000004 /* CaptureCard.swift */,
 				C00000000000000000000005 /* EntryCard.swift */,
+				C0000000000000000000002E /* VoiceTranscriptionController.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -279,6 +284,7 @@
 			isa = PBXGroup;
 			children = (
 				C1000000000000000000000A /* HomeEntryTests.swift */,
+				C1000000000000000000000B /* VoiceTranscriptTextTests.swift */,
 				C10000000000000000000001 /* InboxEntryTests.swift */,
 				C10000000000000000000003 /* SearchEntryTests.swift */,
 				C10000000000000000000004 /* TimelineEntryTests.swift */,
@@ -506,6 +512,7 @@
 				B00000000000000000000024 /* HomeEntry.swift in Sources */,
 				B00000000000000000000025 /* HomeController.swift in Sources */,
 				B00000000000000000000026 /* HomeView.swift in Sources */,
+				B00000000000000000000027 /* VoiceTranscriptionController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -522,6 +529,7 @@
 				B10000000000000000000007 /* HabitEntryTests.swift in Sources */,
 				B10000000000000000000008 /* TrashItemTests.swift in Sources */,
 				B10000000000000000000009 /* HomeEntryTests.swift in Sources */,
+				B1000000000000000000000A /* VoiceTranscriptTextTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

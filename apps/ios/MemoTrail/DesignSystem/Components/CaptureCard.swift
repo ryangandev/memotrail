@@ -19,6 +19,7 @@ struct CaptureCard: View {
   @State private var pickerItems: [PhotosPickerItem] = []
   @State private var isLoadingPhotos = false
   @State private var photoError: String?
+  @State private var voiceController = VoiceTranscriptionController()
 
   var body: some View {
     VStack(spacing: 0) {
@@ -62,6 +63,7 @@ struct CaptureCard: View {
         .font(MTTypography.body)
         .foregroundStyle(MTColor.ink)
         .textInputAutocapitalization(.sentences)
+        .disabled(isSaving || voiceController.isActive)
         .accessibilityIdentifier("capture-body")
 
         if let photoError {
@@ -69,6 +71,16 @@ struct CaptureCard: View {
             .font(MTTypography.caption)
             .foregroundStyle(MTColor.warm)
             .accessibilityIdentifier("capture-photo-error")
+        } else if let voiceMessage = voiceController.message {
+          Label(
+            voiceMessage,
+            systemImage: voiceController.hasError
+              ? "exclamationmark.circle.fill"
+              : (voiceController.isActive ? "waveform" : "checkmark.circle.fill")
+          )
+          .font(MTTypography.caption)
+          .foregroundStyle(voiceController.hasError ? MTColor.warm : MTColor.inkMuted)
+          .accessibilityIdentifier("capture-voice-message")
         } else if let message {
           Label(
             message.text,
@@ -187,8 +199,9 @@ struct CaptureCard: View {
         }
         .accessibilityLabel(occurredAt == nil ? "Add relevant date" : "Remove relevant date")
         .accessibilityIdentifier("capture-date")
+        .disabled(isSaving || isLoadingPhotos || voiceController.isActive)
 
-        upcomingAttachment("Voice", systemImage: "mic")
+        voiceButton
         photoPicker
 
         Spacer()
@@ -215,7 +228,7 @@ struct CaptureCard: View {
           .frame(minWidth: 130, minHeight: 36)
           .background(MTColor.accent, in: RoundedRectangle(cornerRadius: MTRadius.medium))
         }
-        .disabled(isSaving || isLoadingPhotos)
+        .disabled(isSaving || isLoadingPhotos || voiceController.isActive)
         .accessibilityIdentifier("save-entry")
       }
       .padding(.horizontal, MTSpacing.s2)
@@ -232,6 +245,14 @@ struct CaptureCard: View {
     .onChange(of: pickerItems) { _, items in
       Task { await loadPhotos(from: items) }
     }
+    .onChange(of: voiceController.transcribedText) { _, transcribedText in
+      if let transcribedText {
+        note = transcribedText
+      }
+    }
+    .onDisappear {
+      voiceController.stop(silently: true)
+    }
   }
 
   private var occurredAtBinding: Binding<Date> {
@@ -241,16 +262,30 @@ struct CaptureCard: View {
     )
   }
 
-  private func upcomingAttachment(_ title: String, systemImage: String) -> some View {
-    Button(title, systemImage: systemImage) {}
-      .labelStyle(.iconOnly)
-      .font(.system(size: 17))
-      .foregroundStyle(MTColor.inkFaint)
-      .frame(width: 38, height: 36)
-      .contentShape(Rectangle())
-      .disabled(true)
-      .accessibilityLabel(title)
-      .accessibilityHint("Coming next")
+  private var voiceButton: some View {
+    Button {
+      titleFocus.wrappedValue = false
+      if voiceController.isActive {
+        voiceController.stop()
+      } else {
+        Task { await voiceController.start(currentText: note) }
+      }
+    } label: {
+      Image(systemName: voiceController.isActive ? "stop.fill" : "mic")
+        .font(.system(size: voiceController.isActive ? 13 : 17, weight: .medium))
+        .foregroundStyle(voiceController.isActive ? MTColor.warm : MTColor.inkFaint)
+        .frame(width: 38, height: 36)
+        .background(
+          voiceController.isActive ? MTColor.warmSubtle : Color.clear,
+          in: RoundedRectangle(cornerRadius: MTRadius.small)
+        )
+        .contentShape(Rectangle())
+    }
+    .disabled(isSaving || isLoadingPhotos)
+    .accessibilityLabel(voiceController.isActive ? "Stop voice capture" : "Start voice capture")
+    .accessibilityValue(voiceController.phase == .listening ? "Listening" : "")
+    .accessibilityHint("Transcribes speech into the Entry body without saving audio")
+    .accessibilityIdentifier("capture-voice")
   }
 
   private var photoPicker: some View {
@@ -273,7 +308,8 @@ struct CaptureCard: View {
         .contentShape(Rectangle())
     }
     .disabled(
-      isSaving || isLoadingPhotos || photoCount >= FirstTimePhotoDraft.maximumCount
+      isSaving || isLoadingPhotos || voiceController.isActive
+        || photoCount >= FirstTimePhotoDraft.maximumCount
     )
     .accessibilityLabel("Add photos")
     .accessibilityValue("\(photoCount) selected")

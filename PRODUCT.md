@@ -739,6 +739,9 @@ Specific measurable criteria will be defined after the primary device, capture w
 - Resurface only organized, active, dated Entries and keep Inbox content, Trash, and Life Stages out of the memory card.
 - Prefer the nearest prior On This Day anniversary using the Entry's preserved occurrence timezone.
 - Use a stable daily rotation across Entries at least thirty days old when no anniversary is available.
+- Implement voice capture as live platform-native dictation into the editable Entry body without creating, persisting, or uploading an audio file.
+- Prefer on-device iOS speech recognition when the current device and language support it, with the system speech service as the compatibility fallback.
+- Keep Web voice capture as progressive enhancement because browser speech-recognition support varies, while preserving text, draft, and no-audio-retention behavior across clients.
 
 ## 17. Privacy, security, and data ownership
 

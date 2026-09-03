@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Universal voice-to-text capture boundary
+> Current phase: Web voice-to-text capture
 >
 > Last updated: 2026-09-03
 >
@@ -173,6 +173,11 @@
 - The native Soft Ledger memory card presents anniversary or archive context, complete Entry text, Type, original occurrence date, Collections, tags, and an expiring private image URL.
 - Recent Entries and the resurfaced memory share one signed-private-image batch, with the first successfully signed attachment selected as the cover image.
 - The shared iOS scheme now has 106 passing tests, including four focused resurfacing tests, and the implementation passes strict changed-file formatting, project validation, a warning-free generic Simulator build, and an install-and-launch authentication-boundary check.
+- The product contract now defines voice capture as live platform-native dictation into the editable Entry body without creating, persisting, or uploading an audio file.
+- Native universal capture now starts and stops system speech recognition from every shared composer surface, prefers on-device recognition when supported, and uses the system service as a compatibility fallback.
+- iOS preserves existing draft text while live partial results arrive, saves every transcript update through the existing recoverable draft path, and keeps date, photo, and save mutations unavailable until listening stops.
+- Native voice states include permission preparation, listening, completion, denial, unavailable-input, and no-recognized-speech feedback with explicit accessibility labels.
+- The shared iOS scheme now has 111 passing tests, including five focused transcript-merging tests, and the implementation passes strict Swift formatting, property-list validation, project validation, a warning-free generic Simulator build, and an install-and-launch authentication-boundary check.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -639,6 +644,20 @@
 - [x] Verify selection validation and RPC parameters with four focused tests while keeping all 106 native tests passing.
 - [x] Pass strict changed-file formatting, project validation, a warning-free generic Simulator build, and an install-and-launch authentication-boundary check.
 
+### iOS voice-to-text capture
+
+- [x] Use live system dictation without creating, persisting, attaching, or uploading an audio file.
+- [x] Prefer on-device speech recognition when supported and allow the system speech service as a compatibility fallback.
+- [x] Request both Speech Recognition and Microphone access with purpose-specific usage descriptions.
+- [x] Insert live partial transcription into the shared editable Entry body while preserving existing text.
+- [x] Reuse the existing per-user recoverable draft path so transcribed text survives navigation and relaunch.
+- [x] Stop and release the microphone when the user taps Stop or leaves the composer.
+- [x] Prevent date, photo, body-edit, and save collisions while a voice session is active.
+- [x] Provide accessible preparing, listening, completion, permission-denied, unavailable-input, and empty-result feedback.
+- [x] Enforce the shared 50,000-character Entry limit during live transcription.
+- [x] Verify transcript merging with five focused tests while keeping all 111 native tests passing.
+- [x] Pass strict Swift formatting, property-list validation, project validation, a warning-free generic Simulator build, and an install-and-launch authentication-boundary check.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -704,13 +723,14 @@
 - `feat: add Home memory resurfacing contract` added and locally verified a deterministic, owner-scoped Home memory resurfacing contract.
 - `feat: deploy Home memory resurfacing contract` deployed and verified the Home memory resurfacing contract on hosted Supabase.
 - `feat: add Web Home memory resurfacing` added and locally browser-verified the quiet Web Home memory resurfacing experience.
-- Current change: added and simulator-verified the matching native iOS Home memory resurfacing experience.
+- `feat: add iOS Home memory resurfacing` added and simulator-verified the matching native iOS Home memory resurfacing experience.
+- Current change: added and simulator-verified live voice-to-text across every shared native capture surface.
 
 ## Next sequence
 
-1. Define the privacy-preserving transcription boundary for universal voice capture without retaining audio.
-2. Add voice-to-text to the shared iOS capture composer.
-3. Add the matching progressive Web voice-to-text experience where browser capability permits it.
+1. Add the matching progressive Web voice-to-text experience where browser capability permits it.
+2. Verify live transcription, recoverable drafts, permission denial, unsupported browsers, and responsive presentation.
+3. Resume the highest-value non-AI product slice after voice parity is complete.
 
 ## Deferred
 

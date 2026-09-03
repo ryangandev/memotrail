@@ -45,6 +45,8 @@
 	<string>$(MEMOTRAIL_SUPABASE_URL)</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>MemoTrail uses the microphone only while transcribing a voice note.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>MemoTrail converts your speech into editable Entry text and does not save the audio.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
