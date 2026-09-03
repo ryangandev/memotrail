@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Universal capture dates and photos
+> Current phase: iOS universal capture dates
 >
 > Last updated: 2026-09-03
 >
@@ -134,6 +134,10 @@
 - Home, Inbox, and the global full-screen composer share one draft and one offline synchronization queue instead of mounting competing capture state.
 - Timeline, Habits, and Library expose the global native Quick Capture action, while Home and Inbox retain their integrated capture surfaces.
 - The shared iOS scheme now has 95 passing tests, including ten focused Home and root-navigation tests, and passes strict Swift formatting, project validation, and a warning-free generic Simulator build.
+- Web universal capture now accepts an optional exact relevant date and time, preserves it in the recoverable local draft, and otherwise records the actual capture instant as before.
+- Existing version-one Web text drafts migrate in place without inventing a historical date, while every queued Entry continues to preserve one immutable occurrence instant and the browser's IANA time zone.
+- The Web suite now has 111 passing tests, including five focused capture-date and draft-migration tests, and passes formatting, design-token, lint, typecheck, and production-build checks.
+- Isolated localhost browser verification covered a dated draft across reload, synchronization to the exact expected instant and time zone, desktop Home, the full-screen mobile composer, and cleanup of the disposable account.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -502,6 +506,18 @@
 - [x] Verify decoding, dates, time zones, presentation, request validation, tab order, and capture availability with ten focused tests.
 - [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, and all 95 native tests.
 
+### Web universal capture dates
+
+- [x] Keep capture-time behavior unchanged until the user opts into a separate relevant date.
+- [x] Accept an exact local date and time and convert it to one synchronized occurrence instant with the browser's current IANA time zone.
+- [x] Preserve the selected date together with title and body in the recoverable per-user draft.
+- [x] Migrate existing version-one text drafts without data loss or an invented date.
+- [x] Keep the selected occurrence instant immutable after an Entry joins the offline synchronization queue.
+- [x] Expose a compact desktop control and a touch-friendly mobile date editor without competing with the primary capture action.
+- [x] Verify fallback, conversion, invalid input, local editing, dated persistence, and legacy migration with five focused tests.
+- [x] Keep all 111 Web tests passing and pass formatting, design-token, lint, typecheck, and production-build checks.
+- [x] Verify draft reload, exact database synchronization, device time zone, responsive presentation, and disposable-data cleanup against local Supabase.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -557,11 +573,12 @@
 - `feat: add Home workspace contract` added and locally verified the shared Home workspace data contract.
 - `feat: deploy Home workspace contract` deployed and verified the Home workspace contract on hosted Supabase.
 - `feat: add Web Home experience` implemented and locally browser-verified the authenticated Web Home experience and global Quick Capture access.
-- Current change: implemented and simulator-verified the matching native iOS Home experience and shared global Quick Capture state.
+- `feat: add iOS Home experience` implemented and simulator-verified the matching native iOS Home experience and shared global Quick Capture state.
+- Current change: added and locally browser-verified an optional exact relevant date to every Web capture surface.
 
 ## Next sequence
 
-1. Extend universal quick capture with a user-selected relevant date on Web and iOS.
+1. Add the matching relevant-date control and draft behavior to every native capture surface.
 2. Add private photo selection, upload, and recoverable draft behavior to universal capture on Web and iOS.
 3. Add Home resurfacing after the shared capture path supports the complete initial Entry shape.
 

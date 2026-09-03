@@ -30,6 +30,7 @@ describe("Inbox draft persistence", () => {
 
     persistInboxDraft(storage, "owner-a", {
       body: "A private thought",
+      occurredAt: null,
       title: "",
     });
 
@@ -44,24 +45,34 @@ describe("Inbox draft persistence", () => {
     expect(
       persistInboxDraft(storage, "owner-a", {
         body: "  Keep my spacing.\n",
+        occurredAt: "2026-07-03T09:30",
         title: " Draft title ",
       }),
     ).toBe(true);
     expect(loadInboxDraft(storage, "owner-a")).toMatchObject({
       body: "  Keep my spacing.\n",
+      occurredAt: "2026-07-03T09:30",
       title: " Draft title ",
-      version: 1,
+      version: 2,
     });
 
-    expect(persistInboxDraft(storage, "owner-a", { body: "", title: "" })).toBe(
-      false,
-    );
+    expect(
+      persistInboxDraft(storage, "owner-a", {
+        body: "",
+        occurredAt: null,
+        title: "",
+      }),
+    ).toBe(false);
     expect(loadInboxDraft(storage, "owner-a")).toBeNull();
   });
 
   it("clears a saved draft after the Entry is accepted", () => {
     const storage = new MemoryStorage();
-    persistInboxDraft(storage, "owner-a", { body: "Keep me", title: "" });
+    persistInboxDraft(storage, "owner-a", {
+      body: "Keep me",
+      occurredAt: null,
+      title: "",
+    });
 
     clearInboxDraft(storage, "owner-a");
 
@@ -76,7 +87,7 @@ describe("Inbox draft persistence", () => {
           body: "content",
           title: "",
           updatedAt: new Date().toISOString(),
-          version: 2,
+          version: 3,
         }),
       ),
     ).toBeNull();
@@ -90,5 +101,35 @@ describe("Inbox draft persistence", () => {
         }),
       ),
     ).toBeNull();
+    expect(
+      parseInboxDraft(
+        JSON.stringify({
+          body: "content",
+          occurredAt: "not-a-date",
+          title: "",
+          updatedAt: new Date().toISOString(),
+          version: 2,
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it("migrates a version one text draft without inventing a date", () => {
+    expect(
+      parseInboxDraft(
+        JSON.stringify({
+          body: "An earlier draft",
+          title: "",
+          updatedAt: "2026-09-01T15:00:00.000Z",
+          version: 1,
+        }),
+      ),
+    ).toEqual({
+      body: "An earlier draft",
+      occurredAt: null,
+      title: "",
+      updatedAt: "2026-09-01T15:00:00.000Z",
+      version: 2,
+    });
   });
 });

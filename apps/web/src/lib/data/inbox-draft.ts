@@ -2,9 +2,10 @@ import { entryBodyLimit, entryTitleLimit } from "./inbox-input";
 
 export type InboxDraft = {
   body: string;
+  occurredAt: string | null;
   title: string;
   updatedAt: string;
-  version: 1;
+  version: 2;
 };
 
 export type DraftStorage = Pick<Storage, "getItem" | "removeItem" | "setItem">;
@@ -27,7 +28,7 @@ export function loadInboxDraft(
 export function persistInboxDraft(
   storage: DraftStorage,
   ownerId: string,
-  values: Pick<InboxDraft, "body" | "title">,
+  values: Pick<InboxDraft, "body" | "occurredAt" | "title">,
 ) {
   const hasContent = Boolean(values.title || values.body);
 
@@ -40,7 +41,7 @@ export function persistInboxDraft(
     const draft: InboxDraft = {
       ...values,
       updatedAt: new Date().toISOString(),
-      version: 1,
+      version: 2,
     };
 
     storage.setItem(inboxDraftKey(ownerId), JSON.stringify(draft));
@@ -64,10 +65,16 @@ export function parseInboxDraft(value: string | null): InboxDraft | null {
   }
 
   try {
-    const draft = JSON.parse(value) as Partial<InboxDraft>;
+    const draft = JSON.parse(value) as {
+      body?: unknown;
+      occurredAt?: unknown;
+      title?: unknown;
+      updatedAt?: unknown;
+      version?: unknown;
+    };
 
     if (
-      draft.version !== 1 ||
+      (draft.version !== 1 && draft.version !== 2) ||
       typeof draft.title !== "string" ||
       typeof draft.body !== "string" ||
       typeof draft.updatedAt !== "string" ||
@@ -79,7 +86,22 @@ export function parseInboxDraft(value: string | null): InboxDraft | null {
       return null;
     }
 
-    return draft as InboxDraft;
+    const occurredAt = draft.version === 1 ? null : draft.occurredAt;
+
+    if (
+      occurredAt !== null &&
+      (typeof occurredAt !== "string" || Number.isNaN(Date.parse(occurredAt)))
+    ) {
+      return null;
+    }
+
+    return {
+      body: draft.body,
+      occurredAt,
+      title: draft.title,
+      updatedAt: draft.updatedAt,
+      version: 2,
+    };
   } catch {
     return null;
   }

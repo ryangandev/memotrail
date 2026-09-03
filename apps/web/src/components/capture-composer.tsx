@@ -16,6 +16,11 @@ import {
   persistInboxDraft,
 } from "@/lib/data/inbox-draft";
 import {
+  captureDateLabel,
+  localCaptureDateValue,
+  parseCaptureDate,
+} from "@/lib/data/inbox-capture-date";
+import {
   entryBodyLimit,
   entryTitleLimit,
   parseInboxEntryValues,
@@ -48,6 +53,7 @@ export function CaptureComposer({
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [occurredAt, setOccurredAt] = useState<string | null>(null);
   const [isLocalStateReady, setIsLocalStateReady] = useState(false);
   const [hasLocalDraft, setHasLocalDraft] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -141,6 +147,7 @@ export function CaptureComposer({
 
       setTitle(draft?.title ?? "");
       setBody(draft?.body ?? "");
+      setOccurredAt(draft?.occurredAt ?? null);
       setHasLocalDraft(Boolean(draft));
       replacePendingEntries(queue);
       setIsLocalStateReady(true);
@@ -162,16 +169,30 @@ export function CaptureComposer({
     };
   }, [ownerId, replacePendingEntries, synchronizeQueue]);
 
-  function updateDraft(nextTitle: string, nextBody: string) {
+  function updateDraft(
+    nextTitle: string,
+    nextBody: string,
+    nextOccurredAt: string | null,
+  ) {
     setTitle(nextTitle);
     setBody(nextBody);
+    setOccurredAt(nextOccurredAt);
     setHasLocalDraft(
       persistInboxDraft(window.localStorage, ownerId, {
         body: nextBody,
+        occurredAt: nextOccurredAt,
         title: nextTitle,
       }),
     );
     setFeedback(idleFeedback);
+  }
+
+  function toggleRelevantDate() {
+    updateDraft(
+      title,
+      body,
+      occurredAt ? null : localCaptureDateValue(new Date()),
+    );
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -183,15 +204,23 @@ export function CaptureComposer({
       return;
     }
 
+    const now = new Date();
+    const parsedDate = parseCaptureDate(occurredAt, now);
+
+    if (!parsedDate.success) {
+      setFeedback({ isError: true, message: parsedDate.message });
+      return;
+    }
+
     setIsSaving(true);
-    const now = new Date().toISOString();
+    const queuedAt = now.toISOString();
     const entry: QueuedInboxEntry = {
       body: parsedInput.data.body,
       id: crypto.randomUUID(),
-      occurredAt: now,
+      occurredAt: parsedDate.occurredAt,
       occurredTimezone:
         Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
-      queuedAt: now,
+      queuedAt,
       title: parsedInput.data.title,
       version: 1,
     };
@@ -211,6 +240,7 @@ export function CaptureComposer({
     clearInboxDraft(window.localStorage, ownerId);
     setTitle("");
     setBody("");
+    setOccurredAt(null);
     setHasLocalDraft(false);
     setFeedback({
       isError: false,
@@ -251,7 +281,9 @@ export function CaptureComposer({
               id={`${idPrefix}-title`}
               maxLength={entryTitleLimit}
               name="title"
-              onChange={(event) => updateDraft(event.target.value, body)}
+              onChange={(event) =>
+                updateDraft(event.target.value, body, occurredAt)
+              }
               placeholder="What is worth keeping?"
               value={title}
             />
@@ -267,15 +299,51 @@ export function CaptureComposer({
               id={`${idPrefix}-body`}
               maxLength={entryBodyLimit}
               name="body"
-              onChange={(event) => updateDraft(title, event.target.value)}
+              onChange={(event) =>
+                updateDraft(title, event.target.value, occurredAt)
+              }
               placeholder="A thought, a first, something learned, or whatever is on your mind."
               rows={4}
               value={body}
             />
           </div>
         </div>
+        {occurredAt ? (
+          <div className={styles.captureDatePanel}>
+            <label htmlFor={`${idPrefix}-occurred-at`}>
+              <span>Relevant date and time</span>
+              <input
+                disabled={isSaving || !isLocalStateReady}
+                id={`${idPrefix}-occurred-at`}
+                onChange={(event) =>
+                  updateDraft(title, body, event.target.value || null)
+                }
+                type="datetime-local"
+                value={occurredAt}
+              />
+            </label>
+            <button
+              className={styles.removeCaptureDateButton}
+              disabled={isSaving || !isLocalStateReady}
+              onClick={() => updateDraft(title, body, null)}
+              type="button"
+            >
+              Use capture time
+            </button>
+          </div>
+        ) : null}
         <div className={styles.captureActions}>
           <div>
+            <button
+              aria-pressed={Boolean(occurredAt)}
+              className={`${styles.quietButton} ${occurredAt ? styles.activeQuietButton : ""}`}
+              disabled={isSaving || !isLocalStateReady}
+              onClick={toggleRelevantDate}
+              type="button"
+            >
+              <Icon name="calendar" />
+              <span>{occurredAt ? captureDateLabel(occurredAt) : "Date"}</span>
+            </button>
             <button
               aria-label="Voice capture is coming next"
               className={styles.quietButton}
