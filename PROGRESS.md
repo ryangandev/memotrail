@@ -256,6 +256,9 @@
 - Native Trash now decodes, presents, restores, and permanently deletes unlinked Places through the same optimistic revision and recoverable-deletion contract used by Web.
 - The shared iOS scheme now has 151 passing tests, including nine focused Places tests for decoding, sorting, location presentation, private photo context, validation, relationship limits, and mutation encoding.
 - The native Places implementation passes strict Swift formatting, project validation, a generic Simulator build, and the complete suite on an iPhone 17 Pro simulator.
+- GitHub Actions iOS failures were traced to Xcode 16.4 enforcing Swift 6 actor-boundary checks against Supabase 2.55.1 response types that do not yet carry Sendable annotations.
+- Every native Supabase integration now declares that dependency as a pre-concurrency module boundary while retaining Swift 6 and complete concurrency checking for MemoTrail code.
+- The compatibility change passes strict formatting for every touched Swift file, a complete-concurrency generic Simulator build, and all 151 tests on an iPhone 17 Pro simulator.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -889,6 +892,13 @@
 - [x] Verify decoding, deterministic ordering, location presentation, private photo context, validation, relationship limits, optimistic mutation encoding, Library routing, and shared Trash handling with nine focused tests while keeping all 151 native tests passing.
 - [x] Pass strict Swift formatting, project validation, a generic Simulator build, and the complete iPhone 17 Pro suite.
 
+### iOS CI compatibility
+
+- [x] Reproduce the failing runner diagnostics from GitHub Actions and identify the affected third-party concurrency boundary.
+- [x] Mark Supabase imports as pre-concurrency compatibility boundaries without lowering MemoTrail's Swift language mode or concurrency checks.
+- [x] Pass strict formatting for every touched Swift file, a complete-concurrency generic Simulator build, and all 151 native tests.
+- [ ] Push the compatibility fix and confirm the GitHub Actions iOS job succeeds on `macos-15` with Xcode 16.4.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -972,13 +982,14 @@
 - `feat: add Places data contract` added and locally verified the shared reusable Places and future Map data contract.
 - `feat: deploy Places data contract` deployed and verified the additive Places contract on hosted Supabase.
 - `feat: add Web Places experience` implemented and locally browser-verified the complete Web Places experience.
-- Current change: implemented and simulator-verified the matching native iOS Places experience.
+- `feat: add iOS Places experience` implemented and simulator-verified the matching native iOS Places experience.
+- Current change: added a narrow compatibility boundary for the Xcode 16.4 GitHub Actions iOS build.
 
 ## Next sequence
 
-1. Reproduce the current GitHub Actions iOS failure against the runner's Swift and Xcode concurrency behavior.
-2. Fix the underlying compatibility problem without weakening the app's Swift 6 concurrency model.
-3. Keep local native validation green, push the narrow CI repair, and verify the resulting GitHub Actions run remotely.
+1. Push the iOS compatibility repair and verify the `macos-15` GitHub Actions build remotely.
+2. Resolve any remaining independent CI failure that prevents the repository workflow from becoming fully green.
+3. Pause for product review once the remote workflow and local working tree are both clean.
 
 ## Deferred
 

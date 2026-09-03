@@ -1,6 +1,6 @@
 import Foundation
 import Observation
-import Supabase
+@preconcurrency import Supabase
 
 @MainActor
 @Observable

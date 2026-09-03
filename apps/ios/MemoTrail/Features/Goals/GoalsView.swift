@@ -1,5 +1,5 @@
 import PhotosUI
-import Supabase
+@preconcurrency import Supabase
 import SwiftUI
 import UIKit
 

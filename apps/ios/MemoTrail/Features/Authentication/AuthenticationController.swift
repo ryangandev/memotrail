@@ -3,7 +3,7 @@ import Foundation
 import GoogleSignIn
 import Observation
 import Security
-import Supabase
+@preconcurrency import Supabase
 import UIKit
 
 struct AuthenticatedUser: Equatable, Sendable {

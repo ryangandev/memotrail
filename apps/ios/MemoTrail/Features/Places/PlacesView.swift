@@ -1,4 +1,4 @@
-import Supabase
+@preconcurrency import Supabase
 import SwiftUI
 
 struct PlacesView: View {
