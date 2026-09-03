@@ -29,14 +29,9 @@ struct RootTabView: View {
           Label("Timeline", systemImage: "point.bottomleft.forward.to.point.topright.scurvepath")
         }
 
-      FirstTimesView(client: client, ownerID: user.id)
+      LibraryView(client: client, ownerID: user.id)
         .tabItem {
-          Label("Firsts", systemImage: "star")
-        }
-
-      CollectionsView(client: client, ownerID: user.id)
-        .tabItem {
-          Label("Collections", systemImage: "archivebox")
+          Label("Library", systemImage: "books.vertical")
         }
     }
   }

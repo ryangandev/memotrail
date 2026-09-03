@@ -5,46 +5,57 @@ struct CollectionsView: View {
   @State private var controller: CollectionsController
 
   private let client: SupabaseClient
+  private let embedded: Bool
   private let ownerID: UUID
 
-  init(client: SupabaseClient, ownerID: UUID) {
+  init(client: SupabaseClient, ownerID: UUID, embedded: Bool = false) {
     self.client = client
+    self.embedded = embedded
     self.ownerID = ownerID
     _controller = State(
       initialValue: CollectionsController(client: client, ownerID: ownerID)
     )
   }
 
+  @ViewBuilder
   var body: some View {
-    NavigationStack {
-      ScrollView {
-        LazyVStack(alignment: .leading, spacing: MTSpacing.s6) {
-          header
-          summary
-          content
-        }
-        .padding(.horizontal, MTSpacing.s4)
-        .padding(.top, MTSpacing.s6)
-        .padding(.bottom, MTSpacing.s12)
+    if embedded {
+      archiveView
+    } else {
+      NavigationStack {
+        archiveView
       }
-      .background(MTColor.canvas)
-      .navigationTitle("Collections")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbarBackground(MTColor.surface, for: .navigationBar)
-      .toolbarBackground(.visible, for: .navigationBar)
-      .refreshable {
+    }
+  }
+
+  private var archiveView: some View {
+    ScrollView {
+      LazyVStack(alignment: .leading, spacing: MTSpacing.s6) {
+        header
+        summary
+        content
+      }
+      .padding(.horizontal, MTSpacing.s4)
+      .padding(.top, MTSpacing.s6)
+      .padding(.bottom, MTSpacing.s12)
+    }
+    .background(MTColor.canvas)
+    .navigationTitle("Collections")
+    .navigationBarTitleDisplayMode(.inline)
+    .toolbarBackground(MTColor.surface, for: .navigationBar)
+    .toolbarBackground(.visible, for: .navigationBar)
+    .refreshable {
+      await controller.load()
+    }
+    .navigationDestination(for: MemoCollection.self) { collection in
+      CollectionDetailView(client: client, ownerID: ownerID, collection: collection)
+    }
+    .navigationDestination(for: CollectionEntry.self) { entry in
+      CollectionEntryDetailView(entry: entry)
+    }
+    .task {
+      if !controller.hasLoaded {
         await controller.load()
-      }
-      .navigationDestination(for: MemoCollection.self) { collection in
-        CollectionDetailView(client: client, ownerID: ownerID, collection: collection)
-      }
-      .navigationDestination(for: CollectionEntry.self) { entry in
-        CollectionEntryDetailView(entry: entry)
-      }
-      .task {
-        if !controller.hasLoaded {
-          await controller.load()
-        }
       }
     }
   }

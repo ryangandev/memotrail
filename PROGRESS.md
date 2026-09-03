@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Collections
+> Current phase: Library navigation
 >
 > Last updated: 2026-09-02
 >
@@ -87,6 +87,10 @@
 - Native Collection detail supports complete Entry reading, Types, occurrence context, Inbox state, every Collection and tag, one-hour signed private image URLs, and incremental 25-Entry pagination.
 - The shared iOS scheme now has 61 passing tests, including ten focused Collections tests, and passes a warning-free generic Simulator build.
 - The current native build installs and launches on an iPhone 17 Pro simulator while preserving the existing signed-out authentication gate.
+- Native navigation now groups Collections and First Times under one Library tab, leaving room for Habits as a future primary destination without overflowing the iPhone tab bar.
+- Library exposes only implemented archives as interactive routes while keeping Goals, Homes, Vehicles, Places, and People visibly marked as planned.
+- First Times and Collections can render inside the shared Library navigation stack without nested navigation containers or duplicated feature implementations.
+- The shared iOS scheme now has 65 passing tests, including four Library destination-contract tests, and the refactored app passes a warning-free generic Simulator build.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -323,6 +327,16 @@
 - [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, and all 61 native tests.
 - [x] Install and launch the current build on an iPhone 17 Pro simulator without bypassing the existing authentication boundary.
 
+### iOS Library navigation
+
+- [x] Replace separate First Times and Collections tabs with one scalable Library destination.
+- [x] Keep Collections and First Times fully interactive through native push navigation.
+- [x] Reuse each archive inside the Library navigation stack without nesting another `NavigationStack`.
+- [x] Show Goals, Homes, Vehicles, Places, and People as clearly non-interactive planned destinations.
+- [x] Preserve direct primary access to Inbox, Search, and Timeline while reserving tab-bar capacity for Habits.
+- [x] Verify stable destination identity, user-facing metadata, and implemented-versus-planned grouping with four focused tests.
+- [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, and all 65 native tests.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -365,12 +379,13 @@
 - `feat: add Collections browsing contract` implemented and locally verified the shared Collections browsing contract.
 - `feat: deploy Collections browsing contract` deployed and verified the Collections browsing contract on hosted Supabase.
 - `feat: add Web Collections experience` implemented and locally browser-verified the authenticated Web Collections experience.
-- Current change: implemented and simulator-verified the matching native iOS Collections experience.
+- `feat: add iOS Collections experience` implemented and simulator-verified the matching native iOS Collections experience.
+- Current change: consolidated native archive navigation under a scalable Library destination.
 
 ## Next sequence
 
-1. Revisit Library navigation now that Timeline, First Times, and Collections all contain real content.
-2. Choose the next record area from Habits, Places, and Vehicles based on the approved product scope.
+1. Add the shared Habits data contract because Habits is the next confirmed primary mobile destination.
+2. Add matching Web and iOS Habits experiences after the contract is locally verified and deployed.
 
 ## Deferred
 

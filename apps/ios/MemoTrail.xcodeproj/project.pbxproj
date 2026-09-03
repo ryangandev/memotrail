@@ -34,11 +34,14 @@
 		B00000000000000000000019 /* CollectionEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000020 /* CollectionEntry.swift */; };
 		B0000000000000000000001A /* CollectionsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000021 /* CollectionsController.swift */; };
 		B0000000000000000000001B /* CollectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000022 /* CollectionsView.swift */; };
+		B0000000000000000000001C /* LibraryDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000023 /* LibraryDestination.swift */; };
+		B0000000000000000000001D /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000024 /* LibraryView.swift */; };
 		B10000000000000000000001 /* InboxEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000001 /* InboxEntryTests.swift */; };
 		B10000000000000000000002 /* SearchEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000003 /* SearchEntryTests.swift */; };
 		B10000000000000000000003 /* TimelineEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000004 /* TimelineEntryTests.swift */; };
 		B10000000000000000000004 /* FirstTimeEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000005 /* FirstTimeEntryTests.swift */; };
 		B10000000000000000000005 /* CollectionEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000006 /* CollectionEntryTests.swift */; };
+		B10000000000000000000006 /* LibraryDestinationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000007 /* LibraryDestinationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -80,12 +83,15 @@
 		C00000000000000000000020 /* CollectionEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionEntry.swift; sourceTree = "<group>"; };
 		C00000000000000000000021 /* CollectionsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionsController.swift; sourceTree = "<group>"; };
 		C00000000000000000000022 /* CollectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionsView.swift; sourceTree = "<group>"; };
+		C00000000000000000000023 /* LibraryDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryDestination.swift; sourceTree = "<group>"; };
+		C00000000000000000000024 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		C10000000000000000000001 /* InboxEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000002 /* MemoTrailTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MemoTrailTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C10000000000000000000003 /* SearchEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000004 /* TimelineEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000005 /* FirstTimeEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstTimeEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000006 /* CollectionEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionEntryTests.swift; sourceTree = "<group>"; };
+		C10000000000000000000007 /* LibraryDestinationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryDestinationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -159,6 +165,7 @@
 				A10000000000000000000016 /* Timeline */,
 				A10000000000000000000017 /* FirstTimes */,
 				A10000000000000000000018 /* Collections */,
+				A10000000000000000000019 /* Library */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -215,6 +222,7 @@
 				C0000000000000000000001A /* TimelineEntry.swift */,
 				C0000000000000000000001D /* FirstTimeEntry.swift */,
 				C00000000000000000000020 /* CollectionEntry.swift */,
+				C00000000000000000000023 /* LibraryDestination.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -245,6 +253,7 @@
 				C10000000000000000000004 /* TimelineEntryTests.swift */,
 				C10000000000000000000005 /* FirstTimeEntryTests.swift */,
 				C10000000000000000000006 /* CollectionEntryTests.swift */,
+				C10000000000000000000007 /* LibraryDestinationTests.swift */,
 			);
 			path = MemoTrailTests;
 			sourceTree = "<group>";
@@ -283,6 +292,14 @@
 				C00000000000000000000022 /* CollectionsView.swift */,
 			);
 			path = Collections;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000019 /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				C00000000000000000000024 /* LibraryView.swift */,
+			);
+			path = Library;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -418,6 +435,8 @@
 				B00000000000000000000019 /* CollectionEntry.swift in Sources */,
 				B0000000000000000000001A /* CollectionsController.swift in Sources */,
 				B0000000000000000000001B /* CollectionsView.swift in Sources */,
+				B0000000000000000000001C /* LibraryDestination.swift in Sources */,
+				B0000000000000000000001D /* LibraryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -430,6 +449,7 @@
 				B10000000000000000000003 /* TimelineEntryTests.swift in Sources */,
 				B10000000000000000000004 /* FirstTimeEntryTests.swift in Sources */,
 				B10000000000000000000005 /* CollectionEntryTests.swift in Sources */,
+				B10000000000000000000006 /* LibraryDestinationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

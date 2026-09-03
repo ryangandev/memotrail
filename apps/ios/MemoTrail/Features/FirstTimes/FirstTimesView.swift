@@ -7,55 +7,67 @@ struct FirstTimesView: View {
   @State private var controller: FirstTimesController
   @State private var editorSelection: FirstTimeEditorSelection?
 
-  init(client: SupabaseClient, ownerID: UUID) {
+  private let embedded: Bool
+
+  init(client: SupabaseClient, ownerID: UUID, embedded: Bool = false) {
+    self.embedded = embedded
     _controller = State(
       initialValue: FirstTimesController(client: client, ownerID: ownerID)
     )
   }
 
+  @ViewBuilder
   var body: some View {
-    NavigationStack {
-      ScrollView {
-        LazyVStack(alignment: .leading, spacing: MTSpacing.s6) {
-          header
-          summary
-          content
-        }
-        .padding(.horizontal, MTSpacing.s4)
-        .padding(.top, MTSpacing.s6)
-        .padding(.bottom, MTSpacing.s12)
+    if embedded {
+      archiveView
+    } else {
+      NavigationStack {
+        archiveView
       }
-      .background(MTColor.canvas)
-      .navigationTitle("First Times")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbarBackground(MTColor.surface, for: .navigationBar)
-      .toolbarBackground(.visible, for: .navigationBar)
-      .toolbar {
-        ToolbarItem(placement: .topBarTrailing) {
-          Button {
-            editorSelection = FirstTimeEditorSelection(entry: nil)
-          } label: {
-            Image(systemName: "plus")
-          }
-          .accessibilityLabel("Add First Time")
-          .accessibilityIdentifier("add-first-time")
-        }
+    }
+  }
+
+  private var archiveView: some View {
+    ScrollView {
+      LazyVStack(alignment: .leading, spacing: MTSpacing.s6) {
+        header
+        summary
+        content
       }
-      .refreshable {
+      .padding(.horizontal, MTSpacing.s4)
+      .padding(.top, MTSpacing.s6)
+      .padding(.bottom, MTSpacing.s12)
+    }
+    .background(MTColor.canvas)
+    .navigationTitle("First Times")
+    .navigationBarTitleDisplayMode(.inline)
+    .toolbarBackground(MTColor.surface, for: .navigationBar)
+    .toolbarBackground(.visible, for: .navigationBar)
+    .toolbar {
+      ToolbarItem(placement: .topBarTrailing) {
+        Button {
+          editorSelection = FirstTimeEditorSelection(entry: nil)
+        } label: {
+          Image(systemName: "plus")
+        }
+        .accessibilityLabel("Add First Time")
+        .accessibilityIdentifier("add-first-time")
+      }
+    }
+    .refreshable {
+      await controller.load()
+    }
+    .sheet(item: $editorSelection) { selection in
+      FirstTimeEditorSheet(
+        controller: controller,
+        entry: selection.entry,
+        collectionOptions: controller.collectionOptions,
+        tagOptions: controller.tagOptions
+      )
+    }
+    .task {
+      if !controller.hasLoaded {
         await controller.load()
-      }
-      .sheet(item: $editorSelection) { selection in
-        FirstTimeEditorSheet(
-          controller: controller,
-          entry: selection.entry,
-          collectionOptions: controller.collectionOptions,
-          tagOptions: controller.tagOptions
-        )
-      }
-      .task {
-        if !controller.hasLoaded {
-          await controller.load()
-        }
       }
     }
   }
