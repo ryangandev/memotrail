@@ -1,8 +1,8 @@
 # MemoTrail Implementation Progress
 
-> Current phase: iOS Trash experience
+> Current phase: Home data contract
 >
-> Last updated: 2026-09-02
+> Last updated: 2026-09-03
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
@@ -114,6 +114,10 @@
 - Desktop navigation places Trash under Archive while the compact header exposes it without overflowing the five-item mobile tab bar.
 - The Web suite now has 101 passing tests, including eight focused Trash input tests for kinds, identifiers, timestamps, revisions, page parsing, and pagination links.
 - Isolated localhost Chrome verification covered the populated desktop and mobile layouts, signed private image display, Entry restoration, permanent Habit deletion, permanent photo deletion, and confirmed database and private Storage cleanup without application or server errors.
+- iOS now exposes Trash inside Library with the same unified Entry, Habit, and individual-photo feed, signed private thumbnails, exact per-item retention context, and incremental pagination.
+- Native restore and permanent deletion preserve the shared optimistic revision and deletion-time contract, validate owner-scoped Storage paths, remove private objects first, and require explicit destructive confirmation.
+- The shared iOS scheme now has 85 passing tests, including seven focused Trash tests for decoding, composite identity, timestamp precision, retention, pagination, and mutation encoding.
+- The native Trash implementation passes strict Swift formatting, project validation, a warning-free generic Simulator build, the full suite on an iPhone 17 Pro simulator, and an install-and-launch check without bypassing authentication.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -431,6 +435,18 @@
 - [x] Validate Trash inputs and pagination with eight focused tests and keep all 101 Web tests passing.
 - [x] Verify desktop and mobile presentation, signed media, restoration, permanent deletion, and Storage cleanup against isolated local data.
 
+### iOS Trash
+
+- [x] Expose Trash as an interactive Library destination backed by the shared authenticated contract.
+- [x] Show removed Entries, Habits, and individual photos with clear kind, removal, and exact retention context.
+- [x] Display one-hour signed private thumbnails without persisting raw Storage paths or public URLs.
+- [x] Restore only when the visible revision and original deletion timestamp still match.
+- [x] Permanently delete only after explicit confirmation, validate every owner-scoped path, and remove Storage objects before database metadata.
+- [x] Surface loading, empty, success, conflict, offline, and deletion-failure states without claiming automatic cleanup.
+- [x] Load additional items in validated 25-item pages without duplicate cross-table identities.
+- [x] Verify decoding, timestamp precision, identity, retention, pagination, and mutation encoding with seven focused tests.
+- [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, all 85 native tests, and an authenticated-boundary launch check.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -481,11 +497,14 @@
 - `feat: add iOS Habits experience` implemented and simulator-verified the matching native iOS Habits experience.
 - `feat: add Trash data contract` added and locally verified the shared Trash browsing, restoration, and permanent deletion contract.
 - `feat: deploy Trash data contract` deployed and verified the Trash contract on hosted Supabase.
-- Current change: implemented and locally browser-verified the authenticated Web Trash experience.
+- `feat: add Web Trash experience` implemented and locally browser-verified the authenticated Web Trash experience.
+- Current change: implemented and simulator-verified the matching native iOS Trash experience.
 
 ## Next sequence
 
-1. Add the matching native iOS Trash experience inside Library.
+1. Add the shared Home workspace data contract and local database verification.
+2. Add the responsive Web Home experience and global quick-capture access.
+3. Add the matching native Home experience and align the five-item mobile navigation.
 
 ## Deferred
 

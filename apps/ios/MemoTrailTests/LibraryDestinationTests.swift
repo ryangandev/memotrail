@@ -4,7 +4,7 @@ import XCTest
 
 final class LibraryDestinationTests: XCTestCase {
   func testAvailableDestinationsContainOnlyImplementedArchives() {
-    XCTAssertEqual(LibraryDestination.available, [.collections, .firstTimes])
+    XCTAssertEqual(LibraryDestination.available, [.collections, .firstTimes, .trash])
     XCTAssertTrue(LibraryDestination.available.allSatisfy(\.isAvailable))
   }
 
@@ -17,8 +17,8 @@ final class LibraryDestinationTests: XCTestCase {
   }
 
   func testEveryDestinationHasDistinctStableIdentity() {
-    XCTAssertEqual(Set(LibraryDestination.allCases.map(\.id)).count, 7)
-    XCTAssertEqual(LibraryDestination.allCases.count, 7)
+    XCTAssertEqual(Set(LibraryDestination.allCases.map(\.id)).count, 8)
+    XCTAssertEqual(LibraryDestination.allCases.count, 8)
   }
 
   func testEveryDestinationHasUserFacingMetadata() {

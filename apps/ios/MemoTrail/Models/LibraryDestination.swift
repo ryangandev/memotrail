@@ -7,6 +7,7 @@ enum LibraryDestination: String, CaseIterable, Equatable, Hashable, Identifiable
   case homes
   case people
   case places
+  case trash
   case vehicles
 
   var id: String { rawValue }
@@ -25,6 +26,8 @@ enum LibraryDestination: String, CaseIterable, Equatable, Hashable, Identifiable
       "People"
     case .places:
       "Places"
+    case .trash:
+      "Trash"
     case .vehicles:
       "Vehicles"
     }
@@ -44,6 +47,8 @@ enum LibraryDestination: String, CaseIterable, Equatable, Hashable, Identifiable
       "Connect the people who shaped each chapter."
     case .places:
       "Map meaningful locations across your trail."
+    case .trash:
+      "Restore removed items or delete them permanently."
     case .vehicles:
       "Keep the story of vehicles you owned or used."
     }
@@ -63,15 +68,17 @@ enum LibraryDestination: String, CaseIterable, Equatable, Hashable, Identifiable
       "person.2"
     case .places:
       "map"
+    case .trash:
+      "trash"
     case .vehicles:
       "car"
     }
   }
 
   var isAvailable: Bool {
-    self == .collections || self == .firstTimes
+    self == .collections || self == .firstTimes || self == .trash
   }
 
-  static let available: [LibraryDestination] = [.collections, .firstTimes]
+  static let available: [LibraryDestination] = [.collections, .firstTimes, .trash]
   static let planned: [LibraryDestination] = [.goals, .homes, .vehicles, .places, .people]
 }
