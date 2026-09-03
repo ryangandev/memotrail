@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Home data contract
+> Current phase: Home data contract deployment
 >
 > Last updated: 2026-09-03
 >
@@ -118,6 +118,10 @@
 - Native restore and permanent deletion preserve the shared optimistic revision and deletion-time contract, validate owner-scoped Storage paths, remove private objects first, and require explicit destructive confirmation.
 - The shared iOS scheme now has 85 passing tests, including seven focused Trash tests for decoding, composite identity, timestamp precision, retention, pagination, and mutation encoding.
 - The native Trash implementation passes strict Swift formatting, project validation, a warning-free generic Simulator build, the full suite on an iPhone 17 Pro simulator, and an install-and-launch check without bypassing authentication.
+- The locally verified Home contract now returns one owner-scoped snapshot with Inbox, Entry, First Time, Collection, and active Habit counts.
+- Home derives the requested local day's due, completed, and skipped Habit progress without storing synthetic states, and finds current visible Timeline stages using the device time zone.
+- Home returns recent non-Trash Entries with organization and private attachment metadata plus current stage context for shared Web and iOS presentation.
+- The local database now passes 306 pgTAP tests plus warning-free schema lint, including 36 focused Home tests for counts, ordering, time zones, visibility, input limits, grants, and function hardening.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -447,6 +451,18 @@
 - [x] Verify decoding, timestamp precision, identity, retention, pagination, and mutation encoding with seven focused tests.
 - [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, all 85 native tests, and an authenticated-boundary launch check.
 
+### Home data contract
+
+- [x] Return one authenticated owner snapshot for an explicit local date and IANA time zone.
+- [x] Count active Entries, Inbox items, First Times, Collections, and Habits without including Trash, archived records, or other owners.
+- [x] Derive due, completed, and skipped Habit totals from the shared schedule semantics for the requested date.
+- [x] Return visible current Timeline stages using timezone-aware local-day boundaries.
+- [x] Return up to ten recent Entries in stable capture order with Collections, tags, and active private attachment metadata.
+- [x] Validate the local date, time zone, and recent-Entry limit before querying.
+- [x] Keep execution authenticated-only with invoker security, Row Level Security, and an empty function search path.
+- [x] Add a partial owner and creation-time index for the recent active Entry query.
+- [x] Verify the shared contract with 36 focused pgTAP tests, all 306 database tests, and warning-free local schema lint.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -498,11 +514,12 @@
 - `feat: add Trash data contract` added and locally verified the shared Trash browsing, restoration, and permanent deletion contract.
 - `feat: deploy Trash data contract` deployed and verified the Trash contract on hosted Supabase.
 - `feat: add Web Trash experience` implemented and locally browser-verified the authenticated Web Trash experience.
-- Current change: implemented and simulator-verified the matching native iOS Trash experience.
+- `feat: add iOS Trash experience` implemented and simulator-verified the matching native iOS Trash experience.
+- Current change: added and locally verified the shared Home workspace data contract.
 
 ## Next sequence
 
-1. Add the shared Home workspace data contract and local database verification.
+1. Deploy and verify the Home workspace contract on hosted Supabase.
 2. Add the responsive Web Home experience and global quick-capture access.
 3. Add the matching native Home experience and align the five-item mobile navigation.
 
