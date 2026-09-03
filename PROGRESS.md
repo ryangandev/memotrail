@@ -14,7 +14,7 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- The linked hosted Supabase project contains all eight reviewed repository migrations and no development seed users.
+- The linked hosted Supabase project contains all nine reviewed repository migrations and no development seed users.
 - The hosted atomic Entry review contract now supports content, Type, occurrence, Collection, tag, and `Done` updates in one transaction.
 - Hosted verification found 21 Row Level Security-enabled application tables, 22 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
@@ -94,6 +94,7 @@
 - The locally verified Habits contract supports check-off and measured Habits, daily, selected-weekday, weekly-target, and interval schedules, revision-safe definitions and occurrences, recoverable Trash, and immutable history.
 - Habit workspaces derive pending and not-scheduled states for one local date, while the yearly calendar distinguishes completed, skipped, missed, pending, upcoming, and not-scheduled dates without storing synthetic misses.
 - The local database now passes 213 pgTAP tests plus warning-free schema lint, including 49 focused Habits tests for schedule validation, creation, measurement rules, occurrence correction, optimistic conflicts, history, Trash, access boundaries, and function hardening.
+- Hosted verification confirms the Habits migration, aligned nine-migration ledger, warning-free schema, empty function search paths, authenticated-only execution grants, RLS-enabled history, least-privilege table grants, and supporting indexes.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -352,8 +353,8 @@
 - [x] Keep other owners and anonymous callers outside the contract through RLS-backed security-invoker functions.
 - [x] Restrict new history tables to authenticated Select access and every function to the minimum authenticated execution grant.
 - [x] Verify the shared contract with 49 focused pgTAP tests and warning-free local schema lint.
-- [ ] Apply the additive Habits migration to hosted Supabase without seed or role changes.
-- [ ] Verify the hosted migration ledger, schema lint, function definitions, execution grants, table privileges, and indexes after rollout.
+- [x] Apply the additive Habits migration to hosted Supabase without seed or role changes.
+- [x] Verify the hosted migration ledger, schema lint, function definitions, execution grants, table privileges, and indexes after rollout.
 
 ## Feature history
 
@@ -399,13 +400,13 @@
 - `feat: add Web Collections experience` implemented and locally browser-verified the authenticated Web Collections experience.
 - `feat: add iOS Collections experience` implemented and simulator-verified the matching native iOS Collections experience.
 - `feat: add iOS Library navigation` consolidated native archive navigation under a scalable Library destination.
-- Current change: added and locally verified the shared Habits data contract.
+- `feat: add Habits data contract` added and locally verified the shared Habits data contract.
+- Current change: deployed and verified the Habits data contract on hosted Supabase.
 
 ## Next sequence
 
-1. Deploy and verify the additive Habits data contract on hosted Supabase.
-2. Add the authenticated Web Habits experience.
-3. Add the matching native iOS Habits experience as a primary tab.
+1. Add the authenticated Web Habits experience.
+2. Add the matching native iOS Habits experience as a primary tab.
 
 ## Deferred
 
