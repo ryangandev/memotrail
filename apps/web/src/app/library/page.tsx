@@ -33,9 +33,15 @@ const availableDestinations = [
     icon: "home" as const,
     title: "Homes",
   },
+  {
+    detail: "Remember every vehicle and the chapter it carried you through.",
+    href: "/vehicles",
+    icon: "car" as const,
+    title: "Vehicles",
+  },
 ];
 
-const plannedDestinations = ["Goals", "Vehicles", "Places", "People"];
+const plannedDestinations = ["Goals", "Places", "People"];
 
 export default async function LibraryPage() {
   if (!getSupabasePublicConfig()) {
@@ -73,7 +79,7 @@ export default async function LibraryPage() {
         <section aria-labelledby="available-library-heading">
           <div className={styles.sectionHeading}>
             <h2 id="available-library-heading">Available now</h2>
-            <span>Four ways into the archive</span>
+            <span>Five ways into the archive</span>
           </div>
           <div className={styles.availableGrid}>
             {availableDestinations.map((destination) => (

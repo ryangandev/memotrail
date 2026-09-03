@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Web Vehicles experience
+> Current phase: iOS Vehicles experience
 >
 > Last updated: 2026-09-03
 >
@@ -207,6 +207,11 @@
 - The local database now passes 480 pgTAP tests plus warning-free schema lint, including 58 focused Vehicles tests for validation, ordering, organization, history, Timeline, Search, Trash, grants, Home-history regression, and privacy.
 - Hosted Supabase now contains the additive Vehicles migration with an aligned fifteen-migration ledger and no seed or role deployment.
 - Hosted verification confirms all three Vehicles functions, both supporting indexes, the combined Home and Vehicle history trigger, empty function search paths, authenticated-only execution grants, and warning-free public and extensions schema lint.
+- Web now exposes Vehicles as a dedicated authenticated archive with current and earlier chapters, human date context, elapsed duration, structured facts, memories, organization, and private photo covers.
+- The Web Vehicle editor atomically creates or revision-safely updates its ownership or regular-use dates, optional make, model, year and color, Collections, tags, memories, and private Entry photos through the shared hosted contract.
+- Vehicle Timeline stages now open the specialized Vehicle editor instead of the generic Timeline editor, while Vehicles is available from both Records navigation and Library.
+- The Web suite now has 160 passing tests, including 12 focused Vehicle input, response, fact, range, duration, and attachment-decoding tests, and passes lint, typecheck, and production build checks.
+- Localhost verification confirmed the signed-out authentication boundary for the new route; authenticated mutation coverage remains enforced by the shared contract and server-action validation without retaining synthetic user data.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -753,6 +758,15 @@
 - [x] Verify the contract with 58 focused pgTAP tests while keeping all 480 database tests and warning-level schema lint passing.
 - [x] Apply and verify the additive Vehicles migration on hosted Supabase.
 
+### Web Vehicles experience
+
+- [x] Present current and earlier Vehicles as distinct chapters with date range, duration, structured facts, memories, organization, and a private photo cover.
+- [x] Create or revision-safely edit ownership or regular-use dates, precision, human labels, make, model, model year, color, Collections, tags, and memories through one mutation.
+- [x] Upload supported private Entry photos to owner-scoped Storage, register them only after upload, and preserve retryable failures.
+- [x] Move a Vehicle or individual photo to recoverable Trash without deleting the underlying private original.
+- [x] Route Vehicle stages from Timeline to the specialized Vehicle editor and expose Vehicles through Records and Library navigation.
+- [x] Verify Vehicle parsing, facts, range and duration presentation, attachment decoding, lint, typecheck, production build, and the signed-out localhost boundary while keeping all 160 Web tests passing.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -826,13 +840,14 @@
 - `feat: add Web Homes experience` added and authenticated-browser-verified the complete Web Homes experience.
 - `feat: add iOS Homes experience` added and simulator-verified the complete native iOS Homes experience.
 - `feat: add Vehicles data contract` added and locally verified the shared Vehicles and ownership-period data contract.
-- Current change: deployed and verified the additive Vehicles contract on hosted Supabase.
+- `feat: deploy Vehicles data contract` deployed and verified the additive Vehicles contract on hosted Supabase.
+- Current change: added and locally verified the complete Web Vehicles experience.
 
 ## Next sequence
 
-1. Build the Web Vehicles archive with current and earlier ownership or regular-use chapters.
-2. Add revision-safe creation and editing for dates, make, model, year, color, Collections, tags, memories, private photos, and recoverable Trash.
-3. Route Vehicle Timeline stages to the specialized editor and verify the authenticated localhost experience without retaining test data.
+1. Build the matching native Vehicles archive inside Library with current and earlier chapters.
+2. Add revision-safe native creation and editing for dates, structured facts, organization, memories, private photos, and recoverable Trash.
+3. Route native Vehicle Timeline stages to the specialized editor, add focused tests, and verify the simulator build and suite.
 
 ## Deferred
 

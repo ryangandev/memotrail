@@ -200,6 +200,7 @@ export function TimelineWorkspace({
                 ) : (
                   <div className={styles.mobileItems}>
                     {track.items.map((entry) => {
+                      const specializedHref = specializedEntryHref(entry);
                       const content = (
                         <>
                           <span
@@ -217,8 +218,8 @@ export function TimelineWorkspace({
                         </>
                       );
 
-                      return entry.entryType === "home" ? (
-                        <Link href={`/homes?entry=${entry.id}`} key={entry.id}>
+                      return specializedHref ? (
+                        <Link href={specializedHref} key={entry.id}>
                           {content}
                         </Link>
                       ) : (
@@ -326,13 +327,10 @@ function TrackRow({
             style: itemStyle,
             title: `${entry.title} · ${entryDateLabel(entry)}`,
           };
+          const specializedHref = specializedEntryHref(entry);
 
-          return entry.entryType === "home" ? (
-            <Link
-              {...sharedProps}
-              href={`/homes?entry=${entry.id}`}
-              key={entry.id}
-            >
+          return specializedHref ? (
+            <Link {...sharedProps} href={specializedHref} key={entry.id}>
               {content}
             </Link>
           ) : (
@@ -354,6 +352,12 @@ function TrackRow({
       </div>
     </>
   );
+}
+
+function specializedEntryHref(entry: TimelineEntry) {
+  if (entry.entryType === "home") return `/homes?entry=${entry.id}`;
+  if (entry.entryType === "vehicle") return `/vehicles?entry=${entry.id}`;
+  return null;
 }
 
 function TimelineEditor({
