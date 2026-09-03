@@ -53,13 +53,22 @@ values (
 )
 on conflict (id) do nothing;
 
-set local role authenticated;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
+
+create temporary table pg_temp.first_times_test_baseline (entry_id uuid primary key);
+
+insert into pg_temp.first_times_test_baseline (entry_id)
+select entry_id
+from public.first_times_workspace();
+
+grant select on pg_temp.first_times_test_baseline to authenticated;
+
+set local role authenticated;
 
 select is(
   (select count(*)::integer from public.first_times_workspace()),
-  0,
-  'First Times workspace starts empty for the seeded owner'
+  (select count(*)::integer from pg_temp.first_times_test_baseline),
+  'First Times tests preserve any existing local workspace Entries'
 );
 
 select lives_ok(
@@ -182,15 +191,17 @@ select is(
   (
     select count(*)::integer
     from public.first_times_workspace()
+    where entry_id not in (select entry_id from pg_temp.first_times_test_baseline)
   ),
   2,
-  'The workspace returns every non-Trash First Time'
+  'The workspace returns both First Times created by this test'
 );
 
 select is(
   (
     select title
     from public.first_times_workspace()
+    where entry_id not in (select entry_id from pg_temp.first_times_test_baseline)
     limit 1
   ),
   'First time skiing',

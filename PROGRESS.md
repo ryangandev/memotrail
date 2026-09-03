@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: First Times
+> Current phase: Collections
 >
 > Last updated: 2026-09-02
 >
@@ -75,6 +75,9 @@
 - The native First Time editor supports title-only creation, optional and imprecise dates, human labels, reflection, organization, multi-photo selection, preview, revision-safe edits, and recoverable Trash actions.
 - Native photo uploads preserve supported originals, validate file signatures and picker metadata, use owner-scoped private paths, register only after upload, and retain failed selections for retry without losing saved content.
 - The shared iOS scheme now has 51 passing tests, including 13 First Times tests, and passes a warning-free generic Simulator build.
+- A locally verified Collections contract now returns every active owned Collection, including empty ones, with active Entry counts, Inbox counts, stable ordering, and recency.
+- Collection detail returns paginated non-Trash Entries with Types, occurrence context, full organization, and active private attachment metadata while enforcing owner isolation.
+- The local database now passes 164 pgTAP tests plus schema lint, including 35 focused Collections tests and a data-independent First Times suite that tolerates existing local records.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -274,6 +277,19 @@
 - [x] Verify decoding, sorting, date display, validation, photo detection, private paths, and RPC parameters with 13 focused tests.
 - [x] Pass the warning-free generic Simulator build and all 51 tests on an iPhone 17 Pro simulator.
 
+### Collections data contract
+
+- [x] Return every active Collection owned by the authenticated user, including empty Collections.
+- [x] Count only non-Trash Entries and separately report Entries still awaiting Inbox review.
+- [x] Preserve configured sort order with stable case-insensitive name ordering.
+- [x] Return a paginated Collection detail feed with complete Entry content, Type, Inbox state, occurrence context, and revision.
+- [x] Include every active linked Collection, tag, and private attachment metadata object for each Entry.
+- [x] Keep archived Collections, Trash Entries, and recoverably removed attachments out of active browsing.
+- [x] Validate page limits and offsets before executing Collection detail.
+- [x] Enforce owner isolation and unauthenticated denial through RLS-backed security-invoker functions.
+- [x] Restrict function execution to authenticated users and use empty function search paths.
+- [x] Verify the shared contract with 35 focused pgTAP tests and warning-free local schema lint.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -312,12 +328,14 @@
 - `fix: restrict authenticated table grants` removed table privileges outside the intended RLS-managed client surface.
 - `feat: deploy First Times data contract` deployed and verified the First Times contract and least-privilege correction on hosted Supabase.
 - `feat: add Web First Times experience` implemented and locally browser-verified the dedicated Web First Times experience.
-- Current change: implemented and simulator-verified the matching native iOS First Times experience.
+- `feat: add iOS First Times experience` implemented and simulator-verified the matching native iOS First Times experience.
+- Current change: implemented and locally verified the shared Collections browsing contract.
 
 ## Next sequence
 
-1. Define and locally verify the shared Collections browsing contract.
-2. Add matching Web and iOS Collections destinations, then revisit Library navigation with real content behind it.
+1. Deploy and verify the Collections browsing contract on hosted Supabase.
+2. Add the authenticated Web Collections experience.
+3. Add the matching native iOS Collections experience, then revisit Library navigation with real content behind it.
 
 ## Deferred
 
