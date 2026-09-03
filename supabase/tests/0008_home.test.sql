@@ -64,34 +64,19 @@ update public.profiles
 set display_name = 'MemoTrail Home'
 where user_id = '10000000-0000-0000-0000-000000000001';
 
+-- The development seed uses this owner, so clear its mutable archive inside
+-- the transaction before installing deterministic Home fixtures.
 delete from public.entries
-where id in (
-  '81000000-0000-0000-0000-000000000001',
-  '81000000-0000-0000-0000-000000000002',
-  '81000000-0000-0000-0000-000000000003',
-  '81000000-0000-0000-0000-000000000004',
-  '81000000-0000-0000-0000-000000000005',
-  '81000000-0000-0000-0000-000000000006',
-  '81000000-0000-0000-0000-000000000007'
-);
+where owner_id = '10000000-0000-0000-0000-000000000001';
 
 delete from public.collections
-where id in (
-  '82000000-0000-0000-0000-000000000001',
-  '82000000-0000-0000-0000-000000000002'
-);
+where owner_id = '10000000-0000-0000-0000-000000000001';
 
 delete from public.tags
-where id = '83000000-0000-0000-0000-000000000001';
+where owner_id = '10000000-0000-0000-0000-000000000001';
 
 delete from public.habits
-where id in (
-  '84000000-0000-0000-0000-000000000001',
-  '84000000-0000-0000-0000-000000000002',
-  '84000000-0000-0000-0000-000000000003',
-  '84000000-0000-0000-0000-000000000004',
-  '84000000-0000-0000-0000-000000000005'
-);
+where owner_id = '10000000-0000-0000-0000-000000000001';
 
 insert into public.entries (
   id,
@@ -392,12 +377,12 @@ select is(
 );
 select is(
   (select inbox_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  2::bigint,
+  1::bigint,
   'Inbox count includes only active owner Entries awaiting review'
 );
 select is(
   (select entry_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  6::bigint,
+  5::bigint,
   'Entry count includes every active owner Entry'
 );
 select is(
@@ -407,7 +392,7 @@ select is(
 );
 select is(
   (select collection_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  3::bigint,
+  1::bigint,
   'Collection count excludes archived Collections'
 );
 select is(
