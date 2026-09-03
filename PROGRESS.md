@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Hosted Vehicles contract deployment
+> Current phase: Web Vehicles experience
 >
 > Last updated: 2026-09-03
 >
@@ -205,6 +205,8 @@
 - Vehicle version history now preserves the previous specialized facts and Timeline state without regressing the previously enriched Home and Place snapshots.
 - The contract supports incomplete historical facts, open-ended current periods, recoverable Trash restoration, global structured search, optimistic conflicts, and owner isolation while excluding operational vehicle management.
 - The local database now passes 480 pgTAP tests plus warning-free schema lint, including 58 focused Vehicles tests for validation, ordering, organization, history, Timeline, Search, Trash, grants, Home-history regression, and privacy.
+- Hosted Supabase now contains the additive Vehicles migration with an aligned fifteen-migration ledger and no seed or role deployment.
+- Hosted verification confirms all three Vehicles functions, both supporting indexes, the combined Home and Vehicle history trigger, empty function search paths, authenticated-only execution grants, and warning-free public and extensions schema lint.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -749,7 +751,7 @@
 - [x] Reject invalid years and date ranges, stale revisions, cross-owner edits, and cross-owner Trash access without partial mutations.
 - [x] Keep every contract function authenticated-only, security-invoker, Row Level Security-backed, empty-search-path, and supported by focused indexes.
 - [x] Verify the contract with 58 focused pgTAP tests while keeping all 480 database tests and warning-level schema lint passing.
-- [ ] Apply and verify the additive Vehicles migration on hosted Supabase.
+- [x] Apply and verify the additive Vehicles migration on hosted Supabase.
 
 ## Feature history
 
@@ -823,13 +825,14 @@
 - `feat: deploy Homes data contract` deployed and verified the additive Homes and moves contract on hosted Supabase.
 - `feat: add Web Homes experience` added and authenticated-browser-verified the complete Web Homes experience.
 - `feat: add iOS Homes experience` added and simulator-verified the complete native iOS Homes experience.
-- Current change: added and locally verified the shared Vehicles and ownership-period data contract.
+- `feat: add Vehicles data contract` added and locally verified the shared Vehicles and ownership-period data contract.
+- Current change: deployed and verified the additive Vehicles contract on hosted Supabase.
 
 ## Next sequence
 
-1. Apply only the version-controlled additive Vehicles migration to the linked hosted Supabase project.
-2. Verify the hosted migration ledger, function definitions, grants, indexes, history trigger, and schema lint without adding seed data.
-3. Build the Web Vehicles archive and editor against the verified shared contract.
+1. Build the Web Vehicles archive with current and earlier ownership or regular-use chapters.
+2. Add revision-safe creation and editing for dates, make, model, year, color, Collections, tags, memories, private photos, and recoverable Trash.
+3. Route Vehicle Timeline stages to the specialized editor and verify the authenticated localhost experience without retaining test data.
 
 ## Deferred
 
