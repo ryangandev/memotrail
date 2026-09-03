@@ -67,6 +67,10 @@
 - The native Timeline implementation passes a warning-free generic Simulator build and the full suite on an iPhone 17 Pro simulator.
 - The locally verified First Times contract supports lightweight direct creation, revision-safe editing, organization, private photo registration, and recoverable removal.
 - The local database now passes 129 pgTAP tests plus schema lint, including 43 focused First Times and private media tests plus exact authenticated table-grant coverage.
+- Web now exposes First Times as a dedicated authenticated archive with photo-forward and text-first cards, lightweight direct creation, revision-safe editing, and recoverable Trash actions.
+- Web First Times uploads originals directly to the owner's private Storage path, registers metadata only after upload, uses expiring signed URLs for display, and retries failed photo attachment without losing saved content.
+- The Web suite now has 68 passing tests, including First Time content, organization, date precision, identity, MIME type, file-size, and private object-path validation.
+- Synthetic localhost browser verification covered creation, Collections and tags, an exact local date, private PNG upload, signed image display, revision-safe editing, desktop layout, and an iPhone-sized responsive layout.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -241,6 +245,18 @@
 - [x] Keep profiles limited to Select and Update, Entry history and attachments limited to Select, and RLS-managed application tables limited to CRUD.
 - [x] Verify the exact local and hosted privilege inventories after migration.
 
+### Web First Times
+
+- [x] Require the same authenticated server session as Inbox, Search, and Timeline before loading First Times.
+- [x] Show dated and unknown-date First Times in a dedicated responsive archive with useful empty and unavailable states.
+- [x] Create a First Time with only a title required and optional reflection, date precision, human date label, Collections, and tags.
+- [x] Revision-safely edit First Time content and organization and surface cross-device conflicts.
+- [x] Select and preview supported photos before saving, enforce client limits, and upload originals directly to the private owner and Entry path.
+- [x] Register photo metadata only after Storage confirms upload and remove an orphaned object when registration fails.
+- [x] Display private photos through one-hour signed URLs without persisting a public URL.
+- [x] Recoverably remove a photo or move the full First Time to Trash with an explicit confirmation.
+- [x] Verify input normalization with 11 focused tests and the full create, photo, display, and edit path against local Supabase in a real browser.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -277,13 +293,13 @@
 - `feat: add iOS Timeline experience` implemented and simulator-verified the matching native iOS Timeline experience.
 - `feat: add First Times data contract` implemented and locally verified the shared First Times and private photo-attachment data contract.
 - `fix: restrict authenticated table grants` removed table privileges outside the intended RLS-managed client surface.
-- Current change: deployed and verified the First Times contract and least-privilege correction on hosted Supabase.
+- `feat: deploy First Times data contract` deployed and verified the First Times contract and least-privilege correction on hosted Supabase.
+- Current change: implemented and locally browser-verified the dedicated Web First Times experience.
 
 ## Next sequence
 
-1. Add the shared First Times and private photo-attachment data contract.
-2. Add the dedicated Web First Times experience.
-3. Add the matching native iOS First Times experience.
+1. Add the matching native iOS First Times experience.
+2. Revisit Library navigation after First Times, Collections, and the remaining record types have real destinations.
 
 ## Deferred
 

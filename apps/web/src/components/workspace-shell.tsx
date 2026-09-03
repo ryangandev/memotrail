@@ -33,7 +33,12 @@ const primaryNavigation: NavigationItem[] = [
     icon: "timeline",
     label: "Timeline",
   },
-  { destination: "first-times", icon: "star", label: "First Times" },
+  {
+    destination: "first-times",
+    href: "/first-times",
+    icon: "star",
+    label: "First Times",
+  },
   { destination: "collections", icon: "archive", label: "Collections" },
 ];
 
