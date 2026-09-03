@@ -259,6 +259,8 @@
 - GitHub Actions iOS failures were traced to Xcode 16.4 enforcing Swift 6 actor-boundary checks against Supabase 2.55.1 response types that do not yet carry Sendable annotations.
 - Every native Supabase integration now declares that dependency as a pre-concurrency module boundary while retaining Swift 6 and complete concurrency checking for MemoTrail code.
 - The compatibility change passes strict formatting for every touched Swift file, a complete-concurrency generic Simulator build, and all 151 tests on an iPhone 17 Pro simulator.
+- Once those dependency diagnostics became warnings, the remote runner exposed one app-owned Xcode 16.4 error where a file-scope Collections helper created SwiftUI views outside the main actor.
+- All file-scope SwiftUI helpers in that feature are now explicitly main-actor isolated, matching the `View` protocol and newer SDK behavior without changing the interface.
 - The independent Home pgTAP failure was traced to four assertions that assumed development seed content would sort behind their fixtures.
 - The Home suite now clears mutable data for its fixture owner inside the rollback transaction, so all 617 database tests and warning-level schema lint pass with or without seed content.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
@@ -898,6 +900,7 @@
 
 - [x] Reproduce the failing runner diagnostics from GitHub Actions and identify the affected third-party concurrency boundary.
 - [x] Mark Supabase imports as pre-concurrency compatibility boundaries without lowering MemoTrail's Swift language mode or concurrency checks.
+- [x] Main-actor isolate the file-scope Collections view helpers required by the Xcode 16.4 SwiftUI SDK.
 - [x] Pass strict formatting for every touched Swift file, a complete-concurrency generic Simulator build, and all 151 native tests.
 - [ ] Push the compatibility fix and confirm the GitHub Actions iOS job succeeds on `macos-15` with Xcode 16.4.
 
@@ -993,12 +996,13 @@
 - `feat: add Web Places experience` implemented and locally browser-verified the complete Web Places experience.
 - `feat: add iOS Places experience` implemented and simulator-verified the matching native iOS Places experience.
 - `fix: restore iOS CI concurrency compatibility` added a narrow Supabase compatibility boundary for the Xcode 16.4 GitHub Actions build.
-- Current change: isolated the Home database suite from development seed content that made four CI assertions order-dependent.
+- `test: isolate Home database fixtures` isolated the Home suite from development seed content that made four CI assertions order-dependent.
+- Current change: aligned the remaining file-scope Collections view helpers with Xcode 16.4 main-actor isolation.
 
 ## Next sequence
 
-1. Confirm the pushed iOS compatibility repair on the `macos-15` GitHub Actions runner.
-2. Push the Home test isolation and verify the complete GitHub Actions workflow remotely.
+1. Push the remaining Xcode 16.4 actor-isolation repair together with the committed Home test isolation.
+2. Verify the complete GitHub Actions workflow remotely.
 3. Pause for product review once the remote workflow and local working tree are both clean.
 
 ## Deferred

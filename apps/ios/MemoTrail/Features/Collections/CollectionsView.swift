@@ -462,6 +462,7 @@ private struct CollectionRemoteImage: View {
   }
 }
 
+@MainActor
 private func metadataBadge(_ title: String, isWarm: Bool = false) -> some View {
   Text(title)
     .font(.system(size: 10, weight: .medium))
@@ -471,7 +472,7 @@ private func metadataBadge(_ title: String, isWarm: Bool = false) -> some View {
     .background(isWarm ? MTColor.warmSubtle : MTColor.surfaceSubtle, in: Capsule())
 }
 
-@ViewBuilder
+@MainActor @ViewBuilder
 private func organizationPills(entry: CollectionEntry) -> some View {
   if !entry.collectionNames.isEmpty || !entry.tagNames.isEmpty {
     ScrollView(.horizontal, showsIndicators: false) {
@@ -497,6 +498,7 @@ private func organizationPills(entry: CollectionEntry) -> some View {
   }
 }
 
+@MainActor
 private func loadingView(_ message: String) -> some View {
   HStack(spacing: MTSpacing.s3) {
     ProgressView()
@@ -507,6 +509,7 @@ private func loadingView(_ message: String) -> some View {
   .frame(maxWidth: .infinity, minHeight: 180)
 }
 
+@MainActor
 private func archiveMessage(
   title: String,
   message: String,
