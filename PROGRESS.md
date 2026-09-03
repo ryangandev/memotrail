@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Home data contract deployment
+> Current phase: Web Home experience
 >
 > Last updated: 2026-09-03
 >
@@ -14,7 +14,7 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- The linked hosted Supabase project contains all nine reviewed repository migrations and no development seed users.
+- The linked hosted Supabase project contains all eleven reviewed repository migrations and no development seed users.
 - The hosted atomic Entry review contract now supports content, Type, occurrence, Collection, tag, and `Done` updates in one transaction.
 - Hosted verification found 21 Row Level Security-enabled application tables, 22 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
@@ -122,6 +122,7 @@
 - Home derives the requested local day's due, completed, and skipped Habit progress without storing synthetic states, and finds current visible Timeline stages using the device time zone.
 - Home returns recent non-Trash Entries with organization and private attachment metadata plus current stage context for shared Web and iOS presentation.
 - The local database now passes 306 pgTAP tests plus warning-free schema lint, including 36 focused Home tests for counts, ordering, time zones, visibility, input limits, grants, and function hardening.
+- Hosted verification confirms the Home migration, aligned eleven-migration ledger, warning-free schema, authenticated-only execution, invoker security, empty function search path, and supporting partial index.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -462,6 +463,8 @@
 - [x] Keep execution authenticated-only with invoker security, Row Level Security, and an empty function search path.
 - [x] Add a partial owner and creation-time index for the recent active Entry query.
 - [x] Verify the shared contract with 36 focused pgTAP tests, all 306 database tests, and warning-free local schema lint.
+- [x] Apply the additive Home migration to hosted Supabase without seed or role changes.
+- [x] Verify the hosted migration ledger, schema lint, function definition, execution grant, security mode, search path, and index after rollout.
 
 ## Feature history
 
@@ -515,13 +518,13 @@
 - `feat: deploy Trash data contract` deployed and verified the Trash contract on hosted Supabase.
 - `feat: add Web Trash experience` implemented and locally browser-verified the authenticated Web Trash experience.
 - `feat: add iOS Trash experience` implemented and simulator-verified the matching native iOS Trash experience.
-- Current change: added and locally verified the shared Home workspace data contract.
+- `feat: add Home workspace contract` added and locally verified the shared Home workspace data contract.
+- Current change: deployed and verified the Home workspace contract on hosted Supabase.
 
 ## Next sequence
 
-1. Deploy and verify the Home workspace contract on hosted Supabase.
-2. Add the responsive Web Home experience and global quick-capture access.
-3. Add the matching native Home experience and align the five-item mobile navigation.
+1. Add the responsive Web Home experience and global quick-capture access.
+2. Add the matching native Home experience and align the five-item mobile navigation.
 
 ## Deferred
 
