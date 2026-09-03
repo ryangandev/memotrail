@@ -13,6 +13,7 @@ export type WorkspaceDestination =
   | "collections"
   | "habits"
   | "home"
+  | "homes"
   | "inbox"
   | "library"
   | "places"
@@ -43,6 +44,7 @@ const primaryNavigation: NavigationItem[] = [
 
 const recordNavigation: NavigationItem[] = [
   { destination: "habits", href: "/habits", icon: "check", label: "Habits" },
+  { destination: "homes", href: "/homes", icon: "home", label: "Homes" },
   { destination: "places", icon: "map", label: "Places" },
   { destination: "vehicles", icon: "car", label: "Vehicles" },
 ];
@@ -307,7 +309,9 @@ function isNavigationActive(
   return (
     item.destination === activeDestination ||
     (item.destination === "library" &&
-      ["collections", "first-times", "trash"].includes(activeDestination))
+      ["collections", "first-times", "homes", "trash"].includes(
+        activeDestination,
+      ))
   );
 }
 

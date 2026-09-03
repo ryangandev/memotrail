@@ -9,6 +9,7 @@ import type {
 export type TimelineEntry = {
   body: string;
   datePrecision: TimelineDatePrecision;
+  entryType: string;
   id: string;
   kind: TimelineKind;
   occurredEnd: string | null;
@@ -41,6 +42,7 @@ type TimelineRow = {
   body: string | null;
   date_precision: TimelineDatePrecision | null;
   entry_id: string | null;
+  entry_type: string | null;
   item_sort_order: number | null;
   occurred_end: string | null;
   occurred_label: string | null;
@@ -108,6 +110,7 @@ function tracksFromRows(rows: TimelineRow[]) {
       track.items.push({
         body: row.body ?? "",
         datePrecision: row.date_precision ?? "unknown",
+        entryType: row.entry_type ?? "standard",
         id: row.entry_id,
         kind: row.timeline_kind ?? "event",
         occurredEnd: row.occurred_end,
@@ -166,6 +169,7 @@ function isTimelineRow(value: unknown): value is TimelineRow {
   return (
     typeof value.entry_id === "string" &&
     typeof value.body === "string" &&
+    typeof value.entry_type === "string" &&
     typeof value.title === "string" &&
     (value.timeline_kind === "stage" || value.timeline_kind === "event") &&
     typeof value.occurred_start === "string" &&

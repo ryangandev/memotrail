@@ -104,7 +104,7 @@
 
 .plannedGrid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   overflow: hidden;
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   useEffect,
   useMemo,
@@ -198,28 +199,40 @@ export function TimelineWorkspace({
                   <p className={styles.mobileEmpty}>No moments yet.</p>
                 ) : (
                   <div className={styles.mobileItems}>
-                    {track.items.map((entry) => (
-                      <button
-                        key={entry.id}
-                        onClick={() =>
-                          setSelection({ entry, initialTrackId: null })
-                        }
-                        type="button"
-                      >
-                        <span
-                          className={
-                            entry.kind === "stage"
-                              ? styles.mobileStageMarker
-                              : styles.mobileEventMarker
+                    {track.items.map((entry) => {
+                      const content = (
+                        <>
+                          <span
+                            className={
+                              entry.kind === "stage"
+                                ? styles.mobileStageMarker
+                                : styles.mobileEventMarker
+                            }
+                          />
+                          <span>
+                            <strong>{entry.title}</strong>
+                            <small>{entryDateLabel(entry)}</small>
+                          </span>
+                          <Icon name="chevron" size={15} />
+                        </>
+                      );
+
+                      return entry.entryType === "home" ? (
+                        <Link href={`/homes?entry=${entry.id}`} key={entry.id}>
+                          {content}
+                        </Link>
+                      ) : (
+                        <button
+                          key={entry.id}
+                          onClick={() =>
+                            setSelection({ entry, initialTrackId: null })
                           }
-                        />
-                        <span>
-                          <strong>{entry.title}</strong>
-                          <small>{entryDateLabel(entry)}</small>
-                        </span>
-                        <Icon name="chevron" size={15} />
-                      </button>
-                    ))}
+                          type="button"
+                        >
+                          {content}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </article>
@@ -297,22 +310,39 @@ function TrackRow({
             "--item-width": `${position.widthPercent}%`,
           };
 
-          return (
-            <button
-              aria-label={`${entry.title}, ${entryDateLabel(entry)}`}
-              className={
-                entry.kind === "stage" ? styles.stageItem : styles.eventItem
-              }
-              key={entry.id}
-              onClick={() => onSelect(entry)}
-              style={itemStyle}
-              title={`${entry.title} · ${entryDateLabel(entry)}`}
-              type="button"
-            >
+          const content = (
+            <>
               {entry.kind === "event" ? (
                 <span className={styles.eventDot} />
               ) : null}
               <span>{entry.title}</span>
+            </>
+          );
+
+          const sharedProps = {
+            "aria-label": `${entry.title}, ${entryDateLabel(entry)}`,
+            className:
+              entry.kind === "stage" ? styles.stageItem : styles.eventItem,
+            style: itemStyle,
+            title: `${entry.title} · ${entryDateLabel(entry)}`,
+          };
+
+          return entry.entryType === "home" ? (
+            <Link
+              {...sharedProps}
+              href={`/homes?entry=${entry.id}`}
+              key={entry.id}
+            >
+              {content}
+            </Link>
+          ) : (
+            <button
+              {...sharedProps}
+              key={entry.id}
+              onClick={() => onSelect(entry)}
+              type="button"
+            >
+              {content}
             </button>
           );
         })}

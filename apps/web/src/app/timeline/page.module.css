@@ -260,6 +260,7 @@
   font-size: 11px;
   font-weight: var(--mt-font-weight-medium);
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -636,7 +637,7 @@
   display: grid;
 }
 
-.mobileItems > button {
+.mobileItems > :is(button, a) {
   display: grid;
   grid-template-columns: 14px minmax(0, 1fr) auto;
   align-items: center;
@@ -647,18 +648,19 @@
   color: var(--mt-color-ink-muted);
   background: transparent;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
 }
 
-.mobileItems > button:last-child {
+.mobileItems > :is(button, a):last-child {
   border-bottom: 0;
 }
 
-.mobileItems > button:hover {
+.mobileItems > :is(button, a):hover {
   background: var(--mt-color-surface);
 }
 
-.mobileItems > button > span:nth-child(2) {
+.mobileItems > :is(button, a) > span:nth-child(2) {
   display: grid;
   min-width: 0;
   gap: 3px;

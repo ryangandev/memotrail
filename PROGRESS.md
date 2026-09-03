@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Web Homes experience
+> Current phase: iOS Homes experience
 >
 > Last updated: 2026-09-03
 >
@@ -190,6 +190,11 @@
 - The local database now passes 422 pgTAP tests plus warning-free schema lint, including 59 focused Homes tests for validation, ranges, Place reuse, organization, history, Timeline, Search, Trash, grants, and privacy.
 - Hosted Supabase now contains the additive Homes migration with an aligned fourteen-migration ledger and no seed or role deployment.
 - Hosted verification confirms all three Homes functions, the enriched Entry-history trigger, both supporting indexes, empty function search paths, authenticated-only execution grants, and warning-free public and extensions schema lint.
+- Web now exposes Homes as a dedicated authenticated archive with current and earlier residence chapters, human date context, elapsed duration, location summaries, memories, organization, and private photo covers.
+- The Web Home editor atomically creates or revision-safely updates its reusable Place, date range, move context, Collections, tags, memories, and private Entry photos through the shared hosted contract.
+- Home Timeline stages now open the specialized Home editor instead of the generic Timeline editor, while Homes is available from both Records navigation and Library.
+- The Web suite now has 148 passing tests, including 14 focused Home input, response, duration, location, and Place-decoding tests, and passes lint and typecheck checks.
+- Authenticated localhost verification covered Home creation, revision-safe editing, Timeline deep linking, structured exact-address search, and exact hosted cleanup of the disposable Entry, Place, Collection, and tag.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -698,6 +703,17 @@
 - [x] Verify the contract with 59 focused pgTAP tests while keeping all 422 database tests and warning-level schema lint passing.
 - [x] Apply and verify the additive Homes migration on hosted Supabase.
 
+### Web Homes experience
+
+- [x] Present current and earlier Homes as distinct residence chapters with date range, duration, location, memories, organization, and a private photo cover.
+- [x] Create a Home together with a new Place or reuse and update an existing owned Place.
+- [x] Edit move-in and optional move-out dates, date precision, human labels, move reasons, Place details, Collections, tags, and memories through one revision-safe mutation.
+- [x] Upload supported private Entry photos to owner-scoped Storage, register them only after upload, and preserve retryable failures.
+- [x] Move a Home or individual photo to recoverable Trash without deleting the underlying private original.
+- [x] Keep exact addresses inside the authenticated editor while search results expose only the matching Entry and match reason.
+- [x] Route Home stages from Timeline to the specialized Home editor and expose Homes through Records and Library navigation.
+- [x] Verify Home parsing, duration, location, Place decoding, create, edit, Timeline, structured search, and exact disposable-data cleanup while keeping all 148 Web tests passing.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -767,13 +783,14 @@
 - `feat: add iOS voice capture` added and simulator-verified live voice-to-text across every shared native capture surface.
 - `feat: add Web voice capture` added progressive live Web voice-to-text with recoverable drafts and authenticated localhost verification.
 - `feat: add Homes data contract` added and locally verified the shared Homes and moves data contract.
-- Current change: deployed and verified the additive Homes and moves contract on hosted Supabase.
+- `feat: deploy Homes data contract` deployed and verified the additive Homes and moves contract on hosted Supabase.
+- Current change: added and authenticated-browser-verified the complete Web Homes experience.
 
 ## Next sequence
 
-1. Add the authenticated Web Homes archive with current and completed residence context.
-2. Add Home creation and revision-safe editing across Place, dates, move context, Collections, tags, and recoverable Trash.
-3. Reuse private Entry photos and verify the full interaction against hosted data on desktop and iPhone-sized layouts before starting native iOS parity.
+1. Add the matching native Homes archive inside Library with current and earlier residence context.
+2. Add native Home creation and revision-safe editing across reusable Place, dates, move context, Collections, tags, memories, private photos, and recoverable Trash.
+3. Verify the complete iOS experience with focused tests, a warning-free build, and an iPhone simulator interaction pass.
 
 ## Deferred
 
