@@ -4,64 +4,75 @@ import SwiftUI
 struct SearchView: View {
   @State private var controller: SearchController
   @State private var isShowingFilters = false
+  private let embedded: Bool
 
-  init(client: SupabaseClient, ownerID: UUID) {
+  init(client: SupabaseClient, ownerID: UUID, embedded: Bool = false) {
+    self.embedded = embedded
     _controller = State(
       initialValue: SearchController(client: client, ownerID: ownerID)
     )
   }
 
+  @ViewBuilder
   var body: some View {
-    NavigationStack {
-      ScrollView {
-        LazyVStack(alignment: .leading, spacing: MTSpacing.s6) {
-          header
-          criteriaSummary
-          results
+    if embedded {
+      searchWorkspace
+    } else {
+      NavigationStack {
+        searchWorkspace
+      }
+    }
+  }
+
+  private var searchWorkspace: some View {
+    ScrollView {
+      LazyVStack(alignment: .leading, spacing: MTSpacing.s6) {
+        header
+        criteriaSummary
+        results
+      }
+      .padding(.horizontal, MTSpacing.s4)
+      .padding(.top, MTSpacing.s6)
+      .padding(.bottom, MTSpacing.s12)
+    }
+    .background(MTColor.canvas)
+    .navigationTitle("Search")
+    .navigationBarTitleDisplayMode(.inline)
+    .searchable(
+      text: $controller.query,
+      placement: .navigationBarDrawer(displayMode: .always),
+      prompt: "A phrase, place, date, Collection, or tag"
+    )
+    .onSubmit(of: .search) {
+      Task { await controller.search() }
+    }
+    .onChange(of: controller.query) {
+      if controller.query.count > EntrySearchRequest.queryLimit {
+        controller.query = String(controller.query.prefix(EntrySearchRequest.queryLimit))
+      }
+    }
+    .toolbar {
+      ToolbarItem(placement: .topBarTrailing) {
+        Button {
+          isShowingFilters = true
+        } label: {
+          Image(
+            systemName: controller.activeFilterCount > 0
+              ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
         }
-        .padding(.horizontal, MTSpacing.s4)
-        .padding(.top, MTSpacing.s6)
-        .padding(.bottom, MTSpacing.s12)
+        .accessibilityLabel(filterButtonLabel)
       }
-      .background(MTColor.canvas)
-      .navigationTitle("Search")
-      .navigationBarTitleDisplayMode(.inline)
-      .searchable(
-        text: $controller.query,
-        placement: .navigationBarDrawer(displayMode: .always),
-        prompt: "A phrase, place, date, Collection, or tag"
-      )
-      .onSubmit(of: .search) {
-        Task { await controller.search() }
-      }
-      .onChange(of: controller.query) {
-        if controller.query.count > EntrySearchRequest.queryLimit {
-          controller.query = String(controller.query.prefix(EntrySearchRequest.queryLimit))
-        }
-      }
-      .toolbar {
-        ToolbarItem(placement: .topBarTrailing) {
-          Button {
-            isShowingFilters = true
-          } label: {
-            Image(
-              systemName: controller.activeFilterCount > 0
-                ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
-          }
-          .accessibilityLabel(filterButtonLabel)
-        }
-      }
-      .toolbarBackground(MTColor.surface, for: .navigationBar)
-      .toolbarBackground(.visible, for: .navigationBar)
-      .sheet(isPresented: $isShowingFilters) {
-        SearchFiltersSheet(controller: controller)
-      }
-      .navigationDestination(for: SearchEntry.self) { entry in
-        SearchEntryDetailView(entry: entry)
-      }
-      .task {
-        await controller.loadFilterOptions()
-      }
+    }
+    .toolbarBackground(MTColor.surface, for: .navigationBar)
+    .toolbarBackground(.visible, for: .navigationBar)
+    .sheet(isPresented: $isShowingFilters) {
+      SearchFiltersSheet(controller: controller)
+    }
+    .navigationDestination(for: SearchEntry.self) { entry in
+      SearchEntryDetailView(entry: entry)
+    }
+    .task {
+      await controller.loadFilterOptions()
     }
   }
 

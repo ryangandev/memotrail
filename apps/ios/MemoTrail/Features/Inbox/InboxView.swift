@@ -6,40 +6,31 @@ struct InboxView: View {
   let isAuthenticationBusy: Bool
   let signOut: @MainActor () async -> Void
 
-  private let draftStore: InboxDraftStore
-  @State private var controller: InboxController
-  @State private var captureTitle: String
-  @State private var captureBody: String
-  @State private var hasLocalDraft: Bool
+  @Bindable private var controller: InboxController
+  @Binding private var captureTitle: String
+  @Binding private var captureBody: String
+  @Binding private var hasLocalDraft: Bool
   @State private var isShowingAccount = false
   @State private var selectedEntry: InboxEntry?
   @FocusState private var isTitleFocused: Bool
   @Environment(\.scenePhase) private var scenePhase
 
   init(
-    client: SupabaseClient,
     user: AuthenticatedUser,
     isAuthenticationBusy: Bool,
     signOut: @escaping @MainActor () async -> Void,
-    draftStore: InboxDraftStore = InboxDraftStore(),
-    queueStore: InboxQueueStore = InboxQueueStore()
+    controller: InboxController,
+    captureTitle: Binding<String>,
+    captureBody: Binding<String>,
+    hasLocalDraft: Binding<Bool>
   ) {
-    let draft = draftStore.load(ownerID: user.id)
-
     self.user = user
     self.isAuthenticationBusy = isAuthenticationBusy
     self.signOut = signOut
-    self.draftStore = draftStore
-    _controller = State(
-      initialValue: InboxController(
-        client: client,
-        ownerID: user.id,
-        queueStore: queueStore
-      )
-    )
-    _captureTitle = State(initialValue: draft?.title ?? "")
-    _captureBody = State(initialValue: draft?.body ?? "")
-    _hasLocalDraft = State(initialValue: draft != nil)
+    self.controller = controller
+    _captureTitle = captureTitle
+    _captureBody = captureBody
+    _hasLocalDraft = hasLocalDraft
     _selectedEntry = State(initialValue: nil)
   }
 
@@ -142,12 +133,6 @@ struct InboxView: View {
         if !controller.hasLoaded {
           await controller.refresh()
         }
-      }
-      .onChange(of: captureTitle) {
-        persistDraft()
-      }
-      .onChange(of: captureBody) {
-        persistDraft()
       }
       .onChange(of: scenePhase) { _, newPhase in
         guard newPhase == .active, controller.hasLoaded else { return }
@@ -358,27 +343,10 @@ struct InboxView: View {
     let didSave = await controller.save(title: captureTitle, body: captureBody)
 
     if didSave {
-      draftStore.clear(ownerID: user.id)
       captureTitle = ""
       captureBody = ""
       hasLocalDraft = false
     }
-  }
-
-  private func persistDraft() {
-    if captureTitle.count > InboxCapture.titleLimit {
-      captureTitle = String(captureTitle.prefix(InboxCapture.titleLimit))
-    }
-
-    if captureBody.count > InboxCapture.bodyLimit {
-      captureBody = String(captureBody.prefix(InboxCapture.bodyLimit))
-    }
-
-    hasLocalDraft = draftStore.save(
-      title: captureTitle,
-      body: captureBody,
-      ownerID: user.id
-    )
   }
 }
 

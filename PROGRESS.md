@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: iOS Home experience
+> Current phase: Universal capture dates and photos
 >
 > Last updated: 2026-09-03
 >
@@ -129,6 +129,11 @@
 - The browser's IANA time zone is stored as a non-sensitive cookie so server-rendered Home dates, Habit progress, and Timeline ranges follow the device without weakening session security.
 - The Web suite now has 106 passing tests, including five focused Home date, time-zone, and greeting tests, and continues to pass formatting, design-token, lint, typecheck, and production-build checks.
 - Authenticated localhost browser verification covered populated Home data, a global Library capture synchronized into Home, desktop and iPhone layouts, the exact five-item mobile navigation, the full-screen capture dialog, and an error-free browser console.
+- iOS now opens on a native Home workspace with a device-local greeting, shared inline capture, Inbox and archive counts, today's Habit progress, current Timeline chapters, and recent Entries with one-hour signed private photos.
+- Native navigation now uses Home, Inbox, Timeline, Habits, and Library as the exact five primary tabs, keeps Search inside Home, and exposes the current Inbox count as a tab badge.
+- Home, Inbox, and the global full-screen composer share one draft and one offline synchronization queue instead of mounting competing capture state.
+- Timeline, Habits, and Library expose the global native Quick Capture action, while Home and Inbox retain their integrated capture surfaces.
+- The shared iOS scheme now has 95 passing tests, including ten focused Home and root-navigation tests, and passes strict Swift formatting, project validation, and a warning-free generic Simulator build.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -485,6 +490,18 @@
 - [x] Pass formatting, design-token, lint, typecheck, and production-build checks.
 - [x] Verify populated Home, global capture, responsive navigation, full-screen mobile capture, synchronization, and console behavior against isolated local Supabase data.
 
+### iOS Home
+
+- [x] Render a device-local greeting, inline capture, archive counts, today's Habit progress, current Timeline chapters, and recent Entries from the shared Home snapshot.
+- [x] Display recent private photos through one-hour signed URLs without persisting public URLs.
+- [x] Expose Home, Inbox, Timeline, Habits, and Library as the exact five primary tabs and retain Search inside Home navigation.
+- [x] Show a live Inbox badge derived from synchronized and pending Entries.
+- [x] Share one recoverable draft and one offline synchronization queue across Home, Inbox, and global capture.
+- [x] Offer full-screen Quick Capture from Timeline, Habits, and Library without duplicating capture controllers.
+- [x] Refresh Home after successful pending-entry synchronization and when the app returns to the foreground.
+- [x] Verify decoding, dates, time zones, presentation, request validation, tab order, and capture availability with ten focused tests.
+- [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, and all 95 native tests.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -539,11 +556,14 @@
 - `feat: add iOS Trash experience` implemented and simulator-verified the matching native iOS Trash experience.
 - `feat: add Home workspace contract` added and locally verified the shared Home workspace data contract.
 - `feat: deploy Home workspace contract` deployed and verified the Home workspace contract on hosted Supabase.
-- Current change: implemented and locally browser-verified the authenticated Web Home experience and global Quick Capture access.
+- `feat: add Web Home experience` implemented and locally browser-verified the authenticated Web Home experience and global Quick Capture access.
+- Current change: implemented and simulator-verified the matching native iOS Home experience and shared global Quick Capture state.
 
 ## Next sequence
 
-1. Add the matching native Home experience and align the five-item mobile navigation.
+1. Extend universal quick capture with a user-selected relevant date on Web and iOS.
+2. Add private photo selection, upload, and recoverable draft behavior to universal capture on Web and iOS.
+3. Add Home resurfacing after the shared capture path supports the complete initial Entry shape.
 
 ## Deferred
 
