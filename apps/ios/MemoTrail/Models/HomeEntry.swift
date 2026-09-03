@@ -106,7 +106,65 @@ struct HomeEntry: Decodable, Equatable, Identifiable, Sendable {
   }
 
   var coverAttachment: HomeAttachment? {
-    attachments.first
+    attachments.first(where: { $0.signedURL != nil }) ?? attachments.first
+  }
+}
+
+enum HomeResurfacingKind: String, Decodable, Equatable, Sendable {
+  case fromArchive = "from_your_archive"
+  case onThisDay = "on_this_day"
+}
+
+struct HomeResurfacedMemory: Decodable, Equatable, Sendable {
+  var entry: HomeEntry
+  let kind: HomeResurfacingKind
+  let yearsAgo: Int?
+
+  enum CodingKeys: String, CodingKey {
+    case kind = "resurfacing_kind"
+    case yearsAgo = "years_ago"
+  }
+
+  init(from decoder: Decoder) throws {
+    entry = try HomeEntry(from: decoder)
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    kind = try values.decode(HomeResurfacingKind.self, forKey: .kind)
+    yearsAgo = try values.decodeIfPresent(Int.self, forKey: .yearsAgo)
+
+    guard entry.inboxStatus == "organized", entry.occurredStart != nil else {
+      throw DecodingError.dataCorruptedError(
+        forKey: .kind,
+        in: values,
+        debugDescription: "A resurfaced memory must be organized and dated."
+      )
+    }
+
+    switch kind {
+    case .onThisDay:
+      guard let yearsAgo, yearsAgo > 0 else {
+        throw DecodingError.dataCorruptedError(
+          forKey: .yearsAgo,
+          in: values,
+          debugDescription: "An On This Day memory requires a positive anniversary count."
+        )
+      }
+    case .fromArchive:
+      guard yearsAgo == nil else {
+        throw DecodingError.dataCorruptedError(
+          forKey: .yearsAgo,
+          in: values,
+          debugDescription: "An archive memory cannot include an anniversary count."
+        )
+      }
+    }
+  }
+
+  var contextLabel: String {
+    if kind == .onThisDay, let yearsAgo {
+      return "On this day, \(yearsAgo) \(yearsAgo == 1 ? "year" : "years") ago"
+    }
+
+    return "A quiet note from your archive"
   }
 }
 
@@ -231,6 +289,10 @@ struct HomeWorkspaceRequest: Equatable, Sendable {
       recentLimit: recentLimit
     )
   }
+
+  var resurfacingParameters: HomeResurfacingParameters {
+    HomeResurfacingParameters(localDate: localDate, timezone: timezone)
+  }
 }
 
 struct HomeWorkspaceParameters: Encodable, Equatable, Sendable {
@@ -242,6 +304,16 @@ struct HomeWorkspaceParameters: Encodable, Equatable, Sendable {
     case localDate = "p_local_date"
     case timezone = "p_timezone"
     case recentLimit = "p_recent_limit"
+  }
+}
+
+struct HomeResurfacingParameters: Encodable, Equatable, Sendable {
+  let localDate: String
+  let timezone: String
+
+  enum CodingKeys: String, CodingKey {
+    case localDate = "p_local_date"
+    case timezone = "p_timezone"
   }
 }
 

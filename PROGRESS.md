@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: iOS Home memory resurfacing
+> Current phase: Universal voice-to-text capture boundary
 >
 > Last updated: 2026-09-03
 >
@@ -169,6 +169,10 @@
 - The responsive Soft Ledger memory card presents On This Day or archive context, complete Entry text, Type, original occurrence date, Collections, tags, and an expiring private image URL.
 - The Web suite now has 124 passing tests, including six focused resurfacing-response tests, and the implementation passes formatting, design-token, lint, typecheck, and production-build checks.
 - Isolated localhost browser verification covered the real database RPC, private signed image loading, desktop and 390-pixel iPhone layouts, complete memory context, and disposable-account cleanup.
+- iOS Home now loads the same deterministic daily memory in parallel with the main workspace and quietly preserves the normal Home experience if the optional request fails.
+- The native Soft Ledger memory card presents anniversary or archive context, complete Entry text, Type, original occurrence date, Collections, tags, and an expiring private image URL.
+- Recent Entries and the resurfaced memory share one signed-private-image batch, with the first successfully signed attachment selected as the cover image.
+- The shared iOS scheme now has 106 passing tests, including four focused resurfacing tests, and the implementation passes strict changed-file formatting, project validation, a warning-free generic Simulator build, and an install-and-launch authentication-boundary check.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -624,6 +628,17 @@
 - [x] Verify response validation with six focused tests while keeping all 124 Web tests passing.
 - [x] Pass formatting, design-token, lint, typecheck, production-build, real database, signed-image, desktop, mobile, and cleanup checks.
 
+### iOS Home memory resurfacing
+
+- [x] Load the optional resurfaced memory in parallel so it does not extend the main Home workspace request chain.
+- [x] Degrade quietly to the normal Home experience when the optional resurfacing request fails or returns malformed data.
+- [x] Display On This Day anniversary context or the stable archive fallback without presenting the selection as AI-generated.
+- [x] Preserve complete Entry text, Type, original occurrence date, Collections, tags, and active private image metadata.
+- [x] Reuse one private signed-image request across recent Entries and the resurfaced memory.
+- [x] Keep the native card consistent with the Soft Ledger system and existing Home hierarchy.
+- [x] Verify selection validation and RPC parameters with four focused tests while keeping all 106 native tests passing.
+- [x] Pass strict changed-file formatting, project validation, a warning-free generic Simulator build, and an install-and-launch authentication-boundary check.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -688,12 +703,14 @@
 - `feat: add iOS capture photos` added and simulator-verified matching recoverable, offline-first private photos on every iOS universal capture surface.
 - `feat: add Home memory resurfacing contract` added and locally verified a deterministic, owner-scoped Home memory resurfacing contract.
 - `feat: deploy Home memory resurfacing contract` deployed and verified the Home memory resurfacing contract on hosted Supabase.
-- Current change: added and locally browser-verified the quiet Web Home memory resurfacing experience.
+- `feat: add Web Home memory resurfacing` added and locally browser-verified the quiet Web Home memory resurfacing experience.
+- Current change: added and simulator-verified the matching native iOS Home memory resurfacing experience.
 
 ## Next sequence
 
-1. Add the matching native resurfacing experience to iOS Home.
-2. Continue toward universal voice-to-text capture after choosing the transcription boundary.
+1. Define the privacy-preserving transcription boundary for universal voice capture without retaining audio.
+2. Add voice-to-text to the shared iOS capture composer.
+3. Add the matching progressive Web voice-to-text experience where browser capability permits it.
 
 ## Deferred
 

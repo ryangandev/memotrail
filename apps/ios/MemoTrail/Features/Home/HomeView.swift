@@ -197,6 +197,10 @@ struct HomeView: View {
         currentStagesSection(snapshot.currentStages)
       }
 
+      if let memory = controller.resurfacedMemory {
+        resurfacedMemorySection(memory)
+      }
+
       recentEntriesSection(snapshot.recentEntries)
 
       if let message = controller.loadErrorMessage {
@@ -205,6 +209,14 @@ struct HomeView: View {
           .foregroundStyle(MTColor.warm)
       }
     }
+  }
+
+  private func resurfacedMemorySection(_ memory: HomeResurfacedMemory) -> some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s3) {
+      sectionHeading("A memory for today", detail: memory.contextLabel)
+      HomeResurfacedMemoryCard(memory: memory)
+    }
+    .accessibilityIdentifier("home-resurfaced-memory")
   }
 
   private func todaySection(_ snapshot: HomeSnapshot) -> some View {
@@ -523,6 +535,103 @@ private struct HomeRecentEntryCard: View {
 
   private var organizationLabels: [String] {
     entry.collectionNames + entry.tagNames.map { "#\($0)" }
+  }
+
+  private var imagePlaceholder: some View {
+    ZStack {
+      MTColor.surfaceSubtle
+      Image(systemName: "photo")
+        .foregroundStyle(MTColor.inkFaint)
+    }
+  }
+}
+
+private struct HomeResurfacedMemoryCard: View {
+  let memory: HomeResurfacedMemory
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 0) {
+      if let imageURL = memory.entry.coverAttachment?.signedURL {
+        AsyncImage(url: imageURL) { phase in
+          switch phase {
+          case .success(let image):
+            image
+              .resizable()
+              .scaledToFill()
+          case .failure:
+            imagePlaceholder
+          case .empty:
+            ProgressView()
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
+          @unknown default:
+            imagePlaceholder
+          }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 210)
+        .clipped()
+      }
+
+      VStack(alignment: .leading, spacing: MTSpacing.s3) {
+        HStack(alignment: .firstTextBaseline) {
+          Text(memory.entry.displayType.uppercased())
+            .font(.system(size: 10, weight: .semibold))
+            .tracking(0.8)
+            .foregroundStyle(MTColor.warm)
+
+          Spacer()
+
+          Text(memory.entry.displayDate)
+            .font(.system(size: 10))
+            .foregroundStyle(MTColor.inkFaint)
+        }
+
+        Text(memory.entry.title)
+          .font(MTTypography.title)
+          .foregroundStyle(MTColor.ink)
+          .fixedSize(horizontal: false, vertical: true)
+
+        if let excerpt = memory.entry.body.trimmed.nonEmpty?.truncated(to: 240) {
+          Text(excerpt)
+            .font(MTTypography.body)
+            .foregroundStyle(MTColor.inkMuted)
+            .lineLimit(5)
+            .lineSpacing(2)
+        }
+
+        if !organizationLabels.isEmpty {
+          ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: MTSpacing.s1) {
+              ForEach(organizationLabels.prefix(4), id: \.self) { label in
+                Text(label)
+                  .font(.system(size: 10, weight: .medium))
+                  .foregroundStyle(MTColor.accent)
+                  .padding(.horizontal, MTSpacing.s2)
+                  .padding(.vertical, 4)
+                  .background(MTColor.surface, in: Capsule())
+              }
+            }
+          }
+        }
+      }
+      .padding(MTSpacing.s5)
+      .background(
+        LinearGradient(
+          colors: [MTColor.accentSubtle.opacity(0.56), MTColor.surfaceRaised],
+          startPoint: .topLeading,
+          endPoint: .bottomTrailing
+        )
+      )
+    }
+    .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
+    .overlay {
+      RoundedRectangle(cornerRadius: MTRadius.large)
+        .stroke(MTColor.border, lineWidth: 1)
+    }
+  }
+
+  private var organizationLabels: [String] {
+    memory.entry.collectionNames + memory.entry.tagNames.map { "#\($0)" }
   }
 
   private var imagePlaceholder: some View {

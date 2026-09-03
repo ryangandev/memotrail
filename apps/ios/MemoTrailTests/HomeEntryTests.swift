@@ -91,6 +91,48 @@ final class HomeEntryTests: XCTestCase {
     XCTAssertEqual(object["p_recent_limit"] as? Int, 10)
   }
 
+  func testResurfacingParametersUseSharedRPCNames() throws {
+    let request = try HomeWorkspaceRequest(
+      date: Date(timeIntervalSince1970: 0),
+      timezone: .gmt
+    )
+    let data = try JSONEncoder().encode(request.resurfacingParameters)
+    let object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+    XCTAssertEqual(object["p_local_date"] as? String, "1970-01-01")
+    XCTAssertEqual(object["p_timezone"] as? String, "GMT")
+    XCTAssertNil(object["p_recent_limit"])
+  }
+
+  func testOnThisDayMemoryDecodesCompleteEntryContext() throws {
+    let memory = try decodeMemory()
+
+    XCTAssertEqual(memory.kind, .onThisDay)
+    XCTAssertEqual(memory.yearsAgo, 1)
+    XCTAssertEqual(memory.contextLabel, "On this day, 1 year ago")
+    XCTAssertEqual(memory.entry.title, "First coastal train ride")
+    XCTAssertEqual(memory.entry.displayType, "First Time")
+    XCTAssertEqual(memory.entry.collectionNames, ["Journeys"])
+    XCTAssertEqual(memory.entry.tagNames, ["coast"])
+    XCTAssertEqual(memory.entry.coverAttachment?.objectPath, "owner/entry/coast.png")
+  }
+
+  func testArchiveMemoryUsesQuietFallbackContext() throws {
+    let memory = try decodeMemory(kind: "from_your_archive", yearsAgo: nil)
+
+    XCTAssertEqual(memory.kind, .fromArchive)
+    XCTAssertNil(memory.yearsAgo)
+    XCTAssertEqual(memory.contextLabel, "A quiet note from your archive")
+  }
+
+  func testMemoryRejectsInvalidSelectionCombinations() throws {
+    XCTAssertThrowsError(try decodeMemory(yearsAgo: 0))
+    XCTAssertThrowsError(try decodeMemory(kind: "from_your_archive", yearsAgo: 1))
+    XCTAssertThrowsError(try decodeMemory(inboxStatus: "unreviewed"))
+    XCTAssertThrowsError(try decodeMemory(occurredStart: nil))
+    XCTAssertThrowsError(try decodeMemory(kind: "unsupported"))
+  }
+
   func testPresentationUsesLocalGreetingAndFirstName() throws {
     let date = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-09-03T15:00:00Z"))
     let losAngeles = try XCTUnwrap(TimeZone(identifier: "America/Los_Angeles"))
@@ -198,5 +240,55 @@ final class HomeEntryTests: XCTestCase {
     ]
     let data = try JSONSerialization.data(withJSONObject: object)
     return try XCTUnwrap(decoder.decode([HomeSnapshot].self, from: data).first)
+  }
+
+  private func decodeMemory(
+    kind: String = "on_this_day",
+    yearsAgo: Int? = 1,
+    inboxStatus: String = "organized",
+    occurredStart: String? = "2025-09-03T19:00:00Z"
+  ) throws -> HomeResurfacedMemory {
+    let object: [[String: Any]] = [
+      [
+        "entry_id": "50000000-0000-4000-8000-000000000001",
+        "title": "First coastal train ride",
+        "body": "A quiet afternoon on the coast.",
+        "entry_type": "first_time",
+        "inbox_status": inboxStatus,
+        "occurred_start": occurredStart.map { $0 as Any } ?? NSNull(),
+        "occurred_end": NSNull(),
+        "date_precision": "day",
+        "occurred_label": NSNull(),
+        "occurred_timezone": "America/Los_Angeles",
+        "revision": 1,
+        "created_at": "2025-09-03T19:00:00Z",
+        "updated_at": "2025-09-03T19:00:00Z",
+        "collection_names": ["Journeys"],
+        "tag_names": ["coast"],
+        "attachments": [
+          [
+            "attachment_id": "60000000-0000-4000-8000-000000000001",
+            "bucket_id": "entry-media",
+            "object_path": "owner/entry/coast.png",
+            "original_filename": "coast.png",
+            "mime_type": "image/png",
+            "byte_size": 2048,
+            "pixel_width": 1200,
+            "pixel_height": 800,
+          ]
+        ],
+        "resurfacing_kind": kind,
+        "years_ago": yearsAgo.map { $0 as Any } ?? NSNull(),
+      ]
+    ]
+    let data = try JSONSerialization.data(withJSONObject: object)
+    let rows = try decoder.decode([HomeResurfacedMemory].self, from: data)
+    guard let memory = rows.first else {
+      throw DecodingError.valueNotFound(
+        HomeResurfacedMemory.self,
+        .init(codingPath: [], debugDescription: "Expected one memory fixture.")
+      )
+    }
+    return memory
   }
 }

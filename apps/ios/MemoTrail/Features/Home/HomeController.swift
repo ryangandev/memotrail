@@ -6,6 +6,7 @@ import Supabase
 @Observable
 final class HomeController {
   private(set) var snapshot: HomeSnapshot?
+  private(set) var resurfacedMemory: HomeResurfacedMemory?
   private(set) var hasLoaded = false
   private(set) var isLoading = false
   private(set) var loadErrorMessage: String?
@@ -35,6 +36,9 @@ final class HomeController {
       }
 
       let request = try HomeWorkspaceRequest(date: date, timezone: timezone)
+      async let resurfacedMemoryTask: HomeResurfacedMemory? = loadResurfacedMemory(
+        parameters: request.resurfacingParameters
+      )
       let rows: [HomeSnapshot] =
         try await client
         .rpc("home_workspace", params: request.parameters)
@@ -44,9 +48,13 @@ final class HomeController {
       guard var loadedSnapshot = rows.first else {
         throw HomeControllerError.missingSnapshot
       }
+      var loadedMemory = await resurfacedMemoryTask
 
       let paths = Array(
-        Set(loadedSnapshot.recentEntries.flatMap { $0.attachments.map(\.objectPath) })
+        Set(
+          loadedSnapshot.recentEntries.flatMap { $0.attachments.map(\.objectPath) }
+            + (loadedMemory?.entry.attachments.map(\.objectPath) ?? [])
+        )
       )
       let signedURLs = await signedURLMap(paths: paths)
 
@@ -59,10 +67,30 @@ final class HomeController {
         }
       }
 
+      if var memory = loadedMemory {
+        for attachmentIndex in memory.entry.attachments.indices {
+          let path = memory.entry.attachments[attachmentIndex].objectPath
+          memory.entry.attachments[attachmentIndex].signedURL = signedURLs[path]
+        }
+        loadedMemory = memory
+      }
+
       snapshot = loadedSnapshot
+      resurfacedMemory = loadedMemory
     } catch {
       loadErrorMessage = "MemoTrail could not load Home. Pull to refresh or try again."
     }
+  }
+
+  private func loadResurfacedMemory(
+    parameters: HomeResurfacingParameters
+  ) async -> HomeResurfacedMemory? {
+    let rows: [HomeResurfacedMemory]? =
+      try? await client
+      .rpc("home_resurfaced_memory", params: parameters)
+      .execute()
+      .value
+    return rows?.first
   }
 
   private func signedURLMap(paths: [String]) async -> [String: URL] {
