@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Web voice-to-text capture
+> Current phase: Homes and moves data contract
 >
 > Last updated: 2026-09-03
 >
@@ -178,6 +178,11 @@
 - iOS preserves existing draft text while live partial results arrive, saves every transcript update through the existing recoverable draft path, and keeps date, photo, and save mutations unavailable until listening stops.
 - Native voice states include permission preparation, listening, completion, denial, unavailable-input, and no-recognized-speech feedback with explicit accessibility labels.
 - The shared iOS scheme now has 111 passing tests, including five focused transcript-merging tests, and the implementation passes strict Swift formatting, property-list validation, project validation, a warning-free generic Simulator build, and an install-and-launch authentication-boundary check.
+- Web universal capture now uses the browser's standard or prefixed Speech Recognition implementation where available, with text and photo capture left fully usable in unsupported browsers.
+- Web voice capture writes live partial results through the existing recoverable draft path, preserves text written before listening, and never records, persists, attaches, or uploads an audio file.
+- Voice status and error feedback remain visible and accessible while conflicting title, body, date, photo, and save controls stay unavailable until listening ends.
+- The Web suite now has 134 passing tests, including ten focused voice-capability, transcript, limit, and failure tests, and the implementation passes formatting, design-token, lint, typecheck, and production-build checks.
+- Authenticated localhost browser verification covered live start, listening, stop, empty-result feedback, existing-draft preservation across navigation, and cleanup without creating an Entry.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -658,6 +663,19 @@
 - [x] Verify transcript merging with five focused tests while keeping all 111 native tests passing.
 - [x] Pass strict Swift formatting, property-list validation, project validation, a warning-free generic Simulator build, and an install-and-launch authentication-boundary check.
 
+### Web voice-to-text capture
+
+- [x] Use the standard or prefixed browser Speech Recognition implementation when available without making it a requirement for text or photo capture.
+- [x] Transcribe directly into the editable Entry body without creating, persisting, attaching, or uploading an audio file.
+- [x] Preserve existing draft text while live partial recognition results replace only the current spoken segment.
+- [x] Reuse the existing per-user recoverable draft path so recognized text survives navigation and reload.
+- [x] Stop and release browser recognition when the user taps Stop or leaves the composer.
+- [x] Prevent title, body, date, photo, and save collisions while a voice session is active.
+- [x] Provide accessible listening, finishing, completion, permission, microphone, connectivity, unsupported-browser, and empty-result feedback.
+- [x] Enforce the shared 50,000-character Entry limit while merging live transcription.
+- [x] Verify capability detection, transcript extraction and merging, limits, and failure messages with ten focused tests while keeping all 134 Web tests passing.
+- [x] Pass formatting, design-token, lint, typecheck, production-build, and authenticated localhost browser checks without leaving test data.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -724,13 +742,14 @@
 - `feat: deploy Home memory resurfacing contract` deployed and verified the Home memory resurfacing contract on hosted Supabase.
 - `feat: add Web Home memory resurfacing` added and locally browser-verified the quiet Web Home memory resurfacing experience.
 - `feat: add iOS Home memory resurfacing` added and simulator-verified the matching native iOS Home memory resurfacing experience.
-- Current change: added and simulator-verified live voice-to-text across every shared native capture surface.
+- `feat: add iOS voice capture` added and simulator-verified live voice-to-text across every shared native capture surface.
+- Current change: added progressive live Web voice-to-text with recoverable drafts and authenticated localhost verification.
 
 ## Next sequence
 
-1. Add the matching progressive Web voice-to-text experience where browser capability permits it.
-2. Verify live transcription, recoverable drafts, permission denial, unsupported browsers, and responsive presentation.
-3. Resume the highest-value non-AI product slice after voice parity is complete.
+1. Add a shared owner-scoped Homes and moves contract using specialized Home fields on the existing Entry model.
+2. Verify date precision, open-ended residences, duration-ready ranges, Timeline relationships, history, Trash, grants, and owner isolation locally.
+3. Apply and verify the additive Homes migration on hosted Supabase before implementing matching Web and iOS archives.
 
 ## Deferred
 

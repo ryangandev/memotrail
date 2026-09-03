@@ -16,6 +16,7 @@ export type IconName =
   | "search"
   | "sparkle"
   | "star"
+  | "stop"
   | "timeline"
   | "trash";
 
@@ -129,6 +130,17 @@ const paths: Record<IconName, React.ReactNode> = {
   ),
   star: (
     <path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3Z" />
+  ),
+  stop: (
+    <rect
+      fill="currentColor"
+      height="10"
+      rx="1.5"
+      stroke="none"
+      width="10"
+      x="7"
+      y="7"
+    />
   ),
   timeline: (
     <>

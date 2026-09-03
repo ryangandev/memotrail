@@ -51,6 +51,13 @@ import {
   persistInboxPhotoDrafts,
   removeInboxPhotoDrafts,
 } from "@/lib/data/inbox-photo-store";
+import {
+  browserSpeechRecognitionConstructor,
+  browserVoiceTranscript,
+  mergeVoiceTranscript,
+  voiceRecognitionErrorMessage,
+  type BrowserSpeechRecognition,
+} from "@/lib/data/voice-transcript";
 import { createClient } from "@/lib/supabase/client";
 import styles from "@/app/page.module.css";
 
@@ -58,6 +65,8 @@ type CaptureFeedback = {
   isError: boolean;
   message: string;
 };
+
+type VoiceCaptureState = "checking" | "idle" | "listening" | "stopping";
 
 const idleFeedback: CaptureFeedback = { isError: false, message: "" };
 
@@ -82,9 +91,23 @@ export function CaptureComposer({
   const [photos, setPhotos] = useState<InboxPhotoDraft[]>([]);
   const [isPhotoStorageAvailable, setIsPhotoStorageAvailable] = useState(true);
   const [pendingEntries, setPendingEntries] = useState<QueuedInboxEntry[]>([]);
+  const [isVoiceSupported, setIsVoiceSupported] = useState<boolean | null>(
+    null,
+  );
+  const [voiceState, setVoiceState] = useState<VoiceCaptureState>("checking");
+  const [voiceFeedback, setVoiceFeedback] = useState<CaptureFeedback | null>(
+    null,
+  );
   const pendingEntriesRef = useRef<QueuedInboxEntry[]>([]);
   const syncInFlightRef = useRef(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const voiceRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const voiceBaselineRef = useRef("");
+  const voiceHadTranscriptRef = useRef(false);
+  const voiceFailedRef = useRef(false);
+  const voiceRequestedStopRef = useRef(false);
+  const titleRef = useRef("");
+  const occurredAtRef = useRef<string | null>(null);
 
   const replacePendingEntries = useCallback(
     (entries: QueuedInboxEntry[]) => {
@@ -210,6 +233,8 @@ export function CaptureComposer({
         setTitle(draft?.title ?? "");
         setBody(draft?.body ?? "");
         setOccurredAt(draft?.occurredAt ?? null);
+        titleRef.current = draft?.title ?? "";
+        occurredAtRef.current = draft?.occurredAt ?? null;
         setPhotos(draftPhotos);
         setHasLocalDraft(Boolean(draft) || draftPhotos.length > 0);
         replacePendingEntries(queue);
@@ -233,11 +258,39 @@ export function CaptureComposer({
     };
   }, [ownerId, replacePendingEntries, synchronizeQueue]);
 
+  useEffect(() => {
+    let isCanceled = false;
+
+    queueMicrotask(() => {
+      if (!isCanceled) {
+        setIsVoiceSupported(
+          Boolean(browserSpeechRecognitionConstructor(window)),
+        );
+        setVoiceState("idle");
+      }
+    });
+
+    return () => {
+      isCanceled = true;
+      const recognition = voiceRecognitionRef.current;
+      if (recognition) {
+        recognition.onend = null;
+        recognition.onerror = null;
+        recognition.onresult = null;
+        recognition.abort();
+        voiceRecognitionRef.current = null;
+      }
+    };
+  }, []);
+
   function updateDraft(
     nextTitle: string,
     nextBody: string,
     nextOccurredAt: string | null,
+    preserveVoiceFeedback = false,
   ) {
+    titleRef.current = nextTitle;
+    occurredAtRef.current = nextOccurredAt;
     setTitle(nextTitle);
     setBody(nextBody);
     setOccurredAt(nextOccurredAt);
@@ -249,6 +302,119 @@ export function CaptureComposer({
       }) || photos.length > 0,
     );
     setFeedback(idleFeedback);
+    if (!preserveVoiceFeedback) {
+      setVoiceFeedback(null);
+    }
+  }
+
+  function startVoiceCapture() {
+    const Recognition = browserSpeechRecognitionConstructor(window);
+
+    if (!Recognition) {
+      setIsVoiceSupported(false);
+      setVoiceFeedback({
+        isError: true,
+        message:
+          "Voice capture is unavailable in this browser. Text and photo capture still work.",
+      });
+      return;
+    }
+
+    if (voiceRecognitionRef.current || body.length >= entryBodyLimit) {
+      if (body.length >= entryBodyLimit) {
+        setVoiceFeedback({
+          isError: true,
+          message: "This note has reached the 50,000 character limit.",
+        });
+      }
+      return;
+    }
+
+    const recognition = new Recognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = navigator.language || "en-US";
+    voiceBaselineRef.current = body;
+    voiceHadTranscriptRef.current = false;
+    voiceFailedRef.current = false;
+    voiceRequestedStopRef.current = false;
+
+    recognition.onresult = (event) => {
+      const transcript = browserVoiceTranscript(event.results);
+      if (!transcript) {
+        return;
+      }
+
+      voiceHadTranscriptRef.current = true;
+      updateDraft(
+        titleRef.current,
+        mergeVoiceTranscript(voiceBaselineRef.current, transcript),
+        occurredAtRef.current,
+        true,
+      );
+    };
+
+    recognition.onerror = (event) => {
+      const message = voiceRecognitionErrorMessage(event.error);
+      if (!message && voiceRequestedStopRef.current) {
+        return;
+      }
+
+      voiceFailedRef.current = Boolean(message);
+      if (message) {
+        setVoiceFeedback({ isError: true, message });
+      }
+    };
+
+    recognition.onend = () => {
+      if (voiceRecognitionRef.current === recognition) {
+        voiceRecognitionRef.current = null;
+      }
+      setVoiceState("idle");
+
+      if (!voiceFailedRef.current) {
+        setVoiceFeedback({
+          isError: false,
+          message: voiceHadTranscriptRef.current
+            ? "Transcription added to this draft."
+            : "Voice capture stopped before any words were recognized.",
+        });
+      }
+    };
+
+    voiceRecognitionRef.current = recognition;
+
+    try {
+      recognition.start();
+      setVoiceState("listening");
+      setVoiceFeedback({
+        isError: false,
+        message: "Listening… Tap Stop when done. Audio is not saved.",
+      });
+    } catch {
+      voiceRecognitionRef.current = null;
+      setVoiceState("idle");
+      setVoiceFeedback({
+        isError: true,
+        message:
+          "Voice capture could not start. Check browser permissions and try again.",
+      });
+    }
+  }
+
+  function stopVoiceCapture() {
+    const recognition = voiceRecognitionRef.current;
+    if (!recognition) {
+      return;
+    }
+
+    voiceRequestedStopRef.current = true;
+    setVoiceState("stopping");
+    setVoiceFeedback({
+      isError: false,
+      message: "Finishing transcription… Audio was not saved.",
+    });
+    recognition.stop();
   }
 
   function toggleRelevantDate() {
@@ -260,6 +426,7 @@ export function CaptureComposer({
   }
 
   async function handlePhotoSelection(event: ChangeEvent<HTMLInputElement>) {
+    setVoiceFeedback(null);
     const selection = validateInboxPhotoFiles(
       Array.from(event.target.files ?? []),
       photos.length,
@@ -294,6 +461,7 @@ export function CaptureComposer({
   async function removePhoto(photoId: string) {
     try {
       await removeInboxPhotoDrafts(ownerId, [photoId]);
+      setVoiceFeedback(null);
       const nextPhotos = photos.filter((photo) => photo.id !== photoId);
       setPhotos(nextPhotos);
       setHasLocalDraft(
@@ -360,8 +528,11 @@ export function CaptureComposer({
     setTitle("");
     setBody("");
     setOccurredAt(null);
+    titleRef.current = "";
+    occurredAtRef.current = null;
     setPhotos([]);
     setHasLocalDraft(false);
+    setVoiceFeedback(null);
     setFeedback({
       isError: false,
       message: navigator.onLine
@@ -399,7 +570,7 @@ export function CaptureComposer({
             <input
               autoComplete="off"
               className={styles.captureTitle}
-              disabled={isSaving || !isLocalStateReady}
+              disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
               id={`${idPrefix}-title`}
               maxLength={entryTitleLimit}
               name="title"
@@ -417,7 +588,7 @@ export function CaptureComposer({
             </label>
             <textarea
               className={styles.captureBody}
-              disabled={isSaving || !isLocalStateReady}
+              disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
               id={`${idPrefix}-body`}
               maxLength={entryBodyLimit}
               name="body"
@@ -435,7 +606,9 @@ export function CaptureComposer({
             <label htmlFor={`${idPrefix}-occurred-at`}>
               <span>Relevant date and time</span>
               <input
-                disabled={isSaving || !isLocalStateReady}
+                disabled={
+                  isSaving || !isLocalStateReady || voiceState !== "idle"
+                }
                 id={`${idPrefix}-occurred-at`}
                 onChange={(event) =>
                   updateDraft(title, body, event.target.value || null)
@@ -446,7 +619,7 @@ export function CaptureComposer({
             </label>
             <button
               className={styles.removeCaptureDateButton}
-              disabled={isSaving || !isLocalStateReady}
+              disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
               onClick={() => updateDraft(title, body, null)}
               type="button"
             >
@@ -465,12 +638,22 @@ export function CaptureComposer({
             ))}
           </div>
         ) : null}
+        {voiceFeedback ? (
+          <p
+            aria-live="polite"
+            className={`${styles.captureVoiceStatus} ${voiceFeedback.isError ? styles.captureVoiceError : ""}`}
+            role={voiceFeedback.isError ? "alert" : "status"}
+          >
+            <Icon name={voiceFeedback.isError ? "mic" : "sparkle"} size={15} />
+            {voiceFeedback.message}
+          </p>
+        ) : null}
         <div className={styles.captureActions}>
           <div>
             <button
               aria-pressed={Boolean(occurredAt)}
               className={`${styles.quietButton} ${occurredAt ? styles.activeQuietButton : ""}`}
-              disabled={isSaving || !isLocalStateReady}
+              disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
               onClick={toggleRelevantDate}
               type="button"
             >
@@ -478,19 +661,45 @@ export function CaptureComposer({
               <span>{occurredAt ? captureDateLabel(occurredAt) : "Date"}</span>
             </button>
             <button
-              aria-label="Voice capture is coming next"
-              className={styles.quietButton}
-              disabled
+              aria-label={
+                voiceState === "listening"
+                  ? "Stop voice capture"
+                  : isVoiceSupported === false
+                    ? "Voice capture unavailable in this browser"
+                    : "Start voice capture"
+              }
+              aria-pressed={voiceState === "listening"}
+              className={`${styles.quietButton} ${voiceState === "listening" ? styles.listeningQuietButton : ""}`}
+              disabled={
+                isSaving ||
+                !isLocalStateReady ||
+                voiceState === "checking" ||
+                voiceState === "stopping"
+              }
+              onClick={
+                voiceState === "listening"
+                  ? stopVoiceCapture
+                  : startVoiceCapture
+              }
+              title={
+                isVoiceSupported === false
+                  ? "Voice capture is unavailable in this browser"
+                  : undefined
+              }
               type="button"
             >
-              <Icon name="mic" /> Voice
+              <Icon name={voiceState === "listening" ? "stop" : "mic"} />
+              {voiceState === "listening" ? "Stop" : "Voice"}
             </button>
             <button
               aria-label="Add photos"
               aria-pressed={photos.length > 0}
               className={`${styles.quietButton} ${photos.length > 0 ? styles.activeQuietButton : ""}`}
               disabled={
-                isSaving || !isLocalStateReady || !isPhotoStorageAvailable
+                isSaving ||
+                !isLocalStateReady ||
+                !isPhotoStorageAvailable ||
+                voiceState !== "idle"
               }
               onClick={() => photoInputRef.current?.click()}
               type="button"
@@ -504,7 +713,10 @@ export function CaptureComposer({
               accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
               className={styles.visuallyHidden}
               disabled={
-                isSaving || !isLocalStateReady || !isPhotoStorageAvailable
+                isSaving ||
+                !isLocalStateReady ||
+                !isPhotoStorageAvailable ||
+                voiceState !== "idle"
               }
               multiple
               onChange={(event) => void handlePhotoSelection(event)}
@@ -525,7 +737,12 @@ export function CaptureComposer({
             </p>
             <button
               className={styles.saveButton}
-              disabled={isSaving || isSyncing || !isLocalStateReady}
+              disabled={
+                isSaving ||
+                isSyncing ||
+                !isLocalStateReady ||
+                voiceState !== "idle"
+              }
               type="submit"
             >
               {isSaving ? "Saving…" : "Save to Inbox"}

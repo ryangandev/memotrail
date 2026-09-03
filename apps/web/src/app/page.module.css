@@ -565,6 +565,24 @@
   background: color-mix(in srgb, black 78%, transparent);
 }
 
+.captureVoiceStatus {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: var(--mt-space-2);
+  margin: 0;
+  padding: var(--mt-space-2) var(--mt-space-6);
+  border-top: 1px solid var(--mt-color-border);
+  color: var(--mt-color-accent);
+  background: var(--mt-color-accent-subtle);
+  font-size: var(--mt-font-size-caption);
+}
+
+.captureVoiceError {
+  color: var(--mt-color-warm);
+  background: var(--mt-color-warm-subtle);
+}
+
 .captureActions {
   display: flex;
   min-height: 58px;
@@ -625,6 +643,12 @@
 .activeQuietButton {
   color: var(--mt-color-accent);
   background: var(--mt-color-accent-subtle);
+}
+
+.listeningQuietButton,
+.listeningQuietButton:hover {
+  color: var(--mt-color-warm);
+  background: var(--mt-color-warm-subtle);
 }
 
 .quietButton:disabled {
@@ -1282,6 +1306,10 @@
 
   .capturePhotoStrip {
     padding: var(--mt-space-3) var(--mt-space-5);
+  }
+
+  .captureVoiceStatus {
+    padding-inline: var(--mt-space-5);
   }
 
   .capturePhoto {
