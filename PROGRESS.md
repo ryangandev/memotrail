@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Habits data contract
+> Current phase: Web Habits experience
 >
 > Last updated: 2026-09-02
 >
@@ -95,6 +95,10 @@
 - Habit workspaces derive pending and not-scheduled states for one local date, while the yearly calendar distinguishes completed, skipped, missed, pending, upcoming, and not-scheduled dates without storing synthetic misses.
 - The local database now passes 213 pgTAP tests plus warning-free schema lint, including 49 focused Habits tests for schedule validation, creation, measurement rules, occurrence correction, optimistic conflicts, history, Trash, access boundaries, and function hardening.
 - Hosted verification confirms the Habits migration, aligned nine-migration ledger, warning-free schema, empty function search paths, authenticated-only execution grants, RLS-enabled history, least-privilege table grants, and supporting indexes.
+- Web now exposes Habits as a first-class authenticated destination with Check and Measure modes, selected-date check-ins, all four shared schedule types, revision-safe corrections, notes, editing, and recoverable Trash actions.
+- The selected Habit includes a full-year contribution calendar and current streak, longest streak, completion, missed, and intentional-skip statistics without treating skips as failures.
+- The Web suite now has 93 passing tests, including 19 focused Habits tests for input normalization, request parsing, date handling, statistics, and calendar placement.
+- Isolated localhost browser verification covered Check completion and correction, a measured value with notes, a preserved occurrence across a schedule edit, responsive presentation, and a warning-free application console without touching hosted user data.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -356,6 +360,20 @@
 - [x] Apply the additive Habits migration to hosted Supabase without seed or role changes.
 - [x] Verify the hosted migration ledger, schema lint, function definitions, execution grants, table privileges, and indexes after rollout.
 
+### Web Habits
+
+- [x] Require the shared authenticated Web session before reading or mutating Habits.
+- [x] Add Habits to the shared desktop and five-item mobile navigation.
+- [x] Create Check or Measure Habits with daily, selected-weekday, weekly-target, or custom-interval schedules.
+- [x] Select a calendar date and record completed, skipped, or missed check-ins with optional notes and measured values.
+- [x] Revision-safely correct an existing check-in without losing immutable database history.
+- [x] Revision-safely edit a Habit definition or move it to recoverable Trash.
+- [x] Show a full-year contribution calendar with completed, missed, skipped, pending, upcoming, and not-scheduled states.
+- [x] Calculate current and longest streaks, completion rate, misses, and intentional skips while keeping skips neutral.
+- [x] Preserve date, selected Habit, and year state in the URL for refresh-safe navigation.
+- [x] Verify parsing and analytics with 19 focused tests and keep all 93 Web tests passing.
+- [x] Verify Check, Measure, correction, schedule editing, responsive layout, and console behavior against isolated local Supabase data.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -401,12 +419,12 @@
 - `feat: add iOS Collections experience` implemented and simulator-verified the matching native iOS Collections experience.
 - `feat: add iOS Library navigation` consolidated native archive navigation under a scalable Library destination.
 - `feat: add Habits data contract` added and locally verified the shared Habits data contract.
-- Current change: deployed and verified the Habits data contract on hosted Supabase.
+- `feat: deploy Habits data contract` deployed and verified the Habits data contract on hosted Supabase.
+- Current change: implemented and locally browser-verified the authenticated Web Habits experience.
 
 ## Next sequence
 
-1. Add the authenticated Web Habits experience.
-2. Add the matching native iOS Habits experience as a primary tab.
+1. Add the matching native iOS Habits experience as a primary tab.
 
 ## Deferred
 

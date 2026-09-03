@@ -48,14 +48,15 @@ const primaryNavigation: NavigationItem[] = [
 ];
 
 const recordNavigation: NavigationItem[] = [
-  { destination: "habits", icon: "check", label: "Habits" },
+  { destination: "habits", href: "/habits", icon: "check", label: "Habits" },
   { destination: "places", icon: "map", label: "Places" },
   { destination: "vehicles", icon: "car", label: "Vehicles" },
 ];
 
-const mobileNavigation = primaryNavigation.filter(
-  (item) => item.destination !== "search",
-);
+const mobileNavigation = [
+  ...primaryNavigation.filter((item) => item.destination !== "search"),
+  recordNavigation[0],
+];
 
 export function WorkspaceShell({
   activeDestination,
