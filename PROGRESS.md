@@ -14,7 +14,7 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- The linked hosted Supabase project contains all seven reviewed repository migrations and no development seed users.
+- The linked hosted Supabase project contains all eight reviewed repository migrations and no development seed users.
 - The hosted atomic Entry review contract now supports content, Type, occurrence, Collection, tag, and `Done` updates in one transaction.
 - Hosted verification found 21 Row Level Security-enabled application tables, 22 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
@@ -79,6 +79,10 @@
 - Collection detail returns paginated non-Trash Entries with Types, occurrence context, full organization, and active private attachment metadata while enforcing owner isolation.
 - The local database now passes 164 pgTAP tests plus schema lint, including 35 focused Collections tests and a data-independent First Times suite that tolerates existing local records.
 - Hosted verification confirms the Collections migration, aligned eight-migration ledger, warning-free schema, authenticated-only execution grants, empty function search paths, and both supporting indexes.
+- Web now exposes Collections as a first-class authenticated destination with every active Collection, Entry and Inbox counts, stable ordering, and empty-Collection states.
+- Web Collection detail preserves complete Entry text, Type, occurrence context, Inbox state, every Collection and tag, and expiring private image URLs across paginated routes.
+- The Web suite now has 74 passing tests, including Collection identifier, page, and stable pagination-link validation.
+- Authenticated localhost browser verification covered the overview, a Collection deep link, private signed image display, desktop and narrow responsive layouts, complete mobile navigation, and an error-free application console.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -293,6 +297,17 @@
 - [x] Apply the additive Collections migration to hosted Supabase without seed or role changes.
 - [x] Verify the hosted migration ledger, schema lint, function definitions, execution grants, and indexes after rollout.
 
+### Web Collections
+
+- [x] Expose Collections as a working destination in the shared desktop sidebar and four-item mobile navigation.
+- [x] Display every active Collection, including empty Collections, with Entry counts, Inbox counts, recency, and stable ordering.
+- [x] Open a durable Collection detail route and show paginated non-Trash Entries with complete content and organization context.
+- [x] Display active private Entry photos through one-hour signed URLs without persisting public URLs.
+- [x] Handle signed-out, missing configuration, unavailable data, empty Collection, invalid identifier, and out-of-range page states.
+- [x] Validate Collection route inputs and pagination links with six focused tests and keep all 74 Web tests passing.
+- [x] Pass formatting, design-token, lint, typecheck, and production-build checks.
+- [x] Verify overview, detail, private image, desktop, narrow responsive, mobile navigation, and console behavior against local Supabase.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -333,12 +348,13 @@
 - `feat: add Web First Times experience` implemented and locally browser-verified the dedicated Web First Times experience.
 - `feat: add iOS First Times experience` implemented and simulator-verified the matching native iOS First Times experience.
 - `feat: add Collections browsing contract` implemented and locally verified the shared Collections browsing contract.
-- Current change: deployed and verified the Collections browsing contract on hosted Supabase.
+- `feat: deploy Collections browsing contract` deployed and verified the Collections browsing contract on hosted Supabase.
+- Current change: implemented and locally browser-verified the authenticated Web Collections experience.
 
 ## Next sequence
 
-1. Add the authenticated Web Collections experience.
-2. Add the matching native iOS Collections experience, then revisit Library navigation with real content behind it.
+1. Add the matching native iOS Collections experience.
+2. Revisit Library navigation with real content behind it.
 
 ## Deferred
 

@@ -39,7 +39,12 @@ const primaryNavigation: NavigationItem[] = [
     icon: "star",
     label: "First Times",
   },
-  { destination: "collections", icon: "archive", label: "Collections" },
+  {
+    destination: "collections",
+    href: "/collections",
+    icon: "archive",
+    label: "Collections",
+  },
 ];
 
 const recordNavigation: NavigationItem[] = [
