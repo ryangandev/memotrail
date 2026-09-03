@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Deploy Goals data contract
+> Current phase: Web Goals experience
 >
 > Last updated: 2026-09-03
 >
@@ -222,6 +222,8 @@
 - A Bucket List Goal can be atomically marked Achieved and create a linked organized First Time with supplied completion context without copying the Goal description.
 - The Goals contract intentionally excludes percentages, reminders, overdue pressure, subtasks, and productivity scoring.
 - The local database now passes 544 pgTAP tests plus warning-free schema lint, including 64 focused Goals tests for validation, sorting, organization, related Entries, history, Search, Trash, Bucket List completion, grants, indexes, and privacy.
+- Hosted Supabase now contains the additive Goals migration with an aligned sixteen-migration ledger and no seed or role deployment.
+- Hosted verification confirms all four Goals functions, all three supporting indexes, the enriched Home, Vehicle, and Goal history trigger, empty function search paths, authenticated-only execution grants, and warning-free public and extensions schema lint.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -798,7 +800,7 @@
 - [x] Atomically mark a Bucket List Goal Achieved and create a linked organized First Time with supplied completion context without copying the Goal description.
 - [x] Keep every contract function authenticated-only, security-invoker, Row Level Security-backed, empty-search-path, and supported by focused indexes.
 - [x] Verify the contract with 64 focused pgTAP tests while keeping all 544 database tests and warning-level schema lint passing.
-- [ ] Apply and verify the additive Goals migration on hosted Supabase.
+- [x] Apply and verify the additive Goals migration on hosted Supabase.
 
 ## Feature history
 
@@ -876,13 +878,14 @@
 - `feat: deploy Vehicles data contract` deployed and verified the additive Vehicles contract on hosted Supabase.
 - `feat: add Web Vehicles experience` added and locally verified the complete Web Vehicles experience.
 - `feat: add iOS Vehicles experience` added and simulator-verified the complete native iOS Vehicles experience.
-- Current change: added and locally verified the Goals data contract.
+- `feat: add Goals data contract` added and locally verified the shared Goals and Bucket List completion contract.
+- Current change: deployed and verified the additive Goals contract on hosted Supabase.
 
 ## Next sequence
 
-1. Review and dry-run the additive Goals migration against the confirmed hosted Supabase project.
-2. Deploy only the version-controlled Goals migration without seed or role changes.
-3. Verify the hosted migration ledger, function hardening, indexes, history trigger, grants, and schema lint.
+1. Build the Web Goals archive around reflective status, horizon, and optional target-date context.
+2. Add revision-safe editing, related Entries, Collections, tags, photos, and recoverable Trash actions.
+3. Add the Bucket List Achieved flow that creates a linked First Time, then verify the experience on localhost.
 
 ## Deferred
 
