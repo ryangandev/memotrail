@@ -52,6 +52,9 @@
 		B0000000000000000000002B /* VehicleEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000032 /* VehicleEntry.swift */; };
 		B0000000000000000000002C /* VehicleController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000033 /* VehicleController.swift */; };
 		B0000000000000000000002D /* VehiclesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000034 /* VehiclesView.swift */; };
+		B0000000000000000000002E /* GoalEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000035 /* GoalEntry.swift */; };
+		B0000000000000000000002F /* GoalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000036 /* GoalController.swift */; };
+		B00000000000000000000030 /* GoalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000037 /* GoalsView.swift */; };
 		B10000000000000000000001 /* InboxEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000001 /* InboxEntryTests.swift */; };
 		B10000000000000000000002 /* SearchEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000003 /* SearchEntryTests.swift */; };
 		B10000000000000000000003 /* TimelineEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000004 /* TimelineEntryTests.swift */; };
@@ -64,6 +67,7 @@
 		B1000000000000000000000A /* VoiceTranscriptTextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000B /* VoiceTranscriptTextTests.swift */; };
 		B1000000000000000000000B /* ResidenceEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000C /* ResidenceEntryTests.swift */; };
 		B1000000000000000000000C /* VehicleEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000D /* VehicleEntryTests.swift */; };
+		B1000000000000000000000D /* GoalEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000E /* GoalEntryTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -123,6 +127,9 @@
 		C00000000000000000000032 /* VehicleEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleEntry.swift; sourceTree = "<group>"; };
 		C00000000000000000000033 /* VehicleController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleController.swift; sourceTree = "<group>"; };
 		C00000000000000000000034 /* VehiclesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehiclesView.swift; sourceTree = "<group>"; };
+		C00000000000000000000035 /* GoalEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEntry.swift; sourceTree = "<group>"; };
+		C00000000000000000000036 /* GoalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalController.swift; sourceTree = "<group>"; };
+		C00000000000000000000037 /* GoalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsView.swift; sourceTree = "<group>"; };
 		C10000000000000000000001 /* InboxEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000002 /* MemoTrailTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MemoTrailTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C10000000000000000000003 /* SearchEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchEntryTests.swift; sourceTree = "<group>"; };
@@ -136,6 +143,7 @@
 		C1000000000000000000000B /* VoiceTranscriptTextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceTranscriptTextTests.swift; sourceTree = "<group>"; };
 		C1000000000000000000000C /* ResidenceEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResidenceEntryTests.swift; sourceTree = "<group>"; };
 		C1000000000000000000000D /* VehicleEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleEntryTests.swift; sourceTree = "<group>"; };
+		C1000000000000000000000E /* GoalEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEntryTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -207,6 +215,7 @@
 				A10000000000000000000022 /* Home */,
 				A10000000000000000000023 /* Homes */,
 				A10000000000000000000024 /* Vehicles */,
+				A10000000000000000000025 /* Goals */,
 				A10000000000000000000006 /* Inbox */,
 				A10000000000000000000015 /* Search */,
 				A10000000000000000000016 /* Timeline */,
@@ -269,6 +278,7 @@
 				C00000000000000000000028 /* TrashItem.swift */,
 				C0000000000000000000002F /* ResidenceEntry.swift */,
 				C00000000000000000000032 /* VehicleEntry.swift */,
+				C00000000000000000000035 /* GoalEntry.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -307,6 +317,7 @@
 				C1000000000000000000000B /* VoiceTranscriptTextTests.swift */,
 				C1000000000000000000000C /* ResidenceEntryTests.swift */,
 				C1000000000000000000000D /* VehicleEntryTests.swift */,
+				C1000000000000000000000E /* GoalEntryTests.swift */,
 				C10000000000000000000001 /* InboxEntryTests.swift */,
 				C10000000000000000000003 /* SearchEntryTests.swift */,
 				C10000000000000000000004 /* TimelineEntryTests.swift */,
@@ -406,6 +417,15 @@
 				C00000000000000000000034 /* VehiclesView.swift */,
 			);
 			path = Vehicles;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000025 /* Goals */ = {
+			isa = PBXGroup;
+			children = (
+				C00000000000000000000036 /* GoalController.swift */,
+				C00000000000000000000037 /* GoalsView.swift */,
+			);
+			path = Goals;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -559,6 +579,9 @@
 				B0000000000000000000002B /* VehicleEntry.swift in Sources */,
 				B0000000000000000000002C /* VehicleController.swift in Sources */,
 				B0000000000000000000002D /* VehiclesView.swift in Sources */,
+				B0000000000000000000002E /* GoalEntry.swift in Sources */,
+				B0000000000000000000002F /* GoalController.swift in Sources */,
+				B00000000000000000000030 /* GoalsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -578,6 +601,7 @@
 				B1000000000000000000000A /* VoiceTranscriptTextTests.swift in Sources */,
 				B1000000000000000000000B /* ResidenceEntryTests.swift in Sources */,
 				B1000000000000000000000C /* VehicleEntryTests.swift in Sources */,
+				B1000000000000000000000D /* GoalEntryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: iOS Goals experience
+> Current phase: Places and Map data contract
 >
 > Last updated: 2026-09-03
 >
@@ -88,8 +88,8 @@
 - The shared iOS scheme now has 61 passing tests, including ten focused Collections tests, and passes a warning-free generic Simulator build.
 - The current native build installs and launches on an iPhone 17 Pro simulator while preserving the existing signed-out authentication gate.
 - Native navigation now groups Collections and First Times under one Library tab, leaving room for Habits as a future primary destination without overflowing the iPhone tab bar.
-- Library exposes only implemented archives as interactive routes while keeping Goals, Vehicles, Places, and People visibly marked as planned.
-- First Times and Collections can render inside the shared Library navigation stack without nested navigation containers or duplicated feature implementations.
+- Library exposes implemented archives as interactive routes while keeping Places and People visibly marked as planned.
+- Collections, First Times, Homes, Vehicles, Goals, and Trash render inside the shared Library navigation stack without nested navigation containers or duplicated feature implementations.
 - The shared iOS scheme now has 65 passing tests, including four Library destination-contract tests, and the refactored app passes a warning-free generic Simulator build.
 - The locally verified Habits contract supports check-off and measured Habits, daily, selected-weekday, weekly-target, and interval schedules, revision-safe definitions and occurrences, recoverable Trash, and immutable history.
 - Habit workspaces derive pending and not-scheduled states for one local date, while the yearly calendar distinguishes completed, skipped, missed, pending, upcoming, and not-scheduled dates without storing synthetic misses.
@@ -230,6 +230,12 @@
 - Goals are available through Records and Library navigation, and Goal or photo removal remains recoverable through Trash.
 - The Web suite now has 170 passing tests, including ten focused Goal input and response tests, and the implementation passes formatting, lint, typecheck, and production-build checks.
 - Localhost browser verification covered the signed-out authentication boundary plus representative desktop and iPhone-sized archive and editor layouts with an error-free browser console.
+- iOS now exposes Goals inside Library with native In Motion, Considering, Paused, and Closed Chapters plus horizon, target-date, reflection, organization, related Entry, and signed private photo context.
+- The native Goal editor creates or revision-safely updates reflective state, horizon, optional no-pressure target date, Collections, tags, related Entries, and private Entry photos through the shared hosted contract.
+- A saved Bucket List Goal can be atomically marked Achieved and create a linked First Time only after any other visible Goal edits have been saved.
+- Native Goal and individual-photo removal remain recoverable through Trash, while achievement links stay visible without entering the editable related-Entry set.
+- The shared iOS scheme now has 142 passing tests, including ten focused Goals tests for decoding, sorting, sections, validation, date-only handling, organization, related Entries, explicit RPC nulls, and achievement context.
+- The native Goals implementation passes strict Swift formatting, project validation, a warning-free generic Simulator build, the complete suite on an iPhone 17 Pro simulator, and an install-and-launch authentication-boundary check.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -469,9 +475,9 @@
 ### iOS Library navigation
 
 - [x] Replace separate First Times and Collections tabs with one scalable Library destination.
-- [x] Keep Collections and First Times fully interactive through native push navigation.
+- [x] Keep Collections, First Times, Homes, Vehicles, and Goals fully interactive through native push navigation.
 - [x] Reuse each archive inside the Library navigation stack without nesting another `NavigationStack`.
-- [x] Show Goals, Vehicles, Places, and People as clearly non-interactive planned destinations.
+- [x] Show Places and People as clearly non-interactive planned destinations.
 - [x] Preserve direct primary access to Inbox, Search, and Timeline while reserving tab-bar capacity for Habits.
 - [x] Verify stable destination identity, user-facing metadata, and implemented-versus-planned grouping with four focused tests.
 - [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, and all 65 native tests.
@@ -819,6 +825,18 @@
 - [x] Verify input and response parsing with ten focused tests while keeping all 170 Web tests passing.
 - [x] Pass formatting, lint, typecheck, production-build, signed-out route, desktop, mobile, and browser-console checks.
 
+### iOS Goals experience
+
+- [x] Present Goals in native In Motion, Considering, Paused, and Closed Chapters with horizon, target-date, reflection, organization, related Entry, and signed private photo context.
+- [x] Create or revision-safely edit Goal title, reflection, horizon, status, optional no-pressure target date, Collections, tags, and up to 100 related Entries through one mutation.
+- [x] Upload supported private Entry photos to deterministic owner-scoped Storage paths and register metadata only after a successful upload.
+- [x] Move a Goal or individual photo to recoverable Trash without deleting the underlying private original.
+- [x] Mark a saved Bucket List Goal Achieved and atomically create a linked First Time without losing unsaved visible editor changes.
+- [x] Keep achievement links visible and distinct from editable related Entry links.
+- [x] Expose Goals as an implemented Library destination without adding another primary tab or productivity-pressure mechanics.
+- [x] Verify decoding, deterministic ordering, reflective sections, date-only context, validation, organization, related Entries, explicit RPC nulls, and achievement parameters with ten focused tests while keeping all 142 native tests passing.
+- [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, the complete iPhone 17 Pro suite, and an install-and-launch authentication-boundary check.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -897,13 +915,14 @@
 - `feat: add iOS Vehicles experience` added and simulator-verified the complete native iOS Vehicles experience.
 - `feat: add Goals data contract` added and locally verified the shared Goals and Bucket List completion contract.
 - `feat: deploy Goals data contract` deployed and verified the additive Goals contract on hosted Supabase.
-- Current change: added and locally browser-verified the complete Web Goals experience.
+- `feat: add Web Goals experience` added and locally browser-verified the complete Web Goals experience.
+- Current change: added and simulator-verified the complete native iOS Goals experience.
 
 ## Next sequence
 
-1. Build native Goals inside Library with grouped reflective states, horizon, optional target-date context, and related Entries.
-2. Add revision-safe editing, Collections, tags, private photos, recoverable Trash, and the Bucket List Achieved flow that creates a linked First Time.
-3. Verify native parsing and mutation behavior, then pass strict formatting, project validation, a warning-free Simulator build, the complete native suite, and an install-and-launch smoke check.
+1. Define the shared Place contract around reusable owned locations, optional address and coordinates, notes, Entry links, and future Map compatibility.
+2. Preserve existing Home-created Places while adding owner-scoped browsing, revision-safe editing, history, Search, and recoverable Trash behavior.
+3. Verify the additive migration locally before any hosted deployment, then build matching Web and iOS Places experiences.
 
 ## Deferred
 
