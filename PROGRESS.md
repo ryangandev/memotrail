@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Deploy Home memory resurfacing contract
+> Current phase: Web Home memory resurfacing
 >
 > Last updated: 2026-09-03
 >
@@ -163,6 +163,8 @@
 - On This Day prioritizes the nearest prior anniversary using the Entry's preserved occurrence timezone, while days without an anniversary use a deterministic daily rotation across Entries at least thirty days old.
 - Resurfacing excludes unreviewed Inbox Entries, Life Stages, Trash, undated content, and other owners while preserving organization and active private attachment metadata for the selected Entry.
 - The local database now passes 363 pgTAP tests plus warning-free schema lint, including 28 focused resurfacing tests for selection, time zones, privacy, validation, grants, and index hardening.
+- Hosted Supabase now contains the Home resurfacing migration with an aligned thirteen-migration ledger and warning-free public and extensions schema lint.
+- Hosted schema inspection confirms the resurfacing function uses invoker security, an empty search path, authenticated-only execution, and the intended partial candidate index.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -605,7 +607,7 @@
 - [x] Keep the function security-invoker, authenticated-only, and protected by Row Level Security with an empty search path.
 - [x] Add a partial owner and occurrence-time index for eligible resurfacing candidates.
 - [x] Verify the shared contract with 28 focused pgTAP tests, all 363 database tests, and warning-free local schema lint.
-- [ ] Apply and verify the additive Home resurfacing migration on hosted Supabase.
+- [x] Apply and verify the additive Home resurfacing migration on hosted Supabase.
 
 ## Feature history
 
@@ -669,14 +671,14 @@
 - `feat: deploy universal Entry media contract` deployed and verified the universal Entry media contract on hosted Supabase.
 - `feat: add Web capture photos` added and locally browser-verified recoverable, offline-first private photos on every Web universal capture surface.
 - `feat: add iOS capture photos` added and simulator-verified matching recoverable, offline-first private photos on every iOS universal capture surface.
-- Current change: added and locally verified a deterministic, owner-scoped Home memory resurfacing contract.
+- `feat: add Home memory resurfacing contract` added and locally verified a deterministic, owner-scoped Home memory resurfacing contract.
+- Current change: deployed and verified the Home memory resurfacing contract on hosted Supabase.
 
 ## Next sequence
 
-1. Deploy and verify the Home memory resurfacing contract on hosted Supabase.
-2. Add the quiet resurfacing experience to Web Home.
-3. Add the matching native resurfacing experience to iOS Home.
-4. Continue toward universal voice-to-text capture after choosing the transcription boundary.
+1. Add the quiet resurfacing experience to Web Home.
+2. Add the matching native resurfacing experience to iOS Home.
+3. Continue toward universal voice-to-text capture after choosing the transcription boundary.
 
 ## Deferred
 
