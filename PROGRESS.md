@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Web Home memory resurfacing
+> Current phase: iOS Home memory resurfacing
 >
 > Last updated: 2026-09-03
 >
@@ -165,6 +165,10 @@
 - The local database now passes 363 pgTAP tests plus warning-free schema lint, including 28 focused resurfacing tests for selection, time zones, privacy, validation, grants, and index hardening.
 - Hosted Supabase now contains the Home resurfacing migration with an aligned thirteen-migration ledger and warning-free public and extensions schema lint.
 - Hosted schema inspection confirms the resurfacing function uses invoker security, an empty search path, authenticated-only execution, and the intended partial candidate index.
+- Web Home now loads its deterministic daily memory in parallel with the main workspace and quietly omits the optional card if resurfacing fails.
+- The responsive Soft Ledger memory card presents On This Day or archive context, complete Entry text, Type, original occurrence date, Collections, tags, and an expiring private image URL.
+- The Web suite now has 124 passing tests, including six focused resurfacing-response tests, and the implementation passes formatting, design-token, lint, typecheck, and production-build checks.
+- Isolated localhost browser verification covered the real database RPC, private signed image loading, desktop and 390-pixel iPhone layouts, complete memory context, and disposable-account cleanup.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -609,6 +613,17 @@
 - [x] Verify the shared contract with 28 focused pgTAP tests, all 363 database tests, and warning-free local schema lint.
 - [x] Apply and verify the additive Home resurfacing migration on hosted Supabase.
 
+### Web Home memory resurfacing
+
+- [x] Load the optional resurfaced memory in parallel so it does not extend the main Home workspace request chain.
+- [x] Degrade quietly to the normal Home experience when the optional resurfacing request fails or returns malformed data.
+- [x] Display On This Day anniversary context or the stable archive fallback without presenting the selection as AI-generated.
+- [x] Preserve complete Entry text, Type, original occurrence date, Collections, tags, and active private image metadata.
+- [x] Reuse one private signed-image request across recent Entries and the resurfaced memory.
+- [x] Keep the card consistent with the Soft Ledger system across desktop and narrow mobile layouts.
+- [x] Verify response validation with six focused tests while keeping all 124 Web tests passing.
+- [x] Pass formatting, design-token, lint, typecheck, production-build, real database, signed-image, desktop, mobile, and cleanup checks.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -672,13 +687,13 @@
 - `feat: add Web capture photos` added and locally browser-verified recoverable, offline-first private photos on every Web universal capture surface.
 - `feat: add iOS capture photos` added and simulator-verified matching recoverable, offline-first private photos on every iOS universal capture surface.
 - `feat: add Home memory resurfacing contract` added and locally verified a deterministic, owner-scoped Home memory resurfacing contract.
-- Current change: deployed and verified the Home memory resurfacing contract on hosted Supabase.
+- `feat: deploy Home memory resurfacing contract` deployed and verified the Home memory resurfacing contract on hosted Supabase.
+- Current change: added and locally browser-verified the quiet Web Home memory resurfacing experience.
 
 ## Next sequence
 
-1. Add the quiet resurfacing experience to Web Home.
-2. Add the matching native resurfacing experience to iOS Home.
-3. Continue toward universal voice-to-text capture after choosing the transcription boundary.
+1. Add the matching native resurfacing experience to iOS Home.
+2. Continue toward universal voice-to-text capture after choosing the transcription boundary.
 
 ## Deferred
 

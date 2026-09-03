@@ -195,6 +195,91 @@
   font-size: var(--mt-font-size-caption);
 }
 
+.memoryCard {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr);
+  min-height: 250px;
+  overflow: hidden;
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-large);
+  background: linear-gradient(
+    145deg,
+    var(--mt-color-accent-subtle),
+    var(--mt-color-surface) 52%
+  );
+}
+
+.memoryCardTextOnly {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 210px;
+}
+
+.memoryCard > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.memoryCard > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--mt-space-8);
+}
+
+.memoryCard header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mt-space-3);
+}
+
+.memoryCard header span {
+  color: var(--mt-color-warm);
+  font-size: 10px;
+  font-weight: var(--mt-font-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.memoryCard time {
+  color: var(--mt-color-ink-faint);
+  font-size: var(--mt-font-size-caption);
+}
+
+.memoryCard h3 {
+  margin-top: var(--mt-space-4);
+  font-family: var(--mt-font-family-serif);
+  font-size: clamp(25px, 3vw, 34px);
+  font-weight: var(--mt-font-weight-medium);
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+}
+
+.memoryCard p {
+  max-width: 58ch;
+  margin-top: var(--mt-space-3);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-body);
+  line-height: var(--mt-line-height-body);
+}
+
+.memoryCard footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: var(--mt-space-5);
+}
+
+.memoryCard footer span {
+  padding: 3px 8px;
+  border-radius: var(--mt-radius-pill);
+  color: var(--mt-color-accent);
+  background: var(--mt-color-surface);
+  font-size: 10px;
+}
+
 .recentGrid {
   display: grid;
   gap: var(--mt-space-3);
@@ -316,6 +401,10 @@
   .stageGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .memoryCard {
+    grid-template-columns: minmax(190px, 0.7fr) minmax(0, 1.3fr);
+  }
 }
 
 @media (max-width: 720px) {
@@ -379,6 +468,18 @@
   .recentCard > div {
     padding: var(--mt-space-4);
   }
+
+  .memoryCard {
+    grid-template-columns: 1fr;
+  }
+
+  .memoryCard > img {
+    height: 240px;
+  }
+
+  .memoryCard > div {
+    padding: var(--mt-space-6);
+  }
 }
 
 @media (max-width: 430px) {
@@ -408,6 +509,14 @@
 
   .recentCard > img {
     height: 180px;
+  }
+
+  .memoryCard > img {
+    height: 210px;
+  }
+
+  .memoryCard > div {
+    padding: var(--mt-space-5);
   }
 
   .sectionHeading p {

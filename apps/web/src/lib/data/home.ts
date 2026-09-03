@@ -6,38 +6,19 @@ import {
   localDateInTimezone,
   normalizeHomeTimezone,
 } from "./home-input";
+import {
+  parseHomeEntries,
+  type HomeAttachment,
+  type HomeEntry,
+} from "./home-entry";
+import {
+  parseHomeResurfacedMemory,
+  type HomeResurfacedMemory,
+} from "./home-resurfacing";
 import { getAuthenticatedContext, type Viewer } from "./inbox";
 
-export type HomeAttachment = {
-  bucketId: string;
-  byteSize: number | null;
-  id: string;
-  imageUrl: string | null;
-  mimeType: string;
-  objectPath: string;
-  originalFilename: string | null;
-  pixelHeight: number | null;
-  pixelWidth: number | null;
-};
-
-export type HomeEntry = {
-  attachments: HomeAttachment[];
-  body: string;
-  collectionNames: string[];
-  createdAt: string;
-  datePrecision: string;
-  entryType: string;
-  id: string;
-  inboxStatus: "organized" | "unreviewed";
-  occurredEnd: string | null;
-  occurredLabel: string | null;
-  occurredStart: string | null;
-  occurredTimezone: string | null;
-  revision: number;
-  tagNames: string[];
-  title: string;
-  updatedAt: string;
-};
+export type { HomeAttachment, HomeEntry } from "./home-entry";
+export type { HomeResurfacedMemory } from "./home-resurfacing";
 
 export type HomeStage = {
   body: string;
@@ -70,6 +51,7 @@ export type HomeSnapshot = {
 
 export type HomeWorkspace = {
   loadError: string | null;
+  resurfacedMemory: HomeResurfacedMemory | null;
   snapshot: HomeSnapshot | null;
   timezone: string;
   viewer: Viewer;
@@ -87,36 +69,48 @@ export async function getHomeWorkspace(): Promise<HomeWorkspace | null> {
     cookieStore.get(homeTimezoneCookieName)?.value,
   );
   const snapshotDate = localDateInTimezone(new Date(), timezone);
-  const result = await context.client.rpc("home_workspace", {
-    p_local_date: snapshotDate,
-    p_recent_limit: 5,
-    p_timezone: timezone,
-  });
+  const [result, resurfacingResult] = await Promise.all([
+    context.client.rpc("home_workspace", {
+      p_local_date: snapshotDate,
+      p_recent_limit: 5,
+      p_timezone: timezone,
+    }),
+    context.client.rpc("home_resurfaced_memory", {
+      p_local_date: snapshotDate,
+      p_timezone: timezone,
+    }),
+  ]);
   const row = result.error ? null : parseHomeRow(result.data);
+  const resurfacedMemory = resurfacingResult.error
+    ? null
+    : parseHomeResurfacedMemory(resurfacingResult.data);
 
   if (!row) {
     return {
       loadError: "MemoTrail could not load Home. Refresh to try again.",
+      resurfacedMemory: null,
       snapshot: null,
       timezone,
       viewer: context.viewer,
     };
   }
 
-  const attachments = row.recentEntries.flatMap((entry) => entry.attachments);
+  const attachments = [
+    ...row.recentEntries.flatMap((entry) => entry.attachments),
+    ...(resurfacedMemory?.attachments ?? []),
+  ];
   const signedUrls = await signedImageUrls(context.client, attachments);
 
   return {
     loadError: null,
+    resurfacedMemory: resurfacedMemory
+      ? withSignedImageUrls(resurfacedMemory, signedUrls)
+      : null,
     snapshot: {
       ...row,
-      recentEntries: row.recentEntries.map((entry) => ({
-        ...entry,
-        attachments: entry.attachments.map((attachment) => ({
-          ...attachment,
-          imageUrl: signedUrls.get(attachment.objectPath) ?? null,
-        })),
-      })),
+      recentEntries: row.recentEntries.map((entry) =>
+        withSignedImageUrls(entry, signedUrls),
+      ),
     },
     timezone,
     viewer: context.viewer,
@@ -129,7 +123,7 @@ function parseHomeRow(value: unknown): HomeSnapshot | null {
   }
 
   const row = value[0];
-  const recentEntries = parseRecentEntries(row.recent_entries);
+  const recentEntries = parseHomeEntries(row.recent_entries);
   const currentStages = parseCurrentStages(row.current_stages);
   const counts = [
     row.active_habit_count,
@@ -168,103 +162,6 @@ function parseHomeRow(value: unknown): HomeSnapshot | null {
     skippedHabitCount: counts[8]!,
     snapshotDate: row.snapshot_date,
   };
-}
-
-function parseRecentEntries(value: unknown): HomeEntry[] | null {
-  if (!Array.isArray(value)) {
-    return null;
-  }
-
-  const entries: HomeEntry[] = [];
-
-  for (const item of value) {
-    if (!isRecord(item)) {
-      return null;
-    }
-
-    const attachments = parseAttachments(item.attachments);
-
-    if (
-      !attachments ||
-      typeof item.entry_id !== "string" ||
-      typeof item.title !== "string" ||
-      typeof item.body !== "string" ||
-      typeof item.entry_type !== "string" ||
-      (item.inbox_status !== "organized" &&
-        item.inbox_status !== "unreviewed") ||
-      !nullableString(item.occurred_start) ||
-      !nullableString(item.occurred_end) ||
-      typeof item.date_precision !== "string" ||
-      !nullableString(item.occurred_label) ||
-      !nullableString(item.occurred_timezone) ||
-      typeof item.revision !== "number" ||
-      typeof item.created_at !== "string" ||
-      typeof item.updated_at !== "string" ||
-      !stringArray(item.collection_names) ||
-      !stringArray(item.tag_names)
-    ) {
-      return null;
-    }
-
-    entries.push({
-      attachments,
-      body: item.body,
-      collectionNames: item.collection_names,
-      createdAt: item.created_at,
-      datePrecision: item.date_precision,
-      entryType: item.entry_type,
-      id: item.entry_id,
-      inboxStatus: item.inbox_status,
-      occurredEnd: item.occurred_end,
-      occurredLabel: item.occurred_label,
-      occurredStart: item.occurred_start,
-      occurredTimezone: item.occurred_timezone,
-      revision: item.revision,
-      tagNames: item.tag_names,
-      title: item.title,
-      updatedAt: item.updated_at,
-    });
-  }
-
-  return entries;
-}
-
-function parseAttachments(value: unknown): HomeAttachment[] | null {
-  if (!Array.isArray(value)) {
-    return null;
-  }
-
-  const attachments: HomeAttachment[] = [];
-
-  for (const item of value) {
-    if (
-      !isRecord(item) ||
-      typeof item.attachment_id !== "string" ||
-      typeof item.bucket_id !== "string" ||
-      typeof item.object_path !== "string" ||
-      !nullableString(item.original_filename) ||
-      typeof item.mime_type !== "string" ||
-      !nullableNumber(item.byte_size) ||
-      !nullableNumber(item.pixel_width) ||
-      !nullableNumber(item.pixel_height)
-    ) {
-      return null;
-    }
-
-    attachments.push({
-      bucketId: item.bucket_id,
-      byteSize: item.byte_size,
-      id: item.attachment_id,
-      imageUrl: null,
-      mimeType: item.mime_type,
-      objectPath: item.object_path,
-      originalFilename: item.original_filename,
-      pixelHeight: item.pixel_height,
-      pixelWidth: item.pixel_width,
-    });
-  }
-
-  return attachments;
 }
 
 function parseCurrentStages(value: unknown): HomeStage[] | null {
@@ -338,6 +235,19 @@ async function signedImageUrls(
   return urls;
 }
 
+function withSignedImageUrls<T extends HomeEntry>(
+  entry: T,
+  signedUrls: Map<string, string>,
+): T {
+  return {
+    ...entry,
+    attachments: entry.attachments.map((attachment) => ({
+      ...attachment,
+      imageUrl: signedUrls.get(attachment.objectPath) ?? null,
+    })),
+  };
+}
+
 function safeCount(value: unknown) {
   const count = typeof value === "string" ? Number(value) : value;
   return typeof count === "number" && Number.isSafeInteger(count) && count >= 0
@@ -351,14 +261,4 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function nullableString(value: unknown): value is string | null {
   return value === null || typeof value === "string";
-}
-
-function nullableNumber(value: unknown): value is number | null {
-  return value === null || typeof value === "number";
-}
-
-function stringArray(value: unknown): value is string[] {
-  return (
-    Array.isArray(value) && value.every((item) => typeof item === "string")
-  );
 }

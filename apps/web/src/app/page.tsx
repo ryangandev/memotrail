@@ -7,6 +7,7 @@ import { greetingInTimezone } from "@/lib/data/home-input";
 import {
   getHomeWorkspace,
   type HomeEntry,
+  type HomeResurfacedMemory,
   type HomeSnapshot,
   type HomeStage,
   type HomeWorkspace,
@@ -75,13 +76,22 @@ function HomeContent({ workspace }: { workspace: HomeWorkspace }) {
           </div>
         </section>
       ) : (
-        <HomeSnapshotContent snapshot={workspace.snapshot} />
+        <HomeSnapshotContent
+          resurfacedMemory={workspace.resurfacedMemory}
+          snapshot={workspace.snapshot}
+        />
       )}
     </div>
   );
 }
 
-function HomeSnapshotContent({ snapshot }: { snapshot: HomeSnapshot }) {
+function HomeSnapshotContent({
+  resurfacedMemory,
+  snapshot,
+}: {
+  resurfacedMemory: HomeResurfacedMemory | null;
+  snapshot: HomeSnapshot;
+}) {
   return (
     <>
       <section className={styles.todaySection} aria-labelledby="today-heading">
@@ -123,8 +133,67 @@ function HomeSnapshotContent({ snapshot }: { snapshot: HomeSnapshot }) {
       </section>
 
       <CurrentStages stages={snapshot.currentStages} />
+      <ResurfacedMemory memory={resurfacedMemory} />
       <RecentEntries entries={snapshot.recentEntries} />
     </>
+  );
+}
+
+function ResurfacedMemory({ memory }: { memory: HomeResurfacedMemory | null }) {
+  if (!memory) {
+    return null;
+  }
+
+  const cover = memory.attachments.find((attachment) => attachment.imageUrl);
+  const context = [
+    ...memory.collectionNames.map((name) => ({
+      key: `collection:${name.toLocaleLowerCase()}`,
+      label: name,
+    })),
+    ...memory.tagNames.map((tag) => ({
+      key: `tag:${tag.toLocaleLowerCase()}`,
+      label: `#${tag}`,
+    })),
+  ];
+
+  return (
+    <section className={styles.homeSection} aria-labelledby="memory-heading">
+      <SectionHeading
+        detail={resurfacingLabel(memory)}
+        id="memory-heading"
+        title="A memory for today"
+      />
+      <article
+        className={`${styles.memoryCard} ${cover?.imageUrl ? "" : styles.memoryCardTextOnly}`}
+      >
+        {cover?.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            alt={cover.originalFilename ?? "Memory photo"}
+            src={cover.imageUrl}
+          />
+        ) : null}
+        <div>
+          <header>
+            <span>{entryTypeLabel(memory.entryType)}</span>
+            <time dateTime={memory.occurredStart}>
+              {entryDateLabel(memory)}
+            </time>
+          </header>
+          <h3>{memory.title}</h3>
+          {memory.body.trim() ? (
+            <p>{truncate(memory.body.trim(), 240)}</p>
+          ) : null}
+          {context.length > 0 ? (
+            <footer>
+              {context.slice(0, 4).map((item) => (
+                <span key={item.key}>{item.label}</span>
+              ))}
+            </footer>
+          ) : null}
+        </div>
+      </article>
+    </section>
   );
 }
 
@@ -219,8 +288,14 @@ function RecentEntries({ entries }: { entries: HomeEntry[] }) {
 function RecentEntryCard({ entry }: { entry: HomeEntry }) {
   const cover = entry.attachments.find((attachment) => attachment.imageUrl);
   const context = [
-    ...entry.collectionNames,
-    ...entry.tagNames.map((tag) => `#${tag}`),
+    ...entry.collectionNames.map((name) => ({
+      key: `collection:${name.toLocaleLowerCase()}`,
+      label: name,
+    })),
+    ...entry.tagNames.map((tag) => ({
+      key: `tag:${tag.toLocaleLowerCase()}`,
+      label: `#${tag}`,
+    })),
   ];
 
   return (
@@ -246,7 +321,7 @@ function RecentEntryCard({ entry }: { entry: HomeEntry }) {
         {context.length > 0 ? (
           <footer>
             {context.slice(0, 3).map((item) => (
-              <span key={item.toLocaleLowerCase()}>{item}</span>
+              <span key={item.key}>{item.label}</span>
             ))}
           </footer>
         ) : null}
@@ -335,6 +410,14 @@ function entryDateLabel(entry: HomeEntry) {
     entry.occurredStart ?? entry.createdAt,
     entry.occurredTimezone,
   );
+}
+
+function resurfacingLabel(memory: HomeResurfacedMemory) {
+  if (memory.resurfacingKind === "on_this_day" && memory.yearsAgo) {
+    return `On this day, ${memory.yearsAgo} ${memory.yearsAgo === 1 ? "year" : "years"} ago`;
+  }
+
+  return "A quiet note from your archive";
 }
 
 function formatDate(value: string, timezone: string | null) {
