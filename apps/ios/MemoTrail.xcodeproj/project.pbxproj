@@ -42,6 +42,9 @@
 		B00000000000000000000021 /* TrashItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000028 /* TrashItem.swift */; };
 		B00000000000000000000022 /* TrashController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000029 /* TrashController.swift */; };
 		B00000000000000000000023 /* TrashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000002A /* TrashView.swift */; };
+		B00000000000000000000024 /* HomeEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000002B /* HomeEntry.swift */; };
+		B00000000000000000000025 /* HomeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000002C /* HomeController.swift */; };
+		B00000000000000000000026 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000002D /* HomeView.swift */; };
 		B10000000000000000000001 /* InboxEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000001 /* InboxEntryTests.swift */; };
 		B10000000000000000000002 /* SearchEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000003 /* SearchEntryTests.swift */; };
 		B10000000000000000000003 /* TimelineEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000004 /* TimelineEntryTests.swift */; };
@@ -50,6 +53,7 @@
 		B10000000000000000000006 /* LibraryDestinationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000007 /* LibraryDestinationTests.swift */; };
 		B10000000000000000000007 /* HabitEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000008 /* HabitEntryTests.swift */; };
 		B10000000000000000000008 /* TrashItemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000009 /* TrashItemTests.swift */; };
+		B10000000000000000000009 /* HomeEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000A /* HomeEntryTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -99,6 +103,9 @@
 		C00000000000000000000028 /* TrashItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrashItem.swift; sourceTree = "<group>"; };
 		C00000000000000000000029 /* TrashController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrashController.swift; sourceTree = "<group>"; };
 		C0000000000000000000002A /* TrashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrashView.swift; sourceTree = "<group>"; };
+		C0000000000000000000002B /* HomeEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeEntry.swift; sourceTree = "<group>"; };
+		C0000000000000000000002C /* HomeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeController.swift; sourceTree = "<group>"; };
+		C0000000000000000000002D /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		C10000000000000000000001 /* InboxEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000002 /* MemoTrailTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MemoTrailTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C10000000000000000000003 /* SearchEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchEntryTests.swift; sourceTree = "<group>"; };
@@ -108,6 +115,7 @@
 		C10000000000000000000007 /* LibraryDestinationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryDestinationTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000008 /* HabitEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000009 /* TrashItemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrashItemTests.swift; sourceTree = "<group>"; };
+		C1000000000000000000000A /* HomeEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeEntryTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -176,6 +184,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000013 /* Authentication */,
+				A10000000000000000000022 /* Home */,
 				A10000000000000000000006 /* Inbox */,
 				A10000000000000000000015 /* Search */,
 				A10000000000000000000016 /* Timeline */,
@@ -195,15 +204,6 @@
 				C00000000000000000000003 /* InboxView.swift */,
 			);
 			path = Inbox;
-			sourceTree = "<group>";
-		};
-		A10000000000000000000013 /* Authentication */ = {
-			isa = PBXGroup;
-			children = (
-				C00000000000000000000013 /* AuthenticationController.swift */,
-				C00000000000000000000014 /* AuthenticationView.swift */,
-			);
-			path = Authentication;
 			sourceTree = "<group>";
 		};
 		A10000000000000000000007 /* DesignSystem */ = {
@@ -235,6 +235,7 @@
 		A10000000000000000000010 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				C0000000000000000000002B /* HomeEntry.swift */,
 				C00000000000000000000007 /* InboxEntry.swift */,
 				C00000000000000000000017 /* SearchEntry.swift */,
 				C0000000000000000000001A /* TimelineEntry.swift */,
@@ -265,9 +266,19 @@
 			path = Configuration;
 			sourceTree = "<group>";
 		};
+		A10000000000000000000013 /* Authentication */ = {
+			isa = PBXGroup;
+			children = (
+				C00000000000000000000013 /* AuthenticationController.swift */,
+				C00000000000000000000014 /* AuthenticationView.swift */,
+			);
+			path = Authentication;
+			sourceTree = "<group>";
+		};
 		A10000000000000000000014 /* MemoTrailTests */ = {
 			isa = PBXGroup;
 			children = (
+				C1000000000000000000000A /* HomeEntryTests.swift */,
 				C10000000000000000000001 /* InboxEntryTests.swift */,
 				C10000000000000000000003 /* SearchEntryTests.swift */,
 				C10000000000000000000004 /* TimelineEntryTests.swift */,
@@ -340,6 +351,15 @@
 				C0000000000000000000002A /* TrashView.swift */,
 			);
 			path = Trash;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000022 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				C0000000000000000000002C /* HomeController.swift */,
+				C0000000000000000000002D /* HomeView.swift */,
+			);
+			path = Home;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -483,6 +503,9 @@
 				B00000000000000000000021 /* TrashItem.swift in Sources */,
 				B00000000000000000000022 /* TrashController.swift in Sources */,
 				B00000000000000000000023 /* TrashView.swift in Sources */,
+				B00000000000000000000024 /* HomeEntry.swift in Sources */,
+				B00000000000000000000025 /* HomeController.swift in Sources */,
+				B00000000000000000000026 /* HomeView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -498,6 +521,7 @@
 				B10000000000000000000006 /* LibraryDestinationTests.swift in Sources */,
 				B10000000000000000000007 /* HabitEntryTests.swift in Sources */,
 				B10000000000000000000008 /* TrashItemTests.swift in Sources */,
+				B10000000000000000000009 /* HomeEntryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -569,6 +593,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = G2354582TD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MemoTrail/Resources/Info.plist;
@@ -597,6 +622,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = G2354582TD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MemoTrail/Resources/Info.plist;
