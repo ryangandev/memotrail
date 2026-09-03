@@ -1,6 +1,6 @@
 # MemoTrail Implementation Progress
 
-> Current phase: Universal capture photos
+> Current phase: Deploy universal Entry media contract
 >
 > Last updated: 2026-09-03
 >
@@ -142,6 +142,10 @@
 - The shared iOS draft preserves the optional date across every capture surface and continues to decode existing text-only drafts with no invented occurrence date.
 - A native dated capture freezes the selected occurrence instant and current IANA time zone when it enters the existing offline queue, independently from its later synchronization time.
 - The shared iOS scheme now has 96 passing tests and the dated capture implementation passes strict Swift formatting, project validation, a warning-free generic Simulator build, and an install-and-launch smoke check.
+- The locally verified universal Entry media contract now idempotently registers an uploaded private image against any active owned Entry, not only a First Time.
+- Universal attachment registration validates the owner and Entry path, supported image MIME type, 50 MB limit, optional dimensions, original filename, existing Storage object, and conflict identity before writing metadata.
+- Any active Entry photo can now move to recoverable Trash without deleting its private object, while registration and removal stay behind authenticated-only hardened definer boundaries.
+- The local database now passes 335 pgTAP tests plus warning-free schema lint, including 29 focused universal media tests for grants, paths, metadata, idempotency, ownership, Trash, and anonymous denial.
 - AI selection and configuration are deferred and do not block authentication, capture, keyword search, or synchronization work.
 
 ## Active acceptance criteria
@@ -533,6 +537,20 @@
 - [x] Verify dated draft restoration and legacy draft compatibility while keeping all 96 native tests passing.
 - [x] Pass strict Swift formatting, project validation, a warning-free generic Simulator build, and an install-and-launch smoke check.
 
+### Universal Entry media contract
+
+- [x] Register an uploaded original image against any active Entry owned by the authenticated user.
+- [x] Require an owner and Entry-scoped private Storage path with a filename derived from the stable attachment ID.
+- [x] Validate supported image formats, byte size, optional pixel dimensions, and original filename before metadata insertion.
+- [x] Require the private Storage object to exist before attachment metadata is registered.
+- [x] Make an identical retry idempotent while rejecting conflicting identifiers or object paths.
+- [x] Recoverably move any active Entry photo to Trash without deleting its private Storage object.
+- [x] Keep direct attachment writes unavailable to clients and function execution unavailable to anonymous callers.
+- [x] Use hardened definer boundaries with empty search paths for the minimum privileged attachment mutations.
+- [x] Verify registration, removal, idempotency, validation, ownership, grants, and anonymous denial with 29 focused pgTAP tests.
+- [x] Apply the additive migration locally and pass all 335 database tests plus warning-free schema lint.
+- [ ] Apply and verify the universal Entry media migration on hosted Supabase.
+
 ## Feature history
 
 - `docs: define MemoTrail product direction` established the evolving product contract.
@@ -590,13 +608,15 @@
 - `feat: add Web Home experience` implemented and locally browser-verified the authenticated Web Home experience and global Quick Capture access.
 - `feat: add iOS Home experience` implemented and simulator-verified the matching native iOS Home experience and shared global Quick Capture state.
 - `feat: add Web capture dates` added and locally browser-verified an optional exact relevant date to every Web capture surface.
-- Current change: added the matching optional relevant date, shared draft state, and offline occurrence semantics to every native capture surface.
+- `feat: add iOS capture dates` added the matching optional relevant date, shared draft state, and offline occurrence semantics to every native capture surface.
+- Current change: added and locally verified the universal private Entry photo registration and recoverable-removal contract.
 
 ## Next sequence
 
-1. Add private photo selection, upload, and recoverable draft behavior to Web universal capture.
-2. Add matching private photo capture and retry behavior to iOS.
-3. Add Home resurfacing after the shared capture path supports the complete initial Entry shape.
+1. Deploy and verify the universal Entry media migration on hosted Supabase.
+2. Add private photo selection, upload, and recoverable draft behavior to Web universal capture.
+3. Add matching private photo capture and retry behavior to iOS.
+4. Add Home resurfacing after the shared capture path supports the complete initial Entry shape.
 
 ## Deferred
 
