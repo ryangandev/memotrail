@@ -10,6 +10,12 @@ export const dynamic = "force-dynamic";
 
 const availableDestinations = [
   {
+    detail: "Control optional AI assistance, privacy, and spending.",
+    href: "/settings/ai",
+    icon: "sparkle" as const,
+    title: "AI settings",
+  },
+  {
     detail: "Connect the people who shaped your story.",
     href: "/people",
     icon: "archive" as const,
@@ -98,7 +104,7 @@ export default async function LibraryPage() {
         <section aria-labelledby="available-library-heading">
           <div className={styles.sectionHeading}>
             <h2 id="available-library-heading">Available now</h2>
-            <span>Eight ways into the archive</span>
+            <span>Your archives and preferences</span>
           </div>
           <div className={styles.availableGrid}>
             {availableDestinations.map((destination) => (

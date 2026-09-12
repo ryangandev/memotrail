@@ -3,6 +3,23 @@ import XCTest
 @testable import MemoTrail
 
 final class LibraryDestinationTests: XCTestCase {
+  func testAIPreferencesRequireOptInAndBoundedBudget() throws {
+    var preferences = AIPreferences()
+    XCTAssertFalse(preferences.enabled)
+    XCTAssertFalse(preferences.photoAnalysis)
+    XCTAssertTrue(preferences.isValid)
+    preferences.monthlyBudgetMicros = -1
+    XCTAssertFalse(preferences.isValid)
+    preferences.monthlyBudgetMicros = 100_000_001
+    XCTAssertFalse(preferences.isValid)
+    preferences.monthlyBudgetMicros = 0
+    XCTAssertTrue(preferences.isValid)
+    let data = try JSONEncoder().encode(
+      AISettingsInput(preferences: preferences, expectedRevision: 0))
+    let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+    XCTAssertEqual(json["p_expected_revision"] as? Int, 0)
+    XCTAssertEqual(AIAPI.cost(29), "$0.000029")
+  }
   func testPersonSavePreservesExplicitNewIdentityAndValidatesLimits() throws {
     let input = PersonSaveInput(
       p_person_id: nil, p_expected_revision: nil,

@@ -20,7 +20,10 @@ const server = spawn(
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
         local.PUBLISHABLE_KEY || local.ANON_KEY,
       SUPABASE_SECRET_KEY: local.SECRET_KEY || local.SERVICE_ROLE_KEY,
-      AI_PROVIDER: "disabled",
+      // Real provider testing is explicit, bounded, and still uses synthetic local records.
+      AI_PROVIDER:
+        process.env.MEMOTRAIL_E2E_LIVE_AI === "1" ? "anthropic" : "disabled",
+      AI_TOTAL_BUDGET_USD: "0.05",
     },
   },
 );

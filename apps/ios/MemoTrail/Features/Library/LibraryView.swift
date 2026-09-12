@@ -11,6 +11,10 @@ struct LibraryView: View {
         LazyVStack(alignment: .leading, spacing: MTSpacing.s8) {
           header
           availableSection
+          NavigationLink("AI settings") { AISettingsView(client: client, ownerID: ownerID) }
+            .font(MTTypography.titleSmall).foregroundStyle(MTColor.accent)
+            .padding().frame(maxWidth: .infinity, alignment: .leading)
+            .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.large))
           if !LibraryDestination.planned.isEmpty { plannedSection }
         }
         .padding(.horizontal, MTSpacing.s4)

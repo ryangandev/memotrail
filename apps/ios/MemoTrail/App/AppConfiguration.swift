@@ -1,6 +1,13 @@
 import Foundation
 
 enum AppConfiguration {
+  static var apiURL: URL? {
+    guard let raw = value(forInfoDictionaryKey: "MEMOTRAIL_API_URL"),
+      let url = URL(string: raw), let host = url.host,
+      url.scheme == "https" || (url.scheme == "http" && ["localhost", "127.0.0.1"].contains(host))
+    else { return nil }
+    return url
+  }
   struct Authentication: Sendable {
     let googleIOSClientID: String
     let googleIOSURLScheme: String

@@ -16,6 +16,11 @@
 - The People migration is deployed to hosted Supabase and linked schema lint reports no errors.
 - People acceptance passed 640 database tests, 183 Web unit tests, 153 native tests, Web production build, native Simulator build, and an authenticated local browser create/link/unlink/Trash/restore test at desktop and narrow dark layouts.
 - The new browser harness uses only local Supabase with temporary synthetic users; CI now also runs the Web unit tests.
+- AI settings now synchronize explicit consent, feature switches, photo opt-in, monthly budgets, and usage across Web and iOS.
+- The shared server authenticates Web cookies or native bearer tokens, calls pinned Anthropic Haiku with server-only credentials, reserves budget atomically, reconciles actual token costs, and conservatively retains interrupted-request reservations without automatic retries.
+- Authenticated localhost AI acceptance passed using synthetic text at a cost of $0.000035, including disabled/default states, settings persistence, unauthorized and cross-origin denial, native bearer authentication, and zero-budget rejection.
+- AI controls passed 666 database tests, 189 Web tests, 154 native tests, Web production build, native Simulator build, formatting, lint, and type checking.
+- GitHub Actions is externally blocked before any job starts: GitHub reports failed account payments or an insufficient spending limit; Ryan has been asked to check Billing & plans.
 
 - Phase 1 repository, design system, Web shell, iOS shell, local Supabase schema, RLS tests, and CI are complete.
 - The production Web shell is reachable at `https://memotrail.ryangan.me`.
@@ -23,7 +28,7 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- The linked hosted Supabase project contains all eighteen reviewed repository migrations and no development seed users.
+- The linked hosted Supabase project contains all nineteen reviewed migrations, including AI controls; linked schema lint passes and no development seeds or roles were deployed.
 - The hosted atomic Entry review contract now supports content, Type, occurrence, Collection, tag, and `Done` updates in one transaction.
 - Hosted verification found 24 Row Level Security-enabled application tables, 25 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
@@ -1010,6 +1015,7 @@
 - `fix: isolate Collections views to main actor` aligned the remaining file-scope SwiftUI helpers with Xcode 16.4 main-actor isolation and restored the complete remote workflow.
 - `docs: define remaining product architecture and delivery plan` recorded the completion architecture and cross-platform acceptance matrix.
 - `feat: add People across Web and iOS` completed reusable People, linked Entry context, revision protection, shared Trash, and local end-to-end coverage on the deployed shared contract.
+- `feat: add cross-platform AI controls and budgeted provider access` added synchronized AI settings, server-only Anthropic access, usage accounting, budget guards, and real authenticated localhost acceptance.
 
 ## Next sequence
 

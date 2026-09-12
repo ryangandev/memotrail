@@ -140,7 +140,9 @@ Phase 1 repository work:
 
 ## 6. AI provider
 
-No provider is selected yet.
+Anthropic is selected for server-side text generation, using `claude-haiku-4-5-20251001`.
+The corrected local key passed direct and authenticated localhost connection tests on 2026-09-12.
+Generation does not provide embeddings; semantic retrieval remains a separately tracked implementation decision.
 
 Selection criteria:
 
@@ -155,18 +157,18 @@ Selection criteria:
 User preparation after choosing a provider:
 
 - [ ] Create a dedicated MemoTrail API project or account scope.
-- [ ] Create a development API key.
+- [x] Create a development API key and verify a minimal live request.
 - [ ] Configure a conservative spending limit or alert.
-- [ ] Decide whether private Entry content may be sent to the provider.
-- [ ] Decide whether photos may be analyzed or only text.
+- [x] Require explicit per-user AI opt-in before sending private text to the provider.
+- [x] Keep photo analysis off unless separately enabled by the user.
 - [ ] Store the key in a password manager.
-- [ ] Do not send the key through chat or expose it to either client.
+- [x] Keep the key in server-only configuration, outside chat and both client bundles.
 
 Phase 1 and later repository work:
 
 - [ ] Define a provider-neutral server-side interface.
 - [ ] Keep classification, embeddings, and conversational generation separately configurable.
-- [ ] Add retry, failure, audit, and disable controls.
+- [x] Add bounded failure, usage accounting, budget reservations, and disable controls; no automatic provider retries.
 - [ ] Ensure disabling AI preserves capture, organization, browsing, and keyword search.
 
 ## 7. Vercel Web deployment

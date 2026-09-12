@@ -28,7 +28,8 @@ Drafts and pending captures remain per-user and durable on each device until syn
 ## AI architecture
 
 Anthropic is the selected text provider.
-The initial economical model is configurable, with Claude Haiku 4.5 as the default candidate subject to a successful live credential check.
+The initial provider is pinned to `claude-haiku-4-5-20251001`, verified through a real authenticated localhost request.
+Changing models requires updating the usage rates and tests together; an unknown model fails closed rather than silently using incorrect pricing.
 Classification, retrieval, exploration, and resurfacing have separate user controls.
 Model responses are untrusted structured suggestions, validated before storage and never executed as instructions.
 Classification stores suggestions separately from original Entry content; accepting a suggestion fills an editable review and never marks an Entry Done automatically.
@@ -41,6 +42,9 @@ No embedding provider has been supplied, so the implementation must distinguish 
 Photo analysis remains opt-in; initial live tests use synthetic text.
 Real test requests have bounded input, output, request counts, and an application usage ledger.
 The user authorized a maximum of $3.50 from the supplied account balance; failures must not trigger uncontrolled retry loops.
+The application defaults to a $3 server-wide lifetime cap and $1 per-user monthly cap, with atomic pre-request reservations and a 60-request hourly limit.
+Completed requests reconcile reported token usage; interrupted requests retain their full reservation until explicitly reconciled.
+Only service-role RPCs can modify accounting, and anonymous billing records survive account removal so deleting an account cannot reset the global cap.
 
 ## Delivery and verification
 
