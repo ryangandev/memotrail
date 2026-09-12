@@ -1,12 +1,17 @@
 # MemoTrail Implementation Progress
 
-> Current phase: iOS CI reliability
+> Current phase: Complete remaining product scope across Web and iOS
 >
-> Last updated: 2026-09-03
+> Last updated: 2026-09-12
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
 ## Current status
+
+- Ryan authorized completing the remaining confirmed scope, synchronized Web and iOS delivery, real Anthropic testing within a $3.50 balance, Supabase migration pushes, and feature commits to main.
+- `ARCHITECTURE.md` records the shared database, authenticated server API, native integration, AI trust boundary, and delivery conventions.
+- `REMAINING.md` tracks the unfinished product slices and acceptance state across the server and both clients.
+- The supplied local AI key failed a minimal direct Anthropic authentication check with HTTP 401; no generation succeeded and credential contents were not logged.
 
 - Phase 1 repository, design system, Web shell, iOS shell, local Supabase schema, RLS tests, and CI are complete.
 - The production Web shell is reachable at `https://memotrail.ryangan.me`.
@@ -1003,8 +1008,9 @@
 
 ## Next sequence
 
-1. Pause for product review with Places complete on Web and iOS and the remote workflow green.
-2. Resume the roadmap only after review feedback defines the next product slice.
+1. Complete People and other independent product gaps while the Anthropic credential is corrected.
+2. Follow the cross-platform acceptance matrix in `REMAINING.md`, updating this record with every commit.
+3. Validate live provider behavior and production configuration before declaring the AI integration complete.
 
 ## Deferred
 
