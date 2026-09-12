@@ -46,6 +46,8 @@ Web and native date conversion validate wall-clock dates in the recorded zone, i
 Unchanged edits preserve original instants and fractional seconds; newly edited repeated daylight-saving times use the earlier matching instant on both clients.
 Successful Web reviews immediately retain the server-confirmed revision while route refresh is in flight, preventing false conflicts on rapid reopening.
 Archived Collection links stay recoverable during review without re-creating the hidden Collection as an active group.
+First Times, Homes, Vehicles, and Goals use the same active-only replacement rule: a specialized editor cannot remove a hidden Collection link it never displayed.
+This rule lives in the existing shared mutations so Web and native saves agree, while explicit active-membership edits and Collection restoration retain their established behavior.
 The dedicated First Times clients use the same occurrence editors and the additive `first_times_workspace_with_occurrence` / `save_first_time_with_occurrence` contract so range ends and precision survive specialized editing.
 Native First Times decoding retains the original timestamp strings alongside parsed Dates and reuses them for untouched bounds, avoiding SDK fractional-second rounding during serialization.
 The legacy First Times mutation rejects writes that cannot preserve existing range ends or exact/range interpretation rather than silently degrading them.

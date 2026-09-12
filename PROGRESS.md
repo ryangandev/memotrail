@@ -6,6 +6,21 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Preserve recoverable Collection membership in specialized editors
+
+- Reproduced membership loss through each real Web editor: First Times, Homes, Vehicles, and Goals silently detached an Entry from a trashed Collection when saving unrelated fields.
+- The shared mutations now replace only active Collection memberships, retaining hidden grouping for later restoration without creating duplicate Collections.
+- The narrow migration verifies exactly one expected replacement statement in each of four existing functions before changing it; signatures, grants, owner checks, revision checks, and history behavior remain unchanged.
+- Web and iOS already call these same functions, so both clients receive the correction without a new native protocol or UI change.
+- Four authenticated browser cases now save through the actual editor, save again through the shared authenticated RPC, remove visible grouping explicitly, restore the hidden Collection through Trash, and verify the original Entry appears inside it.
+- Forty dedicated database assertions verify hidden links, history snapshots, active-link removal, stale writes, cross-owner denial, original Collection identity, restoration, and retained security-invoker boundaries.
+- Full local regression passes 1,031 database assertions, 290 Web unit/server tests, seventeen browser/API scenarios, lint, and type checking.
+- Production build, repository formatting, and diff whitespace validation pass; migration `202609120012_preserve_archived_memberships.sql` is deployed with a matching ledger and warning-free hosted schema lint, without seeds or role changes.
+- Synthetic accounts are removed and no provider calls were made; local AI accounting remains 51 completed requests totaling $0.052147 with no outstanding reservations.
+- GitHub run `34718513508` executed zero steps in every job; its iOS annotation confirms account payment/spending-limit restrictions still prevent CI from starting.
+- Native source was not modified; the existing 172-test native checkpoint is unchanged, and shared-RPC checks are not claimed as interactive native UI acceptance.
+- Broader Entry-link and date/conversion/photo audits remain unfinished; this checkpoint resolves specialized Collection membership specifically.
+
 ### Lossless First Times occurrence editing across Web and iOS
 
 - Reproduced a real browser save that silently erased an existing range end and downgraded its precision in the dedicated First Times editor.
