@@ -66,7 +66,10 @@ struct AIConnectionResponse: Decodable, Sendable {
 }
 
 enum AIAPI {
-  struct Failure: Decodable { let error: String }
+  struct Failure: Decodable {
+    let error: String
+    let code: String?
+  }
 
   static func post<T: Decodable & Sendable, Body: Encodable & Sendable>(
     _ path: String, body: Body, client: SupabaseClient, ownerID: UUID,
@@ -83,10 +86,11 @@ enum AIAPI {
     request.httpBody = try JSONEncoder().encode(body)
     let (data, response) = try await URLSession.shared.data(for: request)
     guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-      let message =
-        (try? JSONDecoder().decode(Failure.self, from: data).error)
-        ?? "Could not reach the AI server. Your records are unchanged."
-      throw NSError(domain: "MemoTrail.AI", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
+      let failure = try? JSONDecoder().decode(Failure.self, from: data)
+      let message = failure?.error ?? "Could not reach the AI server. Your records are unchanged."
+      throw NSError(
+        domain: "MemoTrail.AI", code: 1,
+        userInfo: [NSLocalizedDescriptionKey: message, "serverCode": failure?.code ?? ""])
     }
     return try JSONDecoder().decode(T.self, from: data)
   }

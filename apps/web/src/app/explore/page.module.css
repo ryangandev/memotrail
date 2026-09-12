@@ -1,0 +1,131 @@
+.workspace {
+  width: min(100% - 48px, 820px);
+  margin: 0 auto;
+  padding: 48px 0 120px;
+  display: grid;
+  gap: 24px;
+}
+.workspace h1,
+.workspace h2 {
+  font-family: var(--mt-font-family-serif);
+  font-weight: 500;
+}
+.workspace h1 {
+  font-size: 36px;
+  margin-bottom: 12px;
+}
+.workspace h2 {
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+.workspace a {
+  color: var(--mt-color-accent);
+  text-underline-offset: 3px;
+}
+.eyebrow {
+  color: var(--mt-color-warm);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  margin: 12px 0;
+}
+.source,
+.turn,
+.save {
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-large);
+  padding: 24px;
+  background: var(--mt-color-surface);
+  min-width: 0;
+}
+.source {
+  background: var(--mt-color-surface-raised);
+}
+.writing {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.75;
+  margin-bottom: 18px;
+}
+.notice,
+.empty {
+  color: var(--mt-color-ink-muted);
+  line-height: 1.6;
+  font-size: 13px;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.links,
+.conversation,
+.composer,
+.save form,
+.field {
+  display: grid;
+  gap: 16px;
+}
+.field {
+  gap: 8px;
+}
+.composer label,
+.save label {
+  font-size: 13px;
+}
+.workspace textarea,
+.workspace input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--mt-color-surface);
+  color: var(--mt-color-ink);
+  border: 1px solid var(--mt-color-border-strong);
+  border-radius: var(--mt-radius-medium);
+  padding: 12px;
+  font: inherit;
+}
+.workspace textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+.workspace button {
+  justify-self: start;
+  min-height: 44px;
+  border: 1px solid var(--mt-color-border-strong);
+  border-radius: var(--mt-radius-medium);
+  background: var(--mt-color-accent-subtle);
+  color: var(--mt-color-accent);
+  padding: 10px 16px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+}
+.workspace button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.workspace summary {
+  margin: 16px 0;
+  color: var(--mt-color-ink-muted);
+  cursor: pointer;
+  font-size: 12px;
+}
+.saved {
+  display: block;
+  margin-top: 12px;
+}
+.error {
+  color: var(--mt-color-warm);
+  white-space: pre-wrap;
+}
+@media (max-width: 600px) {
+  .workspace {
+    width: calc(100% - 24px);
+    padding-top: 28px;
+  }
+  .source,
+  .turn,
+  .save {
+    padding: 18px;
+  }
+}

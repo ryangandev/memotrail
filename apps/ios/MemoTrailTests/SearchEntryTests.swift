@@ -3,6 +3,50 @@ import XCTest
 @testable import MemoTrail
 
 final class SearchEntryTests: XCTestCase {
+  func testExplorationRequestPreservesRetryIdentityWithoutProviderSecrets() throws {
+    let id = UUID()
+    let input = ExplorationInput(
+      action: "send", entryID: id, requestID: id, question: "为什么学习？", sourceRevision: 2)
+    let data = try JSONEncoder().encode(input)
+    let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+    XCTAssertEqual(json["requestID"] as? String, id.uuidString)
+    XCTAssertEqual(json["sourceRevision"] as? Int, 2)
+    XCTAssertEqual(json["question"] as? String, "为什么学习？")
+    XCTAssertEqual(
+      Set(json.keys), Set(["action", "entryID", "requestID", "question", "sourceRevision"]))
+  }
+
+  func testExplorationWorkspaceDecodesPersistedHistoryAndDeletedSaveTombstones() throws {
+    let id = UUID().uuidString
+    let json = """
+      {"source":{"id":"\(id)","title":null,"body":"Original","revision":2},
+      "turns":[{"id":"\(id)","sequence":5,"question":"Why?","source_revision":1,
+      "source_snapshot":{"body":"Original","body_truncated":false},"status":"completed","answer":"A perspective",
+      "saved_entries":[{"request_id":"\(id)","entry_id":null,"title":null,"deleted":true}]}],
+      "total_count":21,"links":[{"id":"\(id)","title":"Conclusion","relationship":"exploration_conclusion"}],"linksTruncated":false}
+      """
+    let workspace = try JSONDecoder().decode(ExplorationWorkspace.self, from: Data(json.utf8))
+    XCTAssertEqual(workspace.totalCount, 21)
+    XCTAssertEqual(workspace.turns.first?.sourceRevision, 1)
+    XCTAssertEqual(workspace.turns.first?.sourceSnapshot["body"]?.text, "Original")
+    XCTAssertNil(workspace.turns.first?.savedEntries.first?.entryID)
+    XCTAssertEqual(workspace.turns.first?.savedEntries.first?.deleted, true)
+    XCTAssertEqual(workspace.links.first?.relationship, "exploration_conclusion")
+  }
+
+  func testExplorationSaveEncodesHumanEditsAndAcceptsDeletedResult() throws {
+    let id = UUID()
+    let input = ExplorationInput(
+      action: "save", requestID: id, turnID: id, title: "My words", body: "Edited conclusion")
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(input)) as? [String: Any])
+    XCTAssertEqual(json["body"] as? String, "Edited conclusion")
+    XCTAssertNil(json["entryID"])
+    let deleted = try JSONDecoder().decode(
+      ExplorationSaveResult.self, from: Data("{\"entry_id\":null,\"created\":false}".utf8))
+    XCTAssertNil(deleted.entryID)
+  }
+
   func testAISearchUsesSharedFiltersWithoutProviderSecrets() throws {
     let request = try EntrySearchRequest.validate(
       query: "第一次滑雪?", entryTypes: [.firstTime], collectionNames: ["Travel"], tagNames: ["winter"],

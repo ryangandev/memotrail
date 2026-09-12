@@ -230,6 +230,10 @@ function EntryReviewDialog({
             <p>Inbox review</p>
             <h2 id="review-heading">Organize Entry</h2>
             <Link href={`/history?entry=${entry.id}`}>Version history</Link>
+            <p>
+              <Link href={`/explore?entry=${entry.id}`}>Explore with AI</Link> ·
+              Uses the saved version. Save your edits first.
+            </p>
           </div>
           <button
             aria-label="Close Entry review"

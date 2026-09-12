@@ -53,6 +53,28 @@ export function EntryHistoryView({
     <>
       <Link href="/history">← All Entry history</Link>
       <h2>{historyTitle(history.current)}</h2>
+      {!history.current.deleted_at && (
+        <Link href={`/explore?entry=${history.current.id}`}>
+          Explore with AI
+        </Link>
+      )}
+      {Array.isArray(history.current.links) &&
+        history.current.links.map(
+          (link: { target_entry_id?: unknown; relationship?: unknown }, i) =>
+            typeof link.target_entry_id === "string" &&
+            /^[0-9a-f-]{36}$/i.test(link.target_entry_id) &&
+            ["exploration_source", "exploration_conclusion"].includes(
+              String(link.relationship),
+            ) ? (
+              <p key={i}>
+                <Link href={`/history?entry=${link.target_entry_id}`}>
+                  {link.relationship === "exploration_source"
+                    ? "Open source Entry"
+                    : "Open saved conclusion"}
+                </Link>
+              </p>
+            ) : null,
+        )}
       {history.versions.length > 0 && (
         <div className={styles.controls}>
           <label>

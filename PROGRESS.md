@@ -8,6 +8,23 @@
 
 ## Current status
 
+### Explore with AI across Web and iOS
+
+- Added an authenticated shared exploration API and matching Web/native entry points from Inbox review and current Entry history.
+- Both clients separate original writing, questions, AI interpretations, recorded source snapshots, paginated conversation history, and editable Save as Entry drafts.
+- Model context uses only the claimed source excerpt and up to eight recent completed turns, with escaped UTF-8 size limits, validated structured answers, and existing consent and budget gates.
+- Opening, refreshing, and reading history never invoke the model; provider-disabled conversations and manual conclusion saves remain available.
+- Reproduced and fixed a browser recovery bug where a persisted answer left the question field locked after a lost response; definitive pre-claim failures now also release editing on both clients.
+- Lost-save recovery freezes the submitted payload and retries its original request ID, producing one conclusion and one source-history revision rather than duplicates.
+- The authenticated browser test verifies native-bearer workspace access, human-edited conclusions retained in Inbox, bidirectional current-reader links, and unchanged original writing.
+- Real synthetic Anthropic acceptance passed a Chinese question, a contextual follow-up, duplicate-request reuse without another charge, and edited conclusion saving for $0.003171.
+- The local AI ledger now totals $0.052147 across 51 completed synthetic requests, with no outstanding reservations; a separate official models lookup returned HTTP 200 without generation.
+- Verification passes 271 Web unit/server tests, ten authenticated browser/API scenarios, and 167 native simulator tests with zero skips; desktop/light and 390-pixel/dark layouts were inspected.
+- The production Web build, lint, type checking, Prettier, Swift formatting, and diff whitespace checks pass.
+- GitHub run `34713625708` still failed before executing any steps because of account payments or spending limits, as confirmed by its iOS check annotation.
+- No new migration is needed for this client/server slice; the exploration persistence migration was already deployed in `95e7a28`.
+- Authenticated native UI taps and production AI acceptance remain explicit final-validation items, not claims inferred from native compilation or bearer API coverage.
+
 ### Exploration persistence and Save as Entry contract
 
 - Added ordered, owner-scoped conversation turns attached to each source Entry, bounded source snapshots, pagination, immutable completions, and visible interrupted-request state.

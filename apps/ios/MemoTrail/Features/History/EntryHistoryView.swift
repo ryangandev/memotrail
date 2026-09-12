@@ -277,6 +277,22 @@ struct EntryHistoryDetailView: View {
       VStack(alignment: .leading, spacing: 20) {
         if let record {
           Text(HistoryPresentation.title(record.current)).font(MTTypography.title)
+          if !record.isDeleted {
+            NavigationLink("Explore with AI") {
+              ExplorationView(client: client, ownerID: ownerID, entryID: entryID)
+            }
+          }
+          ForEach(Array((record.current["links"]?.array ?? []).enumerated()), id: \.offset) {
+            _, value in
+            if let link = value.object, let rawID = link["target_entry_id"]?.text,
+              let linkedID = UUID(uuidString: rawID), let relationship = link["relationship"]?.text,
+              ["exploration_source", "exploration_conclusion"].contains(relationship)
+            {
+              NavigationLink(
+                relationship == "exploration_source" ? "Open source Entry" : "Open saved conclusion"
+              ) { EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: linkedID) }
+            }
+          }
           if !record.versions.isEmpty {
             Picker("Earlier version", selection: $selected) {
               ForEach(record.versions) { version in

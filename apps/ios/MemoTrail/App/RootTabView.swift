@@ -78,6 +78,7 @@ struct RootTabView: View {
       .tag(RootTabDestination.home)
 
       InboxView(
+        client: client,
         user: user,
         isAuthenticationBusy: isAuthenticationBusy,
         signOut: signOut,

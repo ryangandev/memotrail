@@ -99,7 +99,12 @@ Save as Entry creates an unreviewed Standard Entry with Unknown occurrence preci
 One save atomically adds both `exploration_conclusion` and `exploration_source` links and advances source history before changing its relationships.
 Several conclusions may be saved from one turn; duplicate save requests reuse their result, and permanent deletion leaves an idempotency tombstone rather than resurrecting the deleted Entry on retry.
 Trashing a source hides its conversation and blocks new conclusions until restoration; permanent source deletion removes its conversation but does not delete independently saved conclusions.
-The persistence contract alone is not the Explore feature: server model orchestration, both client interfaces, and real conversational acceptance remain tracked separately.
+The authenticated `/api/ai/explore` endpoint shares workspace reads, explicit generation, and conclusion saves between Web cookies and native bearer sessions.
+Generation uses the claimed source snapshot and at most eight recent completed turns, bounded by serialized UTF-8 bytes including escaping, with structured output validation and the same consent and cost controls as other AI features.
+Opening, pagination, and refresh never call the model, and disabling generation does not make saved conversations or manual conclusion saves unavailable.
+Both clients distinguish original writing, questions, AI interpretations, and retained source snapshots, with editable conclusion drafts and bidirectional links in the current-version reader.
+Unconfirmed generation and save requests retain their IDs; refresh reconciles persisted completions, while definitive pre-claim rejections unlock editing without pretending a generation ran.
+Native compilation and bearer API acceptance remain distinct from authenticated simulator taps and production AI acceptance.
 Retrieval answers cite only authenticated archive evidence, including Entries and Habit summaries, and report insufficient evidence explicitly.
 
 Anthropic generation and vector embeddings are separate provider capabilities.

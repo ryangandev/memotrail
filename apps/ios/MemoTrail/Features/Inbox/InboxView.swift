@@ -2,6 +2,7 @@
 import SwiftUI
 
 struct InboxView: View {
+  let client: SupabaseClient
   let user: AuthenticatedUser
   let isAuthenticationBusy: Bool
   let signOut: @MainActor () async -> Void
@@ -20,6 +21,7 @@ struct InboxView: View {
   @Environment(\.scenePhase) private var scenePhase
 
   init(
+    client: SupabaseClient,
     user: AuthenticatedUser,
     isAuthenticationBusy: Bool,
     signOut: @escaping @MainActor () async -> Void,
@@ -32,6 +34,7 @@ struct InboxView: View {
     removeCapturePhoto: @escaping @MainActor (UUID) async throws -> Void,
     hasLocalDraft: Binding<Bool>
   ) {
+    self.client = client
     self.user = user
     self.isAuthenticationBusy = isAuthenticationBusy
     self.signOut = signOut
@@ -120,6 +123,8 @@ struct InboxView: View {
       }
       .sheet(item: $selectedEntry) { entry in
         InboxReviewSheet(
+          client: client,
+          ownerID: user.id,
           entry: entry,
           requestSuggestions: { retry in
             try await controller.aiSuggestions(
@@ -381,6 +386,8 @@ struct InboxView: View {
 }
 
 private struct InboxReviewSheet: View {
+  let client: SupabaseClient
+  let ownerID: UUID
   let entry: InboxEntry
   let requestSuggestions: @MainActor (Bool) async throws -> EntryAISuggestionResponse
   let dismissSuggestion: @MainActor (UUID) async throws -> Void
@@ -410,6 +417,8 @@ private struct InboxReviewSheet: View {
   @State private var tagInput = ""
 
   init(
+    client: SupabaseClient,
+    ownerID: UUID,
     entry: InboxEntry,
     requestSuggestions: @escaping @MainActor (Bool) async throws -> EntryAISuggestionResponse,
     dismissSuggestion: @escaping @MainActor (UUID) async throws -> Void,
@@ -426,6 +435,8 @@ private struct InboxReviewSheet: View {
         InboxController.ReviewIntent
       ) async -> InboxController.ReviewResult
   ) {
+    self.client = client
+    self.ownerID = ownerID
     self.entry = entry
     self.requestSuggestions = requestSuggestions
     self.dismissSuggestion = dismissSuggestion
@@ -443,6 +454,13 @@ private struct InboxReviewSheet: View {
   var body: some View {
     NavigationStack {
       Form {
+        Section {
+          NavigationLink("Explore with AI") {
+            ExplorationView(client: client, ownerID: ownerID, entryID: entry.id)
+          }
+          Text("Uses the saved version. Save your edits first.")
+            .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+        }
         EntryAISuggestionsView(
           request: requestSuggestions, dismiss: dismissSuggestion,
           applyTitle: { title = $0 },

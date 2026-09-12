@@ -19,8 +19,8 @@ The last accepted checkpoint is `a7850b7`.
 | Precision-aware Inbox dates and explicit AI description adoption | Deployed        | Complete        | Complete        | Pushed 1aec663      |
 | Shared retrieval evidence and current source reader              | Deployed        | Complete        | Complete        | Pushed 048efc0      |
 | Natural-language retrieval and grounded source links             | Complete        | Complete        | Complete        | Pushed 239fa90      |
-| Exploration persistence and atomic conclusion-save contract      | Deployed        | Shared contract | Shared contract | This feature commit |
-| Explore with AI, persisted conversation, Save as Entry           | Pending         | Pending         | Pending         | Pending             |
+| Exploration persistence and atomic conclusion-save contract      | Deployed        | Shared contract | Shared contract | Pushed 95e7a28      |
+| Explore with AI, persisted conversation, Save as Entry           | Complete        | Complete        | Complete        | This feature commit |
 | Inspect and restore Entry history                                | Deployed        | Complete        | Complete        | Pushed eee57bf      |
 | Complete ZIP export with JSON, Markdown, CSV, and originals      | Pending         | Pending         | Pending         | Pending             |
 | Timeline track creation, ordering, and hide/show management      | Deployed        | Complete        | Complete        | Pushed e06e96c      |
@@ -31,6 +31,8 @@ The last accepted checkpoint is `a7850b7`.
 
 ## External inputs and limitations
 
+- Exploration passes 271 Web tests, ten browser/API scenarios, 167 native tests with no skips, and a real two-turn synthetic Anthropic flow costing $0.003171, including idempotent retries and original-preserving conclusion saves.
+- Local AI accounting totals $0.052147 with no outstanding reservations; no provider secret was copied into either client.
 - Natural-language search passed real Anthropic five-question acceptance, eight local browser scenarios, 236 Web tests, and native compilation with 164 passing tests and no skips.
 - Actual authenticated native AI taps and production AI acceptance remain on the final validation checklist; native bearer API tests do not substitute for those interactions.
 - The earlier local execution-review timeouts recovered and no longer block local tests.

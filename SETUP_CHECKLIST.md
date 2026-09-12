@@ -1,8 +1,8 @@
 # MemoTrail Setup Checklist
 
-> Status: Atomic Inbox organization deployed; global search implementation underway
+> Status: Core cross-platform archive implemented; remaining AI and portable-export work tracked in REMAINING.md
 >
-> Last updated: 2026-09-02
+> Last updated: 2026-09-12
 >
 > Initial authentication: Google Sign-In only
 >
@@ -144,7 +144,8 @@ Phase 1 repository work:
 Anthropic is selected for server-side text generation, using `claude-haiku-4-5-20251001`.
 The corrected local key passed direct and authenticated localhost connection tests on 2026-09-12.
 The official models endpoint also returned HTTP 200 with the saved key, without generating tokens or exposing credentials.
-Generation does not provide embeddings; semantic retrieval remains a separately tracked implementation decision.
+Model-assisted retrieval is implemented and passed synthetic bilingual source-grounded acceptance; a vector embedding index is not claimed.
+The local key does not configure Vercel: production must separately provide `AI_PROVIDER=anthropic`, the server-only `AI_API_KEY`, the pinned model, and the total budget before redeployment and live acceptance.
 
 Selection criteria:
 
