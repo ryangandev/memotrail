@@ -19,6 +19,25 @@ final class InboxController {
 
   private let client: SupabaseClient
   private let ownerID: UUID
+
+  func aiSuggestions(entryID: UUID, revision: Int, retry: Bool = false) async throws
+    -> EntryAISuggestionResponse
+  {
+    try await AIAPI.post(
+      "suggestions",
+      body: EntryAISuggestionInput(entryID: entryID, revision: revision, retry: retry),
+      client: client, ownerID: ownerID)
+  }
+
+  func dismissAISuggestion(_ id: UUID) async throws {
+    guard try await client.auth.session.user.id == ownerID else {
+      throw InboxControllerError.ownerChanged
+    }
+    let success: Bool = try await client.rpc(
+      "dismiss_ai_suggestion", params: ["p_id": id.uuidString]
+    ).execute().value
+    if !success { throw URLError(.cannotParseResponse) }
+  }
   private let queueStore: InboxQueueStore
   private let photoStore: InboxPhotoStore
   private let networkMonitor: NWPathMonitor
@@ -320,6 +339,10 @@ final class InboxController {
       }
 
       pendingEntries = nextQueue
+      Task { [weak self] in
+        // Optional suggestions cannot delay capture or requeue a successfully saved Entry.
+        _ = try? await self?.aiSuggestions(entryID: entry.id, revision: 1)
+      }
       didSyncEntry = true
       lastSyncedPhotoCount = entry.attachments.count
     }

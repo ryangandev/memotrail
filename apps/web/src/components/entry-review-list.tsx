@@ -7,6 +7,8 @@ import {
   type ReviewInboxEntryResult,
 } from "@/app/inbox/actions";
 import { Icon } from "@/components/icon";
+import { EntryAISuggestionsPanel } from "@/components/entry-ai-suggestions";
+import { mergeAISuggestionNames } from "@/lib/ai/suggestion";
 import type { InboxEntry } from "@/lib/data/inbox";
 import { entryBodyLimit, entryTitleLimit } from "@/lib/data/inbox-input";
 import {
@@ -208,6 +210,27 @@ function EntryReviewDialog({
         </header>
 
         <form className={styles.reviewForm} onSubmit={handleSubmit}>
+          <EntryAISuggestionsPanel
+            entryID={entry.id}
+            revision={entry.revision}
+            disabled={isPending}
+            onApply={(key, value) => {
+              if (key === "title" && typeof value === "string") setTitle(value);
+              if (
+                key === "entryType" &&
+                (value === "standard" || value === "first_time")
+              )
+                setEntryType(value);
+              if (key === "collections" && Array.isArray(value))
+                setCollectionNames((current) =>
+                  mergeAISuggestionNames(current, value, 20),
+                );
+              if (key === "tags" && Array.isArray(value))
+                setTagNames((current) =>
+                  mergeAISuggestionNames(current, value, 50),
+                );
+            }}
+          />
           <label>
             <span>Title</span>
             <input

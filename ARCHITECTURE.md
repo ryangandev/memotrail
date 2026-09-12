@@ -33,6 +33,10 @@ Changing models requires updating the usage rates and tests together; an unknown
 Classification, retrieval, exploration, and resurfacing have separate user controls.
 Model responses are untrusted structured suggestions, validated before storage and never executed as instructions.
 Classification stores suggestions separately from original Entry content; accepting a suggestion fills an editable review and never marks an Entry Done automatically.
+`ai_suggestions` deduplicates work by Entry revision and enabled feature scope, and only trusted server code can write model results.
+Web schedules capture suggestions after its response; iOS starts an independent authenticated request after synchronization.
+Review is also a recovery entry point for interrupted background work, with bounded status polling and explicit-only retries after a failed generation.
+Date suggestions remain readable guidance until precision-aware review can preserve their meaning without inventing timestamps.
 New Collections require user acceptance.
 Exploration remains attached to its source Entry, and Save as Entry creates a separately identified conclusion with a source relationship.
 Retrieval answers cite only authenticated source Entries and report insufficient evidence explicitly.

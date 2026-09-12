@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { suggestForEntry } from "@/lib/ai/suggestions-server";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
   parseFirstTimeAttachmentInput,
@@ -114,6 +116,12 @@ export async function syncInboxEntry(
 
   revalidatePath("/");
 
+  after(async () => {
+    // Capture succeeds independently. The durable suggestion state exposes later failures.
+    await suggestForEntry(context.client, context.userId, input.id, 1).catch(
+      () => undefined,
+    );
+  });
   return {
     message: "Saved to Inbox.",
     status: "synced",

@@ -21,6 +21,11 @@
 - Authenticated localhost AI acceptance passed using synthetic text at a cost of $0.000035, including disabled/default states, settings persistence, unauthorized and cross-origin denial, native bearer authentication, and zero-budget rejection.
 - AI controls passed 666 database tests, 189 Web tests, 154 native tests, Web production build, native Simulator build, formatting, lint, and type checking.
 - GitHub Actions is externally blocked before any job starts: GitHub reports failed account payments or an insufficient spending limit; Ryan has been asked to check Billing & plans.
+- Web and iOS now generate optional Inbox suggestions after capture and expose per-field title, Type, Collection, and tag choices in the review surface without overwriting original text or marking Done.
+- Suggestions are cached by Entry revision and enabled feature scope, shared across clients, schema-validated, and dismissible; concurrent requests reuse one generation, with bounded status polling and explicit-only retries after failure.
+- A real Chinese learning-note test verified provider generation, unchanged originals, manual title edits, Collection acceptance, dismissal, cache reuse through the native bearer API, and retention in Inbox after saving.
+- Date candidates are human-readable guidance only for now; precision-aware date acceptance remains on the completion checklist.
+- Suggestion acceptance passed 682 database tests, 194 Web tests, 155 native tests, desktop/light and narrow/dark browser checks, Web production build, and native Simulator build.
 
 - Phase 1 repository, design system, Web shell, iOS shell, local Supabase schema, RLS tests, and CI are complete.
 - The production Web shell is reachable at `https://memotrail.ryangan.me`.
@@ -28,7 +33,7 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- The linked hosted Supabase project contains all nineteen reviewed migrations, including AI controls; linked schema lint passes and no development seeds or roles were deployed.
+- The linked hosted Supabase project contains all twenty reviewed migrations; linked schema lint passes and no development seed users or roles were deployed.
 - The hosted atomic Entry review contract now supports content, Type, occurrence, Collection, tag, and `Done` updates in one transaction.
 - Hosted verification found 24 Row Level Security-enabled application tables, 25 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
@@ -1016,6 +1021,7 @@
 - `docs: define remaining product architecture and delivery plan` recorded the completion architecture and cross-platform acceptance matrix.
 - `feat: add People across Web and iOS` completed reusable People, linked Entry context, revision protection, shared Trash, and local end-to-end coverage on the deployed shared contract.
 - `feat: add cross-platform AI controls and budgeted provider access` added synchronized AI settings, server-only Anthropic access, usage accounting, budget guards, and real authenticated localhost acceptance.
+- `feat: add editable Inbox AI suggestions across Web and iOS` added asynchronous generation, revision caching, editable per-field choices, dismissals, and real bilingual acceptance without automatic filing.
 
 ## Next sequence
 

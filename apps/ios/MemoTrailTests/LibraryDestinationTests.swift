@@ -3,6 +3,18 @@ import XCTest
 @testable import MemoTrail
 
 final class LibraryDestinationTests: XCTestCase {
+  func testAISuggestionDecodesPendingAndBilingualProposedResults() throws {
+    let pending = Data(
+      "{\"suggestion\":{\"id\":\"93000000-0000-4000-8000-000000000001\",\"entry_revision\":1,\"status\":\"generating\",\"suggestions\":{}}}"
+        .utf8)
+    let decoded = try JSONDecoder().decode(EntryAISuggestionResponse.self, from: pending)
+    XCTAssertEqual(decoded.suggestion?.status, "generating")
+    XCTAssertNil(decoded.suggestion?.suggestions)
+    let proposed = Data(
+      "{\"title\":\"牙套的原理\",\"entryType\":\"standard\",\"collections\":[\"Learning\"],\"tags\":[\"牙齿\"],\"dateText\":null,\"rationale\":\"学习记录\",\"confidence\":0.9}"
+        .utf8)
+    XCTAssertEqual(try JSONDecoder().decode(EntryAISuggestions.self, from: proposed).title, "牙套的原理")
+  }
   func testAIPreferencesRequireOptInAndBoundedBudget() throws {
     var preferences = AIPreferences()
     XCTAssertFalse(preferences.enabled)

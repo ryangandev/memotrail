@@ -18,3 +18,15 @@ export async function saveAISettings(value: AIPreferences) {
     };
   return { data };
 }
+
+export async function dismissAISuggestion(id: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return "Invalid suggestion.";
+  const context = await getAuthenticatedContext();
+  if (!context) return "Sign in again to dismiss suggestions.";
+  const { data, error } = await context.client.rpc("dismiss_ai_suggestion", {
+    p_id: id,
+  });
+  return error || !data
+    ? "Could not dismiss these suggestions. Reopen the Entry and try again."
+    : null;
+}

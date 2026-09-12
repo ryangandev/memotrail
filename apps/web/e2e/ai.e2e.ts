@@ -100,6 +100,78 @@ test("AI consent, settings persistence, API authentication, and bounded connecti
       expect(usage.recent_usage[0].status).toBe("completed");
       expect(usage.month_charged_micros).toBeGreaterThan(0);
       expect(usage.month_charged_micros).toBeLessThan(1000);
+      const entryID = randomUUID();
+      const originalBody =
+        "今天学了为什么塑料牙套能慢慢移动牙齿。持续而轻微的压力让周围骨组织重塑。这是一个学习笔记，不是第一次体验。";
+      expect(
+        (
+          await client
+            .from("entries")
+            .insert({ id: entryID, owner_id: ownerID, body: originalBody })
+        ).error,
+      ).toBeNull();
+      await page.goto("/inbox");
+      await page.getByRole("button", { name: "Review", exact: true }).click();
+      const dialog = page.getByRole("dialog", { name: "Organize Entry" });
+      const titleChoice = dialog.getByRole("button", { name: /Use title:/ });
+      await expect(titleChoice).toBeVisible({ timeout: 35000 });
+      await page.screenshot({
+        path: "/private/tmp/memotrail-ai-suggestions-desktop.png",
+        fullPage: true,
+      });
+      const before = await client
+        .from("entries")
+        .select("title,body,inbox_status")
+        .eq("id", entryID)
+        .single();
+      expect(before.data?.title).toBeNull();
+      expect(before.data?.body).toBe(originalBody);
+      expect(before.data?.inbox_status).toBe("unreviewed");
+      const cached = await page.request.post("/api/ai/suggestions", {
+        headers: {
+          Authorization: `Bearer ${signed.data.session!.access_token}`,
+        },
+        data: { entryID, revision: 1 },
+      });
+      expect(cached.status()).toBe(200);
+      const { data: afterSuggestion } = await client.rpc("ai_workspace");
+      expect(
+        afterSuggestion.recent_usage.filter(
+          (row: { feature: string }) => row.feature === "classification",
+        ),
+      ).toHaveLength(1);
+      await titleChoice.click();
+      await dialog
+        .getByLabel("Title", { exact: true })
+        .fill("My edited learning note");
+      const collectionChoice = dialog
+        .getByRole("button", { name: /Add Collection:/ })
+        .first();
+      await collectionChoice.click();
+      await dialog.getByRole("button", { name: "Dismiss suggestions" }).click();
+      await expect(
+        dialog.getByText("Suggestions dismissed for this version."),
+      ).toBeVisible();
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.emulateMedia({ colorScheme: "dark" });
+      await page.screenshot({
+        path: "/private/tmp/memotrail-ai-review-mobile.png",
+        fullPage: true,
+      });
+      await dialog
+        .getByRole("button", { name: "Save changes", exact: true })
+        .click();
+      await expect(dialog).not.toBeVisible();
+      const saved = await client
+        .from("entries")
+        .select("title,body,inbox_status,revision")
+        .eq("id", entryID)
+        .single();
+      expect(saved.data?.title).toBe("My edited learning note");
+      expect(saved.data?.body).toBe(originalBody);
+      expect(saved.data?.inbox_status).toBe("unreviewed");
+      expect(saved.data?.revision).toBeGreaterThan(1);
+      await page.goto("/settings/ai");
       // Verify the iOS bearer path without cookies, after lowering the budget to zero.
       const noBudget = await client.rpc("save_ai_preferences", {
         p_preferences: { ...usage.preferences, monthly_budget_micros: 0 },

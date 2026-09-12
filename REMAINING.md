@@ -14,8 +14,9 @@ The last accepted checkpoint is `a7850b7`.
 | ---------------------------------------------------------------- | --------------- | ------------- | ------------- | --------------------------- |
 | Architecture and remaining-scope audit                           | Complete        | n/a           | n/a           | Pushed 08930ab              |
 | People, Entry links, and recoverable removal                     | Deployed        | Complete      | Complete      | Pushed feea315              |
-| AI preferences, budgets, provider boundary, and usage            | Deployed        | Complete      | Complete      | Local verified; this commit |
-| Editable AI title, Type, Collection, tag, and date suggestions   | Pending         | Pending       | Pending       | Pending                     |
+| AI preferences, budgets, provider boundary, and usage            | Deployed        | Complete      | Complete      | Pushed 6579c8d              |
+| Editable AI title, Type, Collection, and tag suggestions         | Deployed        | Complete      | Complete      | Local verified; this commit |
+| Precision-aware AI date acceptance                               | Guidance only   | Pending       | Pending       | Pending                     |
 | Natural-language retrieval and grounded source links             | Pending         | Pending       | Pending       | Pending                     |
 | Explore with AI, persisted conversation, Save as Entry           | Pending         | Pending       | Pending       | Pending                     |
 | Inspect and restore Entry history                                | Pending         | Pending       | Pending       | Pending                     |

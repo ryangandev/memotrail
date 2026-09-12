@@ -121,6 +121,11 @@ struct InboxView: View {
       .sheet(item: $selectedEntry) { entry in
         InboxReviewSheet(
           entry: entry,
+          requestSuggestions: { retry in
+            try await controller.aiSuggestions(
+              entryID: entry.id, revision: entry.revision, retry: retry)
+          },
+          dismissSuggestion: { id in try await controller.dismissAISuggestion(id) },
           collectionOptions: controller.collectionOptions,
           tagOptions: controller.tagOptions
         ) {
@@ -375,6 +380,8 @@ struct InboxView: View {
 
 private struct InboxReviewSheet: View {
   let entry: InboxEntry
+  let requestSuggestions: @MainActor (Bool) async throws -> EntryAISuggestionResponse
+  let dismissSuggestion: @MainActor (UUID) async throws -> Void
   let collectionOptions: [String]
   let tagOptions: [String]
   let review:
@@ -404,6 +411,8 @@ private struct InboxReviewSheet: View {
 
   init(
     entry: InboxEntry,
+    requestSuggestions: @escaping @MainActor (Bool) async throws -> EntryAISuggestionResponse,
+    dismissSuggestion: @escaping @MainActor (UUID) async throws -> Void,
     collectionOptions: [String],
     tagOptions: [String],
     review:
@@ -419,6 +428,8 @@ private struct InboxReviewSheet: View {
       ) async -> InboxController.ReviewResult
   ) {
     self.entry = entry
+    self.requestSuggestions = requestSuggestions
+    self.dismissSuggestion = dismissSuggestion
     self.collectionOptions = collectionOptions
     self.tagOptions = tagOptions
     self.review = review
@@ -436,6 +447,24 @@ private struct InboxReviewSheet: View {
   var body: some View {
     NavigationStack {
       Form {
+        EntryAISuggestionsView(
+          request: requestSuggestions, dismiss: dismissSuggestion,
+          applyTitle: { title = $0 },
+          applyType: { if let type = InboxEntryType(rawValue: $0) { entryType = type } },
+          addCollection: { name in
+            if collectionNames.count < 20
+              && !collectionNames.contains(where: { $0.lowercased() == name.lowercased() })
+            {
+              collectionNames.append(name)
+            }
+          },
+          addTag: { name in
+            if tagNames.count < 50
+              && !tagNames.contains(where: { $0.lowercased() == name.lowercased() })
+            {
+              tagNames.append(name)
+            }
+          })
         Section("Content") {
           TextField("Title", text: $title, axis: .vertical)
             .textInputAutocapitalization(.sentences)
