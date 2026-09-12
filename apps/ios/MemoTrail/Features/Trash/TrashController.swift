@@ -59,6 +59,11 @@ final class TrashController {
 
       notice = Notice(message: "Item restored.", tone: .success)
       await reloadAfterMutation()
+    } catch let error as PostgrestError where error.code == "23505" {
+      notice = Notice(
+        message:
+          "An active Collection already has this name. Rename it in organization settings, then restore this one.",
+        tone: .error)
     } catch {
       notice = Notice(
         message: "MemoTrail could not restore this item. Try again when online.",

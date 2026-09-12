@@ -27,6 +27,10 @@ Restoration validates all historical references and original files atomically an
 Legacy snapshots restore only relationships they actually recorded; missing fields do not imply empty relationships.
 Trash restoration remains separate from restoring content history, and optimistic revision checks prevent overwriting newer work from another device.
 Timeline tracks have independent optimistic revisions; renaming preserves their system identity and hiding is reversible presentation state, never content deletion.
+Collection and tag definitions also have independent revisions, while name changes advance linked Entry revisions and snapshot previous organization before mutation.
+Collection Trash preserves grouping relationships for restoration; permanent Collection deletion never deletes its Entries or original media.
+Restoring a Collection with a colliding active name fails atomically and asks for an explicit rename rather than merging or overwriting data.
+Bucket List behavior follows a stable Collection role, not its editable display name, and both clients consume that role from the shared Goal workspace.
 Uploads preserve private originals, and display access uses expiring signed URLs.
 Drafts and pending captures remain per-user and durable on each device until synchronization is confirmed.
 

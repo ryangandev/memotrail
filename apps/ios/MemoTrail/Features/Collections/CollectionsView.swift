@@ -2,6 +2,7 @@
 import SwiftUI
 
 struct CollectionsView: View {
+  @State private var managing = false
   @State private var controller: CollectionsController
 
   private let client: SupabaseClient
@@ -44,6 +45,19 @@ struct CollectionsView: View {
     .navigationBarTitleDisplayMode(.inline)
     .toolbarBackground(MTColor.surface, for: .navigationBar)
     .toolbarBackground(.visible, for: .navigationBar)
+    .toolbar {
+      ToolbarItem(placement: .topBarTrailing) {
+        Button("Manage", systemImage: "slider.horizontal.3") { managing = true }
+      }
+    }
+    .sheet(isPresented: $managing, onDismiss: { Task { await controller.load() } }) {
+      NavigationStack {
+        OrganizationView(client: client, ownerID: ownerID)
+          .toolbar {
+            ToolbarItem(placement: .confirmationAction) { Button("Done") { managing = false } }
+          }
+      }
+    }
     .refreshable {
       await controller.load()
     }

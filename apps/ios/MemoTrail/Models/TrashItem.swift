@@ -6,9 +6,12 @@ enum TrashItemKind: String, Codable, Equatable, Hashable, Sendable {
   case habit
   case place
   case person
+  case collection
 
   var displayName: String {
     switch self {
+    case .collection:
+      "Collection"
     case .attachment:
       "Photo"
     case .entry:
@@ -24,6 +27,8 @@ enum TrashItemKind: String, Codable, Equatable, Hashable, Sendable {
 
   var systemImage: String {
     switch self {
+    case .collection:
+      "archivebox"
     case .attachment:
       "photo"
     case .entry:

@@ -27,7 +27,7 @@ export function EntryHistoryView({
     if (
       !selected ||
       !confirm(
-        `Restore version ${selected.version}? Your current version will be kept in history. Recorded links and photo membership will also be restored; shared People and Place definitions will not change.`,
+        `Restore version ${selected.version}? Your current version will be kept in history. Recorded links and photo membership will also be restored; shared names and definitions, including Collections and tags, stay current.`,
       )
     )
       return;
@@ -85,7 +85,7 @@ export function EntryHistoryView({
       {selected && (
         <>
           <p className={styles.notice}>
-            Changes to restore:{" "}
+            Differences from current version:{" "}
             {historyDifferences(history.current, selected.snapshot).join(
               ", ",
             ) || "No recorded content changes"}

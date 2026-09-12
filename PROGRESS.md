@@ -33,6 +33,12 @@
 - Timeline track management now supports matching Web and iOS creation, renaming, explicit numeric ordering, and reversible visibility changes for custom and default tracks.
 - Track mutations preserve system identity, every Entry and placement, and reject stale revisions; hidden tracks remain available in management and can be shown again without data restoration.
 - Track acceptance passed 746 database tests, 203 Web tests, the 157-test native suite, four authenticated browser scenarios, the Web production build, and hosted schema lint with the additive migration deployed.
+- Organization settings now support matching Web and iOS Collection/tag creation, searching, renaming, linked Entry counts, and Collection ordering.
+- Collections now use shared recoverable Trash, name-conflict recovery, and explicitly confirmed permanent deletion that removes only grouping links while keeping Entries, photos, and unrelated tags intact.
+- Renaming linked organization and removing/restoring Collections preserves prior Entry metadata in history and advances affected Entry revisions so stale reviews cannot overwrite the change.
+- A reproduced Bucket List rename regression is fixed through stable Collection roles, shared Goal workspace metadata, and matching native/Web milestone eligibility.
+- Organization acceptance passed 777 database tests, 206 Web tests, 159 native tests plus a focused decoding rerun, and five authenticated browser scenarios including actual Goal achievement after Collection renaming.
+- The organization migration is deployed with warning-free hosted schema lint; strict browser checks also identified and resolved a missing favicon using the existing M monogram.
 
 - Phase 1 repository, design system, Web shell, iOS shell, local Supabase schema, RLS tests, and CI are complete.
 - The production Web shell is reachable at `https://memotrail.ryangan.me`.
@@ -40,7 +46,7 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- The linked hosted Supabase project contains all twenty-two reviewed migrations; linked schema lint passes and no development seed users or roles were deployed.
+- The linked hosted Supabase project contains all twenty-three reviewed migrations; linked schema lint passes and no development seed users or roles were deployed.
 - The hosted atomic Entry review contract now supports content, Type, occurrence, Collection, tag, and `Done` updates in one transaction.
 - Hosted verification found 24 Row Level Security-enabled application tables, 25 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
@@ -1031,6 +1037,7 @@
 - `feat: add editable Inbox AI suggestions across Web and iOS` added asynchronous generation, revision caching, editable per-field choices, dismissals, and real bilingual acceptance without automatic filing.
 - `feat: add restorable Entry history across Web and iOS` added complete version snapshots, owner-scoped browsing, explicit restoration, relationship and photo preservation, and cross-device conflict protection.
 - `feat: add Timeline track management across Web and iOS` added custom tracks, renaming, ordering, hide/show controls, and revision-safe updates without deleting moments.
+- `feat: add Collection and tag management across Web and iOS` added stable organization editing, Collection Trash, protected Entry history, and rename-safe Bucket List milestones.
 
 ## Next sequence
 

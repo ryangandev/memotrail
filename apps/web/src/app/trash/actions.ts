@@ -36,7 +36,10 @@ export async function restoreTrashItem(
 
   if (error) {
     return {
-      message: "MemoTrail could not restore this item. Try again.",
+      message:
+        error.code === "23505"
+          ? "An active Collection already has this name. Rename it in organization settings, then restore this one."
+          : "MemoTrail could not restore this item. Try again.",
       status: "error",
     };
   }
@@ -154,6 +157,8 @@ function refreshTrashPaths() {
   for (const path of [
     "/",
     "/collections",
+    "/settings/organization",
+    "/goals",
     "/first-times",
     "/habits",
     "/homes",

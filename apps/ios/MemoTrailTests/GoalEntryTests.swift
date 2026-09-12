@@ -3,6 +3,19 @@ import XCTest
 @testable import MemoTrail
 
 final class GoalEntryTests: XCTestCase {
+  func testBucketListRoleSurvivesRenamingAndCanBeExplicitlyRemoved() throws {
+    var row = makeRow()
+    row.bucketListRole = true
+    XCTAssertTrue(row.entry.isBucketList)
+    row.bucketListRole = false
+    XCTAssertFalse(row.entry.isBucketList)
+    let renamedJSON = workspaceJSON.replacingOccurrences(
+      of: "\"collection_names\":[\"Bucket List\"]",
+      with: "\"collection_names\":[\"Someday adventures\"],\"is_bucket_list\":true")
+    let decoded = try decoder.decode([GoalWorkspaceRow].self, from: Data(renamedJSON.utf8))
+    XCTAssertEqual(decoded.first?.entry.bucketListRole, true)
+    XCTAssertEqual(decoded.first?.entry.isBucketList, true)
+  }
   func testWorkspaceDecodesGoalContextRelationshipsAndPrivatePhoto() throws {
     let rows = try decoder.decode([GoalWorkspaceRow].self, from: Data(workspaceJSON.utf8))
     let entry = try XCTUnwrap(rows.first?.entry)

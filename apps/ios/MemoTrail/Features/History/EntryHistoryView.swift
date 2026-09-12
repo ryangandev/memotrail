@@ -286,7 +286,7 @@ struct EntryHistoryDetailView: View {
             Text("Saved before \(version.createdAt)").font(MTTypography.caption).foregroundStyle(
               MTColor.inkMuted)
             Text(
-              "Changes to restore: \(HistoryPresentation.differences(current: record.current, previous: version.snapshot).joined(separator: ", ")). Current version \(record.revision) stays in history."
+              "Differences from current version: \(HistoryPresentation.differences(current: record.current, previous: version.snapshot).joined(separator: ", ")). Current version \(record.revision) stays in history."
             )
             if version.snapshot["history_schema"]?.number != 2 {
               Text(
@@ -327,7 +327,7 @@ struct EntryHistoryDetailView: View {
         Button("Restore version") { Task { await restore() } }
       } message: {
         Text(
-          "Your current version is preserved. Recorded links and photo membership will also be restored; shared People and Place definitions stay current."
+          "Your current version is preserved. Recorded links and photo membership will also be restored; shared names and definitions, including Collections and tags, stay current."
         )
       }
   }

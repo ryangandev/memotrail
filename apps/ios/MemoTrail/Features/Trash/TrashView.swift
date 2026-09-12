@@ -257,6 +257,8 @@ struct TrashView: View {
 
   private func deletionDescription(_ item: TrashItem) -> String {
     switch item.kind {
+    case .collection:
+      "Only the Collection and its grouping links will be removed. Your Entries and photos stay in the archive."
     case .attachment:
       "The private photo file and its attachment record will be removed."
     case .habit:

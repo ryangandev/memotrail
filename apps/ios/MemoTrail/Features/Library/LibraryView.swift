@@ -11,6 +11,10 @@ struct LibraryView: View {
         LazyVStack(alignment: .leading, spacing: MTSpacing.s8) {
           header
           availableSection
+          NavigationLink("Organization") { OrganizationView(client: client, ownerID: ownerID) }
+            .font(MTTypography.titleSmall).foregroundStyle(MTColor.accent)
+            .padding().frame(maxWidth: .infinity, alignment: .leading)
+            .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.large))
           NavigationLink("Entry history") {
             EntryHistoryIndexView(client: client, ownerID: ownerID)
           }

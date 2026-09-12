@@ -3,6 +3,24 @@ import XCTest
 @testable import MemoTrail
 
 final class LibraryDestinationTests: XCTestCase {
+  func testOrganizationInputAndCollectionTrashPreserveRPCContracts() throws {
+    let request = OrganizationSaveRequest(
+      kind: .collection, name: " 学习 ", sortOrder: -1, id: nil, expectedRevision: nil)
+    XCTAssertTrue(request.isValid)
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as? [String: Any])
+    XCTAssertEqual(json["p_name"] as? String, "学习")
+    XCTAssertEqual(json["p_kind"] as? String, "collection")
+    XCTAssertTrue(json["p_id"] is NSNull)
+    XCTAssertTrue(json["p_expected_revision"] is NSNull)
+    XCTAssertFalse(
+      OrganizationSaveRequest(kind: .tag, name: "A", sortOrder: 1, id: nil, expectedRevision: nil)
+        .isValid)
+    XCTAssertFalse(
+      OrganizationSaveRequest(kind: .tag, name: " ", sortOrder: 0, id: nil, expectedRevision: nil)
+        .isValid)
+    XCTAssertEqual(TrashItemKind(rawValue: "collection")?.displayName, "Collection")
+  }
   func testTrackSettingsPreserveVisibilityIdentityAndRevision() throws {
     let data = Data(
       "{\"id\":\"95000000-0000-4000-8000-000000000001\",\"name\":\"学习\",\"system_key\":null,\"sort_order\":-3,\"is_hidden\":true,\"revision\":2,\"entry_count\":1,\"total_count\":5}"

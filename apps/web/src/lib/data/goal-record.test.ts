@@ -49,6 +49,18 @@ const row = {
 };
 
 describe("Goal records", () => {
+  it("preserves Bucket List behavior after a Collection is renamed", () => {
+    const goal = parseGoalRows([
+      {
+        ...row,
+        collection_names: ["Someday adventures"],
+        is_bucket_list: true,
+      },
+    ])?.[0];
+    expect(goal && isBucketListGoal(goal)).toBe(true);
+    const removed = parseGoalRows([{ ...row, is_bucket_list: false }])?.[0];
+    expect(removed && isBucketListGoal(removed)).toBe(false);
+  });
   it("parses a complete Goal response", () => {
     const goals = parseGoalRows([row]);
 

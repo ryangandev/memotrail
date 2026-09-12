@@ -87,6 +87,7 @@ struct GoalRelatedEntry: Decodable, Equatable, Hashable, Identifiable, Sendable 
 }
 
 struct GoalEntry: Equatable, Hashable, Identifiable, Sendable {
+  var bucketListRole: Bool? = nil
   let id: UUID
   let title: String
   let body: String
@@ -103,7 +104,7 @@ struct GoalEntry: Equatable, Hashable, Identifiable, Sendable {
   let totalCount: Int
 
   var isBucketList: Bool {
-    collectionNames.contains { $0.trimmed.lowercased() == "bucket list" }
+    bucketListRole ?? collectionNames.contains { $0.trimmed.lowercased() == "bucket list" }
   }
 
   var editableRelatedEntries: [GoalRelatedEntry] {
@@ -127,6 +128,7 @@ struct GoalEntry: Equatable, Hashable, Identifiable, Sendable {
 }
 
 struct GoalWorkspaceRow: Decodable, Equatable, Sendable {
+  var bucketListRole: Bool? = nil
   let entryID: UUID
   let title: String
   let body: String
@@ -143,6 +145,7 @@ struct GoalWorkspaceRow: Decodable, Equatable, Sendable {
   let totalCount: Int
 
   enum CodingKeys: String, CodingKey {
+    case bucketListRole = "is_bucket_list"
     case entryID = "entry_id"
     case title
     case body
@@ -161,6 +164,7 @@ struct GoalWorkspaceRow: Decodable, Equatable, Sendable {
 
   var entry: GoalEntry {
     GoalEntry(
+      bucketListRole: bucketListRole,
       id: entryID,
       title: title,
       body: body,

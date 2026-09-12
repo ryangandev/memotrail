@@ -10,6 +10,13 @@ export const dynamic = "force-dynamic";
 
 const availableDestinations = [
   {
+    detail:
+      "Create and rename Collections and tags, or recover removed groupings.",
+    href: "/settings/organization",
+    icon: "archive" as const,
+    title: "Organization",
+  },
+  {
     detail: "Inspect earlier writing and safely restore versions.",
     href: "/history",
     icon: "archive" as const,

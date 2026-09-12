@@ -37,6 +37,9 @@ export function CollectionsWorkspace({
           <span>New entry</span>
         </Link>
       </header>
+      <p>
+        <Link href="/settings/organization">Manage Collections and tags</Link>
+      </p>
 
       {selectedCollection ? (
         <CollectionDetail workspace={workspace} />

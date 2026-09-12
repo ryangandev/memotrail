@@ -227,6 +227,11 @@ Confirmed behavior:
 - AI may recommend existing Collections.
 - AI may propose a new Collection, but it cannot create one without user confirmation.
 
+Organization settings provide Collection and tag creation, searching, renaming, and linked Entry counts on both clients.
+Collections also support explicit display ordering and recoverable Trash; removing a Collection never removes its Entries or photos.
+Tags can be removed from individual Entries during review, and duplicate organization names are rejected rather than silently merged.
+Renaming the Bucket List Collection preserves its Goal milestone role through a stable identifier independent of its display name.
+
 ### 5.5 Global smart search
 
 Search should work across every product area.
