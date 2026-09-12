@@ -26,6 +26,7 @@ Version-two Entry snapshots capture organization, specialized details, Timeline 
 Restoration validates all historical references and original files atomically and never overwrites independent shared People or Place definitions.
 Legacy snapshots restore only relationships they actually recorded; missing fields do not imply empty relationships.
 Trash restoration remains separate from restoring content history, and optimistic revision checks prevent overwriting newer work from another device.
+Timeline tracks have independent optimistic revisions; renaming preserves their system identity and hiding is reversible presentation state, never content deletion.
 Uploads preserve private originals, and display access uses expiring signed URLs.
 Drafts and pending captures remain per-user and durable on each device until synchronization is confirmed.
 

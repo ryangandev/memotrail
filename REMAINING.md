@@ -19,9 +19,10 @@ The last accepted checkpoint is `a7850b7`.
 | Precision-aware AI date acceptance                               | Guidance only   | Pending       | Pending       | Pending                     |
 | Natural-language retrieval and grounded source links             | Pending         | Pending       | Pending       | Pending                     |
 | Explore with AI, persisted conversation, Save as Entry           | Pending         | Pending       | Pending       | Pending                     |
-| Inspect and restore Entry history                                | Deployed        | Complete      | Complete      | Local verified; this commit |
+| Inspect and restore Entry history                                | Deployed        | Complete      | Complete      | Pushed eee57bf              |
 | Complete ZIP export with JSON, Markdown, CSV, and originals      | Pending         | Pending       | Pending       | Pending                     |
-| Collection/tag management and Timeline track management          | Pending         | Pending       | Pending       | Pending                     |
+| Timeline track creation, ordering, and hide/show management      | Deployed        | Complete      | Complete      | Local verified; this commit |
+| Collection/tag management                                        | Pending         | Pending       | Pending       | Pending                     |
 | Remaining date precision, Entry conversion and relationship gaps | Audit pending   | Audit pending | Audit pending | Pending                     |
 | Photo derivative and metadata suggestion gaps                    | Audit pending   | Audit pending | Audit pending | Pending                     |
 | Final acceptance and production configuration                    | Pending         | Pending       | Pending       | Pending                     |

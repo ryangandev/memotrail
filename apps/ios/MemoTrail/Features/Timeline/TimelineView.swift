@@ -2,6 +2,9 @@
 import SwiftUI
 
 struct TimelineView: View {
+  private let client: SupabaseClient
+  private let ownerID: UUID
+  @State private var managingTracks = false
   @State private var controller: TimelineController
   @State private var residenceController: ResidenceController
   @State private var vehicleController: VehicleController
@@ -12,6 +15,8 @@ struct TimelineView: View {
   @State private var vehicleErrorMessage: String?
 
   init(client: SupabaseClient, ownerID: UUID) {
+    self.client = client
+    self.ownerID = ownerID
     _controller = State(
       initialValue: TimelineController(client: client, ownerID: ownerID)
     )
@@ -41,6 +46,9 @@ struct TimelineView: View {
       .toolbarBackground(MTColor.surface, for: .navigationBar)
       .toolbarBackground(.visible, for: .navigationBar)
       .toolbar {
+        ToolbarItem(placement: .topBarLeading) {
+          Button("Manage tracks", systemImage: "slider.horizontal.3") { managingTracks = true }
+        }
         ToolbarItem(placement: .topBarTrailing) {
           Button {
             openEditor(trackID: controller.tracks.first?.id)
@@ -54,6 +62,16 @@ struct TimelineView: View {
       }
       .refreshable {
         await controller.load()
+      }
+      .sheet(isPresented: $managingTracks, onDismiss: { Task { await controller.load() } }) {
+        NavigationStack {
+          TimelineTracksView(client: client, ownerID: ownerID)
+            .toolbar {
+              ToolbarItem(placement: .confirmationAction) {
+                Button("Done") { managingTracks = false }
+              }
+            }
+        }
       }
       .sheet(item: $editorSelection) { selection in
         TimelineEditorSheet(

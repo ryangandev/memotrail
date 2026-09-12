@@ -30,6 +30,9 @@
 - Complete snapshots retain organization, specialized details, Timeline and Entry relationships, and private photo membership; legacy snapshots preserve unknown relationships instead of guessing, and unavailable historical references fail atomically.
 - History acceptance passed 723 database tests, 200 Web tests, the 156-test native suite plus a final focused native rerun, and three authenticated browser scenarios including restore, undo by restoring again, stale-device conflict, and exact original-photo preservation.
 - The history migration is deployed to hosted Supabase with warning-free linked schema lint; desktop/light and narrow/dark history layouts were visually checked.
+- Timeline track management now supports matching Web and iOS creation, renaming, explicit numeric ordering, and reversible visibility changes for custom and default tracks.
+- Track mutations preserve system identity, every Entry and placement, and reject stale revisions; hidden tracks remain available in management and can be shown again without data restoration.
+- Track acceptance passed 746 database tests, 203 Web tests, the 157-test native suite, four authenticated browser scenarios, the Web production build, and hosted schema lint with the additive migration deployed.
 
 - Phase 1 repository, design system, Web shell, iOS shell, local Supabase schema, RLS tests, and CI are complete.
 - The production Web shell is reachable at `https://memotrail.ryangan.me`.
@@ -37,7 +40,7 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- The linked hosted Supabase project contains all twenty-one reviewed migrations; linked schema lint passes and no development seed users or roles were deployed.
+- The linked hosted Supabase project contains all twenty-two reviewed migrations; linked schema lint passes and no development seed users or roles were deployed.
 - The hosted atomic Entry review contract now supports content, Type, occurrence, Collection, tag, and `Done` updates in one transaction.
 - Hosted verification found 24 Row Level Security-enabled application tables, 25 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
@@ -1027,6 +1030,7 @@
 - `feat: add cross-platform AI controls and budgeted provider access` added synchronized AI settings, server-only Anthropic access, usage accounting, budget guards, and real authenticated localhost acceptance.
 - `feat: add editable Inbox AI suggestions across Web and iOS` added asynchronous generation, revision caching, editable per-field choices, dismissals, and real bilingual acceptance without automatic filing.
 - `feat: add restorable Entry history across Web and iOS` added complete version snapshots, owner-scoped browsing, explicit restoration, relationship and photo preservation, and cross-device conflict protection.
+- `feat: add Timeline track management across Web and iOS` added custom tracks, renaming, ordering, hide/show controls, and revision-safe updates without deleting moments.
 
 ## Next sequence
 

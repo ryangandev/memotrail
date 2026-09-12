@@ -101,6 +101,8 @@ export function TimelineWorkspace({
       </header>
 
       <div className={styles.summary} aria-label="Timeline summary">
+        <Link href="/timeline/tracks">Manage tracks</Link>
+        <span aria-hidden="true">·</span>
         <span>{trackCountLabel(tracks.length)}</span>
         <span aria-hidden="true">·</span>
         <span>{entryCountLabel(items.length)}</span>
@@ -127,7 +129,7 @@ export function TimelineWorkspace({
           <Icon name="timeline" size={22} />
           <div>
             <strong>Your Timeline needs tracks</strong>
-            <p>Refresh after your default Timeline tracks are available.</p>
+            <p>Open Manage tracks to add a track or show a hidden one.</p>
           </div>
         </div>
       ) : null}

@@ -3,6 +3,40 @@ import XCTest
 @testable import MemoTrail
 
 final class LibraryDestinationTests: XCTestCase {
+  func testTrackSettingsPreserveVisibilityIdentityAndRevision() throws {
+    let data = Data(
+      "{\"id\":\"95000000-0000-4000-8000-000000000001\",\"name\":\"学习\",\"system_key\":null,\"sort_order\":-3,\"is_hidden\":true,\"revision\":2,\"entry_count\":1,\"total_count\":5}"
+        .utf8)
+    let track = try JSONDecoder().decode(TimelineTrackSetting.self, from: data)
+    XCTAssertTrue(track.isHidden)
+    XCTAssertEqual(track.sortOrder, -3)
+    let request = TrackSaveRequest(
+      name: "  学习  ", sortOrder: -3, isHidden: true, trackID: track.id, expectedRevision: 2)
+    XCTAssertTrue(request.isValid)
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as? [String: Any])
+    XCTAssertEqual(json["p_name"] as? String, "学习")
+    XCTAssertEqual(json["p_expected_revision"] as? Int, 2)
+    let create = TrackSaveRequest(
+      name: "New", sortOrder: 0, isHidden: false, trackID: nil, expectedRevision: nil)
+    XCTAssertTrue(create.isValid)
+    let newJSON = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(create)) as? [String: Any])
+    XCTAssertTrue(newJSON["p_track_id"] is NSNull)
+    XCTAssertTrue(newJSON["p_expected_revision"] is NSNull)
+    XCTAssertFalse(
+      TrackSaveRequest(
+        name: " ", sortOrder: 0, isHidden: false, trackID: nil, expectedRevision: nil
+      ).isValid)
+    XCTAssertFalse(
+      TrackSaveRequest(
+        name: "New", sortOrder: 1_000_001, isHidden: false, trackID: nil, expectedRevision: nil
+      ).isValid)
+    XCTAssertFalse(
+      TrackSaveRequest(
+        name: "New", sortOrder: 0, isHidden: false, trackID: track.id, expectedRevision: nil
+      ).isValid)
+  }
   func testHistorySupportsLegacySnapshotsAndPreservesExactRPCIdentity() throws {
     let legacy: [String: HistoryJSON] = [
       "body": .string("学习记录"), "title": .null, "revision": .number(1),
