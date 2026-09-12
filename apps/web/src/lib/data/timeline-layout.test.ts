@@ -20,6 +20,16 @@ function source(
 }
 
 describe("createTimelineLayout", () => {
+  it("never invents calendar positions for unanchored stages or events", () => {
+    const layout = createTimelineLayout(
+      [
+        source({ occurredStart: null }),
+        source({ id: "stage", kind: "stage", occurredStart: null }),
+      ],
+      reference,
+    );
+    expect(layout).toEqual(createTimelineLayout([], reference));
+  });
   it("builds a stable current-year range for an empty Timeline", () => {
     const layout = createTimelineLayout([], reference);
 

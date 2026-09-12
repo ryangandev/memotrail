@@ -28,6 +28,49 @@ function input(
 }
 
 describe("parseTimelineEntryInput", () => {
+  it("preserves description-only dates, partial stage ends, and raw exact instants", () => {
+    for (const datePrecision of ["unknown", "age", "approximate"] as const) {
+      expect(
+        parseTimelineEntryInput(
+          input({
+            datePrecision,
+            occurredStart: null,
+            occurredEnd: null,
+            occurredLabel: datePrecision === "unknown" ? null : "Ages 12 to 25",
+          }),
+        ),
+      ).toMatchObject({
+        success: true,
+        data: { occurredStart: null, occurredEnd: null },
+      });
+    }
+    expect(
+      parseTimelineEntryInput(input({ datePrecision: "year" })).success,
+    ).toBe(true);
+    const raw = "2026-11-01T09:30:00.123456Z";
+    expect(
+      parseTimelineEntryInput(
+        input({
+          datePrecision: "exact",
+          occurredStart: raw,
+          occurredEnd: null,
+        }),
+      ),
+    ).toMatchObject({ success: true, data: { occurredStart: raw } });
+    expect(
+      parseTimelineEntryInput(
+        input({
+          datePrecision: "age",
+          occurredStart: null,
+          occurredEnd: null,
+          occurredLabel: null,
+        }),
+      ).success,
+    ).toBe(false);
+    expect(
+      parseTimelineEntryInput(input({ datePrecision: "unknown" })).success,
+    ).toBe(false);
+  });
   it("normalizes a valid stage", () => {
     const parsed = parseTimelineEntryInput(input());
 

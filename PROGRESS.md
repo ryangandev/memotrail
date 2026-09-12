@@ -6,6 +6,25 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Lossless Timeline dates and visible unanchored moments
+
+- Reproduced the real editor downgrade of an Exact Timeline memory to Day and the lack of a desktop calendar position for unanchored memories.
+- Both clients now share the eight-precision occurrence editor, default new moments to Unknown, preserve untouched exact bounds, and allow description-only Age/Approximate memories without a guessed birthday or calendar date.
+- Explicit span mode preserves optional stage ends at year, month, day, range, age, approximate, or exact precision while point Events continue to reject ends.
+- Native workspace decoding retains original timestamp strings and reuses them on untouched saves, preserving database microseconds and the second occurrence of a repeated daylight-saving hour.
+- Desktop lists unanchored moments above the calendar axis; mobile/native retain them in their track lists, and the summary does not imply a dated range when all moments are undated.
+- Browser testing also reproduced a false revision conflict on immediate reopening; the workspace now retains the server-confirmed revision until fresh props acknowledge it and clears overrides on Trash.
+- Fixed the mobile Add moment button's missing accessible name, retained title focus only on editor mount, and aligned the track-management link with the design tokens.
+- The additive owner/revision-checked mutation preserves history and track relationships; the legacy signature delegates its writes and rejects exact/unanchored data it cannot safely represent.
+- Dedicated SQL coverage verifies nullable workspace reads, partial stage ends, microseconds, legacy guards, stale writes, invalid-date rollback, and cross-owner denial.
+- Local database regression passes 1,133 assertions; Web unit coverage passes 296 tests, and native simulator coverage executes 176 tests with no failures or skips.
+- All twenty-one authenticated browser/API scenarios pass, including mobile creation, rapid re-editing, all eight precisions, partial stage ends, and visible unanchored moments.
+- Migration `202609120016_timeline_occurrence.sql` is deployed with warning-free hosted lint and an up-to-date ledger, without seeds, backfills, or role changes.
+- Production build, lint, type checking, repository and native formatting, and diff checks pass; desktop/light and mobile/dark editors plus the desktop undated section were visually inspected.
+- No AI calls were made; native interactive and production acceptance remain separate checks rather than being inferred from unit tests or browser screenshots.
+- One local Goal-fixture request encountered a gateway upstream connection closure, confirmed in sanitized Kong logs; independent reruns pass without changing application code or weakening test assertions.
+- Remaining scope includes Homes/Vehicles date precision, photo derivatives/metadata, and final cross-platform/production acceptance.
+
 ### Eight-precision Goal achievement across Web and iOS
 
 - Reproduced the real browser bug: completing a Goal with only the age description `17岁` stored today's calendar date in the new First Time.

@@ -7,7 +7,7 @@ struct EntryOccurrence: Equatable, Sendable {
   var label: String?
   var timezone: String
 
-  func validate() throws {
+  func validate(span: Bool = false) throws {
     guard timezone.count <= 100, TimeZone(identifier: timezone) != nil else {
       throw OccurrenceError.invalidTimezone
     }
@@ -25,7 +25,7 @@ struct EntryOccurrence: Equatable, Sendable {
       throw OccurrenceError.invalidDate
     }
     if let end {
-      guard let start, end >= start, [.range, .approximate, .age].contains(precision) else {
+      guard let start, end >= start, span || [.range, .approximate, .age].contains(precision) else {
         throw OccurrenceError.invalidRange
       }
     }
@@ -75,7 +75,7 @@ struct OccurrenceDraft: Equatable, Sendable {
     end = ""
   }
 
-  func resolve(original: EntryOccurrence? = nil) throws -> EntryOccurrence {
+  func resolve(original: EntryOccurrence? = nil, span: Bool = false) throws -> EntryOccurrence {
     guard TimeZone(identifier: timezone) != nil else { throw OccurrenceError.invalidTimezone }
     let previous = original.map(OccurrenceDraft.init)
     func convert(_ text: String, isEnd: Bool) throws -> Date? {
@@ -97,12 +97,13 @@ struct OccurrenceDraft: Equatable, Sendable {
     let value = EntryOccurrence(
       precision: precision,
       start: precision == .unknown ? nil : try convert(start, isEnd: false),
-      end: [.range, .approximate, .age].contains(precision) ? try convert(end, isEnd: true) : nil,
+      end: precision != .unknown && (span || [.range, .approximate, .age].contains(precision))
+        ? try convert(end, isEnd: true) : nil,
       label: label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         ? nil : label.trimmingCharacters(in: .whitespacesAndNewlines),
       timezone: timezone
     )
-    try value.validate()
+    try value.validate(span: span)
     return value
   }
 

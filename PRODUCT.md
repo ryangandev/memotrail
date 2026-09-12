@@ -148,6 +148,8 @@ Possible content includes:
 The timeline should support uncertain or approximate dates because older memories may not have exact dates.
 
 The timeline must support both broad date-range stages and individual point-in-time events.
+Timeline moments with only an age, approximate description, or unknown date remain visible without an inferred calendar position.
+Stages may have a start and optional end at the selected precision, including year-only and month-only bounds; point Events do not have an end date.
 
 Life stages may overlap when they represent different dimensions of life.
 

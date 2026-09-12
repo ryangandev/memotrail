@@ -14,7 +14,7 @@ export type TimelineEntry = {
   kind: TimelineKind;
   occurredEnd: string | null;
   occurredLabel: string | null;
-  occurredStart: string;
+  occurredStart: string | null;
   occurredTimezone: string;
   revision: number;
   title: string;
@@ -115,7 +115,7 @@ function tracksFromRows(rows: TimelineRow[]) {
         kind: row.timeline_kind ?? "event",
         occurredEnd: row.occurred_end,
         occurredLabel: row.occurred_label,
-        occurredStart: row.occurred_start ?? row.updated_at ?? "",
+        occurredStart: row.occurred_start,
         occurredTimezone: row.occurred_timezone ?? "UTC",
         revision: row.revision ?? 1,
         title: row.title ?? "Untitled moment",
@@ -131,8 +131,8 @@ function tracksFromRows(rows: TimelineRow[]) {
       ...track,
       items: track.items.sort(
         (a, b) =>
-          new Date(a.occurredStart).getTime() -
-            new Date(b.occurredStart).getTime() ||
+          (a.occurredStart ? Date.parse(a.occurredStart) : Infinity) -
+            (b.occurredStart ? Date.parse(b.occurredStart) : Infinity) ||
           a.title.localeCompare(b.title),
       ),
     }));
@@ -172,10 +172,10 @@ function isTimelineRow(value: unknown): value is TimelineRow {
     typeof value.entry_type === "string" &&
     typeof value.title === "string" &&
     (value.timeline_kind === "stage" || value.timeline_kind === "event") &&
-    typeof value.occurred_start === "string" &&
+    nullableString(value.occurred_start) &&
     nullableString(value.occurred_end) &&
     nullableString(value.occurred_label) &&
-    typeof value.occurred_timezone === "string" &&
+    nullableString(value.occurred_timezone) &&
     typeof value.revision === "number" &&
     typeof value.updated_at === "string" &&
     typeof value.date_precision === "string"

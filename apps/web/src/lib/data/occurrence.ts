@@ -47,7 +47,10 @@ export function validTimezone(value: unknown): value is string {
     return false;
   }
 }
-export function validateOccurrence(value: Occurrence): string | null {
+export function validateOccurrence(
+  value: Occurrence,
+  span = false,
+): string | null {
   if (!occurrencePrecisions.includes(value.datePrecision))
     return "Choose a supported date precision.";
   if (!validTimezone(value.occurredTimezone))
@@ -93,6 +96,7 @@ export function validateOccurrence(value: Occurrence): string | null {
     return "The end date must be on or after the start date.";
   if (
     value.occurredEnd &&
+    !span &&
     !["range", "approximate", "age"].includes(value.datePrecision)
   )
     return "Only ranges, ages, or approximate periods can have an end date.";
@@ -174,6 +178,7 @@ export function occurrenceDraft(value: Occurrence): OccurrenceDraft {
 export function resolveOccurrenceDraft(
   draft: OccurrenceDraft,
   original?: Occurrence,
+  span = false,
 ): { value: Occurrence; error?: never } | { error: string; value?: never } {
   if (!validTimezone(draft.timezone))
     return {
@@ -197,14 +202,13 @@ export function resolveOccurrenceDraft(
   };
   const start =
     draft.precision === "unknown" ? null : convert(draft.start, "start");
-  const end = ["range", "approximate", "age"].includes(draft.precision)
-    ? convert(draft.end, "end")
-    : null;
+  const bounded =
+    draft.precision !== "unknown" &&
+    (span || ["range", "approximate", "age"].includes(draft.precision));
+  const end = bounded ? convert(draft.end, "end") : null;
   if (
     (draft.start && !start && draft.precision !== "unknown") ||
-    (draft.end &&
-      !end &&
-      ["range", "approximate", "age"].includes(draft.precision))
+    (draft.end && !end && bounded)
   )
     return {
       error:
@@ -217,7 +221,7 @@ export function resolveOccurrenceDraft(
     occurredLabel: draft.label.trim() || null,
     occurredTimezone: draft.timezone,
   };
-  const error = validateOccurrence(value);
+  const error = validateOccurrence(value, span);
   return error ? { error } : { value };
 }
 

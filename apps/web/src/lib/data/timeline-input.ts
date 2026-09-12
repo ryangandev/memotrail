@@ -1,3 +1,4 @@
+import { validateOccurrence } from "./occurrence";
 export const timelineBodyLimit = 50_000;
 export const timelineLabelLimit = 200;
 export const timelineTitleLimit = 200;
@@ -23,7 +24,7 @@ export type TimelineEntryInput = {
   kind: TimelineKind;
   occurredEnd: string | null;
   occurredLabel: string | null;
-  occurredStart: string;
+  occurredStart: string | null;
   occurredTimezone: string;
   revision: number | null;
   title: string;
@@ -75,31 +76,21 @@ export function parseTimelineEntryInput(
     return invalid("Choose a valid date precision.");
   }
 
-  const occurredStart = validIsoDate(input.occurredStart);
-
-  if (!occurredStart) {
-    return invalid("Choose a valid start date.");
-  }
-
-  const occurredEnd = input.occurredEnd
-    ? validIsoDate(input.occurredEnd)
-    : null;
-
-  if (input.occurredEnd && !occurredEnd) {
-    return invalid("Choose a valid end date.");
-  }
-
-  if (input.kind === "event" && occurredEnd) {
+  const occurredStart = input.occurredStart;
+  const occurredEnd = input.occurredEnd;
+  if (input.kind === "event" && occurredEnd)
     return invalid("Events happen at one point and cannot have an end date.");
-  }
-
-  if (occurredEnd && occurredEnd < occurredStart) {
-    return invalid("The end date must be on or after the start date.");
-  }
-
-  if (!occurredTimezone || occurredTimezone.length > 100) {
-    return invalid("Choose a valid occurrence time zone.");
-  }
+  const occurrenceError = validateOccurrence(
+    {
+      occurredAt: occurredStart,
+      occurredEnd,
+      occurredLabel,
+      occurredTimezone,
+      datePrecision: input.datePrecision,
+    },
+    input.kind === "stage",
+  );
+  if (occurrenceError) return invalid(occurrenceError);
 
   if (!isTimelineEntryIdentity(input.id, input.revision)) {
     return invalid("This Timeline version is invalid. Refresh and try again.");
@@ -206,11 +197,6 @@ function dateParts(date: Date, timeZone: string, includeHour = false) {
     month: part("month"),
     year: part("year"),
   };
-}
-
-function validIsoDate(value: string) {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
 function invalid(message: string): ParsedTimelineEntryInput {

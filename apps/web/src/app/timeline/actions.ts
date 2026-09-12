@@ -9,6 +9,8 @@ import {
 } from "@/lib/data/timeline-input";
 
 export type TimelineActionResult = {
+  entryId?: string;
+  revision?: number;
   message: string;
   status: "conflict" | "created" | "error" | "saved" | "trashed";
 };
@@ -31,19 +33,22 @@ export async function saveTimelineEntry(
     };
   }
 
-  const { data, error } = await context.client.rpc("save_timeline_entry", {
-    p_body: parsed.data.body,
-    p_date_precision: parsed.data.datePrecision,
-    p_entry_id: parsed.data.id,
-    p_expected_revision: parsed.data.revision,
-    p_occurred_end: parsed.data.occurredEnd,
-    p_occurred_label: parsed.data.occurredLabel,
-    p_occurred_start: parsed.data.occurredStart,
-    p_occurred_timezone: parsed.data.occurredTimezone,
-    p_timeline_kind: parsed.data.kind,
-    p_title: parsed.data.title,
-    p_track_id: parsed.data.trackId,
-  });
+  const { data, error } = await context.client.rpc(
+    "save_timeline_entry_with_occurrence",
+    {
+      p_body: parsed.data.body,
+      p_date_precision: parsed.data.datePrecision,
+      p_entry_id: parsed.data.id,
+      p_expected_revision: parsed.data.revision,
+      p_occurred_end: parsed.data.occurredEnd,
+      p_occurred_label: parsed.data.occurredLabel,
+      p_occurred_start: parsed.data.occurredStart,
+      p_occurred_timezone: parsed.data.occurredTimezone,
+      p_timeline_kind: parsed.data.kind,
+      p_title: parsed.data.title,
+      p_track_id: parsed.data.trackId,
+    },
+  );
 
   if (error) {
     return {
@@ -64,8 +69,18 @@ export async function saveTimelineEntry(
   refreshTimelinePaths();
 
   return parsed.data.id
-    ? { message: "Timeline moment saved.", status: "saved" }
-    : { message: "Added to your Timeline.", status: "created" };
+    ? {
+        message: "Timeline moment saved.",
+        status: "saved",
+        entryId: data[0].entry_id,
+        revision: data[0].revision,
+      }
+    : {
+        message: "Added to your Timeline.",
+        status: "created",
+        entryId: data[0].entry_id,
+        revision: data[0].revision,
+      };
 }
 
 export async function trashTimelineEntry(input: {

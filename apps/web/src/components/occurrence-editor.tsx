@@ -9,15 +9,29 @@ export function OccurrenceEditor({
   value,
   onChange,
   disabled,
+  span = false,
+  point = false,
 }: {
   value: OccurrenceDraft;
   onChange: (value: OccurrenceDraft) => void;
   disabled: boolean;
+  span?: boolean;
+  point?: boolean;
 }) {
   const change = (patch: Partial<OccurrenceDraft>) =>
     onChange({ ...value, ...patch });
   const calendar = value.precision !== "unknown";
-  const bounded = ["range", "approximate", "age"].includes(value.precision);
+  const bounded =
+    !point &&
+    (span || ["range", "approximate", "age"].includes(value.precision));
+  const inputType =
+    value.precision === "exact"
+      ? "datetime-local"
+      : value.precision === "month"
+        ? "month"
+        : value.precision === "year"
+          ? "text"
+          : "date";
   return (
     <fieldset disabled={disabled} className={styles.occurrenceEditor}>
       <legend>When it happened</legend>
@@ -81,7 +95,8 @@ export function OccurrenceEditor({
             <label>
               <span>End date (optional)</span>
               <input
-                type="date"
+                type={inputType}
+                step={value.precision === "exact" ? "1" : undefined}
                 value={value.end}
                 onChange={(e) => change({ end: e.target.value })}
               />

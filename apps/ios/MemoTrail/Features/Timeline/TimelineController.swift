@@ -56,13 +56,13 @@ final class TimelineController {
     kind: TimelineKind,
     title: String,
     body: String,
-    occurredStart: Date,
+    occurredStart: Date?,
     occurredEnd: Date?,
     datePrecision: TimelineDatePrecision,
     occurredLabel: String,
     occurredTimezone: String
   ) async -> MutationResult {
-    let input: TimelineEntryInput
+    var input: TimelineEntryInput
 
     do {
       input = try TimelineEntryInput.validate(
@@ -82,6 +82,8 @@ final class TimelineController {
       return MutationResult(message: error.localizedDescription, status: .error)
     }
 
+    input.preserveUnchangedBounds(from: entry)
+
     guard !isSaving else {
       return MutationResult(message: "A Timeline change is already saving.", status: .error)
     }
@@ -94,7 +96,7 @@ final class TimelineController {
       let results: [SavedTimelineEntry] =
         try await client
         .rpc(
-          "save_timeline_entry",
+          "save_timeline_entry_with_occurrence",
           params: SaveTimelineEntryParameters(input: input)
         )
         .execute()

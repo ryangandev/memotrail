@@ -18,18 +18,22 @@ import {
 import { Icon } from "@/components/icon";
 import type { TimelineEntry, TimelineTrack } from "@/lib/data/timeline";
 import {
-  localDateToISOString,
-  localDateValue,
   parseTimelineEntryInput,
   timelineBodyLimit,
-  timelineLabelLimit,
   timelineTitleLimit,
-  type TimelineDatePrecision,
   type TimelineEntryInput,
   type TimelineKind,
 } from "@/lib/data/timeline-input";
 import { createTimelineLayout } from "@/lib/data/timeline-layout";
 import styles from "@/app/timeline/page.module.css";
+
+import { OccurrenceEditor } from "@/components/occurrence-editor";
+import {
+  occurrenceDraft,
+  occurrenceLabel,
+  resolveOccurrenceDraft,
+  type Occurrence,
+} from "@/lib/data/occurrence";
 
 type EditorSelection =
   | { entry: TimelineEntry; initialTrackId: null }
@@ -45,26 +49,47 @@ type GridStyle = CSSProperties & {
   "--timeline-canvas-width": string;
 };
 
-const precisionOptions: { label: string; value: TimelineDatePrecision }[] = [
-  { label: "Exact day", value: "day" },
-  { label: "Month", value: "month" },
-  { label: "Year", value: "year" },
-  { label: "Approximate", value: "approximate" },
-  { label: "Age-based", value: "age" },
-  { label: "Date range", value: "range" },
-  { label: "Unknown", value: "unknown" },
-];
-
 export function TimelineWorkspace({
   loadError,
   referenceDate,
-  tracks,
+  tracks: serverTracks,
 }: {
   loadError: string | null;
   referenceDate: string;
   tracks: TimelineTrack[];
 }) {
   const [selection, setSelection] = useState<EditorSelection | null>(null);
+  const [confirmed, setConfirmed] = useState<Map<string, TimelineEntry>>(
+    () => new Map(),
+  );
+  const [previousTracks, setPreviousTracks] = useState(serverTracks);
+  if (previousTracks !== serverTracks) {
+    setPreviousTracks(serverTracks);
+    setConfirmed((current) => {
+      const next = new Map(current);
+      for (const entry of serverTracks.flatMap((track) => track.items)) {
+        const saved = next.get(entry.id);
+        if (saved && entry.revision >= saved.revision) next.delete(entry.id);
+      }
+      return next.size === current.size ? current : next;
+    });
+  }
+  const tracks = useMemo(
+    () =>
+      serverTracks.map((track) => {
+        const entries = new Map(track.items.map((entry) => [entry.id, entry]));
+        for (const saved of confirmed.values()) {
+          const serverEntry = serverTracks
+            .flatMap((item) => item.items)
+            .find((entry) => entry.id === saved.id);
+          if (serverEntry && serverEntry.revision >= saved.revision) continue;
+          entries.delete(saved.id);
+          if (saved.trackId === track.id) entries.set(saved.id, saved);
+        }
+        return { ...track, items: [...entries.values()] };
+      }),
+    [serverTracks, confirmed],
+  );
   const items = useMemo(() => tracks.flatMap((track) => track.items), [tracks]);
   const layout = useMemo(
     () => createTimelineLayout(items, new Date(referenceDate)),
@@ -88,6 +113,7 @@ export function TimelineWorkspace({
           <p>See the chapters, places, and moments that overlap your story.</p>
         </div>
         <button
+          aria-label="Add moment"
           className={styles.addButton}
           disabled={tracks.length === 0}
           onClick={() =>
@@ -106,7 +132,7 @@ export function TimelineWorkspace({
         <span>{trackCountLabel(tracks.length)}</span>
         <span aria-hidden="true">·</span>
         <span>{entryCountLabel(items.length)}</span>
-        {items.length > 0 ? (
+        {items.some((item) => item.occurredStart) ? (
           <>
             <span aria-hidden="true">·</span>
             <span>{rangeLabel(layout.start, layout.end)}</span>
@@ -144,6 +170,48 @@ export function TimelineWorkspace({
               <span>Scroll across years</span>
               <small>Select any moment to edit it</small>
             </div>
+            {items.some((item) => !item.occurredStart) ? (
+              <section
+                className={styles.undatedMoments}
+                aria-label="Without a calendar date"
+              >
+                <h2>Without a calendar date</h2>
+                <p>
+                  These memories stay on their tracks without an invented year.
+                </p>
+                {tracks
+                  .filter((track) =>
+                    track.items.some((item) => !item.occurredStart),
+                  )
+                  .map((track) => (
+                    <div key={track.id}>
+                      <h3>{track.name}</h3>
+                      {track.items
+                        .filter((item) => !item.occurredStart)
+                        .map((entry) => {
+                          const href = specializedEntryHref(entry);
+                          const label =
+                            entry.title + ", " + entryDateLabel(entry);
+                          return href ? (
+                            <Link key={entry.id} href={href}>
+                              {label}
+                            </Link>
+                          ) : (
+                            <button
+                              key={entry.id}
+                              type="button"
+                              onClick={() =>
+                                setSelection({ entry, initialTrackId: null })
+                              }
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                    </div>
+                  ))}
+              </section>
+            ) : null}
             <div className={styles.timelineViewport}>
               <div className={styles.timelineGrid} style={gridStyle}>
                 <div className={styles.axisCorner}>Track</div>
@@ -246,6 +314,16 @@ export function TimelineWorkspace({
 
       {selection ? (
         <TimelineEditor
+          onTrashed={(id) =>
+            setConfirmed((current) => {
+              const next = new Map(current);
+              next.delete(id);
+              return next;
+            })
+          }
+          onSaved={(entry) =>
+            setConfirmed((values) => new Map(values).set(entry.id, entry))
+          }
           entry={selection.entry}
           initialTrackId={selection.initialTrackId}
           key={selection.entry?.id ?? `new:${selection.initialTrackId}`}
@@ -363,11 +441,15 @@ function specializedEntryHref(entry: TimelineEntry) {
 }
 
 function TimelineEditor({
+  onTrashed,
+  onSaved,
   entry,
   initialTrackId,
   onClose,
   tracks,
 }: {
+  onTrashed: (id: string) => void;
+  onSaved: (entry: TimelineEntry) => void;
   entry: TimelineEntry | null;
   initialTrackId: string | null;
   onClose: () => void;
@@ -377,34 +459,27 @@ function TimelineEditor({
   const titleRef = useRef<HTMLInputElement>(null);
   const initialTimezone = entry?.occurredTimezone ?? localTimezone();
   const [body, setBody] = useState(entry?.body ?? "");
-  const [datePrecision, setDatePrecision] = useState<TimelineDatePrecision>(
-    entry?.datePrecision ?? "range",
-  );
-  const [endDate, setEndDate] = useState(
-    entry?.occurredEnd
-      ? localDateValue(entry.occurredEnd, initialTimezone)
-      : "",
+  const originalOccurrence = entry ? entryOccurrence(entry) : undefined;
+  const [occurrence, setOccurrence] = useState(() =>
+    occurrenceDraft(
+      originalOccurrence ?? {
+        datePrecision: "unknown",
+        occurredAt: null,
+        occurredEnd: null,
+        occurredLabel: null,
+        occurredTimezone: initialTimezone,
+      },
+    ),
   );
   const [isPending, setIsPending] = useState(false);
   const [kind, setKind] = useState<TimelineKind>(entry?.kind ?? "stage");
-  const [occurredLabel, setOccurredLabel] = useState(
-    entry?.occurredLabel ?? "",
-  );
-  const [occurredTimezone] = useState(initialTimezone);
   const [result, setResult] = useState<TimelineActionResult | null>(null);
-  const [startDate, setStartDate] = useState(
-    entry
-      ? localDateValue(entry.occurredStart, initialTimezone)
-      : localDateValue(new Date().toISOString(), initialTimezone),
-  );
   const [title, setTitle] = useState(entry?.title ?? "");
   const [trackId, setTrackId] = useState(
     entry?.trackId ?? initialTrackId ?? tracks[0]?.id ?? "",
   );
 
   useEffect(() => {
-    titleRef.current?.focus();
-
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape" && !isPending) {
         onClose();
@@ -415,29 +490,36 @@ function TimelineEditor({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isPending, onClose]);
 
+  useEffect(() => {
+    titleRef.current?.focus();
+  }, []);
+
   function changeKind(nextKind: TimelineKind) {
     setKind(nextKind);
-    setEndDate("");
-    setDatePrecision(nextKind === "stage" ? "range" : "day");
+    if (nextKind === "event") setOccurrence((value) => ({ ...value, end: "" }));
     setResult(null);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const occurredStart = localDateToISOString(startDate, occurredTimezone);
-    const occurredEnd =
-      kind === "stage" && endDate
-        ? localDateToISOString(endDate, occurredTimezone)
-        : null;
+    const resolved = resolveOccurrenceDraft(
+      occurrence,
+      originalOccurrence,
+      kind === "stage",
+    );
+    if (!resolved.value) {
+      setResult({ message: resolved.error, status: "error" });
+      return;
+    }
     const input: TimelineEntryInput = {
       body,
-      datePrecision,
+      datePrecision: resolved.value.datePrecision,
       id: entry?.id ?? null,
       kind,
-      occurredEnd,
-      occurredLabel: occurredLabel || null,
-      occurredStart: occurredStart ?? startDate,
-      occurredTimezone,
+      occurredEnd: resolved.value.occurredEnd,
+      occurredLabel: resolved.value.occurredLabel,
+      occurredStart: resolved.value.occurredAt,
+      occurredTimezone: resolved.value.occurredTimezone,
       revision: entry?.revision ?? null,
       title,
       trackId,
@@ -456,6 +538,14 @@ function TimelineEditor({
       const nextResult = await saveTimelineEntry(parsed.data);
 
       if (nextResult.status === "created" || nextResult.status === "saved") {
+        if (nextResult.entryId && nextResult.revision)
+          onSaved({
+            ...parsed.data,
+            id: nextResult.entryId,
+            revision: nextResult.revision,
+            entryType: kind === "stage" ? "life_stage" : "standard",
+            updatedAt: entry?.updatedAt ?? "",
+          });
         router.refresh();
         onClose();
         return;
@@ -492,6 +582,7 @@ function TimelineEditor({
       });
 
       if (nextResult.status === "trashed") {
+        onTrashed(entry.id);
         router.refresh();
         onClose();
         return;
@@ -596,63 +687,15 @@ function TimelineEditor({
               </select>
             </label>
 
-            <label>
-              <span>Date precision</span>
-              <select
-                onChange={(event) =>
-                  setDatePrecision(event.target.value as TimelineDatePrecision)
-                }
-                value={datePrecision}
-              >
-                {precisionOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              <span>{kind === "stage" ? "Start date" : "Date"}</span>
-              <input
-                onChange={(event) => setStartDate(event.target.value)}
-                required
-                type="date"
-                value={startDate}
+            <div className={styles.fullField}>
+              <OccurrenceEditor
+                value={occurrence}
+                onChange={setOccurrence}
+                disabled={isPending}
+                span={kind === "stage"}
+                point={kind === "event"}
               />
-            </label>
-
-            {kind === "stage" ? (
-              <label>
-                <span>
-                  End date <small>Optional</small>
-                </span>
-                <input
-                  min={startDate}
-                  onChange={(event) => setEndDate(event.target.value)}
-                  type="date"
-                  value={endDate}
-                />
-              </label>
-            ) : (
-              <div className={styles.presentNote}>
-                <Icon name="calendar" size={17} />
-                Events appear as a point in time.
-              </div>
-            )}
-
-            <label className={styles.fullField}>
-              <span>
-                Human date label <small>Optional</small>
-              </span>
-              <input
-                maxLength={timelineLabelLimit}
-                onChange={(event) => setOccurredLabel(event.target.value)}
-                placeholder="For example: Ages 12 to 25"
-                value={occurredLabel}
-              />
-              <small>Shown instead of the formatted date when provided.</small>
-            </label>
+            </div>
 
             <label className={styles.fullField}>
               <span>
@@ -715,54 +758,24 @@ function TimelineEditor({
   );
 }
 
-function entryDateLabel(entry: TimelineEntry) {
-  if (entry.occurredLabel) {
-    return entry.occurredLabel;
-  }
-
-  const start = formatTimelineDate(
-    entry.occurredStart,
-    entry.datePrecision,
-    entry.occurredTimezone,
-  );
-
-  if (entry.kind === "event") {
-    return start;
-  }
-
-  const end = entry.occurredEnd
-    ? formatTimelineDate(
-        entry.occurredEnd,
-        entry.datePrecision,
-        entry.occurredTimezone,
-      )
-    : "Present";
-  return `${start} - ${end}`;
+function entryOccurrence(entry: TimelineEntry): Occurrence {
+  return {
+    datePrecision: entry.datePrecision,
+    occurredAt: entry.occurredStart,
+    occurredEnd: entry.occurredEnd,
+    occurredLabel: entry.occurredLabel,
+    occurredTimezone: entry.occurredTimezone,
+  };
 }
-
-function formatTimelineDate(
-  value: string,
-  precision: TimelineDatePrecision,
-  timeZone: string,
-) {
-  const date = new Date(value);
-  const options: Intl.DateTimeFormatOptions =
-    precision === "year"
-      ? { year: "numeric" }
-      : precision === "month"
-        ? { month: "short", year: "numeric" }
-        : { day: "numeric", month: "short", year: "numeric" };
-
-  try {
-    return new Intl.DateTimeFormat("en-US", { ...options, timeZone }).format(
-      date,
-    );
-  } catch {
-    return new Intl.DateTimeFormat("en-US", {
-      ...options,
-      timeZone: "UTC",
-    }).format(date);
-  }
+function entryDateLabel(entry: TimelineEntry) {
+  const label = occurrenceLabel(entryOccurrence(entry));
+  return entry.kind === "stage" &&
+    entry.occurredStart &&
+    !entry.occurredEnd &&
+    !entry.occurredLabel &&
+    entry.datePrecision !== "range"
+    ? label + " onward"
+    : label;
 }
 
 function localTimezone() {

@@ -2,6 +2,8 @@ import SwiftUI
 
 struct OccurrenceEditor: View {
   @Binding var value: OccurrenceDraft
+  var span = false
+  var point = false
   @State private var showCalendar = false
   @State private var choosingEnd = false
   @State private var calendarDate = Date()
@@ -39,17 +41,23 @@ struct OccurrenceEditor: View {
             .buttonStyle(.borderless)
           }
         }
-        if [.range, .approximate, .age].contains(value.precision) {
+        if !point && (span || [.range, .approximate, .age].contains(value.precision)) {
           HStack {
-            TextField("End date YYYY-MM-DD (optional)", text: $value.end)
-              .textInputAutocapitalization(.never).autocorrectionDisabled()
-            Button {
-              chooseCalendar(end: true)
-            } label: {
-              Image(systemName: "calendar")
+            TextField(
+              "End date \(datePlaceholder.replacingOccurrences(of: "Start date ", with: "")) (optional)",
+              text: $value.end
+            )
+            .accessibilityLabel("End date (optional)")
+            .textInputAutocapitalization(.never).autocorrectionDisabled()
+            if ![.month, .year].contains(value.precision) {
+              Button {
+                chooseCalendar(end: true)
+              } label: {
+                Image(systemName: "calendar")
+              }
+              .accessibilityLabel("Choose end date")
+              .buttonStyle(.borderless)
             }
-            .accessibilityLabel("Choose end date")
-            .buttonStyle(.borderless)
           }
         }
       }
@@ -63,7 +71,7 @@ struct OccurrenceEditor: View {
       NavigationStack {
         DatePicker(
           "Occurred", selection: $calendarDate,
-          displayedComponents: value.precision == .exact && !choosingEnd
+          displayedComponents: value.precision == .exact
             ? [.date, .hourAndMinute] : [.date]
         )
         .datePickerStyle(.graphical)
@@ -80,7 +88,7 @@ struct OccurrenceEditor: View {
             Button("Use date") {
               let selected = OccurrenceDraft(
                 EntryOccurrence(
-                  precision: choosingEnd ? .day : value.precision, start: calendarDate, end: nil,
+                  precision: value.precision, start: calendarDate, end: nil,
                   label: nil, timezone: value.timezone)
               ).start
               if choosingEnd { value.end = selected } else { value.start = selected }
@@ -96,7 +104,7 @@ struct OccurrenceEditor: View {
   private func chooseCalendar(end: Bool) {
     choosingEnd = end
     let text = end ? value.end : value.start
-    let local = value.precision == .exact && !end ? text : "\(text)T12:00:00"
+    let local = value.precision == .exact ? text : "\(text)T12:00:00"
     calendarDate = OccurrenceDraft.wallTimeToDate(local, timezone: value.timezone) ?? Date()
     showCalendar = true
   }

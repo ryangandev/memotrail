@@ -30,7 +30,8 @@ The last accepted checkpoint is `a7850b7`.
 | Recoverable Collection links in all four specialized editors          | Deployed        | Shared contract | Shared contract | Pushed 23a8088      |
 | In-place Idea/Standard Entry to Goal conversion and history recovery  | Deployed        | Complete        | Complete        | Pushed 73ec86e      |
 | Recoverable Goal progress links across target Trash and restoration   | Deployed        | Shared contract | Shared contract | Pushed 7dbe553      |
-| Eight-precision Goal achievement with atomic First Time creation      | Deployed        | Complete        | Complete        | This feature commit |
+| Eight-precision Goal achievement with atomic First Time creation      | Deployed        | Complete        | Complete        | Pushed 015feac      |
+| Lossless Timeline dates and unanchored moment visibility              | Deployed        | Complete        | Complete        | This feature commit |
 | Remaining date precision, Entry conversion and relationship gaps      | Audit ongoing   | Audit ongoing   | Audit ongoing   | Pending             |
 | Photo derivative and metadata suggestion gaps                         | Audit pending   | Audit pending   | Audit pending   | Pending             |
 | Final acceptance and production configuration                         | Pending         | Pending         | Pending         | Pending             |
@@ -39,7 +40,8 @@ The last accepted checkpoint is `a7850b7`.
 
 - First Times now preserves all eight precisions and original bounds on both clients; native serialization also retains untouched database microseconds.
 - Goal achievement now supports all eight precisions on both clients, without invented calendar anchors, and atomically creates one linked First Time while retaining original writing.
-- Remaining source-confirmed date gaps include required calendar anchors in Timeline/Homes/Vehicles; broader Entry-link lifecycle checks need follow-up.
+- Timeline now supports nullable dates, precision-aware stage ends, raw exact-time preservation, and visible unanchored moments on both clients.
+- Remaining source-confirmed date gaps include required calendar anchors in Homes/Vehicles; broader Entry-link lifecycle checks need follow-up.
 - Manual Standard/Idea conversion now preserves the same Entry, original content, dates, photos, organization and Inbox state, with matching Web/native controls and reversible history.
 - Goal saves now retain hidden progress links while preserving explicit active-target unlinking; restoration and later removal are verified through the real Web editor and shared authenticated RPC.
 - First Times, Homes, Vehicles, and Goals now retain trashed Collection membership when saving, with active-link removal and restored Collection browsing verified through all four real Web editors and shared authenticated RPCs.

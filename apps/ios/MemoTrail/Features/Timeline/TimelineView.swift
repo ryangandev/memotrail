@@ -417,12 +417,7 @@ private struct TimelineEditorSheet: View {
   @State private var kind: TimelineKind
   @State private var title: String
   @State private var note: String
-  @State private var occurredStart: Date
-  @State private var occurredEnd: Date
-  @State private var hasEndDate: Bool
-  @State private var datePrecision: TimelineDatePrecision
-  @State private var occurredLabel: String
-  @State private var occurredTimezone: String
+  @State private var occurrence: OccurrenceDraft
   @State private var isWorking = false
   @State private var errorMessage: String?
   @State private var isConfirmingTrash = false
@@ -440,14 +435,12 @@ private struct TimelineEditorSheet: View {
     _kind = State(initialValue: entry?.kind ?? .stage)
     _title = State(initialValue: entry?.title ?? "")
     _note = State(initialValue: entry?.body ?? "")
-    _occurredStart = State(initialValue: entry?.occurredStart ?? Date())
-    _occurredEnd = State(initialValue: entry?.occurredEnd ?? Date())
-    _hasEndDate = State(initialValue: entry?.occurredEnd != nil)
-    _datePrecision = State(initialValue: entry?.datePrecision ?? .range)
-    _occurredLabel = State(initialValue: entry?.occurredLabel ?? "")
-    _occurredTimezone = State(
-      initialValue: entry?.occurredTimezone ?? TimeZone.current.identifier
-    )
+    _occurrence = State(
+      initialValue: OccurrenceDraft(
+        entry?.occurrence
+          ?? EntryOccurrence(
+            precision: .unknown, start: nil, end: nil, label: nil,
+            timezone: TimeZone.current.identifier)))
   }
 
   var body: some View {
@@ -484,34 +477,8 @@ private struct TimelineEditorSheet: View {
             }
           }
 
-          Picker("Date precision", selection: $datePrecision) {
-            ForEach(precisionOptions, id: \.self) { precision in
-              Text(precision.displayName).tag(precision)
-            }
-          }
-
-          DatePicker(
-            kind == .stage ? "Start date" : "Date",
-            selection: $occurredStart,
-            displayedComponents: .date
-          )
-
-          if kind == .stage {
-            Toggle("Has end date", isOn: $hasEndDate)
-
-            if hasEndDate {
-              DatePicker(
-                "End date",
-                selection: $occurredEnd,
-                in: occurredStart...,
-                displayedComponents: .date
-              )
-            }
-          }
-
-          TextField("Human date label (optional)", text: $occurredLabel)
-            .textInputAutocapitalization(.sentences)
         }
+        OccurrenceEditor(value: $occurrence, span: kind == .stage, point: kind == .event)
 
         if let errorMessage {
           Section {
@@ -546,24 +513,7 @@ private struct TimelineEditorSheet: View {
           note = String(note.prefix(TimelineEntryInput.bodyLimit))
         }
       }
-      .onChange(of: occurredLabel) {
-        if occurredLabel.count > TimelineEntryInput.labelLimit {
-          occurredLabel = String(occurredLabel.prefix(TimelineEntryInput.labelLimit))
-        }
-      }
-      .onChange(of: occurredStart) {
-        occurredTimezone = TimeZone.current.identifier
-        if occurredEnd < occurredStart {
-          occurredEnd = occurredStart
-        }
-      }
-      .onChange(of: occurredEnd) {
-        occurredTimezone = TimeZone.current.identifier
-      }
-      .onChange(of: kind) {
-        hasEndDate = false
-        datePrecision = kind == .stage ? .range : .day
-      }
+      .onChange(of: kind) { if kind == .event { occurrence.end = "" } }
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Cancel") { dismiss() }
@@ -603,14 +553,19 @@ private struct TimelineEditorSheet: View {
     .interactiveDismissDisabled(isWorking)
   }
 
-  private var precisionOptions: [TimelineDatePrecision] {
-    [.day, .month, .year, .approximate, .age, .range, .unknown]
-  }
-
   @MainActor
   private func save() async {
     isWorking = true
     errorMessage = nil
+
+    let resolved: EntryOccurrence
+    do {
+      resolved = try occurrence.resolve(original: entry?.occurrence, span: kind == .stage)
+    } catch {
+      isWorking = false
+      errorMessage = error.localizedDescription
+      return
+    }
 
     let result = await controller.save(
       entry: entry,
@@ -618,11 +573,11 @@ private struct TimelineEditorSheet: View {
       kind: kind,
       title: title,
       body: note,
-      occurredStart: occurredStart,
-      occurredEnd: kind == .stage && hasEndDate ? occurredEnd : nil,
-      datePrecision: datePrecision,
-      occurredLabel: occurredLabel,
-      occurredTimezone: occurredTimezone
+      occurredStart: resolved.start,
+      occurredEnd: resolved.end,
+      datePrecision: resolved.precision,
+      occurredLabel: resolved.label ?? "",
+      occurredTimezone: resolved.timezone
     )
 
     isWorking = false

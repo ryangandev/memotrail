@@ -65,13 +65,22 @@ struct TimelineEntry: Equatable, Hashable, Identifiable, Sendable {
   let body: String
   let entryType: String
   let kind: TimelineKind
-  let occurredStart: Date
+  let occurredStart: Date?
   let occurredEnd: Date?
   let datePrecision: TimelineDatePrecision
   let occurredLabel: String?
   let occurredTimezone: String
   let revision: Int
   let updatedAt: Date
+
+  var occurredStartRaw: String? = nil
+  var occurredEndRaw: String? = nil
+
+  var occurrence: EntryOccurrence {
+    EntryOccurrence(
+      precision: datePrecision, start: occurredStart, end: occurredEnd, label: occurredLabel,
+      timezone: occurredTimezone)
+  }
 
   var specializedEditor: TimelineSpecializedEditor? {
     switch entryType {
@@ -82,33 +91,11 @@ struct TimelineEntry: Equatable, Hashable, Identifiable, Sendable {
   }
 
   var displayDate: String {
-    if let occurredLabel = occurredLabel?.trimmed.nonEmpty {
-      return occurredLabel
-    }
-
-    let start = formatted(occurredStart)
-
-    guard kind == .stage else { return start }
-    let end = occurredEnd.map(formatted) ?? "Present"
-    return "\(start) - \(end)"
+    let label = occurrence.displayLabel
+    return kind == .stage && occurredStart != nil && occurredEnd == nil && occurredLabel == nil
+      && datePrecision != .range ? label + " onward" : label
   }
 
-  private func formatted(_ date: Date) -> String {
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "en_US")
-    formatter.timeZone = TimeZone(identifier: occurredTimezone) ?? .gmt
-
-    switch datePrecision {
-    case .year:
-      formatter.setLocalizedDateFormatFromTemplate("yyyy")
-    case .month:
-      formatter.setLocalizedDateFormatFromTemplate("MMM yyyy")
-    default:
-      formatter.setLocalizedDateFormatFromTemplate("MMM d, yyyy")
-    }
-
-    return formatter.string(from: date)
-  }
 }
 
 struct TimelineTrack: Equatable, Identifiable, Sendable {
@@ -138,6 +125,8 @@ struct TimelineWorkspaceRow: Decodable, Equatable, Sendable {
   let occurredTimezone: String?
   let revision: Int?
   let updatedAt: Date?
+  var occurredStartRaw: String? = nil
+  var occurredEndRaw: String? = nil
 
   enum CodingKeys: String, CodingKey {
     case trackID = "track_id"
@@ -167,7 +156,6 @@ struct TimelineWorkspaceRow: Decodable, Equatable, Sendable {
       let entryType = entryType?.trimmed.nonEmpty,
       let timelineKind,
       let kind = TimelineKind(rawValue: timelineKind),
-      let occurredStart,
       let revision,
       revision > 0,
       let updatedAt
@@ -188,7 +176,9 @@ struct TimelineWorkspaceRow: Decodable, Equatable, Sendable {
       occurredLabel: occurredLabel?.trimmed.nonEmpty,
       occurredTimezone: occurredTimezone?.trimmed.nonEmpty ?? "UTC",
       revision: revision,
-      updatedAt: updatedAt
+      updatedAt: updatedAt,
+      occurredStartRaw: occurredStartRaw,
+      occurredEndRaw: occurredEndRaw
     )
   }
 }
@@ -222,7 +212,7 @@ enum TimelineWorkspace {
         track.entries.sort {
           $0.occurredStart == $1.occurredStart
             ? $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
-            : $0.occurredStart < $1.occurredStart
+            : ($0.occurredStart ?? .distantFuture) < ($1.occurredStart ?? .distantFuture)
         }
         return track
       }
@@ -245,11 +235,22 @@ struct TimelineEntryInput: Equatable, Sendable {
   let kind: TimelineKind
   let title: String
   let body: String
-  let occurredStart: Date
+  let occurredStart: Date?
   let occurredEnd: Date?
   let datePrecision: TimelineDatePrecision
   let occurredLabel: String?
   let occurredTimezone: String
+
+  var occurredStartRaw: String? = nil
+  var occurredEndRaw: String? = nil
+
+  mutating func preserveUnchangedBounds(from original: TimelineEntry?) {
+    guard let original, original.datePrecision == datePrecision,
+      original.occurredTimezone == occurredTimezone
+    else { return }
+    if original.occurredStart == occurredStart { occurredStartRaw = original.occurredStartRaw }
+    if original.occurredEnd == occurredEnd { occurredEndRaw = original.occurredEndRaw }
+  }
 
   static func validate(
     entryID: UUID?,
@@ -258,7 +259,7 @@ struct TimelineEntryInput: Equatable, Sendable {
     kind: TimelineKind,
     title: String,
     body: String,
-    occurredStart: Date,
+    occurredStart: Date?,
     occurredEnd: Date?,
     datePrecision: TimelineDatePrecision,
     occurredLabel: String,
@@ -275,7 +276,7 @@ struct TimelineEntryInput: Equatable, Sendable {
     guard (occurredLabel?.count ?? 0) <= labelLimit else {
       throw TimelineEntryError.labelTooLong
     }
-    guard occurredStart.timeIntervalSinceReferenceDate.isFinite,
+    guard occurredStart?.timeIntervalSinceReferenceDate.isFinite ?? true,
       occurredEnd?.timeIntervalSinceReferenceDate.isFinite ?? true
     else {
       throw TimelineEntryError.invalidDate
@@ -283,12 +284,16 @@ struct TimelineEntryInput: Equatable, Sendable {
     guard kind == .stage || occurredEnd == nil else {
       throw TimelineEntryError.eventHasEnd
     }
-    guard occurredEnd.map({ $0 >= occurredStart }) ?? true else {
+    guard occurredEnd.map({ end in occurredStart.map { end >= $0 } ?? false }) ?? true else {
       throw TimelineEntryError.reversedRange
     }
     guard !occurredTimezone.isEmpty, occurredTimezone.count <= 100 else {
       throw TimelineEntryError.invalidTimezone
     }
+    try EntryOccurrence(
+      precision: datePrecision, start: occurredStart, end: occurredEnd, label: occurredLabel,
+      timezone: occurredTimezone
+    ).validate(span: kind == .stage)
     guard
       (entryID == nil && expectedRevision == nil)
         || (entryID != nil && (expectedRevision ?? 0) > 0)
@@ -335,11 +340,20 @@ struct SaveTimelineEntryParameters: Encodable, Equatable, Sendable {
     try values.encode(input.kind, forKey: .kind)
     try values.encode(input.title, forKey: .title)
     try values.encode(input.body, forKey: .body)
-    try values.encode(input.occurredStart, forKey: .occurredStart)
+    if let raw = input.occurredStartRaw {
+      try values.encode(raw, forKey: .occurredStart)
+    } else {
+      try values.encodeIfPresent(input.occurredStart, forKey: .occurredStart)
+      if input.occurredStart == nil { try values.encodeNil(forKey: .occurredStart) }
+    }
     try values.encode(input.datePrecision, forKey: .datePrecision)
     try values.encode(input.occurredTimezone, forKey: .occurredTimezone)
-    try values.encodeIfPresent(input.occurredEnd, forKey: .occurredEnd)
-    if input.occurredEnd == nil { try values.encodeNil(forKey: .occurredEnd) }
+    if let raw = input.occurredEndRaw {
+      try values.encode(raw, forKey: .occurredEnd)
+    } else {
+      try values.encodeIfPresent(input.occurredEnd, forKey: .occurredEnd)
+      if input.occurredEnd == nil { try values.encodeNil(forKey: .occurredEnd) }
+    }
     try values.encodeIfPresent(input.occurredLabel, forKey: .occurredLabel)
     if input.occurredLabel == nil { try values.encodeNil(forKey: .occurredLabel) }
     try values.encodeIfPresent(input.entryID, forKey: .entryID)
@@ -409,5 +423,30 @@ enum TimelineEntryError: LocalizedError, Equatable {
     case .titleTooLong:
       "Titles can be up to \(TimelineEntryInput.titleLimit) characters."
     }
+  }
+}
+
+extension TimelineWorkspaceRow {
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    trackID = try values.decode(UUID.self, forKey: .trackID)
+    trackName = try values.decode(String.self, forKey: .trackName)
+    trackSystemKey = try values.decodeIfPresent(String.self, forKey: .trackSystemKey)
+    trackSortOrder = try values.decode(Int.self, forKey: .trackSortOrder)
+    trackIsHidden = try values.decode(Bool.self, forKey: .trackIsHidden)
+    entryID = try values.decodeIfPresent(UUID.self, forKey: .entryID)
+    title = try values.decodeIfPresent(String.self, forKey: .title)
+    body = try values.decodeIfPresent(String.self, forKey: .body)
+    entryType = try values.decodeIfPresent(String.self, forKey: .entryType)
+    timelineKind = try values.decodeIfPresent(String.self, forKey: .timelineKind)
+    occurredStart = try values.decodeIfPresent(Date.self, forKey: .occurredStart)
+    occurredEnd = try values.decodeIfPresent(Date.self, forKey: .occurredEnd)
+    datePrecision = try values.decodeIfPresent(String.self, forKey: .datePrecision)
+    occurredLabel = try values.decodeIfPresent(String.self, forKey: .occurredLabel)
+    occurredTimezone = try values.decodeIfPresent(String.self, forKey: .occurredTimezone)
+    revision = try values.decodeIfPresent(Int.self, forKey: .revision)
+    updatedAt = try values.decodeIfPresent(Date.self, forKey: .updatedAt)
+    occurredStartRaw = try values.decodeIfPresent(String.self, forKey: .occurredStart)
+    occurredEndRaw = try values.decodeIfPresent(String.self, forKey: .occurredEnd)
   }
 }

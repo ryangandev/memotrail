@@ -105,6 +105,29 @@ describe("precision-aware occurrence", () => {
       resolveOccurrenceDraft({ ...draft, label: "x".repeat(201) }).error,
     ).toBeDefined();
   });
+  it("supports precision-aware stage ends without relaxing ordinary Entry validation", () => {
+    for (const [precision, start, end] of [
+      ["year", "2017", "2023"],
+      ["month", "2017-07", "2023-06"],
+      ["exact", "2017-07-08T01:30:01", "2023-06-01T02:00:01"],
+    ] as const) {
+      const result = resolveOccurrenceDraft(
+        { precision, start, end, label: "", timezone: "Asia/Kathmandu" },
+        undefined,
+        true,
+      );
+      expect(result.value?.occurredEnd).not.toBeNull();
+      expect(validateOccurrence(result.value!, true)).toBeNull();
+      expect(validateOccurrence(result.value!)).not.toBeNull();
+      expect(
+        resolveOccurrenceDraft(
+          { precision, start: end, end: start, label: "", timezone: "UTC" },
+          undefined,
+          true,
+        ).error,
+      ).toBeDefined();
+    }
+  });
   it("rejects invalid partial dates rather than silently converting them", () => {
     for (const [precision, start] of [
       ["year", "20"],

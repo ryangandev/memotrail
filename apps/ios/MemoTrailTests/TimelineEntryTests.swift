@@ -3,6 +3,65 @@ import XCTest
 @testable import MemoTrail
 
 final class TimelineEntryTests: XCTestCase {
+  func testUnanchoredMomentsRemainVisibleAndSpanPrecisionsKeepTheirEnd() throws {
+    let id = UUID()
+    let row = makeRow(
+      entryID: id, title: "Childhood", occurredStart: nil, occurredLabel: "Ages 1 to 12")
+    XCTAssertEqual(TimelineWorkspace.tracks(from: [row]).first?.entries.first?.id, id)
+    XCTAssertNil(row.entry?.occurredStart)
+    XCTAssertEqual(row.entry?.displayDate, "Ages 1 to 12")
+    for precision in [TimelineDatePrecision.age, .approximate, .unknown] {
+      let input = try TimelineEntryInput.validate(
+        entryID: nil, expectedRevision: nil, trackID: UUID(), kind: .stage, title: "Childhood",
+        body: "", occurredStart: nil, occurredEnd: nil, datePrecision: precision,
+        occurredLabel: precision == .unknown ? "" : "Ages 1 to 12", occurredTimezone: "UTC")
+      let json = try XCTUnwrap(
+        JSONSerialization.jsonObject(
+          with: JSONEncoder().encode(SaveTimelineEntryParameters(input: input))) as? [String: Any])
+      XCTAssertTrue(json["p_occurred_start"] is NSNull)
+      XCTAssertTrue(json["p_occurred_end"] is NSNull)
+    }
+    var draft = OccurrenceDraft(
+      EntryOccurrence(
+        precision: .year, start: nil, end: nil, label: nil, timezone: "Asia/Kathmandu"))
+    draft.start = "2017"
+    draft.end = "2023"
+    let span = try draft.resolve(span: true)
+    XCTAssertNotNil(span.end)
+    XCTAssertNoThrow(try span.validate(span: true))
+    XCTAssertThrowsError(try span.validate())
+    draft.end = "2016"
+    XCTAssertThrowsError(try draft.resolve(span: true))
+  }
+
+  func testExactTimelineSerializationPreservesDatabaseMicroseconds() throws {
+    let json = """
+      {"track_id":"10000000-0000-4000-8000-000000000001","track_name":"Life","track_sort_order":1,"track_is_hidden":false,"entry_id":"20000000-0000-4000-8000-000000000001","title":"A moment","body":"Original","entry_type":"standard","timeline_kind":"event","occurred_start":"2026-11-01T09:30:00.123456Z","date_precision":"exact","occurred_timezone":"America/Los_Angeles","revision":1,"updated_at":"2026-09-12T12:00:00Z"}
+      """
+    // Match the Supabase SDK's fractional-second decoding behavior.
+    let jsonDecoder = JSONDecoder()
+    jsonDecoder.dateDecodingStrategy = .custom { decoder in
+      let text = try decoder.singleValueContainer().decode(String.self)
+      let formatter = ISO8601DateFormatter()
+      formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+      if let date = formatter.date(from: text) { return date }
+      formatter.formatOptions = [.withInternetDateTime]
+      return try XCTUnwrap(formatter.date(from: text))
+    }
+    let row = try jsonDecoder.decode(TimelineWorkspaceRow.self, from: Data(json.utf8))
+    let entry = try XCTUnwrap(row.entry)
+    let resolved = try OccurrenceDraft(entry.occurrence).resolve(original: entry.occurrence)
+    var input = try TimelineEntryInput.validate(
+      entryID: entry.id, expectedRevision: entry.revision, trackID: entry.trackID, kind: .event,
+      title: entry.title, body: entry.body, occurredStart: resolved.start, occurredEnd: nil,
+      datePrecision: .exact, occurredLabel: "", occurredTimezone: entry.occurredTimezone)
+    input.preserveUnchangedBounds(from: entry)
+    let encoded = try XCTUnwrap(
+      JSONSerialization.jsonObject(
+        with: JSONEncoder().encode(SaveTimelineEntryParameters(input: input))) as? [String: Any])
+    XCTAssertEqual(encoded["p_occurred_start"] as? String, "2026-11-01T09:30:00.123456Z")
+  }
+
   func testWorkspaceDecodesEmptyAndPopulatedTracks() throws {
     let json = """
       [
@@ -103,7 +162,7 @@ final class TimelineEntryTests: XCTestCase {
       title: "California",
       occurredStart: Date(timeIntervalSince1970: 100)
     )
-    XCTAssertTrue(withoutLabel.entry?.displayDate.hasSuffix(" - Present") == true)
+    XCTAssertTrue(withoutLabel.entry?.displayDate.hasSuffix(" onward") == true)
   }
 
   func testSpecializedEntryTypesRouteToTheirOwnedEditors() throws {

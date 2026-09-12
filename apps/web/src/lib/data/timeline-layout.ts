@@ -2,7 +2,7 @@ export type TimelineLayoutSource = {
   id: string;
   kind: "event" | "stage";
   occurredEnd: string | null;
-  occurredStart: string;
+  occurredStart: string | null;
   trackId: string;
 };
 
@@ -138,7 +138,8 @@ export function createTimelineLayout(
   };
 }
 
-function validTime(value: string) {
+function validTime(value: string | null) {
+  if (value === null) return null;
   const time = new Date(value).getTime();
   return Number.isNaN(time) ? null : time;
 }

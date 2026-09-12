@@ -793,3 +793,43 @@
     transition: none;
   }
 }
+.undatedMoments {
+  border-top: 1px solid var(--mt-color-border);
+  padding: 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.undatedMoments p {
+  color: var(--mt-color-ink-muted);
+}
+
+.undatedMoments h2 {
+  font-family: var(--mt-font-family-serif);
+  font-weight: var(--mt-font-weight-medium);
+}
+.undatedMoments h3 {
+  font-size: var(--mt-font-size-caption);
+  color: var(--mt-color-ink-muted);
+}
+.summary > a {
+  color: var(--mt-color-accent);
+  text-decoration: none;
+}
+.summary > a:hover {
+  text-decoration: underline;
+}
+.undatedMoments div {
+  display: grid;
+  gap: 8px;
+}
+.undatedMoments button,
+.undatedMoments a {
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--mt-color-border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+}
