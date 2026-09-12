@@ -2,6 +2,34 @@
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { validHistoryRestore } from "@/lib/data/history";
+import {
+  parseGoalConversionInput,
+  type GoalConversionInput,
+} from "@/lib/data/goal-record-input";
+
+export async function convertEntryToGoal(
+  input: GoalConversionInput,
+): Promise<string | null> {
+  const parsed = parseGoalConversionInput(input);
+  if (!parsed.success) return parsed.message;
+  const context = await getAuthenticatedContext();
+  if (!context) return "Sign in again to convert this Entry.";
+  const value = parsed.data;
+  const { data, error } = await context.client.rpc("convert_entry_to_goal", {
+    p_entry_id: value.id,
+    p_expected_revision: value.revision,
+    p_title: value.title,
+    p_horizon: value.horizon,
+    p_status: value.status,
+    p_target_date: value.targetDate,
+  });
+  if (error)
+    return "Could not confirm conversion. Refresh to check the current Entry before retrying.";
+  if (!data)
+    return "This Entry changed, is in Trash, or is no longer Standard. Refresh before converting.";
+  revalidatePath("/", "layout");
+  return null;
+}
 export async function restoreHistoryVersion(
   id: string,
   version: number,

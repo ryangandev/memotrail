@@ -3,6 +3,36 @@ import XCTest
 @testable import MemoTrail
 
 final class LibraryDestinationTests: XCTestCase {
+  func testGoalConversionPreservesIdentityAndExplicitNullTarget() throws {
+    let id = UUID()
+    let input = GoalConversionRequest(
+      entryID: id, expectedRevision: 5, title: " 学习 ", horizon: .someday, status: .considering,
+      targetDate: nil)
+    XCTAssertTrue(input.isValid)
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(input)) as? [String: Any])
+    XCTAssertEqual(json["p_entry_id"] as? String, id.uuidString)
+    XCTAssertEqual(json["p_title"] as? String, "学习")
+    XCTAssertEqual(json["p_expected_revision"] as? Int, 5)
+    XCTAssertEqual(json["p_horizon"] as? String, "someday")
+    XCTAssertTrue(json["p_target_date"] is NSNull)
+    XCTAssertNil(json["p_body"])
+    XCTAssertFalse(
+      GoalConversionRequest(
+        entryID: id, expectedRevision: 0, title: "Idea", horizon: .someday, status: .active,
+        targetDate: nil
+      ).isValid)
+    XCTAssertFalse(
+      GoalConversionRequest(
+        entryID: id, expectedRevision: 1, title: " ", horizon: .someday, status: .active,
+        targetDate: nil
+      ).isValid)
+    XCTAssertFalse(
+      GoalConversionRequest(
+        entryID: id, expectedRevision: 1, title: "Idea", horizon: .someday, status: .active,
+        targetDate: "2026-02-30"
+      ).isValid)
+  }
   func testOrganizationInputAndCollectionTrashPreserveRPCContracts() throws {
     let request = OrganizationSaveRequest(
       kind: .collection, name: " 学习 ", sortOrder: -1, id: nil, expectedRevision: nil)

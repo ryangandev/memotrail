@@ -49,6 +49,42 @@ export type GoalAchievementInput = {
   revision: number;
 };
 
+export type GoalConversionInput = Pick<
+  GoalEntryInput,
+  "title" | "horizon" | "status" | "targetDate"
+> & { id: string; revision: number };
+
+export function parseGoalConversionInput(
+  input: unknown,
+): Parsed<GoalConversionInput> {
+  if (
+    !isRecord(input) ||
+    typeof input.id !== "string" ||
+    typeof input.revision !== "number"
+  )
+    return invalid("Choose a current Entry to convert.");
+  const parsed = parseGoalEntryInput({
+    ...input,
+    body: "",
+    collectionNames: [],
+    tagNames: [],
+    relatedEntryIds: [],
+  });
+  if (!parsed.success) return parsed;
+  const { title, horizon, status, targetDate } = parsed.data;
+  return {
+    success: true,
+    data: {
+      id: input.id,
+      revision: input.revision,
+      title,
+      horizon,
+      status,
+      targetDate,
+    },
+  };
+}
+
 type Parsed<T> =
   { data: T; success: true } | { message: string; success: false };
 

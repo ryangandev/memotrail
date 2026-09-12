@@ -54,6 +54,15 @@ The legacy First Times mutation rejects writes that cannot preserve existing ran
 First Times also retains confirmed saved revisions during Web refresh and focuses the title only on editor mount.
 Other specialized editors and broad date-filter semantics remain in the separate cross-product precision audit.
 
+## In-place Goal conversion
+
+The authenticated `convert_entry_to_goal` mutation locks the current owned Standard Entry and applies explicit title and Goal fields at the expected revision.
+It leaves writing, occurrence metadata, Inbox state, organization, media, and relationships untouched, and the existing history trigger captures the complete pre-conversion state before the Goal detail row is added.
+An identical immediate retry returns the already-confirmed revision; mismatched, stale, deleted, cross-owner, or other-specialized-Type requests cannot overwrite the source.
+Restoring history can return to Standard or restore the prior Goal details without creating a duplicate Entry.
+Subsequent Goal saves preserve original occurrence metadata; target dates remain separate calendar-only planning fields.
+Web and native expose the same confirmed conversion fields from the current Entry/history reader and reuse existing Goal validation and enum definitions.
+
 ## AI architecture
 
 ### Retrieval evidence boundary

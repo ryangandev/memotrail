@@ -187,6 +187,40 @@ struct HistoryRestoreRequest: Encodable {
   }
 }
 
+struct GoalConversionRequest: Encodable {
+  let entryID: UUID
+  let expectedRevision: Int
+  let title: String
+  let horizon: GoalHorizon
+  let status: GoalStatus
+  let targetDate: String?
+  var isValid: Bool {
+    expectedRevision > 0 && !title.trimmed.isEmpty && title.trimmed.count <= 200
+      && (targetDate.map(GoalCalendarDate.isValid) ?? true)
+  }
+  enum CodingKeys: String, CodingKey {
+    case entryID = "p_entry_id"
+    case expectedRevision = "p_expected_revision"
+    case title = "p_title"
+    case horizon = "p_horizon"
+    case status = "p_status"
+    case targetDate = "p_target_date"
+  }
+  func encode(to encoder: Encoder) throws {
+    var values = encoder.container(keyedBy: CodingKeys.self)
+    try values.encode(entryID, forKey: .entryID)
+    try values.encode(expectedRevision, forKey: .expectedRevision)
+    try values.encode(title.trimmed, forKey: .title)
+    try values.encode(horizon, forKey: .horizon)
+    try values.encode(status, forKey: .status)
+    if let targetDate {
+      try values.encode(targetDate, forKey: .targetDate)
+    } else {
+      try values.encodeNil(forKey: .targetDate)
+    }
+  }
+}
+
 struct EntryHistoryIndexView: View {
   let client: SupabaseClient
   let ownerID: UUID
@@ -271,6 +305,7 @@ struct EntryHistoryDetailView: View {
   @State private var busy = false
   @State private var message: String?
   @State private var confirmRestore = false
+  @State private var showConversion = false
   var selectedVersion: EntryHistoryVersion? { record?.versions.first { $0.version == selected } }
   var body: some View {
     ScrollView {
@@ -280,6 +315,13 @@ struct EntryHistoryDetailView: View {
           if !record.isDeleted {
             NavigationLink("Explore with AI") {
               ExplorationView(client: client, ownerID: ownerID, entryID: entryID)
+            }
+            if record.current["entry_type"]?.text == "standard" {
+              Button("Convert to Goal") { showConversion = true }.disabled(busy)
+            } else if record.current["entry_type"]?.text == "goal" {
+              NavigationLink("Open Goals") {
+                GoalsView(client: client, ownerID: ownerID, embedded: true)
+              }
             }
           }
           ForEach(Array((record.current["links"]?.array ?? []).enumerated()), id: \.offset) {
@@ -341,6 +383,13 @@ struct EntryHistoryDetailView: View {
         Button("Refresh") { Task { await load(nextPage: 0) } }.disabled(busy)
       }.padding()
     }.background(MTColor.canvas).navigationTitle("Version history").task { await load(nextPage: 0) }
+      .sheet(isPresented: $showConversion) {
+        if let record {
+          GoalConversionSheet(client: client, ownerID: ownerID, entryID: entryID, record: record) {
+            await load(nextPage: 0)
+          }
+        }
+      }
       .confirmationDialog(
         "Restore version \(selected)?", isPresented: $confirmRestore, titleVisibility: .visible
       ) {
@@ -406,6 +455,84 @@ struct EntryHistoryDetailView: View {
         message =
           "Could not confirm restoration. Refresh to check the latest version before trying again."
       }
+    }
+  }
+}
+
+private struct GoalConversionSheet: View {
+  let client: SupabaseClient
+  let ownerID: UUID
+  let entryID: UUID
+  let record: EntryHistoryRecord
+  let onConverted: () async -> Void
+  @Environment(\.dismiss) private var dismiss
+  @State private var title = ""
+  @State private var horizon: GoalHorizon = .someday
+  @State private var status: GoalStatus = .considering
+  @State private var hasTargetDate = false
+  @State private var targetDate = Date()
+  @State private var busy = false
+  @State private var message: String?
+  var body: some View {
+    NavigationStack {
+      Form {
+        Section {
+          TextField("Goal title", text: $title)
+          Picker("Horizon", selection: $horizon) {
+            ForEach(GoalHorizon.allCases, id: \.self) { Text($0.displayName).tag($0) }
+          }
+          Picker("Status", selection: $status) {
+            ForEach(GoalStatus.allCases, id: \.self) { Text($0.displayName).tag($0) }
+          }
+          Toggle("Target date", isOn: $hasTargetDate)
+          if hasTargetDate {
+            DatePicker("Target date", selection: $targetDate, displayedComponents: .date)
+              .environment(\.timeZone, .gmt)
+          }
+        } footer: {
+          Text(
+            "This keeps the same Entry, original writing, dates, photos, links, and Inbox state. No copy or Bucket List membership is created. You can restore the Standard version through history."
+          )
+        }
+        if let message { Text(message).foregroundStyle(MTColor.warm) }
+        Button(busy ? "Converting..." : "Convert this Entry") { Task { await convert() } }
+      }.disabled(busy).navigationTitle("Convert to Goal")
+        .toolbar {
+          ToolbarItem(placement: .cancellationAction) {
+            Button("Cancel") { dismiss() }.disabled(busy)
+          }
+        }
+        .onAppear { title = record.current["title"]?.text ?? "" }
+    }.tint(MTColor.accent).interactiveDismissDisabled(busy)
+  }
+  private func convert() async {
+    guard !busy else { return }
+    let request = GoalConversionRequest(
+      entryID: entryID, expectedRevision: record.revision, title: title, horizon: horizon,
+      status: status, targetDate: hasTargetDate ? GoalCalendarDate.string(from: targetDate) : nil)
+    guard request.isValid else {
+      message = "Add a title up to 200 characters and a valid optional target date."
+      return
+    }
+    busy = true
+    message = nil
+    defer { busy = false }
+    do {
+      guard try await client.auth.session.user.id == ownerID else {
+        throw URLError(.userAuthenticationRequired)
+      }
+      let revision: Int? = try await client.rpc("convert_entry_to_goal", params: request).execute()
+        .value
+      guard revision != nil else {
+        message =
+          "This Entry changed, is in Trash, or is no longer Standard. Close and refresh before converting."
+        return
+      }
+      await onConverted()
+      dismiss()
+    } catch {
+      message =
+        "Could not confirm conversion. Close and refresh to check the current Entry before retrying."
     }
   }
 }

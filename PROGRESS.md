@@ -6,6 +6,24 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### In-place Idea-to-Goal conversion across Web and iOS
+
+- Added explicit Convert to Goal controls to both current Entry/history readers for non-Trash Standard Entries, independent of the editable Ideas Collection name.
+- The user confirms title, horizon, status, and optional calendar-only target date; defaults are Someday and Considering with no deadline or implicit Bucket List membership.
+- The atomic owner/revision-checked conversion reuses the Entry UUID and leaves original writing, occurrence metadata, Inbox status, photos, organization, and links unchanged.
+- Immediate identical lost-response retries return the confirmed revision without another history snapshot; concurrent identical requests also yield one Goal.
+- Complete pre-conversion history allows restoration to Standard and re-restoration of the Goal details; later Goal saves now preserve the original Idea's occurrence dates.
+- Authenticated browser acceptance covers cancellation, custom fields, real Goal editor saves, original photo-byte equality, date ranges with microseconds, history restoration, and concurrent retry behavior.
+- Dedicated database coverage verifies unchanged raw writing and metadata, no duplicate Entry/grouping, history, stale and mismatched retries, other owners, Trash, invalid fields, and rejection of other specialized Types.
+- Local database regression passes 1,058 assertions, Web unit/server coverage passes 292 tests, and native simulator coverage executes 173 tests with no failures or skips.
+- All eighteen authenticated browser/API scenarios pass; desktop/light and 390-pixel/dark conversion layouts were inspected, with a two-column desktop form and single-column mobile form.
+- Migration `202609120013_goal_conversion.sql` is deployed with a matching ledger and warning-free hosted schema lint, without seeds, backfills, or role changes.
+- Production build, lint, type checking, repository formatting, Swift formatting, and diff whitespace checks pass.
+- Conversion fixtures and original test media are removed; no provider calls were made, and local AI accounting remains 51 completed requests totaling $0.052147 with no outstanding reservations.
+- The known Next client-aborted response-stream log still appears during rapid navigation; it remains explicitly tracked for final acceptance and is not reported as fixed.
+- Native interactive acceptance remains part of the final unlocked-Mac validation; compilation and serialization tests are not a substitute for real native taps.
+- Remaining scope still includes other specialized date precision, broader Entry-link lifecycle, photo derivatives/metadata, and final production/native acceptance.
+
 ### Preserve recoverable Collection membership in specialized editors
 
 - Reproduced membership loss through each real Web editor: First Times, Homes, Vehicles, and Goals silently detached an Entry from a trashed Collection when saving unrelated fields.

@@ -2,7 +2,17 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { restoreHistoryVersion } from "@/app/history/actions";
+import {
+  restoreHistoryVersion,
+  convertEntryToGoal,
+} from "@/app/history/actions";
+import {
+  goalHorizons,
+  goalStatuses,
+  type GoalHorizon,
+  type GoalStatus,
+} from "@/lib/data/goal-record-input";
+import { goalHorizonLabels, goalStatusLabels } from "@/lib/data/goal-record";
 import {
   historyTitle,
   historyDifferences,
@@ -57,6 +67,18 @@ export function EntryHistoryView({
         <Link href={`/explore?entry=${history.current.id}`}>
           Explore with AI
         </Link>
+      )}
+      {!history.current.deleted_at &&
+        history.current.entry_type === "standard" && (
+          <GoalConversion
+            key={`${history.current.id}:${history.current.revision}`}
+            entry={history.current}
+            disabled={busy}
+            onBusyChange={setBusy}
+          />
+        )}
+      {!history.current.deleted_at && history.current.entry_type === "goal" && (
+        <Link href={`/goals?entry=${history.current.id}`}>Open Goal</Link>
       )}
       {Array.isArray(history.current.links) &&
         history.current.links.map(
@@ -164,6 +186,125 @@ export function EntryHistoryView({
         )}
       </nav>
     </>
+  );
+}
+function GoalConversion({
+  entry,
+  disabled,
+  onBusyChange,
+}: {
+  entry: HistorySnapshot;
+  disabled: boolean;
+  onBusyChange: (busy: boolean) => void;
+}) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [title, setTitle] = useState(entry.title ?? "");
+  const [horizon, setHorizon] = useState<GoalHorizon>("someday");
+  const [status, setStatus] = useState<GoalStatus>("considering");
+  const [targetDate, setTargetDate] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  if (!open)
+    return (
+      <button disabled={disabled} onClick={() => setOpen(true)}>
+        Convert to Goal
+      </button>
+    );
+  return (
+    <form
+      aria-label="Convert Entry to Goal"
+      className={styles.conversion}
+      onSubmit={async (event) => {
+        event.preventDefault();
+        setBusy(true);
+        onBusyChange(true);
+        setError(null);
+        try {
+          const message = await convertEntryToGoal({
+            id: entry.id,
+            revision: entry.revision,
+            title,
+            horizon,
+            status,
+            targetDate: targetDate || null,
+          });
+          if (message) setError(message);
+          else {
+            setOpen(false);
+            router.refresh();
+          }
+        } catch {
+          setError(
+            "Could not confirm conversion. Refresh to check the current Entry before retrying.",
+          );
+        } finally {
+          setBusy(false);
+          onBusyChange(false);
+        }
+      }}
+    >
+      <h3>Give this idea an intention</h3>
+      <p>
+        This keeps the same Entry, original writing, dates, photos, links, and
+        Inbox state. No copy or Bucket List membership is created. You can
+        restore the Standard version through history.
+      </p>
+      <fieldset disabled={busy || disabled}>
+        <label>
+          Goal title
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={200}
+            required
+          />
+        </label>
+        <label>
+          Horizon
+          <select
+            value={horizon}
+            onChange={(e) => setHorizon(e.target.value as GoalHorizon)}
+          >
+            {goalHorizons.map((v) => (
+              <option key={v} value={v}>
+                {goalHorizonLabels[v]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Status
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as GoalStatus)}
+          >
+            {goalStatuses.map((v) => (
+              <option key={v} value={v}>
+                {goalStatusLabels[v]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Target date (optional)
+          <input
+            type="date"
+            value={targetDate}
+            onChange={(e) => setTargetDate(e.target.value)}
+          />
+        </label>
+        <div className={styles.controls}>
+          <button type="button" onClick={() => setOpen(false)}>
+            Cancel
+          </button>
+          <button type="submit">
+            {busy ? "Converting..." : "Convert this Entry"}
+          </button>
+        </div>
+      </fieldset>
+      {error && <p role="alert">{error}</p>}
+    </form>
   );
 }
 function Snapshot({ value }: { value: HistorySnapshot }) {

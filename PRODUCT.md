@@ -400,6 +400,11 @@ Ideas remain Standard Entries inside the Ideas Collection without deadlines or t
 
 An Idea can be manually converted into a Goal if it becomes an intention the user wants to track.
 
+Conversion is available for a current Standard Entry from its original-record/history view on both clients, without depending on a Collection's editable name.
+It preserves the Entry identity, writing, occurrence dates, photos, relationships, and Inbox state; the user confirms a Goal title, horizon, status, and optional target date.
+Defaults are Someday and Considering, with no target date or implicit Bucket List membership.
+The previous Standard version remains restorable through history, and later Goal edits retain the original occurrence dates.
+
 The initial product does not include subtasks, complex project management, overdue warnings, or productivity scores.
 
 A directly created Goal requires a title, while its description and calendar-only target date remain optional.
