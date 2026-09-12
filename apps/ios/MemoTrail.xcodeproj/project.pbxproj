@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		B0000000000000000000003C /* ExplorationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000043 /* ExplorationView.swift */; };
+		B0000000000000000000003D /* ExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000044 /* ExportView.swift */; };
 		B00000000000000000000037 /* EntryHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003E /* EntryHistoryView.swift */; };
 		B00000000000000000000038 /* TimelineTracksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003F /* TimelineTracksView.swift */; };
 		B00000000000000000000039 /* OrganizationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000040 /* OrganizationView.swift */; };
@@ -95,6 +96,7 @@
 
 /* Begin PBXFileReference section */
 		C00000000000000000000043 /* ExplorationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AI/ExplorationView.swift; sourceTree = "<group>"; };
+		C00000000000000000000044 /* ExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Export/ExportView.swift; sourceTree = "<group>"; };
 		C0000000000000000000003E /* EntryHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = History/EntryHistoryView.swift; sourceTree = "<group>"; };
 		C0000000000000000000003F /* TimelineTracksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timeline/TimelineTracksView.swift; sourceTree = "<group>"; };
 		C00000000000000000000040 /* OrganizationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Collections/OrganizationView.swift; sourceTree = "<group>"; };
@@ -246,6 +248,7 @@
 				C0000000000000000000003B /* PeopleView.swift */,
 				C0000000000000000000003C /* AISettingsView.swift */,
 				C00000000000000000000043 /* ExplorationView.swift */,
+				C00000000000000000000044 /* ExportView.swift */,
 				C0000000000000000000003D /* EntryAISuggestionsView.swift */,
 				C0000000000000000000003E /* EntryHistoryView.swift */,
 				C0000000000000000000003F /* TimelineTracksView.swift */,
@@ -637,6 +640,7 @@
 				B00000000000000000000034 /* PeopleView.swift in Sources */,
 				B00000000000000000000035 /* AISettingsView.swift in Sources */,
 				B0000000000000000000003C /* ExplorationView.swift in Sources */,
+				B0000000000000000000003D /* ExportView.swift in Sources */,
 				B00000000000000000000036 /* EntryAISuggestionsView.swift in Sources */,
 				B00000000000000000000037 /* EntryHistoryView.swift in Sources */,
 				B00000000000000000000038 /* TimelineTracksView.swift in Sources */,

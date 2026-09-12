@@ -6,6 +6,26 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Complete portable ZIP export across Web and iOS
+
+- Added shared authenticated snapshot listing, idempotent creation, explicit discard, and streamed ZIP downloads without AI requests or new provider credentials.
+- Added Library export entry points on both clients with retained-copy privacy disclosure, cross-device snapshot availability, expiry, recovery, and explicit unencrypted-file warnings.
+- ZIPs include all canonical JSON datasets, original Entry Markdown with precise occurrence metadata, structured CSV views, original attachments and registered derivatives, stable relationships, and per-media SHA-256 checksums.
+- Server serialization reads one source at a time with backpressure; original ETags and byte counts must match the capture, and incomplete transfers never receive the successful ZIP completion footer.
+- Web supports direct-to-file streaming where available and a documented Blob fallback, with cancellation and atomic writable abort on failure.
+- Native iOS downloads to protected, backup-excluded temporary disk storage, validates the ZIP footer before offering Save/share, removes screen-owned copies on exit, and prunes abandoned copies after 24 hours when reopened.
+- Export paths use stable UUIDs rather than user titles, CSV formula-like strings are protected without modifying canonical JSON, and expired request recovery releases an unusable retry identity.
+- Authenticated local acceptance downloads an archive larger than 5 MB, validates every ZIP entry with unzip, checks all 30 JSON datasets, confirms original photo SHA-256 identity, and preserves captured writing after another device edits the source.
+- Browser acceptance covers both Blob download and direct-file orchestration, native bearer access, idempotent capture reuse, missing-media failure without a committed file, discard, expiry, and unchanged original records.
+- Reproduced and fixed a pre-aborted stream hang; unit coverage also rejects pagination gaps, unverifiable media, wrong owner paths, ETag changes, size mismatches, and truncated ZIP footers.
+- Verification passes 289 Web unit/server tests, twelve authenticated browser/API scenarios, and 169 executed native simulator tests with zero skips; desktop/light and 390-pixel/dark Web layouts were inspected.
+- Production Web build, lint, type checking, Prettier, Swift formatting, and diff whitespace validation pass.
+- The intentionally missing-media E2E case produces a sanitized expected Next response-stream error; it verifies failure handling and is not mistaken for a successful backup or an unexplained warning.
+- Local AI accounting remains 51 completed synthetic requests totaling $0.052147 with no outstanding reservations; export tests added no AI charges and removed their synthetic accounts, photos, and temporary snapshot rows.
+- No additional migration is needed; the immutable snapshot contract is already deployed in `84f6d83`.
+- Authenticated native UI taps could not be completed because the Mac is locked; unlock is required for that final acceptance, and native compilation/API tests are not claimed as a substitute.
+- Production streaming, native Save/share interaction, and the remaining specialized-date/photo audits stay on the completion checklist.
+
 ## Current status
 
 ### Consistent complete-export snapshot contract
@@ -1129,7 +1149,7 @@
 
 ## Next sequence
 
-1. Complete the remaining export, specialized date precision, and AI retrieval/exploration slices on both clients.
+1. Audit remaining specialized date precision, Entry conversion, relationships, and photo derivative/metadata gaps on both clients.
 2. Follow the cross-platform acceptance matrix in `REMAINING.md`, updating this record with every commit.
 3. Validate live provider behavior and production configuration before declaring the AI integration complete.
 

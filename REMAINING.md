@@ -22,8 +22,8 @@ The last accepted checkpoint is `a7850b7`.
 | Exploration persistence and atomic conclusion-save contract           | Deployed        | Shared contract | Shared contract | Pushed 95e7a28      |
 | Explore with AI, persisted conversation, Save as Entry                | Complete        | Complete        | Complete        | Pushed 0022aea      |
 | Inspect and restore Entry history                                     | Deployed        | Complete        | Complete        | Pushed eee57bf      |
-| Complete ZIP export with JSON, Markdown, CSV, and originals           | Pending         | Pending         | Pending         | Pending             |
-| Consistent export snapshots, pagination, and temporary-data lifecycle | Deployed        | Shared contract | Shared contract | This feature commit |
+| Complete ZIP export with JSON, Markdown, CSV, and originals           | Complete        | Complete        | Complete        | This feature commit |
+| Consistent export snapshots, pagination, and temporary-data lifecycle | Deployed        | Shared contract | Shared contract | Pushed 84f6d83      |
 | Timeline track creation, ordering, and hide/show management           | Deployed        | Complete        | Complete        | Pushed e06e96c      |
 | Collection/tag creation and renaming, Collection ordering/Trash       | Deployed        | Complete        | Complete        | Pushed 332449a      |
 | Remaining date precision, Entry conversion and relationship gaps      | Audit pending   | Audit pending   | Audit pending   | Pending             |
@@ -32,6 +32,10 @@ The last accepted checkpoint is `a7850b7`.
 
 ## External inputs and limitations
 
+- Complete ZIP implementation passes 289 Web tests, twelve authenticated browser/API scenarios, and 169 native tests with zero skips; real ZIP extraction and original media hashes are verified locally.
+- Native interactive export acceptance is currently unavailable because the Mac is locked; Ryan must unlock it before Simulator UI automation can proceed.
+- Production ZIP streaming and authenticated native Save/share acceptance remain final-validation items; local streaming tests and native bearer downloads do not imply those checks passed.
+- Missing-media rejection deliberately terminates an in-progress ZIP response; the negative E2E case records a sanitized expected stream error and verifies neither client-facing download path commits a complete file.
 - Exploration passes 271 Web tests, ten browser/API scenarios, 167 native tests with no skips, and a real two-turn synthetic Anthropic flow costing $0.003171, including idempotent retries and original-preserving conclusion saves.
 - Local AI accounting totals $0.052147 with no outstanding reservations; no provider secret was copied into either client.
 - Natural-language search passed real Anthropic five-question acceptance, eight local browser scenarios, 236 Web tests, and native compilation with 164 passing tests and no skips.

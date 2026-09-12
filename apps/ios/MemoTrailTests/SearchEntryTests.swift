@@ -3,6 +3,31 @@ import XCTest
 @testable import MemoTrail
 
 final class SearchEntryTests: XCTestCase {
+  func testExportSnapshotPreservesCountsAndPortableFilename() throws {
+    let json = """
+      {"id":"00000000-0000-0000-0000-000000000001","schema_version":1,"captured_at":"2026-09-12T19:00:00.123+00:00","expires_at":"2026-09-13T19:00:00.123+00:00","row_count":1005,"json_bytes":2200000,"datasets":{"entries":1005,"homes":0}}
+      """
+    let snapshot = try JSONDecoder().decode(ExportSnapshot.self, from: Data(json.utf8))
+    XCTAssertEqual(snapshot.rowCount, 1005)
+    XCTAssertEqual(snapshot.datasets["homes"], 0)
+    XCTAssertEqual(snapshot.filename, "MemoTrail-2026-09-12-00000000.zip")
+    let request = try JSONEncoder().encode(ExportInput(action: "download", id: snapshot.id))
+    let fields = try XCTUnwrap(JSONSerialization.jsonObject(with: request) as? [String: Any])
+    XCTAssertEqual(Set(fields.keys), Set(["action", "id"]))
+  }
+
+  func testExportFooterRejectsTruncatedDownloadsAndFalseCompletionText() {
+    var tail = Data(repeating: 0, count: ExportAPI.tailSize)
+    tail.replaceSubrange(0..<4, with: [0x50, 0x4b, 5, 6])
+    tail[20] = UInt8(ExportAPI.completion.utf8.count)
+    tail.replaceSubrange(22..<tail.count, with: ExportAPI.completion.utf8)
+    XCTAssertTrue(ExportAPI.isComplete(tail))
+    for count in 0..<tail.count { XCTAssertFalse(ExportAPI.isComplete(tail.prefix(count))) }
+    XCTAssertFalse(ExportAPI.isComplete(tail + Data([0])))
+    tail[0] = 0
+    XCTAssertFalse(ExportAPI.isComplete(tail))
+  }
+
   func testExplorationRequestPreservesRetryIdentityWithoutProviderSecrets() throws {
     let id = UUID()
     let input = ExplorationInput(

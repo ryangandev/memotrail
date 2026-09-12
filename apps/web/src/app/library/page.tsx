@@ -11,6 +11,13 @@ export const dynamic = "force-dynamic";
 const availableDestinations = [
   {
     detail:
+      "Keep a complete portable copy, including history and original photos.",
+    href: "/settings/export",
+    icon: "archive" as const,
+    title: "Export archive",
+  },
+  {
+    detail:
       "Create and rename Collections and tags, or recover removed groupings.",
     href: "/settings/organization",
     icon: "archive" as const,

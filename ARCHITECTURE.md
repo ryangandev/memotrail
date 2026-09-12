@@ -129,7 +129,19 @@ Creation requests serialize by owner and replay the same snapshot; at most two c
 Private snapshot content becomes unreadable after 24 hours, can be explicitly discarded sooner, and is physically removed by an hourly [Supabase Cron](https://supabase.com/docs/guides/cron) job that touches only temporary export content.
 These private captures retain their original contents after later archive edits or deletions; the export interface must disclose that retained-copy lifetime and offer explicit discard.
 Minimal request tombstones retain no copied archive rows or dataset counts, prevent expired retries from capturing a different archive, and disappear with account deletion.
-This contract freezes database content and media identity, not the photo bytes themselves; ZIP serialization, byte verification, large-download handling, and both client interfaces remain separate completion requirements.
+This contract freezes database content and media identity, not the photo bytes themselves.
+The authenticated `/api/export` endpoint lists, creates, discards, and downloads snapshots for Web cookie sessions and native bearer sessions without invoking any AI provider.
+ZIP serialization uses `yazl` with sequential lazy streams and paginated database reads; backpressure reaches Storage downloads instead of buffering entire archives in server memory.
+The ZIP contains a versioned manifest, one complete JSON array per canonical dataset, original Entry Markdown, structured CSV views, registered media variants, and media SHA-256 checksums.
+User titles never become archive paths; stable UUID filenames prevent path traversal, JSON-quoted frontmatter preserves uncertain dates, and formula-leading CSV strings receive a protective apostrophe while canonical JSON remains unchanged.
+Each media response must match its captured ETag and actual byte count; missing, replaced, or truncated originals abort the archive without a successful ZIP footer.
+Both clients verify a fixed completion comment in the standard ZIP end-of-central-directory record before offering the file as complete; this is interruption detection, not a substitute for ZIP CRC or media SHA-256 verification.
+Supported Web browsers write directly through the File System Access API and commit the destination only after completion; other browsers use an explicitly documented in-memory Blob fallback.
+Native iOS uses a URLSession disk download, validates only the footer bytes in memory, and keeps the file in a protected, backup-excluded temporary folder until the user shares it or leaves the screen.
+Abandoned native temporary folders older than 24 hours are removed when export is reopened; snapshots remain independently available across clients until expiration or explicit discard.
+The streaming endpoint has a 300-second deployment limit and a 280-second producer deadline; large archives exceeding that limit fail explicitly, and production streaming capacity must be verified separately from local acceptance.
+Local acceptance verifies an archive exceeding 5 MB, complete extraction, all 30 JSON datasets, unchanged snapshot writing after later edits, original SHA-256 identity, direct-file and Blob paths, native bearer access, and missing-media failure recovery.
+Authenticated native UI taps and production download acceptance remain separate from native compilation and API tests.
 
 ## Delivery and verification
 
