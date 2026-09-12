@@ -152,7 +152,10 @@ test("Organization preserves relationships, Bucket List identity, and recoverabl
     await expect(
       goal.getByRole("button", { name: "Mark achieved and create First Time" }),
     ).toBeVisible();
-    await goal.getByLabel("Achievement date").fill("2026-09-12");
+    await goal
+      .getByRole("combobox", { name: "Date precision", exact: true })
+      .selectOption("day");
+    await goal.getByLabel("Occurred", { exact: true }).fill("2026-09-12");
     const achievementResponse = page.waitForResponse(
       (response) =>
         response.request().method() === "POST" &&

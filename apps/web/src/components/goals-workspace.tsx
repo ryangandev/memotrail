@@ -36,30 +36,22 @@ import {
   type GoalRecord,
 } from "@/lib/data/goal-record";
 import {
-  goalAchievementPrecisions,
   goalBodyLimit,
   goalHorizons,
-  goalLabelLimit,
   goalStatuses,
   goalTitleLimit,
   parseGoalAchievementInput,
   parseGoalEntryInput,
-  type GoalAchievementPrecision,
   type GoalEntryInput,
   type GoalHorizon,
   type GoalStatus,
 } from "@/lib/data/goal-record-input";
-import { localDateToISOString } from "@/lib/data/timeline-input";
+import { OccurrenceEditor } from "@/components/occurrence-editor";
+import {
+  type OccurrenceDraft,
+  resolveOccurrenceDraft,
+} from "@/lib/data/occurrence";
 import { createClient } from "@/lib/supabase/client";
-
-const achievementPrecisionLabels: Record<GoalAchievementPrecision, string> = {
-  age: "Age-based",
-  approximate: "Approximate",
-  day: "Exact day",
-  exact: "Exact date and time",
-  month: "Month and year",
-  year: "Year",
-};
 
 const goalSections: Array<{
   detail: string;
@@ -876,20 +868,28 @@ function AchievementPanel({
   revision: number;
   unsavedChanges: boolean;
 }) {
-  const [date, setDate] = useState(todayCalendarDate());
-  const [label, setLabel] = useState("");
-  const [precision, setPrecision] = useState<GoalAchievementPrecision>("day");
+  const [occurrence, setOccurrence] = useState<OccurrenceDraft>(() => ({
+    precision: "unknown",
+    start: "",
+    end: "",
+    label: "",
+    timezone: localTimezone(),
+  }));
   const [localError, setLocalError] = useState<string | null>(null);
-  const timezone = localTimezone();
 
   async function handleAchievement() {
-    const occurredStart = localDateToISOString(date, timezone);
+    const resolved = resolveOccurrenceDraft(occurrence);
+    if (!resolved.value) {
+      setLocalError(resolved.error);
+      return;
+    }
     const parsed = parseGoalAchievementInput({
-      datePrecision: precision,
+      datePrecision: resolved.value.datePrecision,
       id: goalId,
-      occurredLabel: label || null,
-      occurredStart: occurredStart ?? date,
-      occurredTimezone: timezone,
+      occurredLabel: resolved.value.occurredLabel,
+      occurredStart: resolved.value.occurredAt,
+      occurredEnd: resolved.value.occurredEnd,
+      occurredTimezone: resolved.value.occurredTimezone,
       revision,
     });
     if (!parsed.success) {
@@ -925,44 +925,11 @@ function AchievementPanel({
           </p>
         </div>
       </div>
-      <label>
-        <span>Achievement date</span>
-        <input
-          disabled={disabled}
-          onChange={(event) => setDate(event.target.value)}
-          required
-          type="date"
-          value={date}
-        />
-      </label>
-      <label>
-        <span>Date precision</span>
-        <select
-          disabled={disabled}
-          onChange={(event) =>
-            setPrecision(event.target.value as GoalAchievementPrecision)
-          }
-          value={precision}
-        >
-          {goalAchievementPrecisions.map((value) => (
-            <option key={value} value={value}>
-              {achievementPrecisionLabels[value]}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className={common.fullField}>
-        <span>
-          Human date label <small>Optional</small>
-        </span>
-        <input
-          disabled={disabled}
-          maxLength={goalLabelLimit}
-          onChange={(event) => setLabel(event.target.value)}
-          placeholder="The summer I finally learned"
-          value={label}
-        />
-      </label>
+      <OccurrenceEditor
+        value={occurrence}
+        onChange={setOccurrence}
+        disabled={disabled}
+      />
       {localError ? (
         <p className={styles.achievementError} role="alert">
           {localError}
@@ -975,7 +942,7 @@ function AchievementPanel({
       ) : null}
       <button
         className={styles.achievementButton}
-        disabled={disabled || !date || unsavedChanges}
+        disabled={disabled || unsavedChanges}
         onClick={() => void handleAchievement()}
         type="button"
       >
@@ -1153,21 +1120,6 @@ function sameNames(first: string[], second: string[]) {
     first.length === second.length &&
     first.every((value, index) => value === second[index])
   );
-}
-
-function todayCalendarDate() {
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-  const values = Object.fromEntries(
-    formatter
-      .formatToParts(new Date())
-      .filter((part) => part.type !== "literal")
-      .map((part) => [part.type, part.value]),
-  );
-  return `${values.year}-${values.month}-${values.day}`;
 }
 
 function localTimezone() {

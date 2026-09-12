@@ -76,13 +76,14 @@ export async function markGoalAchieved(
   if (!context) return expiredSession();
 
   const { data, error } = await context.client.rpc(
-    "mark_goal_achieved_with_first_time",
+    "achieve_goal_with_occurrence",
     {
       p_date_precision: parsed.data.datePrecision,
       p_expected_revision: parsed.data.revision,
       p_goal_entry_id: parsed.data.id,
       p_occurred_label: parsed.data.occurredLabel,
       p_occurred_start: parsed.data.occurredStart,
+      p_occurred_end: parsed.data.occurredEnd ?? null,
       p_occurred_timezone: parsed.data.occurredTimezone,
     },
   );

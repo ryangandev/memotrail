@@ -414,6 +414,8 @@ Goal status changes are intentionally flexible rather than enforcing a productiv
 Progress context reuses existing Entries through owner-scoped links instead of introducing a separate checklist or percentage model.
 
 The initial `Mark as Achieved and create First Time` action is available only to a Goal in the Bucket List Collection, records an achieved status, creates a new organized First Time with the supplied best-known completion date, and links the two Entries without copying the Goal description.
+Completion dates follow the same eight-precision model as First Times, including description-only Age and Approximate dates, Unknown, and ranges with an optional end.
+The editor starts with Unknown, not an assumed completion today, and all parts of the achievement save succeed or fail together.
 
 ### 5.10 Places, People, and Map
 

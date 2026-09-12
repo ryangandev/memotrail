@@ -32,24 +32,7 @@ enum GoalStatus: String, CaseIterable, Codable, Equatable, Hashable, Sendable {
   }
 }
 
-enum GoalAchievementPrecision: String, CaseIterable, Codable, Equatable, Hashable, Sendable {
-  case exact
-  case day
-  case month
-  case year
-  case approximate
-  case age
-
-  var displayName: String {
-    switch self {
-    case .exact, .day: "Exact day"
-    case .month: "Month"
-    case .year: "Year"
-    case .approximate: "Approximate"
-    case .age: "Age-based"
-    }
-  }
-}
+typealias GoalAchievementPrecision = TimelineDatePrecision
 
 typealias GoalAttachment = ResidenceAttachment
 
@@ -427,38 +410,42 @@ struct GoalAchievementInput: Equatable, Sendable {
 
   let goalEntryID: UUID
   let expectedRevision: Int
-  let occurredStart: Date
+  let occurredStart: Date?
   let datePrecision: GoalAchievementPrecision
   let occurredLabel: String?
   let occurredTimezone: String
+  var occurredEnd: Date? = nil
 
   static func validate(
     goalEntryID: UUID,
     expectedRevision: Int,
-    occurredStart: Date,
+    occurredStart: Date?,
     datePrecision: GoalAchievementPrecision,
     occurredLabel: String,
-    occurredTimezone: String
+    occurredTimezone: String,
+    occurredEnd: Date? = nil
   ) throws -> GoalAchievementInput {
     let occurredLabel = occurredLabel.trimmed.nonEmpty
     let occurredTimezone = occurredTimezone.trimmed
     guard expectedRevision > 0 else { throw GoalEntryError.invalidRevision }
-    guard occurredStart.timeIntervalSinceReferenceDate.isFinite else {
-      throw GoalEntryError.invalidAchievementDate
-    }
     guard (occurredLabel?.count ?? 0) <= labelLimit else {
       throw GoalEntryError.achievementLabelTooLong
     }
     guard !occurredTimezone.isEmpty, occurredTimezone.count <= 100,
       TimeZone(identifier: occurredTimezone) != nil
     else { throw GoalEntryError.invalidTimezone }
+    try EntryOccurrence(
+      precision: datePrecision, start: occurredStart, end: occurredEnd, label: occurredLabel,
+      timezone: occurredTimezone
+    ).validate()
     return GoalAchievementInput(
       goalEntryID: goalEntryID,
       expectedRevision: expectedRevision,
       occurredStart: occurredStart,
       datePrecision: datePrecision,
       occurredLabel: occurredLabel,
-      occurredTimezone: occurredTimezone
+      occurredTimezone: occurredTimezone,
+      occurredEnd: occurredEnd
     )
   }
 }
@@ -470,6 +457,7 @@ struct GoalAchievementParameters: Encodable, Equatable, Sendable {
     case goalEntryID = "p_goal_entry_id"
     case expectedRevision = "p_expected_revision"
     case occurredStart = "p_occurred_start"
+    case occurredEnd = "p_occurred_end"
     case datePrecision = "p_date_precision"
     case occurredLabel = "p_occurred_label"
     case occurredTimezone = "p_occurred_timezone"
@@ -479,7 +467,16 @@ struct GoalAchievementParameters: Encodable, Equatable, Sendable {
     var values = encoder.container(keyedBy: CodingKeys.self)
     try values.encode(input.goalEntryID, forKey: .goalEntryID)
     try values.encode(input.expectedRevision, forKey: .expectedRevision)
-    try values.encode(input.occurredStart, forKey: .occurredStart)
+    if let start = input.occurredStart {
+      try values.encode(start, forKey: .occurredStart)
+    } else {
+      try values.encodeNil(forKey: .occurredStart)
+    }
+    if let end = input.occurredEnd {
+      try values.encode(end, forKey: .occurredEnd)
+    } else {
+      try values.encodeNil(forKey: .occurredEnd)
+    }
     try values.encode(input.datePrecision, forKey: .datePrecision)
     try values.encode(input.occurredTimezone, forKey: .occurredTimezone)
     if let occurredLabel = input.occurredLabel {

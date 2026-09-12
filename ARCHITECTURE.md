@@ -54,6 +54,10 @@ The dedicated First Times clients use the same occurrence editors and the additi
 Native First Times decoding retains the original timestamp strings alongside parsed Dates and reuses them for untouched bounds, avoiding SDK fractional-second rounding during serialization.
 The legacy First Times mutation rejects writes that cannot preserve existing range ends or exact/range interpretation rather than silently degrading them.
 First Times also retains confirmed saved revisions during Web refresh and focuses the title only on editor mount.
+Bucket List achievement uses these same eight-precision editors and the additive `achieve_goal_with_occurrence` mutation, which delegates date validation and First Time creation to the existing shared helper.
+Both clients start with Unknown rather than silently defaulting the milestone to today; age and approximate descriptions need no calendar anchor, and ranges retain their optional end.
+Goal status, history, the new First Time, and its achievement link commit atomically; invalid dates roll everything back, while revision checks and an already-achieved guard prevent competing or repeated submissions from creating duplicate milestones.
+The legacy six-argument achievement signature remains available for older clients.
 Other specialized editors and broad date-filter semantics remain in the separate cross-product precision audit.
 
 ## In-place Goal conversion

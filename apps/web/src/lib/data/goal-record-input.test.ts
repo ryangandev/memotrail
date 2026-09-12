@@ -95,7 +95,7 @@ describe("parseGoalAchievementInput", () => {
     }
   });
 
-  it("rejects unsaved, invalid, and range-based achievements", () => {
+  it("rejects unsaved achievements and reversed ranges", () => {
     expect(
       parseGoalAchievementInput({
         datePrecision: "day",
@@ -112,9 +112,48 @@ describe("parseGoalAchievementInput", () => {
         id: goalId,
         occurredLabel: null,
         occurredStart: "2030-06-15T19:00:00Z",
+        occurredEnd: "2030-06-14T19:00:00Z",
         occurredTimezone: "UTC",
         revision: 3,
       }),
     ).toMatchObject({ success: false });
+  });
+  it("accepts description-only ages, unknown dates and complete ranges", () => {
+    const base = {
+      id: goalId,
+      revision: 3,
+      occurredTimezone: "UTC",
+      occurredStart: null,
+    };
+    expect(
+      parseGoalAchievementInput({
+        ...base,
+        datePrecision: "age",
+        occurredLabel: "17岁",
+      }),
+    ).toMatchObject({
+      success: true,
+      data: { occurredStart: null, occurredEnd: null },
+    });
+    expect(
+      parseGoalAchievementInput({ ...base, datePrecision: "unknown" }),
+    ).toMatchObject({ success: true, data: { occurredStart: null } });
+    expect(
+      parseGoalAchievementInput({ ...base, datePrecision: "age" }),
+    ).toMatchObject({ success: false });
+    expect(
+      parseGoalAchievementInput({
+        ...base,
+        datePrecision: "range",
+        occurredStart: "2030-06-15T19:00:00.123456Z",
+        occurredEnd: "2030-06-16T19:00:00Z",
+      }),
+    ).toMatchObject({
+      success: true,
+      data: {
+        occurredStart: "2030-06-15T19:00:00.123456Z",
+        occurredEnd: "2030-06-16T19:00:00.000Z",
+      },
+    });
   });
 });

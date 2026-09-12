@@ -165,6 +165,34 @@ final class GoalEntryTests: XCTestCase {
     XCTAssertFalse(GoalCalendarDate.isValid("2027-7-3"))
   }
 
+  func testAchievementSupportsAllPrecisionsAndNullableBounds() throws {
+    XCTAssertEqual(GoalAchievementPrecision.allCases.count, 8)
+    for precision in [GoalAchievementPrecision.age, .approximate, .unknown] {
+      let input = try GoalAchievementInput.validate(
+        goalEntryID: UUID(), expectedRevision: 1, occurredStart: nil, datePrecision: precision,
+        occurredLabel: precision == .unknown ? "" : "17岁", occurredTimezone: "UTC")
+      let json = try XCTUnwrap(
+        JSONSerialization.jsonObject(
+          with: JSONEncoder().encode(GoalAchievementParameters(input: input))) as? [String: Any])
+      XCTAssertTrue(json["p_occurred_start"] is NSNull)
+      XCTAssertTrue(json["p_occurred_end"] is NSNull)
+    }
+    let start = Date(timeIntervalSince1970: 100)
+    let end = Date(timeIntervalSince1970: 200)
+    let input = try GoalAchievementInput.validate(
+      goalEntryID: UUID(), expectedRevision: 1, occurredStart: start, datePrecision: .range,
+      occurredLabel: "", occurredTimezone: "UTC", occurredEnd: end)
+    XCTAssertEqual(input.occurredEnd, end)
+    XCTAssertThrowsError(
+      try GoalAchievementInput.validate(
+        goalEntryID: UUID(), expectedRevision: 1, occurredStart: end, datePrecision: .range,
+        occurredLabel: "", occurredTimezone: "UTC", occurredEnd: start))
+    XCTAssertThrowsError(
+      try GoalAchievementInput.validate(
+        goalEntryID: UUID(), expectedRevision: 1, occurredStart: nil, datePrecision: .age,
+        occurredLabel: "", occurredTimezone: "UTC"))
+  }
+
   private var decoder: JSONDecoder {
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .iso8601

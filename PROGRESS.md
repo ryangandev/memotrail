@@ -6,6 +6,21 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Eight-precision Goal achievement across Web and iOS
+
+- Reproduced the real browser bug: completing a Goal with only the age description `17岁` stored today's calendar date in the new First Time.
+- Both clients now reuse the shared occurrence editor and all eight precisions, defaulting to Unknown instead of inventing a completion date.
+- Age and Approximate descriptions need no calendar anchor, range ends are optional, and exact times respect the recorded zone and repeated-hour policy.
+- The additive atomic mutation reuses First Time validation, preserves original Goal writing and history, creates an empty-body linked First Time, and rolls back all changes when date validation fails.
+- Revision checks plus an already-achieved guard prevent competing or repeated submissions from creating duplicate milestones; the legacy six-argument RPC remains available.
+- Authenticated browser coverage completes Goals with every precision, checks stored bounds and original writing, and verifies competing completion requests create only one First Time.
+- Desktop/light and 390-pixel/dark browser layouts were inspected; native simulator tests execute 174 tests with no failures or skips, without claiming interactive native acceptance while the Mac remains locked.
+- Full regression passes 293 Web tests, twenty authenticated browser/API scenarios, and 1,106 database assertions with warning-free local schema lint.
+- Migration `202609120015_goal_achievement_occurrence.sql` is deployed without seeds, backfills, or role changes; hosted lint reports no schema errors and the migration ledger is up to date.
+- Production build, lint, type checking, repository and Swift formatting, and diff whitespace checks pass; synthetic achievement accounts are removed.
+- No provider calls were added by this slice; broader specialized dates, photo derivatives/metadata, and final cross-platform/production acceptance remain unfinished.
+- Previously tracked Next client-aborted response-stream logs still appear in unrelated rapid-navigation cases and remain a final-acceptance item.
+
 ### Recoverable Goal progress links across Web and iOS
 
 - Reproduced a real Goal editor save that silently removed its link to a progress Entry in Trash because the workspace intentionally hides deleted targets.

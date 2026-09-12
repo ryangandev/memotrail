@@ -152,10 +152,11 @@ final class GoalController {
   func markAchieved(
     entryID: UUID,
     expectedRevision: Int,
-    occurredStart: Date,
+    occurredStart: Date?,
     datePrecision: GoalAchievementPrecision,
     occurredLabel: String,
-    occurredTimezone: String
+    occurredTimezone: String,
+    occurredEnd: Date? = nil
   ) async -> MutationResult {
     let input: GoalAchievementInput
     do {
@@ -165,7 +166,8 @@ final class GoalController {
         occurredStart: occurredStart,
         datePrecision: datePrecision,
         occurredLabel: occurredLabel,
-        occurredTimezone: occurredTimezone
+        occurredTimezone: occurredTimezone,
+        occurredEnd: occurredEnd
       )
     } catch {
       return MutationResult(identity: nil, message: error.localizedDescription, status: .error)
@@ -186,7 +188,7 @@ final class GoalController {
       let results: [AchievedGoalEntry] =
         try await client
         .rpc(
-          "mark_goal_achieved_with_first_time",
+          "achieve_goal_with_occurrence",
           params: GoalAchievementParameters(input: input)
         )
         .execute()

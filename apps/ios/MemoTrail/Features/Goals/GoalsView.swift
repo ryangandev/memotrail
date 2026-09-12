@@ -294,9 +294,9 @@ struct GoalEditorSheet: View {
   @State private var attachments: [GoalAttachment]
   @State private var photoDrafts: [FirstTimePhotoDraft] = []
   @State private var pickerItems: [PhotosPickerItem] = []
-  @State private var achievementDate = Date()
-  @State private var achievementPrecision: GoalAchievementPrecision = .day
-  @State private var achievementLabel = ""
+  @State private var achievementOccurrence = OccurrenceDraft(
+    EntryOccurrence(
+      precision: .unknown, start: nil, end: nil, label: nil, timezone: TimeZone.current.identifier))
   @State private var isWorking = false
   @State private var progressMessage: String?
   @State private var errorMessage: String?
@@ -337,9 +337,6 @@ struct GoalEditorSheet: View {
       .disabled(isWorking)
       .onChange(of: title) { trim(&title, to: GoalEntryInput.titleLimit) }
       .onChange(of: reflection) { trim(&reflection, to: GoalEntryInput.bodyLimit) }
-      .onChange(of: achievementLabel) {
-        trim(&achievementLabel, to: GoalAchievementInput.labelLimit)
-      }
       .onChange(of: pickerItems) { _, items in Task { await loadPhotos(from: items) } }
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
@@ -569,14 +566,11 @@ struct GoalEditorSheet: View {
         )
         .font(MTTypography.caption)
         .foregroundStyle(MTColor.inkMuted)
-        DatePicker("Achievement date", selection: $achievementDate, displayedComponents: .date)
-        Picker("Date precision", selection: $achievementPrecision) {
-          ForEach(GoalAchievementPrecision.allCases, id: \.self) { value in
-            Text(value.displayName).tag(value)
-          }
-        }
-        TextField("Human date label (optional)", text: $achievementLabel)
-          .textInputAutocapitalization(.sentences)
+      } header: {
+        Text("Bucket List Milestone")
+      }
+      OccurrenceEditor(value: $achievementOccurrence)
+      Section {
         if hasUnsavedChanges {
           Label(
             "Save your other Goal changes before recording this milestone.",
@@ -590,8 +584,6 @@ struct GoalEditorSheet: View {
         }
         .disabled(hasUnsavedChanges)
         .accessibilityIdentifier("achieve-bucket-list-goal")
-      } header: {
-        Text("Bucket List Milestone")
       }
     }
   }
@@ -748,13 +740,21 @@ struct GoalEditorSheet: View {
     isWorking = true
     errorMessage = nil
     progressMessage = "Recording milestone..."
+    let occurrence: EntryOccurrence
+    do { occurrence = try achievementOccurrence.resolve() } catch {
+      isWorking = false
+      progressMessage = nil
+      errorMessage = error.localizedDescription
+      return
+    }
     let result = await controller.markAchieved(
       entryID: currentEntryID,
       expectedRevision: currentRevision,
-      occurredStart: achievementDate,
-      datePrecision: achievementPrecision,
-      occurredLabel: achievementLabel,
-      occurredTimezone: TimeZone.current.identifier
+      occurredStart: occurrence.start,
+      datePrecision: occurrence.precision,
+      occurredLabel: occurrence.label ?? "",
+      occurredTimezone: occurrence.timezone,
+      occurredEnd: occurrence.end
     )
     if result.status == .achieved {
       await controller.reloadAfterMutation()

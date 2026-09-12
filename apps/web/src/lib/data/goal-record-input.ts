@@ -1,4 +1,9 @@
 import { parseOrganizationNames } from "./inbox-review";
+import {
+  parseFirstTimeEntryInput,
+  firstTimeDatePrecisions,
+} from "./first-time-input";
+import { validTimezone } from "./occurrence";
 
 export const goalBodyLimit = 50_000;
 export const goalLabelLimit = 200;
@@ -13,14 +18,7 @@ export const goalStatuses = [
   "achieved",
   "let_go",
 ] as const;
-export const goalAchievementPrecisions = [
-  "exact",
-  "day",
-  "month",
-  "year",
-  "approximate",
-  "age",
-] as const;
+export const goalAchievementPrecisions = firstTimeDatePrecisions;
 
 export type GoalHorizon = (typeof goalHorizons)[number];
 export type GoalStatus = (typeof goalStatuses)[number];
@@ -44,7 +42,8 @@ export type GoalAchievementInput = {
   datePrecision: GoalAchievementPrecision;
   id: string;
   occurredLabel: string | null;
-  occurredStart: string;
+  occurredStart: string | null;
+  occurredEnd?: string | null;
   occurredTimezone: string;
   revision: number;
 };
@@ -166,33 +165,27 @@ export function parseGoalAchievementInput(
     return invalid("Save this Goal before recording its achievement.");
   }
 
-  const occurredStart = validIsoDate(input.occurredStart);
   const occurredTimezone = normalizedString(input.occurredTimezone);
-  const occurredLabel = optionalString(input.occurredLabel);
-  if (!occurredStart) return invalid("Choose when you achieved this Goal.");
-  if (!occurredTimezone || occurredTimezone.length > 100) {
+  if (!validTimezone(occurredTimezone)) {
     return invalid("Choose a valid occurrence time zone.");
   }
-  if (
-    typeof input.datePrecision !== "string" ||
-    !goalAchievementPrecisions.includes(
-      input.datePrecision as GoalAchievementPrecision,
-    )
-  ) {
-    return invalid("Choose a valid achievement date precision.");
-  }
-  if (occurredLabel && occurredLabel.length > goalLabelLimit) {
-    return invalid(
-      `Human date labels can be up to ${goalLabelLimit} characters.`,
-    );
-  }
+  const parsed = parseFirstTimeEntryInput({
+    ...input,
+    title: "Achievement",
+    body: "",
+    collectionNames: [],
+    tagNames: [],
+    occurredTimezone: input.occurredStart ? occurredTimezone : null,
+  });
+  if (!parsed.success) return parsed;
 
   return {
     data: {
-      datePrecision: input.datePrecision as GoalAchievementPrecision,
+      datePrecision: parsed.data.datePrecision,
       id: input.id as string,
-      occurredLabel,
-      occurredStart,
+      occurredLabel: parsed.data.occurredLabel,
+      occurredStart: parsed.data.occurredStart,
+      occurredEnd: parsed.data.occurredEnd ?? null,
       occurredTimezone,
       revision: input.revision as number,
     },
@@ -233,23 +226,12 @@ function optionalCalendarDate(value: unknown): string | null | undefined {
     : undefined;
 }
 
-function validIsoDate(value: unknown) {
-  if (typeof value !== "string" || !value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date.toISOString();
-}
-
 function validUuid(value: unknown): value is string {
   return typeof value === "string" && uuidPattern.test(value);
 }
 
 function normalizedString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
-}
-
-function optionalString(value: unknown) {
-  const normalized = normalizedString(value);
-  return normalized || null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
