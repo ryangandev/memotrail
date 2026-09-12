@@ -5,6 +5,7 @@ enum TrashItemKind: String, Codable, Equatable, Hashable, Sendable {
   case entry
   case habit
   case place
+  case person
 
   var displayName: String {
     switch self {
@@ -16,6 +17,8 @@ enum TrashItemKind: String, Codable, Equatable, Hashable, Sendable {
       "Habit"
     case .place:
       "Place"
+    case .person:
+      "Person"
     }
   }
 
@@ -29,6 +32,8 @@ enum TrashItemKind: String, Codable, Equatable, Hashable, Sendable {
       "checkmark"
     case .place:
       "map"
+    case .person:
+      "person.2"
     }
   }
 }

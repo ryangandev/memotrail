@@ -11,7 +11,11 @@
 - Ryan authorized completing the remaining confirmed scope, synchronized Web and iOS delivery, real Anthropic testing within a $3.50 balance, Supabase migration pushes, and feature commits to main.
 - `ARCHITECTURE.md` records the shared database, authenticated server API, native integration, AI trust boundary, and delivery conventions.
 - `REMAINING.md` tracks the unfinished product slices and acceptance state across the server and both clients.
-- The supplied local AI key failed a minimal direct Anthropic authentication check with HTTP 401; no generation succeeded and credential contents were not logged.
+- Ryan corrected the local AI key and a minimal direct Anthropic request succeeded with HTTP 200, using 9 input and 4 output tokens without logging credentials.
+- People now supports matching Web and iOS creation, revision-safe editing, Entry links, unlink-before-Trash protection, restoration, and immutable history.
+- The People migration is deployed to hosted Supabase and linked schema lint reports no errors.
+- People acceptance passed 640 database tests, 183 Web unit tests, 153 native tests, Web production build, native Simulator build, and an authenticated local browser create/link/unlink/Trash/restore test at desktop and narrow dark layouts.
+- The new browser harness uses only local Supabase with temporary synthetic users; CI now also runs the Web unit tests.
 
 - Phase 1 repository, design system, Web shell, iOS shell, local Supabase schema, RLS tests, and CI are complete.
 - The production Web shell is reachable at `https://memotrail.ryangan.me`.
@@ -19,7 +23,7 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- The linked hosted Supabase project contains all seventeen reviewed repository migrations and no development seed users.
+- The linked hosted Supabase project contains all eighteen reviewed repository migrations and no development seed users.
 - The hosted atomic Entry review contract now supports content, Type, occurrence, Collection, tag, and `Done` updates in one transaction.
 - Hosted verification found 24 Row Level Security-enabled application tables, 25 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
@@ -1004,17 +1008,17 @@
 - `fix: restore iOS CI concurrency compatibility` added a narrow Supabase compatibility boundary for the Xcode 16.4 GitHub Actions build.
 - `test: isolate Home database fixtures` isolated the Home suite from development seed content that made four CI assertions order-dependent.
 - `fix: isolate Collections views to main actor` aligned the remaining file-scope SwiftUI helpers with Xcode 16.4 main-actor isolation and restored the complete remote workflow.
-- Current change: recorded the remotely verified green CI result before pausing for product review.
+- `docs: define remaining product architecture and delivery plan` recorded the completion architecture and cross-platform acceptance matrix.
+- `feat: add People across Web and iOS` completed reusable People, linked Entry context, revision protection, shared Trash, and local end-to-end coverage on the deployed shared contract.
 
 ## Next sequence
 
-1. Complete People and other independent product gaps while the Anthropic credential is corrected.
+1. Implement the authenticated AI boundary, preferences, budget accounting, and editable suggestions on both clients.
 2. Follow the cross-platform acceptance matrix in `REMAINING.md`, updating this record with every commit.
 3. Validate live provider behavior and production configuration before declaring the AI integration complete.
 
 ## Deferred
 
-- AI provider selection and AI-assisted organization.
 - Preview or staging OAuth configuration until a stable Preview strategy is chosen.
 - Sign in with Apple and App Store distribution.
 - Production data import, DNS changes, and any destructive remote migration.

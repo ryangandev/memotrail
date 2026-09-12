@@ -10,6 +10,12 @@ export const dynamic = "force-dynamic";
 
 const availableDestinations = [
   {
+    detail: "Connect the people who shaped your story.",
+    href: "/people",
+    icon: "archive" as const,
+    title: "People",
+  },
+  {
     detail: "Browse the themes that connect your Entries.",
     href: "/collections",
     icon: "archive" as const,
@@ -54,7 +60,7 @@ const availableDestinations = [
   },
 ];
 
-const plannedDestinations = ["People"];
+const plannedDestinations: string[] = [];
 
 export default async function LibraryPage() {
   if (!getSupabasePublicConfig()) {
@@ -92,7 +98,7 @@ export default async function LibraryPage() {
         <section aria-labelledby="available-library-heading">
           <div className={styles.sectionHeading}>
             <h2 id="available-library-heading">Available now</h2>
-            <span>Seven ways into the archive</span>
+            <span>Eight ways into the archive</span>
           </div>
           <div className={styles.availableGrid}>
             {availableDestinations.map((destination) => (
@@ -110,20 +116,22 @@ export default async function LibraryPage() {
           </div>
         </section>
 
-        <section aria-labelledby="planned-library-heading">
-          <div className={styles.sectionHeading}>
-            <h2 id="planned-library-heading">Planned archives</h2>
-            <span>Built from the same Entry model</span>
-          </div>
-          <div className={styles.plannedGrid}>
-            {plannedDestinations.map((destination) => (
-              <article key={destination}>
-                <span>{destination}</span>
-                <small>Planned</small>
-              </article>
-            ))}
-          </div>
-        </section>
+        {plannedDestinations.length > 0 ? (
+          <section aria-labelledby="planned-library-heading">
+            <div className={styles.sectionHeading}>
+              <h2 id="planned-library-heading">Planned archives</h2>
+              <span>Built from the same Entry model</span>
+            </div>
+            <div className={styles.plannedGrid}>
+              {plannedDestinations.map((destination) => (
+                <article key={destination}>
+                  <span>{destination}</span>
+                  <small>Planned</small>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </div>
     </WorkspaceShell>
   );

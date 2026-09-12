@@ -10,25 +10,25 @@ The last accepted checkpoint is `a7850b7`.
 
 ## Completion order
 
-| Slice                                                            | Contract/server | Web           | iOS           | Verified and pushed |
-| ---------------------------------------------------------------- | --------------- | ------------- | ------------- | ------------------- |
-| Architecture and remaining-scope audit                           | Complete        | n/a           | n/a           | Pending             |
-| People, Entry links, and recoverable removal                     | Pending         | Pending       | Pending       | Pending             |
-| AI preferences, budgets, provider boundary, and usage            | Pending         | Pending       | Pending       | Pending             |
-| Editable AI title, Type, Collection, tag, and date suggestions   | Pending         | Pending       | Pending       | Pending             |
-| Natural-language retrieval and grounded source links             | Pending         | Pending       | Pending       | Pending             |
-| Explore with AI, persisted conversation, Save as Entry           | Pending         | Pending       | Pending       | Pending             |
-| Inspect and restore Entry history                                | Pending         | Pending       | Pending       | Pending             |
-| Complete ZIP export with JSON, Markdown, CSV, and originals      | Pending         | Pending       | Pending       | Pending             |
-| Collection/tag management and Timeline track management          | Pending         | Pending       | Pending       | Pending             |
-| Remaining date precision, Entry conversion and relationship gaps | Audit pending   | Audit pending | Audit pending | Pending             |
-| Photo derivative and metadata suggestion gaps                    | Audit pending   | Audit pending | Audit pending | Pending             |
-| Final acceptance and production configuration                    | Pending         | Pending       | Pending       | Pending             |
+| Slice                                                            | Contract/server | Web           | iOS           | Verified and pushed   |
+| ---------------------------------------------------------------- | --------------- | ------------- | ------------- | --------------------- |
+| Architecture and remaining-scope audit                           | Complete        | n/a           | n/a           | Pushed 08930ab        |
+| People, Entry links, and recoverable removal                     | Deployed        | Complete      | Complete      | Verified; this commit |
+| AI preferences, budgets, provider boundary, and usage            | Pending         | Pending       | Pending       | Pending               |
+| Editable AI title, Type, Collection, tag, and date suggestions   | Pending         | Pending       | Pending       | Pending               |
+| Natural-language retrieval and grounded source links             | Pending         | Pending       | Pending       | Pending               |
+| Explore with AI, persisted conversation, Save as Entry           | Pending         | Pending       | Pending       | Pending               |
+| Inspect and restore Entry history                                | Pending         | Pending       | Pending       | Pending               |
+| Complete ZIP export with JSON, Markdown, CSV, and originals      | Pending         | Pending       | Pending       | Pending               |
+| Collection/tag management and Timeline track management          | Pending         | Pending       | Pending       | Pending               |
+| Remaining date precision, Entry conversion and relationship gaps | Audit pending   | Audit pending | Audit pending | Pending               |
+| Photo derivative and metadata suggestion gaps                    | Audit pending   | Audit pending | Audit pending | Pending               |
+| Final acceptance and production configuration                    | Pending         | Pending       | Pending       | Pending               |
 
 ## External inputs and limitations
 
-- The local `AI_API_KEY` exists, but a synthetic eight-output-token Anthropic request returned HTTP 401 `authentication_error` on 2026-09-12.
-- `AI_PROVIDER` currently remains `disabled`; a valid direct Anthropic key or the intended gateway configuration is required for live AI acceptance.
+- Ryan corrected the local `AI_API_KEY`; a synthetic Anthropic request succeeded with HTTP 200 on 2026-09-12, using 9 input tokens and 4 output tokens.
+- `AI_PROVIDER` is now `anthropic` locally and the default model is `claude-haiku-4-5-20251001`.
 - Anthropic generation alone does not provide a vector embedding API; evaluate model-assisted retrieval first and clearly identify any remaining embedding requirement.
 - Production AI configuration must be verified separately from the local key.
 - Existing authorization covers incremental commits and pushes to main, implementation testing, and Supabase migrations.

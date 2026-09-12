@@ -142,8 +142,8 @@ export function TrashWorkspace({
           <Icon name="trash" size={25} />
           <h2>Nothing in Trash</h2>
           <p>
-            Removed Entries, Habits, Places, and individual photos will appear
-            here.
+            Removed Entries, Habits, Places, People, and individual photos will
+            appear here.
           </p>
         </section>
       ) : (
@@ -320,6 +320,7 @@ function iconForKind(
 }
 
 function labelForItem(item: TrashItem) {
+  if (item.kind === "person") return "Person";
   if (item.kind === "attachment") {
     return "Photo";
   }
@@ -354,6 +355,8 @@ function retentionLabel(value: string) {
 }
 
 function deletionDescription(item: TrashItem) {
+  if (item.kind === "person")
+    return "The Person and their version history will be removed.";
   if (item.kind === "attachment") {
     return "The private photo file and its attachment record will be removed.";
   }

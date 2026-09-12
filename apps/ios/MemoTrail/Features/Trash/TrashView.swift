@@ -263,6 +263,8 @@ struct TrashView: View {
       "The Habit, check-ins, relationships, and version history will be removed."
     case .place:
       "The Place, relationships, and version history will be removed."
+    case .person:
+      "The Person and their version history will be removed."
     case .entry:
       "The Entry, private photos, relationships, specialized details, and version history will be removed."
     }

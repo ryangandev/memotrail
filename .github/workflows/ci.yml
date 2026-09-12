@@ -47,6 +47,9 @@ jobs:
       - name: Type-check
         run: pnpm typecheck
 
+      - name: Test Web contracts
+        run: pnpm test
+
       - name: Build Web app
         run: pnpm build
 

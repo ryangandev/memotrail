@@ -72,6 +72,7 @@
 		B1000000000000000000000C /* VehicleEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000D /* VehicleEntryTests.swift */; };
 		B1000000000000000000000D /* GoalEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000E /* GoalEntryTests.swift */; };
 		B1000000000000000000000E /* PlaceEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000F /* PlaceEntryTests.swift */; };
+		B00000000000000000000034 /* PeopleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003B /* PeopleView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -152,6 +153,7 @@
 		C1000000000000000000000D /* VehicleEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleEntryTests.swift; sourceTree = "<group>"; };
 		C1000000000000000000000E /* GoalEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEntryTests.swift; sourceTree = "<group>"; };
 		C1000000000000000000000F /* PlaceEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceEntryTests.swift; sourceTree = "<group>"; };
+		C0000000000000000000003B /* PeopleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/PeopleView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -225,6 +227,7 @@
 				A10000000000000000000024 /* Vehicles */,
 				A10000000000000000000025 /* Goals */,
 				A10000000000000000000026 /* Places */,
+				C0000000000000000000003B /* PeopleView.swift */,
 				A10000000000000000000006 /* Inbox */,
 				A10000000000000000000015 /* Search */,
 				A10000000000000000000016 /* Timeline */,
@@ -605,6 +608,7 @@
 				B00000000000000000000031 /* PlaceEntry.swift in Sources */,
 				B00000000000000000000032 /* PlaceController.swift in Sources */,
 				B00000000000000000000033 /* PlacesView.swift in Sources */,
+				B00000000000000000000034 /* PeopleView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
