@@ -8,6 +8,21 @@
 
 ## Current status
 
+### Consistent complete-export snapshot contract
+
+- Added immutable owner-scoped export captures covering all 29 canonical tables plus private attachment object identity, including Trash, histories, relationships, and AI conversations.
+- A single database statement captures source rows consistently; retries and different devices page the same frozen content rather than mixing newer edits into an old export.
+- Snapshot pagination is not capped at 1,000 records, and an oversized individual Unicode record remains complete rather than silently truncated.
+- Cross-owner records and storage identities are denied, missing media is explicit, and an inventory test prevents newly added canonical tables from being silently omitted.
+- Captures expire after 24 hours, can be explicitly discarded, and have an hourly cleanup job that removes only copied export content; minimal tombstones prevent cancelled or expired request IDs from creating new snapshots.
+- Two-active-snapshot and ten-creations-per-hour limits bound temporary data growth without charging AI or changing archive content.
+- Local contract acceptance passes 60 export-specific database checks and an authenticated two-device API scenario with 1,005 Entries, concurrent creation retries, later source edits, complete pagination, and SHA-256-identical original photo retrieval.
+- Full regression passes 963 database tests and eleven authenticated browser/API scenarios; the Web production build, lint, type checking, formatting, and whitespace checks pass.
+- Migration `202609120010_export_snapshots.sql` is deployed to hosted Supabase with warning-free linked schema lint and a matching migration ledger, without seeds or roles.
+- Synthetic export accounts, original test media, and temporary snapshots were removed; no native code changed and no paid AI calls were made in this contract-only checkpoint.
+- A PL/pgSQL initialization lint warning was corrected, and the long-record fixture now avoids triggering an unrelated full-text token-length notice.
+- ZIP serialization and the Web/iOS export interfaces are still pending; this checkpoint is a shared export prerequisite, not a claim that the finished ZIP feature is available.
+
 ### Explore with AI across Web and iOS
 
 - Added an authenticated shared exploration API and matching Web/native entry points from Inbox review and current Entry history.

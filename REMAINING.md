@@ -10,24 +10,25 @@ The last accepted checkpoint is `a7850b7`.
 
 ## Completion order
 
-| Slice                                                            | Contract/server | Web             | iOS             | Verified and pushed |
-| ---------------------------------------------------------------- | --------------- | --------------- | --------------- | ------------------- |
-| Architecture and remaining-scope audit                           | Complete        | n/a             | n/a             | Pushed 08930ab      |
-| People, Entry links, and recoverable removal                     | Deployed        | Complete        | Complete        | Pushed feea315      |
-| AI preferences, budgets, provider boundary, and usage            | Deployed        | Complete        | Complete        | Pushed 6579c8d      |
-| Editable AI title, Type, Collection, and tag suggestions         | Deployed        | Complete        | Complete        | Pushed 90740d3      |
-| Precision-aware Inbox dates and explicit AI description adoption | Deployed        | Complete        | Complete        | Pushed 1aec663      |
-| Shared retrieval evidence and current source reader              | Deployed        | Complete        | Complete        | Pushed 048efc0      |
-| Natural-language retrieval and grounded source links             | Complete        | Complete        | Complete        | Pushed 239fa90      |
-| Exploration persistence and atomic conclusion-save contract      | Deployed        | Shared contract | Shared contract | Pushed 95e7a28      |
-| Explore with AI, persisted conversation, Save as Entry           | Complete        | Complete        | Complete        | This feature commit |
-| Inspect and restore Entry history                                | Deployed        | Complete        | Complete        | Pushed eee57bf      |
-| Complete ZIP export with JSON, Markdown, CSV, and originals      | Pending         | Pending         | Pending         | Pending             |
-| Timeline track creation, ordering, and hide/show management      | Deployed        | Complete        | Complete        | Pushed e06e96c      |
-| Collection/tag creation and renaming, Collection ordering/Trash  | Deployed        | Complete        | Complete        | Pushed 332449a      |
-| Remaining date precision, Entry conversion and relationship gaps | Audit pending   | Audit pending   | Audit pending   | Pending             |
-| Photo derivative and metadata suggestion gaps                    | Audit pending   | Audit pending   | Audit pending   | Pending             |
-| Final acceptance and production configuration                    | Pending         | Pending         | Pending         | Pending             |
+| Slice                                                                 | Contract/server | Web             | iOS             | Verified and pushed |
+| --------------------------------------------------------------------- | --------------- | --------------- | --------------- | ------------------- |
+| Architecture and remaining-scope audit                                | Complete        | n/a             | n/a             | Pushed 08930ab      |
+| People, Entry links, and recoverable removal                          | Deployed        | Complete        | Complete        | Pushed feea315      |
+| AI preferences, budgets, provider boundary, and usage                 | Deployed        | Complete        | Complete        | Pushed 6579c8d      |
+| Editable AI title, Type, Collection, and tag suggestions              | Deployed        | Complete        | Complete        | Pushed 90740d3      |
+| Precision-aware Inbox dates and explicit AI description adoption      | Deployed        | Complete        | Complete        | Pushed 1aec663      |
+| Shared retrieval evidence and current source reader                   | Deployed        | Complete        | Complete        | Pushed 048efc0      |
+| Natural-language retrieval and grounded source links                  | Complete        | Complete        | Complete        | Pushed 239fa90      |
+| Exploration persistence and atomic conclusion-save contract           | Deployed        | Shared contract | Shared contract | Pushed 95e7a28      |
+| Explore with AI, persisted conversation, Save as Entry                | Complete        | Complete        | Complete        | Pushed 0022aea      |
+| Inspect and restore Entry history                                     | Deployed        | Complete        | Complete        | Pushed eee57bf      |
+| Complete ZIP export with JSON, Markdown, CSV, and originals           | Pending         | Pending         | Pending         | Pending             |
+| Consistent export snapshots, pagination, and temporary-data lifecycle | Deployed        | Shared contract | Shared contract | This feature commit |
+| Timeline track creation, ordering, and hide/show management           | Deployed        | Complete        | Complete        | Pushed e06e96c      |
+| Collection/tag creation and renaming, Collection ordering/Trash       | Deployed        | Complete        | Complete        | Pushed 332449a      |
+| Remaining date precision, Entry conversion and relationship gaps      | Audit pending   | Audit pending   | Audit pending   | Pending             |
+| Photo derivative and metadata suggestion gaps                         | Audit pending   | Audit pending   | Audit pending   | Pending             |
+| Final acceptance and production configuration                         | Pending         | Pending         | Pending         | Pending             |
 
 ## External inputs and limitations
 

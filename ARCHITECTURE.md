@@ -116,6 +116,21 @@ The application defaults to a $3 server-wide lifetime cap and $1 per-user monthl
 Completed requests reconcile reported token usage; interrupted requests retain their full reservation until explicitly reconciled.
 Only service-role RPCs can modify accounting, and anonymous billing records survive account removal so deleting an account cannot reset the global cap.
 
+## Portable export boundary
+
+A complete ZIP must derive from one immutable database capture, not sequential reads of live tables that can change between pages.
+`create_export_snapshot` materializes all 29 canonical public tables and an attachment media manifest in one INSERT/SELECT statement under one [PostgreSQL MVCC snapshot](https://www.postgresql.org/docs/17/xfunc-volatility.html).
+The inventory includes Trash, Entry/Person/Place/Habit histories, organization and Timeline relationships, consent and usage, and persisted AI conversations and conclusion mappings.
+An explicit dataset allowlist excludes authentication tables, provider credentials, temporary exports, and the current generated search index; an inventory test requires an export decision whenever a canonical table is added.
+Original IDs and complete row fields remain intact, and the manifest pins each available owner-prefixed private object's storage version, size, and ETag without exposing storage URLs or other users' object metadata.
+Missing or unsafe attachment objects are recorded as unavailable rather than silently dropped; final ZIP generation must fail clearly if required bytes cannot be recovered or no longer match the snapshot.
+Owner-authenticated paginated reads retain fixed ordinal cursors past the default 1,000-row REST limit, with ordinary JSON pages bounded to 1 MiB and oversized individual records returned whole instead of truncated.
+Creation requests serialize by owner and replay the same snapshot; at most two captures may be active, and a ten-per-hour creation limit prevents repeated discard from bypassing resource controls.
+Private snapshot content becomes unreadable after 24 hours, can be explicitly discarded sooner, and is physically removed by an hourly [Supabase Cron](https://supabase.com/docs/guides/cron) job that touches only temporary export content.
+These private captures retain their original contents after later archive edits or deletions; the export interface must disclose that retained-copy lifetime and offer explicit discard.
+Minimal request tombstones retain no copied archive rows or dataset counts, prevent expired retries from capturing a different archive, and disappear with account deletion.
+This contract freezes database content and media identity, not the photo bytes themselves; ZIP serialization, byte verification, large-download handling, and both client interfaces remain separate completion requirements.
+
 ## Delivery and verification
 
 `PRODUCT.md` is the product contract.
