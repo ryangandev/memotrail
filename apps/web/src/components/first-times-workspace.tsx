@@ -20,36 +20,25 @@ import { Icon } from "@/components/icon";
 import {
   createFirstTimeObjectPath,
   firstTimeBodyLimit,
-  firstTimeLabelLimit,
   firstTimePhotoLimit,
   firstTimePhotoSizeLimit,
   firstTimeTitleLimit,
   inferFirstTimeImageMimeType,
   parseFirstTimeEntryInput,
-  type FirstTimeDatePrecision,
   type FirstTimeEntryInput,
 } from "@/lib/data/first-time-input";
 import type {
   FirstTimeAttachment,
   FirstTimeEntry,
 } from "@/lib/data/first-times";
+import { OccurrenceEditor } from "@/components/occurrence-editor";
 import {
-  localDateToISOString,
-  localDateValue,
-} from "@/lib/data/timeline-input";
+  occurrenceDraft,
+  occurrenceLabel,
+  resolveOccurrenceDraft,
+  type Occurrence,
+} from "@/lib/data/occurrence";
 import { createClient } from "@/lib/supabase/client";
-
-const precisionOptions: {
-  label: string;
-  value: FirstTimeDatePrecision;
-}[] = [
-  { label: "Exact day", value: "day" },
-  { label: "Month and year", value: "month" },
-  { label: "Year", value: "year" },
-  { label: "Approximate", value: "approximate" },
-  { label: "Age-based", value: "age" },
-  { label: "Unknown", value: "unknown" },
-];
 
 export function FirstTimesWorkspace({
   collectionOptions,
@@ -65,6 +54,13 @@ export function FirstTimesWorkspace({
   tagOptions: string[];
 }) {
   const [selectedEntry, setSelectedEntry] = useState<FirstTimeEntry | null>();
+  const [confirmedEntries, setConfirmedEntries] = useState<
+    Record<string, FirstTimeEntry>
+  >({});
+  const visibleEntries = entries.map((entry) => {
+    const confirmed = confirmedEntries[entry.id];
+    return confirmed && confirmed.revision > entry.revision ? confirmed : entry;
+  });
   const photoCount = entries.reduce(
     (count, entry) => count + originalAttachments(entry).length,
     0,
@@ -125,7 +121,7 @@ export function FirstTimesWorkspace({
 
       {!loadError && entries.length > 0 ? (
         <section className={styles.firstGrid} aria-label="First Times archive">
-          {entries.map((entry, index) => (
+          {visibleEntries.map((entry, index) => (
             <FirstTimeCard
               entry={entry}
               index={index}
@@ -142,6 +138,12 @@ export function FirstTimesWorkspace({
           entry={selectedEntry}
           key={selectedEntry?.id ?? "new-first-time"}
           onClose={() => setSelectedEntry(undefined)}
+          onSaved={(entry) =>
+            setConfirmedEntries((current) => ({
+              ...current,
+              [entry.id]: entry,
+            }))
+          }
           ownerId={ownerId}
           tagOptions={tagOptions}
         />
@@ -215,18 +217,19 @@ function FirstTimeEditor({
   collectionOptions,
   entry,
   onClose,
+  onSaved,
   ownerId,
   tagOptions,
 }: {
   collectionOptions: string[];
   entry: FirstTimeEntry | null;
   onClose: () => void;
+  onSaved: (entry: FirstTimeEntry) => void;
   ownerId: string;
   tagOptions: string[];
 }) {
   const router = useRouter();
   const titleRef = useRef<HTMLInputElement>(null);
-  const initialTimezone = entry?.occurredTimezone ?? localTimezone();
   const [body, setBody] = useState(entry?.body ?? "");
   const [collectionInput, setCollectionInput] = useState("");
   const [collectionNames, setCollectionNames] = useState(
@@ -236,24 +239,13 @@ function FirstTimeEditor({
   const [currentRevision, setCurrentRevision] = useState(
     entry?.revision ?? null,
   );
-  const [datePrecision, setDatePrecision] = useState<FirstTimeDatePrecision>(
-    editablePrecision(entry?.datePrecision),
+  const [occurrence, setOccurrence] = useState(() =>
+    occurrenceDraft(firstTimeOccurrence(entry)),
   );
   const [existingPhotos, setExistingPhotos] = useState(
     entry ? originalAttachments(entry) : [],
   );
   const [isPending, setIsPending] = useState(false);
-  const [occurredDate, setOccurredDate] = useState(
-    entry?.occurredStart
-      ? localDateValue(entry.occurredStart, initialTimezone)
-      : "",
-  );
-  const [occurredLabel, setOccurredLabel] = useState(
-    entry?.occurredLabel ?? "",
-  );
-  const [occurredTimezone, setOccurredTimezone] = useState(
-    entry?.occurredTimezone ?? null,
-  );
   const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
   const [result, setResult] = useState<FirstTimeActionResult | null>(null);
   const [tagInput, setTagInput] = useState("");
@@ -262,7 +254,9 @@ function FirstTimeEditor({
 
   useEffect(() => {
     titleRef.current?.focus();
+  }, []);
 
+  useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape" && !isPending) {
         onClose();
@@ -310,36 +304,26 @@ function FirstTimeEditor({
     setResult(errorMessage ? actionError(errorMessage) : null);
   }
 
-  function handleDateChange(value: string) {
-    setOccurredDate(value);
-
-    if (value) {
-      setOccurredTimezone(localTimezone());
-      if (datePrecision === "unknown") {
-        setDatePrecision("day");
-      }
-    } else {
-      setOccurredTimezone(null);
-      if (!["age", "approximate"].includes(datePrecision)) {
-        setDatePrecision("unknown");
-      }
-    }
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const occurredStart = occurredDate
-      ? localDateToISOString(occurredDate, occurredTimezone ?? localTimezone())
-      : null;
+    const resolved = resolveOccurrenceDraft(
+      occurrence,
+      firstTimeOccurrence(entry),
+    );
+    if (!resolved.value) {
+      setResult(actionError(resolved.error));
+      return;
+    }
     const input: FirstTimeEntryInput = {
       body,
       collectionNames: namesIncludingDraft(collectionNames, collectionInput),
-      datePrecision,
+      datePrecision: resolved.value.datePrecision,
       id: currentId,
-      occurredLabel: occurredLabel || null,
-      occurredStart: occurredStart ?? (occurredDate || null),
-      occurredTimezone: occurredDate
-        ? (occurredTimezone ?? localTimezone())
+      occurredLabel: resolved.value.occurredLabel,
+      occurredStart: resolved.value.occurredAt,
+      occurredEnd: resolved.value.occurredEnd,
+      occurredTimezone: resolved.value.occurredAt
+        ? resolved.value.occurredTimezone
         : null,
       revision: currentRevision,
       tagNames: namesIncludingDraft(tagNames, tagInput),
@@ -368,6 +352,22 @@ function FirstTimeEditor({
 
       setCurrentId(saved.entry.id);
       setCurrentRevision(saved.entry.revision);
+      if (entry && pendingPhotos.length === 0) {
+        onSaved({
+          ...entry,
+          id: saved.entry.id,
+          revision: saved.entry.revision,
+          title: parsed.data.title,
+          body: parsed.data.body,
+          collectionNames: parsed.data.collectionNames,
+          tagNames: parsed.data.tagNames,
+          datePrecision: parsed.data.datePrecision,
+          occurredStart: parsed.data.occurredStart,
+          occurredEnd: parsed.data.occurredEnd ?? null,
+          occurredLabel: parsed.data.occurredLabel,
+          occurredTimezone: parsed.data.occurredTimezone,
+        });
+      }
       const failedPhotos = await uploadPhotos(
         ownerId,
         saved.entry.id,
@@ -510,48 +510,13 @@ function FirstTimeEditor({
               />
             </label>
 
-            <label>
-              <span>
-                Date <small>Optional</small>
-              </span>
-              <input
-                onChange={(event) => handleDateChange(event.target.value)}
-                type="date"
-                value={occurredDate}
+            <div className={styles.fullField}>
+              <OccurrenceEditor
+                value={occurrence}
+                onChange={setOccurrence}
+                disabled={isPending}
               />
-            </label>
-
-            <label>
-              <span>Date precision</span>
-              <select
-                onChange={(event) =>
-                  setDatePrecision(event.target.value as FirstTimeDatePrecision)
-                }
-                value={datePrecision}
-              >
-                {precisionOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className={styles.fullField}>
-              <span>
-                Human date label <small>Optional</small>
-              </span>
-              <input
-                maxLength={firstTimeLabelLimit}
-                onChange={(event) => setOccurredLabel(event.target.value)}
-                placeholder="For example: Age 17 or Summer 2017"
-                value={occurredLabel}
-              />
-              <small>
-                Use this when the remembered wording matters more than
-                precision.
-              </small>
-            </label>
+            </div>
 
             <label className={styles.fullField}>
               <span>
@@ -877,46 +842,17 @@ function originalAttachments(entry: FirstTimeEntry) {
   );
 }
 
-function editablePrecision(value: FirstTimeDatePrecision | undefined) {
-  if (value === "exact") {
-    return "day";
-  }
-
-  if (value === "range") {
-    return "approximate";
-  }
-
-  return value ?? "unknown";
+function firstTimeOccurrence(entry: FirstTimeEntry | null): Occurrence {
+  return {
+    occurredAt: entry?.occurredStart ?? null,
+    occurredEnd: entry?.occurredEnd ?? null,
+    datePrecision: entry?.datePrecision ?? "unknown",
+    occurredLabel: entry?.occurredLabel ?? null,
+    occurredTimezone: entry?.occurredTimezone ?? localTimezone(),
+  };
 }
-
 function firstTimeDateLabel(entry: FirstTimeEntry) {
-  if (entry.occurredLabel) {
-    return entry.occurredLabel;
-  }
-
-  if (!entry.occurredStart) {
-    return "Date not recorded";
-  }
-
-  const date = new Date(entry.occurredStart);
-  const options: Intl.DateTimeFormatOptions =
-    entry.datePrecision === "year"
-      ? { year: "numeric" }
-      : entry.datePrecision === "month"
-        ? { month: "long", year: "numeric" }
-        : { day: "numeric", month: "long", year: "numeric" };
-
-  try {
-    return new Intl.DateTimeFormat("en-US", {
-      ...options,
-      timeZone: entry.occurredTimezone ?? "UTC",
-    }).format(date);
-  } catch {
-    return new Intl.DateTimeFormat("en-US", {
-      ...options,
-      timeZone: "UTC",
-    }).format(date);
-  }
+  return occurrenceLabel(firstTimeOccurrence(entry));
 }
 
 function localTimezone() {

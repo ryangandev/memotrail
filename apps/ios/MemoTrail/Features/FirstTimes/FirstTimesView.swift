@@ -322,11 +322,7 @@ private struct FirstTimeEditorSheet: View {
   @State private var currentRevision: Int?
   @State private var title: String
   @State private var note: String
-  @State private var hasDate: Bool
-  @State private var occurredStart: Date
-  @State private var datePrecision: FirstTimeDatePrecision
-  @State private var occurredLabel: String
-  @State private var occurredTimezone: String?
+  @State private var occurrence: OccurrenceDraft
   @State private var collectionNames: [String]
   @State private var collectionInput = ""
   @State private var tagNames: [String]
@@ -354,13 +350,12 @@ private struct FirstTimeEditorSheet: View {
     _currentRevision = State(initialValue: entry?.revision)
     _title = State(initialValue: entry?.title ?? "")
     _note = State(initialValue: entry?.body ?? "")
-    _hasDate = State(initialValue: entry?.occurredStart != nil || entry == nil)
-    _occurredStart = State(initialValue: entry?.occurredStart ?? Date())
-    _datePrecision = State(initialValue: entry?.datePrecision ?? .day)
-    _occurredLabel = State(initialValue: entry?.occurredLabel ?? "")
-    _occurredTimezone = State(
-      initialValue: entry?.occurredTimezone ?? TimeZone.current.identifier
-    )
+    _occurrence = State(
+      initialValue: OccurrenceDraft(
+        entry?.occurrence
+          ?? EntryOccurrence(
+            precision: .unknown, start: nil, end: nil, label: nil,
+            timezone: TimeZone.current.identifier)))
     _collectionNames = State(initialValue: entry?.collectionNames ?? [])
     _tagNames = State(initialValue: entry?.tagNames ?? [])
     _attachments = State(initialValue: entry?.attachments ?? [])
@@ -380,26 +375,7 @@ private struct FirstTimeEditorSheet: View {
             .accessibilityIdentifier("first-time-notes")
         }
 
-        Section {
-          Toggle("Date recorded", isOn: $hasDate)
-
-          Picker("Date precision", selection: $datePrecision) {
-            ForEach(precisionOptions, id: \.self) { precision in
-              Text(precision.displayName).tag(precision)
-            }
-          }
-
-          if hasDate {
-            DatePicker("Date", selection: $occurredStart, displayedComponents: .date)
-          }
-
-          TextField("Human date label (optional)", text: $occurredLabel)
-            .textInputAutocapitalization(.sentences)
-        } header: {
-          Text("When")
-        } footer: {
-          Text("Use a label such as “Age 17” or “Summer 2017” when it tells the story better.")
-        }
+        OccurrenceEditor(value: $occurrence)
 
         Section {
           FirstTimeNameEditor(
@@ -467,27 +443,6 @@ private struct FirstTimeEditorSheet: View {
           note = String(note.prefix(FirstTimeEntryInput.bodyLimit))
         }
       }
-      .onChange(of: occurredLabel) {
-        if occurredLabel.count > FirstTimeEntryInput.labelLimit {
-          occurredLabel = String(occurredLabel.prefix(FirstTimeEntryInput.labelLimit))
-        }
-      }
-      .onChange(of: hasDate) {
-        if hasDate {
-          occurredTimezone = TimeZone.current.identifier
-          if datePrecision.supportsMissingDate {
-            datePrecision = .day
-          }
-        } else {
-          occurredTimezone = nil
-          if !datePrecision.supportsMissingDate {
-            datePrecision = .unknown
-          }
-        }
-      }
-      .onChange(of: occurredStart) {
-        occurredTimezone = TimeZone.current.identifier
-      }
       .onChange(of: pickerItems) { _, items in
         Task { await loadPhotos(from: items) }
       }
@@ -554,12 +509,6 @@ private struct FirstTimeEditorSheet: View {
     }
     .presentationDetents([.large])
     .interactiveDismissDisabled(isWorking)
-  }
-
-  private var precisionOptions: [FirstTimeDatePrecision] {
-    hasDate
-      ? FirstTimeDatePrecision.allCases
-      : FirstTimeDatePrecision.allCases.filter(\.supportsMissingDate)
   }
 
   private var remainingPhotoCount: Int {
@@ -683,17 +632,26 @@ private struct FirstTimeEditorSheet: View {
     errorMessage = nil
     progressMessage = "Saving First Time..."
 
+    let resolved: EntryOccurrence
+    do { resolved = try occurrence.resolve(original: entry?.occurrence) } catch {
+      isWorking = false
+      progressMessage = nil
+      errorMessage = error.localizedDescription
+      return
+    }
     let result = await controller.save(
       entryID: currentEntryID,
       expectedRevision: currentRevision,
       title: title,
       body: note,
-      occurredStart: hasDate ? occurredStart : nil,
-      datePrecision: datePrecision,
-      occurredLabel: occurredLabel,
-      occurredTimezone: hasDate ? occurredTimezone : nil,
+      occurredStart: resolved.start,
+      datePrecision: FirstTimeDatePrecision(rawValue: resolved.precision.rawValue) ?? .unknown,
+      occurredLabel: resolved.label ?? "",
+      occurredTimezone: resolved.start == nil ? nil : resolved.timezone,
       collectionNames: namesIncludingDraft(collectionNames, collectionInput),
-      tagNames: namesIncludingDraft(tagNames, tagInput)
+      tagNames: namesIncludingDraft(tagNames, tagInput),
+      occurredEnd: resolved.end,
+      original: entry
     )
 
     guard result.status == .saved, let identity = result.identity else {

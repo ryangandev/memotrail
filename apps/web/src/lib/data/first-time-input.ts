@@ -1,4 +1,5 @@
 import { parseOrganizationNames } from "./inbox-review";
+import { validateOccurrence } from "./occurrence";
 
 export const firstTimeBodyLimit = 50_000;
 export const firstTimeLabelLimit = 200;
@@ -35,6 +36,7 @@ export type FirstTimeEntryInput = {
   id: string | null;
   occurredLabel: string | null;
   occurredStart: string | null;
+  occurredEnd?: string | null;
   occurredTimezone: string | null;
   revision: number | null;
   tagNames: string[];
@@ -151,6 +153,21 @@ export function parseFirstTimeEntryInput(
     );
   }
 
+  const occurredEnd =
+    typeof input.occurredEnd === "string" && input.occurredEnd
+      ? validIsoDate(input.occurredEnd)
+      : null;
+  if (input.occurredEnd && !occurredEnd)
+    return invalid("Choose a valid end date.");
+  const occurrenceError = validateOccurrence({
+    datePrecision,
+    occurredAt: occurredStart,
+    occurredEnd,
+    occurredLabel,
+    occurredTimezone: occurredTimezone ?? "UTC",
+  });
+  if (occurrenceError) return invalid(occurrenceError);
+
   return {
     data: {
       body,
@@ -159,6 +176,7 @@ export function parseFirstTimeEntryInput(
       id: input.id as string | null,
       occurredLabel,
       occurredStart,
+      occurredEnd,
       occurredTimezone,
       revision: input.revision as number | null,
       tagNames,
@@ -303,8 +321,20 @@ export function isFirstTimeUuid(value: unknown): value is string {
 }
 
 function validIsoDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}T/.test(value) || value.startsWith("0000-"))
+    return null;
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  if (Number.isNaN(date.getTime())) return null;
+  const day = new Date(`${value.slice(0, 10)}T12:00:00Z`);
+  if (
+    !Number.isFinite(day.getTime()) ||
+    day.toISOString().slice(0, 10) !== value.slice(0, 10)
+  )
+    return null;
+  // Do not round a database instant to JavaScript's millisecond precision.
+  return /\.\d{4,}(Z|[+-]\d{2}:\d{2})$/.test(value)
+    ? value
+    : date.toISOString();
 }
 
 function optionalPositiveInteger(value: unknown): number | null | undefined {

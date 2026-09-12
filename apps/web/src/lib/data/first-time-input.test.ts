@@ -14,6 +14,45 @@ const entryId = "40000000-0000-4000-8000-000000000001";
 const attachmentId = "60000000-0000-4000-8000-000000000001";
 
 describe("parseFirstTimeEntryInput", () => {
+  it("preserves complete ranges and sub-millisecond exact instants", () => {
+    const value = {
+      title: "First trip",
+      body: "",
+      collectionNames: [],
+      tagNames: [],
+      id: null,
+      revision: null,
+      datePrecision: "range",
+      occurredStart: "2017-07-08T12:00:00.123456Z",
+      occurredEnd: "2017-07-15T12:00:00.654321Z",
+      occurredLabel: null,
+      occurredTimezone: "UTC",
+    };
+    const parsed = parseFirstTimeEntryInput(value);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.occurredStart).toBe(value.occurredStart);
+      expect(parsed.data.occurredEnd).toBe(value.occurredEnd);
+    }
+    expect(
+      parseFirstTimeEntryInput({
+        ...value,
+        datePrecision: "exact",
+        occurredEnd: null,
+      }).success,
+    ).toBe(true);
+    for (const change of [
+      { occurredEnd: "2017-07-01T12:00:00Z" },
+      { occurredStart: "2017-02-30T12:00:00Z" },
+      { datePrecision: "day" },
+      { datePrecision: "unknown" },
+      { datePrecision: "age", occurredLabel: "" },
+      { occurredTimezone: "Not/AZone" },
+    ])
+      expect(parseFirstTimeEntryInput({ ...value, ...change }).success).toBe(
+        false,
+      );
+  });
   it("accepts and trims a title-only First Time", () => {
     expect(
       parseFirstTimeEntryInput({
@@ -31,6 +70,7 @@ describe("parseFirstTimeEntryInput", () => {
     ).toEqual({
       data: {
         body: "",
+        occurredEnd: null,
         collectionNames: [],
         datePrecision: "unknown",
         id: null,

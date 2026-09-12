@@ -6,6 +6,23 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Lossless First Times occurrence editing across Web and iOS
+
+- Reproduced a real browser save that silently erased an existing range end and downgraded its precision in the dedicated First Times editor.
+- Both clients now use their shared occurrence editor with all eight precisions, optional range ends, description-only ages and approximate dates, and Unknown without an invented calendar anchor.
+- Added the owner-scoped `first_times_workspace_with_occurrence` and atomic `save_first_time_with_occurrence` contracts, preserving history, revisions, and both occurrence bounds.
+- Unchanged exact timestamps retain database microseconds and the original repeated daylight-saving instant through both Web and native serialization.
+- Legacy saves remain available for compatible records but reject edits that would erase a range end or reinterpret an exact/range date.
+- Reproduced and fixed rapid reopen version conflicts by retaining the confirmed saved revision while Web refresh runs; separated initial focus from refresh-sensitive Escape handling so typing cannot jump into the title.
+- Local database acceptance passes 991 checks, including 28 dedicated occurrence and legacy-client checks; native simulator acceptance executes 172 tests with no failures or skips.
+- The focused authenticated browser scenario covers all eight precisions, exact microseconds, rapid reopen, and desktop/light plus narrow/dark layouts; three consecutive focused runs pass after the focus fix.
+- Full regression passes 290 Web unit/server tests and all thirteen authenticated browser/API scenarios, plus lint and type checking.
+- Production Web build, repository formatting, Swift formatting, and diff whitespace checks pass; local synthetic First Times accounts are removed and AI accounting remains $0.052147 with no outstanding reservations.
+- Migration `202609120011_first_time_occurrence.sql` is deployed to hosted Supabase with a matching ledger and warning-free schema lint, without seeds, role changes, backfills, or record deletion.
+- This slice makes no provider calls and does not place credentials in either client.
+- Timeline, Homes, Vehicles, Goal achievement, Idea-to-Goal conversion, specialized relationship preservation, and photo derivative/metadata checks remain separate unfinished scope.
+- Interactive authenticated native UI and production acceptance remain pending; simulator unit tests are not presented as native UI acceptance.
+
 ### Complete portable ZIP export across Web and iOS
 
 - Added shared authenticated snapshot listing, idempotent creation, explicit discard, and streamed ZIP downloads without AI requests or new provider credentials.

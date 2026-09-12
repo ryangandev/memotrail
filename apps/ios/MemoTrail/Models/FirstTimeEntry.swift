@@ -140,31 +140,18 @@ struct FirstTimeEntry: Equatable, Hashable, Identifiable, Sendable {
   let collectionNames: [String]
   let tagNames: [String]
   var attachments: [FirstTimeAttachment]
+  var occurredEnd: Date? = nil
+  var occurredStartRaw: String? = nil
+  var occurredEndRaw: String? = nil
 
-  var displayDate: String {
-    if let occurredLabel = occurredLabel?.trimmed.nonEmpty {
-      return occurredLabel
-    }
-
-    guard let occurredStart else {
-      return datePrecision == .age ? "Age not specified" : "Date not recorded"
-    }
-
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "en_US")
-    formatter.timeZone = occurredTimezone.flatMap(TimeZone.init(identifier:)) ?? .gmt
-
-    switch datePrecision {
-    case .year:
-      formatter.setLocalizedDateFormatFromTemplate("yyyy")
-    case .month:
-      formatter.setLocalizedDateFormatFromTemplate("MMM yyyy")
-    default:
-      formatter.setLocalizedDateFormatFromTemplate("MMM d, yyyy")
-    }
-
-    return formatter.string(from: occurredStart)
+  var occurrence: EntryOccurrence {
+    EntryOccurrence(
+      precision: TimelineDatePrecision(rawValue: datePrecision.rawValue) ?? .unknown,
+      start: occurredStart, end: occurredEnd, label: occurredLabel,
+      timezone: occurredTimezone ?? "UTC")
   }
+
+  var displayDate: String { occurrence.displayLabel }
 }
 
 struct FirstTimeWorkspaceRow: Decodable, Equatable, Sendable {
@@ -173,6 +160,7 @@ struct FirstTimeWorkspaceRow: Decodable, Equatable, Sendable {
   let body: String
   let inboxStatus: String
   let occurredStart: Date?
+  let occurredEnd: Date?
   let datePrecision: FirstTimeDatePrecision
   let occurredLabel: String?
   let occurredTimezone: String?
@@ -181,6 +169,8 @@ struct FirstTimeWorkspaceRow: Decodable, Equatable, Sendable {
   let collectionNames: [String]
   let tagNames: [String]
   let attachments: [FirstTimeAttachment]
+  var occurredStartRaw: String? = nil
+  var occurredEndRaw: String? = nil
 
   enum CodingKeys: String, CodingKey {
     case entryID = "entry_id"
@@ -188,6 +178,7 @@ struct FirstTimeWorkspaceRow: Decodable, Equatable, Sendable {
     case body
     case inboxStatus = "inbox_status"
     case occurredStart = "occurred_start"
+    case occurredEnd = "occurred_end"
     case datePrecision = "date_precision"
     case occurredLabel = "occurred_label"
     case occurredTimezone = "occurred_timezone"
@@ -212,8 +203,33 @@ struct FirstTimeWorkspaceRow: Decodable, Equatable, Sendable {
       updatedAt: updatedAt,
       collectionNames: collectionNames,
       tagNames: tagNames,
-      attachments: attachments
+      attachments: attachments,
+      occurredEnd: occurredEnd,
+      occurredStartRaw: occurredStartRaw,
+      occurredEndRaw: occurredEndRaw
     )
+  }
+}
+
+extension FirstTimeWorkspaceRow {
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    entryID = try values.decode(UUID.self, forKey: .entryID)
+    title = try values.decode(String.self, forKey: .title)
+    body = try values.decode(String.self, forKey: .body)
+    inboxStatus = try values.decode(String.self, forKey: .inboxStatus)
+    occurredStart = try values.decodeIfPresent(Date.self, forKey: .occurredStart)
+    occurredEnd = try values.decodeIfPresent(Date.self, forKey: .occurredEnd)
+    occurredStartRaw = try values.decodeIfPresent(String.self, forKey: .occurredStart)
+    occurredEndRaw = try values.decodeIfPresent(String.self, forKey: .occurredEnd)
+    datePrecision = try values.decode(FirstTimeDatePrecision.self, forKey: .datePrecision)
+    occurredLabel = try values.decodeIfPresent(String.self, forKey: .occurredLabel)
+    occurredTimezone = try values.decodeIfPresent(String.self, forKey: .occurredTimezone)
+    revision = try values.decode(Int.self, forKey: .revision)
+    updatedAt = try values.decode(Date.self, forKey: .updatedAt)
+    collectionNames = try values.decode([String].self, forKey: .collectionNames)
+    tagNames = try values.decode([String].self, forKey: .tagNames)
+    attachments = try values.decode([FirstTimeAttachment].self, forKey: .attachments)
   }
 }
 
@@ -255,6 +271,17 @@ struct FirstTimeEntryInput: Equatable, Sendable {
   let occurredTimezone: String?
   let collectionNames: [String]
   let tagNames: [String]
+  var occurredEnd: Date? = nil
+  var occurredStartRaw: String? = nil
+  var occurredEndRaw: String? = nil
+
+  mutating func preserveUnchangedBounds(from original: FirstTimeEntry?) {
+    guard let original, original.datePrecision == datePrecision,
+      original.occurredTimezone == occurredTimezone
+    else { return }
+    if original.occurredStart == occurredStart { occurredStartRaw = original.occurredStartRaw }
+    if original.occurredEnd == occurredEnd { occurredEndRaw = original.occurredEndRaw }
+  }
 
   static func validate(
     entryID: UUID?,
@@ -266,7 +293,8 @@ struct FirstTimeEntryInput: Equatable, Sendable {
     occurredLabel: String,
     occurredTimezone: String?,
     collectionNames: [String],
-    tagNames: [String]
+    tagNames: [String],
+    occurredEnd: Date? = nil
   ) throws -> FirstTimeEntryInput {
     let title = title.trimmed
     let body = body.trimmed
@@ -292,6 +320,12 @@ struct FirstTimeEntryInput: Equatable, Sendable {
         throw FirstTimeEntryError.invalidTimezone
       }
     }
+
+    try EntryOccurrence(
+      precision: TimelineDatePrecision(rawValue: datePrecision.rawValue) ?? .unknown,
+      start: occurredStart, end: occurredEnd, label: occurredLabel,
+      timezone: occurredTimezone ?? "UTC"
+    ).validate()
 
     guard
       (entryID == nil && expectedRevision == nil)
@@ -330,7 +364,8 @@ struct FirstTimeEntryInput: Equatable, Sendable {
       occurredLabel: occurredLabel,
       occurredTimezone: occurredTimezone,
       collectionNames: collectionNames,
-      tagNames: tagNames
+      tagNames: tagNames,
+      occurredEnd: occurredEnd
     )
   }
 
@@ -364,6 +399,7 @@ struct SaveFirstTimeEntryParameters: Encodable, Equatable, Sendable {
     case title = "p_title"
     case body = "p_body"
     case occurredStart = "p_occurred_start"
+    case occurredEnd = "p_occurred_end"
     case datePrecision = "p_date_precision"
     case occurredLabel = "p_occurred_label"
     case occurredTimezone = "p_occurred_timezone"
@@ -380,8 +416,16 @@ struct SaveFirstTimeEntryParameters: Encodable, Equatable, Sendable {
     try values.encode(input.datePrecision, forKey: .datePrecision)
     try values.encode(input.collectionNames, forKey: .collectionNames)
     try values.encode(input.tagNames, forKey: .tagNames)
-    try values.encodeIfPresent(input.occurredStart, forKey: .occurredStart)
-    if input.occurredStart == nil { try values.encodeNil(forKey: .occurredStart) }
+    if let raw = input.occurredStartRaw {
+      try values.encode(raw, forKey: .occurredStart)
+    } else {
+      try values.encode(input.occurredStart, forKey: .occurredStart)
+    }
+    if let raw = input.occurredEndRaw {
+      try values.encode(raw, forKey: .occurredEnd)
+    } else {
+      try values.encode(input.occurredEnd, forKey: .occurredEnd)
+    }
     try values.encodeIfPresent(input.occurredLabel, forKey: .occurredLabel)
     if input.occurredLabel == nil { try values.encodeNil(forKey: .occurredLabel) }
     try values.encodeIfPresent(input.occurredTimezone, forKey: .occurredTimezone)

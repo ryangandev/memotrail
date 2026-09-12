@@ -32,6 +32,7 @@ export type FirstTimeEntry = {
   inboxStatus: "organized" | "unreviewed";
   occurredLabel: string | null;
   occurredStart: string | null;
+  occurredEnd: string | null;
   occurredTimezone: string | null;
   revision: number;
   tagNames: string[];
@@ -57,6 +58,7 @@ type FirstTimeRow = {
   inbox_status: "organized" | "unreviewed";
   occurred_label: string | null;
   occurred_start: string | null;
+  occurred_end: string | null;
   occurred_timezone: string | null;
   revision: number;
   tag_names: string[];
@@ -74,7 +76,7 @@ export async function getFirstTimesWorkspace(): Promise<FirstTimesWorkspace | nu
   }
 
   const [firstTimes, collections, tags, inbox] = await Promise.all([
-    context.client.rpc("first_times_workspace"),
+    context.client.rpc("first_times_workspace_with_occurrence"),
     context.client
       .from("collections")
       .select("name")
@@ -120,6 +122,7 @@ export async function getFirstTimesWorkspace(): Promise<FirstTimesWorkspace | nu
       inboxStatus: row.inbox_status,
       occurredLabel: row.occurred_label,
       occurredStart: row.occurred_start,
+      occurredEnd: row.occurred_end,
       occurredTimezone: row.occurred_timezone,
       revision: row.revision,
       tagNames: row.tag_names,
@@ -193,6 +196,7 @@ function parseFirstTimeRows(value: unknown):
         item.date_precision as FirstTimeDatePrecision,
       ) ||
       !nullableString(item.occurred_start) ||
+      !nullableString(item.occurred_end) ||
       !nullableString(item.occurred_label) ||
       !nullableString(item.occurred_timezone) ||
       typeof item.revision !== "number" ||
@@ -212,6 +216,7 @@ function parseFirstTimeRows(value: unknown):
       inbox_status: item.inbox_status,
       occurred_label: item.occurred_label,
       occurred_start: item.occurred_start,
+      occurred_end: item.occurred_end,
       occurred_timezone: item.occurred_timezone,
       revision: item.revision,
       tag_names: item.tag_names,

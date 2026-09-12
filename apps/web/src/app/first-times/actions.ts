@@ -35,18 +35,22 @@ export async function saveFirstTimeEntry(
     );
   }
 
-  const { data, error } = await context.client.rpc("save_first_time_entry", {
-    p_body: parsed.data.body,
-    p_collection_names: parsed.data.collectionNames,
-    p_date_precision: parsed.data.datePrecision,
-    p_entry_id: parsed.data.id,
-    p_expected_revision: parsed.data.revision,
-    p_occurred_label: parsed.data.occurredLabel,
-    p_occurred_start: parsed.data.occurredStart,
-    p_occurred_timezone: parsed.data.occurredTimezone,
-    p_tag_names: parsed.data.tagNames,
-    p_title: parsed.data.title,
-  });
+  const { data, error } = await context.client.rpc(
+    "save_first_time_with_occurrence",
+    {
+      p_body: parsed.data.body,
+      p_collection_names: parsed.data.collectionNames,
+      p_date_precision: parsed.data.datePrecision,
+      p_entry_id: parsed.data.id,
+      p_expected_revision: parsed.data.revision,
+      p_occurred_label: parsed.data.occurredLabel,
+      p_occurred_start: parsed.data.occurredStart,
+      p_occurred_end: parsed.data.occurredEnd ?? null,
+      p_occurred_timezone: parsed.data.occurredTimezone,
+      p_tag_names: parsed.data.tagNames,
+      p_title: parsed.data.title,
+    },
+  );
 
   if (error) {
     return result(

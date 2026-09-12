@@ -3,6 +3,64 @@ import XCTest
 @testable import MemoTrail
 
 final class FirstTimeEntryTests: XCTestCase {
+  func testNativeSerializationRetainsUnchangedDatabaseMicroseconds() throws {
+    let timestamp = "2026-11-01T09:30:00.123456+00:00"
+    let date = Date(timeIntervalSince1970: 1793525400.123456)
+    var original = makeRow(
+      title: "First trip", occurredStart: date, datePrecision: .exact,
+      occurredTimezone: "America/Los_Angeles"
+    ).entry
+    original.occurredStartRaw = timestamp
+    var input = try FirstTimeEntryInput.validate(
+      entryID: original.id, expectedRevision: original.revision, title: original.title,
+      body: "Updated writing", occurredStart: date, datePrecision: .exact, occurredLabel: "",
+      occurredTimezone: original.occurredTimezone, collectionNames: [], tagNames: [])
+    input.preserveUnchangedBounds(from: original)
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+    let fields = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: encoder.encode(SaveFirstTimeEntryParameters(input: input)))
+        as? [String: Any])
+    XCTAssertEqual(fields["p_occurred_start"] as? String, timestamp)
+    XCTAssertTrue(fields["p_occurred_end"] is NSNull)
+  }
+  func testRangeAndExactDatesSurviveDedicatedEditorAndEncoding() throws {
+    let start = Date(timeIntervalSince1970: 1793525400.123)
+    let end = start.addingTimeInterval(86400)
+    for precision in [TimelineDatePrecision.exact, .range] {
+      let original = EntryOccurrence(
+        precision: precision, start: start, end: precision == .range ? end : nil, label: nil,
+        timezone: "America/Los_Angeles")
+      let resolved = try OccurrenceDraft(original).resolve(original: original)
+      XCTAssertEqual(resolved, original)
+      let input = try FirstTimeEntryInput.validate(
+        entryID: nil, expectedRevision: nil, title: "First experience", body: "Original",
+        occurredStart: resolved.start,
+        datePrecision: FirstTimeDatePrecision(rawValue: resolved.precision.rawValue)!,
+        occurredLabel: "", occurredTimezone: resolved.timezone, collectionNames: [], tagNames: [],
+        occurredEnd: resolved.end)
+      let encoder = JSONEncoder()
+      encoder.dateEncodingStrategy = .iso8601
+      let fields = try XCTUnwrap(
+        JSONSerialization.jsonObject(
+          with: encoder.encode(SaveFirstTimeEntryParameters(input: input))) as? [String: Any])
+      XCTAssertEqual(fields["p_date_precision"] as? String, precision.rawValue)
+      XCTAssertNotNil(fields["p_occurred_end"])
+      if precision == .range { XCTAssertEqual(input.occurredEnd, end) }
+    }
+  }
+
+  func testAgeAndUnknownFirstTimesDoNotInventDates() throws {
+    for precision in [FirstTimeDatePrecision.age, .approximate, .unknown] {
+      let input = try FirstTimeEntryInput.validate(
+        entryID: nil, expectedRevision: nil, title: "First experience", body: "",
+        occurredStart: nil, datePrecision: precision,
+        occurredLabel: precision == .unknown ? "" : "17岁", occurredTimezone: nil,
+        collectionNames: [], tagNames: [])
+      XCTAssertNil(input.occurredStart)
+      XCTAssertNil(input.occurredEnd)
+    }
+  }
   func testWorkspaceDecodesEntryWithPrivateAttachmentMetadata() throws {
     let json = """
       [
@@ -47,6 +105,7 @@ final class FirstTimeEntryTests: XCTestCase {
     XCTAssertEqual(entry.attachments.first?.mimeType, .jpeg)
     XCTAssertEqual(entry.attachments.first?.byteSize, 2048)
     XCTAssertNil(entry.attachments.first?.signedURL)
+    XCTAssertEqual(entry.occurredStartRaw, "2026-07-03T19:00:00Z")
   }
 
   func testWorkspaceSortsDatedEntriesBeforeUnknownDates() {
@@ -300,6 +359,7 @@ final class FirstTimeEntryTests: XCTestCase {
       body: "Notes",
       inboxStatus: "organized",
       occurredStart: occurredStart,
+      occurredEnd: nil,
       datePrecision: datePrecision,
       occurredLabel: occurredLabel,
       occurredTimezone: occurredTimezone,

@@ -22,16 +22,19 @@ The last accepted checkpoint is `a7850b7`.
 | Exploration persistence and atomic conclusion-save contract           | Deployed        | Shared contract | Shared contract | Pushed 95e7a28      |
 | Explore with AI, persisted conversation, Save as Entry                | Complete        | Complete        | Complete        | Pushed 0022aea      |
 | Inspect and restore Entry history                                     | Deployed        | Complete        | Complete        | Pushed eee57bf      |
-| Complete ZIP export with JSON, Markdown, CSV, and originals           | Complete        | Complete        | Complete        | This feature commit |
+| Complete ZIP export with JSON, Markdown, CSV, and originals           | Complete        | Complete        | Complete        | Pushed 8a00293      |
 | Consistent export snapshots, pagination, and temporary-data lifecycle | Deployed        | Shared contract | Shared contract | Pushed 84f6d83      |
 | Timeline track creation, ordering, and hide/show management           | Deployed        | Complete        | Complete        | Pushed e06e96c      |
 | Collection/tag creation and renaming, Collection ordering/Trash       | Deployed        | Complete        | Complete        | Pushed 332449a      |
-| Remaining date precision, Entry conversion and relationship gaps      | Audit pending   | Audit pending   | Audit pending   | Pending             |
+| Lossless dedicated First Times dates and legacy-client guards         | Deployed        | Complete        | Complete        | This feature commit |
+| Remaining date precision, Entry conversion and relationship gaps      | Audit ongoing   | Audit ongoing   | Audit ongoing   | Pending             |
 | Photo derivative and metadata suggestion gaps                         | Audit pending   | Audit pending   | Audit pending   | Pending             |
 | Final acceptance and production configuration                         | Pending         | Pending         | Pending         | Pending             |
 
 ## External inputs and limitations
 
+- First Times now preserves all eight precisions and original bounds on both clients; native serialization also retains untouched database microseconds.
+- Remaining source-confirmed date gaps include required calendar anchors in Timeline/Homes/Vehicles and limited Goal-achievement precision; Idea-to-Goal conversion and specialized archived-Collection link preservation need follow-up.
 - Complete ZIP implementation passes 289 Web tests, twelve authenticated browser/API scenarios, and 169 native tests with zero skips; real ZIP extraction and original media hashes are verified locally.
 - Native interactive export acceptance is currently unavailable because the Mac is locked; Ryan must unlock it before Simulator UI automation can proceed.
 - Production ZIP streaming and authenticated native Save/share acceptance remain final-validation items; local streaming tests and native bearer downloads do not imply those checks passed.

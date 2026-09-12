@@ -40,7 +40,7 @@ final class FirstTimesController {
 
       let rows: [FirstTimeWorkspaceRow] =
         try await client
-        .rpc("first_times_workspace")
+        .rpc("first_times_workspace_with_occurrence")
         .execute()
         .value
       var loadedEntries = FirstTimesWorkspace.entries(from: rows)
@@ -90,9 +90,11 @@ final class FirstTimesController {
     occurredLabel: String,
     occurredTimezone: String?,
     collectionNames: [String],
-    tagNames: [String]
+    tagNames: [String],
+    occurredEnd: Date? = nil,
+    original: FirstTimeEntry? = nil
   ) async -> MutationResult {
-    let input: FirstTimeEntryInput
+    var input: FirstTimeEntryInput
 
     do {
       input = try FirstTimeEntryInput.validate(
@@ -105,8 +107,10 @@ final class FirstTimesController {
         occurredLabel: occurredLabel,
         occurredTimezone: occurredTimezone,
         collectionNames: collectionNames,
-        tagNames: tagNames
+        tagNames: tagNames,
+        occurredEnd: occurredEnd
       )
+      input.preserveUnchangedBounds(from: original)
     } catch {
       return MutationResult(identity: nil, message: error.localizedDescription, status: .error)
     }
@@ -127,7 +131,7 @@ final class FirstTimesController {
       let results: [SavedFirstTimeEntry] =
         try await client
         .rpc(
-          "save_first_time_entry",
+          "save_first_time_with_occurrence",
           params: SaveFirstTimeEntryParameters(input: input)
         )
         .execute()

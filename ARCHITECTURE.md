@@ -46,6 +46,10 @@ Web and native date conversion validate wall-clock dates in the recorded zone, i
 Unchanged edits preserve original instants and fractional seconds; newly edited repeated daylight-saving times use the earlier matching instant on both clients.
 Successful Web reviews immediately retain the server-confirmed revision while route refresh is in flight, preventing false conflicts on rapid reopening.
 Archived Collection links stay recoverable during review without re-creating the hidden Collection as an active group.
+The dedicated First Times clients use the same occurrence editors and the additive `first_times_workspace_with_occurrence` / `save_first_time_with_occurrence` contract so range ends and precision survive specialized editing.
+Native First Times decoding retains the original timestamp strings alongside parsed Dates and reuses them for untouched bounds, avoiding SDK fractional-second rounding during serialization.
+The legacy First Times mutation rejects writes that cannot preserve existing range ends or exact/range interpretation rather than silently degrading them.
+First Times also retains confirmed saved revisions during Web refresh and focuses the title only on editor mount.
 Other specialized editors and broad date-filter semantics remain in the separate cross-product precision audit.
 
 ## AI architecture
