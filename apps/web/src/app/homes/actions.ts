@@ -34,30 +34,33 @@ export async function saveHomeEntry(
     return expiredSession();
   }
 
-  const { data, error } = await context.client.rpc("save_home_entry", {
-    p_address: parsed.data.address,
-    p_body: parsed.data.body,
-    p_city: parsed.data.city,
-    p_collection_names: parsed.data.collectionNames,
-    p_country: parsed.data.country,
-    p_date_precision: parsed.data.datePrecision,
-    p_entry_id: parsed.data.id,
-    p_expected_revision: parsed.data.revision,
-    p_latitude: parsed.data.latitude,
-    p_longitude: parsed.data.longitude,
-    p_move_in_reason: parsed.data.moveInReason,
-    p_move_out_reason: parsed.data.moveOutReason,
-    p_occurred_end: parsed.data.occurredEnd,
-    p_occurred_label: parsed.data.occurredLabel,
-    p_occurred_start: parsed.data.occurredStart,
-    p_occurred_timezone: parsed.data.occurredTimezone,
-    p_place_id: parsed.data.placeId,
-    p_place_name: parsed.data.placeName,
-    p_place_notes: parsed.data.placeNotes,
-    p_region: parsed.data.region,
-    p_tag_names: parsed.data.tagNames,
-    p_title: parsed.data.title,
-  });
+  const { data, error } = await context.client.rpc(
+    "save_home_entry_with_occurrence",
+    {
+      p_address: parsed.data.address,
+      p_body: parsed.data.body,
+      p_city: parsed.data.city,
+      p_collection_names: parsed.data.collectionNames,
+      p_country: parsed.data.country,
+      p_date_precision: parsed.data.datePrecision,
+      p_entry_id: parsed.data.id,
+      p_expected_revision: parsed.data.revision,
+      p_latitude: parsed.data.latitude,
+      p_longitude: parsed.data.longitude,
+      p_move_in_reason: parsed.data.moveInReason,
+      p_move_out_reason: parsed.data.moveOutReason,
+      p_occurred_end: parsed.data.occurredEnd,
+      p_occurred_label: parsed.data.occurredLabel,
+      p_occurred_start: parsed.data.occurredStart,
+      p_occurred_timezone: parsed.data.occurredTimezone,
+      p_place_id: parsed.data.placeId,
+      p_place_name: parsed.data.placeName,
+      p_place_notes: parsed.data.placeNotes,
+      p_region: parsed.data.region,
+      p_tag_names: parsed.data.tagNames,
+      p_title: parsed.data.title,
+    },
+  );
 
   if (error) {
     return result("error", "MemoTrail could not save this Home. Try again.");

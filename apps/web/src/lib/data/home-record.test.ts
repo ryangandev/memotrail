@@ -50,6 +50,24 @@ const row = {
 };
 
 describe("Home records", () => {
+  it.each(["age", "approximate", "unknown"])(
+    "reads unanchored %s rows without hiding the archive",
+    (date_precision) => {
+      const records = parseHomeRows([
+        {
+          ...row,
+          date_precision,
+          occurred_start: null,
+          occurred_end: null,
+          occurred_timezone: null,
+          occurred_label: "During college",
+        },
+      ]);
+      expect(records).toHaveLength(1);
+      expect(homeDurationLabel(records![0])).toBe("Duration unavailable");
+      expect(homeRangeLabel(records![0])).toBe("During college");
+    },
+  );
   it("parses the complete Homes response", () => {
     const records = parseHomeRows([row]);
 
@@ -98,7 +116,7 @@ describe("Home records", () => {
     );
     expect(homeRangeLabel(home)).toBe("Since Jun 2025");
     expect(homeDurationLabel(home, new Date("2026-09-03T12:00:00Z"))).toBe(
-      "1 year 3 months",
+      "About 1 year 3 months",
     );
   });
 
@@ -114,6 +132,6 @@ describe("Home records", () => {
     if (!home) return;
 
     expect(homeRangeLabel(home)).toBe("Ages 25 to 26");
-    expect(homeDurationLabel(home)).toBe("1 year 2 months");
+    expect(homeDurationLabel(home)).toBe("About 1 year 2 months");
   });
 });

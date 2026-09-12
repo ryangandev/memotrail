@@ -319,12 +319,7 @@ struct ResidenceEditorSheet: View {
   @State private var currentPlaceID: UUID?
   @State private var title: String
   @State private var note: String
-  @State private var occurredStart: Date
-  @State private var occurredEnd: Date
-  @State private var isCurrent: Bool
-  @State private var datePrecision: ResidenceDatePrecision
-  @State private var occurredLabel: String
-  @State private var occurredTimezone: String
+  @State private var occurrence: OccurrenceDraft
   @State private var selectedSavedPlaceID: UUID?
   @State private var placeName: String
   @State private var address: String
@@ -357,14 +352,12 @@ struct ResidenceEditorSheet: View {
     _currentPlaceID = State(initialValue: entry?.placeID)
     _title = State(initialValue: entry?.title ?? "")
     _note = State(initialValue: entry?.body ?? "")
-    _occurredStart = State(initialValue: entry?.occurredStart ?? Date())
-    _occurredEnd = State(initialValue: entry?.occurredEnd ?? Date())
-    _isCurrent = State(initialValue: entry?.occurredEnd == nil)
-    _datePrecision = State(initialValue: entry?.datePrecision ?? .range)
-    _occurredLabel = State(initialValue: entry?.occurredLabel ?? "")
-    _occurredTimezone = State(
-      initialValue: entry?.occurredTimezone ?? TimeZone.current.identifier
-    )
+    _occurrence = State(
+      initialValue: OccurrenceDraft(
+        entry?.occurrence
+          ?? EntryOccurrence(
+            precision: .unknown, start: nil, end: nil, label: nil,
+            timezone: TimeZone.current.identifier)))
     _selectedSavedPlaceID = State(initialValue: entry?.placeID)
     _placeName = State(initialValue: entry?.placeName ?? "")
     _address = State(initialValue: entry?.address ?? "")
@@ -396,7 +389,6 @@ struct ResidenceEditorSheet: View {
       .disabled(isWorking)
       .onChange(of: title) { trim(&title, to: ResidenceEntryInput.titleLimit) }
       .onChange(of: note) { trim(&note, to: ResidenceEntryInput.bodyLimit) }
-      .onChange(of: occurredLabel) { trim(&occurredLabel, to: ResidenceEntryInput.labelLimit) }
       .onChange(of: selectedSavedPlaceID) { _, placeID in
         guard let placeID, let place = controller.placeOptions.first(where: { $0.id == placeID })
         else {
@@ -405,7 +397,6 @@ struct ResidenceEditorSheet: View {
         }
         apply(place)
       }
-      .onChange(of: occurredStart) { occurredTimezone = TimeZone.current.identifier }
       .onChange(of: pickerItems) { _, items in Task { await loadPhotos(from: items) } }
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
@@ -475,27 +466,14 @@ struct ResidenceEditorSheet: View {
   }
 
   private var datesSection: some View {
-    Section {
-      DatePicker("Move-in", selection: $occurredStart, displayedComponents: .date)
-      Toggle("Current residence", isOn: $isCurrent)
-      if !isCurrent {
-        DatePicker("Move-out", selection: $occurredEnd, displayedComponents: .date)
-      }
-      Picker("Date precision", selection: $datePrecision) {
-        ForEach(ResidenceDatePrecision.allCases, id: \.self) { precision in
-          Text(precision.displayName).tag(precision)
-        }
-      }
-      TextField("Human date label (optional)", text: $occurredLabel)
-        .textInputAutocapitalization(.sentences)
-      TextField("Why you moved in (optional)", text: $moveInReason, axis: .vertical)
-      if !isCurrent {
+    Group {
+      OccurrenceEditor(value: $occurrence, span: true)
+      Section {
+        TextField("Why you moved in (optional)", text: $moveInReason, axis: .vertical)
         TextField("Why you moved out (optional)", text: $moveOutReason, axis: .vertical)
+      } footer: {
+        Text("Leave the end date empty for a current residence.")
       }
-    } header: {
-      Text("When")
-    } footer: {
-      Text("Use the best-known dates. A label such as “Ages 12 to 25” can preserve context.")
     }
   }
 
@@ -710,16 +688,23 @@ struct ResidenceEditorSheet: View {
 
     isWorking = true
     progressMessage = "Saving Home..."
+    let resolved: EntryOccurrence
+    do { resolved = try occurrence.resolve(original: entry?.occurrence, span: true) } catch {
+      isWorking = false
+      progressMessage = nil
+      errorMessage = error.localizedDescription
+      return
+    }
     let result = await controller.save(
       entryID: currentEntryID,
       expectedRevision: currentRevision,
       title: title,
       body: note,
-      occurredStart: occurredStart,
-      occurredEnd: isCurrent ? nil : occurredEnd,
-      datePrecision: datePrecision,
-      occurredLabel: occurredLabel,
-      occurredTimezone: occurredTimezone,
+      occurredStart: resolved.start,
+      occurredEnd: resolved.end,
+      datePrecision: resolved.precision,
+      occurredLabel: resolved.label ?? "",
+      occurredTimezone: resolved.timezone,
       placeID: currentPlaceID,
       placeName: placeName,
       address: address,
@@ -730,9 +715,10 @@ struct ResidenceEditorSheet: View {
       longitude: parsedLongitude,
       placeNotes: placeNotes,
       moveInReason: moveInReason,
-      moveOutReason: isCurrent ? "" : moveOutReason,
+      moveOutReason: moveOutReason,
       collectionNames: namesIncludingDraft(collectionNames, collectionInput),
-      tagNames: namesIncludingDraft(tagNames, tagInput)
+      tagNames: namesIncludingDraft(tagNames, tagInput),
+      originalEntry: entry
     )
 
     guard result.status == .saved, let identity = result.identity else {

@@ -42,6 +42,24 @@ const row = {
 };
 
 describe("Vehicle records", () => {
+  it.each(["age", "approximate", "unknown"])(
+    "reads unanchored %s rows without hiding the archive",
+    (date_precision) => {
+      const records = parseVehicleRows([
+        {
+          ...row,
+          date_precision,
+          occurred_start: null,
+          occurred_end: null,
+          occurred_timezone: null,
+          occurred_label: "During college",
+        },
+      ]);
+      expect(records).toHaveLength(1);
+      expect(vehicleDurationLabel(records![0])).toBe("Duration unavailable");
+      expect(vehicleRangeLabel(records![0])).toBe("During college");
+    },
+  );
   it("parses the complete Vehicles response", () => {
     const records = parseVehicleRows([row]);
 
@@ -70,7 +88,7 @@ describe("Vehicle records", () => {
     expect(vehicleRangeLabel(vehicle)).toBe("Since Mar 2020");
     expect(
       vehicleDurationLabel(vehicle, new Date("2026-09-03T12:00:00Z")),
-    ).toBe("6 years 5 months");
+    ).toBe("About 6 years 6 months");
   });
 
   it("uses a human label and completed range when provided", () => {
@@ -85,7 +103,7 @@ describe("Vehicle records", () => {
     if (!vehicle) return;
 
     expect(vehicleRangeLabel(vehicle)).toBe("The California road-trip years");
-    expect(vehicleDurationLabel(vehicle)).toBe("6 years 5 months");
+    expect(vehicleDurationLabel(vehicle)).toBe("About 6 years 5 months");
   });
 
   it("builds a compact facts label without empty separators", () => {

@@ -243,3 +243,76 @@ export function occurrenceLabel(value: Occurrence): string {
     }).format(new Date(date));
   return `${format(value.occurredAt)}${value.occurredEnd ? ` to ${format(value.occurredEnd)}` : value.datePrecision === "range" ? " onward" : ""}`;
 }
+
+export function occurrenceSpanLabel(value: Occurrence): string {
+  value = {
+    ...value,
+    occurredTimezone: validTimezone(value.occurredTimezone)
+      ? value.occurredTimezone
+      : "UTC",
+  };
+  if (value.occurredLabel) return value.occurredLabel;
+  if (!value.occurredAt || value.datePrecision === "unknown")
+    return "Date unknown";
+  const point = {
+    ...value,
+    occurredEnd: null,
+    datePrecision:
+      value.datePrecision === "range" ? ("day" as const) : value.datePrecision,
+  };
+  const start = occurrenceLabel(point);
+  return value.occurredEnd
+    ? `${start} - ${occurrenceLabel({ ...point, occurredAt: value.occurredEnd })}`
+    : `Since ${start}`;
+}
+
+export function occurrenceDurationLabel(
+  value: Occurrence,
+  now = new Date(),
+): string {
+  if (!value.occurredAt || value.datePrecision === "unknown")
+    return "Duration unavailable";
+  const parts = (date: string) =>
+    Object.fromEntries(
+      new Intl.DateTimeFormat("en-CA", {
+        timeZone: validTimezone(value.occurredTimezone)
+          ? value.occurredTimezone
+          : "UTC",
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+      })
+        .formatToParts(new Date(date))
+        .filter((part) => part.type !== "literal")
+        .map((part) => [part.type, Number(part.value)]),
+    );
+  try {
+    const start = parts(value.occurredAt),
+      end = parts(value.occurredEnd ?? now.toISOString());
+    if (value.datePrecision === "year") {
+      const years = Math.max(0, end.year - start.year);
+      return years
+        ? `About ${years} ${years === 1 ? "year" : "years"}`
+        : "Less than a year (approx.)";
+    }
+    let months = (end.year - start.year) * 12 + end.month - start.month;
+    if (value.datePrecision !== "month" && end.day < start.day) months -= 1;
+    months = Math.max(0, months);
+    const approximate = ["month", "age", "approximate"].includes(
+      value.datePrecision,
+    );
+    if (!months)
+      return approximate ? "Less than a month (approx.)" : "Less than a month";
+    const years = Math.floor(months / 12),
+      remainder = months % 12;
+    const label = [
+      years ? `${years} ${years === 1 ? "year" : "years"}` : "",
+      remainder ? `${remainder} ${remainder === 1 ? "month" : "months"}` : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    return approximate ? `About ${label}` : label;
+  } catch {
+    return "Duration unavailable";
+  }
+}

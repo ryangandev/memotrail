@@ -1,4 +1,9 @@
 import {
+  occurrenceSpanLabel,
+  occurrenceDurationLabel,
+  type Occurrence,
+} from "./occurrence";
+import {
   firstTimeImageMimeTypes,
   type FirstTimeImageMimeType,
 } from "./first-time-input";
@@ -35,7 +40,7 @@ export type HomeRecord = {
   moveOutReason: string | null;
   occurredEnd: string | null;
   occurredLabel: string | null;
-  occurredStart: string;
+  occurredStart: string | null;
   occurredTimezone: string;
   placeId: string;
   placeName: string;
@@ -129,63 +134,20 @@ export function homeLocationLabel(home: HomeRecord) {
   return [...new Set(parts)].join(", ") || home.placeName;
 }
 
-export function homeRangeLabel(home: HomeRecord) {
-  if (home.occurredLabel) {
-    return home.occurredLabel;
-  }
-
-  const start = formatHomeDate(
-    home.occurredStart,
-    home.datePrecision,
-    home.occurredTimezone,
-  );
-
-  if (!home.occurredEnd) {
-    return `Since ${start}`;
-  }
-
-  return `${start} - ${formatHomeDate(
-    home.occurredEnd,
-    home.datePrecision,
-    home.occurredTimezone,
-  )}`;
+export function homeOccurrence(value: HomeRecord): Occurrence {
+  return {
+    occurredAt: value.occurredStart,
+    occurredEnd: value.occurredEnd,
+    occurredLabel: value.occurredLabel,
+    occurredTimezone: value.occurredTimezone,
+    datePrecision: value.datePrecision,
+  };
 }
-
-export function homeDurationLabel(home: HomeRecord, now = new Date()) {
-  const start = calendarParts(home.occurredStart, home.occurredTimezone);
-  const end = calendarParts(
-    home.occurredEnd ?? now.toISOString(),
-    home.occurredTimezone,
-  );
-
-  if (!start || !end) {
-    return "Duration unavailable";
-  }
-
-  let months = (end.year - start.year) * 12 + end.month - start.month;
-  if (end.day < start.day) {
-    months -= 1;
-  }
-  months = Math.max(0, months);
-
-  if (months === 0) {
-    return "Less than a month";
-  }
-
-  const years = Math.floor(months / 12);
-  const remainingMonths = months % 12;
-  const parts: string[] = [];
-
-  if (years > 0) {
-    parts.push(`${years} ${years === 1 ? "year" : "years"}`);
-  }
-  if (remainingMonths > 0) {
-    parts.push(
-      `${remainingMonths} ${remainingMonths === 1 ? "month" : "months"}`,
-    );
-  }
-
-  return parts.join(" ");
+export function homeRangeLabel(value: HomeRecord) {
+  return occurrenceSpanLabel(homeOccurrence(value));
+}
+export function homeDurationLabel(value: HomeRecord, now = new Date()) {
+  return occurrenceDurationLabel(homeOccurrence(value), now);
 }
 
 function parseHomeRow(value: unknown): HomeRecord | null {
@@ -194,12 +156,16 @@ function parseHomeRow(value: unknown): HomeRecord | null {
     typeof value.entry_id !== "string" ||
     typeof value.title !== "string" ||
     typeof value.body !== "string" ||
-    typeof value.occurred_start !== "string" ||
+    !nullableString(value.occurred_start) ||
+    (value.occurred_start === null &&
+      !["age", "approximate", "unknown"].includes(
+        String(value.date_precision),
+      )) ||
     !nullableString(value.occurred_end) ||
     typeof value.date_precision !== "string" ||
     !homeDatePrecisions.includes(value.date_precision as HomeDatePrecision) ||
     !nullableString(value.occurred_label) ||
-    typeof value.occurred_timezone !== "string" ||
+    !nullableString(value.occurred_timezone) ||
     typeof value.revision !== "number" ||
     typeof value.updated_at !== "string" ||
     !nullableString(value.move_in_reason) ||
@@ -243,7 +209,7 @@ function parseHomeRow(value: unknown): HomeRecord | null {
     occurredEnd: value.occurred_end,
     occurredLabel: value.occurred_label,
     occurredStart: value.occurred_start,
-    occurredTimezone: value.occurred_timezone,
+    occurredTimezone: value.occurred_timezone ?? "UTC",
     placeId: value.place_id,
     placeName: value.place_name,
     placeNotes: value.place_notes,
@@ -299,65 +265,6 @@ function parseAttachments(value: unknown): HomeAttachment[] | null {
   }
 
   return attachments;
-}
-
-function formatHomeDate(
-  value: string,
-  precision: HomeDatePrecision,
-  timeZone: string,
-) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "Date unavailable";
-  }
-
-  const options: Intl.DateTimeFormatOptions =
-    precision === "year"
-      ? { year: "numeric" }
-      : precision === "month" ||
-          precision === "approximate" ||
-          precision === "age" ||
-          precision === "range"
-        ? { month: "short", year: "numeric" }
-        : { day: "numeric", month: "short", year: "numeric" };
-
-  try {
-    return new Intl.DateTimeFormat("en", { ...options, timeZone }).format(date);
-  } catch {
-    return new Intl.DateTimeFormat("en", {
-      ...options,
-      timeZone: "UTC",
-    }).format(date);
-  }
-}
-
-function calendarParts(value: string, timeZone: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
-
-  try {
-    const parts = new Intl.DateTimeFormat("en-CA", {
-      day: "numeric",
-      month: "numeric",
-      timeZone,
-      year: "numeric",
-    }).formatToParts(date);
-    const values = Object.fromEntries(
-      parts
-        .filter((part) => part.type !== "literal")
-        .map((part) => [part.type, Number(part.value)]),
-    );
-
-    return {
-      day: values.day,
-      month: values.month,
-      year: values.year,
-    };
-  } catch {
-    return calendarParts(value, "UTC");
-  }
 }
 
 function stringArray(value: unknown): value is string[] {

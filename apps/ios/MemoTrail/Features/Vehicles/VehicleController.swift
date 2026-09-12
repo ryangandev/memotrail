@@ -68,7 +68,7 @@ final class VehicleController {
     expectedRevision: Int?,
     title: String,
     body: String,
-    occurredStart: Date,
+    occurredStart: Date?,
     occurredEnd: Date?,
     datePrecision: VehicleDatePrecision,
     occurredLabel: String,
@@ -78,9 +78,10 @@ final class VehicleController {
     modelYear: Int?,
     color: String,
     collectionNames: [String],
-    tagNames: [String]
+    tagNames: [String],
+    originalEntry: VehicleEntry? = nil
   ) async -> MutationResult {
-    let input: VehicleEntryInput
+    var input: VehicleEntryInput
     do {
       input = try VehicleEntryInput.validate(
         entryID: entryID,
@@ -103,6 +104,7 @@ final class VehicleController {
       return MutationResult(identity: nil, message: error.localizedDescription, status: .error)
     }
 
+    input.preserveUnchangedBounds(from: originalEntry)
     guard !isSaving else {
       return MutationResult(
         identity: nil,
@@ -117,7 +119,7 @@ final class VehicleController {
       try await validateSessionOwner()
       let results: [SavedVehicleEntry] =
         try await client
-        .rpc("save_vehicle_entry", params: SaveVehicleEntryParameters(input: input))
+        .rpc("save_vehicle_entry_with_occurrence", params: SaveVehicleEntryParameters(input: input))
         .execute()
         .value
       guard let saved = results.first else {

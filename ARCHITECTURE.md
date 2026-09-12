@@ -58,12 +58,19 @@ Bucket List achievement uses these same eight-precision editors and the additive
 Both clients start with Unknown rather than silently defaulting the milestone to today; age and approximate descriptions need no calendar anchor, and ranges retain their optional end.
 Goal status, history, the new First Time, and its achievement link commit atomically; invalid dates roll everything back, while revision checks and an already-achieved guard prevent competing or repeated submissions from creating duplicate milestones.
 The legacy six-argument achievement signature remains available for older clients.
-Other specialized editors and broad date-filter semantics remain in the separate cross-product precision audit.
+Broad date-filter semantics and remaining relationship paths remain in the cross-product audit.
 Timeline now uses `save_timeline_entry_with_occurrence` and the shared date editor on both clients, preserving nullable bounds and original raw timestamps instead of converting exact memories to date-only noon anchors.
 The shared editor's explicit span mode permits precision-aware ends for Life Stages, including year, month, and exact-time ends, without relaxing ordinary Entry validation or allowing point Events to carry an end.
 Unanchored Timeline moments remain in their tracks and native/mobile lists; desktop exposes them above the calendar axis in a separate non-calendar section rather than using creation/update time to invent a position.
 Confirmed Web mutations retain their revision until matching server props arrive, preventing false conflicts on immediate reopening; acknowledged overrides and explicitly trashed Entries are cleared.
 The legacy Timeline RPC retains its signature and validation but delegates actual writes to the new mutation, rejecting edits to exact or unanchored records it cannot represent safely.
+Homes and Vehicles use the same span editor and additive `save_home_entry_with_occurrence` / `save_vehicle_entry_with_occurrence` mutations, with all eight precisions and nullable workspace bounds on both clients.
+Native decoding retains both original timestamp strings for untouched saves, preserving microseconds and repeated daylight-saving instants.
+Chapter lists sort dated rows before undated rows within their current/earlier groups; no end keeps the existing current-chapter semantics.
+Shared chapter labels display year/month bounds at recorded precision, mark uncertain durations as estimates, and decline to calculate duration without a calendar anchor.
+Home move-out reasons require a known end; removing the end never silently erases existing writing, and both editors allow the user to explicitly clear the reason.
+Web chapter editors retain confirmed records during route refresh so immediate reopening uses the saved revision and content; newer acknowledged server revisions supersede temporary overrides.
+Legacy chapter mutations delegate writes but reject exact or unanchored existing records they cannot safely edit, while owned Place updates, private photos, archived Collection links, history, and Timeline stages keep their established shared contracts.
 
 ## In-place Goal conversion
 

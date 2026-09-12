@@ -1,25 +1,6 @@
 import Foundation
 
-enum VehicleDatePrecision: String, CaseIterable, Codable, Equatable, Hashable, Sendable {
-  case exact
-  case day
-  case month
-  case year
-  case approximate
-  case age
-  case range
-
-  var displayName: String {
-    switch self {
-    case .exact, .day: "Exact day"
-    case .month: "Month"
-    case .year: "Year"
-    case .approximate: "Approximate"
-    case .age: "Age-based"
-    case .range: "Date range"
-    }
-  }
-}
+typealias VehicleDatePrecision = TimelineDatePrecision
 
 typealias VehicleAttachment = ResidenceAttachment
 
@@ -27,7 +8,7 @@ struct VehicleEntry: Equatable, Hashable, Identifiable, Sendable {
   let id: UUID
   let title: String
   let body: String
-  let occurredStart: Date
+  let occurredStart: Date?
   let occurredEnd: Date?
   let datePrecision: VehicleDatePrecision
   let occurredLabel: String?
@@ -45,6 +26,14 @@ struct VehicleEntry: Equatable, Hashable, Identifiable, Sendable {
   var attachments: [VehicleAttachment]
   let totalCount: Int
 
+  var occurredStartRaw: String? = nil
+  var occurredEndRaw: String? = nil
+  var occurrence: EntryOccurrence {
+    EntryOccurrence(
+      precision: datePrecision, start: occurredStart, end: occurredEnd, label: occurredLabel,
+      timezone: occurredTimezone)
+  }
+
   var isCurrent: Bool { occurredEnd == nil }
 
   var factsLabel: String {
@@ -57,60 +46,20 @@ struct VehicleEntry: Equatable, Hashable, Identifiable, Sendable {
       .nonEmpty ?? "Details not recorded"
   }
 
-  var displayRange: String {
-    if let occurredLabel = occurredLabel?.trimmed.nonEmpty { return occurredLabel }
-    let start = formatted(occurredStart)
-    guard let occurredEnd else { return "Since \(start)" }
-    return "\(start) - \(formatted(occurredEnd))"
-  }
+  var displayRange: String { occurrence.spanLabel }
+  func durationLabel(now: Date = Date()) -> String { occurrence.durationLabel(now: now) }
 
-  func durationLabel(now: Date = Date()) -> String {
-    var calendar = Calendar(identifier: .gregorian)
-    calendar.timeZone = TimeZone(identifier: occurredTimezone) ?? .gmt
-    let start = calendar.dateComponents([.year, .month, .day], from: occurredStart)
-    let end = calendar.dateComponents([.year, .month, .day], from: occurredEnd ?? now)
-    guard let startYear = start.year, let startMonth = start.month, let startDay = start.day,
-      let endYear = end.year, let endMonth = end.month, let endDay = end.day
-    else { return "Duration unavailable" }
-
-    var months = (endYear - startYear) * 12 + endMonth - startMonth
-    if endDay < startDay { months -= 1 }
-    months = max(0, months)
-    guard months > 0 else { return "Less than a month" }
-
-    let years = months / 12
-    let remainingMonths = months % 12
-    var parts: [String] = []
-    if years > 0 { parts.append("\(years) \(years == 1 ? "year" : "years")") }
-    if remainingMonths > 0 {
-      parts.append("\(remainingMonths) \(remainingMonths == 1 ? "month" : "months")")
-    }
-    return parts.joined(separator: " ")
-  }
-
-  private func formatted(_ date: Date) -> String {
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "en_US")
-    formatter.timeZone = TimeZone(identifier: occurredTimezone) ?? .gmt
-    switch datePrecision {
-    case .year: formatter.setLocalizedDateFormatFromTemplate("yyyy")
-    case .month, .approximate, .age, .range:
-      formatter.setLocalizedDateFormatFromTemplate("MMM yyyy")
-    case .exact, .day: formatter.setLocalizedDateFormatFromTemplate("MMM d, yyyy")
-    }
-    return formatter.string(from: date)
-  }
 }
 
 struct VehicleWorkspaceRow: Decodable, Equatable, Sendable {
   let entryID: UUID
   let title: String
   let body: String
-  let occurredStart: Date
+  let occurredStart: Date?
   let occurredEnd: Date?
   let datePrecision: VehicleDatePrecision
   let occurredLabel: String?
-  let occurredTimezone: String
+  let occurredTimezone: String?
   let revision: Int
   let updatedAt: Date
   let make: String?
@@ -123,6 +72,9 @@ struct VehicleWorkspaceRow: Decodable, Equatable, Sendable {
   let tagNames: [String]
   let attachments: [VehicleAttachment]
   let totalCount: Int
+
+  var occurredStartRaw: String? = nil
+  var occurredEndRaw: String? = nil
 
   enum CodingKeys: String, CodingKey {
     case entryID = "entry_id"
@@ -156,7 +108,7 @@ struct VehicleWorkspaceRow: Decodable, Equatable, Sendable {
       occurredEnd: occurredEnd,
       datePrecision: datePrecision,
       occurredLabel: occurredLabel?.trimmed.nonEmpty,
-      occurredTimezone: occurredTimezone,
+      occurredTimezone: occurredTimezone ?? "UTC",
       revision: revision,
       updatedAt: updatedAt,
       make: make?.trimmed.nonEmpty,
@@ -168,7 +120,9 @@ struct VehicleWorkspaceRow: Decodable, Equatable, Sendable {
       collectionNames: collectionNames,
       tagNames: tagNames,
       attachments: attachments,
-      totalCount: totalCount
+      totalCount: totalCount,
+      occurredStartRaw: occurredStartRaw,
+      occurredEndRaw: occurredEndRaw
     )
   }
 }
@@ -177,7 +131,9 @@ enum VehicleWorkspace {
   static func entries(from rows: [VehicleWorkspaceRow]) -> [VehicleEntry] {
     rows.map(\.entry).sorted {
       if $0.isCurrent != $1.isCurrent { return $0.isCurrent }
-      if $0.occurredStart != $1.occurredStart { return $0.occurredStart > $1.occurredStart }
+      if $0.occurredStart != $1.occurredStart {
+        return ($0.occurredStart ?? .distantPast) > ($1.occurredStart ?? .distantPast)
+      }
       let titleOrder = $0.title.localizedCaseInsensitiveCompare($1.title)
       return titleOrder == .orderedSame
         ? $0.id.uuidString < $1.id.uuidString : titleOrder == .orderedAscending
@@ -201,7 +157,7 @@ struct VehicleEntryInput: Equatable, Sendable {
   let expectedRevision: Int?
   let title: String
   let body: String
-  let occurredStart: Date
+  let occurredStart: Date?
   let occurredEnd: Date?
   let datePrecision: VehicleDatePrecision
   let occurredLabel: String?
@@ -213,12 +169,22 @@ struct VehicleEntryInput: Equatable, Sendable {
   let collectionNames: [String]
   let tagNames: [String]
 
+  var occurredStartRaw: String? = nil
+  var occurredEndRaw: String? = nil
+  mutating func preserveUnchangedBounds(from original: VehicleEntry?) {
+    guard let original, original.datePrecision == datePrecision,
+      original.occurredTimezone == occurredTimezone
+    else { return }
+    if original.occurredStart == occurredStart { occurredStartRaw = original.occurredStartRaw }
+    if original.occurredEnd == occurredEnd { occurredEndRaw = original.occurredEndRaw }
+  }
+
   static func validate(
     entryID: UUID?,
     expectedRevision: Int?,
     title: String,
     body: String,
-    occurredStart: Date,
+    occurredStart: Date?,
     occurredEnd: Date?,
     datePrecision: VehicleDatePrecision,
     occurredLabel: String,
@@ -248,10 +214,10 @@ struct VehicleEntryInput: Equatable, Sendable {
     guard modelYear.map({ 1886...2200 ~= $0 }) ?? true else {
       throw VehicleEntryError.invalidModelYear
     }
-    guard occurredStart.timeIntervalSinceReferenceDate.isFinite,
+    guard occurredStart?.timeIntervalSinceReferenceDate.isFinite ?? true,
       occurredEnd?.timeIntervalSinceReferenceDate.isFinite ?? true
     else { throw VehicleEntryError.invalidDate }
-    guard occurredEnd.map({ $0 >= occurredStart }) ?? true else {
+    guard occurredEnd.map({ end in occurredStart.map { end >= $0 } ?? false }) ?? true else {
       throw VehicleEntryError.reversedRange
     }
     guard !occurredTimezone.isEmpty, occurredTimezone.count <= 100,
@@ -276,6 +242,10 @@ struct VehicleEntryInput: Equatable, Sendable {
       )
     else { throw VehicleEntryError.invalidTags }
 
+    try EntryOccurrence(
+      precision: datePrecision, start: occurredStart, end: occurredEnd, label: occurredLabel,
+      timezone: occurredTimezone
+    ).validate(span: true)
     return VehicleEntryInput(
       entryID: entryID,
       expectedRevision: expectedRevision,
@@ -337,12 +307,20 @@ struct SaveVehicleEntryParameters: Encodable, Equatable, Sendable {
     var values = encoder.container(keyedBy: CodingKeys.self)
     try values.encode(input.title, forKey: .title)
     try values.encode(input.body, forKey: .body)
-    try values.encode(input.occurredStart, forKey: .occurredStart)
+    if let raw = input.occurredStartRaw {
+      try values.encode(raw, forKey: .occurredStart)
+    } else {
+      try encodeNullable(input.occurredStart, forKey: .occurredStart, into: &values)
+    }
     try values.encode(input.datePrecision, forKey: .datePrecision)
     try values.encode(input.occurredTimezone, forKey: .occurredTimezone)
     try values.encode(input.collectionNames, forKey: .collectionNames)
     try values.encode(input.tagNames, forKey: .tagNames)
-    try encodeNullable(input.occurredEnd, forKey: .occurredEnd, into: &values)
+    if let raw = input.occurredEndRaw {
+      try values.encode(raw, forKey: .occurredEnd)
+    } else {
+      try encodeNullable(input.occurredEnd, forKey: .occurredEnd, into: &values)
+    }
     try encodeNullable(input.occurredLabel, forKey: .occurredLabel, into: &values)
     try encodeNullable(input.make, forKey: .make, into: &values)
     try encodeNullable(input.model, forKey: .model, into: &values)
@@ -425,5 +403,33 @@ enum VehicleEntryError: LocalizedError, Equatable {
     case .titleRequired: "Add a name or nickname for this Vehicle."
     case .titleTooLong: "Vehicle names can be up to \(VehicleEntryInput.titleLimit) characters."
     }
+  }
+}
+
+extension VehicleWorkspaceRow {
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    entryID = try values.decode(UUID.self, forKey: .entryID)
+    title = try values.decode(String.self, forKey: .title)
+    body = try values.decode(String.self, forKey: .body)
+    occurredStart = try values.decodeIfPresent(Date.self, forKey: .occurredStart)
+    occurredEnd = try values.decodeIfPresent(Date.self, forKey: .occurredEnd)
+    datePrecision = try values.decode(VehicleDatePrecision.self, forKey: .datePrecision)
+    occurredLabel = try values.decodeIfPresent(String.self, forKey: .occurredLabel)
+    occurredTimezone = try values.decodeIfPresent(String.self, forKey: .occurredTimezone)
+    revision = try values.decode(Int.self, forKey: .revision)
+    updatedAt = try values.decode(Date.self, forKey: .updatedAt)
+    make = try values.decodeIfPresent(String.self, forKey: .make)
+    model = try values.decodeIfPresent(String.self, forKey: .model)
+    modelYear = try values.decodeIfPresent(Int.self, forKey: .modelYear)
+    color = try values.decodeIfPresent(String.self, forKey: .color)
+    timelineTrackID = try values.decodeIfPresent(UUID.self, forKey: .timelineTrackID)
+    timelineTrackName = try values.decodeIfPresent(String.self, forKey: .timelineTrackName)
+    collectionNames = try values.decode([String].self, forKey: .collectionNames)
+    tagNames = try values.decode([String].self, forKey: .tagNames)
+    attachments = try values.decode([VehicleAttachment].self, forKey: .attachments)
+    totalCount = try values.decode(Int.self, forKey: .totalCount)
+    occurredStartRaw = try values.decodeIfPresent(String.self, forKey: .occurredStart)
+    occurredEndRaw = try values.decodeIfPresent(String.self, forKey: .occurredEnd)
   }
 }

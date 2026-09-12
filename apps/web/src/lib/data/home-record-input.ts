@@ -1,3 +1,4 @@
+import { validateOccurrence } from "./occurrence";
 import { parseOrganizationNames } from "./inbox-review";
 
 export const homeBodyLimit = 50_000;
@@ -13,6 +14,7 @@ export const homeDatePrecisions = [
   "approximate",
   "age",
   "range",
+  "unknown",
 ] as const;
 
 export type HomeDatePrecision = (typeof homeDatePrecisions)[number];
@@ -31,7 +33,7 @@ export type HomeEntryInput = {
   moveOutReason: string | null;
   occurredEnd: string | null;
   occurredLabel: string | null;
-  occurredStart: string;
+  occurredStart: string | null;
   occurredTimezone: string;
   placeId: string | null;
   placeName: string;
@@ -115,30 +117,26 @@ export function parseHomeEntryInput(input: unknown): Parsed<HomeEntryInput> {
     return invalid("Choose a valid date precision.");
   }
 
-  const occurredStart = validIsoDate(input.occurredStart);
-  const occurredEnd = input.occurredEnd
-    ? validIsoDate(input.occurredEnd)
-    : null;
-
-  if (!occurredStart) {
-    return invalid("Add the best-known move-in date.");
-  }
-
-  if (input.occurredEnd && !occurredEnd) {
-    return invalid("Choose a valid move-out date.");
-  }
-
-  if (occurredEnd && occurredEnd < occurredStart) {
-    return invalid("The move-out date must be on or after the move-in date.");
-  }
-
-  if (moveOutReason && !occurredEnd) {
+  const occurredStart = input.occurredStart;
+  const occurredEnd = input.occurredEnd;
+  if (
+    !(occurredStart === null || typeof occurredStart === "string") ||
+    !(occurredEnd === null || typeof occurredEnd === "string")
+  )
+    return invalid("Choose a valid date.");
+  const occurrenceError = validateOccurrence(
+    {
+      occurredAt: occurredStart,
+      occurredEnd,
+      occurredLabel,
+      occurredTimezone,
+      datePrecision: input.datePrecision as HomeDatePrecision,
+    },
+    true,
+  );
+  if (occurrenceError) return invalid(occurrenceError);
+  if (moveOutReason && !occurredEnd)
     return invalid("Add a move-out date before recording why you left.");
-  }
-
-  if (!occurredTimezone || occurredTimezone.length > 100) {
-    return invalid("Choose a valid occurrence time zone.");
-  }
 
   const latitude = optionalCoordinate(input.latitude);
   const longitude = optionalCoordinate(input.longitude);
@@ -214,15 +212,6 @@ export function isHomeEntryIdentity(id: unknown, revision: unknown) {
         typeof revision === "number" &&
         Number.isSafeInteger(revision) &&
         revision >= 1;
-}
-
-function validIsoDate(value: unknown) {
-  if (typeof value !== "string" || !value) {
-    return null;
-  }
-
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
 function validUuid(value: unknown) {

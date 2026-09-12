@@ -97,7 +97,7 @@ final class ResidenceEntryTests: XCTestCase {
       region: "San Diego"
     ).entry
 
-    XCTAssertEqual(entry.displayRange, "Jan 2025 - Mar 2026")
+    XCTAssertEqual(entry.displayRange, "Jan 15, 2025 - Mar 14, 2026")
     XCTAssertEqual(entry.displayLocation, "San Diego, USA")
     XCTAssertEqual(entry.durationLabel(), "1 year 1 month")
   }
@@ -219,6 +219,84 @@ final class ResidenceEntryTests: XCTestCase {
     XCTAssertTrue(json["p_original_filename"] is NSNull)
   }
 
+  func testAllChapterPrecisionsValidateWithoutInventedDates() throws {
+    for precision in TimelineDatePrecision.allCases {
+      let unanchored = [.age, .approximate, .unknown].contains(precision)
+      let input = try makeInput(
+        occurredStart: unanchored ? nil : Date(timeIntervalSince1970: 100),
+        datePrecision: precision,
+        occurredLabel: [.age, .approximate].contains(precision) ? "During college" : "",
+        occurredEnd: unanchored ? nil : Date(timeIntervalSince1970: 200))
+      XCTAssertEqual(input.occurredStart == nil, unanchored)
+      XCTAssertEqual(input.datePrecision, precision)
+    }
+    XCTAssertThrowsError(try makeInput(occurredStart: nil, occurredEnd: nil))
+    XCTAssertThrowsError(try makeInput(occurredStart: nil, datePrecision: .age, occurredEnd: nil))
+  }
+
+  func testChapterDurationRespectsMonthYearAndUnknownPrecision() {
+    var value = EntryOccurrence(
+      precision: .month, start: isoDate("2020-03-12T12:00:00Z"),
+      end: isoDate("2026-09-03T12:00:00Z"), label: nil, timezone: "UTC")
+    XCTAssertEqual(value.spanLabel, "Mar 2020 - Sep 2026")
+    XCTAssertEqual(value.durationLabel(), "About 6 years 6 months")
+    value.precision = .year
+    XCTAssertEqual(value.spanLabel, "2020 - 2026")
+    XCTAssertEqual(value.durationLabel(), "About 6 years")
+    value.precision = .unknown
+    value.start = nil
+    value.end = nil
+    XCTAssertEqual(value.durationLabel(), "Duration unavailable")
+  }
+
+  func testWorkspaceDecodingAndSaveRetainRawExactBounds() throws {
+    let base: [String: Any] = [
+      "entry_id": UUID().uuidString, "title": "Chapter", "body": "Memory",
+      "occurred_start": "2026-11-01T09:30:00.123456Z",
+      "occurred_end": "2026-11-01T10:30:00.654321Z",
+      "date_precision": "exact", "occurred_timezone": "America/New_York",
+      "revision": 1, "updated_at": "2026-09-12T12:00:00Z",
+      "place_id": UUID().uuidString, "place_name": "Home",
+      "collection_names": [], "tag_names": [], "attachments": [], "total_count": 1,
+    ]
+    let jsonDecoder = JSONDecoder()
+    jsonDecoder.dateDecodingStrategy = .custom { decoder in
+      let text = try decoder.singleValueContainer().decode(String.self)
+      let formatter = ISO8601DateFormatter()
+      formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+      if let date = formatter.date(from: text) { return date }
+      formatter.formatOptions = [.withInternetDateTime]
+      return try XCTUnwrap(formatter.date(from: text))
+    }
+    let row = try jsonDecoder.decode(
+      ResidenceWorkspaceRow.self, from: JSONSerialization.data(withJSONObject: base))
+    let entry = row.entry
+    let resolved = try OccurrenceDraft(entry.occurrence).resolve(
+      original: entry.occurrence, span: true)
+    var input = try makeInput(
+      occurredStart: resolved.start, datePrecision: .exact, occurredEnd: resolved.end)
+    input.preserveUnchangedBounds(from: entry)
+    let encoded = try XCTUnwrap(
+      JSONSerialization.jsonObject(
+        with: JSONEncoder().encode(SaveResidenceEntryParameters(input: input))) as? [String: Any])
+    XCTAssertEqual(encoded["p_occurred_start"] as? String, base["occurred_start"] as? String)
+    XCTAssertEqual(encoded["p_occurred_end"] as? String, base["occurred_end"] as? String)
+    for precision in ["age", "approximate", "unknown"] {
+      var undated = base
+      undated["occurred_start"] = NSNull()
+      undated["occurred_end"] = NSNull()
+      undated["occurred_timezone"] = NSNull()
+      undated["date_precision"] = precision
+      undated["occurred_label"] = "During college"
+      let record = try jsonDecoder.decode(
+        ResidenceWorkspaceRow.self, from: JSONSerialization.data(withJSONObject: undated)
+      ).entry
+      XCTAssertNil(record.occurredStart)
+      XCTAssertEqual(record.displayRange, "During college")
+      XCTAssertEqual(record.durationLabel(), "Duration unavailable")
+    }
+  }
+
   private var decoder: JSONDecoder {
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .iso8601
@@ -234,7 +312,9 @@ final class ResidenceEntryTests: XCTestCase {
     expectedRevision: Int? = nil,
     title: String = "Home",
     body: String = "Memories",
-    occurredStart: Date = Date(timeIntervalSince1970: 100),
+    occurredStart: Date? = Date(timeIntervalSince1970: 100),
+    datePrecision: TimelineDatePrecision = .range,
+    occurredLabel: String = "",
     occurredEnd: Date? = Date(timeIntervalSince1970: 200),
     placeID: UUID? = nil,
     placeName: String = "Place",
@@ -252,8 +332,8 @@ final class ResidenceEntryTests: XCTestCase {
       body: body,
       occurredStart: occurredStart,
       occurredEnd: occurredEnd,
-      datePrecision: .range,
-      occurredLabel: "",
+      datePrecision: datePrecision,
+      occurredLabel: occurredLabel,
       occurredTimezone: "America/New_York",
       placeID: placeID,
       placeName: placeName,

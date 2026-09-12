@@ -269,12 +269,7 @@ struct VehicleEditorSheet: View {
   @State private var currentRevision: Int?
   @State private var title: String
   @State private var note: String
-  @State private var occurredStart: Date
-  @State private var occurredEnd: Date
-  @State private var isCurrent: Bool
-  @State private var datePrecision: VehicleDatePrecision
-  @State private var occurredLabel: String
-  @State private var occurredTimezone: String
+  @State private var occurrence: OccurrenceDraft
   @State private var make: String
   @State private var model: String
   @State private var modelYear: String
@@ -299,12 +294,12 @@ struct VehicleEditorSheet: View {
     _currentRevision = State(initialValue: entry?.revision)
     _title = State(initialValue: entry?.title ?? "")
     _note = State(initialValue: entry?.body ?? "")
-    _occurredStart = State(initialValue: entry?.occurredStart ?? Date())
-    _occurredEnd = State(initialValue: entry?.occurredEnd ?? Date())
-    _isCurrent = State(initialValue: entry?.occurredEnd == nil)
-    _datePrecision = State(initialValue: entry?.datePrecision ?? .range)
-    _occurredLabel = State(initialValue: entry?.occurredLabel ?? "")
-    _occurredTimezone = State(initialValue: entry?.occurredTimezone ?? TimeZone.current.identifier)
+    _occurrence = State(
+      initialValue: OccurrenceDraft(
+        entry?.occurrence
+          ?? EntryOccurrence(
+            precision: .unknown, start: nil, end: nil, label: nil,
+            timezone: TimeZone.current.identifier)))
     _make = State(initialValue: entry?.make ?? "")
     _model = State(initialValue: entry?.model ?? "")
     _modelYear = State(initialValue: entry?.modelYear.map(String.init) ?? "")
@@ -329,11 +324,9 @@ struct VehicleEditorSheet: View {
       .disabled(isWorking)
       .onChange(of: title) { trim(&title, to: VehicleEntryInput.titleLimit) }
       .onChange(of: note) { trim(&note, to: VehicleEntryInput.bodyLimit) }
-      .onChange(of: occurredLabel) { trim(&occurredLabel, to: VehicleEntryInput.labelLimit) }
       .onChange(of: make) { trim(&make, to: VehicleEntryInput.makeLimit) }
       .onChange(of: model) { trim(&model, to: VehicleEntryInput.modelLimit) }
       .onChange(of: color) { trim(&color, to: VehicleEntryInput.colorLimit) }
-      .onChange(of: occurredStart) { occurredTimezone = TimeZone.current.identifier }
       .onChange(of: pickerItems) { _, items in Task { await loadPhotos(from: items) } }
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
@@ -401,24 +394,9 @@ struct VehicleEditorSheet: View {
   }
 
   private var datesSection: some View {
-    Section {
-      DatePicker("Acquired or began using", selection: $occurredStart, displayedComponents: .date)
-      Toggle("Current vehicle", isOn: $isCurrent)
-      if !isCurrent {
-        DatePicker("Sold, retired, or stopped", selection: $occurredEnd, displayedComponents: .date)
-      }
-      Picker("Date precision", selection: $datePrecision) {
-        ForEach(VehicleDatePrecision.allCases, id: \.self) { precision in
-          Text(precision.displayName).tag(precision)
-        }
-      }
-      TextField("Human date label (optional)", text: $occurredLabel)
-        .textInputAutocapitalization(.sentences)
-    } header: {
-      Text("When")
-    } footer: {
-      Text("Use the best-known dates. A label such as “College years” can preserve context.")
-    }
+    OccurrenceEditor(
+      value: $occurrence, span: true,
+      chapterGuidance: "Leave the end date empty for a current Vehicle chapter.")
   }
 
   private var factsSection: some View {
@@ -583,22 +561,30 @@ struct VehicleEditorSheet: View {
 
     isWorking = true
     progressMessage = "Saving Vehicle..."
+    let resolved: EntryOccurrence
+    do { resolved = try occurrence.resolve(original: entry?.occurrence, span: true) } catch {
+      isWorking = false
+      progressMessage = nil
+      errorMessage = error.localizedDescription
+      return
+    }
     let result = await controller.save(
       entryID: currentEntryID,
       expectedRevision: currentRevision,
       title: title,
       body: note,
-      occurredStart: occurredStart,
-      occurredEnd: isCurrent ? nil : occurredEnd,
-      datePrecision: datePrecision,
-      occurredLabel: occurredLabel,
-      occurredTimezone: occurredTimezone,
+      occurredStart: resolved.start,
+      occurredEnd: resolved.end,
+      datePrecision: resolved.precision,
+      occurredLabel: resolved.label ?? "",
+      occurredTimezone: resolved.timezone,
       make: make,
       model: model,
       modelYear: parsedModelYear,
       color: color,
       collectionNames: namesIncludingDraft(collectionNames, collectionInput),
-      tagNames: namesIncludingDraft(tagNames, tagInput)
+      tagNames: namesIncludingDraft(tagNames, tagInput),
+      originalEntry: entry
     )
     guard result.status == .saved, let identity = result.identity else {
       isWorking = false

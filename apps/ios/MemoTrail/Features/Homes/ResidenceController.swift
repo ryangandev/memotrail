@@ -80,7 +80,7 @@ final class ResidenceController {
     expectedRevision: Int?,
     title: String,
     body: String,
-    occurredStart: Date,
+    occurredStart: Date?,
     occurredEnd: Date?,
     datePrecision: ResidenceDatePrecision,
     occurredLabel: String,
@@ -97,9 +97,10 @@ final class ResidenceController {
     moveInReason: String,
     moveOutReason: String,
     collectionNames: [String],
-    tagNames: [String]
+    tagNames: [String],
+    originalEntry: ResidenceEntry? = nil
   ) async -> MutationResult {
-    let input: ResidenceEntryInput
+    var input: ResidenceEntryInput
 
     do {
       input = try ResidenceEntryInput.validate(
@@ -130,6 +131,7 @@ final class ResidenceController {
       return MutationResult(identity: nil, message: error.localizedDescription, status: .error)
     }
 
+    input.preserveUnchangedBounds(from: originalEntry)
     guard !isSaving else {
       return MutationResult(
         identity: nil,
@@ -145,7 +147,7 @@ final class ResidenceController {
       try await validateSessionOwner()
       let results: [SavedResidenceEntry] =
         try await client
-        .rpc("save_home_entry", params: SaveResidenceEntryParameters(input: input))
+        .rpc("save_home_entry_with_occurrence", params: SaveResidenceEntryParameters(input: input))
         .execute()
         .value
 

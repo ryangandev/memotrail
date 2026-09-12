@@ -6,6 +6,25 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Lossless Homes and Vehicles dates across Web and iOS
+
+- Reproduced Exact chapter dates being downgraded to Day in both dedicated Web editors.
+- Both clients now reuse the shared eight-precision span editor, support description-only Age/Approximate and Unknown without invented anchors, and preserve optional chapter ends at their recorded precision.
+- Native workspace decoding and save serialization retain original timestamp strings, including database microseconds and repeated daylight-saving instants.
+- Shared chapter labels preserve year/month precision, label uncertain durations as estimates, and show Duration unavailable when no calendar anchor exists.
+- Unanchored chapters remain visible after dated chapters within the same current/earlier group; no end retains the existing current-residence/current-Vehicle contract.
+- Home move-out reasons still require an end date and are retained until explicitly cleared, including when the user changes date precision.
+- Browser regression reproduced false cross-device conflicts on rapid reopening; both workspaces now retain confirmed saved records until server props acknowledge the new revision.
+- Actual competing-device edits still reject stale writes, with browser and SQL assertions confirming newer content is not overwritten.
+- Additive owner/revision-checked mutations preserve Place facts, history, Timeline stages, private attachments, and recoverable Collection membership; legacy signatures delegate writes and protect exact/unanchored records from incompatible editors.
+- Migration `202609120017_chapter_occurrence.sql` is deployed, hosted schema lint is clean, and the remote migration ledger is up to date with no seeds or role changes.
+- Local database regression passes 1,189 assertions, Web passes 319 unit tests, and native simulator tests execute 182 tests with zero failures or skips.
+- All 23 authenticated browser/API scenarios pass; focused chapter acceptance also verifies all eight precisions, partial ends, exact microseconds, rapid reopening, mobile Unknown creation, preserved move-out writing, and real stale-save rejection.
+- Desktop/light and mobile/dark editor screenshots were inspected; chapter guidance and action buttons were aligned with shared design tokens.
+- Production build, lint, type checking, formatting, and diff checks pass; native interactive and production acceptance remain separate pending checks.
+- No provider calls were added; the existing expected incomplete-export error and known upstream client-aborted RSC logging are not claimed fixed by this feature.
+- Remaining work includes broader Entry-link/date-filter audit, photo derivatives/metadata, and final cross-platform/production acceptance.
+
 ### Lossless Timeline dates and visible unanchored moments
 
 - Reproduced the real editor downgrade of an Exact Timeline memory to Day and the lack of a desktop calendar position for unanchored memories.

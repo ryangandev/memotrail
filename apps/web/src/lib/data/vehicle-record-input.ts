@@ -1,3 +1,4 @@
+import { validateOccurrence } from "./occurrence";
 import { parseOrganizationNames } from "./inbox-review";
 
 export const vehicleBodyLimit = 50_000;
@@ -15,6 +16,7 @@ export const vehicleDatePrecisions = [
   "approximate",
   "age",
   "range",
+  "unknown",
 ] as const;
 
 export type VehicleDatePrecision = (typeof vehicleDatePrecisions)[number];
@@ -30,7 +32,7 @@ export type VehicleEntryInput = {
   modelYear: number | null;
   occurredEnd: string | null;
   occurredLabel: string | null;
-  occurredStart: string;
+  occurredStart: string | null;
   occurredTimezone: string;
   revision: number | null;
   tagNames: string[];
@@ -90,23 +92,24 @@ export function parseVehicleEntryInput(
     return invalid("Choose a valid date precision.");
   }
 
-  const occurredStart = validIsoDate(input.occurredStart);
-  const occurredEnd = input.occurredEnd
-    ? validIsoDate(input.occurredEnd)
-    : null;
-
-  if (!occurredStart) {
-    return invalid("Add the best-known date this Vehicle chapter began.");
-  }
-  if (input.occurredEnd && !occurredEnd) {
-    return invalid("Choose a valid end date.");
-  }
-  if (occurredEnd && occurredEnd < occurredStart) {
-    return invalid("The end date must be on or after the start date.");
-  }
-  if (!occurredTimezone || occurredTimezone.length > 100) {
-    return invalid("Choose a valid occurrence time zone.");
-  }
+  const occurredStart = input.occurredStart;
+  const occurredEnd = input.occurredEnd;
+  if (
+    !(occurredStart === null || typeof occurredStart === "string") ||
+    !(occurredEnd === null || typeof occurredEnd === "string")
+  )
+    return invalid("Choose a valid date.");
+  const occurrenceError = validateOccurrence(
+    {
+      occurredAt: occurredStart,
+      occurredEnd,
+      occurredLabel,
+      occurredTimezone,
+      datePrecision: input.datePrecision as VehicleDatePrecision,
+    },
+    true,
+  );
+  if (occurrenceError) return invalid(occurrenceError);
 
   const modelYear = optionalModelYear(input.modelYear);
   if (modelYear === undefined) {
@@ -151,12 +154,6 @@ export function isVehicleEntryIdentity(id: unknown, revision: unknown) {
         typeof revision === "number" &&
         Number.isSafeInteger(revision) &&
         revision >= 1;
-}
-
-function validIsoDate(value: unknown) {
-  if (typeof value !== "string" || !value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
 function optionalModelYear(value: unknown): number | null | undefined {

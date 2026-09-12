@@ -28,23 +28,26 @@ export async function saveVehicleEntry(
   const context = await getAuthenticatedContext();
   if (!context) return expiredSession();
 
-  const { data, error } = await context.client.rpc("save_vehicle_entry", {
-    p_body: parsed.data.body,
-    p_collection_names: parsed.data.collectionNames,
-    p_color: parsed.data.color,
-    p_date_precision: parsed.data.datePrecision,
-    p_entry_id: parsed.data.id,
-    p_expected_revision: parsed.data.revision,
-    p_make: parsed.data.make,
-    p_model: parsed.data.model,
-    p_model_year: parsed.data.modelYear,
-    p_occurred_end: parsed.data.occurredEnd,
-    p_occurred_label: parsed.data.occurredLabel,
-    p_occurred_start: parsed.data.occurredStart,
-    p_occurred_timezone: parsed.data.occurredTimezone,
-    p_tag_names: parsed.data.tagNames,
-    p_title: parsed.data.title,
-  });
+  const { data, error } = await context.client.rpc(
+    "save_vehicle_entry_with_occurrence",
+    {
+      p_body: parsed.data.body,
+      p_collection_names: parsed.data.collectionNames,
+      p_color: parsed.data.color,
+      p_date_precision: parsed.data.datePrecision,
+      p_entry_id: parsed.data.id,
+      p_expected_revision: parsed.data.revision,
+      p_make: parsed.data.make,
+      p_model: parsed.data.model,
+      p_model_year: parsed.data.modelYear,
+      p_occurred_end: parsed.data.occurredEnd,
+      p_occurred_label: parsed.data.occurredLabel,
+      p_occurred_start: parsed.data.occurredStart,
+      p_occurred_timezone: parsed.data.occurredTimezone,
+      p_tag_names: parsed.data.tagNames,
+      p_title: parsed.data.title,
+    },
+  );
 
   if (error) {
     return result("error", "MemoTrail could not save this Vehicle. Try again.");

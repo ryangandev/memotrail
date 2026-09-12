@@ -1,4 +1,9 @@
 import {
+  occurrenceSpanLabel,
+  occurrenceDurationLabel,
+  type Occurrence,
+} from "./occurrence";
+import {
   firstTimeImageMimeTypes,
   type FirstTimeImageMimeType,
 } from "./first-time-input";
@@ -32,7 +37,7 @@ export type VehicleRecord = {
   modelYear: number | null;
   occurredEnd: string | null;
   occurredLabel: string | null;
-  occurredStart: string;
+  occurredStart: string | null;
   occurredTimezone: string;
   revision: number;
   tagNames: string[];
@@ -65,44 +70,20 @@ export function vehicleFactsLabel(vehicle: VehicleRecord) {
   );
 }
 
-export function vehicleRangeLabel(vehicle: VehicleRecord) {
-  if (vehicle.occurredLabel) return vehicle.occurredLabel;
-  const start = formatVehicleDate(
-    vehicle.occurredStart,
-    vehicle.datePrecision,
-    vehicle.occurredTimezone,
-  );
-  if (!vehicle.occurredEnd) return `Since ${start}`;
-  return `${start} - ${formatVehicleDate(
-    vehicle.occurredEnd,
-    vehicle.datePrecision,
-    vehicle.occurredTimezone,
-  )}`;
+export function vehicleOccurrence(value: VehicleRecord): Occurrence {
+  return {
+    occurredAt: value.occurredStart,
+    occurredEnd: value.occurredEnd,
+    occurredLabel: value.occurredLabel,
+    occurredTimezone: value.occurredTimezone,
+    datePrecision: value.datePrecision,
+  };
 }
-
-export function vehicleDurationLabel(vehicle: VehicleRecord, now = new Date()) {
-  const start = calendarParts(vehicle.occurredStart, vehicle.occurredTimezone);
-  const end = calendarParts(
-    vehicle.occurredEnd ?? now.toISOString(),
-    vehicle.occurredTimezone,
-  );
-  if (!start || !end) return "Duration unavailable";
-
-  let months = (end.year - start.year) * 12 + end.month - start.month;
-  if (end.day < start.day) months -= 1;
-  months = Math.max(0, months);
-  if (months === 0) return "Less than a month";
-
-  const years = Math.floor(months / 12);
-  const remainingMonths = months % 12;
-  const parts: string[] = [];
-  if (years > 0) parts.push(`${years} ${years === 1 ? "year" : "years"}`);
-  if (remainingMonths > 0) {
-    parts.push(
-      `${remainingMonths} ${remainingMonths === 1 ? "month" : "months"}`,
-    );
-  }
-  return parts.join(" ");
+export function vehicleRangeLabel(value: VehicleRecord) {
+  return occurrenceSpanLabel(vehicleOccurrence(value));
+}
+export function vehicleDurationLabel(value: VehicleRecord, now = new Date()) {
+  return occurrenceDurationLabel(vehicleOccurrence(value), now);
 }
 
 function parseVehicleRow(value: unknown): VehicleRecord | null {
@@ -111,14 +92,18 @@ function parseVehicleRow(value: unknown): VehicleRecord | null {
     typeof value.entry_id !== "string" ||
     typeof value.title !== "string" ||
     typeof value.body !== "string" ||
-    typeof value.occurred_start !== "string" ||
+    !nullableString(value.occurred_start) ||
+    (value.occurred_start === null &&
+      !["age", "approximate", "unknown"].includes(
+        String(value.date_precision),
+      )) ||
     !nullableString(value.occurred_end) ||
     typeof value.date_precision !== "string" ||
     !vehicleDatePrecisions.includes(
       value.date_precision as VehicleDatePrecision,
     ) ||
     !nullableString(value.occurred_label) ||
-    typeof value.occurred_timezone !== "string" ||
+    !nullableString(value.occurred_timezone) ||
     typeof value.revision !== "number" ||
     typeof value.updated_at !== "string" ||
     !nullableString(value.make) ||
@@ -150,7 +135,7 @@ function parseVehicleRow(value: unknown): VehicleRecord | null {
     occurredEnd: value.occurred_end,
     occurredLabel: value.occurred_label,
     occurredStart: value.occurred_start,
-    occurredTimezone: value.occurred_timezone,
+    occurredTimezone: value.occurred_timezone ?? "UTC",
     revision: value.revision,
     tagNames: value.tag_names,
     timelineTrackId: value.timeline_track_id,
@@ -198,54 +183,6 @@ function parseAttachments(value: unknown): VehicleAttachment[] | null {
     });
   }
   return attachments;
-}
-
-function formatVehicleDate(
-  value: string,
-  precision: VehicleDatePrecision,
-  timeZone: string,
-) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Date unavailable";
-  const options: Intl.DateTimeFormatOptions =
-    precision === "year"
-      ? { year: "numeric" }
-      : precision === "month" ||
-          precision === "approximate" ||
-          precision === "age" ||
-          precision === "range"
-        ? { month: "short", year: "numeric" }
-        : { day: "numeric", month: "short", year: "numeric" };
-
-  try {
-    return new Intl.DateTimeFormat("en", { ...options, timeZone }).format(date);
-  } catch {
-    return new Intl.DateTimeFormat("en", {
-      ...options,
-      timeZone: "UTC",
-    }).format(date);
-  }
-}
-
-function calendarParts(value: string, timeZone: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  try {
-    const parts = new Intl.DateTimeFormat("en-CA", {
-      day: "numeric",
-      month: "numeric",
-      timeZone,
-      year: "numeric",
-    }).formatToParts(date);
-    const values = Object.fromEntries(
-      parts
-        .filter((part) => part.type !== "literal")
-        .map((part) => [part.type, Number(part.value)]),
-    );
-    return { day: values.day, month: values.month, year: values.year };
-  } catch {
-    return calendarParts(value, "UTC");
-  }
 }
 
 function nullableString(value: unknown) {

@@ -70,9 +70,11 @@ export function OccurrenceEditor({
             <span>
               {value.precision === "range"
                 ? "Start date"
-                : bounded
+                : bounded && ["age", "approximate"].includes(value.precision)
                   ? "Start date (optional)"
-                  : "Occurred"}
+                  : bounded
+                    ? "Start date"
+                    : "Occurred"}
             </span>
             <input
               aria-label="Occurred"

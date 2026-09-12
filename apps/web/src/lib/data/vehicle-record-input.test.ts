@@ -24,6 +24,37 @@ const validInput = {
 };
 
 describe("parseVehicleEntryInput", () => {
+  it.each([
+    "exact",
+    "day",
+    "month",
+    "year",
+    "range",
+    "age",
+    "approximate",
+    "unknown",
+  ])("accepts %s without inventing calendar precision", (datePrecision) => {
+    const unanchored = ["age", "approximate", "unknown"].includes(
+      datePrecision,
+    );
+    const result = parseVehicleEntryInput({
+      ...validInput,
+      datePrecision,
+      occurredStart: unanchored ? null : "2026-11-01T09:30:00.123456Z",
+      occurredEnd: unanchored ? null : "2026-11-01T10:30:00.654321Z",
+      occurredLabel:
+        unanchored && datePrecision !== "unknown" ? "During college" : null,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.occurredStart).toBe(
+        unanchored ? null : "2026-11-01T09:30:00.123456Z",
+      );
+      expect(result.data.occurredEnd).toBe(
+        unanchored ? null : "2026-11-01T10:30:00.654321Z",
+      );
+    }
+  });
   it("normalizes a complete Vehicle edit", () => {
     const parsed = parseVehicleEntryInput(validInput);
 
@@ -35,8 +66,8 @@ describe("parseVehicleEntryInput", () => {
         color: "Midnight Silver",
         make: "Tesla",
         model: "Model Y",
-        occurredEnd: "2026-08-31T19:00:00.000Z",
-        occurredStart: "2020-03-12T12:00:00.000Z",
+        occurredEnd: "2026-08-31T12:00:00-07:00",
+        occurredStart: "2020-03-12T08:00:00-04:00",
         tagNames: ["Electric", "favorite"],
         title: "Bluebird EV",
       });

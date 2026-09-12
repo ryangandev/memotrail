@@ -25,12 +25,9 @@ import {
 } from "@/lib/data/first-time-input";
 import {
   homeBodyLimit,
-  homeDatePrecisions,
-  homeLabelLimit,
   homePlaceNameLimit,
   homeTitleLimit,
   parseHomeEntryInput,
-  type HomeDatePrecision,
   type HomeEntryInput,
 } from "@/lib/data/home-record-input";
 import {
@@ -41,25 +38,18 @@ import {
   type HomePlaceOption,
   type HomeRecord,
 } from "@/lib/data/home-record";
+import { OccurrenceEditor } from "@/components/occurrence-editor";
 import {
-  localDateToISOString,
-  localDateValue,
-} from "@/lib/data/timeline-input";
+  occurrenceDraft,
+  resolveOccurrenceDraft,
+  type Occurrence,
+} from "@/lib/data/occurrence";
+import { useConfirmedRecords } from "@/components/use-confirmed-records";
 import { createClient } from "@/lib/supabase/client";
-
-const precisionLabels: Record<HomeDatePrecision, string> = {
-  age: "Age-based",
-  approximate: "Approximate",
-  day: "Exact day",
-  exact: "Exact date and time",
-  month: "Month and year",
-  range: "Date range",
-  year: "Year",
-};
 
 export function HomesWorkspace({
   collectionOptions,
-  homes,
+  homes: serverRecords,
   initialHomeId,
   loadError,
   ownerId,
@@ -75,6 +65,11 @@ export function HomesWorkspace({
   tagOptions: string[];
 }) {
   const router = useRouter();
+  const {
+    records: homes,
+    confirm,
+    forget,
+  } = useConfirmedRecords(serverRecords);
   const [selectedHome, setSelectedHome] = useState<
     HomeRecord | null | undefined
   >(homes.find((home) => home.id === initialHomeId));
@@ -161,6 +156,8 @@ export function HomesWorkspace({
           collectionOptions={collectionOptions}
           home={selectedHome}
           key={selectedHome?.id ?? "new-home"}
+          onSaved={confirm}
+          onTrashed={forget}
           onClose={() => {
             setSelectedHome(undefined);
             if (initialHomeId) router.replace("/homes", { scroll: false });
@@ -269,6 +266,8 @@ function HomeEditor({
   collectionOptions,
   home,
   onClose,
+  onSaved,
+  onTrashed,
   ownerId,
   placeOptions,
   tagOptions,
@@ -276,6 +275,8 @@ function HomeEditor({
   collectionOptions: string[];
   home: HomeRecord | null;
   onClose: () => void;
+  onSaved: (record: HomeRecord) => void;
+  onTrashed: (id: string) => void;
   ownerId: string;
   placeOptions: HomePlaceOption[];
   tagOptions: string[];
@@ -283,6 +284,26 @@ function HomeEditor({
   const router = useRouter();
   const titleRef = useRef<HTMLInputElement>(null);
   const initialTimezone = home?.occurredTimezone ?? localTimezone();
+  const originalOccurrence: Occurrence | undefined = home
+    ? {
+        occurredAt: home.occurredStart,
+        occurredEnd: home.occurredEnd,
+        occurredLabel: home.occurredLabel,
+        occurredTimezone: initialTimezone,
+        datePrecision: home.datePrecision,
+      }
+    : undefined;
+  const [occurrence, setOccurrence] = useState(() =>
+    occurrenceDraft(
+      originalOccurrence ?? {
+        occurredAt: null,
+        occurredEnd: null,
+        occurredLabel: null,
+        occurredTimezone: initialTimezone,
+        datePrecision: "unknown",
+      },
+    ),
+  );
   const [address, setAddress] = useState(home?.address ?? "");
   const [body, setBody] = useState(home?.body ?? "");
   const [city, setCity] = useState(home?.city ?? "");
@@ -295,23 +316,12 @@ function HomeEditor({
   const [currentRevision, setCurrentRevision] = useState(
     home?.revision ?? null,
   );
-  const [datePrecision, setDatePrecision] = useState<HomeDatePrecision>(
-    editablePrecision(home?.datePrecision),
-  );
   const [existingPhotos, setExistingPhotos] = useState(home?.attachments ?? []);
   const [isPending, setIsPending] = useState(false);
   const [latitude, setLatitude] = useState(home?.latitude?.toString() ?? "");
   const [longitude, setLongitude] = useState(home?.longitude?.toString() ?? "");
-  const [moveInDate, setMoveInDate] = useState(
-    home ? localDateValue(home.occurredStart, initialTimezone) : "",
-  );
   const [moveInReason, setMoveInReason] = useState(home?.moveInReason ?? "");
-  const [moveOutDate, setMoveOutDate] = useState(
-    home?.occurredEnd ? localDateValue(home.occurredEnd, initialTimezone) : "",
-  );
   const [moveOutReason, setMoveOutReason] = useState(home?.moveOutReason ?? "");
-  const [occurredLabel, setOccurredLabel] = useState(home?.occurredLabel ?? "");
-  const [occurredTimezone] = useState(initialTimezone);
   const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
   const [placeId, setPlaceId] = useState(home?.placeId ?? null);
   const [placeName, setPlaceName] = useState(home?.placeName ?? "");
@@ -324,7 +334,9 @@ function HomeEditor({
 
   useEffect(() => {
     titleRef.current?.focus();
+  }, []);
 
+  useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape" && !isPending) {
         onClose();
@@ -393,28 +405,31 @@ function HomeEditor({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const occurredStart = moveInDate
-      ? localDateToISOString(moveInDate, occurredTimezone)
-      : null;
-    const occurredEnd = moveOutDate
-      ? localDateToISOString(moveOutDate, occurredTimezone)
-      : null;
+    const resolved = resolveOccurrenceDraft(
+      occurrence,
+      originalOccurrence,
+      true,
+    );
+    if (!resolved.value) {
+      setResult(actionError(resolved.error));
+      return;
+    }
     const input: HomeEntryInput = {
       address: address || null,
       body,
       city: city || null,
       collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       country: country || null,
-      datePrecision,
+      datePrecision: resolved.value.datePrecision,
       id: currentId,
       latitude: coordinateValue(latitude),
       longitude: coordinateValue(longitude),
       moveInReason: moveInReason || null,
       moveOutReason: moveOutReason || null,
-      occurredEnd: occurredEnd ?? (moveOutDate || null),
-      occurredLabel: occurredLabel || null,
-      occurredStart: occurredStart ?? moveInDate,
-      occurredTimezone,
+      occurredEnd: resolved.value.occurredEnd,
+      occurredLabel: resolved.value.occurredLabel,
+      occurredStart: resolved.value.occurredAt,
+      occurredTimezone: resolved.value.occurredTimezone,
       placeId,
       placeName,
       placeNotes: placeNotes || null,
@@ -443,6 +458,15 @@ function HomeEditor({
         return;
       }
 
+      onSaved({
+        ...parsed.data,
+        ...saved.entry,
+        attachments: existingPhotos,
+        timelineTrackId: home?.timelineTrackId ?? null,
+        timelineTrackName: home?.timelineTrackName ?? "Homes",
+        totalCount: home?.totalCount ?? 1,
+        updatedAt: new Date().toISOString(),
+      });
       setCurrentId(saved.entry.id);
       setCurrentRevision(saved.entry.revision);
       setPlaceId(saved.entry.placeId);
@@ -525,6 +549,7 @@ function HomeEditor({
         revision: currentRevision,
       });
       if (nextResult.status === "trashed") {
+        onTrashed(currentId);
         router.refresh();
         onClose();
       } else {
@@ -579,52 +604,17 @@ function HomeEditor({
                   value={title}
                 />
               </label>
-              <label>
-                <span>Move-in date</span>
-                <input
-                  onChange={(event) => setMoveInDate(event.target.value)}
-                  required
-                  type="date"
-                  value={moveInDate}
+              <div className={styles.fullField}>
+                <OccurrenceEditor
+                  value={occurrence}
+                  onChange={setOccurrence}
+                  disabled={isPending}
+                  span
                 />
-              </label>
-              <label>
-                <span>
-                  Move-out date <small>Leave empty if current</small>
-                </span>
-                <input
-                  min={moveInDate || undefined}
-                  onChange={(event) => setMoveOutDate(event.target.value)}
-                  type="date"
-                  value={moveOutDate}
-                />
-              </label>
-              <label>
-                <span>Date precision</span>
-                <select
-                  onChange={(event) =>
-                    setDatePrecision(event.target.value as HomeDatePrecision)
-                  }
-                  value={datePrecision}
-                >
-                  {homeDatePrecisions.map((precision) => (
-                    <option key={precision} value={precision}>
-                      {precisionLabels[precision]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <span>
-                  Human date label <small>Optional</small>
-                </span>
-                <input
-                  maxLength={homeLabelLimit}
-                  onChange={(event) => setOccurredLabel(event.target.value)}
-                  placeholder="Ages 12 to 25"
-                  value={occurredLabel}
-                />
-              </label>
+              </div>
+              <p className={styles.fullField}>
+                Leave the end date empty for a current residence.
+              </p>
               <label>
                 <span>
                   Why you moved in <small>Optional</small>
@@ -640,7 +630,6 @@ function HomeEditor({
                   Why you left <small>Optional</small>
                 </span>
                 <input
-                  disabled={!moveOutDate}
                   maxLength={10_000}
                   onChange={(event) => setMoveOutReason(event.target.value)}
                   value={moveOutReason}
@@ -1067,10 +1056,6 @@ async function uploadPhotos(ownerId: string, entryId: string, photos: File[]) {
   }
 
   return failed;
-}
-
-function editablePrecision(value: HomeDatePrecision | undefined) {
-  return value === "exact" ? "day" : (value ?? "month");
 }
 
 function namesIncludingDraft(names: string[], draft: string) {

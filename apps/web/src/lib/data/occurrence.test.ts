@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   occurrenceDraft,
   occurrenceLabel,
+  occurrenceSpanLabel,
+  occurrenceDurationLabel,
   resolveOccurrenceDraft,
   validateOccurrence,
   wallTimeToISO,
@@ -15,6 +17,42 @@ const original: Occurrence = {
   occurredTimezone: "America/Los_Angeles",
 };
 describe("precision-aware occurrence", () => {
+  it("labels chapter bounds and durations only as precisely as recorded", () => {
+    const chapter: Occurrence = {
+      ...original,
+      occurredAt: "2020-03-12T12:00:00Z",
+      occurredEnd: "2026-09-03T12:00:00Z",
+      datePrecision: "month",
+    };
+    expect(occurrenceSpanLabel(chapter)).toBe("Mar 2020 - Sep 2026");
+    expect(occurrenceDurationLabel(chapter)).toBe("About 6 years 6 months");
+    expect(occurrenceSpanLabel({ ...chapter, datePrecision: "year" })).toBe(
+      "2020 - 2026",
+    );
+    expect(occurrenceDurationLabel({ ...chapter, datePrecision: "year" })).toBe(
+      "About 6 years",
+    );
+    expect(
+      occurrenceDurationLabel({ ...chapter, datePrecision: "range" }),
+    ).toBe("6 years 5 months");
+    expect(
+      occurrenceDurationLabel({
+        ...chapter,
+        datePrecision: "unknown",
+        occurredAt: null,
+        occurredEnd: null,
+      }),
+    ).toBe("Duration unavailable");
+    expect(
+      occurrenceSpanLabel({
+        ...chapter,
+        datePrecision: "age",
+        occurredAt: null,
+        occurredEnd: null,
+        occurredLabel: "Ages 17 to 23",
+      }),
+    ).toBe("Ages 17 to 23");
+  });
   it("preserves an unchanged instant including seconds, milliseconds and the later repeated DST hour", () => {
     const draft = occurrenceDraft(original);
     expect(draft.start).toBe("2026-11-01T01:30:27");

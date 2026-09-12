@@ -4,6 +4,7 @@ struct OccurrenceEditor: View {
   @Binding var value: OccurrenceDraft
   var span = false
   var point = false
+  var chapterGuidance: String? = nil
   @State private var showCalendar = false
   @State private var choosingEnd = false
   @State private var calendarDate = Date()
@@ -66,6 +67,7 @@ struct OccurrenceEditor: View {
       Text("When it happened")
     } footer: {
       Text(guidance)
+      if let chapterGuidance { Text(chapterGuidance) }
     }
     .sheet(isPresented: $showCalendar) {
       NavigationStack {

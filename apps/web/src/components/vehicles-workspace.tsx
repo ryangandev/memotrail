@@ -23,10 +23,12 @@ import {
   firstTimePhotoSizeLimit,
   inferFirstTimeImageMimeType,
 } from "@/lib/data/first-time-input";
+import { OccurrenceEditor } from "@/components/occurrence-editor";
 import {
-  localDateToISOString,
-  localDateValue,
-} from "@/lib/data/timeline-input";
+  occurrenceDraft,
+  resolveOccurrenceDraft,
+  type Occurrence,
+} from "@/lib/data/occurrence";
 import {
   vehicleDurationLabel,
   vehicleFactsLabel,
@@ -38,25 +40,13 @@ import {
   parseVehicleEntryInput,
   vehicleBodyLimit,
   vehicleColorLimit,
-  vehicleDatePrecisions,
-  vehicleLabelLimit,
   vehicleMakeLimit,
   vehicleModelLimit,
   vehicleTitleLimit,
-  type VehicleDatePrecision,
   type VehicleEntryInput,
 } from "@/lib/data/vehicle-record-input";
+import { useConfirmedRecords } from "@/components/use-confirmed-records";
 import { createClient } from "@/lib/supabase/client";
-
-const precisionLabels: Record<VehicleDatePrecision, string> = {
-  age: "Age-based",
-  approximate: "Approximate",
-  day: "Exact day",
-  exact: "Exact date and time",
-  month: "Month and year",
-  range: "Date range",
-  year: "Year",
-};
 
 export function VehiclesWorkspace({
   collectionOptions,
@@ -64,7 +54,7 @@ export function VehiclesWorkspace({
   loadError,
   ownerId,
   tagOptions,
-  vehicles,
+  vehicles: serverRecords,
 }: {
   collectionOptions: string[];
   initialVehicleId: string | null;
@@ -74,6 +64,11 @@ export function VehiclesWorkspace({
   vehicles: VehicleRecord[];
 }) {
   const router = useRouter();
+  const {
+    records: vehicles,
+    confirm,
+    forget,
+  } = useConfirmedRecords(serverRecords);
   const [selectedVehicle, setSelectedVehicle] = useState<
     VehicleRecord | null | undefined
   >(vehicles.find((vehicle) => vehicle.id === initialVehicleId));
@@ -159,6 +154,8 @@ export function VehiclesWorkspace({
         <VehicleEditor
           collectionOptions={collectionOptions}
           key={selectedVehicle?.id ?? "new-vehicle"}
+          onSaved={confirm}
+          onTrashed={forget}
           onClose={() => {
             setSelectedVehicle(undefined);
             if (initialVehicleId)
@@ -273,12 +270,16 @@ function VehicleCard({
 function VehicleEditor({
   collectionOptions,
   onClose,
+  onSaved,
+  onTrashed,
   ownerId,
   tagOptions,
   vehicle,
 }: {
   collectionOptions: string[];
   onClose: () => void;
+  onSaved: (record: VehicleRecord) => void;
+  onTrashed: (id: string) => void;
   ownerId: string;
   tagOptions: string[];
   vehicle: VehicleRecord | null;
@@ -286,6 +287,26 @@ function VehicleEditor({
   const router = useRouter();
   const titleRef = useRef<HTMLInputElement>(null);
   const initialTimezone = vehicle?.occurredTimezone ?? localTimezone();
+  const originalOccurrence: Occurrence | undefined = vehicle
+    ? {
+        occurredAt: vehicle.occurredStart,
+        occurredEnd: vehicle.occurredEnd,
+        occurredLabel: vehicle.occurredLabel,
+        occurredTimezone: initialTimezone,
+        datePrecision: vehicle.datePrecision,
+      }
+    : undefined;
+  const [occurrence, setOccurrence] = useState(() =>
+    occurrenceDraft(
+      originalOccurrence ?? {
+        occurredAt: null,
+        occurredEnd: null,
+        occurredLabel: null,
+        occurredTimezone: initialTimezone,
+        datePrecision: "unknown",
+      },
+    ),
+  );
   const [body, setBody] = useState(vehicle?.body ?? "");
   const [collectionInput, setCollectionInput] = useState("");
   const [collectionNames, setCollectionNames] = useState(
@@ -296,14 +317,6 @@ function VehicleEditor({
   const [currentRevision, setCurrentRevision] = useState(
     vehicle?.revision ?? null,
   );
-  const [datePrecision, setDatePrecision] = useState<VehicleDatePrecision>(
-    editablePrecision(vehicle?.datePrecision),
-  );
-  const [endDate, setEndDate] = useState(
-    vehicle?.occurredEnd
-      ? localDateValue(vehicle.occurredEnd, initialTimezone)
-      : "",
-  );
   const [existingPhotos, setExistingPhotos] = useState(
     vehicle?.attachments ?? [],
   );
@@ -313,20 +326,15 @@ function VehicleEditor({
   const [modelYear, setModelYear] = useState(
     vehicle?.modelYear?.toString() ?? "",
   );
-  const [occurredLabel, setOccurredLabel] = useState(
-    vehicle?.occurredLabel ?? "",
-  );
-  const [occurredTimezone] = useState(initialTimezone);
   const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
   const [result, setResult] = useState<VehicleActionResult | null>(null);
-  const [startDate, setStartDate] = useState(
-    vehicle
-      ? localDateValue(vehicle.occurredStart, initialTimezone)
-      : localDateValue(new Date().toISOString(), initialTimezone),
-  );
   const [tagInput, setTagInput] = useState("");
   const [tagNames, setTagNames] = useState(vehicle?.tagNames ?? []);
   const [title, setTitle] = useState(vehicle?.title ?? "");
+
+  useEffect(() => {
+    titleRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     titleRef.current?.focus();
@@ -366,25 +374,28 @@ function VehicleEditor({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const occurredStart = startDate
-      ? localDateToISOString(startDate, occurredTimezone)
-      : null;
-    const occurredEnd = endDate
-      ? localDateToISOString(endDate, occurredTimezone)
-      : null;
+    const resolved = resolveOccurrenceDraft(
+      occurrence,
+      originalOccurrence,
+      true,
+    );
+    if (!resolved.value) {
+      setResult(actionError(resolved.error));
+      return;
+    }
     const input: VehicleEntryInput = {
       body,
       collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       color: color || null,
-      datePrecision,
+      datePrecision: resolved.value.datePrecision,
       id: currentId,
       make: make || null,
       model: model || null,
       modelYear: modelYear.trim() ? Number(modelYear) : null,
-      occurredEnd: occurredEnd ?? (endDate || null),
-      occurredLabel: occurredLabel || null,
-      occurredStart: occurredStart ?? startDate,
-      occurredTimezone,
+      occurredEnd: resolved.value.occurredEnd,
+      occurredLabel: resolved.value.occurredLabel,
+      occurredStart: resolved.value.occurredAt,
+      occurredTimezone: resolved.value.occurredTimezone,
       revision: currentRevision,
       tagNames: namesIncludingDraft(tagNames, tagInput),
       title,
@@ -407,6 +418,15 @@ function VehicleEditor({
         return;
       }
 
+      onSaved({
+        ...parsed.data,
+        ...saved.entry,
+        attachments: existingPhotos,
+        timelineTrackId: vehicle?.timelineTrackId ?? null,
+        timelineTrackName: vehicle?.timelineTrackName ?? "Vehicles",
+        totalCount: vehicle?.totalCount ?? 1,
+        updatedAt: new Date().toISOString(),
+      });
       setCurrentId(saved.entry.id);
       setCurrentRevision(saved.entry.revision);
       const failedPhotos = await uploadPhotos(
@@ -487,6 +507,7 @@ function VehicleEditor({
         revision: currentRevision,
       });
       if (nextResult.status === "trashed") {
+        onTrashed(currentId);
         router.refresh();
         onClose();
       } else {
@@ -542,53 +563,17 @@ function VehicleEditor({
                   value={title}
                 />
               </label>
-              <label>
-                <span>Acquired or began using</span>
-                <input
-                  onChange={(event) => setStartDate(event.target.value)}
-                  required
-                  type="date"
-                  value={startDate}
+              <div className={styles.fullField}>
+                <OccurrenceEditor
+                  value={occurrence}
+                  onChange={setOccurrence}
+                  disabled={isPending}
+                  span
                 />
-              </label>
-              <label>
-                <span>
-                  Sold, retired, or stopped{" "}
-                  <small>Leave empty if current</small>
-                </span>
-                <input
-                  min={startDate || undefined}
-                  onChange={(event) => setEndDate(event.target.value)}
-                  type="date"
-                  value={endDate}
-                />
-              </label>
-              <label>
-                <span>Date precision</span>
-                <select
-                  onChange={(event) =>
-                    setDatePrecision(event.target.value as VehicleDatePrecision)
-                  }
-                  value={datePrecision}
-                >
-                  {vehicleDatePrecisions.map((precision) => (
-                    <option key={precision} value={precision}>
-                      {precisionLabels[precision]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <span>
-                  Human date label <small>Optional</small>
-                </span>
-                <input
-                  maxLength={vehicleLabelLimit}
-                  onChange={(event) => setOccurredLabel(event.target.value)}
-                  placeholder="College years"
-                  value={occurredLabel}
-                />
-              </label>
+              </div>
+              <p className={styles.fullField}>
+                Leave the end date empty for a current Vehicle chapter.
+              </p>
             </fieldset>
 
             <fieldset className={styles.formSection}>
@@ -951,10 +936,6 @@ async function uploadPhotos(ownerId: string, entryId: string, photos: File[]) {
   }
 
   return failed;
-}
-
-function editablePrecision(value: VehicleDatePrecision | undefined) {
-  return value === "exact" ? "day" : (value ?? "month");
 }
 
 function namesIncludingDraft(names: string[], draft: string) {

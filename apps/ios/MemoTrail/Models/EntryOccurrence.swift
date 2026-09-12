@@ -7,6 +7,48 @@ struct EntryOccurrence: Equatable, Sendable {
   var label: String?
   var timezone: String
 
+  var spanLabel: String {
+    if let label, !label.isEmpty { return label }
+    guard start != nil, precision != .unknown else { return "Date unknown" }
+    var point = self
+    point.end = nil
+    if point.precision == .range { point.precision = .day }
+    let first = point.displayLabel
+    guard let end else { return "Since \(first)" }
+    point.start = end
+    return "\(first) - \(point.displayLabel)"
+  }
+
+  func durationLabel(now: Date = Date()) -> String {
+    guard let start, precision != .unknown else { return "Duration unavailable" }
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(identifier: timezone) ?? .gmt
+    let first = calendar.dateComponents([.year, .month, .day], from: start)
+    let last = calendar.dateComponents([.year, .month, .day], from: end ?? now)
+    guard let sy = first.year, let sm = first.month, let sd = first.day, let ey = last.year,
+      let em = last.month, let ed = last.day
+    else { return "Duration unavailable" }
+    if precision == .year {
+      let years = max(0, ey - sy)
+      return years > 0
+        ? "About \(years) \(years == 1 ? "year" : "years")" : "Less than a year (approx.)"
+    }
+    var months = (ey - sy) * 12 + em - sm
+    if precision != .month && ed < sd { months -= 1 }
+    months = max(0, months)
+    let approximate = [.month, .age, .approximate].contains(precision)
+    guard months > 0 else {
+      return approximate ? "Less than a month (approx.)" : "Less than a month"
+    }
+    let years = months / 12
+    let remainder = months % 12
+    let label = [
+      years > 0 ? "\(years) \(years == 1 ? "year" : "years")" : "",
+      remainder > 0 ? "\(remainder) \(remainder == 1 ? "month" : "months")" : "",
+    ].filter { !$0.isEmpty }.joined(separator: " ")
+    return approximate ? "About \(label)" : label
+  }
+
   func validate(span: Bool = false) throws {
     guard timezone.count <= 100, TimeZone(identifier: timezone) != nil else {
       throw OccurrenceError.invalidTimezone

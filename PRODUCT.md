@@ -331,9 +331,12 @@ Privacy controls will be especially important if exact addresses are stored.
 
 Homes are personal-history Entries rather than property-management records.
 
-A directly created Home requires a name, a reusable Place name, and the best-known move-in date.
+A directly created Home requires a name and a reusable Place name; the move-in date uses whatever precision is known.
 
-The date may use exact, day, month, year, age, range, or approximate precision, while a Home without a move-out date remains an active residence.
+The date may use exact, day, month, year, age, range, approximate, or unknown precision, while a Home without a move-out date remains an active residence.
+Age and approximate descriptions need no calendar anchor, and Unknown stores no occurrence date.
+Month/year and approximate durations are labeled as estimates; an unanchored chapter has no calculated duration.
+A move-out reason still requires an end date and is never silently discarded when precision changes.
 
 Every Home is an organized Home Entry and a Stage on the Homes Timeline track, so the same life chapter appears consistently in Homes, Timeline, Search, Collections, tags, and Trash.
 
@@ -359,9 +362,10 @@ Each vehicle may include:
 
 Vehicles are personal-history Entries rather than vehicle-management records.
 
-A directly created Vehicle requires a name or nickname and the best-known date when its ownership or regular-use chapter began.
+A directly created Vehicle requires a name or nickname; the beginning of its ownership or regular-use chapter uses whatever date precision is known.
 
-The start and optional end may use exact, day, month, year, age, range, or approximate precision, while a Vehicle without an end date remains a current chapter.
+The start and optional end may use exact, day, month, year, age, range, approximate, or unknown precision, while a Vehicle without an end date remains a current chapter.
+Age and approximate descriptions need no calendar anchor, Unknown stores no occurrence date, and duration labels never imply greater certainty than the recorded dates.
 
 Make, model, model year, and color are optional facts, so an incomplete older memory can still be saved and improved later.
 
