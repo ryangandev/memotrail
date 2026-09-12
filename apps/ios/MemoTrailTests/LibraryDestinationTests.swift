@@ -3,6 +3,33 @@ import XCTest
 @testable import MemoTrail
 
 final class LibraryDestinationTests: XCTestCase {
+  func testHistorySupportsLegacySnapshotsAndPreservesExactRPCIdentity() throws {
+    let legacy: [String: HistoryJSON] = [
+      "body": .string("学习记录"), "title": .null, "revision": .number(1),
+    ]
+    var current = legacy
+    current["collections"] = .array([.object(["name": .string("New collection")])])
+    XCTAssertEqual(HistoryPresentation.title(legacy), "学习记录")
+    XCTAssertEqual(
+      HistoryPresentation.date([
+        "occurred_start": .string("2021-01-01T01:00:00Z"),
+        "occurred_timezone": .string("America/New_York"), "date_precision": .string("year"),
+      ]), "2020")
+    XCTAssertEqual(HistoryPresentation.date(legacy), "Unknown")
+    XCTAssertEqual(HistoryPresentation.differences(current: current, previous: legacy), [])
+    current["body"] = .string("Changed")
+    XCTAssertEqual(HistoryPresentation.differences(current: current, previous: legacy), ["body"])
+    let id = UUID()
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(
+        with: JSONEncoder().encode(
+          HistoryRestoreRequest(entryID: id, version: 1, expectedRevision: 3))) as? [String: Any])
+    XCTAssertEqual(json["p_entry_id"] as? String, id.uuidString)
+    XCTAssertEqual(json["p_expected_revision"] as? Int, 3)
+    let decoded = try JSONDecoder().decode(
+      [String: HistoryJSON].self, from: JSONEncoder().encode(legacy))
+    XCTAssertEqual(decoded, legacy)
+  }
   func testAISuggestionDecodesPendingAndBilingualProposedResults() throws {
     let pending = Data(
       "{\"suggestion\":{\"id\":\"93000000-0000-4000-8000-000000000001\",\"entry_revision\":1,\"status\":\"generating\",\"suggestions\":{}}}"

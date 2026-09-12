@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   reviewInboxEntry,
   type ReviewInboxEntryResult,
@@ -197,6 +198,7 @@ function EntryReviewDialog({
           <div>
             <p>Inbox review</p>
             <h2 id="review-heading">Organize Entry</h2>
+            <Link href={`/history?entry=${entry.id}`}>Version history</Link>
           </div>
           <button
             aria-label="Close Entry review"

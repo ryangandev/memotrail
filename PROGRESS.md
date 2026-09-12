@@ -26,6 +26,10 @@
 - A real Chinese learning-note test verified provider generation, unchanged originals, manual title edits, Collection acceptance, dismissal, cache reuse through the native bearer API, and retention in Inbox after saving.
 - Date candidates are human-readable guidance only for now; precision-aware date acceptance remains on the completion checklist.
 - Suggestion acceptance passed 682 database tests, 194 Web tests, 155 native tests, desktop/light and narrow/dark browser checks, Web production build, and native Simulator build.
+- Entry history now provides matching Web and iOS browsing, version comparison, and explicit revision-safe restoration while preserving the replaced current state as another recoverable version.
+- Complete snapshots retain organization, specialized details, Timeline and Entry relationships, and private photo membership; legacy snapshots preserve unknown relationships instead of guessing, and unavailable historical references fail atomically.
+- History acceptance passed 723 database tests, 200 Web tests, the 156-test native suite plus a final focused native rerun, and three authenticated browser scenarios including restore, undo by restoring again, stale-device conflict, and exact original-photo preservation.
+- The history migration is deployed to hosted Supabase with warning-free linked schema lint; desktop/light and narrow/dark history layouts were visually checked.
 
 - Phase 1 repository, design system, Web shell, iOS shell, local Supabase schema, RLS tests, and CI are complete.
 - The production Web shell is reachable at `https://memotrail.ryangan.me`.
@@ -33,7 +37,7 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- The linked hosted Supabase project contains all twenty reviewed migrations; linked schema lint passes and no development seed users or roles were deployed.
+- The linked hosted Supabase project contains all twenty-one reviewed migrations; linked schema lint passes and no development seed users or roles were deployed.
 - The hosted atomic Entry review contract now supports content, Type, occurrence, Collection, tag, and `Done` updates in one transaction.
 - Hosted verification found 24 Row Level Security-enabled application tables, 25 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
@@ -1022,10 +1026,11 @@
 - `feat: add People across Web and iOS` completed reusable People, linked Entry context, revision protection, shared Trash, and local end-to-end coverage on the deployed shared contract.
 - `feat: add cross-platform AI controls and budgeted provider access` added synchronized AI settings, server-only Anthropic access, usage accounting, budget guards, and real authenticated localhost acceptance.
 - `feat: add editable Inbox AI suggestions across Web and iOS` added asynchronous generation, revision caching, editable per-field choices, dismissals, and real bilingual acceptance without automatic filing.
+- `feat: add restorable Entry history across Web and iOS` added complete version snapshots, owner-scoped browsing, explicit restoration, relationship and photo preservation, and cross-device conflict protection.
 
 ## Next sequence
 
-1. Implement the authenticated AI boundary, preferences, budget accounting, and editable suggestions on both clients.
+1. Complete the remaining export, organization management, date precision, and AI retrieval/exploration slices on both clients.
 2. Follow the cross-platform acceptance matrix in `REMAINING.md`, updating this record with every commit.
 3. Validate live provider behavior and production configuration before declaring the AI integration complete.
 

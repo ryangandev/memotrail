@@ -10,6 +10,12 @@ export const dynamic = "force-dynamic";
 
 const availableDestinations = [
   {
+    detail: "Inspect earlier writing and safely restore versions.",
+    href: "/history",
+    icon: "archive" as const,
+    title: "Entry history",
+  },
+  {
     detail: "Control optional AI assistance, privacy, and spending.",
     href: "/settings/ai",
     icon: "sparkle" as const,

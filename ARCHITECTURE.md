@@ -22,6 +22,10 @@ All mutations that replace content and links happen in one database transaction.
 Updates include the revision read by the client and surface a conflict when another device has changed it.
 History records the prior content and relationships before mutation.
 Restoration creates another revision rather than removing subsequent history.
+Version-two Entry snapshots capture organization, specialized details, Timeline and Entry relationships, and private photo membership before each mutation.
+Restoration validates all historical references and original files atomically and never overwrites independent shared People or Place definitions.
+Legacy snapshots restore only relationships they actually recorded; missing fields do not imply empty relationships.
+Trash restoration remains separate from restoring content history, and optimistic revision checks prevent overwriting newer work from another device.
 Uploads preserve private originals, and display access uses expiring signed URLs.
 Drafts and pending captures remain per-user and durable on each device until synchronization is confirmed.
 

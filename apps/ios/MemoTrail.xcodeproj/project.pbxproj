@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B00000000000000000000037 /* EntryHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003E /* EntryHistoryView.swift */; };
 		B00000000000000000000036 /* EntryAISuggestionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003D /* EntryAISuggestionsView.swift */; };
 		B00000000000000000000035 /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003C /* AISettingsView.swift */; };
 		B00000000000000000000001 /* MemoTrailApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000001 /* MemoTrailApp.swift */; };
@@ -88,6 +89,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C0000000000000000000003E /* EntryHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = History/EntryHistoryView.swift; sourceTree = "<group>"; };
 		C0000000000000000000003D /* EntryAISuggestionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AI/EntryAISuggestionsView.swift; sourceTree = "<group>"; };
 		C0000000000000000000003C /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AI/AISettingsView.swift; sourceTree = "<group>"; };
 		C00000000000000000000001 /* MemoTrailApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoTrailApp.swift; sourceTree = "<group>"; };
@@ -234,6 +236,7 @@
 				C0000000000000000000003B /* PeopleView.swift */,
 				C0000000000000000000003C /* AISettingsView.swift */,
 				C0000000000000000000003D /* EntryAISuggestionsView.swift */,
+				C0000000000000000000003E /* EntryHistoryView.swift */,
 				A10000000000000000000006 /* Inbox */,
 				A10000000000000000000015 /* Search */,
 				A10000000000000000000016 /* Timeline */,
@@ -617,6 +620,7 @@
 				B00000000000000000000034 /* PeopleView.swift in Sources */,
 				B00000000000000000000035 /* AISettingsView.swift in Sources */,
 				B00000000000000000000036 /* EntryAISuggestionsView.swift in Sources */,
+				B00000000000000000000037 /* EntryHistoryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
