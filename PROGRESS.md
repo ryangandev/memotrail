@@ -6,6 +6,22 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Recoverable Goal progress links across Web and iOS
+
+- Reproduced a real Goal editor save that silently removed its link to a progress Entry in Trash because the workspace intentionally hides deleted targets.
+- The shared Goal mutation now replaces only visible `related` targets, preserving hidden links until their Entries are restored while leaving achievement and other relationship kinds untouched.
+- Web and native already use this same mutation; neither needs a protocol change or a duplicate client-side preservation rule.
+- Authenticated browser acceptance saves through the Goal editor, removes a visible link through the shared RPC, restores the hidden Entry from Trash, verifies its returned link chip, and explicitly removes that restored link through the editor.
+- Seventeen dedicated database checks verify original history, hidden links, visible unlinking, preserved achievement relationships, stale writes, invalid-target rollback, cross-owner denial, restoration, and later explicit unlinking.
+- Full local database regression passes 1,075 assertions with warning-free schema lint.
+- Migration `202609120014_preserve_goal_links.sql` is deployed with warning-free hosted schema lint, without seeds, backfills, role changes, or deletion of existing links.
+- Full regression also passes 292 Web unit/server tests and nineteen authenticated browser/API scenarios, plus production build, lint, type checking, formatting, and diff whitespace checks.
+- Synthetic test accounts are removed; no provider calls were made and AI accounting remains 51 completed requests totaling $0.052147 with no outstanding reservations.
+- Previously tracked Next client-aborted response-stream logs still occur in other rapid-navigation scenarios and remain a final-acceptance item; they are not reported as fixed by this database change.
+- People workspace inspection confirms it returns linked Entries with explicit Trash state rather than silently filtering them; this fix does not alter People linking or explicit history restoration.
+- Native code is unchanged from the 173-test checkpoint; shared-contract acceptance is not claimed as new interactive native UI validation.
+- Remaining completion work includes specialized date precision, photo derivatives/metadata, and final cross-platform/production acceptance.
+
 ### In-place Idea-to-Goal conversion across Web and iOS
 
 - Added explicit Convert to Goal controls to both current Entry/history readers for non-Trash Standard Entries, independent of the editable Ideas Collection name.

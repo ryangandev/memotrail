@@ -48,6 +48,8 @@ Successful Web reviews immediately retain the server-confirmed revision while ro
 Archived Collection links stay recoverable during review without re-creating the hidden Collection as an active group.
 First Times, Homes, Vehicles, and Goals use the same active-only replacement rule: a specialized editor cannot remove a hidden Collection link it never displayed.
 This rule lives in the existing shared mutations so Web and native saves agree, while explicit active-membership edits and Collection restoration retain their established behavior.
+Goal `related` links use the equivalent active-target rule: a hidden target in Trash remains linked through unrelated edits, reappears on restoration, and can then be explicitly unlinked.
+Achievement and other relationship kinds are not part of the Goal editor's replaceable related-link set.
 The dedicated First Times clients use the same occurrence editors and the additive `first_times_workspace_with_occurrence` / `save_first_time_with_occurrence` contract so range ends and precision survive specialized editing.
 Native First Times decoding retains the original timestamp strings alongside parsed Dates and reuses them for untouched bounds, avoiding SDK fractional-second rounding during serialization.
 The legacy First Times mutation rejects writes that cannot preserve existing range ends or exact/range interpretation rather than silently degrading them.

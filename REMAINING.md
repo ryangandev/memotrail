@@ -28,7 +28,8 @@ The last accepted checkpoint is `a7850b7`.
 | Collection/tag creation and renaming, Collection ordering/Trash       | Deployed        | Complete        | Complete        | Pushed 332449a      |
 | Lossless dedicated First Times dates and legacy-client guards         | Deployed        | Complete        | Complete        | Pushed fc1853e      |
 | Recoverable Collection links in all four specialized editors          | Deployed        | Shared contract | Shared contract | Pushed 23a8088      |
-| In-place Idea/Standard Entry to Goal conversion and history recovery  | Deployed        | Complete        | Complete        | This feature commit |
+| In-place Idea/Standard Entry to Goal conversion and history recovery  | Deployed        | Complete        | Complete        | Pushed 73ec86e      |
+| Recoverable Goal progress links across target Trash and restoration   | Deployed        | Shared contract | Shared contract | This feature commit |
 | Remaining date precision, Entry conversion and relationship gaps      | Audit ongoing   | Audit ongoing   | Audit ongoing   | Pending             |
 | Photo derivative and metadata suggestion gaps                         | Audit pending   | Audit pending   | Audit pending   | Pending             |
 | Final acceptance and production configuration                         | Pending         | Pending         | Pending         | Pending             |
@@ -38,6 +39,7 @@ The last accepted checkpoint is `a7850b7`.
 - First Times now preserves all eight precisions and original bounds on both clients; native serialization also retains untouched database microseconds.
 - Remaining source-confirmed date gaps include required calendar anchors in Timeline/Homes/Vehicles and limited Goal-achievement precision; broader Entry-link lifecycle checks need follow-up.
 - Manual Standard/Idea conversion now preserves the same Entry, original content, dates, photos, organization and Inbox state, with matching Web/native controls and reversible history.
+- Goal saves now retain hidden progress links while preserving explicit active-target unlinking; restoration and later removal are verified through the real Web editor and shared authenticated RPC.
 - First Times, Homes, Vehicles, and Goals now retain trashed Collection membership when saving, with active-link removal and restored Collection browsing verified through all four real Web editors and shared authenticated RPCs.
 - Complete ZIP implementation passes 289 Web tests, twelve authenticated browser/API scenarios, and 169 native tests with zero skips; real ZIP extraction and original media hashes are verified locally.
 - Native interactive export acceptance is currently unavailable because the Mac is locked; Ryan must unlock it before Simulator UI automation can proceed.
