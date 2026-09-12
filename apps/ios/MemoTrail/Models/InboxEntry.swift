@@ -11,6 +11,9 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
   let occurredTimezone: String?
   let revision: Int
   let tagNames: [String]
+  let datePrecision: TimelineDatePrecision
+  let occurredEnd: Date?
+  let occurredLabel: String?
 
   init(
     id: UUID,
@@ -22,7 +25,10 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     occurredStart: Date?,
     occurredTimezone: String? = nil,
     revision: Int = 1,
-    tagNames: [String] = []
+    tagNames: [String] = [],
+    datePrecision: TimelineDatePrecision = .exact,
+    occurredEnd: Date? = nil,
+    occurredLabel: String? = nil
   ) {
     self.id = id
     self.title = title
@@ -34,6 +40,9 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     self.occurredTimezone = occurredTimezone
     self.revision = revision
     self.tagNames = tagNames
+    self.datePrecision = occurredStart == nil && datePrecision == .exact ? .unknown : datePrecision
+    self.occurredEnd = occurredEnd
+    self.occurredLabel = occurredLabel
   }
 
   enum CodingKeys: String, CodingKey {
@@ -44,6 +53,9 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     case createdAt = "created_at"
     case occurredStart = "occurred_start"
     case occurredTimezone = "occurred_timezone"
+    case datePrecision = "date_precision"
+    case occurredEnd = "occurred_end"
+    case occurredLabel = "occurred_label"
     case revision
   }
 
@@ -60,6 +72,11 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     occurredTimezone = try values.decodeIfPresent(String.self, forKey: .occurredTimezone)
     revision = try values.decode(Int.self, forKey: .revision)
     tagNames = []
+    let precision =
+      try values.decodeIfPresent(TimelineDatePrecision.self, forKey: .datePrecision) ?? .exact
+    datePrecision = occurredStart == nil && precision == .exact ? .unknown : precision
+    occurredEnd = try values.decodeIfPresent(Date.self, forKey: .occurredEnd)
+    occurredLabel = try values.decodeIfPresent(String.self, forKey: .occurredLabel)
   }
 
   func withOrganization(collectionNames: [String], tagNames: [String]) -> InboxEntry {
@@ -73,19 +90,21 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
       occurredStart: occurredStart,
       occurredTimezone: occurredTimezone,
       revision: revision,
-      tagNames: tagNames
+      tagNames: tagNames,
+      datePrecision: datePrecision,
+      occurredEnd: occurredEnd,
+      occurredLabel: occurredLabel
     )
   }
 
   var displayDate: String {
-    (occurredStart ?? createdAt).formatted(
-      .dateTime
-        .month(.abbreviated)
-        .day()
-        .year()
-        .hour()
-        .minute()
-    )
+    occurrence.displayLabel
+  }
+
+  var occurrence: EntryOccurrence {
+    EntryOccurrence(
+      precision: datePrecision, start: occurredStart, end: occurredEnd, label: occurredLabel,
+      timezone: occurredTimezone.flatMap { TimeZone(identifier: $0) == nil ? nil : $0 } ?? "UTC")
   }
 
   var displayTitle: String {
@@ -175,9 +194,10 @@ struct InboxReviewInput: Equatable, Sendable {
   let body: String
   let collectionNames: [String]
   let entryType: InboxEntryType
-  let occurredAt: Date
+  let occurredAt: Date?
   let occurredTimezone: String
   let tagNames: [String]
+  let occurrence: EntryOccurrence
 
   static func validate(
     entryID: UUID,
@@ -186,9 +206,12 @@ struct InboxReviewInput: Equatable, Sendable {
     body: String,
     collectionNames: [String],
     entryType: InboxEntryType,
-    occurredAt: Date,
+    occurredAt: Date?,
     occurredTimezone: String,
-    tagNames: [String]
+    tagNames: [String],
+    datePrecision: TimelineDatePrecision = .exact,
+    occurredEnd: Date? = nil,
+    occurredLabel: String? = nil
   ) throws -> InboxReviewInput {
     guard revision > 0 else {
       throw InboxReviewError.invalidRevision
@@ -200,9 +223,15 @@ struct InboxReviewInput: Equatable, Sendable {
       throw InboxReviewError.firstTimeRequiresTitle
     }
 
-    guard !occurredTimezone.isEmpty, occurredTimezone.count <= 100 else {
+    guard !occurredTimezone.isEmpty, occurredTimezone.count <= 100,
+      TimeZone(identifier: occurredTimezone) != nil
+    else {
       throw InboxReviewError.invalidTimezone
     }
+    let occurrence = EntryOccurrence(
+      precision: datePrecision, start: occurredAt, end: occurredEnd, label: occurredLabel,
+      timezone: occurredTimezone)
+    try occurrence.validate()
 
     guard
       let normalizedCollections = normalizeNames(
@@ -233,7 +262,8 @@ struct InboxReviewInput: Equatable, Sendable {
       entryType: entryType,
       occurredAt: occurredAt,
       occurredTimezone: occurredTimezone,
-      tagNames: normalizedTags
+      tagNames: normalizedTags,
+      occurrence: occurrence
     )
   }
 

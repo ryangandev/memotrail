@@ -34,6 +34,20 @@ Bucket List behavior follows a stable Collection role, not its editable display 
 Uploads preserve private originals, and display access uses expiring signed URLs.
 Drafts and pending captures remain per-user and durable on each device until synchronization is confirmed.
 
+## Occurrence semantics
+
+Inbox review writes date precision, nullable start/end, a human description, and the recorded IANA time zone in the same atomic mutation as content and organization.
+The additive `review_entry_with_occurrence` RPC keeps the original review signature available to older clients.
+Unknown dates never borrow the Entry creation timestamp; legacy exact records with no occurrence are presented as Unknown.
+Year and month anchors are calendar-normalized for storage but displayed only at their declared precision.
+Age and approximate periods require a human description and do not require a calendar anchor or inferred birth date.
+Ranges support an optional end, with no end meaning onward.
+Web and native date conversion validate wall-clock dates in the recorded zone, including fractional offsets, and reject nonexistent daylight-saving times.
+Unchanged edits preserve original instants and fractional seconds; newly edited repeated daylight-saving times use the earlier matching instant on both clients.
+Successful Web reviews immediately retain the server-confirmed revision while route refresh is in flight, preventing false conflicts on rapid reopening.
+Archived Collection links stay recoverable during review without re-creating the hidden Collection as an active group.
+Other specialized editors and broad date-filter semantics remain in the separate cross-product precision audit.
+
 ## AI architecture
 
 Anthropic is the selected text provider.
@@ -45,7 +59,8 @@ Classification stores suggestions separately from original Entry content; accept
 `ai_suggestions` deduplicates work by Entry revision and enabled feature scope, and only trusted server code can write model results.
 Web schedules capture suggestions after its response; iOS starts an independent authenticated request after synchronization.
 Review is also a recovery entry point for interrupted background work, with bounded status polling and explicit-only retries after a failed generation.
-Date suggestions remain readable guidance until precision-aware review can preserve their meaning without inventing timestamps.
+Accepting an AI date suggestion copies its human-readable description into Approximate precision with empty calendar bounds.
+The user can change the precision to Age, Year, Month, or any other supported value and edit it before saving; model guidance is never silently converted to an exact timestamp.
 New Collections require user acceptance.
 Exploration remains attached to its source Entry, and Save as Entry creates a separately identified conclusion with a source relationship.
 Retrieval answers cite only authenticated source Entries and report insufficient evidence explicitly.

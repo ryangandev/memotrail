@@ -65,6 +65,7 @@ Hosted project rollout:
 - [x] Verify the hosted migration ledger, schema lint, function search path, and authenticated-only execution grant.
 - [x] Add and locally verify the keyword Entry search migration with 21 focused pgTAP tests and schema lint.
 - [x] Apply and verify the keyword Entry search migration on hosted Supabase.
+- [x] Deploy the additive full-occurrence Inbox review contract, preserving nullable dates, recorded precision, archived grouping, and the legacy review signature; hosted schema lint passed on 2026-09-12.
 
 Useful references:
 

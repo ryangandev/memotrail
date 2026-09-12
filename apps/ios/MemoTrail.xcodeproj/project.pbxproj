@@ -19,6 +19,8 @@
 		B00000000000000000000005 /* EntryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000005 /* EntryCard.swift */; };
 		B00000000000000000000006 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000006 /* DesignTokens.swift */; };
 		B00000000000000000000007 /* InboxEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000007 /* InboxEntry.swift */; };
+		B0000000000000000000003A /* EntryOccurrence.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000041 /* EntryOccurrence.swift */; };
+		B0000000000000000000003B /* OccurrenceEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000042 /* OccurrenceEditor.swift */; };
 		B00000000000000000000008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000008 /* Assets.xcassets */; };
 		B00000000000000000000009 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000012 /* AppConfiguration.swift */; };
 		B0000000000000000000000A /* AuthenticationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000013 /* AuthenticationController.swift */; };
@@ -103,6 +105,8 @@
 		C00000000000000000000005 /* EntryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryCard.swift; sourceTree = "<group>"; };
 		C00000000000000000000006 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 		C00000000000000000000007 /* InboxEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxEntry.swift; sourceTree = "<group>"; };
+		C00000000000000000000041 /* EntryOccurrence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryOccurrence.swift; sourceTree = "<group>"; };
+		C00000000000000000000042 /* OccurrenceEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OccurrenceEditor.swift; sourceTree = "<group>"; };
 		C00000000000000000000008 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C00000000000000000000009 /* MemoTrail.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MemoTrail.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C00000000000000000000010 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
@@ -260,6 +264,7 @@
 			children = (
 				C00000000000000000000016 /* InboxController.swift */,
 				C00000000000000000000003 /* InboxView.swift */,
+				C00000000000000000000042 /* OccurrenceEditor.swift */,
 			);
 			path = Inbox;
 			sourceTree = "<group>";
@@ -296,6 +301,7 @@
 			children = (
 				C0000000000000000000002B /* HomeEntry.swift */,
 				C00000000000000000000007 /* InboxEntry.swift */,
+				C00000000000000000000041 /* EntryOccurrence.swift */,
 				C00000000000000000000017 /* SearchEntry.swift */,
 				C0000000000000000000001A /* TimelineEntry.swift */,
 				C0000000000000000000001D /* FirstTimeEntry.swift */,
@@ -583,6 +589,8 @@
 				B00000000000000000000005 /* EntryCard.swift in Sources */,
 				B00000000000000000000006 /* DesignTokens.swift in Sources */,
 				B00000000000000000000007 /* InboxEntry.swift in Sources */,
+				B0000000000000000000003A /* EntryOccurrence.swift in Sources */,
+				B0000000000000000000003B /* OccurrenceEditor.swift in Sources */,
 				B00000000000000000000009 /* AppConfiguration.swift in Sources */,
 				B0000000000000000000000A /* AuthenticationController.swift in Sources */,
 				B0000000000000000000000B /* AuthenticationView.swift in Sources */,

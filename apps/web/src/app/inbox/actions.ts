@@ -22,10 +22,9 @@ export type SyncInboxEntryResult = {
   status: "retry" | "synced";
 };
 
-export type ReviewInboxEntryResult = {
-  message: string;
-  status: "conflict" | "done" | "error" | "saved";
-};
+export type ReviewInboxEntryResult =
+  | { message: string; status: "conflict" | "error" }
+  | { message: string; status: "done" | "saved"; revision: number };
 
 export async function registerEntryAttachment(
   input: FirstTimeAttachmentInput,
@@ -152,18 +151,24 @@ export async function reviewInboxEntry(
     };
   }
 
-  const { data, error } = await context.client.rpc("review_entry", {
-    p_body: parsedInput.data.body,
-    p_collection_names: parsedInput.data.collectionNames,
-    p_entry_id: parsedInput.data.id,
-    p_entry_type: parsedInput.data.entryType,
-    p_expected_revision: parsedInput.data.revision,
-    p_mark_done: intent === "done",
-    p_occurred_start: parsedInput.data.occurredAt,
-    p_occurred_timezone: parsedInput.data.occurredTimezone,
-    p_tag_names: parsedInput.data.tagNames,
-    p_title: parsedInput.data.title,
-  });
+  const { data, error } = await context.client.rpc(
+    "review_entry_with_occurrence",
+    {
+      p_body: parsedInput.data.body,
+      p_collection_names: parsedInput.data.collectionNames,
+      p_entry_id: parsedInput.data.id,
+      p_entry_type: parsedInput.data.entryType,
+      p_expected_revision: parsedInput.data.revision,
+      p_mark_done: intent === "done",
+      p_occurred_start: parsedInput.data.occurredAt,
+      p_occurred_end: parsedInput.data.occurredEnd ?? null,
+      p_occurred_label: parsedInput.data.occurredLabel ?? null,
+      p_date_precision: parsedInput.data.datePrecision ?? "exact",
+      p_occurred_timezone: parsedInput.data.occurredTimezone,
+      p_tag_names: parsedInput.data.tagNames,
+      p_title: parsedInput.data.title,
+    },
+  );
 
   if (error) {
     return {
@@ -172,7 +177,11 @@ export async function reviewInboxEntry(
     };
   }
 
-  if (!Array.isArray(data) || data.length === 0) {
+  if (
+    !Array.isArray(data) ||
+    data.length === 0 ||
+    typeof data[0]?.revision !== "number"
+  ) {
     return {
       message:
         "This Entry changed on another device. Close it, refresh, and review the latest version.",
@@ -182,9 +191,18 @@ export async function reviewInboxEntry(
 
   revalidatePath("/");
 
+  revalidatePath("/inbox");
   return intent === "done"
-    ? { message: "Entry organized.", status: "done" }
-    : { message: "Changes saved.", status: "saved" };
+    ? {
+        message: "Entry organized.",
+        status: "done",
+        revision: data[0].revision,
+      }
+    : {
+        message: "Changes saved.",
+        status: "saved",
+        revision: data[0].revision,
+      };
 }
 
 async function entryAlreadyExists(

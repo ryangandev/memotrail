@@ -1,15 +1,18 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import {
+  validTimezone,
+  type Occurrence,
+  type OccurrencePrecision,
+} from "./occurrence";
 
-export type InboxEntry = {
+export type InboxEntry = Occurrence & {
   body: string;
   collectionNames: string[];
   createdAt: string;
   entryType: "first_time" | "standard";
   id: string;
-  occurredAt: string;
-  occurredTimezone: string | null;
   revision: number;
   tagNames: string[];
   title: string | null;
@@ -38,13 +41,16 @@ type EntryRow = {
   entry_type: "first_time" | "standard";
   id: string;
   occurred_start: string | null;
+  occurred_end: string | null;
+  occurred_label: string | null;
+  date_precision: OccurrencePrecision;
   occurred_timezone: string | null;
   revision: number;
   title: string | null;
 };
 
 type EntryCollectionRow = {
-  collection: { name: string } | null;
+  collection: { name: string; archived_at: string | null } | null;
   entry_id: string;
 };
 
@@ -93,7 +99,7 @@ export async function getInboxWorkspace(): Promise<InboxWorkspace | null> {
   const { data, error } = await context.client
     .from("entries")
     .select(
-      "id,title,body,entry_type,created_at,occurred_start,occurred_timezone,revision",
+      "id,title,body,entry_type,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision",
     )
     .eq("owner_id", context.userId)
     .eq("inbox_status", "unreviewed")
@@ -164,8 +170,16 @@ function entryFromRow(
     createdAt: row.created_at,
     entryType: row.entry_type,
     id: row.id,
-    occurredAt: row.occurred_start ?? row.created_at,
-    occurredTimezone: stringValue(row.occurred_timezone),
+    occurredAt: row.occurred_start,
+    occurredEnd: row.occurred_end,
+    occurredLabel: row.occurred_label,
+    datePrecision:
+      row.occurred_start || row.date_precision !== "exact"
+        ? row.date_precision
+        : "unknown",
+    occurredTimezone: validTimezone(row.occurred_timezone)
+      ? row.occurred_timezone
+      : "UTC",
     revision: row.revision,
     tagNames,
     title: stringValue(row.title),
@@ -182,7 +196,7 @@ function loadEntryCollections(
 
   return context.client
     .from("entry_collections")
-    .select("entry_id,collection:collections(name)")
+    .select("entry_id,collection:collections(name,archived_at)")
     .eq("owner_id", context.userId)
     .in("entry_id", entryIds)
     .returns<EntryCollectionRow[]>();
@@ -216,7 +230,7 @@ function namesByEntry(
         ? (row as EntryCollectionRow).collection
         : (row as EntryTagRow).tag;
 
-    if (!item) {
+    if (!item || ("archived_at" in item && item.archived_at)) {
       continue;
     }
 

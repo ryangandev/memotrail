@@ -16,13 +16,13 @@ The last accepted checkpoint is `a7850b7`.
 | People, Entry links, and recoverable removal                     | Deployed        | Complete      | Complete      | Pushed feea315              |
 | AI preferences, budgets, provider boundary, and usage            | Deployed        | Complete      | Complete      | Pushed 6579c8d              |
 | Editable AI title, Type, Collection, and tag suggestions         | Deployed        | Complete      | Complete      | Pushed 90740d3              |
-| Precision-aware AI date acceptance                               | Guidance only   | Pending       | Pending       | Pending                     |
+| Precision-aware Inbox dates and explicit AI description adoption | Deployed        | Complete      | Complete      | Local verified; this commit |
 | Natural-language retrieval and grounded source links             | Pending         | Pending       | Pending       | Pending                     |
 | Explore with AI, persisted conversation, Save as Entry           | Pending         | Pending       | Pending       | Pending                     |
 | Inspect and restore Entry history                                | Deployed        | Complete      | Complete      | Pushed eee57bf              |
 | Complete ZIP export with JSON, Markdown, CSV, and originals      | Pending         | Pending       | Pending       | Pending                     |
 | Timeline track creation, ordering, and hide/show management      | Deployed        | Complete      | Complete      | Pushed e06e96c              |
-| Collection/tag creation and renaming, Collection ordering/Trash  | Deployed        | Complete      | Complete      | Local verified; this commit |
+| Collection/tag creation and renaming, Collection ordering/Trash  | Deployed        | Complete      | Complete      | Pushed 332449a              |
 | Remaining date precision, Entry conversion and relationship gaps | Audit pending   | Audit pending | Audit pending | Pending                     |
 | Photo derivative and metadata suggestion gaps                    | Audit pending   | Audit pending | Audit pending | Pending                     |
 | Final acceptance and production configuration                    | Pending         | Pending       | Pending       | Pending                     |

@@ -97,7 +97,7 @@ final class InboxController {
         try await client
         .from("entries")
         .select(
-          "id,title,body,entry_type,created_at,occurred_start,occurred_timezone,revision"
+          "id,title,body,entry_type,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision"
         )
         .eq("owner_id", value: ownerID.uuidString)
         .eq("inbox_status", value: "unreviewed")
@@ -197,10 +197,13 @@ final class InboxController {
     body: String,
     collectionNames: [String],
     entryType: InboxEntryType,
-    occurredAt: Date,
+    occurredAt: Date?,
     occurredTimezone: String,
     tagNames: [String],
-    intent: ReviewIntent
+    intent: ReviewIntent,
+    datePrecision: TimelineDatePrecision = .exact,
+    occurredEnd: Date? = nil,
+    occurredLabel: String? = nil
   ) async -> ReviewResult {
     let input: InboxReviewInput
 
@@ -214,7 +217,10 @@ final class InboxController {
         entryType: entryType,
         occurredAt: occurredAt,
         occurredTimezone: occurredTimezone,
-        tagNames: tagNames
+        tagNames: tagNames,
+        datePrecision: datePrecision,
+        occurredEnd: occurredEnd,
+        occurredLabel: occurredLabel
       )
     } catch {
       return ReviewResult(message: error.localizedDescription, status: .error)
@@ -236,11 +242,14 @@ final class InboxController {
         occurredTimezone: input.occurredTimezone,
         collectionNames: input.collectionNames,
         tagNames: input.tagNames,
-        markDone: intent == .done
+        markDone: intent == .done,
+        datePrecision: input.occurrence.precision,
+        occurredEnd: input.occurrence.end,
+        occurredLabel: input.occurrence.label
       )
       let reviewResults: [ReviewedEntryResult] =
         try await client
-        .rpc("review_entry", params: parameters)
+        .rpc("review_entry_with_occurrence", params: parameters)
         .execute()
         .value
 
@@ -267,7 +276,10 @@ final class InboxController {
         occurredStart: input.occurredAt,
         occurredTimezone: input.occurredTimezone,
         revision: reviewResult.revision,
-        tagNames: input.tagNames
+        tagNames: input.tagNames,
+        datePrecision: input.occurrence.precision,
+        occurredEnd: input.occurrence.end,
+        occurredLabel: input.occurrence.label
       )
 
       if let index = entries.firstIndex(where: { $0.id == reviewResult.entryID }) {
@@ -504,7 +516,7 @@ final class InboxController {
     let collectionRelationships: [EntryCollectionRelationship] =
       try await client
       .from("entry_collections")
-      .select("entry_id,collection:collections(name)")
+      .select("entry_id,collection:collections(name,archived_at)")
       .eq("owner_id", value: ownerID.uuidString)
       .in("entry_id", values: entryIDs)
       .execute()
@@ -592,11 +604,14 @@ struct ReviewEntryParameters: Encodable, Sendable {
   let title: String?
   let body: String
   let entryType: InboxEntryType
-  let occurredStart: Date
+  let occurredStart: Date?
   let occurredTimezone: String
   let collectionNames: [String]
   let tagNames: [String]
   let markDone: Bool
+  var datePrecision: TimelineDatePrecision = .exact
+  var occurredEnd: Date? = nil
+  var occurredLabel: String? = nil
 
   enum CodingKeys: String, CodingKey {
     case entryID = "p_entry_id"
@@ -609,6 +624,9 @@ struct ReviewEntryParameters: Encodable, Sendable {
     case collectionNames = "p_collection_names"
     case tagNames = "p_tag_names"
     case markDone = "p_mark_done"
+    case datePrecision = "p_date_precision"
+    case occurredEnd = "p_occurred_end"
+    case occurredLabel = "p_occurred_label"
   }
 
   func encode(to encoder: Encoder) throws {
@@ -628,6 +646,9 @@ struct ReviewEntryParameters: Encodable, Sendable {
     try values.encode(collectionNames, forKey: .collectionNames)
     try values.encode(tagNames, forKey: .tagNames)
     try values.encode(markDone, forKey: .markDone)
+    try values.encode(datePrecision, forKey: .datePrecision)
+    try values.encode(occurredEnd, forKey: .occurredEnd)
+    try values.encode(occurredLabel, forKey: .occurredLabel)
   }
 }
 
@@ -647,11 +668,20 @@ private struct OrganizationName: Decodable, Sendable {
 
 private struct EntryCollectionRelationship: Decodable, Sendable {
   let entryID: UUID
-  let collection: OrganizationName?
+  let collection: InboxCollectionName?
 
   enum CodingKeys: String, CodingKey {
     case entryID = "entry_id"
     case collection
+  }
+}
+
+private struct InboxCollectionName: Decodable, Sendable {
+  let name: String
+  let archivedAt: String?
+  enum CodingKeys: String, CodingKey {
+    case name
+    case archivedAt = "archived_at"
   }
 }
 
@@ -677,7 +707,8 @@ private func collectionNamesByEntry(
 ) -> [UUID: [String]] {
   Dictionary(grouping: relationships, by: \.entryID)
     .mapValues { rows in
-      rows.compactMap(\.collection?.name).sortedCaseInsensitively()
+      rows.filter { $0.collection?.archivedAt == nil }.compactMap(\.collection?.name)
+        .sortedCaseInsensitively()
     }
 }
 

@@ -9,6 +9,12 @@ import {
 } from "@/app/inbox/actions";
 import { Icon } from "@/components/icon";
 import { EntryAISuggestionsPanel } from "@/components/entry-ai-suggestions";
+import { OccurrenceEditor } from "@/components/occurrence-editor";
+import {
+  occurrenceDraft,
+  occurrenceLabel,
+  resolveOccurrenceDraft,
+} from "@/lib/data/occurrence";
 import { mergeAISuggestionNames } from "@/lib/ai/suggestion";
 import type { InboxEntry } from "@/lib/data/inbox";
 import { entryBodyLimit, entryTitleLimit } from "@/lib/data/inbox-input";
@@ -29,17 +35,27 @@ export function EntryReviewList({
   tagOptions: string[];
 }) {
   const [selectedEntry, setSelectedEntry] = useState<InboxEntry | null>(null);
+  // Reflect server-confirmed mutations immediately while router refresh is in
+  // flight. Rapid reopening must never submit the previous revision again.
+  const [savedReviews, setSavedReviews] = useState<
+    Record<string, { entry: InboxEntry; done: boolean }>
+  >({});
 
   return (
     <>
-      {entries.map((entry) => {
+      {entries.map((source) => {
+        const saved = savedReviews[source.id];
+        const latest =
+          saved && saved.entry.revision >= source.revision ? saved : null;
+        if (latest?.done) return null;
+        const entry = latest?.entry ?? source;
         const excerpt = entryExcerpt(entry);
 
         return (
           <article className={styles.entryCard} key={entry.id}>
             <div className={styles.entryMeta}>
-              <time dateTime={entry.occurredAt}>
-                {entryDateLabel(entry.occurredAt)}
+              <time dateTime={entry.occurredAt ?? undefined}>
+                {occurrenceLabel(entry)}
               </time>
             </div>
             <h3>{entryTitle(entry)}</h3>
@@ -81,6 +97,13 @@ export function EntryReviewList({
           key={`${selectedEntry.id}:${selectedEntry.revision}`}
           collectionOptions={collectionOptions}
           onClose={() => setSelectedEntry(null)}
+          onSaved={(entry, done) => {
+            setSavedReviews((current) => ({
+              ...current,
+              [entry.id]: { entry, done },
+            }));
+            setSelectedEntry(null);
+          }}
           tagOptions={tagOptions}
         />
       ) : null}
@@ -92,11 +115,13 @@ function EntryReviewDialog({
   collectionOptions,
   entry,
   onClose,
+  onSaved,
   tagOptions,
 }: {
   collectionOptions: string[];
   entry: InboxEntry;
   onClose: () => void;
+  onSaved: (entry: InboxEntry, done: boolean) => void;
   tagOptions: string[];
 }) {
   const router = useRouter();
@@ -107,12 +132,7 @@ function EntryReviewDialog({
   const [entryType, setEntryType] = useState<ReviewableEntryType>(
     entry.entryType,
   );
-  const [occurredAt, setOccurredAt] = useState(
-    localDateTimeValue(entry.occurredAt),
-  );
-  const [occurredTimezone, setOccurredTimezone] = useState(
-    entry.occurredTimezone ?? localTimezone(),
-  );
+  const [occurrence, setOccurrence] = useState(() => occurrenceDraft(entry));
   const [isPending, setIsPending] = useState(false);
   const [result, setResult] = useState<ReviewInboxEntryResult | null>(null);
   const [tagNames, setTagNames] = useState(entry.tagNames);
@@ -130,16 +150,17 @@ function EntryReviewDialog({
   }, [isPending, onClose]);
 
   async function submitReview(intent: "done" | "save") {
-    const localDate = new Date(occurredAt);
+    const resolved = resolveOccurrenceDraft(occurrence, entry);
+    if (resolved.error) {
+      setResult({ message: resolved.error, status: "error" });
+      return;
+    }
     const input: InboxReviewInput = {
+      ...resolved.value!,
       body,
       collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       entryType,
       id: entry.id,
-      occurredAt: Number.isNaN(localDate.getTime())
-        ? occurredAt
-        : localDate.toISOString(),
-      occurredTimezone,
       revision: entry.revision,
       tagNames: namesIncludingDraft(tagNames, tagInput),
       title: title || null,
@@ -158,8 +179,18 @@ function EntryReviewDialog({
       const nextResult = await reviewInboxEntry(parsedInput.data, intent);
 
       if (nextResult.status === "saved" || nextResult.status === "done") {
+        onSaved(
+          {
+            ...entry,
+            ...parsedInput.data,
+            datePrecision: parsedInput.data.datePrecision ?? "exact",
+            occurredEnd: parsedInput.data.occurredEnd ?? null,
+            occurredLabel: parsedInput.data.occurredLabel ?? null,
+            revision: nextResult.revision,
+          },
+          nextResult.status === "done",
+        );
         router.refresh();
-        onClose();
         return;
       }
 
@@ -217,6 +248,14 @@ function EntryReviewDialog({
             revision={entry.revision}
             disabled={isPending}
             onApply={(key, value) => {
+              if (key === "dateText" && typeof value === "string")
+                setOccurrence((current) => ({
+                  ...current,
+                  precision: "approximate",
+                  label: value,
+                  start: "",
+                  end: "",
+                }));
               if (key === "title" && typeof value === "string") setTitle(value);
               if (
                 key === "entryType" &&
@@ -270,20 +309,12 @@ function EntryReviewDialog({
                 <option value="first_time">First Time</option>
               </select>
             </label>
-
-            <label>
-              <span>Occurred</span>
-              <input
-                disabled={isPending}
-                onChange={(event) => {
-                  setOccurredAt(event.target.value);
-                  setOccurredTimezone(localTimezone());
-                }}
-                type="datetime-local"
-                value={occurredAt}
-              />
-            </label>
           </div>
+          <OccurrenceEditor
+            value={occurrence}
+            onChange={setOccurrence}
+            disabled={isPending}
+          />
 
           <OrganizationNameEditor
             disabled={isPending}
@@ -443,25 +474,6 @@ function OrganizationNameEditor({
 function namesIncludingDraft(names: string[], draft: string) {
   const name = draft.trim();
   return name ? [...names, name] : names;
-}
-
-function localDateTimeValue(value: string) {
-  const date = new Date(value);
-  const localDate = new Date(
-    date.getTime() - date.getTimezoneOffset() * 60_000,
-  );
-  return localDate.toISOString().slice(0, 16);
-}
-
-function localTimezone() {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-}
-
-function entryDateLabel(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
 }
 
 function entryTitle(entry: InboxEntry) {

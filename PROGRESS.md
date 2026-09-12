@@ -24,7 +24,7 @@
 - Web and iOS now generate optional Inbox suggestions after capture and expose per-field title, Type, Collection, and tag choices in the review surface without overwriting original text or marking Done.
 - Suggestions are cached by Entry revision and enabled feature scope, shared across clients, schema-validated, and dismissible; concurrent requests reuse one generation, with bounded status polling and explicit-only retries after failure.
 - A real Chinese learning-note test verified provider generation, unchanged originals, manual title edits, Collection acceptance, dismissal, cache reuse through the native bearer API, and retention in Inbox after saving.
-- Date candidates are human-readable guidance only for now; precision-aware date acceptance remains on the completion checklist.
+- Date candidates were initially guidance only; the precision-aware Inbox review slice below now supports explicit adoption and editing.
 - Suggestion acceptance passed 682 database tests, 194 Web tests, 155 native tests, desktop/light and narrow/dark browser checks, Web production build, and native Simulator build.
 - Entry history now provides matching Web and iOS browsing, version comparison, and explicit revision-safe restoration while preserving the replaced current state as another recoverable version.
 - Complete snapshots retain organization, specialized details, Timeline and Entry relationships, and private photo membership; legacy snapshots preserve unknown relationships instead of guessing, and unavailable historical references fail atomically.
@@ -39,6 +39,14 @@
 - A reproduced Bucket List rename regression is fixed through stable Collection roles, shared Goal workspace metadata, and matching native/Web milestone eligibility.
 - Organization acceptance passed 777 database tests, 206 Web tests, 159 native tests plus a focused decoding rerun, and five authenticated browser scenarios including actual Goal achievement after Collection renaming.
 - The organization migration is deployed with warning-free hosted schema lint; strict browser checks also identified and resolved a missing favicon using the existing M monogram.
+- Inbox review now supports matching Web and iOS Exact, Day, Month, Year, Approximate, Age, Range, and Unknown dates, including nullable bounds and editable descriptions.
+- AI date choices copy only an approximate description into the review form, preserve the original until Save, and never infer a birthday, mark Done, or manufacture a calendar date.
+- A browser-reproduced bug that displayed Unknown dates as creation timestamps is fixed, alongside recorded-zone edits, daylight-saving gaps, fractional offsets, and exact-instant preservation.
+- A second browser-reproduced rapid-review conflict is fixed by retaining the server-confirmed revision immediately after saving while route refresh completes.
+- Review now hides archived Collections without re-creating them or discarding their recoverable links.
+- Occurrence acceptance passed 807 database tests, 215 Web unit tests, and six authenticated browser scenarios; the native 162-test suite covers matching precision, DST, AI adoption, and explicit-null RPC encoding.
+- The additive Inbox occurrence migration is deployed with warning-free hosted lint; no seed users or roles were deployed, and this UI acceptance slice made no paid AI requests.
+- Final occurrence acceptance also passed Web production build, formatting, lint, and type checking; a stalled Xcode parallel-clone installation was interrupted and the final serial native rerun passed all 162 tests with no skips or device reset.
 
 - Phase 1 repository, design system, Web shell, iOS shell, local Supabase schema, RLS tests, and CI are complete.
 - The production Web shell is reachable at `https://memotrail.ryangan.me`.
@@ -46,7 +54,7 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- The linked hosted Supabase project contains all twenty-three reviewed migrations; linked schema lint passes and no development seed users or roles were deployed.
+- The linked hosted Supabase project contains all twenty-four reviewed migrations; linked schema lint passes and no development seed users or roles were deployed.
 - The hosted atomic Entry review contract now supports content, Type, occurrence, Collection, tag, and `Done` updates in one transaction.
 - Hosted verification found 24 Row Level Security-enabled application tables, 25 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
@@ -1038,10 +1046,11 @@
 - `feat: add restorable Entry history across Web and iOS` added complete version snapshots, owner-scoped browsing, explicit restoration, relationship and photo preservation, and cross-device conflict protection.
 - `feat: add Timeline track management across Web and iOS` added custom tracks, renaming, ordering, hide/show controls, and revision-safe updates without deleting moments.
 - `feat: add Collection and tag management across Web and iOS` added stable organization editing, Collection Trash, protected Entry history, and rename-safe Bucket List milestones.
+- `feat: add precision-aware Inbox dates across Web and iOS` added editable occurrence precision, safe AI date adoption, preserved exact instants, and immediate server-confirmed review revisions.
 
 ## Next sequence
 
-1. Complete the remaining export, organization management, date precision, and AI retrieval/exploration slices on both clients.
+1. Complete the remaining export, specialized date precision, and AI retrieval/exploration slices on both clients.
 2. Follow the cross-platform acceptance matrix in `REMAINING.md`, updating this record with every commit.
 3. Validate live provider behavior and production configuration before declaring the AI integration complete.
 

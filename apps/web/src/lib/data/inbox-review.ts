@@ -1,4 +1,5 @@
 import { entryBodyLimit, entryTitleLimit } from "./inbox-input";
+import { validateOccurrence, type OccurrencePrecision } from "./occurrence";
 
 export const reviewableEntryTypes = ["standard", "first_time"] as const;
 export type ReviewableEntryType = (typeof reviewableEntryTypes)[number];
@@ -8,7 +9,10 @@ export type InboxReviewInput = {
   collectionNames: string[];
   entryType: ReviewableEntryType;
   id: string;
-  occurredAt: string;
+  occurredAt: string | null;
+  occurredEnd?: string | null;
+  occurredLabel?: string | null;
+  datePrecision?: OccurrencePrecision;
   occurredTimezone: string;
   revision: number;
   tagNames: string[];
@@ -84,20 +88,15 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
     );
   }
 
-  if (
-    typeof values.occurredAt !== "string" ||
-    Number.isNaN(Date.parse(values.occurredAt))
-  ) {
-    return invalidReview("Choose a valid date and time.");
-  }
-
-  if (
-    typeof values.occurredTimezone !== "string" ||
-    !values.occurredTimezone ||
-    values.occurredTimezone.length > 100
-  ) {
-    return invalidReview("Choose a valid time zone.");
-  }
+  const occurrence = {
+    occurredAt: values.occurredAt as string | null,
+    occurredEnd: (values.occurredEnd ?? null) as string | null,
+    occurredLabel: (values.occurredLabel ?? null) as string | null,
+    occurredTimezone: values.occurredTimezone as string,
+    datePrecision: (values.datePrecision ?? "exact") as OccurrencePrecision,
+  };
+  const occurrenceError = validateOccurrence(occurrence);
+  if (occurrenceError) return invalidReview(occurrenceError);
 
   return {
     data: {
@@ -105,8 +104,14 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
       collectionNames,
       entryType: values.entryType as ReviewableEntryType,
       id: values.id,
-      occurredAt: new Date(values.occurredAt).toISOString(),
-      occurredTimezone: values.occurredTimezone,
+      ...occurrence,
+      occurredAt: occurrence.occurredAt
+        ? new Date(occurrence.occurredAt).toISOString()
+        : null,
+      occurredEnd: occurrence.occurredEnd
+        ? new Date(occurrence.occurredEnd).toISOString()
+        : null,
+      occurredLabel: occurrence.occurredLabel?.trim() || null,
       revision: values.revision,
       tagNames,
       title: title || null,

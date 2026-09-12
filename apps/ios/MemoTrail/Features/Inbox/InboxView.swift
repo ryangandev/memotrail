@@ -133,8 +133,7 @@ struct InboxView: View {
           body,
           collectionNames,
           entryType,
-          occurredAt,
-          timezone,
+          occurrence,
           tagNames,
           intent in
           await controller.review(
@@ -143,10 +142,13 @@ struct InboxView: View {
             body: body,
             collectionNames: collectionNames,
             entryType: entryType,
-            occurredAt: occurredAt,
-            occurredTimezone: timezone,
+            occurredAt: occurrence.start,
+            occurredTimezone: occurrence.timezone,
             tagNames: tagNames,
-            intent: intent
+            intent: intent,
+            datePrecision: occurrence.precision,
+            occurredEnd: occurrence.end,
+            occurredLabel: occurrence.label
           )
         }
       }
@@ -390,8 +392,7 @@ private struct InboxReviewSheet: View {
       String,
       [String],
       InboxEntryType,
-      Date,
-      String,
+      EntryOccurrence,
       [String],
       InboxController.ReviewIntent
     ) async -> InboxController.ReviewResult
@@ -402,8 +403,7 @@ private struct InboxReviewSheet: View {
   @State private var collectionNames: [String]
   @State private var collectionInput = ""
   @State private var entryType: InboxEntryType
-  @State private var occurredAt: Date
-  @State private var occurredTimezone: String
+  @State private var occurrence: OccurrenceDraft
   @State private var isWorking = false
   @State private var errorMessage: String?
   @State private var tagNames: [String]
@@ -421,8 +421,7 @@ private struct InboxReviewSheet: View {
         String,
         [String],
         InboxEntryType,
-        Date,
-        String,
+        EntryOccurrence,
         [String],
         InboxController.ReviewIntent
       ) async -> InboxController.ReviewResult
@@ -437,10 +436,7 @@ private struct InboxReviewSheet: View {
     _note = State(initialValue: entry.body)
     _collectionNames = State(initialValue: entry.collectionNames)
     _entryType = State(initialValue: entry.entryType)
-    _occurredAt = State(initialValue: entry.occurredStart ?? entry.createdAt)
-    _occurredTimezone = State(
-      initialValue: entry.occurredTimezone ?? TimeZone.current.identifier
-    )
+    _occurrence = State(initialValue: OccurrenceDraft(entry.occurrence))
     _tagNames = State(initialValue: entry.tagNames)
   }
 
@@ -451,6 +447,7 @@ private struct InboxReviewSheet: View {
           request: requestSuggestions, dismiss: dismissSuggestion,
           applyTitle: { title = $0 },
           applyType: { if let type = InboxEntryType(rawValue: $0) { entryType = type } },
+          applyDate: { occurrence.useDateSuggestion($0) },
           addCollection: { name in
             if collectionNames.count < 20
               && !collectionNames.contains(where: { $0.lowercased() == name.lowercased() })
@@ -483,16 +480,12 @@ private struct InboxReviewSheet: View {
             }
           }
 
-          DatePicker(
-            "Occurred",
-            selection: $occurredAt,
-            displayedComponents: [.date, .hourAndMinute]
-          )
         } header: {
           Text("Organization")
         } footer: {
           Text("Save changes keeps this Entry in Inbox. Done marks it organized.")
         }
+        OccurrenceEditor(value: $occurrence)
 
         Section {
           OrganizationNameEditor(
@@ -545,9 +538,6 @@ private struct InboxReviewSheet: View {
       .navigationTitle("Organize Entry")
       .navigationBarTitleDisplayMode(.inline)
       .disabled(isWorking)
-      .onChange(of: occurredAt) {
-        occurredTimezone = TimeZone.current.identifier
-      }
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Cancel") {
@@ -579,6 +569,13 @@ private struct InboxReviewSheet: View {
 
   @MainActor
   private func submit(_ intent: InboxController.ReviewIntent) async {
+    let resolved: EntryOccurrence
+    do {
+      resolved = try occurrence.resolve(original: entry.occurrence)
+    } catch {
+      errorMessage = error.localizedDescription
+      return
+    }
     isWorking = true
     errorMessage = nil
 
@@ -587,8 +584,7 @@ private struct InboxReviewSheet: View {
       note,
       namesIncludingDraft(collectionNames, collectionInput),
       entryType,
-      occurredAt,
-      occurredTimezone,
+      resolved,
       namesIncludingDraft(tagNames, tagInput),
       intent
     )

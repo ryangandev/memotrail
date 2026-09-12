@@ -46,6 +46,7 @@ struct EntryAISuggestionsView: View {
   let dismiss: @MainActor (UUID) async throws -> Void
   let applyTitle: (String) -> Void
   let applyType: (String) -> Void
+  let applyDate: (String) -> Void
   let addCollection: (String) -> Void
   let addTag: (String) -> Void
   @State private var result: EntryAISuggestionResponse?
@@ -85,9 +86,10 @@ struct EntryAISuggestionsView: View {
         }
         if let date = suggestion.dateText {
           Text(
-            "Date idea: \(date). Verify Occurred yourself; uncertain dates are not converted into exact timestamps."
+            "Date idea: \(date). Copies the description only. Review the precision and calendar fields before saving."
           )
           .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+          Button("Use as approximate date") { applyDate(date) }
         }
         Button("Dismiss suggestions") {
           Task {

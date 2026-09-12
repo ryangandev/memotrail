@@ -3,6 +3,63 @@ import XCTest
 @testable import MemoTrail
 
 final class InboxEntryTests: XCTestCase {
+  func testOccurrencePreservesLaterRepeatedHourAndFractionalSeconds() throws {
+    let date = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-11-01T09:30:27Z"))
+      .addingTimeInterval(0.123)
+    let value = EntryOccurrence(
+      precision: .exact, start: date, end: nil, label: nil, timezone: "America/Los_Angeles")
+    let draft = OccurrenceDraft(value)
+    XCTAssertEqual(draft.start, "2026-11-01T01:30:27")
+    XCTAssertEqual(try draft.resolve(original: value), value)
+    XCTAssertEqual(
+      OccurrenceDraft.wallTimeToDate("2026-11-01T01:30:27", timezone: value.timezone),
+      ISO8601DateFormatter().date(from: "2026-11-01T08:30:27Z"))
+    XCTAssertNil(OccurrenceDraft.wallTimeToDate("2026-03-08T02:30", timezone: value.timezone))
+    XCTAssertNil(OccurrenceDraft.wallTimeToDate("2025-02-29T12:00", timezone: "UTC"))
+    XCTAssertEqual(
+      OccurrenceDraft.wallTimeToDate("2026-09-12T12:00", timezone: "Asia/Kathmandu"),
+      ISO8601DateFormatter().date(from: "2026-09-12T06:15:00Z"))
+  }
+
+  func testOccurrencePartialDatesUnknownAgeAndAIAdoption() throws {
+    for (precision, input, expected) in [
+      (TimelineDatePrecision.year, "2017", "2017"), (.month, "2017-07", "Jul 2017"),
+      (.day, "2017-07-08", "Jul 8, 2017"),
+    ] {
+      var draft = OccurrenceDraft(
+        EntryOccurrence(
+          precision: precision, start: nil, end: nil, label: nil, timezone: "Pacific/Auckland"))
+      draft.start = input
+      let resolved = try draft.resolve()
+      XCTAssertEqual(resolved.displayLabel, expected)
+      XCTAssertEqual(OccurrenceDraft(resolved).start, input)
+    }
+    let unknown = EntryOccurrence(
+      precision: .unknown, start: nil, end: nil, label: nil, timezone: "UTC")
+    XCTAssertEqual(unknown.displayLabel, "Date unknown")
+    var draft = OccurrenceDraft(unknown)
+    draft.useDateSuggestion("17岁，第一次去日本")
+    XCTAssertEqual(try draft.resolve().precision, .approximate)
+    XCTAssertNil(try draft.resolve().start)
+    draft.precision = .age
+    XCTAssertEqual(try draft.resolve().displayLabel, "17岁，第一次去日本")
+    draft.label = ""
+    XCTAssertThrowsError(try draft.resolve())
+  }
+
+  func testOccurrenceReviewParametersEncodeNullCalendarDates() throws {
+    let parameters = ReviewEntryParameters(
+      entryID: UUID(), expectedRevision: 1, title: nil, body: "Memory", entryType: .standard,
+      occurredStart: nil, occurredTimezone: "UTC", collectionNames: [], tagNames: [],
+      markDone: false, datePrecision: .age, occurredEnd: nil, occurredLabel: "At age 17")
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(parameters)) as? [String: Any])
+    XCTAssertTrue(json["p_occurred_start"] is NSNull)
+    XCTAssertTrue(json["p_occurred_end"] is NSNull)
+    XCTAssertEqual(json["p_date_precision"] as? String, "age")
+    XCTAssertEqual(json["p_occurred_label"] as? String, "At age 17")
+  }
+
   func testBodyOnlyCaptureIsTrimmedAndAccepted() throws {
     let capture = try InboxCapture.validate(
       title: "  ",

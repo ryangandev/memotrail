@@ -1,0 +1,124 @@
+import { describe, expect, it } from "vitest";
+import {
+  occurrenceDraft,
+  occurrenceLabel,
+  resolveOccurrenceDraft,
+  validateOccurrence,
+  wallTimeToISO,
+  type Occurrence,
+} from "./occurrence";
+const original: Occurrence = {
+  datePrecision: "exact",
+  occurredAt: "2026-11-01T09:30:27.123Z",
+  occurredEnd: null,
+  occurredLabel: null,
+  occurredTimezone: "America/Los_Angeles",
+};
+describe("precision-aware occurrence", () => {
+  it("preserves an unchanged instant including seconds, milliseconds and the later repeated DST hour", () => {
+    const draft = occurrenceDraft(original);
+    expect(draft.start).toBe("2026-11-01T01:30:27");
+    expect(resolveOccurrenceDraft(draft, original)).toEqual({
+      value: original,
+    });
+    expect(
+      wallTimeToISO("2026-11-01T01:30:27", original.occurredTimezone),
+    ).toBe("2026-11-01T08:30:27.000Z");
+  });
+  it("handles fractional time zones and rejects nonexistent wall times", () => {
+    expect(wallTimeToISO("2026-09-12T12:00", "Asia/Kathmandu")).toBe(
+      "2026-09-12T06:15:00.000Z",
+    );
+    expect(
+      wallTimeToISO("2026-03-08T02:30", original.occurredTimezone),
+    ).toBeNull();
+    expect(wallTimeToISO("2025-02-29T12:00", "UTC")).toBeNull();
+    expect(wallTimeToISO("2026-09-12T25:00", "UTC")).toBeNull();
+    expect(wallTimeToISO("2026-09-12T12:00", "not-a-zone")).toBeNull();
+  });
+  it.each([
+    ["year", "2017", "2017"],
+    ["month", "2017-07", "Jul 2017"],
+    ["day", "2017-07-08", "Jul 8, 2017"],
+  ] as const)(
+    "keeps %s precision in labels and recorded zone",
+    (precision, start, label) => {
+      const result = resolveOccurrenceDraft({
+        precision,
+        start,
+        end: "",
+        label: "",
+        timezone: "Pacific/Auckland",
+      });
+      expect(result.error).toBeUndefined();
+      expect(occurrenceLabel(result.value!)).toBe(label);
+      expect(occurrenceDraft(result.value!).start).toBe(start);
+    },
+  );
+  it.each(["age", "approximate"] as const)(
+    "stores %s descriptions without inferring a birthday or calendar anchor",
+    (precision) => {
+      const result = resolveOccurrenceDraft({
+        precision,
+        start: "",
+        end: "",
+        label: "17岁，第一次去日本",
+        timezone: "UTC",
+      });
+      expect(result.value).toMatchObject({
+        occurredAt: null,
+        occurredEnd: null,
+        occurredLabel: "17岁，第一次去日本",
+        datePrecision: precision,
+      });
+      expect(occurrenceLabel(result.value!)).toBe("17岁，第一次去日本");
+    },
+  );
+  it("supports unknown and open-ended ranges, refuses reversed ranges and missing descriptions", () => {
+    const unknown = {
+      ...original,
+      datePrecision: "unknown" as const,
+      occurredAt: null,
+    };
+    expect(occurrenceLabel(unknown)).toBe("Date unknown");
+    expect(validateOccurrence(unknown)).toBeNull();
+    expect(
+      validateOccurrence({ ...unknown, occurredAt: original.occurredAt }),
+    ).not.toBeNull();
+    const draft = {
+      precision: "range" as const,
+      start: "2020-01-01",
+      end: "",
+      label: "",
+      timezone: "UTC",
+    };
+    expect(occurrenceLabel(resolveOccurrenceDraft(draft).value!)).toContain(
+      "onward",
+    );
+    expect(
+      resolveOccurrenceDraft({ ...draft, end: "2019-01-01" }).error,
+    ).toBeDefined();
+    expect(
+      resolveOccurrenceDraft({ ...draft, precision: "age", start: "" }).error,
+    ).toBeDefined();
+    expect(
+      resolveOccurrenceDraft({ ...draft, label: "x".repeat(201) }).error,
+    ).toBeDefined();
+  });
+  it("rejects invalid partial dates rather than silently converting them", () => {
+    for (const [precision, start] of [
+      ["year", "20"],
+      ["month", "2017-13"],
+      ["day", "2017-02-30"],
+    ] as const)
+      expect(
+        resolveOccurrenceDraft({
+          precision,
+          start,
+          end: "",
+          label: "",
+          timezone: "UTC",
+        }).error,
+      ).toBeDefined();
+  });
+});

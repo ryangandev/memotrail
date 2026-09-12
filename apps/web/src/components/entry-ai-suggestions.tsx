@@ -184,8 +184,15 @@ export function EntryAISuggestionsPanel({
             <p>
               <strong>Date idea:</strong> {content.dateText}
               <br />
-              Verify the Occurred field yourself. An uncertain date is not
-              converted into an exact timestamp.
+              <button
+                type="button"
+                disabled={disabled || busy}
+                onClick={() => onApply("dateText", content.dateText)}
+              >
+                Use as approximate date
+              </button>{" "}
+              Copies the description only. Review the precision and calendar
+              fields below before saving.
             </p>
           )}
           <button type="button" disabled={disabled || busy} onClick={dismiss}>
