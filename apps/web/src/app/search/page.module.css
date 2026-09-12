@@ -80,8 +80,18 @@
 
 .queryRow {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: var(--mt-space-3);
+}
+.askSubmit {
+  min-height: 48px;
+  border: 1px solid var(--mt-color-border-strong);
+  border-radius: var(--mt-radius-medium);
+  padding: 0 18px;
+  background: var(--mt-color-accent-subtle);
+  color: var(--mt-color-accent);
+  font: inherit;
+  cursor: pointer;
 }
 
 .queryField {

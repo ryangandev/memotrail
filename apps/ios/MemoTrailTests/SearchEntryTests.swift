@@ -3,6 +3,30 @@ import XCTest
 @testable import MemoTrail
 
 final class SearchEntryTests: XCTestCase {
+  func testAISearchUsesSharedFiltersWithoutProviderSecrets() throws {
+    let request = try EntrySearchRequest.validate(
+      query: "第一次滑雪?", entryTypes: [.firstTime], collectionNames: ["Travel"], tagNames: ["winter"],
+      dateFrom: nil, dateTo: nil)
+    let input = AISearchRequest(request: request, timeZone: "America/Los_Angeles")
+    XCTAssertEqual(input.parameters["q"], ["第一次滑雪?"])
+    XCTAssertEqual(input.parameters["type"], ["first_time"])
+    XCTAssertEqual(input.parameters["collection"], ["Travel"])
+    XCTAssertEqual(input.parameters["tag"], ["winter"])
+    XCTAssertEqual(input.parameters["from"], [])
+    let encoded = try XCTUnwrap(String(data: JSONEncoder().encode(input), encoding: .utf8))
+    XCTAssertFalse(encoded.contains("AI_API_KEY"))
+    XCTAssertTrue(encoded.contains("America"))
+  }
+  func testAISearchDecodesVerifiableCitationsAndUnknownDates() throws {
+    let data = Data(
+      #"{"question":"When did I ski?","findings":[{"text":"At age 17.","citations":[{"sourceID":"S1","quote":"第一次滑雪是在17岁。"}]}],"sources":[{"id":"S1","recordID":"11111111-1111-4111-8111-111111111111","kind":"entry","title":"Skiing","text":"第一次滑雪是在17岁。","href":"/history?entry=11111111-1111-4111-8111-111111111111","truncated":false}],"notices":[],"insufficientEvidence":false,"queries":["skiing","滑雪"]}"#
+        .utf8)
+    let answer = try JSONDecoder().decode(AISearchAnswer.self, from: data)
+    XCTAssertEqual(answer.findings[0].citations[0].sourceID, answer.sources[0].id)
+    XCTAssertEqual(
+      answer.sources[0].recordID.uuidString.lowercased(), "11111111-1111-4111-8111-111111111111")
+    XCTAssertFalse(answer.insufficientEvidence)
+  }
   func testSearchRequestNormalizesContentAndOrganization() throws {
     let request = try EntrySearchRequest.validate(
       query: "  teeth movement  ",

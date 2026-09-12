@@ -57,6 +57,7 @@ export async function generateAI(
   system: string,
   prompt: string,
   maxTokens = 1024,
+  outputSchema?: Record<string, unknown>,
 ) {
   if (!aiProviderConfigured())
     throw new AIError(
@@ -65,7 +66,10 @@ export async function generateAI(
       "AI is not configured on this server. Manual features still work.",
     );
   // A UTF-8 byte bound conservatively exceeds text token counts, including Unicode.
-  const promptBytes = Buffer.byteLength(system + prompt, "utf8");
+  const promptBytes = Buffer.byteLength(
+    system + prompt + (outputSchema ? JSON.stringify(outputSchema) : ""),
+    "utf8",
+  );
   if (
     promptBytes > 64_000 ||
     !Number.isInteger(maxTokens) ||
@@ -139,6 +143,13 @@ export async function generateAI(
         max_tokens: maxTokens,
         system,
         messages: [{ role: "user", content: prompt }],
+        ...(outputSchema
+          ? {
+              output_config: {
+                format: { type: "json_schema", schema: outputSchema },
+              },
+            }
+          : {}),
       }),
       signal: AbortSignal.timeout(25_000),
       cache: "no-store",

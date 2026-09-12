@@ -5,9 +5,13 @@ struct SearchView: View {
   @State private var controller: SearchController
   @State private var isShowingFilters = false
   private let embedded: Bool
+  private let client: SupabaseClient
+  private let ownerID: UUID
 
   init(client: SupabaseClient, ownerID: UUID, embedded: Bool = false) {
     self.embedded = embedded
+    self.client = client
+    self.ownerID = ownerID
     _controller = State(
       initialValue: SearchController(client: client, ownerID: ownerID)
     )
@@ -29,7 +33,15 @@ struct SearchView: View {
       LazyVStack(alignment: .leading, spacing: MTSpacing.s6) {
         header
         criteriaSummary
-        results
+        if controller.isAskingAI {
+          ProgressView("Finding sources and composing…")
+          Text("This can take up to a minute. Your original records stay unchanged.")
+            .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+        } else if let answer = controller.aiAnswer {
+          aiResults(answer)
+        } else {
+          results
+        }
       }
       .padding(.horizontal, MTSpacing.s4)
       .padding(.top, MTSpacing.s6)
@@ -41,7 +53,7 @@ struct SearchView: View {
     .searchable(
       text: $controller.query,
       placement: .navigationBarDrawer(displayMode: .always),
-      prompt: "A phrase, place, date, Collection, or tag"
+      prompt: "A phrase, date, or question about your life"
     )
     .onSubmit(of: .search) {
       Task { await controller.search() }
@@ -61,6 +73,7 @@ struct SearchView: View {
               ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
         }
         .accessibilityLabel(filterButtonLabel)
+        .disabled(controller.isAskingAI)
       }
     }
     .toolbarBackground(MTColor.surface, for: .navigationBar)
@@ -139,8 +152,21 @@ struct SearchView: View {
       .buttonStyle(.borderedProminent)
       .tint(MTColor.accent)
       .controlSize(.large)
-      .disabled(!controller.hasCriteria || controller.isLoading)
+      .disabled(!controller.hasCriteria || controller.isLoading || controller.isAskingAI)
       .accessibilityIdentifier("search-entries")
+
+      Button("Ask AI", systemImage: "sparkles") { Task { await controller.askAI() } }
+        .buttonStyle(.bordered).tint(MTColor.accent)
+        .disabled(controller.isAskingAI || controller.isLoading || controller.query.trimmed.isEmpty)
+        .accessibilityIdentifier("ask-ai-search")
+      Text(
+        "Uses this search field and its filters. Sends the question and relevant text to Anthropic only when you ask."
+      )
+      .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+      NavigationLink("AI settings") { AISettingsView(client: client, ownerID: ownerID) }
+      if let error = controller.aiError {
+        Text(error).font(MTTypography.caption).foregroundStyle(MTColor.warm)
+      }
 
       if let filterErrorMessage = controller.filterErrorMessage {
         Label(filterErrorMessage, systemImage: "exclamationmark.circle")
@@ -188,6 +214,80 @@ struct SearchView: View {
     } else {
       resultsList
     }
+  }
+
+  private func aiResults(_ answer: AISearchAnswer) -> some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s4) {
+      Text("AI-ASSISTED SEARCH · CHECK THE SOURCES").font(MTTypography.caption).foregroundStyle(
+        MTColor.warm)
+      Text(answer.question).font(MTTypography.titleSmall)
+      if answer.insufficientEvidence {
+        Text(
+          answer.findings.isEmpty
+            ? "Not enough evidence in the retrieved records to answer this question. Try different words or filters."
+            : "The retrieved records only partly answer this question."
+        )
+        .foregroundStyle(MTColor.inkMuted)
+      }
+      ForEach(Array(answer.findings.enumerated()), id: \.offset) { _, finding in
+        VStack(alignment: .leading, spacing: MTSpacing.s3) {
+          Text(finding.text).textSelection(.enabled)
+          ForEach(Array(finding.citations.enumerated()), id: \.offset) { _, citation in
+            if let source = answer.sources.first(where: { $0.id == citation.sourceID }) {
+              if citation.quote.hasPrefix("Recorded facts:") {
+                DisclosureGroup("Recorded facts") {
+                  Text(citation.quote).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+                    .textSelection(.enabled)
+                }
+              } else {
+                Text(citation.quote).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+                  .textSelection(.enabled)
+              }
+              NavigationLink(source.title) { sourceView(source) }
+            }
+          }
+        }.padding(MTSpacing.s4).frame(maxWidth: .infinity, alignment: .leading)
+          .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.large))
+      }
+      ForEach(answer.notices, id: \.self) {
+        Text($0).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+      }
+      DisclosureGroup("Retrieved sources (\(answer.sources.count))") {
+        ForEach(answer.sources) { source in
+          NavigationLink(source.title) { sourceView(source) }.padding(.vertical, 6)
+        }
+      }
+      Text(
+        "AI interpretations can be wrong. Retrieval uses query expansion and bounded text matching, not a complete vector index. Nothing is saved as an Entry."
+      )
+      .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+    }
+  }
+
+  private func sourceView(_ source: AISearchSource) -> some View {
+    ScrollView {
+      VStack(alignment: .leading, spacing: MTSpacing.s4) {
+        Text(source.title).font(MTTypography.title)
+        Text("\(source.kind) · retrieved evidence\(source.truncated ? " · excerpt" : "")")
+          .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+        Text(source.text).font(MTTypography.body).textSelection(.enabled)
+        if source.kind == "entry" {
+          NavigationLink("Open original record") {
+            EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: source.recordID)
+          }
+        } else if source.kind == "habit" {
+          NavigationLink("Open original Habit") {
+            HabitsView(
+              client: client, ownerID: ownerID, focusedHabitID: source.recordID, embedded: true)
+          }
+        } else if source.kind == "place" {
+          NavigationLink("Open original Place") {
+            PlacesView(
+              client: client, ownerID: ownerID, embedded: true, focusedPlaceID: source.recordID)
+          }
+        }
+      }.padding(MTSpacing.s4)
+    }.background(MTColor.canvas).navigationTitle("Source record")
   }
 
   private var resultsList: some View {

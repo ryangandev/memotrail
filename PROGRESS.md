@@ -8,6 +8,25 @@
 
 ## Current status
 
+### Natural-language search across Web and iOS
+
+- Both clients now have explicit `Ask AI` alongside keyword search using the same question field and filters.
+- The server plans bounded bilingual retrieval, keeps manually selected filters authoritative, then generates only source-backed findings with validated record IDs and verbatim excerpts.
+- Missing evidence is explicit; queries and answers never modify Entries, paid retries are never automatic, and existing consent/budget controls apply to both provider calls.
+- Both planning and answers use native provider JSON schemas; answers select allowed passage IDs and the server inserts original text instead of trusting model-copied quotations.
+- Reproduced live recall failures are covered by bilingual core-term normalization, preserving All Types, and an explicitly labeled filtered fallback when only contextual Home evidence or no keyword matches were found.
+- Before-move retrieval retains the dated Home boundary and describes older reflections without implying complete or immediate pre-move coverage.
+- Both clients offer readable writing, expandable structured facts, and original Entry, Habit, and Place navigation; standalone People evidence remains inspectable without an invented Entry link.
+- The previous execution-approval timeout recovered and no longer blocks local browser or native tests.
+- Real-provider synthetic acceptance passed bilingual first experiences, filtered learning records, pre-move context, Habit comparisons, missing answers, native bearer authentication, source navigation, and unchanged originals; the successful five-question run cost $0.013138.
+- Web has 236 passing unit/server tests and eight passing authenticated browser scenarios, plus a final focused citation UI rerun; the native suite passes 164 tests with no skips.
+- The production Web build, lint, type checking, Prettier, Swift formatting, and diff whitespace checks pass.
+- The local AI ledger totals $0.048976 across 49 completed synthetic requests, with no outstanding reservations; direct key-verification requests outside this ledger were minimal and separately reported above.
+- Local aggregate AI testing remains below $0.10; the test-only cap was raised from $0.05 to $0.10 after request reservation correctly rejected an over-cap request, without deleting usage or changing production budgets.
+- Actual authenticated native AI taps and production AI deployment remain separate acceptance steps; compilation and bearer API tests are not full native or production end-to-end proof.
+
+### Verified delivered baseline
+
 - Ryan authorized completing the remaining confirmed scope, synchronized Web and iOS delivery, real Anthropic testing within a $3.50 balance, Supabase migration pushes, and feature commits to main.
 - `ARCHITECTURE.md` records the shared database, authenticated server API, native integration, AI trust boundary, and delivery conventions.
 - `REMAINING.md` tracks the unfinished product slices and acceptance state across the server and both clients.
@@ -51,7 +70,7 @@
 - Chronological candidate selection happens before limiting, and the original keyword RPC remains compatible with both clients.
 - Latest-Home context uses a calendar boundary only for precise dates; Habit evidence distinguishes skipped days, recorded and inferred misses, and complete-week deficits.
 - Browser acceptance reproduced a source-reader gap for Entries without earlier versions; Web and iOS now retain the current snapshot and hide empty version controls, and Web search titles link to the actual source Entry.
-- Natural-language model orchestration and answer interfaces remain unfinished in `REMAINING.md`; this evidence checkpoint does not claim complete AI search.
+- The evidence checkpoint was followed by the natural-language search slice above; the original evidence commit alone did not claim complete AI search.
 - The corrected local Anthropic key was reverified through the official models endpoint with HTTP 200 and no generated-token charge.
 - Evidence acceptance passed 844 database tests, 215 Web tests, seven authenticated browser scenarios, and 162 native tests with no skips; production build, formatting, lint, and type checking also passed.
 - The additive evidence migration is deployed with warning-free hosted schema lint and no development seeds or roles; browser source-navigation tests use only synthetic local records and incur no paid AI usage.
@@ -1056,6 +1075,7 @@
 - `feat: add Collection and tag management across Web and iOS` added stable organization editing, Collection Trash, protected Entry history, and rename-safe Bucket List milestones.
 - `feat: add precision-aware Inbox dates across Web and iOS` added editable occurrence precision, safe AI date adoption, preserved exact instants, and immediate server-confirmed review revisions.
 - `feat: add shared retrieval evidence and source navigation` added owner-scoped chronological and Habit evidence, preserved keyword compatibility, and fixed current-source reading on both clients.
+- `feat: add grounded AI search across Web and iOS` added explicit bilingual search, schema-constrained planning and citations, bounded source fallback, cross-platform source navigation, and real-provider acceptance without modifying originals.
 
 ## Next sequence
 

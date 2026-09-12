@@ -5,9 +5,11 @@ struct PlacesView: View {
   @State private var controller: PlaceController
   @State private var editorSelection: PlaceEditorSelection?
   private let embedded: Bool
+  private let focusedPlaceID: UUID?
 
-  init(client: SupabaseClient, ownerID: UUID, embedded: Bool = false) {
+  init(client: SupabaseClient, ownerID: UUID, embedded: Bool = false, focusedPlaceID: UUID? = nil) {
     self.embedded = embedded
+    self.focusedPlaceID = focusedPlaceID
     _controller = State(initialValue: PlaceController(client: client, ownerID: ownerID))
   }
 
@@ -97,6 +99,15 @@ struct PlacesView: View {
         message: loadErrorMessage,
         systemImage: "exclamationmark.triangle"
       )
+    } else if let focusedPlaceID {
+      if let place = controller.entries.first(where: { $0.id == focusedPlaceID }) {
+        placeSection(title: "SOURCE PLACE", entries: [place])
+      } else {
+        archiveMessage(
+          title: "Place unavailable",
+          message: "This Place is no longer available in the loaded workspace.",
+          systemImage: "archivebox")
+      }
     } else if controller.entries.isEmpty {
       Button {
         editorSelection = PlaceEditorSelection(entry: nil)

@@ -5,12 +5,15 @@ import Observation
 @MainActor
 @Observable
 final class SearchController {
-  var query = ""
-  var selectedEntryType: SearchEntryType?
-  var selectedCollectionName: String?
-  var selectedTagName: String?
-  var dateFrom: Date?
-  var dateTo: Date?
+  var query = "" { didSet { clearAIResult() } }
+  var selectedEntryType: SearchEntryType? { didSet { clearAIResult() } }
+  var selectedCollectionName: String? { didSet { clearAIResult() } }
+  var selectedTagName: String? { didSet { clearAIResult() } }
+  var dateFrom: Date? { didSet { clearAIResult() } }
+  var dateTo: Date? { didSet { clearAIResult() } }
+  private(set) var aiAnswer: AISearchAnswer?
+  private(set) var aiError: String?
+  private(set) var isAskingAI = false
 
   private(set) var entries: [SearchEntry] = []
   private(set) var collectionOptions: [String] = []
@@ -88,7 +91,47 @@ final class SearchController {
   }
 
   func search() async {
+    guard !isAskingAI else { return }
+    aiAnswer = nil
+    aiError = nil
     await runSearch(appending: false)
+  }
+
+  private func clearAIResult() {
+    aiAnswer = nil
+    aiError = nil
+  }
+
+  private func aiInput() throws -> AISearchRequest {
+    AISearchRequest(
+      request: try EntrySearchRequest.validate(
+        query: query,
+        entryTypes: selectedEntryType.map { [$0] } ?? [],
+        collectionNames: selectedCollectionName.map { [$0] } ?? [],
+        tagNames: selectedTagName.map { [$0] } ?? [], dateFrom: dateFrom, dateTo: dateTo))
+  }
+
+  func askAI() async {
+    guard !isAskingAI, !isLoading else { return }
+    guard !query.trimmed.isEmpty else {
+      aiError = "Enter a question in the search field first."
+      return
+    }
+    isAskingAI = true
+    aiAnswer = nil
+    aiError = nil
+    defer { isAskingAI = false }
+    do {
+      let input = try aiInput()
+      let result: AISearchAnswer = try await AIAPI.post(
+        "search", body: input, client: client, ownerID: ownerID, timeout: 95)
+      try await validateSessionOwner()
+      guard input == (try aiInput()) else {
+        aiError = "Your search changed. Ask again with the new question or filters."
+        return
+      }
+      aiAnswer = result
+    } catch { aiError = error.localizedDescription }
   }
 
   func loadMore() async {
@@ -97,6 +140,8 @@ final class SearchController {
   }
 
   func clearAll() {
+    aiAnswer = nil
+    aiError = nil
     query = ""
     selectedEntryType = nil
     selectedCollectionName = nil

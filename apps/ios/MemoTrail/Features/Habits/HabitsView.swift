@@ -7,73 +7,83 @@ struct HabitsView: View {
   @State private var editorSelection: HabitEditorSelection?
   @State private var checkInSelection: HabitCheckInSelection?
   @State private var message: String?
+  private let focusedHabitID: UUID?
+  private let embedded: Bool
 
-  init(client: SupabaseClient, ownerID: UUID) {
+  init(client: SupabaseClient, ownerID: UUID, focusedHabitID: UUID? = nil, embedded: Bool = false) {
+    self.focusedHabitID = focusedHabitID
+    self.embedded = embedded
     _controller = State(initialValue: HabitsController(client: client, ownerID: ownerID))
   }
 
+  @ViewBuilder
   var body: some View {
-    NavigationStack {
-      ScrollView {
-        LazyVStack(alignment: .leading, spacing: MTSpacing.s6) {
-          header
-          dateCard
+    if embedded { workspace } else { NavigationStack { workspace } }
+  }
 
-          if let message {
-            Label(message, systemImage: "checkmark.circle.fill")
-              .font(MTTypography.caption)
-              .foregroundStyle(MTColor.accent)
-              .frame(maxWidth: .infinity, alignment: .leading)
-              .padding(MTSpacing.s4)
-              .background(MTColor.accentSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
-          }
+  private var workspace: some View {
+    ScrollView {
+      LazyVStack(alignment: .leading, spacing: MTSpacing.s6) {
+        header
+        dateCard
 
-          habitContent
+        if let message {
+          Label(message, systemImage: "checkmark.circle.fill")
+            .font(MTTypography.caption)
+            .foregroundStyle(MTColor.accent)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(MTSpacing.s4)
+            .background(MTColor.accentSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
         }
-        .padding(.horizontal, MTSpacing.s4)
-        .padding(.top, MTSpacing.s6)
-        .padding(.bottom, MTSpacing.s12)
+
+        habitContent
       }
-      .background(MTColor.canvas)
-      .navigationTitle("Habits")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbarBackground(MTColor.surface, for: .navigationBar)
-      .toolbarBackground(.visible, for: .navigationBar)
-      .toolbar {
-        ToolbarItem(placement: .primaryAction) {
-          Button {
-            editorSelection = HabitEditorSelection(habit: nil)
-          } label: {
-            Label("New Habit", systemImage: "plus")
-          }
-          .disabled(controller.isSaving)
+      .padding(.horizontal, MTSpacing.s4)
+      .padding(.top, MTSpacing.s6)
+      .padding(.bottom, MTSpacing.s12)
+    }
+    .background(MTColor.canvas)
+    .navigationTitle("Habits")
+    .navigationBarTitleDisplayMode(.inline)
+    .toolbarBackground(MTColor.surface, for: .navigationBar)
+    .toolbarBackground(.visible, for: .navigationBar)
+    .toolbar {
+      ToolbarItem(placement: .primaryAction) {
+        Button {
+          editorSelection = HabitEditorSelection(habit: nil)
+        } label: {
+          Label("New Habit", systemImage: "plus")
         }
+        .disabled(controller.isSaving)
       }
-      .refreshable {
+    }
+    .refreshable {
+      await controller.load(date: selectedDate)
+    }
+    .task {
+      if !controller.hasLoaded {
         await controller.load(date: selectedDate)
-      }
-      .task {
-        if !controller.hasLoaded {
-          await controller.load(date: selectedDate)
+        if let focusedHabitID, controller.habits.contains(where: { $0.id == focusedHabitID }) {
+          await controller.selectHabit(focusedHabitID)
         }
       }
-      .onChange(of: selectedDate) {
-        message = nil
-        Task { await controller.load(date: selectedDate) }
+    }
+    .onChange(of: selectedDate) {
+      message = nil
+      Task { await controller.load(date: selectedDate) }
+    }
+    .sheet(item: $editorSelection) { selection in
+      HabitEditorSheet(controller: controller, habit: selection.habit) { result in
+        handle(result)
       }
-      .sheet(item: $editorSelection) { selection in
-        HabitEditorSheet(controller: controller, habit: selection.habit) { result in
-          handle(result)
-        }
-      }
-      .sheet(item: $checkInSelection) { selection in
-        HabitCheckInSheet(
-          controller: controller,
-          habit: selection.habit,
-          day: selection.day
-        ) { result in
-          handle(result)
-        }
+    }
+    .sheet(item: $checkInSelection) { selection in
+      HabitCheckInSheet(
+        controller: controller,
+        habit: selection.habit,
+        day: selection.day
+      ) { result in
+        handle(result)
       }
     }
   }
@@ -140,6 +150,9 @@ struct HabitsView: View {
       habitMessage("Loading your Habits...", systemImage: "hourglass")
     } else if let loadErrorMessage = controller.loadErrorMessage {
       habitMessage(loadErrorMessage, systemImage: "exclamationmark.triangle")
+    } else if let focusedHabitID, !controller.habits.contains(where: { $0.id == focusedHabitID }) {
+      habitMessage(
+        "This Habit is no longer available in your active workspace.", systemImage: "archivebox")
     } else if controller.habits.isEmpty {
       habitMessage(
         "Create your first Habit. Check something off or measure a number over time.",
@@ -155,7 +168,8 @@ struct HabitsView: View {
     VStack(alignment: .leading, spacing: MTSpacing.s4) {
       sectionHeader("CHECK IN", title: "Your Habits", detail: "\(controller.habits.count) active")
 
-      ForEach(controller.habits) { habit in
+      ForEach(controller.habits.filter { focusedHabitID == nil || $0.id == focusedHabitID }) {
+        habit in
         HabitCard(
           habit: habit,
           isSelected: controller.selectedHabitID == habit.id,

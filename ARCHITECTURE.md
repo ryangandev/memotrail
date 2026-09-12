@@ -63,7 +63,18 @@ Habit comparisons cover active Habits within the requested date range and expose
 Standalone People and Places are bounded to 25 matching records each and are excluded when Entry-specific or date filters cannot apply to them.
 The caller supplies the user's local `as_of` date when known; the database default is the current database date.
 Web source links open the authenticated current-version reader, which both clients keep visible even when no earlier version exists.
-This deployed evidence boundary is groundwork only: paid query planning, grounded answer validation, and the unified Web/iOS natural-language interface remain separate unfinished work.
+The natural-language interface and orchestration build on the deployed evidence boundary and are shared across Web and iOS.
+Both clients reuse their existing query field and filters with a separate explicit `Ask AI` action; Enter or keyword Search does not incur provider usage.
+The authenticated server runs a bounded bilingual query-planning call and, only when sources exist, an answer-generation call under the existing consent and spending gates.
+Manual Type, Collection, tag, and date filters remain authoritative over inferred filters; All Types is never narrowed by model-inferred labels because reflections can occur inside any Entry Type.
+Deterministic bilingual word segmentation removes intent words from query expansions without assuming that an English question matches English writing.
+When expanded terms return no actual matches, an explicitly labeled bounded fallback removes only query terms while retaining manual filters and the latest-Home date boundary; a Home returned merely as boundary context does not suppress this fallback.
+Both provider calls use [Anthropic structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs), followed by runtime validation.
+Each finding selects allowed source-and-passage references such as `S1:Q2`; the server inserts the literal passage, and malformed or fabricated references reject the answer without automatic retries.
+Original writing and structured facts are separate passages, with long facts expandable on both clients; schema bytes are included in conservative prompt-cost reservations.
+This validates source provenance, not semantic truth, so both clients label AI interpretations and retain inspectable excerpts and original Entry navigation.
+The serialized source payload is bounded, prioritizes Habit comparison records when requested, and reports source/excerpt omissions.
+Questions with no useful evidence return an explicit insufficient-evidence state, and generated results remain transient rather than overwriting or creating Entries.
 
 ### Provider and review controls
 
@@ -80,7 +91,7 @@ Accepting an AI date suggestion copies its human-readable description into Appro
 The user can change the precision to Age, Year, Month, or any other supported value and edit it before saving; model guidance is never silently converted to an exact timestamp.
 New Collections require user acceptance.
 Exploration remains attached to its source Entry, and Save as Entry creates a separately identified conclusion with a source relationship.
-Retrieval answers cite only authenticated source Entries and report insufficient evidence explicitly.
+Retrieval answers cite only authenticated archive evidence, including Entries and Habit summaries, and report insufficient evidence explicitly.
 
 Anthropic generation and vector embeddings are separate provider capabilities.
 No embedding provider has been supplied, so the implementation must distinguish model-assisted retrieval from a complete vector index and document any remaining search limitation.

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AuthGate } from "@/components/auth-gate";
 import { Icon } from "@/components/icon";
 import { WorkspaceShell } from "@/components/workspace-shell";
+import { AISearchForm } from "@/components/ai-search-form";
 import {
   SEARCH_PAGE_SIZE,
   parseSearchRequest,
@@ -76,8 +77,18 @@ export default async function SearchPage({
           </Link>
         </header>
 
-        <section className={styles.searchSurface} aria-label="Entry search">
-          <form action="/search" method="get">
+        <AISearchForm
+          key={JSON.stringify(request)}
+          keywordResults={
+            <SearchResults
+              entries={entries}
+              loadError={loadError}
+              request={request}
+              totalCount={totalCount}
+            />
+          }
+        >
+          <section className={styles.searchSurface} aria-label="Entry search">
             <div className={styles.queryRow}>
               <label className={styles.queryField} htmlFor="trail-search">
                 <Icon name="search" size={21} />
@@ -90,12 +101,20 @@ export default async function SearchPage({
                   id="trail-search"
                   maxLength={200}
                   name="q"
-                  placeholder="A phrase, place, date, Collection, or tag..."
+                  placeholder="A phrase, date, or question about your life..."
                   type="search"
                 />
               </label>
               <button className={styles.searchSubmit} type="submit">
                 Search
+              </button>
+              <button
+                className={styles.askSubmit}
+                name="mode"
+                value="ai"
+                type="submit"
+              >
+                Ask AI
               </button>
             </div>
 
@@ -186,15 +205,8 @@ export default async function SearchPage({
                 {filtersError}
               </p>
             ) : null}
-          </form>
-        </section>
-
-        <SearchResults
-          entries={entries}
-          loadError={loadError}
-          request={request}
-          totalCount={totalCount}
-        />
+          </section>
+        </AISearchForm>
       </div>
     </WorkspaceShell>
   );

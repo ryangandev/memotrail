@@ -23,7 +23,7 @@ const server = spawn(
       // Real provider testing is explicit, bounded, and still uses synthetic local records.
       AI_PROVIDER:
         process.env.MEMOTRAIL_E2E_LIVE_AI === "1" ? "anthropic" : "disabled",
-      AI_TOTAL_BUDGET_USD: "0.05",
+      AI_TOTAL_BUDGET_USD: "0.10",
     },
   },
 );

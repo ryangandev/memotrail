@@ -1,5 +1,42 @@
 import Foundation
 
+struct AISearchRequest: Encodable, Equatable, Sendable {
+  let parameters: [String: [String]]
+  let timeZone: String
+  init(request: EntrySearchRequest, timeZone: String = TimeZone.current.identifier) {
+    self.timeZone = timeZone
+    parameters = [
+      "q": [request.query], "type": request.entryTypes.map(\.rawValue),
+      "collection": request.collectionNames, "tag": request.tagNames,
+      "from": request.dateFrom.map { [$0] } ?? [], "to": request.dateTo.map { [$0] } ?? [],
+    ]
+  }
+}
+struct AISearchAnswer: Decodable, Sendable {
+  let question: String
+  let findings: [AISearchFinding]
+  let sources: [AISearchSource]
+  let notices: [String]
+  let insufficientEvidence: Bool
+  let queries: [String]
+}
+struct AISearchFinding: Decodable, Sendable {
+  let text: String
+  let citations: [AISearchCitation]
+}
+struct AISearchCitation: Decodable, Sendable {
+  let sourceID: String
+  let quote: String
+}
+struct AISearchSource: Decodable, Identifiable, Sendable {
+  let id: String
+  let recordID: UUID
+  let kind: String
+  let title: String
+  let text: String
+  let truncated: Bool
+}
+
 struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   let id: UUID
   let title: String?

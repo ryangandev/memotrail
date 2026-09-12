@@ -69,14 +69,15 @@ enum AIAPI {
   struct Failure: Decodable { let error: String }
 
   static func post<T: Decodable & Sendable, Body: Encodable & Sendable>(
-    _ path: String, body: Body, client: SupabaseClient, ownerID: UUID
+    _ path: String, body: Body, client: SupabaseClient, ownerID: UUID,
+    timeout: TimeInterval = 35
   ) async throws -> T {
     let session = try await client.auth.session
     guard session.user.id == ownerID else { throw URLError(.userAuthenticationRequired) }
     guard let base = AppConfiguration.apiURL else { throw URLError(.badURL) }
     var request = URLRequest(url: base.appendingPathComponent("api/ai/\(path)"))
     request.httpMethod = "POST"
-    request.timeoutInterval = 35
+    request.timeoutInterval = timeout
     request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.httpBody = try JSONEncoder().encode(body)
