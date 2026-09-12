@@ -53,29 +53,31 @@ export function EntryHistoryView({
     <>
       <Link href="/history">← All Entry history</Link>
       <h2>{historyTitle(history.current)}</h2>
-      <div className={styles.controls}>
-        <label>
-          Earlier version
-          <select
-            value={version ?? ""}
-            disabled={busy}
-            onChange={(e) => setVersion(Number(e.target.value))}
+      {history.versions.length > 0 && (
+        <div className={styles.controls}>
+          <label>
+            Earlier version
+            <select
+              value={version ?? ""}
+              disabled={busy}
+              onChange={(e) => setVersion(Number(e.target.value))}
+            >
+              {history.versions.map((v) => (
+                <option key={v.version} value={v.version}>
+                  Version {v.version} · saved before{" "}
+                  {new Date(v.created_at).toLocaleString()}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            disabled={busy || !selected || Boolean(history.current.deleted_at)}
+            onClick={restore}
           >
-            {history.versions.map((v) => (
-              <option key={v.version} value={v.version}>
-                Version {v.version} · saved before{" "}
-                {new Date(v.created_at).toLocaleString()}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          disabled={busy || !selected || Boolean(history.current.deleted_at)}
-          onClick={restore}
-        >
-          {busy ? "Restoring…" : "Restore selected version"}
-        </button>
-      </div>
+            {busy ? "Restoring…" : "Restore selected version"}
+          </button>
+        </div>
+      )}
       {history.current.deleted_at && (
         <p role="status">
           This Entry is in Trash. Restore it there before changing its history.
@@ -115,7 +117,17 @@ export function EntryHistoryView({
           </div>
         </>
       )}
-      {!selected && <p>No earlier versions on this page.</p>}
+      {!selected && (
+        <>
+          <p>No earlier versions on this page.</p>
+          <div className={`${styles.comparison} ${styles.currentOnly}`}>
+            <section aria-label="Current version">
+              <h3>Current · version {history.current.revision}</h3>
+              <Snapshot value={history.current} />
+            </section>
+          </div>
+        </>
+      )}
       <nav className={styles.pagination} aria-label="Version pages">
         {page > 1 && (
           <Link href={`/history?entry=${history.current.id}&page=${page - 1}`}>

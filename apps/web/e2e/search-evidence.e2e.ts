@@ -1,0 +1,141 @@
+import { execFileSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
+import { test, expect } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+
+test("Shared search evidence preserves keyword search and opens its actual source record", async ({
+  page,
+  context,
+}) => {
+  const env = JSON.parse(
+    execFileSync("supabase", ["status", "-o", "json"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }),
+  );
+  expect(env.API_URL).toBe("http://127.0.0.1:54321");
+  const admin = createClient(env.API_URL, env.SERVICE_ROLE_KEY, {
+    auth: { persistSession: false },
+  });
+  const email = `search-evidence-${randomUUID()}@memotrail.local`;
+  const created = await admin.auth.admin.createUser({
+    email,
+    email_confirm: true,
+  });
+  if (!created.data.user) throw new Error("Local search fixture unavailable.");
+  const ownerID = created.data.user.id,
+    entryID = randomUUID();
+  try {
+    const cookies: { name: string; value: string }[] = [];
+    const client = createServerClient(env.API_URL, env.ANON_KEY, {
+      cookies: {
+        getAll: () => cookies,
+        setAll: (values) => {
+          cookies.push(
+            ...values.map((v) => ({ name: v.name, value: v.value })),
+          );
+        },
+      },
+    });
+    const link = await admin.auth.admin.generateLink({
+      type: "magiclink",
+      email,
+    });
+    if (!link.data.properties) throw new Error("Local sign-in unavailable.");
+    const signed = await client.auth.verifyOtp({
+      type: "magiclink",
+      token_hash: link.data.properties.hashed_token,
+    });
+    expect(signed.error).toBeNull();
+    await context.addCookies(
+      cookies.map((c) => ({
+        ...c,
+        domain: "127.0.0.1",
+        path: "/",
+        sameSite: "Lax" as const,
+        httpOnly: false,
+      })),
+    );
+    expect(
+      (
+        await client.from("entries").insert({
+          id: entryID,
+          owner_id: ownerID,
+          title: "How an electric lighter works",
+          body: "今天学了电打火机使用电弧点燃蜡烛。Electric arcs produce heat.",
+          date_precision: "day",
+          occurred_start: "2026-01-05T12:00:00Z",
+          occurred_timezone: "UTC",
+        })
+      ).error,
+    ).toBeNull();
+    const bearer = createClient(env.API_URL, env.ANON_KEY, {
+      auth: { persistSession: false },
+      global: {
+        headers: {
+          Authorization: `Bearer ${signed.data.session!.access_token}`,
+        },
+      },
+    });
+    const evidence = await bearer.rpc("archive_search_evidence", {
+      p_queries: ["电弧", "electric arc"],
+      p_order: "oldest",
+    });
+    expect(evidence.error).toBeNull();
+    expect(evidence.data.entries).toHaveLength(1);
+    expect(evidence.data.entries[0]).toMatchObject({
+      id: entryID,
+      date_precision: "day",
+      title: "How an electric lighter works",
+    });
+    expect(evidence.data.entries[0]).not.toHaveProperty("attachments");
+    expect(evidence.data.entries[0]).not.toHaveProperty("owner_id");
+    await page.goto("/search?q=electric");
+    await expect(
+      page.getByRole("heading", { name: "How an electric lighter works" }),
+    ).toBeVisible();
+    await expect(
+      page.getByText(
+        "今天学了电打火机使用电弧点燃蜡烛。Electric arcs produce heat.",
+      ),
+    ).toBeVisible();
+    // The existing history reader is a stable, authenticated source Entry route,
+    // including when an Entry has no previous versions.
+    await page
+      .getByRole("link", { name: "How an electric lighter works" })
+      .click();
+    await expect(page).toHaveURL(
+      new RegExp(`/history\\?entry=${evidence.data.entries[0].id}$`),
+    );
+    await expect(
+      page.getByText(
+        "今天学了电打火机使用电弧点燃蜡烛。Electric arcs produce heat.",
+      ),
+    ).toBeVisible();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.screenshot({
+      path: "/private/tmp/memotrail-evidence-source-mobile.png",
+      fullPage: true,
+      caret: "initial",
+    });
+    await page.goto("/search?q=" + encodeURIComponent("电弧"));
+    await expect(
+      page.getByRole("heading", { name: "How an electric lighter works" }),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    const unchanged = await client
+      .from("entries")
+      .select("revision,inbox_status")
+      .eq("id", entryID)
+      .single();
+    expect(unchanged.data).toEqual({ revision: 1, inbox_status: "unreviewed" });
+  } finally {
+    expect((await admin.auth.admin.deleteUser(ownerID)).error).toBeNull();
+  }
+});

@@ -47,6 +47,14 @@
 - Occurrence acceptance passed 807 database tests, 215 Web unit tests, and six authenticated browser scenarios; the native 162-test suite covers matching precision, DST, AI adoption, and explicit-null RPC encoding.
 - The additive Inbox occurrence migration is deployed with warning-free hosted lint; no seed users or roles were deployed, and this UI acceptance slice made no paid AI requests.
 - Final occurrence acceptance also passed Web production build, formatting, lint, and type checking; a stalled Xcode parallel-clone installation was interrupted and the final serial native rerun passed all 162 tests with no skips or device reset.
+- Shared retrieval evidence now preserves source IDs, original words, date uncertainty, structured relationships, and explicit bounded-query coverage without calling a model or modifying records.
+- Chronological candidate selection happens before limiting, and the original keyword RPC remains compatible with both clients.
+- Latest-Home context uses a calendar boundary only for precise dates; Habit evidence distinguishes skipped days, recorded and inferred misses, and complete-week deficits.
+- Browser acceptance reproduced a source-reader gap for Entries without earlier versions; Web and iOS now retain the current snapshot and hide empty version controls, and Web search titles link to the actual source Entry.
+- Natural-language model orchestration and answer interfaces remain unfinished in `REMAINING.md`; this evidence checkpoint does not claim complete AI search.
+- The corrected local Anthropic key was reverified through the official models endpoint with HTTP 200 and no generated-token charge.
+- Evidence acceptance passed 844 database tests, 215 Web tests, seven authenticated browser scenarios, and 162 native tests with no skips; production build, formatting, lint, and type checking also passed.
+- The additive evidence migration is deployed with warning-free hosted schema lint and no development seeds or roles; browser source-navigation tests use only synthetic local records and incur no paid AI usage.
 
 - Phase 1 repository, design system, Web shell, iOS shell, local Supabase schema, RLS tests, and CI are complete.
 - The production Web shell is reachable at `https://memotrail.ryangan.me`.
@@ -54,7 +62,7 @@
 - Hosted Supabase Auth exposes Google as the only external provider.
 - Google Web and iOS OAuth clients exist with the confirmed origins, callback, and bundle identifier.
 - Vercel Production contains the public application URL, Supabase public configuration, and a server-only Supabase key.
-- The linked hosted Supabase project contains all twenty-four reviewed migrations; linked schema lint passes and no development seed users or roles were deployed.
+- The linked hosted Supabase project contains all twenty-five reviewed migrations; linked schema lint passes and no development seed users or roles were deployed.
 - The hosted atomic Entry review contract now supports content, Type, occurrence, Collection, tag, and `Done` updates in one transaction.
 - Hosted verification found 24 Row Level Security-enabled application tables, 25 public policies, and a private `entry-media` bucket.
 - Hosted schema lint passes, and the platform-created `SECURITY DEFINER` helper is no longer executable by client roles.
@@ -1047,6 +1055,7 @@
 - `feat: add Timeline track management across Web and iOS` added custom tracks, renaming, ordering, hide/show controls, and revision-safe updates without deleting moments.
 - `feat: add Collection and tag management across Web and iOS` added stable organization editing, Collection Trash, protected Entry history, and rename-safe Bucket List milestones.
 - `feat: add precision-aware Inbox dates across Web and iOS` added editable occurrence precision, safe AI date adoption, preserved exact instants, and immediate server-confirmed review revisions.
+- `feat: add shared retrieval evidence and source navigation` added owner-scoped chronological and Habit evidence, preserved keyword compatibility, and fixed current-source reading on both clients.
 
 ## Next sequence
 

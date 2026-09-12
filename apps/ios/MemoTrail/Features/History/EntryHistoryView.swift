@@ -277,9 +277,11 @@ struct EntryHistoryDetailView: View {
       VStack(alignment: .leading, spacing: 20) {
         if let record {
           Text(HistoryPresentation.title(record.current)).font(MTTypography.title)
-          Picker("Earlier version", selection: $selected) {
-            ForEach(record.versions) { version in
-              Text("Version \(version.version)").tag(version.version)
+          if !record.versions.isEmpty {
+            Picker("Earlier version", selection: $selected) {
+              ForEach(record.versions) { version in
+                Text("Version \(version.version)").tag(version.version)
+              }
             }
           }
           if let version = selectedVersion {
@@ -307,6 +309,8 @@ struct EntryHistoryDetailView: View {
               title: "Current · version \(record.revision)", snapshot: record.current)
           } else {
             Text("No earlier versions on this page.")
+            HistorySnapshotView(
+              title: "Current · version \(record.revision)", snapshot: record.current)
           }
           HStack {
             if page > 0 { Button("Newer versions") { Task { await load(nextPage: page - 1) } } }

@@ -4,6 +4,16 @@
   padding: var(--mt-space-12) 0 var(--mt-space-16);
 }
 
+.sourceLink {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.sourceLink:hover {
+  color: var(--mt-color-accent);
+}
+
 .pageHeader {
   display: flex;
   align-items: flex-end;

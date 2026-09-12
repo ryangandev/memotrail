@@ -16,7 +16,8 @@ The last accepted checkpoint is `a7850b7`.
 | People, Entry links, and recoverable removal                     | Deployed        | Complete      | Complete      | Pushed feea315              |
 | AI preferences, budgets, provider boundary, and usage            | Deployed        | Complete      | Complete      | Pushed 6579c8d              |
 | Editable AI title, Type, Collection, and tag suggestions         | Deployed        | Complete      | Complete      | Pushed 90740d3              |
-| Precision-aware Inbox dates and explicit AI description adoption | Deployed        | Complete      | Complete      | Local verified; this commit |
+| Precision-aware Inbox dates and explicit AI description adoption | Deployed        | Complete      | Complete      | Pushed 1aec663              |
+| Shared retrieval evidence and current source reader              | Deployed        | Complete      | Complete      | Local verified; this commit |
 | Natural-language retrieval and grounded source links             | Pending         | Pending       | Pending       | Pending                     |
 | Explore with AI, persisted conversation, Save as Entry           | Pending         | Pending       | Pending       | Pending                     |
 | Inspect and restore Entry history                                | Deployed        | Complete      | Complete      | Pushed eee57bf              |

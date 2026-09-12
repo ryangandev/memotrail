@@ -50,6 +50,23 @@ Other specialized editors and broad date-filter semantics remain in the separate
 
 ## AI architecture
 
+### Retrieval evidence boundary
+
+`search_entries_ordered` is the single owner-scoped keyword engine; the existing `search_entries` signature delegates to it without changing either client's response contract.
+Chronological ordering occurs before the candidate limit, so First Time questions do not discard the earliest matching memory in a large archive.
+`archive_search_evidence` accepts at most six bounded query expansions, intersects Entry filters, and returns up to 36 Entry sources with explicit candidate and truncation metadata.
+Source projections preserve original writing, occurrence precision, organization, and linked structured facts, but never include photo bytes or storage URLs.
+A latest-Home boundary is applied only when its date has day or exact precision; uncertain dates remain explicit instead of becoming fabricated calendar boundaries.
+Habit evidence separately reports recorded misses, inferred past scheduled misses, skipped days, and complete-week target shortfalls.
+Unrecorded today is pending rather than missed, and excess completions in one week never cancel another week's deficit.
+Habit comparisons cover active Habits within the requested date range and expose their scope and total count; Entry-only filters never silently become unconstrained Habit comparisons.
+Standalone People and Places are bounded to 25 matching records each and are excluded when Entry-specific or date filters cannot apply to them.
+The caller supplies the user's local `as_of` date when known; the database default is the current database date.
+Web source links open the authenticated current-version reader, which both clients keep visible even when no earlier version exists.
+This deployed evidence boundary is groundwork only: paid query planning, grounded answer validation, and the unified Web/iOS natural-language interface remain separate unfinished work.
+
+### Provider and review controls
+
 Anthropic is the selected text provider.
 The initial provider is pinned to `claude-haiku-4-5-20251001`, verified through a real authenticated localhost request.
 Changing models requires updating the usage rates and tests together; an unknown model fails closed rather than silently using incorrect pricing.

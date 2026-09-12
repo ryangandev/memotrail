@@ -292,7 +292,14 @@ function SearchResultCard({ entry }: { entry: SearchEntry }) {
             {resultDateLabel(entry)}
           </time>
         </div>
-        <h3>{entry.title ?? firstUsefulLine(body) ?? "Untitled Entry"}</h3>
+        <h3>
+          <Link
+            className={styles.sourceLink}
+            href={`/history?entry=${entry.id}`}
+          >
+            {entry.title ?? firstUsefulLine(body) ?? "Untitled Entry"}
+          </Link>
+        </h3>
       </header>
 
       {body ? <p className={styles.resultBody}>{body}</p> : null}

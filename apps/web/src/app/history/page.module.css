@@ -112,6 +112,9 @@
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface);
 }
+.currentOnly {
+  grid-template-columns: minmax(0, 1fr);
+}
 .comparison h3 {
   margin: 0 0 20px;
   font-size: 12px;
