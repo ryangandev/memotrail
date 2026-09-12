@@ -91,6 +91,15 @@ Accepting an AI date suggestion copies its human-readable description into Appro
 The user can change the precision to Age, Year, Month, or any other supported value and edit it before saving; model guidance is never silently converted to an exact timestamp.
 New Collections require user acceptance.
 Exploration remains attached to its source Entry, and Save as Entry creates a separately identified conclusion with a source relationship.
+The exploration persistence contract stores ordered turns per source Entry, with immutable question, source revision, bounded text snapshot, completion, and failure state.
+Only server-role RPCs can claim or finish a model turn, while authenticated owners can read paginated conversations and explicitly save edited conclusions.
+Request IDs are payload-bound and serialized; repeating the same request returns its existing state without acquiring another generation, and only one turn per Entry may be generating at a time.
+Interrupted turns become visibly failed after two minutes and require a fresh explicit attempt; a late completion cannot replace an already failed turn.
+Save as Entry creates an unreviewed Standard Entry with Unknown occurrence precision, preserving the user's edited title and body without inserting content into the source.
+One save atomically adds both `exploration_conclusion` and `exploration_source` links and advances source history before changing its relationships.
+Several conclusions may be saved from one turn; duplicate save requests reuse their result, and permanent deletion leaves an idempotency tombstone rather than resurrecting the deleted Entry on retry.
+Trashing a source hides its conversation and blocks new conclusions until restoration; permanent source deletion removes its conversation but does not delete independently saved conclusions.
+The persistence contract alone is not the Explore feature: server model orchestration, both client interfaces, and real conversational acceptance remain tracked separately.
 Retrieval answers cite only authenticated archive evidence, including Entries and Habit summaries, and report insufficient evidence explicitly.
 
 Anthropic generation and vector embeddings are separate provider capabilities.

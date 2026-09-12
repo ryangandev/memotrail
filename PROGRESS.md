@@ -8,6 +8,23 @@
 
 ## Current status
 
+### Exploration persistence and Save as Entry contract
+
+- Added ordered, owner-scoped conversation turns attached to each source Entry, bounded source snapshots, pagination, immutable completions, and visible interrupted-request state.
+- Only the server can claim or complete AI turns; repeated request IDs cannot charge twice, payload changes conflict, and competing devices cannot interleave an active turn.
+- Explicit Save creates a separate editable Inbox Entry with Unknown date precision and bidirectional source links, preserving the source text and its prior relationship history.
+- Multiple conclusions from a turn are supported; repeated save requests are idempotent, and a deleted saved Entry is not resurrected by an old retry.
+- Source Trash hides the conversation and prevents new saves; restoration brings it back without regenerating content.
+- Local acceptance passes 903 database tests, including 59 exploration-specific checks, and a real authenticated two-device concurrency test for generation claims, Save retries, source revisions, links, and unchanged writing.
+- Migration `202609120009_ai_exploration.sql` is deployed to hosted Supabase with warning-free linked schema lint and no development seeds or roles.
+- The nine-scenario local browser/API suite passed, and organization acceptance now waits for both the achievement response and visible confirmation before leaving that page.
+- The suite still intermittently logs `The destination stream closed early`; the behavior matches the upstream [Next.js client-aborted RSC issue](https://github.com/vercel/next.js/issues/96704), whose [fix](https://github.com/vercel/next.js/pull/96715) is merged into canary but absent from the inspected latest stable `v16.3.5` source.
+- This upstream cancellation-reporting gap remains tracked rather than suppressed or patched into generated dependency code; it does not invalidate the passing application/data assertions, and no stable upgrade was falsely reported as a repair.
+- Web production build, lint, type checking, formatting, and diff whitespace checks pass; no native source changed in this persistence-only checkpoint.
+- An attempted blanket wait for Inbox refresh streams was reverted after it stalled a repeated test; its exact synthetic account was removed, and no real data or AI accounting was changed.
+- The concurrency test uses synthetic model text to exercise persistence only and makes no paid Anthropic call; this checkpoint does not claim real exploration generation or completed Web/iOS interfaces.
+- Server orchestration and both client interfaces remain the next implementation unit in `REMAINING.md`.
+
 ### Natural-language search across Web and iOS
 
 - Both clients now have explicit `Ask AI` alongside keyword search using the same question field and filters.
@@ -1076,6 +1093,7 @@
 - `feat: add precision-aware Inbox dates across Web and iOS` added editable occurrence precision, safe AI date adoption, preserved exact instants, and immediate server-confirmed review revisions.
 - `feat: add shared retrieval evidence and source navigation` added owner-scoped chronological and Habit evidence, preserved keyword compatibility, and fixed current-source reading on both clients.
 - `feat: add grounded AI search across Web and iOS` added explicit bilingual search, schema-constrained planning and citations, bounded source fallback, cross-platform source navigation, and real-provider acceptance without modifying originals.
+- `feat: add persistent AI exploration and conclusion contracts` added owner-scoped conversation state, deduplicated generation claims, atomic bidirectional Save as Entry, recoverable source lifecycle, and real concurrent-request verification.
 
 ## Next sequence
 

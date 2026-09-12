@@ -273,6 +273,6 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
       Date.parse("2026-11-01T09:30:27.123Z"),
     );
   } finally {
-    await admin.auth.admin.deleteUser(ownerID);
+    expect((await admin.auth.admin.deleteUser(ownerID)).error).toBeNull();
   }
 });

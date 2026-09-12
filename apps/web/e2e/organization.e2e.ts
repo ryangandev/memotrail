@@ -153,9 +153,18 @@ test("Organization preserves relationships, Bucket List identity, and recoverabl
       goal.getByRole("button", { name: "Mark achieved and create First Time" }),
     ).toBeVisible();
     await goal.getByLabel("Achievement date").fill("2026-09-12");
+    const achievementResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        new URL(response.url()).pathname === "/goals",
+    );
     await goal
       .getByRole("button", { name: "Mark achieved and create First Time" })
       .click();
+    expect(await (await achievementResponse).finished()).toBeNull();
+    await expect(goal.getByRole("status")).toContainText(
+      "Achievement saved, with a linked First Time.",
+    );
     await expect
       .poll(
         async () =>

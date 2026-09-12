@@ -1,0 +1,104 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select no_plan();
+insert into auth.users(id,email,raw_user_meta_data) values
+ ('10000000-0000-0000-0000-000000000097','explore-owner@memotrail.local','{}'),
+ ('10000000-0000-0000-0000-000000000098','explore-other@memotrail.local','{}');
+insert into public.entries(id,owner_id,title,body,date_precision) values
+ ('99000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000097','A thought','为什么人需要不断学习？','unknown'),
+ ('99000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000098','Other thought','Private writing','unknown');
+create function pg_temp.claim(p_id uuid,p_question text default 'Help me explore this thought.',p_revision integer default 1) returns jsonb language sql as $$
+ select public.claim_exploration_turn('10000000-0000-0000-0000-000000000097','99000000-0000-4000-8000-000000000001',p_id,p_question,p_revision);
+$$;
+create function pg_temp.workspace(p_before bigint default null,p_limit integer default 20) returns jsonb language sql as $$
+ select public.exploration_workspace('99000000-0000-4000-8000-000000000001',p_before,p_limit);
+$$;
+create function pg_temp.finish_turn(p_id uuid,p_answer text default 'Learning can open new perspectives.') returns boolean language sql as $$
+ select public.finish_exploration_turn('10000000-0000-0000-0000-000000000097',p_id,p_answer,'claude-haiku-4-5-20251001');
+$$;
+create function pg_temp.save(p_id uuid,p_body text default 'My edited conclusion.') returns jsonb language sql as $$
+ select public.save_exploration_conclusion(p_id,'99000000-0000-4000-8000-000000000011','A conclusion',p_body);
+$$;
+
+set local role service_role;
+select throws_ok($$select pg_temp.claim('99000000-0000-4000-8000-000000000011')$$,'42501','ai_disabled','No exploration without user consent');
+reset role;
+insert into public.ai_preferences(owner_id,enabled,explore) values('10000000-0000-0000-0000-000000000097',true,true);
+set local role authenticated;
+select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000097',true);
+select is(pg_temp.workspace()->>'total_count','0','Empty conversation is readable without a model call');
+select is(pg_temp.workspace()->'source'->>'body','为什么人需要不断学习？','Original writing remains separate');
+select throws_ok($$select pg_temp.claim('99000000-0000-4000-8000-000000000011')$$,'42501',null,'Client cannot forge model turns');
+select throws_ok($$select pg_temp.finish_turn('99000000-0000-4000-8000-000000000011')$$,'42501',null,'Client cannot forge assistant output');
+select throws_ok($$insert into public.ai_exploration_turns(id,owner_id,entry_id,question,source_revision,source_snapshot) values(gen_random_uuid(),auth.uid(),'99000000-0000-4000-8000-000000000001','forged',1,'{}')$$,'42501',null,'Direct turn insertion denied');
+set local role service_role;
+select throws_ok($$select public.claim_exploration_turn('10000000-0000-0000-0000-000000000098','99000000-0000-4000-8000-000000000001','99000000-0000-4000-8000-000000000011','Question',1)$$,'P0001','entry_unavailable','Wrong owner cannot claim source');
+select throws_ok($$select pg_temp.claim('99000000-0000-4000-8000-000000000011','Question',2)$$,'P0001','entry_changed','Stale source revision refused');
+select throws_ok($$select pg_temp.claim('99000000-0000-4000-8000-000000000011','')$$,'22023','invalid_exploration_request','Empty question rejected');
+select throws_ok($$select pg_temp.claim('99000000-0000-4000-8000-000000000011',repeat('x',2001))$$,'22023','invalid_exploration_request','Question length bounded');
+select is(pg_temp.claim('99000000-0000-4000-8000-000000000011')->>'claimed','true','Explicit question claims one generation');
+select is(pg_temp.claim('99000000-0000-4000-8000-000000000011')->>'claimed','false','Identical retry never charges twice');
+select throws_ok($$select pg_temp.claim('99000000-0000-4000-8000-000000000011','Different question')$$,'22023','request_id_conflict','Request identity cannot change question');
+select throws_ok($$select pg_temp.claim('99000000-0000-4000-8000-000000000012')$$,'P0001','exploration_busy','A second device cannot interleave an active turn');
+select is((select source_snapshot->>'body' from public.ai_exploration_turns where id='99000000-0000-4000-8000-000000000011'),'为什么人需要不断学习？','Turn captures the source text actually supplied');
+select ok(not (select source_snapshot ? 'attachments' from public.ai_exploration_turns where id='99000000-0000-4000-8000-000000000011'),'Text exploration excludes photo bytes and paths');
+select throws_ok($$select pg_temp.finish_turn('99000000-0000-4000-8000-000000000011','')$$,'22023','invalid_exploration_completion','Empty answer never becomes completed');
+select is(public.finish_exploration_turn('10000000-0000-0000-0000-000000000098','99000000-0000-4000-8000-000000000011','Wrong owner','claude-haiku-4-5-20251001'),false,'Wrong owner cannot complete turn');
+select ok(pg_temp.finish_turn('99000000-0000-4000-8000-000000000011'),'Server stores completion');
+select is(pg_temp.finish_turn('99000000-0000-4000-8000-000000000011','Replacement'),false,'Completed answer is immutable');
+reset role;
+select is((select body from public.entries where id='99000000-0000-4000-8000-000000000001'),'为什么人需要不断学习？','Generation never overwrites original');
+select is((select revision from public.entries where id='99000000-0000-4000-8000-000000000001'),1,'Generation creates no spurious Entry history');
+set local role service_role;
+select is(pg_temp.claim('99000000-0000-4000-8000-000000000012','Follow up?')->>'claimed','true','Next explicit turn allowed');
+update public.ai_exploration_turns set created_at=now()-interval '3 minutes' where id='99000000-0000-4000-8000-000000000012';
+set local role authenticated;
+select is(pg_temp.workspace()->'turns'->1->>'status','failed','Interrupted turn is visible after timeout');
+select is(pg_temp.workspace()->'turns'->0->>'answer','Learning can open new perspectives.','Conversation persists in chronological order');
+select is(jsonb_array_length(pg_temp.workspace(null,1)->'turns'),1,'Conversation pagination is bounded');
+select is(pg_temp.workspace((pg_temp.workspace()->'turns'->1->>'sequence')::bigint,1)->'turns'->0->>'id','99000000-0000-4000-8000-000000000011','Older-page cursor does not repeat newest turn');
+select throws_ok($$select pg_temp.workspace(null,21)$$,'22023','invalid_exploration_page','Oversized page denied');
+set local role service_role;
+select is(pg_temp.claim('99000000-0000-4000-8000-000000000012','Follow up?')->>'claimed','false','Repeating a failed request never retries generation');
+select is(pg_temp.claim('99000000-0000-4000-8000-000000000013','Try again explicitly.')->>'claimed','true','Fresh explicit attempt can follow interrupted work');
+select is(pg_temp.finish_turn('99000000-0000-4000-8000-000000000012'),false,'Late completion cannot overwrite failed turn');
+select is(public.finish_exploration_turn('10000000-0000-0000-0000-000000000097','99000000-0000-4000-8000-000000000013',null,null,'budget_exceeded'),true,'Budget refusal is persisted without an answer');
+set local role authenticated;
+select throws_ok($$select public.save_exploration_conclusion(gen_random_uuid(),'99000000-0000-4000-8000-000000000013','Title','Body')$$,'P0001','exploration_unavailable','Cannot save a failed answer as a conclusion');
+select is(pg_temp.save('99000000-0000-4000-8000-000000000021')->>'created','true','Explicit Save creates an independent Entry');
+select is(pg_temp.save('99000000-0000-4000-8000-000000000021')->>'created','false','Save retry creates no duplicate');
+select throws_ok($$select pg_temp.save('99000000-0000-4000-8000-000000000021','Different body')$$,'22023','request_id_conflict','Save request cannot change its payload');
+select is((select body from public.entries where id=(pg_temp.save('99000000-0000-4000-8000-000000000021')->>'entry_id')::uuid),'My edited conclusion.','User-edited conclusion is preserved');
+select is((select inbox_status from public.entries where id=(pg_temp.save('99000000-0000-4000-8000-000000000021')->>'entry_id')::uuid),'unreviewed','Saved conclusion remains in Inbox');
+select is((select date_precision from public.entries where id=(pg_temp.save('99000000-0000-4000-8000-000000000021')->>'entry_id')::uuid),'unknown','Saving does not invent an occurrence date');
+select is((select count(*) from public.entry_links where source_entry_id='99000000-0000-4000-8000-000000000001' and relationship='exploration_conclusion'),1::bigint,'Source links to conclusion');
+select is((select count(*) from public.entry_links where target_entry_id='99000000-0000-4000-8000-000000000001' and relationship='exploration_source'),1::bigint,'Conclusion links back to source');
+select is((select revision from public.entries where id='99000000-0000-4000-8000-000000000001'),2,'Link addition advances source revision for stale clients');
+select is((select snapshot->>'body' from public.entry_versions where entry_id='99000000-0000-4000-8000-000000000001' and version=1),'为什么人需要不断学习？','Link addition preserves source history');
+select is(jsonb_array_length((select snapshot->'links' from public.entry_versions where entry_id='99000000-0000-4000-8000-000000000001' and version=1)),0,'History captures links before addition');
+select is(pg_temp.save('99000000-0000-4000-8000-000000000022','A second conclusion.')->>'created','true','Can save more than one durable conclusion from a turn');
+select is(jsonb_array_length(pg_temp.workspace()->'turns'->0->'saved_entries'),2,'Both clients can discover saved conclusions');
+select throws_ok($$select pg_temp.save(gen_random_uuid(),repeat('x',50001))$$,'22023','invalid_exploration_conclusion','Conclusion respects shared Entry length limit');
+select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000098',true);
+select is(pg_temp.workspace(),null::jsonb,'Other owner cannot read source conversation');
+select is((select count(*) from public.ai_exploration_turns),0::bigint,'Turn table RLS denies other owner');
+select is((select count(*) from public.ai_exploration_saves),0::bigint,'Saved mapping RLS denies other owner');
+select throws_ok($$select pg_temp.save(gen_random_uuid())$$,'P0001','exploration_unavailable','Other owner cannot save private conclusion');
+select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000097',true);
+update public.entries set deleted_at=now() where id='99000000-0000-4000-8000-000000000001';
+select is(pg_temp.workspace(),null::jsonb,'Trash hides exploration with its source');
+select is((select count(*) from public.ai_exploration_turns),0::bigint,'Direct reads do not bypass trashed-source boundary');
+select throws_ok($$select pg_temp.save(gen_random_uuid())$$,'P0001','entry_unavailable','Cannot create new conclusion from trashed source');
+update public.entries set deleted_at=null where id='99000000-0000-4000-8000-000000000001';
+select is(pg_temp.workspace()->>'total_count','3','Restoring source restores its conversation');
+reset role;
+delete from public.entries where id=(select saved_entry_id from public.ai_exploration_saves where id='99000000-0000-4000-8000-000000000021');
+set local role authenticated;
+select is(pg_temp.save('99000000-0000-4000-8000-000000000021')->'entry_id','null'::jsonb,'Retry after permanent deletion never resurrects saved Entry');
+select is(pg_temp.save('99000000-0000-4000-8000-000000000021')->>'created','false','Deleted save keeps idempotency tombstone');
+set local role anon;
+select throws_ok($$select pg_temp.workspace()$$,'42501',null,'Anonymous conversation reads denied');
+select throws_ok($$select pg_temp.save(gen_random_uuid())$$,'42501',null,'Anonymous saves denied');
+reset role;
+select * from finish();
+rollback;
