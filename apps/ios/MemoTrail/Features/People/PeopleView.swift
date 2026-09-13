@@ -68,10 +68,12 @@ final class PeopleController {
   private(set) var hasMore = false
   private let client: SupabaseClient
   private let ownerID: UUID
+  private let focusedPersonID: UUID?
 
-  init(client: SupabaseClient, ownerID: UUID) {
+  init(client: SupabaseClient, ownerID: UUID, focusedPersonID: UUID? = nil) {
     self.client = client
     self.ownerID = ownerID
+    self.focusedPersonID = focusedPersonID
   }
 
   func load(more: Bool = false) async {
@@ -82,9 +84,16 @@ final class PeopleController {
     do {
       try await checkOwner()
       let offset = more ? people.count : 0
-      let rows: [PersonRecord] = try await client.rpc(
-        "people_workspace", params: ["p_limit": 100, "p_offset": offset]
-      ).execute().value
+      let rows: [PersonRecord]
+      if let focusedPersonID {
+        rows = try await client.rpc(
+          "person_record", params: ["p_person_id": focusedPersonID.uuidString]
+        ).execute().value
+      } else {
+        rows = try await client.rpc(
+          "people_workspace", params: ["p_limit": 100, "p_offset": offset]
+        ).execute().value
+      }
       let options: [PersonLinkedEntry] = try await client.from("entries")
         .select("id,title,body,entry_type").eq("owner_id", value: ownerID.uuidString)
         .is("deleted_at", value: nil).order("updated_at", ascending: false).limit(200)
@@ -92,6 +101,9 @@ final class PeopleController {
       if more { people.append(contentsOf: rows) } else { people = rows }
       entries = options
       hasMore = people.count < (rows.first?.total_count ?? people.count)
+      if focusedPersonID != nil && rows.isEmpty {
+        error = "This Person is unavailable or in Trash."
+      }
     } catch {
       self.error = "Could not load People. Pull to refresh or try again."
     }
@@ -159,8 +171,10 @@ struct PeopleView: View {
   @State private var controller: PeopleController
   @State private var selection: PersonSelection?
 
-  init(client: SupabaseClient, ownerID: UUID) {
-    _controller = State(initialValue: PeopleController(client: client, ownerID: ownerID))
+  init(client: SupabaseClient, ownerID: UUID, focusedPersonID: UUID? = nil) {
+    _controller = State(
+      initialValue: PeopleController(
+        client: client, ownerID: ownerID, focusedPersonID: focusedPersonID))
   }
 
   var body: some View {

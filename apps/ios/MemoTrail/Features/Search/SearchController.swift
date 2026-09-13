@@ -20,6 +20,7 @@ final class SearchController {
   private(set) var tagOptions: [String] = []
   private(set) var totalCount = 0
   private(set) var hasSearched = false
+  private(set) var libraryQuery: String?
   private(set) var isLoading = false
   private(set) var isLoadingFilters = false
   private(set) var hasLoadedFilters = false
@@ -171,6 +172,7 @@ final class SearchController {
     } catch {
       searchErrorMessage = error.localizedDescription
       if !appending {
+        libraryQuery = nil
         entries = []
         totalCount = 0
         hasSearched = true
@@ -179,6 +181,7 @@ final class SearchController {
     }
 
     guard request.hasCriteria else {
+      libraryQuery = nil
       entries = []
       totalCount = 0
       hasSearched = false
@@ -190,6 +193,7 @@ final class SearchController {
     searchErrorMessage = nil
     if !appending {
       hasSearched = true
+      libraryQuery = activeFilterCount == 0 && !request.query.isEmpty ? request.query : nil
     }
     defer { isLoading = false }
 

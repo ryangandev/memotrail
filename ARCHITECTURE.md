@@ -34,6 +34,17 @@ Bucket List behavior follows a stable Collection role, not its editable display 
 Uploads preserve private originals, and display access uses expiring signed URLs.
 Drafts and pending captures remain per-user and durable on each device until synchronization is confirmed.
 
+## Standalone library keyword search
+
+Global keyword search combines the existing Entry result section with independently paginated People, Places, and Habits through `search_library_entities`.
+This read-only, authenticated invoker RPC explicitly checks ownership and active lifecycle, returns bounded excerpts and matching evidence, and requires no AI credentials or synthetic Entries.
+Literal case-insensitive substrings support Chinese and punctuation; simple full-text matching also supports English terms distributed across names and notes.
+Habit retrieval includes matching check-in notes and excludes archived Habits as well as Trash.
+Entry date, type, Collection, and tag filters apply only to Entries; both clients explain that clearing these filters enables standalone entity results.
+Stable kind-plus-UUID identities distinguish records across tables, and deterministic ordering plus bounded offsets keeps pagination consistent.
+Person sources use `person_record` for exact owner-scoped resolution beyond the first workspace page; Place and Habit sources retain their existing focused routes.
+Native results revalidate session ownership, task cancellation, and request generation before displaying an asynchronous response.
+
 ## Precision-aware search dates
 
 Keyword search and model-assisted evidence share `search_entries_ordered`, so date eligibility cannot diverge between the two search modes or between clients.

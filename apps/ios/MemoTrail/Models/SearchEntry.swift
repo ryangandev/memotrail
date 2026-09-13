@@ -1,5 +1,40 @@
 import Foundation
 
+enum LibrarySearchKind: String, Decodable, Sendable {
+  case person, place, habit
+  var title: String { rawValue.capitalized }
+}
+
+struct LibrarySearchItem: Decodable, Identifiable, Sendable {
+  let recordID: UUID
+  let kind: LibrarySearchKind
+  let name: String
+  let excerpt: String
+  let matchReasons: [String]
+  var id: String { "\(kind.rawValue):\(recordID)" }
+  enum CodingKeys: String, CodingKey {
+    case recordID = "id"
+    case kind, name, excerpt
+    case matchReasons = "match_reasons"
+  }
+}
+
+struct LibrarySearchPage: Decodable, Sendable {
+  let items: [LibrarySearchItem]
+  let totalCount: Int
+  enum CodingKeys: String, CodingKey {
+    case items
+    case totalCount = "total_count"
+  }
+  var isValid: Bool { totalCount >= 0 && items.count <= 50 }
+}
+
+struct LibrarySearchParameters: Encodable, Sendable {
+  let p_query: String
+  let p_offset: Int
+  let p_limit = 20
+}
+
 struct AISearchRequest: Encodable, Equatable, Sendable {
   let parameters: [String: [String]]
   let timeZone: String

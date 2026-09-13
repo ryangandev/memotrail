@@ -45,7 +45,8 @@ The last accepted checkpoint is `a7850b7`.
 | Universal current Entry photo staging, upload, and recoverable removal      | Existing schema | Complete        | Complete        | Pushed dfdebed      |
 | Consent-checked photo context for editable Inbox AI suggestions             | Deployed        | Complete        | Complete        | Pushed c4d9d9c      |
 | Ordinary Entry links, incoming backlinks, and restorable relationship edits | Deployed        | Complete        | Complete        | Pushed 4299a73      |
-| Photo-only Entry history with retry-safe writing concurrency                | Deployed        | Complete        | Complete        | This feature commit |
+| Photo-only Entry history with retry-safe writing concurrency                | Deployed        | Complete        | Complete        | Pushed 638186e      |
+| Standalone People, Places, and Habits keyword search with exact sources     | Deployed        | Complete        | Complete        | This feature commit |
 | Remaining shared metadata and relationship lifecycle audit                  | Audit ongoing   | Audit ongoing   | Audit ongoing   | Pending             |
 | Remaining photo surfaces and interactive gallery acceptance                 | Audit pending   | Audit pending   | Audit pending   | Pending             |
 | Final acceptance and production configuration                               | Pending         | Pending         | Pending         | Pending             |
@@ -58,7 +59,12 @@ The last accepted checkpoint is `a7850b7`.
 - Direct relationship-table writes are disabled; owner-checked Goal/achievement RPCs preserve existing behavior without permitting forged system links or history bypass.
 - Photo registration, Trash, and restoration now create complete Entry versions; retrying an unchanged original does not create duplicate history.
 - Structured editors reconcile only contiguous photo-only revisions, keeping genuine competing writing changes conflicted on both clients.
-- Cross-surface metadata controls and hosted/authenticated native interaction remain follow-up acceptance items.
+- Inbox photo metadata suggestion controls are the confirmed photo-adoption scope; copying those controls into every specialized editor is not automatically an additional requirement.
+- Hosted/authenticated native interaction remains a follow-up acceptance item.
+- Standalone People, Places, and Habits are now covered by ordinary bilingual keyword search on both clients, including Habit check-in notes, bounded pagination, and exact original-source navigation without AI.
+- Entry-only filters intentionally suppress the standalone section with explicit guidance; they never pretend to filter entities that have no corresponding Entry fields.
+- Thirty-day Trash eligibility is displayed, but an automatic permanent-deletion worker is not yet implemented or activated; activating cleanup against existing user data needs an exact retention and target audit.
+- Backup expectations are documented, but actual hosted retention, separately protected database/media backups, and a non-production full restore still need evidence.
 - Specialized uploaders now preserve selected-photo identity and reconcile uncertain upload/registration responses without overwriting or deleting originals, across First Times, Homes, Vehicles, and Goals on both clients.
 - Abandoned unregistered-upload retention/cleanup remains a lifecycle audit item; specialized-editor draft persistence is not added by the retry fix.
 
@@ -79,7 +85,7 @@ The last accepted checkpoint is `a7850b7`.
 - Goal saves now retain hidden progress links while preserving explicit active-target unlinking; restoration and later removal are verified through the real Web editor and shared authenticated RPC.
 - First Times, Homes, Vehicles, and Goals now retain trashed Collection membership when saving, with active-link removal and restored Collection browsing verified through all four real Web editors and shared authenticated RPCs.
 - Complete ZIP implementation passes 289 Web tests, twelve authenticated browser/API scenarios, and 169 native tests with zero skips; real ZIP extraction and original media hashes are verified locally.
-- The earlier native UI attempt encountered a locked Mac; Simulator app/window inventory was readable on this pass, so that old condition is no longer treated as proof of a current blocker.
+- The latest native UI attempt on 2026-09-13 explicitly reported that the Mac is locked and automatic unlock failed; Ryan must unlock it manually before interactive native acceptance can resume.
 - Authenticated native interaction still needs an isolated test account/build and actual UI acceptance; readable app inventory and simulator unit tests do not prove photo-picker, Trash, AI, or export interactions.
 - Production ZIP streaming and authenticated native Save/share acceptance remain final-validation items; local streaming tests and native bearer downloads do not imply those checks passed.
 - Missing-media rejection deliberately terminates an in-progress ZIP response; the negative E2E case records a sanitized expected stream error and verifies neither client-facing download path commits a complete file.

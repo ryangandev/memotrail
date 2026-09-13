@@ -1,6 +1,108 @@
 @preconcurrency import Supabase
 import SwiftUI
 
+@MainActor
+private struct LibraryKeywordResultsView: View {
+  let client: SupabaseClient
+  let ownerID: UUID
+  let query: String
+  @State private var items: [LibrarySearchItem] = []
+  @State private var total = 0
+  @State private var loading = false
+  @State private var error: String?
+  @State private var generation = UUID()
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s3) {
+      Text("People, Places and Habits").font(MTTypography.titleSmall)
+      Text(
+        "Names, notes, location details and Habit check-in notes. No AI required. Trash and archived Habits are excluded."
+      )
+      .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+      if let error {
+        Text(error).font(MTTypography.caption).foregroundStyle(MTColor.warm)
+        Button("Retry library search") { Task { await load(offset: 0) } }.disabled(loading)
+      } else if !loading {
+        Text("\(total) matches").font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+      }
+      ForEach(items) { item in
+        NavigationLink {
+          destination(item)
+        } label: {
+          VStack(alignment: .leading, spacing: MTSpacing.s2) {
+            Text(item.kind.title).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+            Text(item.name).font(MTTypography.titleSmall)
+            if !item.excerpt.isEmpty {
+              Text(item.excerpt).font(MTTypography.body).foregroundStyle(MTColor.inkMuted)
+            }
+            Text(
+              "Matched: \(item.matchReasons.isEmpty ? "Names, notes and details" : item.matchReasons.joined(separator: ", "))"
+            )
+            .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+          }.frame(maxWidth: .infinity, alignment: .leading).padding(MTSpacing.s4)
+            .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.large))
+            .overlay(RoundedRectangle(cornerRadius: MTRadius.large).stroke(MTColor.border))
+        }.buttonStyle(.plain).foregroundStyle(MTColor.ink)
+      }
+      if loading { ProgressView("Searching your library…") }
+      if !loading && items.count < total && items.count <= 10000 {
+        Button("Load more library matches") { Task { await load(offset: items.count) } }
+      } else if !loading && items.count < total {
+        Text("Refine your search to reach more matches.").font(MTTypography.caption)
+      }
+    }.task(id: query) { await load(offset: 0) }
+  }
+
+  @ViewBuilder
+  private func destination(_ item: LibrarySearchItem) -> some View {
+    switch item.kind {
+    case .person: PeopleView(client: client, ownerID: ownerID, focusedPersonID: item.recordID)
+    case .place:
+      PlacesView(client: client, ownerID: ownerID, embedded: true, focusedPlaceID: item.recordID)
+    case .habit:
+      HabitsView(client: client, ownerID: ownerID, focusedHabitID: item.recordID, embedded: true)
+    }
+  }
+
+  private func load(offset: Int) async {
+    let current = UUID()
+    generation = current
+    loading = true
+    error = nil
+    if offset == 0 {
+      items = []
+      total = 0
+    }
+    defer { if generation == current { loading = false } }
+    do {
+      guard try await client.auth.session.user.id == ownerID else {
+        throw URLError(.userAuthenticationRequired)
+      }
+      let page: LibrarySearchPage = try await client.rpc(
+        "search_library_entities", params: LibrarySearchParameters(p_query: query, p_offset: offset)
+      ).execute().value
+      try Task.checkCancellation()
+      guard generation == current else { return }
+      guard page.isValid, try await client.auth.session.user.id == ownerID else {
+        throw URLError(.badServerResponse)
+      }
+      try Task.checkCancellation()
+      guard generation == current else { return }
+      if offset == 0 {
+        items = page.items
+      } else {
+        let known = Set(items.map(\.id))
+        items.append(contentsOf: page.items.filter { !known.contains($0.id) })
+      }
+      total = page.totalCount
+    } catch {
+      if generation == current && !Task.isCancelled {
+        self.error = "Could not search People, Places and Habits. Try again."
+      }
+    }
+  }
+}
+
 struct SearchView: View {
   @State private var controller: SearchController
   @State private var isShowingFilters = false
@@ -41,6 +143,12 @@ struct SearchView: View {
           aiResults(answer)
         } else {
           results
+          if let query = controller.libraryQuery {
+            LibraryKeywordResultsView(client: client, ownerID: ownerID, query: query)
+          } else if controller.hasSearched && controller.activeFilterCount > 0 {
+            Text("Clear Entry filters to also search People, Places and Habits.")
+              .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+          }
         }
       }
       .padding(.horizontal, MTSpacing.s4)
@@ -100,7 +208,7 @@ struct SearchView: View {
         .font(MTTypography.display)
         .foregroundStyle(MTColor.ink)
 
-      Text("Find an Entry by what you wrote, when it happened, or how you organized it.")
+      Text("Find Entries, People, Places and Habits by what you remember.")
         .font(MTTypography.body)
         .foregroundStyle(MTColor.inkMuted)
         .lineSpacing(2)
@@ -145,7 +253,7 @@ struct SearchView: View {
             .tint(MTColor.accentInk)
             .frame(maxWidth: .infinity)
         } else {
-          Label("Search Entries", systemImage: "magnifyingglass")
+          Label("Search", systemImage: "magnifyingglass")
             .frame(maxWidth: .infinity)
         }
       }
@@ -284,6 +392,10 @@ struct SearchView: View {
           NavigationLink("Open original Place") {
             PlacesView(
               client: client, ownerID: ownerID, embedded: true, focusedPlaceID: source.recordID)
+          }
+        } else if source.kind == "person" {
+          NavigationLink("Open original Person") {
+            PeopleView(client: client, ownerID: ownerID, focusedPersonID: source.recordID)
           }
         }
       }.padding(MTSpacing.s4)

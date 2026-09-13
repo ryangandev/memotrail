@@ -8,6 +8,8 @@ import { AuthGate } from "@/components/auth-gate";
 import { Icon } from "@/components/icon";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { AISearchForm } from "@/components/ai-search-form";
+import { LibrarySearchResults } from "@/components/library-search-results";
+import { librarySearchPage } from "@/lib/data/library-search";
 import {
   SEARCH_PAGE_SIZE,
   parseSearchRequest,
@@ -41,8 +43,10 @@ export default async function SearchPage({
     return <AuthGate configured={false} />;
   }
 
-  const parsed = parseSearchRequest(await searchParams);
-  const workspace = await getSearchWorkspace(parsed);
+  const parameters = await searchParams;
+  const parsed = parseSearchRequest(parameters);
+  const libraryPage = librarySearchPage(parameters.libraryPage);
+  const workspace = await getSearchWorkspace(parsed, libraryPage);
 
   if (!workspace) {
     return <AuthGate configured />;
@@ -71,10 +75,7 @@ export default async function SearchPage({
           <div>
             <p className={styles.eyebrow}>Your personal archive</p>
             <h1>Search your trail</h1>
-            <p>
-              Find an Entry by what you wrote, when it happened, or how you
-              organized it.
-            </p>
+            <p>Find Entries, People, Places and Habits by what you remember.</p>
           </div>
           <Link className={styles.newEntryButton} href="/inbox#capture-title">
             <Icon name="plus" />
@@ -85,12 +86,20 @@ export default async function SearchPage({
         <AISearchForm
           key={JSON.stringify(request)}
           keywordResults={
-            <SearchResults
-              entries={entries}
-              loadError={loadError}
-              request={request}
-              totalCount={totalCount}
-            />
+            <>
+              <SearchResults
+                entries={entries}
+                loadError={loadError}
+                request={request}
+                totalCount={totalCount}
+              />
+              <LibrarySearchResults
+                request={request}
+                result={workspace.library}
+                error={workspace.libraryError}
+                page={libraryPage}
+              />
+            </>
           }
         >
           <section className={styles.searchSurface} aria-label="Entry search">

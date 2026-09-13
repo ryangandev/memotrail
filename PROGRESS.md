@@ -6,6 +6,23 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Global standalone library search and exact Person sources on Web and iOS
+
+- Reproduced missing standalone Person, Place, and Habit results through the authenticated localhost search page before implementation.
+- Both clients now share an owner-scoped, read-only bilingual keyword query over names, notes, location details, Habit fields, and matching check-in notes, without paid AI or duplicate Entries.
+- Results preserve kind-specific identities, bounded excerpts, matching explanations, deterministic ordering, and independent pagination; Trash and archived Habits remain excluded.
+- Entry-only filters keep their existing semantics and explicitly explain how to enable standalone results instead of pretending these entities have Entry dates or organization.
+- Exact Person source resolution now works beyond the first 100 People, including native AI source navigation; known foreign or trashed IDs cannot resolve.
+- Native async results revalidate ownership and cancellation and reject superseded request generations before display.
+- The real browser scenario covers Chinese search, all three original-source destinations, Person editing context, 105-Person pagination, Entry filter guidance, Trash exclusion, and the authenticated bearer contract used by native clients.
+- Desktop light and mobile dark results were visually inspected, including the no-horizontal-overflow check.
+- Verification passes 410 Web tests, 200 native tests with no failures/skips, 1,445 SQL assertions across 40 files, and all 48 production-mode browser/API scenarios.
+- Type checking, Web lint, formatting, shared-token checks, and local/hosted schema lint pass; the known client-aborted RSC log and deliberate incomplete-export rejection remain separately tracked.
+- Migration `202609130004_library_keyword_search.sql` is deployed to the verified MemoTrail project with an up-to-date ledger, no seeds, and no user-content rewrites.
+- AI accounting remains 55 completed application requests totaling $0.056502 with no outstanding reservations; this feature made no provider requests.
+- Updated architecture, completion/checklist records, and the existing Obsidian note; actual native interaction is currently blocked by the locked Mac, and GitHub account billing still prevents CI jobs from starting.
+- Actual hosted AI/export acceptance, backup/restore evidence, and retention/abandoned-upload lifecycle remain explicit remaining work; the full product goal is not marked complete.
+
 ### Photo-only Entry history and safe writing retries across Web and iOS
 
 - Reproduced a real organized-Entry upload that left history at version 1 despite adding an original photo.

@@ -1,4 +1,10 @@
 import "server-only";
+import {
+  hasLibrarySearchScope,
+  librarySearchPageSize,
+  parseLibrarySearch,
+  type LibrarySearchResult,
+} from "./library-search";
 import { occurrencePrecisions, type OccurrencePrecision } from "./occurrence";
 
 import { getAuthenticatedContext, type Viewer } from "@/lib/data/inbox";
@@ -26,6 +32,8 @@ export type SearchEntry = {
 };
 
 export type SearchWorkspace = {
+  library: LibrarySearchResult | null;
+  libraryError: string | null;
   collectionOptions: string[];
   entries: SearchEntry[];
   filtersError: string | null;
@@ -61,6 +69,7 @@ type NameRow = {
 
 export async function getSearchWorkspace(
   parsed: ParsedSearchRequest,
+  libraryPage = 1,
 ): Promise<SearchWorkspace | null> {
   const context = await getAuthenticatedContext();
 
@@ -69,6 +78,8 @@ export async function getSearchWorkspace(
   }
 
   const shouldSearch = parsed.request.hasCriteria && !parsed.error;
+  const shouldSearchLibrary =
+    shouldSearch && hasLibrarySearchScope(parsed.request);
   const searchRequest = shouldSearch
     ? context.client.rpc("search_entries_with_occurrence", {
         p_collection_names: parsed.request.collectionNames,
@@ -82,7 +93,7 @@ export async function getSearchWorkspace(
       })
     : Promise.resolve({ data: [] as SearchRow[], error: null });
 
-  const [search, collections, tags, inbox] = await Promise.all([
+  const [search, collections, tags, inbox, librarySearch] = await Promise.all([
     searchRequest,
     context.client
       .from("collections")
@@ -103,6 +114,13 @@ export async function getSearchWorkspace(
       .eq("owner_id", context.userId)
       .eq("inbox_status", "unreviewed")
       .is("deleted_at", null),
+    shouldSearchLibrary
+      ? context.client.rpc("search_library_entities", {
+          p_query: parsed.request.query,
+          p_limit: librarySearchPageSize,
+          p_offset: (libraryPage - 1) * librarySearchPageSize,
+        })
+      : Promise.resolve({ data: null, error: null }),
   ]);
 
   const parsedRows = search.error ? [] : searchRows(search.data);
@@ -111,6 +129,12 @@ export async function getSearchWorkspace(
   const filtersUnavailable = collections.error || tags.error;
 
   return {
+    library: parseLibrarySearch(librarySearch.data),
+    libraryError:
+      shouldSearchLibrary &&
+      (librarySearch.error || !parseLibrarySearch(librarySearch.data))
+        ? "Could not search People, Places and Habits. Refresh to try again."
+        : null,
     collectionOptions: collections.error
       ? []
       : (collections.data ?? []).map((collection) => collection.name),

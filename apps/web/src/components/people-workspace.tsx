@@ -16,11 +16,13 @@ export function PeopleWorkspace({
   entries,
   error,
   page,
+  focused = false,
 }: {
   people: Person[];
   entries: PersonEntry[];
   error: string | null;
   page: number;
+  focused?: boolean;
 }) {
   const [selected, setSelected] = useState<Person | "new" | null>(null);
   return (
@@ -35,6 +37,7 @@ export function PeopleWorkspace({
         </div>
         <button onClick={() => setSelected("new")}>Add Person</button>
       </header>
+      {focused && <Link href="/people">All People</Link>}
       {error ? <p role="alert">{error}</p> : null}
       {!people.length && !error ? (
         <p className={styles.empty}>

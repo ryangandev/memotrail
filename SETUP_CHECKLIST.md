@@ -53,6 +53,7 @@ Phase 1 repository work:
 - [x] Create private media buckets and policies through migrations.
 - [x] Create development seed data that contains no sensitive real-world information.
 - [x] Configure backup and recovery expectations before production data is stored.
+- [ ] Verify actual hosted backup retention, separately protected database/media copies, and a complete restore into a non-production project; documented expectations alone are not proof of recovery.
 
 Hosted project rollout:
 

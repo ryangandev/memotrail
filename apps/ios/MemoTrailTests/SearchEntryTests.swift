@@ -3,6 +3,35 @@ import XCTest
 @testable import MemoTrail
 
 final class SearchEntryTests: XCTestCase {
+  func testLibraryKeywordSearchDecodesKindsAndStableIdentities() throws {
+    let id = UUID()
+    let data = Data(
+      """
+      {"total_count":3,"items":[
+        {"id":"\(id)","kind":"person","name":"学习","excerpt":"Friend","match_reasons":["Name"]},
+        {"id":"\(id)","kind":"place","name":"Library","excerpt":"","match_reasons":[]},
+        {"id":"\(id)","kind":"habit","name":"Read","excerpt":"Book","match_reasons":["Check-in note"]}
+      ]}
+      """.utf8)
+    let page = try JSONDecoder().decode(LibrarySearchPage.self, from: data)
+    XCTAssertTrue(page.isValid)
+    XCTAssertEqual(page.totalCount, 3)
+    XCTAssertEqual(Set(page.items.map(\.id)).count, 3)
+    XCTAssertEqual(page.items[0].recordID, id)
+    XCTAssertEqual(page.items[2].matchReasons, ["Check-in note"])
+  }
+
+  func testLibraryKeywordSearchUsesTheSharedBoundedContract() throws {
+    let request = LibrarySearchParameters(p_query: "学习", p_offset: 20)
+    let values = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as? [String: Any])
+    XCTAssertEqual(values["p_query"] as? String, "学习")
+    XCTAssertEqual(values["p_limit"] as? Int, 20)
+    XCTAssertEqual(values["p_offset"] as? Int, 20)
+    let invalid = Data("{\"total_count\":-1,\"items\":[]}".utf8)
+    XCTAssertFalse(try JSONDecoder().decode(LibrarySearchPage.self, from: invalid).isValid)
+  }
+
   func testSearchResultPreservesPartialDatesAndPeriodEnds() throws {
     for (precision, type, end, expected) in [
       ("year", "standard", "null", "2017"),
