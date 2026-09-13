@@ -81,12 +81,17 @@ The signing key is domain-separated from the existing server-only Supabase crede
 Every image request rechecks the owned original and Entry lifecycle through a service-only resolver, so ordinary grants cease working when the source enters Trash.
 Native URL issuance uses a verified bearer session and validates that returned URLs match its configured server and requested paths.
 
-The universal current-record/history reader on both clients offers an explicit Current photos gallery for every active Entry type.
+The universal current-record/history reader on both clients offers a Current photos gallery and explicit photo management for every active Entry type.
 It reads current attachment membership through the shared authenticated photo-list endpoint, independently from the selected historical snapshot.
 Web uses a modal dialog with contained images, bounded previous/next navigation, Escape dismissal, and focus restoration; native uses a matching full-screen contained-image viewer.
 List failures clear stale membership, unavailable images explain retry, and Refresh requests renewed grants and current membership without mutating the Entry.
 Gallery identity includes a distinct photo namespace and the Entry revision, so history restoration or editing resets loaded membership without colliding with other keyed reader controls.
 Native delivery continues validating the configured server origin, image route, and grant token; no photo bytes or provider credentials are embedded in history snapshots or the application bundle.
+Both readers stage selected photos in the current view, validate the shared supported formats/50-MiB limit, and require Upload photos before persisting them through the retry-safe upload boundary.
+Confirmed photos leave the selection, unconfirmed photos stay retryable, and ordinary photo additions do not change the Entry's writing, occurrence precision, or Inbox state.
+Move to Trash requires confirmation and uses the existing owner-scoped recoverable attachment mutation; the Web action additionally verifies the original belongs to the current Entry before invoking it.
+Mutation controls remain disabled during upload/removal and current-photo refresh; both readers refresh their current metadata after confirmed changes without presenting the selected historical snapshot as current membership.
+Selections are view-local and explicitly labeled as such; this editor does not replace the durable universal quick-capture queue.
 
 On first display, a bounded worker generates 1600-pixel display and 400-pixel thumbnail WebP files without enlarging small photos.
 Sharp handles orientation, resizing, and metadata stripping; the server-side libheif WASM bundle decodes HEIC when the platform's Sharp build lacks HEVC support.

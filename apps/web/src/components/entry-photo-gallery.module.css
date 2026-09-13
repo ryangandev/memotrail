@@ -116,3 +116,57 @@
 .navigation {
   font-size: 13px;
 }
+.photoCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mt-space-2);
+  min-width: 0;
+}
+.photoCard .tile {
+  flex: 1;
+}
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mt-space-2);
+  font-size: 13px;
+  margin-top: var(--mt-space-3);
+}
+.picker input {
+  font: inherit;
+  color: var(--mt-color-ink);
+  width: 100%;
+  min-width: 0;
+}
+.picker input::file-selector-button {
+  font: inherit;
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface);
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-small);
+  padding: var(--mt-space-3);
+  margin-right: var(--mt-space-2);
+}
+.pending {
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-small);
+  padding: var(--mt-space-3);
+  margin-bottom: var(--mt-space-3);
+  margin-top: var(--mt-space-3);
+}
+.pending h4 {
+  margin: 0 0 var(--mt-space-3);
+  font-size: 14px;
+}
+.pendingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mt-space-3);
+  margin-bottom: var(--mt-space-3);
+}
+.pendingRow span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}

@@ -6,6 +6,21 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Universal current Entry photo management across Web and iOS
+
+- Reproduced the missing Add photos control on an organized Standard Entry through the real authenticated reader before implementation.
+- Both current-record/history readers now stage supported photos, allow discarding an unuploaded selection, require explicit Upload photos, and retain unconfirmed photos for safe retries using the shared upload boundary.
+- Added confirmed Move to Trash controls without permanent Storage deletion, keeping original bytes available for restoration through shared Trash.
+- The Web action validates the current Entry, owner, active original, and confirmed RPC result; native uses its existing owner-scoped mutation and checks the session owner before and after the request.
+- Photo additions preserve writing, occurrence precision, and organized Inbox status; current reader metadata refreshes after confirmed changes while historical snapshot semantics remain explicit.
+- Selections are explicitly view-local, not a new offline/durable editor queue; metadata coverage, standalone media history granularity, abandoned-upload lifecycle, and broader relationship work remain tracked separately.
+- Simulator app/window inventory is readable again, but authenticated native UI interaction has not yet been performed and is not inferred from unit-test success.
+- Verification passes 350 Web tests, 194 native simulator tests with zero failures/skips, and all 41 production-mode browser/API scenarios.
+- New real-reader acceptance covers invalid-file rejection, discard before upload, safe retry after a lost registration response, cancellation of removal, recoverable Trash/restoration, byte-identical originals, and unchanged writing/Done/date state.
+- Desktop light and mobile dark photo-management panels were visually inspected; lint, typecheck, formatting, token validation, and diff checks pass.
+- The previously tracked aborted-RSC log and intentional missing-media export failure still appear only in their existing lifecycle/negative scenarios; no new provider calls were made.
+- No schema migration, provider request, or client-side secret was needed for this feature.
+
 ### Retry-safe specialized photo uploads across Web and iOS
 
 - Reproduced a lost registration response in the real First Times editor: selecting Save again created two originals for the same pending photo.

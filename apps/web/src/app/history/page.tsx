@@ -56,6 +56,7 @@ export default async function HistoryPage({
               key={`${selected}:${(result.data as EntryHistory).current.revision}:${page}`}
               history={result.data as EntryHistory}
               page={page}
+              ownerId={context.viewer.id}
             />
           ) : (
             <p>

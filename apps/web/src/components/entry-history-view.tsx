@@ -27,9 +27,11 @@ import styles from "@/app/history/page.module.css";
 export function EntryHistoryView({
   history,
   page,
+  ownerId,
 }: {
   history: EntryHistory;
   page: number;
+  ownerId: string;
 }) {
   const router = useRouter();
   const [version, setVersion] = useState(history.versions[0]?.version);
@@ -213,6 +215,8 @@ export function EntryHistoryView({
         <EntryPhotoGallery
           key={`photos:${history.current.id}:${history.current.revision}`}
           entryId={history.current.id}
+          ownerId={ownerId}
+          onChanged={() => router.refresh()}
         />
       )}
       <nav className={styles.pagination} aria-label="Version pages">

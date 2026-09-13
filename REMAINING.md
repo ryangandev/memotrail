@@ -41,15 +41,16 @@ The last accepted checkpoint is `a7850b7`.
 | All eight quick-capture date precisions with compatible offline drafts      | Existing schema | Complete        | Complete        | Pushed a382c68      |
 | Precision-aware search overlap, date indexing, and result labels            | Deployed        | Complete        | Complete        | Pushed e826f13      |
 | Current Entry photo galleries with full-image browsing and retry            | Shared API      | Complete        | Complete        | Pushed 2c91130      |
-| Retry-safe specialized photo uploads without duplicate or deleted originals | Existing schema | Complete        | Complete        | This feature commit |
+| Retry-safe specialized photo uploads without duplicate or deleted originals | Existing schema | Complete        | Complete        | Pushed 32a0afc      |
+| Universal current Entry photo staging, upload, and recoverable removal      | Existing schema | Complete        | Complete        | This feature commit |
 | Remaining date precision, Entry conversion and relationship gaps            | Audit ongoing   | Audit ongoing   | Audit ongoing   | Pending             |
 | Remaining photo surfaces and interactive gallery acceptance                 | Audit pending   | Audit pending   | Audit pending   | Pending             |
 | Final acceptance and production configuration                               | Pending         | Pending         | Pending         | Pending             |
 
 ## External inputs and limitations
 
-- Current-record/history readers now expose a read-only Current photos gallery on both clients, explicitly separate from earlier snapshot membership, with contained images, previous/next controls, and refreshed private access.
-- Generic organized-Entry photo upload/removal, cross-surface metadata controls, optional AI photo analysis, broader Entry relationships, and hosted/authenticated native gallery interaction remain follow-up acceptance items.
+- Current-record/history readers now expose Current photos on both clients, explicitly separate from earlier snapshot membership, with contained images, previous/next controls, staged uploads, confirmed recoverable removal, and refreshed private access.
+- Cross-surface metadata controls, optional AI photo analysis, attachment-only edit history granularity, broader Entry relationships, and hosted/authenticated native gallery interaction remain follow-up acceptance items.
 - Specialized uploaders now preserve selected-photo identity and reconcile uncertain upload/registration responses without overwriting or deleting originals, across First Times, Homes, Vehicles, and Goals on both clients.
 - Abandoned unregistered-upload retention/cleanup remains a lifecycle audit item; specialized-editor draft persistence is not added by the retry fix.
 
@@ -70,7 +71,8 @@ The last accepted checkpoint is `a7850b7`.
 - Goal saves now retain hidden progress links while preserving explicit active-target unlinking; restoration and later removal are verified through the real Web editor and shared authenticated RPC.
 - First Times, Homes, Vehicles, and Goals now retain trashed Collection membership when saving, with active-link removal and restored Collection browsing verified through all four real Web editors and shared authenticated RPCs.
 - Complete ZIP implementation passes 289 Web tests, twelve authenticated browser/API scenarios, and 169 native tests with zero skips; real ZIP extraction and original media hashes are verified locally.
-- Native interactive export acceptance is currently unavailable because the Mac is locked; Ryan must unlock it before Simulator UI automation can proceed.
+- The earlier native UI attempt encountered a locked Mac; Simulator app/window inventory was readable on this pass, so that old condition is no longer treated as proof of a current blocker.
+- Authenticated native interaction still needs an isolated test account/build and actual UI acceptance; readable app inventory and simulator unit tests do not prove photo-picker, Trash, AI, or export interactions.
 - Production ZIP streaming and authenticated native Save/share acceptance remain final-validation items; local streaming tests and native bearer downloads do not imply those checks passed.
 - Missing-media rejection deliberately terminates an in-progress ZIP response; the negative E2E case records a sanitized expected stream error and verifies neither client-facing download path commits a complete file.
 - Exploration passes 271 Web tests, ten browser/API scenarios, 167 native tests with no skips, and a real two-turn synthetic Anthropic flow costing $0.003171, including idempotent retries and original-preserving conclusion saves.

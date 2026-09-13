@@ -2,16 +2,33 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { EntryPhoto } from "@/lib/media/photo-metadata";
+import { uploadEntryPhotos } from "@/lib/media/upload";
+import {
+  validateInboxPhotoFiles,
+  inboxPhotoLimit,
+} from "@/lib/data/inbox-photo";
+import { registerEntryAttachment } from "@/app/inbox/actions";
+import { trashEntryPhoto } from "@/app/history/media-actions";
 import styles from "./entry-photo-gallery.module.css";
 
 /** Always current membership, never a historical snapshot's photo bytes. */
-export function EntryPhotoGallery({ entryId }: { entryId: string }) {
+export function EntryPhotoGallery({
+  entryId,
+  ownerId,
+  onChanged,
+}: {
+  entryId: string;
+  ownerId: string;
+  onChanged: () => void;
+}) {
   const [photos, setPhotos] = useState<EntryPhoto[] | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [generation, setGeneration] = useState(0);
+  const [pending, setPending] = useState<File[]>([]);
+  const [notice, setNotice] = useState<string | null>(null);
   const request = useRef<AbortController | null>(null);
   useEffect(() => () => request.current?.abort(), []);
 
@@ -48,6 +65,69 @@ export function EntryPhotoGallery({ entryId }: { entryId: string }) {
     }
   }
 
+  async function upload() {
+    if (busy || pending.length === 0) return;
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const failed = await uploadEntryPhotos(
+        ownerId,
+        entryId,
+        pending,
+        async (input) => {
+          const result = await registerEntryAttachment(input);
+          return { status: result.status === "synced" ? "saved" : "error" };
+        },
+      );
+      setPending(failed);
+      await load();
+      if (failed.length)
+        setError(
+          "Some photos are not confirmed. Keep this view open and select Upload photos again to retry safely.",
+        );
+      else {
+        setNotice("Photos attached.");
+        onChanged();
+      }
+    } catch {
+      setError(
+        "Could not confirm photo uploads. Keep this view open and retry.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove(photo: EntryPhoto) {
+    if (
+      busy ||
+      !confirm(`Move ${photo.name} to Trash? The original will be preserved.`)
+    )
+      return;
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const confirmed = await trashEntryPhoto(entryId, photo.id);
+      await load();
+      if (!confirmed)
+        setError(
+          "Could not confirm removal. Refresh to check the current photos before retrying.",
+        );
+      else {
+        setNotice("Photo moved to Trash. Restore it from Trash any time.");
+        onChanged();
+      }
+    } catch {
+      setError(
+        "Could not confirm removal. Refresh to check the current photos before retrying.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <section className={styles.panel} aria-label="Current photos">
       <div className={styles.heading}>
@@ -61,21 +141,82 @@ export function EntryPhotoGallery({ entryId }: { entryId: string }) {
         photo access or check for changes.
       </p>
       {error && <p role="alert">{error}</p>}
+      {notice && <p role="status">{notice}</p>}
+      {photos && (
+        <label className={styles.picker}>
+          Add photos
+          <input
+            type="file"
+            multiple
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
+            disabled={
+              busy ||
+              hasMore ||
+              pending.length > 0 ||
+              photos.length >= inboxPhotoLimit
+            }
+            onChange={(event) => {
+              const selection = validateInboxPhotoFiles(
+                Array.from(event.target.files ?? []),
+                photos.length,
+              );
+              setPending(selection.accepted.map((draft) => draft.file));
+              setError(selection.message);
+              setNotice(null);
+              event.target.value = "";
+            }}
+          />
+        </label>
+      )}
+      <p>
+        Up to {inboxPhotoLimit} photos, 50 MB each. Selected photos stay in this
+        view until you upload or leave.
+      </p>
+      {pending.length > 0 && (
+        <div className={styles.pending}>
+          <h4>Selected photos</h4>
+          {pending.map((file, index) => (
+            <div key={index} className={styles.pendingRow}>
+              <span>{file.name}</span>
+              <button
+                disabled={busy}
+                aria-label={`Discard selected ${file.name}`}
+                onClick={() =>
+                  setPending(pending.filter((_, i) => i !== index))
+                }
+              >
+                Discard selection
+              </button>
+            </div>
+          ))}
+          <button disabled={busy} onClick={() => void upload()}>
+            {busy ? "Saving photos…" : "Upload photos"}
+          </button>
+        </div>
+      )}
       {photos?.length === 0 && (
         <p role="status">No saved photos on this Entry.</p>
       )}
       {hasMore && <p role="status">Showing the first 100 current photos.</p>}
       <div className={styles.grid}>
         {photos?.map((photo, index) => (
-          <button
-            className={styles.tile}
-            key={`${generation}:${photo.id}`}
-            aria-label={`Open ${photo.name}`}
-            onClick={() => setSelected(index)}
-          >
-            <PhotoImage photo={photo} />
-            <span>{photo.name}</span>
-          </button>
+          <div className={styles.photoCard} key={`${generation}:${photo.id}`}>
+            <button
+              className={styles.tile}
+              aria-label={`Open ${photo.name}`}
+              onClick={() => setSelected(index)}
+            >
+              <PhotoImage photo={photo} />
+              <span>{photo.name}</span>
+            </button>
+            <button
+              disabled={busy || pending.length > 0}
+              aria-label={`Move ${photo.name} to Trash`}
+              onClick={() => void remove(photo)}
+            >
+              Move to Trash
+            </button>
+          </div>
         ))}
       </div>
       {photos && selected !== null && (
