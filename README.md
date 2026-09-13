@@ -5,11 +5,10 @@ The repository contains a native SwiftUI iOS app, a responsive Next.js Web app, 
 
 ## Start here
 
-- [Documentation guide](./Docs/README.md) explains what each document owns and how agents should keep it current.
-- [Current status](./Docs/STATUS.md) summarizes what is shipped, what is verified, and what remains.
-- [Product contract](./Docs/PRODUCT.md) defines the intended behavior and confirmed product decisions.
-- [Architecture](./Docs/ARCHITECTURE.md) describes the system boundaries and cross-platform contracts.
-- [Setup and release readiness](./Docs/SETUP.md) tracks external configuration and acceptance gates.
+- [Documentation guide](./docs/README.md) routes each request to the smallest useful context.
+- [Current status](./docs/status.md) summarizes what is shipped, what remains, and what is blocked.
+- [Product contract](./docs/product.md) defines current behavior and scope.
+- [Architecture](./docs/architecture.md) maps system boundaries and requests to likely code.
 
 Agents should also follow the repository-wide instructions in [AGENTS.md](./AGENTS.md).
 
@@ -19,7 +18,7 @@ Agents should also follow the repository-wide instructions in [AGENTS.md](./AGEN
 apps/
   ios/                  Native SwiftUI app
   web/                  Next.js Web app
-Docs/                   Product, architecture, status, and operations
+docs/                   Product contract, architecture map, and current status
 packages/
   design-tokens/        Cross-platform Soft Ledger token source and generator
   media-runtime/        Shared server-side image and metadata runtime
@@ -129,7 +128,7 @@ supabase test db
 ```
 
 Green builds do not by themselves prove authenticated user flows, production configuration, private media delivery, or recovery.
-Use [Docs/STATUS.md](./Docs/STATUS.md) and [Docs/SETUP.md](./Docs/SETUP.md) for the remaining acceptance gates.
+Use [docs/status.md](./docs/status.md) for the remaining acceptance gates.
 
 ## Deployment
 
