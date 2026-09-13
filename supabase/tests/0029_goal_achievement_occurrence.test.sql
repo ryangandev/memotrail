@@ -47,6 +47,6 @@ select is(pg_temp.achieve(id,'unknown',null,null,null,2),null::uuid,'Already-ach
 select is(count(*),1::bigint,'Retries preserve a single achievement') from public.entry_links where source_entry_id=(select id from fixture) and relationship='achievement';
 reset role;
 select ok(not has_function_privilege('anon','public.achieve_goal_with_occurrence(uuid,integer,timestamptz,text,text,text,timestamptz)','execute'),'Anonymous completion is denied');
-select ok(not prosecdef,'Completion preserves the authenticated RLS boundary') from pg_proc where oid='public.achieve_goal_with_occurrence(uuid,integer,timestamptz,text,text,text,timestamptz)'::regprocedure;
+select ok(prosecdef,'Owner-checked completion writes protected achievement links') from pg_proc where oid='public.achieve_goal_with_occurrence(uuid,integer,timestamptz,text,text,text,timestamptz)'::regprocedure;
 select * from finish();
 rollback;

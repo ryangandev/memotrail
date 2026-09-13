@@ -128,6 +128,46 @@ final class LibraryDestinationTests: XCTestCase {
         .utf8)
     XCTAssertEqual(try JSONDecoder().decode(EntryAISuggestions.self, from: proposed).title, "牙套的原理")
   }
+  func testEntryRelationsDecodeBacklinksAndEncodeBoundedPages() throws {
+    let id = UUID()
+    let target = UUID()
+    let data = Data(
+      "{\"revision\":3,\"total_count\":25,\"items\":[{\"entry_id\":\"\(target)\",\"title\":null,\"excerpt\":\"牙套笔记\",\"entry_type\":\"standard\",\"is_deleted\":true}]}"
+        .utf8)
+    let result = try JSONDecoder().decode(EntryRelationsResult.self, from: data)
+    XCTAssertEqual(result.revision, 3)
+    XCTAssertEqual(result.totalCount, 25)
+    XCTAssertEqual(result.items.first?.displayTitle, "牙套笔记")
+    XCTAssertEqual(result.items.first?.isDeleted, true)
+    let request = EntryRelationsRequest(entryID: id, mode: .incoming, query: "  牙套  ", page: 2)
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as? [String: Any])
+    XCTAssertEqual(json["p_mode"] as? String, "incoming")
+    XCTAssertEqual(json["p_query"] as? String, "牙套")
+    XCTAssertEqual(json["p_offset"] as? Int, 40)
+    XCTAssertEqual(json["p_limit"] as? Int, 20)
+  }
+  func testEntryRelationChangesRequireDistinctTargetsAndValidRevision() throws {
+    let id = UUID()
+    let target = UUID()
+    XCTAssertFalse(
+      EntryRelationChange(entryID: id, targetID: id, expectedRevision: 1, linked: true).isValid)
+    XCTAssertFalse(
+      EntryRelationChange(entryID: id, targetID: target, expectedRevision: 0, linked: false).isValid
+    )
+    let request = EntryRelationChange(
+      entryID: id, targetID: target, expectedRevision: 3, linked: false)
+    XCTAssertTrue(request.isValid)
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as? [String: Any])
+    XCTAssertEqual(json["p_linked"] as? Bool, false)
+    XCTAssertEqual(json["p_expected_revision"] as? Int, 3)
+    XCTAssertFalse(EntryRelationsRequest(entryID: id, mode: .outgoing, query: "", page: -1).isValid)
+    XCTAssertFalse(
+      EntryRelationsRequest(
+        entryID: id, mode: .outgoing, query: String(repeating: "a", count: 201), page: 0
+      ).isValid)
+  }
   func testAIPreferencesRequireOptInAndBoundedBudget() throws {
     var preferences = AIPreferences()
     XCTAssertFalse(preferences.enabled)

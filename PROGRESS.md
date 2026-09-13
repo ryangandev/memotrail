@@ -6,6 +6,21 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Ordinary Entry links and backlinks across Web and iOS
+
+- Reproduced the missing Related Entries interface on an organized Standard Entry through an authenticated localhost browser before implementation.
+- Both current-record readers now offer linked Entries, incoming backlinks, bilingual candidate search, explicit Link Entry, confirmed Unlink, refresh, and bounded pagination after the original writing.
+- Shared mutations check ownership, lifecycle, and source revision, preserve original writing/dates/Inbox state, and archive the old outgoing relationship state before a change.
+- Incoming backlinks remain navigable from the target without copying content; their relationship is edited from the source Entry, whose history owns that change.
+- Target Trash preserves and labels the link; explicit unlink remains possible, and history restoration requires the target to be restored first.
+- Tightened direct relationship-table permissions after reproducing the history/provenance bypass; audited Goal save and achievement boundaries keep their owner/revision guards and work without client table-write grants.
+- Existing Goal, achievement, exploration, export, and history workflows pass regression alongside known-ID cross-owner denial checks and two-device competing link requests.
+- Migrations `202609130001_entry_relations.sql` and `202609130002_entry_relation_grants.sql` are deployed to the verified MemoTrail project with clean schema lint, without seeds or content rewrites.
+- Verification passes 386 Web tests, 196 native simulator tests with no failures/skips, 1,371 SQL assertions across 38 files, and all 43 production-mode browser/API scenarios.
+- Desktop light and mobile dark relationship layouts were inspected; native authenticated UI interaction and hosted user-flow acceptance remain separate final gates.
+- This feature makes no paid AI requests and does not change the provider key or original media.
+- Updated architecture, completion tracking, and the existing Obsidian project note; attachment-only photo history and remaining shared metadata/interactive acceptance are still tracked, so the full goal remains active.
+
 ### Consent-checked photo suggestions across Web and iOS
 
 - Reproduced the missing photo context through a real synthetic image request before implementation; the original endpoint sent text only despite Photo analysis consent.

@@ -67,7 +67,7 @@ select is((select count(*) from public.entry_collections ec join public.collecti
  where ec.entry_id=f.id and c.archived_at is null and c.name='Recoverable'),1::bigint,
  f.kind || ' reappears under the original restored Collection') from fixture f;
 reset role;
-select ok(not prosecdef,p.proname || ' keeps security invoker') from pg_proc p
+select is(prosecdef,p.proname='save_goal_entry',p.proname || ' uses its audited mutation boundary') from pg_proc p
  join pg_namespace n on n.oid=p.pronamespace where n.nspname='public'
  and p.proname in ('save_first_time_with_occurrence','save_home_entry','save_vehicle_entry','save_goal_entry');
 select * from finish();

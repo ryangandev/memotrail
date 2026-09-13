@@ -375,6 +375,9 @@ struct EntryHistoryDetailView: View {
               title: "Current · version \(record.revision)", snapshot: record.current)
           }
           if !record.isDeleted {
+            EntryRelationsView(client: client, ownerID: ownerID, entryID: entryID) {
+              await load(nextPage: 0)
+            }.id("relations:\(entryID):\(record.revision)")
             EntryPhotoGalleryView(client: client, ownerID: ownerID, entryID: entryID) {
               await load(nextPage: 0)
             }

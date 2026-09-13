@@ -15,8 +15,11 @@ returns uuid language sql as $$
 $$;
 create temporary table fixture as select pg_temp.save_goal(array[
  '20000000-0000-0000-0000-000000000091'::uuid,'20000000-0000-0000-0000-000000000092'::uuid]) id;
+-- This is a synthetic protected achievement fixture, not an allowed client mutation.
+reset role;
 insert into public.entry_links(source_entry_id,target_entry_id,owner_id,relationship)
  select id,'20000000-0000-0000-0000-000000000091',auth.uid(),'achievement' from fixture;
+set local role authenticated;
 update public.entries set deleted_at=now() where id='20000000-0000-0000-0000-000000000091';
 select is(jsonb_array_length(related_entries),1,'Workspace hides trashed targets') from public.goals_workspace();
 select is(pg_temp.save_goal(array['20000000-0000-0000-0000-000000000092'::uuid],id,1),id,'Saving visible links succeeds') from fixture;

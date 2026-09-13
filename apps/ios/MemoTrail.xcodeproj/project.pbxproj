@@ -13,6 +13,7 @@
 		B0000000000000000000003C /* ExplorationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000043 /* ExplorationView.swift */; };
 		B0000000000000000000003D /* ExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000044 /* ExportView.swift */; };
 		B00000000000000000000037 /* EntryHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003E /* EntryHistoryView.swift */; };
+		B70000000000000000000001 /* EntryRelationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C70000000000000000000001 /* EntryRelationsView.swift */; };
 		B00000000000000000000038 /* TimelineTracksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003F /* TimelineTracksView.swift */; };
 		B00000000000000000000039 /* OrganizationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000040 /* OrganizationView.swift */; };
 		B00000000000000000000036 /* EntryAISuggestionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003D /* EntryAISuggestionsView.swift */; };
@@ -104,6 +105,7 @@
 		C00000000000000000000043 /* ExplorationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AI/ExplorationView.swift; sourceTree = "<group>"; };
 		C00000000000000000000044 /* ExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Export/ExportView.swift; sourceTree = "<group>"; };
 		C0000000000000000000003E /* EntryHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = History/EntryHistoryView.swift; sourceTree = "<group>"; };
+		C70000000000000000000001 /* EntryRelationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = History/EntryRelationsView.swift; sourceTree = "<group>"; };
 		C0000000000000000000003F /* TimelineTracksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timeline/TimelineTracksView.swift; sourceTree = "<group>"; };
 		C00000000000000000000040 /* OrganizationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Collections/OrganizationView.swift; sourceTree = "<group>"; };
 		C0000000000000000000003D /* EntryAISuggestionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AI/EntryAISuggestionsView.swift; sourceTree = "<group>"; };
@@ -257,6 +259,7 @@
 				C00000000000000000000044 /* ExportView.swift */,
 				C0000000000000000000003D /* EntryAISuggestionsView.swift */,
 				C0000000000000000000003E /* EntryHistoryView.swift */,
+				C70000000000000000000001 /* EntryRelationsView.swift */,
 				C0000000000000000000003F /* TimelineTracksView.swift */,
 				C00000000000000000000040 /* OrganizationView.swift */,
 				A10000000000000000000006 /* Inbox */,
@@ -655,6 +658,7 @@
 				B0000000000000000000003D /* ExportView.swift in Sources */,
 				B00000000000000000000036 /* EntryAISuggestionsView.swift in Sources */,
 				B00000000000000000000037 /* EntryHistoryView.swift in Sources */,
+				B70000000000000000000001 /* EntryRelationsView.swift in Sources */,
 				B00000000000000000000038 /* TimelineTracksView.swift in Sources */,
 				B00000000000000000000039 /* OrganizationView.swift in Sources */,
 			);

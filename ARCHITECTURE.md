@@ -187,6 +187,19 @@ Restoring history can return to Standard or restore the prior Goal details witho
 Subsequent Goal saves preserve original occurrence metadata; target dates remain separate calendar-only planning fields.
 Web and native expose the same confirmed conversion fields from the current Entry/history reader and reuse existing Goal validation and enum definitions.
 
+## Ordinary Entry relationships
+
+Web and native current-record readers expose Related Entries after the writing/history comparison, with matching linked, backlink, and candidate views.
+`entry_relations` uses owner-scoped, literal bilingual substring search and deterministic 20-row pages; it includes retained Trash links with an explicit label but excludes deleted targets from new-link candidates.
+Relationships reuse the existing directed `related` edges, including Goal progress links; incoming edges are navigable backlinks and are edited only from their owning source Entry.
+`set_entry_relation` locks source/target rows in UUID order, checks ownership, source revision and target lifecycle, and supports explicit link/unlink operations with a 100-outgoing-link limit.
+It archives the source's complete old state before changing relationships, while leaving writing, occurrence fields, Inbox state, and target content unchanged.
+No-op requests add neither revisions nor history, stale requests do not write, and restoring Entry history can restore the prior outgoing links once their targets are available.
+Ordinary unlinking never changes `achievement`, `exploration_source`, or `exploration_conclusion` provenance.
+Authenticated direct table writes to `entry_links` are revoked so clients cannot bypass revision history or forge those system relationships.
+Existing Goal save and achievement RPCs retain their explicit `auth.uid()` ownership checks, source revision checks, and empty search paths as audited definer boundaries; other invoker functions retain their previous rights.
+Known foreign-ID mutations, retained Trash links, no-op history, page boundaries, competing device requests, Goal compatibility, and original-preserving history restoration are covered by the shared regression suites.
+
 ## AI architecture
 
 ### Retrieval evidence boundary

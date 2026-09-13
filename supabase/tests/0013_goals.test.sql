@@ -560,8 +560,8 @@ select is(
 
 select is(
   (select prosecdef from pg_proc where oid = 'public.save_goal_entry(text,text,text,text,date,text[],text[],uuid[],uuid,integer)'::regprocedure),
-  false,
-  'The Goal save function uses invoker rights'
+  true,
+  'The owner-checked Goal save boundary supports protected relationship writes'
 );
 
 select is(
