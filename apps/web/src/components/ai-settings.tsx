@@ -82,9 +82,10 @@ export function AISettings({
         </p>
         <p>
           Enabled features send the relevant Entry text or search question to
-          Anthropic. Photos require a separate opt-in. Secrets stay on the
-          server, never in the iOS app. Suggestions never silently overwrite
-          your records or mark them Done.
+          Anthropic. Photo analysis separately permits up to 12 compact,
+          metadata-free previews for Inbox suggestions, never originals. Secrets
+          stay on the server, never in the iOS app. Suggestions never silently
+          overwrite your records or mark them Done.
         </p>
         <p>
           Feature switches grant permission; they do not start a bulk analysis

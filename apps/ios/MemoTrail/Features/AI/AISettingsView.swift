@@ -114,7 +114,7 @@ struct AISettingsView: View {
       Section("Provider & privacy") {
         Text("Anthropic · Claude Haiku 4.5")
         Text(
-          "Enabled features send relevant Entry text or search questions to Anthropic. Photos require a separate opt-in. Secrets remain on the server, never in this app."
+          "Enabled features send relevant Entry text or search questions to Anthropic. Photo analysis separately permits up to 12 compact, metadata-free previews for Inbox suggestions, never originals. Secrets remain on the server, never in this app."
         )
         Text(
           "Suggestions never silently overwrite your words or mark Entries Done. Feature switches grant permission, not bulk analysis of your archive."

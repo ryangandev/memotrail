@@ -1,0 +1,28 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select plan(12);
+insert into public.entries(id,owner_id,title) values('93700000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Synthetic photo');
+insert into public.ai_preferences(owner_id,enabled,photo_analysis) values('10000000-0000-0000-0000-000000000001',true,false)
+on conflict(owner_id) do update set enabled=true,photo_analysis=false,classification=true,tagging=true;
+set local role service_role;
+select is(public.claim_entry_ai_suggestion('10000000-0000-0000-0000-000000000001','93700000-0000-4000-8000-000000000001',1,'classification_tagging',false)->>'claimed','true','Legacy text request remains supported');
+select throws_ok($$select public.claim_entry_ai_suggestion('10000000-0000-0000-0000-000000000001','93700000-0000-4000-8000-000000000001',1,'classification_photos_'||repeat('a',64),false)$$,'P0001','ai_disabled','Separate photo opt-in required');
+reset role;
+update public.ai_preferences set photo_analysis=true where owner_id='10000000-0000-0000-0000-000000000001';
+set local role service_role;
+select is(public.claim_entry_ai_suggestion('10000000-0000-0000-0000-000000000001','93700000-0000-4000-8000-000000000001',1,'classification_tagging_photos_'||repeat('a',64),false)->>'claimed','true','Photo fingerprint acquires a claim');
+select is(public.claim_entry_ai_suggestion('10000000-0000-0000-0000-000000000001','93700000-0000-4000-8000-000000000001',1,'classification_tagging_photos_'||repeat('a',64),false)->>'claimed','false','Same photo context deduplicates');
+select is(public.claim_entry_ai_suggestion('10000000-0000-0000-0000-000000000001','93700000-0000-4000-8000-000000000001',1,'classification_tagging_photos_'||repeat('b',64),false)->>'claimed','true','Changed photo context invalidates cache without text revision');
+select throws_ok($$select public.claim_entry_ai_suggestion('10000000-0000-0000-0000-000000000001','93700000-0000-4000-8000-000000000001',1,'tagging_photos_abc',false)$$,'22023','invalid_suggestion_request','Short fingerprints rejected');
+select throws_ok($$select public.claim_entry_ai_suggestion('10000000-0000-0000-0000-000000000001','93700000-0000-4000-8000-000000000001',1,'tagging_photos_'||repeat('z',64),false)$$,'22023','invalid_suggestion_request','Non-hex fingerprints rejected');
+select throws_ok($$select public.claim_entry_ai_suggestion('10000000-0000-0000-0000-000000000099','93700000-0000-4000-8000-000000000001',1,'tagging_photos_'||repeat('a',64),false)$$,'P0001','entry_changed','Cross-owner claims refused');
+select throws_ok($$select public.claim_entry_ai_suggestion('10000000-0000-0000-0000-000000000001','93700000-0000-4000-8000-000000000001',2,'tagging_photos_'||repeat('a',64),false)$$,'P0001','entry_changed','Stale Entry claims refused');
+reset role;
+update public.entries set deleted_at=now() where id='93700000-0000-4000-8000-000000000001';
+set local role service_role;
+select throws_ok($$select public.claim_entry_ai_suggestion('10000000-0000-0000-0000-000000000001','93700000-0000-4000-8000-000000000001',1,'tagging_photos_'||repeat('a',64),false)$$,'P0001','entry_changed','Trashed Entry claims refused');
+reset role;
+select ok(not has_function_privilege('authenticated','public.claim_entry_ai_suggestion(uuid,uuid,integer,text,boolean)','execute'),'Generation remains server-only');
+select ok(not has_function_privilege('anon','public.claim_entry_ai_suggestion(uuid,uuid,integer,text,boolean)','execute'),'Anonymous claims forbidden');
+select * from finish();
+rollback;

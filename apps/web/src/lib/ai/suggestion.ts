@@ -17,6 +17,7 @@ export type EntryAISuggestionRecord = {
 export type EntryAISuggestionResponse = {
   suggestion: EntryAISuggestionRecord | null;
   disabled?: boolean;
+  photoCount?: number;
 };
 export function parseEntryAISuggestions(
   raw: unknown,

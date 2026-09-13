@@ -934,6 +934,20 @@
   font-weight: var(--mt-font-weight-medium);
 }
 
+.reviewHeader a {
+  display: inline-block;
+  margin-top: var(--mt-space-2);
+  color: var(--mt-color-ink);
+  font-size: var(--mt-font-size-caption);
+  text-underline-offset: 3px;
+}
+
+.reviewHeader p:not(:first-child) {
+  letter-spacing: normal;
+  line-height: 1.6;
+  text-transform: none;
+}
+
 .closeReviewButton {
   display: grid;
   width: 34px;

@@ -2,9 +2,25 @@
 
 > Current phase: Complete remaining product scope across Web and iOS
 >
-> Last updated: 2026-09-12
+> Last updated: 2026-09-13
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
+
+### Consent-checked photo suggestions across Web and iOS
+
+- Reproduced the missing photo context through a real synthetic image request before implementation; the original endpoint sent text only despite Photo analysis consent.
+- Both clients now use the same separately authorized photo suggestion path and disclose included preview counts, retaining editable, per-field adoption and unchanged originals until explicit Save.
+- The server sends at most 12 compact metadata-free WebP previews, never original photos, EXIF, Storage URLs, or a client-side provider secret.
+- Preview identity/content hashing invalidates cached suggestions when photos change without a writing revision; owner, current Entry, consent, timeout, image size/count, and conservative budget guards fail closed.
+- Real browser inspection caught an inferred capture date in a model response; server validation now permits only date suggestions literally quoted from the author's writing.
+- The review header links now use shared theme colors and readable sentence-case guidance on desktop and mobile dark mode.
+- Migration `202609120023_ai_photo_suggestions.sql` is deployed to the verified hosted project with clean schema lint, without seeds, role updates, or content rewrites.
+- Verification passes 378 Web unit tests, 1,327 database assertions, and 194 native simulator tests with zero failures/skips.
+- All 42 production-mode browser/API scenarios passed; a separate paid synthetic-image acceptance verifies visible subject recognition, repeat-request caching, Web draft adoption, native bearer access, and byte-identical originals.
+- The final live rerun also verifies that an image-only source has no invented date suggestion, and permits a conservative model to decline an optional title while manual editing stays available.
+- Local application AI accounting now records 55 completed requests totaling $0.056502 with no outstanding reservations; the direct credential check outside that ledger used 9 input and 4 output tokens, approximately $0.000029.
+- Lint, type checking, design-token checks, and formatting pass; previously tracked client-aborted RSC logging and intentional missing-media ZIP rejection remain explicit final-quality items.
+- Updated the existing Obsidian project note with photo consent, privacy, caching, and source-grounded date rules; hosted AI and authenticated native UI acceptance remain separate gates.
 
 ### Universal current Entry photo management across Web and iOS
 

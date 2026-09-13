@@ -25,6 +25,7 @@ export function EntryAISuggestionsPanel({
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
   const [unavailable, setUnavailable] = useState(false);
+  const [photoCount, setPhotoCount] = useState(0);
   useEffect(() => {
     let active = true;
     fetch("/api/ai/suggestions", {
@@ -36,6 +37,7 @@ export function EntryAISuggestionsPanel({
       .then((data) => {
         if (active) {
           setRecord(data.suggestion ?? null);
+          setPhotoCount(data.photoCount ?? 0);
           setUnavailable(data.disabled === true);
           setMessage(data.error ?? null);
         }
@@ -68,6 +70,7 @@ export function EntryAISuggestionsPanel({
           }).then((r) => r.json());
           if (!active) return;
           setRecord(data.suggestion ?? null);
+          setPhotoCount(data.photoCount ?? 0);
           setUnavailable(data.disabled === true);
           setMessage(data.error ?? null);
           if (data.suggestion?.status !== "generating") return;
@@ -95,6 +98,7 @@ export function EntryAISuggestionsPanel({
         }),
       }).then((r) => r.json());
       setRecord(data.suggestion ?? null);
+      setPhotoCount(data.photoCount ?? 0);
       setUnavailable(data.disabled === true);
       setMessage(data.error ?? null);
     } catch {
@@ -124,9 +128,13 @@ export function EntryAISuggestionsPanel({
         <Link href="/settings/ai">Settings</Link>
       </div>
       <p>
-        Optional, based on saved text (up to 16,000 characters). Choose what to
-        copy into this review, edit freely, then Save.
+        Optional, based on saved text (up to 16,000 characters). With Photo
+        analysis enabled, up to 12 compact photo previews are included, without
+        metadata. Choose what to copy, edit freely, then Save.
       </p>
+      {photoCount > 0 && (
+        <p>Photo previews included: {photoCount}. Originals are not sent.</p>
+      )}
       {busy ? (
         <p role="status">Checking suggestions…</p>
       ) : unavailable ? (

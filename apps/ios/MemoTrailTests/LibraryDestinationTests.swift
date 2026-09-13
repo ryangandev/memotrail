@@ -119,6 +119,10 @@ final class LibraryDestinationTests: XCTestCase {
     let decoded = try JSONDecoder().decode(EntryAISuggestionResponse.self, from: pending)
     XCTAssertEqual(decoded.suggestion?.status, "generating")
     XCTAssertNil(decoded.suggestion?.suggestions)
+    XCTAssertNil(decoded.photoCount)
+    let photoResponse = try JSONDecoder().decode(
+      EntryAISuggestionResponse.self, from: Data("{\"suggestion\":null,\"photoCount\":2}".utf8))
+    XCTAssertEqual(photoResponse.photoCount, 2)
     let proposed = Data(
       "{\"title\":\"牙套的原理\",\"entryType\":\"standard\",\"collections\":[\"Learning\"],\"tags\":[\"牙齿\"],\"dateText\":null,\"rationale\":\"学习记录\",\"confidence\":0.9}"
         .utf8)

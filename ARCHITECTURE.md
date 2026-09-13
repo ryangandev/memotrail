@@ -109,7 +109,7 @@ Thus a deletion that locks first makes a late upload fail, while an upload that 
 Both clients explain the cleanup race and offer an explicit refresh/retry instead of claiming permanent deletion succeeded.
 No Storage object is deleted through SQL: deletion still uses the [Storage API](https://supabase.com/docs/guides/storage/management/delete-objects), with transaction ordering grounded in [PostgreSQL row locks](https://www.postgresql.org/docs/17/explicit-locking.html).
 Existing export manifests continue to include registered variants and originals with their actual integrity checks.
-Optional AI photo analysis remains separate unfinished work; display generation never invokes AI or changes Entry dates.
+Display generation never invokes AI or changes Entry dates; optional photo analysis is a separate consent-checked suggestion path described below.
 Deployment traces Sharp through a static server import and explicitly includes the worker-only libheif bundle.
 `MEMOTRAIL_E2E_PRODUCTION=1 pnpm --filter @memotrail/web test:e2e` builds and serves the same synthetic local-only configuration with `next start`; hosted acceptance remains separate.
 Decoder behavior follows [Sharp output documentation](https://sharp.pixelplumbing.com/api-output/) and [libheif-js's supported WASM interface](https://github.com/catdad-experiments/libheif-js).
@@ -217,7 +217,7 @@ Questions with no useful evidence return an explicit insufficient-evidence state
 
 ### Provider and review controls
 
-Anthropic is the selected text provider.
+Anthropic is the selected text and optional photo-suggestion provider.
 The initial provider is pinned to `claude-haiku-4-5-20251001`, verified through a real authenticated localhost request.
 Changing models requires updating the usage rates and tests together; an unknown model fails closed rather than silently using incorrect pricing.
 Classification, retrieval, exploration, and resurfacing have separate user controls.
@@ -227,8 +227,24 @@ Classification stores suggestions separately from original Entry content; accept
 Web schedules capture suggestions after its response; iOS starts an independent authenticated request after synchronization.
 Review is also a recovery entry point for interrupted background work, with bounded status polling and explicit-only retries after a failed generation.
 Accepting an AI date suggestion copies its human-readable description into Approximate precision with empty calendar bounds.
+The server retains a date suggestion only when it appears literally in the author's title or body, preventing capture time and photo appearance from becoming inferred occurrence dates.
 The user can change the precision to Age, Year, Month, or any other supported value and edit it before saving; model guidance is never silently converted to an exact timestamp.
 New Collections require user acceptance.
+
+### Optional photo organization context
+
+`suggestionPhotos` selects only the authenticated owner's active original attachments for the unreviewed Entry.
+Separate Photo analysis consent plus Classification or Tagging permission allows up to 12 existing 400-pixel metadata-free WebP thumbnails, each capped at 1 MiB, to accompany the text in an Anthropic Messages request.
+Inline base64 previews follow the official [vision input contract](https://platform.claude.com/docs/en/build-with-claude/vision); original bytes, EXIF, and Storage URLs are never sent to the provider.
+Each preparation pass has a 20-second deadline and the suggestion route allows 90 seconds; timed-out work cannot continue onto additional photos.
+Preview IDs and content hashes extend the existing revision/feature cache key, so adding, removing, or changing photos does not reuse incompatible suggestions even without a writing revision.
+The service-only claim validates photo consent, provider reservation atomically rechecks the feature permission and budget, and the server rechecks writing/consent before generation and photo content plus writing/consent before publishing.
+Failed preparation never silently omits a saved photo; the user can retry explicitly or disable Photo analysis for text-only suggestions.
+The pinned model reserves an additional 2,048 input microdollars per image before generation and records actual returned token usage afterward.
+Both clients disclose included photo counts, support older responses without that count, and retain manual per-field adoption with no automatic filing.
+
+### Exploration persistence
+
 Exploration remains attached to its source Entry, and Save as Entry creates a separately identified conclusion with a source relationship.
 The exploration persistence contract stores ordered turns per source Entry, with immutable question, source revision, bounded text snapshot, completion, and failure state.
 Only server-role RPCs can claim or finish a model turn, while authenticated owners can read paginated conversations and explicitly save edited conclusions.

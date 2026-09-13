@@ -33,6 +33,7 @@ struct EntryAISuggestionRecord: Decodable, Sendable {
 struct EntryAISuggestionResponse: Decodable, Sendable {
   let suggestion: EntryAISuggestionRecord?
   let disabled: Bool?
+  let photoCount: Int?
 }
 
 struct EntryAISuggestionInput: Encodable, Sendable {
@@ -57,9 +58,13 @@ struct EntryAISuggestionsView: View {
   var body: some View {
     Section("AI suggestions") {
       Text(
-        "Optional, based on saved text (up to 16,000 characters). Choose what to copy into this review, edit freely, then Save."
+        "Optional, based on saved text (up to 16,000 characters). With Photo analysis enabled, up to 12 compact photo previews are included, without metadata. Choose what to copy, edit freely, then Save."
       )
       .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+      if let count = result?.photoCount, count > 0 {
+        Text("Photo previews included: \(count). Originals are not sent.")
+          .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+      }
       if busy {
         ProgressView("Checking suggestions…")
       } else if result?.disabled == true {

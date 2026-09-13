@@ -3,6 +3,7 @@ import { createClient as supabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { requireSupabasePublicConfig } from "@/lib/supabase/config";
 import { AI_MODEL, aiOriginAllowed, type AIFeature } from "./contracts";
+import { imageContent, AI_PHOTO_RESERVE, type AIImage } from "./image-input";
 
 export class AIError extends Error {
   constructor(
@@ -58,6 +59,7 @@ export async function generateAI(
   prompt: string,
   maxTokens = 1024,
   outputSchema?: Record<string, unknown>,
+  images: AIImage[] = [],
 ) {
   if (!aiProviderConfigured())
     throw new AIError(
@@ -81,7 +83,19 @@ export async function generateAI(
       413,
       "Use a shorter passage for AI.",
     );
-  const reserve = promptBytes + 4096 + maxTokens * 5;
+  let imageBlocks: ReturnType<typeof imageContent>;
+  try {
+    if (images.length && feature !== "photo_analysis") throw Error();
+    imageBlocks = imageContent(images);
+  } catch {
+    throw new AIError(
+      "invalid_images",
+      400,
+      "Photo input is invalid. Nothing was sent.",
+    );
+  }
+  const reserve =
+    promptBytes + 4096 + maxTokens * 5 + images.length * AI_PHOTO_RESERVE;
   const budget = Number(process.env.AI_TOTAL_BUDGET_USD ?? "3");
   if (!Number.isFinite(budget) || budget <= 0 || budget > 100)
     throw new AIError(
@@ -142,7 +156,14 @@ export async function generateAI(
         model: AI_MODEL,
         max_tokens: maxTokens,
         system,
-        messages: [{ role: "user", content: prompt }],
+        messages: [
+          {
+            role: "user",
+            content: imageBlocks.length
+              ? [...imageBlocks, { type: "text", text: prompt }]
+              : prompt,
+          },
+        ],
         ...(outputSchema
           ? {
               output_config: {

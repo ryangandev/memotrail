@@ -1,6 +1,6 @@
 # MemoTrail Completion Checklist
 
-Updated: 2026-09-12.
+Updated: 2026-09-13.
 Source of truth: PRODUCT.md, verified current repository, and Ryan's authorization to complete remaining work on both clients.
 
 ## Established baseline
@@ -42,7 +42,8 @@ The last accepted checkpoint is `a7850b7`.
 | Precision-aware search overlap, date indexing, and result labels            | Deployed        | Complete        | Complete        | Pushed e826f13      |
 | Current Entry photo galleries with full-image browsing and retry            | Shared API      | Complete        | Complete        | Pushed 2c91130      |
 | Retry-safe specialized photo uploads without duplicate or deleted originals | Existing schema | Complete        | Complete        | Pushed 32a0afc      |
-| Universal current Entry photo staging, upload, and recoverable removal      | Existing schema | Complete        | Complete        | This feature commit |
+| Universal current Entry photo staging, upload, and recoverable removal      | Existing schema | Complete        | Complete        | Pushed dfdebed      |
+| Consent-checked photo context for editable Inbox AI suggestions             | Deployed        | Complete        | Complete        | This feature commit |
 | Remaining date precision, Entry conversion and relationship gaps            | Audit ongoing   | Audit ongoing   | Audit ongoing   | Pending             |
 | Remaining photo surfaces and interactive gallery acceptance                 | Audit pending   | Audit pending   | Audit pending   | Pending             |
 | Final acceptance and production configuration                               | Pending         | Pending         | Pending         | Pending             |
@@ -50,7 +51,8 @@ The last accepted checkpoint is `a7850b7`.
 ## External inputs and limitations
 
 - Current-record/history readers now expose Current photos on both clients, explicitly separate from earlier snapshot membership, with contained images, previous/next controls, staged uploads, confirmed recoverable removal, and refreshed private access.
-- Cross-surface metadata controls, optional AI photo analysis, attachment-only edit history granularity, broader Entry relationships, and hosted/authenticated native gallery interaction remain follow-up acceptance items.
+- Photo analysis now uses separately authorized, metadata-free previews for editable Inbox suggestions, with content-sensitive caching and real synthetic Anthropic acceptance.
+- Cross-surface metadata controls, attachment-only edit history granularity, broader Entry relationships, and hosted/authenticated native gallery interaction remain follow-up acceptance items.
 - Specialized uploaders now preserve selected-photo identity and reconcile uncertain upload/registration responses without overwriting or deleting originals, across First Times, Homes, Vehicles, and Goals on both clients.
 - Abandoned unregistered-upload retention/cleanup remains a lifecycle audit item; specialized-editor draft persistence is not added by the retry fix.
 
@@ -76,7 +78,7 @@ The last accepted checkpoint is `a7850b7`.
 - Production ZIP streaming and authenticated native Save/share acceptance remain final-validation items; local streaming tests and native bearer downloads do not imply those checks passed.
 - Missing-media rejection deliberately terminates an in-progress ZIP response; the negative E2E case records a sanitized expected stream error and verifies neither client-facing download path commits a complete file.
 - Exploration passes 271 Web tests, ten browser/API scenarios, 167 native tests with no skips, and a real two-turn synthetic Anthropic flow costing $0.003171, including idempotent retries and original-preserving conclusion saves.
-- Local AI accounting totals $0.052147 with no outstanding reservations; no provider secret was copied into either client.
+- Local AI accounting totals $0.056502 over 55 completed requests with no outstanding reservations, plus approximately $0.000029 for this checkpoint's direct key check outside the ledger; no provider secret was copied into either client.
 - Natural-language search passed real Anthropic five-question acceptance, eight local browser scenarios, 236 Web tests, and native compilation with 164 passing tests and no skips.
 - Actual authenticated native AI taps and production AI acceptance remain on the final validation checklist; native bearer API tests do not substitute for those interactions.
 - The earlier local execution-review timeouts recovered and no longer block local tests.

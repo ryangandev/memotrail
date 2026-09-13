@@ -1,6 +1,7 @@
 import { authenticateAI, AIError, aiErrorResponse } from "@/lib/ai/server";
 import { suggestForEntry } from "@/lib/ai/suggestions-server";
 export const runtime = "nodejs";
+export const maxDuration = 90;
 export async function POST(request: Request) {
   try {
     const { client, ownerID } = await authenticateAI(request);
