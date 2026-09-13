@@ -34,6 +34,17 @@ Bucket List behavior follows a stable Collection role, not its editable display 
 Uploads preserve private originals, and display access uses expiring signed URLs.
 Drafts and pending captures remain per-user and durable on each device until synchronization is confirmed.
 
+## Habit check-in Entry context
+
+Check-ins retain their optional `entry_id` through workspace/calendar decoding on both clients, and `habit_entry_choices` provides owner-scoped, bounded bilingual candidate search plus exact resolution of an existing link, including Trash.
+Link selection and removal are staged with the note and status until Save; opening original writing does not copy it or commit the draft.
+`save_habit_check_in` saves status, note, measurement, and explicit Entry selection atomically under existing occurrence revisions and full prior-check-in history.
+New targets must be owned and active; an unchanged owned Trash target can remain attached to the same occurrence at the expected revision.
+The mutation locks an owned target before the Habit, serializes competing Habit requests, and rejects stale writes without merging notes or overwriting another device.
+The older `record_habit_occurrence` interface preserves the current same-revision link when an installed client with no link control sends null; only the versioned interface interprets null as explicit unlink.
+Native historical-day context distinguishes an absent occurrence on that selected day from the current day's check-in, so empty notes, measurements, links, and revisions do not borrow unrelated values.
+No new Entry, AI generation, or extra credential is required.
+
 ## Habit monthly and weekday summaries
 
 Both clients derive twelve monthly rows and seven Monday-first weekday rows directly from `habit_year_calendar`, the same owner-scoped status contract used by the heatmap.

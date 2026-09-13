@@ -17,6 +17,7 @@ import {
 } from "@/app/habits/actions";
 import styles from "@/app/habits/page.module.css";
 import { Icon } from "@/components/icon";
+import { HabitEntryPicker } from "@/components/habit-entry-picker";
 import {
   calculateHabitBreakdown,
   calculateHabitYearStats,
@@ -138,6 +139,7 @@ export function HabitsWorkspace({
     }
 
     const input = {
+      entryId: habit.occurrence?.entryId ?? null,
       expectedRevision: habit.occurrence?.revision ?? null,
       habitId: habit.id,
       localDate: workspace.referenceDate,
@@ -1053,12 +1055,16 @@ function CheckInEditor({
       : String(currentMeasurement),
   );
   const [note, setNote] = useState(currentNote ?? "");
+  const [entryId, setEntryId] = useState(
+    (day ? day.entryId : habit.occurrence?.entryId) ?? null,
+  );
   const [result, setResult] = useState<HabitActionResult | null>(null);
   const [status, setStatus] = useState<HabitOccurrenceStatus>(currentStatus);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const input = {
+      entryId,
       expectedRevision: currentRevision,
       habitId: habit.id,
       localDate,
@@ -1162,6 +1168,14 @@ function CheckInEditor({
             />
           </label>
         </div>
+
+        <HabitEntryPicker
+          habitId={habit.id}
+          localDate={localDate}
+          entryId={entryId}
+          onChange={setEntryId}
+          disabled={isPending}
+        />
 
         {result ? (
           <p className={styles.formMessage} role="alert">

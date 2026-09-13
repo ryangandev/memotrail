@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { HabitEntryChoices } from "@/lib/data/habit-entry-links";
+import { validHistoryID } from "@/lib/data/history";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
   isHabitIdentity,
@@ -10,6 +12,34 @@ import {
   type HabitOccurrenceInput,
 } from "@/lib/data/habit-input";
 
+export async function loadHabitEntryChoices(input: {
+  habitId: string;
+  localDate: string;
+  query: string;
+  page: number;
+}): Promise<HabitEntryChoices> {
+  if (
+    !input ||
+    !validHistoryID(input.habitId) ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(input.localDate) ||
+    typeof input.query !== "string" ||
+    input.query.length > 200 ||
+    !Number.isSafeInteger(input.page) ||
+    input.page < 0 ||
+    input.page > 5000
+  )
+    throw new Error("Invalid Entry search.");
+  const context = await getAuthenticatedContext();
+  if (!context) throw new Error("Session expired.");
+  const { data, error } = await context.client.rpc("habit_entry_choices", {
+    p_habit_id: input.habitId,
+    p_local_date: input.localDate,
+    p_query: input.query,
+    p_offset: input.page * 20,
+  });
+  if (error || !data) throw new Error("Entries could not load.");
+  return data as HabitEntryChoices;
+}
 export type HabitActionResult = {
   message: string;
   status: "conflict" | "created" | "error" | "saved" | "trashed";
@@ -77,15 +107,20 @@ export async function recordHabitOccurrence(
     return expiredSession();
   }
 
-  const { data, error } = await context.client.rpc("record_habit_occurrence", {
-    p_entry_id: null,
-    p_expected_revision: parsed.data.expectedRevision,
-    p_habit_id: parsed.data.habitId,
-    p_local_date: parsed.data.localDate,
-    p_measured_value: parsed.data.measuredValue,
-    p_note: parsed.data.note,
-    p_status: parsed.data.status,
-  });
+  const { data, error } = await context.client.rpc(
+    input.entryId === undefined
+      ? "record_habit_occurrence"
+      : "save_habit_check_in",
+    {
+      p_entry_id: parsed.data.entryId ?? null,
+      p_expected_revision: parsed.data.expectedRevision,
+      p_habit_id: parsed.data.habitId,
+      p_local_date: parsed.data.localDate,
+      p_measured_value: parsed.data.measuredValue,
+      p_note: parsed.data.note,
+      p_status: parsed.data.status,
+    },
+  );
 
   if (error) {
     return {

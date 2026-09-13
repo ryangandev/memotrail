@@ -136,6 +136,7 @@ struct HabitOccurrence: Equatable, Hashable, Sendable {
   let status: HabitOccurrenceStatus
   let measuredValue: Double?
   let note: String?
+  var entryID: UUID? = nil
 }
 
 struct Habit: Equatable, Hashable, Identifiable, Sendable {
@@ -174,6 +175,7 @@ struct HabitWorkspaceRow: Decodable, Equatable, Sendable {
   let localStatus: HabitCalendarStatus
   let measuredValue: Double?
   let note: String?
+  let entryID: UUID?
   let createdAt: Date
   let updatedAt: Date
 
@@ -192,6 +194,7 @@ struct HabitWorkspaceRow: Decodable, Equatable, Sendable {
     case localStatus = "local_status"
     case measuredValue = "measured_value"
     case note
+    case entryID = "entry_id"
     case createdAt = "created_at"
     case updatedAt = "updated_at"
   }
@@ -208,7 +211,8 @@ struct HabitWorkspaceRow: Decodable, Equatable, Sendable {
         revision: occurrenceRevision,
         status: status,
         measuredValue: measuredValue,
-        note: note?.trimmed.nonEmpty
+        note: note?.trimmed.nonEmpty,
+        entryID: entryID
       )
     } else {
       occurrence = nil
@@ -248,6 +252,7 @@ struct HabitCalendarDay: Decodable, Equatable, Hashable, Identifiable, Sendable 
   let note: String?
   let occurrenceID: UUID?
   let occurrenceRevision: Int?
+  var entryID: UUID? = nil
 
   var id: String { localDate }
 
@@ -259,7 +264,60 @@ struct HabitCalendarDay: Decodable, Equatable, Hashable, Identifiable, Sendable 
     case note
     case occurrenceID = "occurrence_id"
     case occurrenceRevision = "occurrence_revision"
+    case entryID = "entry_id"
   }
+}
+
+struct HabitCheckInContext: Equatable, Sendable {
+  let revision: Int?
+  let entryID: UUID?
+  let note: String?
+  let measuredValue: Double?
+  let status: HabitOccurrenceStatus
+  init(day: HabitCalendarDay?, occurrence: HabitOccurrence?) {
+    if let day {
+      revision = day.occurrenceRevision
+      entryID = day.entryID
+      note = day.note
+      measuredValue = day.measuredValue
+      status = HabitOccurrenceStatus(rawValue: day.status.rawValue) ?? .completed
+    } else {
+      revision = occurrence?.revision
+      entryID = occurrence?.entryID
+      note = occurrence?.note
+      measuredValue = occurrence?.measuredValue
+      status = occurrence?.status ?? .completed
+    }
+  }
+}
+
+struct HabitEntryChoice: Decodable, Identifiable, Equatable, Sendable {
+  let id: UUID
+  let title: String?
+  let excerpt: String
+  let isDeleted: Bool
+  var displayTitle: String {
+    title?.trimmed.nonEmpty ?? excerpt.trimmed.nonEmpty ?? "Untitled Entry"
+  }
+  enum CodingKeys: String, CodingKey {
+    case id, title, excerpt
+    case isDeleted = "is_deleted"
+  }
+}
+struct HabitEntryChoices: Decodable, Sendable {
+  let items: [HabitEntryChoice]
+  let selected: HabitEntryChoice?
+  let totalCount: Int
+  enum CodingKeys: String, CodingKey {
+    case items, selected
+    case totalCount = "total_count"
+  }
+}
+struct HabitEntryChoiceParameters: Encodable {
+  let p_habit_id: UUID
+  let p_local_date: String
+  let p_query: String
+  let p_offset: Int
 }
 
 struct HabitYearStats: Equatable, Sendable {
@@ -439,6 +497,7 @@ struct HabitOccurrenceInput: Equatable, Sendable {
   let measuredValue: Double?
   let note: String?
   let expectedRevision: Int?
+  var entryID: UUID? = nil
 
   static func validate(
     habit: Habit,
@@ -446,7 +505,8 @@ struct HabitOccurrenceInput: Equatable, Sendable {
     status: HabitOccurrenceStatus,
     measuredValue: Double?,
     note: String,
-    expectedRevision: Int?
+    expectedRevision: Int?,
+    entryID: UUID? = nil
   ) throws -> HabitOccurrenceInput {
     let note = note.trimmed.nonEmpty
 
@@ -474,7 +534,8 @@ struct HabitOccurrenceInput: Equatable, Sendable {
       status: status,
       measuredValue: measuredValue,
       note: note,
-      expectedRevision: expectedRevision
+      expectedRevision: expectedRevision,
+      entryID: entryID
     )
   }
 }
@@ -547,7 +608,8 @@ struct RecordHabitOccurrenceParameters: Encodable, Equatable, Sendable {
     try values.encode(input.habitID, forKey: .habitID)
     try values.encode(input.localDate, forKey: .localDate)
     try values.encode(input.status, forKey: .status)
-    try values.encodeNil(forKey: .entryID)
+    try values.encodeIfPresent(input.entryID, forKey: .entryID)
+    if input.entryID == nil { try values.encodeNil(forKey: .entryID) }
     try values.encodeIfPresent(input.measuredValue, forKey: .measuredValue)
     if input.measuredValue == nil { try values.encodeNil(forKey: .measuredValue) }
     try values.encodeIfPresent(input.note, forKey: .note)

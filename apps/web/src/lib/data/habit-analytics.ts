@@ -1,6 +1,7 @@
 import type { HabitCalendarStatus } from "./habit-input";
 
 export type HabitCalendarDay = {
+  entryId?: string | null;
   isScheduled: boolean;
   localDate: string;
   measuredValue: number | null;

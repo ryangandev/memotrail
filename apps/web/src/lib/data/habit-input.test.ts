@@ -40,6 +40,19 @@ function occurrence(
 }
 
 describe("parseHabitInput", () => {
+  it("validates explicit Entry links and retains null versus omitted intent", () => {
+    expect(
+      parseHabitOccurrenceInput(occurrence({ entryId: "not-an-id" })).success,
+    ).toBe(false);
+    expect(
+      parseHabitOccurrenceInput(occurrence({ entryId: habitId })),
+    ).toMatchObject({ success: true, data: { entryId: habitId } });
+    expect(
+      parseHabitOccurrenceInput(occurrence({ entryId: null })),
+    ).toMatchObject({ success: true, data: { entryId: null } });
+    const legacy = parseHabitOccurrenceInput(occurrence());
+    expect(legacy.success && legacy.data.entryId).toBeUndefined();
+  });
   it("normalizes a daily Check Habit", () => {
     expect(parseHabitInput(habit())).toMatchObject({
       data: {

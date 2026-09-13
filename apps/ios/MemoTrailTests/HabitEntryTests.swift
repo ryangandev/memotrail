@@ -197,6 +197,47 @@ final class HabitEntryTests: XCTestCase {
     XCTAssertTrue(json["p_note"] is NSNull)
   }
 
+  func testOccurrenceLinkRoundTripsAndSerializesExplicitSelection() throws {
+    let entryID = UUID()
+    let json = """
+      {"local_date":"2026-09-02","is_scheduled":true,"status":"completed","entry_id":"\(entryID)","occurrence_revision":2}
+      """
+    let day = try JSONDecoder().decode(HabitCalendarDay.self, from: Data(json.utf8))
+    XCTAssertEqual(day.entryID, entryID)
+    let input = try HabitOccurrenceInput.validate(
+      habit: makeHabit(trackingMode: .check), localDate: day.localDate, status: .completed,
+      measuredValue: nil, note: "Linked", expectedRevision: 2, entryID: entryID)
+    let data = try JSONEncoder().encode(RecordHabitOccurrenceParameters(input: input))
+    let parameters = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+    XCTAssertEqual(parameters["p_entry_id"] as? String, entryID.uuidString)
+  }
+
+  func testEmptyHistoricalDayDoesNotBorrowCurrentCheckInContext() {
+    let current = HabitOccurrence(
+      id: UUID(), revision: 8, status: .skipped, measuredValue: 5, note: "Today", entryID: UUID())
+    let historical = HabitCheckInContext(
+      day: calendarDay("2026-09-01", .missed), occurrence: current)
+    XCTAssertNil(historical.revision)
+    XCTAssertNil(historical.entryID)
+    XCTAssertNil(historical.note)
+    XCTAssertNil(historical.measuredValue)
+    XCTAssertEqual(historical.status, .missed)
+    let today = HabitCheckInContext(day: nil, occurrence: current)
+    XCTAssertEqual(today.revision, 8)
+    XCTAssertEqual(today.entryID, current.entryID)
+    XCTAssertEqual(today.note, "Today")
+  }
+
+  func testHabitEntryChoicesDecodeTrashAndUnlabeledWriting() throws {
+    let json = """
+      {"items":[],"total_count":0,"selected":{"id":"10000000-0000-4000-8000-000000000001","title":null,"excerpt":"Journal context","is_deleted":true}}
+      """
+    let value = try JSONDecoder().decode(HabitEntryChoices.self, from: Data(json.utf8))
+    XCTAssertEqual(value.selected?.displayTitle, "Journal context")
+    XCTAssertEqual(value.selected?.isDeleted, true)
+    XCTAssertTrue(value.items.isEmpty)
+  }
+
   func testYearStatsKeepSkipsNeutralAndMissesBreakStreaks() {
     let days = [
       calendarDay("2026-09-01", .completed),

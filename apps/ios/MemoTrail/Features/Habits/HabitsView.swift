@@ -9,8 +9,12 @@ struct HabitsView: View {
   @State private var message: String?
   private let focusedHabitID: UUID?
   private let embedded: Bool
+  private let client: SupabaseClient
+  private let ownerID: UUID
 
   init(client: SupabaseClient, ownerID: UUID, focusedHabitID: UUID? = nil, embedded: Bool = false) {
+    self.client = client
+    self.ownerID = ownerID
     self.focusedHabitID = focusedHabitID
     self.embedded = embedded
     _controller = State(initialValue: HabitsController(client: client, ownerID: ownerID))
@@ -79,6 +83,8 @@ struct HabitsView: View {
     }
     .sheet(item: $checkInSelection) { selection in
       HabitCheckInSheet(
+        client: client,
+        ownerID: ownerID,
         controller: controller,
         habit: selection.habit,
         day: selection.day
@@ -911,6 +917,8 @@ private struct HabitEditorSheet: View {
 }
 
 private struct HabitCheckInSheet: View {
+  let client: SupabaseClient
+  let ownerID: UUID
   let controller: HabitsController
   let habit: Habit
   let day: HabitCalendarDay?
@@ -920,27 +928,29 @@ private struct HabitCheckInSheet: View {
   @State private var status: HabitOccurrenceStatus
   @State private var measuredValue: String
   @State private var note: String
+  @State private var entryID: UUID?
   @State private var isWorking = false
   @State private var errorMessage: String?
 
   init(
+    client: SupabaseClient,
+    ownerID: UUID,
     controller: HabitsController,
     habit: Habit,
     day: HabitCalendarDay?,
     onFinished: @escaping (HabitsController.MutationResult) -> Void
   ) {
+    self.client = client
+    self.ownerID = ownerID
     self.controller = controller
     self.habit = habit
     self.day = day
     self.onFinished = onFinished
-    let occurrenceStatus =
-      day.flatMap { HabitOccurrenceStatus(rawValue: $0.status.rawValue) }
-      ?? habit.occurrence?.status
-      ?? .completed
-    _status = State(initialValue: occurrenceStatus)
-    let measurement = day?.measuredValue ?? habit.occurrence?.measuredValue
-    _measuredValue = State(initialValue: measurement.map(HabitNumber.format) ?? "")
-    _note = State(initialValue: day?.note ?? habit.occurrence?.note ?? "")
+    let context = HabitCheckInContext(day: day, occurrence: habit.occurrence)
+    _status = State(initialValue: context.status)
+    _measuredValue = State(initialValue: context.measuredValue.map(HabitNumber.format) ?? "")
+    _note = State(initialValue: context.note ?? "")
+    _entryID = State(initialValue: context.entryID)
   }
 
   var body: some View {
@@ -976,6 +986,10 @@ private struct HabitCheckInSheet: View {
             .frame(minHeight: 130)
             .accessibilityLabel("Optional check-in note")
         }
+
+        HabitEntryPickerSection(
+          client: client, ownerID: ownerID, controller: controller, habitID: habit.id,
+          localDate: day?.localDate ?? controller.referenceDate, entryID: $entryID)
 
         if let errorMessage {
           Section {
@@ -1017,7 +1031,7 @@ private struct HabitCheckInSheet: View {
   }
 
   private var existingRevision: Int? {
-    day?.occurrenceRevision ?? habit.occurrence?.revision
+    HabitCheckInContext(day: day, occurrence: habit.occurrence).revision
   }
 
   private var displayDate: String {
@@ -1035,7 +1049,8 @@ private struct HabitCheckInSheet: View {
       day: day,
       status: status,
       measuredValue: status == .completed ? Double(measuredValue.trimmed) : nil,
-      note: note
+      note: note,
+      entryID: entryID
     )
     isWorking = false
 
@@ -1044,6 +1059,99 @@ private struct HabitCheckInSheet: View {
       dismiss()
     } else {
       errorMessage = result.message
+    }
+  }
+}
+
+private struct HabitEntryPickerSection: View {
+  let client: SupabaseClient
+  let ownerID: UUID
+  let controller: HabitsController
+  let habitID: UUID
+  let localDate: String
+  @Binding var entryID: UUID?
+  @State private var query = ""
+  @State private var search = ""
+  @State private var page = 0
+  @State private var reload = 0
+  @State private var loading = true
+  @State private var data: HabitEntryChoices?
+  @State private var picked: HabitEntryChoice?
+  @State private var failed = false
+  private var selected: HabitEntryChoice? {
+    ([data?.selected, picked].compactMap { $0 } + (data?.items ?? [])).first { $0.id == entryID }
+  }
+  var body: some View {
+    Section("Linked Entry") {
+      Text(
+        "Optional context for this check-in. Changes apply only when you save; the original writing stays unchanged."
+      )
+      .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+      if let entryID {
+        NavigationLink {
+          EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: entryID)
+        } label: {
+          Text(selected?.displayTitle ?? "Open linked Entry")
+        }
+        if selected?.isDeleted == true {
+          Text("In Trash. This link is kept unless you remove it.").font(
+            MTTypography.caption)
+        }
+        Button("Remove link", role: .destructive) { self.entryID = nil }
+      } else {
+        Text("No Entry linked.").foregroundStyle(MTColor.inkMuted)
+      }
+      TextField("Find an Entry", text: $query).onChange(of: query) {
+        query = String(query.prefix(200))
+      }
+      Button("Search Entries") {
+        loading = true
+        search = query.trimmed
+        page = 0
+        reload += 1
+      }.disabled(loading)
+      if loading {
+        ProgressView("Loading Entries…")
+      } else if failed {
+        Text("Entries could not load. Search again to retry. Your existing link has not changed.")
+          .foregroundStyle(MTColor.warm)
+      } else {
+        if data?.items.isEmpty == true { Text("No matching active Entries.") }
+        ForEach(data?.items ?? []) { row in
+          Button("Link \(row.displayTitle)") {
+            picked = row
+            entryID = row.id
+          }.disabled(entryID == row.id)
+        }
+        HStack {
+          Button("Previous Entries") {
+            loading = true
+            page -= 1
+          }.disabled(page == 0)
+          Spacer()
+          Text("Page \(page + 1)").font(MTTypography.caption)
+          Spacer()
+          Button("Next Entries") {
+            loading = true
+            page += 1
+          }.disabled((page + 1) * 20 >= (data?.totalCount ?? 0))
+        }.buttonStyle(.borderless)
+      }
+    }
+    .task(id: "\(search)|\(page)|\(reload)") {
+      do {
+        let result = try await controller.entryChoices(
+          habitID: habitID, localDate: localDate, query: search, page: page)
+        try Task.checkCancellation()
+        data = result
+        failed = false
+        loading = false
+      } catch {
+        guard !Task.isCancelled else { return }
+        failed = true
+        data = nil
+        loading = false
+      }
     }
   }
 }

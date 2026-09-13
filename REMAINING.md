@@ -48,13 +48,16 @@ The last accepted checkpoint is `a7850b7`.
 | Photo-only Entry history with retry-safe writing concurrency                | Deployed        | Complete        | Complete        | Pushed 638186e      |
 | Standalone People, Places, and Habits keyword search with exact sources     | Deployed        | Complete        | Complete        | Pushed 311c1a2      |
 | Confirmed all-page Empty Trash with fixed targets and interruption safety   | Deployed        | Complete        | Complete        | Pushed 7eaae33      |
-| Habit monthly summaries and weekday miss patterns                           | Existing RPC    | Complete        | Complete        | This feature commit |
+| Habit monthly summaries and weekday miss patterns                           | Existing RPC    | Complete        | Complete        | Pushed 70d13bf      |
+| Optional Habit check-in Entry context with legacy-safe link preservation    | Deployed        | Complete        | Complete        | This feature commit |
 | Remaining shared metadata and relationship lifecycle audit                  | Audit ongoing   | Audit ongoing   | Audit ongoing   | Pending             |
 | Remaining photo surfaces and interactive gallery acceptance                 | Audit pending   | Audit pending   | Audit pending   | Pending             |
 | Final acceptance and production configuration                               | Pending         | Pending         | Pending         | Pending             |
 
 ## External inputs and limitations
 
+- Both Habit editors now stage optional Entry selection/removal, search across bounded pages, open original writing, retain unchanged Trash links, and protect note edits from older clients without link controls.
+- Native empty historical check-ins no longer borrow today's note, measurement, revision, or linked Entry; actual authenticated native UI acceptance remains separate from these model/contract tests.
 - Habit monthly and weekday summaries now share canonical status semantics on both clients, keep skips neutral, exclude future dates, and explain weekly-target limitations without paid AI or another migration.
 - Local browser acceptance covers check-in edits, year changes, tied weekday misses, weekly targets, and small-screen horizontal overflow; actual native interaction remains an independent gate.
 - Current-record/history readers now expose Current photos on both clients, explicitly separate from earlier snapshot membership, with contained images, previous/next controls, staged uploads, confirmed recoverable removal, and refreshed private access.

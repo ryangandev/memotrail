@@ -175,9 +175,10 @@ final class HabitsController {
     day: HabitCalendarDay?,
     status: HabitOccurrenceStatus,
     measuredValue: Double?,
-    note: String
+    note: String,
+    entryID: UUID? = nil
   ) async -> MutationResult {
-    let existingRevision = day?.occurrenceRevision ?? habit.occurrence?.revision
+    let existingRevision = HabitCheckInContext(day: day, occurrence: habit.occurrence).revision
     let input: HabitOccurrenceInput
 
     do {
@@ -187,7 +188,8 @@ final class HabitsController {
         status: status,
         measuredValue: status == .completed ? measuredValue : nil,
         note: note,
-        expectedRevision: existingRevision
+        expectedRevision: existingRevision,
+        entryID: entryID
       )
     } catch {
       return MutationResult(message: error.localizedDescription, status: .error)
@@ -205,7 +207,7 @@ final class HabitsController {
       let results: [SavedHabitOccurrence] =
         try await client
         .rpc(
-          "record_habit_occurrence",
+          "save_habit_check_in",
           params: RecordHabitOccurrenceParameters(input: input)
         )
         .execute()
@@ -267,6 +269,23 @@ final class HabitsController {
         status: .error
       )
     }
+  }
+
+  func entryChoices(habitID: UUID, localDate: String, query: String, page: Int) async throws
+    -> HabitEntryChoices
+  {
+    guard query.count <= 200, (0...5000).contains(page), HabitLocalDate.isValid(localDate) else {
+      throw HabitsControllerError.ownerChanged
+    }
+    try await validateSessionOwner()
+    let choices: HabitEntryChoices = try await client.rpc(
+      "habit_entry_choices",
+      params: HabitEntryChoiceParameters(
+        p_habit_id: habitID, p_local_date: localDate, p_query: query, p_offset: page * 20)
+    ).execute().value
+    try await validateSessionOwner()
+    try Task.checkCancellation()
+    return choices
   }
 
   private func loadCalendar() async {

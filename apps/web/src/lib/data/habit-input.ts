@@ -35,6 +35,7 @@ export type ParsedHabitInput = Omit<
 };
 
 export type HabitOccurrenceInput = {
+  entryId?: string | null;
   expectedRevision: number | null;
   habitId: string;
   localDate: string;
@@ -143,6 +144,9 @@ export function parseHabitInput(input: HabitInput): ParsedHabitResult {
 export function parseHabitOccurrenceInput(
   input: HabitOccurrenceInput,
 ): ParsedHabitOccurrenceResult {
+  if (input.entryId != null && !uuidPattern.test(input.entryId)) {
+    return invalidOccurrence("This linked Entry reference is invalid.");
+  }
   if (!uuidPattern.test(input.habitId)) {
     return invalidOccurrence("This Habit reference is invalid.");
   }

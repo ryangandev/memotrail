@@ -6,6 +6,22 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Optional Habit check-in Entry context across Web and iOS
+
+- Reproduced a real localhost check-in note edit clearing its existing `entry_id`, while the PRD explicitly requires optional linked journal context.
+- Both clients now decode and retain check-in links, search owned active Entries with bilingual queries and bounded pagination, open original writing, and stage Link/Remove link until the same explicit Save as the note/status.
+- The versioned `save_habit_check_in` mutation preserves history and optimistic revisions, accepts unchanged owned Trash links, rejects unavailable new targets, and serializes competing saves without copying Entry writing.
+- The legacy mutation retains a same-revision existing link when older installed clients send null because they lack a link control; the new endpoint supports explicit unlink.
+- Native historical-day context now uses that exact day's optional values rather than borrowing today's revision, note, measurement, or Entry link.
+- Real browser acceptance covers original navigation, canceled unlink, Trash retention, explicit removal, restored target selection, later result pages, Chinese search, competing API saves, and legacy preservation.
+- Desktop light and mobile dark selectors were visually inspected, including the no-horizontal-overflow check; actual native UI acceptance remains an independent gate.
+- Verification passes 430 Web unit tests, 211 native tests with no failures/skips, all 51 production-mode browser/API scenarios, and 1,489 SQL assertions across 42 files, with clean local schema lint.
+- Type checking, Web lint, shared tokens, and formatting pass; the intentional incomplete-export error remains a tested negative path rather than a failed download reported as complete.
+- Updated architecture, completion tracking, and the existing Obsidian project note; all isolated browser fixtures were removed, and local AI accounting remains $0.056502 over 55 completed requests with no reservations.
+- Migration `202609130006_habit_entry_links.sql` is deployed to the verified MemoTrail project with a matching migration ledger and clean hosted schema lint, without seeds, role-file changes, or production-content rewrites.
+- This feature requires no provider calls, new credentials, original-photo processing, or production-content rewrites.
+- Existing GitHub billing, locked-Mac/native interaction, hosted acceptance, backup destination, and retention gates remain unfinished; the full product goal is not marked complete.
+
 ### Habit monthly summaries and weekday patterns across Web and iOS
 
 - Reproduced the missing Monthly summary heading through an authenticated localhost browser against the explicit PRODUCT.md Habit requirements.

@@ -10,6 +10,7 @@ import {
 } from "./habit-input";
 
 export type HabitOccurrence = {
+  entryId: string | null;
   id: string;
   measuredValue: number | null;
   note: string | null;
@@ -149,6 +150,7 @@ function habitFromRow(row: HabitWorkspaceRow): Habit {
     occurrence: row.occurrence_id
       ? {
           id: row.occurrence_id,
+          entryId: row.entry_id,
           measuredValue,
           note: row.note,
           revision: row.occurrence_revision ?? 1,
@@ -167,6 +169,7 @@ function habitFromRow(row: HabitWorkspaceRow): Habit {
 
 function calendarDayFromRow(row: HabitCalendarRow): HabitCalendarDay {
   return {
+    entryId: row.entry_id,
     isScheduled: row.is_scheduled,
     localDate: row.local_date,
     measuredValue: nullableNumber(row.measured_value),
