@@ -212,11 +212,12 @@ struct HabitsView: View {
           }
         }
 
-        statsGrid
-
-        if let calendarErrorMessage = controller.calendarErrorMessage {
+        if controller.isCalendarLoading || controller.isLoading {
+          ProgressView("Loading Habit history…")
+        } else if let calendarErrorMessage = controller.calendarErrorMessage {
           habitMessage(calendarErrorMessage, systemImage: "exclamationmark.triangle")
         } else {
+          statsGrid
           HabitYearCalendar(
             days: controller.calendar,
             habit: habit,
@@ -224,6 +225,14 @@ struct HabitsView: View {
           ) { day in
             checkInSelection = HabitCheckInSelection(habit: habit, day: day)
           }
+          HabitBreakdownView(
+            summary: HabitBreakdown.calculate(
+              days: controller.calendar, asOfDate: controller.referenceDate,
+              year: controller.selectedYear),
+            year: controller.selectedYear,
+            referenceDate: controller.referenceDate,
+            schedule: habit.schedule
+          )
         }
       }
       .padding(.top, MTSpacing.s4)
@@ -310,6 +319,74 @@ struct HabitsView: View {
     if result.status == .saved || result.status == .trashed {
       message = result.message
     }
+  }
+}
+
+private struct HabitBreakdownView: View {
+  let summary: HabitBreakdown
+  let year: Int
+  let referenceDate: String
+  let schedule: HabitSchedule
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s4) {
+      Text(
+        "\(String(year)) through \(referenceDate). Rate is Done ÷ (Done + Missed). Skipped, pending, unscheduled, and future days do not lower it."
+      )
+      .font(MTTypography.caption)
+      .foregroundStyle(MTColor.inkMuted)
+      if case .weeklyTarget = schedule {
+        Text(
+          "Weekly targets use recorded check-ins only; unrecorded days are not assigned missed weekdays."
+        )
+        .font(MTTypography.caption)
+        .foregroundStyle(MTColor.inkMuted)
+      }
+      panel("Monthly summary", rows: summary.months)
+      panel(
+        "Weekday patterns", rows: summary.weekdays,
+        detail: summary.mostMisses == 0
+          ? "No missed days in this view."
+          : "Most misses: \(summary.mostMissedWeekdays.joined(separator: ", ")) (\(summary.mostMisses) each)."
+      )
+    }
+  }
+
+  private func panel(_ title: String, rows: [HabitBreakdownRow], detail: String? = nil) -> some View
+  {
+    VStack(alignment: .leading, spacing: MTSpacing.s3) {
+      Text(title)
+        .font(MTTypography.titleSmall)
+        .foregroundStyle(MTColor.ink)
+        .accessibilityAddTraits(.isHeader)
+      if let detail {
+        Text(detail).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+      }
+      ForEach(rows) { row in
+        VStack(alignment: .leading, spacing: 3) {
+          HStack(alignment: .firstTextBaseline) {
+            Text(row.label).foregroundStyle(MTColor.ink)
+            Spacer(minLength: MTSpacing.s2)
+            Text(row.completionRate.map { "\(Int(($0 * 100).rounded()))%" } ?? "-")
+              .monospacedDigit()
+              .foregroundStyle(MTColor.ink)
+              .accessibilityLabel(
+                row.completionRate.map { "Completion rate \(Int(($0 * 100).rounded())) percent" }
+                  ?? "No completion rate")
+          }
+          Text("\(row.completed) done · \(row.missed) missed · \(row.skipped) skipped")
+            .foregroundStyle(MTColor.inkMuted)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .font(MTTypography.caption)
+        .accessibilityElement(children: .combine)
+        if row.id != rows.last?.id { Divider().overlay(MTColor.border) }
+      }
+    }
+    .padding(MTSpacing.s4)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.large))
+    .overlay(RoundedRectangle(cornerRadius: MTRadius.large).stroke(MTColor.border, lineWidth: 1))
   }
 }
 

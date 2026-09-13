@@ -19,6 +19,87 @@ export type HabitYearStats = {
   skipped: number;
 };
 
+export type HabitBreakdownRow = {
+  label: string;
+  completed: number;
+  missed: number;
+  skipped: number;
+  completionRate: number | null;
+};
+
+/** Project canonical calendar statuses, never infer additional scheduled misses. */
+export function calculateHabitBreakdown(
+  days: HabitCalendarDay[],
+  asOfDate: string,
+  year: number,
+) {
+  const row = (label: string): HabitBreakdownRow => ({
+    label,
+    completed: 0,
+    missed: 0,
+    skipped: 0,
+    completionRate: null,
+  });
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ].map(row);
+  const weekdays = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ].map(row);
+  if (parseLocalDate(asOfDate)) {
+    for (const day of days) {
+      const date = parseLocalDate(day.localDate);
+      if (!date || date.getUTCFullYear() !== year || day.localDate > asOfDate)
+        continue;
+      if (
+        day.status !== "completed" &&
+        day.status !== "missed" &&
+        day.status !== "skipped"
+      )
+        continue;
+      for (const bucket of [
+        months[date.getUTCMonth()],
+        weekdays[(date.getUTCDay() + 6) % 7],
+      ]) {
+        bucket[day.status] += 1;
+      }
+    }
+  }
+  for (const bucket of [...months, ...weekdays]) {
+    const observed = bucket.completed + bucket.missed;
+    bucket.completionRate = observed === 0 ? null : bucket.completed / observed;
+  }
+  const mostMisses = Math.max(...weekdays.map((day) => day.missed));
+  return {
+    months,
+    weekdays,
+    mostMisses,
+    mostMissedWeekdays:
+      mostMisses === 0
+        ? []
+        : weekdays
+            .filter((day) => day.missed === mostMisses)
+            .map((day) => day.label),
+  };
+}
+
 export function calculateHabitYearStats(
   days: HabitCalendarDay[],
   asOfDate: string,

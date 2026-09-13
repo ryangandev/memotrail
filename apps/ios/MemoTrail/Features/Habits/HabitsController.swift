@@ -10,6 +10,7 @@ final class HabitsController {
   private(set) var hasLoaded = false
   private(set) var isLoading = false
   private(set) var isSaving = false
+  private(set) var isCalendarLoading = false
   private(set) var loadErrorMessage: String?
   private(set) var calendarErrorMessage: String?
   private(set) var referenceDate = HabitLocalDate.string(from: Date())
@@ -19,6 +20,7 @@ final class HabitsController {
   private let client: SupabaseClient
   private let ownerID: UUID
   private var pendingLocalDate: String?
+  private var calendarRequestID = UUID()
 
   init(client: SupabaseClient, ownerID: UUID) {
     self.client = client
@@ -52,6 +54,9 @@ final class HabitsController {
     }
 
     isLoading = true
+    calendarRequestID = UUID()
+    isCalendarLoading = false
+    calendar = []
     loadErrorMessage = nil
     referenceDate = localDate
 
@@ -63,6 +68,8 @@ final class HabitsController {
         .execute()
         .value
 
+      try await validateSessionOwner()
+      try Task.checkCancellation()
       habits = HabitsWorkspace.habits(from: rows)
       if !habits.contains(where: { $0.id == selectedHabitID }) {
         selectedHabitID = habits.first?.id
@@ -70,6 +77,8 @@ final class HabitsController {
       await loadCalendar()
     } catch {
       habits = []
+      calendarRequestID = UUID()
+      isCalendarLoading = false
       calendar = []
       loadErrorMessage = "MemoTrail could not load your Habits. Pull to refresh or try again."
     }
@@ -261,28 +270,44 @@ final class HabitsController {
   }
 
   private func loadCalendar() async {
+    let requestID = UUID()
+    calendarRequestID = requestID
+    calendar = []
+    calendarErrorMessage = nil
+    isCalendarLoading = false
     guard let selectedHabitID else {
-      calendar = []
-      calendarErrorMessage = nil
       return
     }
-
-    calendarErrorMessage = nil
+    let year = selectedYear
+    let asOfDate = referenceDate
+    isCalendarLoading = true
+    defer {
+      if calendarRequestID == requestID { isCalendarLoading = false }
+    }
     do {
+      try await validateSessionOwner()
+      try Task.checkCancellation()
       let rows: [HabitCalendarDay] =
         try await client
         .rpc(
           "habit_year_calendar",
           params: HabitYearCalendarParameters(
             habitID: selectedHabitID,
-            year: selectedYear,
-            asOfDate: referenceDate
+            year: year,
+            asOfDate: asOfDate
           )
         )
         .execute()
         .value
+      try await validateSessionOwner()
+      try Task.checkCancellation()
+      guard calendarRequestID == requestID,
+        self.selectedHabitID == selectedHabitID,
+        selectedYear == year, referenceDate == asOfDate
+      else { return }
       calendar = rows.sorted { $0.localDate < $1.localDate }
     } catch {
+      guard calendarRequestID == requestID else { return }
       calendar = []
       calendarErrorMessage = "MemoTrail could not load this Habit year. Pull to refresh."
     }

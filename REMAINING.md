@@ -47,13 +47,16 @@ The last accepted checkpoint is `a7850b7`.
 | Ordinary Entry links, incoming backlinks, and restorable relationship edits | Deployed        | Complete        | Complete        | Pushed 4299a73      |
 | Photo-only Entry history with retry-safe writing concurrency                | Deployed        | Complete        | Complete        | Pushed 638186e      |
 | Standalone People, Places, and Habits keyword search with exact sources     | Deployed        | Complete        | Complete        | Pushed 311c1a2      |
-| Confirmed all-page Empty Trash with fixed targets and interruption safety   | Deployed        | Complete        | Complete        | This feature commit |
+| Confirmed all-page Empty Trash with fixed targets and interruption safety   | Deployed        | Complete        | Complete        | Pushed 7eaae33      |
+| Habit monthly summaries and weekday miss patterns                           | Existing RPC    | Complete        | Complete        | This feature commit |
 | Remaining shared metadata and relationship lifecycle audit                  | Audit ongoing   | Audit ongoing   | Audit ongoing   | Pending             |
 | Remaining photo surfaces and interactive gallery acceptance                 | Audit pending   | Audit pending   | Audit pending   | Pending             |
 | Final acceptance and production configuration                               | Pending         | Pending         | Pending         | Pending             |
 
 ## External inputs and limitations
 
+- Habit monthly and weekday summaries now share canonical status semantics on both clients, keep skips neutral, exclude future dates, and explain weekly-target limitations without paid AI or another migration.
+- Local browser acceptance covers check-in edits, year changes, tied weekday misses, weekly targets, and small-screen horizontal overflow; actual native interaction remains an independent gate.
 - Current-record/history readers now expose Current photos on both clients, explicitly separate from earlier snapshot membership, with contained images, previous/next controls, staged uploads, confirmed recoverable removal, and refreshed private access.
 - Photo analysis now uses separately authorized, metadata-free previews for editable Inbox suggestions, with content-sensitive caching and real synthetic Anthropic acceptance.
 - Ordinary Entry links and backlinks now have matching search, navigation, direct linking/unlinking, Trash-aware display, pagination, source revision protection, and restorable history on both clients.

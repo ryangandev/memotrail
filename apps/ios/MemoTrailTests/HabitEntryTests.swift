@@ -220,6 +220,66 @@ final class HabitEntryTests: XCTestCase {
     )
   }
 
+  func testBreakdownGroupsLeapDayAndAllTiedMissedWeekdays() {
+    let summary = HabitBreakdown.calculate(
+      days: [
+        calendarDay("2024-02-26", .completed), calendarDay("2024-02-27", .skipped),
+        calendarDay("2024-02-28", .missed), calendarDay("2024-02-29", .completed),
+        calendarDay("2024-03-01", .missed), calendarDay("2024-03-02", .missed),
+        calendarDay("2024-03-03", .pending),
+      ], asOfDate: "2024-03-03", year: 2024)
+    XCTAssertEqual(summary.months.count, 12)
+    XCTAssertEqual(summary.weekdays.count, 7)
+    XCTAssertEqual(
+      summary.months[1], HabitBreakdownRow(label: "Feb", completed: 2, missed: 1, skipped: 1))
+    XCTAssertEqual(summary.months[1].completionRate, 2.0 / 3.0)
+    XCTAssertEqual(summary.months[2].missed, 2)
+    XCTAssertEqual(summary.months[2].completionRate, 0)
+    XCTAssertEqual(summary.weekdays[0].completed, 1)
+    XCTAssertEqual(summary.weekdays[3].completed, 1)
+    XCTAssertEqual(summary.mostMissedWeekdays, ["Wednesday", "Friday", "Saturday"])
+    XCTAssertEqual(summary.mostMisses, 1)
+  }
+
+  func testBreakdownExcludesFutureOtherYearInvalidAndUnassignedDates() {
+    let summary = HabitBreakdown.calculate(
+      days: [
+        calendarDay("2023-12-31", .missed), calendarDay("2024-01-01", .completed),
+        calendarDay("2024-01-02", .completed), calendarDay("2024-02-30", .missed),
+        calendarDay("invalid", .missed), calendarDay("2024-01-01", .notScheduled),
+        calendarDay("2024-01-01", .pending), calendarDay("2024-01-01", .upcoming),
+      ], asOfDate: "2024-01-01", year: 2024)
+    XCTAssertEqual(summary.months[0], HabitBreakdownRow(label: "Jan", completed: 1))
+    XCTAssertEqual(summary.months[0].completionRate, 1)
+    XCTAssertNil(summary.months[1].completionRate)
+    XCTAssertTrue(summary.mostMissedWeekdays.isEmpty)
+  }
+
+  func testBreakdownKeepsSkipOnlyAndEmptyPeriodsNeutral() {
+    let summary = HabitBreakdown.calculate(
+      days: [calendarDay("2024-03-03", .skipped)], asOfDate: "2024-03-03", year: 2024)
+    XCTAssertEqual(summary.months[2].skipped, 1)
+    XCTAssertNil(summary.months[2].completionRate)
+    XCTAssertEqual(summary.weekdays[6].label, "Sunday")
+    XCTAssertEqual(summary.weekdays[6].skipped, 1)
+    XCTAssertNil(summary.weekdays[6].completionRate)
+    XCTAssertEqual(summary.mostMisses, 0)
+    XCTAssertTrue(
+      HabitBreakdown.calculate(days: [], asOfDate: "2024-03-03", year: 2024).months.allSatisfy {
+        $0.completionRate == nil
+      })
+  }
+
+  func testBreakdownDoesNotInventWeeklyDeficitsOrAcceptInvalidCutoff() {
+    let days = [calendarDay("2024-03-01", .notScheduled), calendarDay("2024-03-02", .missed)]
+    XCTAssertEqual(
+      HabitBreakdown.calculate(days: days, asOfDate: "2024-03-03", year: 2024).months[2].missed, 1)
+    XCTAssertTrue(
+      HabitBreakdown.calculate(days: days, asOfDate: "2024-02-30", year: 2024).months.allSatisfy {
+        $0.missed == 0
+      })
+  }
+
   func testLocalDateRejectsCalendarOverflow() {
     XCTAssertTrue(HabitLocalDate.isValid("2026-02-28"))
     XCTAssertFalse(HabitLocalDate.isValid("2026-02-30"))

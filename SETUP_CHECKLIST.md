@@ -1,14 +1,16 @@
 # MemoTrail Setup Checklist
 
-> Status: Core cross-platform archive implemented; remaining AI and portable-export work tracked in REMAINING.md
+> Status: Core archive, AI, and portable export implemented on both clients; hosted/native acceptance and recovery preparation remain tracked in REMAINING.md
 >
-> Last updated: 2026-09-12
+> Last updated: 2026-09-13
 >
 > Initial authentication: Google Sign-In only
 >
 > iOS bundle identifier: `com.rystudio.memotrail.app`
 
 ## 1. Security rules
+
+Habit monthly and weekday summaries use the existing authenticated calendar data and need no additional setup, AI key, or migration.
 
 - [x] Do not send secrets through chat.
 - [x] Do not commit local environment files, credentials, private keys, or downloaded OAuth configuration files.

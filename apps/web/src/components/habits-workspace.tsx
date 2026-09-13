@@ -18,8 +18,10 @@ import {
 import styles from "@/app/habits/page.module.css";
 import { Icon } from "@/components/icon";
 import {
+  calculateHabitBreakdown,
   calculateHabitYearStats,
   calendarGridPosition,
+  type HabitBreakdownRow,
   type HabitCalendarDay,
 } from "@/lib/data/habit-analytics";
 import {
@@ -555,9 +557,110 @@ function HabitHistory({
               ))}
             </div>
           </div>
+          <HabitBreakdown
+            calendar={calendar}
+            referenceDate={referenceDate}
+            year={year}
+            schedule={habit.schedule}
+          />
         </>
       )}
     </section>
+  );
+}
+
+function HabitBreakdown({
+  calendar,
+  referenceDate,
+  year,
+  schedule,
+}: {
+  calendar: HabitCalendarDay[];
+  referenceDate: string;
+  year: number;
+  schedule: HabitSchedule;
+}) {
+  const summary = useMemo(
+    () => calculateHabitBreakdown(calendar, referenceDate, year),
+    [calendar, referenceDate, year],
+  );
+  return (
+    <div className={styles.breakdown}>
+      <p className={styles.breakdownGuidance}>
+        {year} through {referenceDate}. Rate is Done ÷ (Done + Missed). Skipped,
+        pending, unscheduled, and future days do not lower it.
+        {schedule.kind === "weekly_target" &&
+          " Weekly targets use recorded check-ins only; unrecorded days are not assigned missed weekdays."}
+      </p>
+      <div className={styles.breakdownPanels}>
+        <section
+          className={styles.breakdownPanel}
+          aria-labelledby="monthly-summary"
+        >
+          <h3 id="monthly-summary">Monthly summary</h3>
+          <BreakdownTable
+            label="Monthly summary"
+            firstColumn="Month"
+            rows={summary.months}
+          />
+        </section>
+        <section
+          className={styles.breakdownPanel}
+          aria-labelledby="weekday-patterns"
+        >
+          <h3 id="weekday-patterns">Weekday patterns</h3>
+          <p className={styles.breakdownGuidance}>
+            {summary.mostMisses === 0
+              ? "No missed days in this view."
+              : `Most misses: ${summary.mostMissedWeekdays.join(", ")} (${summary.mostMisses} each).`}
+          </p>
+          <BreakdownTable
+            label="Weekday patterns"
+            firstColumn="Weekday"
+            rows={summary.weekdays}
+          />
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function BreakdownTable({
+  label,
+  firstColumn,
+  rows,
+}: {
+  label: string;
+  firstColumn: string;
+  rows: HabitBreakdownRow[];
+}) {
+  return (
+    <table className={styles.breakdownTable} aria-label={label}>
+      <thead>
+        <tr>
+          {[firstColumn, "Done", "Missed", "Skipped", "Rate"].map((heading) => (
+            <th key={heading} scope="col">
+              {heading}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={row.label}>
+            <th scope="row">{row.label}</th>
+            <td>{row.completed}</td>
+            <td>{row.missed}</td>
+            <td>{row.skipped}</td>
+            <td>
+              {row.completionRate === null
+                ? "-"
+                : `${Math.round(row.completionRate * 100)}%`}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 

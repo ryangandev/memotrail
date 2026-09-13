@@ -306,6 +306,60 @@ struct HabitYearStats: Equatable, Sendable {
   }
 }
 
+struct HabitBreakdownRow: Equatable, Sendable, Identifiable {
+  let label: String
+  var completed = 0
+  var missed = 0
+  var skipped = 0
+  var id: String { label }
+  var completionRate: Double? {
+    completed + missed == 0 ? nil : Double(completed) / Double(completed + missed)
+  }
+}
+
+struct HabitBreakdown: Equatable, Sendable {
+  let months: [HabitBreakdownRow]
+  let weekdays: [HabitBreakdownRow]
+  var mostMisses: Int { weekdays.map(\.missed).max() ?? 0 }
+  var mostMissedWeekdays: [String] {
+    mostMisses == 0 ? [] : weekdays.filter { $0.missed == mostMisses }.map(\.label)
+  }
+
+  // Derive only from canonical calendar statuses using recorded Gregorian dates.
+  static func calculate(days: [HabitCalendarDay], asOfDate: String, year: Int) -> HabitBreakdown {
+    var months = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ].map { HabitBreakdownRow(label: $0) }
+    var weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+      .map { HabitBreakdownRow(label: $0) }
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = .gmt
+    if HabitLocalDate.isValid(asOfDate) {
+      for day in days {
+        guard day.localDate <= asOfDate,
+          let date = HabitLocalDate.date(from: day.localDate, timeZone: .gmt),
+          calendar.component(.year, from: date) == year
+        else { continue }
+        let month = calendar.component(.month, from: date) - 1
+        let weekday = (calendar.component(.weekday, from: date) + 5) % 7
+        switch day.status {
+        case .completed:
+          months[month].completed += 1
+          weekdays[weekday].completed += 1
+        case .missed:
+          months[month].missed += 1
+          weekdays[weekday].missed += 1
+        case .skipped:
+          months[month].skipped += 1
+          weekdays[weekday].skipped += 1
+        case .pending, .upcoming, .notScheduled: break
+        }
+      }
+    }
+    return HabitBreakdown(months: months, weekdays: weekdays)
+  }
+}
+
 struct HabitDefinitionInput: Equatable, Sendable {
   static let nameLimit = 120
   static let unitLimit = 40

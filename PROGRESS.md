@@ -6,6 +6,21 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Habit monthly summaries and weekday patterns across Web and iOS
+
+- Reproduced the missing Monthly summary heading through an authenticated localhost browser against the explicit PRODUCT.md Habit requirements.
+- Both clients now show twelve monthly summaries, seven Monday-first weekday summaries, per-period completed/missed/skipped counts and completion rates, and all tied most-missed weekdays.
+- Calculations reuse canonical calendar statuses and recorded Gregorian dates, exclude future/other-year/invalid dates, keep skips neutral, and show an absent rate rather than a fabricated percentage for empty periods.
+- Weekly-target guidance explicitly avoids assigning unrecorded weekly deficits to invented weekdays; these remain day-status summaries rather than totals across potentially changed measurement units.
+- Native loading clears stale statistics and captures selection/request identity, with ownership and cancellation checks before displaying calendar results; unavailable history no longer presents misleading zero statistics.
+- Real browser acceptance covers leap-day grouping, an actual check-in edit and refreshed rates, past-year empty states, weekly-target guidance, and both theme/layout variants.
+- The small-phone check reproduced existing horizontal overflow from mismatched heatmap margins at 390px; corrected those margins and verified that the whole page fits.
+- Verification passes 429 Web unit tests, 208 native tests with no failures/skips, and all 50 production-mode browser/API scenarios, plus type checking, Web lint, formatting, and shared-token checks.
+- Desktop light and mobile dark layouts were inspected; the intentional incomplete-ZIP error remains an expected negative acceptance path, and actual authenticated native interaction remains a separate gate.
+- Updated architecture, completion/setup records, and the existing Obsidian project note; all isolated Habit browser fixtures were removed and no production content was changed.
+- No migration, provider call, production-content write, new credential, or paid add-on is needed; local AI accounting remains 55 completed requests totaling $0.056502 with no reservations.
+- Existing hosted/native interactive acceptance, GitHub account billing, and backup-destination/recovery/retention gates remain unresolved; this checkpoint does not claim the complete product goal is finished.
+
 ### Confirmed Empty Trash across Web and iOS
 
 - Reproduced the missing Empty Trash control through an authenticated localhost browser; PRODUCT.md explicitly requires this confirmed bulk operation.

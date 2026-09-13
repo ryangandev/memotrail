@@ -34,6 +34,18 @@ Bucket List behavior follows a stable Collection role, not its editable display 
 Uploads preserve private originals, and display access uses expiring signed URLs.
 Drafts and pending captures remain per-user and durable on each device until synchronization is confirmed.
 
+## Habit monthly and weekday summaries
+
+Both clients derive twelve monthly rows and seven Monday-first weekday rows directly from `habit_year_calendar`, the same owner-scoped status contract used by the heatmap.
+The projection uses validated recorded Gregorian dates, excludes other years and dates after the selected reference date, and never shifts a check-in through the device timezone.
+Only completed, missed, and skipped statuses contribute counts; completion rate is completed divided by completed plus missed, with an absent rate when that denominator is zero.
+Pending, upcoming, unscheduled, and intentionally skipped days never become invented failures.
+All weekdays tied for the largest positive miss count are reported; the empty state makes no claim about a most-missed weekday.
+Weekly-target schedules use recorded statuses without allocating unrecorded weekly shortfalls to invented weekdays, and both clients explain this limitation.
+These are day-status summaries, not totals of measured quantities whose unit or target might have changed.
+Native calendar requests capture habit, year, reference date, and request identity, clear stale data while loading, and revalidate owner and cancellation before accepting results.
+The feature requires no new database table, migration, AI call, or credential.
+
 ## Confirmed Empty Trash
 
 `prepare_empty_trash` returns a single read-only owner-scoped snapshot of kinds, IDs, exact deletion timestamps, and revisions across every Trash page, without copying private writing or Storage paths.
