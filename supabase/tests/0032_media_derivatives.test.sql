@@ -11,7 +11,7 @@ insert into public.attachments(id,owner_id,entry_id,object_path,mime_type,byte_s
 create temporary table fixture as select '10000000-0000-0000-0000-000000000091'::uuid owner,'91000000-0000-4000-8000-000000000002'::uuid original,
  '10000000-0000-0000-0000-000000000091/91000000-0000-4000-8000-000000000001/derived/91000000-0000-4000-8000-000000000002/v1/'||repeat('a',64)||'/' prefix;
 insert into storage.objects(bucket_id,name,metadata,version)
- select 'entry-media',object_path,'{"size":1000,"eTag":"original-etag"}','original-v1' from public.attachments;
+ select 'entry-media',object_path,'{"size":1000,"eTag":"original-etag"}','original-v1' from public.attachments where id='91000000-0000-4000-8000-000000000002';
 insert into storage.objects(bucket_id,name,metadata,version)
  select 'entry-media',prefix||v||'.webp','{"size":100,"eTag":"generated-etag"}','generated-v1' from fixture cross join unnest(array['display','thumbnail']) v;
 create function pg_temp.variants() returns jsonb language sql as $$
@@ -23,7 +23,7 @@ set local role service_role;
 select ok(public.register_media_derivatives(owner,original,'original-v1',repeat('a',64),pg_temp.variants()),'Service registers both generated variants') from fixture;
 select ok(public.register_media_derivatives(owner,original,'original-v1',repeat('a',64),pg_temp.variants()),'Identical registration is idempotent') from fixture;
 reset role;
-select is(count(*),3::bigint,'One original plus two variants, never duplicates') from public.attachments;
+select is(count(*),3::bigint,'One original plus two variants, never duplicates') from public.attachments where owner_id='10000000-0000-0000-0000-000000000091';
 set local role service_role;
 select is(public.media_source(owner,original)->>'version','original-v1','Source identity includes the Storage version') from fixture;
 select is(jsonb_array_length(public.media_source(owner,original)->'variants'),2,'Source exposes reusable derivatives') from fixture;
@@ -32,7 +32,7 @@ select is(public.media_source('10000000-0000-0000-0000-000000000092',original),n
 select throws_ok($$select public.register_media_derivatives(owner,original,'original-v1',repeat('a',64),'[]') from fixture$$,'22023','invalid_media_derivatives','Both variants required atomically');
 select throws_ok($$select public.register_media_derivatives(owner,original,'original-v1',repeat('a',64),jsonb_set(pg_temp.variants(),'{0,object_path}','"other-owner/private.webp"')) from fixture$$,'22023','invalid_media_derivative','Foreign Storage paths rejected');
 reset role;
-select is(count(*),3::bigint,'Invalid registration leaves rows unchanged') from public.attachments;
+select is(count(*),3::bigint,'Invalid registration leaves rows unchanged') from public.attachments where owner_id='10000000-0000-0000-0000-000000000091';
 select is(jsonb_array_length(public.entry_history_snapshot(e)->'attachments'),1,'Generated variants are not canonical historical photos') from public.entries e where e.id='91000000-0000-4000-8000-000000000001';
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000091',true);
@@ -57,7 +57,7 @@ select is(jsonb_array_length(snapshot->'attachments'),1,'Saved historical versio
 reset role;
 -- These are transaction-only catalog fixtures, with no actual Storage objects.
 select set_config('storage.allow_delete_query','true',true);
-delete from storage.objects where split_part(name,'/',3)='derived';
+delete from storage.objects where split_part(name,'/',1)='10000000-0000-0000-0000-000000000091' and split_part(name,'/',3)='derived';
 set local role authenticated;
 select is(public.restore_entry_version('91000000-0000-4000-8000-000000000001',1,2),3,'Missing cached preview cannot block restoring writing');
 select is(body,'Original writing','History restores original writing') from public.entries where id='91000000-0000-4000-8000-000000000001';

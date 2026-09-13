@@ -117,7 +117,10 @@ export async function deleteTrashItemForever(
 
   if (error) {
     return {
-      message: "MemoTrail could not permanently delete this item. Try again.",
+      message:
+        error.message === "media_cleanup_required"
+          ? "A photo preview finished while this item was being removed. Refresh and try Delete forever again to remove the remaining files."
+          : "MemoTrail could not permanently delete this item. Try again.",
       status: "error",
     };
   }

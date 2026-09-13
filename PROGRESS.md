@@ -6,6 +6,22 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Race-safe cleanup of generated photo artifacts
+
+- Reproduced a real Trash UI success that left an unregistered generated WebP in Storage after an interrupted worker.
+- Original-photo and whole-Entry deletion manifests now include private derived Storage paths even when generation stopped before attachment registration.
+- A Storage write guard validates the exact owned original and takes a key-share lock; a delete guard requires generated objects to be removed before the original record can disappear.
+- Independent concurrent transactions verify both orders: deletion-first rejects the late real Storage upload, and generation-first rejects deletion until the expanded manifest is removed through the Storage API.
+- The guards also cover cascading Entry deletion and preserve existing Trash restoration, history, owner isolation, and server-only derived writes.
+- Web and iOS now provide the same explicit refresh/retry explanation when a preview finishes during permanent removal; the item remains in Trash rather than falsely reporting completion.
+- Synthetic media teardown now inventories actual local owned Storage paths, asserts user deletion, and safely retries an in-flight preview; SQL fixtures are scoped to their own owner instead of assuming an otherwise empty database.
+- Migration `202609120019_media_cleanup.sql` is deployed with warning-free hosted lint, without seeds, backfills, role changes, or SQL deletion of real Storage objects.
+- Full local SQL regression passes 1,231 assertions, and Web unit coverage passes 325 tests.
+- All 27 production-mode browser/API scenarios pass, and native simulator results contain 183 passing tests with zero failures or skips.
+- Production build, lint, type checking, formatting, and diff checks pass; the expected missing-original ZIP stream error remains a covered negative test rather than an unhandled success path.
+- Remaining work is user-confirmed photo date/Place metadata, broader Inbox photo and relationship/date-filter audit, and final production/native acceptance.
+- No AI requests or new secrets were needed for this slice.
+
 ### Private optimized photos across Web and iOS
 
 - Existing Web and native galleries now use the same scoped photo service, with one-hour owner-bound display grants and explicit Trash access.

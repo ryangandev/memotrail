@@ -52,6 +52,11 @@ Delivery uses private no-store responses and rechecks visibility and source vers
 
 Originals remain unchanged and exportable; generated variants do not increase photo counts, appear as separate Trash items, or become prerequisites for restoring writing history.
 Permanent removal of an original includes its generated family, while removing an Entry includes all its owned media.
+Removal manifests also read owned derived Storage paths that have not reached attachment registration, covering an interrupted worker without depending on an in-memory cleanup callback.
+Derived Storage insertion/update takes a key-share lock on the owned original; a before-delete guard rejects original deletion while any generated object remains.
+Thus a deletion that locks first makes a late upload fail, while an upload that locks first makes deletion recheck the committed object and remain retryable.
+Both clients explain the cleanup race and offer an explicit refresh/retry instead of claiming permanent deletion succeeded.
+No Storage object is deleted through SQL: deletion still uses the [Storage API](https://supabase.com/docs/guides/storage/management/delete-objects), with transaction ordering grounded in [PostgreSQL row locks](https://www.postgresql.org/docs/17/explicit-locking.html).
 Existing export manifests continue to include registered variants and originals with their actual integrity checks.
 EXIF date/Place suggestions and optional AI photo analysis remain separate unfinished work; display generation never invokes AI or changes Entry dates.
 Deployment traces Sharp through a static server import and explicitly includes the worker-only libheif bundle.

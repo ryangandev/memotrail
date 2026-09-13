@@ -117,6 +117,12 @@ final class TrashController {
 
       notice = Notice(message: "Item permanently deleted.", tone: .success)
       await reloadAfterMutation()
+    } catch let error as PostgrestError where error.message == "media_cleanup_required" {
+      notice = Notice(
+        message: "A photo preview finished while this item was being removed. "
+          + "Refresh and try Delete forever again to remove the remaining files.",
+        tone: .error
+      )
     } catch {
       notice = Notice(
         message: "MemoTrail could not finish permanent deletion. The item remains in Trash. "

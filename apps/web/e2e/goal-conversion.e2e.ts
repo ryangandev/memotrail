@@ -4,6 +4,7 @@ import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
+import { cleanupMediaFixture } from "./helpers/media-fixture";
 test("An Idea converts in place, preserves its original content, and can be restored", async ({
   page,
   context,
@@ -282,18 +283,6 @@ test("An Idea converts in place, preserves its original content, and can be rest
     ).toHaveLength(1);
     expect(errors).toEqual([]);
   } finally {
-    const media = await admin
-      .from("attachments")
-      .select("object_path")
-      .eq("owner_id", ownerID);
-    await admin.storage
-      .from("entry-media")
-      .remove([
-        ...new Set([
-          path,
-          ...(media.data ?? []).map((item) => item.object_path),
-        ]),
-      ]);
-    await admin.auth.admin.deleteUser(ownerID);
+    await cleanupMediaFixture(admin, ownerID, env.API_URL);
   }
 });

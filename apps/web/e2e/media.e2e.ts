@@ -5,6 +5,7 @@ import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
+import { cleanupMediaFixture } from "./helpers/media-fixture";
 
 test("Private photo previews preserve originals across Web, native bearer access, caching, and Trash", async ({
   page,
@@ -301,18 +302,6 @@ test("Private photo previews preserve originals across Web, native bearer access
       fullPage: true,
     });
   } finally {
-    const variants = await admin
-      .from("attachments")
-      .select("object_path")
-      .eq("owner_id", owner);
-    await admin.storage
-      .from("entry-media")
-      .remove([
-        ...new Set([
-          ...objects,
-          ...(variants.data ?? []).map((v) => v.object_path),
-        ]),
-      ]);
-    await admin.auth.admin.deleteUser(owner);
+    await cleanupMediaFixture(admin, owner, env.API_URL);
   }
 });
