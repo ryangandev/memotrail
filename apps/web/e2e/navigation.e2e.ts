@@ -83,6 +83,42 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       element.setAttribute("data-shell-instance", "kept");
     });
 
+    await page.setViewportSize({ width: 1280, height: 560 });
+    const scrollRegion = page.getByRole("region", {
+      name: "Navigation and account",
+    });
+    const brand = shell.getByRole("link", { name: "MemoTrail", exact: true });
+    const capture = shell.getByRole("link", {
+      name: "New entry",
+      exact: true,
+    });
+    const brandTop = await brand.evaluate(
+      (element) => element.getBoundingClientRect().top,
+    );
+    const captureTop = await capture.evaluate(
+      (element) => element.getBoundingClientRect().top,
+    );
+    await scrollRegion.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
+    await expect(
+      page
+        .getByRole("navigation", { name: "Settings navigation" })
+        .getByRole("link", { name: "Settings", exact: true }),
+    ).toBeVisible();
+    await expect(brand).toBeVisible();
+    await expect(capture).toBeVisible();
+    await page.screenshot({
+      path: "/private/tmp/memotrail-sidebar-scroll.png",
+    });
+    expect(
+      await brand.evaluate((element) => element.getBoundingClientRect().top),
+    ).toBe(brandTop);
+    expect(
+      await capture.evaluate((element) => element.getBoundingClientRect().top),
+    ).toBe(captureTop);
+    await page.setViewportSize({ width: 1280, height: 720 });
+
     searchNavigationStarted = true;
     await page
       .getByRole("navigation", { name: "Primary navigation" })

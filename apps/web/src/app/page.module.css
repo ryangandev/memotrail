@@ -77,8 +77,11 @@
   flex: none;
 }
 
-.sidebarNav {
+.sidebarScrollRegion {
+  display: flex;
   min-height: 0;
+  flex: 1;
+  flex-direction: column;
   margin-top: var(--mt-space-10);
   overflow-y: auto;
   scrollbar-width: thin;
@@ -161,6 +164,7 @@
   display: grid;
   gap: var(--mt-space-3);
   margin-top: auto;
+  padding-top: var(--mt-space-5);
 }
 
 .archiveNote {

@@ -255,53 +255,59 @@ function Sidebar({
         />
       </div>
 
-      <nav className={styles.sidebarNav} aria-label="Primary navigation">
-        <NavGroup
-          activeDestination={activeDestination}
-          inboxCount={inboxCount}
-          items={primaryNavigation}
-        />
-        <div className={styles.navDivider} />
-        <p className={styles.navLabel}>Records</p>
-        <NavGroup
-          activeDestination={activeDestination}
-          items={recordNavigation}
-        />
-        <div className={styles.navDivider} />
-        <p className={styles.navLabel}>Library</p>
-        <NavGroup
-          activeDestination={activeDestination}
-          items={archiveNavigation}
-        />
-      </nav>
-
-      <div className={styles.sidebarFooter}>
-        <nav className={styles.navGroup} aria-label="Settings navigation">
-          <NavigationControl
-            active={activeDestination === "settings"}
-            item={settingsNavigation}
+      <div
+        aria-label="Navigation and account"
+        className={styles.sidebarScrollRegion}
+        role="region"
+      >
+        <nav className={styles.sidebarNav} aria-label="Primary navigation">
+          <NavGroup
+            activeDestination={activeDestination}
+            inboxCount={inboxCount}
+            items={primaryNavigation}
+          />
+          <div className={styles.navDivider} />
+          <p className={styles.navLabel}>Records</p>
+          <NavGroup
+            activeDestination={activeDestination}
+            items={recordNavigation}
+          />
+          <div className={styles.navDivider} />
+          <p className={styles.navLabel}>Library</p>
+          <NavGroup
+            activeDestination={activeDestination}
+            items={archiveNavigation}
           />
         </nav>
-        <div className={styles.archiveNote}>
-          <Icon name="clock" size={17} />
-          <div>
-            <strong>Private cloud sync</strong>
-            <span>Available on Web and iPhone</span>
+
+        <div className={styles.sidebarFooter}>
+          <nav className={styles.navGroup} aria-label="Settings navigation">
+            <NavigationControl
+              active={activeDestination === "settings"}
+              item={settingsNavigation}
+            />
+          </nav>
+          <div className={styles.archiveNote}>
+            <Icon name="clock" size={17} />
+            <div>
+              <strong>Private cloud sync</strong>
+              <span>Available on Web and iPhone</span>
+            </div>
           </div>
+          <Link
+            aria-current={activeDestination === "settings" ? "page" : undefined}
+            className={styles.accountLink}
+            href="/settings"
+            title={`Open settings for ${viewer.email}`}
+          >
+            <span className={styles.avatar}>{viewer.initial}</span>
+            <span>
+              <strong>{viewer.name}</strong>
+              <small>{viewer.email}</small>
+            </span>
+            <Icon name="chevron" size={17} />
+          </Link>
         </div>
-        <Link
-          aria-current={activeDestination === "settings" ? "page" : undefined}
-          className={styles.accountLink}
-          href="/settings"
-          title={`Open settings for ${viewer.email}`}
-        >
-          <span className={styles.avatar}>{viewer.initial}</span>
-          <span>
-            <strong>{viewer.name}</strong>
-            <small>{viewer.email}</small>
-          </span>
-          <Icon name="chevron" size={17} />
-        </Link>
       </div>
     </aside>
   );
