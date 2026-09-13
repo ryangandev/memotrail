@@ -67,6 +67,14 @@ Both clients retain validated original timestamp strings when the user has not c
 
 ## Private photo delivery
 
+Specialized First Times, Homes, Vehicles, and Goals editors share retry-safe upload orchestration on both clients.
+A selected Web File retains an attachment UUID scoped to its owner and Entry for the open editor's lifetime; native reuses the existing immutable photo draft UUID.
+Uploads use create-only Storage writes, and upload errors still proceed to owner-scoped idempotent registration because the original may already have committed.
+Known successful Web uploads are not resent, and each batch retains only unconfirmed photos for retry while allowing other selected photos to finish.
+Neither client deletes an original in an upload/registration error handler or overwrites it during retry.
+Native cancellation stops before network writes or registration, and session-owner checks surround the upload/registration boundary.
+This does not introduce durable specialized-editor drafts or automatic cleanup of abandoned unregistered uploads; those lifecycle choices remain separate from universal capture's existing offline queue.
+
 Web galleries and native galleries share the Next.js media boundary instead of downloading full originals for display.
 The caller's RLS-scoped attachment query issues one-hour HMAC grants bound to owner, original attachment, expiry, and explicit Trash access.
 The signing key is domain-separated from the existing server-only Supabase credential; neither that credential nor the Anthropic key enters iOS.

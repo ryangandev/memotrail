@@ -18,7 +18,6 @@ import {
 import styles from "@/app/homes/page.module.css";
 import { Icon } from "@/components/icon";
 import {
-  createFirstTimeObjectPath,
   firstTimePhotoLimit,
   firstTimePhotoSizeLimit,
   inferFirstTimeImageMimeType,
@@ -46,7 +45,7 @@ import {
   type VehicleEntryInput,
 } from "@/lib/data/vehicle-record-input";
 import { useConfirmedRecords } from "@/components/use-confirmed-records";
-import { createClient } from "@/lib/supabase/client";
+import { uploadEntryPhotos } from "@/lib/media/upload";
 
 export function VehiclesWorkspace({
   collectionOptions,
@@ -891,51 +890,7 @@ function PendingPhoto({
 }
 
 async function uploadPhotos(ownerId: string, entryId: string, photos: File[]) {
-  const failed: File[] = [];
-  const client = createClient();
-
-  for (const photo of photos) {
-    const mimeType = inferFirstTimeImageMimeType(photo.name, photo.type);
-    const attachmentId = crypto.randomUUID();
-    const objectPath = mimeType
-      ? createFirstTimeObjectPath(ownerId, entryId, attachmentId, mimeType)
-      : null;
-    if (!mimeType || !objectPath) {
-      failed.push(photo);
-      continue;
-    }
-
-    const upload = await client.storage
-      .from("entry-media")
-      .upload(objectPath, photo, {
-        cacheControl: "3600",
-        contentType: mimeType,
-        upsert: false,
-      });
-    if (upload.error) {
-      console.warn("Vehicle photo upload failed:", upload.error.message);
-      failed.push(photo);
-      continue;
-    }
-
-    const registered = await registerVehicleAttachment({
-      attachmentId,
-      byteSize: photo.size,
-      entryId,
-      mimeType,
-      objectPath,
-      originalFilename: photo.name || null,
-      pixelHeight: null,
-      pixelWidth: null,
-    });
-    if (registered.status !== "saved") {
-      console.warn("Vehicle photo registration failed:", registered.message);
-      await client.storage.from("entry-media").remove([objectPath]);
-      failed.push(photo);
-    }
-  }
-
-  return failed;
+  return uploadEntryPhotos(ownerId, entryId, photos, registerVehicleAttachment);
 }
 
 function namesIncludingDraft(names: string[], draft: string) {

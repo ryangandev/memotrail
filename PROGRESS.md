@@ -6,6 +6,19 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Retry-safe specialized photo uploads across Web and iOS
+
+- Reproduced a lost registration response in the real First Times editor: selecting Save again created two originals for the same pending photo.
+- Consolidated the four Web upload loops around stable per-File, per-owner/Entry identities and per-photo confirmation state; a partial batch continues after an individual failure and retains only unconfirmed photos for retry.
+- Consolidated the matching four native upload paths around immutable draft IDs, create-only Storage uploads, owner-checked idempotent registration, and cancellation checks.
+- Removed unsafe error-handler Storage deletion from native and Web specialized upload flows; an uncertain network response is never evidence that the server did not save the photo.
+- An interrupted upload or duplicate-object response is reconciled through registration instead of overwriting or deleting the existing original.
+- Verification passes 347 Web unit tests, 194 native simulator tests with zero failures/skips, and all 40 production-mode browser/API scenarios.
+- Eight new real-editor scenarios cover lost upload and registration responses across all four record types, including partially successful two-photo batches and byte-identical original downloads after retry.
+- Native tests verify uncertain-upload reconciliation, retry after a lost registration response, explicit unconfirmed results, and cancellation before network writes; actual authenticated native UI acceptance remains separate.
+- Lint, typecheck, formatting, shared-token checks, and diff checks pass; the existing tracked client-aborted RSC log and deliberate incomplete-export rejection remain visible in their prior lifecycle tests.
+- No schema migration or provider request is required; generic organized-Entry media management and broader relationship/production acceptance remain separate work.
+
 ### Current Entry photo browsing across Web and iOS
 
 - Reproduced the missing gallery in an authenticated production-mode local browser before implementing it.

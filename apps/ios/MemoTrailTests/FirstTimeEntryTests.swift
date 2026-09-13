@@ -3,6 +3,68 @@ import XCTest
 @testable import MemoTrail
 
 final class FirstTimeEntryTests: XCTestCase {
+  @MainActor
+  func testCancelledPhotoAttemptDoesNotStartNetworkWrites() async {
+    var uploads = 0
+    var registrations = 0
+    let task = Task { @MainActor in
+      try await EntryPhotoUpload.confirm {
+        uploads += 1
+      } register: {
+        registrations += 1
+        return true
+      }
+    }
+    task.cancel()
+    do {
+      _ = try await task.value
+      XCTFail("Cancelled upload should not start")
+    } catch { XCTAssertTrue(error is CancellationError) }
+    XCTAssertEqual(uploads, 0)
+    XCTAssertEqual(registrations, 0)
+  }
+
+  @MainActor
+  func testPhotoRegistrationReconcilesAnUncertainUpload() async throws {
+    var registered = false
+    let confirmed = try await EntryPhotoUpload.confirm {
+      throw URLError(.networkConnectionLost)
+    } register: {
+      registered = true
+      return true
+    }
+    XCTAssertTrue(confirmed)
+    XCTAssertTrue(registered)
+  }
+
+  @MainActor
+  func testPhotoRegistrationFailureStaysRetryableWithoutRemovingOriginal() async throws {
+    var objectExists = false
+    var registrationCount = 0
+    do {
+      _ = try await EntryPhotoUpload.confirm {
+        objectExists = true
+      } register: {
+        registrationCount += 1
+        throw URLError(.networkConnectionLost)
+      }
+      XCTFail("A lost registration response must remain unconfirmed")
+    } catch { XCTAssertTrue(objectExists) }
+    let retried = try await EntryPhotoUpload.confirm {
+      throw URLError(.cannotWriteToFile)
+    } register: {
+      registrationCount += 1
+      return objectExists
+    }
+    XCTAssertTrue(retried)
+    XCTAssertEqual(registrationCount, 2)
+    let missing = try await EntryPhotoUpload.confirm {
+    } register: {
+      false
+    }
+    XCTAssertFalse(missing)
+  }
+
   func testCurrentGalleryDecodesUnavailablePhotosAndValidatesDeliveryOrigin() throws {
     let id = UUID()
     let data = Data(

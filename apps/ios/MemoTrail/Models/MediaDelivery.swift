@@ -1,6 +1,48 @@
 import Foundation
 @preconcurrency import Supabase
 
+/// Retain the draft's identity; an uncertain response never authorizes deleting its original.
+@MainActor
+enum EntryPhotoUpload {
+  static func confirm(
+    upload: () async throws -> Void, register: () async throws -> Bool
+  ) async throws -> Bool {
+    try Task.checkCancellation()
+    do { try await upload() } catch { try Task.checkCancellation() }
+    try Task.checkCancellation()
+    return try await register()
+  }
+
+  static func attach(
+    _ draft: FirstTimePhotoDraft, entryID: UUID, ownerID: UUID, client: SupabaseClient,
+    registration: String = "register_entry_attachment"
+  ) async throws -> Bool {
+    guard try await client.auth.session.user.id == ownerID else {
+      throw URLError(.userAuthenticationRequired)
+    }
+    let path = draft.objectPath(ownerID: ownerID, entryID: entryID)
+    return try await confirm {
+      try await client.storage.from("entry-media").upload(
+        path, data: draft.data,
+        options: FileOptions(
+          cacheControl: "3600", contentType: draft.mimeType.rawValue, upsert: false))
+    } register: {
+      guard try await client.auth.session.user.id == ownerID else {
+        throw URLError(.userAuthenticationRequired)
+      }
+      let rows: [RegisteredFirstTimeAttachment] = try await client.rpc(
+        registration,
+        params: RegisterFirstTimeAttachmentParameters(
+          entryID: entryID, draft: draft, objectPath: path)
+      ).execute().value
+      guard try await client.auth.session.user.id == ownerID else {
+        throw URLError(.userAuthenticationRequired)
+      }
+      return rows.first?.attachmentID == draft.id
+    }
+  }
+}
+
 enum MediaDelivery {
   struct RequestBody: Encodable {
     let paths: [String]

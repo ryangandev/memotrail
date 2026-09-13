@@ -155,47 +155,23 @@ final class VehicleController {
     }
     isSaving = true
     defer { isSaving = false }
-    let path = draft.objectPath(ownerID: ownerID, entryID: entryID)
-
     do {
-      try await validateSessionOwner()
-      try await client.storage.from("entry-media").upload(
-        path,
-        data: draft.data,
-        options: FileOptions(
-          cacheControl: "3600",
-          contentType: draft.mimeType.rawValue,
-          upsert: false
-        )
-      )
-      let registered: [RegisteredResidenceAttachment] =
-        try await client
-        .rpc(
-          "register_entry_attachment",
-          params: RegisterResidenceAttachmentParameters(
-            entryID: entryID,
-            draft: draft,
-            objectPath: path
-          )
-        )
-        .execute()
-        .value
-      guard registered.first?.attachmentID == draft.id else {
-        _ = try? await client.storage.from("entry-media").remove(paths: [path])
+      let confirmed = try await EntryPhotoUpload.attach(
+        draft, entryID: entryID, ownerID: ownerID, client: client)
+      guard confirmed else {
         return MutationResult(
           identity: nil,
-          message: "The photo uploaded, but MemoTrail could not attach it. Try again.",
-          status: .error
-        )
+          message:
+            "Photo attachment is not confirmed. Retry with the same selected photo; no original was deleted.",
+          status: .error)
       }
       return MutationResult(identity: nil, message: "Photo attached.", status: .saved)
     } catch {
-      _ = try? await client.storage.from("entry-media").remove(paths: [path])
       return MutationResult(
         identity: nil,
-        message: "MemoTrail could not upload this photo. Try again.",
-        status: .error
-      )
+        message:
+          "Photo attachment is not confirmed. Retry with the same selected photo; no original was deleted.",
+        status: .error)
     }
   }
 

@@ -21,7 +21,6 @@ import styles from "@/app/goals/page.module.css";
 import common from "@/app/homes/page.module.css";
 import { Icon } from "@/components/icon";
 import {
-  createFirstTimeObjectPath,
   firstTimePhotoLimit,
   firstTimePhotoSizeLimit,
   inferFirstTimeImageMimeType,
@@ -51,7 +50,7 @@ import {
   type OccurrenceDraft,
   resolveOccurrenceDraft,
 } from "@/lib/data/occurrence";
-import { createClient } from "@/lib/supabase/client";
+import { uploadEntryPhotos } from "@/lib/media/upload";
 
 const goalSections: Array<{
   detail: string;
@@ -1070,47 +1069,7 @@ function PendingPhoto({
 }
 
 async function uploadPhotos(ownerId: string, entryId: string, photos: File[]) {
-  const failed: File[] = [];
-  const client = createClient();
-  for (const photo of photos) {
-    const mimeType = inferFirstTimeImageMimeType(photo.name, photo.type);
-    const attachmentId = crypto.randomUUID();
-    const objectPath = mimeType
-      ? createFirstTimeObjectPath(ownerId, entryId, attachmentId, mimeType)
-      : null;
-    if (!mimeType || !objectPath) {
-      failed.push(photo);
-      continue;
-    }
-    const upload = await client.storage
-      .from("entry-media")
-      .upload(objectPath, photo, {
-        cacheControl: "3600",
-        contentType: mimeType,
-        upsert: false,
-      });
-    if (upload.error) {
-      console.warn("Goal photo upload failed:", upload.error.message);
-      failed.push(photo);
-      continue;
-    }
-    const registered = await registerGoalAttachment({
-      attachmentId,
-      byteSize: photo.size,
-      entryId,
-      mimeType,
-      objectPath,
-      originalFilename: photo.name || null,
-      pixelHeight: null,
-      pixelWidth: null,
-    });
-    if (registered.status !== "saved") {
-      console.warn("Goal photo registration failed:", registered.message);
-      await client.storage.from("entry-media").remove([objectPath]);
-      failed.push(photo);
-    }
-  }
-  return failed;
+  return uploadEntryPhotos(ownerId, entryId, photos, registerGoalAttachment);
 }
 
 function namesIncludingDraft(names: string[], draft: string) {
