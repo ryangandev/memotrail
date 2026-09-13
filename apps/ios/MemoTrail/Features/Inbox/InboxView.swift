@@ -386,7 +386,7 @@ struct InboxView: View {
   }
 }
 
-private struct InboxReviewSheet: View {
+struct InboxReviewSheet: View {
   let client: SupabaseClient
   let ownerID: UUID
   let entry: InboxEntry
@@ -465,25 +465,27 @@ private struct InboxReviewSheet: View {
           Text("Uses the saved version. Save your edits first.")
             .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
         }
-        EntryAISuggestionsView(
-          request: requestSuggestions, dismiss: dismissSuggestion,
-          applyTitle: { title = $0 },
-          applyType: { if let type = InboxEntryType(rawValue: $0) { entryType = type } },
-          applyDate: { occurrence.useDateSuggestion($0) },
-          addCollection: { name in
-            if collectionNames.count < 20
-              && !collectionNames.contains(where: { $0.lowercased() == name.lowercased() })
-            {
-              collectionNames.append(name)
-            }
-          },
-          addTag: { name in
-            if tagNames.count < 50
-              && !tagNames.contains(where: { $0.lowercased() == name.lowercased() })
-            {
-              tagNames.append(name)
-            }
-          })
+        if entry.inboxStatus != "organized" {
+          EntryAISuggestionsView(
+            request: requestSuggestions, dismiss: dismissSuggestion,
+            applyTitle: { title = $0 },
+            applyType: { if let type = InboxEntryType(rawValue: $0) { entryType = type } },
+            applyDate: { occurrence.useDateSuggestion($0) },
+            addCollection: { name in
+              if collectionNames.count < 20
+                && !collectionNames.contains(where: { $0.lowercased() == name.lowercased() })
+              {
+                collectionNames.append(name)
+              }
+            },
+            addTag: { name in
+              if tagNames.count < 50
+                && !tagNames.contains(where: { $0.lowercased() == name.lowercased() })
+              {
+                tagNames.append(name)
+              }
+            })
+        }
         Section("Content") {
           TextField("Title", text: $title, axis: .vertical)
             .textInputAutocapitalization(.sentences)
@@ -505,7 +507,10 @@ private struct InboxReviewSheet: View {
         } header: {
           Text("Organization")
         } footer: {
-          Text("Save changes keeps this Entry in Inbox. Done marks it organized.")
+          Text(
+            entry.inboxStatus == "organized"
+              ? "This Entry stays organized when you save."
+              : "Save changes keeps this Entry in Inbox. Done marks it organized.")
         }
         EntryPhotoDatesView(
           client: client, ownerID: ownerID, entryID: entry.id, occurrence: $occurrence,
@@ -560,7 +565,7 @@ private struct InboxReviewSheet: View {
           .accessibilityIdentifier("save-entry-review")
         }
       }
-      .navigationTitle("Organize Entry")
+      .navigationTitle(entry.inboxStatus == "organized" ? "Edit Entry" : "Organize Entry")
       .navigationBarTitleDisplayMode(.inline)
       .disabled(isWorking)
       .toolbar {
@@ -571,13 +576,15 @@ private struct InboxReviewSheet: View {
           .disabled(isWorking)
         }
 
-        ToolbarItem(placement: .confirmationAction) {
-          Button("Done") {
-            Task { await submit(.done) }
+        if entry.inboxStatus != "organized" {
+          ToolbarItem(placement: .confirmationAction) {
+            Button("Done") {
+              Task { await submit(.done) }
+            }
+            .fontWeight(.semibold)
+            .disabled(isWorking)
+            .accessibilityIdentifier("organize-entry")
           }
-          .fontWeight(.semibold)
-          .disabled(isWorking)
-          .accessibilityIdentifier("organize-entry")
         }
       }
       .overlay {

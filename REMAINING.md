@@ -10,39 +10,43 @@ The last accepted checkpoint is `a7850b7`.
 
 ## Completion order
 
-| Slice                                                                 | Contract/server | Web             | iOS             | Verified and pushed |
-| --------------------------------------------------------------------- | --------------- | --------------- | --------------- | ------------------- |
-| Architecture and remaining-scope audit                                | Complete        | n/a             | n/a             | Pushed 08930ab      |
-| People, Entry links, and recoverable removal                          | Deployed        | Complete        | Complete        | Pushed feea315      |
-| AI preferences, budgets, provider boundary, and usage                 | Deployed        | Complete        | Complete        | Pushed 6579c8d      |
-| Editable AI title, Type, Collection, and tag suggestions              | Deployed        | Complete        | Complete        | Pushed 90740d3      |
-| Precision-aware Inbox dates and explicit AI description adoption      | Deployed        | Complete        | Complete        | Pushed 1aec663      |
-| Shared retrieval evidence and current source reader                   | Deployed        | Complete        | Complete        | Pushed 048efc0      |
-| Natural-language retrieval and grounded source links                  | Complete        | Complete        | Complete        | Pushed 239fa90      |
-| Exploration persistence and atomic conclusion-save contract           | Deployed        | Shared contract | Shared contract | Pushed 95e7a28      |
-| Explore with AI, persisted conversation, Save as Entry                | Complete        | Complete        | Complete        | Pushed 0022aea      |
-| Inspect and restore Entry history                                     | Deployed        | Complete        | Complete        | Pushed eee57bf      |
-| Complete ZIP export with JSON, Markdown, CSV, and originals           | Complete        | Complete        | Complete        | Pushed 8a00293      |
-| Consistent export snapshots, pagination, and temporary-data lifecycle | Deployed        | Shared contract | Shared contract | Pushed 84f6d83      |
-| Timeline track creation, ordering, and hide/show management           | Deployed        | Complete        | Complete        | Pushed e06e96c      |
-| Collection/tag creation and renaming, Collection ordering/Trash       | Deployed        | Complete        | Complete        | Pushed 332449a      |
-| Lossless dedicated First Times dates and legacy-client guards         | Deployed        | Complete        | Complete        | Pushed fc1853e      |
-| Recoverable Collection links in all four specialized editors          | Deployed        | Shared contract | Shared contract | Pushed 23a8088      |
-| In-place Idea/Standard Entry to Goal conversion and history recovery  | Deployed        | Complete        | Complete        | Pushed 73ec86e      |
-| Recoverable Goal progress links across target Trash and restoration   | Deployed        | Shared contract | Shared contract | Pushed 7dbe553      |
-| Eight-precision Goal achievement with atomic First Time creation      | Deployed        | Complete        | Complete        | Pushed 015feac      |
-| Lossless Timeline dates and unanchored moment visibility              | Deployed        | Complete        | Complete        | Pushed c2dcf04      |
-| Lossless Homes/Vehicles dates and precision-aware chapter durations   | Deployed        | Complete        | Complete        | Pushed 7c6a63e      |
-| Private optimized photo delivery with preserved originals             | Deployed        | Complete        | Complete        | Pushed eda325d      |
-| Interrupted photo-generation cleanup and concurrent permanent removal | Deployed        | Complete        | Complete        | Pushed eb58df5      |
-| Inbox saved photos and explicit camera calendar-date adoption         | Shared API      | Complete        | Complete        | Pushed 875d59e      |
-| Explicit photo GPS Place creation/reuse in atomic Inbox review        | Deployed        | Complete        | Complete        | This feature commit |
-| Remaining date precision, Entry conversion and relationship gaps      | Audit ongoing   | Audit ongoing   | Audit ongoing   | Pending             |
-| Remaining photo surfaces and interactive gallery acceptance           | Audit pending   | Audit pending   | Audit pending   | Pending             |
-| Final acceptance and production configuration                         | Pending         | Pending         | Pending         | Pending             |
+| Slice                                                                   | Contract/server | Web             | iOS             | Verified and pushed |
+| ----------------------------------------------------------------------- | --------------- | --------------- | --------------- | ------------------- |
+| Architecture and remaining-scope audit                                  | Complete        | n/a             | n/a             | Pushed 08930ab      |
+| People, Entry links, and recoverable removal                            | Deployed        | Complete        | Complete        | Pushed feea315      |
+| AI preferences, budgets, provider boundary, and usage                   | Deployed        | Complete        | Complete        | Pushed 6579c8d      |
+| Editable AI title, Type, Collection, and tag suggestions                | Deployed        | Complete        | Complete        | Pushed 90740d3      |
+| Precision-aware Inbox dates and explicit AI description adoption        | Deployed        | Complete        | Complete        | Pushed 1aec663      |
+| Shared retrieval evidence and current source reader                     | Deployed        | Complete        | Complete        | Pushed 048efc0      |
+| Natural-language retrieval and grounded source links                    | Complete        | Complete        | Complete        | Pushed 239fa90      |
+| Exploration persistence and atomic conclusion-save contract             | Deployed        | Shared contract | Shared contract | Pushed 95e7a28      |
+| Explore with AI, persisted conversation, Save as Entry                  | Complete        | Complete        | Complete        | Pushed 0022aea      |
+| Inspect and restore Entry history                                       | Deployed        | Complete        | Complete        | Pushed eee57bf      |
+| Complete ZIP export with JSON, Markdown, CSV, and originals             | Complete        | Complete        | Complete        | Pushed 8a00293      |
+| Consistent export snapshots, pagination, and temporary-data lifecycle   | Deployed        | Shared contract | Shared contract | Pushed 84f6d83      |
+| Timeline track creation, ordering, and hide/show management             | Deployed        | Complete        | Complete        | Pushed e06e96c      |
+| Collection/tag creation and renaming, Collection ordering/Trash         | Deployed        | Complete        | Complete        | Pushed 332449a      |
+| Lossless dedicated First Times dates and legacy-client guards           | Deployed        | Complete        | Complete        | Pushed fc1853e      |
+| Recoverable Collection links in all four specialized editors            | Deployed        | Shared contract | Shared contract | Pushed 23a8088      |
+| In-place Idea/Standard Entry to Goal conversion and history recovery    | Deployed        | Complete        | Complete        | Pushed 73ec86e      |
+| Recoverable Goal progress links across target Trash and restoration     | Deployed        | Shared contract | Shared contract | Pushed 7dbe553      |
+| Eight-precision Goal achievement with atomic First Time creation        | Deployed        | Complete        | Complete        | Pushed 015feac      |
+| Lossless Timeline dates and unanchored moment visibility                | Deployed        | Complete        | Complete        | Pushed c2dcf04      |
+| Lossless Homes/Vehicles dates and precision-aware chapter durations     | Deployed        | Complete        | Complete        | Pushed 7c6a63e      |
+| Private optimized photo delivery with preserved originals               | Deployed        | Complete        | Complete        | Pushed eda325d      |
+| Interrupted photo-generation cleanup and concurrent permanent removal   | Deployed        | Complete        | Complete        | Pushed eb58df5      |
+| Inbox saved photos and explicit camera calendar-date adoption           | Shared API      | Complete        | Complete        | Pushed 875d59e      |
+| Explicit photo GPS Place creation/reuse in atomic Inbox review          | Deployed        | Complete        | Complete        | Pushed a37b9f5      |
+| Editing organized Standard/First Time Entries with preserved Done state | Deployed        | Complete        | Complete        | This feature commit |
+| All eight quick-capture date precisions with compatible offline drafts  | Pending         | Pending         | Pending         | Pending             |
+| Remaining date precision, Entry conversion and relationship gaps        | Audit ongoing   | Audit ongoing   | Audit ongoing   | Pending             |
+| Remaining photo surfaces and interactive gallery acceptance             | Audit pending   | Audit pending   | Audit pending   | Pending             |
+| Final acceptance and production configuration                           | Pending         | Pending         | Pending         | Pending             |
 
 ## External inputs and limitations
 
+- Organized Standard and First Time Entries now reopen the shared editor from their current-record/history reader on both clients; Save retains organized status, exact timestamps, history, and recoverable organization.
+- Quick capture currently exposes a concrete time only; exact/partial/approximate/age/range/unknown capture and backward-compatible durable draft/offline serialization remain required work.
 - Existing galleries on both clients now use the shared private JPEG/PNG/WebP/HEIC display pipeline; original-byte integrity, missing-cache recovery, source overwrites, ownership, and Trash access are covered by synthetic local acceptance.
 - Interrupted-generation artifacts now appear in owner-scoped deletion manifests, and concurrent upload/delete operations serialize through shared database guards; both clients report a cleanup retry instead of false success.
 - Inbox now browses saved photos and offers explicit Day-precision adoption of validated camera dates on both clients, without timezone inference or writes before Save/Done.

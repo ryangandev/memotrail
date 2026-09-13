@@ -306,6 +306,7 @@ struct EntryHistoryDetailView: View {
   @State private var message: String?
   @State private var confirmRestore = false
   @State private var showConversion = false
+  @State private var editingEntry: InboxEntry?
   var selectedVersion: EntryHistoryVersion? { record?.versions.first { $0.version == selected } }
   var body: some View {
     ScrollView {
@@ -313,6 +314,9 @@ struct EntryHistoryDetailView: View {
         if let record {
           Text(HistoryPresentation.title(record.current)).font(MTTypography.title)
           if !record.isDeleted {
+            if ["standard", "first_time"].contains(record.current["entry_type"]?.text ?? "") {
+              Button("Edit Entry") { Task { await openEditor() } }.disabled(busy)
+            }
             NavigationLink("Explore with AI") {
               ExplorationView(client: client, ownerID: ownerID, entryID: entryID)
             }
@@ -390,6 +394,30 @@ struct EntryHistoryDetailView: View {
           }
         }
       }
+      .sheet(item: $editingEntry) { entry in
+        InboxReviewSheet(
+          client: client, ownerID: ownerID, entry: entry,
+          requestSuggestions: { retry in
+            try await AIAPI.post(
+              "suggestions",
+              body: EntryAISuggestionInput(
+                entryID: entry.id, revision: entry.revision, retry: retry), client: client,
+              ownerID: ownerID)
+          },
+          dismissSuggestion: { id in
+            guard try await client.auth.session.user.id == ownerID else {
+              throw URLError(.userAuthenticationRequired)
+            }
+            let _: Bool = try await client.rpc(
+              "dismiss_ai_suggestion", params: ["p_id": id.uuidString]
+            ).execute().value
+          }, collectionOptions: entry.collectionNames, tagOptions: entry.tagNames
+        ) { title, body, collections, type, occurrence, tags, intent, photoPlace in
+          await saveEditedEntry(
+            entry, title: title, body: body, collections: collections, type: type,
+            occurrence: occurrence, tags: tags, intent: intent, photoPlace: photoPlace)
+        }
+      }
       .confirmationDialog(
         "Restore version \(selected)?", isPresented: $confirmRestore, titleVisibility: .visible
       ) {
@@ -399,6 +427,67 @@ struct EntryHistoryDetailView: View {
           "Your current version is preserved. Recorded links and photo membership will also be restored; shared names and definitions, including Collections and tags, stay current."
         )
       }
+  }
+  private func openEditor() async {
+    guard !busy else { return }
+    busy = true
+    message = nil
+    defer { busy = false }
+    do {
+      guard try await client.auth.session.user.id == ownerID else {
+        throw URLError(.userAuthenticationRequired)
+      }
+      let entry: InboxEntry? = try await client.rpc(
+        "editable_entry", params: ["p_entry_id": entryID.uuidString]
+      ).execute().value
+      guard let entry, try await client.auth.session.user.id == ownerID else {
+        throw URLError(.badServerResponse)
+      }
+      editingEntry = entry
+    } catch { message = "This Entry cannot be edited right now. Refresh and try again." }
+  }
+  private func saveEditedEntry(
+    _ entry: InboxEntry, title: String, body: String, collections: [String], type: InboxEntryType,
+    occurrence: EntryOccurrence, tags: [String], intent: InboxController.ReviewIntent,
+    photoPlace: PhotoPlaceDraft?
+  ) async -> InboxController.ReviewResult {
+    do {
+      guard try await client.auth.session.user.id == ownerID else {
+        throw URLError(.userAuthenticationRequired)
+      }
+      try photoPlace?.validate()
+      let input = try InboxReviewInput.validate(
+        entryID: entry.id, revision: entry.revision, title: title, body: body,
+        collectionNames: collections, entryType: type, occurredAt: occurrence.start,
+        occurredTimezone: occurrence.timezone, tagNames: tags, datePrecision: occurrence.precision,
+        occurredEnd: occurrence.end, occurredLabel: occurrence.label)
+      let parameters = ReviewEntryParameters(
+        entryID: entry.id, expectedRevision: entry.revision, title: input.title, body: input.body,
+        entryType: input.entryType, occurredStart: input.occurredAt,
+        occurredTimezone: input.occurredTimezone, collectionNames: input.collectionNames,
+        tagNames: input.tagNames, markDone: intent == .done, datePrecision: occurrence.precision,
+        occurredEnd: occurrence.end, occurredLabel: occurrence.label, photoPlace: photoPlace,
+        occurredStartRaw: occurrence.start == entry.occurredStart ? entry.occurredStartRaw : nil,
+        occurredEndRaw: occurrence.end == entry.occurredEnd ? entry.occurredEndRaw : nil)
+      let rows: [ReviewedEntryResult] = try await client.rpc(
+        "review_entry_with_photo_place", params: parameters
+      ).execute().value
+      guard rows.first?.entryID == entry.id else {
+        return .init(
+          message:
+            "This Entry changed on another device. Close, refresh, and review the latest version.",
+          status: .conflict)
+      }
+      await load(nextPage: 0)
+      return .init(message: "Changes saved.", status: intent == .done ? .done : .saved)
+    } catch let error as PostgrestError where error.code == "40001" {
+      return .init(
+        message: "The photo or Place changed. Close, refresh, and confirm the latest version.",
+        status: .conflict)
+    } catch {
+      return .init(
+        message: "Could not save these changes. Your draft is unchanged.", status: .error)
+    }
   }
   private func load(nextPage: Int) async {
     guard !busy else { return }

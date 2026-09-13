@@ -114,18 +114,20 @@ export function EntryReviewList({
   );
 }
 
-function EntryReviewDialog({
+export function EntryReviewDialog({
   collectionOptions,
   entry,
   onClose,
   onSaved,
   tagOptions,
+  organized = false,
 }: {
   collectionOptions: string[];
   entry: InboxEntry;
   onClose: () => void;
   onSaved: (entry: InboxEntry, done: boolean) => void;
   tagOptions: string[];
+  organized?: boolean;
 }) {
   const router = useRouter();
   const [title, setTitle] = useState(entry.title ?? "");
@@ -232,8 +234,13 @@ function EntryReviewDialog({
       >
         <header className={styles.reviewHeader}>
           <div>
-            <p>Inbox review</p>
-            <h2 id="review-heading">Organize Entry</h2>
+            <p>{organized ? "Entry editor" : "Inbox review"}</p>
+            <h2 id="review-heading">
+              {organized ? "Edit Entry" : "Organize Entry"}
+            </h2>
+            {organized ? (
+              <p>This Entry stays organized when you save.</p>
+            ) : null}
             <Link href={`/history?entry=${entry.id}`}>Version history</Link>
             <p>
               <Link href={`/explore?entry=${entry.id}`}>Explore with AI</Link> ·
@@ -252,35 +259,38 @@ function EntryReviewDialog({
         </header>
 
         <form className={styles.reviewForm} onSubmit={handleSubmit}>
-          <EntryAISuggestionsPanel
-            entryID={entry.id}
-            revision={entry.revision}
-            disabled={isPending}
-            onApply={(key, value) => {
-              if (key === "dateText" && typeof value === "string")
-                setOccurrence((current) => ({
-                  ...current,
-                  precision: "approximate",
-                  label: value,
-                  start: "",
-                  end: "",
-                }));
-              if (key === "title" && typeof value === "string") setTitle(value);
-              if (
-                key === "entryType" &&
-                (value === "standard" || value === "first_time")
-              )
-                setEntryType(value);
-              if (key === "collections" && Array.isArray(value))
-                setCollectionNames((current) =>
-                  mergeAISuggestionNames(current, value, 20),
-                );
-              if (key === "tags" && Array.isArray(value))
-                setTagNames((current) =>
-                  mergeAISuggestionNames(current, value, 50),
-                );
-            }}
-          />
+          {!organized && (
+            <EntryAISuggestionsPanel
+              entryID={entry.id}
+              revision={entry.revision}
+              disabled={isPending}
+              onApply={(key, value) => {
+                if (key === "dateText" && typeof value === "string")
+                  setOccurrence((current) => ({
+                    ...current,
+                    precision: "approximate",
+                    label: value,
+                    start: "",
+                    end: "",
+                  }));
+                if (key === "title" && typeof value === "string")
+                  setTitle(value);
+                if (
+                  key === "entryType" &&
+                  (value === "standard" || value === "first_time")
+                )
+                  setEntryType(value);
+                if (key === "collections" && Array.isArray(value))
+                  setCollectionNames((current) =>
+                    mergeAISuggestionNames(current, value, 20),
+                  );
+                if (key === "tags" && Array.isArray(value))
+                  setTagNames((current) =>
+                    mergeAISuggestionNames(current, value, 50),
+                  );
+              }}
+            />
+          )}
           <label>
             <span>Title</span>
             <input
@@ -383,15 +393,17 @@ function EntryReviewDialog({
               >
                 Save changes
               </button>
-              <button
-                className={styles.doneButton}
-                disabled={isPending}
-                onClick={() => void submitReview("done")}
-                type="button"
-              >
-                <Icon name="check" size={16} />
-                {isPending ? "Saving…" : "Done"}
-              </button>
+              {!organized && (
+                <button
+                  className={styles.doneButton}
+                  disabled={isPending}
+                  onClick={() => void submitReview("done")}
+                  type="button"
+                >
+                  <Icon name="check" size={16} />
+                  {isPending ? "Saving…" : "Done"}
+                </button>
+              )}
             </div>
           </footer>
         </form>

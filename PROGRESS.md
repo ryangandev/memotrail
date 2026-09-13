@@ -6,6 +6,20 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Editing organized Entries without reopening Inbox
+
+- Reproduced the missing Edit Entry action in the real current-record/history reader before adding matching Web and native editors for active Standard and First Time Entries.
+- Both clients reuse the existing review form with fresh owner-scoped context, keep organized status on Save, and hide Inbox-only Done and AI organization suggestions for organized records.
+- The shared mutation retains optimistic revision checks, original writing history, recoverable archived Collection links, and existing photo date/Place adoption.
+- Generic editing cannot replace structured Goal, Home, or Vehicle details; those records retain their dedicated editors.
+- Validated raw occurrence timestamps now survive unchanged saves across both clients, including database microseconds that JavaScript or native date serialization would otherwise round.
+- Local verification includes 333 Web unit tests, 187 native tests with zero failures or skips, and 1,283 SQL assertions.
+- All 29 production-mode localhost browser/API regression scenarios pass, along with lint, type checking, formatting, and generated-token consistency.
+- Real browser acceptance verifies cancel, save, preserved Done state, exact microseconds, historical writing, and absence from Inbox; desktop light and mobile dark editor screenshots were inspected.
+- Migration `202609120021_organized_entry_edit.sql` is deployed with an up-to-date hosted ledger and clean schema lint; it retains the prior review signature for existing clients, without seeds or role changes.
+- Quick capture still needs all eight date precisions with compatible durable drafts and offline queues; this is an explicit next slice, not claimed complete by the later-editing support.
+- No AI calls or new secrets were required; authenticated native UI and hosted acceptance remain separate final checks.
+
 ### Explicit photo GPS Place adoption across both clients
 
 - Web and iOS Inbox review can stage a named new Place from photo coordinates or search and choose an existing reusable Place, without geocoding or AI calls.

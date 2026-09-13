@@ -1,11 +1,26 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { getAuthenticatedContext } from "@/lib/data/inbox";
+import { getAuthenticatedContext, entryFromRow } from "@/lib/data/inbox";
+import { validHistoryID } from "@/lib/data/history";
 import { validHistoryRestore } from "@/lib/data/history";
 import {
   parseGoalConversionInput,
   type GoalConversionInput,
 } from "@/lib/data/goal-record-input";
+
+export async function loadEditableEntry(id: string) {
+  if (!validHistoryID(id)) return null;
+  const context = await getAuthenticatedContext();
+  if (!context) return null;
+  const { data, error } = await context.client.rpc("editable_entry", {
+    p_entry_id: id,
+  });
+  if (error || !data) return null;
+  return {
+    entry: entryFromRow(data, data.collection_names, data.tag_names),
+    organized: data.inbox_status === "organized",
+  };
+}
 
 export async function convertEntryToGoal(
   input: GoalConversionInput,

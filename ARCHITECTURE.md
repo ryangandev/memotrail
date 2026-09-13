@@ -34,6 +34,16 @@ Bucket List behavior follows a stable Collection role, not its editable display 
 Uploads preserve private originals, and display access uses expiring signed URLs.
 Drafts and pending captures remain per-user and durable on each device until synchronization is confirmed.
 
+## Editing after Inbox organization
+
+The current Entry/history reader loads fresh owner-scoped `editable_entry` context before opening the shared Web or native review form.
+Only active Standard and First Time Entries use this generic editor; Goal, Home, and Vehicle details keep their dedicated mutation contracts.
+Ordinary Save preserves the existing Inbox state, while Done remains an explicit transition from Inbox review.
+The same revision-checked transaction retains history, archived Collection links, dates, and optional photo Place adoption.
+Organized editors hide Inbox-only AI suggestions and Done, without changing exploration availability.
+Native history saves reuse the existing serialized review parameters directly rather than creating another Inbox controller and offline synchronization monitor.
+Both clients retain validated original timestamp strings when the user has not changed the date, avoiding accidental loss of database microseconds during a writing-only edit.
+
 ## Private photo delivery
 
 Web galleries and native galleries share the Next.js media boundary instead of downloading full originals for display.

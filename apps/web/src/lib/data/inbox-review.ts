@@ -114,12 +114,8 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
       entryType: values.entryType as ReviewableEntryType,
       id: values.id,
       ...occurrence,
-      occurredAt: occurrence.occurredAt
-        ? new Date(occurrence.occurredAt).toISOString()
-        : null,
-      occurredEnd: occurrence.occurredEnd
-        ? new Date(occurrence.occurredEnd).toISOString()
-        : null,
+      occurredAt: occurrence.occurredAt,
+      occurredEnd: occurrence.occurredEnd,
       occurredLabel: occurrence.occurredLabel?.trim() || null,
       revision: values.revision,
       tagNames,

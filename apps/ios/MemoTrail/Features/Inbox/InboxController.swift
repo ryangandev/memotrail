@@ -248,7 +248,9 @@ final class InboxController {
         datePrecision: input.occurrence.precision,
         occurredEnd: input.occurrence.end,
         occurredLabel: input.occurrence.label,
-        photoPlace: photoPlace
+        photoPlace: photoPlace,
+        occurredStartRaw: input.occurredAt == entry.occurredStart ? entry.occurredStartRaw : nil,
+        occurredEndRaw: input.occurrence.end == entry.occurredEnd ? entry.occurredEndRaw : nil
       )
       let reviewResults: [ReviewedEntryResult] =
         try await client
@@ -621,6 +623,8 @@ struct ReviewEntryParameters: Encodable, Sendable {
   var occurredEnd: Date? = nil
   var occurredLabel: String? = nil
   var photoPlace: PhotoPlaceDraft? = nil
+  var occurredStartRaw: String? = nil
+  var occurredEndRaw: String? = nil
 
   enum CodingKeys: String, CodingKey {
     case entryID = "p_entry_id"
@@ -651,19 +655,27 @@ struct ReviewEntryParameters: Encodable, Sendable {
     }
     try values.encode(body, forKey: .body)
     try values.encode(entryType, forKey: .entryType)
-    try values.encode(occurredStart, forKey: .occurredStart)
+    if let occurredStartRaw {
+      try values.encode(occurredStartRaw, forKey: .occurredStart)
+    } else {
+      try values.encode(occurredStart, forKey: .occurredStart)
+    }
     try values.encode(occurredTimezone, forKey: .occurredTimezone)
     try values.encode(collectionNames, forKey: .collectionNames)
     try values.encode(tagNames, forKey: .tagNames)
     try values.encode(markDone, forKey: .markDone)
     try values.encode(datePrecision, forKey: .datePrecision)
-    try values.encode(occurredEnd, forKey: .occurredEnd)
+    if let occurredEndRaw {
+      try values.encode(occurredEndRaw, forKey: .occurredEnd)
+    } else {
+      try values.encode(occurredEnd, forKey: .occurredEnd)
+    }
     try values.encode(occurredLabel, forKey: .occurredLabel)
     try values.encode(photoPlace, forKey: .photoPlace)
   }
 }
 
-private struct ReviewedEntryResult: Decodable, Sendable {
+struct ReviewedEntryResult: Decodable, Sendable {
   let entryID: UUID
   let revision: Int
 

@@ -14,6 +14,9 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
   let datePrecision: TimelineDatePrecision
   let occurredEnd: Date?
   let occurredLabel: String?
+  var inboxStatus: String = "unreviewed"
+  var occurredStartRaw: String?
+  var occurredEndRaw: String?
 
   init(
     id: UUID,
@@ -57,6 +60,9 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     case occurredEnd = "occurred_end"
     case occurredLabel = "occurred_label"
     case revision
+    case inboxStatus = "inbox_status"
+    case collectionNames = "collection_names"
+    case tagNames = "tag_names"
   }
 
   init(from decoder: Decoder) throws {
@@ -65,13 +71,16 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     id = try values.decode(UUID.self, forKey: .id)
     title = try values.decodeIfPresent(String.self, forKey: .title)
     body = try values.decode(String.self, forKey: .body)
-    collectionNames = []
+    collectionNames = try values.decodeIfPresent([String].self, forKey: .collectionNames) ?? []
     entryType = try values.decode(InboxEntryType.self, forKey: .entryType)
     createdAt = try values.decode(Date.self, forKey: .createdAt)
     occurredStart = try values.decodeIfPresent(Date.self, forKey: .occurredStart)
     occurredTimezone = try values.decodeIfPresent(String.self, forKey: .occurredTimezone)
     revision = try values.decode(Int.self, forKey: .revision)
-    tagNames = []
+    tagNames = try values.decodeIfPresent([String].self, forKey: .tagNames) ?? []
+    inboxStatus = try values.decodeIfPresent(String.self, forKey: .inboxStatus) ?? "unreviewed"
+    occurredStartRaw = try? values.decode(String.self, forKey: .occurredStart)
+    occurredEndRaw = try? values.decode(String.self, forKey: .occurredEnd)
     let precision =
       try values.decodeIfPresent(TimelineDatePrecision.self, forKey: .datePrecision) ?? .exact
     datePrecision = occurredStart == nil && precision == .exact ? .unknown : precision
@@ -80,7 +89,7 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
   }
 
   func withOrganization(collectionNames: [String], tagNames: [String]) -> InboxEntry {
-    InboxEntry(
+    var result = InboxEntry(
       id: id,
       title: title,
       body: body,
@@ -95,6 +104,10 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
       occurredEnd: occurredEnd,
       occurredLabel: occurredLabel
     )
+    result.inboxStatus = inboxStatus
+    result.occurredStartRaw = occurredStartRaw
+    result.occurredEndRaw = occurredEndRaw
+    return result
   }
 
   var displayDate: String {

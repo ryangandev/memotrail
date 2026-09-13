@@ -3,6 +3,41 @@ import XCTest
 @testable import MemoTrail
 
 final class InboxEntryTests: XCTestCase {
+  func testCurrentEditorContextPreservesOrganizationStatusAndRawTimes() throws {
+    let raw = "2017-07-08T12:34:56.123456+00:00"
+    let data = Data(
+      """
+      {"id":"95000000-0000-4000-8000-000000000001","title":"Memory","body":"Original",
+      "entry_type":"standard","inbox_status":"organized","revision":2,
+      "created_at":"2017-07-08T12:34:56Z","occurred_start":"\(raw)","occurred_end":null,
+      "date_precision":"exact","occurred_timezone":"UTC","collection_names":["Active"],"tag_names":["memory"]}
+      """.utf8)
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .custom { decoder in
+      let value = try decoder.singleValueContainer().decode(String.self)
+      let parser = ISO8601DateFormatter()
+      parser.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+      if let date = parser.date(from: value) { return date }
+      parser.formatOptions = [.withInternetDateTime]
+      return try XCTUnwrap(parser.date(from: value))
+    }
+    let entry = try decoder.decode(InboxEntry.self, from: data)
+    XCTAssertEqual(entry.inboxStatus, "organized")
+    XCTAssertEqual(entry.collectionNames, ["Active"])
+    XCTAssertEqual(entry.tagNames, ["memory"])
+    let organized = entry.withOrganization(collectionNames: ["Other"], tagNames: [])
+    XCTAssertEqual(organized.inboxStatus, "organized")
+    XCTAssertEqual(organized.occurredStartRaw, raw)
+    let parameters = ReviewEntryParameters(
+      entryID: entry.id, expectedRevision: 2, title: entry.title, body: "Edited",
+      entryType: .standard, occurredStart: entry.occurredStart, occurredTimezone: "UTC",
+      collectionNames: [], tagNames: [], markDone: false, occurredStartRaw: entry.occurredStartRaw)
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(parameters)) as? [String: Any])
+    XCTAssertEqual(json["p_occurred_start"] as? String, raw)
+    XCTAssertFalse(json["p_mark_done"] as? Bool ?? true)
+    XCTAssertTrue(json["p_occurred_end"] is NSNull)
+  }
   func testOccurrencePreservesLaterRepeatedHourAndFractionalSeconds() throws {
     let date = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-11-01T09:30:27Z"))
       .addingTimeInterval(0.123)

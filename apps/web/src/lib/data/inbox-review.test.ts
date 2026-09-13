@@ -17,6 +17,12 @@ const validInput = {
 };
 
 describe("Inbox Entry review", () => {
+  it("preserves validated database microseconds instead of rounding an unchanged edit", () => {
+    const raw = "2017-07-08T12:34:56.123456+00:00";
+    const result = parseInboxReviewInput({ ...validInput, occurredAt: raw });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.occurredAt).toBe(raw);
+  });
   it("normalizes a valid editable review", () => {
     expect(
       parseInboxReviewInput({

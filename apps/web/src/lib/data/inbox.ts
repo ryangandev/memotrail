@@ -159,7 +159,7 @@ export async function getInboxWorkspace(): Promise<InboxWorkspace | null> {
   };
 }
 
-function entryFromRow(
+export function entryFromRow(
   row: EntryRow,
   collectionNames: string[],
   tagNames: string[],

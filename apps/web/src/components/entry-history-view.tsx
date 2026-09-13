@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { EntryReviewDialog } from "./entry-review-list";
+import { loadEditableEntry } from "@/app/history/actions";
 import {
   restoreHistoryVersion,
   convertEntryToGoal,
@@ -32,6 +34,21 @@ export function EntryHistoryView({
   const [version, setVersion] = useState(history.versions[0]?.version);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] =
+    useState<Awaited<ReturnType<typeof loadEditableEntry>>>(null);
+  async function edit() {
+    setBusy(true);
+    setError(null);
+    try {
+      const data = await loadEditableEntry(history.current.id);
+      if (!data) throw Error();
+      setEditing(data);
+    } catch {
+      setError("This Entry cannot be edited right now. Refresh and try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
   const selected = history.versions.find((v) => v.version === version);
   async function restore() {
     if (
@@ -63,6 +80,25 @@ export function EntryHistoryView({
     <>
       <Link href="/history">← All Entry history</Link>
       <h2>{historyTitle(history.current)}</h2>
+      {!history.current.deleted_at &&
+        ["standard", "first_time"].includes(history.current.entry_type) && (
+          <button disabled={busy} onClick={() => void edit()}>
+            Edit Entry
+          </button>
+        )}
+      {editing && (
+        <EntryReviewDialog
+          entry={editing.entry}
+          organized={editing.organized}
+          collectionOptions={editing.entry.collectionNames}
+          tagOptions={editing.entry.tagNames}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            router.refresh();
+          }}
+        />
+      )}
       {!history.current.deleted_at && (
         <Link href={`/explore?entry=${history.current.id}`}>
           Explore with AI
