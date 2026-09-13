@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { signOut } from "@/app/auth/actions";
 import styles from "@/app/page.module.css";
+import { BrandMark } from "@/components/brand-mark";
 import { Icon, type IconName } from "@/components/icon";
 import { QuickCaptureDialog } from "@/components/quick-capture-dialog";
 import { SearchShortcutLink } from "@/components/search-shortcut-link";
@@ -119,7 +120,7 @@ export function WorkspaceShell({
             href="/"
             aria-label="MemoTrail home"
           >
-            <span className={styles.brandMark}>M</span>
+            <BrandMark className={styles.brandMark} />
             <span>MemoTrail</span>
           </Link>
 
@@ -188,7 +189,7 @@ function Sidebar({
   return (
     <aside className={styles.sidebar}>
       <Link className={styles.brand} href="/">
-        <span className={styles.brandMark}>M</span>
+        <BrandMark className={styles.brandMark} />
         <span>MemoTrail</span>
       </Link>
 

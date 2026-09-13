@@ -72,16 +72,9 @@
 }
 
 .brandMark {
-  display: grid;
   width: 29px;
   height: 29px;
-  place-items: center;
-  border-radius: 9px 9px 9px 3px;
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent);
-  font-family: var(--mt-font-family-serif);
-  font-size: 16px;
-  font-weight: var(--mt-font-weight-semibold);
+  flex: none;
 }
 
 .sidebarNav {

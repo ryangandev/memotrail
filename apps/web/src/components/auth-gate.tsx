@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BrandMark } from "@/components/brand-mark";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./auth-gate.module.css";
 
@@ -83,7 +84,7 @@ export function AuthGate({ configured }: AuthGateProps) {
           className={styles.signInCard}
           aria-labelledby="sign-in-heading"
         >
-          <span className={styles.cardMark}>M</span>
+          <BrandMark className={styles.cardMark} />
           <p className={styles.cardEyebrow}>Personal archive</p>
           <h2 id="sign-in-heading">Welcome to MemoTrail</h2>
           <p>Sign in to continue to your private space.</p>
@@ -129,7 +130,7 @@ export function AuthGate({ configured }: AuthGateProps) {
 function MemoTrailBrand() {
   return (
     <div className={styles.brand} aria-label="MemoTrail">
-      <span>M</span>
+      <BrandMark className={styles.brandMark} />
       <strong>MemoTrail</strong>
     </div>
   );
