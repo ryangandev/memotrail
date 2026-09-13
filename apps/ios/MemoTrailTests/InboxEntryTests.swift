@@ -3,6 +3,64 @@ import XCTest
 @testable import MemoTrail
 
 final class InboxEntryTests: XCTestCase {
+  func testCaptureDraftRetainsUnfinishedDateAndLegacyExactDate() throws {
+    let defaults = makeDefaults()
+    let store = InboxDraftStore(defaults: defaults)
+    let owner = UUID()
+    var draft = OccurrenceDraft(
+      EntryOccurrence(
+        precision: .year, start: nil, end: nil, label: nil, timezone: "Asia/Kathmandu"))
+    draft.start = "20"
+    XCTAssertTrue(store.save(title: "", body: "", occurrenceDraft: draft, ownerID: owner))
+    XCTAssertEqual(store.load(ownerID: owner)?.captureOccurrence, draft)
+    XCTAssertThrowsError(try draft.resolve())
+    XCTAssertNil(store.load(ownerID: UUID()))
+    let original = Date(timeIntervalSince1970: 1_500_000_000)
+    XCTAssertTrue(store.save(title: "", body: "Legacy", occurredAt: original, ownerID: owner))
+    XCTAssertEqual(try store.load(ownerID: owner)?.captureOccurrence?.resolve().start, original)
+  }
+
+  func testCaptureQueueAndServerPayloadRetainEveryPrecision() throws {
+    let defaults = makeDefaults()
+    let store = InboxQueueStore(defaults: defaults)
+    let owner = UUID()
+    for precision in TimelineDatePrecision.allCases {
+      var draft = OccurrenceDraft(
+        EntryOccurrence(
+          precision: precision, start: nil, end: nil, label: nil, timezone: "Asia/Kathmandu"))
+      switch precision {
+      case .exact: draft.start = "2017-07-08T12:34:56"
+      case .day, .range: draft.start = "2017-07-08"
+      case .month: draft.start = "2017-07"
+      case .year: draft.start = "2017"
+      case .age, .approximate: draft.label = "At age 17"
+      case .unknown: break
+      }
+      if precision == .range { draft.end = "2018-08-09" }
+      let occurrence = try draft.resolve()
+      var queued = QueuedInboxEntry(
+        id: UUID(), title: nil, body: "Memory", occurredAt: Date(), occurredTimezone: "UTC",
+        queuedAt: Date())
+      queued.occurrence = occurrence
+      XCTAssertNotNil(store.enqueue(queued, ownerID: owner))
+      let restored = try XCTUnwrap(store.load(ownerID: owner).first { $0.id == queued.id })
+      XCTAssertEqual(restored.effectiveOccurrence, occurrence)
+      XCTAssertEqual(restored.presentedEntry.datePrecision, precision)
+      XCTAssertEqual(restored.presentedEntry.occurredStart, occurrence.start)
+      let payload = InboxEntryInsert(
+        id: queued.id, ownerID: owner, title: nil, body: "Memory", occurredStart: occurrence.start,
+        occurredTimezone: occurrence.timezone, datePrecision: precision.rawValue,
+        occurredEnd: occurrence.end, occurredLabel: occurrence.label, clientID: "ios:\(queued.id)")
+      let encoder = JSONEncoder()
+      encoder.dateEncodingStrategy = .iso8601
+      let json = try XCTUnwrap(
+        JSONSerialization.jsonObject(with: encoder.encode(payload)) as? [String: Any])
+      XCTAssertEqual(json["date_precision"] as? String, precision.rawValue)
+      XCTAssertEqual(json["occurred_timezone"] as? String, "Asia/Kathmandu")
+      if occurrence.start == nil { XCTAssertNil(json["occurred_start"]) }
+      XCTAssertEqual(json["occurred_label"] as? String, occurrence.label)
+    }
+  }
   func testCurrentEditorContextPreservesOrganizationStatusAndRawTimes() throws {
     let raw = "2017-07-08T12:34:56.123456+00:00"
     let data = Data(
@@ -433,7 +491,7 @@ final class InboxEntryTests: XCTestCase {
     defaults.set(try JSONEncoder().encode(duplicateQueue), forKey: key)
     XCTAssertTrue(store.load(ownerID: ownerID).isEmpty)
 
-    let obsoleteQueue = TestStoredInboxQueue(version: 3, entries: [entry])
+    let obsoleteQueue = TestStoredInboxQueue(version: 99, entries: [entry])
     defaults.set(try JSONEncoder().encode(obsoleteQueue), forKey: key)
     XCTAssertTrue(store.load(ownerID: ownerID).isEmpty)
   }

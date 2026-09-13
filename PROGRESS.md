@@ -6,6 +6,21 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Precision-aware quick capture and durable date drafts
+
+- Web and native Home, Inbox, and global capture now use the existing eight-precision occurrence editor instead of forcing every new Entry to an exact timestamp.
+- Capture time remains the default; the explicit Use capture time action clears custom precision, bounds, description, and zone together.
+- Age and Approximate may contain only a description, Unknown persists no calendar anchor, and range ends and recorded time zones survive synchronization unchanged.
+- Recoverable drafts store the unfinished date fields themselves, including an incomplete year, so navigation or refresh does not require inventing a valid date or discarding writing.
+- Date drafts also persist for photo-only captures; semantic validation runs before the Entry enters the offline queue.
+- Version-three offline captures retain full occurrence metadata while both clients continue reading earlier text/photo queues and exact-date drafts without replacing their stable Entry IDs.
+- Pending cards show the selected precision or description; native preview and server serialization use the same resolved occurrence rather than the legacy compatibility date.
+- Focused real-browser acceptance verifies all eight precisions, invalid-draft recovery, fractional-offset time zones, offline Age replay, and legacy exact-timestamp synchronization.
+- Local unit verification passes 344 Web tests and 189 native simulator tests with zero native failures or skips; desktop light and mobile dark layouts were inspected.
+- All 30 production-mode localhost browser/API scenarios and 1,283 database assertions pass, along with lint, type checking, formatting, and generated-token consistency.
+- Default capture-time reset is also verified through the real browser; the expected interrupted-ZIP negative test remains a deliberate failure-path assertion, not an unhandled successful export.
+- No database migration or AI provider call is needed for this slice; hosted and authenticated native interactive acceptance remain distinct final checks.
+
 ### Editing organized Entries without reopening Inbox
 
 - Reproduced the missing Edit Entry action in the real current-record/history reader before adding matching Web and native editors for active Standard and First Time Entries.

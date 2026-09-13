@@ -132,12 +132,21 @@ final class InboxController {
     title: String,
     body: String,
     occurredAt: Date? = nil,
+    occurrenceDraft: OccurrenceDraft? = nil,
     photos: [FirstTimePhotoDraft] = []
   ) async -> Bool {
     guard !isSaving, !isSyncing else { return false }
 
     let capture: InboxCapture
+    let occurrence: EntryOccurrence
+    let now = Date()
     do {
+      occurrence =
+        try occurrenceDraft?.resolve()
+        ?? EntryOccurrence(
+          precision: .exact, start: occurredAt ?? now, end: nil, label: nil,
+          timezone: TimeZone.current.identifier)
+      try occurrence.validate()
       capture = try InboxCapture.validate(
         title: title,
         body: body,
@@ -155,16 +164,16 @@ final class InboxController {
     captureMessage = nil
     defer { isSaving = false }
 
-    let now = Date()
-    let pendingEntry = QueuedInboxEntry(
+    var pendingEntry = QueuedInboxEntry(
       id: UUID(),
       title: capture.title,
       body: capture.body,
-      occurredAt: occurredAt ?? now,
-      occurredTimezone: TimeZone.current.identifier,
+      occurredAt: occurrence.start,
+      occurredTimezone: occurrence.timezone,
       queuedAt: now,
       attachments: photos.map(QueuedInboxAttachment.init)
     )
+    pendingEntry.occurrence = occurrence
 
     guard let nextQueue = queueStore.enqueue(pendingEntry, ownerID: ownerID) else {
       captureMessage = CaptureMessage(
@@ -387,8 +396,11 @@ final class InboxController {
       ownerID: ownerID,
       title: entry.title,
       body: entry.body,
-      occurredStart: entry.occurredAt,
-      occurredTimezone: entry.occurredTimezone,
+      occurredStart: entry.effectiveOccurrence.start,
+      occurredTimezone: entry.effectiveOccurrence.timezone,
+      datePrecision: entry.effectiveOccurrence.precision.rawValue,
+      occurredEnd: entry.effectiveOccurrence.end,
+      occurredLabel: entry.effectiveOccurrence.label,
       clientID: "ios:\(entry.id.uuidString.lowercased())"
     )
 
@@ -582,16 +594,18 @@ private struct ExistingEntry: Decodable, Sendable {
   let id: UUID
 }
 
-private struct InboxEntryInsert: Encodable, Sendable {
+struct InboxEntryInsert: Encodable, Sendable {
   let id: UUID
   let ownerID: UUID
   let title: String?
   let body: String
   let entryType = "standard"
   let inboxStatus = "unreviewed"
-  let occurredStart: Date
+  let occurredStart: Date?
   let occurredTimezone: String
-  let datePrecision = "exact"
+  var datePrecision = "exact"
+  var occurredEnd: Date? = nil
+  var occurredLabel: String? = nil
   let clientID: String
 
   enum CodingKeys: String, CodingKey {
@@ -604,6 +618,8 @@ private struct InboxEntryInsert: Encodable, Sendable {
     case occurredStart = "occurred_start"
     case occurredTimezone = "occurred_timezone"
     case datePrecision = "date_precision"
+    case occurredEnd = "occurred_end"
+    case occurredLabel = "occurred_label"
     case clientID = "client_id"
   }
 }

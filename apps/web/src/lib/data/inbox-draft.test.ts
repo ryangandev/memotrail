@@ -25,6 +25,61 @@ class MemoryStorage implements DraftStorage {
 }
 
 describe("Inbox draft persistence", () => {
+  it("keeps an unfinished date and photo-only date draft without guessing an instant", () => {
+    const storage = new MemoryStorage();
+    const occurrence = {
+      precision: "year" as const,
+      start: "20",
+      end: "",
+      label: "",
+      timezone: "Asia/Kathmandu",
+    };
+    expect(
+      persistInboxDraft(storage, "owner", {
+        body: "",
+        title: "",
+        occurredAt: null,
+        occurrence,
+      }),
+    ).toBe(true);
+    expect(loadInboxDraft(storage, "owner")).toMatchObject({
+      version: 3,
+      occurredAt: null,
+      occurrence,
+    });
+    expect(loadInboxDraft(storage, "another-owner")).toBeNull();
+    persistInboxDraft(storage, "owner", {
+      body: "Text remains",
+      title: "",
+      occurredAt: null,
+      occurrence: null,
+    });
+    expect(loadInboxDraft(storage, "owner")).toMatchObject({
+      occurrence: null,
+      body: "Text remains",
+    });
+  });
+
+  it("rejects malformed v3 date shapes rather than silently dropping uncertainty", () => {
+    const storage = new MemoryStorage();
+    const data = {
+      version: 3,
+      body: "Original",
+      title: "",
+      occurredAt: null,
+      updatedAt: new Date().toISOString(),
+    };
+    for (const occurrence of [
+      { precision: "invalid" },
+      { precision: "age", start: "", end: "", label: 17, timezone: "UTC" },
+    ]) {
+      storage.setItem(
+        inboxDraftKey("owner"),
+        JSON.stringify({ ...data, occurrence }),
+      );
+      expect(loadInboxDraft(storage, "owner")).toBeNull();
+    }
+  });
   it("keeps drafts isolated by MemoTrail owner", () => {
     const storage = new MemoryStorage();
 

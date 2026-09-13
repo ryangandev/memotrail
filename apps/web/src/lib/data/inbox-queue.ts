@@ -1,26 +1,40 @@
 import { entryBodyLimit, entryTitleLimit } from "./inbox-input";
+import { validateOccurrence, type Occurrence } from "./occurrence";
 import {
   inboxPhotoLimit,
   isQueuedInboxAttachment,
   type QueuedInboxAttachment,
 } from "./inbox-photo";
 
-export type QueuedInboxEntry = {
+type QueueEntryBase = {
   attachments: QueuedInboxAttachment[];
   body: string;
   id: string;
-  occurredAt: string;
   occurredTimezone: string;
   queuedAt: string;
   title: string | null;
-  version: 2;
 };
+export type QueuedInboxEntry = QueueEntryBase &
+  ({ version: 2; occurredAt: string } | ({ version: 3 } & Occurrence));
+
+export function queuedOccurrence(entry: QueuedInboxEntry): Occurrence {
+  return entry.version === 3
+    ? entry
+    : {
+        occurredAt: entry.occurredAt,
+        occurredTimezone: entry.occurredTimezone,
+        occurredEnd: null,
+        occurredLabel: null,
+        datePrecision: "exact",
+      };
+}
 
 type LegacyQueuedInboxEntry = Omit<
-  QueuedInboxEntry,
+  QueueEntryBase,
   "attachments" | "version"
 > & {
   version: 1;
+  occurredAt: string;
 };
 
 export type QueueStorage = Pick<Storage, "getItem" | "removeItem" | "setItem">;
@@ -139,7 +153,7 @@ export function isQueuedInboxEntry(value: unknown): value is QueuedInboxEntry {
   );
 
   return (
-    entry.version === 2 &&
+    (entry.version === 2 || entry.version === 3) &&
     typeof entry.id === "string" &&
     uuidPattern.test(entry.id) &&
     (entry.title === null ||
@@ -153,8 +167,10 @@ export function isQueuedInboxEntry(value: unknown): value is QueuedInboxEntry {
     attachments.length <= inboxPhotoLimit &&
     uniqueAttachmentIds.size === attachments.length &&
     Boolean(entry.title || entry.body || attachments.length > 0) &&
-    typeof entry.occurredAt === "string" &&
-    !Number.isNaN(Date.parse(entry.occurredAt)) &&
+    (entry.version === 3
+      ? validateOccurrence(entry as Occurrence) === null
+      : typeof entry.occurredAt === "string" &&
+        !Number.isNaN(Date.parse(entry.occurredAt))) &&
     typeof entry.queuedAt === "string" &&
     !Number.isNaN(Date.parse(entry.queuedAt)) &&
     typeof entry.occurredTimezone === "string" &&

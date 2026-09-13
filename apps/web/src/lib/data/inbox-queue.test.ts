@@ -6,11 +6,63 @@ import {
   parseInboxQueue,
   type QueuedInboxEntry,
   removeInboxQueueEntry,
+  queuedOccurrence,
+  isQueuedInboxEntry,
 } from "./inbox-queue";
+import { occurrencePrecisions, resolveOccurrenceDraft } from "./occurrence";
+
+describe("Precision-aware offline capture", () => {
+  for (const precision of occurrencePrecisions)
+    it(`replays ${precision} without inventing bounds`, () => {
+      const result = resolveOccurrenceDraft({
+        precision,
+        start: ["age", "approximate", "unknown"].includes(precision)
+          ? ""
+          : precision === "year"
+            ? "2017"
+            : precision === "month"
+              ? "2017-07"
+              : precision === "exact"
+                ? "2017-07-08T12:34:56"
+                : "2017-07-08",
+        end: precision === "range" ? "2018-08-09" : "",
+        label: ["age", "approximate"].includes(precision) ? "At age 17" : "",
+        timezone: "Asia/Kathmandu",
+      });
+      expect(result.error).toBeUndefined();
+      const entry: QueuedInboxEntry = {
+        ...queuedEntry(),
+        ...result.value!,
+        version: 3,
+      };
+      expect(isQueuedInboxEntry(entry)).toBe(true);
+      const stored = parseInboxQueue(JSON.stringify([entry]));
+      expect(stored).toEqual([entry]);
+      expect(queuedOccurrence(stored[0])).toMatchObject(result.value!);
+    });
+  it("rejects inconsistent unknown dates and invalid zones at the sync boundary", () => {
+    const entry = {
+      ...queuedEntry(),
+      version: 3,
+      datePrecision: "unknown",
+      occurredEnd: null,
+      occurredLabel: null,
+    };
+    expect(isQueuedInboxEntry(entry)).toBe(false);
+    expect(
+      isQueuedInboxEntry({
+        ...entry,
+        occurredAt: null,
+        occurredTimezone: "invalid/zone",
+      }),
+    ).toBe(false);
+    expect(isQueuedInboxEntry({ ...entry, occurredAt: null })).toBe(true);
+  });
+});
 
 function queuedEntry(
-  overrides: Partial<QueuedInboxEntry> = {},
-): QueuedInboxEntry {
+  overrides: Partial<Extract<QueuedInboxEntry, { version: 2 }>> = {},
+): Extract<QueuedInboxEntry, { version: 2 }> {
   return {
     attachments: [],
     body: "A thought worth keeping.",

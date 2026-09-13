@@ -20,11 +20,13 @@ import {
   loadInboxDraft,
   persistInboxDraft,
 } from "@/lib/data/inbox-draft";
+import { OccurrenceEditor } from "./occurrence-editor";
 import {
-  captureDateLabel,
-  localCaptureDateValue,
-  parseCaptureDate,
-} from "@/lib/data/inbox-capture-date";
+  occurrenceDraft,
+  occurrenceLabel,
+  resolveOccurrenceDraft,
+  type OccurrenceDraft,
+} from "@/lib/data/occurrence";
 import {
   entryBodyLimit,
   entryTitleLimit,
@@ -40,6 +42,7 @@ import {
   loadInboxQueue,
   removeInboxQueueEntry,
   type QueuedInboxEntry,
+  queuedOccurrence,
 } from "@/lib/data/inbox-queue";
 import {
   queuedInboxAttachment,
@@ -82,7 +85,7 @@ export function CaptureComposer({
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [occurredAt, setOccurredAt] = useState<string | null>(null);
+  const [occurrence, setOccurrence] = useState<OccurrenceDraft | null>(null);
   const [isLocalStateReady, setIsLocalStateReady] = useState(false);
   const [hasLocalDraft, setHasLocalDraft] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -107,7 +110,7 @@ export function CaptureComposer({
   const voiceFailedRef = useRef(false);
   const voiceRequestedStopRef = useRef(false);
   const titleRef = useRef("");
-  const occurredAtRef = useRef<string | null>(null);
+  const occurrenceRef = useRef<OccurrenceDraft | null>(null);
 
   const replacePendingEntries = useCallback(
     (entries: QueuedInboxEntry[]) => {
@@ -232,9 +235,21 @@ export function CaptureComposer({
 
         setTitle(draft?.title ?? "");
         setBody(draft?.body ?? "");
-        setOccurredAt(draft?.occurredAt ?? null);
+        const savedOccurrence =
+          draft?.occurrence ??
+          (draft?.occurredAt
+            ? occurrenceDraft({
+                datePrecision: "exact",
+                occurredAt: new Date(draft.occurredAt).toISOString(),
+                occurredEnd: null,
+                occurredLabel: null,
+                occurredTimezone:
+                  Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+              })
+            : null);
+        setOccurrence(savedOccurrence);
         titleRef.current = draft?.title ?? "";
-        occurredAtRef.current = draft?.occurredAt ?? null;
+        occurrenceRef.current = savedOccurrence;
         setPhotos(draftPhotos);
         setHasLocalDraft(Boolean(draft) || draftPhotos.length > 0);
         replacePendingEntries(queue);
@@ -286,18 +301,19 @@ export function CaptureComposer({
   function updateDraft(
     nextTitle: string,
     nextBody: string,
-    nextOccurredAt: string | null,
+    nextOccurrence: OccurrenceDraft | null,
     preserveVoiceFeedback = false,
   ) {
     titleRef.current = nextTitle;
-    occurredAtRef.current = nextOccurredAt;
+    occurrenceRef.current = nextOccurrence;
     setTitle(nextTitle);
     setBody(nextBody);
-    setOccurredAt(nextOccurredAt);
+    setOccurrence(nextOccurrence);
     setHasLocalDraft(
       persistInboxDraft(window.localStorage, ownerId, {
         body: nextBody,
-        occurredAt: nextOccurredAt,
+        occurredAt: null,
+        occurrence: nextOccurrence,
         title: nextTitle,
       }) || photos.length > 0,
     );
@@ -349,7 +365,7 @@ export function CaptureComposer({
       updateDraft(
         titleRef.current,
         mergeVoiceTranscript(voiceBaselineRef.current, transcript),
-        occurredAtRef.current,
+        occurrenceRef.current,
         true,
       );
     };
@@ -421,7 +437,16 @@ export function CaptureComposer({
     updateDraft(
       title,
       body,
-      occurredAt ? null : localCaptureDateValue(new Date()),
+      occurrence
+        ? null
+        : occurrenceDraft({
+            datePrecision: "exact",
+            occurredAt: new Date().toISOString(),
+            occurredEnd: null,
+            occurredLabel: null,
+            occurredTimezone:
+              Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+          }),
     );
   }
 
@@ -491,10 +516,21 @@ export function CaptureComposer({
     }
 
     const now = new Date();
-    const parsedDate = parseCaptureDate(occurredAt, now);
+    const parsedDate = occurrence
+      ? resolveOccurrenceDraft(occurrence)
+      : {
+          value: {
+            occurredAt: now.toISOString(),
+            occurredEnd: null,
+            occurredLabel: null,
+            occurredTimezone:
+              Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+            datePrecision: "exact" as const,
+          },
+        };
 
-    if (!parsedDate.success) {
-      setFeedback({ isError: true, message: parsedDate.message });
+    if (parsedDate.error) {
+      setFeedback({ isError: true, message: parsedDate.error });
       return;
     }
 
@@ -504,12 +540,10 @@ export function CaptureComposer({
       attachments: photos.map(queuedInboxAttachment),
       body: parsedInput.data.body,
       id: crypto.randomUUID(),
-      occurredAt: parsedDate.occurredAt,
-      occurredTimezone:
-        Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+      ...parsedDate.value!,
       queuedAt,
       title: parsedInput.data.title,
-      version: 2,
+      version: 3,
     };
     const nextQueue = enqueueInboxEntry(window.localStorage, ownerId, entry);
 
@@ -527,9 +561,9 @@ export function CaptureComposer({
     clearInboxDraft(window.localStorage, ownerId);
     setTitle("");
     setBody("");
-    setOccurredAt(null);
+    setOccurrence(null);
     titleRef.current = "";
-    occurredAtRef.current = null;
+    occurrenceRef.current = null;
     setPhotos([]);
     setHasLocalDraft(false);
     setVoiceFeedback(null);
@@ -575,7 +609,7 @@ export function CaptureComposer({
               maxLength={entryTitleLimit}
               name="title"
               onChange={(event) =>
-                updateDraft(event.target.value, body, occurredAt)
+                updateDraft(event.target.value, body, occurrence)
               }
               placeholder="What is worth keeping?"
               value={title}
@@ -593,7 +627,7 @@ export function CaptureComposer({
               maxLength={entryBodyLimit}
               name="body"
               onChange={(event) =>
-                updateDraft(title, event.target.value, occurredAt)
+                updateDraft(title, event.target.value, occurrence)
               }
               placeholder="A thought, a first, something learned, or whatever is on your mind."
               rows={4}
@@ -601,22 +635,15 @@ export function CaptureComposer({
             />
           </div>
         </div>
-        {occurredAt ? (
-          <div className={styles.captureDatePanel}>
-            <label htmlFor={`${idPrefix}-occurred-at`}>
-              <span>Relevant date and time</span>
-              <input
-                disabled={
-                  isSaving || !isLocalStateReady || voiceState !== "idle"
-                }
-                id={`${idPrefix}-occurred-at`}
-                onChange={(event) =>
-                  updateDraft(title, body, event.target.value || null)
-                }
-                type="datetime-local"
-                value={occurredAt}
-              />
-            </label>
+        {occurrence ? (
+          <div
+            className={`${styles.reviewForm} ${styles.captureOccurrencePanel}`}
+          >
+            <OccurrenceEditor
+              value={occurrence}
+              onChange={(value) => updateDraft(title, body, value)}
+              disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
+            />
             <button
               className={styles.removeCaptureDateButton}
               disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
@@ -651,14 +678,14 @@ export function CaptureComposer({
         <div className={styles.captureActions}>
           <div>
             <button
-              aria-pressed={Boolean(occurredAt)}
-              className={`${styles.quietButton} ${occurredAt ? styles.activeQuietButton : ""}`}
+              aria-pressed={Boolean(occurrence)}
+              className={`${styles.quietButton} ${occurrence ? styles.activeQuietButton : ""}`}
               disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
               onClick={toggleRelevantDate}
               type="button"
             >
               <Icon name="calendar" />
-              <span>{occurredAt ? captureDateLabel(occurredAt) : "Date"}</span>
+              <span>{occurrence ? "Custom date" : "Date"}</span>
             </button>
             <button
               aria-label={
@@ -776,8 +803,8 @@ export function CaptureComposer({
             {pendingEntries.map((entry) => (
               <article className={styles.pendingEntryCard} key={entry.id}>
                 <div className={styles.entryMeta}>
-                  <time dateTime={entry.occurredAt}>
-                    {pendingDateLabel(entry.occurredAt)}
+                  <time dateTime={entry.occurredAt ?? undefined}>
+                    {occurrenceLabel(queuedOccurrence(entry))}
                   </time>
                   <span className={styles.pendingBadge}>On this device</span>
                 </div>
@@ -933,13 +960,4 @@ function pendingCountLabel(count: number) {
 
 function photoCountLabel(count: number) {
   return count === 1 ? "1 photo" : `${count} photos`;
-}
-
-function pendingDateLabel(date: string) {
-  return new Intl.DateTimeFormat("en", {
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    month: "short",
-  }).format(new Date(date));
 }

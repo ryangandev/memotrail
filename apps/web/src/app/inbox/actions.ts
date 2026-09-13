@@ -10,6 +10,7 @@ import {
 } from "@/lib/data/first-time-input";
 import {
   isQueuedInboxEntry,
+  queuedOccurrence,
   type QueuedInboxEntry,
 } from "@/lib/data/inbox-queue";
 import {
@@ -92,10 +93,13 @@ export async function syncInboxEntry(
     };
   }
 
+  const occurrence = queuedOccurrence(input);
   const { error } = await context.client.from("entries").insert({
     body: input.body,
     client_id: `web:${input.id}`,
-    date_precision: "exact",
+    date_precision: occurrence.datePrecision,
+    occurred_end: occurrence.occurredEnd,
+    occurred_label: occurrence.occurredLabel,
     entry_type: "standard",
     id: input.id,
     inbox_status: "unreviewed",

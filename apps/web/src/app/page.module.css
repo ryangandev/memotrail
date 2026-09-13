@@ -1470,3 +1470,7 @@
     transition: none;
   }
 }
+.captureOccurrencePanel {
+  padding: var(--mt-space-4);
+  border-top: 1px solid var(--mt-color-border);
+}

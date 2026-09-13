@@ -1,6 +1,6 @@
 import Foundation
 
-struct EntryOccurrence: Equatable, Sendable {
+struct EntryOccurrence: Codable, Equatable, Sendable {
   var precision: TimelineDatePrecision
   var start: Date?
   var end: Date?
@@ -90,7 +90,7 @@ struct EntryOccurrence: Equatable, Sendable {
   }
 }
 
-struct OccurrenceDraft: Equatable, Sendable {
+struct OccurrenceDraft: Codable, Equatable, Sendable {
   var precision: TimelineDatePrecision
   var start: String
   var end: String

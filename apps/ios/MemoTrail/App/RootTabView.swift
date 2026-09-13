@@ -13,7 +13,7 @@ struct RootTabView: View {
   @State private var inboxController: InboxController
   @State private var captureTitle: String
   @State private var captureBody: String
-  @State private var captureOccurredAt: Date?
+  @State private var captureOccurrence: OccurrenceDraft?
   @State private var capturePhotos: [FirstTimePhotoDraft]
   @State private var hasLocalDraft: Bool
   @State private var hasLoadedCapturePhotos = false
@@ -50,7 +50,7 @@ struct RootTabView: View {
     )
     _captureTitle = State(initialValue: draft?.title ?? "")
     _captureBody = State(initialValue: draft?.body ?? "")
-    _captureOccurredAt = State(initialValue: draft?.occurredAt)
+    _captureOccurrence = State(initialValue: draft?.captureOccurrence)
     _capturePhotos = State(initialValue: [])
     _hasLocalDraft = State(initialValue: draft != nil)
   }
@@ -66,7 +66,7 @@ struct RootTabView: View {
         captureController: inboxController,
         captureTitle: $captureTitle,
         captureBody: $captureBody,
-        captureOccurredAt: $captureOccurredAt,
+        captureOccurrence: $captureOccurrence,
         capturePhotos: $capturePhotos,
         addCapturePhoto: addCapturePhoto,
         removeCapturePhoto: removeCapturePhoto,
@@ -85,7 +85,7 @@ struct RootTabView: View {
         controller: inboxController,
         captureTitle: $captureTitle,
         captureBody: $captureBody,
-        captureOccurredAt: $captureOccurredAt,
+        captureOccurrence: $captureOccurrence,
         capturePhotos: $capturePhotos,
         addCapturePhoto: addCapturePhoto,
         removeCapturePhoto: removeCapturePhoto,
@@ -142,7 +142,7 @@ struct RootTabView: View {
         controller: inboxController,
         title: $captureTitle,
         draftBody: $captureBody,
-        occurredAt: $captureOccurredAt,
+        occurrence: $captureOccurrence,
         photos: $capturePhotos,
         addPhoto: addCapturePhoto,
         removePhoto: removeCapturePhoto,
@@ -155,7 +155,7 @@ struct RootTabView: View {
     .onChange(of: captureBody) {
       persistDraft()
     }
-    .onChange(of: captureOccurredAt) {
+    .onChange(of: captureOccurrence) {
       persistDraft()
     }
     .onChange(of: inboxController.pendingEntries.count) { previousCount, count in
@@ -180,7 +180,7 @@ struct RootTabView: View {
       draftStore.save(
         title: captureTitle,
         body: captureBody,
-        occurredAt: captureOccurredAt,
+        occurrenceDraft: captureOccurrence,
         ownerID: user.id
       ) || !capturePhotos.isEmpty
   }
@@ -272,7 +272,7 @@ private struct QuickCaptureView: View {
   @Bindable var controller: InboxController
   @Binding var title: String
   @Binding var draftBody: String
-  @Binding var occurredAt: Date?
+  @Binding var occurrence: OccurrenceDraft?
   @Binding var photos: [FirstTimePhotoDraft]
   let addPhoto: @MainActor (FirstTimePhotoDraft) async throws -> Void
   let removePhoto: @MainActor (UUID) async throws -> Void
@@ -299,7 +299,7 @@ private struct QuickCaptureView: View {
           CaptureCard(
             title: $title,
             note: $draftBody,
-            occurredAt: $occurredAt,
+            occurrence: $occurrence,
             photos: $photos,
             isSaving: controller.isSaving,
             hasLocalDraft: hasLocalDraft,
@@ -344,14 +344,14 @@ private struct QuickCaptureView: View {
     let didSave = await controller.save(
       title: title,
       body: draftBody,
-      occurredAt: occurredAt,
+      occurrenceDraft: occurrence,
       photos: photos
     )
 
     if didSave {
       title = ""
       draftBody = ""
-      occurredAt = nil
+      occurrence = nil
       photos = []
       hasLocalDraft = false
       dismiss()

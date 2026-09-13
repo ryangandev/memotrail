@@ -308,6 +308,17 @@ struct InboxDraft: Codable, Equatable, Sendable {
   let body: String
   let occurredAt: Date?
   let updatedAt: Date
+  var occurrenceDraft: OccurrenceDraft? = nil
+
+  var captureOccurrence: OccurrenceDraft? {
+    occurrenceDraft
+      ?? occurredAt.map {
+        OccurrenceDraft(
+          EntryOccurrence(
+            precision: .exact, start: $0, end: nil, label: nil,
+            timezone: TimeZone.current.identifier))
+      }
+  }
 
   init(title: String, body: String, occurredAt: Date? = nil, updatedAt: Date) {
     self.title = title
@@ -317,7 +328,7 @@ struct InboxDraft: Codable, Equatable, Sendable {
   }
 
   var hasContent: Bool {
-    !title.isEmpty || !body.isEmpty
+    !title.isEmpty || !body.isEmpty || occurrenceDraft != nil
   }
 }
 
@@ -345,9 +356,13 @@ struct InboxDraftStore {
   }
 
   @discardableResult
-  func save(title: String, body: String, occurredAt: Date? = nil, ownerID: UUID) -> Bool {
+  func save(
+    title: String, body: String, occurredAt: Date? = nil, occurrenceDraft: OccurrenceDraft? = nil,
+    ownerID: UUID
+  ) -> Bool {
     let key = Self.storageKey(ownerID: ownerID)
-    let draft = InboxDraft(title: title, body: body, occurredAt: occurredAt, updatedAt: Date())
+    var draft = InboxDraft(title: title, body: body, occurredAt: occurredAt, updatedAt: Date())
+    draft.occurrenceDraft = occurrenceDraft
 
     guard draft.hasContent else {
       defaults.removeObject(forKey: key)
@@ -375,16 +390,23 @@ struct QueuedInboxEntry: Codable, Equatable, Identifiable, Sendable {
   let id: UUID
   let title: String?
   let body: String
-  let occurredAt: Date
+  let occurredAt: Date?
   let occurredTimezone: String
   let queuedAt: Date
   let attachments: [QueuedInboxAttachment]
+  var occurrence: EntryOccurrence? = nil
+
+  var effectiveOccurrence: EntryOccurrence {
+    occurrence
+      ?? EntryOccurrence(
+        precision: .exact, start: occurredAt, end: nil, label: nil, timezone: occurredTimezone)
+  }
 
   init(
     id: UUID,
     title: String?,
     body: String,
-    occurredAt: Date,
+    occurredAt: Date?,
     occurredTimezone: String,
     queuedAt: Date,
     attachments: [QueuedInboxAttachment] = []
@@ -399,7 +421,7 @@ struct QueuedInboxEntry: Codable, Equatable, Identifiable, Sendable {
   }
 
   private enum CodingKeys: String, CodingKey {
-    case id, title, body, occurredAt, occurredTimezone, queuedAt, attachments
+    case id, title, body, occurredAt, occurredTimezone, queuedAt, attachments, occurrence
   }
 
   init(from decoder: Decoder) throws {
@@ -407,11 +429,12 @@ struct QueuedInboxEntry: Codable, Equatable, Identifiable, Sendable {
     id = try values.decode(UUID.self, forKey: .id)
     title = try values.decodeIfPresent(String.self, forKey: .title)
     body = try values.decode(String.self, forKey: .body)
-    occurredAt = try values.decode(Date.self, forKey: .occurredAt)
+    occurredAt = try values.decodeIfPresent(Date.self, forKey: .occurredAt)
     occurredTimezone = try values.decode(String.self, forKey: .occurredTimezone)
     queuedAt = try values.decode(Date.self, forKey: .queuedAt)
     attachments =
       try values.decodeIfPresent([QueuedInboxAttachment].self, forKey: .attachments) ?? []
+    occurrence = try values.decodeIfPresent(EntryOccurrence.self, forKey: .occurrence)
   }
 
   var presentedEntry: InboxEntry {
@@ -421,9 +444,12 @@ struct QueuedInboxEntry: Codable, Equatable, Identifiable, Sendable {
       body: body,
       entryType: .standard,
       createdAt: queuedAt,
-      occurredStart: occurredAt,
-      occurredTimezone: occurredTimezone,
-      revision: 1
+      occurredStart: effectiveOccurrence.start,
+      occurredTimezone: effectiveOccurrence.timezone,
+      revision: 1,
+      datePrecision: effectiveOccurrence.precision,
+      occurredEnd: effectiveOccurrence.end,
+      occurredLabel: effectiveOccurrence.label
     )
   }
 
@@ -431,6 +457,7 @@ struct QueuedInboxEntry: Codable, Equatable, Identifiable, Sendable {
     let normalizedTitle = title?.trimmed.nonEmpty
 
     return normalizedTitle == title
+      && (try? effectiveOccurrence.validate()) != nil
       && body.trimmed == body
       && (title?.count ?? 0) <= InboxCapture.titleLimit
       && body.count <= InboxCapture.bodyLimit
@@ -509,7 +536,7 @@ struct InboxQueueStore {
 
     guard let data = defaults.data(forKey: key),
       let queue = try? JSONDecoder().decode(StoredInboxQueue.self, from: data),
-      [1, 2].contains(queue.version),
+      [1, 2, 3].contains(queue.version),
       queue.entries.count <= Self.maximumEntryCount,
       queue.entries.allSatisfy(\.isValid),
       Set(queue.entries.map(\.id)).count == queue.entries.count
@@ -552,7 +579,7 @@ struct InboxQueueStore {
   }
 
   private func save(_ entries: [QueuedInboxEntry], ownerID: UUID) -> Bool {
-    let queue = StoredInboxQueue(version: 2, entries: entries)
+    let queue = StoredInboxQueue(version: 3, entries: entries)
 
     guard let data = try? JSONEncoder().encode(queue) else {
       return false

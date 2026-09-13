@@ -10,7 +10,7 @@ struct InboxView: View {
   @Bindable private var controller: InboxController
   @Binding private var captureTitle: String
   @Binding private var captureBody: String
-  @Binding private var captureOccurredAt: Date?
+  @Binding private var captureOccurrence: OccurrenceDraft?
   @Binding private var capturePhotos: [FirstTimePhotoDraft]
   private let addCapturePhoto: @MainActor (FirstTimePhotoDraft) async throws -> Void
   private let removeCapturePhoto: @MainActor (UUID) async throws -> Void
@@ -28,7 +28,7 @@ struct InboxView: View {
     controller: InboxController,
     captureTitle: Binding<String>,
     captureBody: Binding<String>,
-    captureOccurredAt: Binding<Date?>,
+    captureOccurrence: Binding<OccurrenceDraft?>,
     capturePhotos: Binding<[FirstTimePhotoDraft]>,
     addCapturePhoto: @escaping @MainActor (FirstTimePhotoDraft) async throws -> Void,
     removeCapturePhoto: @escaping @MainActor (UUID) async throws -> Void,
@@ -41,7 +41,7 @@ struct InboxView: View {
     self.controller = controller
     _captureTitle = captureTitle
     _captureBody = captureBody
-    _captureOccurredAt = captureOccurredAt
+    _captureOccurrence = captureOccurrence
     _capturePhotos = capturePhotos
     self.addCapturePhoto = addCapturePhoto
     self.removeCapturePhoto = removeCapturePhoto
@@ -57,7 +57,7 @@ struct InboxView: View {
           CaptureCard(
             title: $captureTitle,
             note: $captureBody,
-            occurredAt: $captureOccurredAt,
+            occurrence: $captureOccurrence,
             photos: $capturePhotos,
             isSaving: controller.isSaving,
             hasLocalDraft: hasLocalDraft,
@@ -372,14 +372,14 @@ struct InboxView: View {
     let didSave = await controller.save(
       title: captureTitle,
       body: captureBody,
-      occurredAt: captureOccurredAt,
+      occurrenceDraft: captureOccurrence,
       photos: capturePhotos
     )
 
     if didSave {
       captureTitle = ""
       captureBody = ""
-      captureOccurredAt = nil
+      captureOccurrence = nil
       capturePhotos = []
       hasLocalDraft = false
     }

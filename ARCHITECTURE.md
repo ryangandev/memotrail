@@ -34,6 +34,17 @@ Bucket List behavior follows a stable Collection role, not its editable display 
 Uploads preserve private originals, and display access uses expiring signed URLs.
 Drafts and pending captures remain per-user and durable on each device until synchronization is confirmed.
 
+## Precision-aware capture persistence
+
+Capture uses the same eight-precision occurrence model as later editing, with an absent custom draft meaning use the actual capture time.
+An explicit Unknown draft differs from an absent draft: it writes no calendar anchor.
+Draft persistence stores editable field strings before semantic validation, allowing partial input to survive navigation and restart.
+The offline queue contains the validated occurrence with its precision, nullable bounds, description, and recorded zone, then inserts those fields together with the canonical Entry.
+Web version-three records coexist with legacy exact-date queue items; native version-three storage retains the optional full occurrence alongside backward-compatible decoded fields.
+Native pending cards and inserts always use the full occurrence when present; legacy fields are fallback data only and cannot turn an explicit Unknown into capture time.
+Stable UUIDs and the existing owner-scoped duplicate check preserve retry idempotency, including after a queue was saved by an older client version.
+No database migration is required because the canonical Entries schema already supports these occurrence fields.
+
 ## Editing after Inbox organization
 
 The current Entry/history reader loads fresh owner-scoped `editable_entry` context before opening the shared Web or native review form.
