@@ -237,6 +237,102 @@
   margin-left: 244px;
 }
 
+.routeLoading {
+  position: relative;
+  width: min(100% - 64px, 1180px);
+  margin: 0 auto;
+  padding: var(--mt-space-10) 0 var(--mt-space-16);
+}
+
+.loadingEyebrow,
+.loadingTitle,
+.loadingIntro,
+.loadingCards span {
+  display: block;
+  border-radius: var(--mt-radius-medium);
+  background: linear-gradient(
+    100deg,
+    var(--mt-color-surface-subtle) 20%,
+    var(--mt-color-surface) 42%,
+    var(--mt-color-surface-subtle) 64%
+  );
+  background-size: 240% 100%;
+  animation: routeLoadingPulse 1.4s ease-in-out infinite;
+}
+
+.loadingEyebrow {
+  width: 112px;
+  height: 11px;
+}
+
+.loadingTitle {
+  width: min(68%, 460px);
+  height: 42px;
+  margin-top: var(--mt-space-3);
+}
+
+.loadingIntro {
+  width: min(82%, 620px);
+  height: 16px;
+  margin-top: var(--mt-space-4);
+}
+
+.loadingCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--mt-space-4);
+  margin-top: var(--mt-space-10);
+}
+
+.loadingCards span {
+  min-height: 180px;
+  border: 1px solid var(--mt-color-border);
+}
+
+.loadingLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+@keyframes routeLoadingPulse {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}
+
+.navigationProgress {
+  position: fixed;
+  inset: 64px 0 auto 244px;
+  z-index: 30;
+  height: 2px;
+  overflow: hidden;
+  background: var(--mt-color-accent-subtle);
+}
+
+.navigationProgress::after {
+  position: absolute;
+  inset: 0;
+  background: var(--mt-color-accent);
+  content: "";
+  transform: translateX(-72%);
+  animation: navigationProgress 0.85s ease-in-out infinite;
+}
+
+@keyframes navigationProgress {
+  to {
+    transform: translateX(72%);
+  }
+}
+
 .topBar {
   position: sticky;
   top: 0;
@@ -1175,6 +1271,10 @@
     margin-left: 218px;
   }
 
+  .navigationProgress {
+    left: 218px;
+  }
+
   .content {
     width: min(100% - 40px, 720px);
   }
@@ -1204,6 +1304,24 @@
 
   .workspace {
     margin-left: 0;
+  }
+
+  .navigationProgress {
+    top: 57px;
+    left: 0;
+  }
+
+  .routeLoading {
+    width: min(100% - 32px, 620px);
+    padding-top: var(--mt-space-8);
+  }
+
+  .loadingCards {
+    grid-template-columns: 1fr;
+  }
+
+  .loadingCards span {
+    min-height: 116px;
   }
 
   .topBar {
@@ -1450,6 +1568,10 @@
     width: min(100% - 24px, 620px);
   }
 
+  .routeLoading {
+    width: min(100% - 24px, 620px);
+  }
+
   .captureIntro {
     gap: var(--mt-space-3);
     padding-inline: var(--mt-space-4);
@@ -1475,6 +1597,18 @@
   .newEntryButton,
   .saveButton {
     transition: none;
+  }
+
+  .loadingEyebrow,
+  .loadingTitle,
+  .loadingIntro,
+  .loadingCards span {
+    animation: none;
+  }
+
+  .navigationProgress::after {
+    animation: none;
+    transform: none;
   }
 }
 .captureOccurrencePanel {

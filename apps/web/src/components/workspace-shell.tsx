@@ -1,7 +1,11 @@
-import Link from "next/link";
+"use client";
+
+import Link, { useLinkStatus } from "next/link";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { signOut } from "@/app/auth/actions";
 import styles from "@/app/page.module.css";
+import { AuthGate } from "@/components/auth-gate";
 import { BrandMark } from "@/components/brand-mark";
 import { Icon, type IconName } from "@/components/icon";
 import { QuickCaptureDialog } from "@/components/quick-capture-dialog";
@@ -90,17 +94,45 @@ const mobileNavigation: NavigationItem[] = [
   },
 ];
 
+export function WorkspaceBoundary({
+  children,
+  configured,
+  inboxCount,
+  viewer,
+}: {
+  children: ReactNode;
+  configured: boolean;
+  inboxCount?: number;
+  viewer: Viewer | null;
+}) {
+  const pathname = usePathname();
+
+  if (pathname.startsWith("/auth/")) {
+    return children;
+  }
+
+  if (!viewer) {
+    return <AuthGate configured={configured} />;
+  }
+
+  return (
+    <WorkspaceShell inboxCount={inboxCount} viewer={viewer}>
+      {children}
+    </WorkspaceShell>
+  );
+}
+
 export function WorkspaceShell({
-  activeDestination,
   children,
   inboxCount,
   viewer,
 }: {
-  activeDestination: WorkspaceDestination;
   children: ReactNode;
   inboxCount?: number;
   viewer: Viewer;
 }) {
+  const activeDestination = destinationForPathname(usePathname());
+
   return (
     <div className={styles.appShell}>
       <TimezoneSync />
@@ -172,6 +204,22 @@ export function WorkspaceShell({
       </nav>
     </div>
   );
+}
+
+function destinationForPathname(pathname: string): WorkspaceDestination {
+  if (pathname === "/") return "home";
+  if (pathname.startsWith("/search")) return "search";
+  if (pathname.startsWith("/inbox")) return "inbox";
+  if (pathname.startsWith("/timeline")) return "timeline";
+  if (pathname.startsWith("/goals")) return "goals";
+  if (pathname.startsWith("/homes")) return "homes";
+  if (pathname.startsWith("/places")) return "places";
+  if (pathname.startsWith("/people")) return "people";
+  if (pathname.startsWith("/vehicles")) return "vehicles";
+  if (pathname.startsWith("/first-times")) return "first-times";
+  if (pathname.startsWith("/collections")) return "collections";
+  if (pathname.startsWith("/trash")) return "trash";
+  return "library";
 }
 
 function Sidebar({
@@ -298,6 +346,7 @@ function NavigationControl({
         href={item.href}
       >
         {content}
+        <NavigationPendingIndicator label={item.label} />
       </Link>
     );
   }
@@ -306,6 +355,20 @@ function NavigationControl({
     <button aria-disabled="true" className={className} disabled type="button">
       {content}
     </button>
+  );
+}
+
+function NavigationPendingIndicator({ label }: { label: string }) {
+  const { pending } = useLinkStatus();
+
+  if (!pending) return null;
+
+  return (
+    <span
+      aria-label={`Opening ${label}`}
+      className={styles.navigationProgress}
+      role="status"
+    />
   );
 }
 

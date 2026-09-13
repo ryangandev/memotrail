@@ -1,8 +1,5 @@
-import { AuthGate } from "@/components/auth-gate";
-import { WorkspaceShell } from "@/components/workspace-shell";
 import { PeopleWorkspace } from "@/components/people-workspace";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
-import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import type { Person, PersonEntry } from "@/lib/data/person";
 import { isFirstTimeUuid } from "@/lib/data/first-time-input";
 
@@ -13,9 +10,8 @@ export default async function PeoplePage({
 }: {
   searchParams: Promise<{ page?: string; person?: string }>;
 }) {
-  if (!getSupabasePublicConfig()) return <AuthGate configured={false} />;
   const context = await getAuthenticatedContext();
-  if (!context) return <AuthGate configured />;
+  if (!context) return null;
   const parameters = await searchParams;
   const focused = parameters.person;
   const raw = Number(parameters.page ?? 1);
@@ -39,20 +35,18 @@ export default async function PeoplePage({
       .limit(200),
   ]);
   return (
-    <WorkspaceShell activeDestination="people" viewer={context.viewer}>
-      <PeopleWorkspace
-        focused={Boolean(focused)}
-        people={(people.data ?? []) as Person[]}
-        entries={(entries.data ?? []) as PersonEntry[]}
-        page={page}
-        error={
-          focused && !people.error && people.data?.length === 0
-            ? "This Person is unavailable or in Trash."
-            : people.error || entries.error
-              ? "Could not load People and Entry choices. Refresh to try again."
-              : null
-        }
-      />
-    </WorkspaceShell>
+    <PeopleWorkspace
+      focused={Boolean(focused)}
+      people={(people.data ?? []) as Person[]}
+      entries={(entries.data ?? []) as PersonEntry[]}
+      page={page}
+      error={
+        focused && !people.error && people.data?.length === 0
+          ? "This Person is unavailable or in Trash."
+          : people.error || entries.error
+            ? "Could not load People and Entry choices. Refresh to try again."
+            : null
+      }
+    />
   );
 }

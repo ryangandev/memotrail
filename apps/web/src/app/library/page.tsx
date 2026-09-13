@@ -1,9 +1,5 @@
 import Link from "next/link";
-import { AuthGate } from "@/components/auth-gate";
 import { Icon } from "@/components/icon";
-import { WorkspaceShell } from "@/components/workspace-shell";
-import { getAuthenticatedContext } from "@/lib/data/inbox";
-import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -88,31 +84,9 @@ const availableDestinations = [
 
 const plannedDestinations: string[] = [];
 
-export default async function LibraryPage() {
-  if (!getSupabasePublicConfig()) {
-    return <AuthGate configured={false} />;
-  }
-
-  const context = await getAuthenticatedContext();
-
-  if (!context) {
-    return <AuthGate configured />;
-  }
-
-  const inbox = await context.client
-    .from("entries")
-    .select("id", { count: "exact", head: true })
-    .eq("owner_id", context.userId)
-    .eq("inbox_status", "unreviewed")
-    .is("deleted_at", null);
-
+export default function LibraryPage() {
   return (
-    <WorkspaceShell
-      activeDestination="library"
-      inboxCount={inbox.error ? undefined : (inbox.count ?? 0)}
-      viewer={context.viewer}
-    >
-      <div className={styles.content}>
+    <div className={styles.content}>
         <header className={styles.header}>
           <p>Your personal archive</p>
           <h1>Library</h1>
@@ -158,7 +132,6 @@ export default async function LibraryPage() {
             </div>
           </section>
         ) : null}
-      </div>
-    </WorkspaceShell>
+    </div>
   );
 }

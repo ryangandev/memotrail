@@ -4,9 +4,7 @@ import {
   validTimezone,
 } from "@/lib/data/occurrence";
 import Link from "next/link";
-import { AuthGate } from "@/components/auth-gate";
 import { Icon } from "@/components/icon";
-import { WorkspaceShell } from "@/components/workspace-shell";
 import { AISearchForm } from "@/components/ai-search-form";
 import { LibrarySearchResults } from "@/components/library-search-results";
 import { librarySearchPage } from "@/lib/data/library-search";
@@ -18,7 +16,6 @@ import {
   type SearchRequest,
 } from "@/lib/data/search-input";
 import { getSearchWorkspace, type SearchEntry } from "@/lib/data/search";
-import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -37,40 +34,27 @@ export default async function SearchPage({
 }: {
   searchParams: Promise<RawSearchParams>;
 }) {
-  const isConfigured = Boolean(getSupabasePublicConfig());
-
-  if (!isConfigured) {
-    return <AuthGate configured={false} />;
-  }
-
   const parameters = await searchParams;
   const parsed = parseSearchRequest(parameters);
   const libraryPage = librarySearchPage(parameters.libraryPage);
   const workspace = await getSearchWorkspace(parsed, libraryPage);
 
   if (!workspace) {
-    return <AuthGate configured />;
+    return null;
   }
 
   const {
     collectionOptions,
     entries,
     filtersError,
-    inboxCount,
     loadError,
     request,
     tagOptions,
     totalCount,
-    viewer,
   } = workspace;
 
   return (
-    <WorkspaceShell
-      activeDestination="search"
-      inboxCount={inboxCount}
-      viewer={viewer}
-    >
-      <div className={styles.content}>
+    <div className={styles.content}>
         <header className={styles.pageHeader}>
           <div>
             <p className={styles.eyebrow}>Your personal archive</p>
@@ -226,8 +210,7 @@ export default async function SearchPage({
             ) : null}
           </section>
         </AISearchForm>
-      </div>
-    </WorkspaceShell>
+    </div>
   );
 }
 

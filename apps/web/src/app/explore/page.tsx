@@ -1,9 +1,6 @@
 import Link from "next/link";
-import { AuthGate } from "@/components/auth-gate";
-import { WorkspaceShell } from "@/components/workspace-shell";
 import { ExplorationView } from "@/components/exploration-view";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
-import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { explorationID } from "@/lib/ai/exploration";
 import { explorationWorkspace } from "@/lib/ai/exploration-server";
 import styles from "./page.module.css";
@@ -13,9 +10,8 @@ export default async function ExplorePage({
 }: {
   searchParams: Promise<{ entry?: string }>;
 }) {
-  if (!getSupabasePublicConfig()) return <AuthGate configured={false} />;
   const context = await getAuthenticatedContext();
-  if (!context) return <AuthGate configured />;
+  if (!context) return null;
   const { entry } = await searchParams;
   let workspace = null;
   if (explorationID(entry)) {
@@ -26,25 +22,23 @@ export default async function ExplorePage({
     }
   }
   return (
-    <WorkspaceShell activeDestination="library" viewer={context.viewer}>
-      <div className={styles.workspace}>
-        <header>
-          <p className={styles.eyebrow}>ROOM FOR A THOUGHT TO GROW</p>
-          <h1>Explore with AI</h1>
-          <p>A separate conversation. Your original words stay yours.</p>
-        </header>
-        {workspace ? (
-          <ExplorationView
-            key={`${context.viewer.id}:${entry}`}
-            initial={workspace}
-          />
-        ) : (
-          <p role="alert">
-            This Entry could not be loaded or is in Trash.{" "}
-            <Link href="/inbox">Back to Inbox</Link>
-          </p>
-        )}
-      </div>
-    </WorkspaceShell>
+    <div className={styles.workspace}>
+      <header>
+        <p className={styles.eyebrow}>ROOM FOR A THOUGHT TO GROW</p>
+        <h1>Explore with AI</h1>
+        <p>A separate conversation. Your original words stay yours.</p>
+      </header>
+      {workspace ? (
+        <ExplorationView
+          key={`${context.viewer.id}:${entry}`}
+          initial={workspace}
+        />
+      ) : (
+        <p role="alert">
+          This Entry could not be loaded or is in Trash.{" "}
+          <Link href="/inbox">Back to Inbox</Link>
+        </p>
+      )}
+    </div>
   );
 }

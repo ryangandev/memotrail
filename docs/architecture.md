@@ -18,6 +18,10 @@ Last reviewed: 2026-09-13.
 Vercel builds the repository with `apps/web` as the application root.
 Supabase migrations and the iOS Xcode project are independent of the Node workspace.
 
+The Web root layout owns the authenticated application shell, including navigation, account context, and the Inbox count.
+Route pages render only their own server-backed content inside that persistent shell.
+Next.js link prefetching and `app/loading.tsx` provide route fallbacks, while navigation links expose immediate pending feedback when a cold request has not reached the fallback yet.
+
 ## Request-to-code map
 
 Use this table to find the first likely files, then search by the product term or RPC name.
