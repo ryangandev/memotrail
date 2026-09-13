@@ -203,11 +203,13 @@ final class InboxController {
     intent: ReviewIntent,
     datePrecision: TimelineDatePrecision = .exact,
     occurredEnd: Date? = nil,
-    occurredLabel: String? = nil
+    occurredLabel: String? = nil,
+    photoPlace: PhotoPlaceDraft? = nil
   ) async -> ReviewResult {
     let input: InboxReviewInput
 
     do {
+      try photoPlace?.validate()
       input = try InboxReviewInput.validate(
         entryID: entry.id,
         revision: entry.revision,
@@ -245,11 +247,12 @@ final class InboxController {
         markDone: intent == .done,
         datePrecision: input.occurrence.precision,
         occurredEnd: input.occurrence.end,
-        occurredLabel: input.occurrence.label
+        occurredLabel: input.occurrence.label,
+        photoPlace: photoPlace
       )
       let reviewResults: [ReviewedEntryResult] =
         try await client
-        .rpc("review_entry_with_occurrence", params: parameters)
+        .rpc("review_entry_with_photo_place", params: parameters)
         .execute()
         .value
 
@@ -288,6 +291,11 @@ final class InboxController {
       collectionOptions = mergedOptions(collectionOptions, input.collectionNames)
       tagOptions = mergedOptions(tagOptions, input.tagNames)
       return ReviewResult(message: "Changes saved.", status: .saved)
+    } catch let error as PostgrestError where error.code == "40001" {
+      return ReviewResult(
+        message:
+          "The photo or Place changed. Close this review, refresh, and confirm the latest version before saving.",
+        status: .conflict)
     } catch {
       return ReviewResult(
         message: "MemoTrail could not save these changes. Try again.",
@@ -612,6 +620,7 @@ struct ReviewEntryParameters: Encodable, Sendable {
   var datePrecision: TimelineDatePrecision = .exact
   var occurredEnd: Date? = nil
   var occurredLabel: String? = nil
+  var photoPlace: PhotoPlaceDraft? = nil
 
   enum CodingKeys: String, CodingKey {
     case entryID = "p_entry_id"
@@ -627,6 +636,7 @@ struct ReviewEntryParameters: Encodable, Sendable {
     case datePrecision = "p_date_precision"
     case occurredEnd = "p_occurred_end"
     case occurredLabel = "p_occurred_label"
+    case photoPlace = "p_photo_place"
   }
 
   func encode(to encoder: Encoder) throws {
@@ -649,6 +659,7 @@ struct ReviewEntryParameters: Encodable, Sendable {
     try values.encode(datePrecision, forKey: .datePrecision)
     try values.encode(occurredEnd, forKey: .occurredEnd)
     try values.encode(occurredLabel, forKey: .occurredLabel)
+    try values.encode(photoPlace, forKey: .photoPlace)
   }
 }
 

@@ -35,9 +35,10 @@ The last accepted checkpoint is `a7850b7`.
 | Lossless Homes/Vehicles dates and precision-aware chapter durations   | Deployed        | Complete        | Complete        | Pushed 7c6a63e      |
 | Private optimized photo delivery with preserved originals             | Deployed        | Complete        | Complete        | Pushed eda325d      |
 | Interrupted photo-generation cleanup and concurrent permanent removal | Deployed        | Complete        | Complete        | Pushed eb58df5      |
-| Inbox saved photos and explicit camera calendar-date adoption         | Shared API      | Complete        | Complete        | This feature commit |
+| Inbox saved photos and explicit camera calendar-date adoption         | Shared API      | Complete        | Complete        | Pushed 875d59e      |
+| Explicit photo GPS Place creation/reuse in atomic Inbox review        | Deployed        | Complete        | Complete        | This feature commit |
 | Remaining date precision, Entry conversion and relationship gaps      | Audit ongoing   | Audit ongoing   | Audit ongoing   | Pending             |
-| Photo GPS Place adoption and remaining photo surfaces                 | Audit pending   | Audit pending   | Audit pending   | Pending             |
+| Remaining photo surfaces and interactive gallery acceptance           | Audit pending   | Audit pending   | Audit pending   | Pending             |
 | Final acceptance and production configuration                         | Pending         | Pending         | Pending         | Pending             |
 
 ## External inputs and limitations
@@ -45,7 +46,8 @@ The last accepted checkpoint is `a7850b7`.
 - Existing galleries on both clients now use the shared private JPEG/PNG/WebP/HEIC display pipeline; original-byte integrity, missing-cache recovery, source overwrites, ownership, and Trash access are covered by synthetic local acceptance.
 - Interrupted-generation artifacts now appear in owner-scoped deletion manifests, and concurrent upload/delete operations serialize through shared database guards; both clients report a cleanup retry instead of false success.
 - Inbox now browses saved photos and offers explicit Day-precision adoption of validated camera dates on both clients, without timezone inference or writes before Save/Done.
-- GPS coordinates are visible but never automatically linked; named Place adoption, broader photo-surface audit, native interactive galleries, and hosted image/metadata-worker acceptance remain separate checks.
+- Both Inbox editors now stage a named Place with editable photo GPS, or reuse an existing Place without overwriting its facts; only Save/Done atomically persists the relationship alongside the Entry.
+- New Place creation, existing Place reuse, cancellation, negative coordinate input, same-revision concurrent saves, and bidirectional history restoration are verified locally; broader photo-surface audit, native interactive galleries, and hosted image/metadata-worker acceptance remain separate checks.
 
 - First Times now preserves all eight precisions and original bounds on both clients; native serialization also retains untouched database microseconds.
 - Goal achievement now supports all eight precisions on both clients, without invented calendar anchors, and atomically creates one linked First Time while retaining original writing.

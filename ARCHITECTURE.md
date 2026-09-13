@@ -58,7 +58,7 @@ Thus a deletion that locks first makes a late upload fail, while an upload that 
 Both clients explain the cleanup race and offer an explicit refresh/retry instead of claiming permanent deletion succeeded.
 No Storage object is deleted through SQL: deletion still uses the [Storage API](https://supabase.com/docs/guides/storage/management/delete-objects), with transaction ordering grounded in [PostgreSQL row locks](https://www.postgresql.org/docs/17/explicit-locking.html).
 Existing export manifests continue to include registered variants and originals with their actual integrity checks.
-Named Place adoption from photo GPS and optional AI photo analysis remain separate unfinished work; display generation never invokes AI or changes Entry dates.
+Optional AI photo analysis remains separate unfinished work; display generation never invokes AI or changes Entry dates.
 Deployment traces Sharp through a static server import and explicitly includes the worker-only libheif bundle.
 `MEMOTRAIL_E2E_PRODUCTION=1 pnpm --filter @memotrail/web test:e2e` builds and serves the same synthetic local-only configuration with `next start`; hosted acceptance remains separate.
 Decoder behavior follows [Sharp output documentation](https://sharp.pixelplumbing.com/api-output/) and [libheif-js's supported WASM interface](https://github.com/catdad-experiments/libheif-js).
@@ -74,9 +74,20 @@ The response exposes validated camera wall time, optional subsecond text and UTC
 Missing time zones remain explicitly missing instead of becoming UTC or the viewer's zone.
 Use calendar date changes only the editor draft to Day precision, clears its prior range/description, and preserves the editor's selected IANA zone; Save changes or Done remains the only persistence step.
 Cancel discards adoption, and later manual edits take precedence.
-Coordinates are displayed without automatically creating or linking a Place; named Place adoption and metadata controls beyond Inbox remain tracked follow-ups.
+Coordinates are displayed without automatically creating or linking a Place; metadata controls beyond Inbox remain tracked follow-ups.
 Synthetic JPEG/PNG/WebP/HEIC metadata fixtures, owner isolation, cookie/native parity, cancellation, manual override, original-byte identity, and desktop/mobile Web layouts are verified locally.
 Production tracing includes the runtime Sharp and exifr entry points; hosted metadata acceptance and authenticated native UI interaction remain separate checks.
+
+Both Inbox editors can explicitly stage one photo Place per save: name a new reusable Place with editable coordinates, or search and choose an existing owned Place without overwriting its independent facts.
+`review_entry_with_photo_place` wraps the existing occurrence review in one transaction, validates the owned active original, and atomically adds the Place relationship with writing and organization.
+The source-row lock uses a narrowly scoped owner-checked definer helper because clients intentionally have no direct attachment UPDATE privilege; the review itself remains security invoker.
+Existing Place selection includes its revision and locks the shared record before Entry review; a changed or trashed Place rejects the whole save.
+New Place creation happens only after the Entry revision wins, so same-revision competing requests cannot create duplicate or orphan Places.
+Existing links, protected Home relationships, Place names/coordinates/notes, and original photo bytes remain unchanged.
+Adding a new relationship advances the existing Place revision and archives its prior links; Entry history records its pre-adoption relationships and supports restoration in both directions without deleting independent Places.
+Removing a pending Place or canceling review writes nothing; source/Place conflicts keep the draft and ask the user to refresh instead of partially saving.
+The authenticated Place-option endpoint searches names with escaped literal wildcards, returns at most 100 matches with explicit refinement guidance, and supports both Web cookies and native bearer sessions.
+No reverse geocoding, address inference, or paid AI call is involved.
 
 ## Occurrence semantics
 

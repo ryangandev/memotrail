@@ -1,4 +1,5 @@
 "use client";
+import type { PhotoPlaceDraft } from "@/lib/media/photo-place";
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -135,6 +136,7 @@ function EntryReviewDialog({
     entry.entryType,
   );
   const [occurrence, setOccurrence] = useState(() => occurrenceDraft(entry));
+  const [photoPlace, setPhotoPlace] = useState<PhotoPlaceDraft | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [result, setResult] = useState<ReviewInboxEntryResult | null>(null);
   const [tagNames, setTagNames] = useState(entry.tagNames);
@@ -158,6 +160,7 @@ function EntryReviewDialog({
       return;
     }
     const input: InboxReviewInput = {
+      photoPlace,
       ...resolved.value!,
       body,
       collectionNames: namesIncludingDraft(collectionNames, collectionInput),
@@ -317,6 +320,8 @@ function EntryReviewDialog({
             </label>
           </div>
           <EntryPhotoDates
+            place={photoPlace}
+            onPlaceChange={setPhotoPlace}
             entryId={entry.id}
             disabled={isPending}
             onUseDate={(date) =>

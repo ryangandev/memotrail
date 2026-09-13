@@ -140,7 +140,7 @@ struct InboxView: View {
           entryType,
           occurrence,
           tagNames,
-          intent in
+          intent, photoPlace in
           await controller.review(
             entry: entry,
             title: title,
@@ -153,7 +153,8 @@ struct InboxView: View {
             intent: intent,
             datePrecision: occurrence.precision,
             occurredEnd: occurrence.end,
-            occurredLabel: occurrence.label
+            occurredLabel: occurrence.label,
+            photoPlace: photoPlace
           )
         }
       }
@@ -401,7 +402,8 @@ private struct InboxReviewSheet: View {
       InboxEntryType,
       EntryOccurrence,
       [String],
-      InboxController.ReviewIntent
+      InboxController.ReviewIntent,
+      PhotoPlaceDraft?
     ) async -> InboxController.ReviewResult
 
   @Environment(\.dismiss) private var dismiss
@@ -410,6 +412,7 @@ private struct InboxReviewSheet: View {
   @State private var collectionNames: [String]
   @State private var collectionInput = ""
   @State private var entryType: InboxEntryType
+  @State private var photoPlace: PhotoPlaceDraft?
   @State private var occurrence: OccurrenceDraft
   @State private var isWorking = false
   @State private var errorMessage: String?
@@ -432,7 +435,8 @@ private struct InboxReviewSheet: View {
         InboxEntryType,
         EntryOccurrence,
         [String],
-        InboxController.ReviewIntent
+        InboxController.ReviewIntent,
+        PhotoPlaceDraft?
       ) async -> InboxController.ReviewResult
   ) {
     self.client = client
@@ -504,7 +508,8 @@ private struct InboxReviewSheet: View {
           Text("Save changes keeps this Entry in Inbox. Done marks it organized.")
         }
         EntryPhotoDatesView(
-          client: client, ownerID: ownerID, entryID: entry.id, occurrence: $occurrence)
+          client: client, ownerID: ownerID, entryID: entry.id, occurrence: $occurrence,
+          photoPlace: $photoPlace)
         OccurrenceEditor(value: $occurrence)
 
         Section {
@@ -591,6 +596,7 @@ private struct InboxReviewSheet: View {
   private func submit(_ intent: InboxController.ReviewIntent) async {
     let resolved: EntryOccurrence
     do {
+      try photoPlace?.validate()
       resolved = try occurrence.resolve(original: entry.occurrence)
     } catch {
       errorMessage = error.localizedDescription
@@ -606,7 +612,8 @@ private struct InboxReviewSheet: View {
       entryType,
       resolved,
       namesIncludingDraft(tagNames, tagInput),
-      intent
+      intent,
+      photoPlace
     )
 
     isWorking = false

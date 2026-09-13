@@ -1,10 +1,12 @@
 import { entryBodyLimit, entryTitleLimit } from "./inbox-input";
+import { validPhotoPlace, type PhotoPlaceDraft } from "@/lib/media/photo-place";
 import { validateOccurrence, type OccurrencePrecision } from "./occurrence";
 
 export const reviewableEntryTypes = ["standard", "first_time"] as const;
 export type ReviewableEntryType = (typeof reviewableEntryTypes)[number];
 
 export type InboxReviewInput = {
+  photoPlace?: PhotoPlaceDraft | null;
   body: string;
   collectionNames: string[];
   entryType: ReviewableEntryType;
@@ -32,6 +34,10 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
   }
 
   const values = input as Partial<Record<keyof InboxReviewInput, unknown>>;
+  if (values.photoPlace != null && !validPhotoPlace(values.photoPlace))
+    return invalidReview(
+      "Review the Place name and coordinates, or remove it from this draft.",
+    );
   const title = typeof values.title === "string" ? values.title.trim() : "";
   const body = typeof values.body === "string" ? values.body.trim() : "";
   const collectionNames = parseOrganizationNames(
@@ -100,6 +106,9 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
 
   return {
     data: {
+      ...(values.photoPlace != null
+        ? { photoPlace: values.photoPlace as PhotoPlaceDraft }
+        : {}),
       body,
       collectionNames,
       entryType: values.entryType as ReviewableEntryType,

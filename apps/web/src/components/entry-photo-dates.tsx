@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import type { PhotoPlaceDraft } from "@/lib/media/photo-place";
+import { PhotoPlaceEditor } from "./photo-place-draft";
 import type {
   EntryPhoto,
   PhotoMetadataResponse,
@@ -10,10 +12,14 @@ export function EntryPhotoDates({
   entryId,
   disabled,
   onUseDate,
+  place,
+  onPlaceChange,
 }: {
   entryId: string;
   disabled: boolean;
   onUseDate: (date: string) => void;
+  place: PhotoPlaceDraft | null;
+  onPlaceChange: (value: PhotoPlaceDraft | null) => void;
 }) {
   const [photos, setPhotos] = useState<EntryPhoto[] | null>(null);
   const [metadata, setMetadata] = useState<
@@ -116,11 +122,33 @@ export function EntryPhotoDates({
                     </>
                   ) : null}
                   {info.latitude !== null && info.longitude !== null ? (
-                    <p className={styles.coordinates}>
-                      GPS: {info.latitude.toFixed(6)},{" "}
-                      {info.longitude.toFixed(6)}. No Place linked
-                      automatically.
-                    </p>
+                    <>
+                      <p className={styles.coordinates}>
+                        GPS: {info.latitude.toFixed(6)},{" "}
+                        {info.longitude.toFixed(6)}. No Place linked
+                        automatically.
+                      </p>
+                      <button
+                        type="button"
+                        disabled={
+                          disabled ||
+                          busy ||
+                          (place?.attachmentId === photo.id &&
+                            place.kind === "new")
+                        }
+                        onClick={() =>
+                          onPlaceChange({
+                            kind: "new",
+                            attachmentId: photo.id,
+                            name: "",
+                            latitude: info.latitude!,
+                            longitude: info.longitude!,
+                          })
+                        }
+                      >
+                        Use GPS for a Place
+                      </button>
+                    </>
                   ) : null}
                 </>
               ) : null}
@@ -129,6 +157,14 @@ export function EntryPhotoDates({
         );
       })}
       {error ? <p role="alert">{error}</p> : null}
+      {place ? (
+        <PhotoPlaceEditor
+          key={`${place.attachmentId}:${place.kind}`}
+          value={place}
+          onChange={onPlaceChange}
+          disabled={disabled || busy}
+        />
+      ) : null}
       {notice ? <p role="status">{notice}</p> : null}
     </section>
   );

@@ -2,6 +2,41 @@ import Foundation
 @preconcurrency import Supabase
 import SwiftUI
 
+struct PhotoPlaceDraft: Encodable, Equatable, Sendable {
+  var kind: String = "new"
+  let attachmentId: UUID
+  var placeId: UUID?
+  var revision: Int?
+  var name: String = ""
+  var latitude: Double?
+  var longitude: Double?
+  func validate() throws {
+    if kind == "existing" {
+      guard placeId != nil, let revision, revision > 0, revision < 1_000_000_000 else {
+        throw PlaceEntryError.invalidRevision
+      }
+    } else {
+      guard kind == "new", let latitude, let longitude else {
+        throw PlaceEntryError.invalidCoordinates
+      }
+      _ = try PlaceInput.validate(
+        placeID: nil, expectedRevision: nil, name: name, address: "", city: "", region: "",
+        country: "", latitude: latitude, longitude: longitude, notes: "", relatedEntryIDs: [])
+    }
+  }
+}
+struct PhotoPlaceOption: Decodable, Identifiable, Sendable {
+  let id: UUID
+  let name: String
+  let revision: Int
+  let latitude: Double?
+  let longitude: Double?
+}
+struct PhotoPlaceOptions: Decodable, Sendable {
+  let places: [PhotoPlaceOption]
+  let hasMore: Bool
+}
+
 struct EntryPhotoInfo: Decodable, Identifiable, Sendable {
   let id: UUID
   let name: String
@@ -39,6 +74,7 @@ struct EntryPhotoDatesView: View {
   let ownerID: UUID
   let entryID: UUID
   @Binding var occurrence: OccurrenceDraft
+  @Binding var photoPlace: PhotoPlaceDraft?
   @State private var photos: [EntryPhotoInfo]?
   @State private var metadata: [UUID: PhotoCameraMetadata] = [:]
   @State private var busy = false
@@ -96,11 +132,20 @@ struct EntryPhotoDatesView: View {
                 "GPS: \(latitude.formatted(.number.precision(.fractionLength(6)))), \(longitude.formatted(.number.precision(.fractionLength(6)))). No Place linked automatically."
               )
               .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted).textSelection(.enabled)
+              Button("Use GPS for a Place") {
+                photoPlace = PhotoPlaceDraft(
+                  attachmentId: photo.id, latitude: latitude, longitude: longitude)
+              }.disabled(
+                busy || (photoPlace?.attachmentId == photo.id && photoPlace?.kind == "new"))
             }
           }
         }.padding(.vertical, MTSpacing.s2)
       }
       if busy { ProgressView() }
+      if photoPlace != nil {
+        PhotoPlaceDraftEditor(client: client, ownerID: ownerID, value: $photoPlace)
+          .id("\(photoPlace?.attachmentId.uuidString ?? ""):\(photoPlace?.kind ?? "")")
+      }
       if let message { Text(message).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted) }
     }
   }
@@ -136,6 +181,88 @@ struct EntryPhotoDatesView: View {
     } catch {
       message = "Photos or camera metadata are unavailable. Try again. The originals are unchanged."
     }
+  }
+}
+
+private struct PhotoPlaceDraftEditor: View {
+  let client: SupabaseClient
+  let ownerID: UUID
+  @Binding var value: PhotoPlaceDraft?
+  @State private var query = ""
+  @State private var options: [PhotoPlaceOption] = []
+  @State private var message: String?
+  @State private var busy = false
+  @State private var latitude: String
+  @State private var longitude: String
+  init(client: SupabaseClient, ownerID: UUID, value: Binding<PhotoPlaceDraft?>) {
+    self.client = client
+    self.ownerID = ownerID
+    self._value = value
+    _latitude = State(initialValue: value.wrappedValue?.latitude.map { String($0) } ?? "")
+    _longitude = State(initialValue: value.wrappedValue?.longitude.map { String($0) } ?? "")
+  }
+  var body: some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s3) {
+      Text("Place to add when you save").font(MTTypography.body).bold()
+      Text(
+        "No Place is created or linked until Save changes or Done. Existing links stay unchanged."
+      ).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+      if value?.kind == "new" {
+        TextField(
+          "New Place name", text: Binding(get: { value?.name ?? "" }, set: { value?.name = $0 }))
+        TextField("Latitude", text: $latitude).keyboardType(.numbersAndPunctuation)
+          .onChange(of: latitude) { _, text in value?.latitude = Double(text) }
+        TextField("Longitude", text: $longitude).keyboardType(.numbersAndPunctuation)
+          .onChange(of: longitude) { _, text in value?.longitude = Double(text) }
+        Text("Coordinates came from this photo. Review or correct them; no address is inferred.")
+          .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+      } else {
+        Text(
+          "Link existing Place: \(value?.name ?? ""). Its name, coordinates, and other facts will not change."
+        ).font(MTTypography.caption)
+      }
+      TextField("Find an existing Place", text: $query)
+      Button("Search Places") { Task { await search() } }.disabled(busy)
+      if !options.isEmpty {
+        Picker(
+          "Existing Place",
+          selection: Binding(
+            get: { value?.placeId?.uuidString ?? "" },
+            set: { raw in
+              guard let place = options.first(where: { $0.id.uuidString == raw }),
+                let attachment = value?.attachmentId
+              else { return }
+              value = PhotoPlaceDraft(
+                kind: "existing", attachmentId: attachment, placeId: place.id,
+                revision: place.revision, name: place.name)
+            })
+        ) {
+          Text("Choose a Place").tag("")
+          ForEach(options) { p in
+            Text(p.name + (p.latitude.map { " (\($0), \(p.longitude ?? 0))" } ?? "")).tag(
+              p.id.uuidString)
+          }
+        }
+      }
+      if let message { Text(message).font(MTTypography.caption) }
+      Button("Remove Place from draft") { value = nil }
+    }
+  }
+  @MainActor private func search() async {
+    guard !busy else { return }
+    busy = true
+    message = nil
+    defer { busy = false }
+    do {
+      let result: PhotoPlaceOptions = try await MediaDelivery.metadataRequest(
+        path: "api/media/place-options", query: URLQueryItem(name: "query", value: query),
+        client: client, ownerID: ownerID)
+      options = result.places
+      message =
+        result.hasMore
+        ? "First 100 Places shown. Refine your search."
+        : result.places.isEmpty ? "No matching Places." : nil
+    } catch { message = "Places could not be loaded. Try again." }
   }
 }
 

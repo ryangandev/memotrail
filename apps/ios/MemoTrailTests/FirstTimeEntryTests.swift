@@ -3,6 +3,26 @@ import XCTest
 @testable import MemoTrail
 
 final class FirstTimeEntryTests: XCTestCase {
+  func testPhotoPlaceDraftValidatesExplicitNewOrExistingChoice() throws {
+    let photo = UUID()
+    var draft = PhotoPlaceDraft(
+      attachmentId: photo, name: "Ski slope", latitude: 39.95, longitude: -75.166667)
+    XCTAssertNoThrow(try draft.validate())
+    draft.latitude = .nan
+    XCTAssertThrowsError(try draft.validate())
+    draft.latitude = 39.95
+    draft.name = " "
+    XCTAssertThrowsError(try draft.validate())
+    let existing = PhotoPlaceDraft(
+      kind: "existing", attachmentId: photo, placeId: UUID(), revision: 2, name: "Existing place")
+    XCTAssertNoThrow(try existing.validate())
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(existing)) as? [String: Any])
+    XCTAssertEqual(json["kind"] as? String, "existing")
+    XCTAssertNil(json["latitude"])
+    XCTAssertNil(json["longitude"])
+    XCTAssertEqual(json["attachmentId"] as? String, photo.uuidString)
+  }
   func testCameraDateAdoptionIsAnExplicitDayDraftWithNoTimezoneInference() throws {
     let data = Data(
       """

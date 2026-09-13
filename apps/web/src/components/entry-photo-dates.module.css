@@ -67,6 +67,39 @@
   user-select: text;
   overflow-wrap: anywhere;
 }
+.panel fieldset {
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-small);
+  padding: var(--mt-space-3);
+  margin-top: var(--mt-space-3);
+  min-width: 0;
+}
+.panel legend {
+  font-size: 13px;
+  font-weight: 600;
+}
+.panel fieldset button {
+  margin-right: var(--mt-space-2);
+  margin-top: var(--mt-space-2);
+}
+.panel label {
+  display: block;
+  font-size: 12px;
+  margin-block: var(--mt-space-2);
+}
+.panel input,
+.panel select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--mt-color-border);
+  background: var(--mt-color-surface);
+  color: var(--mt-color-ink);
+  border-radius: var(--mt-radius-small);
+  padding: var(--mt-space-2);
+  font: inherit;
+}
 @media (max-width: 480px) {
   .photo {
     flex-direction: column;

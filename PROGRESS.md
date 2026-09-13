@@ -6,6 +6,18 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Explicit photo GPS Place adoption across both clients
+
+- Web and iOS Inbox review can stage a named new Place from photo coordinates or search and choose an existing reusable Place, without geocoding or AI calls.
+- Coordinates remain editable before confirmation; existing Place names, coordinates, notes, other relationships, and Home links are never replaced by photo metadata.
+- Additive migration `202609120020_photo_place_review.sql` atomically saves writing, occurrence, organization, and the chosen Place relationship through the same owner/revision-protected contract.
+- The source lock preserves read-only client attachment permissions, and stale/trashed sources or stale shared Place versions roll back the entire review.
+- Real browser saves verify cancellation, corrected negative coordinates, native-bearer Place lookup, owner isolation, and existing Place reuse; concurrent authenticated saves produce one new Place and one rejected stale revision, not duplicates.
+- SQL history tests verify restoring and re-restoring relationships without deleting reusable Place records; older no-Place review contracts remain available.
+- Local verification: 332 Web tests, 186 native tests with zero skips, 1,268 SQL assertions, lint, type checking, formatting, generated tokens, and production-mode browser/API regression.
+- The linked hosted migration target is the existing `memotrail` project; no seed data or unrelated migration is deployed.
+- Progress and architecture remain explicit about unverified authenticated native interaction and hosted UI/worker acceptance; those are not inferred from local tests.
+
 ### Inbox photos and explicit camera-date adoption
 
 - Web and iOS Inbox review now browse saved photos through the same private image boundary and request original camera metadata on demand.

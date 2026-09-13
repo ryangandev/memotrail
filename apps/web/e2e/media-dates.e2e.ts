@@ -298,6 +298,187 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       (await client.from("entry_places").select("*").eq("entry_id", entry))
         .data,
     ).toEqual([]);
+    async function openPlaceDraft() {
+      await expect(dialog).not.toBeVisible();
+      await page
+        .getByRole("button", { name: "Review", exact: true })
+        .first()
+        .click();
+      await dialog
+        .getByRole("button", { name: "Show photos", exact: true })
+        .click();
+      await dialog
+        .getByRole("button", { name: "Read camera date", exact: true })
+        .click();
+      await dialog
+        .getByRole("button", { name: "Use GPS for a Place", exact: true })
+        .click();
+    }
+    await openPlaceDraft();
+    await dialog
+      .getByLabel("New Place name", { exact: true })
+      .fill("Canceled Place");
+    expect(
+      (await client.from("places").select("id").eq("name", "Canceled Place"))
+        .data,
+    ).toEqual([]);
+    await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+    expect(
+      (await client.from("places").select("id").eq("name", "Canceled Place"))
+        .data,
+    ).toEqual([]);
+    await openPlaceDraft();
+    await dialog
+      .getByLabel("New Place name", { exact: true })
+      .fill("Photo ski slope");
+    await dialog.getByLabel("Latitude", { exact: true }).fill("");
+    await dialog
+      .getByLabel("Latitude", { exact: true })
+      .pressSequentially("-39.95");
+    await expect(dialog.getByLabel("Latitude", { exact: true })).toHaveValue(
+      "-39.95",
+    );
+    await dialog.getByLabel("Longitude", { exact: true }).fill("175.166667");
+    await expect(
+      dialog.getByRole("button", { name: "Use GPS for a Place", exact: true }),
+    ).toBeDisabled();
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.emulateMedia({ colorScheme: "light" });
+    await dialog
+      .getByLabel("Longitude", { exact: true })
+      .scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: "/private/tmp/memotrail-photo-place-desktop.png",
+      fullPage: true,
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.emulateMedia({ colorScheme: "dark" });
+    await dialog
+      .getByRole("button", { name: "Save changes", exact: true })
+      .click();
+    await expect(dialog).not.toBeVisible();
+    const newPlace = await client
+      .from("places")
+      .select("*")
+      .eq("name", "Photo ski slope")
+      .single();
+    expect(newPlace.data).toMatchObject({
+      latitude: -39.95,
+      longitude: 175.166667,
+    });
+    expect(
+      (
+        await client
+          .from("entry_places")
+          .select("place_id")
+          .eq("entry_id", entry)
+      ).data,
+    ).toEqual([{ place_id: newPlace.data!.id }]);
+    const existingPlace = await client.rpc("save_place", {
+      p_name: "Reusable Place",
+      p_address: null,
+      p_city: null,
+      p_country: null,
+      p_region: null,
+      p_latitude: 10,
+      p_longitude: 20,
+      p_notes: "Keep these facts",
+      p_related_entry_ids: [],
+      p_place_id: null,
+      p_expected_revision: null,
+    });
+    expect(existingPlace.error).toBeNull();
+    const existingID = existingPlace.data[0].place_id;
+    await openPlaceDraft();
+    await dialog.getByLabel("Find an existing Place").fill("Reusable");
+    await dialog
+      .getByRole("button", { name: "Search Places", exact: true })
+      .click();
+    await dialog
+      .getByLabel("Existing Place", { exact: true })
+      .selectOption(existingID);
+    await expect(
+      dialog.getByText("Link existing Place:", { exact: false }),
+    ).toContainText("Reusable Place");
+    await dialog
+      .getByText("Link existing Place:", { exact: false })
+      .scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: "/private/tmp/memotrail-photo-place-mobile.png",
+      fullPage: true,
+    });
+    const nativeOptions = await page.request.post(
+      "/api/media/place-options?query=Reusable",
+      { headers: bearer },
+    );
+    expect((await nativeOptions.json()).places[0].id).toBe(existingID);
+    expect(
+      (
+        await (
+          await page.request.post("/api/media/place-options?query=Reusable", {
+            headers: otherHeaders,
+          })
+        ).json()
+      ).places,
+    ).toEqual([]);
+    await dialog
+      .getByRole("button", { name: "Save changes", exact: true })
+      .click();
+    await expect(dialog).not.toBeVisible();
+    expect(
+      (
+        await client
+          .from("entry_places")
+          .select("place_id")
+          .eq("entry_id", entry)
+      ).data,
+    ).toHaveLength(2);
+    expect(
+      (
+        await client
+          .from("places")
+          .select("latitude,longitude,notes")
+          .eq("id", existingID)
+          .single()
+      ).data,
+    ).toEqual({ latitude: 10, longitude: 20, notes: "Keep these facts" });
+    const raceBefore = await snapshot();
+    const raceInput = {
+      p_entry_id: entry,
+      p_expected_revision: raceBefore.revision,
+      p_title: raceBefore.title,
+      p_body: raceBefore.body,
+      p_entry_type: "standard",
+      p_occurred_start: raceBefore.occurred_start,
+      p_occurred_timezone: raceBefore.occurred_timezone,
+      p_collection_names: [],
+      p_tag_names: [],
+      p_mark_done: false,
+      p_occurred_end: null,
+      p_occurred_label: null,
+      p_date_precision: "day",
+      p_photo_place: {
+        kind: "new",
+        attachmentId: attachment,
+        name: "Concurrent photo Place",
+        latitude: 30,
+        longitude: 40,
+      },
+    };
+    const race = await Promise.all([
+      client.rpc("review_entry_with_photo_place", raceInput),
+      client.rpc("review_entry_with_photo_place", raceInput),
+    ]);
+    expect(race.map((v) => v.error)).toEqual([null, null]);
+    expect(race.map((v) => v.data.length).sort()).toEqual([0, 1]);
+    expect(
+      (
+        await client
+          .from("places")
+          .select("id")
+          .eq("name", "Concurrent photo Place")
+      ).data,
+    ).toHaveLength(1);
     expect(
       (
         await client.rpc("trash_entry_attachment", {

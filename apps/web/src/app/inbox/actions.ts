@@ -152,8 +152,9 @@ export async function reviewInboxEntry(
   }
 
   const { data, error } = await context.client.rpc(
-    "review_entry_with_occurrence",
+    "review_entry_with_photo_place",
     {
+      p_photo_place: parsedInput.data.photoPlace ?? null,
       p_body: parsedInput.data.body,
       p_collection_names: parsedInput.data.collectionNames,
       p_entry_id: parsedInput.data.id,
@@ -169,6 +170,13 @@ export async function reviewInboxEntry(
       p_title: parsedInput.data.title,
     },
   );
+
+  if (error?.code === "40001")
+    return {
+      status: "conflict",
+      message:
+        "The photo or Place changed. Close this review, refresh, and confirm the latest version before saving.",
+    };
 
   if (error) {
     return {
@@ -192,6 +200,8 @@ export async function reviewInboxEntry(
   revalidatePath("/");
 
   revalidatePath("/inbox");
+  revalidatePath("/places");
+  revalidatePath("/search");
   return intent === "done"
     ? {
         message: "Entry organized.",
