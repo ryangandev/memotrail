@@ -1,3 +1,8 @@
+import {
+  occurrenceLabel,
+  occurrenceSpanLabel,
+  validTimezone,
+} from "@/lib/data/occurrence";
 import Link from "next/link";
 import { AuthGate } from "@/components/auth-gate";
 import { Icon } from "@/components/icon";
@@ -200,6 +205,11 @@ export default async function SearchPage({
               )}
             </fieldset>
 
+            <p className={styles.dateGuidance}>
+              Date filters include overlapping recorded periods in each
+              Entry&apos;s time zone. Partial dates may overlap; unanchored
+              dates remain searchable without date filters.
+            </p>
             {filtersError ? (
               <p className={styles.filterNotice} role="status">
                 {filtersError}
@@ -300,7 +310,7 @@ function SearchResultCard({ entry }: { entry: SearchEntry }) {
         <div className={styles.resultMeta}>
           <span>{entryTypeLabel(entry.entryType)}</span>
           {entry.inboxStatus === "unreviewed" ? <span>In Inbox</span> : null}
-          <time dateTime={entry.occurredAt ?? entry.updatedAt}>
+          <time dateTime={entry.occurredAt ?? undefined}>
             {resultDateLabel(entry)}
           </time>
         </div>
@@ -396,32 +406,15 @@ function entryTypeLabel(value: string) {
 }
 
 function resultDateLabel(entry: SearchEntry) {
-  if (entry.occurredLabel) {
-    return entry.occurredLabel;
-  }
-
-  if (!entry.occurredAt) {
-    return "Date not set";
-  }
-
-  const date = new Date(entry.occurredAt);
-  const options: Intl.DateTimeFormatOptions = {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
+  const occurrence = {
+    ...entry,
+    occurredTimezone: validTimezone(entry.occurredTimezone)
+      ? entry.occurredTimezone
+      : "UTC",
   };
-
-  try {
-    return new Intl.DateTimeFormat("en-US", {
-      ...options,
-      timeZone: entry.occurredTimezone ?? "UTC",
-    }).format(date);
-  } catch {
-    return new Intl.DateTimeFormat("en-US", {
-      ...options,
-      timeZone: "UTC",
-    }).format(date);
-  }
+  return ["home", "vehicle", "life_stage"].includes(entry.entryType)
+    ? occurrenceSpanLabel(occurrence)
+    : occurrenceLabel(occurrence);
 }
 
 function firstUsefulLine(value: string) {

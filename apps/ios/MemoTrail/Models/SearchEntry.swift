@@ -44,6 +44,8 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   let entryType: String
   let inboxStatus: String
   let occurredAt: Date?
+  let occurredEnd: Date?
+  let datePrecision: String?
   let occurredLabel: String?
   let occurredTimezone: String?
   let updatedAt: Date
@@ -59,6 +61,8 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
     case entryType = "entry_type"
     case inboxStatus = "inbox_status"
     case occurredAt = "occurred_start"
+    case occurredEnd = "occurred_end"
+    case datePrecision = "date_precision"
     case occurredLabel = "occurred_label"
     case occurredTimezone = "occurred_timezone"
     case updatedAt = "updated_at"
@@ -77,6 +81,8 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
     entryType = try values.decode(String.self, forKey: .entryType)
     inboxStatus = try values.decode(String.self, forKey: .inboxStatus)
     occurredAt = try values.decodeIfPresent(Date.self, forKey: .occurredAt)
+    occurredEnd = try values.decodeIfPresent(Date.self, forKey: .occurredEnd)
+    datePrecision = try values.decodeIfPresent(String.self, forKey: .datePrecision)
     occurredLabel = try values.decodeIfPresent(String.self, forKey: .occurredLabel)?.trimmed
       .nonEmpty
     occurredTimezone =
@@ -131,6 +137,13 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   }
 
   var displayDate: String {
+    if let datePrecision, let precision = TimelineDatePrecision(rawValue: datePrecision) {
+      let occurrence = EntryOccurrence(
+        precision: precision, start: occurredAt, end: occurredEnd, label: occurredLabel,
+        timezone: occurredTimezone ?? "UTC")
+      return ["home", "vehicle", "life_stage"].contains(entryType)
+        ? occurrence.spanLabel : occurrence.displayLabel
+    }
     if let occurredLabel {
       return occurredLabel
     }

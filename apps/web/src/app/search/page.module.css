@@ -231,6 +231,13 @@
   font-size: var(--mt-font-size-caption);
 }
 
+.dateGuidance {
+  margin-top: var(--mt-space-3);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+  line-height: var(--mt-line-height-body);
+}
+
 .message {
   display: flex;
   min-height: 164px;

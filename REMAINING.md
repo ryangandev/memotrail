@@ -38,13 +38,15 @@ The last accepted checkpoint is `a7850b7`.
 | Inbox saved photos and explicit camera calendar-date adoption           | Shared API      | Complete        | Complete        | Pushed 875d59e      |
 | Explicit photo GPS Place creation/reuse in atomic Inbox review          | Deployed        | Complete        | Complete        | Pushed a37b9f5      |
 | Editing organized Standard/First Time Entries with preserved Done state | Deployed        | Complete        | Complete        | Pushed 6bcd6c1      |
-| All eight quick-capture date precisions with compatible offline drafts  | Existing schema | Complete        | Complete        | This feature commit |
+| All eight quick-capture date precisions with compatible offline drafts  | Existing schema | Complete        | Complete        | Pushed a382c68      |
+| Precision-aware search overlap, date indexing, and result labels        | Deployed        | Complete        | Complete        | This feature commit |
 | Remaining date precision, Entry conversion and relationship gaps        | Audit ongoing   | Audit ongoing   | Audit ongoing   | Pending             |
 | Remaining photo surfaces and interactive gallery acceptance             | Audit pending   | Audit pending   | Audit pending   | Pending             |
 | Final acceptance and production configuration                           | Pending         | Pending         | Pending         | Pending             |
 
 ## External inputs and limitations
 
+- Search now uses recorded-zone period overlap for date filters, honest partial-date indexing, and matching Web/native precision labels; AI evidence shares the same filtering while legacy RPCs remain available.
 - Organized Standard and First Time Entries now reopen the shared editor from their current-record/history reader on both clients; Save retains organized status, exact timestamps, history, and recoverable organization.
 - Quick capture now supports all eight precisions on both clients, including description-only and Unknown dates, explicit reset to capture time, unfinished date drafts, and backward-compatible offline replay; broad date-filter and relationship audits remain separate work.
 - Existing galleries on both clients now use the shared private JPEG/PNG/WebP/HEIC display pipeline; original-byte integrity, missing-cache recovery, source overwrites, ownership, and Trash access are covered by synthetic local acceptance.

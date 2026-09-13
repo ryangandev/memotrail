@@ -3,6 +3,25 @@ import XCTest
 @testable import MemoTrail
 
 final class SearchEntryTests: XCTestCase {
+  func testSearchResultPreservesPartialDatesAndPeriodEnds() throws {
+    for (precision, type, end, expected) in [
+      ("year", "standard", "null", "2017"),
+      ("month", "standard", "null", "Jan 2017"),
+      ("range", "standard", "\"2019-02-03T12:00:00Z\"", "Jan 1, 2017 to Feb 3, 2019"),
+      ("year", "life_stage", "\"2020-01-01T12:00:00Z\"", "2017 - 2020"),
+      ("day", "home", "null", "Since Jan 1, 2017"),
+      ("unknown", "standard", "null", "Date unknown"),
+    ] {
+      let json = """
+        {"entry_id":"4F8D0FE6-61D0-418A-8713-CF071AEEA450","title":"Memory","body":"Original","entry_type":"\(type)","inbox_status":"organized","occurred_start":"2017-01-01T12:00:00Z","occurred_end":\(end),"date_precision":"\(precision)","occurred_timezone":"UTC","updated_at":"2026-09-02T12:00:00Z","total_count":1}
+        """
+      let decoder = JSONDecoder()
+      decoder.dateDecodingStrategy = .iso8601
+      let entry = try decoder.decode(SearchEntry.self, from: Data(json.utf8))
+      XCTAssertEqual(entry.displayDate, expected)
+      XCTAssertEqual(entry.datePrecision, precision)
+    }
+  }
   func testExportSnapshotPreservesCountsAndPortableFilename() throws {
     let json = """
       {"id":"00000000-0000-0000-0000-000000000001","schema_version":1,"captured_at":"2026-09-12T19:00:00.123+00:00","expires_at":"2026-09-13T19:00:00.123+00:00","row_count":1005,"json_bytes":2200000,"datasets":{"entries":1005,"homes":0}}

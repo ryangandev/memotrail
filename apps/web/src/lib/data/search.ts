@@ -1,4 +1,5 @@
 import "server-only";
+import { occurrencePrecisions, type OccurrencePrecision } from "./occurrence";
 
 import { getAuthenticatedContext, type Viewer } from "@/lib/data/inbox";
 import {
@@ -15,6 +16,8 @@ export type SearchEntry = {
   inboxStatus: "organized" | "unreviewed";
   matchReasons: string[];
   occurredAt: string | null;
+  occurredEnd: string | null;
+  datePrecision: OccurrencePrecision;
   occurredLabel: string | null;
   occurredTimezone: string | null;
   tagNames: string[];
@@ -43,6 +46,8 @@ type SearchRow = {
   match_reasons: string[] | null;
   occurred_label: string | null;
   occurred_start: string | null;
+  occurred_end: string | null;
+  date_precision: OccurrencePrecision;
   occurred_timezone: string | null;
   tag_names: string[] | null;
   title: string | null;
@@ -65,7 +70,7 @@ export async function getSearchWorkspace(
 
   const shouldSearch = parsed.request.hasCriteria && !parsed.error;
   const searchRequest = shouldSearch
-    ? context.client.rpc("search_entries", {
+    ? context.client.rpc("search_entries_with_occurrence", {
         p_collection_names: parsed.request.collectionNames,
         p_date_from: parsed.request.dateFrom,
         p_date_to: parsed.request.dateTo,
@@ -135,6 +140,8 @@ function entryFromRow(row: SearchRow): SearchEntry {
     inboxStatus: row.inbox_status,
     matchReasons: strings(row.match_reasons),
     occurredAt: stringValue(row.occurred_start),
+    occurredEnd: stringValue(row.occurred_end),
+    datePrecision: row.date_precision,
     occurredLabel: stringValue(row.occurred_label),
     occurredTimezone: stringValue(row.occurred_timezone),
     tagNames: strings(row.tag_names),
@@ -182,6 +189,10 @@ function isSearchRow(value: unknown): value is SearchRow {
     nullableString(value.title) &&
     nullableString(value.occurred_label) &&
     nullableString(value.occurred_start) &&
+    nullableString(value.occurred_end) &&
+    occurrencePrecisions.includes(
+      value.date_precision as OccurrencePrecision,
+    ) &&
     nullableString(value.occurred_timezone) &&
     nullableStringArray(value.collection_names) &&
     nullableStringArray(value.match_reasons) &&

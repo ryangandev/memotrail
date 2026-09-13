@@ -34,6 +34,16 @@ Bucket List behavior follows a stable Collection role, not its editable display 
 Uploads preserve private originals, and display access uses expiring signed URLs.
 Drafts and pending captures remain per-user and durable on each device until synchronization is confirmed.
 
+## Precision-aware search dates
+
+Keyword search and model-assisted evidence share `search_entries_ordered`, so date eligibility cannot diverge between the two search modes or between clients.
+`entry_occurrence_window` derives a local-calendar range using the Entry's recorded zone: year/month dates cover that entire year/month, closed periods include their end, and explicit open ranges or ongoing Home/Vehicle/life-stage periods stay open-ended.
+The window is a retrieval interpretation, not a mutation or claim that an uncertain event happened on every included day.
+Unknown and description-only dates have no window and are excluded only when a date filter is active.
+The date text index includes only known precision and recorded ends, never fabricated January/day-one text for partial dates.
+An additive `search_entries_with_occurrence` projection returns the original precision with existing search fields and explicitly preserves relevance ordering after pagination; older RPC signatures remain unchanged.
+Both clients format returned dates through their shared occurrence presenters, with period labels for chapter/stage Entries and no creation-time fallback for Unknown.
+
 ## Precision-aware capture persistence
 
 Capture uses the same eight-precision occurrence model as later editing, with an absent custom draft meaning use the actual capture time.

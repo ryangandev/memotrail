@@ -666,9 +666,15 @@ private struct SearchFiltersSheet: View {
           .disabled(controller.tagOptions.isEmpty)
         }
 
-        Section("Occurrence date") {
+        Section {
           OptionalDateFilter(title: "From", date: $dateFrom)
           OptionalDateFilter(title: "To", date: $dateTo)
+        } header: {
+          Text("Occurrence date")
+        } footer: {
+          Text(
+            "Date filters include overlapping recorded periods in each Entry's time zone. Partial dates may overlap; unanchored dates remain searchable without date filters."
+          )
         }
 
         Section {

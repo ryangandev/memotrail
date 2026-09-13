@@ -6,6 +6,21 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Search dates that respect recorded precision and overlapping periods
+
+- Reproduced a real browser search that omitted a year-only memory from a date window inside that year.
+- Shared search filtering now compares inclusive local-calendar windows, including complete recorded months/years, explicit range ends, and ongoing Home, Vehicle, or life-stage periods.
+- Unknown and description-only dates remain discoverable by text but are excluded from date filters; creation time is never substituted as an occurrence anchor.
+- Date indexing preserves actual precision instead of inventing January, the first day of a month, or stale Unknown anchors, and includes recorded range ends.
+- Web and native keyword search consume an additive occurrence-aware result projection while legacy search signatures remain available; pagination, relevance ordering, owner isolation, and Trash filtering retain their existing contracts.
+- Both clients show original partial precision and period ends rather than formatting every start as a full day, and explain overlap semantics alongside the date filters.
+- Shared AI evidence uses the same candidate filtering and honest date index without additional provider requests.
+- Local SQL verification passes 1,315 assertions, including overlap boundaries, leap years, recorded zones, nonfinite filters, compatibility, ordering, and evidence parity.
+- Migration `202609120022_search_occurrence.sql` is deployed with an up-to-date hosted ledger and clean schema lint, without seeds, role changes, or rewriting user content.
+- Local verification passes 344 Web tests, 190 native tests with zero failures or skips, and all 31 production-mode browser/API scenarios; desktop light/mobile dark result layouts and the final guidance styling were inspected.
+- Lint, type checking, formatting, generated tokens, and diff checks pass; the known client-aborted RSC log and intentional interrupted-ZIP negative test remain distinguished from passing application assertions.
+- No AI request was added; production and authenticated native UI acceptance remain separate final gates.
+
 ### Precision-aware quick capture and durable date drafts
 
 - Web and native Home, Inbox, and global capture now use the existing eight-precision occurrence editor instead of forcing every new Entry to an exact timestamp.
