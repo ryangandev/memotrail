@@ -12,7 +12,6 @@ import type { Viewer } from "@/lib/data/inbox";
 
 export type WorkspaceDestination =
   | "collections"
-  | "habits"
   | "home"
   | "homes"
   | "inbox"
@@ -46,7 +45,6 @@ const primaryNavigation: NavigationItem[] = [
 ];
 
 const recordNavigation: NavigationItem[] = [
-  { destination: "habits", href: "/habits", icon: "check", label: "Habits" },
   { destination: "goals", href: "/goals", icon: "target", label: "Goals" },
   { destination: "homes", href: "/homes", icon: "home", label: "Homes" },
   { destination: "places", href: "/places", icon: "map", label: "Places" },
@@ -84,7 +82,6 @@ const mobileNavigation: NavigationItem[] = [
     icon: "timeline",
     label: "Timeline",
   },
-  { destination: "habits", href: "/habits", icon: "check", label: "Habits" },
   {
     destination: "library",
     href: "/library",

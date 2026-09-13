@@ -119,6 +119,7 @@ export async function getSearchWorkspace(
           p_query: parsed.request.query,
           p_limit: librarySearchPageSize,
           p_offset: (libraryPage - 1) * librarySearchPageSize,
+          p_kinds: ["person", "place"],
         })
       : Promise.resolve({ data: null, error: null }),
   ]);
@@ -133,7 +134,7 @@ export async function getSearchWorkspace(
     libraryError:
       shouldSearchLibrary &&
       (librarySearch.error || !parseLibrarySearch(librarySearch.data))
-        ? "Could not search People, Places and Habits. Refresh to try again."
+        ? "Could not search People and Places. Refresh to try again."
         : null,
     collectionOptions: collections.error
       ? []

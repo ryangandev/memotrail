@@ -182,7 +182,6 @@ function refreshTrashPaths() {
     "/settings/organization",
     "/goals",
     "/first-times",
-    "/habits",
     "/homes",
     "/places",
     "/people",

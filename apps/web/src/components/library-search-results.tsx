@@ -24,32 +24,31 @@ export function LibrarySearchResults({
   if (!hasLibrarySearchScope(request))
     return (
       <p className={styles.dateGuidance}>
-        Clear Entry filters to also search People, Places and Habits.
+        Clear Entry filters to also search People and Places.
       </p>
     );
   return (
     <section
       className={styles.resultsSection}
-      aria-label="People, Places and Habits"
+      aria-label="People and Places"
     >
       <header className={styles.resultsHeader}>
         <div>
-          <h2>People, Places and Habits</h2>
+          <h2>People and Places</h2>
           <span>
             {result ? `${result.total_count} matches` : "Keyword search"}
           </span>
         </div>
       </header>
       <p className={styles.dateGuidance}>
-        Names, notes, location details and Habit check-in notes. No AI required.
-        Trash and archived Habits are excluded.
+        Names, notes, and location details. No AI required. Trash is excluded.
       </p>
       {error ? (
         <p role="alert">{error}</p>
       ) : (
         <>
           {result?.items.length === 0 && (
-            <p>No matching People, Places or Habits.</p>
+            <p>No matching People or Places.</p>
           )}
           <div className={styles.resultList}>
             {result?.items.map((item) => (
@@ -59,11 +58,7 @@ export function LibrarySearchResults({
               >
                 <div className={styles.resultMeta}>
                   <span>
-                    {item.kind === "person"
-                      ? "Person"
-                      : item.kind === "place"
-                        ? "Place"
-                        : "Habit"}
+                    {item.kind === "person" ? "Person" : "Place"}
                   </span>
                 </div>
                 <h3>

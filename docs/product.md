@@ -79,7 +79,7 @@ Photo metadata may be offered as a date or Place suggestion but is never adopted
 ## Retrieval and AI
 
 - One search experience supports literal keyword search and an explicit AI question action.
-- Keyword search covers Entries plus standalone People, Places, and Habits.
+- Keyword search covers Entries plus standalone People and Places.
 - Entry filters include date, Type, Collection, and tag and do not pretend to apply to unrelated entity kinds.
 - Search results explain matches and open the original source.
 - AI answers are grounded in bounded source evidence and cite the Entries used.
@@ -100,7 +100,7 @@ Home is ordered around:
 
 1. Search.
 2. Quick Capture.
-3. Today's Habits.
+3. Current life stages.
 4. A quiet resurfaced memory.
 5. Recent Entries.
 
@@ -114,14 +114,6 @@ Inbox content, Trash, and Life Stages do not appear as resurfaced memory cards.
 
 A First Time requires only a title and accepts the full date-precision model, optional writing, photos, Place, People, Goal, Collections, tags, and Timeline context.
 It may be created directly or by converting an existing Entry without duplicating content.
-
-### Habits
-
-Habits support Check and Measure modes, daily, weekday, weekly-target, and custom-interval schedules, optional notes, and optional Entry context.
-States are Completed, Missed, Intentionally skipped, and Not scheduled.
-Intentional skips are neutral for streak and completion-rate calculations.
-Analytics include current and longest streaks, completion rate, missed days, monthly summaries, a yearly chart, and weekday patterns.
-Habit reminders are outside the current scope.
 
 ### Homes and Vehicles
 
@@ -153,7 +145,7 @@ The data model preserves future Map capability, but Map UI is deferred.
 Soft Ledger is the visual direction: minimal, archival, modern, calm, and approachable.
 Both clients support light and dark appearance, share semantic design intent, and still follow native platform conventions where identical interaction would reduce usability.
 
-Mobile uses Home, Inbox, Timeline, Habits, and Library as its five primary destinations.
+Mobile uses Home, Inbox, Timeline, and Library as its primary destinations.
 Library contains Collections, First Times, Goals, Homes, Vehicles, Places, and People.
 Settings is reached from the profile control.
 
@@ -176,6 +168,7 @@ It is not a social network, publishing platform, collaboration system, generic t
 Deferred or undecided work includes:
 
 - Map UI;
+- Habits and reminders;
 - a native iOS Share Extension;
 - bulk Inbox review;
 - optional PWA enhancements;

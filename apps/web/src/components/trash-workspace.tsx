@@ -159,8 +159,8 @@ export function TrashWorkspace({
           <Icon name="trash" size={25} />
           <h2>Nothing in Trash</h2>
           <p>
-            Removed Entries, Habits, Places, People, and individual photos will
-            appear here.
+            Removed Entries, Places, People, and individual photos will appear
+            here. Legacy records remain recoverable too.
           </p>
         </section>
       ) : (

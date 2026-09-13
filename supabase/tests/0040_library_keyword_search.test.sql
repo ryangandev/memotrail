@@ -16,6 +16,8 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
 select is(public.search_library_entities('学习')->>'total_count','3','Chinese substring finds all three standalone kinds');
 select is(public.search_library_entities('LEARNING')->>'total_count','3','English keyword matches case-insensitively without AI');
+select is(public.search_library_entities('LEARNING',20,0,array['person','place'])->>'total_count','2','Client scope can exclude deferred entity kinds');
+select is(public.search_library_entities('LEARNING',20,0,array['person','place'])->'items'->0->>'kind','place','Scoped pages retain deterministic ordering');
 select is(public.search_library_entities('friend')->'items'->0->>'kind','person','Relationship label is searchable');
 select is(public.search_library_entities('Philadelphia')->'items'->0->>'kind','place','Location details are searchable');
 select is(public.search_library_entities('pages')->'items'->0->>'kind','habit','Measurement unit is searchable');
@@ -30,6 +32,7 @@ select is(public.search_library_entities('  ')->>'total_count','0','Empty search
 select throws_ok($$select public.search_library_entities(repeat('a',201))$$,'22023','invalid_library_search','Long query is rejected');
 select throws_ok($$select public.search_library_entities('Learning',51,0)$$,'22023','invalid_library_search','Unbounded page size rejected');
 select throws_ok($$select public.search_library_entities('Learning',20,-1)$$,'22023','invalid_library_search','Negative offset rejected');
+select throws_ok($$select public.search_library_entities('Learning',20,0,array['entry'])$$,'22023','invalid_library_search','Unknown entity kind rejected');
 select is(jsonb_array_length(public.search_library_entities('Learning',1,0)->'items'),1,'Small page is bounded');
 select is(public.search_library_entities('Learning',1,0)->>'total_count','3','Count is independent of page size');
 select isnt(public.search_library_entities('Learning',1,0)->'items'->0->>'id',public.search_library_entities('Learning',1,1)->'items'->0->>'id','Pages have deterministic distinct results');
@@ -55,7 +58,7 @@ select is(jsonb_array_length(public.search_library_entities('Paged partner',20,1
 select is(length(public.search_library_entities('Paged partner')->'items'->0->>'excerpt'),280,'Search excerpts stay bounded');
 select is(count(*),1::bigint,'Exact source is independent of People workspace pagination') from public.person_record((public.search_library_entities('Paged partner',20,100)->'items'->0->>'id')::uuid);
 reset role;
-select ok(not has_function_privilege('anon','public.search_library_entities(text,integer,integer)','execute'),'Anonymous search is forbidden');
+select ok(not has_function_privilege('anon','public.search_library_entities(text,integer,integer,text[])','execute'),'Anonymous search is forbidden');
 select ok(not has_function_privilege('anon','public.person_record(uuid)','execute'),'Anonymous source reads are forbidden');
 select * from finish();
 rollback;

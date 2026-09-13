@@ -25,7 +25,6 @@ const plan = {
   dateFrom: null,
   dateTo: null,
   beforeLatestHome: false,
-  includeHabits: false,
   order: "oldest",
 };
 const output = (v: unknown) => ({

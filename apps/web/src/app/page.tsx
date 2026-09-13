@@ -109,13 +109,6 @@ function HomeSnapshotContent({
             value={snapshot.inboxCount}
           />
           <HomeStat
-            detail={habitProgressLabel(snapshot)}
-            href="/habits"
-            icon="check"
-            label="Habits complete"
-            value={snapshot.completedHabitCount}
-          />
-          <HomeStat
             detail={entryLabel(snapshot.currentStageCount, "current chapter")}
             href="/timeline"
             icon="timeline"
@@ -370,19 +363,6 @@ function todayLabel(date: Date, timezone: string) {
 
 function displayFirstName(name: string) {
   return name.trim().split(/\s+/)[0] || "MemoTrail";
-}
-
-function habitProgressLabel(snapshot: HomeSnapshot) {
-  if (snapshot.dueHabitCount === 0) {
-    return snapshot.activeHabitCount === 0
-      ? "No Habits created yet"
-      : "Nothing scheduled today";
-  }
-
-  const intentional = snapshot.skippedHabitCount
-    ? ` · ${snapshot.skippedHabitCount} skipped`
-    : "";
-  return `${snapshot.completedHabitCount} of ${snapshot.dueHabitCount} due${intentional}`;
 }
 
 function entryLabel(count: number, noun: string) {

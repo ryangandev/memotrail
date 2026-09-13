@@ -75,7 +75,7 @@ export default async function SearchPage({
           <div>
             <p className={styles.eyebrow}>Your personal archive</p>
             <h1>Search your trail</h1>
-            <p>Find Entries, People, Places and Habits by what you remember.</p>
+            <p>Find Entries, People, and Places by what you remember.</p>
           </div>
           <Link className={styles.newEntryButton} href="/inbox#capture-title">
             <Icon name="plus" />

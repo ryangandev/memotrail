@@ -52,7 +52,6 @@ describe("library keyword search", () => {
       `/people?person=${id}`,
     );
     expect(libraryItemHref({ id, kind: "place" })).toBe(`/places?place=${id}`);
-    expect(libraryItemHref({ id, kind: "habit" })).toBe(`/habits?habit=${id}`);
   });
   it("validates mixed kinds and match explanations", () => {
     const item = {
@@ -68,7 +67,7 @@ describe("library keyword search", () => {
     });
     expect(
       parseLibrarySearch({
-        items: [{ ...item, kind: "entry" }],
+        items: [{ ...item, kind: "habit" }],
         total_count: 1,
       }),
     ).toBeNull();

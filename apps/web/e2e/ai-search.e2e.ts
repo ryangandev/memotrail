@@ -295,49 +295,6 @@ test("Unified AI search uses bilingual source evidence, explicit requests, and n
       expect(
         prior.sources.some((s: { recordID: string }) => s.recordID === afterID),
       ).toBe(false);
-      const habitID = randomUUID();
-      const startsOn = new Date(Date.now() - 7 * 86400000)
-        .toISOString()
-        .slice(0, 10);
-      expect(
-        (
-          await client.from("habits").insert({
-            id: habitID,
-            owner_id: ownerID,
-            name: "Vitamin D supplement",
-            starts_on: startsOn,
-            schedule: { kind: "daily" },
-          })
-        ).error,
-      ).toBeNull();
-      const habit = await page.request.post("/api/ai/search", {
-        headers,
-        data: {
-          parameters: { q: "Which supplements do I miss most often?" },
-          timeZone: "UTC",
-        },
-        timeout: 65000,
-      });
-      expect(habit.status(), await habit.text()).toBe(200);
-      const habitAnswer = await habit.json();
-      expect(habitAnswer.findings.length).toBeGreaterThan(0);
-      expect(
-        habitAnswer.sources.some(
-          (source: { recordID: string; kind: string }) =>
-            source.recordID === habitID && source.kind === "habit",
-        ),
-      ).toBe(true);
-      expect(
-        habitAnswer.findings.some(
-          (finding: { citations: { sourceID: string }[] }) =>
-            finding.citations.some((c) =>
-              habitAnswer.sources.some(
-                (source: { id: string; recordID: string }) =>
-                  source.id === c.sourceID && source.recordID === habitID,
-              ),
-            ),
-        ),
-      ).toBe(true);
       const missing = await page.request.post("/api/ai/search", {
         headers,
         data: {
