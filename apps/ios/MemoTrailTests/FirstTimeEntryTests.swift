@@ -3,6 +3,25 @@ import XCTest
 @testable import MemoTrail
 
 final class FirstTimeEntryTests: XCTestCase {
+  func testMediaDeliveryAcceptsOnlyRequestedImagesOnTheConfiguredServer() throws {
+    let base = try XCTUnwrap(URL(string: "https://memotrail.example"))
+    let path = "owner/entry/photo.jpg"
+    let valid = "https://memotrail.example/api/media/image?token=scoped"
+    XCTAssertEqual(
+      MediaDelivery.validatedURLs([path: valid], paths: [path], base: base)[path]?.absoluteString,
+      valid)
+    for url in [
+      "https://other.example/api/media/image?token=scoped",
+      "http://memotrail.example/api/media/image?token=scoped",
+      "https://memotrail.example/api/export?token=scoped",
+      "https://memotrail.example/api/media/image",
+    ] {
+      XCTAssertTrue(MediaDelivery.validatedURLs([path: url], paths: [path], base: base).isEmpty)
+    }
+    XCTAssertTrue(
+      MediaDelivery.validatedURLs(["not-requested": valid], paths: [path], base: base).isEmpty)
+  }
+
   func testNativeSerializationRetainsUnchangedDatabaseMicroseconds() throws {
     let timestamp = "2026-11-01T09:30:00.123456+00:00"
     let date = Date(timeIntervalSince1970: 1793525400.123456)

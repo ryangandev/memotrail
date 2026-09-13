@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B0000000000000000000003E /* MediaDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000045 /* MediaDelivery.swift */; };
 		B0000000000000000000003C /* ExplorationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000043 /* ExplorationView.swift */; };
 		B0000000000000000000003D /* ExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000044 /* ExportView.swift */; };
 		B00000000000000000000037 /* EntryHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003E /* EntryHistoryView.swift */; };
@@ -95,6 +96,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C00000000000000000000045 /* MediaDelivery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDelivery.swift; sourceTree = "<group>"; };
 		C00000000000000000000043 /* ExplorationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AI/ExplorationView.swift; sourceTree = "<group>"; };
 		C00000000000000000000044 /* ExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Export/ExportView.swift; sourceTree = "<group>"; };
 		C0000000000000000000003E /* EntryHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = History/EntryHistoryView.swift; sourceTree = "<group>"; };
@@ -308,6 +310,7 @@
 				C0000000000000000000002B /* HomeEntry.swift */,
 				C00000000000000000000007 /* InboxEntry.swift */,
 				C00000000000000000000041 /* EntryOccurrence.swift */,
+				C00000000000000000000045 /* MediaDelivery.swift */,
 				C00000000000000000000017 /* SearchEntry.swift */,
 				C0000000000000000000001A /* TimelineEntry.swift */,
 				C0000000000000000000001D /* FirstTimeEntry.swift */,
@@ -596,6 +599,7 @@
 				B00000000000000000000006 /* DesignTokens.swift in Sources */,
 				B00000000000000000000007 /* InboxEntry.swift in Sources */,
 				B0000000000000000000003A /* EntryOccurrence.swift in Sources */,
+				B0000000000000000000003E /* MediaDelivery.swift in Sources */,
 				B0000000000000000000003B /* OccurrenceEditor.swift in Sources */,
 				B00000000000000000000009 /* AppConfiguration.swift in Sources */,
 				B0000000000000000000000A /* AuthenticationController.swift in Sources */,

@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
+import sharp from "sharp";
 test("An Idea converts in place, preserves its original content, and can be restored", async ({
   page,
   context,
@@ -28,10 +29,11 @@ test("An Idea converts in place, preserves its original content, and can be rest
     photoID = randomUUID(),
     collectionID = randomUUID();
   const path = `${ownerID}/${entryID}/${photoID}.png`;
-  const bytes = Buffer.from(
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX1sAAAAASUVORK5CYII=",
-    "base64",
-  );
+  const bytes = await sharp({
+    create: { width: 1, height: 1, channels: 3, background: "#316652" },
+  })
+    .png()
+    .toBuffer();
   try {
     const cookies: { name: string; value: string }[] = [];
     const client = createServerClient(env.API_URL, env.ANON_KEY, {
@@ -280,7 +282,18 @@ test("An Idea converts in place, preserves its original content, and can be rest
     ).toHaveLength(1);
     expect(errors).toEqual([]);
   } finally {
-    await admin.storage.from("entry-media").remove([path]);
+    const media = await admin
+      .from("attachments")
+      .select("object_path")
+      .eq("owner_id", ownerID);
+    await admin.storage
+      .from("entry-media")
+      .remove([
+        ...new Set([
+          path,
+          ...(media.data ?? []).map((item) => item.object_path),
+        ]),
+      ]);
     await admin.auth.admin.deleteUser(ownerID);
   }
 });

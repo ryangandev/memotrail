@@ -202,22 +202,7 @@ final class TrashController {
   }
 
   private func signedURLMap(paths: [String]) async -> [String: URL] {
-    guard !paths.isEmpty else { return [:] }
-
-    let results =
-      (try? await client.storage.from("entry-media").createSignedURLs(
-        paths: paths,
-        expiresIn: 60 * 60
-      )) ?? []
-    var urls: [String: URL] = [:]
-
-    for result in results {
-      if case .success(let path, let url) = result {
-        urls[path] = url
-      }
-    }
-
-    return urls
+    await MediaDelivery.displayURLs(paths: paths, client: client, ownerID: ownerID, trash: true)
   }
 }
 

@@ -34,6 +34,30 @@ Bucket List behavior follows a stable Collection role, not its editable display 
 Uploads preserve private originals, and display access uses expiring signed URLs.
 Drafts and pending captures remain per-user and durable on each device until synchronization is confirmed.
 
+## Private photo delivery
+
+Web galleries and native galleries share the Next.js media boundary instead of downloading full originals for display.
+The caller's RLS-scoped attachment query issues one-hour HMAC grants bound to owner, original attachment, expiry, and explicit Trash access.
+The signing key is domain-separated from the existing server-only Supabase credential; neither that credential nor the Anthropic key enters iOS.
+Every image request rechecks the owned original and Entry lifecycle through a service-only resolver, so ordinary grants cease working when the source enters Trash.
+Native URL issuance uses a verified bearer session and validates that returned URLs match its configured server and requested paths.
+
+On first display, a bounded worker generates 1600-pixel display and 400-pixel thumbnail WebP files without enlarging small photos.
+Sharp handles orientation, resizing, and metadata stripping; the server-side libheif WASM bundle decodes HEIC when the platform's Sharp build lacks HEVC support.
+The worker receives bytes and fixed decoder paths, not application credentials, and has a 25-second deadline, 80-million-pixel input limit, and 8-MiB limit per output.
+The service accepts at most 50 MiB of original bytes, verifies Storage version, ETag, and size, deduplicates same-source work, and bounds local processing to two workers with a bounded queue.
+Private derived paths include original identity, pipeline version, and source SHA-256; registration atomically validates both variants and unchanged source version.
+Only the service can write the reserved derived Storage namespace; reads verify derived hashes and regenerate missing or corrupted cached objects from the original.
+Delivery uses private no-store responses and rechecks visibility and source version after processing.
+
+Originals remain unchanged and exportable; generated variants do not increase photo counts, appear as separate Trash items, or become prerequisites for restoring writing history.
+Permanent removal of an original includes its generated family, while removing an Entry includes all its owned media.
+Existing export manifests continue to include registered variants and originals with their actual integrity checks.
+EXIF date/Place suggestions and optional AI photo analysis remain separate unfinished work; display generation never invokes AI or changes Entry dates.
+Deployment traces Sharp through a static server import and explicitly includes the worker-only libheif bundle.
+`MEMOTRAIL_E2E_PRODUCTION=1 pnpm --filter @memotrail/web test:e2e` builds and serves the same synthetic local-only configuration with `next start`; hosted acceptance remains separate.
+Decoder behavior follows [Sharp output documentation](https://sharp.pixelplumbing.com/api-output/) and [libheif-js's supported WASM interface](https://github.com/catdad-experiments/libheif-js).
+
 ## Occurrence semantics
 
 Inbox review writes date precision, nullable start/end, a human description, and the recorded IANA time zone in the same atomic mutation as content and organization.

@@ -1,4 +1,5 @@
 import "server-only";
+import { displayImageURLs } from "@/lib/media/urls";
 
 import { getAuthenticatedContext, type Viewer } from "./inbox";
 import {
@@ -77,17 +78,7 @@ async function signedImageUrls(
   attachments: VehicleAttachment[],
 ) {
   const paths = [...new Set(attachments.map((item) => item.objectPath))];
-  const urls = new Map<string, string>();
-  if (paths.length === 0) return urls;
-
-  const { data, error } = await client.storage
-    .from("entry-media")
-    .createSignedUrls(paths, 60 * 60);
-  if (error) return urls;
-  for (const item of data ?? []) {
-    if (item.path && item.signedUrl) urls.set(item.path, item.signedUrl);
-  }
-  return urls;
+  return displayImageURLs(client, paths);
 }
 
 function unavailableWorkspace(

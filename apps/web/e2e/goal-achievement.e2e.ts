@@ -133,6 +133,9 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
       await dialog
         .getByRole("textbox", { name: /Human date label|Date description/ })
         .fill(value.label);
+      await expect(
+        dialog.getByRole("textbox", { name: "Title", exact: true }),
+      ).toHaveValue("Try skiing");
       if (value.precision === "age") {
         await page.screenshot({
           path: "/private/tmp/memotrail-goal-achievement-light.png",

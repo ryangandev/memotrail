@@ -346,6 +346,9 @@ function GoalEditor({
 
   useEffect(() => {
     titleRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape" && !isPending) onClose();
     }

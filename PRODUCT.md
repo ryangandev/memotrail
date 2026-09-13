@@ -130,6 +130,10 @@ The resulting text follows the same Inbox and AI organization workflow as typed 
 
 MemoTrail preserves original uploaded photos and generates optimized derivatives for display.
 
+Both clients use private, expiring display access; optimized display images and thumbnails never count as additional user photos.
+Display generation does not change original files, Entry writing, or dates and does not call an AI provider.
+Generated display files are replaceable artifacts, not required originals for writing-history restoration.
+
 Photo metadata may be used to suggest an occurred-at date and Place, but the user must confirm those suggestions.
 
 ### 5.2 Life timeline

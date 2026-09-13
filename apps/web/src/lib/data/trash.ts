@@ -1,4 +1,5 @@
 import "server-only";
+import { displayImageURLs } from "@/lib/media/urls";
 
 import { getAuthenticatedContext, type Viewer } from "./inbox";
 import { TRASH_PAGE_SIZE, type TrashItemKind } from "./trash-input";
@@ -101,27 +102,7 @@ async function signedImageUrls(
   objectPaths: string[],
 ) {
   const paths = [...new Set(objectPaths.filter(Boolean))];
-  const urls = new Map<string, string>();
-
-  if (paths.length === 0) {
-    return urls;
-  }
-
-  const { data, error } = await client.storage
-    .from("entry-media")
-    .createSignedUrls(paths, 60 * 60);
-
-  if (error) {
-    return urls;
-  }
-
-  for (const item of data ?? []) {
-    if (item.path && item.signedUrl) {
-      urls.set(item.path, item.signedUrl);
-    }
-  }
-
-  return urls;
+  return displayImageURLs(client, paths, true);
 }
 
 function parseTrashRows(value: unknown): TrashRow[] | null {

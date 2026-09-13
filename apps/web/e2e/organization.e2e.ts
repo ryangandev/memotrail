@@ -164,7 +164,9 @@ test("Organization preserves relationships, Bucket List identity, and recoverabl
     await goal
       .getByRole("button", { name: "Mark achieved and create First Time" })
       .click();
-    expect(await (await achievementResponse).finished()).toBeNull();
+    // A production RSC response can remain streaming after the mutation has settled.
+    // Verify HTTP success, the visible confirmation, and persisted state rather than stream closure.
+    expect((await achievementResponse).ok()).toBe(true);
     await expect(goal.getByRole("status")).toContainText(
       "Achievement saved, with a linked First Time.",
     );

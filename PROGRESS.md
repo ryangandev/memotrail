@@ -6,6 +6,28 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Private optimized photos across Web and iOS
+
+- Existing Web and native galleries now use the same scoped photo service, with one-hour owner-bound display grants and explicit Trash access.
+- JPEG, PNG, WebP, and HEIC originals generate private 1600-pixel display and 400-pixel thumbnail WebP variants on demand, without changing original bytes, writing, or dates.
+- Image workers have no application environment secrets, bounded input/output sizes and pixel counts, a deadline, and limited concurrency; the HEIC decoder stays on the server, not in either client bundle.
+- Source Storage version, ETag, byte count, and SHA-256 identity protect registration and delivery; corrupted or missing derived caches regenerate without duplicate photo records.
+- Only the service may write derived Storage paths; caller RLS, service-only resolvers, native URL validation, and post-processing lifecycle checks prevent cross-owner and ordinary post-Trash access.
+- Generated variants do not inflate First Times photo counts, appear independently in Trash, or block writing-history restoration when a cached object is absent.
+- Permanent photo removal includes its generated family; original ZIP export and historical writing behavior remain covered by the full regression suite.
+- Migration `202609120018_media_derivatives.sql` is deployed with clean hosted schema lint and an up-to-date ledger, without seeds, backfills, or role changes.
+- Local SQL executes 1,218 passing assertions, Web executes 325 passing unit tests, and native simulator results contain 183 passing tests with no failures or skips.
+- Added production-mode browser testing using a local-only build and `next start`; real JPEG/HEIC requests verify orientation, portable output, original byte equality, cache reuse/recovery, source overwrites, and native bearer access.
+- All 24 browser/API scenarios now pass against `next start`; production build, lint, type checks, repository formatting, Swift formatting, token generation, and diff checks pass.
+- Production dependency tracing was corrected after reproducing a Turbopack directory-link failure; the route manifest includes Sharp's runtime, native codec/library, and worker-only libheif bundle.
+- Browser regression exposed a pre-existing malformed PNG fixture, now replaced by a valid synthetic image with derivative-aware cleanup.
+- A production RSC response can remain streaming after the Goal achievement succeeds; organization acceptance now checks HTTP success, visible confirmation, and persisted state rather than waiting for stream closure.
+- Production regression also reproduced Goal-editor focus jumping from the time-zone input into Title during a parent refresh, corrupting the title and disabling achievement; initial title focus is now mount-only, with an explicit unchanged-title assertion.
+- Desktop/light First Times and mobile/dark Trash screenshots were inspected; hosted image delivery and authenticated native gallery taps remain separate final acceptance items.
+- No AI calls were added: the local ledger remains 51 completed calls costing $0.052147, with no outstanding reservations.
+- Current GitHub iOS job annotations still report that jobs cannot start because of account payment or spending-limit settings; this is not treated as evidence of a source compile failure.
+- Remaining scope includes user-confirmed photo date/Place metadata, concurrent-generation/permanent-removal artifact cleanup, broader Inbox photo and relationship/date-filter audits, and final production/native acceptance.
+
 ### Lossless Homes and Vehicles dates across Web and iOS
 
 - Reproduced Exact chapter dates being downgraded to Day in both dedicated Web editors.
