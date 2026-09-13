@@ -16,6 +16,7 @@ Use Git history for feature-level implementation and test evidence.
 | Timeline, Home, First Times, Homes, Vehicles, Goals, People, Places, and Collections         | Implemented on Web and iOS                                                         |
 | Habits                                                                                       | Deferred; removed from Web, still present on iOS pending the native rework          |
 | Web navigation shell                                                                         | Persistent across routes with prefetch, route fallback, and cold-request feedback  |
+| Web Settings                                                                                 | Account hub, sign-out control, and existing preference links implemented           |
 | Keyword search, grounded AI search, suggestions, and Explore with AI                         | Implemented; Production AI configuration is not accepted                           |
 | Private media, Entry history, relationships, Trash, and complete export                      | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains |
 | Hosted Supabase contracts                                                                    | Deployed to the confirmed MemoTrail project                                        |

@@ -3,7 +3,6 @@
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { signOut } from "@/app/auth/actions";
 import styles from "@/app/page.module.css";
 import { AuthGate } from "@/components/auth-gate";
 import { BrandMark } from "@/components/brand-mark";
@@ -24,6 +23,7 @@ export type WorkspaceDestination =
   | "places"
   | "people"
   | "search"
+  | "settings"
   | "timeline"
   | "trash"
   | "vehicles"
@@ -93,6 +93,13 @@ const mobileNavigation: NavigationItem[] = [
     label: "Library",
   },
 ];
+
+const settingsNavigation: NavigationItem = {
+  destination: "settings",
+  href: "/settings",
+  icon: "settings",
+  label: "Settings",
+};
 
 export function WorkspaceBoundary({
   children,
@@ -176,15 +183,16 @@ export function WorkspaceShell({
             >
               <Icon name="trash" size={19} />
             </Link>
-            <form action={signOut}>
-              <button
-                className={styles.avatarButton}
-                type="submit"
-                aria-label={`Sign out ${viewer.name}`}
-              >
-                {viewer.initial}
-              </button>
-            </form>
+            <Link
+              aria-current={
+                activeDestination === "settings" ? "page" : undefined
+              }
+              aria-label={`Open settings for ${viewer.name}`}
+              className={styles.avatarButton}
+              href="/settings"
+            >
+              {viewer.initial}
+            </Link>
           </div>
         </header>
 
@@ -209,6 +217,7 @@ export function WorkspaceShell({
 function destinationForPathname(pathname: string): WorkspaceDestination {
   if (pathname === "/") return "home";
   if (pathname.startsWith("/search")) return "search";
+  if (pathname.startsWith("/settings")) return "settings";
   if (pathname.startsWith("/inbox")) return "inbox";
   if (pathname.startsWith("/timeline")) return "timeline";
   if (pathname.startsWith("/goals")) return "goals";
@@ -267,6 +276,12 @@ function Sidebar({
       </nav>
 
       <div className={styles.sidebarFooter}>
+        <nav className={styles.navGroup} aria-label="Settings navigation">
+          <NavigationControl
+            active={activeDestination === "settings"}
+            item={settingsNavigation}
+          />
+        </nav>
         <div className={styles.archiveNote}>
           <Icon name="clock" size={17} />
           <div>
@@ -274,16 +289,19 @@ function Sidebar({
             <span>Available on Web and iPhone</span>
           </div>
         </div>
-        <form action={signOut}>
-          <button type="submit" title={`Sign out ${viewer.email}`}>
-            <span className={styles.avatar}>{viewer.initial}</span>
-            <span>
-              <strong>{viewer.name}</strong>
-              <small>Sign out · Private space</small>
-            </span>
-            <Icon name="more" size={17} />
-          </button>
-        </form>
+        <Link
+          aria-current={activeDestination === "settings" ? "page" : undefined}
+          className={styles.accountLink}
+          href="/settings"
+          title={`Open settings for ${viewer.email}`}
+        >
+          <span className={styles.avatar}>{viewer.initial}</span>
+          <span>
+            <strong>{viewer.name}</strong>
+            <small>{viewer.email}</small>
+          </span>
+          <Icon name="chevron" size={17} />
+        </Link>
       </div>
     </aside>
   );
