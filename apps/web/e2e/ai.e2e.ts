@@ -76,7 +76,9 @@ test("AI consent, settings persistence, API authentication, and bounded connecti
       page.getByRole("checkbox", { name: /Photo analysis/ }),
     ).not.toBeChecked();
     await enable.check();
-    await page.getByLabel("Monthly budget (USD)").fill("0.03");
+    await page
+      .getByRole("spinbutton", { name: "Monthly budget (USD)" })
+      .fill("0.03");
     await page.getByRole("button", { name: "Save AI settings" }).click();
     await expect(page.getByRole("status")).toContainText(
       "saved across your devices",
