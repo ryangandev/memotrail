@@ -503,6 +503,8 @@ private struct InboxReviewSheet: View {
         } footer: {
           Text("Save changes keeps this Entry in Inbox. Done marks it organized.")
         }
+        EntryPhotoDatesView(
+          client: client, ownerID: ownerID, entryID: entry.id, occurrence: $occurrence)
         OccurrenceEditor(value: $occurrence)
 
         Section {

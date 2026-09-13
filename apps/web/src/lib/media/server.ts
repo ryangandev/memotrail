@@ -9,6 +9,7 @@ import {
   type MediaVariant,
 } from "./contracts";
 import { renderPhoto } from "./render";
+import { readPhotoMetadata } from "./metadata-worker";
 type Source = {
   id: string;
   owner_id: string;
@@ -229,4 +230,18 @@ async function verifiedDerivative(
   )
     return null;
   return data;
+}
+
+export async function photoMetadata(owner: string, id: string) {
+  const admin = adminClient();
+  const grant = { owner, id, expires: Date.now() + 60_000, trash: false };
+  return limited(async () => {
+    const source = await sourceFor(admin, grant);
+    const metadata = await readPhotoMetadata(
+      await originalBytes(admin, source),
+    );
+    const latest = await sourceFor(admin, grant);
+    if (latest.version !== source.version) throw new MediaError(409);
+    return { ...metadata, attachmentId: id, sourceVersion: source.version };
+  });
 }

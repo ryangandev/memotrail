@@ -3,6 +3,47 @@ import XCTest
 @testable import MemoTrail
 
 final class FirstTimeEntryTests: XCTestCase {
+  func testCameraDateAdoptionIsAnExplicitDayDraftWithNoTimezoneInference() throws {
+    let data = Data(
+      """
+      {"attachmentId":"10000000-0000-4000-8000-000000000001","sourceVersion":"v1",
+      "capturedLocal":"2017-07-08T12:34:56.123","calendarDate":"2017-07-08",
+      "offset":null,"latitude":39.95,"longitude":-75.166667}
+      """.utf8)
+    let metadata = try JSONDecoder().decode(PhotoCameraMetadata.self, from: data)
+    var previous = OccurrenceDraft(
+      EntryOccurrence(
+        precision: .unknown, timezone: "Pacific/Kiritimati"))
+    previous.precision = .range
+    previous.start = "2020-01-01T12:00"
+    previous.end = "2020-01-02T12:00"
+    previous.label = "Original range"
+    previous.timezone = "Pacific/Kiritimati"
+    let draft = try metadata.calendarDraft(previous: previous)
+    XCTAssertEqual(draft.precision, .day)
+    XCTAssertEqual(draft.start, "2017-07-08")
+    XCTAssertEqual(draft.end, "")
+    XCTAssertEqual(draft.label, "")
+    XCTAssertEqual(draft.timezone, previous.timezone)
+    XCTAssertEqual(previous.precision, .range)
+    XCTAssertEqual(previous.label, "Original range")
+    XCTAssertEqual(metadata.capturedLocal, "2017-07-08T12:34:56.123")
+    XCTAssertNil(metadata.offset)
+    XCTAssertEqual(try draft.resolve().timezone, "Pacific/Kiritimati")
+  }
+
+  func testCameraDateAdoptionRejectsMissingOrImpossibleDates() throws {
+    for date in [nil, "2017-02-30", "2017-7-8", "not a date"] as [String?] {
+      let metadata = PhotoCameraMetadata(
+        attachmentId: UUID(), sourceVersion: "v1", capturedLocal: nil,
+        calendarDate: date, offset: nil, latitude: nil, longitude: nil)
+      XCTAssertThrowsError(
+        try metadata.calendarDraft(
+          previous: OccurrenceDraft(
+            EntryOccurrence(precision: .unknown, timezone: "UTC"))))
+    }
+  }
+
   func testMediaDeliveryAcceptsOnlyRequestedImagesOnTheConfiguredServer() throws {
     let base = try XCTUnwrap(URL(string: "https://memotrail.example"))
     let path = "owner/entry/photo.jpg"

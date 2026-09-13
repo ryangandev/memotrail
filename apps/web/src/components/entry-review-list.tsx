@@ -10,6 +10,8 @@ import {
 import { Icon } from "@/components/icon";
 import { EntryAISuggestionsPanel } from "@/components/entry-ai-suggestions";
 import { OccurrenceEditor } from "@/components/occurrence-editor";
+import { EntryPhotoDates } from "@/components/entry-photo-dates";
+import { photoCalendarDateDraft } from "@/lib/media/photo-metadata";
 import {
   occurrenceDraft,
   occurrenceLabel,
@@ -314,6 +316,13 @@ function EntryReviewDialog({
               </select>
             </label>
           </div>
+          <EntryPhotoDates
+            entryId={entry.id}
+            disabled={isPending}
+            onUseDate={(date) =>
+              setOccurrence((current) => photoCalendarDateDraft(date, current))
+            }
+          />
           <OccurrenceEditor
             value={occurrence}
             onChange={setOccurrence}

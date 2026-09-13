@@ -58,10 +58,25 @@ Thus a deletion that locks first makes a late upload fail, while an upload that 
 Both clients explain the cleanup race and offer an explicit refresh/retry instead of claiming permanent deletion succeeded.
 No Storage object is deleted through SQL: deletion still uses the [Storage API](https://supabase.com/docs/guides/storage/management/delete-objects), with transaction ordering grounded in [PostgreSQL row locks](https://www.postgresql.org/docs/17/explicit-locking.html).
 Existing export manifests continue to include registered variants and originals with their actual integrity checks.
-EXIF date/Place suggestions and optional AI photo analysis remain separate unfinished work; display generation never invokes AI or changes Entry dates.
+Named Place adoption from photo GPS and optional AI photo analysis remain separate unfinished work; display generation never invokes AI or changes Entry dates.
 Deployment traces Sharp through a static server import and explicitly includes the worker-only libheif bundle.
 `MEMOTRAIL_E2E_PRODUCTION=1 pnpm --filter @memotrail/web test:e2e` builds and serves the same synthetic local-only configuration with `next start`; hosted acceptance remains separate.
 Decoder behavior follows [Sharp output documentation](https://sharp.pixelplumbing.com/api-output/) and [libheif-js's supported WASM interface](https://github.com/catdad-experiments/libheif-js).
+
+### Camera metadata and explicit date adoption
+
+Web and native Inbox review can browse saved originals and request camera metadata through shared authenticated POST endpoints.
+Cookie requests enforce same-origin checks, native requests use verified bearer sessions, and both paths reject other owners and trashed sources.
+Metadata reads reuse the bounded original download, Storage version/ETag/size checks, concurrency queue, and post-processing lifecycle recheck.
+A separate five-second worker receives no application credentials and uses Sharp to extract at most 1 MiB of EXIF from JPEG, PNG, WebP, or HEIC without decoding pixels.
+[exifr](https://github.com/MikeKovarik/exifr) parses only that TIFF payload with date revival disabled; no full HEIC container parsing, model call, geocoding, database write, or original mutation occurs.
+The response exposes validated camera wall time, optional subsecond text and UTC offset, calendar date, and a complete valid GPS coordinate pair, not arbitrary EXIF fields such as artist or camera serial number.
+Missing time zones remain explicitly missing instead of becoming UTC or the viewer's zone.
+Use calendar date changes only the editor draft to Day precision, clears its prior range/description, and preserves the editor's selected IANA zone; Save changes or Done remains the only persistence step.
+Cancel discards adoption, and later manual edits take precedence.
+Coordinates are displayed without automatically creating or linking a Place; named Place adoption and metadata controls beyond Inbox remain tracked follow-ups.
+Synthetic JPEG/PNG/WebP/HEIC metadata fixtures, owner isolation, cookie/native parity, cancellation, manual override, original-byte identity, and desktop/mobile Web layouts are verified locally.
+Production tracing includes the runtime Sharp and exifr entry points; hosted metadata acceptance and authenticated native UI interaction remain separate checks.
 
 ## Occurrence semantics
 

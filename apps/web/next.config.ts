@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["sharp", "libheif-js"],
+  serverExternalPackages: ["sharp", "libheif-js", "exifr"],
   outputFileTracingIncludes: {
     "/api/media/image": [
       "./node_modules/libheif-js/libheif-wasm/libheif-bundle.js",

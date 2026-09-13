@@ -6,6 +6,18 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Inbox photos and explicit camera-date adoption
+
+- Web and iOS Inbox review now browse saved photos through the same private image boundary and request original camera metadata on demand.
+- JPEG, PNG, WebP, and HEIC EXIF extraction runs in a bounded credential-free server worker; only validated camera dates, optional UTC offsets/subseconds, and complete GPS coordinates are returned.
+- Missing time zones are shown honestly rather than guessed, and Use calendar date updates only the Day-precision draft while retaining the user's selected zone and clearing the replaced range/description.
+- Save changes/Done persists explicitly; cancellation and later manual overrides preserve user control, and original bytes remain untouched.
+- Cross-owner, unauthenticated, foreign-origin, malformed-ID, and Trash access cases are covered by real local API/browser checks, including native bearer parity.
+- Synthetic camera metadata includes real JPEG/PNG/WebP EXIF and a new ImageIO-generated HEIC fixture, with no personal photos or AI calls.
+- Native build and 185 tests pass with zero skips; Web unit tests total 330, SQL contracts total 1,231, and the production-mode browser/API suite totals 28 scenarios.
+- Lint, type-checking, formatting, generated design tokens, production packaging traces, and desktop light/mobile dark photo-date layouts are checked locally.
+- This slice requires no migration, provider spend, or new key; named Place adoption from GPS, remaining photo surfaces, hosted acceptance, and authenticated native UI acceptance remain tracked follow-ups.
+
 ### Race-safe cleanup of generated photo artifacts
 
 - Reproduced a real Trash UI success that left an unregistered generated WebP in Storage after an interrupted worker.
