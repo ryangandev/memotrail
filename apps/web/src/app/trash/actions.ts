@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
+import { parseEmptyTrashSnapshot } from "@/lib/data/empty-trash";
 import {
   parseTrashItemInput,
   type TrashItemInput,
@@ -11,6 +12,24 @@ export type TrashActionResult = {
   message: string;
   status: "deleted" | "error" | "restored";
 };
+
+export async function prepareEmptyTrash(): Promise<
+  { items: TrashItemInput[]; error: null } | { items: null; error: string }
+> {
+  const context = await getAuthenticatedContext();
+  if (!context) return { items: null, error: expiredSession().message };
+  const { data, error } = await context.client.rpc("prepare_empty_trash");
+  const items = error ? null : parseEmptyTrashSnapshot(data);
+  if (!items)
+    return {
+      items: null,
+      error:
+        error?.message === "trash_snapshot_too_large"
+          ? "Trash contains more than 10,000 items. Remove some individually before reviewing Empty Trash."
+          : "Could not prepare the complete Trash list. Nothing was deleted. Refresh and try again.",
+    };
+  return { items, error: null };
+}
 
 export async function restoreTrashItem(
   input: TrashItemInput,

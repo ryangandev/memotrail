@@ -6,6 +6,23 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Confirmed Empty Trash across Web and iOS
+
+- Reproduced the missing Empty Trash control through an authenticated localhost browser; PRODUCT.md explicitly requires this confirmed bulk operation.
+- Both clients now prepare a complete read-only manifest across Trash pages, display its target count and irreversible effects, and allow cancellation before any deletion.
+- Each confirmed target retains its exact kind, UUID, revision, and deletion timestamp; newly trashed content cannot silently join a running batch.
+- Processing reuses the existing owner-checked Storage cleanup and permanent-deletion routines, orders Entry targets before independent grouping definitions, and avoids double-counting attachments beneath trashed Entries.
+- Changed targets, uncertain responses, or cancellation stop further dispatch; progress reports only acknowledged deletion and requires fresh preparation before another attempt.
+- Manifests over 10,000 items fail explicitly rather than confirming a truncated or visible-page-only cleanup.
+- Browser acceptance verifies 35 targets across pages and all six kinds, cancellation, a second-device restore, fresh review, 34 confirmed deletions, a later removal left untouched, removed history/private originals, and preserved active Entry writing and Collection members.
+- Desktop light and mobile dark confirmation layouts were inspected; mobile button targets and destructive-button contrast were improved, and native confirmation scrolls for smaller screens.
+- Verification passes 425 Web tests, 204 native tests with no failures/skips, 1,462 SQL assertions across 41 files, and all 49 production-mode browser/API scenarios.
+- Type checking, Web lint, formatting, shared tokens, and local schema lint pass; existing client-aborted RSC and deliberate incomplete-export logs remain tracked separately.
+- Migration `202609130005_empty_trash_snapshot.sql` is deployed to the verified MemoTrail project; it adds only read-only preparation and does not activate automatic cleanup or delete production content.
+- Read-only hosted backup inventory reports PITR disabled, no listed restore point, and WAL backup enablement; this is not proof of recoverable database or original-photo backups, so destination/add-on selection and actual restore validation remain open.
+- Updated architecture, data-safety/checklist records, and the existing Obsidian project note; no paid AI request, billing change, production deletion, or automatic retention activation occurred.
+- AI accounting remains 55 completed application requests totaling $0.056502 with no outstanding reservations; native UI, hosted acceptance, GitHub billing, and recovery/retention gates remain separate unfinished work.
+
 ### Global standalone library search and exact Person sources on Web and iOS
 
 - Reproduced missing standalone Person, Place, and Habit results through the authenticated localhost search page before implementation.

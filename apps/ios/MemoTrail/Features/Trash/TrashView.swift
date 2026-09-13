@@ -4,6 +4,7 @@ import SwiftUI
 struct TrashView: View {
   @State private var controller: TrashController
   @State private var deleteConfirmation: TrashItem?
+  @State private var batchTask: Task<Void, Never>?
 
   private let embedded: Bool
 
@@ -29,6 +30,20 @@ struct TrashView: View {
         header
         retentionNote
 
+        Button("Empty Trash", role: .destructive) {
+          batchTask = Task { await controller.prepareEmptyTrash() }
+        }
+        .buttonStyle(.bordered)
+        .disabled(controller.isBusy || controller.isLoading || controller.totalCount == 0)
+        .accessibilityIdentifier("empty-trash")
+
+        if controller.isEmptying {
+          ProgressView(
+            "\(controller.emptyProgress) of \(controller.emptyTotal) confirmed deleted. Keep this screen open."
+          )
+          .font(MTTypography.caption)
+        }
+
         if let notice = controller.notice {
           noticeView(notice)
         }
@@ -50,6 +65,38 @@ struct TrashView: View {
     .task {
       if !controller.hasLoaded {
         await controller.load()
+      }
+    }
+    .onDisappear {
+      batchTask?.cancel()
+      controller.cancelEmptyTrash()
+    }
+    .sheet(
+      isPresented: Binding(
+        get: { controller.emptySnapshot != nil },
+        set: { if !$0 { controller.cancelEmptyTrash() } }
+      )
+    ) {
+      if let targets = controller.emptySnapshot {
+        ScrollView {
+          VStack(alignment: .leading, spacing: MTSpacing.s4) {
+            Text("Empty \(targets.count) items from Trash?").font(MTTypography.title)
+            Text(
+              "This includes all Trash pages, not just visible items. Their records, associated history and private photos will be permanently removed. Removing a Collection only removes its grouping, not active Entries. This cannot be undone."
+            )
+            Text(
+              "Only this prepared list is included. Items added to Trash later are not deleted. If an item changes or a request cannot be confirmed, deletion stops for a fresh review."
+            )
+            .foregroundStyle(MTColor.inkMuted)
+            Button("Cancel", role: .cancel) { controller.cancelEmptyTrash() }
+              .buttonStyle(.bordered).frame(maxWidth: .infinity)
+            Button("Permanently delete confirmed items", role: .destructive) {
+              batchTask = Task { await controller.emptyTrash() }
+            }.buttonStyle(.bordered).frame(maxWidth: .infinity)
+          }
+          .font(MTTypography.body).foregroundStyle(MTColor.ink)
+          .padding(MTSpacing.s6).frame(maxWidth: .infinity)
+        }.background(MTColor.canvas)
       }
     }
     .alert(
@@ -173,7 +220,7 @@ struct TrashView: View {
         ForEach(controller.items) { item in
           TrashItemCard(
             item: item,
-            isBusy: controller.pendingItemID != nil,
+            isBusy: controller.isBusy,
             isPending: controller.pendingItemID == item.id,
             onDelete: {
               controller.clearNotice()

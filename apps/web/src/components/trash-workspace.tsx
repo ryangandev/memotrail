@@ -11,6 +11,7 @@ import {
 } from "@/app/trash/actions";
 import styles from "@/app/trash/page.module.css";
 import { Icon } from "@/components/icon";
+import { EmptyTrashControl } from "@/components/empty-trash-control";
 import type {
   TrashItem,
   TrashWorkspace as TrashWorkspaceData,
@@ -31,6 +32,7 @@ export function TrashWorkspace({
   const [confirmation, setConfirmation] = useState<TrashItem | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [result, setResult] = useState<TrashActionResult | null>(null);
+  const [batchBusy, setBatchBusy] = useState(false);
   const firstItemNumber = (workspace.page - 1) * TRASH_PAGE_SIZE + 1;
   const lastItemNumber = Math.min(
     workspace.page * TRASH_PAGE_SIZE,
@@ -118,6 +120,21 @@ export function TrashWorkspace({
         </p>
       </aside>
 
+      <EmptyTrashControl
+        disabled={
+          Boolean(pending) ||
+          Boolean(confirmation) ||
+          Boolean(workspace.loadError) ||
+          workspace.totalCount === 0
+        }
+        onBusy={setBatchBusy}
+        onResult={setResult}
+        onFinish={() => {
+          if (workspace.page > 1) router.push("/trash");
+          else router.refresh();
+        }}
+      />
+
       {result ? (
         <p
           aria-live="polite"
@@ -202,7 +219,7 @@ export function TrashWorkspace({
                   <div className={styles.itemActions}>
                     <button
                       className={styles.restoreButton}
-                      disabled={Boolean(pending)}
+                      disabled={Boolean(pending) || batchBusy}
                       onClick={() => runAction(item, "restore")}
                       type="button"
                     >
@@ -212,7 +229,7 @@ export function TrashWorkspace({
                     </button>
                     <button
                       className={styles.deleteButton}
-                      disabled={Boolean(pending)}
+                      disabled={Boolean(pending) || batchBusy}
                       onClick={() => {
                         setResult(null);
                         setConfirmation(item);

@@ -34,6 +34,18 @@ Bucket List behavior follows a stable Collection role, not its editable display 
 Uploads preserve private originals, and display access uses expiring signed URLs.
 Drafts and pending captures remain per-user and durable on each device until synchronization is confirmed.
 
+## Confirmed Empty Trash
+
+`prepare_empty_trash` returns a single read-only owner-scoped snapshot of kinds, IDs, exact deletion timestamps, and revisions across every Trash page, without copying private writing or Storage paths.
+An attachment under a trashed Entry is covered by its parent rather than counted twice; Entry targets precede independent definitions whose removal might otherwise change relationships.
+Both clients show the complete target count and irreversible effects before any deletion, with cancellation as the initial safe action.
+After confirmation, clients process only that immutable list through the existing Storage cleanup and revision/deletion-time-checked permanent-delete boundary.
+Newly trashed content never joins an in-progress batch, and restored or changed targets fail the original checks.
+An uncertain response or conflict stops further deletion and reports only acknowledged successes; another attempt requires fresh preparation and confirmation.
+Leaving the client stops dispatching further deletions; already acknowledged deletion is not reversible, and an in-flight request may still finish.
+Preparation refuses manifests over 10,000 items instead of silently emptying only the loaded page or truncating the confirmation scope.
+This explicit user operation does not activate automatic retention cleanup or bypass existing private-media guards.
+
 ## Standalone library keyword search
 
 Global keyword search combines the existing Entry result section with independently paginated People, Places, and Habits through `search_library_entities`.

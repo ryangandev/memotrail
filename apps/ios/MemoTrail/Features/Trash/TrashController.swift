@@ -12,6 +12,11 @@ final class TrashController {
   private(set) var pendingItemID: String?
   private(set) var notice: Notice?
   private(set) var loadErrorMessage: String?
+  private(set) var emptySnapshot: [EmptyTrashTarget]?
+  private(set) var isEmptying = false
+  private(set) var emptyProgress = 0
+  private(set) var emptyTotal = 0
+  var isBusy: Bool { pendingItemID != nil || emptySnapshot != nil }
 
   private let client: SupabaseClient
   private let ownerID: UUID
@@ -22,7 +27,7 @@ final class TrashController {
   }
 
   var canLoadMore: Bool {
-    !isLoading && pendingItemID == nil && items.count < totalCount && items.count <= 10_000
+    !isLoading && !isBusy && items.count < totalCount && items.count <= 10_000
   }
 
   func load() async {
@@ -35,7 +40,7 @@ final class TrashController {
   }
 
   func restore(_ item: TrashItem) async {
-    guard pendingItemID == nil else { return }
+    guard !isBusy else { return }
 
     pendingItemID = item.id
     notice = nil
@@ -73,50 +78,22 @@ final class TrashController {
   }
 
   func deleteForever(_ item: TrashItem) async {
-    guard pendingItemID == nil else { return }
+    guard !isBusy else { return }
 
     pendingItemID = item.id
     notice = nil
     defer { pendingItemID = nil }
 
     do {
-      try await validateSessionOwner()
-      let parameters = TrashItemMutationParameters(item: item)
-      let pathRows: [TrashStoragePath] =
-        try await client
-        .rpc("trash_item_storage_paths", params: parameters)
-        .execute()
-        .value
-      let paths = Array(Set(pathRows.map(\.objectPath))).sorted()
-
-      guard paths.allSatisfy(isValidOwnedStoragePath) else {
-        notice = Notice(
-          message: "MemoTrail could not verify this item's private photos.",
-          tone: .error
-        )
-        return
-      }
-
-      if !paths.isEmpty {
-        _ = try await client.storage.from("entry-media").remove(paths: paths)
-      }
-
-      let rows: [DeletedTrashItem] =
-        try await client
-        .rpc("delete_trash_item_forever", params: parameters)
-        .execute()
-        .value
-
-      guard rows.first?.itemKind == item.kind, rows.first?.itemID == item.itemID else {
-        notice = Notice(
-          message: "This item changed on another device. Refresh before trying again.",
-          tone: .error
-        )
-        return
-      }
-
+      try await performDeletion(TrashItemMutationParameters(item: item))
       notice = Notice(message: "Item permanently deleted.", tone: .success)
       await reloadAfterMutation()
+    } catch TrashControllerError.changedItem {
+      notice = Notice(
+        message: "This item changed on another device. Refresh before trying again.", tone: .error)
+    } catch TrashControllerError.invalidMedia {
+      notice = Notice(
+        message: "MemoTrail could not verify this item's private photos.", tone: .error)
     } catch let error as PostgrestError where error.message == "media_cleanup_required" {
       notice = Notice(
         message: "A photo preview finished while this item was being removed. "
@@ -129,6 +106,78 @@ final class TrashController {
           + "Refresh before trying again.",
         tone: .error
       )
+    }
+  }
+
+  func prepareEmptyTrash() async {
+    guard !isBusy, !isLoading else { return }
+    pendingItemID = "prepare-empty-trash"
+    notice = nil
+    defer { pendingItemID = nil }
+    do {
+      try await validateSessionOwner()
+      let targets: [EmptyTrashTarget] = try await client.rpc("prepare_empty_trash").execute().value
+      try await validateSessionOwner()
+      try Task.checkCancellation()
+      guard EmptyTrashTarget.isValid(targets) else { throw URLError(.badServerResponse) }
+      if targets.isEmpty {
+        notice = Notice(message: "Nothing in Trash. No items were deleted.", tone: .success)
+        await reloadAfterMutation()
+      } else {
+        emptySnapshot = targets
+      }
+    } catch let error as PostgrestError where error.message == "trash_snapshot_too_large" {
+      notice = Notice(
+        message:
+          "Trash contains more than 10,000 items. Remove some individually before reviewing Empty Trash.",
+        tone: .error)
+    } catch {
+      notice = Notice(
+        message:
+          "Could not prepare the complete Trash list. Nothing was deleted. Refresh and try again.",
+        tone: .error)
+    }
+  }
+
+  func cancelEmptyTrash() { if !isEmptying { emptySnapshot = nil } }
+
+  func emptyTrash() async {
+    guard pendingItemID == nil, let targets = emptySnapshot, !isEmptying else { return }
+    emptySnapshot = nil
+    pendingItemID = "empty-trash"
+    isEmptying = true
+    emptyProgress = 0
+    emptyTotal = targets.count
+    defer {
+      pendingItemID = nil
+      isEmptying = false
+    }
+    let outcome = await EmptyTrashOutcome.run(
+      targets: targets,
+      remove: { target in
+        try await self.performDeletion(TrashItemMutationParameters(target: target))
+      }, progress: { self.emptyProgress = $0 })
+    notice = Notice(message: outcome.message, tone: outcome.complete ? .success : .error)
+    await reloadAfterMutation()
+  }
+
+  private func performDeletion(_ parameters: TrashItemMutationParameters) async throws {
+    try Task.checkCancellation()
+    try await validateSessionOwner()
+    let pathRows: [TrashStoragePath] = try await client.rpc(
+      "trash_item_storage_paths", params: parameters
+    ).execute().value
+    let paths = Array(Set(pathRows.map(\.objectPath))).sorted()
+    guard paths.allSatisfy(isValidOwnedStoragePath) else { throw TrashControllerError.invalidMedia }
+    try Task.checkCancellation()
+    try await validateSessionOwner()
+    if !paths.isEmpty { _ = try await client.storage.from("entry-media").remove(paths: paths) }
+    let rows: [DeletedTrashItem] = try await client.rpc(
+      "delete_trash_item_forever", params: parameters
+    ).execute().value
+    guard rows.first?.itemKind == parameters.itemKind, rows.first?.itemID == parameters.itemID
+    else {
+      throw TrashControllerError.changedItem
     }
   }
 
@@ -225,5 +274,7 @@ extension TrashController {
 }
 
 private enum TrashControllerError: Error {
+  case changedItem
+  case invalidMedia
   case ownerChanged
 }

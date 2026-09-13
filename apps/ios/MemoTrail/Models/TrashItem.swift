@@ -182,6 +182,13 @@ struct TrashItemMutationParameters: Encodable, Equatable, Sendable {
     expectedDeletedAt = item.deletedAt
   }
 
+  init(target: EmptyTrashTarget) {
+    itemKind = target.kind
+    itemID = target.itemID
+    expectedRevision = target.revision
+    expectedDeletedAt = target.deletedAt
+  }
+
   enum CodingKeys: String, CodingKey {
     case itemKind = "p_item_kind"
     case itemID = "p_item_id"
@@ -231,4 +238,52 @@ struct DeletedTrashItem: Decodable, Equatable, Sendable {
 
 enum TrashItemError: Error, Equatable {
   case invalidPagination
+}
+
+struct EmptyTrashTarget: Decodable, Equatable, Sendable {
+  let kind: TrashItemKind
+  let itemID: UUID
+  let deletedAt: String
+  let revision: Int?
+  enum CodingKeys: String, CodingKey {
+    case kind = "item_kind"
+    case itemID = "item_id"
+    case deletedAt = "deleted_at"
+    case revision
+  }
+  static func isValid(_ items: [Self]) -> Bool {
+    guard items.count <= 10000 else { return false }
+    var seen = Set<String>()
+    return items.allSatisfy {
+      TrashTimestamp.date(from: $0.deletedAt) != nil
+        && ($0.kind == .attachment ? $0.revision == nil : ($0.revision ?? 0) > 0)
+        && seen.insert("\($0.kind.rawValue):\($0.itemID)").inserted
+    }
+  }
+}
+
+struct EmptyTrashOutcome: Equatable, Sendable {
+  let deleted: Int
+  let total: Int
+  var complete: Bool { deleted == total }
+  var message: String {
+    complete
+      ? "\(deleted) confirmed items permanently deleted. Anything added to Trash later was not included."
+      : "\(deleted) of \(total) items confirmed deleted. Stopped because an item changed or a request could not be confirmed. Refresh and review Trash before trying again."
+  }
+  @MainActor
+  static func run(
+    targets: [EmptyTrashTarget],
+    remove: (EmptyTrashTarget) async throws -> Void,
+    progress: (Int) -> Void
+  ) async -> Self {
+    var deleted = 0
+    for target in targets {
+      if Task.isCancelled { break }
+      do { try await remove(target) } catch { break }
+      deleted += 1
+      progress(deleted)
+    }
+    return Self(deleted: deleted, total: targets.count)
+  }
 }

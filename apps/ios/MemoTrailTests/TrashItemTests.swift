@@ -3,6 +3,70 @@ import XCTest
 @testable import MemoTrail
 
 final class TrashItemTests: XCTestCase {
+  func testEmptyTrashSnapshotPreservesExactTargetsAndRejectsDuplicates() throws {
+    let target = EmptyTrashTarget(
+      kind: .entry, itemID: UUID(), deletedAt: "2026-09-01T12:00:00.123456Z", revision: 2)
+    XCTAssertTrue(EmptyTrashTarget.isValid([target]))
+    XCTAssertFalse(EmptyTrashTarget.isValid([target, target]))
+    XCTAssertFalse(
+      EmptyTrashTarget.isValid([
+        EmptyTrashTarget(
+          kind: .attachment, itemID: UUID(), deletedAt: target.deletedAt, revision: 2)
+      ]))
+    XCTAssertFalse(
+      EmptyTrashTarget.isValid([
+        EmptyTrashTarget(kind: .person, itemID: UUID(), deletedAt: "tomorrow", revision: 1)
+      ]))
+    let object = try XCTUnwrap(
+      JSONSerialization.jsonObject(
+        with: JSONEncoder().encode(TrashItemMutationParameters(target: target))) as? [String: Any])
+    XCTAssertEqual(object["p_expected_deleted_at"] as? String, target.deletedAt)
+  }
+
+  @MainActor func testEmptyTrashStopsAfterUncertainDeletionWithoutTouchingRemainingTargets() async {
+    let targets = (0..<3).map { _ in
+      EmptyTrashTarget(kind: .entry, itemID: UUID(), deletedAt: "2026-09-01T12:00:00Z", revision: 1)
+    }
+    var attempted = [UUID]()
+    var progress = [Int]()
+    let result = await EmptyTrashOutcome.run(
+      targets: targets,
+      remove: { target in
+        attempted.append(target.itemID)
+        if attempted.count == 2 { throw URLError(.networkConnectionLost) }
+      }, progress: { progress.append($0) })
+    XCTAssertEqual(attempted, Array(targets.prefix(2)).map(\.itemID))
+    XCTAssertEqual(progress, [1])
+    XCTAssertEqual(result, EmptyTrashOutcome(deleted: 1, total: 3))
+    XCTAssertFalse(result.complete)
+    XCTAssertTrue(result.message.contains("could not be confirmed"))
+  }
+
+  @MainActor func testEmptyTrashReportsOnlyConfirmedSnapshotCompletion() async {
+    let targets = [
+      EmptyTrashTarget(
+        kind: .collection, itemID: UUID(), deletedAt: "2026-09-01T12:00:00Z", revision: 1)
+    ]
+    let result = await EmptyTrashOutcome.run(targets: targets, remove: { _ in }, progress: { _ in })
+    XCTAssertTrue(result.complete)
+    XCTAssertTrue(result.message.contains("later was not included"))
+  }
+
+  @MainActor func testCancelledEmptyTrashStartsNoDeletion() async {
+    let target = EmptyTrashTarget(
+      kind: .entry, itemID: UUID(), deletedAt: "2026-09-01T12:00:00Z", revision: 1)
+    var attempts = 0
+    let task = Task { @MainActor in
+      await EmptyTrashOutcome.run(
+        targets: [target], remove: { _ in attempts += 1 }, progress: { _ in })
+    }
+    task.cancel()
+    let result = await task.value
+    XCTAssertEqual(attempts, 0)
+    XCTAssertEqual(result.deleted, 0)
+    XCTAssertFalse(result.complete)
+  }
+
   func testDecodesEveryTrashKindAndPreservesOptimisticTimestamp() throws {
     let items = try decodeItems()
 

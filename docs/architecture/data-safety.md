@@ -7,7 +7,8 @@ Cross-device synchronization is not a backup by itself.
 
 - Deleting an Entry first sets `deleted_at` and moves it to Trash.
 - Updating an Entry records the previous revision in `entry_versions`.
-- Permanently deleting an Entry may remove its revision history and related media only after an explicit confirmation flow is designed.
+- Permanently deleting an Entry removes its revision history and related media through the implemented explicit confirmation flow and owner/revision-checked cleanup boundary.
+- Empty Trash prepares all targets before confirmation, excludes later removals, and stops on changed targets or uncertain responses; it never claims an interrupted batch deleted everything.
 - Original uploaded photos remain private and separate from optimized display derivatives.
 - A Web capture is written to per-user browser storage before synchronization starts, and its pending copy is removed only after the server confirms the stable Entry ID.
 - Browser drafts and pending Entries are protected by the browser and operating-system account boundary, but they are not separately end-to-end encrypted by MemoTrail.
@@ -35,3 +36,11 @@ Cross-device synchronization is not a backup by itself.
 - Repeat the restore exercise after material schema or backup-policy changes.
 
 No production data should be treated as safely backed up until a restore has been completed and inspected end to end.
+
+## Hosted evidence and outstanding setup
+
+On 2026-09-13, `supabase backups list --project-ref kaivkozeyuwzqrckmyqu --output json` returned `pitr_enabled: false`, `backups: null`, `physical_backup_data: {}`, and `walg_enabled: true`.
+This does not prove that no provider-side physical data exists, but it does not establish an available restore point or verified recovery either.
+No paid add-on, backup destination, restore operation, or automatic deletion was enabled during this read-only audit.
+Database backup scope excludes original Storage objects, which require separate protected copies and recovery verification, as described in [Supabase's backup documentation](https://supabase.com/docs/guides/platform/backups).
+Ryan must choose the protected backup destination and any paid recovery add-on before those account-level changes can be made.

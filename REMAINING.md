@@ -46,7 +46,8 @@ The last accepted checkpoint is `a7850b7`.
 | Consent-checked photo context for editable Inbox AI suggestions             | Deployed        | Complete        | Complete        | Pushed c4d9d9c      |
 | Ordinary Entry links, incoming backlinks, and restorable relationship edits | Deployed        | Complete        | Complete        | Pushed 4299a73      |
 | Photo-only Entry history with retry-safe writing concurrency                | Deployed        | Complete        | Complete        | Pushed 638186e      |
-| Standalone People, Places, and Habits keyword search with exact sources     | Deployed        | Complete        | Complete        | This feature commit |
+| Standalone People, Places, and Habits keyword search with exact sources     | Deployed        | Complete        | Complete        | Pushed 311c1a2      |
+| Confirmed all-page Empty Trash with fixed targets and interruption safety   | Deployed        | Complete        | Complete        | This feature commit |
 | Remaining shared metadata and relationship lifecycle audit                  | Audit ongoing   | Audit ongoing   | Audit ongoing   | Pending             |
 | Remaining photo surfaces and interactive gallery acceptance                 | Audit pending   | Audit pending   | Audit pending   | Pending             |
 | Final acceptance and production configuration                               | Pending         | Pending         | Pending         | Pending             |
@@ -64,7 +65,9 @@ The last accepted checkpoint is `a7850b7`.
 - Standalone People, Places, and Habits are now covered by ordinary bilingual keyword search on both clients, including Habit check-in notes, bounded pagination, and exact original-source navigation without AI.
 - Entry-only filters intentionally suppress the standalone section with explicit guidance; they never pretend to filter entities that have no corresponding Entry fields.
 - Thirty-day Trash eligibility is displayed, but an automatic permanent-deletion worker is not yet implemented or activated; activating cleanup against existing user data needs an exact retention and target audit.
+- Explicit Empty Trash now confirms one complete manifest, retains per-item revision/deletion-time guards, and stops on uncertain results; it does not enroll newly trashed content or start automatic retention cleanup.
 - Backup expectations are documented, but actual hosted retention, separately protected database/media backups, and a non-production full restore still need evidence.
+- The 2026-09-13 hosted inventory returned PITR disabled, no listed restore point, and WAL backup enablement; choose the protected backup destination and any paid add-on before account-level configuration changes.
 - Specialized uploaders now preserve selected-photo identity and reconcile uncertain upload/registration responses without overwriting or deleting originals, across First Times, Homes, Vehicles, and Goals on both clients.
 - Abandoned unregistered-upload retention/cleanup remains a lifecycle audit item; specialized-editor draft persistence is not added by the retry fix.
 

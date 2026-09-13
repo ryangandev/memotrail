@@ -231,7 +231,8 @@
 }
 
 .itemActions button,
-.dialogActions button {
+.dialogActions button,
+.emptyTrashButton {
   min-height: 36px;
   padding: 0 var(--mt-space-3);
   border: 1px solid var(--mt-color-border);
@@ -243,7 +244,8 @@
 }
 
 .itemActions button:disabled,
-.dialogActions button:disabled {
+.dialogActions button:disabled,
+.emptyTrashButton:disabled {
   cursor: wait;
   opacity: 0.58;
 }
@@ -255,6 +257,12 @@
 
 .deleteButton:hover {
   border-color: var(--mt-color-warning);
+  color: var(--mt-color-warning);
+}
+
+.emptyTrashButton {
+  margin-top: var(--mt-space-4);
+  min-height: 44px;
   color: var(--mt-color-warning);
 }
 
@@ -370,7 +378,7 @@
 
 .dialogActions .confirmDeleteButton {
   border-color: var(--mt-color-warning);
-  color: white;
+  color: var(--mt-color-surface-raised);
   background: var(--mt-color-warning);
 }
 
@@ -437,5 +445,29 @@
 @media (prefers-reduced-motion: reduce) {
   .dialogBackdrop {
     backdrop-filter: none;
+  }
+}
+.emptyTrashDialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  border: 1px solid var(--mt-color-border);
+  max-height: calc(100dvh - var(--mt-space-8));
+  overflow-y: auto;
+  color: var(--mt-color-ink);
+}
+
+.emptyTrashDialog::backdrop {
+  background: rgb(0 0 0 / 45%);
+}
+
+.emptyTrashDialog .dialogActions button {
+  min-height: 44px;
+  padding-block: var(--mt-space-2);
+}
+
+@media (max-width: 480px) {
+  .emptyTrashDialog .dialogActions {
+    flex-direction: column;
   }
 }
