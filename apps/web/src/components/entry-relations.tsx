@@ -74,6 +74,15 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
         setMessage(error);
         setBusy(false);
       } else {
+        if (!linked) {
+          setData({
+            ...data,
+            items: data.items.filter((item) => item.entry_id !== row.entry_id),
+            revision: data.revision + 1,
+            total_count: Math.max(0, data.total_count - 1),
+          });
+          setBusy(false);
+        }
         setMode("outgoing");
         setQuery("");
         setSearch("");
