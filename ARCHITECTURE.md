@@ -173,7 +173,12 @@ Both clients explain the cleanup race and offer an explicit refresh/retry instea
 No Storage object is deleted through SQL: deletion still uses the [Storage API](https://supabase.com/docs/guides/storage/management/delete-objects), with transaction ordering grounded in [PostgreSQL row locks](https://www.postgresql.org/docs/17/explicit-locking.html).
 Existing export manifests continue to include registered variants and originals with their actual integrity checks.
 Display generation never invokes AI or changes Entry dates; optional photo analysis is a separate consent-checked suggestion path described below.
-Deployment traces Sharp through a static server import and explicitly includes the worker-only libheif bundle.
+The injected `@memotrail/media-runtime` workspace package remains external to Next and resolves Sharp, exifr, and libheif from its own dependency tree, not the process working directory or Turbopack module IDs.
+Injection is explicit in the Web dependency metadata because ordinary linked workspaces can still be bundled despite `serverExternalPackages`, as reproduced locally and tracked in [Next.js issue 84388](https://github.com/vercel/next.js/issues/84388).
+Its static Node dependencies preserve deployment tracing of native transitive dependencies, and the worker-only libheif bundle is included explicitly.
+Run `pnpm install` after editing this injected package so its installed copy stays synchronized.
+After a production build, `node apps/web/scripts/verify-media-trace.mjs` copies only each media route's traced files into a fresh temporary directory and runs credential-free decoding there; CI performs this check after building.
+This catches deployment-only dependency omissions that full-checkout unit tests cannot prove absent.
 `MEMOTRAIL_E2E_PRODUCTION=1 pnpm --filter @memotrail/web test:e2e` builds and serves the same synthetic local-only configuration with `next start`; hosted acceptance remains separate.
 Decoder behavior follows [Sharp output documentation](https://sharp.pixelplumbing.com/api-output/) and [libheif-js's supported WASM interface](https://github.com/catdad-experiments/libheif-js).
 

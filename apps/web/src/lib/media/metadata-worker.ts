@@ -1,10 +1,7 @@
 import { Worker } from "node:worker_threads";
-import { createRequire } from "node:module";
-import "sharp";
-import "exifr";
+import { decoderPaths } from "@memotrail/media-runtime";
 import { MEDIA_MAX_BYTES, MEDIA_MAX_PIXELS } from "./contracts";
 import { normalizePhotoMetadata, type PhotoMetadata } from "./photo-metadata";
-const runtimeRequire = createRequire(`${process.cwd()}/package.json`);
 const source = String.raw`
 const {parentPort,workerData}=require('node:worker_threads');
 (async()=>{
@@ -43,8 +40,7 @@ export async function readPhotoMetadata(
       workerData: {
         bytes,
         maxPixels: MEDIA_MAX_PIXELS,
-        sharpPath: runtimeRequire.resolve("sharp"),
-        exifrPath: runtimeRequire.resolve("exifr"),
+        ...decoderPaths(),
       },
     });
     let finished = false;

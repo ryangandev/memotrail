@@ -1,16 +1,11 @@
 import { Worker } from "node:worker_threads";
-// Keep Sharp's runtime and native dependencies visible to Next's deployment tracer.
-// Decoding still runs only inside the bounded worker.
-import "sharp";
-import { createRequire } from "node:module";
+import { decoderPaths } from "@memotrail/media-runtime";
 import {
   MEDIA_MAX_BYTES,
   MEDIA_MAX_PIXELS,
   type MediaVariant,
 } from "./contracts";
 import { imageWorkerSource } from "./image-worker-source";
-// Resolve real filesystem paths at runtime, not Turbopack's external module identifiers.
-const runtimeRequire = createRequire(`${process.cwd()}/package.json`);
 export type RenderedImage = {
   variant: MediaVariant;
   bytes: Buffer;
@@ -32,8 +27,7 @@ export function renderPhoto(
       workerData: {
         bytes,
         maxPixels: MEDIA_MAX_PIXELS,
-        sharpPath: runtimeRequire.resolve("sharp"),
-        heifPath: runtimeRequire.resolve("libheif-js/wasm-bundle"),
+        ...decoderPaths(),
       },
     });
     let finished = false;

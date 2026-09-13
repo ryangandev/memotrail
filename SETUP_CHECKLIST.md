@@ -210,6 +210,8 @@ Environment configuration when the Web app exists:
 - [x] Add the Supabase publishable key for browser use.
 - [x] Add the server-only Supabase credential to Vercel Production. It now supports scoped AI accounting, portable exports, and private photo delivery; never put it in iOS or a public environment variable.
 - [ ] Verify hosted JPEG and HEIC previews after deploying the private media endpoints. Local production-mode acceptance does not prove the Vercel deployment's environment or native decoder packaging.
+- [x] Verify hosted bearer ZIP streaming above 4.5 MB with 30 canonical datasets, Chinese writing, original-media hashes, and discarded-snapshot rejection using only a synthetic owner.
+- [ ] Verify actual production browser download and native Save/share interactions separately from hosted API streaming.
 - [ ] Add the selected AI provider key as a server-only environment variable.
 - [ ] Configure separate Preview and Production values. Production is configured; Preview is intentionally pending.
 - [x] Update Supabase and Google redirect allow lists for the stable production URL.

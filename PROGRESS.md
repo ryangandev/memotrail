@@ -6,6 +6,19 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Deployment-safe photo workers and hosted export acceptance
+
+- Actual hosted acceptance downloaded and validated a 5,273,677-byte ZIP containing all 30 canonical datasets, Chinese writing, Markdown/CSV views, and three byte-identical JPEG/HEIC/PNG originals; discarded snapshots reject later downloads with HTTP 410.
+- The same run reproduced HTTP 422 on hosted JPEG preview generation; an isolated copy of the previous deployment trace reproduced `Cannot find module 'sharp'` without the full development checkout.
+- Replaced process-working-directory decoder lookup with the injected, external `@memotrail/media-runtime` package so native transitive dependencies retain standard Node resolution in the deployed worker.
+- A fresh-directory verification script now loads only each media endpoint's traced deployment files and runs a credential-free decoding worker; both image and metadata traces pass, and CI runs this check after building.
+- Added explicit opt-in hosted media/export verification with one marked synthetic account, three generated originals, exact scoped Storage/account cleanup, portable ZIP integrity checks, and no AI calls.
+- Earlier hosted media URL requests intermittently rejected a valid session with HTTP 401 while export accepted it; a later request passed, so this remains an observed intermittent authentication issue, not a claimed fix.
+- All 430 Web tests and 51 production-mode browser/API scenarios pass, alongside the production build, two isolated trace checks, lint, formatting, type checking, and shared tokens; post-deployment media acceptance is still required before claiming this fix live.
+- Existing client-aborted RSC reporting and the intentional missing-media ZIP failure remain distinguished from passing application assertions.
+- All three hosted fixture accounts and their exact objects were confirmed removed; no personal writing, original photos, migration, AI request, or native source change was involved.
+- Production AI configuration, actual native UI/share acceptance, GitHub billing, backup/restore, and retention gates remain separate unfinished work.
+
 ### Hosted AI configuration verification
 
 - Verified the deployed health endpoint returns HTTP 200, and the AI connection endpoint rejects an invalid bearer token with HTTP 401.

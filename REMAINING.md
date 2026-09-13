@@ -56,6 +56,10 @@ The last accepted checkpoint is `a7850b7`.
 
 ## External inputs and limitations
 
+- Hosted bearer ZIP acceptance on 2026-09-13 verified a 5,273,677-byte complete archive, all 30 canonical datasets, three byte-identical original images, and rejection after snapshot discard; actual native Save/share and browser production interaction remain distinct checks.
+- Hosted JPEG preview generation returned 422; the deployment-only dependency copy reproduced missing Sharp resolution, and the injected media runtime now passes local trace-only image/metadata worker checks. Post-deployment verification remains required.
+- Two initial hosted media URL requests rejected a valid session with 401 while export accepted it; the next run passed authentication, so the intermittent failure is recorded without inventing a cause or claiming it fixed.
+
 - Hosted AI was tested on 2026-09-13 with an isolated synthetic account and a one-cent monthly budget: invalid bearer authentication returned 401, while a genuine session returned 503 `provider_unavailable`.
 - The exact synthetic account was removed after verification; no AI requests or charges were recorded and no personal writing or photos were accessed.
 - Local Anthropic credentials are valid, but the deployed server configuration must be corrected in Vercel and redeployed before production AI acceptance can pass.

@@ -2,6 +2,11 @@
   "name": "@memotrail/web",
   "version": "0.1.0",
   "private": true,
+  "dependenciesMeta": {
+    "@memotrail/media-runtime": {
+      "injected": true
+    }
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,6 +17,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@memotrail/media-runtime": "workspace:*",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.112.4",
     "exifr": "7.1.3",

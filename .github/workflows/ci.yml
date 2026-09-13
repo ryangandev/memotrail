@@ -53,6 +53,9 @@ jobs:
       - name: Build Web app
         run: pnpm build
 
+      - name: Verify shipped media dependencies
+        run: node apps/web/scripts/verify-media-trace.mjs
+
   ios:
     name: iOS build
     runs-on: macos-15
