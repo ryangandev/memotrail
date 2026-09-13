@@ -150,6 +150,16 @@ The corrected local key passed direct and authenticated localhost connection tes
 The official models endpoint also returned HTTP 200 with the saved key, without generating tokens or exposing credentials.
 Model-assisted retrieval is implemented and passed synthetic bilingual source-grounded acceptance; a vector embedding index is not claimed.
 The local key does not configure Vercel: production must separately provide `AI_PROVIDER=anthropic`, the server-only `AI_API_KEY`, the pinned model, and the total budget before redeployment and live acceptance.
+On 2026-09-13, a verified synthetic hosted session reached `/api/ai/connection` but received HTTP 503 `provider_unavailable`, with no provider requests or charges.
+The test account was confirmed removed; the result concerns the deployed configuration, not local key validity.
+
+- [ ] Set Vercel Production `AI_PROVIDER=anthropic`, server-only `AI_API_KEY`, `AI_CHAT_MODEL=claude-haiku-4-5-20251001`, and `AI_TOTAL_BUDGET_USD=3`; verify existing server-only `SUPABASE_SECRET_KEY` is present.
+- [ ] Redeploy Production after saving those variables; never use `NEXT_PUBLIC_` or an iOS configuration file for provider credentials.
+- [ ] From the repository root, explicitly run `MEMOTRAIL_VERIFY_HOSTED_AI=1 node apps/web/scripts/verify-hosted-ai.mjs` after deployment and confirm HTTP 200, one completed usage record within the one-cent fixture budget, and confirmed synthetic-account cleanup.
+
+The hosted check uses the existing local Supabase server credentials only against the pinned MemoTrail project.
+It sends no personal writing and does not send the local Anthropic key to the deployed app.
+An uncertain creation or cleanup result requires inspection of the reported synthetic fixture before another run.
 
 Selection criteria:
 

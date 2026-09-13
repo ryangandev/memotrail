@@ -6,6 +6,16 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Hosted AI configuration verification
+
+- Verified the deployed health endpoint returns HTTP 200, and the AI connection endpoint rejects an invalid bearer token with HTTP 401.
+- Created one isolated synthetic hosted account, enabled only connection testing with a one-cent monthly budget, and verified a genuine session reaches the AI provider configuration guard.
+- The deployed endpoint returned HTTP 503 `provider_unavailable`; this proves production configuration is not ready, not that the corrected local Anthropic key is invalid.
+- The synthetic account recorded no AI requests and zero charges, and its exact identity was checked before confirmed deletion; no personal Entries or photos were accessed.
+- Added an explicitly opted-in, exact-project hosted verification script with bounded requests, sanitized reporting, no automatic retries, and marker-checked synthetic-account cleanup.
+- Syntax, targeted lint, formatting, and refusal without explicit opt-in pass; no application or native behavior changed, so the preceding feature's full-suite results remain historical evidence rather than newly rerun results.
+- Production AI acceptance now requires Vercel server environment configuration and redeployment; native interactive acceptance, hosted media/export, GitHub account billing, backup/restore, and retention gates remain open.
+
 ### Optional Habit check-in Entry context across Web and iOS
 
 - Reproduced a real localhost check-in note edit clearing its existing `entry_id`, while the PRD explicitly requires optional linked journal context.

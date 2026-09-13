@@ -49,12 +49,17 @@ The last accepted checkpoint is `a7850b7`.
 | Standalone People, Places, and Habits keyword search with exact sources     | Deployed        | Complete        | Complete        | Pushed 311c1a2      |
 | Confirmed all-page Empty Trash with fixed targets and interruption safety   | Deployed        | Complete        | Complete        | Pushed 7eaae33      |
 | Habit monthly summaries and weekday miss patterns                           | Existing RPC    | Complete        | Complete        | Pushed 70d13bf      |
-| Optional Habit check-in Entry context with legacy-safe link preservation    | Deployed        | Complete        | Complete        | This feature commit |
+| Optional Habit check-in Entry context with legacy-safe link preservation    | Deployed        | Complete        | Complete        | Pushed 603d6c6      |
 | Remaining shared metadata and relationship lifecycle audit                  | Audit ongoing   | Audit ongoing   | Audit ongoing   | Pending             |
 | Remaining photo surfaces and interactive gallery acceptance                 | Audit pending   | Audit pending   | Audit pending   | Pending             |
 | Final acceptance and production configuration                               | Pending         | Pending         | Pending         | Pending             |
 
 ## External inputs and limitations
+
+- Hosted AI was tested on 2026-09-13 with an isolated synthetic account and a one-cent monthly budget: invalid bearer authentication returned 401, while a genuine session returned 503 `provider_unavailable`.
+- The exact synthetic account was removed after verification; no AI requests or charges were recorded and no personal writing or photos were accessed.
+- Local Anthropic credentials are valid, but the deployed server configuration must be corrected in Vercel and redeployed before production AI acceptance can pass.
+- The opt-in `apps/web/scripts/verify-hosted-ai.mjs` can repeat this bounded check after configuration changes; do not repeat account creation after an uncertain result without inspecting the reported fixture first.
 
 - Both Habit editors now stage optional Entry selection/removal, search across bounded pages, open original writing, retain unchanged Trash links, and protect note edits from older clients without link controls.
 - Native empty historical check-ins no longer borrow today's note, measurement, revision, or linked Entry; actual authenticated native UI acceptance remains separate from these model/contract tests.
