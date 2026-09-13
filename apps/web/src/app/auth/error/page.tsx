@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { BrandMark } from "@/components/brand-mark";
 import styles from "./page.module.css";
 
 export default function AuthErrorPage() {
   return (
     <main className={styles.shell}>
       <section className={styles.card}>
-        <span className={styles.mark}>M</span>
+        <BrandMark className={styles.mark} />
         <p>Authentication</p>
         <h1>Sign-in did not finish.</h1>
         <span>

@@ -23,6 +23,7 @@
 		B00000000000000000000003 /* InboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000003 /* InboxView.swift */; };
 		B00000000000000000000004 /* CaptureCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000004 /* CaptureCard.swift */; };
 		B00000000000000000000005 /* EntryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000005 /* EntryCard.swift */; };
+		B80000000000000000000001 /* MemoTrailMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = C80000000000000000000001 /* MemoTrailMark.swift */; };
 		B00000000000000000000006 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000006 /* DesignTokens.swift */; };
 		B00000000000000000000007 /* InboxEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000007 /* InboxEntry.swift */; };
 		B0000000000000000000003A /* EntryOccurrence.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000041 /* EntryOccurrence.swift */; };
@@ -115,6 +116,7 @@
 		C00000000000000000000003 /* InboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxView.swift; sourceTree = "<group>"; };
 		C00000000000000000000004 /* CaptureCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureCard.swift; sourceTree = "<group>"; };
 		C00000000000000000000005 /* EntryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryCard.swift; sourceTree = "<group>"; };
+		C80000000000000000000001 /* MemoTrailMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoTrailMark.swift; sourceTree = "<group>"; };
 		C00000000000000000000006 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 		C00000000000000000000007 /* InboxEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxEntry.swift; sourceTree = "<group>"; };
 		C00000000000000000000041 /* EntryOccurrence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryOccurrence.swift; sourceTree = "<group>"; };
@@ -300,6 +302,7 @@
 			children = (
 				C00000000000000000000004 /* CaptureCard.swift */,
 				C00000000000000000000005 /* EntryCard.swift */,
+				C80000000000000000000001 /* MemoTrailMark.swift */,
 				C0000000000000000000002E /* VoiceTranscriptionController.swift */,
 			);
 			path = Components;
@@ -605,6 +608,7 @@
 				B00000000000000000000003 /* InboxView.swift in Sources */,
 				B00000000000000000000004 /* CaptureCard.swift in Sources */,
 				B00000000000000000000005 /* EntryCard.swift in Sources */,
+				B80000000000000000000001 /* MemoTrailMark.swift in Sources */,
 				B00000000000000000000006 /* DesignTokens.swift in Sources */,
 				B00000000000000000000007 /* InboxEntry.swift in Sources */,
 				B0000000000000000000003A /* EntryOccurrence.swift in Sources */,

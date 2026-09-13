@@ -35,21 +35,8 @@ struct AuthenticationView: View {
 
   private var brand: some View {
     HStack(spacing: MTSpacing.s3) {
-      Text("M")
-        .font(.system(size: 16, weight: .semibold, design: .serif))
-        .foregroundStyle(MTColor.accentInk)
+      MemoTrailMark()
         .frame(width: 32, height: 32)
-        .background(
-          MTColor.accent,
-          in: UnevenRoundedRectangle(
-            cornerRadii: .init(
-              topLeading: 9,
-              bottomLeading: 3,
-              bottomTrailing: 9,
-              topTrailing: 9
-            )
-          )
-        )
 
       Text("MemoTrail")
         .font(.system(size: 20, weight: .medium, design: .serif))

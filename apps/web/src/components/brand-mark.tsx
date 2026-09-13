@@ -4,8 +4,13 @@ type BrandMarkProps = {
 
 export function BrandMark({ className }: BrandMarkProps) {
   return (
-    <svg aria-hidden="true" className={className} viewBox="0 0 64 64">
-      <rect width="64" height="64" rx="15" fill="#F4F1E9" />
+    <svg
+      aria-hidden="true"
+      className={className}
+      focusable="false"
+      shapeRendering="geometricPrecision"
+      viewBox="0 0 64 64"
+    >
       <g fill="none" strokeLinecap="round">
         <path
           d="M27 13.3A19.4 19.4 0 1 0 51.1 35.4"

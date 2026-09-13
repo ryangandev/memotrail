@@ -83,21 +83,8 @@ struct InboxView: View {
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
           HStack(spacing: MTSpacing.s2) {
-            Text("M")
-              .font(.system(size: 14, weight: .semibold, design: .serif))
-              .foregroundStyle(MTColor.accentInk)
+            MemoTrailMark()
               .frame(width: 28, height: 28)
-              .background(
-                MTColor.accent,
-                in: UnevenRoundedRectangle(
-                  cornerRadii: .init(
-                    topLeading: 8,
-                    bottomLeading: 3,
-                    bottomTrailing: 8,
-                    topTrailing: 8
-                  )
-                )
-              )
 
             Text("MemoTrail")
               .font(.system(size: 18, weight: .medium, design: .serif))
