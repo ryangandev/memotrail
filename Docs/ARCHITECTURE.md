@@ -381,10 +381,10 @@ Authenticated native UI taps and production download acceptance remain separate 
 
 ## Delivery and verification
 
-`PRODUCT.md` is the product contract.
-`PROGRESS.md` is the chronological implementation record and is updated in every commit.
-`REMAINING.md` is the current cross-platform acceptance matrix and records blockers without treating partial work as complete.
-`SETUP_CHECKLIST.md` records external configuration and user-only setup.
+[PRODUCT.md](./PRODUCT.md) is the intended product contract.
+[STATUS.md](./STATUS.md) records current cross-platform completion, validation evidence, open work, and blockers without treating partial work as complete.
+[SETUP.md](./SETUP.md) records external configuration, credential boundaries, and release gates.
+Git history and pull requests retain chronological implementation evidence, so repository documentation does not maintain a duplicate per-commit progress log.
 Each finished feature includes the database contract where needed, Web and iOS integration, relevant tests, and an atomic commit pushed to main.
 Database migrations are tested locally with seeded pgTAP fixtures and ownership denial checks before the approved hosted push.
 Client checks include relevant unit tests, Web build and interaction verification, native Simulator build and tests, and GitHub CI.

@@ -1,12 +1,12 @@
 # MemoTrail Product Definition
 
-> Status: Phase 1 foundation approved
+> Status: Current product contract
 >
-> Version: 0.14
+> Version: 0.15
 >
-> Audience: Ryan only
+> Audience: Ryan and MemoTrail implementers
 >
-> Last updated: 2026-08-30
+> Last reviewed: 2026-09-13
 
 ## 1. Product idea
 
@@ -524,45 +524,38 @@ The composer supports text, speech-to-text, photos, and dates.
 
 Saving immediately creates an Inbox Entry while AI suggestions are generated asynchronously.
 
-## 8. Suggested first usable version
+## 8. Current release contract
 
-The first version should prove the central capture-to-retrieval loop before implementing every specialized tracker.
+The current release proves the complete capture-to-retrieval loop across native iOS and Web.
 
-Proposed scope:
+It includes:
 
-1. Universal quick capture with text, photos, and dates.
-2. Inbox with manual organization status.
-3. Automatic type, collection, and tag suggestions that remain manually editable.
-4. Manual collections and tags.
-5. Global search with useful filters.
-6. A basic timeline for life stages and chronological Entries.
-7. First Times as the first specialized Entry type.
+1. Universal quick capture with text, speech-to-text, photos, and all confirmed date precisions.
+2. Recoverable drafts, visible offline queues, and synchronized Inbox review.
+3. Editable AI organization suggestions that preserve the original and require explicit user approval.
+4. Manual Types, Collections, tags, People, Places, and Entry relationships.
+5. Keyword and natural-language search with filters, grounded answers, and source navigation.
+6. Timeline, First Times, Habits, Home resurfacing, Homes, Vehicles, Goals, and Bucket List behavior.
+7. Private photos, revision-safe history, Trash, confirmed permanent deletion, and portable export.
+8. Persistent Explore with AI conversations whose conclusions become Entries only through explicit Save as Entry.
 
-Habits, Homes, and Vehicles remain important confirmed product areas, but may follow after the shared capture and retrieval foundation works well.
+Core product behavior should remain available on both clients whenever the platform can support it.
+Platform-specific interactions may differ, but neither client should become a permanently reduced companion experience.
+Implementation and acceptance state belong in [STATUS.md](./STATUS.md), not in this product contract.
 
-This sequencing is not final and should be changed if another area is more valuable to the user.
+## 9. Open product decisions
 
-Core product features should be available on both native iOS and Web whenever the platform can support them.
-
-The clients may reach parity incrementally, but neither client should become a permanently reduced companion experience.
-
-## 9. Not decided yet
-
-- AI provider and whether AI processing can leave the user's device.
 - Whether optional Progressive Web App enhancements add enough value alongside the native iOS app.
-- Whether the native iOS Share Extension belongs in the first release or shortly afterward.
+- Whether and when to add a native iOS Share Extension.
+- Whether the Inbox should support bulk review after the item-by-item workflow is trusted.
+- Which Entry fields should remain visible in the collapsed composer before the user asks for more options.
+- Whether platform-specific features need an explicit label when no true equivalent exists on the other client.
+- When to add the deferred Map view and additional interface languages.
 
-## 10. Questions for the next discussion
+## 10. Decision discipline
 
-### Direction-defining questions
-
-1. Should the native iOS Share Extension belong in the first release or shortly afterward?
-2. Should the Inbox support bulk review after the item-by-item workflow is established?
-3. Which exact Entry fields should remain visible in the collapsed composer before the user asks for more options?
-
-### Questions for later rounds
-
-4. Should platform-specific features be labeled clearly when no true equivalent exists on the other client?
+Open questions are not implementation requirements until Ryan confirms them.
+When a product decision changes, update the relevant behavior in this document and add a concise dated entry to the decision log.
 
 ## 11. Current assumptions to validate
 
@@ -603,7 +596,7 @@ The clients may reach parity incrementally, but neither client should become a p
 - Database migrations, Row Level Security tests, and local Supabase configuration live in a root `supabase` directory.
 - The discarded historical Next.js, Prisma, Lessons, and Milestones prototype is not restored as the new foundation.
 
-The intended high-level repository shape is:
+The high-level repository shape is:
 
 ```text
 apps/
@@ -615,9 +608,15 @@ packages/
 supabase/
   migrations/
   tests/
-docs/
-PRODUCT.md
-SETUP_CHECKLIST.md
+Docs/
+  architecture/
+  ARCHITECTURE.md
+  PRODUCT.md
+  README.md
+  SETUP.md
+  STATUS.md
+AGENTS.md
+README.md
 ```
 
 ### 12.3 Visual direction
@@ -793,6 +792,10 @@ Specific measurable criteria will be defined after the primary device, capture w
 - Prefer on-device iOS speech recognition when the current device and language support it, with the system speech service as the compatibility fallback.
 - Keep Web voice capture as progressive enhancement because browser speech-recognition support varies, while preserving text, draft, and no-audio-retention behavior across clients.
 
+### 2026-09-13
+
+- Use Anthropic as the initial server-side text-generation provider while retaining an authenticated provider boundary and per-feature user controls.
+
 ## 17. Privacy, security, and data ownership
 
 ### 17.1 Authentication
@@ -850,6 +853,10 @@ Required safeguards include:
 - Logs that do not contain full private Entry content.
 
 ### 17.6 AI controls
+
+Anthropic is the initial server-side text-generation provider.
+Provider access stays behind MemoTrail's authenticated server boundary so it can be changed without altering client data ownership.
+Private content leaves MemoTrail for provider processing only after the relevant user opt-in.
 
 The user can individually disable:
 
