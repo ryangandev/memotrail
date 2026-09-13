@@ -4,6 +4,11 @@ import {
   occurrencePrecisionLabels,
   type OccurrenceDraft,
 } from "@/lib/data/occurrence";
+import {
+  commonTimezones,
+  supportedTimezones,
+  timezoneLabel,
+} from "@/lib/data/timezones";
 import styles from "@/app/page.module.css";
 export function OccurrenceEditor({
   value,
@@ -32,6 +37,9 @@ export function OccurrenceEditor({
         : value.precision === "year"
           ? "text"
           : "date";
+  const allTimezones = supportedTimezones();
+  const commonTimezoneSet = new Set<string>(commonTimezones);
+  const currentTimezoneIsListed = allTimezones.includes(value.timezone);
   return (
     <fieldset disabled={disabled} className={styles.occurrenceEditor}>
       <legend>When it happened</legend>
@@ -57,11 +65,34 @@ export function OccurrenceEditor({
         </label>
         <label>
           <span>Time zone</span>
-          <input
+          <select
             value={value.timezone}
             onChange={(e) => change({ timezone: e.target.value })}
-            placeholder="America/Los_Angeles"
-          />
+          >
+            {!currentTimezoneIsListed ? (
+              <optgroup label="Current time zone">
+                <option value={value.timezone}>
+                  {timezoneLabel(value.timezone)}
+                </option>
+              </optgroup>
+            ) : null}
+            <optgroup label="Common time zones">
+              {commonTimezones.map((timezone) => (
+                <option key={timezone} value={timezone}>
+                  {timezoneLabel(timezone)}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="All time zones">
+              {allTimezones
+                .filter((timezone) => !commonTimezoneSet.has(timezone))
+                .map((timezone) => (
+                  <option key={timezone} value={timezone}>
+                    {timezoneLabel(timezone)}
+                  </option>
+                ))}
+            </optgroup>
+          </select>
         </label>
       </div>
       {calendar && (

@@ -104,8 +104,8 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
         .fill(`Capture ${item.precision}`);
       await capture.getByLabel("Date precision").selectOption(item.precision);
       await capture
-        .getByLabel("Time zone", { exact: true })
-        .fill("Asia/Kathmandu");
+        .getByRole("combobox", { name: "Time zone", exact: true })
+        .selectOption("Asia/Kathmandu");
       if (item.start)
         await capture.getByLabel("Occurred", { exact: true }).fill(item.start);
       await capture

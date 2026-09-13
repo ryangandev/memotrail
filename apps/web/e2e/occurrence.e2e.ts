@@ -111,8 +111,8 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
         .selectOption(precision);
       await page.getByLabel("Occurred", { exact: true }).fill(start);
       await page
-        .getByLabel("Time zone", { exact: true })
-        .fill("Asia/Kathmandu");
+        .getByRole("combobox", { name: "Time zone", exact: true })
+        .selectOption("Asia/Kathmandu");
       await page
         .getByRole("button", { name: "Save changes", exact: true })
         .click();
