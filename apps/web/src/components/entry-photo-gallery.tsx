@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { EntryPhoto } from "@/lib/media/photo-metadata";
 import { uploadEntryPhotos } from "@/lib/media/upload";
 import {
@@ -14,10 +14,12 @@ import styles from "./entry-photo-gallery.module.css";
 /** Always current membership, never a historical snapshot's photo bytes. */
 export function EntryPhotoGallery({
   entryId,
+  entryRevision,
   ownerId,
   onChanged,
 }: {
   entryId: string;
+  entryRevision: number;
   ownerId: string;
   onChanged: () => void;
 }) {
@@ -30,9 +32,10 @@ export function EntryPhotoGallery({
   const [pending, setPending] = useState<File[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const request = useRef<AbortController | null>(null);
+  const observedRevision = useRef(entryRevision);
   useEffect(() => () => request.current?.abort(), []);
 
-  async function load() {
+  const load = useCallback(async () => {
     request.current?.abort();
     const controller = new AbortController();
     request.current = controller;
@@ -63,7 +66,24 @@ export function EntryPhotoGallery({
     } finally {
       if (!controller.signal.aborted) setBusy(false);
     }
-  }
+  }, [entryId]);
+
+  useEffect(() => {
+    if (
+      observedRevision.current === entryRevision ||
+      busy ||
+      pending.length > 0
+    )
+      return;
+    // Refresh current membership after writing/history changes, but retain an
+    // unconfirmed selection and its upload identity across Server Action refreshes.
+    // Coalesce server refreshes after commit; cancel if a user operation begins.
+    const refresh = window.setTimeout(() => {
+      observedRevision.current = entryRevision;
+      if (photos !== null) void load();
+    }, 0);
+    return () => window.clearTimeout(refresh);
+  }, [entryRevision, busy, pending.length, photos, load]);
 
   async function upload() {
     if (busy || pending.length === 0) return;

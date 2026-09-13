@@ -53,7 +53,7 @@ export default async function HistoryPage({
         ) : selected ? (
           result.data ? (
             <EntryHistoryView
-              key={`${selected}:${(result.data as EntryHistory).current.revision}:${page}`}
+              key={`${selected}:${page}`}
               history={result.data as EntryHistory}
               page={page}
               ownerId={context.viewer.id}

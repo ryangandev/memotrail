@@ -128,6 +128,8 @@ final class FirstTimesController {
 
     do {
       try await validateSessionOwner()
+      input.expectedRevision = try await EntryPhotoUpload.writingRevision(
+        client: client, entryID: entryID, revision: expectedRevision)
       let results: [SavedFirstTimeEntry] =
         try await client
         .rpc(

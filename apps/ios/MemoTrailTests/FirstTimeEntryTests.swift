@@ -4,6 +4,34 @@ import XCTest
 
 final class FirstTimeEntryTests: XCTestCase {
   @MainActor
+  func testWritingRevisionUsesTheOriginalGuardAndServerProof() async throws {
+    let id = UUID()
+    let request = EntryPhotoUpload.WritingRevision(p_entry_id: id, p_expected_revision: 2)
+    let body = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as? [String: Any])
+    XCTAssertEqual(body["p_entry_id"] as? String, id.uuidString)
+    XCTAssertEqual(body["p_expected_revision"] as? Int, 2)
+    let photosOnly = try await EntryPhotoUpload.confirmedWritingRevision(revision: 2) { 4 }
+    XCTAssertEqual(photosOnly, 4)
+    let writingGap = try await EntryPhotoUpload.confirmedWritingRevision(revision: 2) { 2 }
+    XCTAssertEqual(writingGap, 2)
+  }
+
+  @MainActor
+  func testWritingRevisionNeverAcceptsRegressionOrNetworkFailure() async {
+    do {
+      _ = try await EntryPhotoUpload.confirmedWritingRevision(revision: 2) { 1 }
+      XCTFail("A regressed revision must not be used for a write")
+    } catch { XCTAssertEqual((error as? URLError)?.code, .badServerResponse) }
+    do {
+      _ = try await EntryPhotoUpload.confirmedWritingRevision(revision: 2) {
+        throw URLError(.notConnectedToInternet)
+      }
+      XCTFail("An unconfirmed revision must not be used for a write")
+    } catch { XCTAssertEqual((error as? URLError)?.code, .notConnectedToInternet) }
+  }
+
+  @MainActor
   func testCancelledPhotoAttemptDoesNotStartNetworkWrites() async {
     var uploads = 0
     var registrations = 0

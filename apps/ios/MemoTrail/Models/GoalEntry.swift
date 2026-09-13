@@ -239,7 +239,7 @@ struct GoalEntryInput: Equatable, Sendable {
   static let relatedEntryLimit = 100
 
   let entryID: UUID?
-  let expectedRevision: Int?
+  var expectedRevision: Int?
   let title: String
   let body: String
   let horizon: GoalHorizon

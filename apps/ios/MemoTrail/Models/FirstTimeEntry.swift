@@ -262,7 +262,7 @@ struct FirstTimeEntryInput: Equatable, Sendable {
   static let tagNameLimit = 60
 
   let entryID: UUID?
-  let expectedRevision: Int?
+  var expectedRevision: Int?
   let title: String
   let body: String
   let occurredStart: Date?

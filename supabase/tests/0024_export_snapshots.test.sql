@@ -23,7 +23,9 @@ insert into public.ai_exploration_turns(id,owner_id,entry_id,question,source_rev
 create function pg_temp.capture(p_id uuid default '87000000-0000-4000-8000-000000000020') returns jsonb language sql as $$select public.create_export_snapshot(p_id)$$;
 create function pg_temp.page(p_after bigint default 0,p_limit integer default 100) returns jsonb language sql as $$select public.read_export_snapshot('87000000-0000-4000-8000-000000000020',p_after,p_limit)$$;
 select set_eq($$select unnest(public.export_dataset_names()) except select 'media_objects'$$,
- $$select tablename from pg_tables where schemaname='public' and tablename not in ('export_snapshots','export_snapshot_rows')$$,
+ -- Internal photo revision reconciliation has no user content; complete snapshots
+ -- and original membership are already exported through entry_versions/attachments.
+ $$select tablename from pg_tables where schemaname='public' and tablename not in ('export_snapshots','export_snapshot_rows','entry_photo_changes')$$,
  'Explicit export inventory covers every canonical table and requires updates for new tables');
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000095',true);

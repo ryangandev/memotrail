@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { suggestForEntry } from "@/lib/ai/suggestions-server";
+import { writingRevision } from "@/lib/media/writing-revision";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
   parseFirstTimeAttachmentInput,
@@ -119,16 +120,26 @@ export async function syncInboxEntry(
 
   revalidatePath("/");
 
-  after(async () => {
-    // Capture succeeds independently. The durable suggestion state exposes later failures.
-    await suggestForEntry(context.client, context.userId, input.id, 1).catch(
-      () => undefined,
-    );
-  });
+  if (input.attachments.length === 0) await finishInboxCapture(input.id);
   return {
     message: "Saved to Inbox.",
     status: "synced",
   };
+}
+
+/** Runs once the capture's originals are registered, never once per photo. */
+export async function finishInboxCapture(entryId: string) {
+  const context = await getAuthenticatedContext();
+  if (!context) return;
+  const revision = await writingRevision(context.client, entryId, 1);
+  after(async () => {
+    await suggestForEntry(
+      context.client,
+      context.userId,
+      entryId,
+      revision ?? 1,
+    ).catch(() => undefined);
+  });
 }
 
 export async function reviewInboxEntry(

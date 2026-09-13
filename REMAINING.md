@@ -44,7 +44,8 @@ The last accepted checkpoint is `a7850b7`.
 | Retry-safe specialized photo uploads without duplicate or deleted originals | Existing schema | Complete        | Complete        | Pushed 32a0afc      |
 | Universal current Entry photo staging, upload, and recoverable removal      | Existing schema | Complete        | Complete        | Pushed dfdebed      |
 | Consent-checked photo context for editable Inbox AI suggestions             | Deployed        | Complete        | Complete        | Pushed c4d9d9c      |
-| Ordinary Entry links, incoming backlinks, and restorable relationship edits | Deployed        | Complete        | Complete        | This feature commit |
+| Ordinary Entry links, incoming backlinks, and restorable relationship edits | Deployed        | Complete        | Complete        | Pushed 4299a73      |
+| Photo-only Entry history with retry-safe writing concurrency                | Deployed        | Complete        | Complete        | This feature commit |
 | Remaining shared metadata and relationship lifecycle audit                  | Audit ongoing   | Audit ongoing   | Audit ongoing   | Pending             |
 | Remaining photo surfaces and interactive gallery acceptance                 | Audit pending   | Audit pending   | Audit pending   | Pending             |
 | Final acceptance and production configuration                               | Pending         | Pending         | Pending         | Pending             |
@@ -55,7 +56,9 @@ The last accepted checkpoint is `a7850b7`.
 - Photo analysis now uses separately authorized, metadata-free previews for editable Inbox suggestions, with content-sensitive caching and real synthetic Anthropic acceptance.
 - Ordinary Entry links and backlinks now have matching search, navigation, direct linking/unlinking, Trash-aware display, pagination, source revision protection, and restorable history on both clients.
 - Direct relationship-table writes are disabled; owner-checked Goal/achievement RPCs preserve existing behavior without permitting forged system links or history bypass.
-- Cross-surface metadata controls, attachment-only edit history granularity, and hosted/authenticated native interaction remain follow-up acceptance items.
+- Photo registration, Trash, and restoration now create complete Entry versions; retrying an unchanged original does not create duplicate history.
+- Structured editors reconcile only contiguous photo-only revisions, keeping genuine competing writing changes conflicted on both clients.
+- Cross-surface metadata controls and hosted/authenticated native interaction remain follow-up acceptance items.
 - Specialized uploaders now preserve selected-photo identity and reconcile uncertain upload/registration responses without overwriting or deleting originals, across First Times, Homes, Vehicles, and Goals on both clients.
 - Abandoned unregistered-upload retention/cleanup remains a lifecycle audit item; specialized-editor draft persistence is not added by the retry fix.
 

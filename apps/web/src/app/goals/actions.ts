@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { writingRevision } from "@/lib/media/writing-revision";
 import {
   isFirstTimeUuid,
   parseFirstTimeAttachmentInput,
@@ -35,7 +36,11 @@ export async function saveGoalEntry(
     p_body: parsed.data.body,
     p_collection_names: parsed.data.collectionNames,
     p_entry_id: parsed.data.id,
-    p_expected_revision: parsed.data.revision,
+    p_expected_revision: await writingRevision(
+      context.client,
+      parsed.data.id,
+      parsed.data.revision,
+    ),
     p_horizon: parsed.data.horizon,
     p_related_entry_ids: parsed.data.relatedEntryIds,
     p_status: parsed.data.status,

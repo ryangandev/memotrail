@@ -91,7 +91,7 @@ final class GoalController {
     tagNames: [String],
     relatedEntryIDs: [UUID]
   ) async -> MutationResult {
-    let input: GoalEntryInput
+    var input: GoalEntryInput
     do {
       input = try GoalEntryInput.validate(
         entryID: entryID,
@@ -121,6 +121,8 @@ final class GoalController {
 
     do {
       try await validateSessionOwner()
+      input.expectedRevision = try await EntryPhotoUpload.writingRevision(
+        client: client, entryID: entryID, revision: expectedRevision)
       let results: [SavedGoalEntry] =
         try await client
         .rpc("save_goal_entry", params: SaveGoalEntryParameters(input: input))

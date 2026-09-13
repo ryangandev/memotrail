@@ -1,6 +1,6 @@
 # MemoTrail Architecture
 
-Last reviewed: 2026-09-12.
+Last reviewed: 2026-09-13.
 
 ## System boundaries
 
@@ -85,13 +85,30 @@ The universal current-record/history reader on both clients offers a Current pho
 It reads current attachment membership through the shared authenticated photo-list endpoint, independently from the selected historical snapshot.
 Web uses a modal dialog with contained images, bounded previous/next navigation, Escape dismissal, and focus restoration; native uses a matching full-screen contained-image viewer.
 List failures clear stale membership, unavailable images explain retry, and Refresh requests renewed grants and current membership without mutating the Entry.
-Gallery identity includes a distinct photo namespace and the Entry revision, so history restoration or editing resets loaded membership without colliding with other keyed reader controls.
+Gallery identity uses a distinct photo namespace.
+The Web gallery preserves its pending immutable File identities across Entry revision refreshes, then coalesces a current-membership refresh when no upload remains unconfirmed.
+Native refreshes its gallery after confirmed changes; neither surface may discard an unconfirmed selection solely because registration advanced the Entry revision.
 Native delivery continues validating the configured server origin, image route, and grant token; no photo bytes or provider credentials are embedded in history snapshots or the application bundle.
 Both readers stage selected photos in the current view, validate the shared supported formats/50-MiB limit, and require Upload photos before persisting them through the retry-safe upload boundary.
 Confirmed photos leave the selection, unconfirmed photos stay retryable, and ordinary photo additions do not change the Entry's writing, occurrence precision, or Inbox state.
 Move to Trash requires confirmation and uses the existing owner-scoped recoverable attachment mutation; the Web action additionally verifies the original belongs to the current Entry before invoking it.
 Mutation controls remain disabled during upload/removal and current-photo refresh; both readers refresh their current metadata after confirmed changes without presenting the selected historical snapshot as current membership.
 Selections are view-local and explicitly labeled as such; this editor does not replace the durable universal quick-capture queue.
+
+### Photo membership history and writing concurrency
+
+Registration, photo Trash, and photo restoration lock the active owned Entry before locking or changing its attachment.
+Each actual change snapshots the complete prior Entry and membership, then advances the same Entry revision exactly once.
+Idempotent registration replays validate the immutable original identity without producing duplicate versions; invalid metadata or missing Storage objects roll back the entire archive and mutation.
+Derivative workers do not generate user versions, and restoring a complete Entry version retains its existing single-transaction, strict-revision behavior.
+
+The private `entry_photo_changes` ledger identifies only revisions produced by those protected photo boundaries.
+The four structured editors use `entry_writing_revision` to reconcile a stale base only when every intervening revision was photo-only, since these saves do not replace photo membership.
+A writing, organization, relationship, lifecycle, or full-history restoration creates a gap and preserves the original conflict guard, including after a lost photo-registration acknowledgment.
+The subsequent ordinary save still checks the returned revision atomically, so a race after reconciliation cannot overwrite newer writing.
+Clients cannot write the ledger or call the internal history-bypassing helpers.
+The ledger is internal concurrency evidence, not another user-content dataset; exports already preserve complete writing versions and original attachment membership.
+Universal capture also uses create-only original uploads, and optional AI organization runs after the complete photo batch against the reconciled capture revision rather than once for every photo.
 
 On first display, a bounded worker generates 1600-pixel display and 400-pixel thumbnail WebP files without enlarging small photos.
 Sharp handles orientation, resizing, and metadata stripping; the server-side libheif WASM bundle decodes HEIC when the platform's Sharp build lacks HEVC support.

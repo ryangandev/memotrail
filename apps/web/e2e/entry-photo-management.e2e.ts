@@ -149,6 +149,10 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
       .single();
     expect(row.error).toBeNull();
     const photo = row.data!;
+    expect(
+      (await client.rpc("entry_history", { p_entry_id: entry })).data.current
+        .revision,
+    ).toBe(2);
     page.once("dialog", (dialog) => dialog.dismiss());
     await gallery
       .getByRole("button", {
@@ -186,6 +190,10 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
         .single()
     ).data!;
     expect(removed.deleted_at).not.toBeNull();
+    expect(
+      (await client.rpc("entry_history", { p_entry_id: entry })).data.current
+        .revision,
+    ).toBe(3);
     const original = await admin.storage
       .from("entry-media")
       .download(photo.object_path);
@@ -203,6 +211,12 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
     await gallery
       .getByRole("button", { name: "Refresh photos", exact: true })
       .click();
+    const history = (await client.rpc("entry_history", { p_entry_id: entry }))
+      .data;
+    expect(history.current.revision).toBe(4);
+    expect(
+      history.versions.map((version: { version: number }) => version.version),
+    ).toEqual([3, 2, 1]);
     await expect(
       gallery.getByRole("button", { name: "Open New memory.png", exact: true }),
     ).toBeVisible();
@@ -219,6 +233,43 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
       inbox_status: "organized",
       date_precision: "unknown",
     });
+    await page.reload();
+    await gallery
+      .getByRole("button", { name: "Show photos", exact: true })
+      .click();
+    await expect(
+      gallery.getByRole("button", { name: "Open New memory.png", exact: true }),
+    ).toBeVisible();
+    await page
+      .getByRole("combobox", { name: /Earlier version/ })
+      .selectOption("1");
+    page.once("dialog", (dialog) => dialog.accept());
+    await page
+      .getByRole("button", { name: "Restore selected version", exact: true })
+      .click();
+    await expect(
+      page.getByRole("region", { name: "Current version", exact: true }),
+    ).toContainText("version 5");
+    await expect(
+      gallery.getByRole("button", { name: "Open New memory.png", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      gallery.getByText("No saved photos on this Entry."),
+    ).toBeVisible();
+    page.once("dialog", (dialog) => dialog.accept());
+    await page
+      .getByRole("button", { name: "Restore selected version", exact: true })
+      .click();
+    await expect(
+      page.getByRole("region", { name: "Current version", exact: true }),
+    ).toContainText("version 6");
+    await expect(
+      gallery.getByRole("button", { name: "Open New memory.png", exact: true }),
+    ).toBeVisible();
+    const retained = await admin.storage
+      .from("entry-media")
+      .download(photo.object_path);
+    expect(Buffer.from(await retained.data!.arrayBuffer())).toEqual(bytes);
   } finally {
     await cleanupMediaFixture(admin, owner, env.API_URL);
   }

@@ -11,6 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import {
   registerEntryAttachment,
+  finishInboxCapture,
   syncInboxEntry,
   type SyncInboxEntryResult,
 } from "@/app/inbox/actions";
@@ -183,6 +184,8 @@ export function CaptureComposer({
 
       didSyncEntry = true;
       replacePendingEntries(nextQueue);
+      if (entry.attachments.length > 0)
+        void finishInboxCapture(entry.id).catch(() => undefined);
     }
 
     syncInFlightRef.current = false;
@@ -915,21 +918,11 @@ async function synchronizeAttachments(
       };
     }
 
-    const upload = await client.storage
-      .from("entry-media")
-      .upload(objectPath, photo.file, {
-        cacheControl: "3600",
-        contentType: attachment.mimeType,
-        upsert: true,
-      });
-
-    if (upload.error) {
-      return {
-        message:
-          "Photos are saved on this device. MemoTrail will retry when you are online.",
-        status: "retry",
-      };
-    }
+    await client.storage.from("entry-media").upload(objectPath, photo.file, {
+      cacheControl: "3600",
+      contentType: attachment.mimeType,
+      upsert: false,
+    });
 
     const registered = await registerEntryAttachment(attachmentInput);
 

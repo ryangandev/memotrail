@@ -59,7 +59,7 @@ reset role;
 select set_config('storage.allow_delete_query','true',true);
 delete from storage.objects where split_part(name,'/',1)='10000000-0000-0000-0000-000000000091' and split_part(name,'/',3)='derived';
 set local role authenticated;
-select is(public.restore_entry_version('91000000-0000-4000-8000-000000000001',1,2),3,'Missing cached preview cannot block restoring writing');
+select is(public.restore_entry_version('91000000-0000-4000-8000-000000000001',3,4),5,'Missing cached preview cannot block restoring writing');
 select is(body,'Original writing','History restores original writing') from public.entries where id='91000000-0000-4000-8000-000000000001';
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000092',true);
 select is(count(*),0::bigint,'Other owner cannot read originals or derivatives') from public.attachments;

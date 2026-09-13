@@ -35,7 +35,9 @@ export function EntryHistoryView({
   ownerId: string;
 }) {
   const router = useRouter();
-  const [version, setVersion] = useState(history.versions[0]?.version);
+  const [version, setVersion] = useState<number | undefined>(
+    history.versions[0]?.version,
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] =
@@ -53,7 +55,8 @@ export function EntryHistoryView({
       setBusy(false);
     }
   }
-  const selected = history.versions.find((v) => v.version === version);
+  const selected =
+    history.versions.find((v) => v.version === version) ?? history.versions[0];
   async function restore() {
     if (
       !selected ||
@@ -71,7 +74,10 @@ export function EntryHistoryView({
         history.current.revision,
       );
       if (message) setError(message);
-      else router.refresh();
+      else {
+        setVersion(undefined);
+        router.refresh();
+      }
     } catch {
       setError(
         "Could not confirm restoration. Refresh to check the latest version before trying again.",
@@ -142,7 +148,7 @@ export function EntryHistoryView({
           <label>
             Earlier version
             <select
-              value={version ?? ""}
+              value={selected?.version ?? ""}
               disabled={busy}
               onChange={(e) => setVersion(Number(e.target.value))}
             >
@@ -220,8 +226,9 @@ export function EntryHistoryView({
       )}
       {!history.current.deleted_at && (
         <EntryPhotoGallery
-          key={`photos:${history.current.id}:${history.current.revision}`}
+          key={`photos:${history.current.id}`}
           entryId={history.current.id}
+          entryRevision={history.current.revision}
           ownerId={ownerId}
           onChanged={() => router.refresh()}
         />

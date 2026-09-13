@@ -145,6 +145,8 @@ final class ResidenceController {
 
     do {
       try await validateSessionOwner()
+      input.expectedRevision = try await EntryPhotoUpload.writingRevision(
+        client: client, entryID: entryID, revision: expectedRevision)
       let results: [SavedResidenceEntry] =
         try await client
         .rpc("save_home_entry_with_occurrence", params: SaveResidenceEntryParameters(input: input))

@@ -617,7 +617,7 @@ select is(
     select count(*)::integer
     from public.trash_first_time_entry(
       (select entry_id from pg_temp.first_time_test_state),
-      2
+      4
     )
   ),
   0,
@@ -633,7 +633,7 @@ select is(
     select count(*)::integer
     from public.trash_first_time_entry(
       (select entry_id from pg_temp.first_time_test_state),
-      2
+      4
     )
   ),
   1,
@@ -656,7 +656,7 @@ select is(
     from public.entry_versions
     where entry_id = (select entry_id from pg_temp.first_time_test_state)
   ),
-  2,
+  4,
   'Moving a First Time to Trash preserves another Entry version'
 );
 

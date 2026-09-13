@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { writingRevision } from "@/lib/media/writing-revision";
 import {
   isFirstTimeUuid,
   parseFirstTimeAttachmentInput,
@@ -36,7 +37,11 @@ export async function saveVehicleEntry(
       p_color: parsed.data.color,
       p_date_precision: parsed.data.datePrecision,
       p_entry_id: parsed.data.id,
-      p_expected_revision: parsed.data.revision,
+      p_expected_revision: await writingRevision(
+        context.client,
+        parsed.data.id,
+        parsed.data.revision,
+      ),
       p_make: parsed.data.make,
       p_model: parsed.data.model,
       p_model_year: parsed.data.modelYear,

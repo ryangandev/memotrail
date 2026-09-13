@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { writingRevision } from "@/lib/media/writing-revision";
 import {
   isFirstTimeUuid,
   parseFirstTimeAttachmentInput,
@@ -44,7 +45,11 @@ export async function saveHomeEntry(
       p_country: parsed.data.country,
       p_date_precision: parsed.data.datePrecision,
       p_entry_id: parsed.data.id,
-      p_expected_revision: parsed.data.revision,
+      p_expected_revision: await writingRevision(
+        context.client,
+        parsed.data.id,
+        parsed.data.revision,
+      ),
       p_latitude: parsed.data.latitude,
       p_longitude: parsed.data.longitude,
       p_move_in_reason: parsed.data.moveInReason,

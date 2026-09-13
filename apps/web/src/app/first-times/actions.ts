@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { writingRevision } from "@/lib/media/writing-revision";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
   isFirstTimeEntryIdentity,
@@ -42,7 +43,11 @@ export async function saveFirstTimeEntry(
       p_collection_names: parsed.data.collectionNames,
       p_date_precision: parsed.data.datePrecision,
       p_entry_id: parsed.data.id,
-      p_expected_revision: parsed.data.revision,
+      p_expected_revision: await writingRevision(
+        context.client,
+        parsed.data.id,
+        parsed.data.revision,
+      ),
       p_occurred_label: parsed.data.occurredLabel,
       p_occurred_start: parsed.data.occurredStart,
       p_occurred_end: parsed.data.occurredEnd ?? null,

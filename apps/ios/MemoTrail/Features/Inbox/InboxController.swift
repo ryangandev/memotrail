@@ -372,7 +372,11 @@ final class InboxController {
       pendingEntries = nextQueue
       Task { [weak self] in
         // Optional suggestions cannot delay capture or requeue a successfully saved Entry.
-        _ = try? await self?.aiSuggestions(entryID: entry.id, revision: 1)
+        guard let self,
+          let revision = try? await EntryPhotoUpload.writingRevision(
+            client: self.client, entryID: entry.id, revision: 1)
+        else { return }
+        _ = try? await self.aiSuggestions(entryID: entry.id, revision: revision)
       }
       didSyncEntry = true
       lastSyncedPhotoCount = entry.attachments.count
@@ -447,15 +451,21 @@ final class InboxController {
           throw InboxControllerError.photoChanged
         }
 
-        try await client.storage.from("entry-media").upload(
-          path,
-          data: draft.data,
-          options: FileOptions(
-            cacheControl: "3600",
-            contentType: attachment.mimeType.rawValue,
-            upsert: true
+        do {
+          try await client.storage.from("entry-media").upload(
+            path,
+            data: draft.data,
+            options: FileOptions(
+              cacheControl: "3600",
+              contentType: attachment.mimeType.rawValue,
+              upsert: false
+            )
           )
-        )
+        } catch {
+          // A lost upload response may already have persisted the immutable original.
+          // Registration below validates its existence without overwriting its bytes.
+          try Task.checkCancellation()
+        }
       }
 
       let registered: [RegisteredEntryAttachment]

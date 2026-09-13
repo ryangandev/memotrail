@@ -6,6 +6,25 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Photo-only Entry history and safe writing retries across Web and iOS
+
+- Reproduced a real organized-Entry upload that left history at version 1 despite adding an original photo.
+- Photo registration, recoverable removal, and Trash restoration now snapshot the complete prior Entry and membership before each actual change, under Entry-first database locks.
+- Replaying the same immutable original creates no duplicate version; invalid metadata and missing Storage objects roll back both revision and archive.
+- Derivative generation remains outside user history, and complete version restoration still uses one strict-revision transaction without attachment-trigger recursion.
+- First Times, Homes, Vehicles, and Goals on both clients reconcile only contiguous photo-only revisions before writing; any intervening writing, organization, relationship, lifecycle, or full-history edit keeps the original conflict guard.
+- The protected internal reconciliation ledger contains no additional user content; complete snapshots and original membership continue to be included in portable exports.
+- Web history refresh no longer discards unconfirmed selected Files; loaded current photos refresh after confirmed history changes, and restoring the prior current version remains available.
+- Universal capture retries now use create-only Storage writes and validate existing originals through registration instead of overwriting bytes; optional AI organization runs after the complete capture photo batch.
+- Local verification passes 395 Web unit tests, 198 native simulator tests with no failures/skips, 1,410 SQL assertions across 39 files, plus schema lint, type checking, lint, formatting, and shared token checks.
+- Real browser acceptance verifies upload acknowledgment loss, exact membership versions, photo Trash/restoration, restoration to pre-upload membership and back, and byte-identical originals; four additional scenarios preserve competing device writing across all specialized editors.
+- All 47 production-mode browser/API scenarios pass in the final full run; desktop light and mobile dark photo/history layouts were inspected.
+- Migration `202609130003_photo_history.sql` is deployed to the verified hosted MemoTrail project with an up-to-date ledger and clean schema lint, without seeds or user-content rewrites.
+- The existing tracked client-aborted RSC log and intentional missing-media ZIP rejection remain distinguished from passing application assertions.
+- Updated architecture, completion tracking, and the existing Obsidian project note with the verified photo-history/concurrency rules.
+- AI accounting remains 55 completed application requests totaling $0.056502 with no outstanding reservations; this feature made no paid provider requests.
+- Cross-surface metadata controls, abandoned-upload lifecycle, actual hosted/native interactive acceptance, and the GitHub billing blocker remain tracked separately; the complete product goal is still active.
+
 ### Ordinary Entry links and backlinks across Web and iOS
 
 - Reproduced the missing Related Entries interface on an organized Standard Entry through an authenticated localhost browser before implementation.

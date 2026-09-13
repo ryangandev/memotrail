@@ -4,6 +4,34 @@ import Foundation
 /// Retain the draft's identity; an uncertain response never authorizes deleting its original.
 @MainActor
 enum EntryPhotoUpload {
+  struct WritingRevision: Encodable {
+    let p_entry_id: UUID
+    let p_expected_revision: Int
+  }
+
+  /// Photo-only changes commute with writing. Never adopt an unseen writing revision.
+  static func writingRevision(client: SupabaseClient, entryID: UUID?, revision: Int?) async throws
+    -> Int?
+  {
+    guard let entryID, let revision else { return revision }
+    return try await confirmedWritingRevision(revision: revision) {
+      try await client.rpc(
+        "entry_writing_revision",
+        params: WritingRevision(p_entry_id: entryID, p_expected_revision: revision)
+      ).execute().value
+    }
+  }
+
+  static func confirmedWritingRevision(revision: Int, request: () async throws -> Int) async throws
+    -> Int
+  {
+    try Task.checkCancellation()
+    let confirmed = try await request()
+    try Task.checkCancellation()
+    guard confirmed >= revision else { throw URLError(.badServerResponse) }
+    return confirmed
+  }
+
   static func confirm(
     upload: () async throws -> Void, register: () async throws -> Bool
   ) async throws -> Bool {

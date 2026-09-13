@@ -117,6 +117,8 @@ final class VehicleController {
 
     do {
       try await validateSessionOwner()
+      input.expectedRevision = try await EntryPhotoUpload.writingRevision(
+        client: client, entryID: entryID, revision: expectedRevision)
       let results: [SavedVehicleEntry] =
         try await client
         .rpc("save_vehicle_entry_with_occurrence", params: SaveVehicleEntryParameters(input: input))

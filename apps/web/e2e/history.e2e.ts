@@ -119,7 +119,7 @@ test("History restores and re-restores writing, relationships, and private photo
       (
         await client.rpc("review_entry", {
           p_entry_id: entryID,
-          p_expected_revision: 1,
+          p_expected_revision: 2,
           p_title: "Revised chapter",
           p_body: "The newer words before restoration.",
           p_entry_type: "standard",
@@ -149,7 +149,7 @@ test("History restores and re-restores writing, relationships, and private photo
     await page
       .getByRole("button", { name: "Restore selected version" })
       .click();
-    await expect(current).toContainText("Current · version 3");
+    await expect(current).toContainText("Current · version 4");
     await expect(current).toContainText("The original words I want to keep.");
     const restored = await client
       .from("entry_collections")
@@ -160,7 +160,7 @@ test("History restores and re-restores writing, relationships, and private photo
     await page
       .getByRole("button", { name: "Restore selected version" })
       .click();
-    await expect(current).toContainText("Current · version 4");
+    await expect(current).toContainText("Current · version 5");
     await expect(current).toContainText("The newer words before restoration.");
     expect(
       (
@@ -182,7 +182,7 @@ test("History restores and re-restores writing, relationships, and private photo
       .select("revision,body")
       .eq("id", entryID)
       .single();
-    expect(fresh.data?.revision).toBe(5);
+    expect(fresh.data?.revision).toBe(6);
     expect(fresh.data?.body).toBe("Another device updated this Entry.");
     const downloaded = await client.storage.from("entry-media").download(path);
     expect(downloaded.error).toBeNull();
@@ -190,7 +190,7 @@ test("History restores and re-restores writing, relationships, and private photo
     await page.reload();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
-    await expect(current).toContainText("Current · version 5");
+    await expect(current).toContainText("Current · version 6");
     await page.screenshot({
       path: "/private/tmp/memotrail-history-mobile.png",
       fullPage: true,

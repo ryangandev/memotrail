@@ -7,7 +7,11 @@ import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
 for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
-  for (const interrupted of ["registration", "upload"] as const) {
+  for (const interrupted of [
+    "registration",
+    "upload",
+    "concurrent writing",
+  ] as const) {
     test(`${kind} preserves original photo identities after a lost ${interrupted} response`, async ({
       page,
       context,
@@ -130,7 +134,7 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
           .toBuffer();
         let dropped = false;
         await page.route(
-          interrupted === "registration"
+          interrupted !== "upload"
             ? `**${config.path}`
             : "**/storage/v1/object/entry-media/**",
           async (route) => {
@@ -159,7 +163,7 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
             buffer: bytes,
           },
         ];
-        if (interrupted === "registration")
+        if (interrupted !== "upload")
           selection.push({
             name: "second.png",
             mimeType: "image/png",
@@ -170,13 +174,47 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
           .getByRole("button", { name: "Save changes", exact: true })
           .click();
         await expect.poll(() => dropped).toBe(true);
-        if (interrupted === "registration") {
+        if (interrupted !== "upload") {
           await expect(
             dialog.getByRole("button", { name: "Save changes", exact: true }),
           ).toBeEnabled();
+          if (interrupted === "concurrent writing") {
+            expect(
+              (
+                await client
+                  .from("entries")
+                  .update({ body: "Other device writing" })
+                  .eq("id", entry)
+              ).error,
+            ).toBeNull();
+          }
           await dialog
             .getByRole("button", { name: "Save changes", exact: true })
             .click();
+          if (interrupted === "concurrent writing") {
+            await expect(
+              dialog.getByText(/changed on another device/),
+            ).toBeVisible();
+            expect(
+              (
+                await client
+                  .from("entries")
+                  .select("body")
+                  .eq("id", entry)
+                  .single()
+              ).data?.body,
+            ).toBe("Other device writing");
+            expect(
+              (
+                await client
+                  .from("attachments")
+                  .select("id")
+                  .eq("entry_id", entry)
+                  .eq("variant", "original")
+              ).data,
+            ).toHaveLength(2);
+            return;
+          }
         }
         await expect(dialog).not.toBeVisible();
         const photos = await client
