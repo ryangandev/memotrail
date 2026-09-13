@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+        B00000000000000000000040 /* EntryPhotoGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000047 /* EntryPhotoGalleryView.swift */; };
 		B0000000000000000000003F /* EntryPhotoDatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000046 /* EntryPhotoDatesView.swift */; };
 		B0000000000000000000003E /* MediaDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000045 /* MediaDelivery.swift */; };
 		B0000000000000000000003C /* ExplorationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000043 /* ExplorationView.swift */; };
@@ -97,6 +98,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+        C00000000000000000000047 /* EntryPhotoGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryPhotoGalleryView.swift; sourceTree = "<group>"; };
 		C00000000000000000000046 /* EntryPhotoDatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryPhotoDatesView.swift; sourceTree = "<group>"; };
 		C00000000000000000000045 /* MediaDelivery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDelivery.swift; sourceTree = "<group>"; };
 		C00000000000000000000043 /* ExplorationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AI/ExplorationView.swift; sourceTree = "<group>"; };
@@ -276,6 +278,7 @@
 				C00000000000000000000003 /* InboxView.swift */,
 				C00000000000000000000042 /* OccurrenceEditor.swift */,
 				C00000000000000000000046 /* EntryPhotoDatesView.swift */,
+                C00000000000000000000047 /* EntryPhotoGalleryView.swift */,
 			);
 			path = Inbox;
 			sourceTree = "<group>";
@@ -604,6 +607,7 @@
 				B0000000000000000000003A /* EntryOccurrence.swift in Sources */,
 				B0000000000000000000003E /* MediaDelivery.swift in Sources */,
 				B0000000000000000000003F /* EntryPhotoDatesView.swift in Sources */,
+                B00000000000000000000040 /* EntryPhotoGalleryView.swift in Sources */,
 				B0000000000000000000003B /* OccurrenceEditor.swift in Sources */,
 				B00000000000000000000009 /* AppConfiguration.swift in Sources */,
 				B0000000000000000000000A /* AuthenticationController.swift in Sources */,

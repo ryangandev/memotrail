@@ -6,6 +6,21 @@
 >
 > Rule: Update this file in every commit and keep each feature in its own commit.
 
+### Current Entry photo browsing across Web and iOS
+
+- Reproduced the missing gallery in an authenticated production-mode local browser before implementing it.
+- Current-record/history readers now offer Current photos for every active Entry type, clearly separated from selected earlier snapshots.
+- Both clients use the existing authenticated private media service, full-image contained previews, previous/next navigation, explicit image-failure feedback, and Refresh for renewed access and current membership.
+- Web supports Escape dismissal and restores focus to the opening thumbnail; native uses a full-screen viewer and validates every photo URL against its configured server.
+- Loading failures clear stale photo lists, revision changes reset gallery state, and photo viewing leaves Entry writing and revision unchanged.
+- Full regression caught a sibling React key collision with Goal conversion; the gallery now has its own identity namespace rather than reusing the conversion key.
+- Verification passes 344 Web unit tests, 191 native simulator tests with zero failures/skips, three repeated Goal conversion flows, and all 32 production-mode browser/API scenarios.
+- Browser acceptance covers contained portrait/landscape previews, light/dark responsive screenshots, keyboard/focus behavior, list and image failures, current photo Trash/restoration, native bearer parity, and unchanged writing/revision during viewing.
+- Lint, typecheck, shared-token validation, formatting, and diff checks pass; the already tracked client-aborted RSC log and intentional missing-media export rejection still appear in their existing negative/lifecycle tests.
+- Local AI accounting remains 51 completed requests totaling $0.052147 with no outstanding reservations; hosted media acceptance and authenticated native UI taps are not implied by these local checks.
+- No new migration, provider request, or client-side secret is required for this feature.
+- Generic organized-Entry photo management, remaining relationship and AI-photo scope, and actual hosted/native interactive acceptance remain tracked in REMAINING.md; this is not full product completion.
+
 ### Search dates that respect recorded precision and overlapping periods
 
 - Reproduced a real browser search that omitted a year-only memory from a date window inside that year.

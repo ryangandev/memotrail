@@ -41,6 +41,12 @@ struct EntryPhotoInfo: Decodable, Identifiable, Sendable {
   let id: UUID
   let name: String
   let imageUrl: String?
+
+  func displayURL(base: URL?) -> URL? {
+    guard let base, let imageUrl else { return nil }
+    return MediaDelivery.validatedURLs(
+      [id.uuidString: imageUrl], paths: [id.uuidString], base: base)[id.uuidString]
+  }
 }
 struct EntryPhotosResponse: Decodable, Sendable {
   let photos: [EntryPhotoInfo]

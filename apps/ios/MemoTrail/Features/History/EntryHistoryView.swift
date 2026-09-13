@@ -374,6 +374,10 @@ struct EntryHistoryDetailView: View {
             HistorySnapshotView(
               title: "Current · version \(record.revision)", snapshot: record.current)
           }
+          if !record.isDeleted {
+            EntryPhotoGalleryView(client: client, ownerID: ownerID, entryID: entryID)
+              .id("\(entryID):\(record.revision)")
+          }
           HStack {
             if page > 0 { Button("Newer versions") { Task { await load(nextPage: page - 1) } } }
             Spacer()

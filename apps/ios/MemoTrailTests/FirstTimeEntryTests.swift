@@ -3,6 +3,24 @@ import XCTest
 @testable import MemoTrail
 
 final class FirstTimeEntryTests: XCTestCase {
+  func testCurrentGalleryDecodesUnavailablePhotosAndValidatesDeliveryOrigin() throws {
+    let id = UUID()
+    let data = Data(
+      """
+      {"photos":[{"id":"\(id)","name":"Original.jpg","imageUrl":null}],"hasMore":true}
+      """.utf8)
+    let response = try JSONDecoder().decode(EntryPhotosResponse.self, from: data)
+    XCTAssertEqual(response.photos.first?.id, id)
+    XCTAssertEqual(response.photos.first?.name, "Original.jpg")
+    XCTAssertTrue(response.hasMore)
+    let base = URL(string: "https://memotrail.example")!
+    XCTAssertNil(response.photos.first?.displayURL(base: base))
+    let valid = EntryPhotoInfo(
+      id: id, name: "Photo", imageUrl: "https://memotrail.example/api/media/image?token=scoped")
+    XCTAssertEqual(valid.displayURL(base: base)?.absoluteString, valid.imageUrl)
+    XCTAssertNil(valid.displayURL(base: nil))
+    XCTAssertNil(valid.displayURL(base: URL(string: "https://other.example")))
+  }
   func testPhotoPlaceDraftValidatesExplicitNewOrExistingChoice() throws {
     let photo = UUID()
     var draft = PhotoPlaceDraft(

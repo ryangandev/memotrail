@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EntryReviewDialog } from "./entry-review-list";
+import { EntryPhotoGallery } from "./entry-photo-gallery";
 import { loadEditableEntry } from "@/app/history/actions";
 import {
   restoreHistoryVersion,
@@ -207,6 +208,12 @@ export function EntryHistoryView({
             </section>
           </div>
         </>
+      )}
+      {!history.current.deleted_at && (
+        <EntryPhotoGallery
+          key={`photos:${history.current.id}:${history.current.revision}`}
+          entryId={history.current.id}
+        />
       )}
       <nav className={styles.pagination} aria-label="Version pages">
         {page > 1 && (

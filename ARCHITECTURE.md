@@ -73,6 +73,13 @@ The signing key is domain-separated from the existing server-only Supabase crede
 Every image request rechecks the owned original and Entry lifecycle through a service-only resolver, so ordinary grants cease working when the source enters Trash.
 Native URL issuance uses a verified bearer session and validates that returned URLs match its configured server and requested paths.
 
+The universal current-record/history reader on both clients offers an explicit Current photos gallery for every active Entry type.
+It reads current attachment membership through the shared authenticated photo-list endpoint, independently from the selected historical snapshot.
+Web uses a modal dialog with contained images, bounded previous/next navigation, Escape dismissal, and focus restoration; native uses a matching full-screen contained-image viewer.
+List failures clear stale membership, unavailable images explain retry, and Refresh requests renewed grants and current membership without mutating the Entry.
+Gallery identity includes a distinct photo namespace and the Entry revision, so history restoration or editing resets loaded membership without colliding with other keyed reader controls.
+Native delivery continues validating the configured server origin, image route, and grant token; no photo bytes or provider credentials are embedded in history snapshots or the application bundle.
+
 On first display, a bounded worker generates 1600-pixel display and 400-pixel thumbnail WebP files without enlarging small photos.
 Sharp handles orientation, resizing, and metadata stripping; the server-side libheif WASM bundle decodes HEIC when the platform's Sharp build lacks HEVC support.
 The worker receives bytes and fixed decoder paths, not application credentials, and has a 25-second deadline, 80-million-pixel input limit, and 8-MiB limit per output.

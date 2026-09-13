@@ -1,0 +1,118 @@
+.panel,
+.viewer {
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-medium);
+  padding: var(--mt-space-4);
+  background: var(--mt-color-surface);
+  color: var(--mt-color-ink);
+}
+.panel {
+  margin-block: var(--mt-space-5);
+}
+.heading,
+.navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mt-space-3);
+}
+.heading h3 {
+  font-size: 15px;
+  margin: 0;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.panel p {
+  color: var(--mt-color-ink-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.panel button,
+.viewer button {
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface);
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-small);
+  padding: var(--mt-space-2) var(--mt-space-3);
+  font: inherit;
+  font-size: 13px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.panel button:disabled,
+.viewer button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.panel button:focus-visible,
+.viewer button:focus-visible {
+  outline: 2px solid var(--mt-color-accent);
+  outline-offset: 2px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+  gap: var(--mt-space-3);
+}
+.grid .tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mt-space-2);
+  text-align: left;
+  min-width: 0;
+  padding: var(--mt-space-2);
+}
+.tile > span:last-child {
+  overflow-wrap: anywhere;
+}
+.image {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.tile .image,
+.tile .unavailable {
+  height: 160px;
+}
+.image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: var(--mt-radius-small);
+}
+.loading,
+.unavailable {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  font-size: 13px;
+  color: var(--mt-color-ink-muted);
+}
+.loading {
+  position: absolute;
+  inset: 0;
+}
+.unavailable {
+  width: 100%;
+  height: 100%;
+  padding: var(--mt-space-3);
+  box-sizing: border-box;
+}
+.viewer {
+  width: min(960px, calc(100vw - 32px));
+  max-width: none;
+  box-sizing: border-box;
+  max-height: calc(100dvh - 32px);
+}
+.viewer::backdrop {
+  background: rgb(0 0 0 / 65%);
+}
+.fullImage {
+  height: min(65dvh, 720px);
+  margin-block: var(--mt-space-3);
+}
+.navigation {
+  font-size: 13px;
+}
