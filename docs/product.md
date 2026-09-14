@@ -162,6 +162,7 @@ The data model preserves future Map capability, but Map UI is deferred.
 
 Soft Ledger is the visual direction: minimal, archival, modern, calm, and approachable.
 Both clients support light and dark appearance, share semantic design intent, and still follow native platform conventions where identical interaction would reduce usability.
+Web appearance is a per-browser choice between System, Light, and Dark; System remains the default and follows operating-system changes.
 
 Mobile uses Home, Inbox, Timeline, and Library as its primary destinations.
 Library contains Collections, First Times, Goals, Homes, Vehicles, Places, and People.

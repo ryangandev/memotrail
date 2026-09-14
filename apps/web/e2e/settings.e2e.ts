@@ -77,6 +77,61 @@ test("Settings is reachable from the sidebar and owns account controls", async (
       page.getByRole("link", { name: /AI assistance/ }),
     ).toHaveAttribute("href", "/settings/ai");
 
+    const appearance = main.getByRole("group", { name: "Appearance mode" });
+    const systemTheme = appearance.getByRole("radio", { name: "System" });
+    const lightTheme = appearance.getByRole("radio", { name: "Light" });
+    const darkTheme = appearance.getByRole("radio", { name: "Dark" });
+    await expect(systemTheme).toBeChecked();
+    await expect(page.locator("html")).not.toHaveAttribute("data-theme");
+    await darkTheme.check();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    await expect(darkTheme).toBeChecked();
+    await expect(appearance).toHaveAttribute("aria-busy", "false");
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => getComputedStyle(document.documentElement).colorScheme,
+        ),
+      )
+      .toBe("dark");
+    await page.reload();
+    await expect(darkTheme).toBeChecked();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    await lightTheme.check();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    await expect(appearance).toHaveAttribute("aria-busy", "false");
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => getComputedStyle(document.documentElement).colorScheme,
+        ),
+      )
+      .toBe("light");
+    await page.emulateMedia({ colorScheme: "dark" });
+    await systemTheme.check();
+    await expect(page.locator("html")).not.toHaveAttribute("data-theme");
+    await expect(appearance).toHaveAttribute("aria-busy", "false");
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => getComputedStyle(document.documentElement).colorScheme,
+        ),
+      )
+      .toBe("dark");
+    await page.screenshot({
+      caret: "initial",
+      fullPage: true,
+      path: "/private/tmp/memotrail-settings-appearance-dark.png",
+    });
+    await page.emulateMedia({ colorScheme: "light" });
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => getComputedStyle(document.documentElement).colorScheme,
+        ),
+      )
+      .toBe("light");
+
     const timezone = main.getByRole("combobox", {
       name: "Default time zone",
       exact: true,

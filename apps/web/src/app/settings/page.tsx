@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { signOut } from "@/app/auth/actions";
+import { AppearanceSetting } from "@/components/appearance-setting";
 import { Icon, type IconName } from "@/components/icon";
 import { BirthDateSetting } from "@/components/birth-date-setting";
 import { TimezoneSetting } from "@/components/timezone-setting";
@@ -9,6 +11,7 @@ import {
   storedBirthDate,
   storedProfileTimezone,
 } from "@/lib/data/profile-input";
+import { storedThemePreference, THEME_COOKIE_NAME } from "@/lib/theme";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -53,6 +56,9 @@ export default async function SettingsPage() {
   const birthDate = storedBirthDate(profile.error ? null : profile.data);
   const profileTimezone = storedProfileTimezone(
     profile.error ? null : profile.data,
+  );
+  const themePreference = storedThemePreference(
+    (await cookies()).get(THEME_COOKIE_NAME)?.value,
   );
 
   return (
@@ -105,16 +111,7 @@ export default async function SettingsPage() {
         ) : null}
 
         <div className={styles.preferenceList}>
-          <div className={styles.appearanceRow}>
-            <span className={styles.preferenceIcon}>
-              <Icon name="settings" size={20} />
-            </span>
-            <div>
-              <strong>Appearance</strong>
-              <p>MemoTrail follows your device&apos;s light or dark setting.</p>
-            </div>
-            <small>System</small>
-          </div>
+          <AppearanceSetting initialPreference={themePreference} />
 
           {preferences.map((preference) => (
             <Link href={preference.href} key={preference.href}>

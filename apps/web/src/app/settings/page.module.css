@@ -341,9 +341,68 @@
   line-height: var(--mt-line-height-body);
 }
 
-.appearanceRow > small {
-  color: var(--mt-color-ink-faint);
+.appearanceControl {
+  display: flex;
+  min-width: 234px;
+  gap: 3px;
+  margin: 0;
+  padding: 3px;
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-medium);
+  background: var(--mt-color-surface-subtle);
+}
+
+.appearanceControl legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.appearanceControl label {
+  position: relative;
+  flex: 1;
+  cursor: pointer;
+}
+
+.appearanceControl input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.appearanceControl label > span {
+  display: grid;
+  min-height: 34px;
+  place-items: center;
+  padding: 0 var(--mt-space-3);
+  border-radius: 9px;
+  color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
+  font-weight: var(--mt-font-weight-medium);
+  transition:
+    color var(--mt-motion-quick),
+    background var(--mt-motion-quick),
+    box-shadow var(--mt-motion-quick);
+}
+
+.appearanceControl label:hover > span {
+  color: var(--mt-color-ink);
+}
+
+.appearanceControl input:checked + span {
+  color: var(--mt-color-accent);
+  background: var(--mt-color-surface-raised);
+  box-shadow: 0 1px 3px rgb(38 37 31 / 0.12);
+}
+
+.appearanceControl input:focus-visible + span {
+  outline: 2px solid var(--mt-color-accent);
+  outline-offset: 2px;
 }
 
 .privacyNote {
@@ -414,6 +473,16 @@
   .appearanceRow {
     gap: var(--mt-space-3);
     padding-inline: var(--mt-space-4);
+  }
+
+  .appearanceRow {
+    flex-wrap: wrap;
+  }
+
+  .appearanceControl {
+    width: calc(100% - 54px);
+    min-width: 0;
+    margin-left: 54px;
   }
 
   .preferenceList p {
