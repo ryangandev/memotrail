@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { signOut } from "@/app/auth/actions";
 import { Icon, type IconName } from "@/components/icon";
+import { BirthDateSetting } from "@/components/birth-date-setting";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
+import { storedBirthDate } from "@/lib/data/profile-input";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +40,12 @@ export default async function SettingsPage() {
   if (!context) return null;
 
   const { viewer } = context;
+  const profile = await context.client
+    .from("profiles")
+    .select("*")
+    .eq("user_id", context.userId)
+    .single();
+  const birthDate = storedBirthDate(profile.error ? null : profile.data);
 
   return (
     <div className={styles.content}>
@@ -67,6 +75,13 @@ export default async function SettingsPage() {
             <button type="submit">Sign out</button>
           </form>
         </div>
+
+        {birthDate.available ? (
+          <BirthDateSetting
+            initialBirthDate={birthDate.birthDate}
+            maxValue={new Date().toISOString().slice(0, 10)}
+          />
+        ) : null}
       </section>
 
       <section aria-labelledby="preferences-heading">

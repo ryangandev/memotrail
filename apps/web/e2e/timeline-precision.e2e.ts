@@ -65,6 +65,14 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       end = "2017-07-15T12:00:00+00:00";
     expect(
       (
+        await client
+          .from("profiles")
+          .update({ birth_date: "1990-01-01" })
+          .eq("user_id", owner)
+      ).error,
+    ).toBeNull();
+    expect(
+      (
         await client.from("entries").insert({
           id,
           owner_id: owner,
@@ -101,6 +109,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     ).toBeNull();
     await page.goto("/timeline");
     const timelineViewport = page.getByTestId("timeline-viewport");
+    await expect(timelineViewport).toBeVisible();
     const edgeBounds = await timelineViewport.evaluate((element) => {
       element.scrollLeft = element.scrollWidth;
       const finalYear = element.querySelector(

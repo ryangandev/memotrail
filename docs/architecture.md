@@ -59,6 +59,7 @@ Pair it with the test file carrying the same feature name.
 - Unknown and description-only dates have no fabricated calendar anchor.
 - Recorded timezone controls calendar interpretation and search overlap.
 - Timeline, search, Home, and specialized editors must use the same occurrence semantics.
+- A private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings.
 
 ## Offline rules
 

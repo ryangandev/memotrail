@@ -34,8 +34,10 @@ const minimumCollisionWidthPercent = 13;
 export function createTimelineLayout(
   items: TimelineLayoutSource[],
   referenceDate = new Date(),
+  birthDate: string | null = null,
 ): TimelineLayout {
   const validReference = validTime(referenceDate.toISOString()) ?? Date.now();
+  const birthTime = validTime(birthDate);
   const normalized = items
     .map((item) => {
       const start = validTime(item.occurredStart);
@@ -53,17 +55,17 @@ export function createTimelineLayout(
   let earliest = Date.UTC(currentYear, 0, 1);
   let latest = Date.UTC(currentYear + 1, 0, 1);
 
-  if (normalized.length > 0) {
-    earliest = Math.min(...normalized.map((item) => item.start));
-    latest = Math.max(...normalized.map((item) => item.end));
+  if (normalized.length > 0 || birthTime !== null) {
+    earliest = birthTime ?? Math.min(...normalized.map((item) => item.start));
+    latest = Math.max(validReference, ...normalized.map((item) => item.end));
     const rawRange = Math.max(latest - earliest, minimumRangeMilliseconds);
     const padding = Math.max(rawRange * 0.025, 30 * 24 * 60 * 60 * 1_000);
-    earliest -= padding;
+    if (birthTime === null) earliest -= padding;
     latest += padding;
 
     if (latest - earliest < minimumRangeMilliseconds) {
       const difference = minimumRangeMilliseconds - (latest - earliest);
-      earliest -= difference / 2;
+      if (birthTime === null) earliest -= difference / 2;
       latest += difference / 2;
     }
   }
@@ -117,7 +119,19 @@ export function createTimelineLayout(
   const firstYear = new Date(earliest).getUTCFullYear();
   const lastYear = new Date(latest).getUTCFullYear();
 
-  for (let year = firstYear; year <= lastYear; year += 1) {
+  if (birthTime !== null) {
+    yearMarkers.push({
+      label: String(firstYear),
+      leftPercent: 0,
+      year: firstYear,
+    });
+  }
+
+  for (
+    let year = birthTime === null ? firstYear : firstYear + 1;
+    year <= lastYear;
+    year += 1
+  ) {
     const position = Date.UTC(year, 0, 1);
 
     if (position >= earliest && position <= latest) {

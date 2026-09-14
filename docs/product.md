@@ -92,6 +92,7 @@ Photo metadata may be offered as a date or Place suggestion but is never adopted
 ## Timeline and Home
 
 Timeline shows point events and overlapping life periods on customizable tracks.
+The first Timeline visit asks for a private birth date, uses it as the story's starting point, and keeps it editable in Settings.
 Default tracks cover Places, Education, Career, Homes, Vehicles, Relationships, Health, First Times, and Other Events.
 The user can create, order, rename, hide, and restore tracks without deleting content.
 Unanchored Age, Approximate, and Unknown moments remain visible without a fabricated calendar position.

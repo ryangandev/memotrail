@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   useEffect,
+  useCallback,
   useMemo,
   useRef,
   useState,
@@ -15,7 +16,9 @@ import {
   trashTimelineEntry,
   type TimelineActionResult,
 } from "@/app/timeline/actions";
+import { saveBirthDate } from "@/app/settings/actions";
 import { Icon } from "@/components/icon";
+import { PrecisionDateField } from "@/components/precision-date-field";
 import type { TimelineEntry, TimelineTrack } from "@/lib/data/timeline";
 import {
   parseTimelineEntryInput,
@@ -50,15 +53,23 @@ type GridStyle = CSSProperties & {
 };
 
 export function TimelineWorkspace({
+  birthDate: serverBirthDate,
+  birthDateAvailable,
   loadError,
   referenceDate,
   tracks: serverTracks,
 }: {
+  birthDate: string | null;
+  birthDateAvailable: boolean;
   loadError: string | null;
   referenceDate: string;
   tracks: TimelineTrack[];
 }) {
   const [selection, setSelection] = useState<EditorSelection | null>(null);
+  const [birthDate, setBirthDate] = useState(serverBirthDate);
+  const [showBirthDatePrompt, setShowBirthDatePrompt] = useState(
+    birthDateAvailable && serverBirthDate === null && loadError === null,
+  );
   const [confirmed, setConfirmed] = useState<Map<string, TimelineEntry>>(
     () => new Map(),
   );
@@ -92,8 +103,8 @@ export function TimelineWorkspace({
   );
   const items = useMemo(() => tracks.flatMap((track) => track.items), [tracks]);
   const layout = useMemo(
-    () => createTimelineLayout(items, new Date(referenceDate)),
-    [items, referenceDate],
+    () => createTimelineLayout(items, new Date(referenceDate), birthDate),
+    [birthDate, items, referenceDate],
   );
   const positions = useMemo(
     () => new Map(layout.positions.map((position) => [position.id, position])),
@@ -136,6 +147,18 @@ export function TimelineWorkspace({
           <>
             <span aria-hidden="true">·</span>
             <span>{rangeLabel(layout.start, layout.end)}</span>
+          </>
+        ) : null}
+        {birthDateAvailable && !birthDate && !loadError ? (
+          <>
+            <span aria-hidden="true">·</span>
+            <button
+              className={styles.birthDateLink}
+              onClick={() => setShowBirthDatePrompt(true)}
+              type="button"
+            >
+              Set birth date
+            </button>
           </>
         ) : null}
       </div>
@@ -334,6 +357,109 @@ export function TimelineWorkspace({
           tracks={tracks}
         />
       ) : null}
+
+      {birthDateAvailable && showBirthDatePrompt && !birthDate && !loadError ? (
+        <BirthDatePrompt
+          maxValue={referenceDate.slice(0, 10)}
+          onClose={() => setShowBirthDatePrompt(false)}
+          onSaved={(value) => {
+            setBirthDate(value);
+            setShowBirthDatePrompt(false);
+          }}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function BirthDatePrompt({
+  maxValue,
+  onClose,
+  onSaved,
+}: {
+  maxValue: string;
+  onClose: () => void;
+  onSaved: (value: string) => void;
+}) {
+  const router = useRouter();
+  const [birthDate, setBirthDate] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const markHydrated = useCallback((node: HTMLElement | null) => {
+    node?.setAttribute("data-hydrated", "true");
+  }, []);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!birthDate || busy) return;
+
+    setBusy(true);
+    setMessage(null);
+
+    try {
+      const result = await saveBirthDate(birthDate);
+      if (result.status === "error" || !result.birthDate) {
+        setMessage(result.message);
+        return;
+      }
+
+      onSaved(result.birthDate);
+      router.refresh();
+    } catch {
+      setMessage("MemoTrail could not save your birth date. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className={styles.dialogBackdrop}>
+      <section
+        aria-labelledby="birth-date-heading"
+        aria-modal="true"
+        className={`${styles.dialogPanel} ${styles.birthDateDialog}`}
+        ref={markHydrated}
+        role="dialog"
+      >
+        <header className={styles.dialogHeader}>
+          <div>
+            <p>Your starting point</p>
+            <h2 id="birth-date-heading">When did your story begin?</h2>
+          </div>
+          <button aria-label="Not now" onClick={onClose} type="button">
+            ×
+          </button>
+        </header>
+        <form className={styles.birthDateForm} onSubmit={submit}>
+          <p>
+            Add your birth date so Timeline begins with your life, not just your
+            earliest saved moment. It stays private and can be changed in
+            Settings.
+          </p>
+          <PrecisionDateField
+            disabled={busy}
+            label="Birth date"
+            maxValue={maxValue}
+            onChange={setBirthDate}
+            precision="day"
+            required
+            value={birthDate}
+          />
+          {message ? (
+            <p className={styles.birthDateMessage} role="alert">
+              {message}
+            </p>
+          ) : null}
+          <div className={styles.birthDateActions}>
+            <button disabled={busy} onClick={onClose} type="button">
+              Not now
+            </button>
+            <button disabled={!birthDate || busy} type="submit">
+              {busy ? "Saving…" : "Start my Timeline"}
+            </button>
+          </div>
+        </form>
+      </section>
     </div>
   );
 }

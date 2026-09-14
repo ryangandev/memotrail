@@ -18,6 +18,7 @@ export function PrecisionDateField({
   disabled,
   label,
   hideLabel = false,
+  maxValue,
   precision,
   required = false,
   value,
@@ -26,6 +27,7 @@ export function PrecisionDateField({
   disabled: boolean;
   label: string;
   hideLabel?: boolean;
+  maxValue?: string;
   precision: CalendarPrecision;
   required?: boolean;
   value: string;
@@ -36,6 +38,7 @@ export function PrecisionDateField({
   const dateText = precision === "exact" ? exactDate(value) : value;
   const timeText = precision === "exact" ? exactTime(value) : "";
   const selected = calendarDate(dateText, precision);
+  const maximum = maxValue ? calendarDate(maxValue, "day") : null;
 
   function changeDate(nextDate: string) {
     onChange(
@@ -72,6 +75,7 @@ export function PrecisionDateField({
         defaultView={view}
         disabled={disabled}
         id={pickerId}
+        max={maximum ?? undefined}
         maxView={view === "day" ? "year" : view}
         minView={view}
         onValueChange={(details) => {

@@ -5,6 +5,7 @@ import type {
   TimelineDatePrecision,
   TimelineKind,
 } from "@/lib/data/timeline-input";
+import { storedBirthDate } from "@/lib/data/profile-input";
 
 export type TimelineEntry = {
   body: string;
@@ -32,6 +33,8 @@ export type TimelineTrack = {
 };
 
 export type TimelineWorkspace = {
+  birthDate: string | null;
+  birthDateAvailable: boolean;
   inboxCount: number | undefined;
   loadError: string | null;
   tracks: TimelineTrack[];
@@ -66,7 +69,7 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
     return null;
   }
 
-  const [timeline, inbox] = await Promise.all([
+  const [timeline, inbox, profile] = await Promise.all([
     context.client.rpc("timeline_workspace", { p_include_hidden: false }),
     context.client
       .from("entries")
@@ -74,10 +77,18 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
       .eq("owner_id", context.userId)
       .eq("inbox_status", "unreviewed")
       .is("deleted_at", null),
+    context.client
+      .from("profiles")
+      .select("*")
+      .eq("user_id", context.userId)
+      .single(),
   ]);
   const rows = timeline.error ? null : timelineRows(timeline.data);
+  const profileBirthDate = storedBirthDate(profile.error ? null : profile.data);
 
   return {
+    birthDate: profileBirthDate.birthDate,
+    birthDateAvailable: profileBirthDate.available,
     inboxCount: inbox.error ? undefined : (inbox.count ?? 0),
     loadError:
       timeline.error || !rows

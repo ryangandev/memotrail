@@ -1193,7 +1193,7 @@
   box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
 }
 
-.reviewForm .datePickerControl input {
+.datePickerControl input {
   height: 100%;
   min-width: 0;
   flex: 1;
@@ -1205,8 +1205,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-.reviewForm .datePickerControl input:focus,
-.reviewForm .datePickerControl input:focus-visible {
+.datePickerControl input:focus,
+.datePickerControl input:focus-visible {
   border: 0;
   outline: 0;
   box-shadow: none;

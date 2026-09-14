@@ -38,6 +38,29 @@ describe("createTimelineLayout", () => {
     expect(layout.positions).toEqual([]);
   });
 
+  it("starts an empty Timeline at the owner's birth date and continues to today", () => {
+    const layout = createTimelineLayout([], reference, "1994-04-18");
+
+    expect(layout.start).toBe("1994-04-18T00:00:00.000Z");
+    expect(layout.yearMarkers[0]).toEqual({
+      label: "1994",
+      leftPercent: 0,
+      year: 1994,
+    });
+    expect(new Date(layout.end).getTime()).toBeGreaterThan(reference.getTime());
+  });
+
+  it("does not move the Timeline before birth for an earlier imported moment", () => {
+    const layout = createTimelineLayout(
+      [source({ occurredStart: "1990-01-01T00:00:00.000Z" })],
+      reference,
+      "1994-04-18",
+    );
+
+    expect(layout.start).toBe("1994-04-18T00:00:00.000Z");
+    expect(layout.positions[0]?.leftPercent).toBe(0);
+  });
+
   it("orders an event within padded bounds", () => {
     const layout = createTimelineLayout([source()], reference);
     const position = layout.positions[0];
