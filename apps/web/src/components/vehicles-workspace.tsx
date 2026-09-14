@@ -74,6 +74,7 @@ export function VehiclesWorkspace({
   >(vehicles.find((vehicle) => vehicle.id === initialVehicleId));
   const currentVehicles = vehicles.filter((vehicle) => !vehicle.occurredEnd);
   const earlierVehicles = vehicles.filter((vehicle) => vehicle.occurredEnd);
+  const orderedVehicles = [...currentVehicles, ...earlierVehicles];
 
   return (
     <div className={styles.content}>
@@ -132,21 +133,12 @@ export function VehiclesWorkspace({
         </button>
       ) : null}
 
-      {!loadError && currentVehicles.length > 0 ? (
+      {!loadError && orderedVehicles.length > 0 ? (
         <VehicleSection
-          label="Vehicles still in your life"
+          label="Current first, followed by earlier chapters"
           onSelect={setSelectedVehicle}
-          title="Current"
-          vehicles={currentVehicles}
-        />
-      ) : null}
-
-      {!loadError && earlierVehicles.length > 0 ? (
-        <VehicleSection
-          label="Chapters that came before"
-          onSelect={setSelectedVehicle}
-          title="Earlier vehicles"
-          vehicles={earlierVehicles}
+          title="Vehicle archive"
+          vehicles={orderedVehicles}
         />
       ) : null}
 
