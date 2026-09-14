@@ -152,7 +152,9 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     await expect(timelineViewport).toBeVisible();
     const todayLine = page.getByTestId("timeline-today");
     const ongoingStage = page.getByRole("button", { name: /Current role/ });
-    const vehicleStage = page.getByRole("link", { name: /Centered vehicle/ });
+    const vehicleStage = page.getByRole("button", {
+      name: /Centered vehicle/,
+    });
     await expect(todayLine).toBeVisible();
     await expect(ongoingStage).toHaveAttribute("data-ongoing", "true");
     await expect(vehicleStage).toBeVisible();
@@ -170,6 +172,116 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       expect(appearance.centerOffset).toBeLessThan(1);
       expect(appearance.indicatorContent).toBe("none");
     }
+    await page.getByRole("button", { name: "Add moment", exact: true }).click();
+    const typeChooser = page.getByRole("dialog", {
+      name: "What are you adding?",
+      exact: true,
+    });
+    await expect(typeChooser).toBeVisible();
+    await expect(
+      typeChooser.getByRole("button", { name: "Add Moment", exact: true }),
+    ).toBeVisible();
+    await expect(
+      typeChooser.getByRole("button", { name: "Add Home", exact: true }),
+    ).toBeVisible();
+    await expect(
+      typeChooser.getByRole("button", { name: "Add Vehicle", exact: true }),
+    ).toBeVisible();
+    await expect(
+      typeChooser.getByRole("button", { name: "Add First Time", exact: true }),
+    ).toBeVisible();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.screenshot({
+      path: "/private/tmp/memotrail-entry-type-chooser-mobile.png",
+    });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await typeChooser
+      .getByRole("button", { name: "Add Moment", exact: true })
+      .click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByRole("combobox", { name: "Track" })).toBeVisible();
+    await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+
+    await page.getByRole("button", { name: "Add moment", exact: true }).click();
+    await typeChooser
+      .getByRole("button", { name: "Add Vehicle", exact: true })
+      .click();
+    const vehicleEditor = page.getByRole("dialog", {
+      name: "Keep a ride in your story",
+      exact: true,
+    });
+    await expect(vehicleEditor).toBeVisible();
+    await expect(page).toHaveURL(/\/timeline$/);
+    await expect(
+      vehicleEditor.getByRole("combobox", { name: "Track" }),
+    ).toHaveCount(0);
+    await vehicleEditor
+      .getByRole("textbox", { name: "Name or nickname" })
+      .fill("Timeline-created vehicle");
+    await vehicleEditor
+      .getByRole("button", { name: "Add Vehicle", exact: true })
+      .click();
+    await expect(vehicleEditor).not.toBeVisible();
+    await expect
+      .poll(async () => {
+        const result = await client
+          .from("entries")
+          .select("entry_type")
+          .eq("owner_id", owner)
+          .eq("title", "Timeline-created vehicle")
+          .maybeSingle();
+        return result.data?.entry_type;
+      })
+      .toBe("vehicle");
+    const createdVehicleCard = page.getByRole("button", {
+      name: /Timeline-created vehicle/,
+    });
+    await expect(createdVehicleCard).toBeVisible();
+    await createdVehicleCard.click();
+    await expect(
+      page.getByRole("dialog", { name: "Timeline-created vehicle" }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { name: "Close Vehicle editor", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Add a moment to Vehicles", exact: true })
+      .click();
+    await expect(vehicleEditor).toBeVisible();
+    await expect(typeChooser).toHaveCount(0);
+    await vehicleEditor
+      .getByRole("button", { name: "Cancel", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Add a moment to Homes", exact: true })
+      .click();
+    const homeEditor = page.getByRole("dialog", {
+      name: "Keep a place in your story",
+      exact: true,
+    });
+    await expect(homeEditor).toBeVisible();
+    await homeEditor
+      .getByRole("button", { name: "Cancel", exact: true })
+      .click();
+    await page
+      .getByRole("button", {
+        name: "Add a moment to First Times",
+        exact: true,
+      })
+      .click();
+    const firstTimeEditor = page.getByRole("dialog", {
+      name: "Keep a beginning",
+      exact: true,
+    });
+    await expect(firstTimeEditor).toBeVisible();
+    await firstTimeEditor
+      .getByRole("button", { name: "Cancel", exact: true })
+      .click();
     const ongoingGeometry = await ongoingStage.evaluate((element) => {
       const card = element.getBoundingClientRect();
       const line = document
@@ -210,7 +322,6 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       name: /First trip to Japan/,
     });
     await timelineStage.click();
-    const dialog = page.getByRole("dialog");
     await page.screenshot({
       path: "/private/tmp/memotrail-timeline-precision-desktop.png",
     });
@@ -386,6 +497,9 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       path: "/private/tmp/memotrail-timeline-undated.png",
     });
     await page.getByRole("button", { name: "Add moment", exact: true }).click();
+    await typeChooser
+      .getByRole("button", { name: "Add Moment", exact: true })
+      .click();
     await expect(dialog.getByText("Optional", { exact: true })).toHaveCount(0);
     await dialog.getByLabel("Date type").selectOption("exact");
     const exactStartDate = dialog.getByRole("textbox", {
@@ -487,6 +601,9 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     await expect(dialog.getByLabel("Date type")).toHaveValue("unknown");
     await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
     await page.getByRole("button", { name: "Add moment", exact: true }).click();
+    await typeChooser
+      .getByRole("button", { name: "Add Moment", exact: true })
+      .click();
     await expect(dialog.getByLabel("Date type")).toHaveValue("unknown");
     await dialog.getByRole("button", { name: "Event", exact: true }).click();
     await expect(

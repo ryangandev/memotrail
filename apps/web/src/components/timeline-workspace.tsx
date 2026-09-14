@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   useEffect,
   useCallback,
@@ -19,7 +20,10 @@ import {
 import { saveBirthDate } from "@/app/settings/actions";
 import { Icon } from "@/components/icon";
 import { DatePickerField } from "@/components/date-picker-field";
+import type { FirstTimeEntry } from "@/lib/data/first-times";
+import type { HomePlaceOption, HomeRecord } from "@/lib/data/home-record";
 import type { TimelineEntry, TimelineTrack } from "@/lib/data/timeline";
+import type { VehicleRecord } from "@/lib/data/vehicle-record";
 import {
   parseTimelineEntryInput,
   timelineBodyLimit,
@@ -38,9 +42,38 @@ import {
   type Occurrence,
 } from "@/lib/data/occurrence";
 
+const FirstTimeEditor = dynamic(
+  () =>
+    import("@/components/first-times-workspace").then(
+      (module) => module.FirstTimeEditor,
+    ),
+  { loading: () => <EditorLoading /> },
+);
+const HomeEditor = dynamic(
+  () =>
+    import("@/components/homes-workspace").then((module) => module.HomeEditor),
+  { loading: () => <EditorLoading /> },
+);
+const VehicleEditor = dynamic(
+  () =>
+    import("@/components/vehicles-workspace").then(
+      (module) => module.VehicleEditor,
+    ),
+  { loading: () => <EditorLoading /> },
+);
+
 type EditorSelection =
-  | { entry: TimelineEntry; initialTrackId: null }
-  | { entry: null; initialTrackId: string | null };
+  | { type: "chooser" }
+  | {
+      type: "timeline";
+      entry: TimelineEntry | null;
+      initialTrackId: string | null;
+    }
+  | { type: "home"; entry: HomeRecord | null }
+  | { type: "vehicle"; entry: VehicleRecord | null }
+  | { type: "first-time"; entry: FirstTimeEntry | null };
+
+type CreationType = "moment" | "home" | "vehicle" | "first-time";
 
 type PositionedStyle = CSSProperties & {
   "--item-lane": number;
@@ -57,18 +90,33 @@ type GridStyle = CSSProperties & {
 export function TimelineWorkspace({
   birthDate: serverBirthDate,
   birthDateAvailable,
+  collectionOptions,
   defaultTimezone,
+  firstTimes,
+  homes,
   loadError,
+  ownerId,
+  placeOptions,
   referenceDate,
+  tagOptions,
   tracks: serverTracks,
+  vehicles,
 }: {
   birthDate: string | null;
   birthDateAvailable: boolean;
+  collectionOptions: string[];
   defaultTimezone: string;
+  firstTimes: FirstTimeEntry[];
+  homes: HomeRecord[];
   loadError: string | null;
+  ownerId: string;
+  placeOptions: HomePlaceOption[];
   referenceDate: string;
+  tagOptions: string[];
   tracks: TimelineTrack[];
+  vehicles: VehicleRecord[];
 }) {
+  const router = useRouter();
   const [selection, setSelection] = useState<EditorSelection | null>(null);
   const [birthDate, setBirthDate] = useState(serverBirthDate);
   const [showBirthDatePrompt, setShowBirthDatePrompt] = useState(
@@ -119,6 +167,60 @@ export function TimelineWorkspace({
     "--timeline-today-offset": `${(layout.todayPercent / 100) * layout.canvasWidth}px`,
   };
 
+  function startCreation(type: CreationType, initialTrackId: string | null) {
+    if (type === "home") {
+      setSelection({ type: "home", entry: null });
+      return;
+    }
+    if (type === "vehicle") {
+      setSelection({ type: "vehicle", entry: null });
+      return;
+    }
+    if (type === "first-time") {
+      setSelection({ type: "first-time", entry: null });
+      return;
+    }
+    setSelection({ type: "timeline", entry: null, initialTrackId });
+  }
+
+  function startCreationForTrack(track: TimelineTrack) {
+    if (track.systemKey === "homes") {
+      startCreation("home", track.id);
+      return;
+    }
+    if (track.systemKey === "vehicles") {
+      startCreation("vehicle", track.id);
+      return;
+    }
+    if (track.systemKey === "first_times") {
+      startCreation("first-time", track.id);
+      return;
+    }
+    startCreation("moment", track.id);
+  }
+
+  function openEntry(entry: TimelineEntry) {
+    if (entry.entryType === "home") {
+      const home = homes.find((item) => item.id === entry.id);
+      if (home) setSelection({ type: "home", entry: home });
+      else router.push(`/homes?entry=${entry.id}`);
+      return;
+    }
+    if (entry.entryType === "vehicle") {
+      const vehicle = vehicles.find((item) => item.id === entry.id);
+      if (vehicle) setSelection({ type: "vehicle", entry: vehicle });
+      else router.push(`/vehicles?entry=${entry.id}`);
+      return;
+    }
+    if (entry.entryType === "first_time") {
+      const firstTime = firstTimes.find((item) => item.id === entry.id);
+      if (firstTime) setSelection({ type: "first-time", entry: firstTime });
+      else router.push("/first-times");
+      return;
+    }
+    setSelection({ type: "timeline", entry, initialTrackId: null });
+  }
+
   return (
     <div className={styles.content}>
       <header className={styles.pageHeader}>
@@ -131,9 +233,7 @@ export function TimelineWorkspace({
           aria-label="Add moment"
           className={styles.addButton}
           disabled={tracks.length === 0}
-          onClick={() =>
-            setSelection({ entry: null, initialTrackId: tracks[0]?.id ?? null })
-          }
+          onClick={() => setSelection({ type: "chooser" })}
           type="button"
         >
           <Icon name="plus" />
@@ -216,20 +316,13 @@ export function TimelineWorkspace({
                       {track.items
                         .filter((item) => !item.occurredStart)
                         .map((entry) => {
-                          const href = specializedEntryHref(entry);
                           const label =
                             entry.title + ", " + entryDateLabel(entry);
-                          return href ? (
-                            <Link key={entry.id} href={href}>
-                              {label}
-                            </Link>
-                          ) : (
+                          return (
                             <button
                               key={entry.id}
                               type="button"
-                              onClick={() =>
-                                setSelection({ entry, initialTrackId: null })
-                              }
+                              onClick={() => openEntry(entry)}
                             >
                               {label}
                             </button>
@@ -260,12 +353,8 @@ export function TimelineWorkspace({
                   <TrackRow
                     key={track.id}
                     layout={layout}
-                    onAdd={() =>
-                      setSelection({ entry: null, initialTrackId: track.id })
-                    }
-                    onSelect={(entry) =>
-                      setSelection({ entry, initialTrackId: null })
-                    }
+                    onAdd={() => startCreationForTrack(track)}
+                    onSelect={openEntry}
                     positions={positions}
                     track={track}
                   />
@@ -292,9 +381,7 @@ export function TimelineWorkspace({
                   </div>
                   <button
                     aria-label={`Add a moment to ${track.name}`}
-                    onClick={() =>
-                      setSelection({ entry: null, initialTrackId: track.id })
-                    }
+                    onClick={() => startCreationForTrack(track)}
                     type="button"
                   >
                     <Icon name="plus" size={17} />
@@ -305,7 +392,6 @@ export function TimelineWorkspace({
                 ) : (
                   <div className={styles.mobileItems}>
                     {track.items.map((entry) => {
-                      const specializedHref = specializedEntryHref(entry);
                       const content = (
                         <>
                           <span
@@ -323,16 +409,10 @@ export function TimelineWorkspace({
                         </>
                       );
 
-                      return specializedHref ? (
-                        <Link href={specializedHref} key={entry.id}>
-                          {content}
-                        </Link>
-                      ) : (
+                      return (
                         <button
                           key={entry.id}
-                          onClick={() =>
-                            setSelection({ entry, initialTrackId: null })
-                          }
+                          onClick={() => openEntry(entry)}
                           type="button"
                         >
                           {content}
@@ -347,7 +427,19 @@ export function TimelineWorkspace({
         </>
       ) : null}
 
-      {selection ? (
+      {selection?.type === "chooser" ? (
+        <MomentTypeChooser
+          onClose={() => setSelection(null)}
+          onSelect={(type) =>
+            startCreation(
+              type,
+              type === "moment" ? (tracks[0]?.id ?? null) : null,
+            )
+          }
+        />
+      ) : null}
+
+      {selection?.type === "timeline" ? (
         <TimelineEditor
           onTrashed={(id) =>
             setConfirmed((current) => {
@@ -368,6 +460,48 @@ export function TimelineWorkspace({
         />
       ) : null}
 
+      {selection?.type === "home" ? (
+        <HomeEditor
+          collectionOptions={collectionOptions}
+          defaultTimezone={defaultTimezone}
+          home={selection.entry}
+          key={selection.entry?.id ?? "new-home-from-timeline"}
+          onClose={() => setSelection(null)}
+          onSaved={() => undefined}
+          onTrashed={() => undefined}
+          ownerId={ownerId}
+          placeOptions={placeOptions}
+          tagOptions={tagOptions}
+        />
+      ) : null}
+
+      {selection?.type === "vehicle" ? (
+        <VehicleEditor
+          collectionOptions={collectionOptions}
+          defaultTimezone={defaultTimezone}
+          key={selection.entry?.id ?? "new-vehicle-from-timeline"}
+          onClose={() => setSelection(null)}
+          onSaved={() => undefined}
+          onTrashed={() => undefined}
+          ownerId={ownerId}
+          tagOptions={tagOptions}
+          vehicle={selection.entry}
+        />
+      ) : null}
+
+      {selection?.type === "first-time" ? (
+        <FirstTimeEditor
+          collectionOptions={collectionOptions}
+          defaultTimezone={defaultTimezone}
+          entry={selection.entry}
+          key={selection.entry?.id ?? "new-first-time-from-timeline"}
+          onClose={() => setSelection(null)}
+          onSaved={() => undefined}
+          ownerId={ownerId}
+          tagOptions={tagOptions}
+        />
+      ) : null}
+
       {birthDateAvailable && showBirthDatePrompt && !birthDate && !loadError ? (
         <BirthDatePrompt
           maxValue={referenceDate.slice(0, 10)}
@@ -378,6 +512,105 @@ export function TimelineWorkspace({
           }}
         />
       ) : null}
+    </div>
+  );
+}
+
+function EditorLoading() {
+  return (
+    <div className={styles.dialogBackdrop}>
+      <div className={styles.editorLoading} role="status">
+        <span />
+        <strong>Opening editor</strong>
+      </div>
+    </div>
+  );
+}
+
+function MomentTypeChooser({
+  onClose,
+  onSelect,
+}: {
+  onClose: () => void;
+  onSelect: (type: CreationType) => void;
+}) {
+  const options: {
+    description: string;
+    icon: "timeline" | "home" | "car" | "star";
+    label: string;
+    type: CreationType;
+  }[] = [
+    {
+      description: "A flexible event or life stage on any Timeline track.",
+      icon: "timeline",
+      label: "Moment",
+      type: "moment",
+    },
+    {
+      description: "A place you called home, with its facts and memories.",
+      icon: "home",
+      label: "Home",
+      type: "home",
+    },
+    {
+      description: "A car, bike, or other vehicle that carried your story.",
+      icon: "car",
+      label: "Vehicle",
+      type: "vehicle",
+    },
+    {
+      description: "A beginning or milestone you want to remember.",
+      icon: "star",
+      label: "First Time",
+      type: "first-time",
+    },
+  ];
+
+  return (
+    <div
+      aria-labelledby="moment-type-heading"
+      aria-modal="true"
+      className={styles.dialogBackdrop}
+      onMouseDown={(event) => {
+        if (event.currentTarget === event.target) onClose();
+      }}
+      role="dialog"
+    >
+      <section className={`${styles.dialogPanel} ${styles.creationDialog}`}>
+        <header className={styles.dialogHeader}>
+          <div>
+            <p>New entry</p>
+            <h2 id="moment-type-heading">What are you adding?</h2>
+          </div>
+          <button
+            aria-label="Close entry type chooser"
+            onClick={onClose}
+            type="button"
+          >
+            ×
+          </button>
+        </header>
+        <div className={styles.creationOptions}>
+          {options.map((option) => (
+            <button
+              aria-label={`Add ${option.label}`}
+              className={styles.creationOption}
+              key={option.type}
+              onClick={() => onSelect(option.type)}
+              type="button"
+            >
+              <span>
+                <Icon name={option.icon} size={21} />
+              </span>
+              <span>
+                <strong>{option.label}</strong>
+                <small>{option.description}</small>
+              </span>
+              <Icon name="chevron" size={16} />
+            </button>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
@@ -558,13 +791,7 @@ function TrackRow({
             style: itemStyle,
             title: `${entry.title} · ${entryDateLabel(entry)}`,
           };
-          const specializedHref = specializedEntryHref(entry);
-
-          return specializedHref ? (
-            <Link {...sharedProps} href={specializedHref} key={entry.id}>
-              {content}
-            </Link>
-          ) : (
+          return (
             <button
               {...sharedProps}
               key={entry.id}
@@ -583,12 +810,6 @@ function TrackRow({
       </div>
     </>
   );
-}
-
-function specializedEntryHref(entry: TimelineEntry) {
-  if (entry.entryType === "home") return `/homes?entry=${entry.id}`;
-  if (entry.entryType === "vehicle") return `/vehicles?entry=${entry.id}`;
-  return null;
 }
 
 function TimelineEditor({

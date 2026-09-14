@@ -101,6 +101,10 @@ Timeline shows point events and overlapping life periods on customizable tracks.
 The first Timeline visit asks for a private birth date, uses it as the story's starting point, and keeps it editable in Settings.
 Default tracks cover Places, Education, Career, Homes, Vehicles, Relationships, Health, First Times, and Other Events.
 The user can create, order, rename, hide, and restore tracks without deleting content.
+Timeline's global Add moment flow asks for the Entry type before opening details: a generic Moment, Home, Vehicle, or First Time.
+Entry type determines the data model and editor, while Track only determines where a generic Moment appears on Timeline.
+The Homes, Vehicles, and First Times track shortcuts open their specialized editors directly; other track shortcuts open the generic Moment editor with that track preselected.
+Opening an existing Home, Vehicle, or First Time from Timeline keeps the user on Timeline and uses the same specialized editor as its Records page.
 Unanchored Age, Approximate, and Unknown moments remain visible without a fabricated calendar position.
 
 Home is ordered around:
