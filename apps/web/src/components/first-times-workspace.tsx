@@ -212,8 +212,9 @@ function FirstTimeCard({
   );
 }
 
-function FirstTimeEditor({
+export function FirstTimeEditor({
   collectionOptions,
+  defaultTimezone,
   entry,
   onClose,
   onSaved,
@@ -221,6 +222,7 @@ function FirstTimeEditor({
   tagOptions,
 }: {
   collectionOptions: string[];
+  defaultTimezone?: string;
   entry: FirstTimeEntry | null;
   onClose: () => void;
   onSaved: (entry: FirstTimeEntry) => void;
@@ -239,7 +241,7 @@ function FirstTimeEditor({
     entry?.revision ?? null,
   );
   const [occurrence, setOccurrence] = useState(() =>
-    occurrenceDraft(firstTimeOccurrence(entry)),
+    occurrenceDraft(firstTimeOccurrence(entry, defaultTimezone)),
   );
   const [existingPhotos, setExistingPhotos] = useState(
     entry ? originalAttachments(entry) : [],
@@ -799,13 +801,17 @@ function originalAttachments(entry: FirstTimeEntry) {
   );
 }
 
-function firstTimeOccurrence(entry: FirstTimeEntry | null): Occurrence {
+function firstTimeOccurrence(
+  entry: FirstTimeEntry | null,
+  defaultTimezone?: string,
+): Occurrence {
   return {
     occurredAt: entry?.occurredStart ?? null,
     occurredEnd: entry?.occurredEnd ?? null,
     datePrecision: entry?.datePrecision ?? "unknown",
     occurredLabel: entry?.occurredLabel ?? null,
-    occurredTimezone: entry?.occurredTimezone ?? localTimezone(),
+    occurredTimezone:
+      entry?.occurredTimezone ?? defaultTimezone ?? localTimezone(),
   };
 }
 function firstTimeDateLabel(entry: FirstTimeEntry) {

@@ -266,8 +266,9 @@ function VehicleCard({
   );
 }
 
-function VehicleEditor({
+export function VehicleEditor({
   collectionOptions,
+  defaultTimezone,
   onClose,
   onSaved,
   onTrashed,
@@ -276,6 +277,7 @@ function VehicleEditor({
   vehicle,
 }: {
   collectionOptions: string[];
+  defaultTimezone?: string;
   onClose: () => void;
   onSaved: (record: VehicleRecord) => void;
   onTrashed: (id: string) => void;
@@ -285,7 +287,8 @@ function VehicleEditor({
 }) {
   const router = useRouter();
   const titleRef = useRef<HTMLInputElement>(null);
-  const initialTimezone = vehicle?.occurredTimezone ?? localTimezone();
+  const initialTimezone =
+    vehicle?.occurredTimezone ?? defaultTimezone ?? localTimezone();
   const originalOccurrence: Occurrence | undefined = vehicle
     ? {
         occurredAt: vehicle.occurredStart,

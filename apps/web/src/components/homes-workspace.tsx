@@ -261,8 +261,9 @@ function HomeCard({
   );
 }
 
-function HomeEditor({
+export function HomeEditor({
   collectionOptions,
+  defaultTimezone,
   home,
   onClose,
   onSaved,
@@ -272,6 +273,7 @@ function HomeEditor({
   tagOptions,
 }: {
   collectionOptions: string[];
+  defaultTimezone?: string;
   home: HomeRecord | null;
   onClose: () => void;
   onSaved: (record: HomeRecord) => void;
@@ -282,7 +284,8 @@ function HomeEditor({
 }) {
   const router = useRouter();
   const titleRef = useRef<HTMLInputElement>(null);
-  const initialTimezone = home?.occurredTimezone ?? localTimezone();
+  const initialTimezone =
+    home?.occurredTimezone ?? defaultTimezone ?? localTimezone();
   const originalOccurrence: Occurrence | undefined = home
     ? {
         occurredAt: home.occurredStart,
