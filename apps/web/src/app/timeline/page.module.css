@@ -145,10 +145,41 @@
 }
 
 .timelineGrid {
+  position: relative;
   display: grid;
   width: calc(164px + var(--timeline-canvas-width));
   min-width: 100%;
   grid-template-columns: 164px var(--timeline-canvas-width);
+}
+
+.todayLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(164px + var(--timeline-today-offset));
+  z-index: 1;
+  width: 1px;
+  background: repeating-linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--mt-color-accent) 62%, transparent) 0 5px,
+    transparent 5px 10px
+  );
+  pointer-events: none;
+}
+
+.todayLine::before {
+  position: absolute;
+  top: 7px;
+  right: 6px;
+  padding: 1px 4px;
+  border-radius: var(--mt-radius-small);
+  color: var(--mt-color-accent);
+  background: var(--mt-color-surface);
+  font-size: 9px;
+  font-weight: var(--mt-font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  content: "Today";
 }
 
 .axisCorner,
@@ -293,6 +324,11 @@
   border-radius: var(--mt-radius-small);
   background: var(--mt-color-accent-subtle);
   white-space: nowrap;
+}
+
+.stageItem[data-ongoing="true"] {
+  border-right: 2px solid var(--mt-color-accent);
+  border-radius: var(--mt-radius-small) 0 0 var(--mt-radius-small);
 }
 
 .stageItem::after {

@@ -28,7 +28,8 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     email_confirm: true,
   });
   const owner = created.data.user!.id,
-    id = randomUUID();
+    id = randomUUID(),
+    ongoingId = randomUUID();
   try {
     const cookies: { name: string; value: string }[] = [];
     const client = createServerClient(env.API_URL, env.ANON_KEY, {
@@ -73,17 +74,30 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     ).toBeNull();
     expect(
       (
-        await client.from("entries").insert({
-          id,
-          owner_id: owner,
-          title: "First trip to Japan",
-          body: "Original travel memory",
-          entry_type: "life_stage",
-          occurred_start: start,
-          occurred_end: end,
-          occurred_timezone: "UTC",
-          date_precision: "range",
-        })
+        await client.from("entries").insert([
+          {
+            id,
+            owner_id: owner,
+            title: "First trip to Japan",
+            body: "Original travel memory",
+            entry_type: "life_stage",
+            occurred_start: start,
+            occurred_end: end,
+            occurred_timezone: "UTC",
+            date_precision: "range",
+          },
+          {
+            id: ongoingId,
+            owner_id: owner,
+            title: "Current role",
+            body: "",
+            entry_type: "life_stage",
+            occurred_start: "2026-04-13T12:00:00+00:00",
+            occurred_end: null,
+            occurred_timezone: "UTC",
+            date_precision: "range",
+          },
+        ])
       ).error,
     ).toBeNull();
     const track = (
@@ -99,17 +113,45 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
         .data;
     expect(
       (
-        await client.from("timeline_items").insert({
-          entry_id: id,
-          track_id: fallbackTrack!.id,
-          owner_id: owner,
-          timeline_kind: "stage",
-        })
+        await client.from("timeline_items").insert([
+          {
+            entry_id: id,
+            track_id: fallbackTrack!.id,
+            owner_id: owner,
+            timeline_kind: "stage",
+          },
+          {
+            entry_id: ongoingId,
+            track_id: fallbackTrack!.id,
+            owner_id: owner,
+            timeline_kind: "stage",
+          },
+        ])
       ).error,
     ).toBeNull();
     await page.goto("/timeline");
     const timelineViewport = page.getByTestId("timeline-viewport");
     await expect(timelineViewport).toBeVisible();
+    const todayLine = page.getByTestId("timeline-today");
+    const ongoingStage = page.getByRole("button", { name: /Current role/ });
+    await expect(todayLine).toBeVisible();
+    await expect(ongoingStage).toHaveAttribute("data-ongoing", "true");
+    const ongoingGeometry = await ongoingStage.evaluate((element) => {
+      const card = element.getBoundingClientRect();
+      const line = document
+        .querySelector('[data-testid="timeline-today"]')!
+        .getBoundingClientRect();
+      const style = window.getComputedStyle(element);
+      return {
+        cardRight: card.right,
+        lineLeft: line.left,
+        rightBorderRadius: style.borderTopRightRadius,
+      };
+    });
+    expect(
+      Math.abs(ongoingGeometry.cardRight - ongoingGeometry.lineLeft),
+    ).toBeLessThan(1);
+    expect(ongoingGeometry.rightBorderRadius).toBe("0px");
     const edgeBounds = await timelineViewport.evaluate((element) => {
       element.scrollLeft = element.scrollWidth;
       const finalYear = element.querySelector(

@@ -63,7 +63,7 @@ Pair it with the test file carrying the same feature name.
 - Timeline date-only, partial, and uncertain editors do not surface a timezone control, but they preserve the stored timezone needed for stable calendar interpretation.
 - Timeline, search, Home, and specialized editors must use the same occurrence semantics.
 - A private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings.
-- Web Timeline lanes use each item's rendered pixel bounds, including minimum stage and event-label widths, so non-overlapping periods share a lane without allowing visible cards to collide. Short ongoing stage labels align to the shared Present endpoint, and every stage label keeps its bottom indicator inset within the rounded card.
+- Web Timeline lanes use each item's rendered pixel bounds, including minimum stage and event-label widths, so non-overlapping periods share a lane without allowing visible cards to collide. A dashed Today line uses the same reference instant as open stages; short ongoing labels end against it with a flat right edge, while every stage label keeps its bottom indicator inset within the card.
 - Web occurrence and profile date forms use `components/date-picker-field.tsx`; domain editors map their precision into its generic granularity, time, editability, and size props instead of duplicating picker UI.
 
 ## Offline rules

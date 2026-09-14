@@ -200,8 +200,10 @@ describe("createTimelineLayout", () => {
         position.stageLabelOffsetPixels +
         Math.max(position.widthPixels, 54),
     );
+    const today = (layout.todayPercent / 100) * layout.canvasWidth;
 
     expect(rightEdges[0]).toBeCloseTo(rightEdges[1]!, 5);
+    expect(rightEdges[0]).toBeCloseTo(today, 5);
   });
 
   it("calculates lanes independently for each track", () => {

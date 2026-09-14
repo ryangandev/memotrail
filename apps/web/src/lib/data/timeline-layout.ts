@@ -27,6 +27,7 @@ export type TimelineLayout = {
   laneCountByTrack: Record<string, number>;
   positions: TimelinePosition[];
   start: string;
+  todayPercent: number;
   yearMarkers: TimelineYearMarker[];
 };
 
@@ -205,6 +206,7 @@ export function createTimelineLayout(
     laneCountByTrack,
     positions,
     start: new Date(earliest).toISOString(),
+    todayPercent: clamp(((validReference - earliest) / range) * 100),
     yearMarkers,
   };
 }

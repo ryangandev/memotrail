@@ -51,6 +51,7 @@ type PositionedStyle = CSSProperties & {
 
 type GridStyle = CSSProperties & {
   "--timeline-canvas-width": string;
+  "--timeline-today-offset": string;
 };
 
 export function TimelineWorkspace({
@@ -115,6 +116,7 @@ export function TimelineWorkspace({
   );
   const gridStyle: GridStyle = {
     "--timeline-canvas-width": `${layout.canvasWidth}px`,
+    "--timeline-today-offset": `${(layout.todayPercent / 100) * layout.canvasWidth}px`,
   };
 
   return (
@@ -268,6 +270,11 @@ export function TimelineWorkspace({
                     track={track}
                   />
                 ))}
+                <div
+                  aria-hidden="true"
+                  className={styles.todayLine}
+                  data-testid="timeline-today"
+                />
               </div>
             </div>
           </section>
