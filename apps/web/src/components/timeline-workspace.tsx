@@ -18,7 +18,7 @@ import {
 } from "@/app/timeline/actions";
 import { saveBirthDate } from "@/app/settings/actions";
 import { Icon } from "@/components/icon";
-import { PrecisionDateField } from "@/components/precision-date-field";
+import { DatePickerField } from "@/components/date-picker-field";
 import type { TimelineEntry, TimelineTrack } from "@/lib/data/timeline";
 import {
   parseTimelineEntryInput,
@@ -439,15 +439,16 @@ function BirthDatePrompt({
             earliest saved moment. It stays private and can be changed in
             Settings.
           </p>
-          <PrecisionDateField
+          <DatePickerField
             disabled={busy}
+            editable={false}
+            granularity="day"
             label="Birth date"
             initialView="year"
             maxValue={maxValue}
             onChange={setBirthDate}
-            pickerOnly
-            precision="day"
             required
+            size="large"
             value={birthDate}
           />
           {message ? (

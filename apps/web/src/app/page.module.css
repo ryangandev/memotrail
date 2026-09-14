@@ -1222,7 +1222,7 @@
 }
 
 .occurrenceDateArea,
-.precisionDateField {
+.datePickerField {
   display: grid;
   align-content: start;
   gap: 7px;
@@ -1237,7 +1237,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.precisionDateField > span {
+.datePickerField > span {
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-label);
   font-weight: var(--mt-font-weight-medium);
@@ -1257,12 +1257,22 @@
     box-shadow var(--mt-motion-quick);
 }
 
+.datePickerControl[data-size="small"] {
+  height: 36px;
+  border-radius: var(--mt-radius-small);
+}
+
+.datePickerControl[data-size="large"] {
+  height: 48px;
+}
+
 .datePickerControl:focus-within {
   border-color: var(--mt-color-accent);
   box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
 }
 
-.datePickerControl input {
+.datePickerField .datePickerControl > input {
+  width: auto;
   height: 100%;
   min-width: 0;
   flex: 1;
@@ -1271,17 +1281,18 @@
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+  appearance: none;
   font-variant-numeric: tabular-nums;
 }
 
-.datePickerControl input:focus,
-.datePickerControl input:focus-visible {
+.datePickerField .datePickerControl > input:focus,
+.datePickerField .datePickerControl > input:focus-visible {
   border: 0;
   outline: 0;
   box-shadow: none;
 }
 
-.datePickerControl input[data-picker-only="true"] {
+.datePickerField .datePickerControl > input[data-picker-only="true"] {
   cursor: pointer;
 }
 
@@ -1308,6 +1319,18 @@
 .datePickerTrigger {
   width: 36px;
   margin-left: 2px;
+}
+
+.datePickerControl[data-size="small"] .datePickerClear,
+.datePickerControl[data-size="small"] .datePickerTrigger,
+.datePickerControl[data-size="small"] .timePickerTrigger {
+  height: 28px;
+}
+
+.datePickerControl[data-size="large"] .datePickerClear,
+.datePickerControl[data-size="large"] .datePickerTrigger,
+.datePickerControl[data-size="large"] .timePickerTrigger {
+  height: 36px;
 }
 
 .timePickerTrigger {
@@ -1410,7 +1433,7 @@
 
 .timePickerFields {
   display: grid;
-  grid-template-columns: 1fr auto 1fr auto 1fr;
+  grid-template-columns: 1fr auto 1fr;
   align-items: end;
   gap: 5px;
 }

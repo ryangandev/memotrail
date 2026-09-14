@@ -6,47 +6,48 @@ import { Portal } from "@ark-ui/react/portal";
 import { parseDate, type CalendarDate } from "@internationalized/date";
 import { useId, useState } from "react";
 import { Icon } from "@/components/icon";
-import type { OccurrencePrecision } from "@/lib/data/occurrence";
 import styles from "@/app/page.module.css";
 
-type CalendarPrecision = Exclude<OccurrencePrecision, "unknown">;
-
-export function PrecisionDateField({
-  disabled,
-  label,
-  hideLabel = false,
-  initialView,
-  maxValue,
-  pickerOnly = false,
-  precision,
-  required = false,
-  value,
-  onChange,
-}: {
-  disabled: boolean;
+export type DatePickerGranularity = "day" | "month" | "year";
+export type DatePickerFieldSize = "small" | "medium" | "large";
+export type DatePickerFieldProps = {
+  disabled?: boolean;
+  editable?: boolean;
+  granularity?: DatePickerGranularity;
   label: string;
   hideLabel?: boolean;
-  initialView?: "day" | "month" | "year";
+  includeTime?: boolean;
+  initialView?: DatePickerGranularity;
   maxValue?: string;
-  pickerOnly?: boolean;
-  precision: CalendarPrecision;
   required?: boolean;
+  size?: DatePickerFieldSize;
   value: string;
   onChange: (value: string) => void;
-}) {
+};
+
+export function DatePickerField({
+  disabled = false,
+  editable = true,
+  granularity = "day",
+  label,
+  hideLabel = false,
+  includeTime = false,
+  initialView,
+  maxValue,
+  required = false,
+  size = "medium",
+  value,
+  onChange,
+}: DatePickerFieldProps) {
   const pickerId = useId();
   const [pickerOpen, setPickerOpen] = useState(false);
-  const view =
-    precision === "year" ? "year" : precision === "month" ? "month" : "day";
-  const dateText = precision === "exact" ? exactDate(value) : value;
-  const timeText = precision === "exact" ? exactTime(value) : "";
-  const selected = calendarDate(dateText, precision);
+  const dateText = includeTime ? datePart(value) : value;
+  const timeText = includeTime ? timePart(value) : "";
+  const selected = calendarDate(dateText, granularity);
   const maximum = maxValue ? calendarDate(maxValue, "day") : null;
 
   function changeDate(nextDate: string) {
-    onChange(
-      precision === "exact" && timeText ? `${nextDate}T${timeText}` : nextDate,
-    );
+    onChange(includeTime && timeText ? `${nextDate}T${timeText}` : nextDate);
   }
 
   function changeTime(nextTime: string) {
@@ -60,7 +61,7 @@ export function PrecisionDateField({
   }
 
   return (
-    <div className={styles.precisionDateField}>
+    <div className={styles.datePickerField}>
       {hideLabel ? null : (
         <span>
           {label}
@@ -73,23 +74,26 @@ export function PrecisionDateField({
       )}
       <DatePicker.Root
         closeOnSelect
-        defaultView={initialView ?? view}
+        defaultView={initialView ?? granularity}
         disabled={disabled}
         id={pickerId}
         max={maximum ?? undefined}
-        maxView={view === "day" ? "year" : view}
-        minView={view}
+        maxView="year"
+        minView={granularity}
         onOpenChange={(details) => setPickerOpen(details.open)}
         onValueChange={(details) => {
           const next = details.value[0];
-          if (next) changeDate(storedDate(next, precision));
+          if (next) changeDate(storedDate(next, granularity));
         }}
         positioning={{ placement: "bottom-start", strategy: "fixed" }}
         unmountOnExit
         open={pickerOpen}
         value={selected ? [selected] : []}
       >
-        <DatePicker.Control className={styles.datePickerControl}>
+        <DatePicker.Control
+          className={styles.datePickerControl}
+          data-size={size}
+        >
           <DatePicker.Trigger
             aria-label={`Choose ${label.toLowerCase()}`}
             className={styles.datePickerTrigger}
@@ -97,19 +101,23 @@ export function PrecisionDateField({
             <Icon name="calendar" size={17} />
           </DatePicker.Trigger>
           <input
-            aria-haspopup={pickerOnly ? "dialog" : undefined}
+            aria-haspopup={!editable ? "dialog" : undefined}
             aria-label={label}
             autoComplete="off"
-            data-picker-only={pickerOnly || undefined}
+            data-picker-only={!editable || undefined}
             disabled={disabled}
             inputMode="numeric"
-            maxLength={dateLength(precision)}
             onChange={
-              pickerOnly ? undefined : (event) => changeDate(event.target.value)
+              editable
+                ? (event) =>
+                    changeDate(
+                      formatNumericDate(event.target.value, granularity),
+                    )
+                : undefined
             }
-            onClick={pickerOnly ? () => setPickerOpen(true) : undefined}
+            onClick={!editable ? () => setPickerOpen(true) : undefined}
             onKeyDown={
-              pickerOnly
+              !editable
                 ? (event) => {
                     if (
                       event.key === "Enter" ||
@@ -120,14 +128,25 @@ export function PrecisionDateField({
                       setPickerOpen(true);
                     }
                   }
-                : undefined
+                : (event) => {
+                    if (
+                      event.key.length === 1 &&
+                      !/\d/.test(event.key) &&
+                      !event.altKey &&
+                      !event.ctrlKey &&
+                      !event.metaKey
+                    ) {
+                      event.preventDefault();
+                    }
+                  }
             }
-            placeholder={datePlaceholder(precision)}
-            readOnly={pickerOnly}
+            placeholder={datePlaceholder(granularity)}
+            readOnly={!editable}
             required={required}
+            type="text"
             value={dateText}
           />
-          {precision === "exact" ? (
+          {includeTime ? (
             <TimePicker
               disabled={disabled}
               label={label}
@@ -277,13 +296,8 @@ function TimePicker({
     if (nextValue) {
       if (!next.hour) next.hour = "00";
       if (!next.minute) next.minute = "00";
-      if (!next.second) next.second = "00";
     }
-    onChange(
-      next.hour && next.minute
-        ? `${next.hour}:${next.minute}:${next.second || "00"}`
-        : "",
-    );
+    onChange(next.hour && next.minute ? `${next.hour}:${next.minute}` : "");
   }
 
   return (
@@ -314,15 +328,8 @@ function TimePicker({
               <TimeSelect
                 label="Minute"
                 onChange={(next) => change("minute", next)}
-                options={minutesAndSeconds}
+                options={minutes}
                 value={parts.minute}
-              />
-              <span aria-hidden="true">:</span>
-              <TimeSelect
-                label="Second"
-                onChange={(next) => change("second", next)}
-                options={minutesAndSeconds}
-                value={parts.second}
               />
             </div>
             <Popover.CloseTrigger
@@ -386,14 +393,14 @@ function CalendarHeader() {
 
 function calendarDate(
   value: string,
-  precision: CalendarPrecision,
+  granularity: DatePickerGranularity,
 ): CalendarDate | null {
   const normalized =
-    precision === "year"
+    granularity === "year"
       ? /^\d{4}$/.test(value)
         ? `${value}-01-01`
         : null
-      : precision === "month"
+      : granularity === "month"
         ? /^\d{4}-\d{2}$/.test(value)
           ? `${value}-01`
           : null
@@ -410,52 +417,56 @@ function calendarDate(
   }
 }
 
-function storedDate(date: DateValue, precision: CalendarPrecision) {
+function storedDate(date: DateValue, granularity: DatePickerGranularity) {
   const value = date.toString();
-  if (precision === "year") return value.slice(0, 4);
-  if (precision === "month") return value.slice(0, 7);
+  if (granularity === "year") return value.slice(0, 4);
+  if (granularity === "month") return value.slice(0, 7);
   return value.slice(0, 10);
 }
 
-function exactDate(value: string) {
+function datePart(value: string) {
   return value.includes("T") ? value.slice(0, value.indexOf("T")) : value;
 }
 
-function exactTime(value: string) {
+function timePart(value: string) {
   return value.includes("T") ? value.slice(value.indexOf("T") + 1) : "";
 }
 
 function timeParts(value: string) {
-  const [hour = "", minute = "", second = ""] = value.split(":");
+  const [hour = "", minute = ""] = value.split(":");
   return {
     hour: /^\d{2}$/.test(hour) ? hour : "",
     minute: /^\d{2}$/.test(minute) ? minute : "",
-    second: /^\d{2}$/.test(second) ? second : "",
   };
 }
 
 function timeDisplay(parts: ReturnType<typeof timeParts>) {
   if (!parts.hour || !parts.minute) return "Time";
-  return parts.second && parts.second !== "00"
-    ? `${parts.hour}:${parts.minute}:${parts.second}`
-    : `${parts.hour}:${parts.minute}`;
+  return `${parts.hour}:${parts.minute}`;
 }
 
-function dateLength(precision: CalendarPrecision) {
-  if (precision === "year") return 4;
-  if (precision === "month") return 7;
-  return 10;
-}
-
-function datePlaceholder(precision: CalendarPrecision) {
-  if (precision === "year") return "YYYY";
-  if (precision === "month") return "YYYY-MM";
+function datePlaceholder(granularity: DatePickerGranularity) {
+  if (granularity === "year") return "YYYY";
+  if (granularity === "month") return "YYYY-MM";
   return "YYYY-MM-DD";
+}
+
+export function formatNumericDate(
+  value: string,
+  granularity: DatePickerGranularity,
+) {
+  const maximumDigits =
+    granularity === "year" ? 4 : granularity === "month" ? 6 : 8;
+  const digits = value.replace(/\D/g, "").slice(0, maximumDigits);
+  if (granularity === "year" || digits.length <= 4) return digits;
+  if (granularity === "month" || digits.length <= 6)
+    return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6)}`;
 }
 
 const hours = Array.from({ length: 24 }, (_, index) =>
   String(index).padStart(2, "0"),
 );
-const minutesAndSeconds = Array.from({ length: 60 }, (_, index) =>
+const minutes = Array.from({ length: 60 }, (_, index) =>
   String(index).padStart(2, "0"),
 );

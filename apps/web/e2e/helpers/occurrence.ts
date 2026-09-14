@@ -39,16 +39,16 @@ async function fillDateField(
   if (!time) return;
 
   const label = await dateField.getAttribute("aria-label");
-  if (!label) throw new Error("Occurrence date field needs an accessible label.");
+  if (!label)
+    throw new Error("Occurrence date field needs an accessible label.");
   const title = `Choose ${label.toLowerCase()} time`;
   await scope.getByRole("button", { name: title, exact: true }).click();
   const picker = dateField.page().getByRole("dialog", {
     name: title,
     exact: true,
   });
-  const [hour, minute, second = "00"] = time.split(":");
+  const [hour, minute] = time.split(":");
   await picker.getByRole("combobox", { name: "Hour" }).selectOption(hour);
   await picker.getByRole("combobox", { name: "Minute" }).selectOption(minute);
-  await picker.getByRole("combobox", { name: "Second" }).selectOption(second);
   await picker.getByRole("button", { name: "Done", exact: true }).click();
 }

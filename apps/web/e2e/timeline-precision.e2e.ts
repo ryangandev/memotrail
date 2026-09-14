@@ -249,7 +249,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     ).toHaveValue("30");
     await expect(
       timePicker.getByRole("combobox", { name: "Second" }),
-    ).toHaveValue("00");
+    ).toHaveCount(0);
     await page.screenshot({
       path: "/private/tmp/memotrail-time-picker-desktop.png",
     });
@@ -308,6 +308,13 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     await page.getByRole("button", { name: "Add moment", exact: true }).click();
     await expect(dialog.getByText("Optional", { exact: true })).toHaveCount(0);
     await dialog.getByLabel("Date type").selectOption("exact");
+    const exactStartDate = dialog.getByRole("textbox", {
+      name: "Start date",
+      exact: true,
+    });
+    await exactStartDate.fill("20ab17/07-08");
+    await expect(exactStartDate).toHaveValue("2017-07-08");
+    await expect(exactStartDate).toHaveCSS("border-top-width", "0px");
     await expect(
       dialog.getByText("New York - America", { exact: true }),
     ).toBeVisible();

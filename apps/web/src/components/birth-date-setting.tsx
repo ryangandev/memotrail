@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { saveBirthDate } from "@/app/settings/actions";
-import { PrecisionDateField } from "@/components/precision-date-field";
+import { DatePickerField } from "@/components/date-picker-field";
 import styles from "@/app/settings/page.module.css";
 
 export function BirthDateSetting({
@@ -46,14 +46,15 @@ export function BirthDateSetting({
           its real beginning.
         </p>
       </div>
-      <PrecisionDateField
+      <DatePickerField
         disabled={busy}
+        editable={false}
+        granularity="day"
         label="Birth date"
         initialView="year"
         maxValue={maxValue}
         onChange={setBirthDate}
-        pickerOnly
-        precision="day"
+        size="medium"
         value={birthDate}
       />
       <div className={styles.birthDateControls}>

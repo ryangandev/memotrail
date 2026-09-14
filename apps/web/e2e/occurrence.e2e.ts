@@ -259,7 +259,7 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
         name: "Choose occurred time",
         exact: true,
       }),
-    ).toContainText("01:30:27");
+    ).toContainText("01:30");
     await page
       .getByRole("textbox", { name: "Note", exact: true })
       .fill("Only this note changed.");

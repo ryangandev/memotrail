@@ -83,7 +83,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
     expect((await client.from("entries").select("id")).data).toHaveLength(0);
 
     const cases = [
-      { precision: "exact", start: "2017-07-08T12:34:56", label: "", end: "" },
+      { precision: "exact", start: "2017-07-08T12:34", label: "", end: "" },
       { precision: "day", start: "2017-07-08", label: "", end: "" },
       { precision: "month", start: "2017-07", label: "", end: "" },
       { precision: "year", start: "2017", label: "", end: "" },
@@ -109,13 +109,11 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       await capture
         .getByRole("combobox", { name: "Time zone", exact: true })
         .selectOption("Asia/Kathmandu");
-      if (item.start)
-        await fillOccurrenceStart(capture, item.start);
+      if (item.start) await fillOccurrenceStart(capture, item.start);
       await capture
         .getByLabel("Date description", { exact: true })
         .fill(item.label);
-      if (item.end)
-        await fillOccurrenceEnd(capture, item.end);
+      if (item.end) await fillOccurrenceEnd(capture, item.end);
       if (item.precision === "age") {
         await page.setViewportSize({ width: 390, height: 844 });
         await page.emulateMedia({ colorScheme: "dark" });
@@ -186,7 +184,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       else {
         const expected =
           item.precision === "exact"
-            ? "2017-07-08T06:49:56"
+            ? "2017-07-08T06:49:00"
             : `${item.precision === "year" ? "2017-01-01" : item.precision === "month" ? "2017-07-01" : item.start}T06:15:00`;
         expect(saved.occurred_start).toBe(`${expected}+00:00`);
       }

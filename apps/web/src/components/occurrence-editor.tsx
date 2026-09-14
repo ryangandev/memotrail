@@ -6,7 +6,10 @@ import {
   occurrencePrecisionLabels,
   type OccurrenceDraft,
 } from "@/lib/data/occurrence";
-import { PrecisionDateField } from "@/components/precision-date-field";
+import {
+  DatePickerField,
+  type DatePickerGranularity,
+} from "@/components/date-picker-field";
 import { TimezoneSelect } from "@/components/timezone-select";
 import { timezoneLabel } from "@/lib/data/timezones";
 import styles from "@/app/page.module.css";
@@ -126,25 +129,25 @@ export function OccurrenceEditor({
           <div
             className={`${styles.reviewFieldRow} ${styles.occurrenceDateRow}`}
           >
-            <PrecisionDateField
+            <DatePickerField
               disabled={disabled}
+              granularity={dateGranularity(value.precision)}
+              includeTime={value.precision === "exact"}
               key={`start-${value.precision}`}
               label={startLabel(value.precision, bounded)}
-              precision={
-                value.precision as Exclude<typeof value.precision, "unknown">
-              }
               required={startRequired}
+              size="medium"
               value={value.start}
               onChange={(start) => change({ start })}
             />
             {bounded && endMode !== "present" ? (
-              <PrecisionDateField
+              <DatePickerField
                 disabled={disabled}
+                granularity={dateGranularity(value.precision)}
+                includeTime={value.precision === "exact"}
                 key={`end-${value.precision}`}
                 label="End date"
-                precision={
-                  value.precision as Exclude<typeof value.precision, "unknown">
-                }
+                size="medium"
                 value={value.end}
                 onChange={(end) => change({ end })}
               />
@@ -191,6 +194,14 @@ export function OccurrenceEditor({
       {precisionHelp ? <p>{precisionHelp}</p> : null}
     </fieldset>
   );
+}
+
+function dateGranularity(
+  precision: OccurrenceDraft["precision"],
+): DatePickerGranularity {
+  if (precision === "year") return "year";
+  if (precision === "month") return "month";
+  return "day";
 }
 
 function startLabel(precision: OccurrenceDraft["precision"], bounded: boolean) {
