@@ -39,10 +39,6 @@
   background: var(--mt-color-surface-subtle);
 }
 
-.placeVisual > img {
-  object-fit: cover;
-}
-
 .mapMark {
   position: relative;
   display: grid;

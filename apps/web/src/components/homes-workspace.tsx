@@ -19,6 +19,7 @@ import styles from "@/app/homes/page.module.css";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
+import { ProgressiveImage } from "@/components/progressive-image";
 import {
   firstTimePhotoLimit,
   firstTimePhotoSizeLimit,
@@ -216,8 +217,7 @@ function HomeCard({
     >
       <div className={styles.homeVisual}>
         {cover?.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img alt="" src={cover.imageUrl} />
+          <ProgressiveImage alt="" src={cover.imageUrl} />
         ) : (
           <div className={styles.homeMark}>
             <Icon name="home" size={24} />
@@ -787,8 +787,7 @@ export function HomeEditor({
                   {existingPhotos.map((photo) => (
                     <div className={styles.photoTile} key={photo.id}>
                       {photo.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <ProgressiveImage
                           alt={photo.originalFilename ?? "Home photo"}
                           src={photo.imageUrl}
                         />
@@ -902,9 +901,8 @@ function PendingPhoto({
 
   return (
     <div className={`${styles.photoTile} ${styles.pendingPhoto}`}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img alt={`Selected ${file.name}`} src={previewUrl} />
-      <span>New</span>
+      <ProgressiveImage alt={`Selected ${file.name}`} src={previewUrl} />
+      <span className={styles.pendingBadge}>New</span>
       <button
         aria-label={`Remove selected ${file.name}`}
         onClick={onRemove}

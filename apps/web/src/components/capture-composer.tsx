@@ -16,6 +16,7 @@ import {
   type SyncInboxEntryResult,
 } from "@/app/inbox/actions";
 import { Icon } from "@/components/icon";
+import { ProgressiveImage } from "@/components/progressive-image";
 import {
   clearInboxDraft,
   loadInboxDraft,
@@ -843,8 +844,7 @@ function CapturePhoto({
 
   return (
     <div className={styles.capturePhoto}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img alt={`Selected ${photo.file.name}`} src={previewUrl} />
+      <ProgressiveImage alt={`Selected ${photo.file.name}`} src={previewUrl} />
       <button
         aria-label={`Remove selected ${photo.file.name}`}
         onClick={onRemove}

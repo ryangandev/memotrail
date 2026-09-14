@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CaptureComposer } from "@/components/capture-composer";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
+import { ProgressiveImage } from "@/components/progressive-image";
 import { greetingInTimezone } from "@/lib/data/home-input";
 import {
   getHomeWorkspace,
@@ -144,9 +145,9 @@ function ResurfacedMemory({ memory }: { memory: HomeResurfacedMemory | null }) {
         className={`${styles.memoryCard} ${cover?.imageUrl ? "" : styles.memoryCardTextOnly}`}
       >
         {cover?.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <ProgressiveImage
             alt={cover.originalFilename ?? "Memory photo"}
+            className={styles.memoryImage}
             src={cover.imageUrl}
           />
         ) : null}
@@ -280,9 +281,9 @@ function RecentEntryCard({ entry }: { entry: HomeEntry }) {
       className={`${styles.recentCard} ${cover?.imageUrl ? "" : styles.recentCardTextOnly}`}
     >
       {cover?.imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <ProgressiveImage
           alt={cover.originalFilename ?? "Entry photo"}
+          className={styles.recentImage}
           src={cover.imageUrl}
         />
       ) : null}

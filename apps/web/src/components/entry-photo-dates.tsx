@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { ProgressiveImage } from "@/components/progressive-image";
 import type { PhotoPlaceDraft } from "@/lib/media/photo-place";
 import { PhotoPlaceEditor } from "./photo-place-draft";
 import type {
@@ -80,9 +81,11 @@ export function EntryPhotoDates({
         return (
           <article className={styles.photo} key={photo.id}>
             {photo.imageUrl ? (
-              // Private optimized images must bypass the public Next image cache.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={photo.imageUrl} alt={photo.name} loading="lazy" />
+              <ProgressiveImage
+                alt={photo.name}
+                loading="lazy"
+                src={photo.imageUrl}
+              />
             ) : null}
             <div>
               <strong>{photo.name}</strong>

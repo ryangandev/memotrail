@@ -1,0 +1,86 @@
+.frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--mt-color-surface-subtle);
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+}
+
+.cover {
+  object-fit: cover;
+}
+
+.contain {
+  object-fit: contain;
+}
+
+.frame[data-image-status="loaded"] .image {
+  opacity: 1;
+}
+
+.skeleton {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background:
+    linear-gradient(
+      105deg,
+      transparent 35%,
+      color-mix(in srgb, var(--mt-color-surface-raised) 72%, transparent) 50%,
+      transparent 65%
+    ),
+    var(--mt-color-surface-subtle);
+  background-size: 220% 100%;
+  animation: image-loading-shimmer 1.25s ease-in-out infinite;
+  transition: opacity 180ms ease-out;
+}
+
+.frame[data-image-status="loaded"] .skeleton,
+.frame[data-image-status="failed"] .skeleton {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--mt-space-3);
+  color: var(--mt-color-ink-muted);
+  background: var(--mt-color-surface-subtle);
+  font-size: var(--mt-font-size-caption);
+  text-align: center;
+}
+
+@keyframes image-loading-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image,
+  .skeleton {
+    transition: none;
+  }
+
+  .skeleton {
+    animation: none;
+  }
+}

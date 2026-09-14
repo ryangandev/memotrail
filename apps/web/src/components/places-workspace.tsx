@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -12,6 +11,7 @@ import common from "@/app/homes/page.module.css";
 import styles from "@/app/places/page.module.css";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
+import { ProgressiveImage } from "@/components/progressive-image";
 import {
   placeCoordinateLabel,
   placeCover,
@@ -195,12 +195,10 @@ function PlaceCard({
     >
       <div className={styles.placeVisual}>
         {cover?.imageUrl ? (
-          <Image
+          <ProgressiveImage
             alt=""
-            fill
             sizes="(max-width: 780px) 132px, 360px"
             src={cover.imageUrl}
-            unoptimized
           />
         ) : (
           <div className={styles.mapMark}>

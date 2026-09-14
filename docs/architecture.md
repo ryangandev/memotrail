@@ -120,6 +120,7 @@ Pair it with the test file carrying the same feature name.
 - Authenticated Web routes use `components/page-frame.tsx` for outer width, centering, responsive gutters, and vertical page rhythm.
 - Page frame variants are semantic: `compact` is 880px for forms and focused reading, `standard` is 960px for lists and search, `wide` is 1080px for dashboards and card grids, and `canvas` is 1180px for dense spatial views.
 - New route pages choose the narrowest variant that fits their content and keep internal grid, dialog, and visualization breakpoints in page-specific CSS instead of redefining the outer page geometry.
+- Web photo surfaces reuse `components/progressive-image.tsx` for a reserved skeleton, decode fade-in, failure fallback, and reduced-motion behavior while private expiring media URLs continue to bypass the public Next image cache.
 
 ## Runtime and validation
 
