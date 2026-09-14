@@ -442,8 +442,10 @@ function BirthDatePrompt({
           <PrecisionDateField
             disabled={busy}
             label="Birth date"
+            initialView="year"
             maxValue={maxValue}
             onChange={setBirthDate}
+            pickerOnly
             precision="day"
             required
             value={birthDate}

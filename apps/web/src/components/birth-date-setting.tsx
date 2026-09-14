@@ -49,8 +49,10 @@ export function BirthDateSetting({
       <PrecisionDateField
         disabled={busy}
         label="Birth date"
+        initialView="year"
         maxValue={maxValue}
         onChange={setBirthDate}
+        pickerOnly
         precision="day"
         value={birthDate}
       />

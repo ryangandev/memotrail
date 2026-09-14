@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
@@ -62,9 +62,9 @@ test("Timeline asks for a private birth date and starts the story there", async 
     });
     await expect(prompt).toBeVisible();
     await expect(prompt).toHaveAttribute("data-hydrated", "true");
-    await expect(prompt.getByLabel("Birth date", { exact: true })).toHaveValue(
-      "",
-    );
+    const birthDateInput = prompt.getByLabel("Birth date", { exact: true });
+    await expect(birthDateInput).toHaveValue("");
+    await expect(birthDateInput).toHaveAttribute("readonly", "");
     await page.screenshot({
       path: "/private/tmp/memotrail-timeline-birth-prompt.png",
     });
@@ -80,7 +80,7 @@ test("Timeline asks for a private birth date and starts the story there", async 
     });
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.emulateMedia({ colorScheme: "light" });
-    await prompt.getByLabel("Birth date", { exact: true }).fill("1994-04-18");
+    await chooseBirthDate(page, birthDateInput, "1994-04-18");
     await prompt
       .getByRole("button", { name: "Start my Timeline", exact: true })
       .click();
@@ -110,7 +110,8 @@ test("Timeline asks for a private birth date and starts the story there", async 
       exact: true,
     });
     await expect(setting).toHaveValue("1994-04-18");
-    await setting.fill("1995-05-19");
+    await expect(setting).toHaveAttribute("readonly", "");
+    await chooseBirthDate(page, setting, "1995-05-19");
     await page
       .getByRole("button", { name: "Save birth date", exact: true })
       .click();
@@ -126,3 +127,55 @@ test("Timeline asks for a private birth date and starts the story there", async 
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }
 });
+
+async function chooseBirthDate(page: Page, input: Locator, value: string) {
+  const [yearText, monthText, dayText] = value.split("-");
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const monthName = new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, 1)));
+
+  await input.click();
+  const yearView = page.getByRole("button", {
+    name: "year view",
+    exact: true,
+  });
+  await expect(yearView).toBeVisible();
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const range = (await yearView.textContent())?.match(
+      /(\d{4})\s*-\s*(\d{4})/,
+    );
+    if (!range) throw new Error("Date picker did not show a year range.");
+
+    const rangeStart = Number(range[1]);
+    const rangeEnd = Number(range[2]);
+    if (year < rangeStart) {
+      await page
+        .getByRole("button", { name: "Previous period", exact: true })
+        .click();
+      continue;
+    }
+    if (year > rangeEnd) {
+      await page
+        .getByRole("button", { name: "Next period", exact: true })
+        .click();
+      continue;
+    }
+    break;
+  }
+
+  await page.getByRole("button", { name: yearText, exact: true }).click();
+  await page
+    .getByRole("button", { name: `${monthName} ${year}`, exact: true })
+    .click();
+  await page
+    .getByRole("gridcell", {
+      name: new RegExp(`${monthName} ${day}, ${year}`),
+    })
+    .click();
+  await expect(input).toHaveValue(value);
+}

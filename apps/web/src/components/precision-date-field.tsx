@@ -1,13 +1,10 @@
 "use client";
 
-import {
-  DatePicker,
-  type DateValue,
-} from "@ark-ui/react/date-picker";
+import { DatePicker, type DateValue } from "@ark-ui/react/date-picker";
 import { Popover } from "@ark-ui/react/popover";
 import { Portal } from "@ark-ui/react/portal";
 import { parseDate, type CalendarDate } from "@internationalized/date";
-import { useId } from "react";
+import { useId, useState } from "react";
 import { Icon } from "@/components/icon";
 import type { OccurrencePrecision } from "@/lib/data/occurrence";
 import styles from "@/app/page.module.css";
@@ -18,7 +15,9 @@ export function PrecisionDateField({
   disabled,
   label,
   hideLabel = false,
+  initialView,
   maxValue,
+  pickerOnly = false,
   precision,
   required = false,
   value,
@@ -27,14 +26,18 @@ export function PrecisionDateField({
   disabled: boolean;
   label: string;
   hideLabel?: boolean;
+  initialView?: "day" | "month" | "year";
   maxValue?: string;
+  pickerOnly?: boolean;
   precision: CalendarPrecision;
   required?: boolean;
   value: string;
   onChange: (value: string) => void;
 }) {
   const pickerId = useId();
-  const view = precision === "year" ? "year" : precision === "month" ? "month" : "day";
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const view =
+    precision === "year" ? "year" : precision === "month" ? "month" : "day";
   const dateText = precision === "exact" ? exactDate(value) : value;
   const timeText = precision === "exact" ? exactTime(value) : "";
   const selected = calendarDate(dateText, precision);
@@ -42,9 +45,7 @@ export function PrecisionDateField({
 
   function changeDate(nextDate: string) {
     onChange(
-      precision === "exact" && timeText
-        ? `${nextDate}T${timeText}`
-        : nextDate,
+      precision === "exact" && timeText ? `${nextDate}T${timeText}` : nextDate,
     );
   }
 
@@ -72,18 +73,20 @@ export function PrecisionDateField({
       )}
       <DatePicker.Root
         closeOnSelect
-        defaultView={view}
+        defaultView={initialView ?? view}
         disabled={disabled}
         id={pickerId}
         max={maximum ?? undefined}
         maxView={view === "day" ? "year" : view}
         minView={view}
+        onOpenChange={(details) => setPickerOpen(details.open)}
         onValueChange={(details) => {
           const next = details.value[0];
           if (next) changeDate(storedDate(next, precision));
         }}
         positioning={{ placement: "bottom-start", strategy: "fixed" }}
         unmountOnExit
+        open={pickerOpen}
         value={selected ? [selected] : []}
       >
         <DatePicker.Control className={styles.datePickerControl}>
@@ -94,13 +97,33 @@ export function PrecisionDateField({
             <Icon name="calendar" size={17} />
           </DatePicker.Trigger>
           <input
+            aria-haspopup={pickerOnly ? "dialog" : undefined}
             aria-label={label}
             autoComplete="off"
+            data-picker-only={pickerOnly || undefined}
             disabled={disabled}
             inputMode="numeric"
             maxLength={dateLength(precision)}
-            onChange={(event) => changeDate(event.target.value)}
+            onChange={
+              pickerOnly ? undefined : (event) => changeDate(event.target.value)
+            }
+            onClick={pickerOnly ? () => setPickerOpen(true) : undefined}
+            onKeyDown={
+              pickerOnly
+                ? (event) => {
+                    if (
+                      event.key === "Enter" ||
+                      event.key === " " ||
+                      event.key === "ArrowDown"
+                    ) {
+                      event.preventDefault();
+                      setPickerOpen(true);
+                    }
+                  }
+                : undefined
+            }
             placeholder={datePlaceholder(precision)}
+            readOnly={pickerOnly}
             required={required}
             value={dateText}
           />
@@ -348,11 +371,15 @@ function TimeSelect({
 function CalendarHeader() {
   return (
     <DatePicker.ViewControl className={styles.calendarHeader}>
-      <DatePicker.PrevTrigger aria-label="Previous period">‹</DatePicker.PrevTrigger>
+      <DatePicker.PrevTrigger aria-label="Previous period">
+        ‹
+      </DatePicker.PrevTrigger>
       <DatePicker.ViewTrigger>
         <DatePicker.RangeText />
       </DatePicker.ViewTrigger>
-      <DatePicker.NextTrigger aria-label="Next period">›</DatePicker.NextTrigger>
+      <DatePicker.NextTrigger aria-label="Next period">
+        ›
+      </DatePicker.NextTrigger>
     </DatePicker.ViewControl>
   );
 }

@@ -1281,6 +1281,10 @@
   box-shadow: none;
 }
 
+.datePickerControl input[data-picker-only="true"] {
+  cursor: pointer;
+}
+
 .datePickerClear,
 .datePickerTrigger,
 .timePickerTrigger {
