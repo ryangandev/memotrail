@@ -1,9 +1,5 @@
 import Link from "next/link";
-import { AuthGate } from "@/components/auth-gate";
 import { Icon } from "@/components/icon";
-import { WorkspaceShell } from "@/components/workspace-shell";
-import { getAuthenticatedContext } from "@/lib/data/inbox";
-import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -15,13 +11,6 @@ const availableDestinations = [
     href: "/settings/export",
     icon: "archive" as const,
     title: "Export archive",
-  },
-  {
-    detail:
-      "Create and rename Collections and tags, or recover removed groupings.",
-    href: "/settings/organization",
-    icon: "archive" as const,
-    title: "Organization",
   },
   {
     detail: "Inspect earlier writing and safely restore versions.",
@@ -46,6 +35,12 @@ const availableDestinations = [
     href: "/collections",
     icon: "archive" as const,
     title: "Collections",
+  },
+  {
+    detail: "Filter every kind of Entry with lightweight shared descriptors.",
+    href: "/tags",
+    icon: "tag" as const,
+    title: "Tags",
   },
   {
     detail: "Revisit the experiences you tried, saw, or learned first.",
@@ -88,31 +83,9 @@ const availableDestinations = [
 
 const plannedDestinations: string[] = [];
 
-export default async function LibraryPage() {
-  if (!getSupabasePublicConfig()) {
-    return <AuthGate configured={false} />;
-  }
-
-  const context = await getAuthenticatedContext();
-
-  if (!context) {
-    return <AuthGate configured />;
-  }
-
-  const inbox = await context.client
-    .from("entries")
-    .select("id", { count: "exact", head: true })
-    .eq("owner_id", context.userId)
-    .eq("inbox_status", "unreviewed")
-    .is("deleted_at", null);
-
+export default function LibraryPage() {
   return (
-    <WorkspaceShell
-      activeDestination="library"
-      inboxCount={inbox.error ? undefined : (inbox.count ?? 0)}
-      viewer={context.viewer}
-    >
-      <div className={styles.content}>
+    <div className={styles.content}>
         <header className={styles.header}>
           <p>Your personal archive</p>
           <h1>Library</h1>
@@ -158,7 +131,6 @@ export default async function LibraryPage() {
             </div>
           </section>
         ) : null}
-      </div>
-    </WorkspaceShell>
+    </div>
   );
 }

@@ -1,13 +1,33 @@
 import "server-only";
 
+import { displayImageURLs } from "@/lib/media/urls";
 import { getAuthenticatedContext, type Viewer } from "@/lib/data/inbox";
+import {
+  parseHomePlaceOptions,
+  parseHomeRows,
+  type HomePlaceOption,
+  type HomeRecord,
+} from "@/lib/data/home-record";
+import {
+  parseVehicleRows,
+  type VehicleRecord,
+} from "@/lib/data/vehicle-record";
+import {
+  parseFirstTimeRows,
+  type FirstTimeEntry,
+} from "@/lib/data/first-times";
 import type {
   TimelineDatePrecision,
   TimelineKind,
 } from "@/lib/data/timeline-input";
+import {
+  storedBirthDate,
+  storedProfileTimezone,
+} from "@/lib/data/profile-input";
 
 export type TimelineEntry = {
   body: string;
+  collectionNames: string[];
   datePrecision: TimelineDatePrecision;
   entryType: string;
   id: string;
@@ -17,6 +37,7 @@ export type TimelineEntry = {
   occurredStart: string | null;
   occurredTimezone: string;
   revision: number;
+  tagNames: string[];
   title: string;
   trackId: string;
   updatedAt: string;
@@ -32,14 +53,26 @@ export type TimelineTrack = {
 };
 
 export type TimelineWorkspace = {
+  birthDate: string | null;
+  birthDateAvailable: boolean;
+  collectionOptions: string[];
+  defaultTimezone: string;
+  firstTimes: FirstTimeEntry[];
+  homes: HomeRecord[];
   inboxCount: number | undefined;
   loadError: string | null;
+  placeOptions: HomePlaceOption[];
+  tagOptions: string[];
   tracks: TimelineTrack[];
+  vehicles: VehicleRecord[];
   viewer: Viewer;
 };
 
+type NameRow = { name: string };
+
 type TimelineRow = {
   body: string | null;
+  collection_names: string[];
   date_precision: TimelineDatePrecision | null;
   entry_id: string | null;
   entry_type: string | null;
@@ -49,6 +82,7 @@ type TimelineRow = {
   occurred_start: string | null;
   occurred_timezone: string | null;
   revision: number | null;
+  tag_names: string[];
   timeline_kind: TimelineKind | null;
   title: string | null;
   track_id: string;
@@ -66,24 +100,130 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
     return null;
   }
 
-  const [timeline, inbox] = await Promise.all([
-    context.client.rpc("timeline_workspace", { p_include_hidden: false }),
+  const [
+    timeline,
+    inbox,
+    profile,
+    homes,
+    vehicles,
+    firstTimes,
+    places,
+    collections,
+    tags,
+  ] = await Promise.all([
+    context.client.rpc("timeline_workspace_with_organization", {
+      p_include_hidden: false,
+    }),
     context.client
       .from("entries")
       .select("id", { count: "exact", head: true })
       .eq("owner_id", context.userId)
       .eq("inbox_status", "unreviewed")
       .is("deleted_at", null),
+    context.client
+      .from("profiles")
+      .select("*")
+      .eq("user_id", context.userId)
+      .single(),
+    context.client.rpc("homes_workspace", { p_limit: 100, p_offset: 0 }),
+    context.client.rpc("vehicles_workspace", { p_limit: 100, p_offset: 0 }),
+    context.client.rpc("first_times_workspace_with_occurrence"),
+    context.client
+      .from("places")
+      .select("id,name,address,city,region,country,latitude,longitude,notes")
+      .eq("owner_id", context.userId)
+      .is("deleted_at", null)
+      .order("name"),
+    context.client
+      .from("collections")
+      .select("name")
+      .eq("owner_id", context.userId)
+      .is("archived_at", null)
+      .order("name")
+      .returns<NameRow[]>(),
+    context.client
+      .from("tags")
+      .select("name")
+      .eq("owner_id", context.userId)
+      .order("name")
+      .returns<NameRow[]>(),
   ]);
   const rows = timeline.error ? null : timelineRows(timeline.data);
+  const timelineEntryIds = new Set(
+    (rows ?? []).flatMap((row) => (row.entry_id ? [row.entry_id] : [])),
+  );
+  const homeRows = (
+    homes.error ? [] : (parseHomeRows(homes.data) ?? [])
+  ).filter((home) => timelineEntryIds.has(home.id));
+  const vehicleRows = (
+    vehicles.error ? [] : (parseVehicleRows(vehicles.data) ?? [])
+  ).filter((vehicle) => timelineEntryIds.has(vehicle.id));
+  const firstTimeRows = (
+    firstTimes.error ? [] : (parseFirstTimeRows(firstTimes.data) ?? [])
+  ).filter((entry) => timelineEntryIds.has(entry.entry_id));
+  const imageUrls = await displayImageURLs(
+    context.client,
+    [
+      ...homeRows.flatMap((home) => home.attachments),
+      ...vehicleRows.flatMap((vehicle) => vehicle.attachments),
+      ...firstTimeRows.flatMap((entry) => entry.attachments),
+    ].map((attachment) => attachment.objectPath),
+  );
+  const profileBirthDate = storedBirthDate(profile.error ? null : profile.data);
+  const profileTimezone = storedProfileTimezone(
+    profile.error ? null : profile.data,
+  );
 
   return {
+    birthDate: profileBirthDate.birthDate,
+    birthDateAvailable: profileBirthDate.available,
+    collectionOptions: collections.error
+      ? []
+      : (collections.data ?? []).map((item) => item.name),
+    defaultTimezone: profileTimezone.timezone,
+    firstTimes: firstTimeRows.map((entry) => ({
+      attachments: entry.attachments.map((attachment) => ({
+        ...attachment,
+        imageUrl: imageUrls.get(attachment.objectPath) ?? null,
+      })),
+      body: entry.body,
+      collectionNames: entry.collection_names,
+      datePrecision: entry.date_precision,
+      id: entry.entry_id,
+      inboxStatus: entry.inbox_status,
+      occurredEnd: entry.occurred_end,
+      occurredLabel: entry.occurred_label,
+      occurredStart: entry.occurred_start,
+      occurredTimezone: entry.occurred_timezone,
+      revision: entry.revision,
+      tagNames: entry.tag_names,
+      title: entry.title,
+      updatedAt: entry.updated_at,
+    })),
+    homes: homeRows.map((home) => ({
+      ...home,
+      attachments: home.attachments.map((attachment) => ({
+        ...attachment,
+        imageUrl: imageUrls.get(attachment.objectPath) ?? null,
+      })),
+    })),
     inboxCount: inbox.error ? undefined : (inbox.count ?? 0),
     loadError:
       timeline.error || !rows
         ? "MemoTrail could not load your Timeline. Refresh to try again."
         : null,
+    placeOptions: places.error
+      ? []
+      : (parseHomePlaceOptions(places.data) ?? []),
+    tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
     tracks: rows ? tracksFromRows(rows) : [],
+    vehicles: vehicleRows.map((vehicle) => ({
+      ...vehicle,
+      attachments: vehicle.attachments.map((attachment) => ({
+        ...attachment,
+        imageUrl: imageUrls.get(attachment.objectPath) ?? null,
+      })),
+    })),
     viewer: context.viewer,
   };
 }
@@ -109,6 +249,7 @@ function tracksFromRows(rows: TimelineRow[]) {
     if (row.entry_id) {
       track.items.push({
         body: row.body ?? "",
+        collectionNames: row.collection_names,
         datePrecision: row.date_precision ?? "unknown",
         entryType: row.entry_type ?? "standard",
         id: row.entry_id,
@@ -118,6 +259,7 @@ function tracksFromRows(rows: TimelineRow[]) {
         occurredStart: row.occurred_start,
         occurredTimezone: row.occurred_timezone ?? "UTC",
         revision: row.revision ?? 1,
+        tagNames: row.tag_names,
         title: row.title ?? "Untitled moment",
         trackId: row.track_id,
         updatedAt: row.updated_at ?? "",
@@ -176,6 +318,8 @@ function isTimelineRow(value: unknown): value is TimelineRow {
     nullableString(value.occurred_end) &&
     nullableString(value.occurred_label) &&
     nullableString(value.occurred_timezone) &&
+    stringArray(value.collection_names) &&
+    stringArray(value.tag_names) &&
     typeof value.revision === "number" &&
     typeof value.updated_at === "string" &&
     typeof value.date_precision === "string"
@@ -188,4 +332,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function nullableString(value: unknown) {
   return value === null || typeof value === "string";
+}
+
+function stringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
 }

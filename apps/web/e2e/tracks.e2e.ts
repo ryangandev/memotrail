@@ -63,6 +63,14 @@ test("Timeline tracks create, rename, reorder, hide and reveal moments with revi
     );
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
+    expect(
+      (
+        await client
+          .from("profiles")
+          .update({ birth_date: "1990-01-01" })
+          .eq("user_id", owner)
+      ).error,
+    ).toBeNull();
     await page.goto("/timeline");
     await page.getByRole("link", { name: "Manage tracks" }).click();
     await page.getByRole("button", { name: "Add track", exact: true }).click();

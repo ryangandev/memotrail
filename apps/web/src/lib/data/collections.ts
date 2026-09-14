@@ -3,6 +3,11 @@ import { displayImageURLs } from "@/lib/media/urls";
 
 import { getAuthenticatedContext, type Viewer } from "./inbox";
 import { COLLECTION_PAGE_SIZE } from "./collections-input";
+import {
+  parseOrganizationItems,
+  type OrganizationItem,
+} from "./organization";
+import { normalizeCounts } from "./organization-workspace";
 
 export type CollectionSummary = {
   color: string | null;
@@ -57,6 +62,7 @@ export type CollectionsWorkspace = {
   entries: CollectionEntry[];
   inboxCount: number | undefined;
   loadError: string | null;
+  organizationItems: OrganizationItem[];
   page: number;
   selectedCollection: CollectionSummary | null;
   totalCount: number;
@@ -118,7 +124,8 @@ export async function getCollectionsWorkspace({
         p_offset: (page - 1) * COLLECTION_PAGE_SIZE,
       })
     : Promise.resolve({ data: [] as CollectionEntryRow[], error: null });
-  const [summaryResult, detailResult, inboxResult] = await Promise.all([
+  const [summaryResult, detailResult, inboxResult, organizationResult] =
+    await Promise.all([
     context.client.rpc("collections_workspace"),
     detailRequest,
     context.client
@@ -127,6 +134,12 @@ export async function getCollectionsWorkspace({
       .eq("owner_id", context.userId)
       .eq("inbox_status", "unreviewed")
       .is("deleted_at", null),
+    context.client.rpc("organization_workspace", {
+      p_kind: "collection",
+      p_limit: 100,
+      p_offset: 0,
+      p_query: "",
+    }),
   ]);
   const summaryRows = summaryResult.error
     ? null
@@ -153,6 +166,9 @@ export async function getCollectionsWorkspace({
       summaryRows && !summaryResult.error
         ? null
         : "MemoTrail could not load your Collections. Refresh to try again.",
+    organizationItems: (
+      parseOrganizationItems(organizationResult.data) ?? []
+    ).map(normalizeCounts),
     page,
     selectedCollection:
       collections.find((collection) => collection.id === collectionId) ?? null,

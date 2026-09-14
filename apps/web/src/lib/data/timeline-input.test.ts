@@ -13,6 +13,7 @@ function input(
 ): TimelineEntryInput {
   return {
     body: "  A formative stretch.  ",
+    collectionNames: ["  College years  ", "college YEARS", ""],
     datePrecision: "range",
     id: null,
     kind: "stage",
@@ -21,6 +22,7 @@ function input(
     occurredStart: "2021-08-01T12:00:00.000Z",
     occurredTimezone: "America/Los_Angeles",
     revision: null,
+    tagNames: ["  formative  ", "Formative"],
     title: "  College years  ",
     trackId,
     ...overrides,
@@ -77,11 +79,24 @@ describe("parseTimelineEntryInput", () => {
     expect(parsed).toMatchObject({
       data: {
         body: "A formative stretch.",
+        collectionNames: ["College years"],
         occurredLabel: "Ages 18 to 22",
+        tagNames: ["formative"],
         title: "College years",
       },
       success: true,
     });
+  });
+
+  it("rejects organization limits", () => {
+    expect(
+      parseTimelineEntryInput(
+        input({ collectionNames: ["x".repeat(81)] }),
+      ),
+    ).toMatchObject({ success: false });
+    expect(
+      parseTimelineEntryInput(input({ tagNames: ["x".repeat(61)] })),
+    ).toMatchObject({ success: false });
   });
 
   it("accepts an event without an end date", () => {

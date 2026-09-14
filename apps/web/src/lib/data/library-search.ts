@@ -4,7 +4,7 @@ import { searchPageHref, type SearchRequest } from "./search-input";
 export const librarySearchPageSize = 20;
 export type LibrarySearchItem = {
   id: string;
-  kind: "person" | "place" | "habit";
+  kind: "person" | "place";
   name: string;
   excerpt: string;
   match_reasons: string[];
@@ -39,11 +39,9 @@ export function librarySearchHref(request: SearchRequest, page: number) {
   return url.pathname + url.search;
 }
 export function libraryItemHref(item: Pick<LibrarySearchItem, "id" | "kind">) {
-  return item.kind === "habit"
-    ? `/habits?habit=${item.id}`
-    : item.kind === "place"
-      ? `/places?place=${item.id}`
-      : `/people?person=${item.id}`;
+  return item.kind === "place"
+    ? `/places?place=${item.id}`
+    : `/people?person=${item.id}`;
 }
 export function parseLibrarySearch(value: unknown): LibrarySearchResult | null {
   if (!value || typeof value !== "object") return null;
@@ -60,7 +58,7 @@ export function parseLibrarySearch(value: unknown): LibrarySearchResult | null {
       (item) =>
         item &&
         isFirstTimeUuid(item.id) &&
-        ["person", "place", "habit"].includes(item.kind) &&
+        ["person", "place"].includes(item.kind) &&
         typeof item.name === "string" &&
         typeof item.excerpt === "string" &&
         Array.isArray(item.match_reasons) &&

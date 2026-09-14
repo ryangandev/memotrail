@@ -1,0 +1,85 @@
+.editor {
+  display: grid;
+  min-width: 0;
+  grid-column: 1 / -1;
+  gap: var(--mt-space-2);
+  padding: 0;
+  border: 0;
+}
+
+.editor legend {
+  padding: 0;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+}
+
+.guidance {
+  margin: -2px 0 var(--mt-space-1);
+  color: var(--mt-color-ink-faint);
+  font-size: var(--mt-font-size-caption);
+  line-height: var(--mt-line-height-body);
+}
+
+.editor > input {
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  padding: 0 var(--mt-space-3);
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-small);
+  outline: 0;
+  color: var(--mt-color-ink);
+  background: var(--mt-color-canvas);
+  font: inherit;
+}
+
+.editor > input:focus {
+  border-color: var(--mt-color-accent);
+  box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
+}
+
+.editor > small {
+  justify-self: end;
+  color: var(--mt-color-ink-faint);
+  font-size: 10px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chips button {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-pill);
+  color: var(--mt-color-ink-muted);
+  background: var(--mt-color-surface-subtle);
+  font-size: var(--mt-font-size-caption);
+  cursor: pointer;
+}
+
+.chips button:hover {
+  color: var(--mt-color-accent);
+  border-color: var(--mt-color-border-strong);
+}
+
+.chips span {
+  color: var(--mt-color-ink-faint);
+  font-size: 15px;
+}
+
+.editor:disabled {
+  opacity: 0.62;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .editor > input {
+    scroll-behavior: auto;
+  }
+}

@@ -4,7 +4,7 @@ import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 
-test("Global keyword search finds standalone People, Places, and Habits without AI", async ({
+test("Global keyword search finds standalone People and Places without deferred Habits", async ({
   page,
   context,
 }) => {
@@ -91,7 +91,7 @@ test("Global keyword search finds standalone People, Places, and Habits without 
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Learning 学习 daily", exact: true }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await page.screenshot({
       path: "/private/tmp/memotrail-library-keyword-desktop.png",
       fullPage: true,
@@ -120,7 +120,7 @@ test("Global keyword search finds standalone People, Places, and Habits without 
       .click();
     await page.goto("/search?q=" + encodeURIComponent("Paged Person"));
     const library = page.getByRole("region", {
-      name: "People, Places and Habits",
+      name: "People and Places",
       exact: true,
     });
     await expect(library).toContainText("105 matches");
@@ -137,7 +137,7 @@ test("Global keyword search finds standalone People, Places, and Habits without 
     );
     await expect(
       page.getByText(
-        "Clear Entry filters to also search People, Places and Habits.",
+        "Clear Entry filters to also search People and Places.",
       ),
     ).toBeVisible();
     await expect(library).toHaveCount(0);
@@ -148,14 +148,6 @@ test("Global keyword search finds standalone People, Places, and Habits without 
     await expect(page).toHaveURL(new RegExp(`/places\\?place=${place}$`));
     await expect(
       page.getByRole("button", { name: /Learning 学习 library/ }),
-    ).toBeVisible();
-    await page.goto("/search?q=" + encodeURIComponent("学习"));
-    await page
-      .getByRole("link", { name: "Learning 学习 daily", exact: true })
-      .click();
-    await expect(page).toHaveURL(new RegExp(`/habits\\?habit=${habit}$`));
-    await expect(
-      page.getByText("Learning 学习 daily", { exact: true }).first(),
     ).toBeVisible();
     await page.goto("/search?q=" + encodeURIComponent("学习"));
     await page.setViewportSize({ width: 390, height: 844 });
@@ -187,6 +179,17 @@ test("Global keyword search finds standalone People, Places, and Habits without 
     expect(
       response.data.items.map((item: { kind: string }) => item.kind).sort(),
     ).toEqual(["habit", "person", "place"]);
+    const webScope = await native.rpc("search_library_entities", {
+      p_query: "学习",
+      p_limit: 20,
+      p_offset: 0,
+      p_kinds: ["person", "place"],
+    });
+    expect(webScope.error).toBeNull();
+    expect(webScope.data.total_count).toBe(2);
+    expect(
+      webScope.data.items.map((item: { kind: string }) => item.kind).sort(),
+    ).toEqual(["person", "place"]);
     expect(
       (
         await client

@@ -3,6 +3,11 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
+import {
+  fillOccurrenceEnd,
+  fillOccurrenceStart,
+  occurrenceStartField,
+} from "./helpers/occurrence";
 
 test("Quick capture retains uncertain dates in drafts and offline replay", async ({
   page,
@@ -61,18 +66,16 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       exact: true,
     });
     await capture.getByRole("button", { name: "Date", exact: true }).click();
-    await expect(capture.getByLabel("Date precision")).toBeVisible({
+    await expect(capture.getByLabel("Date type")).toBeVisible({
       timeout: 5000,
     });
     await capture
       .getByRole("textbox", { name: "Entry title", exact: true })
       .fill("Recovered partial draft");
-    await capture.getByLabel("Date precision").selectOption("year");
-    await capture.getByLabel("Occurred", { exact: true }).fill("20");
+    await capture.getByLabel("Date type").selectOption("year");
+    await occurrenceStartField(capture).fill("20");
     await page.reload();
-    await expect(capture.getByLabel("Occurred", { exact: true })).toHaveValue(
-      "20",
-    );
+    await expect(occurrenceStartField(capture)).toHaveValue("20");
     await capture
       .getByRole("button", { name: "Save to Inbox", exact: true })
       .click();
@@ -80,7 +83,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
     expect((await client.from("entries").select("id")).data).toHaveLength(0);
 
     const cases = [
-      { precision: "exact", start: "2017-07-08T12:34:56", label: "", end: "" },
+      { precision: "exact", start: "2017-07-08T12:34", label: "", end: "" },
       { precision: "day", start: "2017-07-08", label: "", end: "" },
       { precision: "month", start: "2017-07", label: "", end: "" },
       { precision: "year", start: "2017", label: "", end: "" },
@@ -102,19 +105,15 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       await capture
         .getByRole("textbox", { name: "Entry title", exact: true })
         .fill(`Capture ${item.precision}`);
-      await capture.getByLabel("Date precision").selectOption(item.precision);
+      await capture.getByLabel("Date type").selectOption(item.precision);
       await capture
-        .getByLabel("Time zone", { exact: true })
-        .fill("Asia/Kathmandu");
-      if (item.start)
-        await capture.getByLabel("Occurred", { exact: true }).fill(item.start);
+        .getByRole("combobox", { name: "Time zone", exact: true })
+        .selectOption("Asia/Kathmandu");
+      if (item.start) await fillOccurrenceStart(capture, item.start);
       await capture
         .getByLabel("Date description", { exact: true })
         .fill(item.label);
-      if (item.end)
-        await capture
-          .getByLabel("End date (optional)", { exact: true })
-          .fill(item.end);
+      if (item.end) await fillOccurrenceEnd(capture, item.end);
       if (item.precision === "age") {
         await page.setViewportSize({ width: 390, height: 844 });
         await page.emulateMedia({ colorScheme: "dark" });
@@ -185,7 +184,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       else {
         const expected =
           item.precision === "exact"
-            ? "2017-07-08T06:49:56"
+            ? "2017-07-08T06:49:00"
             : `${item.precision === "year" ? "2017-01-01" : item.precision === "month" ? "2017-07-01" : item.start}T06:15:00`;
         expect(saved.occurred_start).toBe(`${expected}+00:00`);
       }
@@ -198,11 +197,11 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
     }
 
     await capture.getByRole("button", { name: "Date", exact: true }).click();
-    await capture.getByLabel("Date precision").selectOption("unknown");
+    await capture.getByLabel("Date type").selectOption("unknown");
     await capture
       .getByRole("button", { name: "Use capture time", exact: true })
       .click();
-    await expect(capture.getByLabel("Date precision")).toHaveCount(0);
+    await expect(capture.getByLabel("Date type")).toHaveCount(0);
     await capture
       .getByRole("textbox", { name: "Entry title", exact: true })
       .fill("Default capture time");

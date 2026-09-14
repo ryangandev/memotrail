@@ -74,6 +74,18 @@
   font-size: var(--mt-font-size-caption);
 }
 
+.birthDateLink {
+  padding: 0;
+  color: var(--mt-color-accent);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.birthDateLink:hover {
+  text-decoration: underline;
+}
+
 .message {
   display: flex;
   min-height: 150px;
@@ -133,10 +145,41 @@
 }
 
 .timelineGrid {
+  position: relative;
   display: grid;
   width: calc(164px + var(--timeline-canvas-width));
   min-width: 100%;
   grid-template-columns: 164px var(--timeline-canvas-width);
+}
+
+.todayLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(164px + var(--timeline-today-offset));
+  z-index: 1;
+  width: 1px;
+  background: repeating-linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--mt-color-accent) 62%, transparent) 0 5px,
+    transparent 5px 10px
+  );
+  pointer-events: none;
+}
+
+.todayLine::before {
+  position: absolute;
+  top: 7px;
+  right: 6px;
+  padding: 1px 4px;
+  border-radius: var(--mt-radius-small);
+  color: var(--mt-color-accent);
+  background: var(--mt-color-surface);
+  font-size: 9px;
+  font-weight: var(--mt-font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  content: "Today";
 }
 
 .axisCorner,
@@ -167,10 +210,18 @@
 .axis span {
   position: absolute;
   top: 17px;
-  transform: translateX(8px);
+  transform: translateX(-50%);
   color: var(--mt-color-ink-faint);
   font-family: var(--mt-font-family-mono);
   font-size: 10px;
+}
+
+.axis span:first-child {
+  transform: none;
+}
+
+.axis span:last-child {
+  transform: translateX(-100%);
 }
 
 .trackLabel {
@@ -265,12 +316,26 @@
 }
 
 .stageItem {
+  display: flex;
   width: max(54px, var(--item-width));
-  overflow: hidden;
+  max-width: calc(100% - var(--item-left));
+  align-items: center;
+  transform: translateX(var(--item-stage-label-offset));
   padding: 0 10px;
   border: 1px solid color-mix(in srgb, var(--mt-color-accent) 42%, transparent);
   border-radius: var(--mt-radius-small);
   background: var(--mt-color-accent-subtle);
+  white-space: nowrap;
+}
+
+.stageItem[data-ongoing="true"] {
+  border-right: 2px solid var(--mt-color-accent);
+  border-radius: var(--mt-radius-small) 0 0 var(--mt-radius-small);
+}
+
+.stageItem > span {
+  display: block;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -294,6 +359,10 @@
   background: transparent;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.eventItem[data-edge="end"] {
+  transform: translateX(-100%);
 }
 
 .eventItem > span:last-child {
@@ -355,6 +424,161 @@
   border-radius: var(--mt-radius-xlarge);
   background: var(--mt-color-surface-raised);
   box-shadow: var(--mt-shadow-floating);
+}
+
+.creationDialog {
+  width: min(100%, 540px);
+}
+
+.editorLoading {
+  display: flex;
+  align-items: center;
+  gap: var(--mt-space-3);
+  padding: var(--mt-space-5) var(--mt-space-6);
+  border: 1px solid var(--mt-color-border-strong);
+  border-radius: var(--mt-radius-large);
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-raised);
+  box-shadow: var(--mt-shadow-floating);
+  font-size: var(--mt-font-size-label);
+}
+
+.editorLoading > span {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--mt-color-border-strong);
+  border-top-color: var(--mt-color-accent);
+  border-radius: 50%;
+  animation: editor-loading-spin 700ms linear infinite;
+}
+
+@keyframes editor-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.creationOptions {
+  display: grid;
+  gap: var(--mt-space-3);
+  padding: var(--mt-space-6);
+}
+
+.creationOption {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--mt-space-3);
+  min-height: 76px;
+  padding: var(--mt-space-3) var(--mt-space-4);
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-medium);
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease,
+    transform 120ms ease;
+}
+
+.creationOption:hover {
+  transform: translateY(-1px);
+  border-color: var(--mt-color-accent);
+  background: var(--mt-color-accent-subtle);
+}
+
+.creationOption > span:first-child {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: var(--mt-radius-small);
+  color: var(--mt-color-accent);
+  background: var(--mt-color-accent-subtle);
+}
+
+.creationOption > span:nth-child(2) {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.creationOption strong {
+  font-size: var(--mt-font-size-body);
+  font-weight: var(--mt-font-weight-semibold);
+}
+
+.creationOption small {
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+  line-height: 1.35;
+}
+
+.creationOption > svg {
+  color: var(--mt-color-ink-faint);
+}
+
+.birthDateDialog {
+  width: min(100%, 520px);
+}
+
+.birthDateForm {
+  display: grid;
+  gap: var(--mt-space-5);
+  padding: var(--mt-space-6);
+}
+
+.birthDateForm > p:first-child {
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-body);
+  line-height: var(--mt-line-height-body);
+}
+
+.birthDateMessage {
+  padding: var(--mt-space-3);
+  border-radius: var(--mt-radius-small);
+  color: var(--mt-color-warm);
+  background: var(--mt-color-warm-subtle);
+  font-size: var(--mt-font-size-caption);
+}
+
+.birthDateActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--mt-space-2);
+}
+
+.birthDateActions button {
+  min-height: 40px;
+  padding: 0 var(--mt-space-4);
+  border-radius: var(--mt-radius-medium);
+  color: var(--mt-color-ink-muted);
+  background: transparent;
+  font: inherit;
+  font-size: var(--mt-font-size-label);
+  cursor: pointer;
+}
+
+.birthDateActions button:last-child {
+  color: var(--mt-color-accent-ink);
+  background: var(--mt-color-accent);
+}
+
+.birthDateActions button:hover:not(:disabled) {
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-subtle);
+}
+
+.birthDateActions button:last-child:hover:not(:disabled) {
+  color: var(--mt-color-accent-ink);
+  background: var(--mt-color-accent-hover);
+}
+
+.birthDateActions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .dialogHeader {
@@ -789,8 +1013,17 @@
 
 @media (prefers-reduced-motion: reduce) {
   .addButton,
+  .creationOption,
   .saveButton {
     transition: none;
+  }
+
+  .creationOption:hover {
+    transform: none;
+  }
+
+  .editorLoading > span {
+    animation: none;
   }
 }
 .undatedMoments {

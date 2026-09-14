@@ -35,18 +35,14 @@ export type HomeStage = {
 };
 
 export type HomeSnapshot = {
-  activeHabitCount: number;
   collectionCount: number;
-  completedHabitCount: number;
   currentStageCount: number;
   currentStages: HomeStage[];
-  dueHabitCount: number;
   entryCount: number;
   firstTimeCount: number;
   inboxCount: number;
   profileDisplayName: string | null;
   recentEntries: HomeEntry[];
-  skippedHabitCount: number;
   snapshotDate: string;
 };
 
@@ -127,15 +123,11 @@ function parseHomeRow(value: unknown): HomeSnapshot | null {
   const recentEntries = parseHomeEntries(row.recent_entries);
   const currentStages = parseCurrentStages(row.current_stages);
   const counts = [
-    row.active_habit_count,
     row.collection_count,
-    row.completed_habit_count,
     row.current_stage_count,
-    row.due_habit_count,
     row.entry_count,
     row.first_time_count,
     row.inbox_count,
-    row.skipped_habit_count,
   ].map(safeCount);
 
   if (
@@ -149,18 +141,14 @@ function parseHomeRow(value: unknown): HomeSnapshot | null {
   }
 
   return {
-    activeHabitCount: counts[0]!,
-    collectionCount: counts[1]!,
-    completedHabitCount: counts[2]!,
-    currentStageCount: counts[3]!,
+    collectionCount: counts[0]!,
+    currentStageCount: counts[1]!,
     currentStages,
-    dueHabitCount: counts[4]!,
-    entryCount: counts[5]!,
-    firstTimeCount: counts[6]!,
-    inboxCount: counts[7]!,
+    entryCount: counts[2]!,
+    firstTimeCount: counts[3]!,
+    inboxCount: counts[4]!,
     profileDisplayName: row.profile_display_name,
     recentEntries,
-    skippedHabitCount: counts[8]!,
     snapshotDate: row.snapshot_date,
   };
 }

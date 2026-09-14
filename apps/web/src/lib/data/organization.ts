@@ -15,13 +15,35 @@ export type OrganizationInput = {
   name: string;
   order: number;
 };
+
+export function parseOrganizationItems(value: unknown): OrganizationItem[] | null {
+  if (!Array.isArray(value)) return null;
+  return value.every(isOrganizationItem) ? value : null;
+}
+
+function isOrganizationItem(value: unknown): value is OrganizationItem {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as OrganizationItem).id === "string" &&
+    typeof (value as OrganizationItem).name === "string" &&
+    ((value as OrganizationItem).system_key === null ||
+      typeof (value as OrganizationItem).system_key === "string") &&
+    typeof (value as OrganizationItem).sort_order === "number" &&
+    typeof (value as OrganizationItem).revision === "number" &&
+    (typeof (value as OrganizationItem).entry_count === "number" ||
+      typeof (value as OrganizationItem).entry_count === "string") &&
+    (typeof (value as OrganizationItem).total_count === "number" ||
+      typeof (value as OrganizationItem).total_count === "string")
+  );
+}
 export function validOrganizationInput(value: OrganizationInput) {
   return (
     value &&
     (value.kind === "collection" || value.kind === "tag") &&
     typeof value.name === "string" &&
     value.name.trim().length > 0 &&
-    [...value.name.trim()].length <= 80 &&
+    [...value.name.trim()].length <= (value.kind === "tag" ? 60 : 80) &&
     Number.isInteger(value.order) &&
     Math.abs(value.order) <= 1000000 &&
     (value.kind !== "tag" || value.order === 0) &&

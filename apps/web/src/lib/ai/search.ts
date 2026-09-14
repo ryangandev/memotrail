@@ -11,13 +11,12 @@ export type SearchPlan = {
   dateFrom: string | null;
   dateTo: string | null;
   beforeLatestHome: boolean;
-  includeHabits: boolean;
   order: "relevance" | "oldest" | "newest";
 };
 export type SearchSource = {
   id: string;
   recordID: string;
-  kind: "entry" | "habit" | "person" | "place";
+  kind: "entry" | "person" | "place";
   title: string;
   text: string;
   href: string | null;
@@ -105,7 +104,6 @@ export const searchPlanSchema = {
     "dateFrom",
     "dateTo",
     "beforeLatestHome",
-    "includeHabits",
     "order",
   ],
   properties: {
@@ -120,7 +118,6 @@ export const searchPlanSchema = {
     dateFrom: { anyOf: [{ type: "string", format: "date" }, { type: "null" }] },
     dateTo: { anyOf: [{ type: "string", format: "date" }, { type: "null" }] },
     beforeLatestHome: { type: "boolean" },
-    includeHabits: { type: "boolean" },
     order: { type: "string", enum: ["relevance", "oldest", "newest"] },
   },
 };
@@ -190,7 +187,6 @@ export function parseSearchPlan(raw: unknown): SearchPlan | null {
     !date(v.dateTo) ||
     (v.dateFrom && v.dateTo && v.dateFrom > v.dateTo) ||
     typeof v.beforeLatestHome !== "boolean" ||
-    typeof v.includeHabits !== "boolean" ||
     !["relevance", "oldest", "newest"].includes(String(v.order))
   )
     return null;
@@ -200,7 +196,6 @@ export function parseSearchPlan(raw: unknown): SearchPlan | null {
     dateFrom: v.dateFrom,
     dateTo: v.dateTo,
     beforeLatestHome: v.beforeLatestHome,
-    includeHabits: v.includeHabits,
     order: v.order as SearchPlan["order"],
   };
 }
@@ -220,7 +215,7 @@ export function evidenceParameters(
     p_date_from: request.dateFrom ?? plan.dateFrom,
     p_date_to: request.dateTo ?? plan.dateTo,
     p_before_latest_home: plan.beforeLatestHome,
-    p_include_habits: plan.includeHabits,
+    p_include_habits: false,
     p_order: plan.order,
     p_as_of: asOf,
   };
@@ -366,17 +361,12 @@ export function buildSearchSources(raw: unknown, queries: string[]) {
       href:
         kind === "entry"
           ? `/history?entry=${row.id}`
-          : kind === "habit"
-            ? `/habits?habit=${row.id}`
-            : kind === "place"
-              ? `/places?place=${row.id}`
-              : null,
+          : kind === "place"
+            ? `/places?place=${row.id}`
+            : null,
       truncated: body.length > 1800 || facts.length > 1800,
     });
   };
-  // A Habit question must retain its comparison data even in a large Entry archive.
-  const habits = object(evidence.habits);
-  rows(habits.habits).forEach((r) => add(r, "habit"));
   rows(evidence.entries).forEach((r) => add(r, "entry"));
   if (evidence.latest_home_reference)
     add(object(evidence.latest_home_reference), "entry");
@@ -389,11 +379,6 @@ export function buildSearchSources(raw: unknown, queries: string[]) {
   if (evidence.latest_home_reference && !evidence.reference_window_applied)
     notices.push(
       "The latest Home has an uncertain date. A precise before-move boundary could not be applied.",
-    );
-  if (habits.scope) notices.push(String(habits.scope));
-  if (Number(habits.total_count) > 50)
-    notices.push(
-      "Only the first 50 active Habits are included; this is not a complete Habit ranking.",
     );
   if (
     rows(evidence.people).length === 25 ||

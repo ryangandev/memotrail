@@ -147,7 +147,7 @@ async function signedImageUrls(
   return displayImageURLs(client, paths);
 }
 
-function parseFirstTimeRows(value: unknown):
+export function parseFirstTimeRows(value: unknown):
   | (FirstTimeRow & {
       attachments: FirstTimeAttachment[];
     })[]

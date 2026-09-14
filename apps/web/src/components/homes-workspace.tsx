@@ -16,6 +16,7 @@ import {
   type HomeActionResult,
 } from "@/app/homes/actions";
 import styles from "@/app/homes/page.module.css";
+import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
 import {
   firstTimePhotoLimit,
@@ -261,8 +262,9 @@ function HomeCard({
   );
 }
 
-function HomeEditor({
+export function HomeEditor({
   collectionOptions,
+  defaultTimezone,
   home,
   onClose,
   onSaved,
@@ -272,6 +274,7 @@ function HomeEditor({
   tagOptions,
 }: {
   collectionOptions: string[];
+  defaultTimezone?: string;
   home: HomeRecord | null;
   onClose: () => void;
   onSaved: (record: HomeRecord) => void;
@@ -282,7 +285,8 @@ function HomeEditor({
 }) {
   const router = useRouter();
   const titleRef = useRef<HTMLInputElement>(null);
-  const initialTimezone = home?.occurredTimezone ?? localTimezone();
+  const initialTimezone =
+    home?.occurredTimezone ?? defaultTimezone ?? localTimezone();
   const originalOccurrence: Occurrence | undefined = home
     ? {
         occurredAt: home.occurredStart,
@@ -611,9 +615,6 @@ function HomeEditor({
                   span
                 />
               </div>
-              <p className={styles.fullField}>
-                Leave the end date empty for a current residence.
-              </p>
               <label>
                 <span>
                   Why you moved in <small>Optional</small>
@@ -758,29 +759,23 @@ function HomeEditor({
                   value={body}
                 />
               </label>
-              <OrganizationEditor
+              <EntryOrganizationEditor
                 disabled={isPending}
                 input={collectionInput}
-                label="Collections"
-                maximumCount={20}
-                maximumNameLength={80}
+                kind="collection"
                 names={collectionNames}
                 onChange={setCollectionNames}
                 onInputChange={setCollectionInput}
                 options={collectionOptions}
-                placeholder="Add a Collection"
               />
-              <OrganizationEditor
+              <EntryOrganizationEditor
                 disabled={isPending}
                 input={tagInput}
-                label="Tags"
-                maximumCount={50}
-                maximumNameLength={60}
+                kind="tag"
                 names={tagNames}
                 onChange={setTagNames}
                 onInputChange={setTagInput}
                 options={tagOptions}
-                placeholder="Add a tag"
               />
             </fieldset>
 
@@ -890,94 +885,6 @@ function HomeEditor({
         </form>
       </div>
     </div>
-  );
-}
-
-function OrganizationEditor({
-  disabled,
-  input,
-  label,
-  maximumCount,
-  maximumNameLength,
-  names,
-  onChange,
-  onInputChange,
-  options,
-  placeholder,
-}: {
-  disabled: boolean;
-  input: string;
-  label: string;
-  maximumCount: number;
-  maximumNameLength: number;
-  names: string[];
-  onChange: (names: string[]) => void;
-  onInputChange: (input: string) => void;
-  options: string[];
-  placeholder: string;
-}) {
-  const datalistId = `home-${label.toLocaleLowerCase()}-options`;
-  const normalizedNames = new Set(
-    names.map((name) => name.toLocaleLowerCase()),
-  );
-
-  function addName(value: string) {
-    const name = value.trim();
-    if (
-      !name ||
-      name.length > maximumNameLength ||
-      names.length >= maximumCount ||
-      normalizedNames.has(name.toLocaleLowerCase())
-    ) {
-      onInputChange("");
-      return;
-    }
-    onChange([...names, name]);
-    onInputChange("");
-  }
-
-  return (
-    <fieldset className={styles.organizationEditor} disabled={disabled}>
-      <legend>{label}</legend>
-      {names.length > 0 ? (
-        <div className={styles.organizationChips}>
-          {names.map((name) => (
-            <button
-              aria-label={`Remove ${name} from ${label}`}
-              key={name.toLocaleLowerCase()}
-              onClick={() => onChange(names.filter((item) => item !== name))}
-              type="button"
-            >
-              {name}
-              <span aria-hidden="true">×</span>
-            </button>
-          ))}
-        </div>
-      ) : null}
-      <input
-        list={datalistId}
-        maxLength={maximumNameLength}
-        onChange={(event) => onInputChange(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            addName(input);
-          }
-        }}
-        placeholder={`${placeholder} and press Enter`}
-        value={input}
-      />
-      <datalist id={datalistId}>
-        {options
-          .filter((option) => !normalizedNames.has(option.toLocaleLowerCase()))
-          .map((option) => (
-            <option key={option.toLocaleLowerCase()} value={option} />
-          ))}
-      </datalist>
-      <small>
-        {names.length} of {maximumCount}
-      </small>
-    </fieldset>
   );
 }
 

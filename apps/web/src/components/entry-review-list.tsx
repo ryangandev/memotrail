@@ -10,6 +10,7 @@ import {
 } from "@/app/inbox/actions";
 import { Icon } from "@/components/icon";
 import { EntryAISuggestionsPanel } from "@/components/entry-ai-suggestions";
+import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { OccurrenceEditor } from "@/components/occurrence-editor";
 import { EntryPhotoDates } from "@/components/entry-photo-dates";
 import { photoCalendarDateDraft } from "@/lib/media/photo-metadata";
@@ -344,30 +345,24 @@ export function EntryReviewDialog({
             disabled={isPending}
           />
 
-          <OrganizationNameEditor
+          <EntryOrganizationEditor
             disabled={isPending}
-            label="Collections"
-            maximumCount={20}
-            maximumNameLength={80}
+            kind="collection"
             names={collectionNames}
             onChange={setCollectionNames}
             input={collectionInput}
             onInputChange={setCollectionInput}
             options={collectionOptions}
-            placeholder="Add a Collection"
           />
 
-          <OrganizationNameEditor
+          <EntryOrganizationEditor
             disabled={isPending}
-            label="Tags"
-            maximumCount={50}
-            maximumNameLength={60}
+            kind="tag"
             names={tagNames}
             onChange={setTagNames}
             input={tagInput}
             onInputChange={setTagInput}
             options={tagOptions}
-            placeholder="Add a tag"
           />
 
           {result ? (
@@ -412,94 +407,6 @@ export function EntryReviewDialog({
   );
 }
 
-function OrganizationNameEditor({
-  disabled,
-  label,
-  maximumCount,
-  maximumNameLength,
-  names,
-  onChange,
-  input,
-  onInputChange,
-  options,
-  placeholder,
-}: {
-  disabled: boolean;
-  label: string;
-  maximumCount: number;
-  maximumNameLength: number;
-  names: string[];
-  onChange: (names: string[]) => void;
-  input: string;
-  onInputChange: (input: string) => void;
-  options: string[];
-  placeholder: string;
-}) {
-  const datalistId = `review-${label.toLocaleLowerCase()}-options`;
-  const selectedNames = new Set(names.map((name) => name.toLocaleLowerCase()));
-  const suggestions = options.filter(
-    (option) => !selectedNames.has(option.toLocaleLowerCase()),
-  );
-
-  function addName(value: string) {
-    const name = value.trim();
-
-    if (
-      !name ||
-      name.length > maximumNameLength ||
-      names.length >= maximumCount ||
-      selectedNames.has(name.toLocaleLowerCase())
-    ) {
-      onInputChange("");
-      return;
-    }
-
-    onChange([...names, name]);
-    onInputChange("");
-  }
-
-  return (
-    <fieldset className={styles.organizationEditor} disabled={disabled}>
-      <legend>{label}</legend>
-      {names.length > 0 ? (
-        <div className={styles.organizationChips}>
-          {names.map((name) => (
-            <button
-              aria-label={`Remove ${name} from ${label}`}
-              key={name.toLocaleLowerCase()}
-              onClick={() => onChange(names.filter((item) => item !== name))}
-              type="button"
-            >
-              {name}
-              <span aria-hidden="true">×</span>
-            </button>
-          ))}
-        </div>
-      ) : null}
-      <input
-        list={datalistId}
-        maxLength={maximumNameLength}
-        onChange={(event) => onInputChange(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            addName(input);
-          }
-        }}
-        placeholder={`${placeholder} and press Enter`}
-        value={input}
-      />
-      <datalist id={datalistId}>
-        {suggestions.map((suggestion) => (
-          <option key={suggestion.toLocaleLowerCase()} value={suggestion} />
-        ))}
-      </datalist>
-      <p>
-        {names.length} of {maximumCount}
-      </p>
-    </fieldset>
-  );
-}
 
 function namesIncludingDraft(names: string[], draft: string) {
   const name = draft.trim();

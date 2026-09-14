@@ -3,6 +3,11 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
+import {
+  fillOccurrenceEnd,
+  fillOccurrenceStart,
+  occurrenceStartField,
+} from "./helpers/occurrence";
 
 test("Inbox preserves uncertain dates and edits calendar precision without inventing dates", async ({
   page,
@@ -107,12 +112,12 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
     ]) {
       await card.getByRole("button", { name: "Review", exact: true }).click();
       await page
-        .getByRole("combobox", { name: "Date precision", exact: true })
+        .getByRole("combobox", { name: "Date type", exact: true })
         .selectOption(precision);
-      await page.getByLabel("Occurred", { exact: true }).fill(start);
+      await fillOccurrenceStart(page, start);
       await page
-        .getByLabel("Time zone", { exact: true })
-        .fill("Asia/Kathmandu");
+        .getByRole("combobox", { name: "Time zone", exact: true })
+        .selectOption("Asia/Kathmandu");
       await page
         .getByRole("button", { name: "Save changes", exact: true })
         .click();
@@ -130,12 +135,10 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
     }
     await card.getByRole("button", { name: "Review", exact: true }).click();
     await page
-      .getByRole("combobox", { name: "Date precision", exact: true })
+      .getByRole("combobox", { name: "Date type", exact: true })
       .selectOption("range");
-    await page.getByLabel("Occurred", { exact: true }).fill("2020-01-01");
-    await page
-      .getByLabel("End date (optional)", { exact: true })
-      .fill("2017-01-01");
+    await fillOccurrenceStart(page, "2020-01-01");
+    await fillOccurrenceEnd(page, "2017-01-01");
     await page
       .getByRole("button", { name: "Save changes", exact: true })
       .click();
@@ -143,7 +146,7 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
       page.getByText("The end date must be on or after the start date."),
     ).toBeVisible();
     await page
-      .getByLabel("End date (optional)", { exact: true })
+      .getByRole("textbox", { name: "End date", exact: true })
       .fill("2023-01-01");
     await page
       .getByRole("button", { name: "Save changes", exact: true })
@@ -183,9 +186,9 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
     await card.getByRole("button", { name: "Review", exact: true }).click();
     await page.getByRole("button", { name: "Use as approximate date" }).click();
     await expect(
-      page.getByRole("combobox", { name: "Date precision", exact: true }),
+      page.getByRole("combobox", { name: "Date type", exact: true }),
     ).toHaveValue("approximate");
-    await expect(page.getByLabel("Occurred", { exact: true })).toHaveValue("");
+    await expect(occurrenceStartField(page)).toHaveValue("");
     await expect(
       page.getByLabel("Date description", { exact: true }),
     ).toHaveValue("17岁，第一次去日本");
@@ -199,7 +202,7 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
       ).data?.date_precision,
     ).toBe("range");
     await page
-      .getByRole("combobox", { name: "Date precision", exact: true })
+      .getByRole("combobox", { name: "Date type", exact: true })
       .selectOption("age");
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
@@ -250,9 +253,13 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
     ).toBeNull();
     await page.reload();
     await card.getByRole("button", { name: "Review", exact: true }).click();
-    await expect(page.getByLabel("Occurred", { exact: true })).toHaveValue(
-      "2026-11-01T01:30:27",
-    );
+    await expect(occurrenceStartField(page)).toHaveValue("2026-11-01");
+    await expect(
+      page.getByRole("button", {
+        name: "Choose occurred time",
+        exact: true,
+      }),
+    ).toContainText("01:30");
     await page
       .getByRole("textbox", { name: "Note", exact: true })
       .fill("Only this note changed.");

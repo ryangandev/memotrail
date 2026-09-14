@@ -1,9 +1,6 @@
 import Link from "next/link";
-import { AuthGate } from "@/components/auth-gate";
-import { WorkspaceShell } from "@/components/workspace-shell";
 import { EntryHistoryView } from "@/components/entry-history-view";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
-import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import {
   historyTitle,
   historyPage,
@@ -18,9 +15,8 @@ export default async function HistoryPage({
 }: {
   searchParams: Promise<{ entry?: string; page?: string; q?: string }>;
 }) {
-  if (!getSupabasePublicConfig()) return <AuthGate configured={false} />;
   const context = await getAuthenticatedContext();
-  if (!context) return <AuthGate configured />;
+  if (!context) return null;
   const params = await searchParams;
   const selected = validHistoryID(params.entry) ? params.entry : null;
   const page = historyPage(params.page, selected ? 5001 : 2001);
@@ -38,8 +34,7 @@ export default async function HistoryPage({
       });
   const rows = (selected ? [] : (result.data ?? [])) as HistoryIndexEntry[];
   return (
-    <WorkspaceShell activeDestination="library" viewer={context.viewer}>
-      <div className={styles.workspace}>
+    <div className={styles.workspace}>
         <header>
           <p className={styles.eyebrow}>NOTHING GOOD HAS TO BE LOST</p>
           <h1>Entry history</h1>
@@ -121,7 +116,6 @@ export default async function HistoryPage({
             </nav>
           </>
         )}
-      </div>
-    </WorkspaceShell>
+    </div>
   );
 }

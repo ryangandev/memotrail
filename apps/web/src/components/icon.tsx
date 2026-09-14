@@ -4,6 +4,7 @@ export type IconName =
   | "car"
   | "check"
   | "chevron"
+  | "close"
   | "clock"
   | "inbox"
   | "home"
@@ -14,10 +15,12 @@ export type IconName =
   | "plus"
   | "refresh"
   | "search"
+  | "settings"
   | "sparkle"
   | "star"
   | "stop"
   | "target"
+  | "tag"
   | "timeline"
   | "trash";
 
@@ -68,6 +71,7 @@ const paths: Record<IconName, React.ReactNode> = {
   ),
   check: <path d="m5 12 4 4L19 6" />,
   chevron: <path d="m9 18 6-6-6-6" />,
+  close: <path d="m7 7 10 10M17 7 7 17" />,
   clock: (
     <>
       <circle cx="12" cy="12" r="9" />
@@ -126,6 +130,12 @@ const paths: Record<IconName, React.ReactNode> = {
       <path d="m15.5 15.5 5 5" />
     </>
   ),
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" />
+    </>
+  ),
   sparkle: (
     <path d="M12 3c.7 4.4 3.2 6.9 7 7.5-3.8.6-6.3 3.1-7 7.5-.7-4.4-3.2-6.9-7-7.5 3.8-.6 6.3-3.1 7-7.5Z" />
   ),
@@ -148,6 +158,12 @@ const paths: Record<IconName, React.ReactNode> = {
       <circle cx="12" cy="12" r="8.5" />
       <circle cx="12" cy="12" r="4.5" />
       <circle cx="12" cy="12" fill="currentColor" r="1" stroke="none" />
+    </>
+  ),
+  tag: (
+    <>
+      <path d="M4 4h7.5L20 12.5 12.5 20 4 11.5V4Z" />
+      <circle cx="8.2" cy="8.2" r="1.25" />
     </>
   ),
   timeline: (

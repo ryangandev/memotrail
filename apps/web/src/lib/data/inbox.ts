@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import {
   validTimezone,
@@ -63,7 +64,7 @@ type NameRow = {
   name: string;
 };
 
-export async function getAuthenticatedContext() {
+export const getAuthenticatedContext = cache(async function getAuthenticatedContext() {
   try {
     const client = await createClient();
     const { data, error } = await client.auth.getClaims();
@@ -87,7 +88,7 @@ export async function getAuthenticatedContext() {
   } catch {
     return null;
   }
-}
+});
 
 export async function getInboxWorkspace(): Promise<InboxWorkspace | null> {
   const context = await getAuthenticatedContext();

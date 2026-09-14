@@ -53,9 +53,9 @@ export function AuthGate({ configured }: AuthGateProps) {
             A quiet place for everything worth keeping.
           </h1>
           <p className={styles.intro}>
-            Capture thoughts, first times, places, habits, and the chapters that
-            connect them. MemoTrail keeps the archive private and leaves the
-            organization in your hands.
+            Capture thoughts, first times, places, and the chapters that connect
+            them. MemoTrail keeps the archive private and leaves the organization
+            in your hands.
           </p>
 
           <div className={styles.trail} aria-hidden="true">

@@ -1,7 +1,10 @@
-import Link from "next/link";
+"use client";
+
+import Link, { useLinkStatus } from "next/link";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { signOut } from "@/app/auth/actions";
 import styles from "@/app/page.module.css";
+import { AuthGate } from "@/components/auth-gate";
 import { BrandMark } from "@/components/brand-mark";
 import { Icon, type IconName } from "@/components/icon";
 import { QuickCaptureDialog } from "@/components/quick-capture-dialog";
@@ -12,7 +15,6 @@ import type { Viewer } from "@/lib/data/inbox";
 
 export type WorkspaceDestination =
   | "collections"
-  | "habits"
   | "home"
   | "homes"
   | "inbox"
@@ -21,6 +23,8 @@ export type WorkspaceDestination =
   | "places"
   | "people"
   | "search"
+  | "settings"
+  | "tags"
   | "timeline"
   | "trash"
   | "vehicles"
@@ -46,7 +50,6 @@ const primaryNavigation: NavigationItem[] = [
 ];
 
 const recordNavigation: NavigationItem[] = [
-  { destination: "habits", href: "/habits", icon: "check", label: "Habits" },
   { destination: "goals", href: "/goals", icon: "target", label: "Goals" },
   { destination: "homes", href: "/homes", icon: "home", label: "Homes" },
   { destination: "places", href: "/places", icon: "map", label: "Places" },
@@ -72,6 +75,7 @@ const archiveNavigation: NavigationItem[] = [
     icon: "archive",
     label: "Collections",
   },
+  { destination: "tags", href: "/tags", icon: "tag", label: "Tags" },
   { destination: "trash", href: "/trash", icon: "trash", label: "Trash" },
 ];
 
@@ -84,7 +88,6 @@ const mobileNavigation: NavigationItem[] = [
     icon: "timeline",
     label: "Timeline",
   },
-  { destination: "habits", href: "/habits", icon: "check", label: "Habits" },
   {
     destination: "library",
     href: "/library",
@@ -93,17 +96,52 @@ const mobileNavigation: NavigationItem[] = [
   },
 ];
 
+const settingsNavigation: NavigationItem = {
+  destination: "settings",
+  href: "/settings",
+  icon: "settings",
+  label: "Settings",
+};
+
+export function WorkspaceBoundary({
+  children,
+  configured,
+  inboxCount,
+  viewer,
+}: {
+  children: ReactNode;
+  configured: boolean;
+  inboxCount?: number;
+  viewer: Viewer | null;
+}) {
+  const pathname = usePathname();
+
+  if (pathname.startsWith("/auth/")) {
+    return children;
+  }
+
+  if (!viewer) {
+    return <AuthGate configured={configured} />;
+  }
+
+  return (
+    <WorkspaceShell inboxCount={inboxCount} viewer={viewer}>
+      {children}
+    </WorkspaceShell>
+  );
+}
+
 export function WorkspaceShell({
-  activeDestination,
   children,
   inboxCount,
   viewer,
 }: {
-  activeDestination: WorkspaceDestination;
   children: ReactNode;
   inboxCount?: number;
   viewer: Viewer;
 }) {
+  const activeDestination = destinationForPathname(usePathname());
+
   return (
     <div className={styles.appShell}>
       <TimezoneSync />
@@ -147,15 +185,16 @@ export function WorkspaceShell({
             >
               <Icon name="trash" size={19} />
             </Link>
-            <form action={signOut}>
-              <button
-                className={styles.avatarButton}
-                type="submit"
-                aria-label={`Sign out ${viewer.name}`}
-              >
-                {viewer.initial}
-              </button>
-            </form>
+            <Link
+              aria-current={
+                activeDestination === "settings" ? "page" : undefined
+              }
+              aria-label={`Open settings for ${viewer.name}`}
+              className={styles.avatarButton}
+              href="/settings"
+            >
+              {viewer.initial}
+            </Link>
           </div>
         </header>
 
@@ -175,6 +214,24 @@ export function WorkspaceShell({
       </nav>
     </div>
   );
+}
+
+function destinationForPathname(pathname: string): WorkspaceDestination {
+  if (pathname === "/") return "home";
+  if (pathname.startsWith("/search")) return "search";
+  if (pathname.startsWith("/settings")) return "settings";
+  if (pathname.startsWith("/inbox")) return "inbox";
+  if (pathname.startsWith("/timeline")) return "timeline";
+  if (pathname.startsWith("/goals")) return "goals";
+  if (pathname.startsWith("/homes")) return "homes";
+  if (pathname.startsWith("/places")) return "places";
+  if (pathname.startsWith("/people")) return "people";
+  if (pathname.startsWith("/vehicles")) return "vehicles";
+  if (pathname.startsWith("/first-times")) return "first-times";
+  if (pathname.startsWith("/collections")) return "collections";
+  if (pathname.startsWith("/tags")) return "tags";
+  if (pathname.startsWith("/trash")) return "trash";
+  return "library";
 }
 
 function Sidebar({
@@ -201,44 +258,59 @@ function Sidebar({
         />
       </div>
 
-      <nav className={styles.sidebarNav} aria-label="Primary navigation">
-        <NavGroup
-          activeDestination={activeDestination}
-          inboxCount={inboxCount}
-          items={primaryNavigation}
-        />
-        <div className={styles.navDivider} />
-        <p className={styles.navLabel}>Records</p>
-        <NavGroup
-          activeDestination={activeDestination}
-          items={recordNavigation}
-        />
-        <div className={styles.navDivider} />
-        <p className={styles.navLabel}>Library</p>
-        <NavGroup
-          activeDestination={activeDestination}
-          items={archiveNavigation}
-        />
-      </nav>
+      <div
+        aria-label="Navigation and account"
+        className={styles.sidebarScrollRegion}
+        role="region"
+      >
+        <nav className={styles.sidebarNav} aria-label="Primary navigation">
+          <NavGroup
+            activeDestination={activeDestination}
+            inboxCount={inboxCount}
+            items={primaryNavigation}
+          />
+          <div className={styles.navDivider} />
+          <p className={styles.navLabel}>Records</p>
+          <NavGroup
+            activeDestination={activeDestination}
+            items={recordNavigation}
+          />
+          <div className={styles.navDivider} />
+          <p className={styles.navLabel}>Library</p>
+          <NavGroup
+            activeDestination={activeDestination}
+            items={archiveNavigation}
+          />
+        </nav>
 
-      <div className={styles.sidebarFooter}>
-        <div className={styles.archiveNote}>
-          <Icon name="clock" size={17} />
-          <div>
-            <strong>Private cloud sync</strong>
-            <span>Available on Web and iPhone</span>
+        <div className={styles.sidebarFooter}>
+          <nav className={styles.navGroup} aria-label="Settings navigation">
+            <NavigationControl
+              active={activeDestination === "settings"}
+              item={settingsNavigation}
+            />
+          </nav>
+          <div className={styles.archiveNote}>
+            <Icon name="clock" size={17} />
+            <div>
+              <strong>Private cloud sync</strong>
+              <span>Available on Web and iPhone</span>
+            </div>
           </div>
-        </div>
-        <form action={signOut}>
-          <button type="submit" title={`Sign out ${viewer.email}`}>
+          <Link
+            aria-current={activeDestination === "settings" ? "page" : undefined}
+            className={styles.accountLink}
+            href="/settings"
+            title={`Open settings for ${viewer.email}`}
+          >
             <span className={styles.avatar}>{viewer.initial}</span>
             <span>
               <strong>{viewer.name}</strong>
-              <small>Sign out · Private space</small>
+              <small>{viewer.email}</small>
             </span>
-            <Icon name="more" size={17} />
-          </button>
-        </form>
+            <Icon name="chevron" size={17} />
+          </Link>
+        </div>
       </div>
     </aside>
   );
@@ -301,6 +373,7 @@ function NavigationControl({
         href={item.href}
       >
         {content}
+        <NavigationPendingIndicator label={item.label} />
       </Link>
     );
   }
@@ -309,6 +382,20 @@ function NavigationControl({
     <button aria-disabled="true" className={className} disabled type="button">
       {content}
     </button>
+  );
+}
+
+function NavigationPendingIndicator({ label }: { label: string }) {
+  const { pending } = useLinkStatus();
+
+  if (!pending) return null;
+
+  return (
+    <span
+      aria-label={`Opening ${label}`}
+      className={styles.navigationProgress}
+      role="status"
+    />
   );
 }
 
@@ -326,6 +413,7 @@ function isNavigationActive(
         "homes",
         "places",
         "people",
+        "tags",
         "trash",
         "vehicles",
       ].includes(activeDestination))

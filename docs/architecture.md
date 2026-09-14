@@ -1,6 +1,6 @@
 # MemoTrail Architecture
 
-Last reviewed: 2026-09-13.
+Last reviewed: 2026-09-14.
 
 ## System map
 
@@ -18,20 +18,24 @@ Last reviewed: 2026-09-13.
 Vercel builds the repository with `apps/web` as the application root.
 Supabase migrations and the iOS Xcode project are independent of the Node workspace.
 
+The Web root layout owns the authenticated application shell, including navigation, account context, and the Inbox count.
+Route pages render only their own server-backed content inside that persistent shell.
+Next.js link prefetching and `app/loading.tsx` provide route fallbacks, while navigation links expose immediate pending feedback when a cold request has not reached the fallback yet.
+
 ## Request-to-code map
 
 Use this table to find the first likely files, then search by the product term or RPC name.
 Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/MemoTrail`.
 
-| Request                                                  | Web                                                                                               | iOS                                                                                   | Shared data and tests                                                            |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Authentication or environment                            | `app/auth`, `lib/auth`, `lib/supabase`, `src/proxy.ts`                                            | `Features/Authentication`, `App/AppConfiguration.swift`                               | foundation and security migrations, `0001_rls.test.sql`                          |
-| Capture, Inbox, drafts, dates, or offline sync           | `app/inbox`, capture and occurrence components, `lib/data/inbox*`, `lib/data/occurrence.ts`       | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests               |
-| Search, AI suggestions, or exploration                   | `app/search`, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`                      | `Features/Search`, `Features/AI`                                                      | AI, evidence, exploration, and search migrations and tests                       |
-| Photos, metadata, or export                              | media and export API routes, `lib/media`, `lib/export`, gallery and export components             | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, photo-history, cleanup, and export migrations and tests                   |
-| Timeline, Habits, Homes, Vehicles, Goals, or First Times | matching `app` route, workspace component, and `lib/data` module                                  | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                            |
-| Collections, People, Places, links, history, or Trash    | matching `app` route and component, `lib/data` organization, relation, history, and Trash modules | matching directory under `Features`                                                   | organization, relationship, history, Trash, and Empty Trash migrations and tests |
-| Visual system                                            | components, CSS modules, `styles/generated-tokens.css`                                            | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-tokens/tokens.json` and generator                               |
+| Request                                               | Web                                                                                               | iOS                                                                                   | Shared data and tests                                                            |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Authentication or environment                         | `app/auth`, `lib/auth`, `lib/supabase`, `src/proxy.ts`                                            | `Features/Authentication`, `App/AppConfiguration.swift`                               | foundation and security migrations, `0001_rls.test.sql`                          |
+| Capture, Inbox, drafts, dates, or offline sync        | `app/inbox`, capture and occurrence components, `lib/data/inbox*`, `lib/data/occurrence.ts`       | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests               |
+| Search, AI suggestions, or exploration                | `app/search`, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`                      | `Features/Search`, `Features/AI`                                                      | AI, evidence, exploration, and search migrations and tests                       |
+| Photos, metadata, or export                           | media and export API routes, `lib/media`, `lib/export`, gallery and export components             | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, photo-history, cleanup, and export migrations and tests                   |
+| Timeline, Homes, Vehicles, Goals, or First Times      | matching `app` route, workspace component, and `lib/data` module                                  | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                            |
+| Collections, tags, People, Places, links, history, or Trash | matching `app` route and component, shared Entry organization editor, `lib/data` organization, relation, history, and Trash modules | matching directory under `Features`                                                   | organization, relationship, history, Trash, and Empty Trash migrations and tests |
+| Visual system                                         | components, CSS modules, `styles/generated-tokens.css`                                            | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-tokens/tokens.json` and generator                               |
 
 For a database behavior, search migrations for the newest definition of the relevant RPC instead of assuming the first occurrence is current.
 Pair it with the test file carrying the same feature name.
@@ -43,6 +47,9 @@ Pair it with the test file carrying the same feature name.
 - Web cookies and native bearer sessions identify the same Supabase user.
 - Entries are canonical content; specialized tables add facts without duplicating writing.
 - Collections, tags, People, Places, and Entry links are owner-scoped reusable relationships.
+- Entry Type owns specialized structure, Collections own curated cross-Type chapters, tags own lightweight cross-Type descriptors, and Timeline tracks own only generic moment placement.
+- Web Entry editors reuse `components/entry-organization-editor.tsx`; their save RPC must atomically preserve Collection and tag memberships with the canonical Entry mutation.
+- Used tags merge atomically into another stable tag identity. Only unused tags can be deleted directly.
 - Multi-record changes use authenticated RPCs so content, relationships, history, and specialized facts commit atomically.
 - Clients send the revision they read. A stale revision surfaces a conflict instead of silently merging or overwriting another device.
 - Important mutations snapshot prior state. Restoring history creates another revision rather than deleting subsequent history.
@@ -54,7 +61,15 @@ Pair it with the test file carrying the same feature name.
 - Exact timestamp, day, month, year, age, range, approximate, and Unknown values remain distinct.
 - Unknown and description-only dates have no fabricated calendar anchor.
 - Recorded timezone controls calendar interpretation and search overlap.
+- `profiles.timezone` supplies the default for new exact Timeline timestamps; an Entry stores its own timezone snapshot and may override that default.
+- Shared Web timezone options derive their displayed UTC offset from the edited occurrence date when available and otherwise from the current date, so daylight-saving changes remain explicit without replacing the stored IANA identifier.
+- Timeline date-only, partial, and uncertain editors do not surface a timezone control, but they preserve the stored timezone needed for stable calendar interpretation.
 - Timeline, search, Home, and specialized editors must use the same occurrence semantics.
+- A private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings.
+- Web Timeline lanes use each item's rendered pixel bounds, including minimum stage and event-label widths, so non-overlapping periods share a lane without allowing visible cards to collide. A dashed Today line uses the same reference instant as open stages; short ongoing labels end against it with a flat right edge, and stage labels share the same vertically centered layout whether rendered as buttons or links.
+- Timeline creation routes by Entry type, not track name. Generic moments use the Timeline editor; Home, Vehicle, and First Time creation and editing reuse the exported Records editors in a lazy-loaded Timeline modal. System track shortcuts select the corresponding specialized type, while ordinary tracks preselect the generic editor's placement.
+- Timeline server data loads the specialized records and shared Place, Collection, and tag choices needed by those editors in parallel, so opening a known specialized Entry does not require a route transition or client-side data waterfall.
+- Web occurrence and profile date forms use `components/date-picker-field.tsx`; domain editors map their precision into its generic granularity, time, editability, and size props instead of duplicating picker UI.
 
 ## Offline rules
 

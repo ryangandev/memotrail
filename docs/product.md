@@ -49,6 +49,12 @@ People and Places are lightweight reusable records, not contact or location-mana
 
 Dates support exact timestamp, day, month, year, age or age range, date range, approximate description, and Unknown.
 The system must preserve the recorded precision and timezone without inventing a calendar anchor.
+Web date forms share one calendar control with day, month, year, optional hour-and-minute, editable numeric-entry, picker-only, and size variants.
+Editable date fields accept digits and add their own separators; the first-visit birth-date prompt is picker-only, while Settings also permits numeric editing.
+Settings owns the user's default timezone for new exact Timeline timestamps.
+An exact Timeline timestamp shows a directly editable timezone select, may override the Settings default on its Entry, and labels every option with the UTC offset for the relevant date.
+Date-only and uncertain Timeline forms keep timezone controls out of the primary form.
+Changing the default never rewrites an existing Entry's recorded timezone.
 
 ## Capture and Inbox
 
@@ -69,8 +75,15 @@ Photo metadata may be offered as a date or Place suggestion but is never adopted
 ## Organization, history, and relationships
 
 - An Entry has one Type and may belong to several Collections and tags.
+- Type defines the Entry's structure, while a Timeline track only defines where a generic moment is shown.
+- Collections are curated, browsable chapters that may contain Entries of different Types.
+- Tags are lightweight cross-Type descriptors for filtering and discovery.
+- People and Places are reusable entities linked to Entries, not alternate tags.
+- Inbox, Timeline, Home, Search, and Library are views or workflow states, not organization labels.
+- Collections and tags are created and managed directly from their Library destinations and remain available in every Entry editor.
 - Renaming a Collection or tag preserves its identity and linked Entries.
 - Moving a Collection to Trash never deletes its Entries or photos.
+- A used tag must be merged into another tag or removed from its Entries before deletion, so organization is never silently lost.
 - Entries may link to other Entries and expose incoming backlinks without copying writing.
 - Reusable People and Places may link to many Entries.
 - Important content, organization, relationship, specialized-field, and photo-membership changes remain recoverable through version history.
@@ -79,7 +92,7 @@ Photo metadata may be offered as a date or Place suggestion but is never adopted
 ## Retrieval and AI
 
 - One search experience supports literal keyword search and an explicit AI question action.
-- Keyword search covers Entries plus standalone People, Places, and Habits.
+- Keyword search covers Entries plus standalone People and Places.
 - Entry filters include date, Type, Collection, and tag and do not pretend to apply to unrelated entity kinds.
 - Search results explain matches and open the original source.
 - AI answers are grounded in bounded source evidence and cite the Entries used.
@@ -92,15 +105,20 @@ Photo metadata may be offered as a date or Place suggestion but is never adopted
 ## Timeline and Home
 
 Timeline shows point events and overlapping life periods on customizable tracks.
+The first Timeline visit asks for a private birth date, uses it as the story's starting point, and keeps it editable in Settings.
 Default tracks cover Places, Education, Career, Homes, Vehicles, Relationships, Health, First Times, and Other Events.
 The user can create, order, rename, hide, and restore tracks without deleting content.
+Timeline's global Add moment flow asks for the Entry type before opening details: a generic Moment, Home, Vehicle, or First Time.
+Entry type determines the data model and editor, while Track only determines where a generic Moment appears on Timeline.
+The Homes, Vehicles, and First Times track shortcuts open their specialized editors directly; other track shortcuts open the generic Moment editor with that track preselected.
+Opening an existing Home, Vehicle, or First Time from Timeline keeps the user on Timeline and uses the same specialized editor as its Records page.
 Unanchored Age, Approximate, and Unknown moments remain visible without a fabricated calendar position.
 
 Home is ordered around:
 
 1. Search.
 2. Quick Capture.
-3. Today's Habits.
+3. Current life stages.
 4. A quiet resurfaced memory.
 5. Recent Entries.
 
@@ -114,14 +132,6 @@ Inbox content, Trash, and Life Stages do not appear as resurfaced memory cards.
 
 A First Time requires only a title and accepts the full date-precision model, optional writing, photos, Place, People, Goal, Collections, tags, and Timeline context.
 It may be created directly or by converting an existing Entry without duplicating content.
-
-### Habits
-
-Habits support Check and Measure modes, daily, weekday, weekly-target, and custom-interval schedules, optional notes, and optional Entry context.
-States are Completed, Missed, Intentionally skipped, and Not scheduled.
-Intentional skips are neutral for streak and completion-rate calculations.
-Analytics include current and longest streaks, completion rate, missed days, monthly summaries, a yearly chart, and weekday patterns.
-Habit reminders are outside the current scope.
 
 ### Homes and Vehicles
 
@@ -153,7 +163,7 @@ The data model preserves future Map capability, but Map UI is deferred.
 Soft Ledger is the visual direction: minimal, archival, modern, calm, and approachable.
 Both clients support light and dark appearance, share semantic design intent, and still follow native platform conventions where identical interaction would reduce usability.
 
-Mobile uses Home, Inbox, Timeline, Habits, and Library as its five primary destinations.
+Mobile uses Home, Inbox, Timeline, and Library as its primary destinations.
 Library contains Collections, First Times, Goals, Homes, Vehicles, Places, and People.
 Settings is reached from the profile control.
 
@@ -176,6 +186,7 @@ It is not a social network, publishing platform, collaboration system, generic t
 Deferred or undecided work includes:
 
 - Map UI;
+- Habits and reminders;
 - a native iOS Share Extension;
 - bulk Inbox review;
 - optional PWA enhancements;

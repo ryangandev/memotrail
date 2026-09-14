@@ -143,6 +143,28 @@ describe("precision-aware occurrence", () => {
       resolveOccurrenceDraft({ ...draft, label: "x".repeat(201) }).error,
     ).toBeDefined();
   });
+  it("supports an optional end date and explicit Present mode", () => {
+    const draft = {
+      precision: "range" as const,
+      start: "2020-01-01",
+      end: "",
+      label: "",
+      timezone: "UTC",
+    };
+    expect(
+      resolveOccurrenceDraft({ ...draft, endMode: "present" }).value,
+    ).toMatchObject({ occurredEnd: null });
+    expect(
+      resolveOccurrenceDraft({ ...draft, endMode: "date" }).value,
+    ).toMatchObject({ occurredEnd: null });
+    expect(
+      resolveOccurrenceDraft({
+        ...draft,
+        end: "2023-01-01",
+        endMode: "date",
+      }).value,
+    ).toMatchObject({ occurredEnd: "2023-01-01T12:00:00.000Z" });
+  });
   it("supports precision-aware stage ends without relaxing ordinary Entry validation", () => {
     for (const [precision, start, end] of [
       ["year", "2017", "2023"],

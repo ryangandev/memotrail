@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { AuthGate } from "@/components/auth-gate";
 import { CaptureComposer } from "@/components/capture-composer";
 import { Icon } from "@/components/icon";
-import { WorkspaceShell } from "@/components/workspace-shell";
 import { greetingInTimezone } from "@/lib/data/home-input";
 import {
   getHomeWorkspace,
@@ -12,33 +10,18 @@ import {
   type HomeStage,
   type HomeWorkspace,
 } from "@/lib/data/home";
-import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import styles from "./home.module.css";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const isConfigured = Boolean(getSupabasePublicConfig());
-
-  if (!isConfigured) {
-    return <AuthGate configured={false} />;
-  }
-
   const workspace = await getHomeWorkspace();
 
   if (!workspace) {
-    return <AuthGate configured />;
+    return null;
   }
 
-  return (
-    <WorkspaceShell
-      activeDestination="home"
-      inboxCount={workspace.snapshot?.inboxCount}
-      viewer={workspace.viewer}
-    >
-      <HomeContent workspace={workspace} />
-    </WorkspaceShell>
-  );
+  return <HomeContent workspace={workspace} />;
 }
 
 function HomeContent({ workspace }: { workspace: HomeWorkspace }) {
@@ -107,13 +90,6 @@ function HomeSnapshotContent({
             icon="inbox"
             label="Waiting in Inbox"
             value={snapshot.inboxCount}
-          />
-          <HomeStat
-            detail={habitProgressLabel(snapshot)}
-            href="/habits"
-            icon="check"
-            label="Habits complete"
-            value={snapshot.completedHabitCount}
           />
           <HomeStat
             detail={entryLabel(snapshot.currentStageCount, "current chapter")}
@@ -370,19 +346,6 @@ function todayLabel(date: Date, timezone: string) {
 
 function displayFirstName(name: string) {
   return name.trim().split(/\s+/)[0] || "MemoTrail";
-}
-
-function habitProgressLabel(snapshot: HomeSnapshot) {
-  if (snapshot.dueHabitCount === 0) {
-    return snapshot.activeHabitCount === 0
-      ? "No Habits created yet"
-      : "Nothing scheduled today";
-  }
-
-  const intentional = snapshot.skippedHabitCount
-    ? ` · ${snapshot.skippedHabitCount} skipped`
-    : "";
-  return `${snapshot.completedHabitCount} of ${snapshot.dueHabitCount} due${intentional}`;
 }
 
 function entryLabel(count: number, noun: string) {

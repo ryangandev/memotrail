@@ -38,6 +38,29 @@ describe("createTimelineLayout", () => {
     expect(layout.positions).toEqual([]);
   });
 
+  it("starts an empty Timeline at the owner's birth date and continues to today", () => {
+    const layout = createTimelineLayout([], reference, "1994-04-18");
+
+    expect(layout.start).toBe("1994-04-18T00:00:00.000Z");
+    expect(layout.yearMarkers[0]).toEqual({
+      label: "1994",
+      leftPercent: 0,
+      year: 1994,
+    });
+    expect(new Date(layout.end).getTime()).toBeGreaterThan(reference.getTime());
+  });
+
+  it("does not move the Timeline before birth for an earlier imported moment", () => {
+    const layout = createTimelineLayout(
+      [source({ occurredStart: "1990-01-01T00:00:00.000Z" })],
+      reference,
+      "1994-04-18",
+    );
+
+    expect(layout.start).toBe("1994-04-18T00:00:00.000Z");
+    expect(layout.positions[0]?.leftPercent).toBe(0);
+  });
+
   it("orders an event within padded bounds", () => {
     const layout = createTimelineLayout([source()], reference);
     const position = layout.positions[0];
@@ -105,6 +128,82 @@ describe("createTimelineLayout", () => {
 
     expect(layout.positions.map((item) => item.lane)).toEqual([0, 0]);
     expect(layout.laneCountByTrack.places).toBe(1);
+  });
+
+  it("reuses a lane for short non-overlapping stages on a life-long Timeline", () => {
+    const layout = createTimelineLayout(
+      [
+        source({
+          id: "walmart",
+          kind: "stage",
+          occurredEnd: "2026-01-31T00:00:00.000Z",
+          occurredStart: "2025-05-19T00:00:00.000Z",
+          trackId: "career",
+        }),
+        source({
+          id: "adobe",
+          kind: "stage",
+          occurredStart: "2026-04-13T00:00:00.000Z",
+          trackId: "career",
+        }),
+      ],
+      reference,
+      "2000-05-16",
+    );
+
+    expect(layout.positions.map((item) => item.lane)).toEqual([0, 0]);
+    expect(layout.laneCountByTrack.career).toBe(1);
+  });
+
+  it("separates point events whose rendered labels overlap", () => {
+    const layout = createTimelineLayout(
+      [
+        source({
+          id: "event-1",
+          occurredStart: "2026-01-01T00:00:00.000Z",
+        }),
+        source({
+          id: "event-2",
+          occurredStart: "2026-06-01T00:00:00.000Z",
+        }),
+      ],
+      reference,
+      "2000-05-16",
+    );
+
+    expect(layout.positions.map((item) => item.lane)).toEqual([0, 1]);
+    expect(layout.laneCountByTrack.places).toBe(2);
+  });
+
+  it("aligns short ongoing stage labels to their shared present endpoint", () => {
+    const layout = createTimelineLayout(
+      [
+        source({
+          id: "adobe",
+          kind: "stage",
+          occurredStart: "2026-04-13T00:00:00.000Z",
+          trackId: "career",
+        }),
+        source({
+          id: "evergreen",
+          kind: "stage",
+          occurredStart: "2026-09-01T00:00:00.000Z",
+          trackId: "homes",
+        }),
+      ],
+      reference,
+      "2000-05-16",
+    );
+    const rightEdges = layout.positions.map(
+      (position) =>
+        (position.leftPercent / 100) * layout.canvasWidth +
+        position.stageLabelOffsetPixels +
+        Math.max(position.widthPixels, 54),
+    );
+    const today = (layout.todayPercent / 100) * layout.canvasWidth;
+
+    expect(rightEdges[0]).toBeCloseTo(rightEdges[1]!, 5);
+    expect(rightEdges[0]).toBeCloseTo(today, 5);
   });
 
   it("calculates lanes independently for each track", () => {

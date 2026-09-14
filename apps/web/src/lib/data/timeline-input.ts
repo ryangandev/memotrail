@@ -1,6 +1,10 @@
 import { validateOccurrence } from "./occurrence";
 export const timelineBodyLimit = 50_000;
+export const timelineCollectionCountLimit = 20;
+export const timelineCollectionNameLimit = 80;
 export const timelineLabelLimit = 200;
+export const timelineTagCountLimit = 50;
+export const timelineTagNameLimit = 60;
 export const timelineTitleLimit = 200;
 
 export const timelineDatePrecisions = [
@@ -19,6 +23,7 @@ export type TimelineKind = "event" | "stage";
 
 export type TimelineEntryInput = {
   body: string;
+  collectionNames: string[];
   datePrecision: TimelineDatePrecision;
   id: string | null;
   kind: TimelineKind;
@@ -27,6 +32,7 @@ export type TimelineEntryInput = {
   occurredStart: string | null;
   occurredTimezone: string;
   revision: number | null;
+  tagNames: string[];
   title: string;
   trackId: string;
 };
@@ -43,8 +49,30 @@ export function parseTimelineEntryInput(
 ): ParsedTimelineEntryInput {
   const title = input.title.trim();
   const body = input.body.trim();
+  const collectionNames = normalizedNames(input.collectionNames);
   const occurredLabel = input.occurredLabel?.trim() || null;
   const occurredTimezone = input.occurredTimezone.trim();
+  const tagNames = normalizedNames(input.tagNames);
+
+  if (
+    collectionNames.length > timelineCollectionCountLimit ||
+    collectionNames.some(
+      (name) => [...name].length > timelineCollectionNameLimit,
+    )
+  ) {
+    return invalid(
+      `Use up to ${timelineCollectionCountLimit} Collections with ${timelineCollectionNameLimit} characters each.`,
+    );
+  }
+
+  if (
+    tagNames.length > timelineTagCountLimit ||
+    tagNames.some((name) => [...name].length > timelineTagNameLimit)
+  ) {
+    return invalid(
+      `Use up to ${timelineTagCountLimit} tags with ${timelineTagNameLimit} characters each.`,
+    );
+  }
 
   if (!uuidPattern.test(input.trackId)) {
     return invalid("Choose a valid Timeline track.");
@@ -100,14 +128,29 @@ export function parseTimelineEntryInput(
     data: {
       ...input,
       body,
+      collectionNames,
       occurredEnd,
       occurredLabel,
       occurredStart,
       occurredTimezone,
+      tagNames,
       title,
     },
     success: true,
   };
+}
+
+function normalizedNames(names: string[]) {
+  const seen = new Set<string>();
+
+  return names.flatMap((value) => {
+    const name = value.trim();
+    const key = name.toLocaleLowerCase();
+
+    if (!name || seen.has(key)) return [];
+    seen.add(key);
+    return [name];
+  });
 }
 
 export function isTimelineEntryIdentity(

@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  distDir: process.env.MEMOTRAIL_NEXT_DIST_DIR ?? ".next",
   serverExternalPackages: [
     "@memotrail/media-runtime",
     "sharp",

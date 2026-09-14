@@ -3,6 +3,10 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
+import {
+  fillOccurrenceEnd,
+  fillOccurrenceStart,
+} from "./helpers/occurrence";
 
 for (const kind of ["home", "vehicle"] as const) {
   test(`${kind} editing preserves uncertain dates and original exact instants`, async ({
@@ -112,7 +116,7 @@ for (const kind of ["home", "vehicle"] as const) {
       await page.goto(config.path + "?entry=" + id);
       const dialog = page.getByRole("dialog");
       await expect(
-        dialog.getByRole("combobox", { name: "Date precision", exact: true }),
+        dialog.getByRole("combobox", { name: "Date type", exact: true }),
       ).toHaveValue("exact");
       await dialog
         .getByRole("button", { name: "Save changes", exact: true })
@@ -138,13 +142,11 @@ for (const kind of ["home", "vehicle"] as const) {
       ]) {
         await page.getByRole("button", { name: /Precision chapter/ }).click();
         await dialog
-          .getByRole("combobox", { name: "Date precision", exact: true })
+          .getByRole("combobox", { name: "Date type", exact: true })
           .selectOption(precision);
         if (precision !== "unknown") {
-          await dialog.getByLabel("Occurred", { exact: true }).fill(start);
-          await dialog
-            .getByLabel("End date (optional)", { exact: true })
-            .fill(end);
+          if (start) await fillOccurrenceStart(dialog, start);
+          if (end) await fillOccurrenceEnd(dialog, end);
         }
         await dialog
           .getByLabel("Date description", { exact: true })
@@ -186,7 +188,7 @@ for (const kind of ["home", "vehicle"] as const) {
       await page.reload();
       await page.getByRole("button", { name: /Precision chapter/ }).click();
       await expect(
-        dialog.getByRole("combobox", { name: "Date precision", exact: true }),
+        dialog.getByRole("combobox", { name: "Date type", exact: true }),
       ).toHaveValue("unknown");
       await page.screenshot({
         path: `/private/tmp/memotrail-${kind}-chapter-desktop.png`,
@@ -206,7 +208,7 @@ for (const kind of ["home", "vehicle"] as const) {
         })
         .click();
       await expect(
-        dialog.getByRole("combobox", { name: "Date precision", exact: true }),
+        dialog.getByRole("combobox", { name: "Date type", exact: true }),
       ).toHaveValue("unknown");
       await dialog
         .getByRole("textbox", {

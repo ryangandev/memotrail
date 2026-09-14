@@ -291,8 +291,10 @@ function PhotoViewer({
   const [index, setIndex] = useState(initialIndex);
   useEffect(() => {
     const element = dialog.current;
-    element?.showModal();
-    return () => element?.close();
+
+    if (element && !element.open) {
+      element.showModal();
+    }
   }, []);
   return (
     <dialog

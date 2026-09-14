@@ -17,7 +17,6 @@ const plan = {
   dateFrom: null,
   dateTo: null,
   beforeLatestHome: false,
-  includeHabits: false,
   order: "oldest",
 };
 describe("AI search trust boundary", () => {
@@ -157,7 +156,7 @@ describe("AI search trust boundary", () => {
       { entryTypes: ["unknown"] },
       { dateFrom: "2026-02-30" },
       { dateFrom: "2026-05-01", dateTo: "2026-01-01" },
-      { includeHabits: "yes" },
+      { beforeLatestHome: "yes" },
     ])
       expect(parseSearchPlan({ ...plan, ...invalid })).toBeNull();
   });
@@ -283,17 +282,14 @@ describe("AI search trust boundary", () => {
       ).length,
     ).toBeLessThan(44000);
   });
-  it("declares missing precision and Habit scope without fabricating dates", () => {
+  it("declares missing precision without fabricating dates", () => {
     const { notices } = buildSearchSources(
       {
         latest_home_reference: { id, title: "Home", date_precision: "age" },
         reference_window_applied: false,
-        habits: { scope: "Active Habits only", total_count: 60, habits: [] },
       },
       [],
     );
     expect(notices.join(" ")).toContain("uncertain date");
-    expect(notices.join(" ")).toContain("Active Habits only");
-    expect(notices.join(" ")).toContain("not a complete Habit ranking");
   });
 });
