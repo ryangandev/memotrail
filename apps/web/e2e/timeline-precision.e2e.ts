@@ -100,6 +100,27 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       ).error,
     ).toBeNull();
     await page.goto("/timeline");
+    const timelineViewport = page.getByTestId("timeline-viewport");
+    const edgeBounds = await timelineViewport.evaluate((element) => {
+      element.scrollLeft = element.scrollWidth;
+      const finalYear = element.querySelector(
+        '[data-testid="timeline-axis"] span:last-child',
+      );
+      const viewportBox = element.getBoundingClientRect();
+      const finalYearBox = finalYear?.getBoundingClientRect();
+
+      return {
+        finalYearRight: finalYearBox?.right ?? 0,
+        finalYearWidth: finalYearBox?.width ?? 0,
+        viewportRight: viewportBox.right,
+        viewportWidth: viewportBox.width,
+      };
+    });
+    expect(edgeBounds.viewportWidth).toBeGreaterThan(0);
+    expect(edgeBounds.finalYearWidth).toBeGreaterThan(0);
+    expect(edgeBounds.finalYearRight).toBeLessThanOrEqual(
+      edgeBounds.viewportRight + 1,
+    );
     await page.getByRole("button", { name: /First trip to Japan/ }).click();
     const dialog = page.getByRole("dialog");
     await page.screenshot({

@@ -212,10 +212,13 @@ export function TimelineWorkspace({
                   ))}
               </section>
             ) : null}
-            <div className={styles.timelineViewport}>
+            <div
+              className={styles.timelineViewport}
+              data-testid="timeline-viewport"
+            >
               <div className={styles.timelineGrid} style={gridStyle}>
                 <div className={styles.axisCorner}>Track</div>
-                <div className={styles.axis}>
+                <div className={styles.axis} data-testid="timeline-axis">
                   {layout.yearMarkers.map((marker) => (
                     <span
                       key={marker.year}
@@ -404,6 +407,10 @@ function TrackRow({
             "aria-label": `${entry.title}, ${entryDateLabel(entry)}`,
             className:
               entry.kind === "stage" ? styles.stageItem : styles.eventItem,
+            "data-edge":
+              entry.kind === "event" && position.leftPercent > 90
+                ? "end"
+                : undefined,
             style: itemStyle,
             title: `${entry.title} · ${entryDateLabel(entry)}`,
           };

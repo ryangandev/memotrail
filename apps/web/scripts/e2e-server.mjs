@@ -10,6 +10,7 @@ if (local.API_URL !== "http://127.0.0.1:54321")
   throw new Error("E2E requires the local Supabase instance.");
 const env = {
   ...process.env,
+  MEMOTRAIL_NEXT_DIST_DIR: ".next-e2e",
   NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3100",
   NEXT_PUBLIC_SUPABASE_URL: local.API_URL,
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: local.PUBLISHABLE_KEY || local.ANON_KEY,

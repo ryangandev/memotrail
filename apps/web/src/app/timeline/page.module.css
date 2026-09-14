@@ -167,10 +167,18 @@
 .axis span {
   position: absolute;
   top: 17px;
-  transform: translateX(8px);
+  transform: translateX(-50%);
   color: var(--mt-color-ink-faint);
   font-family: var(--mt-font-family-mono);
   font-size: 10px;
+}
+
+.axis span:first-child {
+  transform: none;
+}
+
+.axis span:last-child {
+  transform: translateX(-100%);
 }
 
 .trackLabel {
@@ -266,6 +274,7 @@
 
 .stageItem {
   width: max(54px, var(--item-width));
+  max-width: calc(100% - var(--item-left));
   overflow: hidden;
   padding: 0 10px;
   border: 1px solid color-mix(in srgb, var(--mt-color-accent) 42%, transparent);
@@ -294,6 +303,10 @@
   background: transparent;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.eventItem[data-edge="end"] {
+  transform: translateX(-100%);
 }
 
 .eventItem > span:last-child {
