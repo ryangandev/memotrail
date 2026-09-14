@@ -41,7 +41,7 @@ export default async function TagsPage({
         <OrganizationControl items={workspace.items} kind="tag" />
       </header>
 
-      <form className={styles.search}>
+      <form aria-label="Find tags" className={styles.search} role="search">
         <label htmlFor="tag-search">Find a tag</label>
         <div>
           <input

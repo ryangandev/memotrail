@@ -111,6 +111,34 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       ).toBeVisible();
     }
 
+    const tagSearch = page.getByRole("search", { name: "Find tags" });
+    const tagList = page.getByRole("region", { name: "Tags" });
+    await expect(tagSearch).toBeVisible();
+    await expect(tagList).toBeVisible();
+    const tagSurface = await tagList.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        background: style.backgroundColor,
+        borderRadius: Number.parseFloat(style.borderRadius),
+      };
+    });
+    expect(tagSurface.background).not.toBe("rgba(0, 0, 0, 0)");
+    expect(tagSurface.borderRadius).toBeGreaterThan(0);
+    const searchControlHeights = await Promise.all(
+      [tagSearch.getByRole("textbox"), tagSearch.getByRole("button")].map(
+        (control) =>
+          control.evaluate((element) => element.getBoundingClientRect().height),
+      ),
+    );
+    expect(
+      Math.abs(searchControlHeights[0] - searchControlHeights[1]),
+    ).toBeLessThan(1);
+    await page.screenshot({
+      caret: "initial",
+      fullPage: true,
+      path: "/private/tmp/memotrail-tags-consistent.png",
+    });
+
     await page.goto("/timeline");
     const birthDatePrompt = page.getByRole("dialog", {
       name: "When did your story begin?",
