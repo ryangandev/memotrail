@@ -260,9 +260,6 @@
 
 .routeLoading {
   position: relative;
-  width: min(100% - 64px, 1180px);
-  margin: 0 auto;
-  padding: var(--mt-space-10) 0 var(--mt-space-16);
 }
 
 .loadingEyebrow,
@@ -438,12 +435,6 @@
 
 .syncStatus.syncPending > span {
   background: var(--mt-color-warm);
-}
-
-.content {
-  width: min(100% - 64px, 820px);
-  margin: 0 auto;
-  padding: var(--mt-space-12) 0 var(--mt-space-16);
 }
 
 .pageHeader {
@@ -1681,10 +1672,6 @@
     left: 218px;
   }
 
-  .content {
-    width: min(100% - 40px, 720px);
-  }
-
   .topBar {
     justify-content: flex-start;
     padding-inline: var(--mt-space-5);
@@ -1715,11 +1702,6 @@
   .navigationProgress {
     top: 57px;
     left: 0;
-  }
-
-  .routeLoading {
-    width: min(100% - 32px, 620px);
-    padding-top: var(--mt-space-8);
   }
 
   .loadingCards {
@@ -1794,11 +1776,6 @@
 
   .topActions {
     position: static;
-  }
-
-  .content {
-    width: min(100% - 32px, 620px);
-    padding: var(--mt-space-8) 0 var(--mt-space-12);
   }
 
   .pageHeader {
@@ -1978,14 +1955,6 @@
 }
 
 @media (max-width: 390px) {
-  .content {
-    width: min(100% - 24px, 620px);
-  }
-
-  .routeLoading {
-    width: min(100% - 24px, 620px);
-  }
-
   .captureIntro {
     gap: var(--mt-space-3);
     padding-inline: var(--mt-space-4);

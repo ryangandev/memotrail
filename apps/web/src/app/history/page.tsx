@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { EntryHistoryView } from "@/components/entry-history-view";
+import { PageFrame } from "@/components/page-frame";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
   historyTitle,
@@ -34,88 +35,88 @@ export default async function HistoryPage({
       });
   const rows = (selected ? [] : (result.data ?? [])) as HistoryIndexEntry[];
   return (
-    <div className={styles.workspace}>
-        <header>
-          <p className={styles.eyebrow}>NOTHING GOOD HAS TO BE LOST</p>
-          <h1>Entry history</h1>
-          <p>
-            Revisit earlier words and metadata. Restoring saves your current
-            version first.
-          </p>
-        </header>
-        {result.error ? (
-          <p role="alert">History could not load. Refresh to try again.</p>
-        ) : selected ? (
-          result.data ? (
-            <EntryHistoryView
-              key={`${selected}:${page}`}
-              history={result.data as EntryHistory}
-              page={page}
-              ownerId={context.viewer.id}
-            />
-          ) : (
-            <p>
-              This Entry is no longer available.{" "}
-              <Link href="/history">Back to history</Link>
-            </p>
-          )
+    <PageFrame className={styles.workspace} variant="wide">
+      <header>
+        <p className={styles.eyebrow}>NOTHING GOOD HAS TO BE LOST</p>
+        <h1>Entry history</h1>
+        <p>
+          Revisit earlier words and metadata. Restoring saves your current
+          version first.
+        </p>
+      </header>
+      {result.error ? (
+        <p role="alert">History could not load. Refresh to try again.</p>
+      ) : selected ? (
+        result.data ? (
+          <EntryHistoryView
+            key={`${selected}:${page}`}
+            history={result.data as EntryHistory}
+            page={page}
+            ownerId={context.viewer.id}
+          />
         ) : (
-          <>
-            <form className={styles.search}>
-              <label htmlFor="history-search">Find an Entry</label>
-              <div>
-                <input
-                  id="history-search"
-                  name="q"
-                  defaultValue={query}
-                  maxLength={200}
-                  placeholder="Title or words in the current Entry"
-                />
-                <button>Search history</button>
-              </div>
-            </form>
-            {rows.length === 0 ? (
-              <p className={styles.empty}>
-                No matching history yet. Earlier versions appear after an Entry
-                is edited.
-              </p>
-            ) : (
-              <div className={styles.list}>
-                {rows.map((row) => (
-                  <Link
-                    href={`/history?entry=${row.entry_id}`}
-                    key={row.entry_id}
-                  >
-                    <strong>{historyTitle(row)}</strong>
-                    <span>
-                      {row.entry_type.replaceAll("_", " ")} ·{" "}
-                      {row.version_count} earlier versions
-                      {row.is_deleted ? " · In Trash" : ""}
-                    </span>
-                    <p>{row.excerpt}</p>
-                  </Link>
-                ))}
-              </div>
+          <p>
+            This Entry is no longer available.{" "}
+            <Link href="/history">Back to history</Link>
+          </p>
+        )
+      ) : (
+        <>
+          <form className={styles.search}>
+            <label htmlFor="history-search">Find an Entry</label>
+            <div>
+              <input
+                id="history-search"
+                name="q"
+                defaultValue={query}
+                maxLength={200}
+                placeholder="Title or words in the current Entry"
+              />
+              <button>Search history</button>
+            </div>
+          </form>
+          {rows.length === 0 ? (
+            <p className={styles.empty}>
+              No matching history yet. Earlier versions appear after an Entry is
+              edited.
+            </p>
+          ) : (
+            <div className={styles.list}>
+              {rows.map((row) => (
+                <Link
+                  href={`/history?entry=${row.entry_id}`}
+                  key={row.entry_id}
+                >
+                  <strong>{historyTitle(row)}</strong>
+                  <span>
+                    {row.entry_type.replaceAll("_", " ")} · {row.version_count}{" "}
+                    earlier versions
+                    {row.is_deleted ? " · In Trash" : ""}
+                  </span>
+                  <p>{row.excerpt}</p>
+                </Link>
+              ))}
+            </div>
+          )}
+          <nav className={styles.pagination} aria-label="History pages">
+            {page > 1 && (
+              <Link
+                href={`/history?q=${encodeURIComponent(query)}&page=${page - 1}`}
+              >
+                Newer Entries
+              </Link>
             )}
-            <nav className={styles.pagination} aria-label="History pages">
-              {page > 1 && (
-                <Link
-                  href={`/history?q=${encodeURIComponent(query)}&page=${page - 1}`}
-                >
-                  Newer Entries
-                </Link>
-              )}
-              <span>Page {page}</span>
-              {(rows[0]?.total_count ?? 0) > page * 50 && (
-                <Link
-                  href={`/history?q=${encodeURIComponent(query)}&page=${page + 1}`}
-                >
-                  Older Entries
-                </Link>
-              )}
-            </nav>
-          </>
-        )}
-    </div>
+            <span>Page {page}</span>
+            {(rows[0]?.total_count ?? 0) > page * 50 && (
+              <Link
+                href={`/history?q=${encodeURIComponent(query)}&page=${page + 1}`}
+              >
+                Older Entries
+              </Link>
+            )}
+          </nav>
+        </>
+      )}
+    </PageFrame>
   );
 }

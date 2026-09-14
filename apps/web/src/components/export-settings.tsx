@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { PageFrame } from "@/components/page-frame";
 import {
   appendExportTail,
   exportFilename,
@@ -201,7 +202,7 @@ export function ExportSettings({
     }
   }
   return (
-    <div className={styles.content}>
+    <PageFrame className={styles.content} variant="compact">
       <header>
         <p className={styles.eyebrow}>YOUR ARCHIVE, TO KEEP</p>
         <h1>Export archive</h1>
@@ -306,6 +307,6 @@ export function ExportSettings({
         memory before saving. If a download exceeds the server time limit, it
         fails explicitly rather than leaving a falsely complete backup.
       </p>
-    </div>
+    </PageFrame>
   );
 }

@@ -1,6 +1,7 @@
 import { CaptureComposer } from "@/components/capture-composer";
 import { EntryReviewList } from "@/components/entry-review-list";
 import { Icon } from "@/components/icon";
+import { PageFrame } from "@/components/page-frame";
 import {
   getInboxWorkspace,
   type InboxEntry,
@@ -34,7 +35,7 @@ function Workspace({
   viewer: Viewer;
 }) {
   return (
-    <div className={styles.content}>
+    <PageFrame variant="compact">
       <header className={styles.pageHeader}>
         <div>
           <p className={styles.eyebrow}>{todayLabel()}</p>
@@ -49,10 +50,7 @@ function Workspace({
 
       <CaptureComposer ownerId={viewer.id} />
 
-      <section
-        className={styles.entrySection}
-        aria-labelledby="recent-heading"
-      >
+      <section className={styles.entrySection} aria-labelledby="recent-heading">
         <div className={styles.sectionHeader}>
           <div>
             <h2 id="recent-heading">Unsorted</h2>
@@ -88,7 +86,7 @@ function Workspace({
           />
         </div>
       </section>
-    </div>
+    </PageFrame>
   );
 }
 

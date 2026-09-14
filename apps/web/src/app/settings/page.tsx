@@ -3,6 +3,7 @@ import { signOut } from "@/app/auth/actions";
 import { Icon, type IconName } from "@/components/icon";
 import { BirthDateSetting } from "@/components/birth-date-setting";
 import { TimezoneSetting } from "@/components/timezone-setting";
+import { PageFrame } from "@/components/page-frame";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
   storedBirthDate,
@@ -55,7 +56,7 @@ export default async function SettingsPage() {
   );
 
   return (
-    <div className={styles.content}>
+    <PageFrame className={styles.content} variant="compact">
       <header className={styles.header}>
         <p>Your private space</p>
         <h1>Settings</h1>
@@ -139,6 +140,6 @@ export default async function SettingsPage() {
           </p>
         </div>
       </aside>
-    </div>
+    </PageFrame>
   );
 }

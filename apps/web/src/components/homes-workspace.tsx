@@ -18,6 +18,7 @@ import {
 import styles from "@/app/homes/page.module.css";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
+import { PageFrame } from "@/components/page-frame";
 import {
   firstTimePhotoLimit,
   firstTimePhotoSizeLimit,
@@ -77,7 +78,7 @@ export function HomesWorkspace({
   const earlierHomes = homes.filter((home) => home.occurredEnd);
 
   return (
-    <div className={styles.content}>
+    <PageFrame variant="wide">
       <header className={styles.pageHeader}>
         <div>
           <p className={styles.eyebrow}>The places that held your life</p>
@@ -167,7 +168,7 @@ export function HomesWorkspace({
           tagOptions={tagOptions}
         />
       ) : null}
-    </div>
+    </PageFrame>
   );
 }
 

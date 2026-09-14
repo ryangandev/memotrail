@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ExplorationView } from "@/components/exploration-view";
+import { PageFrame } from "@/components/page-frame";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { explorationID } from "@/lib/ai/exploration";
 import { explorationWorkspace } from "@/lib/ai/exploration-server";
@@ -22,7 +23,7 @@ export default async function ExplorePage({
     }
   }
   return (
-    <div className={styles.workspace}>
+    <PageFrame className={styles.workspace} variant="compact">
       <header>
         <p className={styles.eyebrow}>ROOM FOR A THOUGHT TO GROW</p>
         <h1>Explore with AI</h1>
@@ -39,6 +40,6 @@ export default async function ExplorePage({
           <Link href="/inbox">Back to Inbox</Link>
         </p>
       )}
-    </div>
+    </PageFrame>
   );
 }

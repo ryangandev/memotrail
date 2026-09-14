@@ -21,6 +21,7 @@ import styles from "@/app/goals/page.module.css";
 import common from "@/app/homes/page.module.css";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
+import { PageFrame } from "@/components/page-frame";
 import {
   firstTimePhotoLimit,
   firstTimePhotoSizeLimit,
@@ -107,7 +108,7 @@ export function GoalsWorkspace({
   const bucketCount = goals.filter(isBucketListGoal).length;
 
   return (
-    <div className={common.content}>
+    <PageFrame variant="wide">
       <header className={common.pageHeader}>
         <div>
           <p className={common.eyebrow}>Intentions without pressure</p>
@@ -194,7 +195,7 @@ export function GoalsWorkspace({
           tagOptions={tagOptions}
         />
       ) : null}
-    </div>
+    </PageFrame>
   );
 }
 

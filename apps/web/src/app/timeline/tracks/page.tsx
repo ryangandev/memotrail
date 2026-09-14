@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PageFrame } from "@/components/page-frame";
 import { TrackSettings } from "@/components/track-settings";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import type { TrackSetting } from "@/lib/data/tracks";
@@ -22,7 +23,7 @@ export default async function TrackSettingsPage({
   });
   const tracks = (result.data ?? []) as TrackSetting[];
   return (
-    <div className={styles.workspace}>
+    <PageFrame className={styles.workspace} variant="standard">
       <header>
         <Link href="/timeline">Back to Timeline</Link>
         <p className={styles.eyebrow}>CHOOSE THE CHAPTERS YOU SEE</p>
@@ -48,6 +49,6 @@ export default async function TrackSettingsPage({
           <Link href={`/timeline/tracks?page=${page + 1}`}>More tracks</Link>
         )}
       </nav>
-    </div>
+    </PageFrame>
   );
 }

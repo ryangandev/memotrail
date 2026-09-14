@@ -2,6 +2,7 @@ import Link from "next/link";
 import styles from "@/app/collections/page.module.css";
 import { Icon } from "@/components/icon";
 import { OrganizationControl } from "@/components/organization-control";
+import { PageFrame } from "@/components/page-frame";
 import type {
   CollectionEntry,
   CollectionSummary,
@@ -20,7 +21,7 @@ export function CollectionsWorkspace({
   const { selectedCollection } = workspace;
 
   return (
-    <div className={styles.content}>
+    <PageFrame variant="wide">
       <header className={styles.pageHeader}>
         <div>
           <p className={styles.eyebrow}>
@@ -51,7 +52,7 @@ export function CollectionsWorkspace({
       ) : (
         <CollectionOverview workspace={workspace} />
       )}
-    </div>
+    </PageFrame>
   );
 }
 
@@ -123,15 +124,13 @@ function CollectionCard({
 }: {
   collection: CollectionSummary;
   index: number;
-  organizationItem: CollectionsWorkspaceData["organizationItems"][number] | undefined;
+  organizationItem:
+    CollectionsWorkspaceData["organizationItems"][number] | undefined;
   organizationItems: CollectionsWorkspaceData["organizationItems"];
 }) {
   return (
     <article className={styles.collectionCard}>
-      <Link
-        className={styles.cardLink}
-        href={`/collections/${collection.id}`}
-      >
+      <Link className={styles.cardLink} href={`/collections/${collection.id}`}>
         <div className={styles.cardTopline}>
           <span>{String(index).padStart(2, "0")}</span>
           <Icon name="archive" size={20} />

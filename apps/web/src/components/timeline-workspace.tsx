@@ -21,6 +21,7 @@ import { saveBirthDate } from "@/app/settings/actions";
 import { Icon } from "@/components/icon";
 import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
+import { PageFrame } from "@/components/page-frame";
 import type { FirstTimeEntry } from "@/lib/data/first-times";
 import type { HomePlaceOption, HomeRecord } from "@/lib/data/home-record";
 import type { TimelineEntry, TimelineTrack } from "@/lib/data/timeline";
@@ -223,7 +224,7 @@ export function TimelineWorkspace({
   }
 
   return (
-    <div className={styles.content}>
+    <PageFrame variant="canvas">
       <header className={styles.pageHeader}>
         <div>
           <p className={styles.eyebrow}>Your life in context</p>
@@ -515,7 +516,7 @@ export function TimelineWorkspace({
           }}
         />
       ) : null}
-    </div>
+    </PageFrame>
   );
 }
 

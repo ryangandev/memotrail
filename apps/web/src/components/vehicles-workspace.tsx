@@ -18,6 +18,7 @@ import {
 import styles from "@/app/homes/page.module.css";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
+import { PageFrame } from "@/components/page-frame";
 import {
   firstTimePhotoLimit,
   firstTimePhotoSizeLimit,
@@ -77,7 +78,7 @@ export function VehiclesWorkspace({
   const orderedVehicles = [...currentVehicles, ...earlierVehicles];
 
   return (
-    <div className={styles.content}>
+    <PageFrame variant="wide">
       <header className={styles.pageHeader}>
         <div>
           <p className={styles.eyebrow}>The machines that carried your story</p>
@@ -158,7 +159,7 @@ export function VehiclesWorkspace({
           vehicle={selectedVehicle}
         />
       ) : null}
-    </div>
+    </PageFrame>
   );
 }
 

@@ -1,7 +1,4 @@
 .workspace {
-  width: min(100% - 48px, 820px);
-  margin: 0 auto;
-  padding: 48px 0 120px;
   display: grid;
   gap: 24px;
 }
@@ -119,10 +116,6 @@
   white-space: pre-wrap;
 }
 @media (max-width: 600px) {
-  .workspace {
-    width: calc(100% - 24px);
-    padding-top: 28px;
-  }
   .source,
   .turn,
   .save {

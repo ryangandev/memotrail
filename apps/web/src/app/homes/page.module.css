@@ -1,9 +1,3 @@
-.content {
-  width: min(100% - 64px, 1080px);
-  margin: 0 auto;
-  padding: var(--mt-space-12) 0 var(--mt-space-16);
-}
-
 .pageHeader {
   display: flex;
   align-items: flex-end;
@@ -730,11 +724,6 @@
 }
 
 @media (max-width: 780px) {
-  .content {
-    width: min(100% - 32px, 680px);
-    padding: var(--mt-space-8) 0 calc(var(--mt-space-16) + 60px);
-  }
-
   .pageHeader {
     align-items: flex-start;
   }
@@ -819,10 +808,6 @@
 }
 
 @media (max-width: 480px) {
-  .content {
-    width: min(100% - 24px, 680px);
-  }
-
   .homeSection {
     margin-top: var(--mt-space-7);
   }
