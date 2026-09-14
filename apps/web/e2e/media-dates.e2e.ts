@@ -3,6 +3,10 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
+import {
+  fillOccurrenceStart,
+  occurrenceStartField,
+} from "./helpers/occurrence";
 import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
@@ -225,9 +229,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       })
       .click();
     await expect(dialog.getByLabel("Date precision")).toHaveValue("day");
-    await expect(dialog.getByLabel("Occurred", { exact: true })).toHaveValue(
-      "2017-07-08",
-    );
+    await expect(occurrenceStartField(dialog)).toHaveValue("2017-07-08");
     await expect(dialog.getByLabel("Time zone", { exact: true })).toHaveValue(
       "America/Los_Angeles",
     );
@@ -283,7 +285,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       .getByRole("button", { name: "Review", exact: true })
       .first()
       .click();
-    await dialog.getByLabel("Occurred", { exact: true }).fill("2018-02-03");
+    await fillOccurrenceStart(dialog, "2018-02-03");
     await dialog
       .getByRole("button", { name: "Save changes", exact: true })
       .click();

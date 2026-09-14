@@ -20,6 +20,7 @@ export type OccurrenceDraft = {
   precision: OccurrencePrecision;
   start: string;
   end: string;
+  endMode?: "date" | "present";
   label: string;
   timezone: string;
 };
@@ -170,6 +171,7 @@ export function occurrenceDraft(value: Occurrence): OccurrenceDraft {
     precision: value.datePrecision,
     start: local(value.occurredAt),
     end: local(value.occurredEnd),
+    endMode: value.occurredEnd ? "date" : "present",
     label: value.occurredLabel ?? "",
     timezone: value.occurredTimezone,
   };
@@ -205,7 +207,12 @@ export function resolveOccurrenceDraft(
   const bounded =
     draft.precision !== "unknown" &&
     (span || ["range", "approximate", "age"].includes(draft.precision));
-  const end = bounded ? convert(draft.end, "end") : null;
+  if (bounded && draft.endMode === "date" && !draft.end)
+    return { error: "Choose an end date, or continue through Present." };
+  const end =
+    bounded && draft.endMode !== "present"
+      ? convert(draft.end, "end")
+      : null;
   if (
     (draft.start && !start && draft.precision !== "unknown") ||
     (draft.end && !end && bounded)

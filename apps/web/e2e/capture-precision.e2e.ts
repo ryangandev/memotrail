@@ -3,6 +3,11 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
+import {
+  fillOccurrenceEnd,
+  fillOccurrenceStart,
+  occurrenceStartField,
+} from "./helpers/occurrence";
 
 test("Quick capture retains uncertain dates in drafts and offline replay", async ({
   page,
@@ -68,11 +73,9 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       .getByRole("textbox", { name: "Entry title", exact: true })
       .fill("Recovered partial draft");
     await capture.getByLabel("Date precision").selectOption("year");
-    await capture.getByLabel("Occurred", { exact: true }).fill("20");
+    await occurrenceStartField(capture).fill("20");
     await page.reload();
-    await expect(capture.getByLabel("Occurred", { exact: true })).toHaveValue(
-      "20",
-    );
+    await expect(occurrenceStartField(capture)).toHaveValue("20");
     await capture
       .getByRole("button", { name: "Save to Inbox", exact: true })
       .click();
@@ -107,14 +110,12 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
         .getByRole("combobox", { name: "Time zone", exact: true })
         .selectOption("Asia/Kathmandu");
       if (item.start)
-        await capture.getByLabel("Occurred", { exact: true }).fill(item.start);
+        await fillOccurrenceStart(capture, item.start);
       await capture
         .getByLabel("Date description", { exact: true })
         .fill(item.label);
       if (item.end)
-        await capture
-          .getByLabel("End date (optional)", { exact: true })
-          .fill(item.end);
+        await fillOccurrenceEnd(capture, item.end);
       if (item.precision === "age") {
         await page.setViewportSize({ width: 390, height: 844 });
         await page.emulateMedia({ colorScheme: "dark" });

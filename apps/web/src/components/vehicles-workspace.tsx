@@ -570,9 +570,6 @@ function VehicleEditor({
                   span
                 />
               </div>
-              <p className={styles.fullField}>
-                Leave the end date empty for a current Vehicle chapter.
-              </p>
             </fieldset>
 
             <fieldset className={styles.formSection}>

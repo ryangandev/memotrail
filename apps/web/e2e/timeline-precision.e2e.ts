@@ -3,6 +3,10 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
+import {
+  fillOccurrenceEnd,
+  fillOccurrenceStart,
+} from "./helpers/occurrence";
 
 test("Timeline edits preserve full occurrence precision without fabricated dates", async ({
   page,
@@ -100,6 +104,20 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     await page.screenshot({
       path: "/private/tmp/memotrail-timeline-precision-desktop.png",
     });
+    const startDatePicker = dialog.getByRole("button", {
+      name: "Choose start date",
+      exact: true,
+    });
+    await startDatePicker.click();
+    await expect(
+      page.locator(
+        '[data-scope="date-picker"][data-part="content"][data-state="open"]',
+      ),
+    ).toBeVisible();
+    await page.screenshot({
+      path: "/private/tmp/memotrail-date-picker-desktop.png",
+    });
+    await startDatePicker.click();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
@@ -190,9 +208,9 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
         .getByRole("combobox", { name: "Date precision", exact: true })
         .selectOption(sample.precision);
       if (sample.start)
-        await dialog.getByLabel("Occurred", { exact: true }).fill(sample.start);
+        await fillOccurrenceStart(dialog, sample.start);
       if (sample.end)
-        await dialog.getByLabel("End date (optional)").fill(sample.end);
+        await fillOccurrenceEnd(dialog, sample.end);
       await dialog.getByLabel("Date description").fill(sample.label);
       await dialog.getByRole("button", { name: "Save changes" }).click();
       await expect(dialog).not.toBeVisible();
@@ -220,6 +238,18 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
     await page.getByRole("button", { name: "Add moment", exact: true }).click();
     await expect(dialog.getByLabel("Date precision")).toHaveValue("unknown");
+    await dialog.getByRole("button", { name: "Event", exact: true }).click();
+    await expect(
+      dialog
+        .getByRole("combobox", { name: "Date precision", exact: true })
+        .locator('option[value="range"]'),
+    ).toHaveCount(0);
+    await dialog.getByRole("button", { name: "Stage", exact: true }).click();
+    await dialog.getByLabel("Date precision").selectOption("range");
+    await expect(
+      dialog.getByRole("checkbox", { name: "Present", exact: true }),
+    ).toBeChecked();
+    await expect(dialog.getByText("Ongoing through present")).toBeVisible();
     await dialog
       .getByLabel("Title", { exact: true })
       .fill("Unanchored childhood");

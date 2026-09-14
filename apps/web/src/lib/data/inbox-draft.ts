@@ -134,6 +134,9 @@ export function isCaptureOccurrenceDraft(
     occurrencePrecisions.includes(draft.precision!) &&
     typeof draft.start === "string" &&
     typeof draft.end === "string" &&
+    (draft.endMode === undefined ||
+      draft.endMode === "date" ||
+      draft.endMode === "present") &&
     typeof draft.label === "string" &&
     typeof draft.timezone === "string"
   );

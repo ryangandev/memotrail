@@ -611,9 +611,6 @@ function HomeEditor({
                   span
                 />
               </div>
-              <p className={styles.fullField}>
-                Leave the end date empty for a current residence.
-              </p>
               <label>
                 <span>
                   Why you moved in <small>Optional</small>

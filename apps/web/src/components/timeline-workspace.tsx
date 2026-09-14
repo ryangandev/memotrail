@@ -496,7 +496,13 @@ function TimelineEditor({
 
   function changeKind(nextKind: TimelineKind) {
     setKind(nextKind);
-    if (nextKind === "event") setOccurrence((value) => ({ ...value, end: "" }));
+    if (nextKind === "event")
+      setOccurrence((value) => ({
+        ...value,
+        end: "",
+        endMode: "present",
+        precision: value.precision === "range" ? "day" : value.precision,
+      }));
     setResult(null);
   }
 

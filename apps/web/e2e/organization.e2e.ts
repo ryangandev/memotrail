@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
+import { fillOccurrenceStart } from "./helpers/occurrence";
 
 test("Organization preserves relationships, Bucket List identity, and recoverable Collection deletion", async ({
   page,
@@ -155,7 +156,7 @@ test("Organization preserves relationships, Bucket List identity, and recoverabl
     await goal
       .getByRole("combobox", { name: "Date precision", exact: true })
       .selectOption("day");
-    await goal.getByLabel("Occurred", { exact: true }).fill("2026-09-12");
+    await fillOccurrenceStart(goal, "2026-09-12");
     const achievementResponse = page.waitForResponse(
       (response) =>
         response.request().method() === "POST" &&

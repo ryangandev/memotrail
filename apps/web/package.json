@@ -17,6 +17,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ark-ui/react": "5.39.2",
+    "@internationalized/date": "3.12.4",
     "@memotrail/media-runtime": "workspace:*",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.112.4",
