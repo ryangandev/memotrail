@@ -33,12 +33,19 @@ export function TrackSettings({ tracks }: { tracks: TrackSetting[] }) {
         discards unsaved track edits.
       </p>
       {adding && (
-        <TrackForm key={`new:${generation}`} onSaved={() => setAdding(false)} />
+        <TrackForm
+          key={`new:${generation}`}
+          onSaved={() => {
+            setAdding(false);
+            router.refresh();
+          }}
+        />
       )}
       <div className={styles.list}>
         {tracks.map((track) => (
           <TrackForm
             key={`${track.id}:${track.revision}:${generation}`}
+            onSaved={() => router.refresh()}
             track={track}
           />
         ))}
