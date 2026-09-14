@@ -29,7 +29,8 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
   });
   const owner = created.data.user!.id,
     id = randomUUID(),
-    ongoingId = randomUUID();
+    ongoingId = randomUUID(),
+    vehicleId = randomUUID();
   try {
     const cookies: { name: string; value: string }[] = [];
     const client = createServerClient(env.API_URL, env.ANON_KEY, {
@@ -97,6 +98,17 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
             occurred_timezone: "UTC",
             date_precision: "range",
           },
+          {
+            id: vehicleId,
+            owner_id: owner,
+            title: "Centered vehicle",
+            body: "",
+            entry_type: "vehicle",
+            occurred_start: "2024-01-01T12:00:00+00:00",
+            occurred_end: "2025-01-01T12:00:00+00:00",
+            occurred_timezone: "UTC",
+            date_precision: "range",
+          },
         ])
       ).error,
     ).toBeNull();
@@ -126,6 +138,12 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
             owner_id: owner,
             timeline_kind: "stage",
           },
+          {
+            entry_id: vehicleId,
+            track_id: fallbackTrack!.id,
+            owner_id: owner,
+            timeline_kind: "stage",
+          },
         ])
       ).error,
     ).toBeNull();
@@ -134,8 +152,24 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     await expect(timelineViewport).toBeVisible();
     const todayLine = page.getByTestId("timeline-today");
     const ongoingStage = page.getByRole("button", { name: /Current role/ });
+    const vehicleStage = page.getByRole("link", { name: /Centered vehicle/ });
     await expect(todayLine).toBeVisible();
     await expect(ongoingStage).toHaveAttribute("data-ongoing", "true");
+    await expect(vehicleStage).toBeVisible();
+    for (const stage of [ongoingStage, vehicleStage]) {
+      const appearance = await stage.evaluate((element) => {
+        const card = element.getBoundingClientRect();
+        const label = element.querySelector("span")!.getBoundingClientRect();
+        return {
+          centerOffset: Math.abs(
+            card.top + card.height / 2 - (label.top + label.height / 2),
+          ),
+          indicatorContent: window.getComputedStyle(element, "::after").content,
+        };
+      });
+      expect(appearance.centerOffset).toBeLessThan(1);
+      expect(appearance.indicatorContent).toBe("none");
+    }
     const ongoingGeometry = await ongoingStage.evaluate((element) => {
       const card = element.getBoundingClientRect();
       const line = document
@@ -175,18 +209,6 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     const timelineStage = page.getByRole("button", {
       name: /First trip to Japan/,
     });
-    const indicatorBounds = await timelineStage.evaluate((element) => {
-      const indicator = window.getComputedStyle(element, "::after");
-      return {
-        cardWidth: element.getBoundingClientRect().width,
-        left: Number.parseFloat(indicator.left),
-        right: Number.parseFloat(indicator.right),
-        width: Number.parseFloat(indicator.width),
-      };
-    });
-    expect(indicatorBounds.left).toBe(10);
-    expect(indicatorBounds.right).toBe(10);
-    expect(indicatorBounds.width).toBeLessThan(indicatorBounds.cardWidth);
     await timelineStage.click();
     const dialog = page.getByRole("dialog");
     await page.screenshot({
