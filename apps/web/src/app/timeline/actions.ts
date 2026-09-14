@@ -34,9 +34,10 @@ export async function saveTimelineEntry(
   }
 
   const { data, error } = await context.client.rpc(
-    "save_timeline_entry_with_occurrence",
+    "save_timeline_entry_with_organization",
     {
       p_body: parsed.data.body,
+      p_collection_names: parsed.data.collectionNames,
       p_date_precision: parsed.data.datePrecision,
       p_entry_id: parsed.data.id,
       p_expected_revision: parsed.data.revision,
@@ -45,6 +46,7 @@ export async function saveTimelineEntry(
       p_occurred_start: parsed.data.occurredStart,
       p_occurred_timezone: parsed.data.occurredTimezone,
       p_timeline_kind: parsed.data.kind,
+      p_tag_names: parsed.data.tagNames,
       p_title: parsed.data.title,
       p_track_id: parsed.data.trackId,
     },
@@ -129,6 +131,8 @@ export async function trashTimelineEntry(input: {
 }
 
 function refreshTimelinePaths() {
+  revalidatePath("/collections");
   revalidatePath("/timeline");
+  revalidatePath("/tags");
   revalidatePath("/search");
 }

@@ -24,6 +24,7 @@ export type WorkspaceDestination =
   | "people"
   | "search"
   | "settings"
+  | "tags"
   | "timeline"
   | "trash"
   | "vehicles"
@@ -74,6 +75,7 @@ const archiveNavigation: NavigationItem[] = [
     icon: "archive",
     label: "Collections",
   },
+  { destination: "tags", href: "/tags", icon: "tag", label: "Tags" },
   { destination: "trash", href: "/trash", icon: "trash", label: "Trash" },
 ];
 
@@ -227,6 +229,7 @@ function destinationForPathname(pathname: string): WorkspaceDestination {
   if (pathname.startsWith("/vehicles")) return "vehicles";
   if (pathname.startsWith("/first-times")) return "first-times";
   if (pathname.startsWith("/collections")) return "collections";
+  if (pathname.startsWith("/tags")) return "tags";
   if (pathname.startsWith("/trash")) return "trash";
   return "library";
 }
@@ -410,6 +413,7 @@ function isNavigationActive(
         "homes",
         "places",
         "people",
+        "tags",
         "trash",
         "vehicles",
       ].includes(activeDestination))

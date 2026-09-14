@@ -75,8 +75,15 @@ Photo metadata may be offered as a date or Place suggestion but is never adopted
 ## Organization, history, and relationships
 
 - An Entry has one Type and may belong to several Collections and tags.
+- Type defines the Entry's structure, while a Timeline track only defines where a generic moment is shown.
+- Collections are curated, browsable chapters that may contain Entries of different Types.
+- Tags are lightweight cross-Type descriptors for filtering and discovery.
+- People and Places are reusable entities linked to Entries, not alternate tags.
+- Inbox, Timeline, Home, Search, and Library are views or workflow states, not organization labels.
+- Collections and tags are created and managed directly from their Library destinations and remain available in every Entry editor.
 - Renaming a Collection or tag preserves its identity and linked Entries.
 - Moving a Collection to Trash never deletes its Entries or photos.
+- A used tag must be merged into another tag or removed from its Entries before deletion, so organization is never silently lost.
 - Entries may link to other Entries and expose incoming backlinks without copying writing.
 - Reusable People and Places may link to many Entries.
 - Important content, organization, relationship, specialized-field, and photo-membership changes remain recoverable through version history.

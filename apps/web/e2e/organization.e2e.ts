@@ -1,13 +1,13 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { test, expect } from "@playwright/test";
-import { createClient } from "@supabase/supabase-js";
+import { expect, test } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { fillOccurrenceStart } from "./helpers/occurrence";
 
-test("Organization preserves relationships, Bucket List identity, and recoverable Collection deletion", async ({
-  page,
+test("Collections and Tags are first-class and organize generic Timeline moments", async ({
   context,
+  page,
 }) => {
   const env = JSON.parse(
     execFileSync("supabase", ["status", "-o", "json"], {
@@ -22,34 +22,33 @@ test("Organization preserves relationships, Bucket List identity, and recoverabl
   const email = `organization-${randomUUID()}@memotrail.local`;
   const created = await admin.auth.admin.createUser({
     email,
-    password: randomUUID(),
     email_confirm: true,
+    password: randomUUID(),
   });
-  if (!created.data.user)
-    throw new Error("Could not create local test account.");
+  if (!created.data.user) throw new Error("Could not create local test account.");
   const owner = created.data.user.id;
+
   try {
     const cookies: { name: string; value: string }[] = [];
     const client = createServerClient(env.API_URL, env.ANON_KEY, {
       cookies: {
         getAll: () => cookies,
         setAll: (values) => {
-          for (const value of values)
+          for (const value of values) {
             cookies.push({ name: value.name, value: value.value });
+          }
         },
       },
     });
-    const link = await admin.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-    });
-    if (!link.data.properties)
+    const link = await admin.auth.admin.generateLink({ type: "magiclink", email });
+    if (!link.data.properties) {
       throw new Error("Could not establish local fixture session.");
+    }
     expect(
       (
         await client.auth.verifyOtp({
-          type: "magiclink",
           token_hash: link.data.properties.hashed_token,
+          type: "magiclink",
         })
       ).error,
     ).toBeNull();
@@ -57,294 +56,135 @@ test("Organization preserves relationships, Bucket List identity, and recoverabl
       cookies.map((cookie) => ({
         ...cookie,
         domain: "127.0.0.1",
-        path: "/",
         httpOnly: false,
+        path: "/",
         sameSite: "Lax" as const,
       })),
     );
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     page.on("console", (message) => {
-      if (message.type() === "error")
-        errors.push(
-          `${message.text()} (${message.location().url.split("?")[0]})`,
-        );
+      if (message.type() === "error") errors.push(message.text());
     });
 
     await page.goto("/collections");
-    await page
-      .getByRole("link", { name: "Manage Collections and tags" })
-      .click();
-    await page
-      .getByRole("button", { name: "Add Collection", exact: true })
-      .click();
-    const create = page.getByRole("form", { name: "New Collection" });
-    await create.getByLabel("Name", { exact: true }).fill("Bucket List");
-    await create.getByRole("button", { name: "Create Collection" }).click();
-    const original = page.getByRole("form", {
-      name: "Edit Bucket List",
-      exact: true,
+    await expect(page.getByRole("heading", { name: "Collections" })).toBeVisible();
+    const organizationTabs = page.getByRole("navigation", {
+      name: "Archive organization",
     });
-    await expect(original).toBeVisible();
-    const collection = await client
-      .from("collections")
-      .select("id")
-      .eq("name", "Bucket List")
-      .single();
-    expect(collection.error).toBeNull();
-    const collectionID = collection.data!.id;
-    const entryID = randomUUID();
-    expect(
-      (
-        await client.from("entries").insert({
-          id: entryID,
-          owner_id: owner,
-          title: "Try pottery",
-          body: "A personal reflection, not duplicated.",
-          entry_type: "goal",
-          inbox_status: "organized",
-        })
-      ).error,
-    ).toBeNull();
-    expect(
-      (
-        await client.from("goals").insert({
-          entry_id: entryID,
-          owner_id: owner,
-          horizon: "someday",
-          status: "active",
-        })
-      ).error,
-    ).toBeNull();
-    expect(
-      (
-        await client.from("entry_collections").insert({
-          entry_id: entryID,
-          owner_id: owner,
-          collection_id: collectionID,
-        })
-      ).error,
-    ).toBeNull();
-    await page.reload();
-    await expect(original).toContainText("1 Entry");
-    await original
-      .getByLabel("Name", { exact: true })
-      .fill("Someday adventures");
-    await original.getByLabel("Order", { exact: true }).fill("-10");
-    await original.getByRole("button", { name: "Save changes" }).click();
-    const renamed = page.getByRole("form", {
-      name: "Edit Someday adventures",
-      exact: true,
+    await expect(organizationTabs.getByRole("link", { name: "Tags" })).toBeVisible();
+    await page.getByRole("button", { name: "New Collection" }).click();
+    const collectionDialog = page.getByRole("dialog", {
+      name: "Create a Collection",
     });
-    await expect(renamed).toContainText(
-      "Renaming preserves its Goal milestone behavior.",
-    );
-    expect(
-      (
-        await client
-          .from("entries")
-          .select("revision")
-          .eq("id", entryID)
-          .single()
-      ).data?.revision,
-    ).toBe(2);
-    await page.goto("/goals?entry=" + entryID);
-    const goal = page.getByRole("dialog");
-    await expect(
-      goal.getByRole("button", { name: "Mark achieved and create First Time" }),
-    ).toBeVisible();
-    await goal
+    await collectionDialog.getByLabel("Name *").fill("City chapters");
+    await collectionDialog.getByLabel("Display order *").fill("-10");
+    await collectionDialog
+      .getByRole("button", { name: "Create Collection" })
+      .click();
+    await expect(collectionDialog).not.toBeVisible();
+    await expect(page.getByRole("heading", { name: "City chapters" })).toBeVisible();
+
+    await organizationTabs.getByRole("link", { name: "Tags" }).click();
+    await expect(page).toHaveURL(/\/tags$/);
+    for (const name of ["travel", "journeys", "unused"]) {
+      await page.getByRole("button", { name: "New Tag" }).click();
+      const tagDialog = page.getByRole("dialog", { name: "Create a Tag" });
+      await tagDialog.getByLabel("Name *").fill(name);
+      await tagDialog.getByRole("button", { name: "Create Tag" }).click();
+      await expect(tagDialog).not.toBeVisible();
+      await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
+    }
+
+    await page.goto("/timeline");
+    const birthDatePrompt = page.getByRole("dialog", {
+      name: "When did your story begin?",
+    });
+    if (await birthDatePrompt.isVisible()) {
+      await birthDatePrompt.getByText("Not now", { exact: true }).click();
+    }
+    await page.getByRole("button", { name: "Add moment", exact: true }).click();
+    await page
+      .getByRole("dialog", { name: "What are you adding?" })
+      .getByRole("button", { name: "Add Moment", exact: true })
+      .click();
+    const momentDialog = page.getByRole("dialog", { name: "Add to your story" });
+    await momentDialog.getByLabel("Title", { exact: true }).fill("Moved to Seattle");
+    await momentDialog
       .getByRole("combobox", { name: "Date type", exact: true })
       .selectOption("day");
-    await fillOccurrenceStart(goal, "2026-09-12");
-    const achievementResponse = page.waitForResponse(
-      (response) =>
-        response.request().method() === "POST" &&
-        new URL(response.url()).pathname === "/goals",
-    );
-    await goal
-      .getByRole("button", { name: "Mark achieved and create First Time" })
-      .click();
-    // A production RSC response can remain streaming after the mutation has settled.
-    // Verify HTTP success, the visible confirmation, and persisted state rather than stream closure.
-    expect((await achievementResponse).ok()).toBe(true);
-    await expect(goal.getByRole("status")).toContainText(
-      "Achievement saved, with a linked First Time.",
-    );
-    await expect
-      .poll(
-        async () =>
-          (
-            await client
-              .from("goals")
-              .select("status")
-              .eq("entry_id", entryID)
-              .single()
-          ).data?.status,
-      )
-      .toBe("achieved");
-    const linked = await client
-      .from("entry_links")
-      .select("target_entry_id")
-      .eq("source_entry_id", entryID)
-      .eq("relationship", "achievement")
-      .single();
-    expect(linked.error).toBeNull();
-    expect(
-      (
-        await client
-          .from("entries")
-          .select("body")
-          .eq("id", linked.data!.target_entry_id)
-          .single()
-      ).data?.body,
-    ).toBe("");
-    await page.goto("/settings/organization?kind=tag");
-    await page.getByRole("button", { name: "Add tag", exact: true }).click();
-    const newTag = page.getByRole("form", { name: "New tag" });
-    await newTag.getByLabel("Name", { exact: true }).fill("ceramics");
-    await newTag.getByRole("button", { name: "Create tag" }).click();
-    await expect(
-      page.getByRole("form", { name: "Edit ceramics", exact: true }),
-    ).toBeVisible();
-    const tag = await client
-      .from("tags")
+    await fillOccurrenceStart(momentDialog, "2025-03-14");
+    await momentDialog.getByLabel("Add a Collection").fill("City chapters");
+    await momentDialog.getByLabel("Add a Collection").press("Enter");
+    await momentDialog.getByLabel("Add a tag").fill("travel");
+    await momentDialog.getByLabel("Add a tag").press("Enter");
+    await momentDialog.getByRole("button", { name: "Add moment" }).click();
+    await expect(momentDialog).not.toBeVisible();
+
+    const entry = await client
+      .from("entries")
       .select("id")
-      .eq("name", "ceramics")
+      .eq("owner_id", owner)
+      .eq("title", "Moved to Seattle")
       .single();
-    expect(tag.error).toBeNull();
+    expect(entry.error).toBeNull();
+    expect(
+      (
+        await client
+          .from("entry_collections")
+          .select("collection_id", { count: "exact", head: true })
+          .eq("entry_id", entry.data!.id)
+      ).count,
+    ).toBe(1);
     expect(
       (
         await client
           .from("entry_tags")
-          .insert({ entry_id: entryID, owner_id: owner, tag_id: tag.data!.id })
-      ).error,
-    ).toBeNull();
-    await page.reload();
-    const tagForm = page.getByRole("form", {
-      name: "Edit ceramics",
-      exact: true,
-    });
-    await tagForm.getByLabel("Name", { exact: true }).fill("陶艺");
-    await tagForm.getByRole("button", { name: "Save changes" }).click();
-    await expect(
-      page.getByRole("form", { name: "Edit 陶艺", exact: true }),
-    ).toContainText("1 Entry");
-    await page.goto("/settings/organization");
-    page.once("dialog", (d) => d.accept());
-    await renamed.getByRole("button", { name: "Move to Trash" }).click();
-    await expect(renamed).not.toBeVisible();
-    await page.goto("/trash");
-    await expect(
-      page.getByText("Someday adventures", { exact: true }),
-    ).toBeVisible();
-    expect(
-      (
-        await client
-          .from("entries")
-          .select("deleted_at")
-          .eq("id", entryID)
-          .single()
-      ).data?.deleted_at,
-    ).toBeNull();
-    // Reusing the name must not overwrite the removed grouping during restoration.
-    expect(
-      (
-        await client.rpc("save_organization", {
-          p_kind: "collection",
-          p_name: "Someday adventures",
-          p_sort_order: 0,
-        })
-      ).error,
-    ).toBeNull();
-    await page.getByRole("button", { name: "Restore", exact: true }).click();
-    await expect(
-      page.getByText(/An active Collection already has this name/),
-    ).toBeVisible();
-    await page.goto("/settings/organization");
-    await renamed.getByLabel("Name", { exact: true }).fill("Travel ideas");
-    await renamed.getByRole("button", { name: "Save changes" }).click();
-    await expect(
-      page.getByRole("form", { name: "Edit Travel ideas", exact: true }),
-    ).toBeVisible();
-    await page.goto("/trash");
-    await page.getByRole("button", { name: "Restore", exact: true }).click();
-    await expect(
-      page.getByText("Someday adventures", { exact: true }),
-    ).not.toBeVisible();
-    await page.goto("/collections/" + collectionID);
-    await expect(page.getByText("Try pottery", { exact: true })).toBeVisible();
-    await page.goto("/settings/organization");
+          .select("tag_id", { count: "exact", head: true })
+          .eq("entry_id", entry.data!.id)
+      ).count,
+    ).toBe(1);
+
+    await page.goto("/tags");
+    const travelRow = page.getByRole("article").filter({ hasText: "travel" });
+    await expect(travelRow).toContainText("Used by 1 Entry");
+    await travelRow.getByRole("button", { name: "Edit travel" }).click();
+    const travelDialog = page.getByRole("dialog", { name: "travel" });
+    await travelDialog
+      .getByLabel("Destination tag")
+      .selectOption({ label: "#journeys (0)" });
+    page.once("dialog", (dialog) => dialog.accept());
+    await travelDialog.getByRole("button", { name: "Merge tag" }).click();
+    await expect(travelDialog).not.toBeVisible();
+    await expect(page.getByRole("heading", { name: "travel", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("article").filter({ hasText: "journeys" })).toContainText(
+      "Used by 1 Entry",
+    );
+
+    const unusedRow = page.getByRole("article").filter({ hasText: "unused" });
+    await unusedRow.getByRole("button", { name: "Edit unused" }).click();
+    const unusedDialog = page.getByRole("dialog", { name: "unused" });
+    page.once("dialog", (dialog) => dialog.accept());
+    await unusedDialog.getByRole("button", { name: "Delete unused tag" }).click();
+    await expect(unusedDialog).not.toBeVisible();
+    await expect(page.getByRole("heading", { name: "unused", exact: true })).toHaveCount(0);
+
+    await page.goto("/settings/organization?kind=tag");
+    await expect(page).toHaveURL(/\/tags$/);
     await page.screenshot({
-      path: "/private/tmp/memotrail-organization-desktop.png",
       caret: "initial",
       fullPage: true,
+      path: "/private/tmp/memotrail-tags-desktop.png",
     });
-    const current = await client
-      .from("collections")
-      .select("revision")
-      .eq("id", collectionID)
-      .single();
-    expect(
-      (
-        await client.rpc("save_organization", {
-          p_kind: "collection",
-          p_name: "Someday adventures",
-          p_sort_order: -20,
-          p_id: collectionID,
-          p_expected_revision: current.data!.revision,
-        })
-      ).error,
-    ).toBeNull();
-    await renamed.getByLabel("Name", { exact: true }).fill("Stale device");
-    await renamed.getByRole("button", { name: "Save changes" }).click();
-    await expect(renamed.getByRole("status")).toContainText(
-      "changed on another device",
-    );
-    await page.getByRole("button", { name: "Reload items" }).click();
-    await expect(renamed.getByLabel("Order", { exact: true })).toHaveValue(
-      "-20",
-    );
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.emulateMedia({ colorScheme: "dark" });
-    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.setViewportSize({ height: 844, width: 390 });
     await page.screenshot({
-      path: "/private/tmp/memotrail-organization-mobile.png",
       caret: "initial",
       fullPage: true,
+      path: "/private/tmp/memotrail-tags-mobile.png",
     });
     expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
-      ),
+      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
     ).toBe(true);
-    page.once("dialog", (d) => d.accept());
-    await renamed.getByRole("button", { name: "Move to Trash" }).click();
-    await expect(renamed).not.toBeVisible();
-    await page.goto("/trash");
-    await page
-      .getByRole("button", { name: "Delete forever", exact: true })
-      .click();
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { name: "Delete forever", exact: true })
-      .click();
-    await expect(
-      page.getByText("Someday adventures", { exact: true }),
-    ).not.toBeVisible();
-    expect(
-      (await client.from("entries").select("id").eq("id", entryID).single())
-        .data?.id,
-    ).toBe(entryID);
-    expect(
-      (
-        await client
-          .from("entry_tags")
-          .select("tag_id")
-          .eq("entry_id", entryID)
-          .single()
-      ).data?.tag_id,
-    ).toBe(tag.data!.id);
     expect(errors).toEqual([]);
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();

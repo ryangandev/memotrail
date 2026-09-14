@@ -1,6 +1,6 @@
 # MemoTrail Architecture
 
-Last reviewed: 2026-09-13.
+Last reviewed: 2026-09-14.
 
 ## System map
 
@@ -34,7 +34,7 @@ Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/Me
 | Search, AI suggestions, or exploration                | `app/search`, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`                      | `Features/Search`, `Features/AI`                                                      | AI, evidence, exploration, and search migrations and tests                       |
 | Photos, metadata, or export                           | media and export API routes, `lib/media`, `lib/export`, gallery and export components             | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, photo-history, cleanup, and export migrations and tests                   |
 | Timeline, Homes, Vehicles, Goals, or First Times      | matching `app` route, workspace component, and `lib/data` module                                  | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                            |
-| Collections, People, Places, links, history, or Trash | matching `app` route and component, `lib/data` organization, relation, history, and Trash modules | matching directory under `Features`                                                   | organization, relationship, history, Trash, and Empty Trash migrations and tests |
+| Collections, tags, People, Places, links, history, or Trash | matching `app` route and component, shared Entry organization editor, `lib/data` organization, relation, history, and Trash modules | matching directory under `Features`                                                   | organization, relationship, history, Trash, and Empty Trash migrations and tests |
 | Visual system                                         | components, CSS modules, `styles/generated-tokens.css`                                            | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-tokens/tokens.json` and generator                               |
 
 For a database behavior, search migrations for the newest definition of the relevant RPC instead of assuming the first occurrence is current.
@@ -47,6 +47,9 @@ Pair it with the test file carrying the same feature name.
 - Web cookies and native bearer sessions identify the same Supabase user.
 - Entries are canonical content; specialized tables add facts without duplicating writing.
 - Collections, tags, People, Places, and Entry links are owner-scoped reusable relationships.
+- Entry Type owns specialized structure, Collections own curated cross-Type chapters, tags own lightweight cross-Type descriptors, and Timeline tracks own only generic moment placement.
+- Web Entry editors reuse `components/entry-organization-editor.tsx`; their save RPC must atomically preserve Collection and tag memberships with the canonical Entry mutation.
+- Used tags merge atomically into another stable tag identity. Only unused tags can be deleted directly.
 - Multi-record changes use authenticated RPCs so content, relationships, history, and specialized facts commit atomically.
 - Clients send the revision they read. A stale revision surfaces a conflict instead of silently merging or overwriting another device.
 - Important mutations snapshot prior state. Restoring history creates another revision rather than deleting subsequent history.

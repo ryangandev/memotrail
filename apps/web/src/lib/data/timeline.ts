@@ -27,6 +27,7 @@ import {
 
 export type TimelineEntry = {
   body: string;
+  collectionNames: string[];
   datePrecision: TimelineDatePrecision;
   entryType: string;
   id: string;
@@ -36,6 +37,7 @@ export type TimelineEntry = {
   occurredStart: string | null;
   occurredTimezone: string;
   revision: number;
+  tagNames: string[];
   title: string;
   trackId: string;
   updatedAt: string;
@@ -70,6 +72,7 @@ type NameRow = { name: string };
 
 type TimelineRow = {
   body: string | null;
+  collection_names: string[];
   date_precision: TimelineDatePrecision | null;
   entry_id: string | null;
   entry_type: string | null;
@@ -79,6 +82,7 @@ type TimelineRow = {
   occurred_start: string | null;
   occurred_timezone: string | null;
   revision: number | null;
+  tag_names: string[];
   timeline_kind: TimelineKind | null;
   title: string | null;
   track_id: string;
@@ -107,7 +111,9 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
     collections,
     tags,
   ] = await Promise.all([
-    context.client.rpc("timeline_workspace", { p_include_hidden: false }),
+    context.client.rpc("timeline_workspace_with_organization", {
+      p_include_hidden: false,
+    }),
     context.client
       .from("entries")
       .select("id", { count: "exact", head: true })
@@ -243,6 +249,7 @@ function tracksFromRows(rows: TimelineRow[]) {
     if (row.entry_id) {
       track.items.push({
         body: row.body ?? "",
+        collectionNames: row.collection_names,
         datePrecision: row.date_precision ?? "unknown",
         entryType: row.entry_type ?? "standard",
         id: row.entry_id,
@@ -252,6 +259,7 @@ function tracksFromRows(rows: TimelineRow[]) {
         occurredStart: row.occurred_start,
         occurredTimezone: row.occurred_timezone ?? "UTC",
         revision: row.revision ?? 1,
+        tagNames: row.tag_names,
         title: row.title ?? "Untitled moment",
         trackId: row.track_id,
         updatedAt: row.updated_at ?? "",
@@ -310,6 +318,8 @@ function isTimelineRow(value: unknown): value is TimelineRow {
     nullableString(value.occurred_end) &&
     nullableString(value.occurred_label) &&
     nullableString(value.occurred_timezone) &&
+    stringArray(value.collection_names) &&
+    stringArray(value.tag_names) &&
     typeof value.revision === "number" &&
     typeof value.updated_at === "string" &&
     typeof value.date_precision === "string"
@@ -322,4 +332,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function nullableString(value: unknown) {
   return value === null || typeof value === "string";
+}
+
+function stringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
 }

@@ -179,7 +179,7 @@ function refreshTrashPaths() {
   for (const path of [
     "/",
     "/collections",
-    "/settings/organization",
+    "/tags",
     "/goals",
     "/first-times",
     "/homes",

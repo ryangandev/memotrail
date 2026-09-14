@@ -20,6 +20,7 @@ import {
 import { saveBirthDate } from "@/app/settings/actions";
 import { Icon } from "@/components/icon";
 import { DatePickerField } from "@/components/date-picker-field";
+import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import type { FirstTimeEntry } from "@/lib/data/first-times";
 import type { HomePlaceOption, HomeRecord } from "@/lib/data/home-record";
 import type { TimelineEntry, TimelineTrack } from "@/lib/data/timeline";
@@ -441,6 +442,7 @@ export function TimelineWorkspace({
 
       {selection?.type === "timeline" ? (
         <TimelineEditor
+          collectionOptions={collectionOptions}
           onTrashed={(id) =>
             setConfirmed((current) => {
               const next = new Map(current);
@@ -457,6 +459,7 @@ export function TimelineWorkspace({
           key={selection.entry?.id ?? `new:${selection.initialTrackId}`}
           onClose={() => setSelection(null)}
           tracks={tracks}
+          tagOptions={tagOptions}
         />
       ) : null}
 
@@ -669,7 +672,11 @@ function BirthDatePrompt({
             <p>Your starting point</p>
             <h2 id="birth-date-heading">When did your story begin?</h2>
           </div>
-          <button aria-label="Not now" onClick={onClose} type="button">
+          <button
+            aria-label="Close birth date prompt"
+            onClick={onClose}
+            type="button"
+          >
             ×
           </button>
         </header>
@@ -813,6 +820,7 @@ function TrackRow({
 }
 
 function TimelineEditor({
+  collectionOptions,
   defaultTimezone,
   onTrashed,
   onSaved,
@@ -820,7 +828,9 @@ function TimelineEditor({
   initialTrackId,
   onClose,
   tracks,
+  tagOptions,
 }: {
+  collectionOptions: string[];
   defaultTimezone: string;
   onTrashed: (id: string) => void;
   onSaved: (entry: TimelineEntry) => void;
@@ -828,11 +838,16 @@ function TimelineEditor({
   initialTrackId: string | null;
   onClose: () => void;
   tracks: TimelineTrack[];
+  tagOptions: string[];
 }) {
   const router = useRouter();
   const titleRef = useRef<HTMLInputElement>(null);
   const initialTimezone = entry?.occurredTimezone ?? defaultTimezone;
   const [body, setBody] = useState(entry?.body ?? "");
+  const [collectionInput, setCollectionInput] = useState("");
+  const [collectionNames, setCollectionNames] = useState(
+    entry?.collectionNames ?? [],
+  );
   const originalOccurrence = entry ? entryOccurrence(entry) : undefined;
   const [occurrence, setOccurrence] = useState(() =>
     occurrenceDraft(
@@ -848,6 +863,8 @@ function TimelineEditor({
   const [isPending, setIsPending] = useState(false);
   const [kind, setKind] = useState<TimelineKind>(entry?.kind ?? "stage");
   const [result, setResult] = useState<TimelineActionResult | null>(null);
+  const [tagInput, setTagInput] = useState("");
+  const [tagNames, setTagNames] = useState(entry?.tagNames ?? []);
   const [title, setTitle] = useState(entry?.title ?? "");
   const [trackId, setTrackId] = useState(
     entry?.trackId ?? initialTrackId ?? tracks[0]?.id ?? "",
@@ -893,6 +910,7 @@ function TimelineEditor({
     }
     const input: TimelineEntryInput = {
       body,
+      collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       datePrecision: resolved.value.datePrecision,
       id: entry?.id ?? null,
       kind,
@@ -901,6 +919,7 @@ function TimelineEditor({
       occurredStart: resolved.value.occurredAt,
       occurredTimezone: resolved.value.occurredTimezone,
       revision: entry?.revision ?? null,
+      tagNames: namesIncludingDraft(tagNames, tagInput),
       title,
       trackId,
     };
@@ -1103,6 +1122,26 @@ function TimelineEditor({
                 value={body}
               />
             </label>
+
+            <EntryOrganizationEditor
+              disabled={isPending}
+              input={collectionInput}
+              kind="collection"
+              names={collectionNames}
+              onChange={setCollectionNames}
+              onInputChange={setCollectionInput}
+              options={collectionOptions}
+            />
+
+            <EntryOrganizationEditor
+              disabled={isPending}
+              input={tagInput}
+              kind="tag"
+              names={tagNames}
+              onChange={setTagNames}
+              onInputChange={setTagInput}
+              options={tagOptions}
+            />
           </div>
 
           {result ? (
@@ -1160,6 +1199,11 @@ function entryOccurrence(entry: TimelineEntry): Occurrence {
     occurredLabel: entry.occurredLabel,
     occurredTimezone: entry.occurredTimezone,
   };
+}
+
+function namesIncludingDraft(names: string[], draft: string) {
+  const name = draft.trim();
+  return name ? [...names, name] : names;
 }
 function entryDateLabel(entry: TimelineEntry) {
   const label = occurrenceLabel(entryOccurrence(entry));

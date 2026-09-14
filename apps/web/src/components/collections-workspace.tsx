@@ -1,6 +1,7 @@
 import Link from "next/link";
 import styles from "@/app/collections/page.module.css";
 import { Icon } from "@/components/icon";
+import { OrganizationControl } from "@/components/organization-control";
 import type {
   CollectionEntry,
   CollectionSummary,
@@ -32,14 +33,27 @@ export function CollectionsWorkspace({
               : "Open a theme to revisit the Entries, moments, and firsts you filed together."}
           </p>
         </div>
-        <Link className={styles.newEntryButton} href="/inbox#capture-title">
-          <Icon name="plus" />
-          <span>New entry</span>
-        </Link>
+        {selectedCollection ? (
+          <Link className={styles.newEntryButton} href="/inbox#capture-title">
+            <Icon name="plus" />
+            <span>New entry</span>
+          </Link>
+        ) : (
+          <OrganizationControl
+            items={workspace.organizationItems}
+            kind="collection"
+          />
+        )}
       </header>
-      <p>
-        <Link href="/settings/organization">Manage Collections and tags</Link>
-      </p>
+
+      {!selectedCollection ? (
+        <nav className={styles.kindTabs} aria-label="Archive organization">
+          <Link aria-current="page" href="/collections">
+            Collections
+          </Link>
+          <Link href="/tags">Tags</Link>
+        </nav>
+      ) : null}
 
       {selectedCollection ? (
         <CollectionDetail workspace={workspace} />
@@ -99,6 +113,10 @@ function CollectionOverview({
             collection={collection}
             index={index + 1}
             key={collection.id}
+            organizationItem={workspace.organizationItems.find(
+              (item) => item.id === collection.id,
+            )}
+            organizationItems={workspace.organizationItems}
           />
         ))}
       </section>
@@ -109,38 +127,53 @@ function CollectionOverview({
 function CollectionCard({
   collection,
   index,
+  organizationItem,
+  organizationItems,
 }: {
   collection: CollectionSummary;
   index: number;
+  organizationItem: CollectionsWorkspaceData["organizationItems"][number] | undefined;
+  organizationItems: CollectionsWorkspaceData["organizationItems"];
 }) {
   return (
-    <Link
-      className={styles.collectionCard}
-      href={`/collections/${collection.id}`}
-    >
-      <div className={styles.cardTopline}>
-        <span>{String(index).padStart(2, "0")}</span>
-        <Icon name="archive" size={20} />
-      </div>
-      <h2>{collection.name}</h2>
-      <p>
-        {collection.entryCount === 0
-          ? "Ready for its first Entry."
-          : `${countLabel(collection.entryCount, "Entry")} filed here.`}
-      </p>
-      <footer>
-        <span>
-          {collection.latestEntryAt
-            ? `Latest ${shortDate(collection.latestEntryAt)}`
-            : "Empty Collection"}
-        </span>
-        {collection.unreviewedCount ? (
-          <strong>{collection.unreviewedCount} in Inbox</strong>
-        ) : (
-          <Icon name="chevron" size={16} />
-        )}
-      </footer>
-    </Link>
+    <article className={styles.collectionCard}>
+      <Link
+        className={styles.cardLink}
+        href={`/collections/${collection.id}`}
+      >
+        <div className={styles.cardTopline}>
+          <span>{String(index).padStart(2, "0")}</span>
+          <Icon name="archive" size={20} />
+        </div>
+        <h2>{collection.name}</h2>
+        <p>
+          {collection.entryCount === 0
+            ? "Ready for its first Entry."
+            : `${countLabel(collection.entryCount, "Entry")} filed here.`}
+        </p>
+        <footer>
+          <span>
+            {collection.latestEntryAt
+              ? `Latest ${shortDate(collection.latestEntryAt)}`
+              : "Empty Collection"}
+          </span>
+          {collection.unreviewedCount ? (
+            <strong>{collection.unreviewedCount} in Inbox</strong>
+          ) : (
+            <Icon name="chevron" size={16} />
+          )}
+        </footer>
+      </Link>
+      {organizationItem ? (
+        <div className={styles.cardControl}>
+          <OrganizationControl
+            item={organizationItem}
+            items={organizationItems}
+            kind="collection"
+          />
+        </div>
+      ) : null}
+    </article>
   );
 }
 
@@ -173,6 +206,17 @@ function CollectionDetail({
             <span>{collection.unreviewedCount} still in Inbox</span>
           ) : null}
         </div>
+        {workspace.organizationItems.find(
+          (item) => item.id === collection.id,
+        ) ? (
+          <OrganizationControl
+            item={workspace.organizationItems.find(
+              (item) => item.id === collection.id,
+            )}
+            items={workspace.organizationItems}
+            kind="collection"
+          />
+        ) : null}
       </div>
 
       {workspace.detailLoadError ? (
@@ -262,13 +306,21 @@ function CollectionEntryCard({ entry }: { entry: CollectionEntry }) {
         {entry.collectionNames.length || entry.tagNames.length ? (
           <div className={styles.organization} aria-label="Entry organization">
             {entry.collectionNames.map((name) => (
-              <span key={`collection:${name.toLocaleLowerCase()}`}>
+              <Link
+                href={`/search?collection=${encodeURIComponent(name)}`}
+                key={`collection:${name.toLocaleLowerCase()}`}
+              >
                 <Icon name="archive" size={12} />
                 {name}
-              </span>
+              </Link>
             ))}
             {entry.tagNames.map((name) => (
-              <span key={`tag:${name.toLocaleLowerCase()}`}>#{name}</span>
+              <Link
+                href={`/search?tag=${encodeURIComponent(name)}`}
+                key={`tag:${name.toLocaleLowerCase()}`}
+              >
+                #{name}
+              </Link>
             ))}
           </div>
         ) : null}

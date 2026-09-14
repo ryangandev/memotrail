@@ -13,13 +13,6 @@ const availableDestinations = [
     title: "Export archive",
   },
   {
-    detail:
-      "Create and rename Collections and tags, or recover removed groupings.",
-    href: "/settings/organization",
-    icon: "archive" as const,
-    title: "Organization",
-  },
-  {
     detail: "Inspect earlier writing and safely restore versions.",
     href: "/history",
     icon: "archive" as const,
@@ -42,6 +35,12 @@ const availableDestinations = [
     href: "/collections",
     icon: "archive" as const,
     title: "Collections",
+  },
+  {
+    detail: "Filter every kind of Entry with lightweight shared descriptors.",
+    href: "/tags",
+    icon: "tag" as const,
+    title: "Tags",
   },
   {
     detail: "Revisit the experiences you tried, saw, or learned first.",

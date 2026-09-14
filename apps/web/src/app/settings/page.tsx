@@ -25,10 +25,10 @@ const preferences: Array<{
     title: "AI assistance",
   },
   {
-    detail: "Rename Collections and tags without changing your Entries.",
-    href: "/settings/organization",
+    detail: "Open the Library to manage Collections and tags across Entries.",
+    href: "/collections",
     icon: "archive",
-    title: "Organization",
+    title: "Archive organization",
   },
   {
     detail: "Create a complete portable copy of your private archive.",
