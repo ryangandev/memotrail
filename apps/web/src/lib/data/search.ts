@@ -216,7 +216,8 @@ export async function getQuickSearchResults(
 }
 
 function quickEntryItem(row: SearchRow): QuickSearchItem {
-  const title = stringValue(row.title) ?? firstUsefulLine(row.body) ?? "Untitled Entry";
+  const title =
+    stringValue(row.title) ?? firstUsefulLine(row.body) ?? "Untitled Entry";
 
   return {
     href: `/history?entry=${encodeURIComponent(row.entry_id)}`,

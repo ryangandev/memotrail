@@ -136,9 +136,7 @@ test("Global keyword search finds standalone People and Places without deferred 
       "/search?q=" + encodeURIComponent("学习") + "&type=standard",
     );
     await expect(
-      page.getByText(
-        "Clear Entry filters to also search People and Places.",
-      ),
+      page.getByText("Clear Entry filters to also search People and Places."),
     ).toBeVisible();
     await expect(library).toHaveCount(0);
     await page.goto("/search?q=" + encodeURIComponent("学习"));

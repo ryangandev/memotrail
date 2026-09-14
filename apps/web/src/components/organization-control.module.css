@@ -29,7 +29,11 @@
   border: 1px solid var(--mt-color-border);
   border-radius: 50%;
   color: var(--mt-color-ink-muted);
-  background: color-mix(in srgb, var(--mt-color-surface-raised) 88%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--mt-color-surface-raised) 88%,
+    transparent
+  );
 }
 
 .editTrigger:hover {

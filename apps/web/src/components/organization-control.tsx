@@ -228,7 +228,11 @@ export function OrganizationControl({
                     disabled={busy || !validOrganizationInput(input)}
                     type="submit"
                   >
-                    {busy ? "Saving..." : item ? "Save changes" : `Create ${label}`}
+                    {busy
+                      ? "Saving..."
+                      : item
+                        ? "Save changes"
+                        : `Create ${label}`}
                   </button>
                 </div>
               </footer>

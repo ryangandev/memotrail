@@ -28,10 +28,7 @@ export function LibrarySearchResults({
       </p>
     );
   return (
-    <section
-      className={styles.resultsSection}
-      aria-label="People and Places"
-    >
+    <section className={styles.resultsSection} aria-label="People and Places">
       <header className={styles.resultsHeader}>
         <div>
           <h2>People and Places</h2>
@@ -47,9 +44,7 @@ export function LibrarySearchResults({
         <p role="alert">{error}</p>
       ) : (
         <>
-          {result?.items.length === 0 && (
-            <p>No matching People or Places.</p>
-          )}
+          {result?.items.length === 0 && <p>No matching People or Places.</p>}
           <div className={styles.resultList}>
             {result?.items.map((item) => (
               <article
@@ -57,9 +52,7 @@ export function LibrarySearchResults({
                 key={`${item.kind}:${item.id}`}
               >
                 <div className={styles.resultMeta}>
-                  <span>
-                    {item.kind === "person" ? "Person" : "Place"}
-                  </span>
+                  <span>{item.kind === "person" ? "Person" : "Place"}</span>
                 </div>
                 <h3>
                   <Link

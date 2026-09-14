@@ -3,10 +3,7 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
-import {
-  fillOccurrenceEnd,
-  fillOccurrenceStart,
-} from "./helpers/occurrence";
+import { fillOccurrenceEnd, fillOccurrenceStart } from "./helpers/occurrence";
 
 for (const kind of ["home", "vehicle"] as const) {
   test(`${kind} editing preserves uncertain dates and original exact instants`, async ({

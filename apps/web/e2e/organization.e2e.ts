@@ -25,7 +25,8 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     email_confirm: true,
     password: randomUUID(),
   });
-  if (!created.data.user) throw new Error("Could not create local test account.");
+  if (!created.data.user)
+    throw new Error("Could not create local test account.");
   const owner = created.data.user.id;
 
   try {
@@ -40,7 +41,10 @@ test("Collections and Tags are first-class and organize generic Timeline moments
         },
       },
     });
-    const link = await admin.auth.admin.generateLink({ type: "magiclink", email });
+    const link = await admin.auth.admin.generateLink({
+      type: "magiclink",
+      email,
+    });
     if (!link.data.properties) {
       throw new Error("Could not establish local fixture session.");
     }
@@ -68,7 +72,9 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     });
 
     await page.goto("/collections");
-    await expect(page.getByRole("heading", { name: "Collections" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Collections" }),
+    ).toBeVisible();
     await expect(
       page.getByRole("navigation", { name: "Archive organization" }),
     ).toHaveCount(0);
@@ -82,7 +88,9 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       .getByRole("button", { name: "Create Collection" })
       .click();
     await expect(collectionDialog).not.toBeVisible();
-    await expect(page.getByRole("heading", { name: "City chapters" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "City chapters" }),
+    ).toBeVisible();
 
     await page
       .getByRole("navigation", { name: "Primary navigation" })
@@ -98,7 +106,9 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       await tagDialog.getByLabel("Name *").fill(name);
       await tagDialog.getByRole("button", { name: "Create Tag" }).click();
       await expect(tagDialog).not.toBeVisible();
-      await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name, exact: true }),
+      ).toBeVisible();
     }
 
     await page.goto("/timeline");
@@ -117,8 +127,12 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       .getByRole("dialog", { name: "What are you adding?" })
       .getByRole("button", { name: "Add Moment", exact: true })
       .click();
-    const momentDialog = page.getByRole("dialog", { name: "Add to your story" });
-    await momentDialog.getByLabel("Title", { exact: true }).fill("Moved to Seattle");
+    const momentDialog = page.getByRole("dialog", {
+      name: "Add to your story",
+    });
+    await momentDialog
+      .getByLabel("Title", { exact: true })
+      .fill("Moved to Seattle");
     await momentDialog
       .getByRole("combobox", { name: "Date type", exact: true })
       .selectOption("day");
@@ -165,18 +179,24 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     page.once("dialog", (dialog) => dialog.accept());
     await travelDialog.getByRole("button", { name: "Merge tag" }).click();
     await expect(travelDialog).not.toBeVisible();
-    await expect(page.getByRole("heading", { name: "travel", exact: true })).toHaveCount(0);
-    await expect(page.getByRole("article").filter({ hasText: "journeys" })).toContainText(
-      "Used by 1 Entry",
-    );
+    await expect(
+      page.getByRole("heading", { name: "travel", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("article").filter({ hasText: "journeys" }),
+    ).toContainText("Used by 1 Entry");
 
     const unusedRow = page.getByRole("article").filter({ hasText: "unused" });
     await unusedRow.getByRole("button", { name: "Edit unused" }).click();
     const unusedDialog = page.getByRole("dialog", { name: "unused" });
     page.once("dialog", (dialog) => dialog.accept());
-    await unusedDialog.getByRole("button", { name: "Delete unused tag" }).click();
+    await unusedDialog
+      .getByRole("button", { name: "Delete unused tag" })
+      .click();
     await expect(unusedDialog).not.toBeVisible();
-    await expect(page.getByRole("heading", { name: "unused", exact: true })).toHaveCount(0);
+    await expect(
+      page.getByRole("heading", { name: "unused", exact: true }),
+    ).toHaveCount(0);
 
     await page.goto("/settings/organization?kind=tag");
     await expect(page).toHaveURL(/\/tags$/);
@@ -192,7 +212,9 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       path: "/private/tmp/memotrail-tags-mobile.png",
     });
     expect(
-      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
     ).toBe(true);
     expect(errors).toEqual([]);
   } finally {

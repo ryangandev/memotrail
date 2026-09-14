@@ -3,10 +3,7 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
-import {
-  fillOccurrenceEnd,
-  fillOccurrenceStart,
-} from "./helpers/occurrence";
+import { fillOccurrenceEnd, fillOccurrenceStart } from "./helpers/occurrence";
 
 test("Goal achievements preserve all eight date precisions and reject duplicate completion", async ({
   page,
@@ -130,10 +127,8 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
       await dialog
         .getByRole("combobox", { name: "Time zone", exact: true })
         .selectOption("America/Los_Angeles");
-      if (value.start)
-        await fillOccurrenceStart(dialog, value.start);
-      if (value.end)
-        await fillOccurrenceEnd(dialog, value.end);
+      if (value.start) await fillOccurrenceStart(dialog, value.start);
+      if (value.end) await fillOccurrenceEnd(dialog, value.end);
       await dialog
         .getByRole("textbox", { name: /Human date label|Date description/ })
         .fill(value.label);

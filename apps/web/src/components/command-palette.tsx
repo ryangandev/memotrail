@@ -166,7 +166,8 @@ export function CommandPalette({
         setSearchState({ ...result, query: requestQuery });
       })
       .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
+        if (error instanceof DOMException && error.name === "AbortError")
+          return;
         setSearchState({
           error: "MemoTrail could not search your archive. Try again.",
           items: [],
@@ -351,7 +352,8 @@ function filterCommands(query: string) {
   if (terms.length === 0) return commands;
 
   return commands.filter((command) => {
-    const searchValue = `${command.label} ${command.description} ${command.keywords}`.toLocaleLowerCase();
+    const searchValue =
+      `${command.label} ${command.description} ${command.keywords}`.toLocaleLowerCase();
     return terms.every((term) => searchValue.includes(term));
   });
 }

@@ -64,31 +64,33 @@ type NameRow = {
   name: string;
 };
 
-export const getAuthenticatedContext = cache(async function getAuthenticatedContext() {
-  try {
-    const client = await createClient();
-    const { data, error } = await client.auth.getClaims();
+export const getAuthenticatedContext = cache(
+  async function getAuthenticatedContext() {
+    try {
+      const client = await createClient();
+      const { data, error } = await client.auth.getClaims();
 
-    if (error || !data?.claims) {
+      if (error || !data?.claims) {
+        return null;
+      }
+
+      const claims = data.claims as Claims;
+      const userId = stringValue(claims.sub);
+
+      if (!userId) {
+        return null;
+      }
+
+      return {
+        client,
+        userId,
+        viewer: viewerFromClaims(userId, claims),
+      };
+    } catch {
       return null;
     }
-
-    const claims = data.claims as Claims;
-    const userId = stringValue(claims.sub);
-
-    if (!userId) {
-      return null;
-    }
-
-    return {
-      client,
-      userId,
-      viewer: viewerFromClaims(userId, claims),
-    };
-  } catch {
-    return null;
-  }
-});
+  },
+);
 
 export async function getInboxWorkspace(): Promise<InboxWorkspace | null> {
   const context = await getAuthenticatedContext();

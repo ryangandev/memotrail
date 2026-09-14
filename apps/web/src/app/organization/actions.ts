@@ -29,7 +29,8 @@ export async function saveOrganization(
   if (result.error?.code === "23505") {
     return "This name already exists. Choose a different name; nothing was merged or overwritten.";
   }
-  if (result.error) return "Could not save. Your edits are still here to retry.";
+  if (result.error)
+    return "Could not save. Your edits are still here to retry.";
   if (!result.data) {
     return "This item changed on another device or moved to Trash. Refresh before editing again.";
   }
@@ -40,7 +41,11 @@ export async function saveOrganization(
 export async function trashCollection(
   input: OrganizationInput,
 ): Promise<string | null> {
-  if (!validOrganizationInput(input) || input.kind !== "collection" || !input.id) {
+  if (
+    !validOrganizationInput(input) ||
+    input.kind !== "collection" ||
+    !input.id
+  ) {
     return "Choose a valid Collection.";
   }
   const context = await getAuthenticatedContext();
@@ -49,7 +54,8 @@ export async function trashCollection(
     p_expected_revision: input.revision,
     p_id: input.id,
   });
-  if (result.error) return "Could not move this Collection to Trash. Try again.";
+  if (result.error)
+    return "Could not move this Collection to Trash. Try again.";
   if (!result.data) {
     return "This Collection changed on another device. Refresh before trying again.";
   }

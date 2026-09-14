@@ -208,9 +208,7 @@ export function resolveOccurrenceDraft(
     draft.precision !== "unknown" &&
     (span || ["range", "approximate", "age"].includes(draft.precision));
   const end =
-    bounded && draft.endMode !== "present"
-      ? convert(draft.end, "end")
-      : null;
+    bounded && draft.endMode !== "present" ? convert(draft.end, "end") : null;
   if (
     (draft.start && !start && draft.precision !== "unknown") ||
     (draft.end && !end && bounded)

@@ -16,7 +16,9 @@ export type OrganizationInput = {
   order: number;
 };
 
-export function parseOrganizationItems(value: unknown): OrganizationItem[] | null {
+export function parseOrganizationItems(
+  value: unknown,
+): OrganizationItem[] | null {
   if (!Array.isArray(value)) return null;
   return value.every(isOrganizationItem) ? value : null;
 }

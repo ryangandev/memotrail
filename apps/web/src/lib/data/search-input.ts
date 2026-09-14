@@ -34,7 +34,9 @@ export type QuickSearchResult = {
   items: QuickSearchItem[];
 };
 
-export function parseQuickSearchResult(value: unknown): QuickSearchResult | null {
+export function parseQuickSearchResult(
+  value: unknown,
+): QuickSearchResult | null {
   if (!value || typeof value !== "object") return null;
   const result = value as QuickSearchResult;
 

@@ -148,18 +148,12 @@ export function WorkspaceShell({
     () => setCommandPaletteOpen(false),
     [],
   );
-  const openCommandPalette = useCallback(
-    () => setCommandPaletteOpen(true),
-    [],
-  );
+  const openCommandPalette = useCallback(() => setCommandPaletteOpen(true), []);
 
   return (
     <div className={styles.appShell}>
       <TimezoneSync />
-      <CommandPalette
-        onClose={closeCommandPalette}
-        open={commandPaletteOpen}
-      />
+      <CommandPalette onClose={closeCommandPalette} open={commandPaletteOpen} />
       <Sidebar
         activeDestination={activeDestination}
         inboxCount={inboxCount}
