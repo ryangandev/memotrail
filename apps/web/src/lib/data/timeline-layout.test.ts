@@ -175,6 +175,35 @@ describe("createTimelineLayout", () => {
     expect(layout.laneCountByTrack.places).toBe(2);
   });
 
+  it("aligns short ongoing stage labels to their shared present endpoint", () => {
+    const layout = createTimelineLayout(
+      [
+        source({
+          id: "adobe",
+          kind: "stage",
+          occurredStart: "2026-04-13T00:00:00.000Z",
+          trackId: "career",
+        }),
+        source({
+          id: "evergreen",
+          kind: "stage",
+          occurredStart: "2026-09-01T00:00:00.000Z",
+          trackId: "homes",
+        }),
+      ],
+      reference,
+      "2000-05-16",
+    );
+    const rightEdges = layout.positions.map(
+      (position) =>
+        (position.leftPercent / 100) * layout.canvasWidth +
+        position.stageLabelOffsetPixels +
+        Math.max(position.widthPixels, 54),
+    );
+
+    expect(rightEdges[0]).toBeCloseTo(rightEdges[1]!, 5);
+  });
+
   it("calculates lanes independently for each track", () => {
     const layout = createTimelineLayout(
       [source(), source({ id: "event-2", trackId: "education" })],

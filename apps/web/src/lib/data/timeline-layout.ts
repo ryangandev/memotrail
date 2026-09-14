@@ -10,6 +10,8 @@ export type TimelinePosition = {
   id: string;
   lane: number;
   leftPercent: number;
+  stageLabelOffsetPixels: number;
+  widthPixels: number;
   widthPercent: number;
 };
 
@@ -117,7 +119,11 @@ export function createTimelineLayout(
         ? 0
         : clamp(((item.end - item.start) / range) * 100);
     const anchor = (leftPercent / 100) * canvasWidth;
-    const actualEnd = anchor + (widthPercent / 100) * canvasWidth;
+    const widthPixels = (widthPercent / 100) * canvasWidth;
+    const stageLabelOffsetPixels =
+      item.kind === "stage" && item.occurredEnd === null
+        ? Math.min(0, widthPixels - minimumStageWidthPixels)
+        : 0;
     const visualStart =
       item.kind === "event"
         ? Math.max(
@@ -127,7 +133,7 @@ export function createTimelineLayout(
                 ? eventWidthPixels
                 : eventLeadingOffsetPixels),
           )
-        : anchor;
+        : anchor + stageLabelOffsetPixels;
     const visualEnd =
       item.kind === "event"
         ? Math.min(
@@ -139,14 +145,18 @@ export function createTimelineLayout(
           )
         : Math.min(
             canvasWidth,
-            Math.max(actualEnd, anchor + minimumStageWidthPixels),
+            anchor +
+              stageLabelOffsetPixels +
+              Math.max(widthPixels, minimumStageWidthPixels),
           );
 
     return {
       ...item,
       leftPercent,
+      stageLabelOffsetPixels,
       visualEnd,
       visualStart,
+      widthPixels,
       widthPercent,
     };
   });
@@ -180,6 +190,8 @@ export function createTimelineLayout(
         id: item.id,
         lane,
         leftPercent: item.leftPercent,
+        stageLabelOffsetPixels: item.stageLabelOffsetPixels,
+        widthPixels: item.widthPixels,
         widthPercent: item.widthPercent,
       });
     }

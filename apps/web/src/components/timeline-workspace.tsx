@@ -45,6 +45,8 @@ type EditorSelection =
 type PositionedStyle = CSSProperties & {
   "--item-lane": number;
   "--item-left": string;
+  "--item-stage-label-offset": string;
+  "--item-width-pixels": string;
   "--item-width": string;
 };
 
@@ -522,6 +524,8 @@ function TrackRow({
           const itemStyle: PositionedStyle = {
             "--item-lane": position.lane,
             "--item-left": `${position.leftPercent}%`,
+            "--item-stage-label-offset": `${position.stageLabelOffsetPixels}px`,
+            "--item-width-pixels": `${position.widthPixels}px`,
             "--item-width": `${position.widthPercent}%`,
           };
 
@@ -541,6 +545,10 @@ function TrackRow({
             "data-edge":
               entry.kind === "event" && position.leftPercent > 90
                 ? "end"
+                : undefined,
+            "data-ongoing":
+              entry.kind === "stage" && entry.occurredEnd === null
+                ? "true"
                 : undefined,
             style: itemStyle,
             title: `${entry.title} · ${entryDateLabel(entry)}`,

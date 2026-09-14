@@ -287,11 +287,28 @@
 .stageItem {
   width: max(54px, var(--item-width));
   max-width: calc(100% - var(--item-left));
-  overflow: hidden;
+  transform: translateX(var(--item-stage-label-offset));
   padding: 0 10px;
   border: 1px solid color-mix(in srgb, var(--mt-color-accent) 42%, transparent);
   border-radius: var(--mt-radius-small);
   background: var(--mt-color-accent-subtle);
+  white-space: nowrap;
+}
+
+.stageItem::after {
+  position: absolute;
+  bottom: 3px;
+  left: calc(0px - var(--item-stage-label-offset));
+  width: max(2px, var(--item-width-pixels));
+  height: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mt-color-accent) 72%, transparent);
+  content: "";
+}
+
+.stageItem > span {
+  display: block;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
