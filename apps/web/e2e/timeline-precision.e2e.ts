@@ -130,7 +130,22 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     expect(edgeBounds.finalYearRight).toBeLessThanOrEqual(
       edgeBounds.viewportRight + 1,
     );
-    await page.getByRole("button", { name: /First trip to Japan/ }).click();
+    const timelineStage = page.getByRole("button", {
+      name: /First trip to Japan/,
+    });
+    const indicatorBounds = await timelineStage.evaluate((element) => {
+      const indicator = window.getComputedStyle(element, "::after");
+      return {
+        cardWidth: element.getBoundingClientRect().width,
+        left: Number.parseFloat(indicator.left),
+        right: Number.parseFloat(indicator.right),
+        width: Number.parseFloat(indicator.width),
+      };
+    });
+    expect(indicatorBounds.left).toBe(10);
+    expect(indicatorBounds.right).toBe(10);
+    expect(indicatorBounds.width).toBeLessThan(indicatorBounds.cardWidth);
+    await timelineStage.click();
     const dialog = page.getByRole("dialog");
     await page.screenshot({
       path: "/private/tmp/memotrail-timeline-precision-desktop.png",

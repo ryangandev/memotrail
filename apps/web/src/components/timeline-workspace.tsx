@@ -46,7 +46,6 @@ type PositionedStyle = CSSProperties & {
   "--item-lane": number;
   "--item-left": string;
   "--item-stage-label-offset": string;
-  "--item-width-pixels": string;
   "--item-width": string;
 };
 
@@ -525,7 +524,6 @@ function TrackRow({
             "--item-lane": position.lane,
             "--item-left": `${position.leftPercent}%`,
             "--item-stage-label-offset": `${position.stageLabelOffsetPixels}px`,
-            "--item-width-pixels": `${position.widthPixels}px`,
             "--item-width": `${position.widthPercent}%`,
           };
 
