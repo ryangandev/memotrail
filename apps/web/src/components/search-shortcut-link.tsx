@@ -1,19 +1,15 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Icon } from "@/components/icon";
 
-export function SearchShortcutLink({
-  active,
+export function SearchShortcutButton({
   className,
+  onOpen,
 }: {
-  active: boolean;
   className: string;
+  onOpen: () => void;
 }) {
-  const router = useRouter();
-
   useEffect(() => {
     function handleShortcut(event: KeyboardEvent) {
       if (
@@ -25,24 +21,24 @@ export function SearchShortcutLink({
       }
 
       event.preventDefault();
-
-      if (active) {
-        document.getElementById("trail-search")?.focus();
-        return;
-      }
-
-      router.push("/search");
+      onOpen();
     }
 
     window.addEventListener("keydown", handleShortcut);
     return () => window.removeEventListener("keydown", handleShortcut);
-  }, [active, router]);
+  }, [onOpen]);
 
   return (
-    <Link aria-label="Search your trail" className={className} href="/search">
+    <button
+      aria-haspopup="dialog"
+      aria-label="Search your trail"
+      className={className}
+      onClick={onOpen}
+      type="button"
+    >
       <Icon name="search" />
-      <span>{active ? "Search" : "Search your trail"}</span>
+      <span>Search your trail</span>
       <kbd aria-hidden="true">⌘ K</kbd>
-    </Link>
+    </button>
   );
 }

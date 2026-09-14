@@ -79,6 +79,12 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
 
     const shell = page.getByRole("complementary");
     await expect(shell).toBeVisible();
+    await expect(shell.getByText(email, { exact: true })).toHaveCount(0);
+    await expect(
+      shell
+        .getByRole("navigation", { name: "Settings navigation" })
+        .getByRole("link", { name: "Settings", exact: true }),
+    ).toHaveCount(1);
     const syncNote = shell.getByRole("note", { name: "Private cloud sync" });
     await expect(syncNote).toBeVisible();
     await syncNote
@@ -95,7 +101,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
 
     await page.setViewportSize({ width: 1280, height: 560 });
     const scrollRegion = page.getByRole("region", {
-      name: "Navigation and account",
+      name: "Sidebar navigation",
     });
     const brand = shell.getByRole("link", { name: "MemoTrail", exact: true });
     const capture = shell.getByRole("link", {
@@ -128,6 +134,23 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       await capture.evaluate((element) => element.getBoundingClientRect().top),
     ).toBe(captureTop);
     await page.setViewportSize({ width: 1280, height: 720 });
+
+    await page.keyboard.press("Meta+k");
+    const commandPalette = page.getByRole("dialog", {
+      name: "Search MemoTrail",
+    });
+    await expect(commandPalette).toBeVisible();
+    await page.screenshot({
+      path: "/private/tmp/memotrail-command-palette.png",
+    });
+    await expect(page).toHaveURL(/\/$/);
+    await expect(commandPalette.getByRole("searchbox")).toBeFocused();
+    await commandPalette.getByRole("searchbox").fill("settings");
+    await expect(
+      commandPalette.getByRole("button", { name: /Settings/ }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(commandPalette).not.toBeVisible();
 
     searchNavigationStarted = true;
     await page

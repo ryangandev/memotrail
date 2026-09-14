@@ -167,6 +167,12 @@
   padding-top: var(--mt-space-5);
 }
 
+.sidebarFooterDivider {
+  height: 1px;
+  margin: var(--mt-space-1) var(--mt-space-3) 0;
+  background: var(--mt-color-border);
+}
+
 .archiveNote {
   position: relative;
   display: flex;
@@ -221,31 +227,6 @@
   font-size: 10px;
 }
 
-.accountLink {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 10px;
-  padding: var(--mt-space-2);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-ink);
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.accountLink:hover,
-.accountLink[aria-current="page"] {
-  background: var(--mt-color-surface-subtle);
-}
-
-.accountLink > span:nth-child(2) {
-  display: grid;
-  flex: 1;
-  min-width: 0;
-}
-
 .sidebarFooter strong {
   font-size: 12px;
   font-weight: var(--mt-font-weight-medium);
@@ -260,7 +241,6 @@
   white-space: nowrap;
 }
 
-.avatar,
 .avatarButton {
   display: grid;
   width: 30px;
@@ -408,6 +388,7 @@
   color: var(--mt-color-ink-faint);
   background: var(--mt-color-surface);
   box-shadow: 0 1px 2px rgb(38 37 31 / 0.03);
+  font: inherit;
   font-size: var(--mt-font-size-label);
   text-align: left;
   text-decoration: none;
