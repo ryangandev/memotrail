@@ -215,19 +215,20 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
         exact: true,
       }),
     ).toContainText("01:30");
+    const timezone = dialog.getByRole("combobox", {
+      name: "Time zone",
+      exact: true,
+    });
+    await expect(timezone).toHaveValue("America/Los_Angeles");
     await expect(
-      dialog.getByText("Los Angeles - America", { exact: true }),
-    ).toBeVisible();
+      timezone.locator('option[value="America/Los_Angeles"]'),
+    ).toHaveText("(UTC-08:00) Los Angeles - America");
     await expect(
       dialog.getByText("Entry override", { exact: true }),
     ).toBeVisible();
     await expect(
-      dialog.getByRole("combobox", { name: "Time zone", exact: true }),
+      dialog.getByRole("button", { name: "Change", exact: true }),
     ).toHaveCount(0);
-    await dialog.getByRole("button", { name: "Change", exact: true }).click();
-    await expect(
-      dialog.getByRole("combobox", { name: "Time zone", exact: true }),
-    ).toHaveValue("America/Los_Angeles");
     await page.screenshot({
       path: "/private/tmp/memotrail-exact-datetime-desktop.png",
     });
@@ -312,18 +313,70 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       name: "Start date",
       exact: true,
     });
+    const emptyInputWidth = await exactStartDate.evaluate(
+      (input) => input.getBoundingClientRect().width,
+    );
+    const clearStartDate = dialog.locator(
+      'button[aria-label="Clear start date"]',
+    );
+    await expect(clearStartDate).not.toBeVisible();
     await exactStartDate.fill("20ab17/07-08");
     await expect(exactStartDate).toHaveValue("2017-07-08");
     await expect(exactStartDate).toHaveCSS("border-top-width", "0px");
+    await expect(clearStartDate).toBeVisible();
+    expect(
+      Math.abs(
+        (await exactStartDate.evaluate(
+          (input) => input.getBoundingClientRect().width,
+        )) - emptyInputWidth,
+      ),
+    ).toBeLessThan(1);
+    await clearStartDate.hover();
+    await expect(clearStartDate).toHaveCSS(
+      "background-color",
+      "rgba(0, 0, 0, 0)",
+    );
+    expect(
+      await clearStartDate.evaluate((button) => {
+        const buttonRect = button.getBoundingClientRect();
+        const iconRect = button.querySelector("svg")!.getBoundingClientRect();
+        return Math.abs(
+          buttonRect.top +
+            buttonRect.height / 2 -
+            (iconRect.top + iconRect.height / 2),
+        );
+      }),
+    ).toBeLessThan(1);
+    for (const action of [
+      dialog.getByRole("button", { name: "Choose start date", exact: true }),
+      dialog.getByRole("button", {
+        name: "Choose start date time",
+        exact: true,
+      }),
+    ]) {
+      await action.hover();
+      expect(
+        await action.evaluate((button) => {
+          const control = button.parentElement!.getBoundingClientRect();
+          const actionRect = button.getBoundingClientRect();
+          return Math.min(
+            actionRect.top - control.top,
+            control.bottom - actionRect.bottom,
+          );
+        }),
+      ).toBeGreaterThanOrEqual(4);
+    }
+    const defaultTimezoneSelect = dialog.getByRole("combobox", {
+      name: "Time zone",
+      exact: true,
+    });
+    await expect(defaultTimezoneSelect).toHaveValue("America/New_York");
     await expect(
-      dialog.getByText("New York - America", { exact: true }),
-    ).toBeVisible();
+      defaultTimezoneSelect.locator('option[value="America/New_York"]'),
+    ).toHaveText("(UTC-04:00) New York - America");
     await expect(
       dialog.getByText("Default from Settings", { exact: true }),
     ).toBeVisible();
-    await expect(
-      dialog.getByRole("combobox", { name: "Time zone", exact: true }),
-    ).toHaveCount(0);
     await dialog.getByLabel("Date type").selectOption("range");
     const present = dialog.getByRole("checkbox", {
       name: "Present",

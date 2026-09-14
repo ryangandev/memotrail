@@ -48,7 +48,6 @@ export function BirthDateSetting({
       </div>
       <DatePickerField
         disabled={busy}
-        editable={false}
         granularity="day"
         label="Birth date"
         initialView="year"

@@ -154,17 +154,17 @@ export function DatePickerField({
               value={timeText}
             />
           ) : null}
-          {value ? (
-            <button
-              aria-label={`Clear ${label.toLowerCase()}`}
-              className={styles.datePickerClear}
-              disabled={disabled}
-              onClick={() => onChange("")}
-              type="button"
-            >
-              <span aria-hidden="true">×</span>
-            </button>
-          ) : null}
+          <button
+            aria-label={`Clear ${label.toLowerCase()}`}
+            className={styles.datePickerClear}
+            data-empty={!value || undefined}
+            disabled={disabled || !value}
+            onClick={() => onChange("")}
+            tabIndex={value ? undefined : -1}
+            type="button"
+          >
+            <Icon name="close" size={16} />
+          </button>
         </DatePicker.Control>
 
         <Portal>

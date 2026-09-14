@@ -50,9 +50,10 @@ People and Places are lightweight reusable records, not contact or location-mana
 Dates support exact timestamp, day, month, year, age or age range, date range, approximate description, and Unknown.
 The system must preserve the recorded precision and timezone without inventing a calendar anchor.
 Web date forms share one calendar control with day, month, year, optional hour-and-minute, editable numeric-entry, picker-only, and size variants.
-Editable date fields accept digits and add their own separators; private birth dates remain picker-only.
+Editable date fields accept digits and add their own separators; the first-visit birth-date prompt is picker-only, while Settings also permits numeric editing.
 Settings owns the user's default timezone for new exact Timeline timestamps.
-An exact Timeline timestamp may override that default on its Entry, while date-only and uncertain Timeline forms keep timezone controls out of the primary form.
+An exact Timeline timestamp shows a directly editable timezone select, may override the Settings default on its Entry, and labels every option with the UTC offset for the relevant date.
+Date-only and uncertain Timeline forms keep timezone controls out of the primary form.
 Changing the default never rewrites an existing Entry's recorded timezone.
 
 ## Capture and Inbox

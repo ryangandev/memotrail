@@ -46,3 +46,56 @@ export function timezoneLabel(timezone: string) {
   const location = locationParts.join(" / ").replaceAll("_", " ");
   return location ? `${location} - ${region}` : timezone.replaceAll("_", " ");
 }
+
+export function timezoneOffsetLabel(
+  timezone: string,
+  referenceDate: string | Date = new Date(),
+) {
+  const reference = offsetReferenceDate(referenceDate);
+  const cacheKey = `${timezone}:${reference.toISOString().slice(0, 10)}`;
+  if (offsetLabelCache.has(cacheKey)) return offsetLabelCache.get(cacheKey)!;
+
+  let offset = "";
+  try {
+    const zoneName = new Intl.DateTimeFormat("en-US", {
+      hour: "2-digit",
+      timeZone: timezone,
+      timeZoneName: "longOffset",
+    })
+      .formatToParts(reference)
+      .find((part) => part.type === "timeZoneName")?.value;
+    const match = zoneName?.match(/^GMT(?:([+-])(\d{1,2}):(\d{2}))?$/);
+    if (match) {
+      offset = match[1]
+        ? `UTC${match[1]}${match[2].padStart(2, "0")}:${match[3]}`
+        : "UTC+00:00";
+    }
+  } catch {
+    // Preserve the IANA label if this runtime cannot format its offset.
+  }
+
+  offsetLabelCache.set(cacheKey, offset);
+  return offset;
+}
+
+export function timezoneOptionLabel(
+  timezone: string,
+  referenceDate?: string | Date,
+) {
+  const offset = timezoneOffsetLabel(timezone, referenceDate);
+  return `${offset ? `(${offset}) ` : ""}${timezoneLabel(timezone)}`;
+}
+
+function offsetReferenceDate(value: string | Date) {
+  if (value instanceof Date && Number.isFinite(value.getTime())) return value;
+  if (typeof value === "string") {
+    const day = value.match(/^\d{4}-\d{2}-\d{2}/)?.[0];
+    if (day) {
+      const reference = new Date(`${day}T12:00:00Z`);
+      if (Number.isFinite(reference.getTime())) return reference;
+    }
+  }
+  return new Date();
+}
+
+const offsetLabelCache = new Map<string, string>();

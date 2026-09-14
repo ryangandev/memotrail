@@ -110,8 +110,9 @@ test("Timeline asks for a private birth date and starts the story there", async 
       exact: true,
     });
     await expect(setting).toHaveValue("1994-04-18");
-    await expect(setting).toHaveAttribute("readonly", "");
-    await chooseBirthDate(page, setting, "1995-05-19");
+    await expect(setting).not.toHaveAttribute("readonly", "");
+    await setting.fill("1995abc05/19");
+    await expect(setting).toHaveValue("1995-05-19");
     await page
       .getByRole("button", { name: "Save birth date", exact: true })
       .click();

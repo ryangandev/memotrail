@@ -82,6 +82,14 @@ test("Settings is reachable from the sidebar and owns account controls", async (
       exact: true,
     });
     await expect(timezone).toHaveValue("UTC");
+    const timezoneOptions = await timezone.locator("option").allTextContents();
+    expect(timezoneOptions.length).toBeGreaterThan(100);
+    expect(timezoneOptions.every((label) => label.startsWith("(UTC"))).toBe(
+      true,
+    );
+    await expect(timezone.locator('option[value="UTC"]')).toHaveText(
+      "(UTC+00:00) UTC",
+    );
     await timezone.selectOption("America/Los_Angeles");
     await main
       .getByRole("button", { name: "Save time zone", exact: true })

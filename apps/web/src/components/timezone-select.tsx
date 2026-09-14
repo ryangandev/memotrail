@@ -4,7 +4,7 @@ import type { ChangeEventHandler } from "react";
 import {
   commonTimezones,
   supportedTimezones,
-  timezoneLabel,
+  timezoneOptionLabel,
 } from "@/lib/data/timezones";
 
 export function TimezoneSelect({
@@ -12,12 +12,14 @@ export function TimezoneSelect({
   className,
   disabled = false,
   onChange,
+  referenceDate,
   value,
 }: {
   ariaLabel: string;
   className?: string;
   disabled?: boolean;
   onChange: ChangeEventHandler<HTMLSelectElement>;
+  referenceDate?: string;
   value: string;
 }) {
   const allTimezones = supportedTimezones();
@@ -35,13 +37,15 @@ export function TimezoneSelect({
     >
       {!currentTimezoneIsListed ? (
         <optgroup label="Current time zone">
-          <option value={value}>{timezoneLabel(value)}</option>
+          <option value={value}>
+            {timezoneOptionLabel(value, referenceDate)}
+          </option>
         </optgroup>
       ) : null}
       <optgroup label="Common time zones">
         {commonTimezones.map((timezone) => (
           <option key={timezone} value={timezone}>
-            {timezoneLabel(timezone)}
+            {timezoneOptionLabel(timezone, referenceDate)}
           </option>
         ))}
       </optgroup>
@@ -50,7 +54,7 @@ export function TimezoneSelect({
           .filter((timezone) => !commonTimezoneSet.has(timezone))
           .map((timezone) => (
             <option key={timezone} value={timezone}>
-              {timezoneLabel(timezone)}
+              {timezoneOptionLabel(timezone, referenceDate)}
             </option>
           ))}
       </optgroup>

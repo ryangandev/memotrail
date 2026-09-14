@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   occurrencePrecisions,
   occurrencePrecisionLabels,
@@ -11,7 +10,6 @@ import {
   type DatePickerGranularity,
 } from "@/components/date-picker-field";
 import { TimezoneSelect } from "@/components/timezone-select";
-import { timezoneLabel } from "@/lib/data/timezones";
 import styles from "@/app/page.module.css";
 
 export function OccurrenceEditor({
@@ -29,7 +27,6 @@ export function OccurrenceEditor({
   span?: boolean;
   point?: boolean;
 }) {
-  const [editingTimezone, setEditingTimezone] = useState(false);
   const change = (patch: Partial<OccurrenceDraft>) =>
     onChange({ ...value, ...patch });
   const calendar = value.precision !== "unknown";
@@ -79,38 +76,23 @@ export function OccurrenceEditor({
         </label>
         {defaultTimezone ? (
           value.precision === "exact" ? (
-            !editingTimezone ? (
-              <div className={styles.timezoneSummary}>
-                <span>Time zone</span>
-                <div>
-                  <span>
-                    <strong>{timezoneLabel(value.timezone)}</strong>
-                    <small>
-                      {timezoneIsDefault
-                        ? "Default from Settings"
-                        : "Entry override"}
-                    </small>
-                  </span>
-                  <button
-                    disabled={disabled}
-                    onClick={() => setEditingTimezone(true)}
-                    type="button"
-                  >
-                    Change
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <label>
-                <span>Time zone</span>
-                <TimezoneSelect
-                  ariaLabel="Time zone"
-                  disabled={disabled}
-                  onChange={(event) => change({ timezone: event.target.value })}
-                  value={value.timezone}
-                />
-              </label>
-            )
+            <label>
+              <span>
+                Time zone
+                <small>
+                  {timezoneIsDefault
+                    ? "Default from Settings"
+                    : "Entry override"}
+                </small>
+              </span>
+              <TimezoneSelect
+                ariaLabel="Time zone"
+                disabled={disabled}
+                onChange={(event) => change({ timezone: event.target.value })}
+                referenceDate={value.start}
+                value={value.timezone}
+              />
+            </label>
           ) : null
         ) : (
           <label>
@@ -119,6 +101,7 @@ export function OccurrenceEditor({
               ariaLabel="Time zone"
               disabled={disabled}
               onChange={(event) => change({ timezone: event.target.value })}
+              referenceDate={value.start}
               value={value.timezone}
             />
           </label>
