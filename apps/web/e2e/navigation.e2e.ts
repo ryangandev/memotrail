@@ -95,6 +95,15 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(
       shell.getByRole("note", { name: "Private cloud sync" }),
     ).toHaveCount(0);
+    const sidebarDividers = shell.getByRole("separator");
+    await expect(sidebarDividers).toHaveCount(3);
+    const dividerMargins = await sidebarDividers.evaluateAll((elements) =>
+      elements.map((element) => {
+        const style = getComputedStyle(element);
+        return [style.marginTop, style.marginBottom];
+      }),
+    );
+    expect(dividerMargins[2]).toEqual(dividerMargins[0]);
     await shell.evaluate((element) => {
       element.setAttribute("data-shell-instance", "kept");
     });

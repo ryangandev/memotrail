@@ -162,15 +162,11 @@
 
 .sidebarFooter {
   display: grid;
-  gap: var(--mt-space-3);
-  margin-top: auto;
-  padding-top: var(--mt-space-5);
+  gap: 0;
 }
 
-.sidebarFooterDivider {
-  height: 1px;
-  margin: var(--mt-space-1) var(--mt-space-3) 0;
-  background: var(--mt-color-border);
+.sidebarFooter .archiveNote {
+  margin-top: var(--mt-space-5);
 }
 
 .archiveNote {

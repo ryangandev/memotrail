@@ -278,13 +278,13 @@ function Sidebar({
             inboxCount={inboxCount}
             items={primaryNavigation}
           />
-          <div className={styles.navDivider} />
+          <div className={styles.navDivider} role="separator" />
           <p className={styles.navLabel}>Records</p>
           <NavGroup
             activeDestination={activeDestination}
             items={recordNavigation}
           />
-          <div className={styles.navDivider} />
+          <div className={styles.navDivider} role="separator" />
           <p className={styles.navLabel}>Library</p>
           <NavGroup
             activeDestination={activeDestination}
@@ -294,7 +294,7 @@ function Sidebar({
 
         <div className={styles.sidebarFooter}>
           <DismissibleSyncNote ownerId={viewer.id} />
-          <div className={styles.sidebarFooterDivider} role="separator" />
+          <div className={styles.navDivider} role="separator" />
           <nav className={styles.navGroup} aria-label="Settings navigation">
             <NavigationControl
               active={activeDestination === "settings"}
