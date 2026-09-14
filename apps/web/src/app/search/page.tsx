@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { AISearchForm } from "@/components/ai-search-form";
 import { LibrarySearchResults } from "@/components/library-search-results";
+import { PageFrame } from "@/components/page-frame";
 import { librarySearchPage } from "@/lib/data/library-search";
 import {
   SEARCH_PAGE_SIZE,
@@ -54,163 +55,161 @@ export default async function SearchPage({
   } = workspace;
 
   return (
-    <div className={styles.content}>
-        <header className={styles.pageHeader}>
-          <div>
-            <p className={styles.eyebrow}>Your personal archive</p>
-            <h1>Search your trail</h1>
-            <p>Find Entries, People, and Places by what you remember.</p>
+    <PageFrame variant="standard">
+      <header className={styles.pageHeader}>
+        <div>
+          <p className={styles.eyebrow}>Your personal archive</p>
+          <h1>Search your trail</h1>
+          <p>Find Entries, People, and Places by what you remember.</p>
+        </div>
+        <Link className={styles.newEntryButton} href="/inbox#capture-title">
+          <Icon name="plus" />
+          <span>New entry</span>
+        </Link>
+      </header>
+
+      <AISearchForm
+        key={JSON.stringify(request)}
+        keywordResults={
+          <>
+            <SearchResults
+              entries={entries}
+              loadError={loadError}
+              request={request}
+              totalCount={totalCount}
+            />
+            <LibrarySearchResults
+              request={request}
+              result={workspace.library}
+              error={workspace.libraryError}
+              page={libraryPage}
+            />
+          </>
+        }
+      >
+        <section className={styles.searchSurface} aria-label="Entry search">
+          <div className={styles.queryRow}>
+            <label className={styles.queryField} htmlFor="trail-search">
+              <Icon name="search" size={21} />
+              <span className={styles.visuallyHidden}>Search your Entries</span>
+              <input
+                autoFocus
+                defaultValue={request.query}
+                id="trail-search"
+                maxLength={200}
+                name="q"
+                placeholder="A phrase, date, or question about your life..."
+                type="search"
+              />
+            </label>
+            <button className={styles.searchSubmit} type="submit">
+              Search
+            </button>
+            <button
+              className={styles.askSubmit}
+              name="mode"
+              value="ai"
+              type="submit"
+            >
+              Ask AI
+            </button>
           </div>
-          <Link className={styles.newEntryButton} href="/inbox#capture-title">
-            <Icon name="plus" />
-            <span>New entry</span>
-          </Link>
-        </header>
 
-        <AISearchForm
-          key={JSON.stringify(request)}
-          keywordResults={
-            <>
-              <SearchResults
-                entries={entries}
-                loadError={loadError}
-                request={request}
-                totalCount={totalCount}
-              />
-              <LibrarySearchResults
-                request={request}
-                result={workspace.library}
-                error={workspace.libraryError}
-                page={libraryPage}
-              />
-            </>
-          }
-        >
-          <section className={styles.searchSurface} aria-label="Entry search">
-            <div className={styles.queryRow}>
-              <label className={styles.queryField} htmlFor="trail-search">
-                <Icon name="search" size={21} />
-                <span className={styles.visuallyHidden}>
-                  Search your Entries
-                </span>
-                <input
-                  autoFocus
-                  defaultValue={request.query}
-                  id="trail-search"
-                  maxLength={200}
-                  name="q"
-                  placeholder="A phrase, date, or question about your life..."
-                  type="search"
-                />
-              </label>
-              <button className={styles.searchSubmit} type="submit">
-                Search
-              </button>
-              <button
-                className={styles.askSubmit}
-                name="mode"
-                value="ai"
-                type="submit"
-              >
-                Ask AI
-              </button>
-            </div>
-
-            <div className={styles.searchScope}>
-              <span>Keyword search</span>
-              <p>
-                Titles, notes, local dates, Collections, tags, and structured
-                details
-              </p>
-            </div>
-
-            <fieldset className={styles.filters}>
-              <legend>Refine results</legend>
-
-              <label>
-                <span>Type</span>
-                <select defaultValue={request.entryTypes[0] ?? ""} name="type">
-                  <option value="">All Types</option>
-                  {entryTypeOptions.map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                <span>Collection</span>
-                <select
-                  defaultValue={request.collectionNames[0] ?? ""}
-                  disabled={collectionOptions.length === 0}
-                  name="collection"
-                >
-                  <option value="">All Collections</option>
-                  {collectionOptions.map((name) => (
-                    <option key={name.toLocaleLowerCase()} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                <span>Tag</span>
-                <select
-                  defaultValue={request.tagNames[0] ?? ""}
-                  disabled={tagOptions.length === 0}
-                  name="tag"
-                >
-                  <option value="">All tags</option>
-                  {tagOptions.map((name) => (
-                    <option key={name.toLocaleLowerCase()} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                <span>From</span>
-                <input
-                  defaultValue={request.dateFrom ?? ""}
-                  name="from"
-                  type="date"
-                />
-              </label>
-
-              <label>
-                <span>To</span>
-                <input
-                  defaultValue={request.dateTo ?? ""}
-                  name="to"
-                  type="date"
-                />
-              </label>
-
-              {request.hasCriteria ? (
-                <Link className={styles.clearFilters} href="/search">
-                  Clear all
-                </Link>
-              ) : (
-                <span className={styles.clearPlaceholder} aria-hidden="true" />
-              )}
-            </fieldset>
-
-            <p className={styles.dateGuidance}>
-              Date filters include overlapping recorded periods in each
-              Entry&apos;s time zone. Partial dates may overlap; unanchored
-              dates remain searchable without date filters.
+          <div className={styles.searchScope}>
+            <span>Keyword search</span>
+            <p>
+              Titles, notes, local dates, Collections, tags, and structured
+              details
             </p>
-            {filtersError ? (
-              <p className={styles.filterNotice} role="status">
-                {filtersError}
-              </p>
-            ) : null}
-          </section>
-        </AISearchForm>
-    </div>
+          </div>
+
+          <fieldset className={styles.filters}>
+            <legend>Refine results</legend>
+
+            <label>
+              <span>Type</span>
+              <select defaultValue={request.entryTypes[0] ?? ""} name="type">
+                <option value="">All Types</option>
+                {entryTypeOptions.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span>Collection</span>
+              <select
+                defaultValue={request.collectionNames[0] ?? ""}
+                disabled={collectionOptions.length === 0}
+                name="collection"
+              >
+                <option value="">All Collections</option>
+                {collectionOptions.map((name) => (
+                  <option key={name.toLocaleLowerCase()} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span>Tag</span>
+              <select
+                defaultValue={request.tagNames[0] ?? ""}
+                disabled={tagOptions.length === 0}
+                name="tag"
+              >
+                <option value="">All tags</option>
+                {tagOptions.map((name) => (
+                  <option key={name.toLocaleLowerCase()} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span>From</span>
+              <input
+                defaultValue={request.dateFrom ?? ""}
+                name="from"
+                type="date"
+              />
+            </label>
+
+            <label>
+              <span>To</span>
+              <input
+                defaultValue={request.dateTo ?? ""}
+                name="to"
+                type="date"
+              />
+            </label>
+
+            {request.hasCriteria ? (
+              <Link className={styles.clearFilters} href="/search">
+                Clear all
+              </Link>
+            ) : (
+              <span className={styles.clearPlaceholder} aria-hidden="true" />
+            )}
+          </fieldset>
+
+          <p className={styles.dateGuidance}>
+            Date filters include overlapping recorded periods in each
+            Entry&apos;s time zone. Partial dates may overlap; unanchored dates
+            remain searchable without date filters.
+          </p>
+          {filtersError ? (
+            <p className={styles.filterNotice} role="status">
+              {filtersError}
+            </p>
+          ) : null}
+        </section>
+      </AISearchForm>
+    </PageFrame>
   );
 }
 

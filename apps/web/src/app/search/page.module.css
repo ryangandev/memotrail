@@ -1,9 +1,3 @@
-.content {
-  width: min(100% - 64px, 960px);
-  margin: 0 auto;
-  padding: var(--mt-space-12) 0 var(--mt-space-16);
-}
-
 .sourceLink {
   color: inherit;
   text-decoration-thickness: 1px;
@@ -492,11 +486,6 @@
 }
 
 @media (max-width: 720px) {
-  .content {
-    width: min(100% - 32px, 620px);
-    padding: var(--mt-space-8) 0 var(--mt-space-12);
-  }
-
   .pageHeader {
     align-items: center;
   }
@@ -558,10 +547,6 @@
 }
 
 @media (max-width: 430px) {
-  .content {
-    width: min(100% - 24px, 620px);
-  }
-
   .queryRow {
     grid-template-columns: 1fr;
   }

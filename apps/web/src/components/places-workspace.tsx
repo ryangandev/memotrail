@@ -11,6 +11,7 @@ import {
 import common from "@/app/homes/page.module.css";
 import styles from "@/app/places/page.module.css";
 import { Icon } from "@/components/icon";
+import { PageFrame } from "@/components/page-frame";
 import {
   placeCoordinateLabel,
   placeCover,
@@ -53,7 +54,7 @@ export function PlacesWorkspace({
   const unlinked = places.filter((place) => place.linkedEntryCount === 0);
 
   return (
-    <div className={common.content}>
+    <PageFrame variant="wide">
       <header className={common.pageHeader}>
         <div>
           <p className={common.eyebrow}>A geography of your archive</p>
@@ -138,7 +139,7 @@ export function PlacesWorkspace({
           place={selectedPlace}
         />
       ) : null}
-    </div>
+    </PageFrame>
   );
 }
 

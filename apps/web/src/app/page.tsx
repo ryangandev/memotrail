@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CaptureComposer } from "@/components/capture-composer";
 import { Icon } from "@/components/icon";
+import { PageFrame } from "@/components/page-frame";
 import { greetingInTimezone } from "@/lib/data/home-input";
 import {
   getHomeWorkspace,
@@ -31,7 +32,7 @@ function HomeContent({ workspace }: { workspace: HomeWorkspace }) {
   );
 
   return (
-    <div className={styles.content}>
+    <PageFrame variant="wide">
       <header className={styles.pageHeader}>
         <div>
           <p className={styles.eyebrow}>
@@ -64,7 +65,7 @@ function HomeContent({ workspace }: { workspace: HomeWorkspace }) {
           snapshot={workspace.snapshot}
         />
       )}
-    </div>
+    </PageFrame>
   );
 }
 

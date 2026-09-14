@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { OrganizationControl } from "@/components/organization-control";
+import { PageFrame } from "@/components/page-frame";
 import { getOrganizationWorkspace } from "@/lib/data/organization-workspace";
 import styles from "./page.module.css";
 
@@ -26,7 +27,7 @@ export default async function TagsPage({
   if (!workspace) return null;
 
   return (
-    <div className={styles.content}>
+    <PageFrame variant="standard">
       <header className={styles.pageHeader}>
         <div>
           <p className={styles.eyebrow}>Filter across your archive</p>
@@ -39,13 +40,6 @@ export default async function TagsPage({
         </div>
         <OrganizationControl items={workspace.items} kind="tag" />
       </header>
-
-      <nav className={styles.kindTabs} aria-label="Archive organization">
-        <Link href="/collections">Collections</Link>
-        <Link aria-current="page" href="/tags">
-          Tags
-        </Link>
-      </nav>
 
       <form className={styles.search}>
         <label htmlFor="tag-search">Find a tag</label>
@@ -115,12 +109,8 @@ export default async function TagsPage({
         </section>
       )}
 
-      <Pagination
-        page={page}
-        query={query}
-        totalCount={workspace.totalCount}
-      />
-    </div>
+      <Pagination page={page} query={query} totalCount={workspace.totalCount} />
+    </PageFrame>
   );
 }
 

@@ -24,7 +24,8 @@ test("Vehicle cards share one grid row and keep their visual flush to the border
     email_confirm: true,
     password: randomUUID(),
   });
-  if (!created.data.user) throw new Error("Could not create local test account.");
+  if (!created.data.user)
+    throw new Error("Could not create local test account.");
   const owner = created.data.user.id;
 
   try {
@@ -39,8 +40,12 @@ test("Vehicle cards share one grid row and keep their visual flush to the border
         },
       },
     });
-    const link = await admin.auth.admin.generateLink({ type: "magiclink", email });
-    if (!link.data.properties) throw new Error("Could not sign in local fixture.");
+    const link = await admin.auth.admin.generateLink({
+      type: "magiclink",
+      email,
+    });
+    if (!link.data.properties)
+      throw new Error("Could not sign in local fixture.");
     expect(
       (
         await client.auth.verifyOtp({
@@ -126,7 +131,9 @@ test("Vehicle cards share one grid row and keep their visual flush to the border
     await page.setViewportSize({ height: 844, width: 390 });
     await expect(current).toBeVisible();
     expect(
-      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
     ).toBe(true);
     expect(
       await current.evaluate(

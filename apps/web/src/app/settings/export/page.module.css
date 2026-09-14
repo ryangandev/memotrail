@@ -1,9 +1,6 @@
 .content {
-  max-width: 840px;
-  margin: 0 auto;
   display: grid;
   gap: 24px;
-  padding: 32px 24px 80px;
   color: var(--mt-color-ink);
 }
 .content header {
@@ -82,7 +79,6 @@
 }
 @media (max-width: 600px) {
   .content {
-    padding: 24px 16px 100px;
     gap: 20px;
   }
   .card {

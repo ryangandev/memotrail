@@ -12,6 +12,7 @@ import {
 import styles from "@/app/trash/page.module.css";
 import { Icon } from "@/components/icon";
 import { EmptyTrashControl } from "@/components/empty-trash-control";
+import { PageFrame } from "@/components/page-frame";
 import type {
   TrashItem,
   TrashWorkspace as TrashWorkspaceData,
@@ -92,7 +93,7 @@ export function TrashWorkspace({
   }
 
   return (
-    <div className={styles.content}>
+    <PageFrame variant="standard">
       <header className={styles.pageHeader}>
         <div>
           <p className={styles.eyebrow}>Recoverable by design</p>
@@ -318,7 +319,7 @@ export function TrashWorkspace({
           </section>
         </div>
       ) : null}
-    </div>
+    </PageFrame>
   );
 }
 

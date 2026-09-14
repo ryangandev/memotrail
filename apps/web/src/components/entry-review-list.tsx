@@ -407,7 +407,6 @@ export function EntryReviewDialog({
   );
 }
 
-
 function namesIncludingDraft(names: string[], draft: string) {
   const name = draft.trim();
   return name ? [...names, name] : names;

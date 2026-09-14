@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { savePerson, trashPerson } from "@/app/people/actions";
+import { PageFrame } from "@/components/page-frame";
 import {
   personEntryTitle,
   type Person,
@@ -26,7 +27,7 @@ export function PeopleWorkspace({
 }) {
   const [selected, setSelected] = useState<Person | "new" | null>(null);
   return (
-    <div className={styles.workspace}>
+    <PageFrame className={styles.workspace} variant="canvas">
       <header className={styles.header}>
         <div>
           <p>THE PEOPLE IN YOUR STORY</p>
@@ -77,7 +78,7 @@ export function PeopleWorkspace({
           onClose={() => setSelected(null)}
         />
       ) : null}
-    </div>
+    </PageFrame>
   );
 }
 

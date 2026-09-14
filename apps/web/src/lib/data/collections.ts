@@ -3,10 +3,7 @@ import { displayImageURLs } from "@/lib/media/urls";
 
 import { getAuthenticatedContext, type Viewer } from "./inbox";
 import { COLLECTION_PAGE_SIZE } from "./collections-input";
-import {
-  parseOrganizationItems,
-  type OrganizationItem,
-} from "./organization";
+import { parseOrganizationItems, type OrganizationItem } from "./organization";
 import { normalizeCounts } from "./organization-workspace";
 
 export type CollectionSummary = {
@@ -126,21 +123,21 @@ export async function getCollectionsWorkspace({
     : Promise.resolve({ data: [] as CollectionEntryRow[], error: null });
   const [summaryResult, detailResult, inboxResult, organizationResult] =
     await Promise.all([
-    context.client.rpc("collections_workspace"),
-    detailRequest,
-    context.client
-      .from("entries")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", context.userId)
-      .eq("inbox_status", "unreviewed")
-      .is("deleted_at", null),
-    context.client.rpc("organization_workspace", {
-      p_kind: "collection",
-      p_limit: 100,
-      p_offset: 0,
-      p_query: "",
-    }),
-  ]);
+      context.client.rpc("collections_workspace"),
+      detailRequest,
+      context.client
+        .from("entries")
+        .select("id", { count: "exact", head: true })
+        .eq("owner_id", context.userId)
+        .eq("inbox_status", "unreviewed")
+        .is("deleted_at", null),
+      context.client.rpc("organization_workspace", {
+        p_kind: "collection",
+        p_limit: 100,
+        p_offset: 0,
+        p_query: "",
+      }),
+    ]);
   const summaryRows = summaryResult.error
     ? null
     : parseCollectionSummaryRows(summaryResult.data);

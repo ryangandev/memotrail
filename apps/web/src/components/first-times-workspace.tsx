@@ -18,6 +18,7 @@ import {
 import styles from "@/app/first-times/page.module.css";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
+import { PageFrame } from "@/components/page-frame";
 import {
   firstTimeBodyLimit,
   firstTimePhotoLimit,
@@ -67,7 +68,7 @@ export function FirstTimesWorkspace({
   );
 
   return (
-    <div className={styles.content}>
+    <PageFrame variant="wide">
       <header className={styles.pageHeader}>
         <div>
           <p className={styles.eyebrow}>A record of beginnings</p>
@@ -148,7 +149,7 @@ export function FirstTimesWorkspace({
           tagOptions={tagOptions}
         />
       ) : null}
-    </div>
+    </PageFrame>
   );
 }
 

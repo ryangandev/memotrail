@@ -1,7 +1,4 @@
 .workspace {
-  max-width: 1120px;
-  margin: auto;
-  padding: var(--mt-space-8) var(--mt-space-6) var(--mt-space-16);
   display: grid;
   gap: 20px;
 }
@@ -194,9 +191,6 @@
 @media (max-width: 700px) {
   .conversion fieldset {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .workspace {
-    padding: 24px 16px 110px;
   }
   .comparison {
     grid-template-columns: 1fr;

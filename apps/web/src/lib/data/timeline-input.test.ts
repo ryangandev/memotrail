@@ -90,9 +90,7 @@ describe("parseTimelineEntryInput", () => {
 
   it("rejects organization limits", () => {
     expect(
-      parseTimelineEntryInput(
-        input({ collectionNames: ["x".repeat(81)] }),
-      ),
+      parseTimelineEntryInput(input({ collectionNames: ["x".repeat(81)] })),
     ).toMatchObject({ success: false });
     expect(
       parseTimelineEntryInput(input({ tagNames: ["x".repeat(61)] })),

@@ -2,13 +2,15 @@
 
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import styles from "@/app/page.module.css";
 import { AuthGate } from "@/components/auth-gate";
 import { BrandMark } from "@/components/brand-mark";
+import { CommandPalette } from "@/components/command-palette";
+import { DismissibleSyncNote } from "@/components/dismissible-sync-note";
 import { Icon, type IconName } from "@/components/icon";
 import { QuickCaptureDialog } from "@/components/quick-capture-dialog";
-import { SearchShortcutLink } from "@/components/search-shortcut-link";
+import { SearchShortcutButton } from "@/components/search-shortcut-link";
 import { SyncStatus } from "@/components/sync-status";
 import { TimezoneSync } from "@/components/timezone-sync";
 import type { Viewer } from "@/lib/data/inbox";
@@ -141,10 +143,17 @@ export function WorkspaceShell({
   viewer: Viewer;
 }) {
   const activeDestination = destinationForPathname(usePathname());
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const closeCommandPalette = useCallback(
+    () => setCommandPaletteOpen(false),
+    [],
+  );
+  const openCommandPalette = useCallback(() => setCommandPaletteOpen(true), []);
 
   return (
     <div className={styles.appShell}>
       <TimezoneSync />
+      <CommandPalette onClose={closeCommandPalette} open={commandPaletteOpen} />
       <Sidebar
         activeDestination={activeDestination}
         inboxCount={inboxCount}
@@ -162,9 +171,9 @@ export function WorkspaceShell({
             <span>MemoTrail</span>
           </Link>
 
-          <SearchShortcutLink
-            active={activeDestination === "search"}
+          <SearchShortcutButton
             className={styles.searchButton}
+            onOpen={openCommandPalette}
           />
 
           <div className={styles.topActions}>
@@ -259,7 +268,7 @@ function Sidebar({
       </div>
 
       <div
-        aria-label="Navigation and account"
+        aria-label="Sidebar navigation"
         className={styles.sidebarScrollRegion}
         role="region"
       >
@@ -284,32 +293,14 @@ function Sidebar({
         </nav>
 
         <div className={styles.sidebarFooter}>
+          <DismissibleSyncNote ownerId={viewer.id} />
+          <div className={styles.sidebarFooterDivider} role="separator" />
           <nav className={styles.navGroup} aria-label="Settings navigation">
             <NavigationControl
               active={activeDestination === "settings"}
               item={settingsNavigation}
             />
           </nav>
-          <div className={styles.archiveNote}>
-            <Icon name="clock" size={17} />
-            <div>
-              <strong>Private cloud sync</strong>
-              <span>Available on Web and iPhone</span>
-            </div>
-          </div>
-          <Link
-            aria-current={activeDestination === "settings" ? "page" : undefined}
-            className={styles.accountLink}
-            href="/settings"
-            title={`Open settings for ${viewer.email}`}
-          >
-            <span className={styles.avatar}>{viewer.initial}</span>
-            <span>
-              <strong>{viewer.name}</strong>
-              <small>{viewer.email}</small>
-            </span>
-            <Icon name="chevron" size={17} />
-          </Link>
         </div>
       </div>
     </aside>

@@ -80,7 +80,7 @@ Photo metadata may be offered as a date or Place suggestion but is never adopted
 - Tags are lightweight cross-Type descriptors for filtering and discovery.
 - People and Places are reusable entities linked to Entries, not alternate tags.
 - Inbox, Timeline, Home, Search, and Library are views or workflow states, not organization labels.
-- Collections and tags are created and managed directly from their Library destinations and remain available in every Entry editor.
+- Collections and tags are created and managed from separate Library destinations without a second in-page switcher, and remain available in every Entry editor.
 - Renaming a Collection or tag preserves its identity and linked Entries.
 - Moving a Collection to Trash never deletes its Entries or photos.
 - A used tag must be merged into another tag or removed from its Entries before deletion, so organization is never silently lost.
@@ -167,7 +167,8 @@ Mobile uses Home, Inbox, Timeline, and Library as its primary destinations.
 Library contains Collections, First Times, Goals, Homes, Vehicles, Places, and People.
 Settings is reached from the profile control.
 
-Desktop uses a persistent sidebar with direct access to capture, search, the primary areas, Trash, and Settings.
+Desktop uses a persistent sidebar with direct access to capture, search, the primary areas, Trash, and one Settings entry point separated from Library.
+A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry, People, and Place results in place, supports keyboard navigation, and keeps full-page Search with filters and AI as an explicit destination.
 A global capture control remains available from every primary screen.
 
 ## Privacy, deletion, and portability

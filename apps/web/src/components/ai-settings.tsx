@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { saveAISettings } from "@/app/settings/ai/actions";
+import { PageFrame } from "@/components/page-frame";
 import {
   aiFeatures,
   featureLabels,
@@ -63,7 +64,7 @@ export function AISettings({
     }
   }
   return (
-    <div className={styles.content}>
+    <PageFrame className={styles.content} variant="compact">
       <header>
         <p className={styles.eyebrow}>YOUR ARCHIVE, YOUR CHOICE</p>
         <h1>AI settings</h1>
@@ -195,6 +196,6 @@ export function AISettings({
           </ul>
         )}
       </section>
-    </div>
+    </PageFrame>
   );
 }

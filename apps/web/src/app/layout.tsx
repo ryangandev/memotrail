@@ -31,7 +31,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       <body>
         <WorkspaceBoundary
           configured={configured}
-          inboxCount={inbox?.error ? undefined : inbox?.count ?? undefined}
+          inboxCount={inbox?.error ? undefined : (inbox?.count ?? undefined)}
           viewer={context?.viewer ?? null}
         >
           {children}
