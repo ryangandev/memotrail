@@ -97,50 +97,47 @@ export function OccurrenceEditor({
         </label>
       </div>
       {calendar && (
-        <div className={styles.reviewFieldRow}>
-          <PrecisionDateField
-            disabled={disabled}
-            key={`start-${value.precision}`}
-            label={startLabel(value.precision, bounded)}
-            precision={value.precision as Exclude<typeof value.precision, "unknown">}
-            value={value.start}
-            onChange={(start) => change({ start })}
-          />
-          {bounded && (
-            <div className={styles.occurrenceEndField}>
-              <div className={styles.occurrenceEndHeader}>
-                <span>End date</span>
-                <label className={styles.presentToggle}>
-                  <input
-                    checked={endMode === "present"}
-                    onChange={(event) =>
-                      change({
-                        end: event.target.checked ? "" : value.end,
-                        endMode: event.target.checked ? "present" : "date",
-                      })
-                    }
-                    type="checkbox"
-                  />
-                  <span>Present</span>
-                </label>
-              </div>
-              {endMode === "present" ? (
-                <strong className={styles.presentDateField}>
-                  Ongoing through present
-                </strong>
-              ) : (
-                <PrecisionDateField
-                  disabled={disabled}
-                  hideLabel
-                  key={`end-${value.precision}`}
-                  label="End date"
-                  precision={value.precision as Exclude<typeof value.precision, "unknown">}
-                  value={value.end}
-                  onChange={(end) => change({ end })}
-                />
-              )}
-            </div>
-          )}
+        <div className={styles.occurrenceDateArea}>
+          <div
+            className={`${styles.reviewFieldRow} ${styles.occurrenceDateRow} ${bounded && endMode === "present" ? styles.occurrenceDateRowOpenEnded : ""}`}
+          >
+            <PrecisionDateField
+              disabled={disabled}
+              key={`start-${value.precision}`}
+              label={startLabel(value.precision, bounded)}
+              precision={value.precision as Exclude<typeof value.precision, "unknown">}
+              value={value.start}
+              onChange={(start) => change({ start })}
+            />
+            {bounded && endMode !== "present" ? (
+              <PrecisionDateField
+                disabled={disabled}
+                key={`end-${value.precision}`}
+                label="End date"
+                precision={value.precision as Exclude<typeof value.precision, "unknown">}
+                value={value.end}
+                onChange={(end) => change({ end })}
+              />
+            ) : null}
+          </div>
+          {bounded ? (
+            <label className={styles.presentToggle}>
+              <input
+                aria-label="Present"
+                checked={endMode === "present"}
+                onChange={(event) =>
+                  change({
+                    end: event.target.checked ? "" : value.end,
+                    endMode: event.target.checked ? "present" : "date",
+                  })
+                }
+                type="checkbox"
+              />
+              <span>
+                Present <small>This period is still ongoing</small>
+              </span>
+            </label>
+          ) : null}
         </div>
       )}
       <label>
@@ -164,7 +161,7 @@ export function OccurrenceEditor({
         {value.precision === "exact"
           ? "Choose both a calendar date and a local time. Daylight-saving changes use the selected time zone."
           : ["age", "approximate"].includes(value.precision)
-            ? "Describe what you remember. A calendar anchor is optional, and no birth date is inferred."
+            ? "Describe what you remember. A start date is optional, and no birth date is inferred."
             : value.precision === "range"
               ? "Choose Present when this period is still happening."
               : value.precision === "unknown"
@@ -180,7 +177,7 @@ function startLabel(
   bounded: boolean,
 ) {
   if (["age", "approximate"].includes(precision))
-    return "Calendar anchor (optional)";
+    return "Start date (optional)";
   return bounded ? "Start date" : "Occurred";
 }
 

@@ -178,6 +178,38 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     await expect(
       dialog.getByRole("combobox", { name: "Date precision", exact: true }),
     ).toHaveValue("exact");
+    await expect(
+      dialog.getByRole("button", {
+        name: "Choose start date time",
+        exact: true,
+      }),
+    ).toContainText("01:30");
+    await page.screenshot({
+      path: "/private/tmp/memotrail-exact-datetime-desktop.png",
+    });
+    await dialog
+      .getByRole("button", {
+        name: "Choose start date time",
+        exact: true,
+      })
+      .click();
+    const timePicker = page.getByRole("dialog", {
+      name: "Choose start date time",
+      exact: true,
+    });
+    await expect(timePicker.getByRole("combobox", { name: "Hour" })).toHaveValue(
+      "01",
+    );
+    await expect(
+      timePicker.getByRole("combobox", { name: "Minute" }),
+    ).toHaveValue("30");
+    await expect(
+      timePicker.getByRole("combobox", { name: "Second" }),
+    ).toHaveValue("00");
+    await page.screenshot({
+      path: "/private/tmp/memotrail-time-picker-desktop.png",
+    });
+    await timePicker.getByRole("button", { name: "Done", exact: true }).click();
     await dialog.getByRole("button", { name: "Save changes" }).click();
     await expect(dialog).not.toBeVisible();
     expect(
@@ -249,7 +281,12 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     await expect(
       dialog.getByRole("checkbox", { name: "Present", exact: true }),
     ).toBeChecked();
-    await expect(dialog.getByText("Ongoing through present")).toBeVisible();
+    await expect(
+      dialog.getByRole("textbox", { name: "End date", exact: true }),
+    ).toHaveCount(0);
+    await page.screenshot({
+      path: "/private/tmp/memotrail-present-layout-mobile.png",
+    });
     await dialog
       .getByLabel("Title", { exact: true })
       .fill("Unanchored childhood");

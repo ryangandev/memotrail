@@ -1090,12 +1090,13 @@
   outline: 0;
   color: var(--mt-color-ink);
   background: var(--mt-color-surface);
+  font: inherit;
 }
 
 .reviewForm input,
 .reviewForm select {
   height: 42px;
-  padding: 0 var(--mt-space-3);
+  padding-left: var(--mt-space-3);
 }
 
 .reviewForm textarea {
@@ -1146,16 +1147,27 @@
   font-weight: var(--mt-font-weight-regular);
 }
 
-.precisionDateField,
-.occurrenceEndField {
+.occurrenceDateArea,
+.precisionDateField {
   display: grid;
   align-content: start;
   gap: 7px;
   min-width: 0;
 }
 
-.precisionDateField > span,
-.occurrenceEndHeader > span {
+.occurrenceDateArea {
+  gap: var(--mt-space-2);
+}
+
+.occurrenceDateRow {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.occurrenceDateRowOpenEnded {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.precisionDateField > span {
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-label);
   font-weight: var(--mt-font-weight-medium);
@@ -1163,7 +1175,9 @@
 
 .datePickerControl {
   display: flex;
+  height: 42px;
   min-width: 0;
+  align-items: center;
   overflow: hidden;
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-medium);
@@ -1179,20 +1193,15 @@
 }
 
 .datePickerControl input {
+  height: 100%;
   min-width: 0;
   flex: 1;
+  padding: 0 var(--mt-space-2);
   border: 0;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
-  font-family: var(--mt-font-family-mono);
   font-variant-numeric: tabular-nums;
-}
-
-.datePickerControl input + input {
-  width: 88px;
-  flex: none;
-  border-left: 1px solid var(--mt-color-border);
 }
 
 .datePickerControl input:focus {
@@ -1200,9 +1209,14 @@
 }
 
 .datePickerClear,
-.datePickerTrigger {
+.datePickerTrigger,
+.timePickerTrigger {
+  display: flex;
+  height: 32px;
   flex: none;
-  border-left: 1px solid var(--mt-color-border);
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--mt-radius-small);
   color: var(--mt-color-ink-muted);
   background: transparent;
   cursor: pointer;
@@ -1215,61 +1229,68 @@
 }
 
 .datePickerTrigger {
-  display: grid;
-  width: 40px;
-  place-items: center;
+  width: 36px;
+  margin-left: 2px;
+}
+
+.timePickerTrigger {
+  min-width: 72px;
+  gap: 5px;
+  padding: 0 var(--mt-space-2);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .datePickerClear:hover,
-.datePickerTrigger:hover {
+.datePickerTrigger:hover,
+.timePickerTrigger:hover,
+.timePickerTrigger[data-state="open"] {
   color: var(--mt-color-accent);
   background: var(--mt-color-accent-subtle);
 }
 
 .datePickerClear:disabled,
-.datePickerTrigger:disabled {
+.datePickerTrigger:disabled,
+.timePickerTrigger:disabled {
   cursor: not-allowed;
   opacity: 0.5;
 }
 
-.presentDateField {
-  display: flex;
-  height: 42px;
-  align-items: center;
-  padding: 0 var(--mt-space-3);
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-accent);
-  background: var(--mt-color-accent-subtle);
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.occurrenceEndHeader {
-  display: flex;
-  min-height: 18px;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--mt-space-2);
-}
-
-.occurrenceEndHeader .presentToggle {
-  display: flex;
-  min-height: 18px;
+.occurrenceEditor .presentToggle {
+  display: inline-flex;
+  justify-self: end;
+  min-height: 28px;
   align-items: center;
   gap: var(--mt-space-2);
-  color: var(--mt-color-accent);
-  font-size: 10px;
-  font-weight: var(--mt-font-weight-medium);
+  padding: 2px 0;
+  color: var(--mt-color-ink-muted);
   cursor: pointer;
 }
 
-.occurrenceEndHeader .presentToggle input {
+.occurrenceEditor .presentToggle input {
   width: 16px;
   height: 16px;
   flex: none;
+  margin: 0;
   padding: 0;
   accent-color: var(--mt-color-accent);
+}
+
+.occurrenceEditor .presentToggle > span {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--mt-color-ink);
+  font-size: var(--mt-font-size-caption);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.occurrenceEditor .presentToggle > span small {
+  margin: 0;
+  color: var(--mt-color-ink-faint);
+  font-size: 10px;
+  font-weight: var(--mt-font-weight-regular);
 }
 
 .datePickerPositioner {
@@ -1288,6 +1309,78 @@
 
 .datePickerContent[hidden] {
   display: none;
+}
+
+.timePickerPositioner {
+  z-index: 90 !important;
+}
+
+.timePickerContent {
+  width: min(292px, calc(100vw - 24px));
+  padding: var(--mt-space-3);
+  border: 1px solid var(--mt-color-border-strong);
+  border-radius: var(--mt-radius-large);
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-raised);
+  box-shadow: var(--mt-shadow-floating);
+}
+
+.timePickerContent > [data-part="title"] {
+  margin-bottom: var(--mt-space-3);
+  font-size: var(--mt-font-size-caption);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.timePickerFields {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items: end;
+  gap: 5px;
+}
+
+.timePickerFields label {
+  display: grid;
+  gap: 5px;
+}
+
+.timePickerFields label span {
+  color: var(--mt-color-ink-muted);
+  font-size: 10px;
+}
+
+.timePickerFields > span {
+  padding-bottom: 10px;
+  color: var(--mt-color-ink-faint);
+}
+
+.timePickerFields select {
+  width: 100%;
+  height: 38px;
+  padding-left: 9px;
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-medium);
+  outline: 0;
+  color: var(--mt-color-ink);
+  background-color: var(--mt-color-surface);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.timePickerFields select:focus {
+  border-color: var(--mt-color-accent);
+  box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
+}
+
+.timePickerDone {
+  width: 100%;
+  height: 36px;
+  margin-top: var(--mt-space-3);
+  border-radius: var(--mt-radius-medium);
+  color: var(--mt-color-accent-ink);
+  background: var(--mt-color-accent);
+  font-size: var(--mt-font-size-caption);
+  font-weight: var(--mt-font-weight-medium);
+  cursor: pointer;
 }
 
 .calendarHeader {
@@ -1778,6 +1871,10 @@
 
   .reviewFieldRow {
     grid-template-columns: 1fr;
+  }
+
+  .occurrenceEditor .presentToggle {
+    justify-self: start;
   }
 
   .reviewActions {

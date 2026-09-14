@@ -2,7 +2,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 
 type OccurrenceScope = Locator | Page;
 
-const startDateName = /^(Occurred|Start date|Calendar anchor \(optional\))$/;
+const startDateName = /^(Occurred|Start date|Start date \(optional\))$/;
 
 export function occurrenceStartField(scope: OccurrenceScope) {
   return scope.getByRole("textbox", { name: startDateName });
@@ -40,7 +40,15 @@ async function fillDateField(
 
   const label = await dateField.getAttribute("aria-label");
   if (!label) throw new Error("Occurrence date field needs an accessible label.");
-  await scope
-    .getByRole("textbox", { name: `${label} time`, exact: true })
-    .fill(time);
+  const title = `Choose ${label.toLowerCase()} time`;
+  await scope.getByRole("button", { name: title, exact: true }).click();
+  const picker = dateField.page().getByRole("dialog", {
+    name: title,
+    exact: true,
+  });
+  const [hour, minute, second = "00"] = time.split(":");
+  await picker.getByRole("combobox", { name: "Hour" }).selectOption(hour);
+  await picker.getByRole("combobox", { name: "Minute" }).selectOption(minute);
+  await picker.getByRole("combobox", { name: "Second" }).selectOption(second);
+  await picker.getByRole("button", { name: "Done", exact: true }).click();
 }

@@ -4,6 +4,7 @@ import {
   DatePicker,
   type DateValue,
 } from "@ark-ui/react/date-picker";
+import { Popover } from "@ark-ui/react/popover";
 import { Portal } from "@ark-ui/react/portal";
 import { parseDate, type CalendarDate } from "@internationalized/date";
 import { useId } from "react";
@@ -42,6 +43,16 @@ export function PrecisionDateField({
     );
   }
 
+  function changeTime(nextTime: string) {
+    onChange(
+      dateText
+        ? `${dateText}${nextTime ? `T${nextTime}` : ""}`
+        : nextTime
+          ? `T${nextTime}`
+          : "",
+    );
+  }
+
   return (
     <div className={styles.precisionDateField}>
       {hideLabel ? null : <span>{label}</span>}
@@ -61,6 +72,12 @@ export function PrecisionDateField({
         value={selected ? [selected] : []}
       >
         <DatePicker.Control className={styles.datePickerControl}>
+          <DatePicker.Trigger
+            aria-label={`Choose ${label.toLowerCase()}`}
+            className={styles.datePickerTrigger}
+          >
+            <Icon name="calendar" size={17} />
+          </DatePicker.Trigger>
           <input
             aria-label={label}
             autoComplete="off"
@@ -72,22 +89,10 @@ export function PrecisionDateField({
             value={dateText}
           />
           {precision === "exact" ? (
-            <input
-              aria-label={`${label} time`}
-              autoComplete="off"
+            <TimePicker
               disabled={disabled}
-              inputMode="numeric"
-              maxLength={8}
-              onChange={(event) =>
-                onChange(
-                  dateText
-                    ? `${dateText}${event.target.value ? `T${event.target.value}` : ""}`
-                    : event.target.value
-                      ? `T${event.target.value}`
-                      : "",
-                )
-              }
-              placeholder="HH:MM"
+              label={label}
+              onChange={changeTime}
               value={timeText}
             />
           ) : null}
@@ -102,12 +107,6 @@ export function PrecisionDateField({
               <span aria-hidden="true">×</span>
             </button>
           ) : null}
-          <DatePicker.Trigger
-            aria-label={`Choose ${label.toLowerCase()}`}
-            className={styles.datePickerTrigger}
-          >
-            <Icon name="calendar" size={17} />
-          </DatePicker.Trigger>
         </DatePicker.Control>
 
         <Portal>
@@ -220,6 +219,119 @@ export function PrecisionDateField({
   );
 }
 
+function TimePicker({
+  disabled,
+  label,
+  value,
+  onChange,
+}: {
+  disabled: boolean;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const parts = timeParts(value);
+  const title = `Choose ${label.toLowerCase()} time`;
+
+  function change(part: keyof typeof parts, nextValue: string) {
+    const next = { ...parts, [part]: nextValue };
+    if (nextValue) {
+      if (!next.hour) next.hour = "00";
+      if (!next.minute) next.minute = "00";
+      if (!next.second) next.second = "00";
+    }
+    onChange(
+      next.hour && next.minute
+        ? `${next.hour}:${next.minute}:${next.second || "00"}`
+        : "",
+    );
+  }
+
+  return (
+    <Popover.Root
+      positioning={{ placement: "bottom", strategy: "fixed" }}
+      unmountOnExit
+    >
+      <Popover.Trigger
+        aria-label={title}
+        className={styles.timePickerTrigger}
+        disabled={disabled}
+      >
+        <Icon name="clock" size={15} />
+        <span>{timeDisplay(parts)}</span>
+      </Popover.Trigger>
+      <Portal>
+        <Popover.Positioner className={styles.timePickerPositioner}>
+          <Popover.Content
+            aria-label={title}
+            className={styles.timePickerContent}
+          >
+            <Popover.Title>Choose time</Popover.Title>
+            <div className={styles.timePickerFields}>
+              <TimeSelect
+                label="Hour"
+                onChange={(next) => change("hour", next)}
+                options={hours}
+                value={parts.hour}
+              />
+              <span aria-hidden="true">:</span>
+              <TimeSelect
+                label="Minute"
+                onChange={(next) => change("minute", next)}
+                options={minutesAndSeconds}
+                value={parts.minute}
+              />
+              <span aria-hidden="true">:</span>
+              <TimeSelect
+                label="Second"
+                onChange={(next) => change("second", next)}
+                options={minutesAndSeconds}
+                value={parts.second}
+              />
+            </div>
+            <Popover.CloseTrigger
+              aria-label="Done"
+              className={styles.timePickerDone}
+            >
+              Done
+            </Popover.CloseTrigger>
+          </Popover.Content>
+        </Popover.Positioner>
+      </Portal>
+    </Popover.Root>
+  );
+}
+
+function TimeSelect({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: readonly string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label>
+      <span>{label}</span>
+      <select
+        aria-label={label}
+        onChange={(event) => onChange(event.target.value)}
+        value={value}
+      >
+        <option value="">--</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 function CalendarHeader() {
   return (
     <DatePicker.ViewControl className={styles.calendarHeader}>
@@ -273,6 +385,22 @@ function exactTime(value: string) {
   return value.includes("T") ? value.slice(value.indexOf("T") + 1) : "";
 }
 
+function timeParts(value: string) {
+  const [hour = "", minute = "", second = ""] = value.split(":");
+  return {
+    hour: /^\d{2}$/.test(hour) ? hour : "",
+    minute: /^\d{2}$/.test(minute) ? minute : "",
+    second: /^\d{2}$/.test(second) ? second : "",
+  };
+}
+
+function timeDisplay(parts: ReturnType<typeof timeParts>) {
+  if (!parts.hour || !parts.minute) return "Time";
+  return parts.second && parts.second !== "00"
+    ? `${parts.hour}:${parts.minute}:${parts.second}`
+    : `${parts.hour}:${parts.minute}`;
+}
+
 function dateLength(precision: CalendarPrecision) {
   if (precision === "year") return 4;
   if (precision === "month") return 7;
@@ -284,3 +412,10 @@ function datePlaceholder(precision: CalendarPrecision) {
   if (precision === "month") return "YYYY-MM";
   return "YYYY-MM-DD";
 }
+
+const hours = Array.from({ length: 24 }, (_, index) =>
+  String(index).padStart(2, "0"),
+);
+const minutesAndSeconds = Array.from({ length: 60 }, (_, index) =>
+  String(index).padStart(2, "0"),
+);

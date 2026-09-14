@@ -255,8 +255,11 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
     await card.getByRole("button", { name: "Review", exact: true }).click();
     await expect(occurrenceStartField(page)).toHaveValue("2026-11-01");
     await expect(
-      page.getByRole("textbox", { name: "Occurred time", exact: true }),
-    ).toHaveValue("01:30:27");
+      page.getByRole("button", {
+        name: "Choose occurred time",
+        exact: true,
+      }),
+    ).toContainText("01:30:27");
     await page
       .getByRole("textbox", { name: "Note", exact: true })
       .fill("Only this note changed.");
