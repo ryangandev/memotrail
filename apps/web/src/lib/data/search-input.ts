@@ -20,6 +20,48 @@ export type ParsedSearchRequest = {
   request: SearchRequest;
 };
 
+export type QuickSearchItem = {
+  href: string;
+  id: string;
+  kind: "entry" | "person" | "place";
+  label: string;
+  subtitle: string;
+  title: string;
+};
+
+export type QuickSearchResult = {
+  error: string | null;
+  items: QuickSearchItem[];
+};
+
+export function parseQuickSearchResult(value: unknown): QuickSearchResult | null {
+  if (!value || typeof value !== "object") return null;
+  const result = value as QuickSearchResult;
+
+  if (
+    (result.error !== null && typeof result.error !== "string") ||
+    !Array.isArray(result.items) ||
+    result.items.length > 8
+  ) {
+    return null;
+  }
+
+  return result.items.every(
+    (item) =>
+      item &&
+      typeof item.id === "string" &&
+      ["entry", "person", "place"].includes(item.kind) &&
+      typeof item.href === "string" &&
+      item.href.startsWith("/") &&
+      !item.href.startsWith("//") &&
+      typeof item.label === "string" &&
+      typeof item.subtitle === "string" &&
+      typeof item.title === "string",
+  )
+    ? result
+    : null;
+}
+
 export function parseSearchRequest(
   parameters: RawSearchParams,
 ): ParsedSearchRequest {

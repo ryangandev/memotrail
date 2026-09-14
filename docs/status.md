@@ -7,7 +7,6 @@ Last reviewed: 2026-09-14.
 MemoTrail's confirmed core scope is implemented across Web, native iOS, and shared Supabase contracts.
 The product is not yet fully accepted for production because live configuration, real native and browser interactions, CI, and recovery evidence remain incomplete.
 
-Latest product implementation commit: `2b408c4`.
 Use Git history for feature-level implementation and test evidence.
 
 | Area                                                                                 | State                                                                              |
@@ -18,7 +17,7 @@ Use Git history for feature-level implementation and test evidence.
 | Web navigation shell                                                                 | Persistent across routes with prefetch, route fallback, and cold-request feedback  |
 | Web Settings                                                                         | Account, birth date, default timezone, sign-out, and preference links implemented  |
 | Web Collections and tags                                                             | Direct Library destinations and shared Entry organization editor implemented       |
-| Keyword search, grounded AI search, suggestions, and Explore with AI                 | Implemented; Production AI configuration is not accepted                           |
+| Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI    | Implemented; Production AI configuration is not accepted                           |
 | Private media, Entry history, relationships, Trash, and complete export              | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains |
 | Hosted Supabase contracts                                                            | Deployed to the confirmed MemoTrail project                                        |
 | Backup and restore                                                                   | Not ready                                                                          |

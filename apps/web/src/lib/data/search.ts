@@ -1,6 +1,7 @@
 import "server-only";
 import {
   hasLibrarySearchScope,
+  libraryItemHref,
   librarySearchPageSize,
   parseLibrarySearch,
   type LibrarySearchResult,
@@ -11,6 +12,8 @@ import { getAuthenticatedContext, type Viewer } from "@/lib/data/inbox";
 import {
   SEARCH_PAGE_SIZE,
   type ParsedSearchRequest,
+  type QuickSearchItem,
+  type QuickSearchResult,
   type SearchRequest,
 } from "@/lib/data/search-input";
 
@@ -154,6 +157,100 @@ export async function getSearchWorkspace(
     totalCount: search.error ? 0 : countFromRows(rows),
     viewer: context.viewer,
   };
+}
+
+export async function getQuickSearchResults(
+  query: string,
+): Promise<QuickSearchResult | null> {
+  const context = await getAuthenticatedContext();
+  if (!context) return null;
+
+  const normalizedQuery = query.trim().slice(0, 200);
+  if (!normalizedQuery) return { error: null, items: [] };
+
+  const [entrySearch, librarySearch] = await Promise.all([
+    context.client.rpc("search_entries_with_occurrence", {
+      p_collection_names: [],
+      p_date_from: null,
+      p_date_to: null,
+      p_entry_types: [],
+      p_limit: 6,
+      p_offset: 0,
+      p_query: normalizedQuery,
+      p_tag_names: [],
+    }),
+    context.client.rpc("search_library_entities", {
+      p_query: normalizedQuery,
+      p_limit: 4,
+      p_offset: 0,
+      p_kinds: ["person", "place"],
+    }),
+  ]);
+
+  const entryRows = entrySearch.error ? null : searchRows(entrySearch.data);
+  const libraryRows = librarySearch.error
+    ? null
+    : parseLibrarySearch(librarySearch.data);
+  const items = [
+    ...(entryRows ?? []).map(quickEntryItem),
+    ...(libraryRows?.items ?? []).map((item): QuickSearchItem => ({
+      href: libraryItemHref(item),
+      id: item.id,
+      kind: item.kind,
+      label: item.kind === "person" ? "Person" : "Place",
+      subtitle: compactText(item.excerpt) || "Saved in your Library",
+      title: item.name,
+    })),
+  ].slice(0, 8);
+  const partialFailure = !entryRows || !libraryRows;
+
+  return {
+    error:
+      partialFailure && items.length === 0
+        ? "MemoTrail could not search your archive. Try again."
+        : partialFailure
+          ? "Some archive results are temporarily unavailable."
+          : null,
+    items,
+  };
+}
+
+function quickEntryItem(row: SearchRow): QuickSearchItem {
+  const title = stringValue(row.title) ?? firstUsefulLine(row.body) ?? "Untitled Entry";
+
+  return {
+    href: `/history?entry=${encodeURIComponent(row.entry_id)}`,
+    id: row.entry_id,
+    kind: "entry",
+    label: entryTypeLabel(row.entry_type),
+    subtitle: compactText(row.body) || "Saved Entry",
+    title,
+  };
+}
+
+function compactText(value: string) {
+  const compact = value.replace(/\s+/g, " ").trim();
+  return compact.length > 140 ? `${compact.slice(0, 137)}...` : compact;
+}
+
+function firstUsefulLine(value: string) {
+  return value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find(Boolean);
+}
+
+function entryTypeLabel(value: string) {
+  const labels: Record<string, string> = {
+    first_time: "First Time",
+    goal: "Goal",
+    home: "Home",
+    life_stage: "Life Stage",
+    standard: "Entry",
+    vehicle: "Vehicle",
+  };
+
+  return labels[value] ?? "Entry";
 }
 
 function entryFromRow(row: SearchRow): SearchEntry {

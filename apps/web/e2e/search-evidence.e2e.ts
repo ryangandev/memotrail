@@ -91,7 +91,35 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
     });
     expect(evidence.data.entries[0]).not.toHaveProperty("attachments");
     expect(evidence.data.entries[0]).not.toHaveProperty("owner_id");
-    await page.goto("/search?q=electric");
+    let quickSearchRequests = 0;
+    page.on("request", (request) => {
+      if (new URL(request.url()).pathname === "/api/search/quick") {
+        quickSearchRequests += 1;
+      }
+    });
+    await page.goto("/");
+    await page
+      .getByRole("button", { name: "Search your trail", exact: true })
+      .click();
+    const commandPalette = page.getByRole("dialog", {
+      name: "Search MemoTrail",
+    });
+    const quickSearch = commandPalette.getByRole("searchbox");
+    await quickSearch.pressSequentially("electric", { delay: 15 });
+    await expect(
+      commandPalette.getByRole("button", {
+        name: /How an electric lighter works/,
+      }),
+    ).toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
+    expect(quickSearchRequests).toBe(1);
+    await page.screenshot({
+      path: "/private/tmp/memotrail-quick-search.png",
+    });
+    await commandPalette
+      .getByRole("button", { name: /Search all for “electric”/ })
+      .click();
+    await expect(page).toHaveURL(/\/search\?q=electric$/);
     await expect(
       page.getByRole("heading", { name: "How an electric lighter works" }),
     ).toBeVisible();

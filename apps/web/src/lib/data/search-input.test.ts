@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   SEARCH_PAGE_SIZE,
+  parseQuickSearchResult,
   parseSearchRequest,
   searchPageHref,
 } from "./search-input";
@@ -84,5 +85,46 @@ describe("searchPageHref", () => {
     expect(searchPageHref(request, 2)).toBe(
       "/search?q=first+snow&type=first_time&collection=Travel&tag=skiing&from=2026-01-01&page=2",
     );
+  });
+});
+
+describe("parseQuickSearchResult", () => {
+  it("accepts bounded owner-safe result links", () => {
+    expect(
+      parseQuickSearchResult({
+        error: null,
+        items: [
+          {
+            href: "/history?entry=123",
+            id: "123",
+            kind: "entry",
+            label: "Entry",
+            subtitle: "A saved note",
+            title: "Remember this",
+          },
+        ],
+      }),
+    ).not.toBeNull();
+  });
+
+  it("rejects malformed and external result links", () => {
+    expect(
+      parseQuickSearchResult({
+        error: null,
+        items: [
+          {
+            href: "https://example.com",
+            id: "123",
+            kind: "entry",
+            label: "Entry",
+            subtitle: "A saved note",
+            title: "Remember this",
+          },
+        ],
+      }),
+    ).toBeNull();
+    expect(
+      parseQuickSearchResult({ error: null, items: Array(9).fill({}) }),
+    ).toBeNull();
   });
 });

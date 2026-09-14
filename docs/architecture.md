@@ -98,6 +98,7 @@ Pair it with the test file carrying the same feature name.
 - Interrupted provider outcomes do not trigger automatic paid retries.
 - Suggestion and search outputs are schema-validated and remain separate from original writing until explicit user action.
 - Search answers cite exact stored evidence; provenance does not imply that the model's conclusion is true.
+- The persistent Web Command Palette debounces input before calling the dynamic, private, no-store `app/api/search/quick` route. That route runs owner-scoped Entry and Library RPCs in parallel, returns a bounded result shape, and leaves filtered or AI search on the full Search page.
 
 ## Deletion, export, and recovery rules
 

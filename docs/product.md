@@ -168,7 +168,7 @@ Library contains Collections, First Times, Goals, Homes, Vehicles, Places, and P
 Settings is reached from the profile control.
 
 Desktop uses a persistent sidebar with direct access to capture, search, the primary areas, Trash, and one Settings entry point separated from Library.
-A customizable Command Palette opens from the global search control or Command K, supports keyboard navigation, and keeps full-page Search as an explicit destination.
+A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry, People, and Place results in place, supports keyboard navigation, and keeps full-page Search with filters and AI as an explicit destination.
 A global capture control remains available from every primary screen.
 
 ## Privacy, deletion, and portability
