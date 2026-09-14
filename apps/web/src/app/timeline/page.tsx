@@ -14,6 +14,7 @@ export default async function TimelinePage() {
     <TimelineWorkspace
       birthDate={workspace.birthDate}
       birthDateAvailable={workspace.birthDateAvailable}
+      defaultTimezone={workspace.defaultTimezone}
       loadError={workspace.loadError}
       referenceDate={new Date().toISOString()}
       tracks={workspace.tracks}

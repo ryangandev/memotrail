@@ -55,12 +55,14 @@ type GridStyle = CSSProperties & {
 export function TimelineWorkspace({
   birthDate: serverBirthDate,
   birthDateAvailable,
+  defaultTimezone,
   loadError,
   referenceDate,
   tracks: serverTracks,
 }: {
   birthDate: string | null;
   birthDateAvailable: boolean;
+  defaultTimezone: string;
   loadError: string | null;
   referenceDate: string;
   tracks: TimelineTrack[];
@@ -351,6 +353,7 @@ export function TimelineWorkspace({
             setConfirmed((values) => new Map(values).set(entry.id, entry))
           }
           entry={selection.entry}
+          defaultTimezone={defaultTimezone}
           initialTrackId={selection.initialTrackId}
           key={selection.entry?.id ?? `new:${selection.initialTrackId}`}
           onClose={() => setSelection(null)}
@@ -574,6 +577,7 @@ function specializedEntryHref(entry: TimelineEntry) {
 }
 
 function TimelineEditor({
+  defaultTimezone,
   onTrashed,
   onSaved,
   entry,
@@ -581,6 +585,7 @@ function TimelineEditor({
   onClose,
   tracks,
 }: {
+  defaultTimezone: string;
   onTrashed: (id: string) => void;
   onSaved: (entry: TimelineEntry) => void;
   entry: TimelineEntry | null;
@@ -590,7 +595,7 @@ function TimelineEditor({
 }) {
   const router = useRouter();
   const titleRef = useRef<HTMLInputElement>(null);
-  const initialTimezone = entry?.occurredTimezone ?? localTimezone();
+  const initialTimezone = entry?.occurredTimezone ?? defaultTimezone;
   const [body, setBody] = useState(entry?.body ?? "");
   const originalOccurrence = entry ? entryOccurrence(entry) : undefined;
   const [occurrence, setOccurrence] = useState(() =>
@@ -842,6 +847,7 @@ function TimelineEditor({
 
             <div className={styles.fullField}>
               <OccurrenceEditor
+                defaultTimezone={defaultTimezone}
                 value={occurrence}
                 onChange={setOccurrence}
                 disabled={isPending}
@@ -928,10 +934,6 @@ function entryDateLabel(entry: TimelineEntry) {
     entry.datePrecision !== "range"
     ? label + " onward"
     : label;
-}
-
-function localTimezone() {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
 function rangeLabel(start: string, end: string) {

@@ -103,7 +103,7 @@
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-ink-muted);
   background: transparent;
-  font-size: var(--mt-font-size-body);
+  font-size: var(--mt-font-size-label);
   text-align: left;
   cursor: pointer;
   text-decoration: none;
@@ -1150,6 +1150,75 @@
 .requiredMark {
   margin-left: 3px;
   color: var(--mt-color-warm);
+}
+
+.timezoneSummary {
+  display: grid;
+  align-content: start;
+  gap: var(--mt-space-2);
+  min-width: 0;
+}
+
+.timezoneSummary > span {
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.timezoneSummary > div {
+  display: flex;
+  height: 42px;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mt-space-3);
+  padding: 0 6px 0 var(--mt-space-3);
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-medium);
+  background: var(--mt-color-surface);
+}
+
+.timezoneSummary > div > span {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: var(--mt-space-2);
+}
+
+.timezoneSummary strong {
+  overflow: hidden;
+  color: var(--mt-color-ink);
+  font-size: var(--mt-font-size-body);
+  font-weight: var(--mt-font-weight-regular);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timezoneSummary small {
+  flex: none;
+  color: var(--mt-color-ink-faint);
+  font-size: 10px;
+}
+
+.timezoneSummary button {
+  min-height: 30px;
+  flex: none;
+  padding: 0 var(--mt-space-2);
+  border-radius: var(--mt-radius-small);
+  color: var(--mt-color-accent);
+  background: transparent;
+  font: inherit;
+  font-size: var(--mt-font-size-caption);
+  cursor: pointer;
+}
+
+.timezoneSummary button:hover:not(:disabled) {
+  background: var(--mt-color-accent-subtle);
+}
+
+.timezoneSummary button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .occurrenceDateArea,

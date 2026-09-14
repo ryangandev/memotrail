@@ -1,3 +1,5 @@
+import { validTimezone } from "./occurrence";
+
 export type BirthDateResult =
   | { birthDate: string | null; success: true }
   | { message: string; success: false };
@@ -5,6 +7,14 @@ export type BirthDateResult =
 export type StoredBirthDate = {
   available: boolean;
   birthDate: string | null;
+};
+
+export type ProfileTimezoneResult =
+  { success: true; timezone: string } | { message: string; success: false };
+
+export type StoredProfileTimezone = {
+  available: boolean;
+  timezone: string;
 };
 
 const earliestBirthDate = "1800-01-01";
@@ -43,6 +53,28 @@ export function storedBirthDate(value: unknown): StoredBirthDate {
   return {
     available: true,
     birthDate: validStoredBirthDate(value.birth_date) ? value.birth_date : null,
+  };
+}
+
+export function parseProfileTimezone(value: string): ProfileTimezoneResult {
+  const timezone = value.trim();
+
+  return validTimezone(timezone)
+    ? { success: true, timezone }
+    : {
+        message: "Choose a valid time zone.",
+        success: false,
+      };
+}
+
+export function storedProfileTimezone(value: unknown): StoredProfileTimezone {
+  if (typeof value !== "object" || value === null || !("timezone" in value)) {
+    return { available: false, timezone: "UTC" };
+  }
+
+  return {
+    available: true,
+    timezone: validTimezone(value.timezone) ? value.timezone : "UTC",
   };
 }
 

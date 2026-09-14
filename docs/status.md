@@ -10,18 +10,18 @@ The product is not yet fully accepted for production because live configuration,
 Latest product implementation commit: `cd3ab9f`.
 Use Git history for feature-level implementation and test evidence.
 
-| Area                                                                                         | State                                                                              |
-| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Capture, Inbox, organization, dates, drafts, and offline queues                              | Implemented on Web and iOS                                                         |
-| Timeline, Home, First Times, Homes, Vehicles, Goals, People, Places, and Collections         | Implemented on Web and iOS                                                         |
-| Habits                                                                                       | Deferred; removed from Web, still present on iOS pending the native rework          |
-| Web navigation shell                                                                         | Persistent across routes with prefetch, route fallback, and cold-request feedback  |
-| Web Settings                                                                                 | Account hub, sign-out control, and existing preference links implemented           |
-| Keyword search, grounded AI search, suggestions, and Explore with AI                         | Implemented; Production AI configuration is not accepted                           |
-| Private media, Entry history, relationships, Trash, and complete export                      | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains |
-| Hosted Supabase contracts                                                                    | Deployed to the confirmed MemoTrail project                                        |
-| Backup and restore                                                                           | Not ready                                                                          |
-| Current GitHub CI                                                                            | Blocked before jobs start by account billing or spending limits                    |
+| Area                                                                                 | State                                                                              |
+| ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| Capture, Inbox, organization, dates, drafts, and offline queues                      | Implemented on Web and iOS                                                         |
+| Timeline, Home, First Times, Homes, Vehicles, Goals, People, Places, and Collections | Implemented on Web and iOS                                                         |
+| Habits                                                                               | Deferred; removed from Web, still present on iOS pending the native rework         |
+| Web navigation shell                                                                 | Persistent across routes with prefetch, route fallback, and cold-request feedback  |
+| Web Settings                                                                         | Account, birth date, default timezone, sign-out, and preference links implemented  |
+| Keyword search, grounded AI search, suggestions, and Explore with AI                 | Implemented; Production AI configuration is not accepted                           |
+| Private media, Entry history, relationships, Trash, and complete export              | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains |
+| Hosted Supabase contracts                                                            | Deployed to the confirmed MemoTrail project                                        |
+| Backup and restore                                                                   | Not ready                                                                          |
+| Current GitHub CI                                                                    | Blocked before jobs start by account billing or spending limits                    |
 
 The latest hosted synthetic run verified JPEG, HEIC, and PNG display derivatives, metadata extraction, unchanged originals, and a complete ZIP with all canonical datasets.
 Its marked account and Storage objects were confirmed removed without accessing personal data or calling AI.

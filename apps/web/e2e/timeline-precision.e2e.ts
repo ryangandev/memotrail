@@ -3,10 +3,7 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
-import {
-  fillOccurrenceEnd,
-  fillOccurrenceStart,
-} from "./helpers/occurrence";
+import { fillOccurrenceEnd, fillOccurrenceStart } from "./helpers/occurrence";
 
 test("Timeline edits preserve full occurrence precision without fabricated dates", async ({
   page,
@@ -67,7 +64,10 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       (
         await client
           .from("profiles")
-          .update({ birth_date: "1990-01-01" })
+          .update({
+            birth_date: "1990-01-01",
+            timezone: "America/New_York",
+          })
           .eq("user_id", owner)
       ).error,
     ).toBeNull();
@@ -215,6 +215,19 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
         exact: true,
       }),
     ).toContainText("01:30");
+    await expect(
+      dialog.getByText("Los Angeles - America", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      dialog.getByText("Entry override", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      dialog.getByRole("combobox", { name: "Time zone", exact: true }),
+    ).toHaveCount(0);
+    await dialog.getByRole("button", { name: "Change", exact: true }).click();
+    await expect(
+      dialog.getByRole("combobox", { name: "Time zone", exact: true }),
+    ).toHaveValue("America/Los_Angeles");
     await page.screenshot({
       path: "/private/tmp/memotrail-exact-datetime-desktop.png",
     });
@@ -228,9 +241,9 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       name: "Choose start date time",
       exact: true,
     });
-    await expect(timePicker.getByRole("combobox", { name: "Hour" })).toHaveValue(
-      "01",
-    );
+    await expect(
+      timePicker.getByRole("combobox", { name: "Hour" }),
+    ).toHaveValue("01");
     await expect(
       timePicker.getByRole("combobox", { name: "Minute" }),
     ).toHaveValue("30");
@@ -270,10 +283,8 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       await dialog
         .getByRole("combobox", { name: "Date type", exact: true })
         .selectOption(sample.precision);
-      if (sample.start)
-        await fillOccurrenceStart(dialog, sample.start);
-      if (sample.end)
-        await fillOccurrenceEnd(dialog, sample.end);
+      if (sample.start) await fillOccurrenceStart(dialog, sample.start);
+      if (sample.end) await fillOccurrenceEnd(dialog, sample.end);
       await dialog.getByLabel("Date description").fill(sample.label);
       await dialog.getByRole("button", { name: "Save changes" }).click();
       await expect(dialog).not.toBeVisible();
@@ -296,6 +307,16 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     });
     await page.getByRole("button", { name: "Add moment", exact: true }).click();
     await expect(dialog.getByText("Optional", { exact: true })).toHaveCount(0);
+    await dialog.getByLabel("Date type").selectOption("exact");
+    await expect(
+      dialog.getByText("New York - America", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      dialog.getByText("Default from Settings", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      dialog.getByRole("combobox", { name: "Time zone", exact: true }),
+    ).toHaveCount(0);
     await dialog.getByLabel("Date type").selectOption("range");
     const present = dialog.getByRole("checkbox", {
       name: "Present",

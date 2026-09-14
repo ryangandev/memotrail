@@ -1,29 +1,32 @@
 "use client";
+
+import { useState } from "react";
 import {
   occurrencePrecisions,
   occurrencePrecisionLabels,
   type OccurrenceDraft,
 } from "@/lib/data/occurrence";
 import { PrecisionDateField } from "@/components/precision-date-field";
-import {
-  commonTimezones,
-  supportedTimezones,
-  timezoneLabel,
-} from "@/lib/data/timezones";
+import { TimezoneSelect } from "@/components/timezone-select";
+import { timezoneLabel } from "@/lib/data/timezones";
 import styles from "@/app/page.module.css";
+
 export function OccurrenceEditor({
   value,
   onChange,
   disabled,
+  defaultTimezone,
   span = false,
   point = false,
 }: {
   value: OccurrenceDraft;
   onChange: (value: OccurrenceDraft) => void;
   disabled: boolean;
+  defaultTimezone?: string;
   span?: boolean;
   point?: boolean;
 }) {
+  const [editingTimezone, setEditingTimezone] = useState(false);
   const change = (patch: Partial<OccurrenceDraft>) =>
     onChange({ ...value, ...patch });
   const calendar = value.precision !== "unknown";
@@ -31,19 +34,15 @@ export function OccurrenceEditor({
     !point &&
     (span || ["range", "approximate", "age"].includes(value.precision));
   const endMode = value.endMode ?? "date";
-  const descriptionRequired = ["age", "approximate"].includes(
-    value.precision,
-  );
+  const descriptionRequired = ["age", "approximate"].includes(value.precision);
   const startRequired =
     calendar && !["age", "approximate"].includes(value.precision);
   const precisionOptions =
     point && value.precision !== "range"
       ? occurrencePrecisions.filter((precision) => precision !== "range")
       : occurrencePrecisions;
-  const allTimezones = supportedTimezones();
-  const commonTimezoneSet = new Set<string>(commonTimezones);
-  const currentTimezoneIsListed = allTimezones.includes(value.timezone);
   const precisionHelp = helpText(value.precision);
+  const timezoneIsDefault = value.timezone === defaultTimezone;
   return (
     <fieldset disabled={disabled} className={styles.occurrenceEditor}>
       <legend>When it happened</legend>
@@ -75,53 +74,65 @@ export function OccurrenceEditor({
             ))}
           </select>
         </label>
-        <label>
-          <span>
-            Time zone
-            <span aria-hidden="true" className={styles.requiredMark}>
-              *
-            </span>
-          </span>
-          <select
-            aria-label="Time zone"
-            required
-            value={value.timezone}
-            onChange={(e) => change({ timezone: e.target.value })}
-          >
-            {!currentTimezoneIsListed ? (
-              <optgroup label="Current time zone">
-                <option value={value.timezone}>
-                  {timezoneLabel(value.timezone)}
-                </option>
-              </optgroup>
-            ) : null}
-            <optgroup label="Common time zones">
-              {commonTimezones.map((timezone) => (
-                <option key={timezone} value={timezone}>
-                  {timezoneLabel(timezone)}
-                </option>
-              ))}
-            </optgroup>
-            <optgroup label="All time zones">
-              {allTimezones
-                .filter((timezone) => !commonTimezoneSet.has(timezone))
-                .map((timezone) => (
-                  <option key={timezone} value={timezone}>
-                    {timezoneLabel(timezone)}
-                  </option>
-                ))}
-            </optgroup>
-          </select>
-        </label>
+        {defaultTimezone ? (
+          value.precision === "exact" ? (
+            !editingTimezone ? (
+              <div className={styles.timezoneSummary}>
+                <span>Time zone</span>
+                <div>
+                  <span>
+                    <strong>{timezoneLabel(value.timezone)}</strong>
+                    <small>
+                      {timezoneIsDefault
+                        ? "Default from Settings"
+                        : "Entry override"}
+                    </small>
+                  </span>
+                  <button
+                    disabled={disabled}
+                    onClick={() => setEditingTimezone(true)}
+                    type="button"
+                  >
+                    Change
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <label>
+                <span>Time zone</span>
+                <TimezoneSelect
+                  ariaLabel="Time zone"
+                  disabled={disabled}
+                  onChange={(event) => change({ timezone: event.target.value })}
+                  value={value.timezone}
+                />
+              </label>
+            )
+          ) : null
+        ) : (
+          <label>
+            <span>Time zone</span>
+            <TimezoneSelect
+              ariaLabel="Time zone"
+              disabled={disabled}
+              onChange={(event) => change({ timezone: event.target.value })}
+              value={value.timezone}
+            />
+          </label>
+        )}
       </div>
       {calendar && (
         <div className={styles.occurrenceDateArea}>
-          <div className={`${styles.reviewFieldRow} ${styles.occurrenceDateRow}`}>
+          <div
+            className={`${styles.reviewFieldRow} ${styles.occurrenceDateRow}`}
+          >
             <PrecisionDateField
               disabled={disabled}
               key={`start-${value.precision}`}
               label={startLabel(value.precision, bounded)}
-              precision={value.precision as Exclude<typeof value.precision, "unknown">}
+              precision={
+                value.precision as Exclude<typeof value.precision, "unknown">
+              }
               required={startRequired}
               value={value.start}
               onChange={(start) => change({ start })}
@@ -131,7 +142,9 @@ export function OccurrenceEditor({
                 disabled={disabled}
                 key={`end-${value.precision}`}
                 label="End date"
-                precision={value.precision as Exclude<typeof value.precision, "unknown">}
+                precision={
+                  value.precision as Exclude<typeof value.precision, "unknown">
+                }
                 value={value.end}
                 onChange={(end) => change({ end })}
               />
@@ -180,10 +193,7 @@ export function OccurrenceEditor({
   );
 }
 
-function startLabel(
-  precision: OccurrenceDraft["precision"],
-  bounded: boolean,
-) {
+function startLabel(precision: OccurrenceDraft["precision"], bounded: boolean) {
   if (["age", "approximate"].includes(precision)) return "Start date";
   return bounded ? "Start date" : "Occurred";
 }

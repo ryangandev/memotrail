@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   parseBirthDate,
+  parseProfileTimezone,
   storedBirthDate,
+  storedProfileTimezone,
   validStoredBirthDate,
 } from "./profile-input";
 
@@ -46,6 +48,34 @@ describe("storedBirthDate", () => {
     expect(storedBirthDate({ birth_date: null })).toEqual({
       available: true,
       birthDate: null,
+    });
+  });
+});
+
+describe("profile timezone", () => {
+  it("accepts IANA timezones and rejects arbitrary text", () => {
+    expect(parseProfileTimezone(" America/Los_Angeles ")).toEqual({
+      success: true,
+      timezone: "America/Los_Angeles",
+    });
+    expect(parseProfileTimezone("Los Angeles")).toEqual({
+      message: "Choose a valid time zone.",
+      success: false,
+    });
+  });
+
+  it("reads the existing profile preference with a safe fallback", () => {
+    expect(storedProfileTimezone({ timezone: "Asia/Shanghai" })).toEqual({
+      available: true,
+      timezone: "Asia/Shanghai",
+    });
+    expect(storedProfileTimezone({ timezone: "not-a-zone" })).toEqual({
+      available: true,
+      timezone: "UTC",
+    });
+    expect(storedProfileTimezone({ birth_date: null })).toEqual({
+      available: false,
+      timezone: "UTC",
     });
   });
 });

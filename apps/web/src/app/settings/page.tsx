@@ -2,8 +2,12 @@ import Link from "next/link";
 import { signOut } from "@/app/auth/actions";
 import { Icon, type IconName } from "@/components/icon";
 import { BirthDateSetting } from "@/components/birth-date-setting";
+import { TimezoneSetting } from "@/components/timezone-setting";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
-import { storedBirthDate } from "@/lib/data/profile-input";
+import {
+  storedBirthDate,
+  storedProfileTimezone,
+} from "@/lib/data/profile-input";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -46,6 +50,9 @@ export default async function SettingsPage() {
     .eq("user_id", context.userId)
     .single();
   const birthDate = storedBirthDate(profile.error ? null : profile.data);
+  const profileTimezone = storedProfileTimezone(
+    profile.error ? null : profile.data,
+  );
 
   return (
     <div className={styles.content}>
@@ -91,6 +98,10 @@ export default async function SettingsPage() {
             <p>Controls already available in this version</p>
           </div>
         </div>
+
+        {profileTimezone.available ? (
+          <TimezoneSetting initialTimezone={profileTimezone.timezone} />
+        ) : null}
 
         <div className={styles.preferenceList}>
           <div className={styles.appearanceRow}>

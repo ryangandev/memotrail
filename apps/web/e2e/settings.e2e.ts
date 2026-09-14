@@ -77,6 +77,31 @@ test("Settings is reachable from the sidebar and owns account controls", async (
       page.getByRole("link", { name: /AI assistance/ }),
     ).toHaveAttribute("href", "/settings/ai");
 
+    const timezone = main.getByRole("combobox", {
+      name: "Default time zone",
+      exact: true,
+    });
+    await expect(timezone).toHaveValue("UTC");
+    await timezone.selectOption("America/Los_Angeles");
+    await main
+      .getByRole("button", { name: "Save time zone", exact: true })
+      .click();
+    await expect(main.getByRole("status")).toHaveText(
+      "Default time zone saved.",
+    );
+    await expect
+      .poll(
+        async () =>
+          (
+            await client
+              .from("profiles")
+              .select("timezone")
+              .eq("user_id", owner)
+              .single()
+          ).data?.timezone,
+      )
+      .toBe("America/Los_Angeles");
+
     await page.screenshot({
       path: "/private/tmp/memotrail-settings-desktop.png",
     });

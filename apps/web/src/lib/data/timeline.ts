@@ -5,7 +5,10 @@ import type {
   TimelineDatePrecision,
   TimelineKind,
 } from "@/lib/data/timeline-input";
-import { storedBirthDate } from "@/lib/data/profile-input";
+import {
+  storedBirthDate,
+  storedProfileTimezone,
+} from "@/lib/data/profile-input";
 
 export type TimelineEntry = {
   body: string;
@@ -35,6 +38,7 @@ export type TimelineTrack = {
 export type TimelineWorkspace = {
   birthDate: string | null;
   birthDateAvailable: boolean;
+  defaultTimezone: string;
   inboxCount: number | undefined;
   loadError: string | null;
   tracks: TimelineTrack[];
@@ -85,10 +89,14 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
   ]);
   const rows = timeline.error ? null : timelineRows(timeline.data);
   const profileBirthDate = storedBirthDate(profile.error ? null : profile.data);
+  const profileTimezone = storedProfileTimezone(
+    profile.error ? null : profile.data,
+  );
 
   return {
     birthDate: profileBirthDate.birthDate,
     birthDateAvailable: profileBirthDate.available,
+    defaultTimezone: profileTimezone.timezone,
     inboxCount: inbox.error ? undefined : (inbox.count ?? 0),
     loadError:
       timeline.error || !rows
