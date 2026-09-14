@@ -12,6 +12,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
   page,
   context,
 }) => {
+  test.setTimeout(90_000);
   const uiErrors: string[] = [];
   page.on("pageerror", (error) => uiErrors.push(error.message));
   const env = JSON.parse(
@@ -176,7 +177,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     await page.reload();
     await page.getByRole("button", { name: /First trip to Japan/ }).click();
     await expect(
-      dialog.getByRole("combobox", { name: "Date precision", exact: true }),
+      dialog.getByRole("combobox", { name: "Date type", exact: true }),
     ).toHaveValue("exact");
     await expect(
       dialog.getByRole("button", {
@@ -237,7 +238,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     ]) {
       await page.getByRole("button", { name: /First trip to Japan/ }).click();
       await dialog
-        .getByRole("combobox", { name: "Date precision", exact: true })
+        .getByRole("combobox", { name: "Date type", exact: true })
         .selectOption(sample.precision);
       if (sample.start)
         await fillOccurrenceStart(dialog, sample.start);
@@ -263,24 +264,60 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     await page.screenshot({
       path: "/private/tmp/memotrail-timeline-undated.png",
     });
+    await page.getByRole("button", { name: "Add moment", exact: true }).click();
+    await expect(dialog.getByText("Optional", { exact: true })).toHaveCount(0);
+    await dialog.getByLabel("Date type").selectOption("range");
+    const present = dialog.getByRole("checkbox", {
+      name: "Present",
+      exact: true,
+    });
+    const startDate = dialog.getByRole("textbox", {
+      name: "Start date",
+      exact: true,
+    });
+    const startBeforePresent = await startDate.boundingBox();
+    await expect(present).not.toBeChecked();
+    await expect(
+      dialog.getByRole("textbox", { name: "End date", exact: true }),
+    ).toBeVisible();
+    await present.check();
+    await expect(
+      dialog.getByRole("textbox", { name: "End date", exact: true }),
+    ).toHaveCount(0);
+    const startAfterPresent = await startDate.boundingBox();
+    expect(startBeforePresent).not.toBeNull();
+    expect(startAfterPresent).not.toBeNull();
+    expect(
+      Math.abs(startBeforePresent!.width - startAfterPresent!.width),
+    ).toBeLessThan(2);
+    await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.getByRole("button", { name: /First trip to Japan/ }).click();
-    await expect(dialog.getByLabel("Date precision")).toHaveValue("unknown");
+    await expect(dialog.getByLabel("Date type")).toHaveValue("unknown");
     await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
     await page.getByRole("button", { name: "Add moment", exact: true }).click();
-    await expect(dialog.getByLabel("Date precision")).toHaveValue("unknown");
+    await expect(dialog.getByLabel("Date type")).toHaveValue("unknown");
     await dialog.getByRole("button", { name: "Event", exact: true }).click();
     await expect(
       dialog
-        .getByRole("combobox", { name: "Date precision", exact: true })
+        .getByRole("combobox", { name: "Date type", exact: true })
         .locator('option[value="range"]'),
     ).toHaveCount(0);
     await dialog.getByRole("button", { name: "Stage", exact: true }).click();
-    await dialog.getByLabel("Date precision").selectOption("range");
+    await dialog.getByLabel("Date type").selectOption("range");
     await expect(
       dialog.getByRole("checkbox", { name: "Present", exact: true }),
-    ).toBeChecked();
+    ).not.toBeChecked();
+    await expect(
+      dialog.getByRole("textbox", { name: "End date", exact: true }),
+    ).toBeVisible();
+    await expect(
+      dialog.getByText("Choose Present when this period is still happening."),
+    ).toHaveCount(0);
+    await dialog
+      .getByRole("checkbox", { name: "Present", exact: true })
+      .check();
     await expect(
       dialog.getByRole("textbox", { name: "End date", exact: true }),
     ).toHaveCount(0);
@@ -290,8 +327,11 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     await dialog
       .getByLabel("Title", { exact: true })
       .fill("Unanchored childhood");
-    await dialog.getByLabel("Date precision").selectOption("age");
+    await dialog.getByLabel("Date type").selectOption("age");
     await dialog.getByLabel("Date description").fill("Ages 1 to 12");
+    await dialog
+      .getByRole("checkbox", { name: "Present", exact: true })
+      .check();
     await dialog
       .getByRole("button", { name: "Add moment", exact: true })
       .click();

@@ -66,13 +66,13 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       exact: true,
     });
     await capture.getByRole("button", { name: "Date", exact: true }).click();
-    await expect(capture.getByLabel("Date precision")).toBeVisible({
+    await expect(capture.getByLabel("Date type")).toBeVisible({
       timeout: 5000,
     });
     await capture
       .getByRole("textbox", { name: "Entry title", exact: true })
       .fill("Recovered partial draft");
-    await capture.getByLabel("Date precision").selectOption("year");
+    await capture.getByLabel("Date type").selectOption("year");
     await occurrenceStartField(capture).fill("20");
     await page.reload();
     await expect(occurrenceStartField(capture)).toHaveValue("20");
@@ -105,7 +105,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       await capture
         .getByRole("textbox", { name: "Entry title", exact: true })
         .fill(`Capture ${item.precision}`);
-      await capture.getByLabel("Date precision").selectOption(item.precision);
+      await capture.getByLabel("Date type").selectOption(item.precision);
       await capture
         .getByRole("combobox", { name: "Time zone", exact: true })
         .selectOption("Asia/Kathmandu");
@@ -199,11 +199,11 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
     }
 
     await capture.getByRole("button", { name: "Date", exact: true }).click();
-    await capture.getByLabel("Date precision").selectOption("unknown");
+    await capture.getByLabel("Date type").selectOption("unknown");
     await capture
       .getByRole("button", { name: "Use capture time", exact: true })
       .click();
-    await expect(capture.getByLabel("Date precision")).toHaveCount(0);
+    await expect(capture.getByLabel("Date type")).toHaveCount(0);
     await capture
       .getByRole("textbox", { name: "Entry title", exact: true })
       .fill("Default capture time");

@@ -125,7 +125,7 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
       await page.goto("/goals?entry=" + id);
       const dialog = page.getByRole("dialog");
       await dialog
-        .getByRole("combobox", { name: "Date precision", exact: true })
+        .getByRole("combobox", { name: "Date type", exact: true })
         .selectOption(value.precision);
       await dialog
         .getByRole("combobox", { name: "Time zone", exact: true })

@@ -116,7 +116,7 @@ for (const kind of ["home", "vehicle"] as const) {
       await page.goto(config.path + "?entry=" + id);
       const dialog = page.getByRole("dialog");
       await expect(
-        dialog.getByRole("combobox", { name: "Date precision", exact: true }),
+        dialog.getByRole("combobox", { name: "Date type", exact: true }),
       ).toHaveValue("exact");
       await dialog
         .getByRole("button", { name: "Save changes", exact: true })
@@ -142,7 +142,7 @@ for (const kind of ["home", "vehicle"] as const) {
       ]) {
         await page.getByRole("button", { name: /Precision chapter/ }).click();
         await dialog
-          .getByRole("combobox", { name: "Date precision", exact: true })
+          .getByRole("combobox", { name: "Date type", exact: true })
           .selectOption(precision);
         if (precision !== "unknown") {
           if (start) await fillOccurrenceStart(dialog, start);
@@ -188,7 +188,7 @@ for (const kind of ["home", "vehicle"] as const) {
       await page.reload();
       await page.getByRole("button", { name: /Precision chapter/ }).click();
       await expect(
-        dialog.getByRole("combobox", { name: "Date precision", exact: true }),
+        dialog.getByRole("combobox", { name: "Date type", exact: true }),
       ).toHaveValue("unknown");
       await page.screenshot({
         path: `/private/tmp/memotrail-${kind}-chapter-desktop.png`,
@@ -208,7 +208,7 @@ for (const kind of ["home", "vehicle"] as const) {
         })
         .click();
       await expect(
-        dialog.getByRole("combobox", { name: "Date precision", exact: true }),
+        dialog.getByRole("combobox", { name: "Date type", exact: true }),
       ).toHaveValue("unknown");
       await dialog
         .getByRole("textbox", {

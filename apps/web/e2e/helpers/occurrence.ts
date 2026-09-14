@@ -2,7 +2,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 
 type OccurrenceScope = Locator | Page;
 
-const startDateName = /^(Occurred|Start date|Start date \(optional\))$/;
+const startDateName = /^(Occurred|Start date)$/;
 
 export function occurrenceStartField(scope: OccurrenceScope) {
   return scope.getByRole("textbox", { name: startDateName });

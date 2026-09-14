@@ -112,7 +112,7 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
     ]) {
       await card.getByRole("button", { name: "Review", exact: true }).click();
       await page
-        .getByRole("combobox", { name: "Date precision", exact: true })
+        .getByRole("combobox", { name: "Date type", exact: true })
         .selectOption(precision);
       await fillOccurrenceStart(page, start);
       await page
@@ -135,7 +135,7 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
     }
     await card.getByRole("button", { name: "Review", exact: true }).click();
     await page
-      .getByRole("combobox", { name: "Date precision", exact: true })
+      .getByRole("combobox", { name: "Date type", exact: true })
       .selectOption("range");
     await fillOccurrenceStart(page, "2020-01-01");
     await fillOccurrenceEnd(page, "2017-01-01");
@@ -186,7 +186,7 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
     await card.getByRole("button", { name: "Review", exact: true }).click();
     await page.getByRole("button", { name: "Use as approximate date" }).click();
     await expect(
-      page.getByRole("combobox", { name: "Date precision", exact: true }),
+      page.getByRole("combobox", { name: "Date type", exact: true }),
     ).toHaveValue("approximate");
     await expect(occurrenceStartField(page)).toHaveValue("");
     await expect(
@@ -202,7 +202,7 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
       ).data?.date_precision,
     ).toBe("range");
     await page
-      .getByRole("combobox", { name: "Date precision", exact: true })
+      .getByRole("combobox", { name: "Date type", exact: true })
       .selectOption("age");
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });

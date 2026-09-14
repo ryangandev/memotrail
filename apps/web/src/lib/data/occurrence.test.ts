@@ -143,7 +143,7 @@ describe("precision-aware occurrence", () => {
       resolveOccurrenceDraft({ ...draft, label: "x".repeat(201) }).error,
     ).toBeDefined();
   });
-  it("keeps Present explicit and requires a date after choosing an end date", () => {
+  it("supports an optional end date and explicit Present mode", () => {
     const draft = {
       precision: "range" as const,
       start: "2020-01-01",
@@ -155,8 +155,8 @@ describe("precision-aware occurrence", () => {
       resolveOccurrenceDraft({ ...draft, endMode: "present" }).value,
     ).toMatchObject({ occurredEnd: null });
     expect(
-      resolveOccurrenceDraft({ ...draft, endMode: "date" }).error,
-    ).toBe("Choose an end date, or continue through Present.");
+      resolveOccurrenceDraft({ ...draft, endMode: "date" }).value,
+    ).toMatchObject({ occurredEnd: null });
     expect(
       resolveOccurrenceDraft({
         ...draft,

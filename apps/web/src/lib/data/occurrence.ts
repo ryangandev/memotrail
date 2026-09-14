@@ -207,8 +207,6 @@ export function resolveOccurrenceDraft(
   const bounded =
     draft.precision !== "unknown" &&
     (span || ["range", "approximate", "age"].includes(draft.precision));
-  if (bounded && draft.endMode === "date" && !draft.end)
-    return { error: "Choose an end date, or continue through Present." };
   const end =
     bounded && draft.endMode !== "present"
       ? convert(draft.end, "end")

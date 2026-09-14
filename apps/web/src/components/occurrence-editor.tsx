@@ -30,7 +30,12 @@ export function OccurrenceEditor({
   const bounded =
     !point &&
     (span || ["range", "approximate", "age"].includes(value.precision));
-  const endMode = value.endMode ?? (value.end ? "date" : "present");
+  const endMode = value.endMode ?? "date";
+  const descriptionRequired = ["age", "approximate"].includes(
+    value.precision,
+  );
+  const startRequired =
+    calendar && !["age", "approximate"].includes(value.precision);
   const precisionOptions =
     point && value.precision !== "range"
       ? occurrencePrecisions.filter((precision) => precision !== "range")
@@ -38,21 +43,28 @@ export function OccurrenceEditor({
   const allTimezones = supportedTimezones();
   const commonTimezoneSet = new Set<string>(commonTimezones);
   const currentTimezoneIsListed = allTimezones.includes(value.timezone);
+  const precisionHelp = helpText(value.precision);
   return (
     <fieldset disabled={disabled} className={styles.occurrenceEditor}>
       <legend>When it happened</legend>
       <div className={styles.reviewFieldRow}>
         <label>
-          <span>Date precision</span>
+          <span>
+            Date type
+            <span aria-hidden="true" className={styles.requiredMark}>
+              *
+            </span>
+          </span>
           <select
-            aria-label="Date precision"
+            aria-label="Date type"
+            required
             value={value.precision}
             onChange={(e) =>
               change({
                 precision: e.target.value as OccurrenceDraft["precision"],
                 start: "",
                 end: "",
-                endMode: "present",
+                endMode: "date",
               })
             }
           >
@@ -64,9 +76,15 @@ export function OccurrenceEditor({
           </select>
         </label>
         <label>
-          <span>Time zone</span>
+          <span>
+            Time zone
+            <span aria-hidden="true" className={styles.requiredMark}>
+              *
+            </span>
+          </span>
           <select
             aria-label="Time zone"
+            required
             value={value.timezone}
             onChange={(e) => change({ timezone: e.target.value })}
           >
@@ -98,14 +116,13 @@ export function OccurrenceEditor({
       </div>
       {calendar && (
         <div className={styles.occurrenceDateArea}>
-          <div
-            className={`${styles.reviewFieldRow} ${styles.occurrenceDateRow} ${bounded && endMode === "present" ? styles.occurrenceDateRowOpenEnded : ""}`}
-          >
+          <div className={`${styles.reviewFieldRow} ${styles.occurrenceDateRow}`}>
             <PrecisionDateField
               disabled={disabled}
               key={`start-${value.precision}`}
               label={startLabel(value.precision, bounded)}
               precision={value.precision as Exclude<typeof value.precision, "unknown">}
+              required={startRequired}
               value={value.start}
               onChange={(start) => change({ start })}
             />
@@ -143,31 +160,22 @@ export function OccurrenceEditor({
       <label>
         <span>
           Date description
-          <small>
-            {["age", "approximate"].includes(value.precision)
-              ? "Required"
-              : "Optional"}
-          </small>
+          {descriptionRequired ? (
+            <span aria-hidden="true" className={styles.requiredMark}>
+              *
+            </span>
+          ) : null}
         </span>
         <input
           aria-label="Date description"
           maxLength={200}
           placeholder={descriptionPlaceholder(value.precision)}
+          required={descriptionRequired}
           value={value.label}
           onChange={(e) => change({ label: e.target.value })}
         />
       </label>
-      <p>
-        {value.precision === "exact"
-          ? "Choose both a calendar date and a local time. Daylight-saving changes use the selected time zone."
-          : ["age", "approximate"].includes(value.precision)
-            ? "Describe what you remember. A start date is optional, and no birth date is inferred."
-            : value.precision === "range"
-              ? "Choose Present when this period is still happening."
-              : value.precision === "unknown"
-                ? "No occurred date will be stored. Creation time is kept separately."
-                : "Only the selected precision is shown. Unknown days or months are not presented as facts."}
-      </p>
+      {precisionHelp ? <p>{precisionHelp}</p> : null}
     </fieldset>
   );
 }
@@ -176,9 +184,19 @@ function startLabel(
   precision: OccurrenceDraft["precision"],
   bounded: boolean,
 ) {
-  if (["age", "approximate"].includes(precision))
-    return "Start date (optional)";
+  if (["age", "approximate"].includes(precision)) return "Start date";
   return bounded ? "Start date" : "Occurred";
+}
+
+function helpText(precision: OccurrenceDraft["precision"]) {
+  if (precision === "exact")
+    return "Choose both a calendar date and a local time. Daylight-saving changes use the selected time zone.";
+  if (["age", "approximate"].includes(precision))
+    return "Describe what you remember. A start date can add calendar context, and no birth date is inferred.";
+  if (precision === "range") return null;
+  if (precision === "unknown")
+    return "No occurred date will be stored. Creation time is kept separately.";
+  return "Only the selected date type is shown. Unknown days or months are not presented as facts.";
 }
 
 function descriptionPlaceholder(precision: OccurrenceDraft["precision"]) {

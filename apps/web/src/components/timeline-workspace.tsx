@@ -500,7 +500,7 @@ function TimelineEditor({
       setOccurrence((value) => ({
         ...value,
         end: "",
-        endMode: "present",
+        endMode: "date",
         precision: value.precision === "range" ? "day" : value.precision,
       }));
     setResult(null);
@@ -667,22 +667,36 @@ function TimelineEditor({
 
           <div className={styles.formGrid}>
             <label className={styles.fullField}>
-              <span>Title</span>
+              <span>
+                Title
+                <span aria-hidden="true" className={styles.requiredMark}>
+                  *
+                </span>
+              </span>
               <input
+                aria-label="Title"
                 maxLength={timelineTitleLimit}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder={
                   kind === "stage" ? "Living in Philadelphia" : "First ski day"
                 }
                 ref={titleRef}
+                required
                 value={title}
               />
             </label>
 
             <label>
-              <span>Track</span>
+              <span>
+                Track
+                <span aria-hidden="true" className={styles.requiredMark}>
+                  *
+                </span>
+              </span>
               <select
+                aria-label="Track"
                 onChange={(event) => setTrackId(event.target.value)}
+                required
                 value={trackId}
               >
                 {tracks.map((track) => (
@@ -704,10 +718,9 @@ function TimelineEditor({
             </div>
 
             <label className={styles.fullField}>
-              <span>
-                Notes <small>Optional</small>
-              </span>
+              <span>Notes</span>
               <textarea
+                aria-label="Notes"
                 maxLength={timelineBodyLimit}
                 onChange={(event) => setBody(event.target.value)}
                 placeholder="What made this chapter or moment meaningful?"

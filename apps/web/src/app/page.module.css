@@ -1147,6 +1147,11 @@
   font-weight: var(--mt-font-weight-regular);
 }
 
+.requiredMark {
+  margin-left: 3px;
+  color: var(--mt-color-warm);
+}
+
 .occurrenceDateArea,
 .precisionDateField {
   display: grid;
@@ -1161,10 +1166,6 @@
 
 .occurrenceDateRow {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.occurrenceDateRowOpenEnded {
-  grid-template-columns: minmax(0, 1fr);
 }
 
 .precisionDateField > span {
@@ -1192,7 +1193,7 @@
   box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
 }
 
-.datePickerControl input {
+.reviewForm .datePickerControl input {
   height: 100%;
   min-width: 0;
   flex: 1;
@@ -1204,7 +1205,10 @@
   font-variant-numeric: tabular-nums;
 }
 
-.datePickerControl input:focus {
+.reviewForm .datePickerControl input:focus,
+.reviewForm .datePickerControl input:focus-visible {
+  border: 0;
+  outline: 0;
   box-shadow: none;
 }
 
@@ -1259,7 +1263,7 @@
 
 .occurrenceEditor .presentToggle {
   display: inline-flex;
-  justify-self: end;
+  justify-self: start;
   min-height: 28px;
   align-items: center;
   gap: var(--mt-space-2);
@@ -1871,10 +1875,6 @@
 
   .reviewFieldRow {
     grid-template-columns: 1fr;
-  }
-
-  .occurrenceEditor .presentToggle {
-    justify-self: start;
   }
 
   .reviewActions {

@@ -141,7 +141,7 @@ test("Editing a First Time keeps its original date range", async ({
     await page.reload();
     await page.getByRole("button", { name: /First trip to Japan/ }).click();
     await expect(
-      dialog.getByRole("combobox", { name: "Date precision", exact: true }),
+      dialog.getByRole("combobox", { name: "Date type", exact: true }),
     ).toHaveValue("exact");
     await dialog.getByRole("button", { name: "Save changes" }).click();
     await expect(dialog).not.toBeVisible();
@@ -170,7 +170,7 @@ test("Editing a First Time keeps its original date range", async ({
     ]) {
       await page.getByRole("button", { name: /First trip to Japan/ }).click();
       await dialog
-        .getByRole("combobox", { name: "Date precision", exact: true })
+        .getByRole("combobox", { name: "Date type", exact: true })
         .selectOption(sample.precision);
       if (sample.start)
         await fillOccurrenceStart(dialog, sample.start);

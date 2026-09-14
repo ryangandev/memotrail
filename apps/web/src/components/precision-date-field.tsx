@@ -19,6 +19,7 @@ export function PrecisionDateField({
   label,
   hideLabel = false,
   precision,
+  required = false,
   value,
   onChange,
 }: {
@@ -26,6 +27,7 @@ export function PrecisionDateField({
   label: string;
   hideLabel?: boolean;
   precision: CalendarPrecision;
+  required?: boolean;
   value: string;
   onChange: (value: string) => void;
 }) {
@@ -55,7 +57,16 @@ export function PrecisionDateField({
 
   return (
     <div className={styles.precisionDateField}>
-      {hideLabel ? null : <span>{label}</span>}
+      {hideLabel ? null : (
+        <span>
+          {label}
+          {required ? (
+            <span aria-hidden="true" className={styles.requiredMark}>
+              *
+            </span>
+          ) : null}
+        </span>
+      )}
       <DatePicker.Root
         closeOnSelect
         defaultView={view}
@@ -86,6 +97,7 @@ export function PrecisionDateField({
             maxLength={dateLength(precision)}
             onChange={(event) => changeDate(event.target.value)}
             placeholder={datePlaceholder(precision)}
+            required={required}
             value={dateText}
           />
           {precision === "exact" ? (
@@ -262,11 +274,8 @@ function TimePicker({
       </Popover.Trigger>
       <Portal>
         <Popover.Positioner className={styles.timePickerPositioner}>
-          <Popover.Content
-            aria-label={title}
-            className={styles.timePickerContent}
-          >
-            <Popover.Title>Choose time</Popover.Title>
+          <Popover.Content className={styles.timePickerContent}>
+            <Popover.Title>{title}</Popover.Title>
             <div className={styles.timePickerFields}>
               <TimeSelect
                 label="Hour"

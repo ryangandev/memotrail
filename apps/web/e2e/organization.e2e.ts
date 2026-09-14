@@ -154,7 +154,7 @@ test("Organization preserves relationships, Bucket List identity, and recoverabl
       goal.getByRole("button", { name: "Mark achieved and create First Time" }),
     ).toBeVisible();
     await goal
-      .getByRole("combobox", { name: "Date precision", exact: true })
+      .getByRole("combobox", { name: "Date type", exact: true })
       .selectOption("day");
     await fillOccurrenceStart(goal, "2026-09-12");
     const achievementResponse = page.waitForResponse(
