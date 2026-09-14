@@ -46,15 +46,6 @@ export function CollectionsWorkspace({
         )}
       </header>
 
-      {!selectedCollection ? (
-        <nav className={styles.kindTabs} aria-label="Archive organization">
-          <Link aria-current="page" href="/collections">
-            Collections
-          </Link>
-          <Link href="/tags">Tags</Link>
-        </nav>
-      ) : null}
-
       {selectedCollection ? (
         <CollectionDetail workspace={workspace} />
       ) : (

@@ -40,13 +40,6 @@ export default async function TagsPage({
         <OrganizationControl items={workspace.items} kind="tag" />
       </header>
 
-      <nav className={styles.kindTabs} aria-label="Archive organization">
-        <Link href="/collections">Collections</Link>
-        <Link aria-current="page" href="/tags">
-          Tags
-        </Link>
-      </nav>
-
       <form className={styles.search}>
         <label htmlFor="tag-search">Find a tag</label>
         <div>

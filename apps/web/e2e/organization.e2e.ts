@@ -69,10 +69,9 @@ test("Collections and Tags are first-class and organize generic Timeline moments
 
     await page.goto("/collections");
     await expect(page.getByRole("heading", { name: "Collections" })).toBeVisible();
-    const organizationTabs = page.getByRole("navigation", {
-      name: "Archive organization",
-    });
-    await expect(organizationTabs.getByRole("link", { name: "Tags" })).toBeVisible();
+    await expect(
+      page.getByRole("navigation", { name: "Archive organization" }),
+    ).toHaveCount(0);
     await page.getByRole("button", { name: "New Collection" }).click();
     const collectionDialog = page.getByRole("dialog", {
       name: "Create a Collection",
@@ -85,8 +84,14 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await expect(collectionDialog).not.toBeVisible();
     await expect(page.getByRole("heading", { name: "City chapters" })).toBeVisible();
 
-    await organizationTabs.getByRole("link", { name: "Tags" }).click();
+    await page
+      .getByRole("navigation", { name: "Primary navigation" })
+      .getByRole("link", { name: "Tags", exact: true })
+      .click();
     await expect(page).toHaveURL(/\/tags$/);
+    await expect(
+      page.getByRole("navigation", { name: "Archive organization" }),
+    ).toHaveCount(0);
     for (const name of ["travel", "journeys", "unused"]) {
       await page.getByRole("button", { name: "New Tag" }).click();
       const tagDialog = page.getByRole("dialog", { name: "Create a Tag" });
@@ -101,7 +106,11 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       name: "When did your story begin?",
     });
     if (await birthDatePrompt.isVisible()) {
-      await birthDatePrompt.getByText("Not now", { exact: true }).click();
+      await expect(birthDatePrompt).toHaveAttribute("data-hydrated", "true");
+      await birthDatePrompt
+        .getByRole("button", { name: "Not now", exact: true })
+        .click();
+      await expect(birthDatePrompt).not.toBeVisible();
     }
     await page.getByRole("button", { name: "Add moment", exact: true }).click();
     await page
