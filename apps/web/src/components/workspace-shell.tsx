@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import styles from "@/app/page.module.css";
 import { AuthGate } from "@/components/auth-gate";
 import { BrandMark } from "@/components/brand-mark";
+import { DismissibleSyncNote } from "@/components/dismissible-sync-note";
 import { Icon, type IconName } from "@/components/icon";
 import { QuickCaptureDialog } from "@/components/quick-capture-dialog";
 import { SearchShortcutLink } from "@/components/search-shortcut-link";
@@ -290,13 +291,7 @@ function Sidebar({
               item={settingsNavigation}
             />
           </nav>
-          <div className={styles.archiveNote}>
-            <Icon name="clock" size={17} />
-            <div>
-              <strong>Private cloud sync</strong>
-              <span>Available on Web and iPhone</span>
-            </div>
-          </div>
+          <DismissibleSyncNote ownerId={viewer.id} />
           <Link
             aria-current={activeDestination === "settings" ? "page" : undefined}
             className={styles.accountLink}

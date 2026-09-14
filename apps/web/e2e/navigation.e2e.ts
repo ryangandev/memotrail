@@ -79,6 +79,16 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
 
     const shell = page.getByRole("complementary");
     await expect(shell).toBeVisible();
+    const syncNote = shell.getByRole("note", { name: "Private cloud sync" });
+    await expect(syncNote).toBeVisible();
+    await syncNote
+      .getByRole("button", { name: "Dismiss private cloud sync" })
+      .click();
+    await expect(syncNote).not.toBeVisible();
+    await page.reload();
+    await expect(
+      shell.getByRole("note", { name: "Private cloud sync" }),
+    ).toHaveCount(0);
     await shell.evaluate((element) => {
       element.setAttribute("data-shell-instance", "kept");
     });

@@ -168,10 +168,11 @@
 }
 
 .archiveNote {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: var(--mt-space-3);
-  padding: var(--mt-space-3);
+  padding: var(--mt-space-3) 38px var(--mt-space-3) var(--mt-space-3);
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-warm);
@@ -180,7 +181,33 @@
 
 .archiveNote div {
   display: grid;
+  min-width: 0;
   gap: 2px;
+}
+
+.archiveNote > button {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--mt-color-ink-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.archiveNote > button:hover,
+.archiveNote > button:focus-visible {
+  color: var(--mt-color-ink);
+  background: color-mix(in srgb, var(--mt-color-warm) 12%, transparent);
+}
+
+.archiveNote > button:focus-visible {
+  outline: 2px solid var(--mt-color-accent);
+  outline-offset: 1px;
 }
 
 .archiveNote strong {
