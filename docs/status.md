@@ -7,7 +7,7 @@ Last reviewed: 2026-09-14.
 MemoTrail's confirmed core scope is implemented across Web, native iOS, and shared Supabase contracts.
 The product is not yet fully accepted for production because live configuration, real native and browser interactions, CI, and recovery evidence remain incomplete.
 
-Latest product implementation commit: `cd3ab9f`.
+Latest product implementation commit: `2b408c4`.
 Use Git history for feature-level implementation and test evidence.
 
 | Area                                                                                 | State                                                                              |
@@ -17,7 +17,7 @@ Use Git history for feature-level implementation and test evidence.
 | Habits                                                                               | Deferred; removed from Web, still present on iOS pending the native rework         |
 | Web navigation shell                                                                 | Persistent across routes with prefetch, route fallback, and cold-request feedback  |
 | Web Settings                                                                         | Account, birth date, default timezone, sign-out, and preference links implemented  |
-| Web Collections and tags                                                             | Direct Library destinations and shared Entry organization editor implemented; hosted migration pending review |
+| Web Collections and tags                                                             | Direct Library destinations and shared Entry organization editor implemented       |
 | Keyword search, grounded AI search, suggestions, and Explore with AI                 | Implemented; Production AI configuration is not accepted                           |
 | Private media, Entry history, relationships, Trash, and complete export              | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains |
 | Hosted Supabase contracts                                                            | Deployed to the confirmed MemoTrail project                                        |
@@ -29,19 +29,14 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 ## Next work
 
-### 1. Apply the pending organization contract
-
-- Review and apply `202609140001_entry_organization.sql` to the hosted MemoTrail Supabase project.
-- Verify generic Timeline moments preserve Collection and tag memberships in the hosted Web app.
-
-### 2. Accept Production AI
+### 1. Accept Production AI
 
 - Set the Production Vercel values for `AI_PROVIDER`, server-only `AI_API_KEY`, `AI_CHAT_MODEL`, and `AI_TOTAL_BUDGET_USD`.
 - Confirm the existing server-only `SUPABASE_SECRET_KEY` remains present.
 - Redeploy and run `MEMOTRAIL_VERIFY_HOSTED_AI=1 node apps/web/scripts/verify-hosted-ai.mjs` with synthetic data.
 - The last authenticated check returned HTTP 503 `provider_unavailable`; a valid local key does not configure Production.
 
-### 3. Complete real interaction acceptance
+### 2. Complete real interaction acceptance
 
 - Verify an actual production browser export download.
 - Verify native Save and share for a production export.
@@ -50,14 +45,14 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 The latest automated native UI attempt was blocked by the locked development Mac.
 
-### 4. Establish recovery
+### 3. Establish recovery
 
 - Choose separately protected destinations for database backups and original Storage objects.
 - Decide whether to enable point-in-time recovery; the latest inventory showed PITR disabled and no listed restore point.
 - Complete and inspect a full restore in a non-production project.
 - Audit abandoned unregistered uploads before approving automatic retention cleanup.
 
-### 5. Restore current CI evidence
+### 4. Restore current CI evidence
 
 - Resolve the GitHub account billing or spending-limit issue.
 - Rerun all Web, iOS, and database jobs for current `main` and confirm they actually execute.
