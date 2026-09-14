@@ -130,6 +130,51 @@ describe("createTimelineLayout", () => {
     expect(layout.laneCountByTrack.places).toBe(1);
   });
 
+  it("reuses a lane for short non-overlapping stages on a life-long Timeline", () => {
+    const layout = createTimelineLayout(
+      [
+        source({
+          id: "walmart",
+          kind: "stage",
+          occurredEnd: "2026-01-31T00:00:00.000Z",
+          occurredStart: "2025-05-19T00:00:00.000Z",
+          trackId: "career",
+        }),
+        source({
+          id: "adobe",
+          kind: "stage",
+          occurredStart: "2026-04-13T00:00:00.000Z",
+          trackId: "career",
+        }),
+      ],
+      reference,
+      "2000-05-16",
+    );
+
+    expect(layout.positions.map((item) => item.lane)).toEqual([0, 0]);
+    expect(layout.laneCountByTrack.career).toBe(1);
+  });
+
+  it("separates point events whose rendered labels overlap", () => {
+    const layout = createTimelineLayout(
+      [
+        source({
+          id: "event-1",
+          occurredStart: "2026-01-01T00:00:00.000Z",
+        }),
+        source({
+          id: "event-2",
+          occurredStart: "2026-06-01T00:00:00.000Z",
+        }),
+      ],
+      reference,
+      "2000-05-16",
+    );
+
+    expect(layout.positions.map((item) => item.lane)).toEqual([0, 1]);
+    expect(layout.laneCountByTrack.places).toBe(2);
+  });
+
   it("calculates lanes independently for each track", () => {
     const layout = createTimelineLayout(
       [source(), source({ id: "event-2", trackId: "education" })],

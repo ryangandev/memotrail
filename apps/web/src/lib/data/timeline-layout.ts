@@ -20,6 +20,7 @@ export type TimelineYearMarker = {
 };
 
 export type TimelineLayout = {
+  canvasWidth: number;
   end: string;
   laneCountByTrack: Record<string, number>;
   positions: TimelinePosition[];
@@ -28,8 +29,12 @@ export type TimelineLayout = {
 };
 
 const minimumRangeMilliseconds = 365 * 24 * 60 * 60 * 1_000;
-const minimumStageWidthPercent = 1.2;
-const minimumCollisionWidthPercent = 13;
+const minimumCanvasWidthPixels = 840;
+const yearWidthPixels = 112;
+const minimumStageWidthPixels = 54;
+const eventWidthPixels = 126;
+const eventLeadingOffsetPixels = 6;
+const endAlignedEventThresholdPercent = 90;
 
 export function createTimelineLayout(
   items: TimelineLayoutSource[],
@@ -71,50 +76,6 @@ export function createTimelineLayout(
   }
 
   const range = latest - earliest;
-  const positions: TimelinePosition[] = [];
-  const laneCountByTrack: Record<string, number> = {};
-  const itemsByTrack = new Map<string, typeof normalized>();
-
-  for (const item of normalized) {
-    const trackItems = itemsByTrack.get(item.trackId) ?? [];
-    trackItems.push(item);
-    itemsByTrack.set(item.trackId, trackItems);
-  }
-
-  for (const [trackId, trackItems] of itemsByTrack) {
-    const laneEnds: number[] = [];
-
-    trackItems.sort((a, b) => a.start - b.start || a.end - b.end);
-
-    for (const item of trackItems) {
-      let lane = laneEnds.findIndex((laneEnd) => laneEnd <= item.start);
-
-      if (lane === -1) {
-        lane = laneEnds.length;
-      }
-
-      const visualEnd = Math.max(
-        item.end,
-        item.start + (range * minimumCollisionWidthPercent) / 100,
-      );
-      laneEnds[lane] = visualEnd;
-      positions.push({
-        id: item.id,
-        lane,
-        leftPercent: clamp(((item.start - earliest) / range) * 100),
-        widthPercent:
-          item.kind === "event"
-            ? 0
-            : Math.max(
-                minimumStageWidthPercent,
-                clamp(((item.end - item.start) / range) * 100),
-              ),
-      });
-    }
-
-    laneCountByTrack[trackId] = Math.max(1, laneEnds.length);
-  }
-
   const yearMarkers: TimelineYearMarker[] = [];
   const firstYear = new Date(earliest).getUTCFullYear();
   const lastYear = new Date(latest).getUTCFullYear();
@@ -143,7 +104,91 @@ export function createTimelineLayout(
     }
   }
 
+  const canvasWidth = Math.max(
+    minimumCanvasWidthPixels,
+    yearMarkers.length * yearWidthPixels,
+  );
+  const positions: TimelinePosition[] = [];
+  const laneCountByTrack: Record<string, number> = {};
+  const renderedItems = normalized.map((item) => {
+    const leftPercent = clamp(((item.start - earliest) / range) * 100);
+    const widthPercent =
+      item.kind === "event"
+        ? 0
+        : clamp(((item.end - item.start) / range) * 100);
+    const anchor = (leftPercent / 100) * canvasWidth;
+    const actualEnd = anchor + (widthPercent / 100) * canvasWidth;
+    const visualStart =
+      item.kind === "event"
+        ? Math.max(
+            0,
+            anchor -
+              (leftPercent > endAlignedEventThresholdPercent
+                ? eventWidthPixels
+                : eventLeadingOffsetPixels),
+          )
+        : anchor;
+    const visualEnd =
+      item.kind === "event"
+        ? Math.min(
+            canvasWidth,
+            anchor +
+              (leftPercent > endAlignedEventThresholdPercent
+                ? 0
+                : eventWidthPixels - eventLeadingOffsetPixels),
+          )
+        : Math.min(
+            canvasWidth,
+            Math.max(actualEnd, anchor + minimumStageWidthPixels),
+          );
+
+    return {
+      ...item,
+      leftPercent,
+      visualEnd,
+      visualStart,
+      widthPercent,
+    };
+  });
+  const itemsByTrack = new Map<string, typeof renderedItems>();
+
+  for (const item of renderedItems) {
+    const trackItems = itemsByTrack.get(item.trackId) ?? [];
+    trackItems.push(item);
+    itemsByTrack.set(item.trackId, trackItems);
+  }
+
+  for (const [trackId, trackItems] of itemsByTrack) {
+    const laneEnds: number[] = [];
+
+    trackItems.sort(
+      (a, b) =>
+        a.visualStart - b.visualStart ||
+        a.visualEnd - b.visualEnd ||
+        a.start - b.start,
+    );
+
+    for (const item of trackItems) {
+      let lane = laneEnds.findIndex((laneEnd) => laneEnd <= item.visualStart);
+
+      if (lane === -1) {
+        lane = laneEnds.length;
+      }
+
+      laneEnds[lane] = item.visualEnd;
+      positions.push({
+        id: item.id,
+        lane,
+        leftPercent: item.leftPercent,
+        widthPercent: item.widthPercent,
+      });
+    }
+
+    laneCountByTrack[trackId] = Math.max(1, laneEnds.length);
+  }
+
   return {
+    canvasWidth,
     end: new Date(latest).toISOString(),
     laneCountByTrack,
     positions,

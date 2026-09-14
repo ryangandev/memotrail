@@ -112,9 +112,8 @@ export function TimelineWorkspace({
     () => new Map(layout.positions.map((position) => [position.id, position])),
     [layout.positions],
   );
-  const canvasWidth = Math.max(840, layout.yearMarkers.length * 112);
   const gridStyle: GridStyle = {
-    "--timeline-canvas-width": `${canvasWidth}px`,
+    "--timeline-canvas-width": `${layout.canvasWidth}px`,
   };
 
   return (
