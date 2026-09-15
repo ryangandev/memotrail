@@ -43,7 +43,7 @@
   min-height: 0;
   flex: 1;
   flex-direction: column;
-  margin-top: var(--mt-space-10);
+  margin-top: var(--mt-space-5);
   overflow-y: auto;
   scrollbar-width: thin;
 }

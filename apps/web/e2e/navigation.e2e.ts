@@ -132,7 +132,17 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       name: "Sidebar navigation",
     });
     const brand = shell.getByRole("link", { name: "MemoTrail", exact: true });
+    const homeLink = shell
+      .getByRole("navigation", { name: "Primary navigation" })
+      .getByRole("link", { name: "Home", exact: true });
     const capture = newEntryShortcut;
+    const brandBottom = await brand.evaluate(
+      (element) => element.getBoundingClientRect().bottom,
+    );
+    const homeTop = await homeLink.evaluate(
+      (element) => element.getBoundingClientRect().top,
+    );
+    expect(Math.round(homeTop - brandBottom)).toBe(20);
     const brandTop = await brand.evaluate(
       (element) => element.getBoundingClientRect().top,
     );
