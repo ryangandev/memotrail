@@ -609,9 +609,11 @@ export function CaptureComposer({
         onSubmit={handleSubmit}
       >
         <div className={styles.captureIntro}>
-          <span className={styles.captureSpark} aria-hidden="true">
-            <Icon name="sparkle" size={19} />
-          </span>
+          {variant === "page" ? (
+            <span className={styles.captureSpark} aria-hidden="true">
+              <Icon name="sparkle" size={19} />
+            </span>
+          ) : null}
           <div className={styles.captureFields}>
             <label
               className={styles.visuallyHidden}

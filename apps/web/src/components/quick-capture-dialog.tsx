@@ -11,12 +11,14 @@ export function QuickCaptureDialog({
   onOpen,
   open,
   ownerId,
+  triggerClassName,
 }: {
   idPrefix: string;
   onClose: () => void;
   onOpen: () => void;
   open: boolean;
   ownerId: string;
+  triggerClassName: string;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -59,12 +61,11 @@ export function QuickCaptureDialog({
         aria-keyshortcuts="Meta+J Control+J"
         aria-label="New entry"
         aria-haspopup="dialog"
-        className={styles.trigger}
+        className={triggerClassName}
         onClick={onOpen}
         type="button"
       >
         <Icon name="plus" size={17} />
-        <span>New entry</span>
         <kbd aria-hidden="true">⌘ J</kbd>
       </button>
 
@@ -82,7 +83,12 @@ export function QuickCaptureDialog({
           ref={dialogRef}
         >
           <header className={styles.dialogHeader}>
-            <h2 id={`${idPrefix}-heading`}>Quick Capture</h2>
+            <div className={styles.dialogTitle}>
+              <span className={styles.dialogMark} aria-hidden="true">
+                <Icon name="sparkle" size={15} />
+              </span>
+              <h2 id={`${idPrefix}-heading`}>What’s on your mind?</h2>
+            </div>
             <button
               aria-label="Close quick capture"
               className={styles.closeButton}

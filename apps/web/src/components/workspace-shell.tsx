@@ -183,7 +183,7 @@ export function WorkspaceShell({
           <div className={styles.topActions}>
             <SyncStatus ownerId={viewer.id} />
             <SearchShortcutButton
-              className={styles.searchButton}
+              className={styles.topActionButton}
               onOpen={openCommandPalette}
             />
             <QuickCaptureDialog
@@ -192,6 +192,7 @@ export function WorkspaceShell({
               onOpen={openQuickCapture}
               open={quickCaptureOpen}
               ownerId={viewer.id}
+              triggerClassName={styles.topActionButton}
             />
             <Link
               aria-current={activeDestination === "trash" ? "page" : undefined}

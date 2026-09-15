@@ -98,6 +98,32 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(searchShortcut).toContainText("⌘ K");
     await expect(searchShortcut).not.toContainText("Search your trail");
     await expect(newEntryShortcut).toContainText("⌘ J");
+    await expect(newEntryShortcut).not.toContainText("New entry");
+    const topActionStyle = async (button: typeof searchShortcut) =>
+      button.evaluate((element) => {
+        const style = getComputedStyle(element);
+        return {
+          backgroundColor: style.backgroundColor,
+          borderColor: style.borderColor,
+          boxShadow: style.boxShadow,
+          color: style.color,
+          height: style.height,
+        };
+      });
+    const searchActionStyle = await topActionStyle(searchShortcut);
+    expect(await topActionStyle(newEntryShortcut)).toEqual(searchActionStyle);
+    await newEntryShortcut.hover();
+    await expect
+      .poll(async () => (await topActionStyle(newEntryShortcut)).boxShadow)
+      .not.toBe(searchActionStyle.boxShadow);
+    await page.screenshot({
+      caret: "initial",
+      path: "/private/tmp/memotrail-topbar-action-hover.png",
+    });
+    await page.mouse.move(500, 500);
+    await expect
+      .poll(async () => (await topActionStyle(newEntryShortcut)).boxShadow)
+      .toBe(searchActionStyle.boxShadow);
     await expect(shell.getByText(email, { exact: true })).toHaveCount(0);
     await expect(
       shell
@@ -238,7 +264,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.keyboard.press("Meta+j");
 
     const quickCapture = page.getByRole("dialog", {
-      name: "Quick Capture",
+      name: "What’s on your mind?",
     });
     const quickCaptureForm = quickCapture.getByRole("form", {
       name: "Quick capture",
@@ -251,6 +277,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(quickCapture).toBeVisible();
     const dialogHeader = quickCapture.locator("header");
     await expect(dialogHeader).toHaveCSS("border-bottom-width", "0px");
+    await expect(dialogHeader.locator("svg")).toHaveCount(1);
     expect(
       await dialogHeader.evaluate(
         (element) => element.getBoundingClientRect().height,
@@ -258,13 +285,13 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     ).toBeLessThanOrEqual(56);
     await expect(
       quickCapture.getByRole("heading", {
-        name: "Quick Capture",
+        name: "What’s on your mind?",
         exact: true,
       }),
     ).toBeVisible();
     await expect(
       quickCapture.getByRole("heading", {
-        name: "Keep what is on your mind",
+        name: "Quick Capture",
         exact: true,
       }),
     ).toHaveCount(0);
@@ -281,6 +308,13 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     ).toHaveCount(0);
     await expect(entryText).toBeEnabled();
     await expect(entryText).toBeFocused();
+    const dialogLeft = await quickCapture.evaluate(
+      (element) => element.getBoundingClientRect().left,
+    );
+    const entryTextLeft = await entryText.evaluate(
+      (element) => element.getBoundingClientRect().left,
+    );
+    expect(Math.round(entryTextLeft - dialogLeft)).toBe(21);
     const entryTextStyle = await entryText.evaluate((element) => {
       const style = getComputedStyle(element);
       return {
