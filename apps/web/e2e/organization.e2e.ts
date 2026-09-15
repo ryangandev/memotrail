@@ -147,10 +147,24 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       return {
         background: style.backgroundColor,
         borderRadius: Number.parseFloat(style.borderRadius),
+        width: element.getBoundingClientRect().width,
       };
     });
     expect(tagSurface.background).not.toBe("rgba(0, 0, 0, 0)");
     expect(tagSurface.borderRadius).toBeGreaterThan(0);
+    const tagBadges = tagList.getByRole("article");
+    await expect(tagBadges).toHaveCount(3);
+    const badgeBoxes = await tagBadges.evaluateAll((elements) =>
+      elements.map((element) => {
+        const box = element.getBoundingClientRect();
+        return { height: box.height, width: box.width, y: box.y };
+      }),
+    );
+    expect(Math.abs(badgeBoxes[0].y - badgeBoxes[1].y)).toBeLessThanOrEqual(1);
+    expect(badgeBoxes.every((box) => box.height < 54)).toBe(true);
+    expect(badgeBoxes.every((box) => box.width < tagSurface.width / 2)).toBe(
+      true,
+    );
     const searchControlHeights = await Promise.all(
       [tagSearch.getByRole("textbox"), tagSearch.getByRole("button")].map(
         (control) =>
@@ -225,9 +239,16 @@ test("Collections and Tags are first-class and organize generic Timeline moments
 
     await page.goto("/tags");
     const travelRow = page.getByRole("article").filter({ hasText: "travel" });
-    await expect(travelRow).toContainText("Used by 1 Entry");
+    await expect(travelRow.getByLabel("1 Entry", { exact: true })).toHaveText(
+      "1",
+    );
     await travelRow.getByRole("button", { name: "Edit travel" }).click();
     const travelDialog = page.getByRole("dialog", { name: "travel" });
+    expect(
+      await travelDialog.evaluate(
+        (element) => element.closest("article") === null,
+      ),
+    ).toBe(true);
     await travelDialog
       .getByLabel("Destination tag")
       .selectOption({ label: "#journeys (0)" });
@@ -237,9 +258,21 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await expect(
       page.getByRole("heading", { name: "travel", exact: true }),
     ).toHaveCount(0);
+    const journeysRow = page
+      .getByRole("article")
+      .filter({ hasText: "journeys" });
+    await expect(journeysRow.getByLabel("1 Entry", { exact: true })).toHaveText(
+      "1",
+    );
+    await journeysRow.getByRole("link").click();
+    await expect(page).toHaveURL(/\/search\?tag=journeys$/);
     await expect(
-      page.getByRole("article").filter({ hasText: "journeys" }),
-    ).toContainText("Used by 1 Entry");
+      page.getByRole("combobox", { name: "Tag", exact: true }),
+    ).toHaveValue("journeys");
+    await expect(
+      page.getByRole("heading", { name: "Moved to Seattle", exact: true }),
+    ).toBeVisible();
+    await page.goto("/tags");
 
     const unusedRow = page.getByRole("article").filter({ hasText: "unused" });
     await unusedRow.getByRole("button", { name: "Edit unused" }).click();
