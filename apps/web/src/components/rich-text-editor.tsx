@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -211,13 +212,15 @@ function FormattingToolbar({
           : emptyFormatState,
     }) ?? emptyFormatState;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isLinkEditorOpen) linkInputRef.current?.focus();
   }, [isLinkEditorOpen]);
 
   const openLinkEditor = useCallback(() => {
     if (!editor) return;
-    setLinkValue((editor.getAttributes("link").href as string | undefined) ?? "");
+    setLinkValue(
+      (editor.getAttributes("link").href as string | undefined) ?? "",
+    );
     setIsLinkEditorOpen(true);
   }, [editor]);
 
@@ -360,7 +363,12 @@ function FormattingToolbar({
       />
 
       {isLinkEditorOpen ? (
-        <div className={styles.linkEditor} role="group" aria-label="Link editor">
+        <div
+          aria-label="Link editor"
+          className={styles.linkEditor}
+          data-escape-layer="link-editor"
+          role="group"
+        >
           <input
             aria-label="Link URL"
             onChange={(event) => setLinkValue(event.target.value)}
@@ -394,7 +402,11 @@ function FormattingToolbar({
           >
             Cancel
           </button>
-          <button disabled={!normalizedLink(linkValue)} onClick={applyLink} type="button">
+          <button
+            disabled={!normalizedLink(linkValue)}
+            onClick={applyLink}
+            type="button"
+          >
             Apply
           </button>
         </div>
@@ -476,16 +488,10 @@ function formattingShortcut(event: KeyboardEvent): FormattingShortcut | null {
   }
 
   if (!event.shiftKey && event.key.toLocaleLowerCase() === "k") return "link";
-  if (
-    event.shiftKey &&
-    (event.code === "Digit7" || event.key === "&")
-  ) {
+  if (event.shiftKey && (event.code === "Digit7" || event.key === "&")) {
     return "orderedList";
   }
-  if (
-    event.shiftKey &&
-    (event.code === "Digit8" || event.key === "*")
-  ) {
+  if (event.shiftKey && (event.code === "Digit8" || event.key === "*")) {
     return "bulletList";
   }
   return null;

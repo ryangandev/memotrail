@@ -72,14 +72,18 @@ type CaptureFeedback = {
 
 type VoiceCaptureState = "checking" | "idle" | "listening" | "stopping";
 
+export type NativePhotoPickerState = "canceled" | "opened" | "selected";
+
 const idleFeedback: CaptureFeedback = { isError: false, message: "" };
 
 export function CaptureComposer({
   idPrefix = "capture",
+  onNativePhotoPickerChange,
   ownerId,
   variant = "page",
 }: {
   idPrefix?: string;
+  onNativePhotoPickerChange?: (state: NativePhotoPickerState) => void;
   ownerId: string;
   variant?: "dialog" | "page";
 }) {
@@ -114,6 +118,18 @@ export function CaptureComposer({
   const voiceRequestedStopRef = useRef(false);
   const titleRef = useRef("");
   const occurrenceRef = useRef<OccurrenceDraft | null>(null);
+
+  useEffect(() => {
+    const input = photoInputRef.current;
+    if (!input || !onNativePhotoPickerChange) return;
+
+    function handlePhotoPickerCancel() {
+      onNativePhotoPickerChange?.("canceled");
+    }
+
+    input.addEventListener("cancel", handlePhotoPickerCancel);
+    return () => input.removeEventListener("cancel", handlePhotoPickerCancel);
+  }, [onNativePhotoPickerChange]);
 
   const replacePendingEntries = useCallback(
     (entries: QueuedInboxEntry[]) => {
@@ -467,6 +483,7 @@ export function CaptureComposer({
   }
 
   async function handlePhotoSelection(event: ChangeEvent<HTMLInputElement>) {
+    onNativePhotoPickerChange?.("selected");
     setVoiceFeedback(null);
     const selection = validateInboxPhotoFiles(
       Array.from(event.target.files ?? []),
@@ -735,7 +752,10 @@ export function CaptureComposer({
                 !isPhotoStorageAvailable ||
                 voiceState !== "idle"
               }
-              onClick={() => photoInputRef.current?.click()}
+              onClick={() => {
+                onNativePhotoPickerChange?.("opened");
+                photoInputRef.current?.click();
+              }}
               type="button"
             >
               <Icon name="photo" />

@@ -420,6 +420,31 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     ).toHaveCount(0);
     await expect(entryText).toBeEnabled();
     await expect(entryText).toBeFocused();
+
+    const fileChooserPromise = page.waitForEvent("filechooser");
+    await quickCapture
+      .getByRole("button", { name: "Add photos", exact: true })
+      .click();
+    await fileChooserPromise;
+    await page.keyboard.press("Escape");
+    await expect(quickCapture).toBeVisible();
+    await quickCapture.locator('input[type="file"]').dispatchEvent("cancel");
+    await expect(quickCapture).toBeVisible();
+
+    await entryText.focus();
+    await entryText.press("Meta+k");
+    const linkEditor = quickCapture.getByRole("group", {
+      name: "Link editor",
+      exact: true,
+    });
+    await expect(linkEditor).toBeVisible();
+    await expect(
+      linkEditor.getByLabel("Link URL", { exact: true }),
+    ).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(linkEditor).not.toBeVisible();
+    await expect(quickCapture).toBeVisible();
+
     await page.keyboard.press("Escape");
     await expect(quickCapture).not.toBeVisible();
     await page.keyboard.press("Meta+j");

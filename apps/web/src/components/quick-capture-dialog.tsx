@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
-import { CaptureComposer } from "@/components/capture-composer";
+import {
+  CaptureComposer,
+  type NativePhotoPickerState,
+} from "@/components/capture-composer";
 import { Icon } from "@/components/icon";
 import styles from "./quick-capture-dialog.module.css";
 
@@ -21,10 +24,33 @@ export function QuickCaptureDialog({
   triggerClassName: string;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const nativePhotoPickerOpenRef = useRef(false);
+  const suppressEscapeUntilRef = useRef(0);
   const close = useCallback(() => {
+    nativePhotoPickerOpenRef.current = false;
+    suppressEscapeUntilRef.current = 0;
     dialogRef.current?.close();
     onClose();
   }, [onClose]);
+  const handleNativePhotoPickerChange = useCallback(
+    (state: NativePhotoPickerState) => {
+      if (state === "opened") {
+        nativePhotoPickerOpenRef.current = true;
+        suppressEscapeUntilRef.current = 0;
+        return;
+      }
+
+      const wasOpen = nativePhotoPickerOpenRef.current;
+      nativePhotoPickerOpenRef.current = false;
+
+      if (state === "selected") {
+        suppressEscapeUntilRef.current = 0;
+      } else if (wasOpen) {
+        suppressEscapeUntilRef.current = performance.now() + 250;
+      }
+    },
+    [],
+  );
 
   useLayoutEffect(() => {
     const dialog = dialogRef.current;
@@ -61,13 +87,45 @@ export function QuickCaptureDialog({
 
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key !== "Escape") return;
+
+      if (
+        event.defaultPrevented ||
+        (event.target instanceof Element &&
+          event.target.closest("[data-escape-layer]"))
+      ) {
+        nativePhotoPickerOpenRef.current = false;
+        suppressEscapeUntilRef.current = 0;
+        return;
+      }
+
+      if (
+        nativePhotoPickerOpenRef.current ||
+        performance.now() < suppressEscapeUntilRef.current
+      ) {
+        nativePhotoPickerOpenRef.current = false;
+        suppressEscapeUntilRef.current = 0;
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
       event.preventDefault();
       event.stopPropagation();
       close();
     }
 
-    window.addEventListener("keydown", closeOnEscape, true);
-    return () => window.removeEventListener("keydown", closeOnEscape, true);
+    function handleWindowFocus() {
+      if (!nativePhotoPickerOpenRef.current) return;
+      nativePhotoPickerOpenRef.current = false;
+      suppressEscapeUntilRef.current = performance.now() + 250;
+    }
+
+    window.addEventListener("keydown", closeOnEscape);
+    window.addEventListener("focus", handleWindowFocus);
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape);
+      window.removeEventListener("focus", handleWindowFocus);
+    };
   }, [close, open]);
 
   return (
@@ -89,6 +147,7 @@ export function QuickCaptureDialog({
           aria-labelledby={`${idPrefix}-heading`}
           className={styles.dialog}
           onCancel={(event) => {
+            if (event.target !== event.currentTarget) return;
             event.preventDefault();
             close();
           }}
@@ -119,6 +178,7 @@ export function QuickCaptureDialog({
           <div className={styles.dialogBody}>
             <CaptureComposer
               idPrefix={idPrefix}
+              onNativePhotoPickerChange={handleNativePhotoPickerChange}
               ownerId={ownerId}
               variant="dialog"
             />
