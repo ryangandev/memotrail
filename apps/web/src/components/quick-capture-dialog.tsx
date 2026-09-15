@@ -82,10 +82,7 @@ export function QuickCaptureDialog({
           ref={dialogRef}
         >
           <header className={styles.dialogHeader}>
-            <div>
-              <p>Quick capture</p>
-              <h2 id={`${idPrefix}-heading`}>Keep what is on your mind</h2>
-            </div>
+            <h2 id={`${idPrefix}-heading`}>Quick Capture</h2>
             <button
               aria-label="Close quick capture"
               className={styles.closeButton}

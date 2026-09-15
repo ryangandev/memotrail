@@ -451,8 +451,16 @@
 }
 
 .dialogCaptureCard {
-  margin-top: var(--mt-space-6);
+  margin-top: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   box-shadow: none;
+}
+
+.dialogCaptureCard .captureIntro {
+  min-height: 220px;
+  padding: var(--mt-space-6) var(--mt-space-5);
 }
 
 .captureIntro {

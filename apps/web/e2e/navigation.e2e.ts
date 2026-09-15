@@ -234,16 +234,38 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await birthDatePrompt
       .getByRole("button", { name: "Not now", exact: true })
       .click();
+    await page.emulateMedia({ colorScheme: "dark" });
     await page.keyboard.press("Meta+j");
 
     const quickCapture = page.getByRole("dialog", {
-      name: "Keep what is on your mind",
+      name: "Quick Capture",
+    });
+    const quickCaptureForm = quickCapture.getByRole("form", {
+      name: "Quick capture",
+      exact: true,
     });
     const entryText = quickCapture.getByRole("textbox", {
       name: "Entry text",
       exact: true,
     });
     await expect(quickCapture).toBeVisible();
+    await expect(
+      quickCapture.getByRole("heading", {
+        name: "Quick Capture",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(
+      quickCapture.getByRole("heading", {
+        name: "Keep what is on your mind",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await expect(quickCaptureForm).toHaveCSS("border-width", "0px");
+    await expect(quickCaptureForm).toHaveCSS(
+      "background-color",
+      "rgba(0, 0, 0, 0)",
+    );
     await expect(
       quickCapture.getByRole("textbox", {
         name: "Entry title",
