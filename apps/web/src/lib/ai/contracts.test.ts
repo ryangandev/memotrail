@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { aiOriginAllowed, parseAIPreferences, formatAICost } from "./contracts";
+import {
+  aiOriginAllowed,
+  formatAICost,
+  parseAIPreferences,
+  simpleAIControlChecked,
+  updateSimpleAIPreferences,
+} from "./contracts";
 const prefs = {
   enabled: false,
   classification: true,
@@ -32,6 +38,41 @@ describe("AI controls", () => {
     expect(
       parseAIPreferences({ ...prefs, monthly_budget_micros: 0 }),
     ).not.toBeNull();
+  });
+  it("maps the simple organizing control onto both suggestion permissions", () => {
+    expect(
+      simpleAIControlChecked(
+        { ...prefs, classification: false, tagging: true },
+        "organizing",
+      ),
+    ).toBe(true);
+    expect(updateSimpleAIPreferences(prefs, "organizing", false)).toMatchObject(
+      {
+        classification: false,
+        tagging: false,
+      },
+    );
+  });
+  it("enables explicit AI actions without exposing backend permissions", () => {
+    expect(
+      updateSimpleAIPreferences(
+        {
+          ...prefs,
+          explore: false,
+          monthly_budget_micros: 0,
+          resurfacing: true,
+          search: false,
+        },
+        "enabled",
+        true,
+      ),
+    ).toMatchObject({
+      enabled: true,
+      explore: true,
+      monthly_budget_micros: 1_000_000,
+      resurfacing: false,
+      search: true,
+    });
   });
   it("reports sub-cent costs without rounding them to zero", () => {
     expect(formatAICost(29)).toBe("$0.000029");

@@ -58,7 +58,11 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 
 ## Capture and Inbox
 
-- Global capture starts with one flexible text field and may include a title, photos, voice-to-text, and a best-known date.
+- Global capture starts with one flexible writing field and may include photos, voice-to-text, and a best-known date.
+- New captures remain untitled until Inbox review or later editing adds a title.
+- The New Entry modal is a compact single-surface composer whose writing field grows with its content and does not expose native resize controls.
+- Quick Capture offers lightweight rich text for emphasis, links, lists, quotes, inline code, and code blocks without turning capture into a document editor.
+- Rich formatting never replaces the Entry's clean plaintext body, so search, AI, export, and clients that do not render formatting still receive readable writing.
 - The composer keeps a recoverable local draft.
 - Offline captures remain visible and retryable until synchronization is confirmed.
 - Voice capture produces editable text and never retains the original audio.
@@ -81,6 +85,7 @@ Photo metadata may be offered as a date or Place suggestion but is never adopted
 - People and Places are reusable entities linked to Entries, not alternate tags.
 - Inbox, Timeline, Home, Search, and Library are views or workflow states, not organization labels.
 - Collections and tags are created and managed from separate Library destinations without a second in-page switcher, and remain available in every Entry editor.
+- Collection and tag management opens in viewport-level dialogs. The Tags Library uses compact usage-count badges that open tag management, recent linked Entries, and a path to the complete filtered result set.
 - Renaming a Collection or tag preserves its identity and linked Entries.
 - Moving a Collection to Trash never deletes its Entries or photos.
 - A used tag must be merged into another tag or removed from its Entries before deletion, so organization is never silently lost.
@@ -99,8 +104,9 @@ Photo metadata may be offered as a date or Place suggestion but is never adopted
 - The original Entry is never changed by an AI answer.
 - `Explore with AI` creates a separate conversation attached to its source Entry.
 - `Save as Entry` creates an editable, independent Inbox Entry with a bidirectional source link.
-- AI features are individually disableable and manual capture, organization, browsing, and keyword search continue without them.
-- Photo analysis requires separate consent from text features.
+- AI defaults off, and manual capture, organization, browsing, and keyword search continue without it.
+- Web offers one master permission, one optional organizing-suggestions control, and separate photo understanding consent. AI Search and Explore run only after an explicit user action.
+- Photo understanding requires separate consent from text features.
 
 ## Timeline and Home
 
@@ -162,14 +168,16 @@ The data model preserves future Map capability, but Map UI is deferred.
 
 Soft Ledger is the visual direction: minimal, archival, modern, calm, and approachable.
 Both clients support light and dark appearance, share semantic design intent, and still follow native platform conventions where identical interaction would reduce usability.
+Web appearance is a per-browser choice between System, Light, and Dark; System remains the default and follows operating-system changes.
 
 Mobile uses Home, Inbox, Timeline, and Library as its primary destinations.
 Library contains Collections, First Times, Goals, Homes, Vehicles, Places, and People.
 Settings is reached from the profile control.
 
-Desktop uses a persistent sidebar with direct access to capture, search, the primary areas, Trash, and one Settings entry point separated from Library.
+Desktop uses a persistent sidebar for the primary areas, Trash, and one Settings entry point separated from Library.
+Compact icon-and-shortcut Search and New Entry controls share one translucent shape and motion treatment at the right of the persistent top bar on every primary screen, while a quiet warm accent distinguishes New Entry from neutral Search.
 A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry, People, and Place results in place, supports keyboard navigation, and keeps full-page Search with filters and AI as an explicit destination.
-A global capture control remains available from every primary screen.
+New Entry opens from the top bar or Command J.
 
 ## Privacy, deletion, and portability
 

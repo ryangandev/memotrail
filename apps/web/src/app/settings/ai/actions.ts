@@ -3,8 +3,7 @@ import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { parseAIPreferences, type AIPreferences } from "@/lib/ai/contracts";
 export async function saveAISettings(value: AIPreferences) {
   const preferences = parseAIPreferences(value);
-  if (!preferences)
-    return { error: "Choose a monthly budget between $0 and $100." };
+  if (!preferences) return { error: "These AI preferences are invalid." };
   const context = await getAuthenticatedContext();
   if (!context) return { error: "Sign in again to change AI settings." };
   const { data, error } = await context.client.rpc("save_ai_preferences", {

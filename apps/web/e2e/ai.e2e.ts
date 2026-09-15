@@ -68,34 +68,82 @@ test("AI consent, settings persistence, API authentication, and bounded connecti
       })),
     );
     await page.goto("/settings/ai");
+    const main = page.getByRole("main");
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
-    const enable = page.getByRole("checkbox", { name: /Enable AI assistance/ });
+    const enable = page.getByRole("switch", { name: "AI assistance" });
+    const organizing = page.getByRole("switch", {
+      name: "Suggestions while organizing",
+    });
+    const photoUnderstanding = page.getByRole("switch", {
+      name: "Understand photos",
+    });
     await expect(enable).not.toBeChecked();
+    await expect(organizing).toBeDisabled();
+    await expect(photoUnderstanding).toBeDisabled();
     await expect(
-      page.getByRole("checkbox", { name: /Photo analysis/ }),
-    ).not.toBeChecked();
+      main.getByText("Search and explore", { exact: true }),
+    ).toBeVisible();
+    await expect(main.getByText("When you ask", { exact: true })).toBeVisible();
+    await expect(page.getByRole("spinbutton")).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: /Save AI settings/ }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: /Test connection/ }),
+    ).toHaveCount(0);
+    await expect(page.getByText(/Claude Haiku/)).toHaveCount(0);
+    await expect(
+      page.getByText("AI-assisted memory resurfacing", { exact: true }),
+    ).toHaveCount(0);
     await enable.check();
-    await page
-      .getByRole("spinbutton", { name: "Monthly budget (USD)" })
-      .fill("0.03");
-    await page.getByRole("button", { name: "Save AI settings" }).click();
-    await expect(page.getByRole("status")).toContainText(
-      "saved across your devices",
-    );
-    const { data: workspace } = await client.rpc("ai_workspace");
+    await expect(page.getByRole("status")).toHaveText("AI assistance is on.");
+    await expect(organizing).toBeEnabled();
+    await expect(photoUnderstanding).toBeEnabled();
+    let { data: workspace } = await client.rpc("ai_workspace");
     expect(workspace.preferences.enabled).toBe(true);
-    expect(workspace.preferences.monthly_budget_micros).toBe(30000);
+    expect(workspace.preferences.search).toBe(true);
+    expect(workspace.preferences.explore).toBe(true);
+    expect(workspace.preferences.resurfacing).toBe(false);
+    expect(workspace.preferences.monthly_budget_micros).toBe(1_000_000);
     expect(workspace.preferences.photo_analysis).toBe(false);
+    await organizing.uncheck();
+    await expect(page.getByRole("status")).toHaveText(
+      "Organizing suggestions are off.",
+    );
+    ({ data: workspace } = await client.rpc("ai_workspace"));
+    expect(workspace.preferences.classification).toBe(false);
+    expect(workspace.preferences.tagging).toBe(false);
+    await organizing.check();
+    await expect(page.getByRole("status")).toHaveText(
+      "Organizing suggestions are on.",
+    );
+    await photoUnderstanding.check();
+    await expect(page.getByRole("status")).toHaveText(
+      "Photo understanding is on.",
+    );
+    ({ data: workspace } = await client.rpc("ai_workspace"));
+    expect(workspace.preferences.photo_analysis).toBe(true);
+    await photoUnderstanding.uncheck();
+    await expect(page.getByRole("status")).toHaveText(
+      "Photo understanding is off.",
+    );
+    await page.screenshot({
+      path: "/private/tmp/memotrail-ai-settings-simple-desktop.png",
+      fullPage: true,
+    });
     const crossOrigin = await page.request.post("/api/ai/connection", {
       headers: { Origin: "https://evil.test" },
     });
     expect(crossOrigin.status()).toBe(403);
     if (live) {
-      await page.getByRole("button", { name: "Test connection" }).click();
-      await expect(page.getByRole("status")).toContainText(
+      const connection = await page.request.post("/api/ai/connection", {
+        headers: { Origin: "http://127.0.0.1:3100" },
+        timeout: 35_000,
+      });
+      expect(connection.status()).toBe(200);
+      expect((await connection.json()).message).toContain(
         "Anthropic connection verified",
-        { timeout: 35000 },
       );
       const { data: usage } = await client.rpc("ai_workspace");
       expect(usage.recent_usage).toHaveLength(1);
@@ -188,8 +236,8 @@ test("AI consent, settings persistence, API authentication, and bounded connecti
       expect(bearer.status()).toBe(429);
     } else {
       await expect(
-        page.getByRole("button", { name: "Test connection" }),
-      ).toBeDisabled();
+        main.getByText("AI is not available on this server yet."),
+      ).toBeVisible();
       const response = await page.request.post("/api/ai/connection", {
         headers: { Origin: "http://127.0.0.1:3100" },
       });
@@ -209,13 +257,8 @@ test("AI consent, settings persistence, API authentication, and bounded connecti
       ),
     ).toBe(true);
     await enable.uncheck();
-    await page.getByRole("button", { name: "Save AI settings" }).click();
-    await expect(page.getByRole("status")).toContainText(
-      "saved across your devices",
-    );
-    await expect(
-      page.getByRole("button", { name: "Test connection" }),
-    ).toBeDisabled();
+    await expect(page.getByRole("status")).toHaveText("AI assistance is off.");
+    await expect(organizing).toBeDisabled();
     expect(errors).toEqual([]);
   } finally {
     const result = await admin.auth.admin.deleteUser(ownerID);

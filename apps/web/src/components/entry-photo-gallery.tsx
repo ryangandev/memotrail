@@ -9,6 +9,7 @@ import {
 } from "@/lib/data/inbox-photo";
 import { registerEntryAttachment } from "@/app/inbox/actions";
 import { trashEntryPhoto } from "@/app/history/media-actions";
+import { ProgressiveImage } from "@/components/progressive-image";
 import styles from "./entry-photo-gallery.module.css";
 
 /** Always current membership, never a historical snapshot's photo bytes. */
@@ -251,30 +252,20 @@ export function EntryPhotoGallery({
 }
 
 function PhotoImage({ photo }: { photo: EntryPhoto }) {
-  const [failed, setFailed] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  if (!photo.imageUrl || failed)
+  if (!photo.imageUrl)
     return (
       <span className={styles.unavailable} role="status">
         Photo unavailable. Close the viewer and refresh photos to retry.
       </span>
     );
   return (
-    <span className={styles.image}>
-      {!loaded && (
-        <span className={styles.loading} role="status">
-          Loading photo…
-        </span>
-      )}
-      {/* Private, expiring, already optimized media grants cannot use the public Next image cache. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={photo.imageUrl}
-        alt={photo.name}
-        onLoad={() => setLoaded(true)}
-        onError={() => setFailed(true)}
-      />
-    </span>
+    <ProgressiveImage
+      alt={photo.name}
+      className={styles.image}
+      fallback="Photo unavailable. Close the viewer and refresh photos to retry."
+      fit="contain"
+      src={photo.imageUrl}
+    />
   );
 }
 

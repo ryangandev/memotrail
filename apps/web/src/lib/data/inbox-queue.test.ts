@@ -10,6 +10,7 @@ import {
   isQueuedInboxEntry,
 } from "./inbox-queue";
 import { occurrencePrecisions, resolveOccurrenceDraft } from "./occurrence";
+import { createEntryRichText, plainTextDocument } from "./rich-text";
 
 describe("Precision-aware offline capture", () => {
   for (const precision of occurrencePrecisions)
@@ -87,6 +88,60 @@ function memoryStorage() {
 }
 
 describe("Inbox synchronization queue", () => {
+  it("keeps validated rich formatting beside the plaintext body", () => {
+    const storage = memoryStorage();
+    const bodyRich = createEntryRichText(
+      plainTextDocument("A thought worth keeping."),
+    );
+    const entry = queuedEntry({ bodyRich });
+
+    expect(enqueueInboxEntry(storage, "owner-a", entry)).toEqual([entry]);
+    expect(loadInboxQueue(storage, "owner-a")[0].bodyRich).toEqual(bodyRich);
+    expect(
+      parseInboxQueue(
+        JSON.stringify([{ ...entry, body: "A different body." }]),
+      ),
+    ).toEqual([]);
+  });
+
+  it("accepts Tiptap link attributes at the server boundary", () => {
+    const entry = queuedEntry({
+      bodyRich: {
+        document: {
+          type: "doc",
+          content: [
+            {
+              type: "paragraph",
+              content: [
+                {
+                  type: "text",
+                  marks: [
+                    {
+                      type: "link",
+                      attrs: {
+                        href: "https://example.com/memory",
+                        target: "_blank",
+                        rel: "noopener noreferrer",
+                        class: null,
+                        title: null,
+                      },
+                    },
+                    { type: "bold" },
+                  ],
+                  text: "A thought worth keeping.",
+                },
+              ],
+            },
+          ],
+        },
+        text: "A thought worth keeping.",
+        version: 1,
+      },
+    });
+
+    expect(isQueuedInboxEntry(entry)).toBe(true);
+  });
+
   it("keeps queued Entries isolated by MemoTrail user", () => {
     const storage = memoryStorage();
     const entry = queuedEntry();

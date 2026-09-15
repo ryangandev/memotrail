@@ -3,6 +3,7 @@ import styles from "@/app/collections/page.module.css";
 import { Icon } from "@/components/icon";
 import { OrganizationControl } from "@/components/organization-control";
 import { PageFrame } from "@/components/page-frame";
+import { ProgressiveImage } from "@/components/progressive-image";
 import type {
   CollectionEntry,
   CollectionSummary,
@@ -258,13 +259,12 @@ function CollectionEntryCard({ entry }: { entry: CollectionEntry }) {
       {cover ? (
         <div className={styles.entryCover}>
           {cover.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <ProgressiveImage
               alt={cover.originalFilename ?? "Entry photo"}
               src={cover.imageUrl}
             />
           ) : (
-            <span>
+            <span className={styles.entryCoverFallback}>
               <Icon name="photo" size={22} />
               Private photo
             </span>

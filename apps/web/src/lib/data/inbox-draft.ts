@@ -1,5 +1,6 @@
 import { entryBodyLimit, entryTitleLimit } from "./inbox-input";
 import { occurrencePrecisions, type OccurrenceDraft } from "./occurrence";
+import { isEntryRichText, type EntryRichText } from "./rich-text";
 
 export type InboxDraft = {
   body: string;
@@ -7,6 +8,7 @@ export type InboxDraft = {
   title: string;
   updatedAt: string;
   occurrence?: OccurrenceDraft | null;
+  bodyRich?: EntryRichText | null;
   version: 2 | 3;
 };
 
@@ -30,7 +32,10 @@ export function loadInboxDraft(
 export function persistInboxDraft(
   storage: DraftStorage,
   ownerId: string,
-  values: Pick<InboxDraft, "body" | "occurredAt" | "title" | "occurrence">,
+  values: Pick<
+    InboxDraft,
+    "body" | "bodyRich" | "occurredAt" | "title" | "occurrence"
+  >,
 ) {
   const hasContent = Boolean(values.title || values.body || values.occurrence);
 
@@ -74,6 +79,7 @@ export function parseInboxDraft(value: string | null): InboxDraft | null {
       updatedAt?: unknown;
       version?: unknown;
       occurrence?: unknown;
+      bodyRich?: unknown;
     };
 
     if (
@@ -96,6 +102,14 @@ export function parseInboxDraft(value: string | null): InboxDraft | null {
     )
       return null;
 
+    if (
+      draft.bodyRich !== undefined &&
+      draft.bodyRich !== null &&
+      !isEntryRichText(draft.bodyRich, draft.body)
+    ) {
+      return null;
+    }
+
     const occurredAt = draft.version === 1 ? null : draft.occurredAt;
 
     if (
@@ -111,6 +125,9 @@ export function parseInboxDraft(value: string | null): InboxDraft | null {
       title: draft.title,
       updatedAt: draft.updatedAt,
       version: 2,
+      ...(draft.bodyRich === undefined
+        ? {}
+        : { bodyRich: draft.bodyRich as EntryRichText | null }),
       ...(draft.version === 3
         ? {
             version: 3 as const,

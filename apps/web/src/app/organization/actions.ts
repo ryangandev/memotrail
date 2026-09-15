@@ -5,9 +5,17 @@ import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
   validOrganizationInput,
   type OrganizationInput,
+  type TagEntryPreviewResult,
 } from "@/lib/data/organization";
+import { getTagEntryPreviews } from "@/lib/data/search";
 
 type TagIdentity = { id: string; revision: number };
+
+export async function loadTagEntryPreviews(
+  tagName: string,
+): Promise<TagEntryPreviewResult> {
+  return getTagEntryPreviews(tagName);
+}
 
 export async function saveOrganization(
   input: OrganizationInput,

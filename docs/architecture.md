@@ -1,6 +1,6 @@
 # MemoTrail Architecture
 
-Last reviewed: 2026-09-14.
+Last reviewed: 2026-09-15.
 
 ## System map
 
@@ -30,7 +30,7 @@ Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/Me
 | Request                                                     | Web                                                                                                                                 | iOS                                                                                   | Shared data and tests                                                            |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | Authentication or environment                               | `app/auth`, `lib/auth`, `lib/supabase`, `src/proxy.ts`                                                                              | `Features/Authentication`, `App/AppConfiguration.swift`                               | foundation and security migrations, `0001_rls.test.sql`                          |
-| Capture, Inbox, drafts, dates, or offline sync              | `app/inbox`, capture and occurrence components, `lib/data/inbox*`, `lib/data/occurrence.ts`                                         | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests               |
+| Capture, Inbox, drafts, dates, rich text, or offline sync   | `app/inbox`, capture, rich-text and occurrence components, `lib/data/inbox*`, `lib/data/rich-text.ts`, `lib/data/occurrence.ts`     | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests               |
 | Search, AI suggestions, or exploration                      | `app/search`, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`                                                        | `Features/Search`, `Features/AI`                                                      | AI, evidence, exploration, and search migrations and tests                       |
 | Photos, metadata, or export                                 | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                               | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, photo-history, cleanup, and export migrations and tests                   |
 | Timeline, Homes, Vehicles, Goals, or First Times            | matching `app` route, workspace component, and `lib/data` module                                                                    | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                            |
@@ -46,10 +46,13 @@ Pair it with the test file carrying the same feature name.
 - Row Level Security is the final owner-authorization boundary for exposed data.
 - Web cookies and native bearer sessions identify the same Supabase user.
 - Entries are canonical content; specialized tables add facts without duplicating writing.
+- `entries.body` remains canonical plaintext. Optional validated rich content is versioned under `entries.metadata.body_rich`, carries the exact matching plaintext, and is ignored when another client changes the body without updating the rich document.
+- Web capture uses `components/rich-text-editor.tsx` for the reusable headless editor surface, with page, dialog, and form variants instead of separate editors. Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while server synchronization writes plaintext and metadata together.
 - Collections, tags, People, Places, and Entry links are owner-scoped reusable relationships.
 - Entry Type owns specialized structure, Collections own curated cross-Type chapters, tags own lightweight cross-Type descriptors, and Timeline tracks own only generic moment placement.
 - Web Entry editors reuse `components/entry-organization-editor.tsx`; their save RPC must atomically preserve Collection and tag memberships with the canonical Entry mutation.
 - Used tags merge atomically into another stable tag identity. Only unused tags can be deleted directly.
+- Tag management loads at most five linked Entry previews on demand through a server action, so the Tags page stays lightweight and never creates a per-tag data waterfall during its initial render.
 - Multi-record changes use authenticated RPCs so content, relationships, history, and specialized facts commit atomically.
 - Clients send the revision they read. A stale revision surfaces a conflict instead of silently merging or overwriting another device.
 - Important mutations snapshot prior state. Restoring history creates another revision rather than deleting subsequent history.
@@ -93,7 +96,8 @@ Pair it with the test file carrying the same feature name.
 - The Next.js server is the only AI provider boundary.
 - Native requests reuse the user's Supabase bearer session and never receive provider credentials.
 - Anthropic is the initial text provider behind a replaceable server interface.
-- AI defaults off and is controlled per feature; photo analysis has separate consent.
+- AI defaults off. Web maps its user-facing master, organizing, and photo controls onto the more granular shared preference contract; photo understanding retains separate consent.
+- AI provider diagnostics, model identifiers, token prices, and editable spending caps stay out of ordinary Web settings. Existing per-user and server-wide budget enforcement remains active behind a simple monthly activity summary.
 - Budget is reserved before a request and reconciled from actual usage.
 - Interrupted provider outcomes do not trigger automatic paid retries.
 - Suggestion and search outputs are schema-validated and remain separate from original writing until explicit user action.
@@ -120,6 +124,9 @@ Pair it with the test file carrying the same feature name.
 - Authenticated Web routes use `components/page-frame.tsx` for outer width, centering, responsive gutters, and vertical page rhythm.
 - Page frame variants are semantic: `compact` is 880px for forms and focused reading, `standard` is 960px for lists and search, `wide` is 1080px for dashboards and card grids, and `canvas` is 1180px for dense spatial views.
 - New route pages choose the narrowest variant that fits their content and keep internal grid, dialog, and visualization breakpoints in page-specific CSS instead of redefining the outer page geometry.
+- Web photo surfaces reuse `components/progressive-image.tsx` for a reserved skeleton, decode fade-in, failure fallback, and reduced-motion behavior while private expiring media URLs continue to bypass the public Next image cache.
+- Quick Capture restores local text and occurrence state before paint, keeps the loading and editor geometries equal, and loads IndexedDB photo drafts separately so editor initialization cannot move the open dialog.
+- Web appearance uses the existing light and dark semantic tokens, stores a per-browser System, Light, or Dark choice in a same-site cookie, and lets the server root layout apply explicit themes before first paint without adding a client-side flash.
 
 ## Runtime and validation
 

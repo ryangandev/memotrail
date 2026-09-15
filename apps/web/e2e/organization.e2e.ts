@@ -91,6 +91,33 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await expect(
       page.getByRole("heading", { name: "City chapters" }),
     ).toBeVisible();
+    const cityCollectionCard = page
+      .getByRole("article")
+      .filter({ hasText: "City chapters" });
+    await cityCollectionCard
+      .getByRole("button", { name: "Edit City chapters" })
+      .click();
+    const editCollectionDialog = page.getByRole("dialog", {
+      name: "City chapters",
+    });
+    await expect(editCollectionDialog).toBeVisible();
+    expect(
+      await editCollectionDialog.evaluate(
+        (element) => element.closest("article") === null,
+      ),
+    ).toBe(true);
+    const collectionOverlay = editCollectionDialog.locator("..");
+    const overlayBox = await collectionOverlay.boundingBox();
+    expect(overlayBox).toMatchObject({
+      height: page.viewportSize()?.height,
+      width: page.viewportSize()?.width,
+      x: 0,
+      y: 0,
+    });
+    await editCollectionDialog
+      .getByRole("button", { name: "Close organization editor" })
+      .click();
+    await expect(editCollectionDialog).not.toBeVisible();
 
     await page
       .getByRole("navigation", { name: "Primary navigation" })
@@ -107,9 +134,70 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       await tagDialog.getByRole("button", { name: "Create Tag" }).click();
       await expect(tagDialog).not.toBeVisible();
       await expect(
-        page.getByRole("heading", { name, exact: true }),
+        page.getByRole("button", {
+          name: `Manage tag ${name}, used by 0 Entries`,
+        }),
       ).toBeVisible();
     }
+
+    const tagSearch = page.getByRole("search", { name: "Find tags" });
+    const tagList = page.getByRole("region", { name: "Tags" });
+    await expect(tagSearch).toBeVisible();
+    await expect(tagList).toBeVisible();
+    const searchSurface = await tagSearch.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        background: style.backgroundColor,
+        borderWidth: Number.parseFloat(style.borderWidth),
+      };
+    });
+    expect(searchSurface.background).toBe("rgba(0, 0, 0, 0)");
+    expect(searchSurface.borderWidth).toBe(0);
+    const tagSurface = await tagList.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        background: style.backgroundColor,
+        borderWidth: Number.parseFloat(style.borderWidth),
+        width: element.getBoundingClientRect().width,
+      };
+    });
+    expect(tagSurface.background).toBe("rgba(0, 0, 0, 0)");
+    expect(tagSurface.borderWidth).toBe(0);
+    await expect(tagList.getByText("3 tags", { exact: true })).toBeVisible();
+    await expect(
+      tagList.getByText("Select a tag to browse the Entries using it"),
+    ).toHaveCount(0);
+    const tagBadges = tagList.getByRole("article");
+    await expect(tagBadges).toHaveCount(3);
+    await expect(tagBadges.first().getByRole("button")).toHaveAccessibleName(
+      /Manage tag .+, used by 0 Entries/,
+    );
+    await expect(tagBadges.first().getByRole("button")).toHaveCount(1);
+    const badgeBoxes = await tagBadges.evaluateAll((elements) =>
+      elements.map((element) => {
+        const box = element.getBoundingClientRect();
+        return { height: box.height, width: box.width, y: box.y };
+      }),
+    );
+    expect(Math.abs(badgeBoxes[0].y - badgeBoxes[1].y)).toBeLessThanOrEqual(1);
+    expect(badgeBoxes.every((box) => box.height < 54)).toBe(true);
+    expect(badgeBoxes.every((box) => box.width < tagSurface.width / 2)).toBe(
+      true,
+    );
+    const searchControlHeights = await Promise.all(
+      [tagSearch.getByRole("textbox"), tagSearch.getByRole("button")].map(
+        (control) =>
+          control.evaluate((element) => element.getBoundingClientRect().height),
+      ),
+    );
+    expect(
+      Math.abs(searchControlHeights[0] - searchControlHeights[1]),
+    ).toBeLessThan(1);
+    await page.screenshot({
+      caret: "initial",
+      fullPage: true,
+      path: "/private/tmp/memotrail-tags-consistent.png",
+    });
 
     await page.goto("/timeline");
     const birthDatePrompt = page.getByRole("dialog", {
@@ -170,9 +258,39 @@ test("Collections and Tags are first-class and organize generic Timeline moments
 
     await page.goto("/tags");
     const travelRow = page.getByRole("article").filter({ hasText: "travel" });
-    await expect(travelRow).toContainText("Used by 1 Entry");
-    await travelRow.getByRole("button", { name: "Edit travel" }).click();
+    await expect(travelRow.getByLabel("1 Entry", { exact: true })).toHaveText(
+      "1",
+    );
+    await travelRow
+      .getByRole("button", { name: "Manage tag travel, used by 1 Entry" })
+      .click();
     const travelDialog = page.getByRole("dialog", { name: "travel" });
+    expect(
+      await travelDialog.evaluate(
+        (element) => element.closest("article") === null,
+      ),
+    ).toBe(true);
+    await expect(
+      travelDialog.getByText("Used by 1 Entry", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      travelDialog.getByRole("link", { name: "Moved to Seattle" }),
+    ).toBeVisible();
+    await expect(
+      travelDialog.getByRole("link", {
+        name: "View all Entries for this tag",
+      }),
+    ).toBeVisible();
+    await page.screenshot({
+      caret: "initial",
+      path: "/private/tmp/memotrail-tag-editor.png",
+    });
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.screenshot({
+      caret: "initial",
+      path: "/private/tmp/memotrail-tag-editor-dark.png",
+    });
+    await page.emulateMedia({ colorScheme: "light" });
     await travelDialog
       .getByLabel("Destination tag")
       .selectOption({ label: "#journeys (0)" });
@@ -180,14 +298,36 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await travelDialog.getByRole("button", { name: "Merge tag" }).click();
     await expect(travelDialog).not.toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "travel", exact: true }),
+      page.getByRole("button", {
+        name: "Manage tag travel, used by 1 Entry",
+      }),
     ).toHaveCount(0);
+    const journeysRow = page
+      .getByRole("article")
+      .filter({ hasText: "journeys" });
+    await expect(journeysRow.getByLabel("1 Entry", { exact: true })).toHaveText(
+      "1",
+    );
+    await journeysRow
+      .getByRole("button", { name: "Manage tag journeys, used by 1 Entry" })
+      .click();
+    const journeysDialog = page.getByRole("dialog", { name: "journeys" });
+    await journeysDialog
+      .getByRole("link", { name: "View all Entries for this tag" })
+      .click();
+    await expect(page).toHaveURL(/\/search\?tag=journeys$/);
     await expect(
-      page.getByRole("article").filter({ hasText: "journeys" }),
-    ).toContainText("Used by 1 Entry");
+      page.getByRole("combobox", { name: "Tag", exact: true }),
+    ).toHaveValue("journeys");
+    await expect(
+      page.getByRole("heading", { name: "Moved to Seattle", exact: true }),
+    ).toBeVisible();
+    await page.goto("/tags");
 
     const unusedRow = page.getByRole("article").filter({ hasText: "unused" });
-    await unusedRow.getByRole("button", { name: "Edit unused" }).click();
+    await unusedRow
+      .getByRole("button", { name: "Manage tag unused, used by 0 Entries" })
+      .click();
     const unusedDialog = page.getByRole("dialog", { name: "unused" });
     page.once("dialog", (dialog) => dialog.accept());
     await unusedDialog
@@ -195,7 +335,9 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       .click();
     await expect(unusedDialog).not.toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "unused", exact: true }),
+      page.getByRole("button", {
+        name: "Manage tag unused, used by 0 Entries",
+      }),
     ).toHaveCount(0);
 
     await page.goto("/settings/organization?kind=tag");

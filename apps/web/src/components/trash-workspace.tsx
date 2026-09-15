@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,6 +12,7 @@ import styles from "@/app/trash/page.module.css";
 import { Icon } from "@/components/icon";
 import { EmptyTrashControl } from "@/components/empty-trash-control";
 import { PageFrame } from "@/components/page-frame";
+import { ProgressiveImage } from "@/components/progressive-image";
 import type {
   TrashItem,
   TrashWorkspace as TrashWorkspaceData,
@@ -183,12 +183,10 @@ export function TrashWorkspace({
                 >
                   {item.imageUrl ? (
                     <div className={styles.itemImage}>
-                      <Image
+                      <ProgressiveImage
                         alt=""
-                        fill
                         sizes="(max-width: 720px) 88px, 124px"
                         src={item.imageUrl}
-                        unoptimized
                       />
                     </div>
                   ) : (

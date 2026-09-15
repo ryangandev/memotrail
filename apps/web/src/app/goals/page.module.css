@@ -45,7 +45,7 @@
   object-fit: cover;
 }
 
-.goalCover span {
+.photoCount {
   position: absolute;
   right: var(--mt-space-3);
   bottom: var(--mt-space-3);

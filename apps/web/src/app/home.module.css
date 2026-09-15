@@ -208,10 +208,9 @@
   min-height: 210px;
 }
 
-.memoryCard > img {
+.memoryImage {
   width: 100%;
   height: 100%;
-  object-fit: cover;
 }
 
 .memoryCard > div {
@@ -293,10 +292,9 @@
   grid-template-columns: 1fr;
 }
 
-.recentCard > img {
+.recentImage {
   width: 100%;
   height: 100%;
-  object-fit: cover;
 }
 
 .recentCard > div {
@@ -454,7 +452,7 @@
     grid-template-columns: 1fr;
   }
 
-  .memoryCard > img {
+  .memoryImage {
     height: 240px;
   }
 
@@ -490,11 +488,11 @@
     grid-template-columns: 1fr;
   }
 
-  .recentCard > img {
+  .recentImage {
     height: 180px;
   }
 
-  .memoryCard > img {
+  .memoryImage {
     height: 210px;
   }
 

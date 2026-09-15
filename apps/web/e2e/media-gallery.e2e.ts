@@ -123,12 +123,40 @@ test("Current Entry photos are browsable without changing history", async ({
       exact: true,
     });
     await expect(gallery).toBeVisible();
+    let releaseImages: () => void = () => undefined;
+    const imageGate = new Promise<void>((resolve) => {
+      releaseImages = resolve;
+    });
+    await page.route("**/api/media/image?*", async (route) => {
+      await imageGate;
+      await route.continue();
+    });
     await gallery
       .getByRole("button", { name: "Show photos", exact: true })
       .click();
-    await expect(
-      gallery.getByRole("button", { name: "Open Photo 1.jpg", exact: true }),
-    ).toBeVisible();
+    const firstPhoto = gallery.getByRole("button", {
+      name: "Open Photo 1.jpg",
+      exact: true,
+    });
+    await expect(firstPhoto).toBeVisible();
+    const progressiveImage = firstPhoto.locator("[data-image-status]");
+    await expect(progressiveImage).toHaveAttribute(
+      "data-image-status",
+      "loading",
+    );
+    await expect(progressiveImage).toHaveAttribute("aria-busy", "true");
+    await page.screenshot({
+      caret: "initial",
+      fullPage: true,
+      path: "/private/tmp/memotrail-image-loading.png",
+    });
+    releaseImages();
+    await expect(progressiveImage).toHaveAttribute(
+      "data-image-status",
+      "loaded",
+    );
+    await expect(progressiveImage).toHaveAttribute("aria-busy", "false");
+    await page.unroute("**/api/media/image?*");
     await gallery
       .getByRole("button", { name: "Open Photo 1.jpg", exact: true })
       .click();

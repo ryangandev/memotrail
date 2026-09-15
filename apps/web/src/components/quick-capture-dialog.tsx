@@ -1,64 +1,111 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { CaptureComposer } from "@/components/capture-composer";
 import { Icon } from "@/components/icon";
 import styles from "./quick-capture-dialog.module.css";
 
 export function QuickCaptureDialog({
-  compact = false,
   idPrefix,
+  onClose,
+  onOpen,
+  open,
   ownerId,
+  triggerClassName,
 }: {
-  compact?: boolean;
   idPrefix: string;
+  onClose: () => void;
+  onOpen: () => void;
+  open: boolean;
   ownerId: string;
+  triggerClassName: string;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const close = useCallback(() => {
+    dialogRef.current?.close();
+    onClose();
+  }, [onClose]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const dialog = dialogRef.current;
 
-    if (isOpen && dialog && !dialog.open) {
+    if (open && dialog && !dialog.open) {
       dialog.showModal();
     }
-  }, [isOpen]);
+  }, [open]);
 
-  function close() {
-    dialogRef.current?.close();
-    setIsOpen(false);
-  }
+  useEffect(() => {
+    function handleShortcut(event: KeyboardEvent) {
+      if (
+        event.defaultPrevented ||
+        event.key.toLocaleLowerCase() !== "j" ||
+        (!event.metaKey && !event.ctrlKey) ||
+        event.shiftKey ||
+        event.altKey ||
+        event.repeat ||
+        isEditableTarget(event.target)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      onOpen();
+    }
+
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, [onOpen]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      close();
+    }
+
+    window.addEventListener("keydown", closeOnEscape, true);
+    return () => window.removeEventListener("keydown", closeOnEscape, true);
+  }, [close, open]);
 
   return (
     <>
       <button
+        aria-keyshortcuts="Meta+J Control+J"
+        aria-label="New entry"
         aria-haspopup="dialog"
-        className={`${styles.trigger} ${compact ? styles.compactTrigger : ""}`}
-        onClick={() => setIsOpen(true)}
+        className={triggerClassName}
+        onClick={onOpen}
         type="button"
       >
         <Icon name="plus" size={17} />
-        <span>New entry</span>
+        <kbd aria-hidden="true">⌘ J</kbd>
       </button>
 
-      {isOpen ? (
+      {open ? (
         <dialog
           aria-labelledby={`${idPrefix}-heading`}
           className={styles.dialog}
-          onCancel={() => setIsOpen(false)}
+          onCancel={(event) => {
+            event.preventDefault();
+            close();
+          }}
           onClick={(event) => {
             if (event.target === event.currentTarget) {
               close();
             }
           }}
-          onClose={() => setIsOpen(false)}
+          onClose={onClose}
           ref={dialogRef}
         >
           <header className={styles.dialogHeader}>
-            <div>
-              <p>Quick capture</p>
-              <h2 id={`${idPrefix}-heading`}>Keep what is on your mind</h2>
+            <div className={styles.dialogTitle}>
+              <span className={styles.dialogMark} aria-hidden="true">
+                <Icon name="sparkle" size={15} />
+              </span>
+              <h2 id={`${idPrefix}-heading`}>What’s on your mind?</h2>
             </div>
             <button
               aria-label="Close quick capture"
@@ -79,5 +126,12 @@ export function QuickCaptureDialog({
         </dialog>
       ) : null}
     </>
+  );
+}
+
+function isEditableTarget(target: EventTarget | null) {
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable || Boolean(target.closest("input, textarea")))
   );
 }

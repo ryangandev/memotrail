@@ -19,6 +19,7 @@ import styles from "@/app/first-times/page.module.css";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
+import { ProgressiveImage } from "@/components/progressive-image";
 import {
   firstTimeBodyLimit,
   firstTimePhotoLimit,
@@ -175,10 +176,9 @@ function FirstTimeCard({
       {cover ? (
         <div className={styles.coverPhoto}>
           {cover.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img alt="" src={cover.imageUrl} />
+            <ProgressiveImage alt="" src={cover.imageUrl} />
           ) : (
-            <span>
+            <span className={styles.coverFallback}>
               <Icon name="photo" size={22} />
               Private photo
             </span>
@@ -561,8 +561,7 @@ export function FirstTimeEditor({
                   {existingPhotos.map((photo) => (
                     <div className={styles.photoTile} key={photo.id}>
                       {photo.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <ProgressiveImage
                           alt={photo.originalFilename ?? "First Time photo"}
                           src={photo.imageUrl}
                         />
@@ -678,9 +677,8 @@ function PendingPhoto({
 
   return (
     <div className={`${styles.photoTile} ${styles.pendingPhoto}`}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img alt={`Selected ${file.name}`} src={previewUrl} />
-      <span>New</span>
+      <ProgressiveImage alt={`Selected ${file.name}`} src={previewUrl} />
+      <span className={styles.pendingBadge}>New</span>
       <button
         aria-label={`Remove selected ${file.name}`}
         onClick={onRemove}

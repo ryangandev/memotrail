@@ -1,8 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { parseBirthDate, parseProfileTimezone } from "@/lib/data/profile-input";
+import {
+  storedThemePreference,
+  THEME_COOKIE_NAME,
+  type ThemePreference,
+} from "@/lib/theme";
 
 export type BirthDateActionResult = {
   birthDate?: string | null;
@@ -15,6 +21,21 @@ export type TimezoneActionResult = {
   status: "error" | "saved";
   timezone?: string;
 };
+
+export async function saveThemePreference(
+  value: ThemePreference,
+): Promise<ThemePreference> {
+  const preference = storedThemePreference(value);
+  const cookieStore = await cookies();
+  cookieStore.set(THEME_COOKIE_NAME, preference, {
+    httpOnly: true,
+    maxAge: 60 * 60 * 24 * 365,
+    path: "/",
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
+  return preference;
+}
 
 export async function saveBirthDate(
   value: string,

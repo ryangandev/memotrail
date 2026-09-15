@@ -178,7 +178,7 @@
   object-fit: cover;
 }
 
-.coverPhoto > span {
+.coverFallback {
   display: flex;
   height: 100%;
   align-items: center;
@@ -505,7 +505,7 @@
   backdrop-filter: blur(6px);
 }
 
-.pendingPhoto > span {
+.pendingBadge {
   position: absolute;
   bottom: 6px;
   left: 6px;

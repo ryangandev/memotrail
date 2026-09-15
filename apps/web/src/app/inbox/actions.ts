@@ -18,6 +18,10 @@ import {
   parseInboxReviewInput,
   type InboxReviewInput,
 } from "@/lib/data/inbox-review";
+import {
+  metadataWithEntryRichText,
+  parseEntryRichTextJson,
+} from "@/lib/data/rich-text";
 
 export type SyncInboxEntryResult = {
   message: string;
@@ -77,8 +81,19 @@ export async function registerEntryAttachment(
 
 export async function syncInboxEntry(
   input: QueuedInboxEntry,
+  bodyRichJson: string | null = null,
 ): Promise<SyncInboxEntryResult> {
   if (!isQueuedInboxEntry(input)) {
+    return {
+      message: "This queued Entry is invalid and needs your attention.",
+      status: "retry",
+    };
+  }
+
+  const bodyRich = parseEntryRichTextJson(bodyRichJson, input.body);
+  const entry: QueuedInboxEntry = { ...input, bodyRich };
+
+  if (bodyRichJson !== null && bodyRich === null) {
     return {
       message: "This queued Entry is invalid and needs your attention.",
       status: "retry",
@@ -94,23 +109,24 @@ export async function syncInboxEntry(
     };
   }
 
-  const occurrence = queuedOccurrence(input);
+  const occurrence = queuedOccurrence(entry);
   const { error } = await context.client.from("entries").insert({
-    body: input.body,
-    client_id: `web:${input.id}`,
+    body: entry.body,
+    client_id: `web:${entry.id}`,
     date_precision: occurrence.datePrecision,
     occurred_end: occurrence.occurredEnd,
     occurred_label: occurrence.occurredLabel,
     entry_type: "standard",
-    id: input.id,
+    id: entry.id,
     inbox_status: "unreviewed",
-    occurred_start: input.occurredAt,
-    occurred_timezone: input.occurredTimezone,
+    occurred_start: entry.occurredAt,
+    occurred_timezone: entry.occurredTimezone,
     owner_id: context.userId,
-    title: input.title,
+    metadata: metadataWithEntryRichText(bodyRich),
+    title: entry.title,
   });
 
-  if (error && !(await entryAlreadyExists(input.id, context))) {
+  if (error && !(await entryAlreadyExists(entry.id, context))) {
     return {
       message:
         "Saved on this device. MemoTrail will retry when you are online.",
@@ -120,7 +136,7 @@ export async function syncInboxEntry(
 
   revalidatePath("/");
 
-  if (input.attachments.length === 0) await finishInboxCapture(input.id);
+  if (entry.attachments.length === 0) await finishInboxCapture(entry.id);
   return {
     message: "Saved to Inbox.",
     status: "synced",

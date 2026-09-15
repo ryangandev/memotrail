@@ -76,23 +76,12 @@
 .tile .unavailable {
   height: 160px;
 }
-.image img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  border-radius: var(--mt-radius-small);
-}
-.loading,
 .unavailable {
   display: grid;
   place-items: center;
   text-align: center;
   font-size: 13px;
   color: var(--mt-color-ink-muted);
-}
-.loading {
-  position: absolute;
-  inset: 0;
 }
 .unavailable {
   width: 100%;

@@ -7,6 +7,7 @@ import {
   persistInboxDraft,
   type DraftStorage,
 } from "./inbox-draft";
+import { createEntryRichText, plainTextDocument } from "./rich-text";
 
 class MemoryStorage implements DraftStorage {
   private values = new Map<string, string>();
@@ -92,6 +93,26 @@ describe("Inbox draft persistence", () => {
     expect(loadInboxDraft(storage, "owner-a")?.body).toBe("A private thought");
     expect(loadInboxDraft(storage, "owner-b")).toBeNull();
     expect(inboxDraftKey("owner/a")).not.toBe(inboxDraftKey("owner-a"));
+  });
+
+  it("restores rich formatting only while it matches the draft text", () => {
+    const storage = new MemoryStorage();
+    const bodyRich = createEntryRichText(plainTextDocument("Formatted draft"));
+
+    persistInboxDraft(storage, "owner", {
+      body: "Formatted draft",
+      bodyRich,
+      occurredAt: null,
+      title: "",
+    });
+    expect(loadInboxDraft(storage, "owner")?.bodyRich).toEqual(bodyRich);
+
+    const stored = JSON.parse(storage.getItem(inboxDraftKey("owner"))!);
+    storage.setItem(
+      inboxDraftKey("owner"),
+      JSON.stringify({ ...stored, body: "Changed elsewhere" }),
+    );
+    expect(loadInboxDraft(storage, "owner")).toBeNull();
   });
 
   it("preserves whitespace and clears empty drafts", () => {

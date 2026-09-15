@@ -22,6 +22,7 @@ import common from "@/app/homes/page.module.css";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
+import { ProgressiveImage } from "@/components/progressive-image";
 import {
   firstTimePhotoLimit,
   firstTimePhotoSizeLimit,
@@ -249,10 +250,11 @@ function GoalCard({
     >
       {cover?.imageUrl ? (
         <div className={styles.goalCover}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img alt="" src={cover.imageUrl} />
+          <ProgressiveImage alt="" src={cover.imageUrl} />
           {goal.attachments.length > 1 ? (
-            <span>{goal.attachments.length} photos</span>
+            <span className={styles.photoCount}>
+              {goal.attachments.length} photos
+            </span>
           ) : null}
         </div>
       ) : null}
@@ -728,8 +730,7 @@ function GoalEditor({
                   {existingPhotos.map((photo) => (
                     <div className={common.photoTile} key={photo.id}>
                       {photo.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <ProgressiveImage
                           alt={photo.originalFilename ?? "Goal photo"}
                           src={photo.imageUrl}
                         />
@@ -962,9 +963,8 @@ function PendingPhoto({
   useEffect(() => () => URL.revokeObjectURL(previewUrl), [previewUrl]);
   return (
     <div className={`${common.photoTile} ${common.pendingPhoto}`}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img alt={`Selected ${file.name}`} src={previewUrl} />
-      <span>New</span>
+      <ProgressiveImage alt={`Selected ${file.name}`} src={previewUrl} />
+      <span className={common.pendingBadge}>New</span>
       <button
         aria-label={`Remove selected ${file.name}`}
         onClick={onRemove}

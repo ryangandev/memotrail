@@ -41,8 +41,10 @@ export default async function TagsPage({
         <OrganizationControl items={workspace.items} kind="tag" />
       </header>
 
-      <form className={styles.search}>
-        <label htmlFor="tag-search">Find a tag</label>
+      <form aria-label="Find tags" className={styles.search} role="search">
+        <label className={styles.visuallyHidden} htmlFor="tag-search">
+          Find a tag
+        </label>
         <div>
           <input
             defaultValue={query}
@@ -82,30 +84,33 @@ export default async function TagsPage({
         <section className={styles.tagList} aria-label="Tags">
           <div className={styles.summary}>
             <span>{countLabel(workspace.totalCount, "tag")}</span>
-            <span>Names apply everywhere they are used</span>
           </div>
-          {workspace.items.map((item) => (
-            <article className={styles.tagRow} key={item.id}>
-              <Link href={`/search?tag=${encodeURIComponent(item.name)}`}>
-                <span className={styles.tagMark}>#</span>
-                <div>
-                  <h2>{item.name}</h2>
-                  <p>
-                    {item.entry_count
-                      ? `Used by ${countLabel(item.entry_count, "Entry")}`
-                      : "Not used by an Entry yet"}
-                  </p>
-                </div>
-                <span className={styles.openLabel}>Browse Entries</span>
-                <Icon name="chevron" size={16} />
-              </Link>
-              <OrganizationControl
-                item={item}
-                items={workspace.items}
-                kind="tag"
-              />
-            </article>
-          ))}
+          <div className={styles.tagCloud}>
+            {workspace.items.map((item) => (
+              <article className={styles.tagBadge} key={item.id}>
+                <OrganizationControl
+                  item={item}
+                  items={workspace.items}
+                  kind="tag"
+                  trigger={
+                    <>
+                      <span className={styles.tagMark} aria-hidden="true">
+                        #
+                      </span>
+                      <span className={styles.tagName}>{item.name}</span>
+                      <span
+                        aria-label={countLabel(item.entry_count, "Entry")}
+                        className={styles.tagCount}
+                      >
+                        {item.entry_count}
+                      </span>
+                    </>
+                  }
+                  triggerClassName={styles.tagTrigger}
+                />
+              </article>
+            ))}
+          </div>
         </section>
       )}
 

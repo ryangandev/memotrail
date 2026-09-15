@@ -27,6 +27,56 @@ export type AIWorkspace = {
   month_charged_micros: number;
   recent_usage: AIUsage[];
 };
+
+export const defaultAIMonthlyBudgetMicros = 1_000_000;
+
+export const simpleAIControls = [
+  "enabled",
+  "organizing",
+  "photo_analysis",
+] as const;
+export type SimpleAIControl = (typeof simpleAIControls)[number];
+
+export function simpleAIControlChecked(
+  preferences: AIPreferences,
+  control: SimpleAIControl,
+) {
+  if (control === "organizing") {
+    return preferences.classification || preferences.tagging;
+  }
+  return preferences[control];
+}
+
+export function updateSimpleAIPreferences(
+  preferences: AIPreferences,
+  control: SimpleAIControl,
+  checked: boolean,
+): AIPreferences {
+  const normalized = { ...preferences, resurfacing: false };
+
+  if (control === "enabled") {
+    return {
+      ...normalized,
+      enabled: checked,
+      explore: checked ? true : normalized.explore,
+      monthly_budget_micros:
+        checked && normalized.monthly_budget_micros === 0
+          ? defaultAIMonthlyBudgetMicros
+          : normalized.monthly_budget_micros,
+      search: checked ? true : normalized.search,
+    };
+  }
+
+  if (control === "organizing") {
+    return {
+      ...normalized,
+      classification: checked,
+      tagging: checked,
+    };
+  }
+
+  return { ...normalized, photo_analysis: checked };
+}
 export const featureLabels: Record<AIFeature, string> = {
   classification: "Title, Type, Collection, and date suggestions",
   tagging: "Tag suggestions",

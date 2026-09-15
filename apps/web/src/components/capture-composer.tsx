@@ -4,6 +4,7 @@ import {
   type ChangeEvent,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type FormEvent,
@@ -16,6 +17,8 @@ import {
   type SyncInboxEntryResult,
 } from "@/app/inbox/actions";
 import { Icon } from "@/components/icon";
+import { ProgressiveImage } from "@/components/progressive-image";
+import { RichTextEditor } from "@/components/rich-text-editor";
 import {
   clearInboxDraft,
   loadInboxDraft,
@@ -28,11 +31,7 @@ import {
   resolveOccurrenceDraft,
   type OccurrenceDraft,
 } from "@/lib/data/occurrence";
-import {
-  entryBodyLimit,
-  entryTitleLimit,
-  parseInboxEntryValues,
-} from "@/lib/data/inbox-input";
+import { entryBodyLimit, parseInboxEntryValues } from "@/lib/data/inbox-input";
 import {
   createFirstTimeObjectPath,
   type FirstTimeAttachmentInput,
@@ -63,6 +62,7 @@ import {
   type BrowserSpeechRecognition,
 } from "@/lib/data/voice-transcript";
 import { createClient } from "@/lib/supabase/client";
+import type { EntryRichText } from "@/lib/data/rich-text";
 import styles from "@/app/page.module.css";
 
 type CaptureFeedback = {
@@ -86,6 +86,7 @@ export function CaptureComposer({
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [bodyRich, setBodyRich] = useState<EntryRichText | null>(null);
   const [occurrence, setOccurrence] = useState<OccurrenceDraft | null>(null);
   const [isLocalStateReady, setIsLocalStateReady] = useState(false);
   const [hasLocalDraft, setHasLocalDraft] = useState(false);
@@ -93,6 +94,7 @@ export function CaptureComposer({
   const [isSyncing, setIsSyncing] = useState(false);
   const [feedback, setFeedback] = useState<CaptureFeedback>(idleFeedback);
   const [photos, setPhotos] = useState<InboxPhotoDraft[]>([]);
+  const [isPhotoStateReady, setIsPhotoStateReady] = useState(false);
   const [isPhotoStorageAvailable, setIsPhotoStorageAvailable] = useState(true);
   const [pendingEntries, setPendingEntries] = useState<QueuedInboxEntry[]>([]);
   const [isVoiceSupported, setIsVoiceSupported] = useState<boolean | null>(
@@ -138,7 +140,11 @@ export function CaptureComposer({
 
     for (const entry of [...pendingEntriesRef.current]) {
       try {
-        latestResult = await syncInboxEntry(entry);
+        const { bodyRich: queuedBodyRich, ...syncInput } = entry;
+        latestResult = await syncInboxEntry(
+          syncInput,
+          queuedBodyRich ? JSON.stringify(queuedBodyRich) : null,
+        );
       } catch {
         latestResult = {
           message:
@@ -203,63 +209,67 @@ export function CaptureComposer({
     }
   }, [ownerId, replacePendingEntries, router]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const draft = loadInboxDraft(window.localStorage, ownerId);
     const queue = loadInboxQueue(window.localStorage, ownerId);
     let isCanceled = false;
 
     queueMicrotask(() => {
-      void (async () => {
-        let storedPhotos: InboxPhotoDraft[] = [];
+      if (isCanceled) return;
 
+      const savedOccurrence =
+        draft?.occurrence ??
+        (draft?.occurredAt
+          ? occurrenceDraft({
+              datePrecision: "exact",
+              occurredAt: new Date(draft.occurredAt).toISOString(),
+              occurredEnd: null,
+              occurredLabel: null,
+              occurredTimezone:
+                Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+            })
+          : null);
+
+      setTitle(draft?.title ?? "");
+      setBody(draft?.body ?? "");
+      setBodyRich(draft?.bodyRich ?? null);
+      setOccurrence(savedOccurrence);
+      titleRef.current = draft?.title ?? "";
+      occurrenceRef.current = savedOccurrence;
+      setHasLocalDraft(Boolean(draft));
+      replacePendingEntries(queue);
+      setIsLocalStateReady(true);
+
+      if (queue.length > 0 && navigator.onLine) {
+        void synchronizeQueue();
+      }
+
+      void (async () => {
         try {
-          storedPhotos = await loadInboxPhotoDrafts(ownerId);
+          const storedPhotos = await loadInboxPhotoDrafts(ownerId);
+          if (isCanceled) return;
+
+          const queuedPhotoIds = new Set(
+            queue.flatMap((entry) =>
+              entry.attachments.map((attachment) => attachment.id),
+            ),
+          );
+          const draftPhotos = storedPhotos.filter(
+            (photo) => !queuedPhotoIds.has(photo.id),
+          );
+
+          setPhotos(draftPhotos);
+          setHasLocalDraft(Boolean(draft) || draftPhotos.length > 0);
         } catch {
+          if (isCanceled) return;
           setIsPhotoStorageAvailable(false);
           setFeedback({
             isError: true,
             message:
               "Photo drafts are unavailable in this browser. Text capture still works.",
           });
-        }
-
-        if (isCanceled) {
-          return;
-        }
-
-        const queuedPhotoIds = new Set(
-          queue.flatMap((entry) =>
-            entry.attachments.map((attachment) => attachment.id),
-          ),
-        );
-        const draftPhotos = storedPhotos.filter(
-          (photo) => !queuedPhotoIds.has(photo.id),
-        );
-
-        setTitle(draft?.title ?? "");
-        setBody(draft?.body ?? "");
-        const savedOccurrence =
-          draft?.occurrence ??
-          (draft?.occurredAt
-            ? occurrenceDraft({
-                datePrecision: "exact",
-                occurredAt: new Date(draft.occurredAt).toISOString(),
-                occurredEnd: null,
-                occurredLabel: null,
-                occurredTimezone:
-                  Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
-              })
-            : null);
-        setOccurrence(savedOccurrence);
-        titleRef.current = draft?.title ?? "";
-        occurrenceRef.current = savedOccurrence;
-        setPhotos(draftPhotos);
-        setHasLocalDraft(Boolean(draft) || draftPhotos.length > 0);
-        replacePendingEntries(queue);
-        setIsLocalStateReady(true);
-
-        if (queue.length > 0 && navigator.onLine) {
-          void synchronizeQueue();
+        } finally {
+          if (!isCanceled) setIsPhotoStateReady(true);
         }
       })();
     });
@@ -306,15 +316,18 @@ export function CaptureComposer({
     nextBody: string,
     nextOccurrence: OccurrenceDraft | null,
     preserveVoiceFeedback = false,
+    nextBodyRich: EntryRichText | null = nextBody === body ? bodyRich : null,
   ) {
     titleRef.current = nextTitle;
     occurrenceRef.current = nextOccurrence;
     setTitle(nextTitle);
     setBody(nextBody);
+    setBodyRich(nextBodyRich);
     setOccurrence(nextOccurrence);
     setHasLocalDraft(
       persistInboxDraft(window.localStorage, ownerId, {
         body: nextBody,
+        bodyRich: nextBodyRich,
         occurredAt: null,
         occurrence: nextOccurrence,
         title: nextTitle,
@@ -546,6 +559,7 @@ export function CaptureComposer({
       ...parsedDate.value!,
       queuedAt,
       title: parsedInput.data.title,
+      bodyRich: bodyRich?.text === parsedInput.data.body ? bodyRich : null,
       version: 3,
     };
     const nextQueue = enqueueInboxEntry(window.localStorage, ownerId, entry);
@@ -564,6 +578,7 @@ export function CaptureComposer({
     clearInboxDraft(window.localStorage, ownerId);
     setTitle("");
     setBody("");
+    setBodyRich(null);
     setOccurrence(null);
     titleRef.current = "";
     occurrenceRef.current = null;
@@ -593,49 +608,37 @@ export function CaptureComposer({
         aria-label="Quick capture"
         onSubmit={handleSubmit}
       >
+        {variant === "page" ? (
+          <header className={styles.captureComposerHeader}>
+            <span className={styles.captureSpark} aria-hidden="true">
+              <Icon name="sparkle" size={17} />
+            </span>
+            <h2>What’s on your mind?</h2>
+          </header>
+        ) : null}
         <div className={styles.captureIntro}>
-          <span className={styles.captureSpark} aria-hidden="true">
-            <Icon name="sparkle" size={19} />
-          </span>
           <div className={styles.captureFields}>
-            <label
-              className={styles.visuallyHidden}
-              htmlFor={`${idPrefix}-title`}
-            >
-              Entry title
-            </label>
-            <input
-              autoComplete="off"
-              className={styles.captureTitle}
-              disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
-              id={`${idPrefix}-title`}
-              maxLength={entryTitleLimit}
-              name="title"
-              onChange={(event) =>
-                updateDraft(event.target.value, body, occurrence)
-              }
-              placeholder="What is worth keeping?"
-              value={title}
-            />
-            <label
-              className={styles.visuallyHidden}
-              htmlFor={`${idPrefix}-body`}
-            >
-              Entry text
-            </label>
-            <textarea
-              className={styles.captureBody}
-              disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
-              id={`${idPrefix}-body`}
-              maxLength={entryBodyLimit}
-              name="body"
-              onChange={(event) =>
-                updateDraft(title, event.target.value, occurrence)
-              }
-              placeholder="A thought, a first, something learned, or whatever is on your mind."
-              rows={4}
-              value={body}
-            />
+            {isLocalStateReady ? (
+              <RichTextEditor
+                autoFocus={variant === "dialog"}
+                disabled={isSaving || voiceState !== "idle"}
+                label="Entry text"
+                maxLength={entryBodyLimit}
+                onChange={(value) =>
+                  updateDraft(title, value.text, occurrence, false, value)
+                }
+                placeholder="What is on your mind?"
+                richText={bodyRich}
+                text={body}
+                variant={variant}
+              />
+            ) : (
+              <div
+                aria-label="Preparing writing space"
+                className={styles.captureEditorLoading}
+                role="status"
+              />
+            )}
           </div>
         </div>
         {occurrence ? (
@@ -678,7 +681,7 @@ export function CaptureComposer({
             {voiceFeedback.message}
           </p>
         ) : null}
-        <div className={styles.captureActions}>
+        <div className={styles.captureActions} data-capture-actions>
           <div>
             <button
               aria-pressed={Boolean(occurrence)}
@@ -728,6 +731,7 @@ export function CaptureComposer({
               disabled={
                 isSaving ||
                 !isLocalStateReady ||
+                !isPhotoStateReady ||
                 !isPhotoStorageAvailable ||
                 voiceState !== "idle"
               }
@@ -745,6 +749,7 @@ export function CaptureComposer({
               disabled={
                 isSaving ||
                 !isLocalStateReady ||
+                !isPhotoStateReady ||
                 !isPhotoStorageAvailable ||
                 voiceState !== "idle"
               }
@@ -771,6 +776,7 @@ export function CaptureComposer({
                 isSaving ||
                 isSyncing ||
                 !isLocalStateReady ||
+                !isPhotoStateReady ||
                 voiceState !== "idle"
               }
               type="submit"
@@ -843,8 +849,7 @@ function CapturePhoto({
 
   return (
     <div className={styles.capturePhoto}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img alt={`Selected ${photo.file.name}`} src={previewUrl} />
+      <ProgressiveImage alt={`Selected ${photo.file.name}`} src={previewUrl} />
       <button
         aria-label={`Remove selected ${photo.file.name}`}
         onClick={onRemove}

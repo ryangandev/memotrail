@@ -37,12 +37,14 @@ export function SyncStatus({ ownerId }: { ownerId: string }) {
     };
   }, [ownerId]);
 
+  if (!pendingCount) {
+    return null;
+  }
+
   return (
-    <span
-      className={`${styles.syncStatus} ${pendingCount ? styles.syncPending : ""}`}
-    >
+    <span aria-live="polite" className={styles.syncStatus} role="status">
       <span />
-      {pendingCount ? `${pendingCount} pending` : "Saved"}
+      {pendingCount} pending
     </span>
   );
 }
