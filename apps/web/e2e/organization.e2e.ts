@@ -91,6 +91,33 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await expect(
       page.getByRole("heading", { name: "City chapters" }),
     ).toBeVisible();
+    const cityCollectionCard = page
+      .getByRole("article")
+      .filter({ hasText: "City chapters" });
+    await cityCollectionCard
+      .getByRole("button", { name: "Edit City chapters" })
+      .click();
+    const editCollectionDialog = page.getByRole("dialog", {
+      name: "City chapters",
+    });
+    await expect(editCollectionDialog).toBeVisible();
+    expect(
+      await editCollectionDialog.evaluate(
+        (element) => element.closest("article") === null,
+      ),
+    ).toBe(true);
+    const collectionOverlay = editCollectionDialog.locator("..");
+    const overlayBox = await collectionOverlay.boundingBox();
+    expect(overlayBox).toMatchObject({
+      height: page.viewportSize()?.height,
+      width: page.viewportSize()?.width,
+      x: 0,
+      y: 0,
+    });
+    await editCollectionDialog
+      .getByRole("button", { name: "Close organization editor" })
+      .click();
+    await expect(editCollectionDialog).not.toBeVisible();
 
     await page
       .getByRole("navigation", { name: "Primary navigation" })

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import {
   deleteUnusedTag,
   mergeTags,
@@ -123,157 +124,163 @@ export function OrganizationControl({
         {!item ? `New ${label}` : null}
       </button>
 
-      {open ? (
-        <div
-          className={styles.backdrop}
-          onMouseDown={(event) => {
-            if (event.currentTarget === event.target && !busy) setOpen(false);
-          }}
-        >
-          <section
-            aria-labelledby={`organization-control-${item?.id ?? kind}`}
-            aria-modal="true"
-            className={styles.dialog}
-            role="dialog"
-          >
-            <header>
-              <div>
-                <p>{item ? `Edit ${label}` : `New ${label}`}</p>
-                <h2 id={`organization-control-${item?.id ?? kind}`}>
-                  {item?.name ?? `Create a ${label}`}
-                </h2>
-              </div>
-              <button
-                aria-label="Close organization editor"
-                disabled={busy}
-                onClick={() => setOpen(false)}
-                type="button"
+      {open
+        ? createPortal(
+            <div
+              className={styles.backdrop}
+              data-organization-overlay
+              onMouseDown={(event) => {
+                if (event.currentTarget === event.target && !busy)
+                  setOpen(false);
+              }}
+            >
+              <section
+                aria-labelledby={`organization-control-${item?.id ?? kind}`}
+                aria-modal="true"
+                className={styles.dialog}
+                role="dialog"
               >
-                <Icon name="close" size={20} />
-              </button>
-            </header>
-
-            <form onSubmit={submit}>
-              <fieldset disabled={busy}>
-                <label>
-                  <span>Name *</span>
-                  <input
-                    autoFocus
-                    maxLength={kind === "tag" ? 60 : 80}
-                    onChange={(event) => setName(event.target.value)}
-                    required
-                    value={name}
-                  />
-                </label>
-                {kind === "collection" ? (
-                  <label>
-                    <span>Display order *</span>
-                    <input
-                      max={1000000}
-                      min={-1000000}
-                      onChange={(event) => setOrder(event.target.value)}
-                      required
-                      step={1}
-                      type="number"
-                      value={order}
-                    />
-                  </label>
-                ) : null}
-              </fieldset>
-              {item?.system_key === "bucket_list" ? (
-                <p className={styles.helper}>
-                  This is your Bucket List Collection. Renaming it preserves
-                  Goal milestone behavior.
-                </p>
-              ) : null}
-              {message ? (
-                <p className={styles.message} role="alert">
-                  {message}
-                </p>
-              ) : null}
-              <footer>
-                <div>
-                  {item && kind === "collection" ? (
-                    <button
-                      className={styles.danger}
-                      disabled={busy}
-                      onClick={() => void remove()}
-                      type="button"
-                    >
-                      Move to Trash
-                    </button>
-                  ) : null}
-                  {item && kind === "tag" && item.entry_count === 0 ? (
-                    <button
-                      className={styles.danger}
-                      disabled={busy}
-                      onClick={() => void remove()}
-                      type="button"
-                    >
-                      Delete unused tag
-                    </button>
-                  ) : null}
-                </div>
-                <div>
+                <header>
+                  <div>
+                    <p>{item ? `Edit ${label}` : `New ${label}`}</p>
+                    <h2 id={`organization-control-${item?.id ?? kind}`}>
+                      {item?.name ?? `Create a ${label}`}
+                    </h2>
+                  </div>
                   <button
-                    className={styles.cancel}
+                    aria-label="Close organization editor"
                     disabled={busy}
                     onClick={() => setOpen(false)}
                     type="button"
                   >
-                    Cancel
+                    <Icon name="close" size={20} />
                   </button>
-                  <button
-                    className={styles.save}
-                    disabled={busy || !validOrganizationInput(input)}
-                    type="submit"
-                  >
-                    {busy
-                      ? "Saving..."
-                      : item
-                        ? "Save changes"
-                        : `Create ${label}`}
-                  </button>
-                </div>
-              </footer>
-            </form>
+                </header>
 
-            {item && kind === "tag" && item.entry_count > 0 ? (
-              <div className={styles.mergePanel}>
-                <div>
-                  <strong>Merge this tag</strong>
-                  <p>
-                    This tag is used by {countLabel(item.entry_count, "Entry")}.
-                    Merge it to preserve every assignment.
-                  </p>
-                </div>
-                <label>
-                  <span>Destination tag</span>
-                  <select
-                    disabled={busy || mergeTargets.length === 0}
-                    onChange={(event) => setTargetId(event.target.value)}
-                    value={targetId}
-                  >
-                    <option value="">Choose a tag</option>
-                    {mergeTargets.map((candidate) => (
-                      <option key={candidate.id} value={candidate.id}>
-                        #{candidate.name} ({candidate.entry_count})
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button
-                  disabled={busy || !targetId}
-                  onClick={() => void merge()}
-                  type="button"
-                >
-                  Merge tag
-                </button>
-              </div>
-            ) : null}
-          </section>
-        </div>
-      ) : null}
+                <form onSubmit={submit}>
+                  <fieldset disabled={busy}>
+                    <label>
+                      <span>Name *</span>
+                      <input
+                        autoFocus
+                        maxLength={kind === "tag" ? 60 : 80}
+                        onChange={(event) => setName(event.target.value)}
+                        required
+                        value={name}
+                      />
+                    </label>
+                    {kind === "collection" ? (
+                      <label>
+                        <span>Display order *</span>
+                        <input
+                          max={1000000}
+                          min={-1000000}
+                          onChange={(event) => setOrder(event.target.value)}
+                          required
+                          step={1}
+                          type="number"
+                          value={order}
+                        />
+                      </label>
+                    ) : null}
+                  </fieldset>
+                  {item?.system_key === "bucket_list" ? (
+                    <p className={styles.helper}>
+                      This is your Bucket List Collection. Renaming it preserves
+                      Goal milestone behavior.
+                    </p>
+                  ) : null}
+                  {message ? (
+                    <p className={styles.message} role="alert">
+                      {message}
+                    </p>
+                  ) : null}
+                  <footer>
+                    <div>
+                      {item && kind === "collection" ? (
+                        <button
+                          className={styles.danger}
+                          disabled={busy}
+                          onClick={() => void remove()}
+                          type="button"
+                        >
+                          Move to Trash
+                        </button>
+                      ) : null}
+                      {item && kind === "tag" && item.entry_count === 0 ? (
+                        <button
+                          className={styles.danger}
+                          disabled={busy}
+                          onClick={() => void remove()}
+                          type="button"
+                        >
+                          Delete unused tag
+                        </button>
+                      ) : null}
+                    </div>
+                    <div>
+                      <button
+                        className={styles.cancel}
+                        disabled={busy}
+                        onClick={() => setOpen(false)}
+                        type="button"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className={styles.save}
+                        disabled={busy || !validOrganizationInput(input)}
+                        type="submit"
+                      >
+                        {busy
+                          ? "Saving..."
+                          : item
+                            ? "Save changes"
+                            : `Create ${label}`}
+                      </button>
+                    </div>
+                  </footer>
+                </form>
+
+                {item && kind === "tag" && item.entry_count > 0 ? (
+                  <div className={styles.mergePanel}>
+                    <div>
+                      <strong>Merge this tag</strong>
+                      <p>
+                        This tag is used by{" "}
+                        {countLabel(item.entry_count, "Entry")}. Merge it to
+                        preserve every assignment.
+                      </p>
+                    </div>
+                    <label>
+                      <span>Destination tag</span>
+                      <select
+                        disabled={busy || mergeTargets.length === 0}
+                        onChange={(event) => setTargetId(event.target.value)}
+                        value={targetId}
+                      >
+                        <option value="">Choose a tag</option>
+                        {mergeTargets.map((candidate) => (
+                          <option key={candidate.id} value={candidate.id}>
+                            #{candidate.name} ({candidate.entry_count})
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <button
+                      disabled={busy || !targetId}
+                      onClick={() => void merge()}
+                      type="button"
+                    >
+                      Merge tag
+                    </button>
+                  </div>
+                ) : null}
+              </section>
+            </div>,
+            document.body,
+          )
+        : null}
     </>
   );
 }
