@@ -174,7 +174,7 @@ Library contains Collections, First Times, Goals, Homes, Vehicles, Places, and P
 Settings is reached from the profile control.
 
 Desktop uses a persistent sidebar for the primary areas, Trash, and one Settings entry point separated from Library.
-Compact icon-and-shortcut Search and New Entry controls share one translucent hover treatment at the right of the persistent top bar on every primary screen.
+Compact icon-and-shortcut Search and New Entry controls share one translucent shape and motion treatment at the right of the persistent top bar on every primary screen, while a quiet warm accent distinguishes New Entry from neutral Search.
 A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry, People, and Place results in place, supports keyboard navigation, and keeps full-page Search with filters and AI as an explicit destination.
 New Entry opens from the top bar or Command J.
 

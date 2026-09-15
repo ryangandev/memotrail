@@ -192,7 +192,7 @@ export function WorkspaceShell({
               onOpen={openQuickCapture}
               open={quickCaptureOpen}
               ownerId={viewer.id}
-              triggerClassName={styles.topActionButton}
+              triggerClassName={`${styles.topActionButton} ${styles.newEntryTopAction}`}
             />
             <Link
               aria-current={activeDestination === "trash" ? "page" : undefined}

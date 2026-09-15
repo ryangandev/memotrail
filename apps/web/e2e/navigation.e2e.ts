@@ -130,17 +130,29 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
         return {
           backgroundColor: style.backgroundColor,
           borderColor: style.borderColor,
+          borderRadius: style.borderRadius,
           boxShadow: style.boxShadow,
           color: style.color,
           height: style.height,
         };
       });
     const searchActionStyle = await topActionStyle(searchShortcut);
-    expect(await topActionStyle(newEntryShortcut)).toEqual(searchActionStyle);
+    const newEntryActionStyle = await topActionStyle(newEntryShortcut);
+    expect(newEntryActionStyle.height).toBe(searchActionStyle.height);
+    expect(newEntryActionStyle.borderRadius).toBe(
+      searchActionStyle.borderRadius,
+    );
+    expect(newEntryActionStyle.backgroundColor).not.toBe(
+      searchActionStyle.backgroundColor,
+    );
+    expect(newEntryActionStyle.borderColor).not.toBe(
+      searchActionStyle.borderColor,
+    );
+    expect(newEntryActionStyle.color).not.toBe(searchActionStyle.color);
     await newEntryShortcut.hover();
     await expect
       .poll(async () => (await topActionStyle(newEntryShortcut)).boxShadow)
-      .not.toBe(searchActionStyle.boxShadow);
+      .not.toBe(newEntryActionStyle.boxShadow);
     await page.screenshot({
       caret: "initial",
       path: "/private/tmp/memotrail-topbar-action-hover.png",
@@ -148,7 +160,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.mouse.move(500, 500);
     await expect
       .poll(async () => (await topActionStyle(newEntryShortcut)).boxShadow)
-      .toBe(searchActionStyle.boxShadow);
+      .toBe(newEntryActionStyle.boxShadow);
     await expect(shell.getByText(email, { exact: true })).toHaveCount(0);
     await expect(
       shell
