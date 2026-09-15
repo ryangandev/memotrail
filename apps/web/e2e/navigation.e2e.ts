@@ -420,6 +420,12 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     ).toHaveCount(0);
     await expect(entryText).toBeEnabled();
     await expect(entryText).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(quickCapture).not.toBeVisible();
+    await page.keyboard.press("Meta+j");
+    await expect(quickCapture).toBeVisible();
+    await expect(entryText).toBeFocused();
+    await page.waitForTimeout(250);
     const dialogLeft = await quickCapture.evaluate(
       (element) => element.getBoundingClientRect().left,
     );

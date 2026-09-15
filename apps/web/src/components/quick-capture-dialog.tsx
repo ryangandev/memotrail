@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { CaptureComposer } from "@/components/capture-composer";
 import { Icon } from "@/components/icon";
 import styles from "./quick-capture-dialog.module.css";
@@ -21,6 +21,10 @@ export function QuickCaptureDialog({
   triggerClassName: string;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const close = useCallback(() => {
+    dialogRef.current?.close();
+    onClose();
+  }, [onClose]);
 
   useLayoutEffect(() => {
     const dialog = dialogRef.current;
@@ -52,10 +56,19 @@ export function QuickCaptureDialog({
     return () => window.removeEventListener("keydown", handleShortcut);
   }, [onOpen]);
 
-  function close() {
-    dialogRef.current?.close();
-    onClose();
-  }
+  useEffect(() => {
+    if (!open) return;
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      close();
+    }
+
+    window.addEventListener("keydown", closeOnEscape, true);
+    return () => window.removeEventListener("keydown", closeOnEscape, true);
+  }, [close, open]);
 
   return (
     <>
@@ -75,7 +88,10 @@ export function QuickCaptureDialog({
         <dialog
           aria-labelledby={`${idPrefix}-heading`}
           className={styles.dialog}
-          onCancel={onClose}
+          onCancel={(event) => {
+            event.preventDefault();
+            close();
+          }}
           onClick={(event) => {
             if (event.target === event.currentTarget) {
               close();
