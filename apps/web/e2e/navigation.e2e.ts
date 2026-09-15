@@ -332,20 +332,24 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       resize: "none",
     });
     expect(entryTextStyle.caretColor).not.toBe("rgba(0, 0, 0, 0)");
-    const emptyTextHeight = await entryText.evaluate(
-      (element) => element.getBoundingClientRect().height,
+    const emptyTextMetrics = await entryText.evaluate((element) => ({
+      height: element.getBoundingClientRect().height,
+      lineHeight: Number.parseFloat(getComputedStyle(element).lineHeight),
+    }));
+    expect(emptyTextMetrics.height).toBeGreaterThanOrEqual(
+      emptyTextMetrics.lineHeight * 3,
     );
     await entryText.fill(
-      "A small moment worth keeping.\nThe writing space grows naturally.\nNothing looks like a form control.",
+      "A small moment worth keeping.\nThe writing space grows naturally.\nThree lines are always ready.\nNothing looks like a form control.",
     );
     await expect(entryText).toHaveValue(
-      "A small moment worth keeping.\nThe writing space grows naturally.\nNothing looks like a form control.",
+      "A small moment worth keeping.\nThe writing space grows naturally.\nThree lines are always ready.\nNothing looks like a form control.",
     );
     expect(
       await entryText.evaluate(
         (element) => element.getBoundingClientRect().height,
       ),
-    ).toBeGreaterThan(emptyTextHeight);
+    ).toBeGreaterThan(emptyTextMetrics.height);
     await page.screenshot({
       caret: "initial",
       path: "/private/tmp/memotrail-quick-capture-typing.png",

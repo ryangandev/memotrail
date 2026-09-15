@@ -632,7 +632,7 @@ export function CaptureComposer({
               }
               placeholder="What is on your mind?"
               ref={bodyInputRef}
-              rows={variant === "dialog" ? 1 : 4}
+              rows={variant === "dialog" ? 3 : 4}
               value={body}
             />
           </div>
