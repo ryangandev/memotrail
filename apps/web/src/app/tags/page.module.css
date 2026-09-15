@@ -31,20 +31,17 @@
 }
 
 .search {
-  display: grid;
-  gap: var(--mt-space-3);
   margin-top: var(--mt-space-10);
-  padding: var(--mt-space-5);
-  border: 1px solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface-raised);
-  box-shadow: var(--mt-shadow-raised);
 }
 
-.search > label {
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-medium);
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .search > div {
@@ -94,21 +91,10 @@
 
 .tagList {
   margin-top: var(--mt-space-8);
-  overflow: hidden;
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface-raised);
-  box-shadow: 0 1px 2px rgb(38 37 31 / 0.025);
 }
 
 .summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--mt-space-3) var(--mt-space-4);
-  border-bottom: 1px solid var(--mt-color-border);
   color: var(--mt-color-ink-faint);
-  background: var(--mt-color-surface-subtle);
   font-size: var(--mt-font-size-caption);
 }
 
@@ -117,7 +103,7 @@
   flex-wrap: wrap;
   align-items: flex-start;
   gap: var(--mt-space-3);
-  padding: var(--mt-space-5);
+  margin-top: var(--mt-space-3);
 }
 
 .tagBadge {
@@ -139,22 +125,16 @@
     box-shadow var(--mt-motion-quick);
 }
 
-.tagBadge > a {
+.tagTrigger {
   display: flex;
   min-width: 0;
   align-items: center;
   gap: 6px;
-  padding: 7px 5px 7px var(--mt-space-3);
+  padding: 9px var(--mt-space-3);
+  border: 0;
   color: var(--mt-color-ink);
-  text-decoration: none;
-}
-
-.tagBadge > button {
-  width: 30px;
-  height: 30px;
-  margin: 5px 5px 5px 0;
-  border-color: transparent;
   background: transparent;
+  cursor: pointer;
 }
 
 .tagMark {
@@ -163,7 +143,7 @@
   font-size: var(--mt-font-size-label);
 }
 
-.tagBadge h2 {
+.tagName {
   overflow: hidden;
   font-family: var(--mt-font-family-sans);
   font-size: var(--mt-font-size-label);
@@ -196,8 +176,8 @@
   box-shadow: 0 3px 12px rgb(38 37 31 / 0.06);
 }
 
-.tagBadge > a:hover h2,
-.tagBadge > a:focus-visible h2 {
+.tagTrigger:hover .tagName,
+.tagTrigger:focus-visible .tagName {
   color: var(--mt-color-accent);
 }
 
@@ -260,14 +240,6 @@
   .pageHeader h1 {
     font-size: 36px;
   }
-
-  .search {
-    padding: var(--mt-space-4);
-  }
-
-  .tagCloud {
-    padding: var(--mt-space-4);
-  }
 }
 
 @media (max-width: 520px) {
@@ -278,10 +250,6 @@
 
   .search button {
     width: 100%;
-  }
-
-  .summary span:last-child {
-    display: none;
   }
 }
 

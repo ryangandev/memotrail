@@ -15,6 +15,17 @@ export type OrganizationInput = {
   name: string;
   order: number;
 };
+export type TagEntryPreview = {
+  date: string;
+  href: string;
+  id: string;
+  title: string;
+  type: string;
+};
+export type TagEntryPreviewResult = {
+  entries: TagEntryPreview[];
+  error: string | null;
+};
 
 export function parseOrganizationItems(
   value: unknown,

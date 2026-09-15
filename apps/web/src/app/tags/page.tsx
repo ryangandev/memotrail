@@ -42,7 +42,9 @@ export default async function TagsPage({
       </header>
 
       <form aria-label="Find tags" className={styles.search} role="search">
-        <label htmlFor="tag-search">Find a tag</label>
+        <label className={styles.visuallyHidden} htmlFor="tag-search">
+          Find a tag
+        </label>
         <div>
           <input
             defaultValue={query}
@@ -82,30 +84,29 @@ export default async function TagsPage({
         <section className={styles.tagList} aria-label="Tags">
           <div className={styles.summary}>
             <span>{countLabel(workspace.totalCount, "tag")}</span>
-            <span>Select a tag to browse the Entries using it</span>
           </div>
           <div className={styles.tagCloud}>
             {workspace.items.map((item) => (
               <article className={styles.tagBadge} key={item.id}>
-                <Link
-                  href={`/search?tag=${encodeURIComponent(item.name)}`}
-                  title={`Browse ${countLabel(item.entry_count, "Entry")} tagged ${item.name}`}
-                >
-                  <span className={styles.tagMark} aria-hidden="true">
-                    #
-                  </span>
-                  <h2>{item.name}</h2>
-                  <span
-                    aria-label={countLabel(item.entry_count, "Entry")}
-                    className={styles.tagCount}
-                  >
-                    {item.entry_count}
-                  </span>
-                </Link>
                 <OrganizationControl
                   item={item}
                   items={workspace.items}
                   kind="tag"
+                  trigger={
+                    <>
+                      <span className={styles.tagMark} aria-hidden="true">
+                        #
+                      </span>
+                      <span className={styles.tagName}>{item.name}</span>
+                      <span
+                        aria-label={countLabel(item.entry_count, "Entry")}
+                        className={styles.tagCount}
+                      >
+                        {item.entry_count}
+                      </span>
+                    </>
+                  }
+                  triggerClassName={styles.tagTrigger}
                 />
               </article>
             ))}

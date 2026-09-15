@@ -134,7 +134,9 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       await tagDialog.getByRole("button", { name: "Create Tag" }).click();
       await expect(tagDialog).not.toBeVisible();
       await expect(
-        page.getByRole("heading", { name, exact: true }),
+        page.getByRole("button", {
+          name: `Manage tag ${name}, used by 0 Entries`,
+        }),
       ).toBeVisible();
     }
 
@@ -142,18 +144,35 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     const tagList = page.getByRole("region", { name: "Tags" });
     await expect(tagSearch).toBeVisible();
     await expect(tagList).toBeVisible();
+    const searchSurface = await tagSearch.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        background: style.backgroundColor,
+        borderWidth: Number.parseFloat(style.borderWidth),
+      };
+    });
+    expect(searchSurface.background).toBe("rgba(0, 0, 0, 0)");
+    expect(searchSurface.borderWidth).toBe(0);
     const tagSurface = await tagList.evaluate((element) => {
       const style = getComputedStyle(element);
       return {
         background: style.backgroundColor,
-        borderRadius: Number.parseFloat(style.borderRadius),
+        borderWidth: Number.parseFloat(style.borderWidth),
         width: element.getBoundingClientRect().width,
       };
     });
-    expect(tagSurface.background).not.toBe("rgba(0, 0, 0, 0)");
-    expect(tagSurface.borderRadius).toBeGreaterThan(0);
+    expect(tagSurface.background).toBe("rgba(0, 0, 0, 0)");
+    expect(tagSurface.borderWidth).toBe(0);
+    await expect(tagList.getByText("3 tags", { exact: true })).toBeVisible();
+    await expect(
+      tagList.getByText("Select a tag to browse the Entries using it"),
+    ).toHaveCount(0);
     const tagBadges = tagList.getByRole("article");
     await expect(tagBadges).toHaveCount(3);
+    await expect(tagBadges.first().getByRole("button")).toHaveAccessibleName(
+      /Manage tag .+, used by 0 Entries/,
+    );
+    await expect(tagBadges.first().getByRole("button")).toHaveCount(1);
     const badgeBoxes = await tagBadges.evaluateAll((elements) =>
       elements.map((element) => {
         const box = element.getBoundingClientRect();
@@ -242,13 +261,36 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await expect(travelRow.getByLabel("1 Entry", { exact: true })).toHaveText(
       "1",
     );
-    await travelRow.getByRole("button", { name: "Edit travel" }).click();
+    await travelRow
+      .getByRole("button", { name: "Manage tag travel, used by 1 Entry" })
+      .click();
     const travelDialog = page.getByRole("dialog", { name: "travel" });
     expect(
       await travelDialog.evaluate(
         (element) => element.closest("article") === null,
       ),
     ).toBe(true);
+    await expect(
+      travelDialog.getByText("Used by 1 Entry", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      travelDialog.getByRole("link", { name: "Moved to Seattle" }),
+    ).toBeVisible();
+    await expect(
+      travelDialog.getByRole("link", {
+        name: "View all Entries for this tag",
+      }),
+    ).toBeVisible();
+    await page.screenshot({
+      caret: "initial",
+      path: "/private/tmp/memotrail-tag-editor.png",
+    });
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.screenshot({
+      caret: "initial",
+      path: "/private/tmp/memotrail-tag-editor-dark.png",
+    });
+    await page.emulateMedia({ colorScheme: "light" });
     await travelDialog
       .getByLabel("Destination tag")
       .selectOption({ label: "#journeys (0)" });
@@ -256,7 +298,9 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await travelDialog.getByRole("button", { name: "Merge tag" }).click();
     await expect(travelDialog).not.toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "travel", exact: true }),
+      page.getByRole("button", {
+        name: "Manage tag travel, used by 1 Entry",
+      }),
     ).toHaveCount(0);
     const journeysRow = page
       .getByRole("article")
@@ -264,7 +308,13 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await expect(journeysRow.getByLabel("1 Entry", { exact: true })).toHaveText(
       "1",
     );
-    await journeysRow.getByRole("link").click();
+    await journeysRow
+      .getByRole("button", { name: "Manage tag journeys, used by 1 Entry" })
+      .click();
+    const journeysDialog = page.getByRole("dialog", { name: "journeys" });
+    await journeysDialog
+      .getByRole("link", { name: "View all Entries for this tag" })
+      .click();
     await expect(page).toHaveURL(/\/search\?tag=journeys$/);
     await expect(
       page.getByRole("combobox", { name: "Tag", exact: true }),
@@ -275,7 +325,9 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await page.goto("/tags");
 
     const unusedRow = page.getByRole("article").filter({ hasText: "unused" });
-    await unusedRow.getByRole("button", { name: "Edit unused" }).click();
+    await unusedRow
+      .getByRole("button", { name: "Manage tag unused, used by 0 Entries" })
+      .click();
     const unusedDialog = page.getByRole("dialog", { name: "unused" });
     page.once("dialog", (dialog) => dialog.accept());
     await unusedDialog
@@ -283,7 +335,9 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       .click();
     await expect(unusedDialog).not.toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "unused", exact: true }),
+      page.getByRole("button", {
+        name: "Manage tag unused, used by 0 Entries",
+      }),
     ).toHaveCount(0);
 
     await page.goto("/settings/organization?kind=tag");

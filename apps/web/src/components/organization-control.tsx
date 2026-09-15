@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import {
   deleteUnusedTag,
+  loadTagEntryPreviews,
   mergeTags,
   saveOrganization,
   trashCollection,
@@ -14,6 +16,7 @@ import {
   validOrganizationInput,
   type OrganizationItem,
   type OrganizationKind,
+  type TagEntryPreviewResult,
 } from "@/lib/data/organization";
 import styles from "./organization-control.module.css";
 
@@ -21,10 +24,14 @@ export function OrganizationControl({
   item,
   items = [],
   kind,
+  trigger,
+  triggerClassName,
 }: {
   item?: OrganizationItem;
   items?: OrganizationItem[];
   kind: OrganizationKind;
+  trigger?: ReactNode;
+  triggerClassName?: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -33,6 +40,9 @@ export function OrganizationControl({
   const [name, setName] = useState(item?.name ?? "");
   const [order, setOrder] = useState(String(item?.sort_order ?? 0));
   const [targetId, setTargetId] = useState("");
+  const [tagPreview, setTagPreview] = useState<TagEntryPreviewResult | null>(
+    null,
+  );
   const label = kind === "collection" ? "Collection" : "Tag";
   const mergeTargets = items.filter((candidate) => candidate.id !== item?.id);
   const input = {
@@ -51,6 +61,23 @@ export function OrganizationControl({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [busy, open]);
+
+  useEffect(() => {
+    if (!open || kind !== "tag" || !item) return;
+    let active = true;
+
+    if (item.entry_count === 0) {
+      return;
+    }
+
+    void loadTagEntryPreviews(item.name).then((preview) => {
+      if (active) setTagPreview(preview);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [item, kind, open]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -112,16 +139,29 @@ export function OrganizationControl({
   return (
     <>
       <button
-        aria-label={item ? `Edit ${item.name}` : `New ${label}`}
-        className={item ? styles.editTrigger : styles.newTrigger}
+        aria-label={
+          trigger && item
+            ? `Manage tag ${item.name}, used by ${countLabel(item.entry_count, "Entry")}`
+            : item
+              ? `Edit ${item.name}`
+              : `New ${label}`
+        }
+        className={
+          triggerClassName ?? (item ? styles.editTrigger : styles.newTrigger)
+        }
         onClick={() => {
           setMessage(null);
+          setTagPreview(null);
           setOpen(true);
         }}
         type="button"
       >
-        <Icon name={item ? "more" : "plus"} size={17} />
-        {!item ? `New ${label}` : null}
+        {trigger ?? (
+          <>
+            <Icon name={item ? "more" : "plus"} size={17} />
+            {!item ? `New ${label}` : null}
+          </>
+        )}
       </button>
 
       {open
@@ -146,6 +186,11 @@ export function OrganizationControl({
                     <h2 id={`organization-control-${item?.id ?? kind}`}>
                       {item?.name ?? `Create a ${label}`}
                     </h2>
+                    {item && kind === "tag" ? (
+                      <span className={styles.usageCount}>
+                        Used by {countLabel(item.entry_count, "Entry")}
+                      </span>
+                    ) : null}
                   </div>
                   <button
                     aria-label="Close organization editor"
@@ -276,6 +321,14 @@ export function OrganizationControl({
                     </button>
                   </div>
                 ) : null}
+
+                {item && kind === "tag" ? (
+                  <TagEntryList
+                    count={item.entry_count}
+                    name={item.name}
+                    preview={tagPreview}
+                  />
+                ) : null}
               </section>
             </div>,
             document.body,
@@ -285,6 +338,74 @@ export function OrganizationControl({
   );
 }
 
+function TagEntryList({
+  count,
+  name,
+  preview,
+}: {
+  count: number;
+  name: string;
+  preview: TagEntryPreviewResult | null;
+}) {
+  const allEntriesHref = `/search?tag=${encodeURIComponent(name)}`;
+
+  return (
+    <section
+      aria-labelledby="tag-entry-list-heading"
+      className={styles.entryPanel}
+    >
+      <header>
+        <div>
+          <strong id="tag-entry-list-heading">Entries using this tag</strong>
+          <span>{countLabel(count, "Entry")}</span>
+        </div>
+        {count > 5 ? <span>Showing 5</span> : null}
+      </header>
+
+      {count === 0 ? (
+        <p className={styles.emptyEntries}>No Entries use this tag yet.</p>
+      ) : preview === null ? (
+        <div
+          aria-label="Loading tagged Entries"
+          className={styles.entryLoading}
+          role="status"
+        >
+          <span />
+          <span />
+          <span />
+        </div>
+      ) : preview.error ? (
+        <p className={styles.entryError} role="alert">
+          {preview.error}
+        </p>
+      ) : (
+        <ul className={styles.entryList}>
+          {preview.entries.map((entry) => (
+            <li key={entry.id}>
+              <Link href={entry.href}>
+                <strong>{entry.title}</strong>
+                <span>
+                  {entry.type} · {entry.date}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {count > 0 ? (
+        <Link className={styles.viewAllEntries} href={allEntriesHref}>
+          <span>View all Entries for this tag</span>
+          <Icon name="chevron" size={16} />
+        </Link>
+      ) : null}
+    </section>
+  );
+}
+
 function countLabel(count: number, singular: string) {
-  return `${count} ${count === 1 ? singular : `${singular}s`}`;
+  const plural = singular.endsWith("y")
+    ? `${singular.slice(0, -1)}ies`
+    : `${singular}s`;
+  return `${count} ${count === 1 ? singular : plural}`;
 }

@@ -52,6 +52,7 @@ Pair it with the test file carrying the same feature name.
 - Entry Type owns specialized structure, Collections own curated cross-Type chapters, tags own lightweight cross-Type descriptors, and Timeline tracks own only generic moment placement.
 - Web Entry editors reuse `components/entry-organization-editor.tsx`; their save RPC must atomically preserve Collection and tag memberships with the canonical Entry mutation.
 - Used tags merge atomically into another stable tag identity. Only unused tags can be deleted directly.
+- Tag management loads at most five linked Entry previews on demand through a server action, so the Tags page stays lightweight and never creates a per-tag data waterfall during its initial render.
 - Multi-record changes use authenticated RPCs so content, relationships, history, and specialized facts commit atomically.
 - Clients send the revision they read. A stale revision surfaces a conflict instead of silently merging or overwriting another device.
 - Important mutations snapshot prior state. Restoring history creates another revision rather than deleting subsequent history.

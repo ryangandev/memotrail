@@ -6,7 +6,13 @@ import {
   parseLibrarySearch,
   type LibrarySearchResult,
 } from "./library-search";
-import { occurrencePrecisions, type OccurrencePrecision } from "./occurrence";
+import {
+  occurrenceLabel,
+  occurrencePrecisions,
+  validTimezone,
+  type OccurrencePrecision,
+} from "./occurrence";
+import type { TagEntryPreview, TagEntryPreviewResult } from "./organization";
 
 import { getAuthenticatedContext, type Viewer } from "@/lib/data/inbox";
 import {
@@ -215,6 +221,47 @@ export async function getQuickSearchResults(
   };
 }
 
+export async function getTagEntryPreviews(
+  tagName: string,
+): Promise<TagEntryPreviewResult> {
+  const normalizedName = tagName.trim();
+  if (!normalizedName || [...normalizedName].length > 60) {
+    return { entries: [], error: "Choose a valid tag." };
+  }
+
+  const context = await getAuthenticatedContext();
+  if (!context) {
+    return {
+      entries: [],
+      error: "Sign in again to browse Entries using this tag.",
+    };
+  }
+
+  const result = await context.client.rpc("search_entries_with_occurrence", {
+    p_collection_names: [],
+    p_date_from: null,
+    p_date_to: null,
+    p_entry_types: [],
+    p_limit: 5,
+    p_offset: 0,
+    p_query: "",
+    p_tag_names: [normalizedName],
+  });
+  const rows = result.error ? null : searchRows(result.data);
+
+  if (!rows) {
+    return {
+      entries: [],
+      error: "Could not load Entries using this tag. Try again.",
+    };
+  }
+
+  return {
+    entries: rows.map(tagEntryPreview),
+    error: null,
+  };
+}
+
 function quickEntryItem(row: SearchRow): QuickSearchItem {
   const title =
     stringValue(row.title) ?? firstUsefulLine(row.body) ?? "Untitled Entry";
@@ -226,6 +273,25 @@ function quickEntryItem(row: SearchRow): QuickSearchItem {
     label: entryTypeLabel(row.entry_type),
     subtitle: compactText(row.body) || "Saved Entry",
     title,
+  };
+}
+
+function tagEntryPreview(row: SearchRow): TagEntryPreview {
+  return {
+    date: occurrenceLabel({
+      datePrecision: row.date_precision,
+      occurredAt: stringValue(row.occurred_start),
+      occurredEnd: stringValue(row.occurred_end),
+      occurredLabel: stringValue(row.occurred_label),
+      occurredTimezone: validTimezone(row.occurred_timezone)
+        ? row.occurred_timezone
+        : "UTC",
+    }),
+    href: `/history?entry=${encodeURIComponent(row.entry_id)}`,
+    id: row.entry_id,
+    title:
+      stringValue(row.title) ?? firstUsefulLine(row.body) ?? "Untitled Entry",
+    type: entryTypeLabel(row.entry_type),
   };
 }
 
