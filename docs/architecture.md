@@ -93,7 +93,8 @@ Pair it with the test file carrying the same feature name.
 - The Next.js server is the only AI provider boundary.
 - Native requests reuse the user's Supabase bearer session and never receive provider credentials.
 - Anthropic is the initial text provider behind a replaceable server interface.
-- AI defaults off and is controlled per feature; photo analysis has separate consent.
+- AI defaults off. Web maps its user-facing master, organizing, and photo controls onto the more granular shared preference contract; photo understanding retains separate consent.
+- AI provider diagnostics, model identifiers, token prices, and editable spending caps stay out of ordinary Web settings. Existing per-user and server-wide budget enforcement remains active behind a simple monthly activity summary.
 - Budget is reserved before a request and reconciled from actual usage.
 - Interrupted provider outcomes do not trigger automatic paid retries.
 - Suggestion and search outputs are schema-validated and remain separate from original writing until explicit user action.

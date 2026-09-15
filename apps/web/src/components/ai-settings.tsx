@@ -1,201 +1,318 @@
 "use client";
+
 import { useState } from "react";
 import { saveAISettings } from "@/app/settings/ai/actions";
+import styles from "@/app/settings/ai/page.module.css";
+import { Icon, type IconName } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import {
-  aiFeatures,
-  featureLabels,
-  formatAICost,
+  simpleAIControlChecked,
+  updateSimpleAIPreferences,
+  type AIUsage,
   type AIWorkspace,
+  type SimpleAIControl,
 } from "@/lib/ai/contracts";
-import styles from "@/app/settings/ai/page.module.css";
-export function AISettings({
-  initial,
-  configured,
-}: {
-  initial: AIWorkspace;
+
+const activityLabels: Record<string, string> = {
+  classification: "Organizing suggestions",
+  explore: "Explore with AI",
+  photo_analysis: "Photo understanding",
+  search: "AI search",
+  tagging: "Organizing suggestions",
+};
+
+const activityStatuses: Record<AIUsage["status"], string> = {
+  completed: "Completed",
+  failed: "Not completed",
+  reserved: "In progress",
+  uncertain: "Interrupted",
+};
+
+type AISettingsProps = {
   configured: boolean;
-}) {
+  initial: AIWorkspace;
+  monthRequestCount: number | null;
+};
+
+export function AISettings({
+  configured,
+  initial,
+  monthRequestCount,
+}: AISettingsProps) {
   const [workspace, setWorkspace] = useState(initial);
-  const [draft, setDraft] = useState(initial.preferences);
-  const [budget, setBudget] = useState(
-    String(draft.monthly_budget_micros / 1_000_000),
-  );
-  const [busy, setBusy] = useState(false);
+  const [busyControl, setBusyControl] = useState<SimpleAIControl | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [testing, setTesting] = useState(false);
-  async function save(event: React.FormEvent) {
-    event.preventDefault();
-    setBusy(true);
+  const preferences = workspace.preferences;
+  const monthlyLimitReached =
+    preferences.monthly_budget_micros === 0 ||
+    workspace.month_charged_micros >= preferences.monthly_budget_micros;
+  const recentActivity = workspace.recent_usage
+    .filter((item) => item.feature !== "connection")
+    .slice(0, 5);
+
+  async function update(control: SimpleAIControl, checked: boolean) {
+    if (busyControl) return;
+    const previous = workspace;
+    const nextPreferences = updateSimpleAIPreferences(
+      preferences,
+      control,
+      checked,
+    );
+    setWorkspace({ ...workspace, preferences: nextPreferences });
+    setBusyControl(control);
     setMessage(null);
+
     try {
-      if (!budget.trim() || !Number.isFinite(Number(budget))) {
-        setMessage("Enter a monthly budget from $0 to $100.");
+      const result = await saveAISettings(nextPreferences);
+      if (result.error || !result.data) {
+        setWorkspace(previous);
+        setMessage(result.error ?? "Could not save AI preferences.");
         return;
       }
-      const result = await saveAISettings({
-        ...draft,
-        monthly_budget_micros: Math.round(Number(budget) * 1_000_000),
-      });
-      if (result.error) setMessage(result.error);
-      else {
-        setWorkspace(result.data);
-        setDraft(result.data.preferences);
-        setMessage("AI settings saved across your devices.");
-      }
+      setWorkspace(result.data as AIWorkspace);
+      setMessage(savedMessage(control, checked));
     } catch {
-      setMessage("Could not save settings. Your edits are still here.");
+      setWorkspace(previous);
+      setMessage("Could not save AI preferences. Try again.");
     } finally {
-      setBusy(false);
+      setBusyControl(null);
     }
   }
-  async function test() {
-    setTesting(true);
-    setMessage(null);
-    try {
-      const response = await fetch("/api/ai/connection", { method: "POST" });
-      const result = await response.json();
-      setMessage(result.error ?? result.message);
-      // Usage is refreshed on reload; do not replace an unsaved preference draft.
-    } catch {
-      setMessage("Could not reach the AI server. Try again later.");
-    } finally {
-      setTesting(false);
-    }
-  }
+
+  const availability = !configured
+    ? "Unavailable"
+    : monthlyLimitReached
+      ? "Monthly limit reached"
+      : "Available";
+
   return (
     <PageFrame className={styles.content} variant="compact">
-      <header>
-        <p className={styles.eyebrow}>YOUR ARCHIVE, YOUR CHOICE</p>
-        <h1>AI settings</h1>
-        <p>
-          Optional assistance. Your words and manual organization always remain
+      <header className={styles.header}>
+        <p>Your archive, your choice</p>
+        <h1>AI assistance</h1>
+        <span>
+          Choose when MemoTrail may help. Your original words always remain
           yours.
-        </p>
+        </span>
       </header>
-      <section className={styles.card}>
-        <h2>Provider & privacy</h2>
-        <p>Anthropic · Claude Haiku 4.5</p>
-        <p>
-          {configured
-            ? "Server connection is configured."
-            : "This server still needs its AI configuration. Preferences can be saved now."}
-        </p>
-        <p>
-          Enabled features send the relevant Entry text or search question to
-          Anthropic. Photo analysis separately permits up to 12 compact,
-          metadata-free previews for Inbox suggestions, never originals. Secrets
-          stay on the server, never in the iOS app. Suggestions never silently
-          overwrite your records or mark them Done.
-        </p>
-        <p>
-          Feature switches grant permission; they do not start a bulk analysis
-          of your archive.
+
+      <section className={styles.primaryCard} aria-labelledby="ai-master-title">
+        <div className={styles.primaryHeading}>
+          <span className={styles.primaryIcon}>
+            <Icon name="sparkle" size={22} />
+          </span>
+          <div>
+            <h2 id="ai-master-title">Use AI in MemoTrail</h2>
+            <p>
+              Get help organizing memories, searching your archive, and
+              exploring an Entry.
+            </p>
+          </div>
+          <span
+            className={styles.availability}
+            data-available={configured && !monthlyLimitReached}
+          >
+            {availability}
+          </span>
+        </div>
+
+        <PreferenceSwitch
+          checked={simpleAIControlChecked(preferences, "enabled")}
+          description="Off by default. Turning this off stops new AI requests on every device."
+          disabled={busyControl !== null}
+          label="AI assistance"
+          onChange={(checked) => void update("enabled", checked)}
+          pending={busyControl === "enabled"}
+        />
+
+        {!configured ? (
+          <p className={styles.unavailableNote}>
+            AI is not available on this server yet. You can choose your
+            preferences now, and no content will be sent until the service is
+            available.
+          </p>
+        ) : null}
+
+        <p className={styles.saveStatus} role="status">
+          {busyControl
+            ? "Saving..."
+            : (message ?? "Changes save automatically.")}
         </p>
       </section>
-      <form className={styles.card} onSubmit={save}>
-        <label className={styles.toggle}>
-          <span>
-            <strong>Enable AI assistance</strong>
-            <small>
-              Off by default. Turn off to stop new AI requests on every device.
-            </small>
-          </span>
-          <input
-            type="checkbox"
-            checked={draft.enabled}
-            onChange={(e) => setDraft({ ...draft, enabled: e.target.checked })}
-            disabled={busy || testing}
-          />
-        </label>
-        <fieldset disabled={busy || testing || !draft.enabled}>
-          <legend>Allow these features</legend>
-          {aiFeatures.map((feature) => (
-            <label className={styles.toggle} key={feature}>
-              <span>{featureLabels[feature]}</span>
-              <input
-                type="checkbox"
-                checked={draft[feature]}
-                onChange={(e) =>
-                  setDraft({ ...draft, [feature]: e.target.checked })
-                }
-              />
-            </label>
-          ))}
-        </fieldset>
-        <label className={styles.budget}>
-          Monthly budget (USD)
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            max="100"
-            required
-            value={budget}
-            disabled={busy || testing}
-            onChange={(e) => setBudget(e.target.value)}
-          />
-        </label>
-        <p>
-          Resets at the start of each UTC month. A separate server-wide total
-          cap can stop requests earlier. This is a MemoTrail spending guard, not
-          your Anthropic account balance.
-        </p>
-        <div className={styles.actions}>
-          <button disabled={busy || testing} type="submit">
-            {busy ? "Saving…" : "Save AI settings"}
-          </button>
-          <button
-            type="button"
-            disabled={
-              busy || testing || !configured || !workspace.preferences.enabled
-            }
-            onClick={test}
-          >
-            {testing ? "Testing…" : "Test connection"}
-          </button>
+
+      <section aria-labelledby="ai-features-title">
+        <div className={styles.sectionHeading}>
+          <div>
+            <h2 id="ai-features-title">How AI helps</h2>
+            <p>Simple controls based on what you are trying to do</p>
+          </div>
         </div>
-        <p>
-          A connection test sends only synthetic text and has a small usage
-          cost. Save Enable AI first.
-        </p>
-        {message && (
-          <p role="status" className={styles.message}>
-            {message}
+
+        <div className={styles.preferenceList}>
+          <FeaturePreference
+            checked={simpleAIControlChecked(preferences, "organizing")}
+            description="Offers optional title, type, Collection, date, and tag suggestions while you review an Entry."
+            disabled={busyControl !== null || !preferences.enabled}
+            icon="tag"
+            label="Suggestions while organizing"
+            onChange={(checked) => void update("organizing", checked)}
+            pending={busyControl === "organizing"}
+          />
+
+          <div className={styles.featureRow}>
+            <span className={styles.featureIcon}>
+              <Icon name="search" size={20} />
+            </span>
+            <div>
+              <strong>Search and explore</strong>
+              <p>
+                Runs only when you choose Ask AI or Explore with AI. Normal
+                keyword search never requires AI.
+              </p>
+            </div>
+            <span className={styles.onDemandBadge}>When you ask</span>
+          </div>
+
+          <FeaturePreference
+            checked={simpleAIControlChecked(preferences, "photo_analysis")}
+            description="Lets organizing suggestions consider compact photo previews. Originals and photo metadata are not shared."
+            disabled={busyControl !== null || !preferences.enabled}
+            icon="photo"
+            label="Understand photos"
+            onChange={(checked) => void update("photo_analysis", checked)}
+            pending={busyControl === "photo_analysis"}
+          />
+        </div>
+      </section>
+
+      <aside className={styles.privacyNote}>
+        <Icon name="check" size={18} />
+        <div>
+          <strong>You stay in control</strong>
+          <p>
+            AI suggestions never replace your writing, reorganize an Entry, or
+            mark anything complete without your action.
           </p>
-        )}
-      </form>
-      <section className={styles.card}>
-        <h2>Usage this month</h2>
-        <p className={styles.amount}>
-          {formatAICost(workspace.month_charged_micros)}{" "}
-          <span>
-            of {formatAICost(workspace.preferences.monthly_budget_micros)}
-          </span>
-        </p>
-        <p>
-          Includes in-flight and uncertain reservations. Completed requests use
-          reported token counts at $1 / million input and $5 / million output
-          tokens. Reload to refresh usage after a test.
-        </p>
-        {workspace.recent_usage.length === 0 ? (
-          <p>No AI requests yet.</p>
-        ) : (
-          <ul className={styles.usage}>
-            {workspace.recent_usage.map((item) => (
-              <li key={item.id}>
-                <div>
-                  <strong>{item.feature.replaceAll("_", " ")}</strong>
-                  <small>
-                    {new Date(item.created_at).toLocaleString()} · {item.status}
-                  </small>
-                </div>
-                <span>{formatAICost(item.charged_micros)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+          <details>
+            <summary>What is shared with AI?</summary>
+            <p>
+              MemoTrail sends only the relevant Entry text or search question to
+              its configured AI provider. If Understand photos is on, it may
+              also send up to 12 compact, metadata-free previews, never original
+              image files. Provider credentials remain on the server.
+            </p>
+          </details>
+        </div>
+      </aside>
+
+      <section aria-labelledby="ai-usage-title">
+        <div className={styles.sectionHeading}>
+          <div>
+            <h2 id="ai-usage-title">Usage this month</h2>
+            <p>AI activity is limited automatically</p>
+          </div>
+        </div>
+
+        <div className={styles.usageCard}>
+          <div className={styles.usageSummary}>
+            <p>
+              <strong>{monthRequestCount ?? "-"}</strong>
+              <span>
+                {monthRequestCount === 1 ? "AI action" : "AI actions"} this
+                month
+              </span>
+            </p>
+            <span data-limit-reached={monthlyLimitReached}>
+              {monthlyLimitReached
+                ? "Monthly limit reached"
+                : "Within monthly limit"}
+            </span>
+          </div>
+
+          {recentActivity.length ? (
+            <details className={styles.activityDetails}>
+              <summary>View recent activity</summary>
+              <ul>
+                {recentActivity.map((item) => (
+                  <li key={item.id}>
+                    <span>
+                      {activityLabels[item.feature] ?? "AI assistance"}
+                    </span>
+                    <small>{activityStatuses[item.status]}</small>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ) : (
+            <p className={styles.emptyUsage}>No AI activity yet.</p>
+          )}
+        </div>
       </section>
     </PageFrame>
   );
+}
+
+type PreferenceSwitchProps = {
+  checked: boolean;
+  description: string;
+  disabled: boolean;
+  label: string;
+  onChange: (checked: boolean) => void;
+  pending: boolean;
+};
+
+function PreferenceSwitch({
+  checked,
+  description,
+  disabled,
+  label,
+  onChange,
+  pending,
+}: PreferenceSwitchProps) {
+  return (
+    <label className={styles.switchRow}>
+      <span>
+        <strong>{label}</strong>
+        <small>{description}</small>
+      </span>
+      <span className={styles.switchControl}>
+        <input
+          aria-label={label}
+          checked={checked}
+          disabled={disabled}
+          onChange={(event) => onChange(event.target.checked)}
+          role="switch"
+          type="checkbox"
+        />
+        <span aria-hidden="true" className={styles.switchTrack}>
+          <span />
+        </span>
+        {pending ? <span className={styles.pendingText}>Saving</span> : null}
+      </span>
+    </label>
+  );
+}
+
+function FeaturePreference({
+  icon,
+  ...switchProps
+}: PreferenceSwitchProps & { icon: IconName }) {
+  return (
+    <div className={styles.featureRow}>
+      <span className={styles.featureIcon}>
+        <Icon name={icon} size={20} />
+      </span>
+      <PreferenceSwitch {...switchProps} />
+    </div>
+  );
+}
+
+function savedMessage(control: SimpleAIControl, checked: boolean) {
+  if (control === "enabled") {
+    return `AI assistance is ${checked ? "on" : "off"}.`;
+  }
+  if (control === "organizing") {
+    return `Organizing suggestions are ${checked ? "on" : "off"}.`;
+  }
+  return `Photo understanding is ${checked ? "on" : "off"}.`;
 }

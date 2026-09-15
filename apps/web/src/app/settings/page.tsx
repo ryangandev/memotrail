@@ -23,7 +23,7 @@ const preferences: Array<{
   title: string;
 }> = [
   {
-    detail: "Choose where AI may help and keep spending limits visible.",
+    detail: "Choose when AI may help and review its privacy controls.",
     href: "/settings/ai",
     icon: "sparkle",
     title: "AI assistance",
