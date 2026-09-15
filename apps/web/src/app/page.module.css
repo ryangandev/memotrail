@@ -43,8 +43,16 @@
   min-height: 0;
   flex: 1;
   flex-direction: column;
+  margin-right: calc(var(--mt-space-4) * -1);
   margin-top: var(--mt-space-5);
   overflow-y: auto;
+  padding-right: var(--mt-space-4);
+  scrollbar-color: color-mix(
+      in srgb,
+      var(--mt-color-ink-muted) 38%,
+      transparent
+    )
+    transparent;
   scrollbar-width: thin;
 }
 
