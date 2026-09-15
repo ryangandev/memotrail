@@ -29,11 +29,7 @@ import {
   resolveOccurrenceDraft,
   type OccurrenceDraft,
 } from "@/lib/data/occurrence";
-import {
-  entryBodyLimit,
-  entryTitleLimit,
-  parseInboxEntryValues,
-} from "@/lib/data/inbox-input";
+import { entryBodyLimit, parseInboxEntryValues } from "@/lib/data/inbox-input";
 import {
   createFirstTimeObjectPath,
   type FirstTimeAttachmentInput,
@@ -105,6 +101,7 @@ export function CaptureComposer({
   );
   const pendingEntriesRef = useRef<QueuedInboxEntry[]>([]);
   const syncInFlightRef = useRef(false);
+  const bodyInputRef = useRef<HTMLTextAreaElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const voiceRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const voiceBaselineRef = useRef("");
@@ -301,6 +298,12 @@ export function CaptureComposer({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (variant === "dialog" && isLocalStateReady) {
+      bodyInputRef.current?.focus();
+    }
+  }, [isLocalStateReady, variant]);
 
   function updateDraft(
     nextTitle: string,
@@ -601,25 +604,6 @@ export function CaptureComposer({
           <div className={styles.captureFields}>
             <label
               className={styles.visuallyHidden}
-              htmlFor={`${idPrefix}-title`}
-            >
-              Entry title
-            </label>
-            <input
-              autoComplete="off"
-              className={styles.captureTitle}
-              disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
-              id={`${idPrefix}-title`}
-              maxLength={entryTitleLimit}
-              name="title"
-              onChange={(event) =>
-                updateDraft(event.target.value, body, occurrence)
-              }
-              placeholder="What is worth keeping?"
-              value={title}
-            />
-            <label
-              className={styles.visuallyHidden}
               htmlFor={`${idPrefix}-body`}
             >
               Entry text
@@ -633,7 +617,8 @@ export function CaptureComposer({
               onChange={(event) =>
                 updateDraft(title, event.target.value, occurrence)
               }
-              placeholder="A thought, a first, something learned, or whatever is on your mind."
+              placeholder="What is on your mind?"
+              ref={bodyInputRef}
               rows={4}
               value={body}
             />

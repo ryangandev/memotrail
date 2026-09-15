@@ -58,7 +58,8 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 
 ## Capture and Inbox
 
-- Global capture starts with one flexible text field and may include a title, photos, voice-to-text, and a best-known date.
+- Global capture starts with one flexible writing field and may include photos, voice-to-text, and a best-known date.
+- New captures remain untitled until Inbox review or later editing adds a title.
 - The composer keeps a recoverable local draft.
 - Offline captures remain visible and retryable until synchronization is confirmed.
 - Voice capture produces editable text and never retains the original audio.

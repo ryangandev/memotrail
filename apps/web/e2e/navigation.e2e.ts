@@ -65,7 +65,11 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
         new URL(route.request().url()).searchParams.has("_rsc");
 
       if (isRscRequest && !searchNavigationStarted) {
-        await route.abort("blockedbyclient");
+        await route.fulfill({
+          body: "Search prefetch intentionally unavailable during this test.",
+          contentType: "text/plain",
+          status: 503,
+        });
         return;
       }
 
@@ -223,8 +227,13 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       exact: true,
     });
     await expect(quickCapture).toBeVisible();
+    await expect(
+      quickCapture.getByRole("textbox", {
+        name: "Entry title",
+        exact: true,
+      }),
+    ).toHaveCount(0);
     await expect(entryText).toBeEnabled();
-    await entryText.focus();
     await expect(entryText).toBeFocused();
     const entryTextStyle = await entryText.evaluate((element) => {
       const style = getComputedStyle(element);

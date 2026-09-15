@@ -69,8 +69,11 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
     await expect(capture.getByLabel("Date type")).toBeVisible({
       timeout: 5000,
     });
+    await expect(
+      capture.getByRole("textbox", { name: "Entry title", exact: true }),
+    ).toHaveCount(0);
     await capture
-      .getByRole("textbox", { name: "Entry title", exact: true })
+      .getByRole("textbox", { name: "Entry text", exact: true })
       .fill("Recovered partial draft");
     await capture.getByLabel("Date type").selectOption("year");
     await occurrenceStartField(capture).fill("20");
@@ -103,7 +106,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
           .getByRole("button", { name: "Date", exact: true })
           .click();
       await capture
-        .getByRole("textbox", { name: "Entry title", exact: true })
+        .getByRole("textbox", { name: "Entry text", exact: true })
         .fill(`Capture ${item.precision}`);
       await capture.getByLabel("Date type").selectOption(item.precision);
       await capture
@@ -135,10 +138,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
         ).toBeVisible();
         await expect(
           page.locator("article").filter({
-            has: page.getByRole("heading", {
-              name: "Capture age",
-              exact: true,
-            }),
+            hasText: "Capture age",
           }),
         ).toContainText("At age 17");
         const pending = await page.evaluate(
@@ -163,7 +163,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
               await client
                 .from("entries")
                 .select("id")
-                .eq("title", `Capture ${item.precision}`)
+                .eq("body", `Capture ${item.precision}`)
             ).data?.length,
         )
         .toBe(1);
@@ -171,14 +171,16 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
         await client
           .from("entries")
           .select("*")
-          .eq("title", `Capture ${item.precision}`)
+          .eq("body", `Capture ${item.precision}`)
           .single()
       ).data!;
       expect(saved).toMatchObject({
+        body: `Capture ${item.precision}`,
         date_precision: item.precision,
         inbox_status: "unreviewed",
         occurred_timezone: "Asia/Kathmandu",
         occurred_label: item.label || null,
+        title: null,
       });
       if (!item.start) expect(saved.occurred_start).toBeNull();
       else {
@@ -203,7 +205,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       .click();
     await expect(capture.getByLabel("Date type")).toHaveCount(0);
     await capture
-      .getByRole("textbox", { name: "Entry title", exact: true })
+      .getByRole("textbox", { name: "Entry text", exact: true })
       .fill("Default capture time");
     const beforeDefault = Date.now();
     await capture
@@ -216,7 +218,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
             await client
               .from("entries")
               .select("id")
-              .eq("title", "Default capture time")
+              .eq("body", "Default capture time")
           ).data?.length,
       )
       .toBe(1);
@@ -224,9 +226,10 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       await client
         .from("entries")
         .select("*")
-        .eq("title", "Default capture time")
+        .eq("body", "Default capture time")
         .single()
     ).data!;
+    expect(defaultEntry.title).toBeNull();
     expect(defaultEntry.date_precision).toBe("exact");
     expect(Date.parse(defaultEntry.occurred_start)).toBeGreaterThanOrEqual(
       beforeDefault,
