@@ -4,6 +4,7 @@ import {
   type ChangeEvent,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type FormEvent,
@@ -93,6 +94,7 @@ export function CaptureComposer({
   const [isSyncing, setIsSyncing] = useState(false);
   const [feedback, setFeedback] = useState<CaptureFeedback>(idleFeedback);
   const [photos, setPhotos] = useState<InboxPhotoDraft[]>([]);
+  const [isPhotoStateReady, setIsPhotoStateReady] = useState(false);
   const [isPhotoStorageAvailable, setIsPhotoStorageAvailable] = useState(true);
   const [pendingEntries, setPendingEntries] = useState<QueuedInboxEntry[]>([]);
   const [isVoiceSupported, setIsVoiceSupported] = useState<boolean | null>(
@@ -207,64 +209,67 @@ export function CaptureComposer({
     }
   }, [ownerId, replacePendingEntries, router]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const draft = loadInboxDraft(window.localStorage, ownerId);
     const queue = loadInboxQueue(window.localStorage, ownerId);
     let isCanceled = false;
 
     queueMicrotask(() => {
-      void (async () => {
-        let storedPhotos: InboxPhotoDraft[] = [];
+      if (isCanceled) return;
 
+      const savedOccurrence =
+        draft?.occurrence ??
+        (draft?.occurredAt
+          ? occurrenceDraft({
+              datePrecision: "exact",
+              occurredAt: new Date(draft.occurredAt).toISOString(),
+              occurredEnd: null,
+              occurredLabel: null,
+              occurredTimezone:
+                Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+            })
+          : null);
+
+      setTitle(draft?.title ?? "");
+      setBody(draft?.body ?? "");
+      setBodyRich(draft?.bodyRich ?? null);
+      setOccurrence(savedOccurrence);
+      titleRef.current = draft?.title ?? "";
+      occurrenceRef.current = savedOccurrence;
+      setHasLocalDraft(Boolean(draft));
+      replacePendingEntries(queue);
+      setIsLocalStateReady(true);
+
+      if (queue.length > 0 && navigator.onLine) {
+        void synchronizeQueue();
+      }
+
+      void (async () => {
         try {
-          storedPhotos = await loadInboxPhotoDrafts(ownerId);
+          const storedPhotos = await loadInboxPhotoDrafts(ownerId);
+          if (isCanceled) return;
+
+          const queuedPhotoIds = new Set(
+            queue.flatMap((entry) =>
+              entry.attachments.map((attachment) => attachment.id),
+            ),
+          );
+          const draftPhotos = storedPhotos.filter(
+            (photo) => !queuedPhotoIds.has(photo.id),
+          );
+
+          setPhotos(draftPhotos);
+          setHasLocalDraft(Boolean(draft) || draftPhotos.length > 0);
         } catch {
+          if (isCanceled) return;
           setIsPhotoStorageAvailable(false);
           setFeedback({
             isError: true,
             message:
               "Photo drafts are unavailable in this browser. Text capture still works.",
           });
-        }
-
-        if (isCanceled) {
-          return;
-        }
-
-        const queuedPhotoIds = new Set(
-          queue.flatMap((entry) =>
-            entry.attachments.map((attachment) => attachment.id),
-          ),
-        );
-        const draftPhotos = storedPhotos.filter(
-          (photo) => !queuedPhotoIds.has(photo.id),
-        );
-
-        setTitle(draft?.title ?? "");
-        setBody(draft?.body ?? "");
-        setBodyRich(draft?.bodyRich ?? null);
-        const savedOccurrence =
-          draft?.occurrence ??
-          (draft?.occurredAt
-            ? occurrenceDraft({
-                datePrecision: "exact",
-                occurredAt: new Date(draft.occurredAt).toISOString(),
-                occurredEnd: null,
-                occurredLabel: null,
-                occurredTimezone:
-                  Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
-              })
-            : null);
-        setOccurrence(savedOccurrence);
-        titleRef.current = draft?.title ?? "";
-        occurrenceRef.current = savedOccurrence;
-        setPhotos(draftPhotos);
-        setHasLocalDraft(Boolean(draft) || draftPhotos.length > 0);
-        replacePendingEntries(queue);
-        setIsLocalStateReady(true);
-
-        if (queue.length > 0 && navigator.onLine) {
-          void synchronizeQueue();
+        } finally {
+          if (!isCanceled) setIsPhotoStateReady(true);
         }
       })();
     });
@@ -311,8 +316,7 @@ export function CaptureComposer({
     nextBody: string,
     nextOccurrence: OccurrenceDraft | null,
     preserveVoiceFeedback = false,
-    nextBodyRich: EntryRichText | null =
-      nextBody === body ? bodyRich : null,
+    nextBodyRich: EntryRichText | null = nextBody === body ? bodyRich : null,
   ) {
     titleRef.current = nextTitle;
     occurrenceRef.current = nextOccurrence;
@@ -555,8 +559,7 @@ export function CaptureComposer({
       ...parsedDate.value!,
       queuedAt,
       title: parsedInput.data.title,
-      bodyRich:
-        bodyRich?.text === parsedInput.data.body ? bodyRich : null,
+      bodyRich: bodyRich?.text === parsedInput.data.body ? bodyRich : null,
       version: 3,
     };
     const nextQueue = enqueueInboxEntry(window.localStorage, ownerId, entry);
@@ -728,6 +731,7 @@ export function CaptureComposer({
               disabled={
                 isSaving ||
                 !isLocalStateReady ||
+                !isPhotoStateReady ||
                 !isPhotoStorageAvailable ||
                 voiceState !== "idle"
               }
@@ -745,6 +749,7 @@ export function CaptureComposer({
               disabled={
                 isSaving ||
                 !isLocalStateReady ||
+                !isPhotoStateReady ||
                 !isPhotoStorageAvailable ||
                 voiceState !== "idle"
               }
@@ -771,6 +776,7 @@ export function CaptureComposer({
                 isSaving ||
                 isSyncing ||
                 !isLocalStateReady ||
+                !isPhotoStateReady ||
                 voiceState !== "idle"
               }
               type="submit"

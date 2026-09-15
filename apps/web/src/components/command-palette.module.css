@@ -8,6 +8,7 @@
   padding: min(14vh, 120px) var(--mt-space-4) var(--mt-space-8);
   background: rgb(28 28 25 / 0.34);
   backdrop-filter: blur(8px);
+  animation: palette-backdrop-enter var(--mt-motion-standard) ease-out both;
 }
 
 .dialog {
@@ -21,6 +22,30 @@
   border-radius: 18px;
   background: var(--mt-color-surface-raised);
   box-shadow: 0 24px 80px rgb(25 25 22 / 0.24);
+  animation: palette-dialog-enter var(--mt-motion-standard)
+    cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes palette-backdrop-enter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes palette-dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .resultsViewport {
@@ -240,5 +265,12 @@
   .searchField kbd,
   .footer {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .dialog {
+    animation: none;
   }
 }

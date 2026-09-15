@@ -558,7 +558,9 @@
 }
 
 .captureEditorLoading {
-  min-height: 110px;
+  min-height: calc(
+    3 * var(--mt-line-height-body) * var(--mt-font-size-body) + 38px
+  );
   border-radius: var(--mt-radius-small);
   background: linear-gradient(
     100deg,

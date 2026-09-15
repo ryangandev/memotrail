@@ -262,6 +262,11 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       name: "Search MemoTrail",
     });
     await expect(commandPalette).toBeVisible();
+    expect(
+      await commandPalette.evaluate(
+        (element) => getComputedStyle(element).animationDuration,
+      ),
+    ).not.toBe("0s");
     await page.screenshot({
       caret: "initial",
       path: "/private/tmp/memotrail-command-palette.png",
@@ -314,6 +319,35 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       .getByRole("button", { name: "Not now", exact: true })
       .click();
     await page.emulateMedia({ colorScheme: "dark" });
+    await page.evaluate(() => {
+      const captureWindow = window as typeof window & {
+        __quickCaptureHeights?: number[];
+        __quickCaptureMutationObserver?: MutationObserver;
+        __quickCaptureResizeObserver?: ResizeObserver;
+      };
+      captureWindow.__quickCaptureHeights = [];
+      captureWindow.__quickCaptureMutationObserver = new MutationObserver(
+        () => {
+          const form = document.querySelector<HTMLElement>(
+            'dialog[open] form[aria-label="Quick capture"]',
+          );
+          if (!form) return;
+
+          captureWindow.__quickCaptureMutationObserver?.disconnect();
+          const recordHeight = () =>
+            captureWindow.__quickCaptureHeights?.push(form.offsetHeight);
+          captureWindow.__quickCaptureResizeObserver = new ResizeObserver(
+            recordHeight,
+          );
+          captureWindow.__quickCaptureResizeObserver.observe(form);
+          recordHeight();
+        },
+      );
+      captureWindow.__quickCaptureMutationObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+    });
     await page.keyboard.press("Meta+j");
 
     const quickCapture = page.getByRole("dialog", {
@@ -328,6 +362,26 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       exact: true,
     });
     await expect(quickCapture).toBeVisible();
+    expect(
+      await quickCapture.evaluate(
+        (element) => getComputedStyle(element).animationDuration,
+      ),
+    ).not.toBe("0s");
+    await page.waitForTimeout(250);
+    const quickCaptureHeights = await page.evaluate(() => {
+      const captureWindow = window as typeof window & {
+        __quickCaptureHeights?: number[];
+        __quickCaptureMutationObserver?: MutationObserver;
+        __quickCaptureResizeObserver?: ResizeObserver;
+      };
+      captureWindow.__quickCaptureMutationObserver?.disconnect();
+      captureWindow.__quickCaptureResizeObserver?.disconnect();
+      return captureWindow.__quickCaptureHeights ?? [];
+    });
+    expect(quickCaptureHeights.length).toBeGreaterThan(0);
+    expect(
+      Math.max(...quickCaptureHeights) - Math.min(...quickCaptureHeights),
+    ).toBeLessThanOrEqual(1);
     const dialogHeader = quickCapture.locator("header");
     await expect(dialogHeader).toHaveCSS("border-bottom-width", "0px");
     await expect(dialogHeader.locator("svg")).toHaveCount(1);
@@ -480,14 +534,12 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       await expect(entryText.locator(element)).toHaveCount(0);
     }
     await entryText.press("Meta+a");
-    await formatting
-      .getByRole("button", { name: "Bold", exact: true })
-      .click();
+    await formatting.getByRole("button", { name: "Bold", exact: true }).click();
     await entryText.press("Meta+k");
     await expect(commandPalette).not.toBeVisible();
-    await quickCapture.getByRole("textbox", { name: "Link URL" }).fill(
-      "example.com/memory",
-    );
+    await quickCapture
+      .getByRole("textbox", { name: "Link URL" })
+      .fill("example.com/memory");
     await quickCapture.getByRole("button", { name: "Apply" }).click();
     await expect(entryText.locator("a")).toHaveAttribute(
       "href",

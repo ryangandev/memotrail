@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { CaptureComposer } from "@/components/capture-composer";
 import { Icon } from "@/components/icon";
 import styles from "./quick-capture-dialog.module.css";
@@ -22,7 +22,7 @@ export function QuickCaptureDialog({
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const dialog = dialogRef.current;
 
     if (open && dialog && !dialog.open) {
