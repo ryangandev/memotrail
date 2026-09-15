@@ -1,6 +1,6 @@
 # MemoTrail Architecture
 
-Last reviewed: 2026-09-14.
+Last reviewed: 2026-09-15.
 
 ## System map
 
@@ -30,7 +30,7 @@ Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/Me
 | Request                                                     | Web                                                                                                                                 | iOS                                                                                   | Shared data and tests                                                            |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | Authentication or environment                               | `app/auth`, `lib/auth`, `lib/supabase`, `src/proxy.ts`                                                                              | `Features/Authentication`, `App/AppConfiguration.swift`                               | foundation and security migrations, `0001_rls.test.sql`                          |
-| Capture, Inbox, drafts, dates, or offline sync              | `app/inbox`, capture and occurrence components, `lib/data/inbox*`, `lib/data/occurrence.ts`                                         | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests               |
+| Capture, Inbox, drafts, dates, rich text, or offline sync   | `app/inbox`, capture, rich-text and occurrence components, `lib/data/inbox*`, `lib/data/rich-text.ts`, `lib/data/occurrence.ts`       | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests               |
 | Search, AI suggestions, or exploration                      | `app/search`, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`                                                        | `Features/Search`, `Features/AI`                                                      | AI, evidence, exploration, and search migrations and tests                       |
 | Photos, metadata, or export                                 | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                               | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, photo-history, cleanup, and export migrations and tests                   |
 | Timeline, Homes, Vehicles, Goals, or First Times            | matching `app` route, workspace component, and `lib/data` module                                                                    | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                            |
@@ -46,6 +46,8 @@ Pair it with the test file carrying the same feature name.
 - Row Level Security is the final owner-authorization boundary for exposed data.
 - Web cookies and native bearer sessions identify the same Supabase user.
 - Entries are canonical content; specialized tables add facts without duplicating writing.
+- `entries.body` remains canonical plaintext. Optional validated rich content is versioned under `entries.metadata.body_rich`, carries the exact matching plaintext, and is ignored when another client changes the body without updating the rich document.
+- Web capture uses `components/rich-text-editor.tsx` for the reusable headless editor surface. Drafts and pending queues preserve the same rich payload, while server synchronization writes plaintext and metadata together.
 - Collections, tags, People, Places, and Entry links are owner-scoped reusable relationships.
 - Entry Type owns specialized structure, Collections own curated cross-Type chapters, tags own lightweight cross-Type descriptors, and Timeline tracks own only generic moment placement.
 - Web Entry editors reuse `components/entry-organization-editor.tsx`; their save RPC must atomically preserve Collection and tag memberships with the canonical Entry mutation.

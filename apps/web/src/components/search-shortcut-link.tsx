@@ -13,9 +13,11 @@ export function SearchShortcutButton({
   useEffect(() => {
     function handleShortcut(event: KeyboardEvent) {
       if (
+        event.defaultPrevented ||
         event.key.toLocaleLowerCase() !== "k" ||
         (!event.metaKey && !event.ctrlKey) ||
-        event.altKey
+        event.altKey ||
+        isEditableTarget(event.target)
       ) {
         return;
       }
@@ -39,5 +41,12 @@ export function SearchShortcutButton({
       <Icon name="search" />
       <kbd aria-hidden="true">⌘ K</kbd>
     </button>
+  );
+}
+
+function isEditableTarget(target: EventTarget | null) {
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable || Boolean(target.closest("input, textarea")))
   );
 }

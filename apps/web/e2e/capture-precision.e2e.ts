@@ -8,6 +8,7 @@ import {
   fillOccurrenceStart,
   occurrenceStartField,
 } from "./helpers/occurrence";
+import { parseInboxDraft } from "../src/lib/data/inbox-draft";
 
 test("Quick capture retains uncertain dates in drafts and offline replay", async ({
   page,
@@ -75,8 +76,29 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
     await capture
       .getByRole("textbox", { name: "Entry text", exact: true })
       .fill("Recovered partial draft");
+    await expect
+      .poll(() =>
+        page.evaluate((ownerId) => {
+          const stored = localStorage.getItem(
+            `memotrail:inbox-draft:${ownerId}`,
+          );
+          return stored ? JSON.parse(stored) : null;
+        }, owner),
+      )
+      .toMatchObject({
+        body: "Recovered partial draft",
+        bodyRich: { text: "Recovered partial draft", version: 1 },
+      });
     await capture.getByLabel("Date type").selectOption("year");
     await occurrenceStartField(capture).fill("20");
+    const storedDraft = await page.evaluate(
+      (ownerId) =>
+        localStorage.getItem(`memotrail:inbox-draft:${ownerId}`),
+      owner,
+    );
+    expect(parseInboxDraft(storedDraft)).toMatchObject({
+      body: "Recovered partial draft",
+    });
     await page.reload();
     await expect(occurrenceStartField(capture)).toHaveValue("20");
     await capture

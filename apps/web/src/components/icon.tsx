@@ -1,28 +1,38 @@
 export type IconName =
   | "archive"
+  | "bold"
+  | "bulletList"
   | "calendar"
   | "car"
   | "check"
   | "chevron"
   | "close"
   | "clock"
+  | "code"
+  | "codeBlock"
   | "inbox"
   | "home"
+  | "italic"
+  | "link"
   | "map"
   | "mic"
   | "more"
   | "photo"
   | "plus"
+  | "quote"
   | "refresh"
   | "search"
   | "settings"
   | "sparkle"
   | "star"
   | "stop"
+  | "strike"
   | "target"
   | "tag"
   | "timeline"
-  | "trash";
+  | "trash"
+  | "underline"
+  | "orderedList";
 
 type IconProps = {
   name: IconName;
@@ -57,6 +67,20 @@ const paths: Record<IconName, React.ReactNode> = {
       <path d="M3 4.5h18v4H3zM9 13h6" />
     </>
   ),
+  bold: (
+    <>
+      <path d="M7 4h6a4 4 0 0 1 0 8H7V4Z" />
+      <path d="M7 12h7a4 4 0 0 1 0 8H7v-8Z" />
+    </>
+  ),
+  bulletList: (
+    <>
+      <circle cx="5" cy="7" fill="currentColor" r="1" stroke="none" />
+      <circle cx="5" cy="12" fill="currentColor" r="1" stroke="none" />
+      <circle cx="5" cy="17" fill="currentColor" r="1" stroke="none" />
+      <path d="M9 7h10M9 12h10M9 17h10" />
+    </>
+  ),
   calendar: (
     <>
       <rect height="17" rx="2" width="18" x="3" y="4" />
@@ -78,6 +102,13 @@ const paths: Record<IconName, React.ReactNode> = {
       <path d="M12 7v5l3 2" />
     </>
   ),
+  code: <path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14" />,
+  codeBlock: (
+    <>
+      <rect height="18" rx="2" width="20" x="2" y="3" />
+      <path d="m9 8-4 4 4 4M15 8l4 4-4 4" />
+    </>
+  ),
   inbox: (
     <>
       <path d="M4.5 5.5h15l1.5 9v4H3v-4l1.5-9Z" />
@@ -88,6 +119,13 @@ const paths: Record<IconName, React.ReactNode> = {
     <>
       <path d="m3.5 10.5 8.5-7 8.5 7" />
       <path d="M5.5 9v11h13V9M9.5 20v-6h5v6" />
+    </>
+  ),
+  italic: <path d="M10 4h8M6 20h8M14 4l-4 16" />,
+  link: (
+    <>
+      <path d="m9.5 14.5-1 1a4 4 0 0 1-5.7-5.7l3-3a4 4 0 0 1 5.7 0" />
+      <path d="m14.5 9.5 1-1a4 4 0 0 1 5.7 5.7l-3 3a4 4 0 0 1-5.7 0M8.5 12h7" />
     </>
   ),
   map: (
@@ -117,6 +155,12 @@ const paths: Record<IconName, React.ReactNode> = {
     </>
   ),
   plus: <path d="M12 5v14M5 12h14" />,
+  quote: (
+    <>
+      <path d="M5 10h5v5H5v-4a5 5 0 0 1 5-5" />
+      <path d="M14 10h5v5h-5v-4a5 5 0 0 1 5-5" />
+    </>
+  ),
   refresh: (
     <>
       <path d="M19 8a7.5 7.5 0 0 0-12.6-2L4 8" />
@@ -153,6 +197,7 @@ const paths: Record<IconName, React.ReactNode> = {
       y="7"
     />
   ),
+  strike: <path d="M5 12h14M16.5 7.5A4.5 4.5 0 0 0 12 5c-2.2 0-4 1.2-4 3 0 1 .6 1.7 1.6 2.2M8 16c.8 1.8 2.4 3 4.6 3 2.4 0 4.4-1.3 4.4-3.3 0-.7-.2-1.2-.6-1.7" />,
   target: (
     <>
       <circle cx="12" cy="12" r="8.5" />
@@ -177,6 +222,16 @@ const paths: Record<IconName, React.ReactNode> = {
   trash: (
     <>
       <path d="M4 7h16M9 3h6l1 4H8l1-4ZM6.5 7l1 14h9l1-14M10 11v6M14 11v6" />
+    </>
+  ),
+  underline: (
+    <>
+      <path d="M7 4v7a5 5 0 0 0 10 0V4M5 20h14" />
+    </>
+  ),
+  orderedList: (
+    <>
+      <path d="M10 7h10M10 12h10M10 17h10M4 5h1v4M4 11h2l-2 3h2M4 16h2l-1.5 1.5A1 1 0 0 1 6 19H4" />
     </>
   ),
 };

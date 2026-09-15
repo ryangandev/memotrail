@@ -33,11 +33,13 @@ export function QuickCaptureDialog({
   useEffect(() => {
     function handleShortcut(event: KeyboardEvent) {
       if (
+        event.defaultPrevented ||
         event.key.toLocaleLowerCase() !== "j" ||
         (!event.metaKey && !event.ctrlKey) ||
         event.shiftKey ||
         event.altKey ||
-        event.repeat
+        event.repeat ||
+        isEditableTarget(event.target)
       ) {
         return;
       }
@@ -108,5 +110,12 @@ export function QuickCaptureDialog({
         </dialog>
       ) : null}
     </>
+  );
+}
+
+function isEditableTarget(target: EventTarget | null) {
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable || Boolean(target.closest("input, textarea")))
   );
 }

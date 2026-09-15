@@ -5,10 +5,12 @@ import {
   isQueuedInboxAttachment,
   type QueuedInboxAttachment,
 } from "./inbox-photo";
+import { isEntryRichText, type EntryRichText } from "./rich-text";
 
 type QueueEntryBase = {
   attachments: QueuedInboxAttachment[];
   body: string;
+  bodyRich?: EntryRichText | null;
   id: string;
   occurredTimezone: string;
   queuedAt: string;
@@ -162,6 +164,9 @@ export function isQueuedInboxEntry(value: unknown): value is QueuedInboxEntry {
         entry.title.length <= entryTitleLimit)) &&
     typeof entry.body === "string" &&
     entry.body.length <= entryBodyLimit &&
+    (entry.bodyRich === undefined ||
+      entry.bodyRich === null ||
+      isEntryRichText(entry.bodyRich, entry.body)) &&
     Array.isArray(entry.attachments) &&
     attachments.length === entry.attachments.length &&
     attachments.length <= inboxPhotoLimit &&

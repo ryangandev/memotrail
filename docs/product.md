@@ -61,6 +61,8 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - Global capture starts with one flexible writing field and may include photos, voice-to-text, and a best-known date.
 - New captures remain untitled until Inbox review or later editing adds a title.
 - The New Entry modal is a compact single-surface composer whose writing field grows with its content and does not expose native resize controls.
+- Quick Capture offers lightweight rich text for emphasis, links, lists, quotes, inline code, and code blocks without turning capture into a document editor.
+- Rich formatting never replaces the Entry's clean plaintext body, so search, AI, export, and clients that do not render formatting still receive readable writing.
 - The composer keeps a recoverable local draft.
 - Offline captures remain visible and retryable until synchronization is confirmed.
 - Voice capture produces editable text and never retains the original audio.

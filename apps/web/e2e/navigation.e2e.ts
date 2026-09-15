@@ -339,21 +339,112 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     expect(emptyTextMetrics.height).toBeGreaterThanOrEqual(
       emptyTextMetrics.lineHeight * 3,
     );
-    await entryText.fill(
-      "A small moment worth keeping.\nThe writing space grows naturally.\nThree lines are always ready.\nNothing looks like a form control.",
+    const formatting = quickCapture.getByRole("toolbar", {
+      name: "Text formatting",
+      exact: true,
+    });
+    for (const label of [
+      "Bold",
+      "Italic",
+      "Underline",
+      "Strikethrough",
+      "Attach link",
+      "Bullet list",
+      "Ordered list",
+      "Block quote",
+      "Inline code",
+      "Code block",
+    ]) {
+      await expect(
+        formatting.getByRole("button", { name: label, exact: true }),
+      ).toBeVisible();
+    }
+    const entryBody = "A small moment worth keeping.";
+    await entryText.fill(entryBody);
+    for (const [label, element] of [
+      ["Bold", "strong"],
+      ["Italic", "em"],
+      ["Underline", "u"],
+      ["Strikethrough", "s"],
+      ["Inline code", "code"],
+    ] as const) {
+      await entryText.press("Meta+a");
+      const button = formatting.getByRole("button", {
+        name: label,
+        exact: true,
+      });
+      await button.click();
+      await expect(entryText.locator(element)).toHaveText(entryBody);
+      await button.click();
+      await expect(entryText.locator(element)).toHaveCount(0);
+    }
+    await entryText.press("Meta+a");
+    await formatting
+      .getByRole("button", { name: "Bold", exact: true })
+      .click();
+    await formatting
+      .getByRole("button", { name: "Attach link", exact: true })
+      .click();
+    await quickCapture.getByRole("textbox", { name: "Link URL" }).fill(
+      "example.com/memory",
     );
-    await expect(entryText).toHaveValue(
-      "A small moment worth keeping.\nThe writing space grows naturally.\nThree lines are always ready.\nNothing looks like a form control.",
+    await quickCapture.getByRole("button", { name: "Apply" }).click();
+    await expect(entryText.locator("a")).toHaveAttribute(
+      "href",
+      "https://example.com/memory",
     );
+    await expect(entryText).toContainText(entryBody);
+    await expect
+      .poll(() =>
+        page.evaluate((ownerId) => {
+          const stored = localStorage.getItem(
+            `memotrail:inbox-draft:${ownerId}`,
+          );
+          return stored ? JSON.parse(stored) : null;
+        }, owner),
+      )
+      .toMatchObject({
+        body: entryBody,
+        bodyRich: { text: entryBody, version: 1 },
+      });
     expect(
       await entryText.evaluate(
         (element) => element.getBoundingClientRect().height,
       ),
-    ).toBeGreaterThan(emptyTextMetrics.height);
+    ).toBeGreaterThanOrEqual(emptyTextMetrics.height);
     await page.screenshot({
       caret: "initial",
       path: "/private/tmp/memotrail-quick-capture-typing.png",
     });
+    await quickCapture
+      .getByRole("button", { name: "Save to Inbox", exact: true })
+      .click();
+    await expect(quickCaptureForm).not.toContainText(
+      "MemoTrail could not store this Entry",
+    );
+    await expect(quickCaptureForm).toContainText("Saved to Inbox.");
+    await expect
+      .poll(async () => {
+        const result = await client
+          .from("entries")
+          .select("body,metadata")
+          .eq("owner_id", owner)
+          .eq("body", entryBody)
+          .maybeSingle();
+        return { data: result.data, error: result.error };
+      })
+      .toMatchObject({
+        data: {
+          body: entryBody,
+          metadata: {
+            body_rich: {
+              text: entryBody,
+              version: 1,
+            },
+          },
+        },
+        error: null,
+      });
   } finally {
     await page.close();
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();

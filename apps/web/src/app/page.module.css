@@ -482,13 +482,6 @@
   padding: var(--mt-space-4) var(--mt-space-5);
 }
 
-.dialogCaptureCard .captureBody {
-  min-height: 72px;
-  max-height: min(48dvh, 420px);
-  overflow-y: auto;
-  resize: none;
-}
-
 .captureIntro {
   display: flex;
   min-height: 174px;
@@ -515,31 +508,27 @@
   min-width: 0;
 }
 
-.captureBody {
-  width: 100%;
-  border: 0;
-  outline: 0;
-  color: var(--mt-color-ink);
-  background: transparent;
+.captureEditorLoading {
+  min-height: 110px;
+  border-radius: var(--mt-radius-small);
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    var(--mt-color-surface-subtle) 45%,
+    transparent 70%
+  );
+  background-size: 220% 100%;
+  animation: capture-editor-loading 1.2s ease-in-out infinite;
 }
 
-.captureBody {
-  min-height: 126px;
-  resize: vertical;
-  color: var(--mt-color-ink);
-  font-family: var(--mt-font-family-sans);
-  font-size: var(--mt-font-size-body);
-  line-height: var(--mt-line-height-body);
-}
+@keyframes capture-editor-loading {
+  from {
+    background-position: 100% 0;
+  }
 
-.captureBody::placeholder {
-  color: var(--mt-color-ink-faint);
-  opacity: 1;
-}
-
-.captureBody:focus-visible {
-  outline: none;
-  box-shadow: none;
+  to {
+    background-position: -100% 0;
+  }
 }
 
 .captureDatePanel {
@@ -1775,10 +1764,6 @@
     padding: var(--mt-space-5);
   }
 
-  .captureBody {
-    font-size: 14px;
-  }
-
   .captureActions {
     padding-left: var(--mt-space-2);
   }
@@ -1934,6 +1919,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .captureEditorLoading {
+    animation: none;
+  }
+
   .topActionButton {
     transition: none;
   }

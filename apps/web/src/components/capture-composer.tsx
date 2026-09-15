@@ -17,6 +17,7 @@ import {
 } from "@/app/inbox/actions";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { RichTextEditor } from "@/components/rich-text-editor";
 import {
   clearInboxDraft,
   loadInboxDraft,
@@ -60,6 +61,7 @@ import {
   type BrowserSpeechRecognition,
 } from "@/lib/data/voice-transcript";
 import { createClient } from "@/lib/supabase/client";
+import type { EntryRichText } from "@/lib/data/rich-text";
 import styles from "@/app/page.module.css";
 
 type CaptureFeedback = {
@@ -83,6 +85,7 @@ export function CaptureComposer({
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [bodyRich, setBodyRich] = useState<EntryRichText | null>(null);
   const [occurrence, setOccurrence] = useState<OccurrenceDraft | null>(null);
   const [isLocalStateReady, setIsLocalStateReady] = useState(false);
   const [hasLocalDraft, setHasLocalDraft] = useState(false);
@@ -101,7 +104,6 @@ export function CaptureComposer({
   );
   const pendingEntriesRef = useRef<QueuedInboxEntry[]>([]);
   const syncInFlightRef = useRef(false);
-  const bodyInputRef = useRef<HTMLTextAreaElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const voiceRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const voiceBaselineRef = useRef("");
@@ -136,7 +138,11 @@ export function CaptureComposer({
 
     for (const entry of [...pendingEntriesRef.current]) {
       try {
-        latestResult = await syncInboxEntry(entry);
+        const { bodyRich: queuedBodyRich, ...syncInput } = entry;
+        latestResult = await syncInboxEntry(
+          syncInput,
+          queuedBodyRich ? JSON.stringify(queuedBodyRich) : null,
+        );
       } catch {
         latestResult = {
           message:
@@ -236,6 +242,7 @@ export function CaptureComposer({
 
         setTitle(draft?.title ?? "");
         setBody(draft?.body ?? "");
+        setBodyRich(draft?.bodyRich ?? null);
         const savedOccurrence =
           draft?.occurrence ??
           (draft?.occurredAt
@@ -299,37 +306,24 @@ export function CaptureComposer({
     };
   }, []);
 
-  useEffect(() => {
-    if (variant === "dialog" && isLocalStateReady) {
-      bodyInputRef.current?.focus();
-    }
-  }, [isLocalStateReady, variant]);
-
-  useEffect(() => {
-    const input = bodyInputRef.current;
-
-    if (variant !== "dialog" || !input) {
-      return;
-    }
-
-    input.style.height = "auto";
-    input.style.height = `${input.scrollHeight}px`;
-  }, [body, variant]);
-
   function updateDraft(
     nextTitle: string,
     nextBody: string,
     nextOccurrence: OccurrenceDraft | null,
     preserveVoiceFeedback = false,
+    nextBodyRich: EntryRichText | null =
+      nextBody === body ? bodyRich : null,
   ) {
     titleRef.current = nextTitle;
     occurrenceRef.current = nextOccurrence;
     setTitle(nextTitle);
     setBody(nextBody);
+    setBodyRich(nextBodyRich);
     setOccurrence(nextOccurrence);
     setHasLocalDraft(
       persistInboxDraft(window.localStorage, ownerId, {
         body: nextBody,
+        bodyRich: nextBodyRich,
         occurredAt: null,
         occurrence: nextOccurrence,
         title: nextTitle,
@@ -561,6 +555,8 @@ export function CaptureComposer({
       ...parsedDate.value!,
       queuedAt,
       title: parsedInput.data.title,
+      bodyRich:
+        bodyRich?.text === parsedInput.data.body ? bodyRich : null,
       version: 3,
     };
     const nextQueue = enqueueInboxEntry(window.localStorage, ownerId, entry);
@@ -579,6 +575,7 @@ export function CaptureComposer({
     clearInboxDraft(window.localStorage, ownerId);
     setTitle("");
     setBody("");
+    setBodyRich(null);
     setOccurrence(null);
     titleRef.current = "";
     occurrenceRef.current = null;
@@ -615,26 +612,27 @@ export function CaptureComposer({
             </span>
           ) : null}
           <div className={styles.captureFields}>
-            <label
-              className={styles.visuallyHidden}
-              htmlFor={`${idPrefix}-body`}
-            >
-              Entry text
-            </label>
-            <textarea
-              className={styles.captureBody}
-              disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
-              id={`${idPrefix}-body`}
-              maxLength={entryBodyLimit}
-              name="body"
-              onChange={(event) =>
-                updateDraft(title, event.target.value, occurrence)
-              }
-              placeholder="What is on your mind?"
-              ref={bodyInputRef}
-              rows={variant === "dialog" ? 3 : 4}
-              value={body}
-            />
+            {isLocalStateReady ? (
+              <RichTextEditor
+                autoFocus={variant === "dialog"}
+                disabled={isSaving || voiceState !== "idle"}
+                label="Entry text"
+                maxLength={entryBodyLimit}
+                onChange={(value) =>
+                  updateDraft(title, value.text, occurrence, false, value)
+                }
+                placeholder="What is on your mind?"
+                richText={bodyRich}
+                text={body}
+                variant="compact"
+              />
+            ) : (
+              <div
+                aria-label="Preparing writing space"
+                className={styles.captureEditorLoading}
+                role="status"
+              />
+            )}
           </div>
         </div>
         {occurrence ? (
