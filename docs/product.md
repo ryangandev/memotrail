@@ -173,7 +173,7 @@ Settings is reached from the profile control.
 Desktop uses a persistent sidebar for the primary areas, Trash, and one Settings entry point separated from Library.
 Compact Search and New Entry controls remain at the right of the persistent top bar on every primary screen.
 A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry, People, and Place results in place, supports keyboard navigation, and keeps full-page Search with filters and AI as an explicit destination.
-New Entry opens from the top bar or Command Shift E.
+New Entry opens from the top bar or Command J.
 
 ## Privacy, deletion, and portability
 

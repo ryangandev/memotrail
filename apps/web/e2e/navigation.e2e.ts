@@ -97,7 +97,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     });
     await expect(searchShortcut).toContainText("⌘ K");
     await expect(searchShortcut).not.toContainText("Search your trail");
-    await expect(newEntryShortcut).toContainText("⌘ ⇧ E");
+    await expect(newEntryShortcut).toContainText("⌘ J");
     await expect(shell.getByText(email, { exact: true })).toHaveCount(0);
     await expect(
       shell
@@ -234,7 +234,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await birthDatePrompt
       .getByRole("button", { name: "Not now", exact: true })
       .click();
-    await page.keyboard.press("Meta+Shift+e");
+    await page.keyboard.press("Meta+j");
 
     const quickCapture = page.getByRole("dialog", {
       name: "Keep what is on your mind",

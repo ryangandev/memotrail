@@ -31,9 +31,9 @@ export function QuickCaptureDialog({
   useEffect(() => {
     function handleShortcut(event: KeyboardEvent) {
       if (
-        event.key.toLocaleLowerCase() !== "e" ||
+        event.key.toLocaleLowerCase() !== "j" ||
         (!event.metaKey && !event.ctrlKey) ||
-        !event.shiftKey ||
+        event.shiftKey ||
         event.altKey ||
         event.repeat
       ) {
@@ -56,6 +56,7 @@ export function QuickCaptureDialog({
   return (
     <>
       <button
+        aria-keyshortcuts="Meta+J Control+J"
         aria-label="New entry"
         aria-haspopup="dialog"
         className={styles.trigger}
@@ -64,7 +65,7 @@ export function QuickCaptureDialog({
       >
         <Icon name="plus" size={17} />
         <span>New entry</span>
-        <kbd aria-hidden="true">⌘ ⇧ E</kbd>
+        <kbd aria-hidden="true">⌘ J</kbd>
       </button>
 
       {open ? (
