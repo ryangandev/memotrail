@@ -89,9 +89,8 @@ export function QuickCaptureDialog({
       if (event.key !== "Escape") return;
 
       if (
-        event.defaultPrevented ||
-        (event.target instanceof Element &&
-          event.target.closest("[data-escape-layer]"))
+        event.target instanceof Element &&
+        event.target.closest("[data-escape-layer]")
       ) {
         nativePhotoPickerOpenRef.current = false;
         suppressEscapeUntilRef.current = 0;

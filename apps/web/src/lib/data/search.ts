@@ -14,7 +14,12 @@ import {
 } from "./occurrence";
 import type { TagEntryPreview, TagEntryPreviewResult } from "./organization";
 
-import { getAuthenticatedContext, type Viewer } from "@/lib/data/inbox";
+import {
+  getAuthenticatedContext,
+  loadEntryRichTextMap,
+  type Viewer,
+} from "@/lib/data/inbox";
+import type { EntryRichText } from "@/lib/data/rich-text";
 import {
   SEARCH_PAGE_SIZE,
   type ParsedSearchRequest,
@@ -25,6 +30,7 @@ import {
 
 export type SearchEntry = {
   body: string;
+  bodyRich: EntryRichText | null;
   collectionNames: string[];
   entryType: string;
   id: string;
@@ -136,6 +142,10 @@ export async function getSearchWorkspace(
   const parsedRows = search.error ? [] : searchRows(search.data);
   const malformedSearchResponse = shouldSearch && !search.error && !parsedRows;
   const rows = parsedRows ?? [];
+  const bodyRichByEntry = await loadEntryRichTextMap(
+    context,
+    rows.map((row) => ({ body: row.body, id: row.entry_id })),
+  );
   const filtersUnavailable = collections.error || tags.error;
 
   return {
@@ -148,7 +158,9 @@ export async function getSearchWorkspace(
     collectionOptions: collections.error
       ? []
       : (collections.data ?? []).map((collection) => collection.name),
-    entries: search.error ? [] : rows.map(entryFromRow),
+    entries: search.error
+      ? []
+      : rows.map((row) => entryFromRow(row, bodyRichByEntry.get(row.entry_id))),
     filtersError: filtersUnavailable
       ? "Collection and tag filters are temporarily unavailable. Keyword search still works."
       : null,
@@ -320,9 +332,13 @@ function entryTypeLabel(value: string) {
   return labels[value] ?? "Entry";
 }
 
-function entryFromRow(row: SearchRow): SearchEntry {
+function entryFromRow(
+  row: SearchRow,
+  bodyRich: EntryRichText | null = null,
+): SearchEntry {
   return {
     body: row.body,
+    bodyRich,
     collectionNames: strings(row.collection_names),
     entryType: row.entry_type,
     id: row.entry_id,

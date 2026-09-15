@@ -1,6 +1,7 @@
 import { entryBodyLimit, entryTitleLimit } from "./inbox-input";
 import { validPhotoPlace, type PhotoPlaceDraft } from "@/lib/media/photo-place";
 import { validateOccurrence, type OccurrencePrecision } from "./occurrence";
+import { isEntryRichText, type EntryRichText } from "./rich-text";
 
 export const reviewableEntryTypes = ["standard", "first_time"] as const;
 export type ReviewableEntryType = (typeof reviewableEntryTypes)[number];
@@ -8,6 +9,7 @@ export type ReviewableEntryType = (typeof reviewableEntryTypes)[number];
 export type InboxReviewInput = {
   photoPlace?: PhotoPlaceDraft | null;
   body: string;
+  bodyRich?: EntryRichText | null;
   collectionNames: string[];
   entryType: ReviewableEntryType;
   id: string;
@@ -40,6 +42,12 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
     );
   const title = typeof values.title === "string" ? values.title.trim() : "";
   const body = typeof values.body === "string" ? values.body.trim() : "";
+  const bodyRich =
+    values.bodyRich === null || values.bodyRich === undefined
+      ? null
+      : isEntryRichText(values.bodyRich, body)
+        ? values.bodyRich
+        : undefined;
   const collectionNames = parseOrganizationNames(
     values.collectionNames,
     20,
@@ -49,6 +57,10 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
 
   if (!title && !body) {
     return invalidReview("Keep a title or note before saving.");
+  }
+
+  if (bodyRich === undefined) {
+    return invalidReview("This Entry's rich text is invalid.");
   }
 
   if (!collectionNames) {
@@ -110,6 +122,7 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
         ? { photoPlace: values.photoPlace as PhotoPlaceDraft }
         : {}),
       body,
+      bodyRich,
       collectionNames,
       entryType: values.entryType as ReviewableEntryType,
       id: values.id,

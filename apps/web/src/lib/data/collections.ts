@@ -1,7 +1,12 @@
 import "server-only";
 import { displayImageURLs } from "@/lib/media/urls";
 
-import { getAuthenticatedContext, type Viewer } from "./inbox";
+import {
+  getAuthenticatedContext,
+  loadEntryRichTextMap,
+  type Viewer,
+} from "./inbox";
+import type { EntryRichText } from "./rich-text";
 import { COLLECTION_PAGE_SIZE } from "./collections-input";
 import { parseOrganizationItems, type OrganizationItem } from "./organization";
 import { normalizeCounts } from "./organization-workspace";
@@ -37,6 +42,7 @@ export type CollectionAttachment = {
 export type CollectionEntry = {
   attachments: CollectionAttachment[];
   body: string;
+  bodyRich: EntryRichText | null;
   collectionNames: string[];
   createdAt: string;
   datePrecision: string;
@@ -146,10 +152,16 @@ export async function getCollectionsWorkspace({
     : parseCollectionEntryRows(detailResult.data);
   const collections = (summaryRows ?? []).map(summaryFromRow);
   const parsedEntries = detailRows ?? [];
-  const signedUrls = await signedImageUrls(
-    context.client,
-    parsedEntries.flatMap((row) => parseAttachments(row.attachments) ?? []),
-  );
+  const [signedUrls, bodyRichByEntry] = await Promise.all([
+    signedImageUrls(
+      context.client,
+      parsedEntries.flatMap((row) => parseAttachments(row.attachments) ?? []),
+    ),
+    loadEntryRichTextMap(
+      context,
+      parsedEntries.map((row) => ({ body: row.body, id: row.entry_id })),
+    ),
+  ]);
 
   return {
     collections,
@@ -157,7 +169,9 @@ export async function getCollectionsWorkspace({
       collectionId && (!detailRows || detailResult.error)
         ? "MemoTrail could not load this Collection. Refresh to try again."
         : null,
-    entries: parsedEntries.map((row) => entryFromRow(row, signedUrls)),
+    entries: parsedEntries.map((row) =>
+      entryFromRow(row, signedUrls, bodyRichByEntry.get(row.entry_id)),
+    ),
     inboxCount: inboxResult.error ? undefined : (inboxResult.count ?? 0),
     loadError:
       summaryRows && !summaryResult.error
@@ -192,6 +206,7 @@ function summaryFromRow(row: CollectionSummaryRow): CollectionSummary {
 function entryFromRow(
   row: CollectionEntryRow,
   signedUrls: Map<string, string>,
+  bodyRich: EntryRichText | null = null,
 ): CollectionEntry {
   return {
     attachments: (parseAttachments(row.attachments) ?? []).map(
@@ -201,6 +216,7 @@ function entryFromRow(
       }),
     ),
     body: row.body,
+    bodyRich,
     collectionNames: row.collection_names,
     createdAt: row.created_at,
     datePrecision: row.date_precision,

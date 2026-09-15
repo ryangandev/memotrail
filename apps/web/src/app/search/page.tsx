@@ -4,6 +4,7 @@ import {
   validTimezone,
 } from "@/lib/data/occurrence";
 import Link from "next/link";
+import { EntryRichTextContent } from "@/components/entry-rich-text-content";
 import { Icon } from "@/components/icon";
 import { AISearchForm } from "@/components/ai-search-form";
 import { LibrarySearchResults } from "@/components/library-search-results";
@@ -315,12 +316,22 @@ function SearchResultCard({ entry }: { entry: SearchEntry }) {
         </h3>
       </header>
 
-      {body ? <p className={styles.resultBody}>{body}</p> : null}
+      {body ? (
+        <EntryRichTextContent
+          body={body}
+          className={styles.resultBody}
+          richText={entry.bodyRich}
+        />
+      ) : null}
 
       {hasLongBody ? (
         <details className={styles.fullEntry}>
           <summary>Read full note</summary>
-          <p>{body}</p>
+          <EntryRichTextContent
+            body={body}
+            className={styles.fullEntryBody}
+            richText={entry.bodyRich}
+          />
         </details>
       ) : null}
 

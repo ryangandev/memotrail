@@ -183,8 +183,9 @@ export async function reviewInboxEntry(
   }
 
   const { data, error } = await context.client.rpc(
-    "review_entry_with_photo_place",
+    "review_entry_with_photo_place_rich",
     {
+      p_body_rich: parsedInput.data.bodyRich ?? null,
       p_photo_place: parsedInput.data.photoPlace ?? null,
       p_body: parsedInput.data.body,
       p_collection_names: parsedInput.data.collectionNames,

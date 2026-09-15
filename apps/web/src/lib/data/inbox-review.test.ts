@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseInboxReviewInput } from "./inbox-review";
+import { createEntryRichText, plainTextDocument } from "./rich-text";
 
 const validInput = {
   body: "Small forces trigger bone remodeling.",
@@ -30,8 +31,28 @@ describe("Inbox Entry review", () => {
         body: "  Small forces trigger bone remodeling.  ",
       }),
     ).toEqual({
-      data: validInput,
+      data: { ...validInput, bodyRich: null },
       success: true,
+    });
+  });
+
+  it("keeps validated rich text with its canonical note", () => {
+    const bodyRich = createEntryRichText(
+      plainTextDocument("Small forces trigger bone remodeling."),
+    );
+
+    expect(parseInboxReviewInput({ ...validInput, bodyRich })).toMatchObject({
+      data: { bodyRich },
+      success: true,
+    });
+  });
+
+  it("rejects rich text that does not match the canonical note", () => {
+    const bodyRich = createEntryRichText(plainTextDocument("Different note"));
+
+    expect(parseInboxReviewInput({ ...validInput, bodyRich })).toEqual({
+      message: "This Entry's rich text is invalid.",
+      success: false,
     });
   });
 

@@ -13,6 +13,7 @@ import { EntryAISuggestionsPanel } from "@/components/entry-ai-suggestions";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { OccurrenceEditor } from "@/components/occurrence-editor";
 import { EntryPhotoDates } from "@/components/entry-photo-dates";
+import { RichTextEditor } from "@/components/rich-text-editor";
 import { photoCalendarDateDraft } from "@/lib/media/photo-metadata";
 import {
   occurrenceDraft,
@@ -133,6 +134,7 @@ export function EntryReviewDialog({
   const router = useRouter();
   const [title, setTitle] = useState(entry.title ?? "");
   const [body, setBody] = useState(entry.body);
+  const [bodyRich, setBodyRich] = useState(entry.bodyRich);
   const [collectionNames, setCollectionNames] = useState(entry.collectionNames);
   const [collectionInput, setCollectionInput] = useState("");
   const [entryType, setEntryType] = useState<ReviewableEntryType>(
@@ -147,7 +149,14 @@ export function EntryReviewDialog({
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isPending) {
+      if (
+        event.key === "Escape" &&
+        !(
+          event.target instanceof Element &&
+          event.target.closest("[data-escape-layer]")
+        ) &&
+        !isPending
+      ) {
         onClose();
       }
     }
@@ -166,6 +175,7 @@ export function EntryReviewDialog({
       photoPlace,
       ...resolved.value!,
       body,
+      bodyRich: bodyRich?.text === body ? bodyRich : null,
       collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       entryType,
       id: entry.id,
@@ -304,16 +314,22 @@ export function EntryReviewDialog({
             />
           </label>
 
-          <label>
+          <div className={styles.reviewRichTextField}>
             <span>Note</span>
-            <textarea
+            <RichTextEditor
               disabled={isPending}
               maxLength={entryBodyLimit}
-              onChange={(event) => setBody(event.target.value)}
-              rows={9}
-              value={body}
+              label="Note"
+              onChange={(value) => {
+                setBody(value.text);
+                setBodyRich(value);
+              }}
+              placeholder="Write what you want to remember"
+              richText={bodyRich}
+              text={body}
+              variant="form"
             />
-          </label>
+          </div>
 
           <div className={styles.reviewFieldRow}>
             <label>

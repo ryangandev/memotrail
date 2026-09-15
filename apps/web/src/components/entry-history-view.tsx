@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { EntryReviewDialog } from "./entry-review-list";
 import { EntryPhotoGallery } from "./entry-photo-gallery";
 import { EntryRelationsPanel } from "./entry-relations";
+import { EntryRichTextContent } from "./entry-rich-text-content";
 import { loadEditableEntry } from "@/app/history/actions";
 import {
   restoreHistoryVersion,
@@ -24,6 +25,7 @@ import {
   type EntryHistory,
   type HistorySnapshot,
 } from "@/lib/data/history";
+import { entryRichTextMetadataKey } from "@/lib/data/rich-text";
 import styles from "@/app/history/page.module.css";
 export function EntryHistoryView({
   history,
@@ -372,9 +374,11 @@ function Snapshot({ value }: { value: HistorySnapshot }) {
   return (
     <>
       <h4>{historyTitle(value)}</h4>
-      <p className={styles.body}>
-        {value.body || "No writing in this version."}
-      </p>
+      <EntryRichTextContent
+        body={value.body || "No writing in this version."}
+        className={styles.body}
+        metadata={value.body ? value.metadata : undefined}
+      />
       <dl className={styles.facts}>
         <dt>Type</dt>
         <dd>{value.entry_type.replaceAll("_", " ")}</dd>
@@ -413,17 +417,18 @@ function Snapshot({ value }: { value: HistorySnapshot }) {
           </div>
         ) : null,
       )}
-      {["home", "vehicle", "goal", "metadata", "links"].map((key) =>
-        value[key] &&
-        JSON.stringify(value[key]) !== "{}" &&
-        JSON.stringify(value[key]) !== "[]" ? (
+      {["home", "vehicle", "goal", "metadata", "links"].map((key) => {
+        const detail = snapshotDetail(value, key);
+        return detail &&
+          JSON.stringify(detail) !== "{}" &&
+          JSON.stringify(detail) !== "[]" ? (
           <details key={key}>
             <summary>
               {key.charAt(0).toUpperCase() + key.slice(1)} details
             </summary>
             <pre className={styles.json}>
               {JSON.stringify(
-                value[key],
+                detail,
                 (name, item) =>
                   ["owner_id", "entry_id", "created_at", "updated_at"].includes(
                     name,
@@ -434,8 +439,21 @@ function Snapshot({ value }: { value: HistorySnapshot }) {
               )}
             </pre>
           </details>
-        ) : null,
-      )}
+        ) : null;
+      })}
     </>
   );
+}
+
+function snapshotDetail(value: HistorySnapshot, key: string) {
+  const detail = value[key];
+  if (key !== "metadata" || !isRecord(detail)) return detail;
+
+  const visibleMetadata = { ...detail };
+  delete visibleMetadata[entryRichTextMetadataKey];
+  return visibleMetadata;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

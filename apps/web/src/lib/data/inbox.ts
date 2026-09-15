@@ -7,9 +7,11 @@ import {
   type Occurrence,
   type OccurrencePrecision,
 } from "./occurrence";
+import { entryRichTextFromMetadata, type EntryRichText } from "./rich-text";
 
 export type InboxEntry = Occurrence & {
   body: string;
+  bodyRich: EntryRichText | null;
   collectionNames: string[];
   createdAt: string;
   entryType: "first_time" | "standard";
@@ -41,6 +43,7 @@ type EntryRow = {
   created_at: string;
   entry_type: "first_time" | "standard";
   id: string;
+  metadata: unknown;
   occurred_start: string | null;
   occurred_end: string | null;
   occurred_label: string | null;
@@ -92,6 +95,33 @@ export const getAuthenticatedContext = cache(
   },
 );
 
+export async function loadEntryRichTextMap(
+  context: NonNullable<Awaited<ReturnType<typeof getAuthenticatedContext>>>,
+  entries: readonly { body: string; id: string }[],
+) {
+  const expectedBodies = new Map(
+    entries.map((entry) => [entry.id, entry.body] as const),
+  );
+  if (expectedBodies.size === 0) return new Map<string, EntryRichText>();
+
+  const { data, error } = await context.client
+    .from("entries")
+    .select("id,body,metadata")
+    .eq("owner_id", context.userId)
+    .in("id", [...expectedBodies.keys()])
+    .returns<{ body: string; id: string; metadata: unknown }[]>();
+
+  if (error) return new Map<string, EntryRichText>();
+
+  const values = new Map<string, EntryRichText>();
+  for (const row of data ?? []) {
+    if (expectedBodies.get(row.id) !== row.body) continue;
+    const richText = entryRichTextFromMetadata(row.metadata, row.body);
+    if (richText) values.set(row.id, richText);
+  }
+  return values;
+}
+
 export async function getInboxWorkspace(): Promise<InboxWorkspace | null> {
   const context = await getAuthenticatedContext();
 
@@ -102,7 +132,7 @@ export async function getInboxWorkspace(): Promise<InboxWorkspace | null> {
   const { data, error } = await context.client
     .from("entries")
     .select(
-      "id,title,body,entry_type,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision",
+      "id,title,body,metadata,entry_type,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision",
     )
     .eq("owner_id", context.userId)
     .eq("inbox_status", "unreviewed")
@@ -169,6 +199,7 @@ export function entryFromRow(
 ): InboxEntry {
   return {
     body: row.body,
+    bodyRich: entryRichTextFromMetadata(row.metadata, row.body),
     collectionNames,
     createdAt: row.created_at,
     entryType: row.entry_type,

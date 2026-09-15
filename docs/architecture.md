@@ -47,7 +47,10 @@ Pair it with the test file carrying the same feature name.
 - Web cookies and native bearer sessions identify the same Supabase user.
 - Entries are canonical content; specialized tables add facts without duplicating writing.
 - `entries.body` remains canonical plaintext. Optional validated rich content is versioned under `entries.metadata.body_rich`, carries the exact matching plaintext, and is ignored when another client changes the body without updating the rich document.
-- Web capture uses `components/rich-text-editor.tsx` for the reusable headless editor surface, with page, dialog, and form variants instead of separate editors. Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while server synchronization writes plaintext and metadata together.
+- Web capture and Entry review use `components/rich-text-editor.tsx` for the reusable headless editor surface, with page, dialog, and form variants instead of separate editors.
+  `components/entry-rich-text-content.tsx` safely renders validated formatting on note surfaces and falls back to canonical plaintext when rich metadata is absent, invalid, or stale.
+  Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while `review_entry_with_photo_place_rich` writes plaintext, formatting, organization, occurrence, and photo Place adoption in one revision.
+  Older review RPCs preserve rich metadata they do not understand.
 - Collections, tags, People, Places, and Entry links are owner-scoped reusable relationships.
 - Entry Type owns specialized structure, Collections own curated cross-Type chapters, tags own lightweight cross-Type descriptors, and Timeline tracks own only generic moment placement.
 - Web Entry editors reuse `components/entry-organization-editor.tsx`; their save RPC must atomically preserve Collection and tag memberships with the canonical Entry mutation.

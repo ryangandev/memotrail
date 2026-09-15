@@ -1,6 +1,7 @@
 import Link from "next/link";
 import styles from "@/app/collections/page.module.css";
 import { Icon } from "@/components/icon";
+import { EntryRichTextContent } from "@/components/entry-rich-text-content";
 import { OrganizationControl } from "@/components/organization-control";
 import { PageFrame } from "@/components/page-frame";
 import { ProgressiveImage } from "@/components/progressive-image";
@@ -284,12 +285,22 @@ function CollectionEntryCard({ entry }: { entry: CollectionEntry }) {
           <h2>{title}</h2>
         </header>
 
-        {body ? <p className={styles.entryBody}>{body}</p> : null}
+        {body ? (
+          <EntryRichTextContent
+            body={body}
+            className={styles.entryBody}
+            richText={entry.bodyRich}
+          />
+        ) : null}
 
         {body.length > 320 ? (
           <details className={styles.fullEntry}>
             <summary>Read full note</summary>
-            <p>{body}</p>
+            <EntryRichTextContent
+              body={body}
+              className={styles.fullEntryBody}
+              richText={entry.bodyRich}
+            />
           </details>
         ) : null}
 
