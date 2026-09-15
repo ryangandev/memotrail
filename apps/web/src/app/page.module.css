@@ -535,9 +535,8 @@
 }
 
 .captureIntro {
-  min-height: 158px;
-  padding: var(--mt-space-4) var(--capture-inline-padding)
-    var(--mt-space-5);
+  min-height: 0;
+  padding: var(--mt-space-4) var(--capture-inline-padding) var(--mt-space-5);
 }
 
 .captureSpark {
@@ -1815,7 +1814,7 @@
   }
 
   .captureIntro {
-    min-height: 158px;
+    min-height: 0;
   }
 
   .captureDatePanel {

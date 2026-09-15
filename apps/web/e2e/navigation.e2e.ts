@@ -105,6 +105,22 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       (element) => element.getBoundingClientRect().left,
     );
     expect(Math.round(homeEntryTextLeft - homeCaptureLeft)).toBe(25);
+    const homeFormatting = homeCapture.getByRole("toolbar", {
+      name: "Text formatting",
+      exact: true,
+    });
+    const homeBoldIconLeft = await homeFormatting
+      .getByRole("button", { name: "Bold", exact: true })
+      .locator("svg")
+      .evaluate((element) => element.getBoundingClientRect().left);
+    expect(Math.round(homeBoldIconLeft)).toBe(Math.round(homeEntryTextLeft));
+    const homeToolbarBottom = await homeFormatting.evaluate(
+      (element) => element.getBoundingClientRect().bottom,
+    );
+    const homeActionsTop = await homeCapture
+      .locator("[data-capture-actions]")
+      .evaluate((element) => element.getBoundingClientRect().top);
+    expect(Math.round(homeActionsTop - homeToolbarBottom)).toBe(20);
 
     const shell = page.getByRole("complementary");
     await expect(shell).toBeVisible();

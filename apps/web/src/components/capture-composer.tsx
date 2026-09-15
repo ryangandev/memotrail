@@ -678,7 +678,7 @@ export function CaptureComposer({
             {voiceFeedback.message}
           </p>
         ) : null}
-        <div className={styles.captureActions}>
+        <div className={styles.captureActions} data-capture-actions>
           <div>
             <button
               aria-pressed={Boolean(occurrence)}
