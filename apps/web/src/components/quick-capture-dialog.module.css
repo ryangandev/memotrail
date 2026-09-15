@@ -54,8 +54,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--mt-space-4);
-  padding: var(--mt-space-4) var(--mt-space-5);
-  border-bottom: 1px solid var(--mt-color-border);
+  padding: var(--mt-space-3) var(--mt-space-4);
   background: color-mix(
     in srgb,
     var(--mt-color-surface-raised) 94%,
@@ -66,13 +65,13 @@
 
 .dialogHeader h2 {
   font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title-small);
+  font-size: 19px;
   font-weight: var(--mt-font-weight-medium);
 }
 
 .closeButton {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface);
@@ -117,7 +116,7 @@
   }
 
   .dialogHeader {
-    padding: var(--mt-space-4);
+    padding: var(--mt-space-3) var(--mt-space-4);
   }
 }
 

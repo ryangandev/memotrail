@@ -459,8 +459,15 @@
 }
 
 .dialogCaptureCard .captureIntro {
-  min-height: 220px;
-  padding: var(--mt-space-6) var(--mt-space-5);
+  min-height: 0;
+  padding: var(--mt-space-4);
+}
+
+.dialogCaptureCard .captureBody {
+  min-height: 24px;
+  max-height: min(48dvh, 420px);
+  overflow-y: auto;
+  resize: none;
 }
 
 .captureIntro {

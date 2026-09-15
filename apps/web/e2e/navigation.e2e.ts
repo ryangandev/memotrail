@@ -249,6 +249,13 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       exact: true,
     });
     await expect(quickCapture).toBeVisible();
+    const dialogHeader = quickCapture.locator("header");
+    await expect(dialogHeader).toHaveCSS("border-bottom-width", "0px");
+    expect(
+      await dialogHeader.evaluate(
+        (element) => element.getBoundingClientRect().height,
+      ),
+    ).toBeLessThanOrEqual(56);
     await expect(
       quickCapture.getByRole("heading", {
         name: "Quick Capture",
@@ -281,18 +288,30 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
         boxShadow: style.boxShadow,
         caretColor: style.caretColor,
         outlineStyle: style.outlineStyle,
+        resize: style.resize,
       };
     });
     expect(entryTextStyle).toMatchObject({
       borderWidth: "0px",
       boxShadow: "none",
       outlineStyle: "none",
+      resize: "none",
     });
     expect(entryTextStyle.caretColor).not.toBe("rgba(0, 0, 0, 0)");
-    await entryText.fill("Typing stays visible without a focus border.");
-    await expect(entryText).toHaveValue(
-      "Typing stays visible without a focus border.",
+    const emptyTextHeight = await entryText.evaluate(
+      (element) => element.getBoundingClientRect().height,
     );
+    await entryText.fill(
+      "A small moment worth keeping.\nThe writing space grows naturally.\nNothing looks like a form control.",
+    );
+    await expect(entryText).toHaveValue(
+      "A small moment worth keeping.\nThe writing space grows naturally.\nNothing looks like a form control.",
+    );
+    expect(
+      await entryText.evaluate(
+        (element) => element.getBoundingClientRect().height,
+      ),
+    ).toBeGreaterThan(emptyTextHeight);
     await page.screenshot({
       caret: "initial",
       path: "/private/tmp/memotrail-quick-capture-typing.png",

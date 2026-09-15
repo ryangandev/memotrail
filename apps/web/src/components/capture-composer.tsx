@@ -305,6 +305,17 @@ export function CaptureComposer({
     }
   }, [isLocalStateReady, variant]);
 
+  useEffect(() => {
+    const input = bodyInputRef.current;
+
+    if (variant !== "dialog" || !input) {
+      return;
+    }
+
+    input.style.height = "auto";
+    input.style.height = `${input.scrollHeight}px`;
+  }, [body, variant]);
+
   function updateDraft(
     nextTitle: string,
     nextBody: string,
@@ -619,7 +630,7 @@ export function CaptureComposer({
               }
               placeholder="What is on your mind?"
               ref={bodyInputRef}
-              rows={4}
+              rows={variant === "dialog" ? 1 : 4}
               value={body}
             />
           </div>
