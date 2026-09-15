@@ -560,7 +560,8 @@
 
 .captureTitle:focus-visible,
 .captureBody:focus-visible {
-  box-shadow: 0 2px 0 -1px var(--mt-color-accent);
+  outline: none;
+  box-shadow: none;
 }
 
 .captureDatePanel {

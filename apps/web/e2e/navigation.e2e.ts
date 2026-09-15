@@ -185,6 +185,53 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       .click();
     await expect(page).toHaveURL(/\/inbox$/);
     await expect(shell).toHaveAttribute("data-shell-instance", "kept");
+
+    await page
+      .getByRole("navigation", { name: "Primary navigation" })
+      .getByRole("link", { name: "Timeline", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/timeline$/);
+    const birthDatePrompt = page.getByRole("dialog", {
+      name: "When did your story begin?",
+    });
+    await expect(birthDatePrompt).toBeVisible();
+    await birthDatePrompt
+      .getByRole("button", { name: "Not now", exact: true })
+      .click();
+    await shell.getByRole("button", { name: "New entry", exact: true }).click();
+
+    const quickCapture = page.getByRole("dialog", {
+      name: "Keep what is on your mind",
+    });
+    const entryText = quickCapture.getByRole("textbox", {
+      name: "Entry text",
+      exact: true,
+    });
+    await expect(quickCapture).toBeVisible();
+    await entryText.focus();
+    await expect(entryText).toBeFocused();
+    const entryTextStyle = await entryText.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        borderWidth: style.borderWidth,
+        boxShadow: style.boxShadow,
+        caretColor: style.caretColor,
+        outlineStyle: style.outlineStyle,
+      };
+    });
+    expect(entryTextStyle).toMatchObject({
+      borderWidth: "0px",
+      boxShadow: "none",
+      outlineStyle: "none",
+    });
+    expect(entryTextStyle.caretColor).not.toBe("rgba(0, 0, 0, 0)");
+    await entryText.fill("Typing stays visible without a focus border.");
+    await expect(entryText).toHaveValue(
+      "Typing stays visible without a focus border.",
+    );
+    await page.screenshot({
+      path: "/private/tmp/memotrail-quick-capture-typing.png",
+    });
   } finally {
     await page.close();
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
