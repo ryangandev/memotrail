@@ -37,7 +37,6 @@ export function SearchShortcutButton({
       type="button"
     >
       <Icon name="search" />
-      <span>Search your trail</span>
       <kbd aria-hidden="true">⌘ K</kbd>
     </button>
   );

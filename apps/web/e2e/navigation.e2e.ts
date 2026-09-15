@@ -79,6 +79,21 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
 
     const shell = page.getByRole("complementary");
     await expect(shell).toBeVisible();
+    await expect(shell.getByRole("button", { name: "New entry" })).toHaveCount(
+      0,
+    );
+    await expect(page.getByText("Saved", { exact: true })).toHaveCount(0);
+    const searchShortcut = page.getByRole("button", {
+      name: "Search your trail",
+      exact: true,
+    });
+    const newEntryShortcut = page.getByRole("button", {
+      name: "New entry",
+      exact: true,
+    });
+    await expect(searchShortcut).toContainText("⌘ K");
+    await expect(searchShortcut).not.toContainText("Search your trail");
+    await expect(newEntryShortcut).toContainText("⌘ ⇧ E");
     await expect(shell.getByText(email, { exact: true })).toHaveCount(0);
     await expect(
       shell
@@ -113,10 +128,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       name: "Sidebar navigation",
     });
     const brand = shell.getByRole("link", { name: "MemoTrail", exact: true });
-    const capture = shell.getByRole("link", {
-      name: "New entry",
-      exact: true,
-    });
+    const capture = newEntryShortcut;
     const brandTop = await brand.evaluate(
       (element) => element.getBoundingClientRect().top,
     );
@@ -134,6 +146,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(brand).toBeVisible();
     await expect(capture).toBeVisible();
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-sidebar-scroll.png",
     });
     expect(
@@ -150,6 +163,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     });
     await expect(commandPalette).toBeVisible();
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-command-palette.png",
     });
     await expect(page).toHaveURL(/\/$/);
@@ -171,6 +185,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       page.getByRole("status", { name: "Opening Search" }),
     ).toBeVisible({ timeout: 500 });
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-navigation-loading.png",
     });
     await expect(shell).toHaveAttribute("data-shell-instance", "kept");
@@ -198,7 +213,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await birthDatePrompt
       .getByRole("button", { name: "Not now", exact: true })
       .click();
-    await shell.getByRole("button", { name: "New entry", exact: true }).click();
+    await page.keyboard.press("Meta+Shift+e");
 
     const quickCapture = page.getByRole("dialog", {
       name: "Keep what is on your mind",
@@ -208,6 +223,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       exact: true,
     });
     await expect(quickCapture).toBeVisible();
+    await expect(entryText).toBeEnabled();
     await entryText.focus();
     await expect(entryText).toBeFocused();
     const entryTextStyle = await entryText.evaluate((element) => {
@@ -230,6 +246,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       "Typing stays visible without a focus border.",
     );
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-quick-capture-typing.png",
     });
   } finally {

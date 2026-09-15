@@ -1,10 +1,11 @@
 .trigger {
   display: flex;
-  width: 100%;
-  height: 42px;
+  width: auto;
+  height: 38px;
   align-items: center;
   justify-content: center;
   gap: var(--mt-space-2);
+  padding: 0 var(--mt-space-3);
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-accent-ink);
   background: var(--mt-color-accent);
@@ -18,20 +19,13 @@
   background: var(--mt-color-accent-hover);
 }
 
-.compactTrigger {
-  width: 38px;
-  height: 38px;
-  padding: 0;
-}
-
-.compactTrigger span {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  clip-path: inset(50%);
+.trigger kbd {
+  padding: 2px 6px;
+  border: 1px solid color-mix(in srgb, currentcolor 24%, transparent);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--mt-color-surface) 16%, transparent);
+  font-family: var(--mt-font-family-sans);
+  font-size: 10px;
 }
 
 .dialog {
@@ -102,6 +96,22 @@
 }
 
 @media (max-width: 720px) {
+  .trigger {
+    width: 38px;
+    padding: 0;
+  }
+
+  .trigger span,
+  .trigger kbd {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
+
   .dialog {
     width: 100%;
     max-width: none;

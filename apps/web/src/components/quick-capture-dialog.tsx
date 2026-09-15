@@ -1,58 +1,83 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { CaptureComposer } from "@/components/capture-composer";
 import { Icon } from "@/components/icon";
 import styles from "./quick-capture-dialog.module.css";
 
 export function QuickCaptureDialog({
-  compact = false,
   idPrefix,
+  onClose,
+  onOpen,
+  open,
   ownerId,
 }: {
-  compact?: boolean;
   idPrefix: string;
+  onClose: () => void;
+  onOpen: () => void;
+  open: boolean;
   ownerId: string;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     const dialog = dialogRef.current;
 
-    if (isOpen && dialog && !dialog.open) {
+    if (open && dialog && !dialog.open) {
       dialog.showModal();
     }
-  }, [isOpen]);
+  }, [open]);
+
+  useEffect(() => {
+    function handleShortcut(event: KeyboardEvent) {
+      if (
+        event.key.toLocaleLowerCase() !== "e" ||
+        (!event.metaKey && !event.ctrlKey) ||
+        !event.shiftKey ||
+        event.altKey ||
+        event.repeat
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      onOpen();
+    }
+
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, [onOpen]);
 
   function close() {
     dialogRef.current?.close();
-    setIsOpen(false);
+    onClose();
   }
 
   return (
     <>
       <button
+        aria-label="New entry"
         aria-haspopup="dialog"
-        className={`${styles.trigger} ${compact ? styles.compactTrigger : ""}`}
-        onClick={() => setIsOpen(true)}
+        className={styles.trigger}
+        onClick={onOpen}
         type="button"
       >
         <Icon name="plus" size={17} />
         <span>New entry</span>
+        <kbd aria-hidden="true">⌘ ⇧ E</kbd>
       </button>
 
-      {isOpen ? (
+      {open ? (
         <dialog
           aria-labelledby={`${idPrefix}-heading`}
           className={styles.dialog}
-          onCancel={() => setIsOpen(false)}
+          onCancel={onClose}
           onClick={(event) => {
             if (event.target === event.currentTarget) {
               close();
             }
           }}
-          onClose={() => setIsOpen(false)}
+          onClose={onClose}
           ref={dialogRef}
         >
           <header className={styles.dialogHeader}>

@@ -169,9 +169,10 @@ Mobile uses Home, Inbox, Timeline, and Library as its primary destinations.
 Library contains Collections, First Times, Goals, Homes, Vehicles, Places, and People.
 Settings is reached from the profile control.
 
-Desktop uses a persistent sidebar with direct access to capture, search, the primary areas, Trash, and one Settings entry point separated from Library.
+Desktop uses a persistent sidebar for the primary areas, Trash, and one Settings entry point separated from Library.
+Compact Search and New Entry controls remain at the right of the persistent top bar on every primary screen.
 A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry, People, and Place results in place, supports keyboard navigation, and keeps full-page Search with filters and AI as an explicit destination.
-A global capture control remains available from every primary screen.
+New Entry opens from the top bar or Command Shift E.
 
 ## Privacy, deletion, and portability
 

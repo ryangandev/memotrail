@@ -32,45 +32,6 @@
   padding: 0 var(--mt-space-2);
 }
 
-.sidebarCaptureButton {
-  margin-top: var(--mt-space-6);
-}
-
-.captureNavigationLink {
-  display: flex;
-  width: 100%;
-  height: 42px;
-  align-items: center;
-  justify-content: center;
-  gap: var(--mt-space-2);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent);
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-medium);
-  text-decoration: none;
-}
-
-.captureNavigationLink:hover {
-  background: var(--mt-color-accent-hover);
-}
-
-.compactCaptureNavigationLink {
-  width: 38px;
-  height: 38px;
-  padding: 0;
-}
-
-.compactCaptureNavigationLink span {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  clip-path: inset(50%);
-}
-
 .brandMark {
   width: 29px;
   height: 29px;
@@ -354,7 +315,7 @@
   display: flex;
   height: 65px;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   padding: 0 var(--mt-space-8);
   border-bottom: 1px solid
     color-mix(in srgb, var(--mt-color-border) 82%, transparent);
@@ -364,14 +325,13 @@
 
 .mobileBrand,
 .mobileTrashButton,
-.mobileCaptureButton,
 .avatarButton {
   display: none;
 }
 
 .searchButton {
   display: flex;
-  width: min(100%, 390px);
+  width: auto;
   height: 38px;
   align-items: center;
   gap: 10px;
@@ -388,10 +348,6 @@
   cursor: pointer;
 }
 
-.searchButton span {
-  flex: 1;
-}
-
 .searchButton kbd {
   padding: 2px 6px;
   border: 1px solid var(--mt-color-border);
@@ -403,11 +359,10 @@
 }
 
 .topActions {
-  position: absolute;
-  right: var(--mt-space-8);
   display: flex;
   align-items: center;
   gap: var(--mt-space-3);
+  margin-left: auto;
 }
 
 .syncStatus {
@@ -422,14 +377,6 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--mt-color-success);
-}
-
-.syncStatus.syncPending {
-  color: var(--mt-color-warm);
-}
-
-.syncStatus.syncPending > span {
   background: var(--mt-color-warm);
 }
 
@@ -1670,16 +1617,7 @@
   }
 
   .topBar {
-    justify-content: flex-start;
     padding-inline: var(--mt-space-5);
-  }
-
-  .searchButton {
-    width: 280px;
-  }
-
-  .topActions {
-    right: var(--mt-space-5);
   }
 }
 
@@ -1716,8 +1654,7 @@
   }
 
   .mobileBrand,
-  .mobileTrashButton,
-  .mobileCaptureButton {
+  .mobileTrashButton {
     display: flex;
   }
 
@@ -1765,7 +1702,6 @@
     box-shadow: none;
   }
 
-  .searchButton span,
   .searchButton kbd,
   .syncStatus {
     display: none;

@@ -144,11 +144,20 @@ export function WorkspaceShell({
 }) {
   const activeDestination = destinationForPathname(usePathname());
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
   const closeCommandPalette = useCallback(
     () => setCommandPaletteOpen(false),
     [],
   );
-  const openCommandPalette = useCallback(() => setCommandPaletteOpen(true), []);
+  const closeQuickCapture = useCallback(() => setQuickCaptureOpen(false), []);
+  const openCommandPalette = useCallback(() => {
+    setQuickCaptureOpen(false);
+    setCommandPaletteOpen(true);
+  }, []);
+  const openQuickCapture = useCallback(() => {
+    setCommandPaletteOpen(false);
+    setQuickCaptureOpen(true);
+  }, []);
 
   return (
     <div className={styles.appShell}>
@@ -171,21 +180,19 @@ export function WorkspaceShell({
             <span>MemoTrail</span>
           </Link>
 
-          <SearchShortcutButton
-            className={styles.searchButton}
-            onOpen={openCommandPalette}
-          />
-
           <div className={styles.topActions}>
             <SyncStatus ownerId={viewer.id} />
-            <div className={styles.mobileCaptureButton}>
-              <CaptureControl
-                activeDestination={activeDestination}
-                compact
-                idPrefix="mobile-capture"
-                ownerId={viewer.id}
-              />
-            </div>
+            <SearchShortcutButton
+              className={styles.searchButton}
+              onOpen={openCommandPalette}
+            />
+            <QuickCaptureDialog
+              idPrefix="topbar-capture"
+              onClose={closeQuickCapture}
+              onOpen={openQuickCapture}
+              open={quickCaptureOpen}
+              ownerId={viewer.id}
+            />
             <Link
               aria-current={activeDestination === "trash" ? "page" : undefined}
               aria-label="Open Trash"
@@ -258,14 +265,6 @@ function Sidebar({
         <BrandMark className={styles.brandMark} />
         <span>MemoTrail</span>
       </Link>
-
-      <div className={styles.sidebarCaptureButton}>
-        <CaptureControl
-          activeDestination={activeDestination}
-          idPrefix="sidebar-capture"
-          ownerId={viewer.id}
-        />
-      </div>
 
       <div
         aria-label="Sidebar navigation"
@@ -408,38 +407,5 @@ function isNavigationActive(
         "trash",
         "vehicles",
       ].includes(activeDestination))
-  );
-}
-
-function CaptureControl({
-  activeDestination,
-  compact = false,
-  idPrefix,
-  ownerId,
-}: {
-  activeDestination: WorkspaceDestination;
-  compact?: boolean;
-  idPrefix: string;
-  ownerId: string;
-}) {
-  if (activeDestination === "home" || activeDestination === "inbox") {
-    return (
-      <Link
-        aria-label={compact ? "New entry" : undefined}
-        className={`${styles.captureNavigationLink} ${compact ? styles.compactCaptureNavigationLink : ""}`}
-        href="#capture-title"
-      >
-        <Icon name="plus" size={17} />
-        <span>New entry</span>
-      </Link>
-    );
-  }
-
-  return (
-    <QuickCaptureDialog
-      compact={compact}
-      idPrefix={idPrefix}
-      ownerId={ownerId}
-    />
   );
 }
