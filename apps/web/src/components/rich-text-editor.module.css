@@ -12,6 +12,11 @@
   background: var(--mt-color-surface);
 }
 
+.page,
+.dialog {
+  background: transparent;
+}
+
 .content {
   min-width: 0;
 }
@@ -110,6 +115,7 @@
 }
 
 .toolbarButton {
+  position: relative;
   display: grid;
   width: 30px;
   height: 30px;
@@ -122,6 +128,63 @@
   transition:
     color var(--mt-motion-quick),
     background var(--mt-motion-quick);
+}
+
+.tooltip {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  z-index: 5;
+  display: flex;
+  width: max-content;
+  max-width: 180px;
+  align-items: center;
+  gap: var(--mt-space-2);
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  visibility: hidden;
+  color: var(--mt-color-surface-raised);
+  background: var(--mt-color-ink);
+  box-shadow: var(--mt-shadow-raised);
+  font-family: var(--mt-font-family-sans);
+  font-size: 11px;
+  font-weight: var(--mt-font-weight-medium);
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -3px);
+  transition:
+    opacity var(--mt-motion-quick),
+    transform var(--mt-motion-quick);
+}
+
+.tooltip kbd {
+  padding: 2px 4px;
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  border-radius: 4px;
+  color: inherit;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  font: inherit;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.toolbarButton:hover .tooltip,
+.toolbarButton:focus-visible .tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.toolbarButton:first-child .tooltip {
+  left: 0;
+  transform: translate(0, -3px);
+}
+
+.toolbarButton:first-child:hover .tooltip,
+.toolbarButton:first-child:focus-visible .tooltip {
+  transform: translate(0, 0);
 }
 
 .toolbarButton:hover {
@@ -220,6 +283,10 @@
   .linkEditor {
     right: 0;
     min-width: 0;
+  }
+
+  .tooltip {
+    display: none;
   }
 }
 

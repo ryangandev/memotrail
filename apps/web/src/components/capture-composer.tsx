@@ -605,12 +605,15 @@ export function CaptureComposer({
         aria-label="Quick capture"
         onSubmit={handleSubmit}
       >
-        <div className={styles.captureIntro}>
-          {variant === "page" ? (
+        {variant === "page" ? (
+          <header className={styles.captureComposerHeader}>
             <span className={styles.captureSpark} aria-hidden="true">
-              <Icon name="sparkle" size={19} />
+              <Icon name="sparkle" size={17} />
             </span>
-          ) : null}
+            <h2>What’s on your mind?</h2>
+          </header>
+        ) : null}
+        <div className={styles.captureIntro}>
           <div className={styles.captureFields}>
             {isLocalStateReady ? (
               <RichTextEditor
@@ -624,7 +627,7 @@ export function CaptureComposer({
                 placeholder="What is on your mind?"
                 richText={bodyRich}
                 text={body}
-                variant="compact"
+                variant={variant}
               />
             ) : (
               <div

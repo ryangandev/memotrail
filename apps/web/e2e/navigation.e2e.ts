@@ -81,6 +81,31 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     });
     await page.goto("/");
 
+    const homeCapture = page.getByRole("form", {
+      name: "Quick capture",
+      exact: true,
+    });
+    const homeCaptureHeading = homeCapture.getByRole("heading", {
+      name: "What’s on your mind?",
+      exact: true,
+    });
+    const homeEntryText = homeCapture.getByRole("textbox", {
+      name: "Entry text",
+      exact: true,
+    });
+    await expect(homeCaptureHeading).toBeVisible();
+    await expect(homeEntryText).toBeVisible();
+    await expect(
+      homeCapture.locator('[data-rich-text-editor="true"]'),
+    ).toHaveAttribute("data-variant", "page");
+    const homeCaptureLeft = await homeCapture.evaluate(
+      (element) => element.getBoundingClientRect().left,
+    );
+    const homeEntryTextLeft = await homeEntryText.evaluate(
+      (element) => element.getBoundingClientRect().left,
+    );
+    expect(Math.round(homeEntryTextLeft - homeCaptureLeft)).toBe(25);
+
     const shell = page.getByRole("complementary");
     await expect(shell).toBeVisible();
     await expect(shell.getByRole("button", { name: "New entry" })).toHaveCount(
@@ -282,7 +307,12 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       await dialogHeader.evaluate(
         (element) => element.getBoundingClientRect().height,
       ),
-    ).toBeLessThanOrEqual(56);
+    ).toBeGreaterThanOrEqual(62);
+    expect(
+      await dialogHeader.evaluate(
+        (element) => element.getBoundingClientRect().height,
+      ),
+    ).toBeLessThanOrEqual(68);
     await expect(
       quickCapture.getByRole("heading", {
         name: "What’s on your mind?",
@@ -315,6 +345,26 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       (element) => element.getBoundingClientRect().left,
     );
     expect(Math.round(entryTextLeft - dialogLeft)).toBe(21);
+    const dialogMarkLeft = await dialogHeader
+      .locator("span")
+      .first()
+      .evaluate((element) => element.getBoundingClientRect().left);
+    const dateActionLeft = await quickCapture
+      .getByRole("button", { name: "Date", exact: true })
+      .evaluate((element) => element.getBoundingClientRect().left);
+    expect(Math.round(dialogMarkLeft)).toBe(Math.round(entryTextLeft));
+    expect(Math.round(dateActionLeft)).toBe(Math.round(entryTextLeft));
+    const dialogRight = await quickCapture.evaluate(
+      (element) => element.getBoundingClientRect().right,
+    );
+    const closeRight = await quickCapture
+      .getByRole("button", { name: "Close quick capture", exact: true })
+      .evaluate((element) => element.getBoundingClientRect().right);
+    const saveRight = await quickCapture
+      .getByRole("button", { name: "Save to Inbox", exact: true })
+      .evaluate((element) => element.getBoundingClientRect().right);
+    expect(Math.round(dialogRight - closeRight)).toBe(21);
+    expect(Math.round(dialogRight - saveRight)).toBe(21);
     const entryTextStyle = await entryText.evaluate((element) => {
       const style = getComputedStyle(element);
       return {
@@ -343,23 +393,46 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       name: "Text formatting",
       exact: true,
     });
-    for (const label of [
-      "Bold",
-      "Italic",
-      "Underline",
-      "Strikethrough",
-      "Attach link",
-      "Bullet list",
-      "Ordered list",
-      "Block quote",
-      "Inline code",
-      "Code block",
-    ]) {
-      await expect(
-        formatting.getByRole("button", { name: label, exact: true }),
-      ).toBeVisible();
+    for (const [label, shortcut, ariaShortcut] of [
+      ["Bold", "⌘B", /Meta\+B/],
+      ["Italic", "⌘I", /Meta\+I/],
+      ["Underline", "⌘U", /Meta\+U/],
+      ["Strikethrough", "⌘⇧S", /Meta\+Shift\+S/],
+      ["Attach link", "⌘K", /Meta\+K/],
+      ["Bullet list", "⌘⇧8", /Meta\+Shift\+8/],
+      ["Ordered list", "⌘⇧7", /Meta\+Shift\+7/],
+      ["Block quote", "⌘⇧B", /Meta\+Shift\+B/],
+      ["Inline code", "⌘E", /Meta\+E/],
+      ["Code block", "⌘⌥C", /Meta\+Alt\+C/],
+    ] as const) {
+      const button = formatting.getByRole("button", {
+        name: label,
+        exact: true,
+      });
+      await expect(button).toBeVisible();
+      await expect(button).toHaveAttribute("aria-keyshortcuts", ariaShortcut);
+      await button.hover();
+      const tooltip = button.getByRole("tooltip");
+      await expect(tooltip).toBeVisible();
+      await expect(tooltip).toContainText(label);
+      await expect(tooltip).toContainText(shortcut);
     }
+    const boldButton = formatting.getByRole("button", {
+      name: "Bold",
+      exact: true,
+    });
+    await boldButton.hover();
+    await expect(boldButton.getByRole("tooltip")).toHaveCSS("opacity", "1");
+    await page.screenshot({
+      caret: "initial",
+      path: "/private/tmp/memotrail-rich-text-tooltip.png",
+    });
     const entryBody = "A small moment worth keeping.";
+    await entryText.fill("List item");
+    await entryText.press("Meta+Shift+8");
+    await expect(entryText.locator("ul")).toContainText("List item");
+    await entryText.press("Meta+Shift+8");
+    await expect(entryText.locator("ul")).toHaveCount(0);
     await entryText.fill(entryBody);
     for (const [label, element] of [
       ["Bold", "strong"],
@@ -382,9 +455,8 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await formatting
       .getByRole("button", { name: "Bold", exact: true })
       .click();
-    await formatting
-      .getByRole("button", { name: "Attach link", exact: true })
-      .click();
+    await entryText.press("Meta+k");
+    await expect(commandPalette).not.toBeVisible();
     await quickCapture.getByRole("textbox", { name: "Link URL" }).fill(
       "example.com/memory",
     );
