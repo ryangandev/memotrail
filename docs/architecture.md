@@ -49,6 +49,7 @@ Pair it with the test file carrying the same feature name.
 - `entries.item_kind` owns the structural identity boundary: Capture, Writing, Entity, Event, Story, or Goal.
 - `entries.item_subtype` selects a compatible preset within that Kind.
 - `entries.entry_type` is a synchronized compatibility discriminator for older clients and must not become the source of new product semantics.
+- `wiki_items_workspace` supplies the owner-scoped Library browse surface across `entries` plus the legacy People and Places registries. Those registries are exposed as Entity presets until their storage is consolidated behind canonical Wiki Item identities.
 - A raw Capture may be finalized as one durable item or may produce linked items through a provenance-preserving extraction.
 - Established durable items never change Kind through a generic selector; cross-Kind workflows create and link another item.
 - Web Goal extraction uses a caller-generated target UUID for idempotency, preserves the source revision and identity, and records `derived` plus `derived_from` provenance links so both items remain discoverable.
