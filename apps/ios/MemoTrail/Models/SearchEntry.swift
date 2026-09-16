@@ -1,38 +1,7 @@
 import Foundation
 
-enum LibrarySearchKind: String, Decodable, Sendable {
-  case person, place, habit
-  var title: String { rawValue.capitalized }
-}
-
-struct LibrarySearchItem: Decodable, Identifiable, Sendable {
-  let recordID: UUID
-  let kind: LibrarySearchKind
-  let name: String
-  let excerpt: String
-  let matchReasons: [String]
-  var id: String { "\(kind.rawValue):\(recordID)" }
-  enum CodingKeys: String, CodingKey {
-    case recordID = "id"
-    case kind, name, excerpt
-    case matchReasons = "match_reasons"
-  }
-}
-
-struct LibrarySearchPage: Decodable, Sendable {
-  let items: [LibrarySearchItem]
-  let totalCount: Int
-  enum CodingKeys: String, CodingKey {
-    case items
-    case totalCount = "total_count"
-  }
-  var isValid: Bool { totalCount >= 0 && items.count <= 50 }
-}
-
-struct LibrarySearchParameters: Encodable, Sendable {
-  let p_query: String
-  let p_offset: Int
-  let p_limit = 20
+enum SearchRecordSource: String, Codable, Equatable, Hashable, Sendable {
+  case entry, person, place
 }
 
 struct AISearchRequest: Encodable, Equatable, Sendable {
@@ -78,6 +47,10 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   let body: String
   let entryType: String
   let inboxStatus: String
+  let itemKind: WikiItemKind
+  let itemSubtype: String
+  let recordSource: SearchRecordSource
+  let recordID: UUID
   let occurredAt: Date?
   let occurredEnd: Date?
   let datePrecision: String?
@@ -95,6 +68,10 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
     case body
     case entryType = "entry_type"
     case inboxStatus = "inbox_status"
+    case itemKind = "item_kind"
+    case itemSubtype = "item_subtype"
+    case recordSource = "record_source"
+    case recordID = "record_id"
     case occurredAt = "occurred_start"
     case occurredEnd = "occurred_end"
     case datePrecision = "date_precision"
@@ -115,6 +92,19 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
     body = try values.decode(String.self, forKey: .body)
     entryType = try values.decode(String.self, forKey: .entryType)
     inboxStatus = try values.decode(String.self, forKey: .inboxStatus)
+    let compatibility = Self.compatibilityIdentity(
+      entryType: entryType,
+      inboxStatus: inboxStatus
+    )
+    itemKind =
+      try values.decodeIfPresent(WikiItemKind.self, forKey: .itemKind)
+      ?? compatibility.kind
+    itemSubtype =
+      try values.decodeIfPresent(String.self, forKey: .itemSubtype)?.trimmed.nonEmpty
+      ?? compatibility.subtype
+    recordSource =
+      try values.decodeIfPresent(SearchRecordSource.self, forKey: .recordSource) ?? .entry
+    recordID = try values.decodeIfPresent(UUID.self, forKey: .recordID) ?? id
     occurredAt = try values.decodeIfPresent(Date.self, forKey: .occurredAt)
     occurredEnd = try values.decodeIfPresent(Date.self, forKey: .occurredEnd)
     datePrecision = try values.decodeIfPresent(String.self, forKey: .datePrecision)
@@ -164,11 +154,15 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   }
 
   var displayType: String {
-    SearchEntryType(rawValue: entryType)?.displayName
-      ?? entryType
+    let subtype =
+      itemSubtype
       .split(separator: "_")
       .map { $0.prefix(1).uppercased() + $0.dropFirst() }
       .joined(separator: " ")
+    if itemSubtype == itemKind.rawValue || (itemKind == .goal && itemSubtype == "goal") {
+      return itemKind.displayName
+    }
+    return "\(itemKind.displayName) · \(subtype)"
   }
 
   var displayDate: String {
@@ -176,7 +170,8 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
       let occurrence = EntryOccurrence(
         precision: precision, start: occurredAt, end: occurredEnd, label: occurredLabel,
         timezone: occurredTimezone ?? "UTC")
-      return ["home", "vehicle", "life_stage"].contains(entryType)
+      return (itemKind == .entity && ["home", "vehicle"].contains(itemSubtype))
+        || (itemKind == .event && itemSubtype == "life_stage")
         ? occurrence.spanLabel : occurrence.displayLabel
     }
     if let occurredLabel {
@@ -195,30 +190,41 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   var isInInbox: Bool {
     inboxStatus == "unreviewed"
   }
+
+  private static func compatibilityIdentity(
+    entryType: String,
+    inboxStatus: String
+  ) -> (kind: WikiItemKind, subtype: String) {
+    switch entryType {
+    case "first_time": (.event, "first_time")
+    case "life_stage": (.event, "life_stage")
+    case "home": (.entity, "home")
+    case "vehicle": (.entity, "vehicle")
+    case "goal": (.goal, "goal")
+    default:
+      inboxStatus == "unreviewed"
+        ? (.capture, "quick_capture")
+        : (.writing, "note")
+    }
+  }
 }
 
 enum SearchEntryType: String, CaseIterable, Codable, Equatable, Hashable, Sendable {
-  case standard
-  case firstTime = "first_time"
-  case lifeStage = "life_stage"
-  case home
-  case vehicle
+  case capture
+  case writing
+  case entity
+  case event
+  case story
   case goal
 
   var displayName: String {
     switch self {
-    case .standard:
-      "Standard Entry"
-    case .firstTime:
-      "First Time"
-    case .lifeStage:
-      "Life Stage"
-    case .home:
-      "Home"
-    case .vehicle:
-      "Vehicle"
-    case .goal:
-      "Goal"
+    case .capture: "Capture"
+    case .writing: "Writing"
+    case .entity: "Entity"
+    case .event: "Event"
+    case .story: "Story"
+    case .goal: "Goal"
     }
   }
 }

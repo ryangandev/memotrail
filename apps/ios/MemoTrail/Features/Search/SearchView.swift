@@ -1,108 +1,6 @@
 @preconcurrency import Supabase
 import SwiftUI
 
-@MainActor
-private struct LibraryKeywordResultsView: View {
-  let client: SupabaseClient
-  let ownerID: UUID
-  let query: String
-  @State private var items: [LibrarySearchItem] = []
-  @State private var total = 0
-  @State private var loading = false
-  @State private var error: String?
-  @State private var generation = UUID()
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      Text("People, Places and Habits").font(MTTypography.titleSmall)
-      Text(
-        "Names, notes, location details and Habit check-in notes. No AI required. Trash and archived Habits are excluded."
-      )
-      .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-      if let error {
-        Text(error).font(MTTypography.caption).foregroundStyle(MTColor.warm)
-        Button("Retry library search") { Task { await load(offset: 0) } }.disabled(loading)
-      } else if !loading {
-        Text("\(total) matches").font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-      }
-      ForEach(items) { item in
-        NavigationLink {
-          destination(item)
-        } label: {
-          VStack(alignment: .leading, spacing: MTSpacing.s2) {
-            Text(item.kind.title).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-            Text(item.name).font(MTTypography.titleSmall)
-            if !item.excerpt.isEmpty {
-              Text(item.excerpt).font(MTTypography.body).foregroundStyle(MTColor.inkMuted)
-            }
-            Text(
-              "Matched: \(item.matchReasons.isEmpty ? "Names, notes and details" : item.matchReasons.joined(separator: ", "))"
-            )
-            .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-          }.frame(maxWidth: .infinity, alignment: .leading).padding(MTSpacing.s4)
-            .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.large))
-            .overlay(RoundedRectangle(cornerRadius: MTRadius.large).stroke(MTColor.border))
-        }.buttonStyle(.plain).foregroundStyle(MTColor.ink)
-      }
-      if loading { ProgressView("Searching your library…") }
-      if !loading && items.count < total && items.count <= 10000 {
-        Button("Load more library matches") { Task { await load(offset: items.count) } }
-      } else if !loading && items.count < total {
-        Text("Refine your search to reach more matches.").font(MTTypography.caption)
-      }
-    }.task(id: query) { await load(offset: 0) }
-  }
-
-  @ViewBuilder
-  private func destination(_ item: LibrarySearchItem) -> some View {
-    switch item.kind {
-    case .person: PeopleView(client: client, ownerID: ownerID, focusedPersonID: item.recordID)
-    case .place:
-      PlacesView(client: client, ownerID: ownerID, embedded: true, focusedPlaceID: item.recordID)
-    case .habit:
-      HabitsView(client: client, ownerID: ownerID, focusedHabitID: item.recordID, embedded: true)
-    }
-  }
-
-  private func load(offset: Int) async {
-    let current = UUID()
-    generation = current
-    loading = true
-    error = nil
-    if offset == 0 {
-      items = []
-      total = 0
-    }
-    defer { if generation == current { loading = false } }
-    do {
-      guard try await client.auth.session.user.id == ownerID else {
-        throw URLError(.userAuthenticationRequired)
-      }
-      let page: LibrarySearchPage = try await client.rpc(
-        "search_library_entities", params: LibrarySearchParameters(p_query: query, p_offset: offset)
-      ).execute().value
-      try Task.checkCancellation()
-      guard generation == current else { return }
-      guard page.isValid, try await client.auth.session.user.id == ownerID else {
-        throw URLError(.badServerResponse)
-      }
-      try Task.checkCancellation()
-      guard generation == current else { return }
-      if offset == 0 {
-        items = page.items
-      } else {
-        let known = Set(items.map(\.id))
-        items.append(contentsOf: page.items.filter { !known.contains($0.id) })
-      }
-      total = page.totalCount
-    } catch {
-      if generation == current && !Task.isCancelled {
-        self.error = "Could not search People, Places and Habits. Try again."
-      }
-    }
-  }
-}
-
 struct SearchView: View {
   @State private var controller: SearchController
   @State private var isShowingFilters = false
@@ -143,12 +41,6 @@ struct SearchView: View {
           aiResults(answer)
         } else {
           results
-          if let query = controller.libraryQuery {
-            LibraryKeywordResultsView(client: client, ownerID: ownerID, query: query)
-          } else if controller.hasSearched && controller.activeFilterCount > 0 {
-            Text("Clear Entry filters to also search People, Places and Habits.")
-              .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-          }
         }
       }
       .padding(.horizontal, MTSpacing.s4)
@@ -190,7 +82,7 @@ struct SearchView: View {
       SearchFiltersSheet(controller: controller)
     }
     .navigationDestination(for: SearchEntry.self) { entry in
-      SearchEntryDetailView(entry: entry)
+      searchDestination(entry)
     }
     .task {
       await controller.loadFilterOptions()
@@ -208,7 +100,7 @@ struct SearchView: View {
         .font(MTTypography.display)
         .foregroundStyle(MTColor.ink)
 
-      Text("Find Entries, People, Places and Habits by what you remember.")
+      Text("Find any Writing, Entity, Event, Story, or Goal by what you remember.")
         .font(MTTypography.body)
         .foregroundStyle(MTColor.inkMuted)
         .lineSpacing(2)
@@ -302,20 +194,20 @@ struct SearchView: View {
       searchMessage(
         title: "Start with anything you remember",
         message:
-          "A word from the note, a year, a Collection, or even part of a Chinese phrase can bring the Entry back.",
+          "A word from the writing, a year, a Collection, or even part of a Chinese phrase can bring a Wiki Item back.",
         systemImage: "sparkles"
       )
     } else if controller.isLoading && controller.entries.isEmpty {
       HStack(spacing: MTSpacing.s3) {
         ProgressView()
-        Text("Searching your Entries...")
+        Text("Searching your Life Wiki...")
           .font(MTTypography.body)
           .foregroundStyle(MTColor.inkMuted)
       }
       .frame(maxWidth: .infinity, minHeight: 150)
     } else if controller.entries.isEmpty {
       searchMessage(
-        title: "No matching Entries",
+        title: "No matching items",
         message: "Try fewer words, remove a filter, or search for a broader date.",
         systemImage: "magnifyingglass"
       )
@@ -505,7 +397,19 @@ struct SearchView: View {
   }
 
   private var resultCountLabel: String {
-    "\(controller.totalCount) \(controller.totalCount == 1 ? "Entry" : "Entries")"
+    "\(controller.totalCount) \(controller.totalCount == 1 ? "item" : "items")"
+  }
+
+  @ViewBuilder
+  private func searchDestination(_ entry: SearchEntry) -> some View {
+    switch entry.recordSource {
+    case .person:
+      PeopleView(client: client, ownerID: ownerID, focusedPersonID: entry.recordID)
+    case .place:
+      PlacesView(client: client, ownerID: ownerID, embedded: true, focusedPlaceID: entry.recordID)
+    case .entry:
+      SearchEntryDetailView(entry: entry)
+    }
   }
 
   private var filterButtonLabel: String {
@@ -754,8 +658,8 @@ private struct SearchFiltersSheet: View {
     NavigationStack {
       Form {
         Section("Organization") {
-          Picker("Type", selection: $entryType) {
-            Text("All Types").tag(nil as SearchEntryType?)
+          Picker("Kind", selection: $entryType) {
+            Text("All Kinds").tag(nil as SearchEntryType?)
             ForEach(SearchEntryType.allCases, id: \.self) { type in
               Text(type.displayName).tag(type as SearchEntryType?)
             }

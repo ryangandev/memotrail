@@ -23,7 +23,6 @@ import {
 import {
   isWikiItemKind,
   wikiEntryHref,
-  wikiItemIdentityFromLegacy,
   wikiItemIdentityLabel,
   type WikiItemKind,
 } from "@/lib/data/wiki-item";
@@ -67,12 +66,16 @@ type SearchRow = {
   entry_id: string;
   entry_type: string;
   inbox_status: "organized" | "unreviewed";
+  item_kind: WikiItemKind;
+  item_subtype: string;
   match_reasons: string[] | null;
   occurred_label: string | null;
   occurred_start: string | null;
   occurred_end: string | null;
   date_precision: OccurrencePrecision;
   occurred_timezone: string | null;
+  record_id: string;
+  record_source: "entry" | "person" | "place";
   tag_names: string[] | null;
   title: string | null;
   total_count: number | string;
@@ -88,17 +91,6 @@ type ItemIdentity = {
   itemSubtype: string;
   recordId: string;
   recordSource: "entry" | "person" | "place";
-};
-
-type ItemIdentityRow = {
-  id: string;
-  item_kind: string;
-  item_subtype: string;
-};
-
-type SpecializedIdentityRow = {
-  entry_id: string;
-  id: string;
 };
 
 export async function getSearchWorkspace(
@@ -150,13 +142,10 @@ export async function getSearchWorkspace(
   const parsedRows = search.error ? [] : searchRows(search.data);
   const malformedSearchResponse = shouldSearch && !search.error && !parsedRows;
   const rows = parsedRows ?? [];
-  const [bodyRichByEntry, identityByEntry] = await Promise.all([
-    loadEntryRichTextMap(
-      context,
-      rows.map((row) => ({ body: row.body, id: row.entry_id })),
-    ),
-    loadEntryIdentityMap(context, rows),
-  ]);
+  const bodyRichByEntry = await loadEntryRichTextMap(
+    context,
+    rows.map((row) => ({ body: row.body, id: row.entry_id })),
+  );
   const filtersUnavailable = collections.error || tags.error;
 
   return {
@@ -165,13 +154,7 @@ export async function getSearchWorkspace(
       : (collections.data ?? []).map((collection) => collection.name),
     entries: search.error
       ? []
-      : rows.map((row) =>
-          entryFromRow(
-            row,
-            bodyRichByEntry.get(row.entry_id),
-            identityByEntry.get(row.entry_id),
-          ),
-        ),
+      : rows.map((row) => entryFromRow(row, bodyRichByEntry.get(row.entry_id))),
     filtersError: filtersUnavailable
       ? "Collection and tag filters are temporarily unavailable. Keyword search still works."
       : null,
@@ -212,12 +195,7 @@ export async function getQuickSearchResults(
   );
 
   const entryRows = entrySearch.error ? null : searchRows(entrySearch.data);
-  const identityByEntry = entryRows
-    ? await loadEntryIdentityMap(context, entryRows)
-    : new Map<string, ItemIdentity>();
-  const items = (entryRows ?? [])
-    .map((row) => quickEntryItem(row, identityByEntry.get(row.entry_id)))
-    .slice(0, 8);
+  const items = (entryRows ?? []).map((row) => quickEntryItem(row)).slice(0, 8);
 
   return {
     error: entryRows
@@ -262,11 +240,8 @@ export async function getTagEntryPreviews(
     };
   }
 
-  const identityByEntry = await loadEntryIdentityMap(context, rows);
   return {
-    entries: rows.map((row) =>
-      tagEntryPreview(row, identityByEntry.get(row.entry_id)),
-    ),
+    entries: rows.map((row) => tagEntryPreview(row)),
     error: null,
   };
 }
@@ -357,91 +332,12 @@ function entryFromRow(
   };
 }
 
-async function loadEntryIdentityMap(
-  context: NonNullable<Awaited<ReturnType<typeof getAuthenticatedContext>>>,
-  rows: readonly SearchRow[],
-) {
-  if (rows.length === 0) return new Map<string, ItemIdentity>();
-
-  const { data, error } = await context.client
-    .from("entries")
-    .select("id,item_kind,item_subtype")
-    .eq("owner_id", context.userId)
-    .in(
-      "id",
-      rows.map((row) => row.entry_id),
-    )
-    .returns<ItemIdentityRow[]>();
-  if (error) return new Map<string, ItemIdentity>();
-
-  const identities = new Map<string, ItemIdentity>();
-  for (const row of data ?? []) {
-    if (!isWikiItemKind(row.item_kind) || !row.item_subtype) continue;
-    identities.set(row.id, {
-      itemKind: row.item_kind,
-      itemSubtype: row.item_subtype,
-      recordId: row.id,
-      recordSource: "entry",
-    });
-  }
-
-  const personEntryIds = (data ?? [])
-    .filter(
-      (row) => row.item_kind === "entity" && row.item_subtype === "person",
-    )
-    .map((row) => row.id);
-  const placeEntryIds = (data ?? [])
-    .filter((row) => row.item_kind === "entity" && row.item_subtype === "place")
-    .map((row) => row.id);
-  const [people, places] = await Promise.all([
-    personEntryIds.length
-      ? context.client
-          .from("people")
-          .select("id,entry_id")
-          .eq("owner_id", context.userId)
-          .in("entry_id", personEntryIds)
-          .returns<SpecializedIdentityRow[]>()
-      : Promise.resolve({ data: [] as SpecializedIdentityRow[], error: null }),
-    placeEntryIds.length
-      ? context.client
-          .from("places")
-          .select("id,entry_id")
-          .eq("owner_id", context.userId)
-          .in("entry_id", placeEntryIds)
-          .returns<SpecializedIdentityRow[]>()
-      : Promise.resolve({ data: [] as SpecializedIdentityRow[], error: null }),
-  ]);
-
-  if (!people.error) {
-    for (const row of people.data ?? []) {
-      const identity = identities.get(row.entry_id);
-      if (!identity) continue;
-      identities.set(row.entry_id, {
-        ...identity,
-        recordId: row.id,
-        recordSource: "person",
-      });
-    }
-  }
-  if (!places.error) {
-    for (const row of places.data ?? []) {
-      const identity = identities.get(row.entry_id);
-      if (!identity) continue;
-      identities.set(row.entry_id, {
-        ...identity,
-        recordId: row.id,
-        recordSource: "place",
-      });
-    }
-  }
-  return identities;
-}
-
 function identityFromSearchRow(row: SearchRow): ItemIdentity {
   return {
-    ...wikiItemIdentityFromLegacy(row.entry_type, row.inbox_status),
-    recordId: row.entry_id,
-    recordSource: "entry" as const,
+    itemKind: row.item_kind,
+    itemSubtype: row.item_subtype,
+    recordId: row.record_id,
+    recordSource: row.record_source,
   };
 }
 
@@ -478,6 +374,8 @@ function isSearchRow(value: unknown): value is SearchRow {
     typeof value.body === "string" &&
     typeof value.entry_id === "string" &&
     typeof value.entry_type === "string" &&
+    isWikiItemKind(value.item_kind) &&
+    typeof value.item_subtype === "string" &&
     (value.inbox_status === "organized" ||
       value.inbox_status === "unreviewed") &&
     typeof value.updated_at === "string" &&
@@ -485,6 +383,8 @@ function isSearchRow(value: unknown): value is SearchRow {
     nullableString(value.occurred_label) &&
     nullableString(value.occurred_start) &&
     nullableString(value.occurred_end) &&
+    typeof value.record_id === "string" &&
+    ["entry", "person", "place"].includes(String(value.record_source)) &&
     occurrencePrecisions.includes(
       value.date_precision as OccurrencePrecision,
     ) &&

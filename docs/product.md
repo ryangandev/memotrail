@@ -102,7 +102,7 @@ Photo metadata may be offered as a date or Place suggestion but is never adopted
 - Moving a Collection to Trash never deletes its Entries or photos.
 - A used tag must be merged into another tag or removed from its Entries before deletion, so organization is never silently lost.
 - Entries may link to other Entries and expose incoming backlinks without copying writing.
-- Reusable People and Places may link to many Entries.
+- Reusable People and Places are canonical Entity Wiki Items with typed detail records and may link to many other Wiki Items.
 - Important content, organization, relationship, specialized-field, and photo-membership changes remain recoverable through version history.
 - Restoring history creates a new revision and does not erase later history.
 

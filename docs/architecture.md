@@ -49,7 +49,8 @@ Pair it with the test file carrying the same feature name.
 - `entries.item_kind` owns the structural identity boundary: Capture, Writing, Entity, Event, Story, or Goal.
 - `entries.item_subtype` selects a compatible preset within that Kind.
 - `entries.entry_type` is a synchronized compatibility discriminator for older clients and must not become the source of new product semantics.
-- `wiki_items_workspace` supplies the owner-scoped Library browse surface across `entries` plus the legacy People and Places registries. Those registries are exposed as Entity presets until their storage is consolidated behind canonical Wiki Item identities.
+- `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item. Person and Place rows expose both the canonical Entry ID and their specialized record ID so clients can preserve identity while opening the correct editor.
+- `people.entry_id` and `places.entry_id` are required owner-scoped links to canonical Entity Wiki Items. Triggers keep names, notes, revision state, and Trash state synchronized while the specialized tables retain typed facts and relationship-facing IDs.
 - A raw Capture may be finalized as one durable item or may produce linked items through a provenance-preserving extraction.
 - Established durable items never change Kind through a generic selector; cross-Kind workflows create and link another item.
 - Dedicated Web extraction routes pass only the source Capture ID, reload the owner-scoped saved source on the server, and prefill the specialized form without placing personal content in the URL or client storage.
@@ -123,8 +124,8 @@ Pair it with the test file carrying the same feature name.
 - Interrupted provider outcomes do not trigger automatic paid retries.
 - Suggestion and search outputs are schema-validated and remain separate from original writing until explicit user action.
 - Search answers cite exact stored evidence; provenance does not imply that the model's conclusion is true.
-- Search retains the compatibility parameter name `p_entry_types`, but `search_entries_ordered` interprets each value as a Wiki Item Kind, subtype, or legacy `entry_type` before pagination. Web result labels and routes come from `item_kind` plus `item_subtype`; People and Places join keyword and AI results when the selected semantic scope includes their Entity presets.
-- The persistent Web Command Palette debounces input before calling the dynamic, private, no-store `app/api/search/quick` route. That route runs owner-scoped Entry and Library RPCs in parallel, returns a bounded result shape, and leaves filtered or AI search on the full Search page.
+- Search retains the compatibility parameter name `p_entry_types`, but `search_entries_ordered` interprets each value as a Wiki Item Kind, subtype, or legacy `entry_type` before pagination. `search_entries_with_occurrence` adds canonical Kind, subtype, record source, and specialized routing identity so Web and iOS use one result stream for every Wiki Item, including People and Places.
+- The persistent Web Command Palette debounces input before calling the dynamic, private, no-store `app/api/search/quick` route. That route returns one bounded owner-scoped canonical result stream and leaves filtered or AI search on the full Search page.
 
 ## Deletion, export, and recovery rules
 
