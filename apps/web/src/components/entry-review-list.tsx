@@ -407,6 +407,10 @@ export function EntryReviewDialog({
                 <Icon name="home" size={15} />
                 Create a Home
               </Link>
+              <Link href={`/vehicles?source=${entry.id}`}>
+                <Icon name="car" size={15} />
+                Create a Vehicle
+              </Link>
             </div>
           ) : null}
           <EntryPhotoDates
