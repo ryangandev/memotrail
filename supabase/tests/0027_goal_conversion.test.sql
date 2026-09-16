@@ -9,6 +9,7 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000093'
 insert into public.entries(id,owner_id,title,body,date_precision,occurred_label,metadata)
 values ('20000000-0000-0000-0000-000000000093',auth.uid(),'An idea',E'  Original\nwriting  ','age','17岁','{"original":true}');
 create temporary table original as select public.entry_history('20000000-0000-0000-0000-000000000093',20,0)->'current' as snapshot;
+reset role;
 select is(public.convert_entry_to_goal('20000000-0000-0000-0000-000000000093',1,'An idea','someday','considering',null),2,'Conversion increments revision once');
 select is(entry_type,'goal','The original Entry becomes a Goal') from public.entries where id='20000000-0000-0000-0000-000000000093';
 select is(body,E'  Original\nwriting  ','Conversion retains raw writing including whitespace') from public.entries where id='20000000-0000-0000-0000-000000000093';
@@ -40,7 +41,7 @@ insert into public.entries(id,owner_id,title,entry_type,deleted_at) values
  ('20000000-0000-0000-0000-000000000095',auth.uid(),'A First Time','first_time',null);
 select is(public.convert_entry_to_goal('20000000-0000-0000-0000-000000000094',1,'Trashed idea','someday','considering',null),null::integer,'Trash must be restored before conversion');
 select is(public.convert_entry_to_goal('20000000-0000-0000-0000-000000000095',1,'A First Time','someday','considering',null),null::integer,'Other specialized Types are not converted');
-reset role;
 select ok(not has_function_privilege('anon','public.convert_entry_to_goal(uuid,integer,text,text,text,date)','execute'),'Anonymous conversion is denied');
+select ok(not has_function_privilege('authenticated','public.convert_entry_to_goal(uuid,integer,text,text,text,date)','execute'),'Authenticated clients cannot use the deprecated conversion');
 select * from finish();
 rollback;
