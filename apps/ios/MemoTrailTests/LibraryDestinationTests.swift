@@ -131,7 +131,7 @@ final class LibraryDestinationTests: XCTestCase {
       EntryAISuggestionResponse.self, from: Data("{\"suggestion\":null,\"photoCount\":2}".utf8))
     XCTAssertEqual(photoResponse.photoCount, 2)
     let proposed = Data(
-      "{\"title\":\"牙套的原理\",\"entryType\":\"standard\",\"collections\":[\"Learning\"],\"tags\":[\"牙齿\"],\"dateText\":null,\"rationale\":\"学习记录\",\"confidence\":0.9}"
+      "{\"title\":\"牙套的原理\",\"classification\":{\"itemKind\":\"writing\",\"itemSubtype\":\"note\"},\"collections\":[\"Learning\"],\"tags\":[\"牙齿\"],\"dateText\":null,\"rationale\":\"学习记录\",\"confidence\":0.9}"
         .utf8)
     XCTAssertEqual(try JSONDecoder().decode(EntryAISuggestions.self, from: proposed).title, "牙套的原理")
   }
@@ -139,7 +139,7 @@ final class LibraryDestinationTests: XCTestCase {
     let id = UUID()
     let target = UUID()
     let data = Data(
-      "{\"revision\":3,\"total_count\":25,\"items\":[{\"entry_id\":\"\(target)\",\"title\":null,\"excerpt\":\"牙套笔记\",\"entry_type\":\"standard\",\"is_deleted\":true}]}"
+      "{\"revision\":3,\"total_count\":25,\"items\":[{\"entry_id\":\"\(target)\",\"title\":null,\"excerpt\":\"牙套笔记\",\"item_kind\":\"writing\",\"item_subtype\":\"note\",\"is_deleted\":true}]}"
         .utf8)
     let result = try JSONDecoder().decode(EntryRelationsResult.self, from: data)
     XCTAssertEqual(result.revision, 3)
@@ -221,7 +221,7 @@ final class LibraryDestinationTests: XCTestCase {
       [{"id":"92000000-0000-4000-8000-000000000001","name":"Friend","relationship_label":"Mentor",
         "notes":null,"revision":2,"total_count":1,"linked_entries":[
         {"id":"91000000-0000-4000-8000-000000000001","title":null,"body":"A shared memory",
-          "entry_type":"standard","is_deleted":true}]}]
+          "item_kind":"event","item_subtype":"memory","is_deleted":true}]}]
       """.utf8)
     let row = try XCTUnwrap(JSONDecoder().decode([PersonRecord].self, from: data).first)
     XCTAssertEqual(row.linked_entries.first?.displayTitle, "A shared memory")

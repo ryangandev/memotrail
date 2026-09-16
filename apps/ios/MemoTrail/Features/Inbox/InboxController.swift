@@ -97,7 +97,7 @@ final class InboxController {
         try await client
         .from("entries")
         .select(
-          "id,title,body,entry_type,item_kind,item_subtype,inbox_status,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision"
+          "id,title,body,item_kind,item_subtype,inbox_status,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision"
         )
         .eq("owner_id", value: ownerID.uuidString)
         .eq("inbox_status", value: "unreviewed")
@@ -288,8 +288,6 @@ final class InboxController {
         title: input.title,
         body: input.body,
         collectionNames: input.collectionNames,
-        entryType: input.itemKind == .event && input.itemSubtype == "first_time"
-          ? .firstTime : .standard,
         itemKind: input.itemKind,
         itemSubtype: input.itemSubtype,
         createdAt: entry.createdAt,
@@ -615,7 +613,6 @@ struct InboxEntryInsert: Encodable, Sendable {
   let ownerID: UUID
   let title: String?
   let body: String
-  let entryType = "standard"
   let itemKind = "capture"
   let itemSubtype = "quick_capture"
   let inboxStatus = "unreviewed"
@@ -631,7 +628,6 @@ struct InboxEntryInsert: Encodable, Sendable {
     case ownerID = "owner_id"
     case title
     case body
-    case entryType = "entry_type"
     case itemKind = "item_kind"
     case itemSubtype = "item_subtype"
     case inboxStatus = "inbox_status"

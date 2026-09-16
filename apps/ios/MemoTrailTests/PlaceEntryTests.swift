@@ -180,7 +180,7 @@ final class PlaceEntryTests: XCTestCase {
       "created_at":"2026-09-03T19:00:00Z","updated_at":"2026-09-03T20:00:00Z",
       "linked_entries":[{
         "id":"20000000-0000-4000-8000-000000000001","title":"Autumn walk",
-        "body":"A quiet route.","entry_type":"standard","inbox_status":"reviewed",
+        "body":"A quiet route.","item_kind":"event","item_subtype":"memory","inbox_status":"reviewed",
         "occurred_start":"2026-09-01T19:00:00Z","occurred_end":null,
         "date_precision":"day","occurred_label":null,"occurred_timezone":"America/Los_Angeles",
         "revision":2,"updated_at":"2026-09-03T20:00:00Z","relationship":"related",
@@ -192,7 +192,7 @@ final class PlaceEntryTests: XCTestCase {
         }]
       },{
         "id":"20000000-0000-4000-8000-000000000002","title":"San Francisco home",
-        "body":"","entry_type":"home","inbox_status":"reviewed",
+        "body":"","item_kind":"entity","item_subtype":"home","inbox_status":"reviewed",
         "occurred_start":"2025-01-01T20:00:00Z","occurred_end":null,
         "date_precision":"year","occurred_label":null,"occurred_timezone":"America/Los_Angeles",
         "revision":1,"updated_at":"2026-09-02T20:00:00Z","relationship":"home",

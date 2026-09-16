@@ -36,7 +36,7 @@ final class TimelineEntryTests: XCTestCase {
 
   func testExactTimelineSerializationPreservesDatabaseMicroseconds() throws {
     let json = """
-      {"track_id":"10000000-0000-4000-8000-000000000001","track_name":"Life","track_sort_order":1,"track_is_hidden":false,"entry_id":"20000000-0000-4000-8000-000000000001","title":"A moment","body":"Original","entry_type":"standard","timeline_kind":"event","occurred_start":"2026-11-01T09:30:00.123456Z","date_precision":"exact","occurred_timezone":"America/Los_Angeles","revision":1,"updated_at":"2026-09-12T12:00:00Z"}
+      {"track_id":"10000000-0000-4000-8000-000000000001","track_name":"Life","track_sort_order":1,"track_is_hidden":false,"entry_id":"20000000-0000-4000-8000-000000000001","title":"A moment","body":"Original","item_kind":"event","item_subtype":"memory","timeline_kind":"event","occurred_start":"2026-11-01T09:30:00.123456Z","date_precision":"exact","occurred_timezone":"America/Los_Angeles","revision":1,"updated_at":"2026-09-12T12:00:00Z"}
       """
     // Match the Supabase SDK's fractional-second decoding behavior.
     let jsonDecoder = JSONDecoder()
@@ -74,7 +74,8 @@ final class TimelineEntryTests: XCTestCase {
           "entry_id": "20000000-0000-4000-8000-000000000001",
           "title": "Living in Philadelphia",
           "body": "A long chapter.",
-          "entry_type": "home",
+          "item_kind": "entity",
+          "item_subtype": "home",
           "timeline_kind": "stage",
           "occurred_start": "2012-08-15T19:00:00Z",
           "occurred_end": null,
@@ -93,7 +94,8 @@ final class TimelineEntryTests: XCTestCase {
           "entry_id": null,
           "title": null,
           "body": null,
-          "entry_type": null,
+          "item_kind": null,
+          "item_subtype": null,
           "timeline_kind": null,
           "occurred_start": null,
           "occurred_end": null,
@@ -110,7 +112,8 @@ final class TimelineEntryTests: XCTestCase {
 
     XCTAssertEqual(tracks.map(\.name), ["Places", "Education"])
     XCTAssertEqual(tracks[0].entries.first?.title, "Living in Philadelphia")
-    XCTAssertEqual(tracks[0].entries.first?.entryType, "home")
+    XCTAssertEqual(tracks[0].entries.first?.itemKind, .entity)
+    XCTAssertEqual(tracks[0].entries.first?.itemSubtype, "home")
     XCTAssertEqual(tracks[0].entries.first?.revision, 3)
     XCTAssertTrue(tracks[1].entries.isEmpty)
   }
@@ -168,14 +171,18 @@ final class TimelineEntryTests: XCTestCase {
   func testSpecializedEntryTypesRouteToTheirOwnedEditors() throws {
     let entryID = UUID(uuidString: "20000000-0000-4000-8000-000000000001")!
     let home = try XCTUnwrap(
-      makeRow(entryID: entryID, title: "Home", occurredStart: Date(), entryType: "home").entry
+      makeRow(
+        entryID: entryID, title: "Home", occurredStart: Date(), itemKind: .entity,
+        itemSubtype: "home"
+      ).entry
     )
     let vehicle = try XCTUnwrap(
       makeRow(
         entryID: entryID,
         title: "Vehicle",
         occurredStart: Date(),
-        entryType: "vehicle"
+        itemKind: .entity,
+        itemSubtype: "vehicle"
       ).entry
     )
     let lifeStage = try XCTUnwrap(
@@ -313,7 +320,8 @@ final class TimelineEntryTests: XCTestCase {
     title: String?,
     occurredStart: Date?,
     occurredLabel: String? = nil,
-    entryType: String = "life_stage"
+    itemKind: WikiItemKind = .event,
+    itemSubtype: String = "life_stage"
   ) -> TimelineWorkspaceRow {
     TimelineWorkspaceRow(
       trackID: trackID,
@@ -324,7 +332,8 @@ final class TimelineEntryTests: XCTestCase {
       entryID: entryID,
       title: title,
       body: entryID == nil ? nil : "Notes",
-      entryType: entryID == nil ? nil : entryType,
+      itemKind: entryID == nil ? nil : itemKind,
+      itemSubtype: entryID == nil ? nil : itemSubtype,
       timelineKind: entryID == nil ? nil : "stage",
       occurredStart: occurredStart,
       occurredEnd: nil,

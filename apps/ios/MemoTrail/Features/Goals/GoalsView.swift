@@ -520,7 +520,7 @@ struct GoalEditorSheet: View {
               relatedEntryIDs.append(option.id)
             } label: {
               Text(
-                "\(option.displayTitle) · \(option.entryType.replacingOccurrences(of: "_", with: " ").capitalized)"
+                "\(option.displayTitle) · \(option.displayType)"
               )
             }
           }
@@ -673,8 +673,12 @@ struct GoalEditorSheet: View {
   }
 
   private func relatedType(_ id: UUID) -> String? {
-    controller.linkOptions.first { $0.id == id }?.entryType
-      ?? entry?.editableRelatedEntries.first { $0.id == id }?.entryType
+    controller.linkOptions.first { $0.id == id }.map {
+      $0.itemKind.displayName(subtype: $0.itemSubtype)
+    }
+      ?? entry?.editableRelatedEntries.first { $0.id == id }.map {
+        $0.itemKind.displayName(subtype: $0.itemSubtype)
+      }
   }
 
   private func removeButton(label: String, action: @escaping () -> Void) -> some View {

@@ -198,7 +198,7 @@ final class SearchController {
 
       let results: [SearchEntry] =
         try await client
-        .rpc("search_entries_with_occurrence", params: request.parameters)
+        .rpc("search_wiki_items", params: request.parameters)
         .execute()
         .value
 

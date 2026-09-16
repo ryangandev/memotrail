@@ -7,8 +7,16 @@ struct PersonLinkedEntry: Codable, Identifiable, Sendable {
   let id: UUID
   let title: String?
   let body: String
-  let entry_type: String
+  let itemKind: WikiItemKind
+  let itemSubtype: String
   let is_deleted: Bool?
+
+  enum CodingKeys: String, CodingKey {
+    case id, title, body
+    case itemKind = "item_kind"
+    case itemSubtype = "item_subtype"
+    case is_deleted
+  }
 
   var displayTitle: String {
     title?.trimmed.nonEmpty ?? body.trimmed.nonEmpty.map { String($0.prefix(80)) }
@@ -95,7 +103,7 @@ final class PeopleController {
         ).execute().value
       }
       let options: [PersonLinkedEntry] = try await client.from("entries")
-        .select("id,title,body,entry_type").eq("owner_id", value: ownerID.uuidString)
+        .select("id,title,body,item_kind,item_subtype").eq("owner_id", value: ownerID.uuidString)
         .is("deleted_at", value: nil).order("updated_at", ascending: false).limit(200)
         .execute().value
       if more { people.append(contentsOf: rows) } else { people = rows }

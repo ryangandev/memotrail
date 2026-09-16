@@ -60,7 +60,6 @@ struct CollectionEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   let id: UUID
   let title: String?
   let body: String
-  let entryType: String
   let inboxStatus: String
   let itemKind: WikiItemKind
   let itemSubtype: String
@@ -85,7 +84,6 @@ struct CollectionEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
     case id = "entry_id"
     case title
     case body
-    case entryType = "entry_type"
     case inboxStatus = "inbox_status"
     case itemKind = "item_kind"
     case itemSubtype = "item_subtype"
@@ -113,15 +111,9 @@ struct CollectionEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
     id = try values.decode(UUID.self, forKey: .id)
     title = try values.decodeIfPresent(String.self, forKey: .title)?.trimmed.nonEmpty
     body = try values.decode(String.self, forKey: .body)
-    entryType = try values.decode(String.self, forKey: .entryType)
     inboxStatus = try values.decode(String.self, forKey: .inboxStatus)
-    let compatibility = Self.compatibilityIdentity(entryType: entryType, inboxStatus: inboxStatus)
-    itemKind =
-      try values.decodeIfPresent(WikiItemKind.self, forKey: .itemKind)
-      ?? compatibility.kind
-    itemSubtype =
-      try values.decodeIfPresent(String.self, forKey: .itemSubtype)?.trimmed.nonEmpty
-      ?? compatibility.subtype
+    itemKind = try values.decode(WikiItemKind.self, forKey: .itemKind)
+    itemSubtype = try values.decode(String.self, forKey: .itemSubtype)
     recordSource =
       try values.decodeIfPresent(WikiItemRecordSource.self, forKey: .recordSource) ?? .entry
     recordID = try values.decodeIfPresent(UUID.self, forKey: .recordID) ?? id
@@ -224,22 +216,6 @@ struct CollectionEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
     return formatter.string(from: date)
   }
 
-  private static func compatibilityIdentity(
-    entryType: String,
-    inboxStatus: String
-  ) -> (kind: WikiItemKind, subtype: String) {
-    switch entryType {
-    case "first_time": (.event, "first_time")
-    case "life_stage": (.event, "life_stage")
-    case "home": (.entity, "home")
-    case "vehicle": (.entity, "vehicle")
-    case "goal": (.goal, "goal")
-    default:
-      inboxStatus == "unreviewed"
-        ? (.capture, "quick_capture")
-        : (.writing, "note")
-    }
-  }
 }
 
 struct CollectionPageRequest: Equatable, Sendable {

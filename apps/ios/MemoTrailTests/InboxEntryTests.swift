@@ -68,7 +68,7 @@ final class InboxEntryTests: XCTestCase {
     let data = Data(
       """
       {"id":"95000000-0000-4000-8000-000000000001","title":"Memory","body":"Original",
-      "entry_type":"standard","inbox_status":"organized","revision":2,
+      "item_kind":"writing","item_subtype":"note","inbox_status":"organized","revision":2,
       "created_at":"2017-07-08T12:34:56Z","occurred_start":"\(raw)","occurred_end":null,
       "date_precision":"exact","occurred_timezone":"UTC","collection_names":["Active"],"tag_names":["memory"]}
       """.utf8)
@@ -106,7 +106,7 @@ final class InboxEntryTests: XCTestCase {
     let data = Data(
       """
       {"id":"95000000-0000-4000-8000-000000000002","title":"The long way home",\
-      "body":"A story worth keeping.","entry_type":"standard","item_kind":"story",\
+      "body":"A story worth keeping.","item_kind":"story",\
       "item_subtype":"chapter","inbox_status":"organized","revision":3,\
       "created_at":"2026-09-16T12:00:00Z","occurred_start":null,"occurred_end":null,\
       "date_precision":"unknown","occurred_timezone":"UTC"}

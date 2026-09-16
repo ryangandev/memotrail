@@ -38,7 +38,7 @@ final class TimelineController {
       let rows: [TimelineWorkspaceRow] =
         try await client
         .rpc(
-          "timeline_workspace",
+          "timeline_workspace_with_organization",
           params: TimelineWorkspaceParameters(includeHidden: false)
         )
         .execute()

@@ -193,7 +193,7 @@ final class PlaceController {
   }
 
   private func loadLinkOptions() async throws -> [PlaceLinkOption] {
-    try await client.from("entries").select("id,title,body,entry_type,updated_at")
+    try await client.from("entries").select("id,title,body,item_kind,item_subtype,updated_at")
       .eq("owner_id", value: ownerID.uuidString)
       .is("deleted_at", value: nil)
       .order("updated_at", ascending: false)

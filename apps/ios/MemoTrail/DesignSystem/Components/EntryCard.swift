@@ -48,7 +48,7 @@ struct EntryCard: View {
             .padding(.vertical, 4)
             .background(MTColor.surfaceSubtle, in: Capsule())
 
-          if entry.entryType == .firstTime {
+          if entry.itemKind == .event && entry.itemSubtype == "first_time" {
             Text("First Time")
               .font(.system(size: 10, weight: .medium))
               .foregroundStyle(MTColor.inkMuted)

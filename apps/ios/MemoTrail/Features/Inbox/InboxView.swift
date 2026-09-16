@@ -473,14 +473,12 @@ struct InboxReviewSheet: View {
           EntryAISuggestionsView(
             request: requestSuggestions, dismiss: dismissSuggestion,
             applyTitle: { title = $0 },
-            applyType: { type in
-              if type == InboxEntryType.firstTime.rawValue {
-                itemKind = .event
-                itemSubtype = "first_time"
-              } else if type == InboxEntryType.standard.rawValue {
-                itemKind = .writing
-                itemSubtype = "note"
+            applyClassification: { classification in
+              guard classification.itemKind.supportsReviewSubtype(classification.itemSubtype) else {
+                return
               }
+              itemKind = classification.itemKind
+              itemSubtype = classification.itemSubtype
             },
             applyDate: { occurrence.useDateSuggestion($0) },
             addCollection: { name in

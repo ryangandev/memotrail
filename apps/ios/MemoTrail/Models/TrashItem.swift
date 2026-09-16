@@ -46,7 +46,8 @@ struct TrashItem: Decodable, Equatable, Identifiable, Sendable {
   let deletedAt: String
   let expiresAt: String
   let revision: Int?
-  let entryType: String?
+  let wikiItemKind: WikiItemKind?
+  let wikiItemSubtype: String?
   let parentEntryID: UUID?
   let storagePaths: [String]
   let totalCount: Int
@@ -60,7 +61,8 @@ struct TrashItem: Decodable, Equatable, Identifiable, Sendable {
     case deletedAt = "deleted_at"
     case expiresAt = "expires_at"
     case revision
-    case entryType = "entry_type"
+    case wikiItemKind = "wiki_item_kind"
+    case wikiItemSubtype = "wiki_item_subtype"
     case parentEntryID = "parent_entry_id"
     case storagePaths = "storage_paths"
     case totalCount = "total_count"
@@ -71,8 +73,12 @@ struct TrashItem: Decodable, Equatable, Identifiable, Sendable {
   }
 
   var displayKind: String {
-    if kind == .entry, entryType == "first_time" {
+    if kind == .entry, wikiItemKind == .event, wikiItemSubtype == "first_time" {
       return "First Time"
+    }
+
+    if kind == .entry, let wikiItemKind, let wikiItemSubtype {
+      return wikiItemKind.displayName(subtype: wikiItemSubtype)
     }
 
     return kind.displayName

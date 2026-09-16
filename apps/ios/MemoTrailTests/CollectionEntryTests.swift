@@ -209,7 +209,6 @@ final class CollectionEntryTests: XCTestCase {
       "entry_id": "20000000-0000-4000-8000-000000000001",
       "title": title ?? NSNull(),
       "body": body,
-      "entry_type": "first_time",
       "inbox_status": "unreviewed",
       "item_kind": itemKind,
       "item_subtype": itemSubtype,

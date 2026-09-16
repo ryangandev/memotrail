@@ -4,16 +4,16 @@ import XCTest
 
 final class SearchEntryTests: XCTestCase {
   func testSearchResultPreservesPartialDatesAndPeriodEnds() throws {
-    for (precision, type, end, expected) in [
-      ("year", "standard", "null", "2017"),
-      ("month", "standard", "null", "Jan 2017"),
-      ("range", "standard", "\"2019-02-03T12:00:00Z\"", "Jan 1, 2017 to Feb 3, 2019"),
-      ("year", "life_stage", "\"2020-01-01T12:00:00Z\"", "2017 - 2020"),
-      ("day", "home", "null", "Since Jan 1, 2017"),
-      ("unknown", "standard", "null", "Date unknown"),
+    for (precision, kind, subtype, end, expected) in [
+      ("year", "writing", "note", "null", "2017"),
+      ("month", "writing", "note", "null", "Jan 2017"),
+      ("range", "writing", "note", "\"2019-02-03T12:00:00Z\"", "Jan 1, 2017 to Feb 3, 2019"),
+      ("year", "event", "life_stage", "\"2020-01-01T12:00:00Z\"", "2017 - 2020"),
+      ("day", "entity", "home", "null", "Since Jan 1, 2017"),
+      ("unknown", "writing", "note", "null", "Date unknown"),
     ] {
       let json = """
-        {"entry_id":"4F8D0FE6-61D0-418A-8713-CF071AEEA450","title":"Memory","body":"Original","entry_type":"\(type)","inbox_status":"organized","occurred_start":"2017-01-01T12:00:00Z","occurred_end":\(end),"date_precision":"\(precision)","occurred_timezone":"UTC","updated_at":"2026-09-02T12:00:00Z","total_count":1}
+        {"entry_id":"4F8D0FE6-61D0-418A-8713-CF071AEEA450","title":"Memory","body":"Original","item_kind":"\(kind)","item_subtype":"\(subtype)","inbox_status":"organized","occurred_start":"2017-01-01T12:00:00Z","occurred_end":\(end),"date_precision":"\(precision)","occurred_timezone":"UTC","updated_at":"2026-09-02T12:00:00Z","total_count":1}
         """
       let decoder = JSONDecoder()
       decoder.dateDecodingStrategy = .iso8601
@@ -215,7 +215,7 @@ final class SearchEntryTests: XCTestCase {
     let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
     XCTAssertEqual(json["p_query"] as? String, "Japan")
-    XCTAssertEqual(json["p_entry_types"] as? [String], ["event"])
+    XCTAssertEqual(json["p_item_classifications"] as? [String], ["event"])
     XCTAssertEqual(json["p_collection_names"] as? [String], ["Travel"])
     XCTAssertEqual(json["p_tag_names"] as? [String], ["Japan"])
     XCTAssertEqual(json["p_date_from"] as? String, "2017-07-07")
@@ -263,7 +263,8 @@ final class SearchEntryTests: XCTestCase {
         "entry_id": "4F8D0FE6-61D0-418A-8713-CF071AEEA450",
         "title": "First time in Japan",
         "body": "A summer trip.",
-        "entry_type": "first_time",
+        "item_kind": "event",
+        "item_subtype": "first_time",
         "inbox_status": "organized",
         "occurred_start": "2017-07-08T06:30:00Z",
         "occurred_label": null,
@@ -295,7 +296,6 @@ final class SearchEntryTests: XCTestCase {
         "entry_id": "4F8D0FE6-61D0-418A-8713-CF071AEEA450",
         "title": "Marina",
         "body": "Friend from the harbor.",
-        "entry_type": "standard",
         "item_kind": "entity",
         "item_subtype": "person",
         "record_source": "person",
@@ -322,7 +322,8 @@ final class SearchEntryTests: XCTestCase {
         "entry_id": "4F8D0FE6-61D0-418A-8713-CF071AEEA450",
         "title": null,
         "body": "Why keep learning?\\nBecause the world keeps changing.",
-        "entry_type": "standard",
+        "item_kind": "capture",
+        "item_subtype": "quick_capture",
         "inbox_status": "unreviewed",
         "occurred_start": "2026-07-03T23:30:00Z",
         "occurred_label": null,

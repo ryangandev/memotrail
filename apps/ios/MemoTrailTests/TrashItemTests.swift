@@ -154,7 +154,8 @@ final class TrashItemTests: XCTestCase {
           "deleted_at": "2026-09-02T12:34:56.123456+00:00",
           "expires_at": "2026-10-02T12:34:56.123456+00:00",
           "revision": 4,
-          "entry_type": "first_time",
+          "wiki_item_kind": "event",
+          "wiki_item_subtype": "first_time",
           "parent_entry_id": null,
           "storage_paths": ["21000000/entry/photo.png"],
           "total_count": 3
@@ -167,7 +168,8 @@ final class TrashItemTests: XCTestCase {
           "deleted_at": "2026-09-02T12:36:56.123456+00:00",
           "expires_at": "2026-10-02T12:36:56.123456+00:00",
           "revision": null,
-          "entry_type": "attachment",
+          "wiki_item_kind": null,
+          "wiki_item_subtype": null,
           "parent_entry_id": "31000000-0000-4000-8000-000000000001",
           "storage_paths": ["21000000/photo.png"],
           "total_count": 3
@@ -180,7 +182,8 @@ final class TrashItemTests: XCTestCase {
           "deleted_at": "2026-09-02T12:37:56.123456+00:00",
           "expires_at": "2026-10-02T12:37:56.123456+00:00",
           "revision": 3,
-          "entry_type": null,
+          "wiki_item_kind": "entity",
+          "wiki_item_subtype": "place",
           "parent_entry_id": null,
           "storage_paths": [],
           "total_count": 3

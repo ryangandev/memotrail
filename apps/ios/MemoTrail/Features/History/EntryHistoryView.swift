@@ -65,7 +65,8 @@ struct HistoryIndexEntry: Decodable, Identifiable, Sendable {
   let entryID: UUID
   let title: String?
   let excerpt: String
-  let entryType: String
+  let itemKind: WikiItemKind
+  let itemSubtype: String
   let revision: Int
   let isDeleted: Bool
   let versionCount: Int
@@ -78,7 +79,8 @@ struct HistoryIndexEntry: Decodable, Identifiable, Sendable {
   enum CodingKeys: String, CodingKey {
     case title, excerpt, revision
     case entryID = "entry_id"
-    case entryType = "entry_type"
+    case itemKind = "item_kind"
+    case itemSubtype = "item_subtype"
     case isDeleted = "is_deleted"
     case versionCount = "version_count"
     case lastChanged = "last_changed"
@@ -138,7 +140,7 @@ enum HistoryPresentation {
     return format(raw) + (snapshot["occurred_end"]?.text.map { " to \(format($0))" } ?? "")
   }
   static let fields = [
-    "title", "body", "entry_type", "inbox_status", "occurred_start", "occurred_end",
+    "title", "body", "item_kind", "item_subtype", "inbox_status", "occurred_start", "occurred_end",
     "date_precision", "occurred_label", "occurred_timezone", "collections", "tags", "people",
     "places", "timeline_items", "home", "vehicle", "goal", "links", "attachments", "metadata",
     "source_language",
@@ -273,7 +275,7 @@ struct EntryHistoryIndexView: View {
             VStack(alignment: .leading, spacing: 8) {
               Text(row.displayTitle).font(MTTypography.titleSmall).foregroundStyle(MTColor.ink)
               Text(
-                "\(row.entryType) · \(row.versionCount) earlier versions\(row.isDeleted ? " · In Trash" : "")"
+                "\(row.itemKind.displayName(subtype: row.itemSubtype)) · \(row.versionCount) earlier versions\(row.isDeleted ? " · In Trash" : "")"
               ).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
               Text(row.excerpt).lineLimit(3).font(MTTypography.caption).foregroundStyle(
                 MTColor.inkMuted)
@@ -677,7 +679,7 @@ private struct HistorySnapshotView: View {
       LabeledContent("Date", value: HistoryPresentation.date(snapshot)).font(MTTypography.caption)
       ForEach(
         [
-          "entry_type", "inbox_status", "occurred_timezone",
+          "item_kind", "item_subtype", "inbox_status", "occurred_timezone",
         ], id: \.self
       ) { key in
         if let value = snapshot[key]?.text {

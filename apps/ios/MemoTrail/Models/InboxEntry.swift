@@ -5,7 +5,6 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
   let title: String?
   let body: String
   let collectionNames: [String]
-  let entryType: InboxEntryType
   let itemKind: WikiItemKind
   let itemSubtype: String
   let createdAt: Date
@@ -25,7 +24,6 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     title: String?,
     body: String,
     collectionNames: [String] = [],
-    entryType: InboxEntryType = .standard,
     itemKind: WikiItemKind = .capture,
     itemSubtype: String = "quick_capture",
     createdAt: Date,
@@ -41,7 +39,6 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     self.title = title
     self.body = body
     self.collectionNames = collectionNames
-    self.entryType = entryType
     self.itemKind = itemKind
     self.itemSubtype = itemSubtype
     self.createdAt = createdAt
@@ -58,7 +55,6 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     case id
     case title
     case body
-    case entryType = "entry_type"
     case itemKind = "item_kind"
     case itemSubtype = "item_subtype"
     case createdAt = "created_at"
@@ -80,19 +76,14 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     title = try values.decodeIfPresent(String.self, forKey: .title)
     body = try values.decode(String.self, forKey: .body)
     collectionNames = try values.decodeIfPresent([String].self, forKey: .collectionNames) ?? []
-    entryType = try values.decode(InboxEntryType.self, forKey: .entryType)
     createdAt = try values.decode(Date.self, forKey: .createdAt)
     occurredStart = try values.decodeIfPresent(Date.self, forKey: .occurredStart)
     occurredTimezone = try values.decodeIfPresent(String.self, forKey: .occurredTimezone)
     revision = try values.decode(Int.self, forKey: .revision)
     tagNames = try values.decodeIfPresent([String].self, forKey: .tagNames) ?? []
     inboxStatus = try values.decodeIfPresent(String.self, forKey: .inboxStatus) ?? "unreviewed"
-    itemKind =
-      try values.decodeIfPresent(WikiItemKind.self, forKey: .itemKind)
-      ?? WikiItemKind.compatibilityKind(entryType: entryType, inboxStatus: inboxStatus)
-    itemSubtype =
-      try values.decodeIfPresent(String.self, forKey: .itemSubtype)
-      ?? WikiItemKind.compatibilitySubtype(entryType: entryType, inboxStatus: inboxStatus)
+    itemKind = try values.decode(WikiItemKind.self, forKey: .itemKind)
+    itemSubtype = try values.decode(String.self, forKey: .itemSubtype)
     occurredStartRaw = try? values.decode(String.self, forKey: .occurredStart)
     occurredEndRaw = try? values.decode(String.self, forKey: .occurredEnd)
     let precision =
@@ -108,7 +99,6 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
       title: title,
       body: body,
       collectionNames: collectionNames,
-      entryType: entryType,
       itemKind: itemKind,
       itemSubtype: itemSubtype,
       createdAt: createdAt,
@@ -171,20 +161,6 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
   }
 }
 
-enum InboxEntryType: String, CaseIterable, Codable, Equatable, Sendable {
-  case standard
-  case firstTime = "first_time"
-
-  var displayName: String {
-    switch self {
-    case .standard:
-      "Standard Entry"
-    case .firstTime:
-      "First Time"
-    }
-  }
-}
-
 enum WikiItemKind: String, CaseIterable, Codable, Equatable, Hashable, Sendable {
   case capture
   case writing
@@ -243,19 +219,14 @@ enum WikiItemKind: String, CaseIterable, Codable, Equatable, Hashable, Sendable 
     reviewPresets.contains { $0.subtype == subtype }
   }
 
-  static func compatibilityKind(
-    entryType: InboxEntryType, inboxStatus: String
-  ) -> WikiItemKind {
-    if entryType == .firstTime { return .event }
-    return inboxStatus == "unreviewed" ? .capture : .writing
+  func displayName(subtype: String) -> String {
+    let subtypeName = subtype.replacingOccurrences(of: "_", with: " ").capitalized
+    if subtype == rawValue || (self == .goal && subtype == "goal") {
+      return displayName
+    }
+    return "\(displayName) · \(subtypeName)"
   }
 
-  static func compatibilitySubtype(
-    entryType: InboxEntryType, inboxStatus: String
-  ) -> String {
-    if entryType == .firstTime { return "first_time" }
-    return inboxStatus == "unreviewed" ? "quick_capture" : "note"
-  }
 }
 
 struct WikiItemPreset: Equatable, Hashable, Identifiable, Sendable {
@@ -578,7 +549,6 @@ struct QueuedInboxEntry: Codable, Equatable, Identifiable, Sendable {
       id: id,
       title: title,
       body: body,
-      entryType: .standard,
       createdAt: queuedAt,
       occurredStart: effectiveOccurrence.start,
       occurredTimezone: effectiveOccurrence.timezone,
