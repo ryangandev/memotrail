@@ -57,6 +57,7 @@ Pair it with the test file carrying the same feature name.
 - Web Goal extraction uses a caller-generated target UUID for idempotency, preserves the source revision and identity, and records `derived` plus `derived_from` provenance links so both items remain discoverable.
 - `review_wiki_item_with_photo_place` is the plaintext-client semantic review boundary. iOS uses it to finalize a Capture or edit a same-Kind Writing, Event, or Story while preserving rich-text metadata the native editor does not author.
 - The iOS Inbox sends canonical Kind and subtype values. Its generic organizer exposes only Writing, Event, and Story; Entity and Goal creation must use their dedicated forms and extraction RPCs.
+- Native Inbox handoffs reuse the existing Home, Vehicle, and Goal editors with a `CaptureExtractionSource`. The same validated domain input drives either the normal save RPC or the matching extraction RPC, so specialized fields, source revision checks, organization, dates, and provenance stay aligned with Web.
 - `convert_entry_to_goal` remains only as a deprecated native-client compatibility RPC until the iOS Life Wiki adoption replaces it, after which its authenticated grant must be removed.
 - Specialized tables add typed facts without duplicating common writing, organization, dates, media, or history.
 - `entries.body` remains canonical plaintext. Optional validated rich content is versioned under `entries.metadata.body_rich`, carries the exact matching plaintext, and is ignored when another client changes the body without updating the rich document.

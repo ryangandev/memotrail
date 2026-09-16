@@ -284,8 +284,16 @@ struct VehicleEntryInput: Equatable, Sendable {
 
 struct SaveVehicleEntryParameters: Encodable, Equatable, Sendable {
   let input: VehicleEntryInput
+  let source: CaptureExtractionSource?
+
+  init(input: VehicleEntryInput, source: CaptureExtractionSource? = nil) {
+    self.input = input
+    self.source = source
+  }
 
   enum CodingKeys: String, CodingKey {
+    case captureID = "p_capture_id"
+    case captureRevision = "p_capture_revision"
     case title = "p_title"
     case body = "p_body"
     case occurredStart = "p_occurred_start"
@@ -305,6 +313,10 @@ struct SaveVehicleEntryParameters: Encodable, Equatable, Sendable {
 
   func encode(to encoder: Encoder) throws {
     var values = encoder.container(keyedBy: CodingKeys.self)
+    if let source {
+      try values.encode(source.entryID, forKey: .captureID)
+      try values.encode(source.revision, forKey: .captureRevision)
+    }
     try values.encode(input.title, forKey: .title)
     try values.encode(input.body, forKey: .body)
     if let raw = input.occurredStartRaw {
@@ -326,8 +338,10 @@ struct SaveVehicleEntryParameters: Encodable, Equatable, Sendable {
     try encodeNullable(input.model, forKey: .model, into: &values)
     try encodeNullable(input.modelYear, forKey: .modelYear, into: &values)
     try encodeNullable(input.color, forKey: .color, into: &values)
-    try encodeNullable(input.entryID, forKey: .entryID, into: &values)
-    try encodeNullable(input.expectedRevision, forKey: .expectedRevision, into: &values)
+    if source == nil {
+      try encodeNullable(input.entryID, forKey: .entryID, into: &values)
+      try encodeNullable(input.expectedRevision, forKey: .expectedRevision, into: &values)
+    }
   }
 
   private func encodeNullable<T: Encodable>(
@@ -340,6 +354,20 @@ struct SaveVehicleEntryParameters: Encodable, Equatable, Sendable {
     } else {
       try values.encodeNil(forKey: key)
     }
+  }
+}
+
+struct ExtractedCaptureVehicle: Decodable, Equatable, Sendable {
+  let captureID: UUID
+  let captureRevision: Int
+  let vehicleEntryID: UUID
+  let vehicleRevision: Int
+
+  enum CodingKeys: String, CodingKey {
+    case captureID = "capture_id"
+    case captureRevision = "capture_revision"
+    case vehicleEntryID = "vehicle_entry_id"
+    case vehicleRevision = "vehicle_revision"
   }
 }
 

@@ -352,7 +352,7 @@ struct PlaceEditorSheet: View {
       Form {
         detailsSection
         coordinatesSection
-        memorySection
+        notesSection
         relationshipsSection
         linkedPhotosSection
         statusSections
@@ -441,8 +441,8 @@ struct PlaceEditorSheet: View {
     }
   }
 
-  private var memorySection: some View {
-    Section("Memory") {
+  private var notesSection: some View {
+    Section("Notes") {
       TextEditor(text: $notes)
         .frame(minHeight: 120)
         .accessibilityLabel("Notes")
@@ -457,7 +457,7 @@ struct PlaceEditorSheet: View {
           Label {
             VStack(alignment: .leading, spacing: 3) {
               Text(linked.displayTitle).foregroundStyle(MTColor.ink)
-              Text("Home chapter · managed from its record")
+              Text("Home record · managed from Homes")
                 .font(MTTypography.caption)
                 .foregroundStyle(MTColor.inkFaint)
             }

@@ -276,6 +276,8 @@ struct GoalEditorSelection: Identifiable {
 struct GoalEditorSheet: View {
   let controller: GoalController
   let entry: GoalEntry?
+  let sourceCapture: CaptureExtractionSource?
+  let onSaved: (@MainActor () async -> Void)?
 
   @Environment(\.dismiss) private var dismiss
   @State private var currentEntryID: UUID?
@@ -303,21 +305,29 @@ struct GoalEditorSheet: View {
   @State private var isConfirmingTrash = false
   @State private var attachmentToRemove: GoalAttachment?
 
-  init(controller: GoalController, entry: GoalEntry?) {
+  init(
+    controller: GoalController,
+    entry: GoalEntry?,
+    sourceCapture: CaptureExtractionSource? = nil,
+    onSaved: (@MainActor () async -> Void)? = nil
+  ) {
     self.controller = controller
     self.entry = entry
+    self.sourceCapture = sourceCapture
+    self.onSaved = onSaved
     _currentEntryID = State(initialValue: entry?.id)
     _currentRevision = State(initialValue: entry?.revision)
-    _title = State(initialValue: entry?.title ?? "")
-    _reflection = State(initialValue: entry?.body ?? "")
+    _title = State(initialValue: entry?.title ?? sourceCapture?.title ?? "")
+    _reflection = State(initialValue: entry?.body ?? sourceCapture?.body ?? "")
     _horizon = State(initialValue: entry?.horizon ?? .shortTerm)
     _status = State(initialValue: entry?.status ?? .considering)
     _usesTargetDate = State(initialValue: entry?.targetDate != nil)
     _targetDate = State(
       initialValue: entry?.targetDate.flatMap(GoalCalendarDate.date) ?? Date()
     )
-    _collectionNames = State(initialValue: entry?.collectionNames ?? [])
-    _tagNames = State(initialValue: entry?.tagNames ?? [])
+    _collectionNames = State(
+      initialValue: entry?.collectionNames ?? sourceCapture?.collectionNames ?? [])
+    _tagNames = State(initialValue: entry?.tagNames ?? sourceCapture?.tagNames ?? [])
     _relatedEntryIDs = State(initialValue: entry?.editableRelatedEntries.map(\.id) ?? [])
     _attachments = State(initialValue: entry?.attachments ?? [])
   }
@@ -325,6 +335,13 @@ struct GoalEditorSheet: View {
   var body: some View {
     NavigationStack {
       Form {
+        if sourceCapture != nil {
+          Section {
+            Label("Creating a Goal from this Capture", systemImage: "arrow.triangle.branch")
+          } footer: {
+            Text("The original Capture stays linked as provenance after this Goal is created.")
+          }
+        }
         intentionSection
         organizationSections
         relatedEntriesSection
@@ -332,7 +349,9 @@ struct GoalEditorSheet: View {
         achievementSection
         statusSections
       }
-      .navigationTitle(entry == nil ? "New Goal" : "Edit Goal")
+      .navigationTitle(
+        sourceCapture == nil ? (entry == nil ? "New Goal" : "Edit Goal") : "Create Goal"
+      )
       .navigationBarTitleDisplayMode(.inline)
       .disabled(isWorking)
       .onChange(of: title) { trim(&title, to: GoalEntryInput.titleLimit) }
@@ -343,7 +362,7 @@ struct GoalEditorSheet: View {
           Button("Cancel") { dismiss() }.disabled(isWorking)
         }
         ToolbarItem(placement: .confirmationAction) {
-          Button(entry == nil ? "Add" : "Save") { Task { await save() } }
+          Button(currentEntryID == nil ? "Add" : "Save") { Task { await save() } }
             .fontWeight(.semibold)
             .disabled(isWorking)
             .accessibilityIdentifier("save-goal")
@@ -701,7 +720,8 @@ struct GoalEditorSheet: View {
       targetDate: selectedTargetDate,
       collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       tagNames: namesIncludingDraft(tagNames, tagInput),
-      relatedEntryIDs: relatedEntryIDs
+      relatedEntryIDs: relatedEntryIDs,
+      sourceCapture: currentEntryID == nil ? sourceCapture : nil
     )
     guard result.status == .saved, let identity = result.identity else {
       isWorking = false
@@ -729,6 +749,8 @@ struct GoalEditorSheet: View {
     progressMessage = nil
     if let failedMessage {
       errorMessage = "Your Goal was saved. \(failedMessage)"
+    } else if let onSaved {
+      await onSaved()
     } else {
       dismiss()
     }

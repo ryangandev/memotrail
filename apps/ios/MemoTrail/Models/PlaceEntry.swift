@@ -45,7 +45,7 @@ struct PlaceLinkedEntry: Decodable, Equatable, Hashable, Identifiable, Sendable 
   var isEditable: Bool { relationship == "related" }
 
   var relationshipLabel: String {
-    relationship == "home" ? "Home chapter" : entryType.displayEntryType
+    relationship == "home" ? "Home record" : entryType.displayEntryType
   }
 }
 

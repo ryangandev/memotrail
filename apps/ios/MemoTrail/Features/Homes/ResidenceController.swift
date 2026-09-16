@@ -98,7 +98,8 @@ final class ResidenceController {
     moveOutReason: String,
     collectionNames: [String],
     tagNames: [String],
-    originalEntry: ResidenceEntry? = nil
+    originalEntry: ResidenceEntry? = nil,
+    sourceCapture: CaptureExtractionSource? = nil
   ) async -> MutationResult {
     var input: ResidenceEntryInput
 
@@ -132,6 +133,14 @@ final class ResidenceController {
     }
 
     input.preserveUnchangedBounds(from: originalEntry)
+    if let sourceCapture {
+      guard entryID == nil, expectedRevision == nil else {
+        return MutationResult(
+          identity: nil, message: "A Capture can only create a new Home.", status: .error)
+      }
+      input.occurredStartRaw = sourceCapture.occurredStartRaw
+      input.occurredEndRaw = sourceCapture.occurredEndRaw
+    }
     guard !isSaving else {
       return MutationResult(
         identity: nil,
@@ -145,6 +154,27 @@ final class ResidenceController {
 
     do {
       try await validateSessionOwner()
+      if let sourceCapture {
+        let results: [ExtractedCaptureHome] =
+          try await client
+          .rpc(
+            "extract_capture_to_home",
+            params: SaveResidenceEntryParameters(input: input, source: sourceCapture)
+          )
+          .execute()
+          .value
+        guard let saved = results.first else {
+          return MutationResult(
+            identity: nil,
+            message: "This Capture changed on another device. Close it, refresh, and try again.",
+            status: .conflict)
+        }
+        return MutationResult(
+          identity: SavedIdentity(
+            id: saved.homeEntryID, revision: saved.homeRevision, placeID: saved.placeID),
+          message: "Home created from Capture.",
+          status: .saved)
+      }
       input.expectedRevision = try await EntryPhotoUpload.writingRevision(
         client: client, entryID: entryID, revision: expectedRevision)
       let results: [SavedResidenceEntry] =

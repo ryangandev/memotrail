@@ -119,7 +119,8 @@ struct InboxView: View {
           },
           dismissSuggestion: { id in try await controller.dismissAISuggestion(id) },
           collectionOptions: controller.collectionOptions,
-          tagOptions: controller.tagOptions
+          tagOptions: controller.tagOptions,
+          extractionCompleted: { await controller.refresh() }
         ) {
           title,
           body,
@@ -383,6 +384,7 @@ struct InboxReviewSheet: View {
   let dismissSuggestion: @MainActor (UUID) async throws -> Void
   let collectionOptions: [String]
   let tagOptions: [String]
+  let extractionCompleted: @MainActor () async -> Void
   let review:
     @MainActor (
       String,
@@ -409,6 +411,8 @@ struct InboxReviewSheet: View {
   @State private var errorMessage: String?
   @State private var tagNames: [String]
   @State private var tagInput = ""
+  @State private var extractionRequest: CaptureExtractionRequest?
+  @State private var extractionDidComplete = false
 
   init(
     client: SupabaseClient,
@@ -418,6 +422,7 @@ struct InboxReviewSheet: View {
     dismissSuggestion: @escaping @MainActor (UUID) async throws -> Void,
     collectionOptions: [String],
     tagOptions: [String],
+    extractionCompleted: @escaping @MainActor () async -> Void = {},
     review:
       @escaping @MainActor (
         String,
@@ -438,6 +443,7 @@ struct InboxReviewSheet: View {
     self.dismissSuggestion = dismissSuggestion
     self.collectionOptions = collectionOptions
     self.tagOptions = tagOptions
+    self.extractionCompleted = extractionCompleted
     self.review = review
     _title = State(initialValue: entry.title ?? "")
     _note = State(initialValue: entry.body)
@@ -491,6 +497,25 @@ struct InboxReviewSheet: View {
                 tagNames.append(name)
               }
             })
+        }
+        if entry.itemKind == .capture {
+          Section {
+            Button("Create a Home", systemImage: "house") {
+              prepareExtraction(.home)
+            }
+            Button("Create a Vehicle", systemImage: "car") {
+              prepareExtraction(.vehicle)
+            }
+            Button("Create a Goal", systemImage: "target") {
+              prepareExtraction(.goal)
+            }
+          } header: {
+            Text("Use a detailed form")
+          } footer: {
+            Text(
+              "These create a separate structured item and keep this Capture linked as its source."
+            )
+          }
         }
         Section("Content") {
           TextField("Title", text: $title, axis: .vertical)
@@ -616,6 +641,63 @@ struct InboxReviewSheet: View {
     }
     .presentationDetents([.large])
     .interactiveDismissDisabled(isWorking)
+    .sheet(
+      item: $extractionRequest,
+      onDismiss: {
+        guard extractionDidComplete else { return }
+        Task { await completeExtraction() }
+      },
+      content: { request in
+        switch request.kind {
+        case .home:
+          CaptureHomeExtractionView(
+            client: client, ownerID: ownerID, source: request.source,
+            onSaved: extractionSaved)
+        case .vehicle:
+          CaptureVehicleExtractionView(
+            client: client, ownerID: ownerID, source: request.source,
+            onSaved: extractionSaved)
+        case .goal:
+          CaptureGoalExtractionView(
+            client: client, ownerID: ownerID, source: request.source,
+            onSaved: extractionSaved)
+        }
+      }
+    )
+  }
+
+  @MainActor
+  private func prepareExtraction(_ kind: CaptureExtractionKind) {
+    do {
+      let resolved = try occurrence.resolve(original: entry.occurrence)
+      extractionRequest = CaptureExtractionRequest(
+        kind: kind,
+        source: CaptureExtractionSource(
+          entry: entry,
+          title: title,
+          body: note,
+          occurrence: resolved,
+          collectionNames: namesIncludingDraft(collectionNames, collectionInput),
+          tagNames: namesIncludingDraft(tagNames, tagInput)
+        ))
+      errorMessage = nil
+    } catch {
+      errorMessage = error.localizedDescription
+    }
+  }
+
+  @MainActor
+  private func extractionSaved() async {
+    extractionDidComplete = true
+    extractionRequest = nil
+  }
+
+  @MainActor
+  private func completeExtraction() async {
+    guard extractionDidComplete else { return }
+    extractionDidComplete = false
+    await extractionCompleted()
+    dismiss()
   }
 
   @MainActor
@@ -656,6 +738,93 @@ struct InboxReviewSheet: View {
   private func namesIncludingDraft(_ names: [String], _ draft: String) -> [String] {
     let name = draft.trimmed
     return name.isEmpty ? names : names + [name]
+  }
+}
+
+private enum CaptureExtractionKind: String, Identifiable {
+  case home
+  case vehicle
+  case goal
+
+  var id: String { rawValue }
+}
+
+private struct CaptureExtractionRequest: Identifiable {
+  let kind: CaptureExtractionKind
+  let source: CaptureExtractionSource
+
+  var id: String { "\(source.entryID.uuidString):\(kind.rawValue)" }
+}
+
+private struct CaptureHomeExtractionView: View {
+  @State private var controller: ResidenceController
+  let source: CaptureExtractionSource
+  let onSaved: @MainActor () async -> Void
+
+  init(
+    client: SupabaseClient,
+    ownerID: UUID,
+    source: CaptureExtractionSource,
+    onSaved: @escaping @MainActor () async -> Void
+  ) {
+    _controller = State(initialValue: ResidenceController(client: client, ownerID: ownerID))
+    self.source = source
+    self.onSaved = onSaved
+  }
+
+  var body: some View {
+    ResidenceEditorSheet(
+      controller: controller, entry: nil, sourceCapture: source, onSaved: onSaved
+    )
+    .task { if !controller.hasLoaded { await controller.load() } }
+  }
+}
+
+private struct CaptureVehicleExtractionView: View {
+  @State private var controller: VehicleController
+  let source: CaptureExtractionSource
+  let onSaved: @MainActor () async -> Void
+
+  init(
+    client: SupabaseClient,
+    ownerID: UUID,
+    source: CaptureExtractionSource,
+    onSaved: @escaping @MainActor () async -> Void
+  ) {
+    _controller = State(initialValue: VehicleController(client: client, ownerID: ownerID))
+    self.source = source
+    self.onSaved = onSaved
+  }
+
+  var body: some View {
+    VehicleEditorSheet(
+      controller: controller, entry: nil, sourceCapture: source, onSaved: onSaved
+    )
+    .task { if !controller.hasLoaded { await controller.load() } }
+  }
+}
+
+private struct CaptureGoalExtractionView: View {
+  @State private var controller: GoalController
+  let source: CaptureExtractionSource
+  let onSaved: @MainActor () async -> Void
+
+  init(
+    client: SupabaseClient,
+    ownerID: UUID,
+    source: CaptureExtractionSource,
+    onSaved: @escaping @MainActor () async -> Void
+  ) {
+    _controller = State(initialValue: GoalController(client: client, ownerID: ownerID))
+    self.source = source
+    self.onSaved = onSaved
+  }
+
+  var body: some View {
+    GoalEditorSheet(
+      controller: controller, entry: nil, sourceCapture: source, onSaved: onSaved
+    )
+    .task { if !controller.hasLoaded { await controller.load() } }
   }
 }
 

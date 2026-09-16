@@ -133,6 +133,30 @@ final class VehicleEntryTests: XCTestCase {
     XCTAssertEqual(json["p_date_precision"] as? String, "range")
   }
 
+  func testCaptureExtractionParametersUseSourceIdentityAndVehicleFacts() throws {
+    let entryID = UUID(uuidString: "92000000-0000-4000-8000-000000000001")!
+    let entry = InboxEntry(
+      id: entryID, title: "Blue Civic", body: "First commute", createdAt: Date(),
+      occurredStart: Date(timeIntervalSince1970: 100), occurredTimezone: "America/Los_Angeles",
+      revision: 5, datePrecision: .range, occurredEnd: Date(timeIntervalSince1970: 200))
+    let source = CaptureExtractionSource(
+      entry: entry, title: "Blue Civic", body: "First commute", occurrence: entry.occurrence,
+      collectionNames: ["Cars"], tagNames: ["commute"])
+    let input = try makeInput(collectionNames: source.collectionNames, tagNames: source.tagNames)
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(
+        with: encoder.encode(SaveVehicleEntryParameters(input: input, source: source)))
+        as? [String: Any])
+
+    XCTAssertEqual(json["p_capture_id"] as? String, entryID.uuidString)
+    XCTAssertEqual(json["p_capture_revision"] as? Int, 5)
+    XCTAssertEqual(json["p_make"] as? String, "Honda")
+    XCTAssertEqual(json["p_model_year"] as? Int, 2018)
+    XCTAssertNil(json["p_entry_id"])
+  }
+
   func testAllChapterPrecisionsValidateWithoutInventedDates() throws {
     for precision in TimelineDatePrecision.allCases {
       let unanchored = [.age, .approximate, .unknown].contains(precision)

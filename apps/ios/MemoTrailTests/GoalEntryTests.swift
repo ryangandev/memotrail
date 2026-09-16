@@ -115,6 +115,29 @@ final class GoalEntryTests: XCTestCase {
     XCTAssertEqual(json["p_related_entry_ids"] as? [String], [])
   }
 
+  func testCaptureExtractionParametersUseSourceIdentityAndGoalFields() throws {
+    let entryID = UUID(uuidString: "93000000-0000-4000-8000-000000000001")!
+    let entry = InboxEntry(
+      id: entryID, title: "Learn to ski", body: "Try this winter", createdAt: Date(),
+      occurredStart: nil, revision: 6)
+    let source = CaptureExtractionSource(
+      entry: entry, title: "Learn to ski", body: "Try this winter",
+      occurrence: entry.occurrence, collectionNames: ["Someday"], tagNames: ["skiing"])
+    let input = try makeInput(
+      collectionNames: source.collectionNames, tagNames: source.tagNames,
+      relatedEntryIDs: [UUID(uuidString: "93000000-0000-4000-8000-000000000002")!])
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(
+        with: JSONEncoder().encode(SaveGoalEntryParameters(input: input, source: source)))
+        as? [String: Any])
+
+    XCTAssertEqual(json["p_capture_id"] as? String, entryID.uuidString)
+    XCTAssertEqual(json["p_capture_revision"] as? Int, 6)
+    XCTAssertEqual(json["p_horizon"] as? String, "short_term")
+    XCTAssertEqual(json["p_target_date"] as? String, "2027-07-03")
+    XCTAssertNil(json["p_entry_id"])
+  }
+
   func testAchievementValidationNormalizesContextAndRejectsInvalidTimezone() throws {
     let input = try GoalAchievementInput.validate(
       goalEntryID: UUID(),

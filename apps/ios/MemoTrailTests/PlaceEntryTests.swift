@@ -12,7 +12,7 @@ final class PlaceEntryTests: XCTestCase {
       entry.locationLabel, "501 Stanyan Street · San Francisco, California, United States")
     XCTAssertEqual(entry.coordinateLabel, "37.7694°N, 122.4862°W")
     XCTAssertEqual(entry.relatedEntries.first?.displayTitle, "Autumn walk")
-    XCTAssertEqual(entry.protectedEntries.first?.relationshipLabel, "Home chapter")
+    XCTAssertEqual(entry.protectedEntries.first?.relationshipLabel, "Home record")
     XCTAssertEqual(entry.coverAttachment?.mimeType, .jpeg)
     XCTAssertNil(entry.coverAttachment?.signedURL)
     XCTAssertFalse(entry.canMoveToTrash)

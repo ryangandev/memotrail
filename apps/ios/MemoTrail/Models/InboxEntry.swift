@@ -265,6 +265,37 @@ struct WikiItemPreset: Equatable, Hashable, Identifiable, Sendable {
   var id: String { subtype }
 }
 
+struct CaptureExtractionSource: Equatable, Sendable {
+  let entryID: UUID
+  let revision: Int
+  let title: String
+  let body: String
+  let occurrence: EntryOccurrence
+  let collectionNames: [String]
+  let tagNames: [String]
+  let occurredStartRaw: String?
+  let occurredEndRaw: String?
+
+  init(
+    entry: InboxEntry,
+    title: String,
+    body: String,
+    occurrence: EntryOccurrence,
+    collectionNames: [String],
+    tagNames: [String]
+  ) {
+    entryID = entry.id
+    revision = entry.revision
+    self.title = title
+    self.body = body
+    self.occurrence = occurrence
+    self.collectionNames = collectionNames
+    self.tagNames = tagNames
+    occurredStartRaw = occurrence.start == entry.occurredStart ? entry.occurredStartRaw : nil
+    occurredEndRaw = occurrence.end == entry.occurredEnd ? entry.occurredEndRaw : nil
+  }
+}
+
 struct InboxCapture: Equatable, Sendable {
   static let titleLimit = 200
   static let bodyLimit = 50_000
