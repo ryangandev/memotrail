@@ -146,9 +146,7 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
         <button disabled={busy}>Search</button>
       </form>
       {mode === "incoming" && (
-        <p>
-          These Items link here. Open the source Item to change its link.
-        </p>
+        <p>These Items link here. Open the source Item to change its link.</p>
       )}
       {mode === "candidates" && (
         <p>
@@ -171,7 +169,7 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
               {data.items.map((row) => (
                 <li key={row.entry_id}>
                   <div>
-                    <Link href={`/history?entry=${row.entry_id}`}>
+                    <Link href={`/items/${row.entry_id}`}>
                       {historyTitle(row)}
                     </Link>
                     <small>

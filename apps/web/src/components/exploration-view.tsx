@@ -202,14 +202,14 @@ export function ExplorationView({
         </p>
         <h2>{workspace.source.title || "Untitled Entry"}</h2>
         <p className={styles.writing}>{workspace.source.body}</p>
-        <Link href={`/history?entry=${entryID}`}>Open original Entry</Link>
+        <Link href={`/items/${entryID}`}>Open original Entry</Link>
       </section>
       {workspace.links.length > 0 && (
         <nav className={styles.links} aria-label="Exploration links">
           {workspace.links.map((link) => (
             <Link
               key={`${link.id}:${link.relationship}`}
-              href={`/history?entry=${link.id}`}
+              href={`/items/${link.id}`}
             >
               {link.relationship === "exploration_source"
                 ? "Source"
@@ -301,7 +301,7 @@ export function ExplorationView({
                 <Link
                   className={styles.saved}
                   key={entry.request_id}
-                  href={`/history?entry=${entry.entry_id}`}
+                  href={`/items/${entry.entry_id}`}
                 >
                   Saved Entry: {entry.title || "Untitled Entry"}
                 </Link>
@@ -425,7 +425,7 @@ export function ExplorationView({
       {savedID && (
         <p role="status">
           Conclusion saved to Inbox.{" "}
-          <Link href={`/history?entry=${savedID}`}>Open saved Entry</Link>
+          <Link href={`/items/${savedID}`}>Open saved Entry</Link>
         </p>
       )}
       {error && (

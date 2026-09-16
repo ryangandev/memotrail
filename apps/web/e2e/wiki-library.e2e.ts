@@ -64,26 +64,38 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       })),
     );
 
+    const inserted = await client
+      .from("entries")
+      .insert([
+        {
+          body: "The quiet helped me notice what mattered.",
+          inbox_status: "organized",
+          item_kind: "writing",
+          item_subtype: "reflection",
+          owner_id: ownerID,
+          title: "Morning reflection",
+        },
+        {
+          body: "A first glimpse of the Pacific.",
+          inbox_status: "organized",
+          item_kind: "event",
+          item_subtype: "memory",
+          owner_id: ownerID,
+          title: "Ocean memory",
+        },
+      ])
+      .select("id,title");
+    expect(inserted.error).toBeNull();
+    const reflectionID = inserted.data?.find(
+      (entry) => entry.title === "Morning reflection",
+    )?.id;
+    expect(reflectionID).toBeTruthy();
     expect(
       (
-        await client.from("entries").insert([
-          {
-            body: "The quiet helped me notice what mattered.",
-            inbox_status: "organized",
-            item_kind: "writing",
-            item_subtype: "reflection",
-            owner_id: ownerID,
-            title: "Morning reflection",
-          },
-          {
-            body: "A first glimpse of the Pacific.",
-            inbox_status: "organized",
-            item_kind: "event",
-            item_subtype: "memory",
-            owner_id: ownerID,
-            title: "Ocean memory",
-          },
-        ])
+        await client
+          .from("entries")
+          .update({ body: "The calm helped me notice what mattered." })
+          .eq("id", reflectionID!)
       ).error,
     ).toBeNull();
     expect(
@@ -113,10 +125,9 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await page.goto("/library");
     await expect(page.getByRole("heading", { name: "Library" })).toBeVisible();
     const kinds = page.getByRole("navigation", { name: "Life Wiki Kinds" });
-    await expect(kinds.getByRole("link", { name: /All items/ })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+    await expect(
+      kinds.getByRole("link", { name: /All items/ }),
+    ).toHaveAttribute("aria-current", "page");
     await expect(kinds.getByRole("link", { name: /Writing/ })).toBeVisible();
     await expect(kinds.getByRole("link", { name: /Entities/ })).toBeVisible();
     await expect(
@@ -125,9 +136,14 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await expect(
       page.getByRole("link", { name: /Version history/ }),
     ).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: /Writing Reflection Morning reflection/ }),
-    ).toBeVisible();
+    const reflectionLink = page.getByRole("link", {
+      name: /Writing Reflection Morning reflection/,
+    });
+    await expect(reflectionLink).toBeVisible();
+    await expect(reflectionLink).toHaveAttribute(
+      "href",
+      `/items/${reflectionID}`,
+    );
     await expect(
       page.getByRole("link", { name: /Entity Person Avery/ }),
     ).toBeVisible();
@@ -137,6 +153,49 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await expect(
       page.getByRole("main").getByText("4 items", { exact: true }),
     ).toBeVisible();
+
+    await reflectionLink.click();
+    await expect(page).toHaveURL(`/items/${reflectionID}`);
+    await expect(
+      page.getByRole("heading", { name: "Morning reflection", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("article", { name: "Current item" }),
+    ).toContainText("The calm helped me notice what mattered.");
+    await expect(
+      page.getByRole("link", { name: "View version history (1)" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Move to Trash" }),
+    ).toBeVisible();
+    await page.screenshot({
+      fullPage: true,
+      path: "/private/tmp/memotrail-wiki-item-detail-desktop.png",
+    });
+
+    await page.getByRole("link", { name: "View version history (1)" }).click();
+    await expect(page).toHaveURL(`/history?entry=${reflectionID}`);
+    await expect(
+      page.getByRole("heading", { name: "Version history", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: "Earlier version" }),
+    ).toContainText("The quiet helped me notice what mattered.");
+
+    await page.goto(`/items/${reflectionID}`);
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Move to Trash" }).click();
+    await expect(page).toHaveURL(/\/library$/);
+    await expect(
+      page.getByRole("link", { name: /Writing Reflection Morning reflection/ }),
+    ).toHaveCount(0);
+    const trashedReflection = await client
+      .from("entries")
+      .select("deleted_at")
+      .eq("id", reflectionID!)
+      .single();
+    expect(trashedReflection.error).toBeNull();
+    expect(trashedReflection.data?.deleted_at).toBeTruthy();
 
     const filters = page.locator('form:visible:has(select[name="kind"])');
     await filters.locator('select[name="kind"]').selectOption("entity");

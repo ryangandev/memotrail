@@ -195,7 +195,7 @@ test("Unified AI search uses bilingual source evidence, explicit requests, and n
                 kind: "entry",
                 title: "雪山日记",
                 text: original,
-                href: `/history?entry=${entryID}`,
+                href: `/items/${entryID}`,
                 truncated: false,
               },
             ],
@@ -237,10 +237,7 @@ test("Unified AI search uses bilingual source evidence, explicit requests, and n
     const sourceLink = answer
       .getByRole("link", { name: "雪山日记", exact: true })
       .first();
-    await expect(sourceLink).toHaveAttribute(
-      "href",
-      `/history?entry=${entryID}`,
-    );
+    await expect(sourceLink).toHaveAttribute("href", `/items/${entryID}`);
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
       path: "/private/tmp/memotrail-ai-search-desktop.png",
@@ -262,7 +259,7 @@ test("Unified AI search uses bilingual source evidence, explicit requests, and n
     ).toBe(true);
     await sourceLink.click();
     await expect(
-      page.getByRole("region", { name: "Current version" }),
+      page.getByRole("article", { name: "Current item" }),
     ).toContainText(original);
     if (live) {
       const learning = await page.request.post("/api/ai/search", {

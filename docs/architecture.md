@@ -50,7 +50,9 @@ Pair it with the test file carrying the same feature name.
 - `entries.item_kind` owns the structural identity boundary: Capture, Writing, Entity, Event, Story, or Goal.
 - `entries.item_subtype` selects a compatible preset within that Kind.
 - `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item. Person and Place rows expose both the canonical Entry ID and their specialized record ID so clients can preserve identity while opening the correct editor.
-- Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace. Native Library routes typed records to their focused editors and other canonical items to the shared History detail/edit boundary.
+- Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace.
+  Web routes typed records to focused editors and general items to `/items/[entry]`, where current content and primary actions precede an explicit history link.
+  Native Library routes typed records to their focused editors and other canonical items to the shared History detail/edit boundary.
 - `collection_wiki_items` composes the established paged Collection detail with canonical Kind, subtype, and specialized routing identity. Both clients use it so Collections remain organizational lenses rather than a second generic detail system.
 - `people.entry_id` and `places.entry_id` are required owner-scoped links to canonical Entity Wiki Items. Triggers keep names, notes, revision state, and Trash state synchronized while the specialized tables retain typed facts and relationship-facing IDs.
 - A raw Capture may be finalized as one durable item or may produce linked items through a provenance-preserving extraction.

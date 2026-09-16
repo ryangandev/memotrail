@@ -291,7 +291,7 @@ test("Exploration persists across devices, recovers an interrupted response, and
       name: "Open saved Entry",
       exact: true,
     });
-    const savedID = (await open.getAttribute("href"))!.split("=")[1];
+    const savedID = (await open.getAttribute("href"))!.split("/").at(-1)!;
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
     await page.screenshot({
       path: "/private/tmp/memotrail-explore-desktop.png",
@@ -311,14 +311,14 @@ test("Exploration persists across devices, recovers an interrupted response, and
     ).toBe(true);
     await open.click();
     await expect(
-      page.getByRole("region", { name: "Current version" }),
+      page.getByRole("article", { name: "Current item" }),
     ).toContainText("我决定每天记录一个新学到的知识");
     await page
       .getByRole("link", { name: "Open source item", exact: true })
       .click();
     await expect(
       page.getByRole("link", { name: "Open saved conclusion", exact: true }),
-    ).toHaveAttribute("href", `/history?entry=${savedID}`);
+    ).toHaveAttribute("href", `/items/${savedID}`);
     expect(
       (
         await client

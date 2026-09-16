@@ -19,7 +19,12 @@ export default async function ExplorePage({
     try {
       workspace = await explorationWorkspace(context.client, entry);
     } catch {
-      /* Render recoverable unavailable state. */
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      try {
+        workspace = await explorationWorkspace(context.client, entry);
+      } catch {
+        /* Render recoverable unavailable state after one bounded retry. */
+      }
     }
   }
   return (
