@@ -55,6 +55,7 @@ import {
 } from "@/lib/data/occurrence";
 import { uploadEntryPhotos } from "@/lib/media/upload";
 import type { CaptureExtractionSource } from "@/lib/data/capture-extraction-input";
+import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 
 const goalSections: Array<{
   detail: string;
@@ -733,7 +734,8 @@ function GoalEditor({
                   </option>
                   {selectableEntries.map((entry) => (
                     <option key={entry.id} value={entry.id}>
-                      {entry.title} · {entryTypeLabel(entry.entryType)}
+                      {entry.title} ·{" "}
+                      {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
                     </option>
                   ))}
                 </select>
@@ -1024,12 +1026,6 @@ function sameNames(first: string[], second: string[]) {
 
 function localTimezone() {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-}
-
-function entryTypeLabel(value: string) {
-  return value
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function actionError(message: string): GoalActionResult {

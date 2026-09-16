@@ -26,6 +26,7 @@ import {
   type HistorySnapshot,
 } from "@/lib/data/history";
 import { entryRichTextMetadataKey } from "@/lib/data/rich-text";
+import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 import styles from "@/app/history/page.module.css";
 export function EntryHistoryView({
   history,
@@ -118,21 +119,17 @@ export function EntryHistoryView({
           Explore with AI
         </Link>
       )}
-      {!history.current.deleted_at &&
-        history.current.item_kind !== "goal" &&
-        history.current.entry_type !== "goal" && (
-          <GoalExtraction
-            key={`${history.current.id}:${history.current.revision}`}
-            entry={history.current}
-            disabled={busy}
-            onBusyChange={setBusy}
-          />
-        )}
-      {!history.current.deleted_at &&
-        (history.current.item_kind === "goal" ||
-          history.current.entry_type === "goal") && (
-          <Link href={`/goals?entry=${history.current.id}`}>Open Goal</Link>
-        )}
+      {!history.current.deleted_at && history.current.item_kind !== "goal" && (
+        <GoalExtraction
+          key={`${history.current.id}:${history.current.revision}`}
+          entry={history.current}
+          disabled={busy}
+          onBusyChange={setBusy}
+        />
+      )}
+      {!history.current.deleted_at && history.current.item_kind === "goal" && (
+        <Link href={`/goals?entry=${history.current.id}`}>Open Goal</Link>
+      )}
       {Array.isArray(history.current.links) &&
         history.current.links.map(
           (link: { target_entry_id?: unknown; relationship?: unknown }, i) =>
@@ -406,7 +403,7 @@ function Snapshot({ value }: { value: HistorySnapshot }) {
       />
       <dl className={styles.facts}>
         <dt>Type</dt>
-        <dd>{value.entry_type.replaceAll("_", " ")}</dd>
+        <dd>{wikiItemIdentityLabel(value.item_kind, value.item_subtype)}</dd>
         <dt>Inbox</dt>
         <dd>{value.inbox_status}</dd>
         <dt>Date</dt>

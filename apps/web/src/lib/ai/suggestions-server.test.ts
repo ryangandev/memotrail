@@ -43,7 +43,7 @@ const collections = vi.fn();
 const entryRow = { id: "entry", title: "Visual note", body: "", revision: 1 };
 const proposal = {
   title: "Archery",
-  entryType: "standard",
+  classification: { itemKind: "writing", itemSubtype: "note" },
   collections: [],
   tags: ["archery"],
   dateText: null,

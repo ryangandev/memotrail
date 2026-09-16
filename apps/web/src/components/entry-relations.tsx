@@ -14,6 +14,7 @@ import {
   type RelatedEntry,
   type RelationMode,
 } from "@/lib/data/entry-relations";
+import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 import styles from "./entry-relations.module.css";
 export function EntryRelationsPanel({ entryID }: { entryID: string }) {
   const router = useRouter();
@@ -174,7 +175,7 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
                       {historyTitle(row)}
                     </Link>
                     <small>
-                      {row.entry_type.replaceAll("_", " ")}
+                      {wikiItemIdentityLabel(row.item_kind, row.item_subtype)}
                       {row.is_deleted ? " · In Trash" : ""}
                     </small>
                     <p>{row.excerpt}</p>

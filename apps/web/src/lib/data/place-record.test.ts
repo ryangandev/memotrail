@@ -31,7 +31,8 @@ const row = {
       attachments: [attachment],
       body: "The first apartment I chose for myself.",
       date_precision: "range",
-      entry_type: "home",
+      item_kind: "entity",
+      item_subtype: "home",
       id: "40000000-0000-4000-8000-000000000002",
       inbox_status: "organized",
       occurred_end: null,
@@ -119,7 +120,8 @@ describe("Place records", () => {
       parsePlaceLinkOptions([
         {
           body: "A useful memory from the neighborhood.",
-          entry_type: "standard",
+          item_kind: "event",
+          item_subtype: "memory",
           id: "40000000-0000-4000-8000-000000000003",
           title: null,
           updated_at: "2026-09-03T10:00:00Z",
@@ -127,8 +129,9 @@ describe("Place records", () => {
       ]),
     ).toEqual([
       {
-        entryType: "standard",
         id: "40000000-0000-4000-8000-000000000003",
+        itemKind: "event",
+        itemSubtype: "memory",
         title: "A useful memory from the neighborhood.",
         updatedAt: "2026-09-03T10:00:00Z",
       },

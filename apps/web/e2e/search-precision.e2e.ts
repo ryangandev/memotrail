@@ -64,6 +64,8 @@ test("Search date filters include overlapping periods without inventing date pre
           owner_id: ownerID,
           title: "Year-only memory",
           body: "",
+          item_kind: "writing",
+          item_subtype: "note",
           date_precision: "year",
           occurred_start: "2017-01-01T12:00:00Z",
           occurred_timezone: "UTC",
@@ -79,35 +81,40 @@ test("Search date filters include overlapping periods without inventing date pre
               date_precision: "month",
               occurred_start: "2017-07-01T12:00:00Z",
               occurred_end: null,
-              entry_type: "standard",
+              item_kind: "writing",
+              item_subtype: "note",
             },
             {
               title: "Long period memory",
               date_precision: "range",
               occurred_start: "2016-01-01T12:00:00Z",
               occurred_end: "2019-02-03T12:00:00Z",
-              entry_type: "standard",
+              item_kind: "writing",
+              item_subtype: "note",
             },
             {
               title: "College stage memory",
               date_precision: "year",
               occurred_start: "2015-01-01T12:00:00Z",
               occurred_end: "2020-01-01T12:00:00Z",
-              entry_type: "life_stage",
+              item_kind: "event",
+              item_subtype: "life_stage",
             },
             {
               title: "Unknown memory",
               date_precision: "unknown",
               occurred_start: null,
               occurred_end: null,
-              entry_type: "standard",
+              item_kind: "writing",
+              item_subtype: "note",
             },
             {
               title: "Previous calendar day",
               date_precision: "exact",
               occurred_start: "2017-07-10T00:15:00Z",
               occurred_end: null,
-              entry_type: "standard",
+              item_kind: "writing",
+              item_subtype: "note",
               occurred_timezone: "America/Los_Angeles",
             },
           ].map((row) => ({
@@ -152,7 +159,7 @@ test("Search date filters include overlapping periods without inventing date pre
         },
       },
     });
-    const native = await bearer.rpc("search_entries_with_occurrence", {
+    const native = await bearer.rpc("search_wiki_items", {
       p_date_from: "2017-07-10",
       p_date_to: "2017-07-10",
     });
@@ -161,7 +168,7 @@ test("Search date filters include overlapping periods without inventing date pre
     expect(
       native.data.find((row: { entry_id: string }) => row.entry_id === entryID),
     ).toMatchObject({ date_precision: "year" });
-    const evidence = await bearer.rpc("archive_search_evidence", {
+    const evidence = await bearer.rpc("archive_wiki_search_evidence", {
       p_queries: [],
       p_date_from: "2017-07-10",
       p_date_to: "2017-07-10",

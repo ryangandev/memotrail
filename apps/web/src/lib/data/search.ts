@@ -64,7 +64,6 @@ type SearchRow = {
   body: string;
   collection_names: string[] | null;
   entry_id: string;
-  entry_type: string;
   inbox_status: "organized" | "unreviewed";
   item_kind: WikiItemKind;
   item_subtype: string;
@@ -104,13 +103,14 @@ export async function getSearchWorkspace(
 
   const shouldSearch = parsed.request.hasCriteria && !parsed.error;
   const searchRequest = shouldSearch
-    ? context.client.rpc("search_entries_with_occurrence", {
+    ? context.client.rpc("search_wiki_items", {
         p_collection_names: parsed.request.collectionNames,
         p_date_from: parsed.request.dateFrom,
         p_date_to: parsed.request.dateTo,
-        p_entry_types: parsed.request.itemClassifications,
+        p_item_classifications: parsed.request.itemClassifications,
         p_limit: SEARCH_PAGE_SIZE,
         p_offset: parsed.request.offset,
+        p_order: "relevance",
         p_query: parsed.request.query,
         p_tag_names: parsed.request.tagNames,
       })
@@ -180,19 +180,17 @@ export async function getQuickSearchResults(
   const normalizedQuery = query.trim().slice(0, 200);
   if (!normalizedQuery) return { error: null, items: [] };
 
-  const entrySearch = await context.client.rpc(
-    "search_entries_with_occurrence",
-    {
-      p_collection_names: [],
-      p_date_from: null,
-      p_date_to: null,
-      p_entry_types: [],
-      p_limit: 8,
-      p_offset: 0,
-      p_query: normalizedQuery,
-      p_tag_names: [],
-    },
-  );
+  const entrySearch = await context.client.rpc("search_wiki_items", {
+    p_collection_names: [],
+    p_date_from: null,
+    p_date_to: null,
+    p_item_classifications: [],
+    p_limit: 8,
+    p_offset: 0,
+    p_order: "relevance",
+    p_query: normalizedQuery,
+    p_tag_names: [],
+  });
 
   const entryRows = entrySearch.error ? null : searchRows(entrySearch.data);
   const items = (entryRows ?? []).map((row) => quickEntryItem(row)).slice(0, 8);
@@ -221,13 +219,14 @@ export async function getTagEntryPreviews(
     };
   }
 
-  const result = await context.client.rpc("search_entries_with_occurrence", {
+  const result = await context.client.rpc("search_wiki_items", {
     p_collection_names: [],
     p_date_from: null,
     p_date_to: null,
-    p_entry_types: [],
+    p_item_classifications: [],
     p_limit: 5,
     p_offset: 0,
+    p_order: "relevance",
     p_query: "",
     p_tag_names: [normalizedName],
   });
@@ -373,7 +372,6 @@ function isSearchRow(value: unknown): value is SearchRow {
   return (
     typeof value.body === "string" &&
     typeof value.entry_id === "string" &&
-    typeof value.entry_type === "string" &&
     isWikiItemKind(value.item_kind) &&
     typeof value.item_subtype === "string" &&
     (value.inbox_status === "organized" ||

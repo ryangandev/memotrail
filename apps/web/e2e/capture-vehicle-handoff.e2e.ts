@@ -73,7 +73,8 @@ test("Inbox Capture creates a linked Vehicle through the specialized form", asyn
           owner_id: ownerID,
           title: "My first EV",
           body: "Quiet drives around the bay.",
-          entry_type: "standard",
+          item_kind: "capture",
+          item_subtype: "quick_capture",
           inbox_status: "unreviewed",
           date_precision: "unknown",
         })

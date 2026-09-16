@@ -34,7 +34,6 @@ function isSourceRow(value: unknown): value is Parameters<
     typeof row.id === "string" &&
     typeof row.body === "string" &&
     typeof row.created_at === "string" &&
-    typeof row.entry_type === "string" &&
     row.item_kind === "capture" &&
     row.item_subtype === "quick_capture" &&
     typeof row.revision === "number" &&

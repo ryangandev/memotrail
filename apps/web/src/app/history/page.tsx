@@ -9,6 +9,7 @@ import {
   type EntryHistory,
   type HistoryIndexEntry,
 } from "@/lib/data/history";
+import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 import styles from "./page.module.css";
 export const dynamic = "force-dynamic";
 export default async function HistoryPage({
@@ -89,8 +90,8 @@ export default async function HistoryPage({
                 >
                   <strong>{historyTitle(row)}</strong>
                   <span>
-                    {row.entry_type.replaceAll("_", " ")} · {row.version_count}{" "}
-                    earlier versions
+                    {wikiItemIdentityLabel(row.item_kind, row.item_subtype)} ·{" "}
+                    {row.version_count} earlier versions
                     {row.is_deleted ? " · In Trash" : ""}
                   </span>
                   <p>{row.excerpt}</p>

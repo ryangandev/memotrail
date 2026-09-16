@@ -78,7 +78,8 @@ export function entryMarkdown(entry: Record<string, unknown>) {
   const fields = [
     "id",
     "title",
-    "entry_type",
+    "item_kind",
+    "item_subtype",
     "date_precision",
     "occurred_start",
     "occurred_end",

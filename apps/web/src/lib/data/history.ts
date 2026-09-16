@@ -1,10 +1,11 @@
+import type { WikiItemKind } from "./wiki-item";
+
 export type HistoryIndexEntry = {
   entry_id: string;
   title: string | null;
   excerpt: string;
-  entry_type: string;
-  item_kind?: string;
-  item_subtype?: string;
+  item_kind: WikiItemKind;
+  item_subtype: string;
   revision: number;
   is_deleted: boolean;
   version_count: number;
@@ -15,9 +16,8 @@ export type HistorySnapshot = {
   id: string;
   title: string | null;
   body: string;
-  entry_type: string;
-  item_kind?: string;
-  item_subtype?: string;
+  item_kind: WikiItemKind;
+  item_subtype: string;
   inbox_status: string;
   revision: number;
   deleted_at: string | null;
@@ -43,7 +43,6 @@ export type EntryHistory = {
 export const historyFields: Record<string, string> = {
   title: "Title",
   body: "Writing",
-  entry_type: "Type",
   item_kind: "Kind",
   item_subtype: "Subtype",
   inbox_status: "Inbox status",

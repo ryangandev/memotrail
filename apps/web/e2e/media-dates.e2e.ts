@@ -450,7 +450,8 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       p_expected_revision: raceBefore.revision,
       p_title: raceBefore.title,
       p_body: raceBefore.body,
-      p_entry_type: "standard",
+      p_item_kind: "writing",
+      p_item_subtype: "note",
       p_occurred_start: raceBefore.occurred_start,
       p_occurred_timezone: raceBefore.occurred_timezone,
       p_collection_names: [],
@@ -468,8 +469,8 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       },
     };
     const race = await Promise.all([
-      client.rpc("review_entry_with_photo_place", raceInput),
-      client.rpc("review_entry_with_photo_place", raceInput),
+      client.rpc("review_wiki_item_with_photo_place", raceInput),
+      client.rpc("review_wiki_item_with_photo_place", raceInput),
     ]);
     expect(race.map((v) => v.error)).toEqual([null, null]);
     expect(race.map((v) => v.data.length).sort()).toEqual([0, 1]);

@@ -73,7 +73,8 @@ test("Inbox Capture creates a linked Goal through the specialized form", async (
           owner_id: ownerID,
           title: "Learn to sail",
           body: "A wish I want to make concrete.",
-          entry_type: "standard",
+          item_kind: "capture",
+          item_subtype: "quick_capture",
           inbox_status: "unreviewed",
           date_precision: "unknown",
         })

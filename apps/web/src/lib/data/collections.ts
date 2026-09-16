@@ -47,7 +47,6 @@ export type CollectionEntry = {
   collectionNames: string[];
   createdAt: string;
   datePrecision: string;
-  entryType: string;
   id: string;
   inboxStatus: "organized" | "unreviewed";
   itemKind: WikiItemKind;
@@ -99,7 +98,6 @@ type CollectionEntryRow = {
   created_at: string;
   date_precision: string;
   entry_id: string;
-  entry_type: string;
   inbox_status: "organized" | "unreviewed";
   item_kind: WikiItemKind;
   item_subtype: string;
@@ -229,7 +227,6 @@ function entryFromRow(
     collectionNames: row.collection_names,
     createdAt: row.created_at,
     datePrecision: row.date_precision,
-    entryType: row.entry_type,
     id: row.entry_id,
     inboxStatus: row.inbox_status,
     itemKind: row.item_kind,
@@ -306,7 +303,6 @@ function isCollectionEntryRow(value: unknown): value is CollectionEntryRow {
     typeof value.entry_id === "string" &&
     nullableString(value.title) &&
     typeof value.body === "string" &&
-    typeof value.entry_type === "string" &&
     isWikiItemKind(value.item_kind) &&
     typeof value.item_subtype === "string" &&
     (value.inbox_status === "organized" ||

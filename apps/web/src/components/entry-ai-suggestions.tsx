@@ -157,14 +157,18 @@ export function EntryAISuggestionsPanel({
                 Use title: {content.title}
               </button>
             )}
-            {content.entryType && (
+            {content.classification && (
               <button
                 type="button"
                 disabled={disabled}
-                onClick={() => onApply("entryType", content.entryType)}
+                onClick={() =>
+                  onApply("classification", content.classification)
+                }
               >
                 Organize as:{" "}
-                {content.entryType === "first_time" ? "First Time" : "Note"}
+                {content.classification.itemSubtype === "first_time"
+                  ? "First Time"
+                  : "Note"}
               </button>
             )}
             {content.collections.map((name) => (

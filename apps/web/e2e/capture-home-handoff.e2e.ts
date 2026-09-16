@@ -74,7 +74,8 @@ test("Inbox Capture creates a linked Home through the specialized form", async (
           owner_id: ownerID,
           title: "Moved near the lake",
           body: "First evening in the new apartment.",
-          entry_type: "standard",
+          item_kind: "capture",
+          item_subtype: "quick_capture",
           inbox_status: "unreviewed",
           date_precision: "unknown",
         })

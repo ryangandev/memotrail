@@ -199,17 +199,15 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       path: "/private/tmp/memotrail-tags-consistent.png",
     });
 
+    expect(
+      (
+        await client
+          .from("profiles")
+          .update({ birth_date: "1990-01-01" })
+          .eq("user_id", owner)
+      ).error,
+    ).toBeNull();
     await page.goto("/timeline");
-    const birthDatePrompt = page.getByRole("dialog", {
-      name: "When did your story begin?",
-    });
-    if (await birthDatePrompt.isVisible()) {
-      await expect(birthDatePrompt).toHaveAttribute("data-hydrated", "true");
-      await birthDatePrompt
-        .getByRole("button", { name: "Not now", exact: true })
-        .click();
-      await expect(birthDatePrompt).not.toBeVisible();
-    }
     await page.getByRole("button", { name: "Add moment", exact: true }).click();
     await page
       .getByRole("dialog", { name: "What are you adding?" })

@@ -24,13 +24,15 @@ import {
   storedBirthDate,
   storedProfileTimezone,
 } from "@/lib/data/profile-input";
+import { isWikiItemKind, type WikiItemKind } from "@/lib/data/wiki-item";
 
 export type TimelineEntry = {
   body: string;
   collectionNames: string[];
   datePrecision: TimelineDatePrecision;
-  entryType: string;
   id: string;
+  itemKind: WikiItemKind;
+  itemSubtype: string;
   kind: TimelineKind;
   occurredEnd: string | null;
   occurredLabel: string | null;
@@ -75,7 +77,8 @@ type TimelineRow = {
   collection_names: string[];
   date_precision: TimelineDatePrecision | null;
   entry_id: string | null;
-  entry_type: string | null;
+  item_kind: WikiItemKind | null;
+  item_subtype: string | null;
   item_sort_order: number | null;
   occurred_end: string | null;
   occurred_label: string | null;
@@ -251,8 +254,9 @@ function tracksFromRows(rows: TimelineRow[]) {
         body: row.body ?? "",
         collectionNames: row.collection_names,
         datePrecision: row.date_precision ?? "unknown",
-        entryType: row.entry_type ?? "standard",
         id: row.entry_id,
+        itemKind: row.item_kind ?? "event",
+        itemSubtype: row.item_subtype ?? "other",
         kind: row.timeline_kind ?? "event",
         occurredEnd: row.occurred_end,
         occurredLabel: row.occurred_label,
@@ -311,7 +315,8 @@ function isTimelineRow(value: unknown): value is TimelineRow {
   return (
     typeof value.entry_id === "string" &&
     typeof value.body === "string" &&
-    typeof value.entry_type === "string" &&
+    isWikiItemKind(value.item_kind) &&
+    typeof value.item_subtype === "string" &&
     typeof value.title === "string" &&
     (value.timeline_kind === "stage" || value.timeline_kind === "event") &&
     nullableString(value.occurred_start) &&

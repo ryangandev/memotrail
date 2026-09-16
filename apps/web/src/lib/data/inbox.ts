@@ -15,7 +15,6 @@ export type InboxEntry = Occurrence & {
   bodyRich: EntryRichText | null;
   collectionNames: string[];
   createdAt: string;
-  entryType: "first_time" | "life_stage" | "standard";
   id: string;
   itemKind: WikiItemKind;
   itemSubtype: string;
@@ -44,7 +43,6 @@ type Claims = Record<string, unknown>;
 type EntryRow = {
   body: string;
   created_at: string;
-  entry_type: "first_time" | "life_stage" | "standard";
   id: string;
   item_kind: string;
   item_subtype: string;
@@ -137,7 +135,7 @@ export async function getInboxWorkspace(
   }
 
   const entryColumns =
-    "id,title,body,metadata,entry_type,item_kind,item_subtype,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision";
+    "id,title,body,metadata,item_kind,item_subtype,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision";
   const inboxRequest = context.client
     .from("entries")
     .select(entryColumns)
@@ -224,19 +222,12 @@ export function entryFromRow(
     bodyRich: entryRichTextFromMetadata(row.metadata, row.body),
     collectionNames,
     createdAt: row.created_at,
-    entryType: row.entry_type,
     id: row.id,
-    itemKind: isWikiItemKind(row.item_kind)
-      ? row.item_kind
-      : row.entry_type === "first_time"
-        ? "event"
-        : "writing",
+    itemKind: isWikiItemKind(row.item_kind) ? row.item_kind : "capture",
     itemSubtype:
       typeof row.item_subtype === "string" && row.item_subtype
         ? row.item_subtype
-        : row.entry_type === "first_time"
-          ? "first_time"
-          : "note",
+        : "quick_capture",
     occurredAt: row.occurred_start,
     occurredEnd: row.occurred_end,
     occurredLabel: row.occurred_label,

@@ -76,7 +76,6 @@ test("An Idea creates a linked Goal without changing the source", async ({
           owner_id: ownerID,
           title: "Original chapter",
           body: "The original words I want to keep.",
-          entry_type: "standard",
           inbox_status: "organized",
           item_kind: "writing",
           item_subtype: "idea",
@@ -159,11 +158,11 @@ test("An Idea creates a linked Goal without changing the source", async ({
       (
         await client
           .from("entries")
-          .select("entry_type")
+          .select("item_kind,item_subtype")
           .eq("id", entryID)
           .single()
-      ).data?.entry_type,
-    ).toBe("standard");
+      ).data,
+    ).toEqual({ item_kind: "writing", item_subtype: "idea" });
     await page
       .getByRole("button", { name: "Create linked Goal", exact: true })
       .click();

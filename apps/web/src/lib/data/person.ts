@@ -1,8 +1,11 @@
+import type { WikiItemKind } from "./wiki-item";
+
 export type PersonEntry = {
   id: string;
   title: string | null;
   body: string;
-  entry_type: string;
+  item_kind: WikiItemKind;
+  item_subtype: string;
   is_deleted?: boolean;
 };
 

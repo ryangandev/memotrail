@@ -12,6 +12,7 @@ import {
   type HomeStage,
   type HomeWorkspace,
 } from "@/lib/data/home";
+import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 import styles from "./home.module.css";
 
 export const dynamic = "force-dynamic";
@@ -153,7 +154,9 @@ function ResurfacedMemory({ memory }: { memory: HomeResurfacedMemory | null }) {
         ) : null}
         <div>
           <header>
-            <span>{entryTypeLabel(memory.entryType)}</span>
+            <span>
+              {wikiItemIdentityLabel(memory.itemKind, memory.itemSubtype)}
+            </span>
             <time dateTime={memory.occurredStart}>
               {entryDateLabel(memory)}
             </time>
@@ -289,7 +292,9 @@ function RecentEntryCard({ entry }: { entry: HomeEntry }) {
       ) : null}
       <div>
         <header>
-          <span>{entryTypeLabel(entry.entryType)}</span>
+          <span>
+            {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
+          </span>
           <time dateTime={entry.occurredStart ?? entry.createdAt}>
             {entryDateLabel(entry)}
           </time>
@@ -400,17 +405,6 @@ function formatDate(value: string, timezone: string | null) {
       timeZone: "UTC",
       year: "numeric",
     }).format(new Date(value));
-  }
-}
-
-function entryTypeLabel(type: string) {
-  switch (type) {
-    case "first_time":
-      return "First Time";
-    case "life_stage":
-      return "Life Stage";
-    default:
-      return "Entry";
   }
 }
 

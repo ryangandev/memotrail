@@ -18,6 +18,7 @@ import type {
   TrashWorkspace as TrashWorkspaceData,
 } from "@/lib/data/trash";
 import { TRASH_PAGE_SIZE, trashPageHref } from "@/lib/data/trash-input";
+import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 
 type PendingAction = {
   action: "delete" | "restore";
@@ -321,9 +322,7 @@ export function TrashWorkspace({
   );
 }
 
-function iconForKind(
-  kind: TrashItem["kind"],
-): "map" | "photo" | "timeline" {
+function iconForKind(kind: TrashItem["kind"]): "map" | "photo" | "timeline" {
   if (kind === "place") {
     return "map";
   }
@@ -342,7 +341,9 @@ function labelForItem(item: TrashItem) {
     return "Place";
   }
 
-  return item.entryType === "first_time" ? "First Time" : "Entry";
+  return item.wikiItemKind && item.wikiItemSubtype
+    ? wikiItemIdentityLabel(item.wikiItemKind, item.wikiItemSubtype)
+    : "Entry";
 }
 
 function formatDate(value: string) {

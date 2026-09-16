@@ -77,7 +77,8 @@ test("Private photo previews preserve originals across Web, native bearer access
           owner_id: owner,
           title: "Photo archive",
           body: "Original writing",
-          entry_type: "first_time",
+          item_kind: "event",
+          item_subtype: "first_time",
           date_precision: "unknown",
         })
       ).error,

@@ -224,13 +224,6 @@ export function EntryReviewDialog({
           {
             ...entry,
             ...parsedInput.data,
-            entryType:
-              parsedInput.data.itemKind === "event" &&
-              parsedInput.data.itemSubtype === "first_time"
-                ? "first_time"
-                : parsedInput.data.itemKind === "event"
-                  ? "life_stage"
-                  : "standard",
             datePrecision: parsedInput.data.datePrecision ?? "exact",
             occurredEnd: parsedInput.data.occurredEnd ?? null,
             occurredLabel: parsedInput.data.occurredLabel ?? null,
@@ -316,15 +309,16 @@ export function EntryReviewDialog({
                   }));
                 if (key === "title" && typeof value === "string")
                   setTitle(value);
-                if (key === "entryType" && entry.itemKind === "capture") {
-                  if (value === "first_time") {
-                    setItemKind("event");
-                    setItemSubtype("first_time");
-                  }
-                  if (value === "standard") {
-                    setItemKind("writing");
-                    setItemSubtype("note");
-                  }
+                if (
+                  key === "classification" &&
+                  entry.itemKind === "capture" &&
+                  value &&
+                  typeof value === "object" &&
+                  "itemKind" in value &&
+                  "itemSubtype" in value
+                ) {
+                  setItemKind(value.itemKind);
+                  setItemSubtype(value.itemSubtype);
                 }
                 if (key === "collections" && Array.isArray(value))
                   setCollectionNames((current) =>

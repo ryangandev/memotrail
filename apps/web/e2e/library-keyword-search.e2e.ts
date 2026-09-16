@@ -156,11 +156,11 @@ test("Canonical keyword search finds People and Places without deferred Habits",
         },
       },
     });
-    const response = await native.rpc("search_entries_with_occurrence", {
+    const response = await native.rpc("search_wiki_items", {
       p_collection_names: [],
       p_date_from: null,
       p_date_to: null,
-      p_entry_types: [],
+      p_item_classifications: [],
       p_query: "学习",
       p_tag_names: [],
       p_limit: 20,
@@ -177,11 +177,11 @@ test("Canonical keyword search finds People and Places without deferred Habits",
     expect(
       response.data.map((item: { item_kind: string }) => item.item_kind),
     ).toEqual(["entity", "entity"]);
-    const personScope = await native.rpc("search_entries_with_occurrence", {
+    const personScope = await native.rpc("search_wiki_items", {
       p_collection_names: [],
       p_date_from: null,
       p_date_to: null,
-      p_entry_types: ["person"],
+      p_item_classifications: ["person"],
       p_query: "学习",
       p_tag_names: [],
       p_limit: 20,

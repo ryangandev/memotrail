@@ -4,7 +4,6 @@ import {
   reviewablePresetsForKind,
   validReviewableWikiItemPreset,
   wikiEntryHref,
-  wikiItemIdentityFromLegacy,
   wikiItemIdentityLabel,
   wikiItemSubtypeLabel,
 } from "./wiki-item";
@@ -42,17 +41,6 @@ describe("Life Wiki item classification", () => {
     expect(wikiItemSubtypeLabel("writing", "field_note")).toBe("Field Note");
     expect(wikiItemIdentityLabel("event", "memory")).toBe("Event · Memory");
     expect(wikiItemIdentityLabel("goal", "goal")).toBe("Goal");
-  });
-
-  it("provides a safe semantic fallback for legacy search results", () => {
-    expect(wikiItemIdentityFromLegacy("life_stage", "organized")).toEqual({
-      itemKind: "event",
-      itemSubtype: "life_stage",
-    });
-    expect(wikiItemIdentityFromLegacy("standard", "unreviewed")).toEqual({
-      itemKind: "capture",
-      itemSubtype: "quick_capture",
-    });
   });
 
   it("routes semantic items to their canonical editor", () => {

@@ -8,6 +8,7 @@ import {
   type GoalHorizon,
   type GoalStatus,
 } from "./goal-record-input";
+import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
 
 export type GoalAttachment = {
   bucketId: string;
@@ -24,8 +25,9 @@ export type GoalAttachment = {
 
 export type GoalRelatedEntry = {
   body: string;
-  entryType: string;
   id: string;
+  itemKind: WikiItemKind;
+  itemSubtype: string;
   occurredLabel: string | null;
   occurredStart: string | null;
   occurredTimezone: string | null;
@@ -54,8 +56,9 @@ export type GoalRecord = {
 };
 
 export type GoalLinkOption = {
-  entryType: string;
   id: string;
+  itemKind: WikiItemKind;
+  itemSubtype: string;
   title: string;
   updatedAt: string;
 };
@@ -94,14 +97,16 @@ export function parseGoalLinkOptions(value: unknown): GoalLinkOption[] | null {
       typeof item.id !== "string" ||
       !nullableString(item.title) ||
       !nullableString(item.body) ||
-      typeof item.entry_type !== "string" ||
+      !isWikiItemKind(item.item_kind) ||
+      typeof item.item_subtype !== "string" ||
       typeof item.updated_at !== "string"
     ) {
       return null;
     }
     options.push({
-      entryType: item.entry_type,
       id: item.id,
+      itemKind: item.item_kind,
+      itemSubtype: item.item_subtype,
       title: entryOptionTitle(item.title, item.body),
       updatedAt: item.updated_at,
     });
@@ -186,7 +191,8 @@ function parseRelatedEntries(value: unknown): GoalRelatedEntry[] | null {
       typeof item.id !== "string" ||
       !nullableString(item.title) ||
       typeof item.body !== "string" ||
-      typeof item.entry_type !== "string" ||
+      !isWikiItemKind(item.item_kind) ||
+      typeof item.item_subtype !== "string" ||
       !nullableString(item.occurred_start) ||
       !nullableString(item.occurred_label) ||
       !nullableString(item.occurred_timezone) ||
@@ -198,8 +204,9 @@ function parseRelatedEntries(value: unknown): GoalRelatedEntry[] | null {
     }
     entries.push({
       body: item.body,
-      entryType: item.entry_type,
       id: item.id,
+      itemKind: item.item_kind,
+      itemSubtype: item.item_subtype,
       occurredLabel: item.occurred_label,
       occurredStart: item.occurred_start,
       occurredTimezone: item.occurred_timezone,

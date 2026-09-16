@@ -202,19 +202,19 @@ export function TimelineWorkspace({
   }
 
   function openEntry(entry: TimelineEntry) {
-    if (entry.entryType === "home") {
+    if (entry.itemKind === "entity" && entry.itemSubtype === "home") {
       const home = homes.find((item) => item.id === entry.id);
       if (home) setSelection({ type: "home", entry: home });
       else router.push(`/homes?entry=${entry.id}`);
       return;
     }
-    if (entry.entryType === "vehicle") {
+    if (entry.itemKind === "entity" && entry.itemSubtype === "vehicle") {
       const vehicle = vehicles.find((item) => item.id === entry.id);
       if (vehicle) setSelection({ type: "vehicle", entry: vehicle });
       else router.push(`/vehicles?entry=${entry.id}`);
       return;
     }
-    if (entry.entryType === "first_time") {
+    if (entry.itemKind === "event" && entry.itemSubtype === "first_time") {
       const firstTime = firstTimes.find((item) => item.id === entry.id);
       if (firstTime) setSelection({ type: "first-time", entry: firstTime });
       else router.push("/first-times");
@@ -943,7 +943,8 @@ function TimelineEditor({
             ...parsed.data,
             id: nextResult.entryId,
             revision: nextResult.revision,
-            entryType: kind === "stage" ? "life_stage" : "standard",
+            itemKind: "event",
+            itemSubtype: kind === "stage" ? "life_stage" : "other",
             updatedAt: entry?.updatedAt ?? "",
           });
         router.refresh();

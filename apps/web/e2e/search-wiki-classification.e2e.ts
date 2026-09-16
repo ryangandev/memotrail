@@ -69,7 +69,6 @@ test("Search filters and labels Life Wiki Kinds and types", async ({
         await client.from("entries").insert([
           {
             body: "I noticed how quiet the room felt.",
-            entry_type: "standard",
             inbox_status: "organized",
             item_kind: "writing",
             item_subtype: "reflection",
@@ -78,7 +77,6 @@ test("Search filters and labels Life Wiki Kinds and types", async ({
           },
           {
             body: "A very good day at the water.",
-            entry_type: "life_stage",
             inbox_status: "organized",
             item_kind: "event",
             item_subtype: "memory",

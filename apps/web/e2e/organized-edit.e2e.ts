@@ -63,7 +63,8 @@ test("Organized Entries stay editable without returning to Inbox", async ({
           owner_id: owner,
           title: "Finished organizing",
           body: "Original words",
-          entry_type: "standard",
+          item_kind: "writing",
+          item_subtype: "note",
           inbox_status: "organized",
           date_precision: "exact",
           metadata: {

@@ -116,7 +116,6 @@ export async function syncInboxEntry(
     date_precision: occurrence.datePrecision,
     occurred_end: occurrence.occurredEnd,
     occurred_label: occurrence.occurredLabel,
-    entry_type: "standard",
     item_kind: "capture",
     item_subtype: "quick_capture",
     id: entry.id,

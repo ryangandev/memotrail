@@ -30,6 +30,7 @@ import {
   placeRegionLimit,
   type PlaceRecordInput,
 } from "@/lib/data/place-record-input";
+import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 
 export function PlacesWorkspace({
   initialPlaceId,
@@ -230,7 +231,7 @@ function PlaceCard({
             <span key={`${entry.relationship}-${entry.id}`}>
               {entry.relationship === "home"
                 ? "Home"
-                : entryTypeLabel(entry.entryType)}
+                : wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
               {": "}
               {entry.title}
             </span>
@@ -568,11 +569,17 @@ function PlaceEditor({
                       <div className={styles.editableLink} key={entryId}>
                         <span>
                           <small>
-                            {entryTypeLabel(
-                              option?.entryType ??
-                                existing?.entryType ??
-                                "standard",
-                            )}
+                            {option
+                              ? wikiItemIdentityLabel(
+                                  option.itemKind,
+                                  option.itemSubtype,
+                                )
+                              : existing
+                                ? wikiItemIdentityLabel(
+                                    existing.itemKind,
+                                    existing.itemSubtype,
+                                  )
+                                : "Entry"}
                           </small>
                           {option?.title ?? existing?.title ?? "Linked Entry"}
                         </span>
@@ -608,7 +615,11 @@ function PlaceEditor({
                   </option>
                   {availableLinkOptions.map((option) => (
                     <option key={option.id} value={option.id}>
-                      {entryTypeLabel(option.entryType)} · {option.title}
+                      {wikiItemIdentityLabel(
+                        option.itemKind,
+                        option.itemSubtype,
+                      )}{" "}
+                      · {option.title}
                     </option>
                   ))}
                 </select>
@@ -698,7 +709,7 @@ function LinkedEntryRow({ entry }: { entry: PlaceLinkedEntry }) {
         <small>
           {entry.relationship === "home"
             ? "Home chapter"
-            : entryTypeLabel(entry.entryType)}
+            : wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
         </small>
         {entry.title}
       </span>
@@ -710,13 +721,6 @@ function LinkedEntryRow({ entry }: { entry: PlaceLinkedEntry }) {
 function coordinateValue(value: string) {
   const normalized = value.trim();
   return normalized ? Number(normalized) : null;
-}
-
-function entryTypeLabel(value: string) {
-  return value
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
 }
 
 function countLabel(count: number, singular: string, plural = `${singular}s`) {

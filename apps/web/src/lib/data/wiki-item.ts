@@ -220,28 +220,6 @@ export function wikiItemIdentityLabel(kind: WikiItemKind, subtype: string) {
   return `${kindLabel} · ${subtypeLabel}`;
 }
 
-export function wikiItemIdentityFromLegacy(
-  entryType: string,
-  inboxStatus: "organized" | "unreviewed",
-): { itemKind: WikiItemKind; itemSubtype: string } {
-  switch (entryType) {
-    case "first_time":
-      return { itemKind: "event", itemSubtype: "first_time" };
-    case "life_stage":
-      return { itemKind: "event", itemSubtype: "life_stage" };
-    case "home":
-      return { itemKind: "entity", itemSubtype: "home" };
-    case "vehicle":
-      return { itemKind: "entity", itemSubtype: "vehicle" };
-    case "goal":
-      return { itemKind: "goal", itemSubtype: "goal" };
-    default:
-      return inboxStatus === "unreviewed"
-        ? { itemKind: "capture", itemSubtype: "quick_capture" }
-        : { itemKind: "writing", itemSubtype: "note" };
-  }
-}
-
 export function wikiEntryHref(item: {
   id: string;
   inboxStatus: "organized" | "unreviewed";

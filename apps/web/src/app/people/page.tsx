@@ -28,7 +28,7 @@ export default async function PeoplePage({
         }),
     context.client
       .from("entries")
-      .select("id,title,body,entry_type")
+      .select("id,title,body,item_kind,item_subtype")
       .eq("owner_id", context.userId)
       .is("deleted_at", null)
       .order("updated_at", { ascending: false })

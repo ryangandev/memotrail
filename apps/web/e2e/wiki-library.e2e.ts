@@ -69,7 +69,6 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
         await client.from("entries").insert([
           {
             body: "The quiet helped me notice what mattered.",
-            entry_type: "standard",
             inbox_status: "organized",
             item_kind: "writing",
             item_subtype: "reflection",
@@ -78,7 +77,6 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
           },
           {
             body: "A first glimpse of the Pacific.",
-            entry_type: "life_stage",
             inbox_status: "organized",
             item_kind: "event",
             item_subtype: "memory",
