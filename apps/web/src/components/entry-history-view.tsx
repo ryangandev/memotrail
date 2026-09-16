@@ -9,7 +9,7 @@ import { EntryRichTextContent } from "./entry-rich-text-content";
 import { loadEditableEntry } from "@/app/history/actions";
 import {
   restoreHistoryVersion,
-  convertEntryToGoal,
+  extractGoalFromItem,
 } from "@/app/history/actions";
 import {
   goalHorizons,
@@ -93,7 +93,9 @@ export function EntryHistoryView({
       <Link href="/history">← All Entry history</Link>
       <h2>{historyTitle(history.current)}</h2>
       {!history.current.deleted_at &&
-        ["standard", "first_time"].includes(history.current.entry_type) && (
+        ["writing", "event", "story"].includes(
+          String(history.current.item_kind),
+        ) && (
           <button disabled={busy} onClick={() => void edit()}>
             Edit Entry
           </button>
@@ -117,30 +119,39 @@ export function EntryHistoryView({
         </Link>
       )}
       {!history.current.deleted_at &&
-        history.current.entry_type === "standard" && (
-          <GoalConversion
+        history.current.item_kind !== "goal" &&
+        history.current.entry_type !== "goal" && (
+          <GoalExtraction
             key={`${history.current.id}:${history.current.revision}`}
             entry={history.current}
             disabled={busy}
             onBusyChange={setBusy}
           />
         )}
-      {!history.current.deleted_at && history.current.entry_type === "goal" && (
-        <Link href={`/goals?entry=${history.current.id}`}>Open Goal</Link>
-      )}
+      {!history.current.deleted_at &&
+        (history.current.item_kind === "goal" ||
+          history.current.entry_type === "goal") && (
+          <Link href={`/goals?entry=${history.current.id}`}>Open Goal</Link>
+        )}
       {Array.isArray(history.current.links) &&
         history.current.links.map(
           (link: { target_entry_id?: unknown; relationship?: unknown }, i) =>
             typeof link.target_entry_id === "string" &&
             /^[0-9a-f-]{36}$/i.test(link.target_entry_id) &&
-            ["exploration_source", "exploration_conclusion"].includes(
-              String(link.relationship),
-            ) ? (
+            [
+              "derived",
+              "derived_from",
+              "exploration_source",
+              "exploration_conclusion",
+            ].includes(String(link.relationship)) ? (
               <p key={i}>
                 <Link href={`/history?entry=${link.target_entry_id}`}>
-                  {link.relationship === "exploration_source"
-                    ? "Open source Entry"
-                    : "Open saved conclusion"}
+                  {link.relationship === "derived"
+                    ? "Open extracted item"
+                    : link.relationship === "derived_from" ||
+                        link.relationship === "exploration_source"
+                      ? "Open source item"
+                      : "Open saved conclusion"}
                 </Link>
               </p>
             ) : null,
@@ -251,7 +262,7 @@ export function EntryHistoryView({
     </>
   );
 }
-function GoalConversion({
+function GoalExtraction({
   entry,
   disabled,
   onBusyChange,
@@ -262,6 +273,7 @@ function GoalConversion({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [goalId, setGoalId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [title, setTitle] = useState(entry.title ?? "");
   const [horizon, setHorizon] = useState<GoalHorizon>("someday");
@@ -270,13 +282,19 @@ function GoalConversion({
   const [error, setError] = useState<string | null>(null);
   if (!open)
     return (
-      <button disabled={disabled} onClick={() => setOpen(true)}>
-        Convert to Goal
+      <button
+        disabled={disabled}
+        onClick={() => {
+          setGoalId(crypto.randomUUID());
+          setOpen(true);
+        }}
+      >
+        Create linked Goal
       </button>
     );
   return (
     <form
-      aria-label="Convert Entry to Goal"
+      aria-label="Create linked Goal"
       className={styles.conversion}
       onSubmit={async (event) => {
         event.preventDefault();
@@ -284,22 +302,24 @@ function GoalConversion({
         onBusyChange(true);
         setError(null);
         try {
-          const message = await convertEntryToGoal({
-            id: entry.id,
-            revision: entry.revision,
+          if (!goalId) throw Error("Missing Goal identity");
+          const result = await extractGoalFromItem({
+            goalId,
+            sourceId: entry.id,
+            sourceRevision: entry.revision,
             title,
             horizon,
             status,
             targetDate: targetDate || null,
           });
-          if (message) setError(message);
-          else {
+          if (result.error) setError(result.error);
+          else if (result.goalId) {
             setOpen(false);
-            router.refresh();
+            router.push(`/goals?entry=${result.goalId}`);
           }
         } catch {
           setError(
-            "Could not confirm conversion. Refresh to check the current Entry before retrying.",
+            "Could not confirm Goal creation. Refresh to check the source before retrying.",
           );
         } finally {
           setBusy(false);
@@ -307,11 +327,10 @@ function GoalConversion({
         }
       }}
     >
-      <h3>Give this idea an intention</h3>
+      <h3>Create a Goal from this item</h3>
       <p>
-        This keeps the same Entry, original writing, dates, photos, links, and
-        Inbox state. No copy or Bucket List membership is created. You can
-        restore the Standard version through history.
+        This creates a separate Goal and links it back to this source. The
+        source keeps its Kind, writing, dates, photos, links, and history.
       </p>
       <fieldset disabled={busy || disabled}>
         <label>
@@ -358,11 +377,17 @@ function GoalConversion({
           />
         </label>
         <div className={styles.controls}>
-          <button type="button" onClick={() => setOpen(false)}>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              setGoalId(null);
+            }}
+          >
             Cancel
           </button>
           <button type="submit">
-            {busy ? "Converting..." : "Convert this Entry"}
+            {busy ? "Creating..." : "Create linked Goal"}
           </button>
         </div>
       </fieldset>

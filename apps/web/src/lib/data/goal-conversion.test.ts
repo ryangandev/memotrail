@@ -1,17 +1,18 @@
 import { describe, it, expect } from "vitest";
-import { parseGoalConversionInput } from "./goal-record-input";
+import { parseGoalExtractionInput } from "./goal-record-input";
 const input = {
-  id: "9ee35d43-af21-41c4-9bdb-2864b99622f0",
-  revision: 3,
+  goalId: "50000000-0000-4000-8000-000000000001",
+  sourceId: "9ee35d43-af21-41c4-9bdb-2864b99622f0",
+  sourceRevision: 3,
   title: " 学习 ",
   horizon: "someday",
   status: "considering",
   targetDate: null,
 };
-describe("Goal conversion input", () => {
-  it("keeps identity and only exposes explicit conversion fields", () => {
+describe("Goal extraction input", () => {
+  it("keeps source and target identity and only exposes explicit Goal fields", () => {
     expect(
-      parseGoalConversionInput({
+      parseGoalExtractionInput({
         ...input,
         body: "Do not overwrite",
         collectionNames: ["Ignore"],
@@ -20,16 +21,17 @@ describe("Goal conversion input", () => {
   });
   it("rejects invalid versions, titles, states and calendar dates", () => {
     for (const patch of [
-      { id: null },
-      { id: "bad" },
-      { revision: 0 },
-      { revision: 1.5 },
+      { goalId: null },
+      { goalId: "bad" },
+      { sourceId: "bad" },
+      { sourceRevision: 0 },
+      { sourceRevision: 1.5 },
       { title: " " },
       { status: "bad" },
       { horizon: null },
       { targetDate: "2026-02-30" },
     ])
-      expect(parseGoalConversionInput({ ...input, ...patch }).success).toBe(
+      expect(parseGoalExtractionInput({ ...input, ...patch }).success).toBe(
         false,
       );
   });

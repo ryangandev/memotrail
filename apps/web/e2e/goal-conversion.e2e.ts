@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
-test("An Idea converts in place, preserves its original content, and can be restored", async ({
+test("An Idea creates a linked Goal without changing the source", async ({
   page,
   context,
 }) => {
@@ -19,7 +19,7 @@ test("An Idea converts in place, preserves its original content, and can be rest
   const admin = createClient(env.API_URL, env.SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
   });
-  const email = `goal-conversion-${randomUUID()}@memotrail.local`;
+  const email = `goal-extraction-${randomUUID()}@memotrail.local`;
   const created = await admin.auth.admin.createUser({
     email,
     email_confirm: true,
@@ -76,6 +76,10 @@ test("An Idea converts in place, preserves its original content, and can be rest
           owner_id: ownerID,
           title: "Original chapter",
           body: "The original words I want to keep.",
+          entry_type: "standard",
+          inbox_status: "organized",
+          item_kind: "writing",
+          item_subtype: "idea",
         })
       ).error,
     ).toBeNull();
@@ -143,9 +147,9 @@ test("An Idea converts in place, preserves its original content, and can be rest
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto("/history?entry=" + entryID);
     await page
-      .getByRole("button", { name: "Convert to Goal", exact: true })
+      .getByRole("button", { name: "Create linked Goal", exact: true })
       .click();
-    const form = page.getByRole("form", { name: "Convert Entry to Goal" });
+    const form = page.getByRole("form", { name: "Create linked Goal" });
     await expect(form.getByLabel("Horizon")).toHaveValue("someday");
     await expect(
       form.getByRole("combobox", { name: "Status", exact: true }),
@@ -161,7 +165,7 @@ test("An Idea converts in place, preserves its original content, and can be rest
       ).data?.entry_type,
     ).toBe("standard");
     await page
-      .getByRole("button", { name: "Convert to Goal", exact: true })
+      .getByRole("button", { name: "Create linked Goal", exact: true })
       .click();
     await form.getByLabel("Horizon").selectOption("long_term");
     await form
@@ -170,13 +174,13 @@ test("An Idea converts in place, preserves its original content, and can be rest
     await form.getByLabel("Target date (optional)").fill("2027-12-31");
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
-      path: "/private/tmp/memotrail-goal-conversion-desktop.png",
+      path: "/private/tmp/memotrail-goal-extraction-desktop.png",
     });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
-      path: "/private/tmp/memotrail-goal-conversion-mobile.png",
+      path: "/private/tmp/memotrail-goal-extraction-mobile.png",
     });
     expect(
       await page.evaluate(
@@ -184,11 +188,18 @@ test("An Idea converts in place, preserves its original content, and can be rest
       ),
     ).toBe(true);
     await form
-      .getByRole("button", { name: "Convert this Entry", exact: true })
+      .getByRole("button", { name: "Create linked Goal", exact: true })
       .click();
-    await expect(
-      page.getByRole("link", { name: "Open Goal", exact: true }),
-    ).toBeVisible();
+    await expect(page).toHaveURL(/\/goals\?entry=/);
+    await expect(page.getByRole("dialog")).toBeVisible();
+    const derivedLinks = await client
+      .from("entry_links")
+      .select("target_entry_id")
+      .eq("source_entry_id", entryID)
+      .eq("relationship", "derived")
+      .single();
+    expect(derivedLinks.error).toBeNull();
+    const goalID = derivedLinks.data!.target_entry_id;
     const after = (
       await client.rpc("entry_history", {
         p_entry_id: entryID,
@@ -209,24 +220,45 @@ test("An Idea converts in place, preserves its original content, and can be rest
       "tags",
       "people",
       "places",
-      "links",
       "attachments",
       "metadata",
+      "revision",
+      "item_kind",
+      "item_subtype",
     ])
       expect(after[key], key).toEqual(before[key]);
-    expect(after.goal.horizon).toBe("long_term");
-    expect(after.goal.target_date).toBe("2027-12-31");
-    const retry = await client.rpc("convert_entry_to_goal", {
-      p_entry_id: entryID,
-      p_expected_revision: before.revision,
-      p_title: before.title,
+    expect(after.links).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          relationship: "derived",
+          target_entry_id: goalID,
+        }),
+      ]),
+    );
+    const goal = (
+      await client.rpc("entry_history", {
+        p_entry_id: goalID,
+        p_limit: 20,
+        p_offset: 0,
+      })
+    ).data.current;
+    expect(goal.id).toBe(goalID);
+    expect(goal.item_kind).toBe("goal");
+    expect(goal.body).toBe(before.body);
+    expect(goal.goal.horizon).toBe("long_term");
+    expect(goal.goal.target_date).toBe("2027-12-31");
+    const retry = await client.rpc("extract_goal_from_item", {
+      p_goal_id: goalID,
       p_horizon: "long_term",
       p_status: "active",
       p_target_date: "2027-12-31",
+      p_title: before.title,
+      p_source_entry_id: entryID,
+      p_source_revision: before.revision,
     });
     expect(retry.error).toBeNull();
-    expect(retry.data).toBe(after.revision);
-    await page.getByRole("link", { name: "Open Goal", exact: true }).click();
+    expect(retry.data).toHaveLength(1);
+    expect(retry.data[0].goal_entry_id).toBe(goalID);
     await page
       .getByRole("dialog")
       .getByRole("button", { name: "Save changes", exact: true })
@@ -241,44 +273,21 @@ test("An Idea converts in place, preserves its original content, and can be rest
     ).data!;
     expect(later.occurred_start).toBe(before.occurred_start);
     expect(later.occurred_end).toBe(before.occurred_end);
-    await page.goto("/history?entry=" + entryID);
-    await page
-      .getByRole("combobox", { name: "Earlier version", exact: true })
-      .selectOption(String(before.revision));
-    page.once("dialog", (d) => d.accept());
-    await page
-      .getByRole("button", { name: "Restore selected version" })
-      .click();
+    await page.goto("/history?entry=" + goalID);
     await expect(
-      page.getByRole("button", { name: "Convert to Goal", exact: true }),
+      page.getByRole("link", { name: "Open source item", exact: true }),
     ).toBeVisible();
-    expect(
-      (await client.from("goals").select("entry_id").eq("entry_id", entryID))
-        .data,
-    ).toHaveLength(0);
+    await page.goto("/history?entry=" + entryID);
+    await expect(
+      page.getByRole("button", { name: "Create linked Goal", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Open extracted item", exact: true }),
+    ).toBeVisible();
     const downloaded = await client.storage.from("entry-media").download(path);
     expect(Buffer.from(await downloaded.data!.arrayBuffer())).toEqual(bytes);
-    const restored = (
-      await client.from("entries").select("revision").eq("id", entryID).single()
-    ).data!.revision;
-    const requests = await Promise.all(
-      [0, 1].map(() =>
-        client.rpc("convert_entry_to_goal", {
-          p_entry_id: entryID,
-          p_expected_revision: restored,
-          p_title: before.title,
-          p_horizon: "someday",
-          p_status: "considering",
-          p_target_date: null,
-        }),
-      ),
-    );
-    for (const request of requests) {
-      expect(request.error).toBeNull();
-      expect(request.data).toBe(restored + 1);
-    }
     expect(
-      (await client.from("goals").select("entry_id").eq("entry_id", entryID))
+      (await client.from("goals").select("entry_id").eq("entry_id", goalID))
         .data,
     ).toHaveLength(1);
     expect(errors).toEqual([]);

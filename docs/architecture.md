@@ -51,6 +51,8 @@ Pair it with the test file carrying the same feature name.
 - `entries.entry_type` is a synchronized compatibility discriminator for older clients and must not become the source of new product semantics.
 - A raw Capture may be finalized as one durable item or may produce linked items through a provenance-preserving extraction.
 - Established durable items never change Kind through a generic selector; cross-Kind workflows create and link another item.
+- Web Goal extraction uses a caller-generated target UUID for idempotency, preserves the source revision and identity, and records `derived` plus `derived_from` provenance links so both items remain discoverable.
+- `convert_entry_to_goal` remains only as a deprecated native-client compatibility RPC until the iOS Life Wiki adoption replaces it, after which its authenticated grant must be removed.
 - Specialized tables add typed facts without duplicating common writing, organization, dates, media, or history.
 - `entries.body` remains canonical plaintext. Optional validated rich content is versioned under `entries.metadata.body_rich`, carries the exact matching plaintext, and is ignored when another client changes the body without updating the rich document.
 - Web capture and Entry review use `components/rich-text-editor.tsx` for the reusable headless editor surface, with page, dialog, and form variants instead of separate editors.
