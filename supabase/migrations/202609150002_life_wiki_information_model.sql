@@ -99,10 +99,17 @@ begin
 end;
 $$;
 
+-- Classification backfill is schema migration metadata, not a user edit. Keep
+-- the existing History timeline intact instead of archiving one synthetic
+-- version for every pre-existing Entry.
+alter table public.entries disable trigger archive_entry_before_change;
+
 update public.entries
 set
   item_kind = public.legacy_item_kind(entry_type, inbox_status),
   item_subtype = public.legacy_item_subtype(entry_type, inbox_status);
+
+alter table public.entries enable trigger archive_entry_before_change;
 
 alter table public.entries
   alter column item_kind set not null,
