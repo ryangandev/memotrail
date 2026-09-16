@@ -12,7 +12,6 @@ final class HomeEntryTests: XCTestCase {
     XCTAssertEqual(snapshot.entryCount, 4)
     XCTAssertEqual(snapshot.firstTimeCount, 1)
     XCTAssertEqual(snapshot.collectionCount, 1)
-    XCTAssertEqual(snapshot.completedHabitCount, 1)
     XCTAssertEqual(snapshot.currentStages.first?.title, "Living in California")
     XCTAssertEqual(snapshot.recentEntries.first?.collectionNames, ["Things I Learned"])
     XCTAssertEqual(snapshot.recentEntries.first?.tagNames, ["curiosity"])
@@ -144,12 +143,6 @@ final class HomeEntryTests: XCTestCase {
     XCTAssertEqual(HomePresentation.firstName("   "), "MemoTrail")
   }
 
-  func testHabitProgressExplainsDueSkippedAndEmptyStates() throws {
-    let snapshot = try decodeSnapshot()
-
-    XCTAssertEqual(snapshot.habitProgressLabel, "1 of 1 due")
-  }
-
   func testRootTabsMatchTheFourDestinationProductContract() {
     XCTAssertEqual(
       RootTabDestination.allCases,
@@ -185,10 +178,6 @@ final class HomeEntryTests: XCTestCase {
         "entry_count": 4,
         "first_time_count": 1,
         "collection_count": 1,
-        "active_habit_count": 1,
-        "due_habit_count": 1,
-        "completed_habit_count": 1,
-        "skipped_habit_count": 0,
         "current_stage_count": 1,
         "recent_entries": [
           [

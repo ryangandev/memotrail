@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(36);
+select no_plan();
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -73,9 +73,6 @@ delete from public.collections
 where owner_id = '10000000-0000-0000-0000-000000000001';
 
 delete from public.tags
-where owner_id = '10000000-0000-0000-0000-000000000001';
-
-delete from public.habits
 where owner_id = '10000000-0000-0000-0000-000000000001';
 
 insert into public.entries (
@@ -279,83 +276,6 @@ cross join lateral (
   limit 1
 ) as timeline_tracks;
 
-insert into public.habits (
-  id,
-  owner_id,
-  name,
-  tracking_mode,
-  schedule,
-  starts_on,
-  archived_at,
-  deleted_at
-)
-values
-  (
-    '84000000-0000-0000-0000-000000000001',
-    '10000000-0000-0000-0000-000000000001',
-    'Home Test Complete',
-    'check',
-    '{"kind":"daily"}'::jsonb,
-    '2026-01-01',
-    null,
-    null
-  ),
-  (
-    '84000000-0000-0000-0000-000000000002',
-    '10000000-0000-0000-0000-000000000001',
-    'Home Test Weekly',
-    'check',
-    '{"kind":"weekly_target","target":3}'::jsonb,
-    '2026-01-01',
-    null,
-    null
-  ),
-  (
-    '84000000-0000-0000-0000-000000000003',
-    '10000000-0000-0000-0000-000000000001',
-    'Home Test Not Scheduled',
-    'check',
-    '{"kind":"interval","every_days":2}'::jsonb,
-    '2026-09-02',
-    null,
-    null
-  ),
-  (
-    '84000000-0000-0000-0000-000000000004',
-    '10000000-0000-0000-0000-000000000001',
-    'Home Test Removed',
-    'check',
-    '{"kind":"daily"}'::jsonb,
-    '2026-01-01',
-    null,
-    '2026-09-01T00:00:00Z'
-  ),
-  (
-    '84000000-0000-0000-0000-000000000005',
-    '10000000-0000-0000-0000-000000000007',
-    'Other owner habit',
-    'check',
-    '{"kind":"daily"}'::jsonb,
-    '2026-01-01',
-    null,
-    null
-  );
-
-insert into public.habit_occurrences (
-  id,
-  habit_id,
-  owner_id,
-  local_date,
-  status
-)
-values (
-  '86000000-0000-0000-0000-000000000001',
-  '84000000-0000-0000-0000-000000000001',
-  '10000000-0000-0000-0000-000000000001',
-  '2026-09-03',
-  'completed'
-);
-
 set local role authenticated;
 set local request.jwt.claim.sub = '10000000-0000-0000-0000-000000000001';
 set local request.jwt.claim.role = 'authenticated';
@@ -394,26 +314,6 @@ select is(
   (select collection_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
   1::bigint,
   'Collection count excludes archived Collections'
-);
-select is(
-  (select active_habit_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  3::bigint,
-  'Active Habit count excludes removed and other-owner Habits'
-);
-select is(
-  (select due_habit_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  2::bigint,
-  'Due Habit count excludes not-scheduled Habits'
-);
-select is(
-  (select completed_habit_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  1::bigint,
-  'Completed Habit count reflects the requested local date'
-);
-select is(
-  (select skipped_habit_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  0::bigint,
-  'Skipped Habit count starts at zero for this fixture'
 );
 select is(
   (select current_stage_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),

@@ -7,10 +7,6 @@ struct HomeSnapshot: Decodable, Equatable, Sendable {
   let entryCount: Int
   let firstTimeCount: Int
   let collectionCount: Int
-  let activeHabitCount: Int
-  let dueHabitCount: Int
-  let completedHabitCount: Int
-  let skippedHabitCount: Int
   let currentStageCount: Int
   var recentEntries: [HomeEntry]
   let currentStages: [HomeStage]
@@ -22,23 +18,11 @@ struct HomeSnapshot: Decodable, Equatable, Sendable {
     case entryCount = "entry_count"
     case firstTimeCount = "first_time_count"
     case collectionCount = "collection_count"
-    case activeHabitCount = "active_habit_count"
-    case dueHabitCount = "due_habit_count"
-    case completedHabitCount = "completed_habit_count"
-    case skippedHabitCount = "skipped_habit_count"
     case currentStageCount = "current_stage_count"
     case recentEntries = "recent_entries"
     case currentStages = "current_stages"
   }
 
-  var habitProgressLabel: String {
-    if dueHabitCount == 0 {
-      return activeHabitCount == 0 ? "No Habits yet" : "Nothing scheduled today"
-    }
-
-    let skipped = skippedHabitCount > 0 ? " · \(skippedHabitCount) skipped" : ""
-    return "\(completedHabitCount) of \(dueHabitCount) due\(skipped)"
-  }
 }
 
 struct HomeEntry: Decodable, Equatable, Identifiable, Sendable {

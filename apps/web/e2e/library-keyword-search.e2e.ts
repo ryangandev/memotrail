@@ -53,8 +53,7 @@ test("Canonical keyword search finds People and Places without deferred Habits",
       })),
     );
     const person = randomUUID(),
-      place = randomUUID(),
-      habit = randomUUID();
+      place = randomUUID();
     expect(
       (
         await client.from("people").insert({
@@ -75,13 +74,6 @@ test("Canonical keyword search finds People and Places without deferred Habits",
         })
       ).error,
     ).toBeNull();
-    expect(
-      (
-        await client
-          .from("habits")
-          .insert({ id: habit, owner_id: owner, name: "Learning 学习 daily" })
-      ).error,
-    ).toBeNull();
     await page.goto("/search?q=" + encodeURIComponent("学习"));
     await expect(
       page.getByRole("link", { name: "Learning 学习 partner", exact: true }),
@@ -89,9 +81,6 @@ test("Canonical keyword search finds People and Places without deferred Habits",
     await expect(
       page.getByRole("link", { name: "Learning 学习 library", exact: true }),
     ).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: "Learning 学习 daily", exact: true }),
-    ).toHaveCount(0);
     await page.screenshot({
       path: "/private/tmp/memotrail-library-keyword-desktop.png",
       fullPage: true,

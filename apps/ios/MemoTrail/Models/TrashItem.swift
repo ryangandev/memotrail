@@ -3,7 +3,6 @@ import Foundation
 enum TrashItemKind: String, Codable, Equatable, Hashable, Sendable {
   case attachment
   case entry
-  case habit
   case place
   case person
   case collection
@@ -16,8 +15,6 @@ enum TrashItemKind: String, Codable, Equatable, Hashable, Sendable {
       "Photo"
     case .entry:
       "Entry"
-    case .habit:
-      "Habit"
     case .place:
       "Place"
     case .person:
@@ -33,8 +30,6 @@ enum TrashItemKind: String, Codable, Equatable, Hashable, Sendable {
       "photo"
     case .entry:
       "text.line.first.and.arrowtriangle.forward"
-    case .habit:
-      "checkmark"
     case .place:
       "map"
     case .person:

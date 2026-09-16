@@ -196,7 +196,7 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
         maxBuffer: 10 * 1024 * 1024,
       });
     const manifest = JSON.parse(read("manifest.json").toString());
-    expect(Object.keys(manifest.datasets)).toHaveLength(30);
+    expect(Object.keys(manifest.datasets)).toHaveLength(26);
     for (const [name, value] of Object.entries(snapshot.datasets))
       expect(JSON.parse(read(`data/${name}.json`).toString())).toHaveLength(
         value as number,
@@ -208,7 +208,7 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
     expect(read(`entries/${entryID}.md`).toString()).toContain(
       'occurred_label: "17岁"',
     );
-    for (const name of ["habits", "homes", "vehicles"])
+    for (const name of ["homes", "vehicles"])
       expect(read(`tables/${name}.csv`).toString()).toContain('"id"');
     const checksum = JSON.parse(read("checksums.json").toString()).media[0];
     expect(checksum.sha256).toBe(sha(original));

@@ -323,11 +323,7 @@ export function TrashWorkspace({
 
 function iconForKind(
   kind: TrashItem["kind"],
-): "check" | "map" | "photo" | "timeline" {
-  if (kind === "habit") {
-    return "check";
-  }
-
+): "map" | "photo" | "timeline" {
   if (kind === "place") {
     return "map";
   }
@@ -340,10 +336,6 @@ function labelForItem(item: TrashItem) {
   if (item.kind === "person") return "Person";
   if (item.kind === "attachment") {
     return "Photo";
-  }
-
-  if (item.kind === "habit") {
-    return "Habit";
   }
 
   if (item.kind === "place") {
@@ -378,10 +370,6 @@ function deletionDescription(item: TrashItem) {
     return "The Person and their version history will be removed.";
   if (item.kind === "attachment") {
     return "The private photo file and its attachment record will be removed.";
-  }
-
-  if (item.kind === "habit") {
-    return "The Habit, check-ins, relationships, and version history will be removed.";
   }
 
   if (item.kind === "place") {

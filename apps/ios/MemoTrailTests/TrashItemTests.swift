@@ -70,33 +70,31 @@ final class TrashItemTests: XCTestCase {
   func testDecodesEveryTrashKindAndPreservesOptimisticTimestamp() throws {
     let items = try decodeItems()
 
-    XCTAssertEqual(items.map(\.kind), [.entry, .habit, .attachment, .place])
+    XCTAssertEqual(items.map(\.kind), [.entry, .attachment, .place])
     XCTAssertEqual(items[0].deletedAt, "2026-09-02T12:34:56.123456+00:00")
     XCTAssertEqual(items[0].revision, 4)
-    XCTAssertNil(items[2].revision)
-    XCTAssertEqual(items[2].storagePaths, ["21000000/photo.png"])
-    XCTAssertEqual(items[0].totalCount, 4)
+    XCTAssertNil(items[1].revision)
+    XCTAssertEqual(items[1].storagePaths, ["21000000/photo.png"])
+    XCTAssertEqual(items[0].totalCount, 3)
   }
 
   func testCompositeIdentityCannotCollideAcrossTables() throws {
     let items = try decodeItems()
 
-    XCTAssertEqual(Set(items.map(\.id)).count, 4)
+    XCTAssertEqual(Set(items.map(\.id)).count, 3)
     XCTAssertTrue(items[0].id.hasPrefix("entry-"))
-    XCTAssertTrue(items[1].id.hasPrefix("habit-"))
-    XCTAssertTrue(items[2].id.hasPrefix("attachment-"))
-    XCTAssertTrue(items[3].id.hasPrefix("place-"))
+    XCTAssertTrue(items[1].id.hasPrefix("attachment-"))
+    XCTAssertTrue(items[2].id.hasPrefix("place-"))
   }
 
   func testDisplayMetadataDistinguishesFirstTimesAndRemovesDuplicateDetail() throws {
     let items = try decodeItems()
 
     XCTAssertEqual(items[0].displayKind, "First Time")
-    XCTAssertEqual(items[1].displayKind, "Habit")
-    XCTAssertEqual(items[2].displayKind, "Photo")
-    XCTAssertEqual(items[3].displayKind, "Place")
+    XCTAssertEqual(items[1].displayKind, "Photo")
+    XCTAssertEqual(items[2].displayKind, "Place")
     XCTAssertNil(items[0].displayDetail)
-    XCTAssertEqual(items[2].displayDetail, "Photo from First ski trip")
+    XCTAssertEqual(items[1].displayDetail, "Photo from First ski trip")
   }
 
   func testRetentionLabelUsesExactRemainingDuration() throws {
@@ -126,7 +124,7 @@ final class TrashItemTests: XCTestCase {
   }
 
   func testAttachmentMutationEncodesExplicitNullRevisionAndOriginalTimestamp() throws {
-    let attachment = try decodeItems()[2]
+    let attachment = try decodeItems()[1]
     let data = try JSONEncoder().encode(TrashItemMutationParameters(item: attachment))
     let object = try XCTUnwrap(
       JSONSerialization.jsonObject(with: data) as? [String: Any]
@@ -159,20 +157,7 @@ final class TrashItemTests: XCTestCase {
           "entry_type": "first_time",
           "parent_entry_id": null,
           "storage_paths": ["21000000/entry/photo.png"],
-          "total_count": 4
-        },
-        {
-          "item_kind": "habit",
-          "item_id": "21000000-0000-4000-8000-000000000001",
-          "title": "Take supplement",
-          "detail": "Check Habit",
-          "deleted_at": "2026-09-02T12:35:56.123456+00:00",
-          "expires_at": "2026-10-02T12:35:56.123456+00:00",
-          "revision": 2,
-          "entry_type": null,
-          "parent_entry_id": null,
-          "storage_paths": [],
-          "total_count": 4
+          "total_count": 3
         },
         {
           "item_kind": "attachment",
@@ -185,7 +170,7 @@ final class TrashItemTests: XCTestCase {
           "entry_type": "attachment",
           "parent_entry_id": "31000000-0000-4000-8000-000000000001",
           "storage_paths": ["21000000/photo.png"],
-          "total_count": 4
+          "total_count": 3
         },
         {
           "item_kind": "place",
@@ -198,7 +183,7 @@ final class TrashItemTests: XCTestCase {
           "entry_type": null,
           "parent_entry_id": null,
           "storage_paths": [],
-          "total_count": 4
+          "total_count": 3
         }
       ]
       """#

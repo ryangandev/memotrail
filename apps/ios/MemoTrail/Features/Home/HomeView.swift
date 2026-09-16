@@ -237,12 +237,6 @@ struct HomeView: View {
           systemImage: "tray"
         )
         HomeStatCard(
-          value: "\(snapshot.completedHabitCount)",
-          title: "Habits complete",
-          detail: snapshot.habitProgressLabel,
-          systemImage: "checkmark"
-        )
-        HomeStatCard(
           value: "\(snapshot.currentStageCount)",
           title: "Life in progress",
           detail: countLabel(snapshot.currentStageCount, singular: "current chapter"),

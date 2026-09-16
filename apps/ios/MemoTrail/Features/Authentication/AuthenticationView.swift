@@ -60,7 +60,7 @@ struct AuthenticationView: View {
         .fixedSize(horizontal: false, vertical: true)
 
       Text(
-        "Capture thoughts, first times, places, habits, and the chapters that connect them."
+        "Capture thoughts, first times, people, places, and the chapters that connect them."
       )
       .font(MTTypography.body)
       .foregroundStyle(MTColor.inkMuted)

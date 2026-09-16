@@ -275,11 +275,6 @@ struct SearchView: View {
           NavigationLink("Open original record") {
             EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: source.recordID)
           }
-        } else if source.kind == "habit" {
-          NavigationLink("Open original Habit") {
-            HabitsView(
-              client: client, ownerID: ownerID, focusedHabitID: source.recordID, embedded: true)
-          }
         } else if source.kind == "place" {
           NavigationLink("Open original Place") {
             PlacesView(

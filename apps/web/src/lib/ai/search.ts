@@ -233,7 +233,6 @@ export function evidenceParameters(
     p_date_from: request.dateFrom ?? plan.dateFrom,
     p_date_to: request.dateTo ?? plan.dateTo,
     p_before_latest_home: plan.beforeLatestHome,
-    p_include_habits: false,
     p_order: plan.order,
     p_as_of: asOf,
   };
