@@ -133,7 +133,7 @@ export function parseGoalEntryInput(input: unknown): Parsed<GoalEntryInput> {
     return invalid("Use up to 50 tags with names under 60 characters.");
   }
   if (!relatedEntryIds || relatedEntryIds.length > goalRelatedEntryLimit) {
-    return invalid(`Relate up to ${goalRelatedEntryLimit} Entries.`);
+    return invalid(`Relate up to ${goalRelatedEntryLimit} Items.`);
   }
   if (!isGoalEntryIdentity(input.id, input.revision)) {
     return invalid("This Goal version is invalid. Refresh and try again.");

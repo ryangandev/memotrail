@@ -84,6 +84,7 @@ test("Canonical keyword search finds People and Places without deferred Habits",
     await page.screenshot({
       path: "/private/tmp/memotrail-library-keyword-desktop.png",
       fullPage: true,
+      caret: "initial",
     });
     expect(
       (
@@ -142,6 +143,7 @@ test("Canonical keyword search finds People and Places without deferred Habits",
     await page.screenshot({
       path: "/private/tmp/memotrail-library-keyword-mobile.png",
       fullPage: true,
+      caret: "initial",
     });
     expect(
       await page.evaluate(

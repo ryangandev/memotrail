@@ -85,7 +85,7 @@ export async function trashPlace(input: {
   if (!Array.isArray(data) || data.length === 0) {
     return result(
       "conflict",
-      "This Place changed or is still linked to an Entry. Refresh and unlink it before trying again.",
+      "This Place changed or is still linked to an Item. Refresh and unlink it before trying again.",
     );
   }
 

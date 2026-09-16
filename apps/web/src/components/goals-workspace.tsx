@@ -281,7 +281,7 @@ function GoalCard({
             </span>
           ) : null}
           {relatedCount > 0 ? (
-            <span>{countLabel(relatedCount, "related Entry")}</span>
+            <span>{countLabel(relatedCount, "related Item")}</span>
           ) : null}
           {hasAchievement ? <span>First Time linked</span> : null}
         </div>
@@ -382,7 +382,7 @@ function GoalEditor({
     const existing = goal?.relatedEntries.find((entry) => entry.id === id);
     return {
       id,
-      title: option?.title ?? existing?.title ?? "Related Entry",
+      title: option?.title ?? existing?.title ?? "Related Item",
     };
   });
   const savedBucketListGoal = Boolean(
@@ -696,7 +696,7 @@ function GoalEditor({
             <fieldset
               className={`${common.formSection} ${styles.relatedSection}`}
             >
-              <legend>Related Entries</legend>
+              <legend>Related Items</legend>
               <p>
                 Link memories, ideas, or learning that give this Goal context.
               </p>
@@ -704,7 +704,7 @@ function GoalEditor({
                 <div className={styles.relatedChips}>
                   {selectedEntries.map((entry) => (
                     <button
-                      aria-label={`Remove related Entry ${entry.title}`}
+                      aria-label={`Remove related Item ${entry.title}`}
                       disabled={isPending}
                       key={entry.id}
                       onClick={() =>
@@ -722,15 +722,15 @@ function GoalEditor({
               ) : null}
               <div className={styles.relatedPicker}>
                 <select
-                  aria-label="Choose a related Entry"
+                  aria-label="Choose a related Item"
                   disabled={isPending || selectableEntries.length === 0}
                   onChange={(event) => setRelatedSelection(event.target.value)}
                   value={relatedSelection}
                 >
                   <option value="">
                     {selectableEntries.length > 0
-                      ? "Choose an Entry"
-                      : "No more Entries available"}
+                      ? "Choose an Item"
+                      : "No more Items available"}
                   </option>
                   {selectableEntries.map((entry) => (
                     <option key={entry.id} value={entry.id}>

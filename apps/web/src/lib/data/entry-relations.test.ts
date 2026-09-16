@@ -18,9 +18,9 @@ const change: RelationChange = { entryID, targetID, revision: 2, linked: true };
 it("supports outgoing links, backlinks, and paginated candidates", () => {
   expect(validRelationRequest(read)).toBe(true);
   expect(Object.values(relationModeLabels)).toEqual([
-    "Linked Entries",
+    "Linked Items",
     "Linked from",
-    "Find Entries",
+    "Find Items",
   ]);
   expect(validRelationRequest({ ...read, page: 5000 })).toBe(true);
 });

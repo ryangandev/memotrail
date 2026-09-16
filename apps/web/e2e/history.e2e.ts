@@ -149,6 +149,7 @@ test("History restores and re-restores writing, relationships, and private photo
     await page.screenshot({
       path: "/private/tmp/memotrail-history-desktop.png",
       fullPage: true,
+      caret: "initial",
     });
     page.once("dialog", (d) => d.accept());
     await page
@@ -199,6 +200,7 @@ test("History restores and re-restores writing, relationships, and private photo
     await page.screenshot({
       path: "/private/tmp/memotrail-history-mobile.png",
       fullPage: true,
+      caret: "initial",
     });
     expect(
       await page.evaluate(

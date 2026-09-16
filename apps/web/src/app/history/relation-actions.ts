@@ -27,7 +27,7 @@ export async function loadEntryRelations(
 export async function changeEntryRelation(
   input: RelationChange,
 ): Promise<string | null> {
-  if (!validRelationChange(input)) return "Choose a different valid Entry.";
+  if (!validRelationChange(input)) return "Choose a different valid Item.";
   const context = await getAuthenticatedContext();
   if (!context) return "Sign in again to change links.";
   const { data, error } = await context.client.rpc("set_entry_relation", {
@@ -37,11 +37,11 @@ export async function changeEntryRelation(
     p_linked: input.linked,
   });
   if (error?.message === "relation_limit")
-    return "This Entry already has 100 links. Remove a link before adding another.";
+    return "This Item already has 100 links. Remove a link before adding another.";
   if (error)
     return "Could not confirm this link change. Refresh before retrying.";
   if (!data)
-    return "This Entry changed or a linked Entry is unavailable. Refresh before retrying.";
+    return "This Item changed or a linked Item is unavailable. Refresh before retrying.";
   revalidatePath("/", "layout");
   return null;
 }
