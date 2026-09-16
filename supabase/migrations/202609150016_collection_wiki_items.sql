@@ -71,11 +71,11 @@ as $$
     and entry.owner_id = auth.uid()
     and entry.deleted_at is null
   left join public.people as person
-    on person.entry_id = page.entry_id
+    on person.id = page.entry_id
     and person.owner_id = entry.owner_id
     and person.deleted_at is null
   left join public.places as place
-    on place.entry_id = page.entry_id
+    on place.id = page.entry_id
     and place.owner_id = entry.owner_id
     and place.deleted_at is null
   order by

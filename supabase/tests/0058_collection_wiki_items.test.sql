@@ -21,7 +21,7 @@ insert into public.people(id,owner_id,name,notes) values (
 insert into public.entry_collections(owner_id,entry_id,collection_id)
 select
   person.owner_id,
-  person.entry_id,
+  person.id,
   '98910000-0000-4000-8000-000000000001'::uuid
 from public.people as person
 where person.id = '98910000-0000-4000-8000-000000000002';
@@ -44,11 +44,11 @@ select is(
     from public.collection_wiki_items('98910000-0000-4000-8000-000000000001')
   ),
   (
-    select entry_id
+    select id
     from public.people
     where id = '98910000-0000-4000-8000-000000000002'
   ),
-  'A Collection preserves the canonical Wiki Item identity separately from its Person record'
+  'A Collection uses the same canonical and specialized Person identity'
 );
 
 reset role;

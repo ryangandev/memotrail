@@ -54,13 +54,13 @@ begin
       and not exists (
         select 1
         from public.people as person
-        where person.entry_id = entry.id
+        where person.id = entry.id
           and person.owner_id = entry.owner_id
       )
       and not exists (
         select 1
         from public.places as place
-        where place.entry_id = entry.id
+        where place.id = entry.id
           and place.owner_id = entry.owner_id
       )
 

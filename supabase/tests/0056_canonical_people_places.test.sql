@@ -29,7 +29,7 @@ select is(
   (
     select entry.item_kind || ':' || entry.item_subtype || ':' || entry.title
     from public.people as person
-    join public.entries as entry on entry.id=person.entry_id and entry.owner_id=person.owner_id
+    join public.entries as entry on entry.id=person.id and entry.owner_id=person.owner_id
     where person.id='98800000-0000-4000-8000-000000000001'
   ),
   'entity:person:Avery',
@@ -40,17 +40,17 @@ select is(
   (
     select entry.item_kind || ':' || entry.item_subtype || ':' || entry.title
     from public.places as place
-    join public.entries as entry on entry.id=place.entry_id and entry.owner_id=place.owner_id
+    join public.entries as entry on entry.id=place.id and entry.owner_id=place.owner_id
     where place.id='98800000-0000-4000-8000-000000000002'
   ),
   'entity:place:Berkeley Marina',
   'A Place is created with one canonical Entity Wiki Item'
 );
 
-select isnt(
-  (select entry_id from public.people where id='98800000-0000-4000-8000-000000000001'),
+select is(
+  (select id from public.people where id='98800000-0000-4000-8000-000000000001'),
   '98800000-0000-4000-8000-000000000001'::uuid,
-  'The canonical identity is independent from the Person registry identity'
+  'The canonical and specialized Person records share one identity'
 );
 
 set local role authenticated;
@@ -73,8 +73,8 @@ select is(
     select canonical_item_id
     from public.wiki_items_workspace('',array[]::text[],array['person'],50,0)
   ),
-  (select entry_id from public.people where id='98800000-0000-4000-8000-000000000001'),
-  'The Life Wiki exposes the Person canonical identity separately from its registry id'
+  (select id from public.people where id='98800000-0000-4000-8000-000000000001'),
+  'The Life Wiki exposes the shared Person identity'
 );
 
 select is(
@@ -93,7 +93,7 @@ select is(
   (
     select entry.title || ':' || entry.body || ':' || entry.revision
     from public.people as person
-    join public.entries as entry on entry.id=person.entry_id and entry.owner_id=person.owner_id
+    join public.entries as entry on entry.id=person.id and entry.owner_id=person.owner_id
     where person.id='98800000-0000-4000-8000-000000000001'
   ),
   'Avery Chen:Sailing together.:2',
@@ -117,7 +117,7 @@ select is(
   (
     select entry.title || ':' || entry.body || ':' || entry.revision
     from public.places as place
-    join public.entries as entry on entry.id=place.entry_id and entry.owner_id=place.owner_id
+    join public.entries as entry on entry.id=place.id and entry.owner_id=place.owner_id
     where place.id='98800000-0000-4000-8000-000000000002'
   ),
   'Berkeley Marina:Evening sails.:2',
@@ -132,7 +132,7 @@ select is(
       null,null,50,0
     )
   ),
-  (select entry_id from public.places where id='98800000-0000-4000-8000-000000000002'),
+  (select id from public.places where id='98800000-0000-4000-8000-000000000002'),
   'Canonical Place search includes specialized address fields'
 );
 
@@ -151,7 +151,7 @@ select ok(
       and entry.deleted_at=person.deleted_at
       and entry.revision=person.revision
     from public.people as person
-    join public.entries as entry on entry.id=person.entry_id and entry.owner_id=person.owner_id
+    join public.entries as entry on entry.id=person.id and entry.owner_id=person.owner_id
     where person.id='98800000-0000-4000-8000-000000000001'
   ),
   'Person Trash state and revision synchronize to the canonical item'
@@ -173,7 +173,7 @@ select is(
     from public.trash_workspace(50,0)
     where item_kind='entry'
       and item_id=(
-        select entry_id from public.people
+        select id from public.people
         where id='98800000-0000-4000-8000-000000000001'
       )
   ),
@@ -199,7 +199,7 @@ select ok(
       and entry.deleted_at is null
       and entry.revision=person.revision
     from public.people as person
-    join public.entries as entry on entry.id=person.entry_id and entry.owner_id=person.owner_id
+    join public.entries as entry on entry.id=person.id and entry.owner_id=person.owner_id
     where person.id='98800000-0000-4000-8000-000000000001'
   ),
   'Restored Person and canonical item remain synchronized'
