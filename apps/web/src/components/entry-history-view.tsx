@@ -26,7 +26,10 @@ import {
   type HistorySnapshot,
 } from "@/lib/data/history";
 import { entryRichTextMetadataKey } from "@/lib/data/rich-text";
-import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
+import {
+  wikiItemIdentityLabel,
+  wikiItemKindLabel,
+} from "@/lib/data/wiki-item";
 import styles from "@/app/history/page.module.css";
 export function EntryHistoryView({
   history,
@@ -53,7 +56,7 @@ export function EntryHistoryView({
       if (!data) throw Error();
       setEditing(data);
     } catch {
-      setError("This Entry cannot be edited right now. Refresh and try again.");
+      setError("This item cannot be edited right now. Refresh and try again.");
     } finally {
       setBusy(false);
     }
@@ -91,14 +94,14 @@ export function EntryHistoryView({
   }
   return (
     <>
-      <Link href="/history">← All Entry history</Link>
+      <Link href="/history">← All version history</Link>
       <h2>{historyTitle(history.current)}</h2>
       {!history.current.deleted_at &&
         ["writing", "event", "story"].includes(
           String(history.current.item_kind),
         ) && (
           <button disabled={busy} onClick={() => void edit()}>
-            Edit Entry
+            Edit {wikiItemKindLabel(history.current.item_kind)}
           </button>
         )}
       {editing && (
@@ -180,7 +183,7 @@ export function EntryHistoryView({
       )}
       {history.current.deleted_at && (
         <p role="status">
-          This Entry is in Trash. Restore it there before changing its history.
+          This item is in Trash. Restore it there before changing its history.
         </p>
       )}
       {error && <p role="alert">{error}</p>}

@@ -39,10 +39,10 @@ export default async function HistoryPage({
     <PageFrame className={styles.workspace} variant="wide">
       <header>
         <p className={styles.eyebrow}>NOTHING GOOD HAS TO BE LOST</p>
-        <h1>Entry history</h1>
+        <h1>Version history</h1>
         <p>
-          Revisit earlier words and metadata. Restoring saves your current
-          version first.
+          Revisit earlier versions of anything in your Life Wiki. Restoring
+          always keeps the current version first.
         </p>
       </header>
       {result.error ? (
@@ -57,28 +57,28 @@ export default async function HistoryPage({
           />
         ) : (
           <p>
-            This Entry is no longer available.{" "}
+            This item is no longer available.{" "}
             <Link href="/history">Back to history</Link>
           </p>
         )
       ) : (
         <>
           <form className={styles.search}>
-            <label htmlFor="history-search">Find an Entry</label>
+            <label htmlFor="history-search">Find an item</label>
             <div>
               <input
                 id="history-search"
                 name="q"
                 defaultValue={query}
                 maxLength={200}
-                placeholder="Title or words in the current Entry"
+                placeholder="Title or words in the current item"
               />
               <button>Search history</button>
             </div>
           </form>
           {rows.length === 0 ? (
             <p className={styles.empty}>
-              No matching history yet. Earlier versions appear after an Entry is
+              No matching history yet. Earlier versions appear after an item is
               edited.
             </p>
           ) : (
@@ -104,7 +104,7 @@ export default async function HistoryPage({
               <Link
                 href={`/history?q=${encodeURIComponent(query)}&page=${page - 1}`}
               >
-                Newer Entries
+                Newer items
               </Link>
             )}
             <span>Page {page}</span>
@@ -112,7 +112,7 @@ export default async function HistoryPage({
               <Link
                 href={`/history?q=${encodeURIComponent(query)}&page=${page + 1}`}
               >
-                Older Entries
+                Older items
               </Link>
             )}
           </nav>

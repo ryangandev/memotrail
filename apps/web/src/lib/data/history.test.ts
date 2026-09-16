@@ -61,7 +61,7 @@ describe("Entry history", () => {
   });
   it("handles body-only and empty titles", () => {
     expect(historyTitle({ title: null, body: "  学习记录 " })).toBe("学习记录");
-    expect(historyTitle({ title: null })).toBe("Untitled Entry");
+    expect(historyTitle({ title: null })).toBe("Untitled item");
   });
   it("bounds pagination and preserves valid pages", () => {
     expect(historyPage("3", 5)).toBe(3);

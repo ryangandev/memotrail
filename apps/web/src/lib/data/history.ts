@@ -84,7 +84,7 @@ export function historyTitle(value: {
   return (
     value.title?.trim() ||
     (value.body ?? value.excerpt ?? "").trim().slice(0, 80) ||
-    "Untitled Entry"
+    "Untitled item"
   );
 }
 export function validHistoryID(id: unknown): id is string {
