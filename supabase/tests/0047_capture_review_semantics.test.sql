@@ -6,10 +6,10 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000105','capture-review-owner@memotrail.local'),
   ('10000000-0000-0000-0000-000000000106','capture-review-other@memotrail.local');
 
-insert into public.entries(id,owner_id,title,body,entry_type,inbox_status,date_precision,occurred_timezone) values
-  ('98000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000105','Morning pages','A quiet start.','standard','unreviewed','unknown','UTC'),
-  ('98000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000105','A bright day','I felt happy today.','standard','unreviewed','unknown','UTC'),
-  ('98000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000105','Draft chapter','A longer arc.','standard','unreviewed','unknown','UTC');
+insert into public.entries(id,owner_id,title,body,inbox_status,date_precision,occurred_timezone) values
+  ('98000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000105','Morning pages','A quiet start.','unreviewed','unknown','UTC'),
+  ('98000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000105','A bright day','I felt happy today.','unreviewed','unknown','UTC'),
+  ('98000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000105','Draft chapter','A longer arc.','unreviewed','unknown','UTC');
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000105',true);
@@ -63,10 +63,10 @@ select is(
   'A raw Capture can be finalized directly as a Memory Event'
 );
 select is(
-  (select entry_type || ':' || item_kind || ':' || item_subtype
+  (select item_kind || ':' || item_subtype
    from public.entries where id='98000000-0000-4000-8000-000000000002'),
-  'life_stage:event:memory',
-  'A Memory uses the Event model and a legacy Timeline-compatible discriminator'
+  'event:memory',
+  'A Memory uses the canonical Event model'
 );
 select is(
   (select item_kind || ':' || item_subtype

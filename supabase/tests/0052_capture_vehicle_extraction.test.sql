@@ -7,13 +7,12 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000114','capture-vehicle-other@memotrail.local');
 
 insert into public.entries(
-  id,owner_id,title,body,entry_type,inbox_status,date_precision
+  id,owner_id,title,body,inbox_status,date_precision
 ) values (
   '98500000-0000-4000-8000-000000000001',
   '10000000-0000-0000-0000-000000000113',
   'My first EV',
   'Quiet drives around the bay.',
-  'standard',
   'unreviewed',
   'unknown'
 );
@@ -37,14 +36,14 @@ select is(
   'The original Capture is preserved as provenance'
 );
 select is(
-  (select item_kind || ':' || item_subtype || ':' || entry_type
+  (select item_kind || ':' || item_subtype
    from public.entries
    where id = (
      select target_entry_id from public.entry_links
      where source_entry_id='98500000-0000-4000-8000-000000000001'
        and relationship='derived'
    )),
-  'entity:vehicle:vehicle',
+  'entity:vehicle',
   'The durable target is a Vehicle Entity'
 );
 select is(

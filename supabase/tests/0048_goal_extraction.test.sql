@@ -7,7 +7,7 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000108','goal-extraction-other@memotrail.local');
 
 insert into public.entries(
-  id,owner_id,title,body,metadata,source_language,entry_type,item_kind,item_subtype,inbox_status
+  id,owner_id,title,body,metadata,source_language,item_kind,item_subtype,inbox_status
 ) values (
   '98100000-0000-4000-8000-000000000001',
   '10000000-0000-0000-0000-000000000107',
@@ -15,7 +15,6 @@ insert into public.entries(
   'I want to spend more time on the water.',
   '{"body_rich":{"version":1,"text":"I want to spend more time on the water.","document":{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"I want to spend more time on the water."}]}]}},"private_draft":"do not copy"}',
   'en',
-  'standard',
   'writing',
   'idea',
   'organized'
@@ -40,9 +39,9 @@ select is(
   'The source keeps its Kind, subtype, and revision'
 );
 select is(
-  (select title || ':' || item_kind || ':' || item_subtype || ':' || entry_type
+  (select title || ':' || item_kind || ':' || item_subtype
    from public.entries where id='98100000-0000-4000-8000-000000000002'),
-  'Learn to sail:goal:goal:goal',
+  'Learn to sail:goal:goal',
   'The target is a distinct Goal Wiki Item'
 );
 select is(

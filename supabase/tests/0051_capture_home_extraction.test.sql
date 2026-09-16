@@ -7,13 +7,12 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000112','capture-home-other@memotrail.local');
 
 insert into public.entries(
-  id,owner_id,title,body,entry_type,inbox_status,date_precision,occurred_timezone
+  id,owner_id,title,body,inbox_status,date_precision,occurred_timezone
 ) values (
   '98400000-0000-4000-8000-000000000001',
   '10000000-0000-0000-0000-000000000111',
   'Moved to Oakland',
   'The apartment near the lake.',
-  'standard',
   'unreviewed',
   'unknown',
   'America/Los_Angeles'
@@ -66,14 +65,14 @@ select is(
   'The original Capture is preserved and leaves Inbox as provenance'
 );
 select is(
-  (select item_kind || ':' || item_subtype || ':' || entry_type
+  (select item_kind || ':' || item_subtype
    from public.entries
    where id = (
      select target_entry_id from public.entry_links
      where source_entry_id='98400000-0000-4000-8000-000000000001'
        and relationship='derived'
    )),
-  'entity:home:home',
+  'entity:home',
   'The durable target is a Home Entity'
 );
 select is(

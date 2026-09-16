@@ -1,47 +1,148 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 select no_plan();
+
 insert into auth.users(id,email,raw_user_meta_data) values
- ('10000000-0000-0000-0000-000000000093','conversion-owner@memotrail.local','{}'),
- ('10000000-0000-0000-0000-000000000094','conversion-other@memotrail.local','{}');
+  ('10000000-0000-0000-0000-000000000093','goal-extraction-owner@memotrail.local','{}'),
+  ('10000000-0000-0000-0000-000000000094','goal-extraction-other@memotrail.local','{}');
+
+insert into public.entries(
+  id,owner_id,title,body,item_kind,item_subtype,inbox_status,date_precision,occurred_label,metadata
+) values (
+  '20000000-0000-0000-0000-000000000093',
+  '10000000-0000-0000-0000-000000000093',
+  'An idea',
+  E'  Original\nwriting  ',
+  'writing',
+  'idea',
+  'unreviewed',
+  'age',
+  '17岁',
+  '{"original":true,"body_rich":{"version":1,"text":"  Original\nwriting  ","document":{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"  Original\nwriting  "}]}]}}}'
+);
+
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000093',true);
-insert into public.entries(id,owner_id,title,body,date_precision,occurred_label,metadata)
-values ('20000000-0000-0000-0000-000000000093',auth.uid(),'An idea',E'  Original\nwriting  ','age','17岁','{"original":true}');
-create temporary table original as select public.entry_history('20000000-0000-0000-0000-000000000093',20,0)->'current' as snapshot;
-reset role;
-select is(public.convert_entry_to_goal('20000000-0000-0000-0000-000000000093',1,'An idea','someday','considering',null),2,'Conversion increments revision once');
-select is(entry_type,'goal','The original Entry becomes a Goal') from public.entries where id='20000000-0000-0000-0000-000000000093';
-select is(body,E'  Original\nwriting  ','Conversion retains raw writing including whitespace') from public.entries where id='20000000-0000-0000-0000-000000000093';
-select is(inbox_status,'unreviewed','Conversion does not file the Inbox item') from public.entries where id='20000000-0000-0000-0000-000000000093';
-select is(occurred_label,'17岁','Age description is not replaced by a target date') from public.entries where id='20000000-0000-0000-0000-000000000093';
-select is(metadata,'{"original":true}'::jsonb,'Original metadata survives') from public.entries where id='20000000-0000-0000-0000-000000000093';
-select is(count(*),1::bigint,'No duplicate Entry is created') from public.entries where owner_id=auth.uid();
-select is(count(*),0::bigint,'No implicit Bucket List membership is created') from public.entry_collections where owner_id=auth.uid();
-select is(snapshot - array['embedding','search_document'],(select snapshot from original),'Prior history retains every publicly readable original field') from public.entry_versions where entry_id='20000000-0000-0000-0000-000000000093' and version=1;
-select is(public.convert_entry_to_goal('20000000-0000-0000-0000-000000000093',1,'An idea','someday','considering',null),2,'Lost-response retry returns the confirmed revision');
-select is(count(*),1::bigint,'Retry creates no additional history') from public.entry_versions where entry_id='20000000-0000-0000-0000-000000000093';
-select is(public.convert_entry_to_goal('20000000-0000-0000-0000-000000000093',1,'Changed intention','someday','active',null),null::integer,'Different stale payload cannot masquerade as an idempotent retry');
-select is(public.convert_entry_to_goal('20000000-0000-0000-0000-000000000093',2,'An idea','someday','considering',null),null::integer,'An existing Goal is not converted again');
-select throws_ok($$select public.convert_entry_to_goal('20000000-0000-0000-0000-000000000093',0,'An idea','someday','considering',null)$$,'22023','invalid_goal_conversion','Invalid revision is rejected');
-select throws_ok($$select public.convert_entry_to_goal('20000000-0000-0000-0000-000000000093',1,' ','someday','considering',null)$$,'22023','invalid_goal_conversion','Missing title is rejected');
-select throws_ok($$select public.convert_entry_to_goal('20000000-0000-0000-0000-000000000093',1,'An idea',null,'considering',null)$$,'22023','invalid_goal_conversion','Null horizon is rejected');
-select throws_ok($$select public.convert_entry_to_goal('20000000-0000-0000-0000-000000000093',1,'An idea','someday',null,null)$$,'22023','invalid_goal_conversion','Null status is rejected');
-select throws_ok($$select public.convert_entry_to_goal('20000000-0000-0000-0000-000000000093',1,'An idea','someday','considering','infinity')$$,'22023','invalid_goal_conversion','Infinite target date is rejected');
-select is(public.restore_entry_version('20000000-0000-0000-0000-000000000093',1,2),3,'History restores the original Standard Entry');
-select is(count(*),0::bigint,'Restoration removes the specialized Goal row') from public.goals where owner_id=auth.uid();
-select is(public.convert_entry_to_goal('20000000-0000-0000-0000-000000000093',1,'An idea','someday','considering',null),null::integer,'Old retry cannot reconvert a restored Entry');
-select is(public.restore_entry_version('20000000-0000-0000-0000-000000000093',2,3),4,'The prior Goal can also be restored');
-select is(horizon,'someday','Goal details survive round-trip restoration') from public.goals where owner_id=auth.uid();
+
+select is(
+  (select goal_entry_id from public.extract_goal_from_item(
+    '20000000-0000-0000-0000-000000000093',
+    1,
+    '20000000-0000-0000-0000-000000000096',
+    'An idea',
+    'someday',
+    'considering',
+    null
+  )),
+  '20000000-0000-0000-0000-000000000096'::uuid,
+  'Extraction creates a separately identified Goal'
+);
+select is(
+  (select item_kind || ':' || item_subtype || ':' || revision
+   from public.entries where id='20000000-0000-0000-0000-000000000093'),
+  'writing:idea:1',
+  'The source keeps its writing identity and revision'
+);
+select is(
+  (select body from public.entries where id='20000000-0000-0000-0000-000000000093'),
+  E'  Original\nwriting  ',
+  'The source keeps its exact writing'
+);
+select is(
+  (select inbox_status from public.entries where id='20000000-0000-0000-0000-000000000093'),
+  'unreviewed',
+  'Extraction does not silently file the source Capture'
+);
+select is(
+  (select occurred_label from public.entries where id='20000000-0000-0000-0000-000000000093'),
+  '17岁',
+  'Extraction does not rewrite source occurrence context'
+);
+select is(
+  (select item_kind || ':' || item_subtype from public.entries where id='20000000-0000-0000-0000-000000000096'),
+  'goal:goal',
+  'The extracted item has canonical Goal identity'
+);
+select is(
+  (select horizon || ':' || status from public.goals where entry_id='20000000-0000-0000-0000-000000000096'),
+  'someday:considering',
+  'Goal-specific facts live in the Goal record'
+);
+select is(
+  (select count(*) from public.entry_links
+   where owner_id='10000000-0000-0000-0000-000000000093'
+     and ((source_entry_id='20000000-0000-0000-0000-000000000093'
+       and target_entry_id='20000000-0000-0000-0000-000000000096'
+       and relationship='derived')
+      or (source_entry_id='20000000-0000-0000-0000-000000000096'
+       and target_entry_id='20000000-0000-0000-0000-000000000093'
+       and relationship='derived_from'))),
+  2::bigint,
+  'Both items retain navigable provenance'
+);
+select ok(
+  (select metadata ? 'body_rich' and not metadata ? 'original'
+   from public.entries where id='20000000-0000-0000-0000-000000000096'),
+  'Only portable rich writing metadata is copied to the Goal'
+);
+select is(
+  (select goal_entry_id from public.extract_goal_from_item(
+    '20000000-0000-0000-0000-000000000093',1,
+    '20000000-0000-0000-0000-000000000096',
+    'An idea','someday','considering',null
+  )),
+  '20000000-0000-0000-0000-000000000096'::uuid,
+  'A lost-response retry returns the same Goal'
+);
+select is(
+  (select count(*) from public.entries where id='20000000-0000-0000-0000-000000000096'),
+  1::bigint,
+  'A retry cannot duplicate the Goal'
+);
+select is(
+  (select count(*) from public.extract_goal_from_item(
+    '20000000-0000-0000-0000-000000000093',1,
+    '20000000-0000-0000-0000-000000000096',
+    'Changed intention','someday','active',null
+  )),
+  0::bigint,
+  'A reused request id cannot confirm a different payload'
+);
+
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000094',true);
-select is(public.convert_entry_to_goal('20000000-0000-0000-0000-000000000093',4,'Other user','someday','considering',null),null::integer,'Cross-owner conversion is denied');
-select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000093',true);
-insert into public.entries(id,owner_id,title,entry_type,deleted_at) values
- ('20000000-0000-0000-0000-000000000094',auth.uid(),'Trashed idea','standard',now()),
- ('20000000-0000-0000-0000-000000000095',auth.uid(),'A First Time','first_time',null);
-select is(public.convert_entry_to_goal('20000000-0000-0000-0000-000000000094',1,'Trashed idea','someday','considering',null),null::integer,'Trash must be restored before conversion');
-select is(public.convert_entry_to_goal('20000000-0000-0000-0000-000000000095',1,'A First Time','someday','considering',null),null::integer,'Other specialized Types are not converted');
-select ok(not has_function_privilege('anon','public.convert_entry_to_goal(uuid,integer,text,text,text,date)','execute'),'Anonymous conversion is denied');
-select ok(not has_function_privilege('authenticated','public.convert_entry_to_goal(uuid,integer,text,text,text,date)','execute'),'Authenticated clients cannot use the deprecated conversion');
+select is(
+  (select count(*) from public.extract_goal_from_item(
+    '20000000-0000-0000-0000-000000000093',1,
+    '20000000-0000-0000-0000-000000000097',
+    'Other user','someday','considering',null
+  )),
+  0::bigint,
+  'Another account cannot extract from the source'
+);
+
+reset role;
+select hasnt_function(
+  'public',
+  'convert_entry_to_goal',
+  array['uuid','integer','text','text','text','date'],
+  'The in-place conversion contract is removed'
+);
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'public.extract_goal_from_item(uuid,integer,uuid,text,text,text,date)',
+    'execute'
+  ),
+  'Authenticated clients may extract a separate linked Goal'
+);
+select ok(
+  not has_function_privilege(
+    'anon',
+    'public.extract_goal_from_item(uuid,integer,uuid,text,text,text,date)',
+    'execute'
+  ),
+  'Anonymous extraction is denied'
+);
+
 select * from finish();
 rollback;

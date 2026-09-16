@@ -7,14 +7,15 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000116','capture-goal-other@memotrail.local');
 
 insert into public.entries(
-  id,owner_id,title,body,entry_type,inbox_status,date_precision
+  id,owner_id,title,body,item_kind,item_subtype,inbox_status,date_precision
 ) values
   (
     '98600000-0000-4000-8000-000000000001',
     '10000000-0000-0000-0000-000000000115',
     'Learn to sail',
     'A wish I want to make concrete.',
-    'standard',
+    'capture',
+    'quick_capture',
     'unreviewed',
     'unknown'
   ),
@@ -23,7 +24,8 @@ insert into public.entries(
     '10000000-0000-0000-0000-000000000115',
     'Why the ocean matters',
     'A related note.',
-    'standard',
+    'writing',
+    'note',
     'organized',
     'unknown'
   );
@@ -47,14 +49,14 @@ select is(
   'The original Capture is preserved as provenance'
 );
 select is(
-  (select item_kind || ':' || item_subtype || ':' || entry_type
+  (select item_kind || ':' || item_subtype
    from public.entries
    where id = (
      select target_entry_id from public.entry_links
      where source_entry_id='98600000-0000-4000-8000-000000000001'
        and relationship='derived'
    )),
-  'goal:goal:goal',
+  'goal:goal',
   'The durable target is a Goal'
 );
 select is(

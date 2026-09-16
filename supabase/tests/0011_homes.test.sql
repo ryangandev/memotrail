@@ -101,13 +101,13 @@ select lives_ok(
 
 select is(
   (
-    select entry_type
+    select item_subtype
     from public.entries
     where title = 'California apartment'
-      and entry_type = 'home'
+      and item_kind = 'entity' and item_subtype = 'home'
   ),
   'home',
-  'A Home is stored as a specialized Home Entry'
+  'A Home is stored as a specialized Home Entity'
 );
 
 select is(
@@ -115,7 +115,7 @@ select is(
     select inbox_status
     from public.entries
     where title = 'California apartment'
-      and entry_type = 'home'
+      and item_kind = 'entity' and item_subtype = 'home'
   ),
   'organized',
   'Direct Home creation produces an organized Entry'
@@ -250,7 +250,7 @@ select
   1234
 from public.entries
 where entries.title = 'California apartment'
-  and entries.entry_type = 'home';
+  and entries.item_kind = 'entity' and entries.item_subtype = 'home';
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
@@ -460,8 +460,8 @@ select is(
       'Needed more space.',
       array['Homes', 'Milestones'],
       array['California', 'favorite'],
-      (select id from public.entries where title = 'California apartment' and entry_type = 'home'),
-      (select revision from public.entries where title = 'California apartment' and entry_type = 'home')
+      (select id from public.entries where title = 'California apartment' and item_kind = 'entity' and item_subtype = 'home'),
+      (select revision from public.entries where title = 'California apartment' and item_kind = 'entity' and item_subtype = 'home')
     )
   ),
   1,
@@ -469,7 +469,7 @@ select is(
 );
 
 select is(
-  (select revision from public.entries where title = 'California home' and entry_type = 'home'),
+  (select revision from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home'),
   2,
   'Updating a Home advances its Entry revision once'
 );
@@ -478,7 +478,7 @@ select is(
   (
     select snapshot ->> 'title'
     from public.entry_versions
-    where entry_id = (select id from public.entries where title = 'California home' and entry_type = 'home')
+    where entry_id = (select id from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home')
       and version = 1
   ),
   'California apartment',
@@ -489,7 +489,7 @@ select is(
   (
     select snapshot #>> '{home,move_in_reason}'
     from public.entry_versions
-    where entry_id = (select id from public.entries where title = 'California home' and entry_type = 'home')
+    where entry_id = (select id from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home')
       and version = 1
   ),
   'Moved for a new chapter.',
@@ -500,7 +500,7 @@ select is(
   (
     select snapshot #>> '{place,address}'
     from public.entry_versions
-    where entry_id = (select id from public.entries where title = 'California home' and entry_type = 'home')
+    where entry_id = (select id from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home')
       and version = 1
   ),
   '123 Palm Street',
@@ -511,7 +511,7 @@ select is(
   (
     select snapshot #>> '{timeline,track_system_key}'
     from public.entry_versions
-    where entry_id = (select id from public.entries where title = 'California home' and entry_type = 'home')
+    where entry_id = (select id from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home')
       and version = 1
   ),
   'homes',
@@ -541,8 +541,8 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.search_entries('Elm Street')
-    where entry_type = 'home'
+    from public.search_wiki_items('Elm Street')
+    where item_kind = 'entity' and item_subtype = 'home'
       and title = 'California home'
   ),
   1,
@@ -558,7 +558,7 @@ select is(
       (select homes.place_id from public.homes join public.entries on entries.id = homes.entry_id where entries.title = 'California home'),
       'Changed by stale write', null, null, null, null, null, null, null, null, null,
       array[]::text[], array[]::text[],
-      (select id from public.entries where title = 'California home' and entry_type = 'home'), 1
+      (select id from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home'), 1
     )
   ),
   0,
@@ -579,7 +579,7 @@ select is(
 
 select set_config(
   'app.test_home_entry_id',
-  (select id::text from public.entries where title = 'California home' and entry_type = 'home'),
+  (select id::text from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home'),
   true
 );
 
@@ -641,7 +641,7 @@ select is(
   (
     select count(*)::integer
     from public.trash_home_entry(
-      (select id from public.entries where title = 'California home' and entry_type = 'home'),
+      (select id from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home'),
       2
     )
   ),
@@ -661,19 +661,19 @@ select is(
 
 select is(
   (
-    select entry_type
+    select wiki_item_subtype
     from public.trash_workspace()
     where title = 'California home'
   ),
   'home',
-  'A trashed Home appears in the shared recoverable Trash archive'
+  'A trashed Home keeps its Entity subtype in the recoverable Trash archive'
 );
 
 select is(
   (
     select snapshot #>> '{place,city}'
     from public.entry_versions
-    where entry_id = (select id from public.entries where title = 'California home' and entry_type = 'home')
+    where entry_id = (select id from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home')
       and version = 2
   ),
   'San Francisco',
@@ -685,9 +685,9 @@ select is(
     select count(*)::integer
     from public.restore_trash_item(
       'entry',
-      (select id from public.entries where title = 'California home' and entry_type = 'home'),
-      (select revision from public.entries where title = 'California home' and entry_type = 'home'),
-      (select deleted_at from public.entries where title = 'California home' and entry_type = 'home')
+      (select id from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home'),
+      (select revision from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home'),
+      (select deleted_at from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home')
     )
   ),
   1,
@@ -697,7 +697,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.timeline_workspace()
+    from public.timeline_workspace_with_organization()
     where title = 'California home'
       and track_system_key = 'homes'
       and timeline_kind = 'stage'

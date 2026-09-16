@@ -2,13 +2,11 @@ begin;
 create extension if not exists pgtap with schema extensions;
 select no_plan();
 
-select ok(
-  not has_function_privilege(
-    'authenticated',
-    'public.convert_entry_to_goal(uuid,integer,text,text,text,date)',
-    'execute'
-  ),
-  'Authenticated clients cannot mutate an existing Wiki Item into a Goal'
+select hasnt_function(
+  'public',
+  'convert_entry_to_goal',
+  array['uuid','integer','text','text','text','date'],
+  'The in-place Goal conversion contract is removed'
 );
 
 select ok(

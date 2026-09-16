@@ -91,7 +91,8 @@ insert into public.entries (
   owner_id,
   title,
   body,
-  entry_type,
+  item_kind,
+  item_subtype,
   inbox_status,
   deleted_at
 )
@@ -101,6 +102,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'First ski trip',
     'A First Time with private photos.',
+    'event',
     'first_time',
     'organized',
     '2026-08-01T12:00:00Z'
@@ -110,6 +112,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Photo parent',
     'An active First Time with one removed photo.',
+    'event',
     'first_time',
     'organized',
     null
@@ -119,7 +122,8 @@ values
     '10000000-0000-0000-0000-000000000006',
     'Other owner Trash',
     'Private.',
-    'standard',
+    'writing',
+    'note',
     'organized',
     '2026-08-04T12:00:00Z'
   ),
@@ -128,7 +132,8 @@ values
     '10000000-0000-0000-0000-000000000001',
     null,
     '  A body-only deleted thought.  ',
-    'standard',
+    'capture',
+    'quick_capture',
     'unreviewed',
     '2026-07-30T12:00:00Z'
   );

@@ -16,7 +16,7 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000121'
 select is(
   (
     select concat_ws('|',item_kind,item_subtype,record_source,record_id::text)
-    from public.search_entries_with_occurrence('Marina')
+    from public.search_wiki_items('Marina')
   ),
   'entity|person|person|98900000-0000-4000-8000-000000000001',
   'Canonical search returns Person semantic and specialized routing identities'
@@ -25,14 +25,14 @@ select is(
 select is(
   (
     select concat_ws('|',item_kind,item_subtype,record_source,record_id::text)
-    from public.search_entries_with_occurrence('Pier 7')
+    from public.search_wiki_items('Pier 7')
   ),
   'entity|place|place|98900000-0000-4000-8000-000000000002',
   'Canonical search indexes Place details and returns its specialized routing identity'
 );
 
 select is(
-  (select count(*) from public.search_entries_with_occurrence('',array['entity'])),
+  (select count(*) from public.search_wiki_items('',array['entity'])),
   2::bigint,
   'Entity Kind filtering returns canonical People and Places once'
 );
@@ -41,7 +41,7 @@ reset role;
 select ok(
   not has_function_privilege(
     'anon',
-    'public.search_entries_with_occurrence(text,text[],text[],text[],date,date,integer,integer)',
+    'public.search_wiki_items(text,text[],text[],text[],date,date,integer,integer,text)',
     'execute'
   ),
   'Anonymous canonical search is denied'

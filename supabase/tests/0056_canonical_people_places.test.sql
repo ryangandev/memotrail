@@ -63,7 +63,7 @@ select is(
 );
 
 select is(
-  (select count(*) from public.search_entries_with_occurrence('',array['standard'])),
+  (select count(*) from public.search_wiki_items('',array['standard'])),
   0::bigint,
   'Legacy Standard filtering does not classify canonical Entities as Writing'
 );
@@ -127,7 +127,7 @@ select is(
 select is(
   (
     select entry_id
-    from public.search_entries_with_occurrence(
+    from public.search_wiki_items(
       '201 University Avenue',array['place'],array[]::text[],array[]::text[],
       null,null,50,0
     )

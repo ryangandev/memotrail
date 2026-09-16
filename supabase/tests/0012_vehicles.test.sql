@@ -93,9 +93,9 @@ select lives_ok(
 );
 
 select is(
-  (select entry_type from public.entries where title = 'Bluebird'),
+  (select item_subtype from public.entries where title = 'Bluebird'),
   'vehicle',
-  'A Vehicle is stored as a specialized Entry'
+  'A Vehicle is stored as a specialized Entity'
 );
 
 select is(
@@ -421,8 +421,8 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.search_entries('Midnight Silver')
-    where entry_type = 'vehicle'
+    from public.search_wiki_items('Midnight Silver')
+    where item_kind = 'entity' and item_subtype = 'vehicle'
       and title = 'Bluebird EV'
   ),
   1,
@@ -517,7 +517,7 @@ select is(
 );
 
 select is(
-  (select entry_type from public.trash_workspace() where title = 'Bluebird EV'),
+  (select wiki_item_subtype from public.trash_workspace() where title = 'Bluebird EV'),
   'vehicle',
   'A trashed Vehicle appears in the shared recoverable Trash archive'
 );
@@ -550,7 +550,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.timeline_workspace()
+    from public.timeline_workspace_with_organization()
     where title = 'Bluebird EV'
       and track_system_key = 'vehicles'
       and timeline_kind = 'stage'

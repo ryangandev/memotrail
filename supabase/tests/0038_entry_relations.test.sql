@@ -7,7 +7,7 @@ insert into public.entries(id,owner_id,title,body,inbox_status,date_precision) v
 ('93800000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','牙套','Learning','organized','unknown'),
 ('93800000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000001','Percent % note','Other','organized','unknown'),
 ('93800000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000099','Private foreign','Hidden','organized','unknown');
-update public.entries set entry_type='goal' where id='93800000-0000-4000-8000-000000000004';
+update public.entries set item_kind='goal' where id='93800000-0000-4000-8000-000000000004';
 insert into public.goals(entry_id,owner_id,horizon,status) values('93800000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000099','someday','active');
 insert into public.collections(id,owner_id,name,system_key) values('93800000-0000-4000-8000-000000000099','10000000-0000-0000-0000-000000000099','Bucket List','bucket_list');
 insert into public.entry_collections(entry_id,owner_id,collection_id) values('93800000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000099','93800000-0000-4000-8000-000000000099');

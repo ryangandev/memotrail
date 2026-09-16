@@ -8,22 +8,23 @@ insert into auth.users(id,email) values
 
 select has_column('public','entries','item_kind','Entries expose a structural Wiki Item kind');
 select has_column('public','entries','item_subtype','Entries expose a compatible preset subtype');
+select hasnt_column('public','entries','entry_type','Entries no longer expose the transitional Entry type');
 
-insert into public.entries(id,owner_id,body,entry_type,inbox_status,date_precision) values
-  ('97000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000103','A raw thought','standard','unreviewed','unknown'),
-  ('97000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000103','An older organized note','standard','organized','unknown'),
-  ('97000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000103','Home facts','home','organized','unknown'),
-  ('97000000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000103','A first','first_time','organized','unknown');
+insert into public.entries(id,owner_id,body,item_kind,item_subtype,inbox_status,date_precision) values
+  ('97000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000103','A raw thought','capture','quick_capture','unreviewed','unknown'),
+  ('97000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000103','An organized note','writing','note','organized','unknown'),
+  ('97000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000103','Home facts','entity','home','organized','unknown'),
+  ('97000000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000103','A first','event','first_time','organized','unknown');
 
 select is(
   (select item_kind || ':' || item_subtype from public.entries where id='97000000-0000-4000-8000-000000000001'),
   'capture:quick_capture',
-  'An older unreviewed Standard insert becomes a raw Capture'
+  'A raw thought is stored as a Capture'
 );
 select is(
   (select item_kind || ':' || item_subtype from public.entries where id='97000000-0000-4000-8000-000000000002'),
   'writing:note',
-  'An older organized Standard insert remains Writing'
+  'An organized note is stored as Writing'
 );
 select is(
   (select item_kind || ':' || item_subtype from public.entries where id='97000000-0000-4000-8000-000000000003'),
@@ -42,17 +43,15 @@ values('97000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000103',true);
 
-update public.entries
-set inbox_status='organized'
-where id='97000000-0000-4000-8000-000000000001';
 select is(
-  (select item_kind || ':' || item_subtype from public.entries where id='97000000-0000-4000-8000-000000000001'),
+  (select item_kind || ':' || item_subtype
+   from public.organize_capture('97000000-0000-4000-8000-000000000001',1,'writing','note')),
   'writing:note',
-  'An older Done action finalizes a simple Capture as Writing'
+  'Capture organization explicitly finalizes a simple Capture as Writing'
 );
 
-insert into public.entries(id,owner_id,title,body,entry_type,inbox_status,date_precision) values
-  ('97000000-0000-4000-8000-000000000010',auth.uid(),'A very good day','I felt happy today.','standard','unreviewed','unknown');
+insert into public.entries(id,owner_id,title,body,inbox_status,date_precision) values
+  ('97000000-0000-4000-8000-000000000010',auth.uid(),'A very good day','I felt happy today.','unreviewed','unknown');
 
 select is(
   (select item_kind || ':' || item_subtype
@@ -61,9 +60,9 @@ select is(
   'A raw Capture can be finalized as an Event'
 );
 select is(
-  (select entry_type from public.entries where id='97000000-0000-4000-8000-000000000010'),
-  'life_stage',
-  'The compatibility Entry type follows the new Event identity'
+  (select item_kind || ':' || item_subtype from public.entries where id='97000000-0000-4000-8000-000000000010'),
+  'event:memory',
+  'The canonical Event identity is persisted directly'
 );
 
 update public.entries
@@ -80,8 +79,8 @@ select is(
   'History restoration restores semantic subtype instead of only the legacy type'
 );
 
-insert into public.entries(id,owner_id,body,entry_type,inbox_status,date_precision) values
-  ('97000000-0000-4000-8000-000000000020',auth.uid(),'Bought a white RAV4 and felt excited.','standard','unreviewed','unknown');
+insert into public.entries(id,owner_id,body,inbox_status,date_precision) values
+  ('97000000-0000-4000-8000-000000000020',auth.uid(),'Bought a white RAV4 and felt excited.','unreviewed','unknown');
 
 create temporary table extracted_item as
 select * from public.extract_capture_item(
@@ -125,13 +124,13 @@ select throws_ok(
   'Entity creation cannot bypass its specialized editor'
 );
 
-insert into public.entries(id,owner_id,body,entry_type,item_kind,item_subtype,inbox_status,date_precision) values
-  ('97000000-0000-4000-8000-000000000030',auth.uid(),'A longer narrative','standard','story','chapter','organized','unknown');
+insert into public.entries(id,owner_id,body,item_kind,item_subtype,inbox_status,date_precision) values
+  ('97000000-0000-4000-8000-000000000030',auth.uid(),'A longer narrative','story','chapter','organized','unknown');
 select is(
-  (select entry_type || ':' || item_kind || ':' || item_subtype
+  (select item_kind || ':' || item_subtype
    from public.entries where id='97000000-0000-4000-8000-000000000030'),
-  'standard:story:chapter',
-  'Stories remain distinct even while older clients see a compatible Standard Entry'
+  'story:chapter',
+  'Stories retain their canonical identity without a compatibility discriminator'
 );
 
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000104',true);

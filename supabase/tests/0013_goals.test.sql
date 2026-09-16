@@ -47,12 +47,13 @@ select is(
   'The Goals workspace rejects an invalid page'
 );
 
-insert into public.entries (title, body, owner_id, entry_type, inbox_status)
+insert into public.entries (title, body, owner_id, item_kind, item_subtype, inbox_status)
 values (
   'Learning journal',
   'Notes from language practice.',
   '10000000-0000-0000-0000-000000000001',
-  'standard',
+  'writing',
+  'note',
   'organized'
 );
 
@@ -76,7 +77,7 @@ select lives_ok(
 );
 
 select is(
-  (select entry_type from public.entries where title = 'Learn Japanese'),
+  (select item_kind from public.entries where title = 'Learn Japanese'),
   'goal',
   'A Goal is stored as a specialized Entry'
 );
@@ -239,10 +240,10 @@ select is(
 
 reset role;
 
-insert into public.entries (owner_id, title, body, entry_type, inbox_status)
+insert into public.entries (owner_id, title, body, item_kind, item_subtype, inbox_status)
 values (
   '10000000-0000-0000-0000-000000000013',
-  'Other private progress', '', 'standard', 'organized'
+  'Other private progress', '', 'writing', 'note', 'organized'
 );
 
 set local role authenticated;
@@ -333,7 +334,7 @@ select is(
 select is(
   (
     select title
-    from public.search_entries('long term', array['goal'], '{}', '{}', null, null, 20, 0)
+    from public.search_wiki_items('long term', array['goal'], '{}', '{}', null, null, 20, 0)
     where title = 'Learn Japanese well'
   ),
   'Learn Japanese well',
@@ -343,7 +344,7 @@ select is(
 select is(
   (
     select title
-    from public.search_entries('2028-12-31', array['goal'], '{}', '{}', null, null, 20, 0)
+    from public.search_wiki_items('2028-12-31', array['goal'], '{}', '{}', null, null, 20, 0)
     where title = 'Learn Japanese well'
   ),
   null,
@@ -379,7 +380,7 @@ select is(
     select goals.status
     from public.goals
     join public.entries on entries.id = goals.entry_id
-    where entries.title = 'Visit Iceland' and entries.entry_type = 'goal'
+    where entries.title = 'Visit Iceland' and entries.item_kind = 'goal'
   ),
   'achieved',
   'The Bucket List action marks the Goal achieved'
@@ -389,7 +390,7 @@ select is(
   (
     select revision
     from public.entries
-    where title = 'Visit Iceland' and entry_type = 'goal'
+    where title = 'Visit Iceland' and item_kind = 'goal'
   ),
   2,
   'The Bucket List action revision-safely updates the Goal'
@@ -399,7 +400,7 @@ select is(
   (
     select body
     from public.entries
-    where title = 'Visit Iceland' and entry_type = 'first_time'
+    where title = 'Visit Iceland' and item_kind = 'event' and item_subtype = 'first_time'
   ),
   '',
   'The created First Time does not copy the Goal description'
@@ -407,11 +408,11 @@ select is(
 
 select is(
   (
-    select concat_ws('|', entry_type, inbox_status, date_precision, occurred_label)
+    select concat_ws('|', item_kind, item_subtype, inbox_status, date_precision, occurred_label)
     from public.entries
-    where title = 'Visit Iceland' and entry_type = 'first_time'
+    where title = 'Visit Iceland' and item_kind = 'event' and item_subtype = 'first_time'
   ),
-  'first_time|organized|day|First Iceland trip',
+  'event|first_time|organized|day|First Iceland trip',
   'The created First Time preserves organized occurrence context'
 );
 
@@ -441,7 +442,7 @@ select is(
   (
     select count(*)::integer
     from public.mark_goal_achieved_with_first_time(
-      (select id from public.entries where title = 'Visit Iceland' and entry_type = 'goal'),
+      (select id from public.entries where title = 'Visit Iceland' and item_kind = 'goal'),
       1, '2026-09-04T19:00:00Z', 'day', null, 'America/Los_Angeles'
     )
   ),
@@ -455,7 +456,7 @@ select is(
       $$select * from public.mark_goal_achieved_with_first_time(
         %L::uuid, 2, '2026-09-03T19:00:00Z', 'unknown', null, 'America/Los_Angeles'
       )$$,
-      (select id from public.entries where title = 'Visit Iceland' and entry_type = 'goal')
+      (select id from public.entries where title = 'Visit Iceland' and item_kind = 'goal')
     )
   ),
   '22023',
@@ -468,7 +469,7 @@ select is(
       $$select * from public.mark_goal_achieved_with_first_time(
         %L::uuid, 2, '2026-09-03T19:00:00Z', 'day', null, 'Not/A-Timezone'
       )$$,
-      (select id from public.entries where title = 'Visit Iceland' and entry_type = 'goal')
+      (select id from public.entries where title = 'Visit Iceland' and item_kind = 'goal')
     )
   ),
   '22023',
@@ -488,7 +489,7 @@ select is(
 );
 
 select is(
-  (select entry_type from public.trash_workspace() where title = 'Pause running'),
+  (select wiki_item_kind from public.trash_workspace() where title = 'Pause running'),
   'goal',
   'The shared Trash workspace preserves the Goal type'
 );

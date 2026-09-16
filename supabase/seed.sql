@@ -71,7 +71,8 @@ insert into public.entries (
   owner_id,
   title,
   body,
-  entry_type,
+  item_kind,
+  item_subtype,
   occurred_start,
   source_language
 )
@@ -80,7 +81,8 @@ values (
   '10000000-0000-0000-0000-000000000001',
   'Why do people need to keep learning?',
   'Maybe learning is less about collecting answers and more about keeping our model of the world alive.',
-  'standard',
+  'writing',
+  'reflection',
   timezone('utc', now()),
   'en'
 )

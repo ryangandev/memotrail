@@ -7,7 +7,7 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000118','plaintext-review-other@memotrail.local');
 
 insert into public.entries(
-  id,owner_id,title,body,metadata,entry_type,inbox_status,date_precision,occurred_timezone
+  id,owner_id,title,body,metadata,inbox_status,date_precision,occurred_timezone
 ) values (
   '98700000-0000-4000-8000-000000000001',
   '10000000-0000-0000-0000-000000000117',
@@ -21,7 +21,7 @@ insert into public.entries(
       'document',jsonb_build_object('type','doc','content',jsonb_build_array())
     )
   ),
-  'standard','unreviewed','unknown','UTC'
+  'unreviewed','unknown','UTC'
 );
 
 set local role authenticated;

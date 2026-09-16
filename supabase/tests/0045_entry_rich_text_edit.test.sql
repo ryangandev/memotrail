@@ -5,13 +5,13 @@ select no_plan();
 insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000095','rich-entry-owner@memotrail.local'),
   ('10000000-0000-0000-0000-000000000096','rich-entry-other@memotrail.local');
-insert into public.entries(id,owner_id,title,body,entry_type,inbox_status,date_precision,occurred_timezone,metadata) values
-  ('96000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000095','Rich Entry','Original words','standard','organized','unknown','UTC',
+insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,inbox_status,date_precision,occurred_timezone,metadata) values
+  ('96000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000095','Rich Entry','Original words','writing','note','organized','unknown','UTC',
    '{"body_rich":{"version":1,"text":"Original words","document":{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Original words","marks":[{"type":"bold"}]}]}]}}}');
 
 create function pg_temp.rich_review(rev integer, body text, rich jsonb) returns bigint language sql as $$
-  select count(*) from public.review_entry_with_photo_place_rich(
-    '96000000-0000-4000-8000-000000000001',rev,'Rich Entry',body,'standard',
+  select count(*) from public.review_wiki_item_with_photo_place_rich(
+    '96000000-0000-4000-8000-000000000001',rev,'Rich Entry',body,'writing','note',
     null,'UTC','{}','{}',false,null,null,'unknown',null,rich
   );
 $$;
@@ -20,8 +20,8 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000095',true);
 
 select is(
-  (select count(*) from public.review_entry_with_photo_place(
-    '96000000-0000-4000-8000-000000000001',1,'Renamed by old client','Original words','standard',
+  (select count(*) from public.review_wiki_item_with_photo_place(
+    '96000000-0000-4000-8000-000000000001',1,'Renamed by plaintext client','Original words','writing','note',
     null,'UTC','{}','{}',false,null,null,'unknown',null
   )),
   1::bigint,
@@ -57,7 +57,7 @@ select is(pg_temp.rich_review(4,'Foreign edit',null),0::bigint,'Another owner ca
 reset role;
 
 select ok(
-  not has_function_privilege('anon','public.review_entry_with_photo_place_rich(uuid,integer,text,text,text,timestamptz,text,text[],text[],boolean,timestamptz,text,text,jsonb,jsonb)','execute'),
+  not has_function_privilege('anon','public.review_wiki_item_with_photo_place_rich(uuid,integer,text,text,text,text,timestamptz,text,text[],text[],boolean,timestamptz,text,text,jsonb,jsonb)','execute'),
   'Anonymous rich review denied'
 );
 select * from finish();

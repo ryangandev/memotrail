@@ -57,7 +57,7 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
 
 select is(
-  (select count(*)::integer from public.timeline_workspace()),
+  (select count(*)::integer from public.timeline_workspace_with_organization()),
   9,
   'Timeline workspace includes every visible default track when it is empty'
 );
@@ -65,7 +65,7 @@ select is(
 select is(
   (
     select count(distinct track_id)::integer
-    from public.timeline_workspace()
+    from public.timeline_workspace_with_organization()
   ),
   9,
   'Every visible Timeline track is represented, including empty tracks'
@@ -77,13 +77,13 @@ where owner_id = '10000000-0000-0000-0000-000000000001'
   and system_key = 'health';
 
 select is(
-  (select count(*)::integer from public.timeline_workspace()),
+  (select count(*)::integer from public.timeline_workspace_with_organization()),
   8,
   'Timeline workspace hides tracks marked hidden by default'
 );
 
 select is(
-  (select count(*)::integer from public.timeline_workspace(true)),
+  (select count(*)::integer from public.timeline_workspace_with_organization(true)),
   9,
   'Timeline workspace can explicitly include hidden tracks'
 );
@@ -120,12 +120,12 @@ select lives_ok(
 
 select is(
   (
-    select entry_type
+    select item_kind || ':' || item_subtype
     from public.entries
     where title = 'Lived in Philadelphia'
   ),
-  'life_stage',
-  'A stage is stored as a Life Stage Entry'
+  'event:life_stage',
+  'A stage is stored as a Life Stage Event'
 );
 
 select is(
@@ -165,7 +165,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.timeline_workspace()
+    from public.timeline_workspace_with_organization()
     where title = 'Lived in Philadelphia'
       and track_system_key = 'places'
   ),
@@ -211,7 +211,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.timeline_workspace()
+    from public.timeline_workspace_with_organization()
     where title in ('Lived in Philadelphia', 'University')
   ),
   2,
@@ -245,12 +245,12 @@ select lives_ok(
 
 select is(
   (
-    select entry_type
+    select item_kind || ':' || item_subtype
     from public.entries
     where title = 'Moved to California'
   ),
-  'standard',
-  'A direct Timeline event uses the Standard Entry type'
+  'event:other',
+  'A direct Timeline event uses the canonical Event identity'
 );
 
 select is(
@@ -451,7 +451,7 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000002', true);
 
 select is(
-  (select count(*)::integer from public.timeline_workspace()),
+  (select count(*)::integer from public.timeline_workspace_with_organization()),
   9,
   'Another owner sees only their own empty default Timeline tracks'
 );
@@ -513,7 +513,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.timeline_workspace()
+    from public.timeline_workspace_with_organization()
     where title = 'Moved to California'
   ),
   0,
@@ -538,7 +538,7 @@ reset role;
 select set_config('request.jwt.claim.sub', '', true);
 
 select is(
-  (select count(*)::integer from public.timeline_workspace()),
+  (select count(*)::integer from public.timeline_workspace_with_organization()),
   0,
   'An unauthenticated caller receives no Timeline data'
 );
