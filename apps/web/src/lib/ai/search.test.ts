@@ -51,7 +51,7 @@ describe("AI search trust boundary", () => {
     })!.request;
     expect(
       evidenceParameters(
-        parseSearchPlan({ ...plan, entryTypes: ["standard"] })!,
+        parseSearchPlan({ ...plan, entryTypes: ["writing"] })!,
         request,
         "2026-09-12",
       ).p_entry_types,
@@ -134,7 +134,7 @@ describe("AI search trust boundary", () => {
           from: "2020-01-01",
         },
         timeZone: "America/Los_Angeles",
-      })?.request.entryTypes,
+      })?.request.itemClassifications,
     ).toEqual(["first_time"]);
     for (const parameters of [
       { q: "" },

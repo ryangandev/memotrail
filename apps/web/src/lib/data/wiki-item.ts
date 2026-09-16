@@ -17,6 +17,14 @@ export type WikiItemPreset = {
   subtype: string;
 };
 
+export type WikiItemSearchGroup = {
+  label: string;
+  options: readonly {
+    label: string;
+    value: string;
+  }[];
+};
+
 export const reviewableWikiItemPresets: readonly WikiItemPreset[] = [
   {
     description: "A flexible thought that can stay simple.",
@@ -77,6 +85,53 @@ export const reviewableWikiItemPresets: readonly WikiItemPreset[] = [
     kind: "story",
     label: "Chapter",
     subtype: "chapter",
+  },
+] as const;
+
+export const wikiItemSearchGroups: readonly WikiItemSearchGroup[] = [
+  {
+    label: "Kinds",
+    options: [
+      { label: "Captures", value: "capture" },
+      { label: "Writing", value: "writing" },
+      { label: "Entities", value: "entity" },
+      { label: "Events", value: "event" },
+      { label: "Stories", value: "story" },
+      { label: "Goals", value: "goal" },
+    ],
+  },
+  {
+    label: "Writing types",
+    options: [
+      { label: "Notes", value: "note" },
+      { label: "Journals", value: "journal" },
+      { label: "Reflections", value: "reflection" },
+      { label: "Lessons", value: "lesson" },
+      { label: "Ideas", value: "idea" },
+    ],
+  },
+  {
+    label: "Entity types",
+    options: [
+      { label: "People", value: "person" },
+      { label: "Places", value: "place" },
+      { label: "Homes", value: "home" },
+      { label: "Vehicles", value: "vehicle" },
+    ],
+  },
+  {
+    label: "Event types",
+    options: [
+      { label: "Memories", value: "memory" },
+      { label: "First Times", value: "first_time" },
+      { label: "Milestones", value: "milestone" },
+      { label: "Trips", value: "trip" },
+      { label: "Life Stages", value: "life_stage" },
+    ],
+  },
+  {
+    label: "Story types",
+    options: [{ label: "Chapters", value: "chapter" }],
   },
 ] as const;
 
@@ -150,4 +205,60 @@ export function wikiItemSubtypeLabel(kind: WikiItemKind, subtype: string) {
     .split("_")
     .map((part) => part.charAt(0).toLocaleUpperCase() + part.slice(1))
     .join(" ");
+}
+
+export function wikiItemIdentityLabel(kind: WikiItemKind, subtype: string) {
+  const kindLabel = wikiItemKindLabel(kind);
+  const subtypeLabel = wikiItemSubtypeLabel(kind, subtype);
+  if (
+    kind === "capture" ||
+    kind === "goal" ||
+    kindLabel.toLocaleLowerCase() === subtypeLabel.toLocaleLowerCase()
+  ) {
+    return kindLabel;
+  }
+  return `${kindLabel} · ${subtypeLabel}`;
+}
+
+export function wikiItemIdentityFromLegacy(
+  entryType: string,
+  inboxStatus: "organized" | "unreviewed",
+): { itemKind: WikiItemKind; itemSubtype: string } {
+  switch (entryType) {
+    case "first_time":
+      return { itemKind: "event", itemSubtype: "first_time" };
+    case "life_stage":
+      return { itemKind: "event", itemSubtype: "life_stage" };
+    case "home":
+      return { itemKind: "entity", itemSubtype: "home" };
+    case "vehicle":
+      return { itemKind: "entity", itemSubtype: "vehicle" };
+    case "goal":
+      return { itemKind: "goal", itemSubtype: "goal" };
+    default:
+      return inboxStatus === "unreviewed"
+        ? { itemKind: "capture", itemSubtype: "quick_capture" }
+        : { itemKind: "writing", itemSubtype: "note" };
+  }
+}
+
+export function wikiEntryHref(item: {
+  id: string;
+  inboxStatus: "organized" | "unreviewed";
+  itemKind: WikiItemKind;
+  itemSubtype: string;
+}) {
+  if (item.itemKind === "entity" && item.itemSubtype === "home") {
+    return `/homes?entry=${item.id}`;
+  }
+  if (item.itemKind === "entity" && item.itemSubtype === "vehicle") {
+    return `/vehicles?entry=${item.id}`;
+  }
+  if (item.itemKind === "goal") {
+    return `/goals?entry=${item.id}`;
+  }
+  if (item.itemKind === "capture" && item.inboxStatus === "unreviewed") {
+    return "/inbox";
+  }
+  return `/history?entry=${item.id}`;
 }

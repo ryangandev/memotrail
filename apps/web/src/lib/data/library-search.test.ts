@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   hasLibrarySearchScope,
+  libraryKindsForSearch,
   libraryItemHref,
   librarySearchHref,
   librarySearchPage,
@@ -28,6 +29,23 @@ describe("library keyword search", () => {
         ),
       ).toBe(false);
     }
+  });
+  it("keeps semantic Entity filters on People and Places", () => {
+    expect(
+      libraryKindsForSearch(
+        parseSearchRequest({ q: "marina", type: "entity" }).request,
+      ),
+    ).toEqual(["person", "place"]);
+    expect(
+      libraryKindsForSearch(
+        parseSearchRequest({ q: "marina", type: "person" }).request,
+      ),
+    ).toEqual(["person"]);
+    expect(
+      libraryKindsForSearch(
+        parseSearchRequest({ q: "marina", type: "writing" }).request,
+      ),
+    ).toEqual([]);
   });
   it("preserves the Entry page and keyword when independently paging entities", () => {
     expect(

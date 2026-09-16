@@ -1,6 +1,8 @@
 import Link from "next/link";
 import {
   hasLibrarySearchScope,
+  hasUnappliedLibraryFilters,
+  libraryKindsForSearch,
   libraryItemHref,
   librarySearchHref,
   librarySearchPageSize,
@@ -21,17 +23,26 @@ export function LibrarySearchResults({
   page: number;
 }) {
   if (!request.query) return null;
-  if (!hasLibrarySearchScope(request))
+  if (!hasLibrarySearchScope(request) && hasUnappliedLibraryFilters(request))
     return (
       <p className={styles.dateGuidance}>
-        Clear Entry filters to also search People and Places.
+        People and Places do not use the selected Collection, tag, date, or
+        non-Entity classification.
       </p>
     );
+  if (!hasLibrarySearchScope(request)) return null;
+  const libraryKinds = libraryKindsForSearch(request);
+  const sectionLabel =
+    libraryKinds.length === 1
+      ? libraryKinds[0] === "person"
+        ? "People"
+        : "Places"
+      : "People and Places";
   return (
-    <section className={styles.resultsSection} aria-label="People and Places">
+    <section className={styles.resultsSection} aria-label={sectionLabel}>
       <header className={styles.resultsHeader}>
         <div>
-          <h2>People and Places</h2>
+          <h2>{sectionLabel}</h2>
           <span>
             {result ? `${result.total_count} matches` : "Keyword search"}
           </span>
@@ -44,7 +55,7 @@ export function LibrarySearchResults({
         <p role="alert">{error}</p>
       ) : (
         <>
-          {result?.items.length === 0 && <p>No matching People or Places.</p>}
+          {result?.items.length === 0 && <p>No matching {sectionLabel}.</p>}
           <div className={styles.resultList}>
             {result?.items.map((item) => (
               <article

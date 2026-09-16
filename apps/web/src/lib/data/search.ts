@@ -1,6 +1,7 @@
 import "server-only";
 import {
   hasLibrarySearchScope,
+  libraryKindsForSearch,
   libraryItemHref,
   librarySearchPageSize,
   parseLibrarySearch,
@@ -27,14 +28,22 @@ import {
   type QuickSearchResult,
   type SearchRequest,
 } from "@/lib/data/search-input";
+import {
+  isWikiItemKind,
+  wikiEntryHref,
+  wikiItemIdentityFromLegacy,
+  wikiItemIdentityLabel,
+  type WikiItemKind,
+} from "@/lib/data/wiki-item";
 
 export type SearchEntry = {
   body: string;
   bodyRich: EntryRichText | null;
   collectionNames: string[];
-  entryType: string;
   id: string;
   inboxStatus: "organized" | "unreviewed";
+  itemKind: WikiItemKind;
+  itemSubtype: string;
   matchReasons: string[];
   occurredAt: string | null;
   occurredEnd: string | null;
@@ -82,6 +91,17 @@ type NameRow = {
   name: string;
 };
 
+type ItemIdentity = {
+  itemKind: WikiItemKind;
+  itemSubtype: string;
+};
+
+type ItemIdentityRow = {
+  id: string;
+  item_kind: string;
+  item_subtype: string;
+};
+
 export async function getSearchWorkspace(
   parsed: ParsedSearchRequest,
   libraryPage = 1,
@@ -95,12 +115,13 @@ export async function getSearchWorkspace(
   const shouldSearch = parsed.request.hasCriteria && !parsed.error;
   const shouldSearchLibrary =
     shouldSearch && hasLibrarySearchScope(parsed.request);
+  const libraryKinds = libraryKindsForSearch(parsed.request);
   const searchRequest = shouldSearch
     ? context.client.rpc("search_entries_with_occurrence", {
         p_collection_names: parsed.request.collectionNames,
         p_date_from: parsed.request.dateFrom,
         p_date_to: parsed.request.dateTo,
-        p_entry_types: parsed.request.entryTypes,
+        p_entry_types: parsed.request.itemClassifications,
         p_limit: SEARCH_PAGE_SIZE,
         p_offset: parsed.request.offset,
         p_query: parsed.request.query,
@@ -134,7 +155,7 @@ export async function getSearchWorkspace(
           p_query: parsed.request.query,
           p_limit: librarySearchPageSize,
           p_offset: (libraryPage - 1) * librarySearchPageSize,
-          p_kinds: ["person", "place"],
+          p_kinds: libraryKinds,
         })
       : Promise.resolve({ data: null, error: null }),
   ]);
@@ -142,10 +163,13 @@ export async function getSearchWorkspace(
   const parsedRows = search.error ? [] : searchRows(search.data);
   const malformedSearchResponse = shouldSearch && !search.error && !parsedRows;
   const rows = parsedRows ?? [];
-  const bodyRichByEntry = await loadEntryRichTextMap(
-    context,
-    rows.map((row) => ({ body: row.body, id: row.entry_id })),
-  );
+  const [bodyRichByEntry, identityByEntry] = await Promise.all([
+    loadEntryRichTextMap(
+      context,
+      rows.map((row) => ({ body: row.body, id: row.entry_id })),
+    ),
+    loadEntryIdentityMap(context, rows),
+  ]);
   const filtersUnavailable = collections.error || tags.error;
 
   return {
@@ -160,7 +184,13 @@ export async function getSearchWorkspace(
       : (collections.data ?? []).map((collection) => collection.name),
     entries: search.error
       ? []
-      : rows.map((row) => entryFromRow(row, bodyRichByEntry.get(row.entry_id))),
+      : rows.map((row) =>
+          entryFromRow(
+            row,
+            bodyRichByEntry.get(row.entry_id),
+            identityByEntry.get(row.entry_id),
+          ),
+        ),
     filtersError: filtersUnavailable
       ? "Collection and tag filters are temporarily unavailable. Keyword search still works."
       : null,
@@ -209,8 +239,13 @@ export async function getQuickSearchResults(
   const libraryRows = librarySearch.error
     ? null
     : parseLibrarySearch(librarySearch.data);
+  const identityByEntry = entryRows
+    ? await loadEntryIdentityMap(context, entryRows)
+    : new Map<string, ItemIdentity>();
   const items = [
-    ...(entryRows ?? []).map(quickEntryItem),
+    ...(entryRows ?? []).map((row) =>
+      quickEntryItem(row, identityByEntry.get(row.entry_id)),
+    ),
     ...(libraryRows?.items ?? []).map((item): QuickSearchItem => ({
       href: libraryItemHref(item),
       id: item.id,
@@ -268,27 +303,40 @@ export async function getTagEntryPreviews(
     };
   }
 
+  const identityByEntry = await loadEntryIdentityMap(context, rows);
   return {
-    entries: rows.map(tagEntryPreview),
+    entries: rows.map((row) =>
+      tagEntryPreview(row, identityByEntry.get(row.entry_id)),
+    ),
     error: null,
   };
 }
 
-function quickEntryItem(row: SearchRow): QuickSearchItem {
+function quickEntryItem(
+  row: SearchRow,
+  identity = identityFromSearchRow(row),
+): QuickSearchItem {
   const title =
     stringValue(row.title) ?? firstUsefulLine(row.body) ?? "Untitled Entry";
 
   return {
-    href: `/history?entry=${encodeURIComponent(row.entry_id)}`,
+    href: wikiEntryHref({
+      id: row.entry_id,
+      inboxStatus: row.inbox_status,
+      ...identity,
+    }),
     id: row.entry_id,
     kind: "entry",
-    label: entryTypeLabel(row.entry_type),
+    label: wikiItemIdentityLabel(identity.itemKind, identity.itemSubtype),
     subtitle: compactText(row.body) || "Saved Entry",
     title,
   };
 }
 
-function tagEntryPreview(row: SearchRow): TagEntryPreview {
+function tagEntryPreview(
+  row: SearchRow,
+  identity = identityFromSearchRow(row),
+): TagEntryPreview {
   return {
     date: occurrenceLabel({
       datePrecision: row.date_precision,
@@ -299,11 +347,15 @@ function tagEntryPreview(row: SearchRow): TagEntryPreview {
         ? row.occurred_timezone
         : "UTC",
     }),
-    href: `/history?entry=${encodeURIComponent(row.entry_id)}`,
+    href: wikiEntryHref({
+      id: row.entry_id,
+      inboxStatus: row.inbox_status,
+      ...identity,
+    }),
     id: row.entry_id,
     title:
       stringValue(row.title) ?? firstUsefulLine(row.body) ?? "Untitled Entry",
-    type: entryTypeLabel(row.entry_type),
+    type: wikiItemIdentityLabel(identity.itemKind, identity.itemSubtype),
   };
 }
 
@@ -319,30 +371,19 @@ function firstUsefulLine(value: string) {
     .find(Boolean);
 }
 
-function entryTypeLabel(value: string) {
-  const labels: Record<string, string> = {
-    first_time: "First Time",
-    goal: "Goal",
-    home: "Home",
-    life_stage: "Life Stage",
-    standard: "Entry",
-    vehicle: "Vehicle",
-  };
-
-  return labels[value] ?? "Entry";
-}
-
 function entryFromRow(
   row: SearchRow,
   bodyRich: EntryRichText | null = null,
+  identity = identityFromSearchRow(row),
 ): SearchEntry {
   return {
     body: row.body,
     bodyRich,
     collectionNames: strings(row.collection_names),
-    entryType: row.entry_type,
     id: row.entry_id,
     inboxStatus: row.inbox_status,
+    itemKind: identity.itemKind,
+    itemSubtype: identity.itemSubtype,
     matchReasons: strings(row.match_reasons),
     occurredAt: stringValue(row.occurred_start),
     occurredEnd: stringValue(row.occurred_end),
@@ -353,6 +394,38 @@ function entryFromRow(
     title: stringValue(row.title),
     updatedAt: row.updated_at,
   };
+}
+
+async function loadEntryIdentityMap(
+  context: NonNullable<Awaited<ReturnType<typeof getAuthenticatedContext>>>,
+  rows: readonly SearchRow[],
+) {
+  if (rows.length === 0) return new Map<string, ItemIdentity>();
+
+  const { data, error } = await context.client
+    .from("entries")
+    .select("id,item_kind,item_subtype")
+    .eq("owner_id", context.userId)
+    .in(
+      "id",
+      rows.map((row) => row.entry_id),
+    )
+    .returns<ItemIdentityRow[]>();
+  if (error) return new Map<string, ItemIdentity>();
+
+  const identities = new Map<string, ItemIdentity>();
+  for (const row of data ?? []) {
+    if (!isWikiItemKind(row.item_kind) || !row.item_subtype) continue;
+    identities.set(row.id, {
+      itemKind: row.item_kind,
+      itemSubtype: row.item_subtype,
+    });
+  }
+  return identities;
+}
+
+function identityFromSearchRow(row: SearchRow) {
+  return wikiItemIdentityFromLegacy(row.entry_type, row.inbox_status);
 }
 
 function countFromRows(rows: SearchRow[]) {

@@ -7,7 +7,7 @@ export type SearchRequest = {
   collectionNames: string[];
   dateFrom: string | null;
   dateTo: string | null;
-  entryTypes: string[];
+  itemClassifications: string[];
   hasCriteria: boolean;
   offset: number;
   page: number;
@@ -68,7 +68,7 @@ export function parseSearchRequest(
   parameters: RawSearchParams,
 ): ParsedSearchRequest {
   const query = firstValue(parameters.q).trim();
-  const entryTypes = normalizedValues(parameters.type);
+  const itemClassifications = normalizedValues(parameters.type);
   const collectionNames = normalizedValues(parameters.collection);
   const tagNames = normalizedValues(parameters.tag);
   const dateFromValue = firstValue(parameters.from).trim();
@@ -80,8 +80,8 @@ export function parseSearchRequest(
 
   if (query.length > SEARCH_QUERY_LIMIT) {
     error = `Search phrases can be up to ${SEARCH_QUERY_LIMIT} characters.`;
-  } else if (!validNames(entryTypes, 20, 80)) {
-    error = "Choose up to 20 valid Entry Types.";
+  } else if (!validNames(itemClassifications, 20, 80)) {
+    error = "Choose up to 20 valid Kinds or types.";
   } else if (!validNames(collectionNames, 20, 80)) {
     error = "Choose up to 20 valid Collections.";
   } else if (!validNames(tagNames, 50, 60)) {
@@ -100,10 +100,10 @@ export function parseSearchRequest(
       collectionNames,
       dateFrom,
       dateTo,
-      entryTypes,
+      itemClassifications,
       hasCriteria:
         query.length > 0 ||
-        entryTypes.length > 0 ||
+        itemClassifications.length > 0 ||
         collectionNames.length > 0 ||
         tagNames.length > 0 ||
         Boolean(dateFrom) ||
@@ -123,8 +123,8 @@ export function searchPageHref(request: SearchRequest, page: number) {
     parameters.set("q", request.query);
   }
 
-  for (const entryType of request.entryTypes) {
-    parameters.append("type", entryType);
+  for (const classification of request.itemClassifications) {
+    parameters.append("type", classification);
   }
 
   for (const collectionName of request.collectionNames) {

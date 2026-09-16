@@ -15,13 +15,46 @@ export type LibrarySearchResult = {
 };
 
 export function hasLibrarySearchScope(request: SearchRequest) {
+  return libraryKindsForSearch(request).length > 0;
+}
+
+export function libraryKindsForSearch(
+  request: SearchRequest,
+): ("person" | "place")[] {
+  if (
+    !request.query.trim() ||
+    request.collectionNames.length > 0 ||
+    request.tagNames.length > 0 ||
+    request.dateFrom ||
+    request.dateTo
+  ) {
+    return [];
+  }
+
+  if (request.itemClassifications.length === 0) {
+    return ["person", "place"];
+  }
+
+  const classifications = new Set(request.itemClassifications);
+  if (classifications.has("entity")) {
+    return ["person", "place"];
+  }
+
+  const kinds: ("person" | "place")[] = [];
+  if (classifications.has("person")) kinds.push("person");
+  if (classifications.has("place")) kinds.push("place");
+  return kinds;
+}
+
+export function hasUnappliedLibraryFilters(request: SearchRequest) {
   return (
     Boolean(request.query.trim()) &&
-    request.entryTypes.length === 0 &&
-    request.collectionNames.length === 0 &&
-    request.tagNames.length === 0 &&
-    !request.dateFrom &&
-    !request.dateTo
+    libraryKindsForSearch(request).length === 0 &&
+    (request.collectionNames.length > 0 ||
+      request.tagNames.length > 0 ||
+      Boolean(request.dateFrom) ||
+      Boolean(request.dateTo) ||
+      request.itemClassifications.length > 0)
   );
 }
 export function librarySearchPage(value: string | string[] | undefined) {

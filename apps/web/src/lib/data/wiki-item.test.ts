@@ -3,6 +3,9 @@ import {
   initialReviewClassification,
   reviewablePresetsForKind,
   validReviewableWikiItemPreset,
+  wikiEntryHref,
+  wikiItemIdentityFromLegacy,
+  wikiItemIdentityLabel,
   wikiItemSubtypeLabel,
 } from "./wiki-item";
 
@@ -37,5 +40,37 @@ describe("Life Wiki item classification", () => {
     expect(wikiItemSubtypeLabel("event", "first_time")).toBe("First Time");
     expect(wikiItemSubtypeLabel("entity", "vehicle")).toBe("Vehicle");
     expect(wikiItemSubtypeLabel("writing", "field_note")).toBe("Field Note");
+    expect(wikiItemIdentityLabel("event", "memory")).toBe("Event · Memory");
+    expect(wikiItemIdentityLabel("goal", "goal")).toBe("Goal");
+  });
+
+  it("provides a safe semantic fallback for legacy search results", () => {
+    expect(wikiItemIdentityFromLegacy("life_stage", "organized")).toEqual({
+      itemKind: "event",
+      itemSubtype: "life_stage",
+    });
+    expect(wikiItemIdentityFromLegacy("standard", "unreviewed")).toEqual({
+      itemKind: "capture",
+      itemSubtype: "quick_capture",
+    });
+  });
+
+  it("routes semantic items to their canonical editor", () => {
+    expect(
+      wikiEntryHref({
+        id: "1",
+        inboxStatus: "organized",
+        itemKind: "entity",
+        itemSubtype: "vehicle",
+      }),
+    ).toBe("/vehicles?entry=1");
+    expect(
+      wikiEntryHref({
+        id: "2",
+        inboxStatus: "organized",
+        itemKind: "writing",
+        itemSubtype: "journal",
+      }),
+    ).toBe("/history?entry=2");
   });
 });

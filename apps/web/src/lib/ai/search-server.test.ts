@@ -127,7 +127,7 @@ it("broadens reference-only move retrieval without discarding the date boundary 
   const home = { id: "22222222-2222-4222-8222-222222222222", title: "Move" };
   generate
     .mockResolvedValueOnce(
-      output({ ...plan, beforeLatestHome: true, entryTypes: ["standard"] }),
+      output({ ...plan, beforeLatestHome: true, entryTypes: ["writing"] }),
     )
     .mockResolvedValueOnce(
       output({ insufficientEvidence: true, findings: [] }),

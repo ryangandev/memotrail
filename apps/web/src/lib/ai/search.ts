@@ -88,13 +88,29 @@ export function retrievalTerms(queries: string[]) {
 }
 
 const types = [
-  "standard",
+  "capture",
+  "writing",
+  "entity",
+  "event",
+  "story",
+  "goal",
+  "note",
+  "journal",
+  "reflection",
+  "lesson",
+  "idea",
+  "person",
+  "place",
+  "memory",
   "first_time",
+  "milestone",
+  "trip",
   "life_stage",
   "home",
   "vehicle",
-  "goal",
+  "chapter",
 ];
+const acceptedManualTypes = new Set([...types, "standard"]);
 export const searchPlanSchema = {
   type: "object",
   additionalProperties: false,
@@ -168,7 +184,9 @@ export function parseAISearchInput(
   if (
     parsed.error ||
     !parsed.request.query ||
-    parsed.request.entryTypes.some((t) => !types.includes(t))
+    parsed.request.itemClassifications.some(
+      (classification) => !acceptedManualTypes.has(classification),
+    )
   )
     return null;
   return { request: parsed.request, timeZone: v.timeZone };
@@ -209,7 +227,7 @@ export function evidenceParameters(
     p_queries: plan.queries,
     // All Types really means all types. Thoughts can live inside a First Time
     // or Home, so model-inferred labels must not silently narrow the archive.
-    p_entry_types: request.entryTypes,
+    p_entry_types: request.itemClassifications,
     p_collection_names: request.collectionNames,
     p_tag_names: request.tagNames,
     p_date_from: request.dateFrom ?? plan.dateFrom,

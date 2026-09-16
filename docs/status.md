@@ -24,6 +24,8 @@ Use Git history for feature-level implementation and test evidence.
 | Backup and restore                                                                   | Not ready                                                                                                                                              |
 | Current GitHub CI                                                                    | Blocked before jobs start by account billing or spending limits                                                                                        |
 
+Semantic Kind and subtype Search is also implemented locally on Web, including People and Places within Entity-scoped keyword and AI retrieval.
+
 The latest hosted synthetic run verified JPEG, HEIC, and PNG display derivatives, metadata extraction, unchanged originals, and a complete ZIP with all canonical datasets.
 Its marked account and Storage objects were confirmed removed without accessing personal data or calling AI.
 

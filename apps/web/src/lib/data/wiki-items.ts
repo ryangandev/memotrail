@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getAuthenticatedContext } from "./inbox";
-import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
+import { isWikiItemKind, wikiEntryHref, type WikiItemKind } from "./wiki-item";
 
 export const wikiItemsPageSize = 36;
 
@@ -88,19 +88,7 @@ export function wikiItemHref(item: WikiItemSummary) {
   if (item.recordSource === "place") {
     return `/places?place=${item.id}`;
   }
-  if (item.itemKind === "entity" && item.itemSubtype === "home") {
-    return `/homes?entry=${item.id}`;
-  }
-  if (item.itemKind === "entity" && item.itemSubtype === "vehicle") {
-    return `/vehicles?entry=${item.id}`;
-  }
-  if (item.itemKind === "goal") {
-    return `/goals?entry=${item.id}`;
-  }
-  if (item.itemKind === "capture" && item.inboxStatus === "unreviewed") {
-    return "/inbox";
-  }
-  return `/history?entry=${item.id}`;
+  return wikiEntryHref(item);
 }
 
 export function wikiItemsPage(value: unknown) {

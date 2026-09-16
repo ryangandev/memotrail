@@ -18,18 +18,14 @@ import {
   type SearchRequest,
 } from "@/lib/data/search-input";
 import { getSearchWorkspace, type SearchEntry } from "@/lib/data/search";
+import {
+  wikiEntryHref,
+  wikiItemIdentityLabel,
+  wikiItemSearchGroups,
+} from "@/lib/data/wiki-item";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
-
-const entryTypeOptions = [
-  ["standard", "Standard Entry"],
-  ["first_time", "First Time"],
-  ["life_stage", "Life Stage"],
-  ["home", "Home"],
-  ["vehicle", "Vehicle"],
-  ["goal", "Goal"],
-] as const;
 
 export default async function SearchPage({
   searchParams,
@@ -61,7 +57,7 @@ export default async function SearchPage({
         <div>
           <p className={styles.eyebrow}>Your personal archive</p>
           <h1>Search your trail</h1>
-          <p>Find Entries, People, and Places by what you remember.</p>
+          <p>Find anything in your Life Wiki by what you remember.</p>
         </div>
         <Link className={styles.newEntryButton} href="/inbox#capture-title">
           <Icon name="plus" />
@@ -75,6 +71,7 @@ export default async function SearchPage({
           <>
             <SearchResults
               entries={entries}
+              hasLibraryMatches={Boolean(workspace.library?.items.length)}
               loadError={loadError}
               request={request}
               totalCount={totalCount}
@@ -92,7 +89,9 @@ export default async function SearchPage({
           <div className={styles.queryRow}>
             <label className={styles.queryField} htmlFor="trail-search">
               <Icon name="search" size={21} />
-              <span className={styles.visuallyHidden}>Search your Entries</span>
+              <span className={styles.visuallyHidden}>
+                Search your Life Wiki
+              </span>
               <input
                 autoFocus
                 defaultValue={request.query}
@@ -128,13 +127,20 @@ export default async function SearchPage({
             <legend>Refine results</legend>
 
             <label>
-              <span>Type</span>
-              <select defaultValue={request.entryTypes[0] ?? ""} name="type">
-                <option value="">All Types</option>
-                {entryTypeOptions.map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
+              <span>Kind or type</span>
+              <select
+                defaultValue={request.itemClassifications[0] ?? ""}
+                name="type"
+              >
+                <option value="">All Kinds and types</option>
+                {wikiItemSearchGroups.map((group) => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.options.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </label>
@@ -200,7 +206,7 @@ export default async function SearchPage({
 
           <p className={styles.dateGuidance}>
             Date filters include overlapping recorded periods in each
-            Entry&apos;s time zone. Partial dates may overlap; unanchored dates
+            item&apos;s time zone. Partial dates may overlap; unanchored dates
             remain searchable without date filters.
           </p>
           {filtersError ? (
@@ -216,11 +222,13 @@ export default async function SearchPage({
 
 function SearchResults({
   entries,
+  hasLibraryMatches,
   loadError,
   request,
   totalCount,
 }: {
   entries: SearchEntry[];
+  hasLibraryMatches: boolean;
   loadError: string | null;
   request: SearchRequest;
   totalCount: number;
@@ -244,8 +252,8 @@ function SearchResults({
         <div>
           <strong>Start with anything you remember</strong>
           <p>
-            A word from the note, a year, a Collection, or even part of a
-            Chinese phrase can bring the Entry back.
+            A word from the writing, a year, a Collection, or even part of a
+            Chinese phrase can bring an item back.
           </p>
         </div>
       </div>
@@ -253,11 +261,12 @@ function SearchResults({
   }
 
   if (entries.length === 0) {
+    if (hasLibraryMatches) return null;
     return (
       <div className={styles.message}>
         <Icon name="search" size={23} />
         <div>
-          <strong>No matching Entries</strong>
+          <strong>No matching items</strong>
           <p>Try fewer words, remove a filter, or search for a broader date.</p>
         </div>
       </div>
@@ -300,17 +309,16 @@ function SearchResultCard({ entry }: { entry: SearchEntry }) {
     <article className={styles.resultCard}>
       <header>
         <div className={styles.resultMeta}>
-          <span>{entryTypeLabel(entry.entryType)}</span>
+          <span>
+            {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
+          </span>
           {entry.inboxStatus === "unreviewed" ? <span>In Inbox</span> : null}
           <time dateTime={entry.occurredAt ?? undefined}>
             {resultDateLabel(entry)}
           </time>
         </div>
         <h3>
-          <Link
-            className={styles.sourceLink}
-            href={`/history?entry=${entry.id}`}
-          >
+          <Link className={styles.sourceLink} href={wikiEntryHref(entry)}>
             {entry.title ?? firstUsefulLine(body) ?? "Untitled Entry"}
           </Link>
         </h3>
@@ -336,7 +344,7 @@ function SearchResultCard({ entry }: { entry: SearchEntry }) {
       ) : null}
 
       {entry.collectionNames.length || entry.tagNames.length ? (
-        <div className={styles.organization} aria-label="Entry organization">
+        <div className={styles.organization} aria-label="Item organization">
           {entry.collectionNames.map((name) => (
             <span key={`collection:${name.toLocaleLowerCase()}`}>{name}</span>
           ))}
@@ -390,21 +398,7 @@ function SearchPagination({
 }
 
 function resultCountLabel(count: number) {
-  return `${count} ${count === 1 ? "Entry" : "Entries"}`;
-}
-
-function entryTypeLabel(value: string) {
-  const known = entryTypeOptions.find(([entryType]) => entryType === value);
-
-  if (known) {
-    return known[1];
-  }
-
-  return value
-    .split("_")
-    .filter(Boolean)
-    .map((part) => `${part.charAt(0).toLocaleUpperCase()}${part.slice(1)}`)
-    .join(" ");
+  return `${count} ${count === 1 ? "item" : "items"}`;
 }
 
 function resultDateLabel(entry: SearchEntry) {
@@ -414,7 +408,10 @@ function resultDateLabel(entry: SearchEntry) {
       ? entry.occurredTimezone
       : "UTC",
   };
-  return ["home", "vehicle", "life_stage"].includes(entry.entryType)
+  return entry.occurredEnd !== null ||
+    (entry.itemKind === "entity" &&
+      ["home", "vehicle"].includes(entry.itemSubtype)) ||
+    entry.itemSubtype === "life_stage"
     ? occurrenceSpanLabel(occurrence)
     : occurrenceLabel(occurrence);
 }

@@ -138,7 +138,7 @@ test("Unified AI search uses bilingual source evidence, explicit requests, and n
     ).toBe(403);
     await page.goto("/search");
     await page
-      .getByRole("searchbox", { name: "Search your Entries" })
+      .getByRole("searchbox", { name: "Search your Life Wiki" })
       .fill(request.parameters.q);
     await page.getByRole("button", { name: "Ask AI", exact: true }).click();
     await expect(

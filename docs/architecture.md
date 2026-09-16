@@ -117,6 +117,7 @@ Pair it with the test file carrying the same feature name.
 - Interrupted provider outcomes do not trigger automatic paid retries.
 - Suggestion and search outputs are schema-validated and remain separate from original writing until explicit user action.
 - Search answers cite exact stored evidence; provenance does not imply that the model's conclusion is true.
+- Search retains the compatibility parameter name `p_entry_types`, but `search_entries_ordered` interprets each value as a Wiki Item Kind, subtype, or legacy `entry_type` before pagination. Web result labels and routes come from `item_kind` plus `item_subtype`; People and Places join keyword and AI results when the selected semantic scope includes their Entity presets.
 - The persistent Web Command Palette debounces input before calling the dynamic, private, no-store `app/api/search/quick` route. That route runs owner-scoped Entry and Library RPCs in parallel, returns a bounded result shape, and leaves filtered or AI search on the full Search page.
 
 ## Deletion, export, and recovery rules
