@@ -6,6 +6,8 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
   let body: String
   let collectionNames: [String]
   let entryType: InboxEntryType
+  let itemKind: WikiItemKind
+  let itemSubtype: String
   let createdAt: Date
   let occurredStart: Date?
   let occurredTimezone: String?
@@ -24,6 +26,8 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     body: String,
     collectionNames: [String] = [],
     entryType: InboxEntryType = .standard,
+    itemKind: WikiItemKind = .capture,
+    itemSubtype: String = "quick_capture",
     createdAt: Date,
     occurredStart: Date?,
     occurredTimezone: String? = nil,
@@ -38,6 +42,8 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     self.body = body
     self.collectionNames = collectionNames
     self.entryType = entryType
+    self.itemKind = itemKind
+    self.itemSubtype = itemSubtype
     self.createdAt = createdAt
     self.occurredStart = occurredStart
     self.occurredTimezone = occurredTimezone
@@ -53,6 +59,8 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     case title
     case body
     case entryType = "entry_type"
+    case itemKind = "item_kind"
+    case itemSubtype = "item_subtype"
     case createdAt = "created_at"
     case occurredStart = "occurred_start"
     case occurredTimezone = "occurred_timezone"
@@ -79,6 +87,12 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     revision = try values.decode(Int.self, forKey: .revision)
     tagNames = try values.decodeIfPresent([String].self, forKey: .tagNames) ?? []
     inboxStatus = try values.decodeIfPresent(String.self, forKey: .inboxStatus) ?? "unreviewed"
+    itemKind =
+      try values.decodeIfPresent(WikiItemKind.self, forKey: .itemKind)
+      ?? WikiItemKind.compatibilityKind(entryType: entryType, inboxStatus: inboxStatus)
+    itemSubtype =
+      try values.decodeIfPresent(String.self, forKey: .itemSubtype)
+      ?? WikiItemKind.compatibilitySubtype(entryType: entryType, inboxStatus: inboxStatus)
     occurredStartRaw = try? values.decode(String.self, forKey: .occurredStart)
     occurredEndRaw = try? values.decode(String.self, forKey: .occurredEnd)
     let precision =
@@ -95,6 +109,8 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
       body: body,
       collectionNames: collectionNames,
       entryType: entryType,
+      itemKind: itemKind,
+      itemSubtype: itemSubtype,
       createdAt: createdAt,
       occurredStart: occurredStart,
       occurredTimezone: occurredTimezone,
@@ -169,6 +185,86 @@ enum InboxEntryType: String, CaseIterable, Codable, Equatable, Sendable {
   }
 }
 
+enum WikiItemKind: String, CaseIterable, Codable, Equatable, Hashable, Sendable {
+  case capture
+  case writing
+  case entity
+  case event
+  case story
+  case goal
+
+  static let reviewableCases: [WikiItemKind] = [.writing, .event, .story]
+
+  var displayName: String {
+    switch self {
+    case .capture: "Capture"
+    case .writing: "Writing"
+    case .entity: "Entity"
+    case .event: "Event"
+    case .story: "Story"
+    case .goal: "Goal"
+    }
+  }
+
+  var reviewPresets: [WikiItemPreset] {
+    switch self {
+    case .writing:
+      [
+        .init(subtype: "note", label: "Note"),
+        .init(subtype: "journal", label: "Journal"),
+        .init(subtype: "reflection", label: "Reflection"),
+        .init(subtype: "lesson", label: "Lesson"),
+        .init(subtype: "idea", label: "Idea"),
+      ]
+    case .event:
+      [
+        .init(subtype: "memory", label: "Memory"),
+        .init(subtype: "first_time", label: "First Time"),
+        .init(subtype: "milestone", label: "Milestone"),
+        .init(subtype: "trip", label: "Trip"),
+        .init(subtype: "life_stage", label: "Life Stage"),
+        .init(subtype: "other", label: "Other Event"),
+      ]
+    case .story:
+      [
+        .init(subtype: "chapter", label: "Chapter"),
+        .init(subtype: "story", label: "Story"),
+      ]
+    case .capture, .entity, .goal:
+      []
+    }
+  }
+
+  var defaultReviewSubtype: String {
+    reviewPresets.first?.subtype ?? "note"
+  }
+
+  func supportsReviewSubtype(_ subtype: String) -> Bool {
+    reviewPresets.contains { $0.subtype == subtype }
+  }
+
+  static func compatibilityKind(
+    entryType: InboxEntryType, inboxStatus: String
+  ) -> WikiItemKind {
+    if entryType == .firstTime { return .event }
+    return inboxStatus == "unreviewed" ? .capture : .writing
+  }
+
+  static func compatibilitySubtype(
+    entryType: InboxEntryType, inboxStatus: String
+  ) -> String {
+    if entryType == .firstTime { return "first_time" }
+    return inboxStatus == "unreviewed" ? "quick_capture" : "note"
+  }
+}
+
+struct WikiItemPreset: Equatable, Hashable, Identifiable, Sendable {
+  let subtype: String
+  let label: String
+
+  var id: String { subtype }
+}
+
 struct InboxCapture: Equatable, Sendable {
   static let titleLimit = 200
   static let bodyLimit = 50_000
@@ -206,7 +302,8 @@ struct InboxReviewInput: Equatable, Sendable {
   let title: String?
   let body: String
   let collectionNames: [String]
-  let entryType: InboxEntryType
+  let itemKind: WikiItemKind
+  let itemSubtype: String
   let occurredAt: Date?
   let occurredTimezone: String
   let tagNames: [String]
@@ -218,7 +315,8 @@ struct InboxReviewInput: Equatable, Sendable {
     title: String,
     body: String,
     collectionNames: [String],
-    entryType: InboxEntryType,
+    itemKind: WikiItemKind,
+    itemSubtype: String,
     occurredAt: Date?,
     occurredTimezone: String,
     tagNames: [String],
@@ -232,7 +330,13 @@ struct InboxReviewInput: Equatable, Sendable {
 
     let capture = try InboxCapture.validate(title: title, body: body)
 
-    if entryType == .firstTime, capture.title == nil {
+    guard WikiItemKind.reviewableCases.contains(itemKind),
+      itemKind.supportsReviewSubtype(itemSubtype)
+    else {
+      throw InboxReviewError.invalidClassification
+    }
+
+    if itemKind == .event, itemSubtype == "first_time", capture.title == nil {
       throw InboxReviewError.firstTimeRequiresTitle
     }
 
@@ -272,7 +376,8 @@ struct InboxReviewInput: Equatable, Sendable {
       title: capture.title,
       body: capture.body,
       collectionNames: normalizedCollections,
-      entryType: entryType,
+      itemKind: itemKind,
+      itemSubtype: itemSubtype,
       occurredAt: occurredAt,
       occurredTimezone: occurredTimezone,
       tagNames: normalizedTags,
@@ -818,6 +923,7 @@ enum InboxCaptureError: LocalizedError, Equatable {
 
 enum InboxReviewError: LocalizedError, Equatable {
   case firstTimeRequiresTitle
+  case invalidClassification
   case invalidCollections
   case invalidRevision
   case invalidTags
@@ -827,6 +933,8 @@ enum InboxReviewError: LocalizedError, Equatable {
     switch self {
     case .firstTimeRequiresTitle:
       "Add a title before marking an Entry as a First Time."
+    case .invalidClassification:
+      "Choose a compatible Kind and Type for this Entry."
     case .invalidCollections:
       "Use up to 20 Collections with names under 80 characters."
     case .invalidRevision:

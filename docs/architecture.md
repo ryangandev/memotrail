@@ -55,6 +55,8 @@ Pair it with the test file carrying the same feature name.
 - Dedicated Web extraction routes pass only the source Capture ID, reload the owner-scoped saved source on the server, and prefill the specialized form without placing personal content in the URL or client storage.
 - `capture_extraction_source` supplies the reusable raw-Capture handoff contract. Specialized extraction RPCs create the typed target, organize the preserved Capture as `capture:source_capture`, and record `derived` plus `derived_from` links in one transaction.
 - Web Goal extraction uses a caller-generated target UUID for idempotency, preserves the source revision and identity, and records `derived` plus `derived_from` provenance links so both items remain discoverable.
+- `review_wiki_item_with_photo_place` is the plaintext-client semantic review boundary. iOS uses it to finalize a Capture or edit a same-Kind Writing, Event, or Story while preserving rich-text metadata the native editor does not author.
+- The iOS Inbox sends canonical Kind and subtype values. Its generic organizer exposes only Writing, Event, and Story; Entity and Goal creation must use their dedicated forms and extraction RPCs.
 - `convert_entry_to_goal` remains only as a deprecated native-client compatibility RPC until the iOS Life Wiki adoption replaces it, after which its authenticated grant must be removed.
 - Specialized tables add typed facts without duplicating common writing, organization, dates, media, or history.
 - `entries.body` remains canonical plaintext. Optional validated rich content is versioned under `entries.metadata.body_rich`, carries the exact matching plaintext, and is ignored when another client changes the body without updating the rich document.

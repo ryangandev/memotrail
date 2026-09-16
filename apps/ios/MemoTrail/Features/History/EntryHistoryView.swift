@@ -314,15 +314,15 @@ struct EntryHistoryDetailView: View {
         if let record {
           Text(HistoryPresentation.title(record.current)).font(MTTypography.title)
           if !record.isDeleted {
-            if ["standard", "first_time"].contains(record.current["entry_type"]?.text ?? "") {
+            if ["writing", "event", "story"].contains(record.current["item_kind"]?.text ?? "") {
               Button("Edit Entry") { Task { await openEditor() } }.disabled(busy)
             }
             NavigationLink("Explore with AI") {
               ExplorationView(client: client, ownerID: ownerID, entryID: entryID)
             }
-            if record.current["entry_type"]?.text == "standard" {
+            if record.current["item_kind"]?.text == "writing" {
               Button("Convert to Goal") { showConversion = true }.disabled(busy)
-            } else if record.current["entry_type"]?.text == "goal" {
+            } else if record.current["item_kind"]?.text == "goal" {
               NavigationLink("Open Goals") {
                 GoalsView(client: client, ownerID: ownerID, embedded: true)
               }
@@ -421,10 +421,13 @@ struct EntryHistoryDetailView: View {
               "dismiss_ai_suggestion", params: ["p_id": id.uuidString]
             ).execute().value
           }, collectionOptions: entry.collectionNames, tagOptions: entry.tagNames
-        ) { title, body, collections, type, occurrence, tags, intent, photoPlace in
+        ) {
+          title, body, collections, itemKind, itemSubtype, occurrence, tags, intent,
+          photoPlace in
           await saveEditedEntry(
-            entry, title: title, body: body, collections: collections, type: type,
-            occurrence: occurrence, tags: tags, intent: intent, photoPlace: photoPlace)
+            entry, title: title, body: body, collections: collections, itemKind: itemKind,
+            itemSubtype: itemSubtype, occurrence: occurrence, tags: tags, intent: intent,
+            photoPlace: photoPlace)
         }
       }
       .confirmationDialog(
@@ -456,9 +459,9 @@ struct EntryHistoryDetailView: View {
     } catch { message = "This Entry cannot be edited right now. Refresh and try again." }
   }
   private func saveEditedEntry(
-    _ entry: InboxEntry, title: String, body: String, collections: [String], type: InboxEntryType,
-    occurrence: EntryOccurrence, tags: [String], intent: InboxController.ReviewIntent,
-    photoPlace: PhotoPlaceDraft?
+    _ entry: InboxEntry, title: String, body: String, collections: [String],
+    itemKind: WikiItemKind, itemSubtype: String, occurrence: EntryOccurrence, tags: [String],
+    intent: InboxController.ReviewIntent, photoPlace: PhotoPlaceDraft?
   ) async -> InboxController.ReviewResult {
     do {
       guard try await client.auth.session.user.id == ownerID else {
@@ -467,19 +470,21 @@ struct EntryHistoryDetailView: View {
       try photoPlace?.validate()
       let input = try InboxReviewInput.validate(
         entryID: entry.id, revision: entry.revision, title: title, body: body,
-        collectionNames: collections, entryType: type, occurredAt: occurrence.start,
+        collectionNames: collections, itemKind: itemKind, itemSubtype: itemSubtype,
+        occurredAt: occurrence.start,
         occurredTimezone: occurrence.timezone, tagNames: tags, datePrecision: occurrence.precision,
         occurredEnd: occurrence.end, occurredLabel: occurrence.label)
       let parameters = ReviewEntryParameters(
         entryID: entry.id, expectedRevision: entry.revision, title: input.title, body: input.body,
-        entryType: input.entryType, occurredStart: input.occurredAt,
+        itemKind: input.itemKind, itemSubtype: input.itemSubtype,
+        occurredStart: input.occurredAt,
         occurredTimezone: input.occurredTimezone, collectionNames: input.collectionNames,
         tagNames: input.tagNames, markDone: intent == .done, datePrecision: occurrence.precision,
         occurredEnd: occurrence.end, occurredLabel: occurrence.label, photoPlace: photoPlace,
         occurredStartRaw: occurrence.start == entry.occurredStart ? entry.occurredStartRaw : nil,
         occurredEndRaw: occurrence.end == entry.occurredEnd ? entry.occurredEndRaw : nil)
       let rows: [ReviewedEntryResult] = try await client.rpc(
-        "review_entry_with_photo_place", params: parameters
+        "review_wiki_item_with_photo_place", params: parameters
       ).execute().value
       guard rows.first?.entryID == entry.id else {
         return .init(

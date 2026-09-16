@@ -20,7 +20,7 @@ Use Git history for feature-level implementation and test evidence.
 | Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI    | Implemented; Production AI configuration is not accepted                                                                                                                                                                 |
 | Private media, Entry history, relationships, Trash, and complete export              | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                                                       |
 | Hosted Supabase contracts                                                            | Deployed to the confirmed MemoTrail project                                                                                                                                                                              |
-| Capture First Life Wiki information model                                            | Database foundation, Web Inbox organizer, semantic Search, all-items Library, linked Goal extraction, and Inbox-to-Home/Vehicle/Goal specialized handoffs implemented locally; broader Web and iOS adoption not complete |
+| Capture First Life Wiki information model                                            | Database foundation and primary Web flows implemented locally; native Inbox now classifies Writing/Event/Story through a plaintext-safe semantic RPC, while native specialized extraction handoffs and broader adoption remain incomplete |
 | Backup and restore                                                                   | Not ready                                                                                                                                                                                                                |
 | Current GitHub CI                                                                    | Blocked before jobs start by account billing or spending limits                                                                                                                                                          |
 
@@ -29,14 +29,21 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 ## Next work
 
-### 1. Accept Production AI
+### 1. Complete Life Wiki adoption
+
+- Add native Inbox handoffs to the specialized Home, Vehicle, and Goal forms without mutating the source Capture.
+- Replace the remaining native Goal conversion compatibility path, then remove its authenticated RPC grant.
+- Consolidate People and Places behind canonical Entity identities without losing their specialized fields or relationships.
+- The current native source changes pass Swift parser and formatting checks, but a full simulator build remains blocked until the local Xcode license is accepted.
+
+### 2. Accept Production AI
 
 - Set the Production Vercel values for `AI_PROVIDER`, server-only `AI_API_KEY`, `AI_CHAT_MODEL`, and `AI_TOTAL_BUDGET_USD`.
 - Confirm the existing server-only `SUPABASE_SECRET_KEY` remains present.
 - Redeploy and run `MEMOTRAIL_VERIFY_HOSTED_AI=1 node apps/web/scripts/verify-hosted-ai.mjs` with synthetic data.
 - The last authenticated check returned HTTP 503 `provider_unavailable`; a valid local key does not configure Production.
 
-### 2. Complete real interaction acceptance
+### 3. Complete real interaction acceptance
 
 - Verify an actual production browser export download.
 - Verify native Save and share for a production export.
@@ -45,14 +52,14 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 The latest automated native UI attempt was blocked by the locked development Mac.
 
-### 3. Establish recovery
+### 4. Establish recovery
 
 - Choose separately protected destinations for database backups and original Storage objects.
 - Decide whether to enable point-in-time recovery; the latest inventory showed PITR disabled and no listed restore point.
 - Complete and inspect a full restore in a non-production project.
 - Audit abandoned unregistered uploads before approving automatic retention cleanup.
 
-### 4. Restore current CI evidence
+### 5. Restore current CI evidence
 
 - Resolve the GitHub account billing or spending-limit issue.
 - Rerun all Web, iOS, and database jobs for current `main` and confirm they actually execute.

@@ -124,7 +124,8 @@ struct InboxView: View {
           title,
           body,
           collectionNames,
-          entryType,
+          itemKind,
+          itemSubtype,
           occurrence,
           tagNames,
           intent, photoPlace in
@@ -133,7 +134,8 @@ struct InboxView: View {
             title: title,
             body: body,
             collectionNames: collectionNames,
-            entryType: entryType,
+            itemKind: itemKind,
+            itemSubtype: itemSubtype,
             occurredAt: occurrence.start,
             occurredTimezone: occurrence.timezone,
             tagNames: tagNames,
@@ -386,7 +388,8 @@ struct InboxReviewSheet: View {
       String,
       String,
       [String],
-      InboxEntryType,
+      WikiItemKind,
+      String,
       EntryOccurrence,
       [String],
       InboxController.ReviewIntent,
@@ -398,7 +401,8 @@ struct InboxReviewSheet: View {
   @State private var note: String
   @State private var collectionNames: [String]
   @State private var collectionInput = ""
-  @State private var entryType: InboxEntryType
+  @State private var itemKind: WikiItemKind
+  @State private var itemSubtype: String
   @State private var photoPlace: PhotoPlaceDraft?
   @State private var occurrence: OccurrenceDraft
   @State private var isWorking = false
@@ -419,7 +423,8 @@ struct InboxReviewSheet: View {
         String,
         String,
         [String],
-        InboxEntryType,
+        WikiItemKind,
+        String,
         EntryOccurrence,
         [String],
         InboxController.ReviewIntent,
@@ -437,7 +442,13 @@ struct InboxReviewSheet: View {
     _title = State(initialValue: entry.title ?? "")
     _note = State(initialValue: entry.body)
     _collectionNames = State(initialValue: entry.collectionNames)
-    _entryType = State(initialValue: entry.entryType)
+    let initialKind =
+      WikiItemKind.reviewableCases.contains(entry.itemKind)
+      ? entry.itemKind : .writing
+    _itemKind = State(initialValue: initialKind)
+    _itemSubtype = State(
+      initialValue: initialKind.supportsReviewSubtype(entry.itemSubtype)
+        ? entry.itemSubtype : initialKind.defaultReviewSubtype)
     _occurrence = State(initialValue: OccurrenceDraft(entry.occurrence))
     _tagNames = State(initialValue: entry.tagNames)
   }
@@ -456,7 +467,15 @@ struct InboxReviewSheet: View {
           EntryAISuggestionsView(
             request: requestSuggestions, dismiss: dismissSuggestion,
             applyTitle: { title = $0 },
-            applyType: { if let type = InboxEntryType(rawValue: $0) { entryType = type } },
+            applyType: { type in
+              if type == InboxEntryType.firstTime.rawValue {
+                itemKind = .event
+                itemSubtype = "first_time"
+              } else if type == InboxEntryType.standard.rawValue {
+                itemKind = .writing
+                itemSubtype = "note"
+              }
+            },
             applyDate: { occurrence.useDateSuggestion($0) },
             addCollection: { name in
               if collectionNames.count < 20
@@ -485,19 +504,32 @@ struct InboxReviewSheet: View {
         }
 
         Section {
-          Picker("Type", selection: $entryType) {
-            ForEach(InboxEntryType.allCases, id: \.self) { type in
-              Text(type.displayName).tag(type)
+          Picker("Kind", selection: $itemKind) {
+            ForEach(WikiItemKind.reviewableCases, id: \.self) { kind in
+              Text(kind.displayName).tag(kind)
+            }
+          }
+          .disabled(entry.itemKind != .capture)
+          .onChange(of: itemKind) { _, nextKind in
+            if !nextKind.supportsReviewSubtype(itemSubtype) {
+              itemSubtype = nextKind.defaultReviewSubtype
+            }
+          }
+
+          Picker("Type", selection: $itemSubtype) {
+            ForEach(itemKind.reviewPresets) { preset in
+              Text(preset.label).tag(preset.subtype)
             }
           }
 
         } header: {
-          Text("Organization")
+          Text("Classification")
         } footer: {
           Text(
             entry.inboxStatus == "organized"
               ? "This Entry stays organized when you save."
-              : "Save changes keeps this Entry in Inbox. Done marks it organized.")
+              : "Choose what this Capture becomes. Homes, Vehicles, and Goals use their dedicated forms. Save changes keeps it in Inbox; Done marks it organized."
+          )
         }
         EntryPhotoDatesView(
           client: client, ownerID: ownerID, entryID: entry.id, occurrence: $occurrence,
@@ -603,7 +635,8 @@ struct InboxReviewSheet: View {
       title,
       note,
       namesIncludingDraft(collectionNames, collectionInput),
-      entryType,
+      itemKind,
+      itemSubtype,
       resolved,
       namesIncludingDraft(tagNames, tagInput),
       intent,

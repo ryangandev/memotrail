@@ -97,7 +97,7 @@ final class InboxController {
         try await client
         .from("entries")
         .select(
-          "id,title,body,entry_type,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision"
+          "id,title,body,entry_type,item_kind,item_subtype,inbox_status,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision"
         )
         .eq("owner_id", value: ownerID.uuidString)
         .eq("inbox_status", value: "unreviewed")
@@ -205,7 +205,8 @@ final class InboxController {
     title: String,
     body: String,
     collectionNames: [String],
-    entryType: InboxEntryType,
+    itemKind: WikiItemKind,
+    itemSubtype: String,
     occurredAt: Date?,
     occurredTimezone: String,
     tagNames: [String],
@@ -225,7 +226,8 @@ final class InboxController {
         title: title,
         body: body,
         collectionNames: collectionNames,
-        entryType: entryType,
+        itemKind: itemKind,
+        itemSubtype: itemSubtype,
         occurredAt: occurredAt,
         occurredTimezone: occurredTimezone,
         tagNames: tagNames,
@@ -248,7 +250,8 @@ final class InboxController {
         expectedRevision: input.revision,
         title: input.title,
         body: input.body,
-        entryType: input.entryType,
+        itemKind: input.itemKind,
+        itemSubtype: input.itemSubtype,
         occurredStart: input.occurredAt,
         occurredTimezone: input.occurredTimezone,
         collectionNames: input.collectionNames,
@@ -263,7 +266,7 @@ final class InboxController {
       )
       let reviewResults: [ReviewedEntryResult] =
         try await client
-        .rpc("review_entry_with_photo_place", params: parameters)
+        .rpc("review_wiki_item_with_photo_place", params: parameters)
         .execute()
         .value
 
@@ -285,7 +288,10 @@ final class InboxController {
         title: input.title,
         body: input.body,
         collectionNames: input.collectionNames,
-        entryType: input.entryType,
+        entryType: input.itemKind == .event && input.itemSubtype == "first_time"
+          ? .firstTime : .standard,
+        itemKind: input.itemKind,
+        itemSubtype: input.itemSubtype,
         createdAt: entry.createdAt,
         occurredStart: input.occurredAt,
         occurredTimezone: input.occurredTimezone,
@@ -610,6 +616,8 @@ struct InboxEntryInsert: Encodable, Sendable {
   let title: String?
   let body: String
   let entryType = "standard"
+  let itemKind = "capture"
+  let itemSubtype = "quick_capture"
   let inboxStatus = "unreviewed"
   let occurredStart: Date?
   let occurredTimezone: String
@@ -624,6 +632,8 @@ struct InboxEntryInsert: Encodable, Sendable {
     case title
     case body
     case entryType = "entry_type"
+    case itemKind = "item_kind"
+    case itemSubtype = "item_subtype"
     case inboxStatus = "inbox_status"
     case occurredStart = "occurred_start"
     case occurredTimezone = "occurred_timezone"
@@ -639,7 +649,8 @@ struct ReviewEntryParameters: Encodable, Sendable {
   let expectedRevision: Int
   let title: String?
   let body: String
-  let entryType: InboxEntryType
+  let itemKind: WikiItemKind
+  let itemSubtype: String
   let occurredStart: Date?
   let occurredTimezone: String
   let collectionNames: [String]
@@ -657,7 +668,8 @@ struct ReviewEntryParameters: Encodable, Sendable {
     case expectedRevision = "p_expected_revision"
     case title = "p_title"
     case body = "p_body"
-    case entryType = "p_entry_type"
+    case itemKind = "p_item_kind"
+    case itemSubtype = "p_item_subtype"
     case occurredStart = "p_occurred_start"
     case occurredTimezone = "p_occurred_timezone"
     case collectionNames = "p_collection_names"
@@ -680,7 +692,8 @@ struct ReviewEntryParameters: Encodable, Sendable {
       try values.encodeNil(forKey: .title)
     }
     try values.encode(body, forKey: .body)
-    try values.encode(entryType, forKey: .entryType)
+    try values.encode(itemKind, forKey: .itemKind)
+    try values.encode(itemSubtype, forKey: .itemSubtype)
     if let occurredStartRaw {
       try values.encode(occurredStartRaw, forKey: .occurredStart)
     } else {
