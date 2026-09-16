@@ -117,6 +117,8 @@ export async function syncInboxEntry(
     occurred_end: occurrence.occurredEnd,
     occurred_label: occurrence.occurredLabel,
     entry_type: "standard",
+    item_kind: "capture",
+    item_subtype: "quick_capture",
     id: entry.id,
     inbox_status: "unreviewed",
     occurred_start: entry.occurredAt,
@@ -183,14 +185,15 @@ export async function reviewInboxEntry(
   }
 
   const { data, error } = await context.client.rpc(
-    "review_entry_with_photo_place_rich",
+    "review_wiki_item_with_photo_place_rich",
     {
       p_body_rich: parsedInput.data.bodyRich ?? null,
       p_photo_place: parsedInput.data.photoPlace ?? null,
       p_body: parsedInput.data.body,
       p_collection_names: parsedInput.data.collectionNames,
       p_entry_id: parsedInput.data.id,
-      p_entry_type: parsedInput.data.entryType,
+      p_item_kind: parsedInput.data.itemKind,
+      p_item_subtype: parsedInput.data.itemSubtype,
       p_expected_revision: parsedInput.data.revision,
       p_mark_done: intent === "done",
       p_occurred_start: parsedInput.data.occurredAt,

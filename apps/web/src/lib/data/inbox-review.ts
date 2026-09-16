@@ -2,16 +2,18 @@ import { entryBodyLimit, entryTitleLimit } from "./inbox-input";
 import { validPhotoPlace, type PhotoPlaceDraft } from "@/lib/media/photo-place";
 import { validateOccurrence, type OccurrencePrecision } from "./occurrence";
 import { isEntryRichText, type EntryRichText } from "./rich-text";
-
-export const reviewableEntryTypes = ["standard", "first_time"] as const;
-export type ReviewableEntryType = (typeof reviewableEntryTypes)[number];
+import {
+  validReviewableWikiItemPreset,
+  type ReviewableWikiItemKind,
+} from "./wiki-item";
 
 export type InboxReviewInput = {
   photoPlace?: PhotoPlaceDraft | null;
   body: string;
   bodyRich?: EntryRichText | null;
   collectionNames: string[];
-  entryType: ReviewableEntryType;
+  itemKind: ReviewableWikiItemKind;
+  itemSubtype: string;
   id: string;
   occurredAt: string | null;
   occurredEnd?: string | null;
@@ -93,14 +95,15 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
     return invalidReview("This Entry review is invalid.");
   }
 
-  if (
-    typeof values.entryType !== "string" ||
-    !reviewableEntryTypes.includes(values.entryType as ReviewableEntryType)
-  ) {
-    return invalidReview("Choose a supported Entry type.");
+  if (!validReviewableWikiItemPreset(values.itemKind, values.itemSubtype)) {
+    return invalidReview("Choose a supported Wiki Item kind and type.");
   }
 
-  if (values.entryType === "first_time" && !title) {
+  if (
+    values.itemKind === "event" &&
+    values.itemSubtype === "first_time" &&
+    !title
+  ) {
     return invalidReview(
       "Add a title before marking an Entry as a First Time.",
     );
@@ -124,7 +127,8 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
       body,
       bodyRich,
       collectionNames,
-      entryType: values.entryType as ReviewableEntryType,
+      itemKind: values.itemKind as ReviewableWikiItemKind,
+      itemSubtype: values.itemSubtype as string,
       id: values.id,
       ...occurrence,
       occurredAt: occurrence.occurredAt,

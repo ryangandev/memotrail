@@ -1138,6 +1138,13 @@
   gap: var(--mt-space-4);
 }
 
+.reviewTypeGuidance {
+  margin-top: calc(var(--mt-space-3) * -1);
+  color: var(--mt-color-ink-faint);
+  font-size: var(--mt-font-size-caption);
+  line-height: var(--mt-line-height-body);
+}
+
 .occurrenceEditor {
   display: grid;
   gap: var(--mt-space-4);

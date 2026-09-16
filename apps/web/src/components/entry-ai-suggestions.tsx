@@ -163,8 +163,8 @@ export function EntryAISuggestionsPanel({
                 disabled={disabled}
                 onClick={() => onApply("entryType", content.entryType)}
               >
-                Use Type:{" "}
-                {content.entryType === "first_time" ? "First Time" : "Standard"}
+                Organize as:{" "}
+                {content.entryType === "first_time" ? "First Time" : "Note"}
               </button>
             )}
             {content.collections.map((name) => (

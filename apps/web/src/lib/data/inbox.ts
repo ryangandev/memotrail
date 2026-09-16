@@ -8,14 +8,17 @@ import {
   type OccurrencePrecision,
 } from "./occurrence";
 import { entryRichTextFromMetadata, type EntryRichText } from "./rich-text";
+import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
 
 export type InboxEntry = Occurrence & {
   body: string;
   bodyRich: EntryRichText | null;
   collectionNames: string[];
   createdAt: string;
-  entryType: "first_time" | "standard";
+  entryType: "first_time" | "life_stage" | "standard";
   id: string;
+  itemKind: WikiItemKind;
+  itemSubtype: string;
   revision: number;
   tagNames: string[];
   title: string | null;
@@ -41,8 +44,10 @@ type Claims = Record<string, unknown>;
 type EntryRow = {
   body: string;
   created_at: string;
-  entry_type: "first_time" | "standard";
+  entry_type: "first_time" | "life_stage" | "standard";
   id: string;
+  item_kind: string;
+  item_subtype: string;
   metadata: unknown;
   occurred_start: string | null;
   occurred_end: string | null;
@@ -132,7 +137,7 @@ export async function getInboxWorkspace(): Promise<InboxWorkspace | null> {
   const { data, error } = await context.client
     .from("entries")
     .select(
-      "id,title,body,metadata,entry_type,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision",
+      "id,title,body,metadata,entry_type,item_kind,item_subtype,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision",
     )
     .eq("owner_id", context.userId)
     .eq("inbox_status", "unreviewed")
@@ -204,6 +209,17 @@ export function entryFromRow(
     createdAt: row.created_at,
     entryType: row.entry_type,
     id: row.id,
+    itemKind: isWikiItemKind(row.item_kind)
+      ? row.item_kind
+      : row.entry_type === "first_time"
+        ? "event"
+        : "writing",
+    itemSubtype:
+      typeof row.item_subtype === "string" && row.item_subtype
+        ? row.item_subtype
+        : row.entry_type === "first_time"
+          ? "first_time"
+          : "note",
     occurredAt: row.occurred_start,
     occurredEnd: row.occurred_end,
     occurredLabel: row.occurred_label,
