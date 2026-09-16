@@ -285,6 +285,15 @@
   line-height: 1.35;
 }
 
+.entryContent h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.entryContent h2 a:hover {
+  color: var(--mt-color-accent);
+}
+
 .entryBody,
 .fullEntryBody {
   white-space: pre-wrap;

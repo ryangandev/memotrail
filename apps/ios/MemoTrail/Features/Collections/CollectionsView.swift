@@ -65,12 +65,32 @@ struct CollectionsView: View {
       CollectionDetailView(client: client, ownerID: ownerID, collection: collection)
     }
     .navigationDestination(for: CollectionEntry.self) { entry in
-      CollectionEntryDetailView(entry: entry)
+      collectionEntryDestination(entry)
     }
     .task {
       if !controller.hasLoaded {
         await controller.load()
       }
+    }
+  }
+
+  @ViewBuilder
+  private func collectionEntryDestination(_ entry: CollectionEntry) -> some View {
+    switch (entry.itemKind, entry.itemSubtype, entry.recordSource) {
+    case (.entity, "person", .person):
+      PeopleView(client: client, ownerID: ownerID, focusedPersonID: entry.recordID)
+    case (.entity, "place", .place):
+      PlacesView(client: client, ownerID: ownerID, embedded: true, focusedPlaceID: entry.recordID)
+    case (.entity, "home", _):
+      HomesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
+    case (.entity, "vehicle", _):
+      VehiclesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
+    case (.goal, _, _):
+      GoalsView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
+    case (.event, "first_time", _):
+      FirstTimesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
+    default:
+      EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: entry.id)
     }
   }
 
@@ -376,69 +396,6 @@ private struct CollectionEntryCard: View {
       RoundedRectangle(cornerRadius: MTRadius.large)
         .stroke(MTColor.border, lineWidth: 1)
     }
-  }
-}
-
-private struct CollectionEntryDetailView: View {
-  let entry: CollectionEntry
-
-  var body: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: MTSpacing.s6) {
-        if !entry.attachments.isEmpty {
-          ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: MTSpacing.s3) {
-              ForEach(entry.attachments) { attachment in
-                CollectionRemoteImage(attachment: attachment)
-                  .frame(width: 300, height: 225)
-                  .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
-              }
-            }
-          }
-        }
-
-        VStack(alignment: .leading, spacing: MTSpacing.s3) {
-          HStack(spacing: MTSpacing.s2) {
-            metadataBadge(entry.displayType)
-            if entry.isInInbox {
-              metadataBadge("In Inbox", isWarm: true)
-            }
-          }
-
-          Text(entry.displayTitle)
-            .font(MTTypography.title)
-            .foregroundStyle(MTColor.ink)
-
-          Text(entry.displayDate)
-            .font(MTTypography.caption)
-            .foregroundStyle(MTColor.inkFaint)
-        }
-
-        if !entry.body.trimmed.isEmpty {
-          Text(entry.body)
-            .font(MTTypography.bodyLarge)
-            .foregroundStyle(MTColor.ink)
-            .lineSpacing(4)
-            .textSelection(.enabled)
-        }
-
-        if !entry.collectionNames.isEmpty || !entry.tagNames.isEmpty {
-          VStack(alignment: .leading, spacing: MTSpacing.s2) {
-            Text("ORGANIZATION")
-              .font(MTTypography.label)
-              .tracking(0.7)
-              .foregroundStyle(MTColor.inkFaint)
-
-            organizationPills(entry: entry)
-          }
-        }
-      }
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .padding(MTSpacing.s6)
-    }
-    .background(MTColor.canvas)
-    .navigationTitle("Entry")
-    .navigationBarTitleDisplayMode(.inline)
   }
 }
 

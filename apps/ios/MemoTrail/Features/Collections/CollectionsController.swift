@@ -111,7 +111,7 @@ final class CollectionDetailController {
       try await validateSessionOwner()
       var rows: [CollectionEntry] =
         try await client
-        .rpc("collection_entries", params: request.parameters)
+        .rpc("collection_wiki_items", params: request.parameters)
         .execute()
         .value
 

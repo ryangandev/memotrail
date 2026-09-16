@@ -62,6 +62,10 @@ struct CollectionEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   let body: String
   let entryType: String
   let inboxStatus: String
+  let itemKind: WikiItemKind
+  let itemSubtype: String
+  let recordSource: WikiItemRecordSource
+  let recordID: UUID
   let occurredStart: Date?
   let occurredEnd: Date?
   let datePrecision: String
@@ -83,6 +87,10 @@ struct CollectionEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
     case body
     case entryType = "entry_type"
     case inboxStatus = "inbox_status"
+    case itemKind = "item_kind"
+    case itemSubtype = "item_subtype"
+    case recordSource = "record_source"
+    case recordID = "record_id"
     case occurredStart = "occurred_start"
     case occurredEnd = "occurred_end"
     case datePrecision = "date_precision"
@@ -107,6 +115,16 @@ struct CollectionEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
     body = try values.decode(String.self, forKey: .body)
     entryType = try values.decode(String.self, forKey: .entryType)
     inboxStatus = try values.decode(String.self, forKey: .inboxStatus)
+    let compatibility = Self.compatibilityIdentity(entryType: entryType, inboxStatus: inboxStatus)
+    itemKind =
+      try values.decodeIfPresent(WikiItemKind.self, forKey: .itemKind)
+      ?? compatibility.kind
+    itemSubtype =
+      try values.decodeIfPresent(String.self, forKey: .itemSubtype)?.trimmed.nonEmpty
+      ?? compatibility.subtype
+    recordSource =
+      try values.decodeIfPresent(WikiItemRecordSource.self, forKey: .recordSource) ?? .entry
+    recordID = try values.decodeIfPresent(UUID.self, forKey: .recordID) ?? id
     occurredStart = try values.decodeIfPresent(Date.self, forKey: .occurredStart)
     occurredEnd = try values.decodeIfPresent(Date.self, forKey: .occurredEnd)
     datePrecision = try values.decode(String.self, forKey: .datePrecision)
@@ -150,11 +168,15 @@ struct CollectionEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   }
 
   var displayType: String {
-    SearchEntryType(rawValue: entryType)?.displayName
-      ?? entryType
+    let subtype =
+      itemSubtype
       .split(separator: "_")
       .map { $0.prefix(1).uppercased() + $0.dropFirst() }
       .joined(separator: " ")
+    if itemKind == .capture || subtype == itemKind.displayName {
+      return itemKind.displayName
+    }
+    return "\(itemKind.displayName) · \(subtype)"
   }
 
   var displayDate: String {
@@ -200,6 +222,23 @@ struct CollectionEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
     }
 
     return formatter.string(from: date)
+  }
+
+  private static func compatibilityIdentity(
+    entryType: String,
+    inboxStatus: String
+  ) -> (kind: WikiItemKind, subtype: String) {
+    switch entryType {
+    case "first_time": (.event, "first_time")
+    case "life_stage": (.event, "life_stage")
+    case "home": (.entity, "home")
+    case "vehicle": (.entity, "vehicle")
+    case "goal": (.goal, "goal")
+    default:
+      inboxStatus == "unreviewed"
+        ? (.capture, "quick_capture")
+        : (.writing, "note")
+    }
   }
 }
 
