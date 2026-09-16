@@ -124,6 +124,16 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
 
     const shell = page.getByRole("complementary");
     await expect(shell).toBeVisible();
+    const primaryNavigation = shell.getByRole("navigation", {
+      name: "Primary navigation",
+    });
+    await expect(
+      primaryNavigation.getByRole("link", { name: "Library", exact: true }),
+    ).toBeVisible();
+    await expect(
+      shell.getByText("Focused views", { exact: true }),
+    ).toBeVisible();
+    await expect(shell.getByText("Organize", { exact: true })).toBeVisible();
     await expect(shell.getByRole("button", { name: "New entry" })).toHaveCount(
       0,
     );
