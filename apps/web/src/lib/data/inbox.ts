@@ -127,30 +127,47 @@ export async function loadEntryRichTextMap(
   return values;
 }
 
-export async function getInboxWorkspace(): Promise<InboxWorkspace | null> {
+export async function getInboxWorkspace(
+  focusedEntryId: string | null = null,
+): Promise<InboxWorkspace | null> {
   const context = await getAuthenticatedContext();
 
   if (!context) {
     return null;
   }
 
-  const { data, error } = await context.client
+  const entryColumns =
+    "id,title,body,metadata,entry_type,item_kind,item_subtype,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision";
+  const inboxRequest = context.client
     .from("entries")
-    .select(
-      "id,title,body,metadata,entry_type,item_kind,item_subtype,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision",
-    )
+    .select(entryColumns)
     .eq("owner_id", context.userId)
     .eq("inbox_status", "unreviewed")
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(50)
     .returns<EntryRow[]>();
+  const focusedRequest = focusedEntryId
+    ? context.client
+        .from("entries")
+        .select(entryColumns)
+        .eq("owner_id", context.userId)
+        .eq("id", focusedEntryId)
+        .eq("inbox_status", "unreviewed")
+        .is("deleted_at", null)
+        .limit(1)
+        .returns<EntryRow[]>()
+    : Promise.resolve({ data: [] as EntryRow[], error: null });
+  const [inbox, focused] = await Promise.all([inboxRequest, focusedRequest]);
 
-  if (error) {
+  if (inbox.error || focused.error) {
     return unavailableWorkspace(context.viewer);
   }
 
-  const rows = data ?? [];
+  const rows = [...(focused.data ?? []), ...(inbox.data ?? [])].filter(
+    (entry, index, values) =>
+      values.findIndex((candidate) => candidate.id === entry.id) === index,
+  );
   const entryIds = rows.map((entry) => entry.id);
   const [entryCollections, entryTags, collections, tags] = await Promise.all([
     loadEntryCollections(context, entryIds),

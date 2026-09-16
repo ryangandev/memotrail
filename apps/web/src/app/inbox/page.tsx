@@ -11,14 +11,23 @@ import styles from "../page.module.css";
 
 export const dynamic = "force-dynamic";
 
-export default async function InboxPage() {
-  const workspace = await getInboxWorkspace();
+export default async function InboxPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ entry?: string | string[] }>;
+}) {
+  const parameters = await searchParams;
+  const requestedEntry = Array.isArray(parameters.entry)
+    ? parameters.entry[0]
+    : parameters.entry;
+  const focusedEntryId = validEntryID(requestedEntry) ? requestedEntry : null;
+  const workspace = await getInboxWorkspace(focusedEntryId);
 
   if (!workspace) {
     return null;
   }
 
-  return <Workspace {...workspace} />;
+  return <Workspace {...workspace} focusedEntryId={focusedEntryId} />;
 }
 
 function Workspace({
@@ -27,9 +36,11 @@ function Workspace({
   loadError,
   tagOptions,
   viewer,
+  focusedEntryId,
 }: {
   collectionOptions: string[];
   entries: InboxEntry[];
+  focusedEntryId: string | null;
   loadError: string | null;
   tagOptions: string[];
   viewer: Viewer;
@@ -82,6 +93,8 @@ function Workspace({
           <EntryReviewList
             collectionOptions={collectionOptions}
             entries={entries}
+            initialEntryID={focusedEntryId}
+            key={focusedEntryId ?? "inbox"}
             tagOptions={tagOptions}
           />
         </div>
@@ -100,4 +113,13 @@ function todayLabel() {
 
 function entryCountLabel(count: number) {
   return `${count} ${count === 1 ? "entry" : "entries"}`;
+}
+
+function validEntryID(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      value,
+    )
+  );
 }

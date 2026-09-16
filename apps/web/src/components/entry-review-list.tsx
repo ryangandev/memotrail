@@ -39,13 +39,18 @@ import styles from "@/app/page.module.css";
 export function EntryReviewList({
   collectionOptions,
   entries,
+  initialEntryID = null,
   tagOptions,
 }: {
   collectionOptions: string[];
   entries: InboxEntry[];
+  initialEntryID?: string | null;
   tagOptions: string[];
 }) {
-  const [selectedEntry, setSelectedEntry] = useState<InboxEntry | null>(null);
+  const router = useRouter();
+  const [selectedEntry, setSelectedEntry] = useState<InboxEntry | null>(
+    () => entries.find((entry) => entry.id === initialEntryID) ?? null,
+  );
   // Reflect server-confirmed mutations immediately while router refresh is in
   // flight. Rapid reopening must never submit the previous revision again.
   const [savedReviews, setSavedReviews] = useState<
@@ -110,13 +115,17 @@ export function EntryReviewList({
           entry={selectedEntry}
           key={`${selectedEntry.id}:${selectedEntry.revision}`}
           collectionOptions={collectionOptions}
-          onClose={() => setSelectedEntry(null)}
+          onClose={() => {
+            setSelectedEntry(null);
+            if (initialEntryID) router.replace("/inbox", { scroll: false });
+          }}
           onSaved={(entry, done) => {
             setSavedReviews((current) => ({
               ...current,
               [entry.id]: { entry, done },
             }));
             setSelectedEntry(null);
+            if (initialEntryID) router.replace("/inbox", { scroll: false });
           }}
           tagOptions={tagOptions}
         />

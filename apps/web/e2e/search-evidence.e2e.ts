@@ -128,18 +128,16 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
         "今天学了电打火机使用电弧点燃蜡烛。Electric arcs produce heat.",
       ),
     ).toBeVisible();
-    // The existing history reader is a stable, authenticated source Entry route,
-    // including when an Entry has no previous versions.
+    // Raw Captures return to their exact Inbox review instead of opening a
+    // second generic detail surface.
     await page
       .getByRole("link", { name: "How an electric lighter works" })
       .click();
     await expect(page).toHaveURL(
-      new RegExp(`/history\\?entry=${evidence.data.entries[0].id}$`),
+      new RegExp(`/inbox\\?entry=${evidence.data.entries[0].id}$`),
     );
     await expect(
-      page.getByText(
-        "今天学了电打火机使用电弧点燃蜡烛。Electric arcs produce heat.",
-      ),
+      page.getByRole("dialog", { name: "Organize Entry", exact: true }),
     ).toBeVisible();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });

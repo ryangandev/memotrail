@@ -82,5 +82,13 @@ describe("Life Wiki item classification", () => {
         recordSource: "person",
       }),
     ).toBe("/people?person=30");
+    expect(
+      wikiEntryHref({
+        id: "4",
+        inboxStatus: "unreviewed",
+        itemKind: "capture",
+        itemSubtype: "quick_capture",
+      }),
+    ).toBe("/inbox?entry=4");
   });
 });

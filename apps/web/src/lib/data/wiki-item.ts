@@ -276,7 +276,7 @@ export function wikiEntryHref(item: {
     return `/goals?entry=${item.id}`;
   }
   if (item.itemKind === "capture" && item.inboxStatus === "unreviewed") {
-    return "/inbox";
+    return `/inbox?entry=${item.id}`;
   }
   return `/history?entry=${item.id}`;
 }
