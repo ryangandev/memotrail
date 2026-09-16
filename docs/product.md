@@ -1,6 +1,6 @@
 # MemoTrail Product Contract
 
-Last reviewed: 2026-09-13.
+Last reviewed: 2026-09-15.
 
 ## Product in one minute
 
@@ -24,28 +24,35 @@ The interface is initially English, while Entry content and search support Engli
 
 ## Core information model
 
-`Entry` is the user-facing term for independently searchable content.
-An Entry may have:
+MemoTrail is a Capture First Life Wiki.
+A raw Capture is an Inbox workflow source, not a permanent semantic Type.
+Organizing a Capture may finalize it as one Wiki Item or extract several linked Wiki Items while retaining the source as provenance.
 
-- a title and body;
-- a separate creation time and best-known occurrence;
-- one Type and multiple Collections and tags;
-- original photos and other attachments;
-- links to Places, People, and other Entries;
-- an Inbox or organized state.
+Every durable Wiki Item has one structural Kind:
 
-Specialized Types add structure without creating a separate content silo:
+- Writing records what the user wrote, including Notes, Journals, Reflections, Lessons, and Ideas;
+- Entity records a person, place, or thing in the user's life, including People, Places, Homes, Vehicles, and future optional presets;
+- Event records something that happened, including Memories, First Times, Milestones, Trips, and other point or ranged events;
+- Story organizes a deliberately authored narrative or Chapter without treating every dated record as a story;
+- Goal records an intention and its lifecycle without turning the archive into a task manager.
 
-- Standard Entry, including journal writing, reflections, learning, moods, and Ideas;
-- First Time;
-- Life Stage or Timeline event;
-- Home;
-- Vehicle;
-- Goal.
+A subtype or preset adds structure within one Kind.
+Subtype changes are allowed only when their data remains compatible.
+Kind is an identity boundary, not a flexible label.
+Cross-Kind organization creates and links another Wiki Item instead of mutating an established Writing, Entity, Event, Story, or Goal.
 
-Collections are reusable areas of meaning.
+Home and Vehicle are Entities.
+Their date range describes when they were part of the user's life and does not make them a Chapter.
+A Chapter is an explicitly authored Story that may link Entities, Events, Writings, and Goals.
+A Memory is an Event preset rather than a separate primitive.
+
+Every Wiki Item may have common writing, best-known time, media, Collections, tags, links, history, and retrieval behavior where those capabilities make sense.
+Specialized presets add typed facts without duplicating the common item.
+
+Collections are reusable areas of meaning, not automatically inferred Chapters.
 Tags are granular descriptors.
-People and Places are lightweight reusable records, not contact or location-management systems.
+Timeline is a projection of dated Wiki Items, not a Kind.
+Timeline tracks control presentation and are not semantic Types.
 
 Dates support exact timestamp, day, month, year, age or age range, date range, approximate description, and Unknown.
 The system must preserve the recorded precision and timezone without inventing a calendar anchor.
@@ -67,23 +74,26 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - The composer keeps a recoverable local draft.
 - Offline captures remain visible and retryable until synchronization is confirmed.
 - Voice capture produces editable text and never retains the original audio.
-- Every new free-form Entry enters Inbox, even when AI suggestions are available.
-- AI may suggest title, Type, Collections, tags, date, and photo-derived date or Place context.
+- Every new free-form Capture enters Inbox, even when AI suggestions are available.
+- AI may suggest title, Kind, subtype, Collections, tags, date, and photo-derived date or Place context.
 - Suggestions remain editable and require explicit adoption.
 - AI may propose a Collection but cannot create it without confirmation.
-- The Entry remains in Inbox until the user selects `Done`.
+- The Capture remains in Inbox until the user selects `Done` or completes another explicit organization action.
 - `Done` marks organization complete but never prevents later editing.
+- An unorganized Capture may be finalized as Writing, Event, or Story when its content already represents that one item.
+- Creating an Entity or Goal from a Capture uses its specialized form and links the result to the Capture instead of bypassing required structure.
+- Once a durable Wiki Item exists, cross-Kind actions use Extract, Create and Link, or another explicit workflow instead of a generic Type selector.
 
 Original photos remain private and unchanged.
 Photo metadata may be offered as a date or Place suggestion but is never adopted automatically.
 
 ## Organization, history, and relationships
 
-- An Entry has one Type and may belong to several Collections and tags.
-- Type defines the Entry's structure, while a Timeline track only defines where a generic moment is shown.
-- Collections are curated, browsable chapters that may contain Entries of different Types.
-- Tags are lightweight cross-Type descriptors for filtering and discovery.
-- People and Places are reusable entities linked to Entries, not alternate tags.
+- A Wiki Item has one Kind and subtype and may belong to several Collections and tags.
+- Kind defines the identity boundary, subtype selects compatible structure, and a Timeline track only controls where a dated item is shown.
+- Collections are curated, browsable groupings that may contain Wiki Items of different Kinds.
+- Tags are lightweight cross-Kind descriptors for filtering and discovery.
+- People and Places are reusable Entities linked to other Wiki Items, not alternate tags.
 - Inbox, Timeline, Home, Search, and Library are views or workflow states, not organization labels.
 - Collections and tags are created and managed from separate Library destinations without a second in-page switcher, and remain available in every Entry editor.
 - Collection and tag management opens in viewport-level dialogs. The Tags Library uses compact usage-count badges that open tag management, recent linked Entries, and a path to the complete filtered result set.
@@ -98,8 +108,8 @@ Photo metadata may be offered as a date or Place suggestion but is never adopted
 ## Retrieval and AI
 
 - One search experience supports literal keyword search and an explicit AI question action.
-- Keyword search covers Entries plus standalone People and Places.
-- Entry filters include date, Type, Collection, and tag and do not pretend to apply to unrelated entity kinds.
+- Keyword search covers Wiki Items, including People and Places.
+- Filters include date, Kind, subtype, Collection, and tag and do not pretend to apply where a field is irrelevant.
 - Search results explain matches and open the original source.
 - AI answers are grounded in bounded source evidence and cite the Entries used.
 - The original Entry is never changed by an AI answer.
@@ -111,12 +121,12 @@ Photo metadata may be offered as a date or Place suggestion but is never adopted
 
 ## Timeline and Home
 
-Timeline shows point events and overlapping life periods on customizable tracks.
+Timeline shows dated Wiki Items, including point Events and contextual Entity spans, on customizable tracks.
 The first Timeline visit asks for a private birth date, uses it as the story's starting point, and keeps it editable in Settings.
 Default tracks cover Places, Education, Career, Homes, Vehicles, Relationships, Health, First Times, and Other Events.
 The user can create, order, rename, hide, and restore tracks without deleting content.
-Timeline's global Add moment flow asks for the Entry type before opening details: a generic Moment, Home, Vehicle, or First Time.
-Entry type determines the data model and editor, while Track only determines where a generic Moment appears on Timeline.
+Timeline's global Add moment flow asks what the user is recording before opening the matching Event or Entity editor.
+Kind and subtype determine the data model and editor, while Track only determines presentation.
 The Homes, Vehicles, and First Times track shortcuts open their specialized editors directly; other track shortcuts open the generic Moment editor with that track preselected.
 Opening an existing Home, Vehicle, or First Time from Timeline keeps the user on Timeline and uses the same specialized editor as its Records page.
 Unanchored Age, Approximate, and Unknown moments remain visible without a fabricated calendar position.
@@ -137,13 +147,15 @@ Inbox content, Trash, and Life Stages do not appear as resurfaced memory cards.
 
 ### First Times
 
-A First Time requires only a title and accepts the full date-precision model, optional writing, photos, Place, People, Goal, Collections, tags, and Timeline context.
-It may be created directly or by converting an existing Entry without duplicating content.
+A First Time is an Event preset.
+It requires only a title and accepts the full date-precision model, optional writing, photos, Place, People, Goal, Collections, tags, and Timeline context.
+It may be created directly, finalized from a raw Capture, or extracted and linked from established Writing without changing the Writing's identity.
 
 ### Homes and Vehicles
 
-Homes and Vehicles are personal-history periods with the full date-precision model, optional facts, writing, photos, relationships, and Timeline context.
-An absent end means the chapter is current.
+Homes and Vehicles are Entity presets with the full date-precision model, optional facts, writing, photos, relationships, and Timeline context.
+Their dates describe when the Entity was part of the user's life.
+An absent end means that relationship is current, not that the Entity is automatically a Chapter.
 Duration labels must not imply more precision than the recorded dates.
 Property operations, vehicle maintenance, fuel, expenses, insurance, and document storage are outside the current scope.
 
@@ -152,11 +164,11 @@ Property operations, vehicle maintenance, fuel, expenses, insurance, and documen
 Goals are low-pressure Entries with Short-term, Long-term, or Someday horizons and Considering, Active, Paused, Achieved, or Let Go states.
 They may have a target date, progress notes, and related Entries, but never require a percentage, subtasks, deadlines, overdue warnings, or productivity scores.
 
-Ideas remain Standard Entries until the user explicitly converts one into a Goal.
-Conversion preserves Entry identity, writing, occurrence, photos, organization, links, Inbox state, and restorable history.
+Ideas are Writing until the user explicitly creates a linked Goal from one.
+The Writing remains intact as the source instead of changing its Kind.
 
 Bucket List items are Goals with a stable Collection role and Someday default.
-An explicit achievement action may atomically mark one Achieved and create a linked First Time using the best-known date without copying the Goal writing.
+An explicit achievement action may atomically mark one Achieved and create a linked completion Event using the best-known date without copying the Goal writing.
 
 ### Places and People
 

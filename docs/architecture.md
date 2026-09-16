@@ -45,14 +45,23 @@ Pair it with the test file carrying the same feature name.
 - Supabase Postgres is the canonical synchronized data store.
 - Row Level Security is the final owner-authorization boundary for exposed data.
 - Web cookies and native bearer sessions identify the same Supabase user.
-- Entries are canonical content; specialized tables add facts without duplicating writing.
+- `entries` remains the compatibility name of the canonical Wiki Item table while Web and iOS migrate to the Capture First Life Wiki vocabulary.
+- `entries.item_kind` owns the structural identity boundary: Capture, Writing, Entity, Event, Story, or Goal.
+- `entries.item_subtype` selects a compatible preset within that Kind.
+- `entries.entry_type` is a synchronized compatibility discriminator for older clients and must not become the source of new product semantics.
+- A raw Capture may be finalized as one durable item or may produce linked items through a provenance-preserving extraction.
+- Established durable items never change Kind through a generic selector; cross-Kind workflows create and link another item.
+- Specialized tables add typed facts without duplicating common writing, organization, dates, media, or history.
 - `entries.body` remains canonical plaintext. Optional validated rich content is versioned under `entries.metadata.body_rich`, carries the exact matching plaintext, and is ignored when another client changes the body without updating the rich document.
 - Web capture and Entry review use `components/rich-text-editor.tsx` for the reusable headless editor surface, with page, dialog, and form variants instead of separate editors.
   `components/entry-rich-text-content.tsx` safely renders validated formatting on note surfaces and falls back to canonical plaintext when rich metadata is absent, invalid, or stale.
   Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while `review_entry_with_photo_place_rich` writes plaintext, formatting, organization, occurrence, and photo Place adoption in one revision.
   Older review RPCs preserve rich metadata they do not understand.
-- Collections, tags, People, Places, and Entry links are owner-scoped reusable relationships.
-- Entry Type owns specialized structure, Collections own curated cross-Type chapters, tags own lightweight cross-Type descriptors, and Timeline tracks own only generic moment placement.
+- Collections, tags, People, Places, and Wiki Item links are owner-scoped reusable relationships.
+- Kind owns identity, subtype owns compatible specialized structure, Collections own curated cross-Kind groupings, tags own lightweight cross-Kind descriptors, and Timeline tracks own presentation only.
+- Home and Vehicle are Entity subtypes whose occurrence range describes the user's relationship span.
+- Memory and First Time are Event subtypes.
+- Story or Chapter is explicit authored narrative and is never inferred from an Entity's date range.
 - Web Entry editors reuse `components/entry-organization-editor.tsx`; their save RPC must atomically preserve Collection and tag memberships with the canonical Entry mutation.
 - Used tags merge atomically into another stable tag identity. Only unused tags can be deleted directly.
 - Tag management loads at most five linked Entry previews on demand through a server action, so the Tags page stays lightweight and never creates a per-tag data waterfall during its initial render.

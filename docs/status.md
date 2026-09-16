@@ -1,6 +1,6 @@
 # MemoTrail Status
 
-Last reviewed: 2026-09-14.
+Last reviewed: 2026-09-15.
 
 ## Current state
 
@@ -20,6 +20,7 @@ Use Git history for feature-level implementation and test evidence.
 | Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI    | Implemented; Production AI configuration is not accepted                              |
 | Private media, Entry history, relationships, Trash, and complete export              | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains    |
 | Hosted Supabase contracts                                                            | Deployed to the confirmed MemoTrail project                                           |
+| Capture First Life Wiki information model                                            | Database compatibility migration in progress; Web and iOS adoption not complete       |
 | Backup and restore                                                                   | Not ready                                                                             |
 | Current GitHub CI                                                                    | Blocked before jobs start by account billing or spending limits                       |
 
