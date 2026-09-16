@@ -112,6 +112,19 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto("/library");
     await expect(page.getByRole("heading", { name: "Library" })).toBeVisible();
+    const kinds = page.getByRole("navigation", { name: "Life Wiki Kinds" });
+    await expect(kinds.getByRole("link", { name: /All items/ })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    await expect(kinds.getByRole("link", { name: /Writing/ })).toBeVisible();
+    await expect(kinds.getByRole("link", { name: /Entities/ })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Focused views", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Version history/ }),
+    ).toBeVisible();
     await expect(
       page.getByRole("link", { name: /Writing Reflection Morning reflection/ }),
     ).toBeVisible();
@@ -127,7 +140,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
 
     const filters = page.locator('form:visible:has(select[name="kind"])');
     await filters.locator('select[name="kind"]').selectOption("entity");
-    await filters.getByRole("button", { name: "Browse" }).click();
+    await filters.getByRole("button", { name: "Apply" }).click();
     await expect(page).toHaveURL(/kind=entity/);
     await expect(
       page.getByRole("link", { name: /Entity Person Avery/ }),
@@ -141,7 +154,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
 
     await filters.locator('select[name="kind"]').selectOption("");
     await filters.locator('input[name="q"]').fill("marina");
-    await filters.getByRole("button", { name: "Browse" }).click();
+    await filters.getByRole("button", { name: "Apply" }).click();
     await expect(
       page.getByRole("link", { name: /Entity Person Avery/ }),
     ).toBeVisible();

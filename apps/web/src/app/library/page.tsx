@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Icon } from "@/components/icon";
+import { Icon, type IconName } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import {
   isWikiItemKind,
@@ -15,62 +15,63 @@ import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
 
-const availableDestinations = [
+type LibraryDestination = {
+  detail: string;
+  href: string;
+  icon: IconName;
+  title: string;
+};
+
+const kindDestinations: Array<{
+  detail: string;
+  icon: IconName;
+  kind: "entity" | "event" | "goal" | "story" | "writing" | null;
+  title: string;
+}> = [
   {
-    detail:
-      "Keep a complete portable copy, including history and original photos.",
-    href: "/settings/export",
+    detail: "Everything you have chosen to keep.",
     icon: "archive" as const,
-    title: "Export archive",
+    kind: null,
+    title: "All items",
   },
   {
-    detail: "Inspect earlier writing and safely restore versions.",
-    href: "/history",
+    detail: "Notes, journals, reflections, lessons, and ideas.",
+    icon: "bold" as const,
+    kind: "writing",
+    title: "Writing",
+  },
+  {
+    detail: "Memories, first times, milestones, trips, and moments.",
+    icon: "timeline" as const,
+    kind: "event",
+    title: "Events",
+  },
+  {
+    detail: "People, places, homes, vehicles, and other life facts.",
     icon: "archive" as const,
-    title: "Entry history",
+    kind: "entity",
+    title: "Entities",
   },
   {
-    detail: "Control optional AI assistance, privacy, and spending.",
-    href: "/settings/ai",
-    icon: "sparkle" as const,
-    title: "AI settings",
+    detail: "Chapters and narratives you deliberately author.",
+    icon: "star" as const,
+    kind: "story",
+    title: "Stories",
   },
   {
-    detail: "Connect the people who shaped your story.",
+    detail: "Intentions you may pursue without task-list pressure.",
+    icon: "target" as const,
+    kind: "goal",
+    title: "Goals",
+  },
+];
+
+const focusedDestinations: LibraryDestination[] = [
+  {
+    detail: "Connect the people who shaped your life.",
     href: "/people",
     icon: "archive" as const,
     title: "People",
-  },
-  {
-    detail: "Browse the themes that connect your Entries.",
-    href: "/collections",
-    icon: "archive" as const,
-    title: "Collections",
-  },
-  {
-    detail: "Filter every kind of Entry with lightweight shared descriptors.",
-    href: "/tags",
-    icon: "tag" as const,
-    title: "Tags",
-  },
-  {
-    detail: "Revisit the experiences you tried, saw, or learned first.",
-    href: "/first-times",
-    icon: "star" as const,
-    title: "First Times",
-  },
-  {
-    detail:
-      "Revisit the locations connected to your writing, events, and Homes.",
-    href: "/places",
-    icon: "map" as const,
-    title: "Places",
-  },
-  {
-    detail: "Restore removed items or permanently clear them.",
-    href: "/trash",
-    icon: "trash" as const,
-    title: "Trash",
   },
   {
     detail: "Remember every place you called home and when it was yours.",
@@ -85,6 +86,19 @@ const availableDestinations = [
     title: "Vehicles",
   },
   {
+    detail:
+      "Revisit the locations connected to your writing, events, and homes.",
+    href: "/places",
+    icon: "map" as const,
+    title: "Places",
+  },
+  {
+    detail: "Revisit the experiences you tried, saw, or learned first.",
+    href: "/first-times",
+    icon: "star" as const,
+    title: "First Times",
+  },
+  {
     detail: "Keep active plans, distant hopes, and someday ideas close.",
     href: "/goals",
     icon: "target" as const,
@@ -92,7 +106,41 @@ const availableDestinations = [
   },
 ];
 
-const plannedDestinations: string[] = [];
+const organizationDestinations: LibraryDestination[] = [
+  {
+    detail: "Curate items from different Kinds into meaningful groups.",
+    href: "/collections",
+    icon: "archive" as const,
+    title: "Collections",
+  },
+  {
+    detail: "Use lightweight descriptors to reconnect related items.",
+    href: "/tags",
+    icon: "tag" as const,
+    title: "Tags",
+  },
+];
+
+const archiveDestinations: LibraryDestination[] = [
+  {
+    detail: "Inspect earlier versions and restore one without losing today.",
+    href: "/history",
+    icon: "clock" as const,
+    title: "Version history",
+  },
+  {
+    detail: "Restore removed items or permanently clear them.",
+    href: "/trash",
+    icon: "trash" as const,
+    title: "Trash",
+  },
+  {
+    detail: "Keep a portable copy with history and original photos.",
+    href: "/settings/export",
+    icon: "archive" as const,
+    title: "Export archive",
+  },
+];
 
 export default async function LibraryPage({
   searchParams,
@@ -113,19 +161,48 @@ export default async function LibraryPage({
   const totalCount = workspace.items[0]?.totalCount ?? 0;
 
   return (
-    <PageFrame className={styles.content} variant="compact">
+    <PageFrame className={styles.content} variant="standard">
       <header className={styles.header}>
-        <p>Your personal archive</p>
+        <p>Your Life Wiki</p>
         <h1>Library</h1>
         <span>
-          Browse the Writings, Entities, Events, Stories, and Goals that make up
-          your Life Wiki.
+          One place for the writing, people, places, moments, stories, and goals
+          that make up your life.
         </span>
       </header>
 
+      <section aria-labelledby="kinds-heading">
+        <div className={styles.sectionHeading}>
+          <h2 id="kinds-heading">Browse by Kind</h2>
+          <span>What each item is</span>
+        </div>
+        <nav className={styles.kindGrid} aria-label="Life Wiki Kinds">
+          {kindDestinations.map((destination) => (
+            <Link
+              aria-current={
+                destination.kind === itemKind ||
+                (!destination.kind && !itemKind)
+                  ? "page"
+                  : undefined
+              }
+              href={libraryPageHref(query, destination.kind, 1)}
+              key={destination.title}
+            >
+              <span>
+                <Icon name={destination.icon} size={18} />
+              </span>
+              <strong>{destination.title}</strong>
+              <p>{destination.detail}</p>
+            </Link>
+          ))}
+        </nav>
+      </section>
+
       <section aria-labelledby="all-items-heading">
         <div className={styles.sectionHeading}>
-          <h2 id="all-items-heading">All items</h2>
+          <h2 id="all-items-heading">
+            {itemKind ? wikiItemKindLabel(itemKind) : "All items"}
+          </h2>
           <span>
             {totalCount} {totalCount === 1 ? "item" : "items"}
           </span>
@@ -144,16 +221,16 @@ export default async function LibraryPage({
           <label>
             <span>Kind</span>
             <select defaultValue={itemKind ?? ""} name="kind">
-              <option value="">All Kinds</option>
-              <option value="capture">Captures</option>
+              <option value="">All kinds</option>
               <option value="writing">Writing</option>
               <option value="entity">Entities</option>
               <option value="event">Events</option>
               <option value="story">Stories</option>
               <option value="goal">Goals</option>
+              <option value="capture">Source captures</option>
             </select>
           </label>
-          <button type="submit">Browse</button>
+          <button type="submit">Apply</button>
         </form>
 
         {workspace.error ? (
@@ -203,44 +280,55 @@ export default async function LibraryPage({
         </nav>
       </section>
 
-      <section aria-labelledby="available-library-heading">
+      <section aria-labelledby="focused-library-heading">
         <div className={styles.sectionHeading}>
-          <h2 id="available-library-heading">Browse by structure</h2>
-          <span>Focused records and archive tools</span>
+          <h2 id="focused-library-heading">Focused views</h2>
+          <span>Structured parts of your life</span>
         </div>
-        <div className={styles.availableGrid}>
-          {availableDestinations.map((destination) => (
-            <Link href={destination.href} key={destination.href}>
-              <span>
-                <Icon name={destination.icon} size={20} />
-              </span>
-              <div>
-                <strong>{destination.title}</strong>
-                <p>{destination.detail}</p>
-              </div>
-              <Icon name="chevron" size={15} />
-            </Link>
-          ))}
-        </div>
+        <DestinationGrid destinations={focusedDestinations} />
       </section>
 
-      {plannedDestinations.length > 0 ? (
-        <section aria-labelledby="planned-library-heading">
+      <div className={styles.libraryUtilities}>
+        <section aria-labelledby="organize-library-heading">
           <div className={styles.sectionHeading}>
-            <h2 id="planned-library-heading">Planned archives</h2>
-            <span>Built from the same Entry model</span>
+            <h2 id="organize-library-heading">Organize</h2>
+            <span>Across every Kind</span>
           </div>
-          <div className={styles.plannedGrid}>
-            {plannedDestinations.map((destination) => (
-              <article key={destination}>
-                <span>{destination}</span>
-                <small>Planned</small>
-              </article>
-            ))}
-          </div>
+          <DestinationGrid destinations={organizationDestinations} />
         </section>
-      ) : null}
+
+        <section aria-labelledby="archive-library-heading">
+          <div className={styles.sectionHeading}>
+            <h2 id="archive-library-heading">Archive tools</h2>
+            <span>History, recovery, and export</span>
+          </div>
+          <DestinationGrid destinations={archiveDestinations} />
+        </section>
+      </div>
     </PageFrame>
+  );
+}
+
+function DestinationGrid({
+  destinations,
+}: {
+  destinations: LibraryDestination[];
+}) {
+  return (
+    <div className={styles.destinationGrid}>
+      {destinations.map((destination) => (
+        <Link href={destination.href} key={destination.href}>
+          <span>
+            <Icon name={destination.icon} size={19} />
+          </span>
+          <div>
+            <strong>{destination.title}</strong>
+            <p>{destination.detail}</p>
+          </div>
+          <Icon name="chevron" size={14} />
+        </Link>
+      ))}
+    </div>
   );
 }
 

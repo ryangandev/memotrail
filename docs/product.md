@@ -95,7 +95,8 @@ Photo metadata may be offered as a date or Place suggestion but is never adopted
 - Tags are lightweight cross-Kind descriptors for filtering and discovery.
 - People and Places are reusable Entities linked to other Wiki Items, not alternate tags.
 - Inbox, Timeline, Home, Search, and Library are views or workflow states, not organization labels.
-- Library is the primary all-items entry point for the Life Wiki. It browses every Kind together, supports Kind and keyword filters, and links into each preset's appropriate editor or detail surface.
+- Library is the primary all-items entry point for the Life Wiki.
+  It presents Writing, Events, Entities, Stories, and Goals as the main browsing lenses, keeps source Captures available as provenance rather than a peer content choice, supports Kind and keyword filters, and links each preset to its appropriate editor or detail surface.
 - Collections and tags are created and managed from separate Library destinations without a second in-page switcher, and remain available in every compatible Wiki Item editor.
 - Collection and tag management opens in viewport-level dialogs. The Tags Library uses compact usage-count badges that open tag management, recent linked Entries, and a path to the complete filtered result set.
 - Renaming a Collection or tag preserves its identity and linked Wiki Items.

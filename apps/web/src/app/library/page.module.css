@@ -215,14 +215,78 @@
   color: var(--mt-color-accent);
 }
 
-.availableGrid {
+.kindGrid {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--mt-space-3);
 }
 
-.availableGrid > a {
+.kindGrid > a {
+  display: grid;
+  min-height: 142px;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr;
+  align-content: start;
+  gap: var(--mt-space-2) var(--mt-space-3);
+  padding: var(--mt-space-4);
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-large);
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-raised);
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.kindGrid > a:hover {
+  border-color: var(--mt-color-border-strong);
+  transform: translateY(-1px);
+}
+
+.kindGrid > a[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--mt-color-accent) 44%, transparent);
+  background: var(--mt-color-accent-subtle);
+}
+
+.kindGrid > a > span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  grid-row: 1 / span 2;
+  place-items: center;
+  border-radius: var(--mt-radius-small);
+  color: var(--mt-color-accent);
+  background: var(--mt-color-surface-subtle);
+}
+
+.kindGrid > a[aria-current="page"] > span {
+  background: var(--mt-color-surface-raised);
+}
+
+.kindGrid strong {
+  align-self: center;
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-title-small);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.kindGrid p {
+  grid-column: 2;
+  color: var(--mt-color-ink-faint);
+  font-size: var(--mt-font-size-caption);
+  line-height: var(--mt-line-height-body);
+}
+
+.destinationGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mt-space-3);
+}
+
+.destinationGrid > a {
   display: flex;
-  min-height: 92px;
+  min-height: 96px;
   align-items: center;
   gap: var(--mt-space-4);
   padding: var(--mt-space-4) var(--mt-space-5);
@@ -233,15 +297,15 @@
   text-decoration: none;
 }
 
-.availableGrid > a:hover {
+.destinationGrid > a:hover {
   border-color: var(--mt-color-border-strong);
   background: var(--mt-color-surface-subtle);
 }
 
-.availableGrid > a > span {
+.destinationGrid > a > span {
   display: grid;
-  width: 46px;
-  height: 46px;
+  width: 42px;
+  height: 42px;
   flex: 0 0 auto;
   place-items: center;
   border-radius: var(--mt-radius-medium);
@@ -249,62 +313,43 @@
   background: var(--mt-color-accent-subtle);
 }
 
-.availableGrid > a > div {
+.destinationGrid > a > div {
+  min-width: 0;
   flex: 1;
 }
 
-.availableGrid strong {
+.destinationGrid strong {
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-title-small);
   font-weight: var(--mt-font-weight-medium);
 }
 
-.availableGrid p {
+.destinationGrid p {
   margin-top: 4px;
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
+  line-height: var(--mt-line-height-body);
 }
 
-.plannedGrid {
+.libraryUtilities {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  overflow: hidden;
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mt-space-8);
+  margin-top: var(--mt-space-10);
 }
 
-.plannedGrid article {
-  display: grid;
-  gap: 4px;
-  padding: var(--mt-space-4);
-  border-right: 1px solid var(--mt-color-border);
+.libraryUtilities section {
+  min-width: 0;
+  margin-top: 0;
 }
 
-.plannedGrid article:last-child {
-  border-right: 0;
-}
-
-.plannedGrid span {
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-label);
-}
-
-.plannedGrid small {
-  color: var(--mt-color-warm);
-  font-size: 9px;
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.libraryUtilities .destinationGrid {
+  grid-template-columns: 1fr;
 }
 
 @media (max-width: 720px) {
   .header h1 {
     font-size: 36px;
-  }
-
-  .plannedGrid {
-    grid-template-columns: 1fr 1fr;
   }
 
   .wikiFilters {
@@ -319,16 +364,14 @@
     grid-template-columns: 1fr;
   }
 
-  .plannedGrid article {
-    border-bottom: 1px solid var(--mt-color-border);
+  .kindGrid,
+  .destinationGrid,
+  .libraryUtilities {
+    grid-template-columns: 1fr;
   }
 
-  .plannedGrid article:nth-child(2n) {
-    border-right: 0;
-  }
-
-  .plannedGrid article:last-child {
-    border-bottom: 0;
+  .kindGrid > a {
+    min-height: 112px;
   }
 }
 
