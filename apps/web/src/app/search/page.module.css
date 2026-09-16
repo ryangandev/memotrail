@@ -456,11 +456,6 @@
   font-size: var(--mt-font-size-caption);
 }
 
-.libraryPagination {
-  display: flex;
-  flex-wrap: wrap;
-}
-
 .visuallyHidden {
   position: absolute;
   width: 1px;

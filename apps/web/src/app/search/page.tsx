@@ -7,9 +7,7 @@ import Link from "next/link";
 import { EntryRichTextContent } from "@/components/entry-rich-text-content";
 import { Icon } from "@/components/icon";
 import { AISearchForm } from "@/components/ai-search-form";
-import { LibrarySearchResults } from "@/components/library-search-results";
 import { PageFrame } from "@/components/page-frame";
-import { librarySearchPage } from "@/lib/data/library-search";
 import {
   SEARCH_PAGE_SIZE,
   parseSearchRequest,
@@ -34,8 +32,7 @@ export default async function SearchPage({
 }) {
   const parameters = await searchParams;
   const parsed = parseSearchRequest(parameters);
-  const libraryPage = librarySearchPage(parameters.libraryPage);
-  const workspace = await getSearchWorkspace(parsed, libraryPage);
+  const workspace = await getSearchWorkspace(parsed);
 
   if (!workspace) {
     return null;
@@ -71,16 +68,9 @@ export default async function SearchPage({
           <>
             <SearchResults
               entries={entries}
-              hasLibraryMatches={Boolean(workspace.library?.items.length)}
               loadError={loadError}
               request={request}
               totalCount={totalCount}
-            />
-            <LibrarySearchResults
-              request={request}
-              result={workspace.library}
-              error={workspace.libraryError}
-              page={libraryPage}
             />
           </>
         }
@@ -222,13 +212,11 @@ export default async function SearchPage({
 
 function SearchResults({
   entries,
-  hasLibraryMatches,
   loadError,
   request,
   totalCount,
 }: {
   entries: SearchEntry[];
-  hasLibraryMatches: boolean;
   loadError: string | null;
   request: SearchRequest;
   totalCount: number;
@@ -261,7 +249,6 @@ function SearchResults({
   }
 
   if (entries.length === 0) {
-    if (hasLibraryMatches) return null;
     return (
       <div className={styles.message}>
         <Icon name="search" size={23} />

@@ -13,6 +13,7 @@ export type WikiItemSummary = {
   itemSubtype: string;
   occurredEnd: string | null;
   occurredStart: string | null;
+  recordId: string;
   recordSource: "entry" | "person" | "place";
   title: string;
   totalCount: number;
@@ -20,6 +21,7 @@ export type WikiItemSummary = {
 };
 
 type WikiItemRow = {
+  canonical_item_id: string;
   excerpt: string;
   inbox_status: "organized" | "unreviewed";
   item_id: string;
@@ -66,12 +68,13 @@ export function parseWikiItemRows(value: unknown): WikiItemSummary[] | null {
     if (!isWikiItemRow(candidate)) return null;
     items.push({
       excerpt: candidate.excerpt,
-      id: candidate.item_id,
+      id: candidate.canonical_item_id,
       inboxStatus: candidate.inbox_status,
       itemKind: candidate.item_kind,
       itemSubtype: candidate.item_subtype,
       occurredEnd: candidate.occurred_end,
       occurredStart: candidate.occurred_start,
+      recordId: candidate.item_id,
       recordSource: candidate.record_source,
       title: candidate.title,
       totalCount: Number(candidate.total_count),
@@ -82,12 +85,6 @@ export function parseWikiItemRows(value: unknown): WikiItemSummary[] | null {
 }
 
 export function wikiItemHref(item: WikiItemSummary) {
-  if (item.recordSource === "person") {
-    return `/people?person=${item.id}`;
-  }
-  if (item.recordSource === "place") {
-    return `/places?place=${item.id}`;
-  }
   return wikiEntryHref(item);
 }
 
@@ -100,6 +97,7 @@ function isWikiItemRow(value: unknown): value is WikiItemRow {
   if (!value || typeof value !== "object") return false;
   const row = value as Partial<WikiItemRow>;
   return (
+    typeof row.canonical_item_id === "string" &&
     typeof row.item_id === "string" &&
     ["entry", "person", "place"].includes(String(row.record_source)) &&
     isWikiItemKind(row.item_kind) &&

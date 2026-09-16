@@ -247,7 +247,25 @@ export function wikiEntryHref(item: {
   inboxStatus: "organized" | "unreviewed";
   itemKind: WikiItemKind;
   itemSubtype: string;
+  recordId?: string;
+  recordSource?: "entry" | "person" | "place";
 }) {
+  if (
+    item.itemKind === "entity" &&
+    item.itemSubtype === "person" &&
+    item.recordSource === "person" &&
+    item.recordId
+  ) {
+    return `/people?person=${item.recordId}`;
+  }
+  if (
+    item.itemKind === "entity" &&
+    item.itemSubtype === "place" &&
+    item.recordSource === "place" &&
+    item.recordId
+  ) {
+    return `/places?place=${item.recordId}`;
+  }
   if (item.itemKind === "entity" && item.itemSubtype === "home") {
     return `/homes?entry=${item.id}`;
   }

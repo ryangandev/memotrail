@@ -1,13 +1,5 @@
 import "server-only";
 import {
-  hasLibrarySearchScope,
-  libraryKindsForSearch,
-  libraryItemHref,
-  librarySearchPageSize,
-  parseLibrarySearch,
-  type LibrarySearchResult,
-} from "./library-search";
-import {
   occurrenceLabel,
   occurrencePrecisions,
   validTimezone,
@@ -50,14 +42,14 @@ export type SearchEntry = {
   datePrecision: OccurrencePrecision;
   occurredLabel: string | null;
   occurredTimezone: string | null;
+  recordId: string;
+  recordSource: "entry" | "person" | "place";
   tagNames: string[];
   title: string | null;
   updatedAt: string;
 };
 
 export type SearchWorkspace = {
-  library: LibrarySearchResult | null;
-  libraryError: string | null;
   collectionOptions: string[];
   entries: SearchEntry[];
   filtersError: string | null;
@@ -94,6 +86,8 @@ type NameRow = {
 type ItemIdentity = {
   itemKind: WikiItemKind;
   itemSubtype: string;
+  recordId: string;
+  recordSource: "entry" | "person" | "place";
 };
 
 type ItemIdentityRow = {
@@ -102,9 +96,13 @@ type ItemIdentityRow = {
   item_subtype: string;
 };
 
+type SpecializedIdentityRow = {
+  entry_id: string;
+  id: string;
+};
+
 export async function getSearchWorkspace(
   parsed: ParsedSearchRequest,
-  libraryPage = 1,
 ): Promise<SearchWorkspace | null> {
   const context = await getAuthenticatedContext();
 
@@ -113,9 +111,6 @@ export async function getSearchWorkspace(
   }
 
   const shouldSearch = parsed.request.hasCriteria && !parsed.error;
-  const shouldSearchLibrary =
-    shouldSearch && hasLibrarySearchScope(parsed.request);
-  const libraryKinds = libraryKindsForSearch(parsed.request);
   const searchRequest = shouldSearch
     ? context.client.rpc("search_entries_with_occurrence", {
         p_collection_names: parsed.request.collectionNames,
@@ -129,7 +124,7 @@ export async function getSearchWorkspace(
       })
     : Promise.resolve({ data: [] as SearchRow[], error: null });
 
-  const [search, collections, tags, inbox, librarySearch] = await Promise.all([
+  const [search, collections, tags, inbox] = await Promise.all([
     searchRequest,
     context.client
       .from("collections")
@@ -150,14 +145,6 @@ export async function getSearchWorkspace(
       .eq("owner_id", context.userId)
       .eq("inbox_status", "unreviewed")
       .is("deleted_at", null),
-    shouldSearchLibrary
-      ? context.client.rpc("search_library_entities", {
-          p_query: parsed.request.query,
-          p_limit: librarySearchPageSize,
-          p_offset: (libraryPage - 1) * librarySearchPageSize,
-          p_kinds: libraryKinds,
-        })
-      : Promise.resolve({ data: null, error: null }),
   ]);
 
   const parsedRows = search.error ? [] : searchRows(search.data);
@@ -173,12 +160,6 @@ export async function getSearchWorkspace(
   const filtersUnavailable = collections.error || tags.error;
 
   return {
-    library: parseLibrarySearch(librarySearch.data),
-    libraryError:
-      shouldSearchLibrary &&
-      (librarySearch.error || !parseLibrarySearch(librarySearch.data))
-        ? "Could not search People and Places. Refresh to try again."
-        : null,
     collectionOptions: collections.error
       ? []
       : (collections.data ?? []).map((collection) => collection.name),
@@ -216,54 +197,32 @@ export async function getQuickSearchResults(
   const normalizedQuery = query.trim().slice(0, 200);
   if (!normalizedQuery) return { error: null, items: [] };
 
-  const [entrySearch, librarySearch] = await Promise.all([
-    context.client.rpc("search_entries_with_occurrence", {
+  const entrySearch = await context.client.rpc(
+    "search_entries_with_occurrence",
+    {
       p_collection_names: [],
       p_date_from: null,
       p_date_to: null,
       p_entry_types: [],
-      p_limit: 6,
+      p_limit: 8,
       p_offset: 0,
       p_query: normalizedQuery,
       p_tag_names: [],
-    }),
-    context.client.rpc("search_library_entities", {
-      p_query: normalizedQuery,
-      p_limit: 4,
-      p_offset: 0,
-      p_kinds: ["person", "place"],
-    }),
-  ]);
+    },
+  );
 
   const entryRows = entrySearch.error ? null : searchRows(entrySearch.data);
-  const libraryRows = librarySearch.error
-    ? null
-    : parseLibrarySearch(librarySearch.data);
   const identityByEntry = entryRows
     ? await loadEntryIdentityMap(context, entryRows)
     : new Map<string, ItemIdentity>();
-  const items = [
-    ...(entryRows ?? []).map((row) =>
-      quickEntryItem(row, identityByEntry.get(row.entry_id)),
-    ),
-    ...(libraryRows?.items ?? []).map((item): QuickSearchItem => ({
-      href: libraryItemHref(item),
-      id: item.id,
-      kind: item.kind,
-      label: item.kind === "person" ? "Person" : "Place",
-      subtitle: compactText(item.excerpt) || "Saved in your Library",
-      title: item.name,
-    })),
-  ].slice(0, 8);
-  const partialFailure = !entryRows || !libraryRows;
+  const items = (entryRows ?? [])
+    .map((row) => quickEntryItem(row, identityByEntry.get(row.entry_id)))
+    .slice(0, 8);
 
   return {
-    error:
-      partialFailure && items.length === 0
-        ? "MemoTrail could not search your archive. Try again."
-        : partialFailure
-          ? "Some archive results are temporarily unavailable."
-          : null,
+    error: entryRows
+      ? null
+      : "MemoTrail could not search your archive. Try again.",
     items,
   };
 }
@@ -314,7 +273,7 @@ export async function getTagEntryPreviews(
 
 function quickEntryItem(
   row: SearchRow,
-  identity = identityFromSearchRow(row),
+  identity: ItemIdentity = identityFromSearchRow(row),
 ): QuickSearchItem {
   const title =
     stringValue(row.title) ?? firstUsefulLine(row.body) ?? "Untitled Entry";
@@ -326,7 +285,7 @@ function quickEntryItem(
       ...identity,
     }),
     id: row.entry_id,
-    kind: "entry",
+    kind: identity.recordSource,
     label: wikiItemIdentityLabel(identity.itemKind, identity.itemSubtype),
     subtitle: compactText(row.body) || "Saved Entry",
     title,
@@ -335,7 +294,7 @@ function quickEntryItem(
 
 function tagEntryPreview(
   row: SearchRow,
-  identity = identityFromSearchRow(row),
+  identity: ItemIdentity = identityFromSearchRow(row),
 ): TagEntryPreview {
   return {
     date: occurrenceLabel({
@@ -374,7 +333,7 @@ function firstUsefulLine(value: string) {
 function entryFromRow(
   row: SearchRow,
   bodyRich: EntryRichText | null = null,
-  identity = identityFromSearchRow(row),
+  identity: ItemIdentity = identityFromSearchRow(row),
 ): SearchEntry {
   return {
     body: row.body,
@@ -390,6 +349,8 @@ function entryFromRow(
     datePrecision: row.date_precision,
     occurredLabel: stringValue(row.occurred_label),
     occurredTimezone: stringValue(row.occurred_timezone),
+    recordId: identity.recordId,
+    recordSource: identity.recordSource,
     tagNames: strings(row.tag_names),
     title: stringValue(row.title),
     updatedAt: row.updated_at,
@@ -419,13 +380,69 @@ async function loadEntryIdentityMap(
     identities.set(row.id, {
       itemKind: row.item_kind,
       itemSubtype: row.item_subtype,
+      recordId: row.id,
+      recordSource: "entry",
     });
+  }
+
+  const personEntryIds = (data ?? [])
+    .filter(
+      (row) => row.item_kind === "entity" && row.item_subtype === "person",
+    )
+    .map((row) => row.id);
+  const placeEntryIds = (data ?? [])
+    .filter((row) => row.item_kind === "entity" && row.item_subtype === "place")
+    .map((row) => row.id);
+  const [people, places] = await Promise.all([
+    personEntryIds.length
+      ? context.client
+          .from("people")
+          .select("id,entry_id")
+          .eq("owner_id", context.userId)
+          .in("entry_id", personEntryIds)
+          .returns<SpecializedIdentityRow[]>()
+      : Promise.resolve({ data: [] as SpecializedIdentityRow[], error: null }),
+    placeEntryIds.length
+      ? context.client
+          .from("places")
+          .select("id,entry_id")
+          .eq("owner_id", context.userId)
+          .in("entry_id", placeEntryIds)
+          .returns<SpecializedIdentityRow[]>()
+      : Promise.resolve({ data: [] as SpecializedIdentityRow[], error: null }),
+  ]);
+
+  if (!people.error) {
+    for (const row of people.data ?? []) {
+      const identity = identities.get(row.entry_id);
+      if (!identity) continue;
+      identities.set(row.entry_id, {
+        ...identity,
+        recordId: row.id,
+        recordSource: "person",
+      });
+    }
+  }
+  if (!places.error) {
+    for (const row of places.data ?? []) {
+      const identity = identities.get(row.entry_id);
+      if (!identity) continue;
+      identities.set(row.entry_id, {
+        ...identity,
+        recordId: row.id,
+        recordSource: "place",
+      });
+    }
   }
   return identities;
 }
 
-function identityFromSearchRow(row: SearchRow) {
-  return wikiItemIdentityFromLegacy(row.entry_type, row.inbox_status);
+function identityFromSearchRow(row: SearchRow): ItemIdentity {
+  return {
+    ...wikiItemIdentityFromLegacy(row.entry_type, row.inbox_status),
+    recordId: row.entry_id,
+    recordSource: "entry" as const,
+  };
 }
 
 function countFromRows(rows: SearchRow[]) {

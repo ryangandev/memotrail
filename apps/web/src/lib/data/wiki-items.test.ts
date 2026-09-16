@@ -6,6 +6,7 @@ vi.mock("./inbox", () => ({ getAuthenticatedContext: vi.fn() }));
 import { parseWikiItemRows, wikiItemHref, wikiItemsPage } from "./wiki-items";
 
 const item = {
+  canonical_item_id: "40000000-0000-4000-8000-000000000001",
   excerpt: "A reflection",
   inbox_status: "organized",
   item_id: "40000000-0000-4000-8000-000000000001",
@@ -25,6 +26,7 @@ describe("Life Wiki workspace data", () => {
       expect.objectContaining({
         itemKind: "writing",
         itemSubtype: "reflection",
+        recordId: item.item_id,
         recordSource: "entry",
         totalCount: 3,
       }),
@@ -32,6 +34,9 @@ describe("Life Wiki workspace data", () => {
   });
 
   it("rejects malformed semantic identity", () => {
+    expect(
+      parseWikiItemRows([{ ...item, canonical_item_id: null }]),
+    ).toBeNull();
     expect(parseWikiItemRows([{ ...item, item_kind: "entry" }])).toBeNull();
     expect(parseWikiItemRows([{ ...item, total_count: "many" }])).toBeNull();
   });
@@ -51,9 +56,10 @@ describe("Life Wiki workspace data", () => {
         ...parsed,
         itemKind: "entity",
         itemSubtype: "person",
+        recordId: "40000000-0000-4000-8000-000000000002",
         recordSource: "person",
       }),
-    ).toBe(`/people?person=${parsed.id}`);
+    ).toBe("/people?person=40000000-0000-4000-8000-000000000002");
   });
 
   it("bounds pagination", () => {
