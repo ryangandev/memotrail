@@ -78,8 +78,8 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - AI may suggest title, Kind, subtype, Collections, tags, date, and photo-derived date or Place context.
 - Suggestions remain editable and require explicit adoption.
 - AI may propose a Collection but cannot create it without confirmation.
-- The Capture remains in Inbox until the user selects `Done` or completes another explicit organization action.
-- `Done` marks organization complete but never prevents later editing.
+- The Capture remains in Inbox until the user selects `Save to Library` or completes another explicit organization action.
+- `Save to Library` marks organization complete but never prevents later editing.
 - An unorganized Capture may be finalized as Writing, Event, or Story when its content already represents that one item.
 - Creating an Entity or Goal from a Capture uses its specialized form and links the result to the Capture instead of bypassing required structure.
 - Once a durable Wiki Item exists, cross-Kind actions use Extract, Create and Link, or another explicit workflow instead of a generic Type selector.

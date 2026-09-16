@@ -124,7 +124,7 @@ test("Organized Entries stay editable without returning to Inbox", async ({
       .click({ timeout: 5000 });
     const dialog = page.getByRole("dialog");
     await expect(
-      dialog.getByRole("button", { name: "Done", exact: true }),
+      dialog.getByRole("button", { name: "Save to Library", exact: true }),
     ).toHaveCount(0);
     await expect(
       dialog.getByRole("complementary", { name: "AI suggestions" }),

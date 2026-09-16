@@ -85,10 +85,10 @@ test("Inbox Capture creates a linked Vehicle through the specialized form", asyn
     const card = page.locator("article").filter({
       has: page.getByRole("heading", { name: "My first EV" }),
     });
-    await card.getByRole("button", { name: "Review", exact: true }).click();
+    await card.getByRole("button", { name: "Organize", exact: true }).click();
     await page
-      .getByRole("dialog", { name: "Organize Entry" })
-      .getByRole("link", { name: "Create a Vehicle" })
+      .getByRole("dialog", { name: "Organize Capture" })
+      .getByRole("link", { name: "Vehicle", exact: true })
       .click();
 
     await expect(page).toHaveURL(

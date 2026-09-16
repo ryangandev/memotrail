@@ -55,7 +55,7 @@ function Workspace({
         </div>
         <a className={styles.newEntryButton} href="#capture-title">
           <Icon name="plus" />
-          <span>New entry</span>
+          <span>Quick capture</span>
         </a>
       </header>
 
@@ -64,8 +64,8 @@ function Workspace({
       <section className={styles.entrySection} aria-labelledby="recent-heading">
         <div className={styles.sectionHeader}>
           <div>
-            <h2 id="recent-heading">Unsorted</h2>
-            <span>{entryCountLabel(entries.length)}</span>
+            <h2 id="recent-heading">Ready to organize</h2>
+            <span>{captureCountLabel(entries.length)}</span>
           </div>
         </div>
 
@@ -85,7 +85,7 @@ function Workspace({
               <Icon name="inbox" size={22} />
               <div>
                 <strong>Your Inbox is ready</strong>
-                <p>Save a thought above and it will appear here.</p>
+                <p>New captures will wait here until you give them a place.</p>
               </div>
             </div>
           ) : null}
@@ -111,8 +111,8 @@ function todayLabel() {
   }).format(new Date());
 }
 
-function entryCountLabel(count: number) {
-  return `${count} ${count === 1 ? "entry" : "entries"}`;
+function captureCountLabel(count: number) {
+  return `${count} ${count === 1 ? "capture" : "captures"}`;
 }
 
 function validEntryID(value: unknown): value is string {

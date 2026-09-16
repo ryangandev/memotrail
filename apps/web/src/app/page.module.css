@@ -1138,8 +1138,27 @@
   gap: var(--mt-space-4);
 }
 
-.reviewTypeGuidance {
-  margin-top: calc(var(--mt-space-3) * -1);
+.classificationPanel {
+  display: grid;
+  gap: var(--mt-space-4);
+  padding: var(--mt-space-4);
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-large);
+  background: var(--mt-color-surface-subtle);
+}
+
+.classificationHeading {
+  display: grid;
+  gap: 3px;
+}
+
+.classificationHeading strong {
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-title-small);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.classificationHeading span {
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
   line-height: var(--mt-line-height-body);
@@ -1150,9 +1169,12 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--mt-space-2);
-  margin-top: calc(var(--mt-space-2) * -1);
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
+}
+
+.specializedHandoffs > span {
+  width: 100%;
 }
 
 .specializedHandoffs a {

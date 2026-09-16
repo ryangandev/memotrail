@@ -206,7 +206,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     expect(await snapshot()).toEqual(before);
     await page.goto("/inbox");
     await page
-      .getByRole("button", { name: "Review", exact: true })
+      .getByRole("button", { name: "Organize", exact: true })
       .first()
       .click();
     const dialog = page.getByRole("dialog");
@@ -253,7 +253,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
     expect(await snapshot()).toEqual(before);
     await page
-      .getByRole("button", { name: "Review", exact: true })
+      .getByRole("button", { name: "Organize", exact: true })
       .first()
       .click();
     await expect(dialog.getByLabel("Date type")).toHaveValue("range");
@@ -282,7 +282,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     expect(saved.occurred_timezone).toBe(before.occurred_timezone);
     await expect(dialog).not.toBeVisible();
     await page
-      .getByRole("button", { name: "Review", exact: true })
+      .getByRole("button", { name: "Organize", exact: true })
       .first()
       .click();
     await fillOccurrenceStart(dialog, "2018-02-03");
@@ -303,7 +303,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     async function openPlaceDraft() {
       await expect(dialog).not.toBeVisible();
       await page
-        .getByRole("button", { name: "Review", exact: true })
+        .getByRole("button", { name: "Organize", exact: true })
         .first()
         .click();
       await dialog

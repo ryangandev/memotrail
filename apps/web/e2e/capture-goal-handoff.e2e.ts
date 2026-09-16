@@ -85,10 +85,10 @@ test("Inbox Capture creates a linked Goal through the specialized form", async (
     const card = page.locator("article").filter({
       has: page.getByRole("heading", { name: "Learn to sail" }),
     });
-    await card.getByRole("button", { name: "Review", exact: true }).click();
+    await card.getByRole("button", { name: "Organize", exact: true }).click();
     await page
-      .getByRole("dialog", { name: "Organize Entry" })
-      .getByRole("link", { name: "Create a Goal" })
+      .getByRole("dialog", { name: "Organize Capture" })
+      .getByRole("link", { name: "Goal", exact: true })
       .click();
 
     await expect(page).toHaveURL(new RegExp(`/goals\\?source=${captureID}$`));

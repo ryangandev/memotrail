@@ -86,9 +86,20 @@ test("Inbox Capture creates a linked Home through the specialized form", async (
     const card = page.locator("article").filter({
       has: page.getByRole("heading", { name: "Moved near the lake" }),
     });
-    await card.getByRole("button", { name: "Review", exact: true }).click();
-    const review = page.getByRole("dialog", { name: "Organize Entry" });
-    await review.getByRole("link", { name: "Create a Home" }).click();
+    await card.getByRole("button", { name: "Organize", exact: true }).click();
+    const review = page.getByRole("dialog", { name: "Organize Capture" });
+    await expect(review.getByText("Organize as", { exact: true })).toBeVisible();
+    await expect(
+      review.getByRole("combobox", { name: "Kind", exact: true }),
+    ).toHaveValue("writing");
+    await expect(
+      review.getByRole("button", { name: "Save to Library", exact: true }),
+    ).toBeVisible();
+    await page.screenshot({
+      path: "/private/tmp/memotrail-capture-organizer.png",
+      fullPage: true,
+    });
+    await review.getByRole("link", { name: "Home", exact: true }).click();
 
     await expect(page).toHaveURL(new RegExp(`/homes\\?source=${captureID}$`));
     const editor = page.getByRole("dialog", {

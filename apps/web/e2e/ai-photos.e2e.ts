@@ -138,8 +138,8 @@ test("AI photo suggestions require opt-in and share only synthetic previews", as
       feature: "photo_analysis",
     });
     await page.goto("/inbox");
-    await page.getByRole("button", { name: "Review", exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: "Organize Entry" });
+    await page.getByRole("button", { name: "Organize", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Organize Capture" });
     await expect(
       dialog.getByText("Photo previews included: 1. Originals are not sent."),
     ).toBeVisible();

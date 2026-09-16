@@ -59,7 +59,7 @@ export function EntryOrganizationEditor({
       <legend>{label}</legend>
       <p className={styles.guidance}>
         {kind === "collection"
-          ? "Add this Entry to a larger story or chapter."
+          ? "Add this item to a larger story or chapter."
           : "Add specific descriptors for filtering and discovery."}
       </p>
       {names.length > 0 ? (
