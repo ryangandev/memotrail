@@ -109,30 +109,26 @@ test("Search filters and labels Life Wiki Kinds and types", async ({
 
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
+    const visibleResult = (title: string) =>
+      page.locator("article:visible").filter({
+        has: page.locator("a:visible", { hasText: title }),
+      });
     await page.goto("/search?type=memory");
     await expect(page.getByLabel("Kind or type")).toHaveValue("memory");
-    await expect(
-      page.getByText("Marina memory", { exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByText("Event · Memory", { exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByText("Quiet reflection", { exact: true }),
-    ).toHaveCount(0);
+    await expect(visibleResult("Marina memory")).toBeVisible();
+    await expect(visibleResult("Marina memory")).toContainText(
+      "Event · Memory",
+    );
+    await expect(visibleResult("Quiet reflection")).toHaveCount(0);
 
     await page.goto("/search?q=marina&type=entity");
-    await expect(
-      page.getByText("Marina mentor", { exact: true }),
-    ).toBeVisible();
-    await expect(page.getByText("Marina dock", { exact: true })).toBeVisible();
+    await expect(visibleResult("Marina mentor")).toBeVisible();
+    await expect(visibleResult("Marina dock")).toBeVisible();
     await page.getByLabel("Kind or type").selectOption("person");
     await page.getByRole("button", { name: "Search", exact: true }).click();
     await expect(page).toHaveURL(/type=person/);
-    await expect(
-      page.getByText("Marina mentor", { exact: true }),
-    ).toBeVisible();
-    await expect(page.getByText("Marina dock", { exact: true })).toHaveCount(0);
+    await expect(visibleResult("Marina mentor")).toBeVisible();
+    await expect(visibleResult("Marina dock")).toHaveCount(0);
 
     await page.waitForLoadState("networkidle");
     await page.getByLabel("Kind or type").press("Tab");
