@@ -23,17 +23,23 @@ export default async function HistoryPage({
   const selected = validHistoryID(params.entry) ? params.entry : null;
   const page = historyPage(params.page, selected ? 5001 : 2001);
   const query = (params.q ?? "").trim().slice(0, 200);
-  const result = selected
-    ? await context.client.rpc("entry_history", {
-        p_entry_id: selected,
-        p_limit: 20,
-        p_offset: (page - 1) * 20,
-      })
-    : await context.client.rpc("entry_history_index", {
-        p_query: query,
-        p_limit: 50,
-        p_offset: (page - 1) * 50,
-      });
+  const loadHistory = () =>
+    selected
+      ? context.client.rpc("entry_history", {
+          p_entry_id: selected,
+          p_limit: 20,
+          p_offset: (page - 1) * 20,
+        })
+      : context.client.rpc("entry_history_index", {
+          p_query: query,
+          p_limit: 50,
+          p_offset: (page - 1) * 50,
+        });
+  let result = await loadHistory();
+  if (result.error) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    result = await loadHistory();
+  }
   const rows = (selected ? [] : (result.data ?? [])) as HistoryIndexEntry[];
   return (
     <PageFrame className={styles.workspace} variant="wide">
