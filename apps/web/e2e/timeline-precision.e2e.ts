@@ -212,7 +212,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       .getByRole("button", { name: "Add Vehicle", exact: true })
       .click();
     const vehicleEditor = page.getByRole("dialog", {
-      name: "Keep a ride in your story",
+      name: "Keep a Vehicle in your Life Wiki",
       exact: true,
     });
     await expect(vehicleEditor).toBeVisible();
@@ -261,7 +261,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       .getByRole("button", { name: "Add a moment to Homes", exact: true })
       .click();
     const homeEditor = page.getByRole("dialog", {
-      name: "Keep a place in your story",
+      name: "Keep a Home in your Life Wiki",
       exact: true,
     });
     await expect(homeEditor).toBeVisible();

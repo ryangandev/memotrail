@@ -114,23 +114,39 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto("/library");
     await expect(page.getByRole("heading", { name: "Library" })).toBeVisible();
-    await expect(page.getByText("Morning reflection")).toBeVisible();
-    await expect(page.getByText("Avery")).toBeVisible();
-    await expect(page.getByText("Ocean Beach")).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Writing Reflection Morning reflection/ }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Entity Person Avery/ }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Entity Place Ocean Beach/ }),
+    ).toBeVisible();
     await expect(page.getByText("4 items")).toBeVisible();
 
     await page.getByLabel("Kind").selectOption("entity");
     await page.getByRole("button", { name: "Browse" }).click();
     await expect(page).toHaveURL(/kind=entity/);
-    await expect(page.getByText("Avery")).toBeVisible();
-    await expect(page.getByText("Ocean Beach")).toBeVisible();
-    await expect(page.getByText("Morning reflection")).not.toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Entity Person Avery/ }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Entity Place Ocean Beach/ }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Writing Reflection Morning reflection/ }),
+    ).toHaveCount(0);
 
     await page.getByLabel("Kind").selectOption("");
     await page.getByLabel("Find in your Life Wiki").fill("marina");
     await page.getByRole("button", { name: "Browse" }).click();
-    await expect(page.getByText("Avery")).toBeVisible();
-    await expect(page.getByText("Ocean Beach")).not.toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Entity Person Avery/ }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Entity Place Ocean Beach/ }),
+    ).toHaveCount(0);
     await page.waitForLoadState("networkidle");
     await page.getByLabel("Find in your Life Wiki").press("Tab");
 

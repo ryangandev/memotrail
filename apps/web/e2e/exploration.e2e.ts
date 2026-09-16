@@ -314,7 +314,7 @@ test("Exploration persists across devices, recovers an interrupted response, and
       page.getByRole("region", { name: "Current version" }),
     ).toContainText("我决定每天记录一个新学到的知识");
     await page
-      .getByRole("link", { name: "Open source Entry", exact: true })
+      .getByRole("link", { name: "Open source item", exact: true })
       .click();
     await expect(
       page.getByRole("link", { name: "Open saved conclusion", exact: true }),

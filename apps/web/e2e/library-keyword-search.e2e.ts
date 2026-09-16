@@ -4,7 +4,7 @@ import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 
-test("Global keyword search finds standalone People and Places without deferred Habits", async ({
+test("Canonical keyword search finds People and Places without deferred Habits", async ({
   page,
   context,
 }) => {
@@ -119,26 +119,26 @@ test("Global keyword search finds standalone People and Places without deferred 
       .getByRole("button", { name: "Close Person editor", exact: true })
       .click();
     await page.goto("/search?q=" + encodeURIComponent("Paged Person"));
-    const library = page.getByRole("region", {
-      name: "People and Places",
-      exact: true,
-    });
-    await expect(library).toContainText("105 matches");
-    await expect(library.locator("article")).toHaveCount(20);
-    await page
-      .getByRole("link", { name: "Next library matches", exact: true })
-      .click();
-    await expect(page).toHaveURL(/libraryPage=2/);
+    const results = page.getByRole("region", { name: "Results", exact: true });
+    await expect(results).toContainText("105 items");
+    await expect(results.locator("article")).toHaveCount(25);
+    await results.getByRole("link", { name: "Next", exact: true }).click();
+    await expect(page).toHaveURL(/page=2/);
     await expect(
-      library.getByRole("link", { name: "Paged Person 020", exact: true }),
+      results.getByRole("link", { name: /Paged Person/ }).first(),
     ).toBeVisible();
     await page.goto(
-      "/search?q=" + encodeURIComponent("学习") + "&type=standard",
+      "/search?q=" + encodeURIComponent("学习") + "&type=writing",
     );
     await expect(
-      page.getByText("Clear Entry filters to also search People and Places."),
+      page.getByText("No matching items", { exact: true }),
     ).toBeVisible();
-    await expect(library).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "Learning 学习 partner", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "Learning 学习 library", exact: true }),
+    ).toHaveCount(0);
     await page.goto("/search?q=" + encodeURIComponent("学习"));
     await page
       .getByRole("link", { name: "Learning 学习 library", exact: true })
@@ -167,27 +167,44 @@ test("Global keyword search finds standalone People and Places without deferred 
         },
       },
     });
-    const response = await native.rpc("search_library_entities", {
+    const response = await native.rpc("search_entries_with_occurrence", {
+      p_collection_names: [],
+      p_date_from: null,
+      p_date_to: null,
+      p_entry_types: [],
       p_query: "学习",
+      p_tag_names: [],
       p_limit: 20,
       p_offset: 0,
     });
     expect(response.error).toBeNull();
-    expect(response.data.total_count).toBe(3);
+    expect(response.data).toHaveLength(2);
+    expect(response.data[0].total_count).toBe(2);
     expect(
-      response.data.items.map((item: { kind: string }) => item.kind).sort(),
-    ).toEqual(["habit", "person", "place"]);
-    const webScope = await native.rpc("search_library_entities", {
+      response.data
+        .map((item: { record_source: string }) => item.record_source)
+        .sort(),
+    ).toEqual(["person", "place"]);
+    expect(
+      response.data.map((item: { item_kind: string }) => item.item_kind),
+    ).toEqual(["entity", "entity"]);
+    const personScope = await native.rpc("search_entries_with_occurrence", {
+      p_collection_names: [],
+      p_date_from: null,
+      p_date_to: null,
+      p_entry_types: ["person"],
       p_query: "学习",
+      p_tag_names: [],
       p_limit: 20,
       p_offset: 0,
-      p_kinds: ["person", "place"],
     });
-    expect(webScope.error).toBeNull();
-    expect(webScope.data.total_count).toBe(2);
-    expect(
-      webScope.data.items.map((item: { kind: string }) => item.kind).sort(),
-    ).toEqual(["person", "place"]);
+    expect(personScope.error).toBeNull();
+    expect(personScope.data).toHaveLength(1);
+    expect(personScope.data[0]).toMatchObject({
+      item_kind: "entity",
+      item_subtype: "person",
+      record_source: "person",
+    });
     expect(
       (
         await client
