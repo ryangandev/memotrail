@@ -237,8 +237,10 @@ function validMarks(value: unknown) {
     if (!markTypes.has(mark.type)) return false;
 
     if (mark.type !== "link") {
-      return mark.attrs === undefined ||
-        (isRecord(mark.attrs) && Object.keys(mark.attrs).length === 0);
+      return (
+        mark.attrs === undefined ||
+        (isRecord(mark.attrs) && Object.keys(mark.attrs).length === 0)
+      );
     }
 
     if (!isRecord(mark.attrs) || !safeLink(mark.attrs.href)) return false;
