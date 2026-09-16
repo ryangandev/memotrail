@@ -1,12 +1,5 @@
 import "server-only";
 import {
-  hasLibrarySearchScope,
-  libraryItemHref,
-  librarySearchPageSize,
-  parseLibrarySearch,
-  type LibrarySearchResult,
-} from "./library-search";
-import {
   occurrenceLabel,
   occurrencePrecisions,
   validTimezone,
@@ -14,7 +7,12 @@ import {
 } from "./occurrence";
 import type { TagEntryPreview, TagEntryPreviewResult } from "./organization";
 
-import { getAuthenticatedContext, type Viewer } from "@/lib/data/inbox";
+import {
+  getAuthenticatedContext,
+  loadEntryRichTextMap,
+  type Viewer,
+} from "@/lib/data/inbox";
+import type { EntryRichText } from "@/lib/data/rich-text";
 import {
   SEARCH_PAGE_SIZE,
   type ParsedSearchRequest,
@@ -22,27 +20,35 @@ import {
   type QuickSearchResult,
   type SearchRequest,
 } from "@/lib/data/search-input";
+import {
+  isWikiItemKind,
+  wikiEntryHref,
+  wikiItemIdentityLabel,
+  type WikiItemKind,
+} from "@/lib/data/wiki-item";
 
 export type SearchEntry = {
   body: string;
+  bodyRich: EntryRichText | null;
   collectionNames: string[];
-  entryType: string;
   id: string;
   inboxStatus: "organized" | "unreviewed";
+  itemKind: WikiItemKind;
+  itemSubtype: string;
   matchReasons: string[];
   occurredAt: string | null;
   occurredEnd: string | null;
   datePrecision: OccurrencePrecision;
   occurredLabel: string | null;
   occurredTimezone: string | null;
+  recordId: string;
+  recordSource: "entry" | "person" | "place";
   tagNames: string[];
   title: string | null;
   updatedAt: string;
 };
 
 export type SearchWorkspace = {
-  library: LibrarySearchResult | null;
-  libraryError: string | null;
   collectionOptions: string[];
   entries: SearchEntry[];
   filtersError: string | null;
@@ -58,14 +64,17 @@ type SearchRow = {
   body: string;
   collection_names: string[] | null;
   entry_id: string;
-  entry_type: string;
   inbox_status: "organized" | "unreviewed";
+  item_kind: WikiItemKind;
+  item_subtype: string;
   match_reasons: string[] | null;
   occurred_label: string | null;
   occurred_start: string | null;
   occurred_end: string | null;
   date_precision: OccurrencePrecision;
   occurred_timezone: string | null;
+  record_id: string;
+  record_source: "entry" | "person" | "place";
   tag_names: string[] | null;
   title: string | null;
   total_count: number | string;
@@ -76,9 +85,15 @@ type NameRow = {
   name: string;
 };
 
+type ItemIdentity = {
+  itemKind: WikiItemKind;
+  itemSubtype: string;
+  recordId: string;
+  recordSource: "entry" | "person" | "place";
+};
+
 export async function getSearchWorkspace(
   parsed: ParsedSearchRequest,
-  libraryPage = 1,
 ): Promise<SearchWorkspace | null> {
   const context = await getAuthenticatedContext();
 
@@ -87,22 +102,21 @@ export async function getSearchWorkspace(
   }
 
   const shouldSearch = parsed.request.hasCriteria && !parsed.error;
-  const shouldSearchLibrary =
-    shouldSearch && hasLibrarySearchScope(parsed.request);
   const searchRequest = shouldSearch
-    ? context.client.rpc("search_entries_with_occurrence", {
+    ? context.client.rpc("search_wiki_items", {
         p_collection_names: parsed.request.collectionNames,
         p_date_from: parsed.request.dateFrom,
         p_date_to: parsed.request.dateTo,
-        p_entry_types: parsed.request.entryTypes,
+        p_item_classifications: parsed.request.itemClassifications,
         p_limit: SEARCH_PAGE_SIZE,
         p_offset: parsed.request.offset,
+        p_order: "relevance",
         p_query: parsed.request.query,
         p_tag_names: parsed.request.tagNames,
       })
     : Promise.resolve({ data: [] as SearchRow[], error: null });
 
-  const [search, collections, tags, inbox, librarySearch] = await Promise.all([
+  const [search, collections, tags, inbox] = await Promise.all([
     searchRequest,
     context.client
       .from("collections")
@@ -123,32 +137,24 @@ export async function getSearchWorkspace(
       .eq("owner_id", context.userId)
       .eq("inbox_status", "unreviewed")
       .is("deleted_at", null),
-    shouldSearchLibrary
-      ? context.client.rpc("search_library_entities", {
-          p_query: parsed.request.query,
-          p_limit: librarySearchPageSize,
-          p_offset: (libraryPage - 1) * librarySearchPageSize,
-          p_kinds: ["person", "place"],
-        })
-      : Promise.resolve({ data: null, error: null }),
   ]);
 
   const parsedRows = search.error ? [] : searchRows(search.data);
   const malformedSearchResponse = shouldSearch && !search.error && !parsedRows;
   const rows = parsedRows ?? [];
+  const bodyRichByEntry = await loadEntryRichTextMap(
+    context,
+    rows.map((row) => ({ body: row.body, id: row.entry_id })),
+  );
   const filtersUnavailable = collections.error || tags.error;
 
   return {
-    library: parseLibrarySearch(librarySearch.data),
-    libraryError:
-      shouldSearchLibrary &&
-      (librarySearch.error || !parseLibrarySearch(librarySearch.data))
-        ? "Could not search People and Places. Refresh to try again."
-        : null,
     collectionOptions: collections.error
       ? []
       : (collections.data ?? []).map((collection) => collection.name),
-    entries: search.error ? [] : rows.map(entryFromRow),
+    entries: search.error
+      ? []
+      : rows.map((row) => entryFromRow(row, bodyRichByEntry.get(row.entry_id))),
     filtersError: filtersUnavailable
       ? "Collection and tag filters are temporarily unavailable. Keyword search still works."
       : null,
@@ -174,49 +180,25 @@ export async function getQuickSearchResults(
   const normalizedQuery = query.trim().slice(0, 200);
   if (!normalizedQuery) return { error: null, items: [] };
 
-  const [entrySearch, librarySearch] = await Promise.all([
-    context.client.rpc("search_entries_with_occurrence", {
-      p_collection_names: [],
-      p_date_from: null,
-      p_date_to: null,
-      p_entry_types: [],
-      p_limit: 6,
-      p_offset: 0,
-      p_query: normalizedQuery,
-      p_tag_names: [],
-    }),
-    context.client.rpc("search_library_entities", {
-      p_query: normalizedQuery,
-      p_limit: 4,
-      p_offset: 0,
-      p_kinds: ["person", "place"],
-    }),
-  ]);
+  const entrySearch = await context.client.rpc("search_wiki_items", {
+    p_collection_names: [],
+    p_date_from: null,
+    p_date_to: null,
+    p_item_classifications: [],
+    p_limit: 8,
+    p_offset: 0,
+    p_order: "relevance",
+    p_query: normalizedQuery,
+    p_tag_names: [],
+  });
 
   const entryRows = entrySearch.error ? null : searchRows(entrySearch.data);
-  const libraryRows = librarySearch.error
-    ? null
-    : parseLibrarySearch(librarySearch.data);
-  const items = [
-    ...(entryRows ?? []).map(quickEntryItem),
-    ...(libraryRows?.items ?? []).map((item): QuickSearchItem => ({
-      href: libraryItemHref(item),
-      id: item.id,
-      kind: item.kind,
-      label: item.kind === "person" ? "Person" : "Place",
-      subtitle: compactText(item.excerpt) || "Saved in your Library",
-      title: item.name,
-    })),
-  ].slice(0, 8);
-  const partialFailure = !entryRows || !libraryRows;
+  const items = (entryRows ?? []).map((row) => quickEntryItem(row)).slice(0, 8);
 
   return {
-    error:
-      partialFailure && items.length === 0
-        ? "MemoTrail could not search your archive. Try again."
-        : partialFailure
-          ? "Some archive results are temporarily unavailable."
-          : null,
+    error: entryRows
+      ? null
+      : "MemoTrail could not search your archive. Try again.",
     items,
   };
 }
@@ -237,13 +219,14 @@ export async function getTagEntryPreviews(
     };
   }
 
-  const result = await context.client.rpc("search_entries_with_occurrence", {
+  const result = await context.client.rpc("search_wiki_items", {
     p_collection_names: [],
     p_date_from: null,
     p_date_to: null,
-    p_entry_types: [],
+    p_item_classifications: [],
     p_limit: 5,
     p_offset: 0,
+    p_order: "relevance",
     p_query: "",
     p_tag_names: [normalizedName],
   });
@@ -257,26 +240,36 @@ export async function getTagEntryPreviews(
   }
 
   return {
-    entries: rows.map(tagEntryPreview),
+    entries: rows.map((row) => tagEntryPreview(row)),
     error: null,
   };
 }
 
-function quickEntryItem(row: SearchRow): QuickSearchItem {
+function quickEntryItem(
+  row: SearchRow,
+  identity: ItemIdentity = identityFromSearchRow(row),
+): QuickSearchItem {
   const title =
     stringValue(row.title) ?? firstUsefulLine(row.body) ?? "Untitled Entry";
 
   return {
-    href: `/history?entry=${encodeURIComponent(row.entry_id)}`,
+    href: wikiEntryHref({
+      id: row.entry_id,
+      inboxStatus: row.inbox_status,
+      ...identity,
+    }),
     id: row.entry_id,
-    kind: "entry",
-    label: entryTypeLabel(row.entry_type),
+    kind: identity.recordSource,
+    label: wikiItemIdentityLabel(identity.itemKind, identity.itemSubtype),
     subtitle: compactText(row.body) || "Saved Entry",
     title,
   };
 }
 
-function tagEntryPreview(row: SearchRow): TagEntryPreview {
+function tagEntryPreview(
+  row: SearchRow,
+  identity: ItemIdentity = identityFromSearchRow(row),
+): TagEntryPreview {
   return {
     date: occurrenceLabel({
       datePrecision: row.date_precision,
@@ -287,11 +280,15 @@ function tagEntryPreview(row: SearchRow): TagEntryPreview {
         ? row.occurred_timezone
         : "UTC",
     }),
-    href: `/history?entry=${encodeURIComponent(row.entry_id)}`,
+    href: wikiEntryHref({
+      id: row.entry_id,
+      inboxStatus: row.inbox_status,
+      ...identity,
+    }),
     id: row.entry_id,
     title:
       stringValue(row.title) ?? firstUsefulLine(row.body) ?? "Untitled Entry",
-    type: entryTypeLabel(row.entry_type),
+    type: wikiItemIdentityLabel(identity.itemKind, identity.itemSubtype),
   };
 }
 
@@ -307,35 +304,39 @@ function firstUsefulLine(value: string) {
     .find(Boolean);
 }
 
-function entryTypeLabel(value: string) {
-  const labels: Record<string, string> = {
-    first_time: "First Time",
-    goal: "Goal",
-    home: "Home",
-    life_stage: "Life Stage",
-    standard: "Entry",
-    vehicle: "Vehicle",
-  };
-
-  return labels[value] ?? "Entry";
-}
-
-function entryFromRow(row: SearchRow): SearchEntry {
+function entryFromRow(
+  row: SearchRow,
+  bodyRich: EntryRichText | null = null,
+  identity: ItemIdentity = identityFromSearchRow(row),
+): SearchEntry {
   return {
     body: row.body,
+    bodyRich,
     collectionNames: strings(row.collection_names),
-    entryType: row.entry_type,
     id: row.entry_id,
     inboxStatus: row.inbox_status,
+    itemKind: identity.itemKind,
+    itemSubtype: identity.itemSubtype,
     matchReasons: strings(row.match_reasons),
     occurredAt: stringValue(row.occurred_start),
     occurredEnd: stringValue(row.occurred_end),
     datePrecision: row.date_precision,
     occurredLabel: stringValue(row.occurred_label),
     occurredTimezone: stringValue(row.occurred_timezone),
+    recordId: identity.recordId,
+    recordSource: identity.recordSource,
     tagNames: strings(row.tag_names),
     title: stringValue(row.title),
     updatedAt: row.updated_at,
+  };
+}
+
+function identityFromSearchRow(row: SearchRow): ItemIdentity {
+  return {
+    itemKind: row.item_kind,
+    itemSubtype: row.item_subtype,
+    recordId: row.record_id,
+    recordSource: row.record_source,
   };
 }
 
@@ -371,7 +372,8 @@ function isSearchRow(value: unknown): value is SearchRow {
   return (
     typeof value.body === "string" &&
     typeof value.entry_id === "string" &&
-    typeof value.entry_type === "string" &&
+    isWikiItemKind(value.item_kind) &&
+    typeof value.item_subtype === "string" &&
     (value.inbox_status === "organized" ||
       value.inbox_status === "unreviewed") &&
     typeof value.updated_at === "string" &&
@@ -379,6 +381,8 @@ function isSearchRow(value: unknown): value is SearchRow {
     nullableString(value.occurred_label) &&
     nullableString(value.occurred_start) &&
     nullableString(value.occurred_end) &&
+    typeof value.record_id === "string" &&
+    ["entry", "person", "place"].includes(String(value.record_source)) &&
     occurrencePrecisions.includes(
       value.date_precision as OccurrencePrecision,
     ) &&

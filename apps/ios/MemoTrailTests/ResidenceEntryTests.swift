@@ -195,6 +195,30 @@ final class ResidenceEntryTests: XCTestCase {
     XCTAssertEqual(json["p_date_precision"] as? String, "range")
   }
 
+  func testCaptureExtractionParametersUseSourceIdentityAndSpecializedFields() throws {
+    let entryID = UUID(uuidString: "91000000-0000-4000-8000-000000000001")!
+    let entry = InboxEntry(
+      id: entryID, title: "Our first apartment", body: "Moving day", createdAt: Date(),
+      occurredStart: Date(timeIntervalSince1970: 100), occurredTimezone: "America/New_York",
+      revision: 4, datePrecision: .range, occurredEnd: Date(timeIntervalSince1970: 200))
+    let source = CaptureExtractionSource(
+      entry: entry, title: "Our first apartment", body: "Moving day",
+      occurrence: entry.occurrence, collectionNames: ["Philadelphia"], tagNames: ["home"])
+    let input = try makeInput(collectionNames: source.collectionNames, tagNames: source.tagNames)
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(
+        with: encoder.encode(SaveResidenceEntryParameters(input: input, source: source)))
+        as? [String: Any])
+
+    XCTAssertEqual(json["p_capture_id"] as? String, entryID.uuidString)
+    XCTAssertEqual(json["p_capture_revision"] as? Int, 4)
+    XCTAssertEqual(json["p_place_name"] as? String, "Place")
+    XCTAssertEqual(json["p_collection_names"] as? [String], ["Philadelphia"])
+    XCTAssertNil(json["p_entry_id"])
+  }
+
   func testUniversalAttachmentParametersPreservePrivateMetadata() throws {
     let entryID = UUID(uuidString: "10000000-0000-4000-8000-000000000001")!
     let draft = try FirstTimePhotoDraft.validate(

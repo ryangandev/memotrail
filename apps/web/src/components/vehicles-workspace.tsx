@@ -49,12 +49,14 @@ import {
 } from "@/lib/data/vehicle-record-input";
 import { useConfirmedRecords } from "@/components/use-confirmed-records";
 import { uploadEntryPhotos } from "@/lib/media/upload";
+import type { CaptureExtractionSource } from "@/lib/data/capture-extraction-input";
 
 export function VehiclesWorkspace({
   collectionOptions,
   initialVehicleId,
   loadError,
   ownerId,
+  sourceCapture,
   tagOptions,
   vehicles: serverRecords,
 }: {
@@ -62,6 +64,7 @@ export function VehiclesWorkspace({
   initialVehicleId: string | null;
   loadError: string | null;
   ownerId: string;
+  sourceCapture: CaptureExtractionSource | null;
   tagOptions: string[];
   vehicles: VehicleRecord[];
 }) {
@@ -73,7 +76,11 @@ export function VehiclesWorkspace({
   } = useConfirmedRecords(serverRecords);
   const [selectedVehicle, setSelectedVehicle] = useState<
     VehicleRecord | null | undefined
-  >(vehicles.find((vehicle) => vehicle.id === initialVehicleId));
+  >(
+    sourceCapture
+      ? null
+      : vehicles.find((vehicle) => vehicle.id === initialVehicleId),
+  );
   const currentVehicles = vehicles.filter((vehicle) => !vehicle.occurredEnd);
   const earlierVehicles = vehicles.filter((vehicle) => vehicle.occurredEnd);
   const orderedVehicles = [...currentVehicles, ...earlierVehicles];
@@ -85,8 +92,8 @@ export function VehiclesWorkspace({
           <p className={styles.eyebrow}>The machines that carried your story</p>
           <h1>Vehicles</h1>
           <p>
-            Keep each car, bike, or other vehicle as a chapter, with the dates,
-            details, and memories that made it yours.
+            Keep each car, bike, or other vehicle as an Entity, with the dates,
+            facts, and memories that made it yours.
           </p>
         </div>
         <button
@@ -137,7 +144,7 @@ export function VehiclesWorkspace({
 
       {!loadError && orderedVehicles.length > 0 ? (
         <VehicleSection
-          label="Current first, followed by earlier chapters"
+          label="Current first, followed by earlier vehicles"
           onSelect={setSelectedVehicle}
           title="Vehicle archive"
           vehicles={orderedVehicles}
@@ -152,10 +159,12 @@ export function VehiclesWorkspace({
           onTrashed={forget}
           onClose={() => {
             setSelectedVehicle(undefined);
-            if (initialVehicleId)
+            if (initialVehicleId || sourceCapture)
               router.replace("/vehicles", { scroll: false });
+            else router.refresh();
           }}
           ownerId={ownerId}
+          sourceCapture={selectedVehicle === null ? sourceCapture : null}
           tagOptions={tagOptions}
           vehicle={selectedVehicle}
         />
@@ -267,6 +276,7 @@ export function VehicleEditor({
   onSaved,
   onTrashed,
   ownerId,
+  sourceCapture = null,
   tagOptions,
   vehicle,
 }: {
@@ -276,6 +286,7 @@ export function VehicleEditor({
   onSaved: (record: VehicleRecord) => void;
   onTrashed: (id: string) => void;
   ownerId: string;
+  sourceCapture?: CaptureExtractionSource | null;
   tagOptions: string[];
   vehicle: VehicleRecord | null;
 }) {
@@ -291,7 +302,7 @@ export function VehicleEditor({
         occurredTimezone: initialTimezone,
         datePrecision: vehicle.datePrecision,
       }
-    : undefined;
+    : (sourceCapture ?? undefined);
   const [occurrence, setOccurrence] = useState(() =>
     occurrenceDraft(
       originalOccurrence ?? {
@@ -303,10 +314,10 @@ export function VehicleEditor({
       },
     ),
   );
-  const [body, setBody] = useState(vehicle?.body ?? "");
+  const [body, setBody] = useState(vehicle?.body ?? sourceCapture?.body ?? "");
   const [collectionInput, setCollectionInput] = useState("");
   const [collectionNames, setCollectionNames] = useState(
-    vehicle?.collectionNames ?? [],
+    vehicle?.collectionNames ?? sourceCapture?.collectionNames ?? [],
   );
   const [color, setColor] = useState(vehicle?.color ?? "");
   const [currentId, setCurrentId] = useState(vehicle?.id ?? null);
@@ -325,8 +336,12 @@ export function VehicleEditor({
   const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
   const [result, setResult] = useState<VehicleActionResult | null>(null);
   const [tagInput, setTagInput] = useState("");
-  const [tagNames, setTagNames] = useState(vehicle?.tagNames ?? []);
-  const [title, setTitle] = useState(vehicle?.title ?? "");
+  const [tagNames, setTagNames] = useState(
+    vehicle?.tagNames ?? sourceCapture?.tagNames ?? [],
+  );
+  const [title, setTitle] = useState(
+    vehicle?.title ?? sourceCapture?.title ?? "",
+  );
 
   useEffect(() => {
     titleRef.current?.focus();
@@ -405,7 +420,12 @@ export function VehicleEditor({
     setIsPending(true);
     setResult(null);
     try {
-      const saved = await saveVehicleEntry(parsed.data);
+      const saved = await saveVehicleEntry(
+        parsed.data,
+        sourceCapture
+          ? { id: sourceCapture.id, revision: sourceCapture.revision }
+          : null,
+      );
       if (
         (saved.status !== "created" && saved.status !== "saved") ||
         !saved.entry
@@ -441,7 +461,6 @@ export function VehicleEditor({
         return;
       }
 
-      router.refresh();
       onClose();
     } catch {
       setResult(
@@ -504,7 +523,6 @@ export function VehicleEditor({
       });
       if (nextResult.status === "trashed") {
         onTrashed(currentId);
-        router.refresh();
         onClose();
       } else {
         setResult(nextResult);
@@ -531,7 +549,11 @@ export function VehicleEditor({
           <div>
             <p>{currentId ? "Edit Vehicle" : "New Vehicle"}</p>
             <h2 id="vehicle-editor-title">
-              {currentId ? title || "Vehicle" : "Keep a ride in your story"}
+              {currentId
+                ? title || "Vehicle"
+                : sourceCapture
+                  ? "Create a Vehicle from this Capture"
+                  : "Keep a Vehicle in your Life Wiki"}
             </h2>
           </div>
           <button
@@ -546,8 +568,20 @@ export function VehicleEditor({
 
         <form onSubmit={handleSubmit}>
           <div className={styles.formGrid}>
+            {sourceCapture ? (
+              <div className={styles.extractionNotice}>
+                <Icon name="inbox" size={18} />
+                <div>
+                  <strong>Starting from an Inbox Capture</strong>
+                  <p>
+                    Saving creates a separate Vehicle and links it to the
+                    preserved source Capture.
+                  </p>
+                </div>
+              </div>
+            ) : null}
             <fieldset className={styles.formSection}>
-              <legend>Vehicle chapter</legend>
+              <legend>Vehicle details</legend>
               <label className={styles.fullField}>
                 <span>Name or nickname</span>
                 <input

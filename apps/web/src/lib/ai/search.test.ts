@@ -13,7 +13,7 @@ import {
 const id = "11111111-1111-4111-8111-111111111111";
 const plan = {
   queries: ["skiing", "滑雪"],
-  entryTypes: [],
+  itemClassifications: [],
   dateFrom: null,
   dateTo: null,
   beforeLatestHome: false,
@@ -51,10 +51,10 @@ describe("AI search trust boundary", () => {
     })!.request;
     expect(
       evidenceParameters(
-        parseSearchPlan({ ...plan, entryTypes: ["standard"] })!,
+        parseSearchPlan({ ...plan, itemClassifications: ["writing"] })!,
         request,
         "2026-09-12",
-      ).p_entry_types,
+      ).p_item_classifications,
     ).toEqual([]);
   });
   it("keeps readable writing separate from inspectable structured facts", () => {
@@ -134,7 +134,7 @@ describe("AI search trust boundary", () => {
           from: "2020-01-01",
         },
         timeZone: "America/Los_Angeles",
-      })?.request.entryTypes,
+      })?.request.itemClassifications,
     ).toEqual(["first_time"]);
     for (const parameters of [
       { q: "" },
@@ -153,7 +153,7 @@ describe("AI search trust boundary", () => {
     for (const invalid of [
       { queries: Array(7).fill("a") },
       { order: "random" },
-      { entryTypes: ["unknown"] },
+      { itemClassifications: ["unknown"] },
       { dateFrom: "2026-02-30" },
       { dateFrom: "2026-05-01", dateTo: "2026-01-01" },
       { beforeLatestHome: "yes" },
@@ -164,7 +164,7 @@ describe("AI search trust boundary", () => {
     const request = parseAISearchInput({
       parameters: {
         q: "skiing",
-        type: "standard",
+        type: "writing",
         collection: "Travel",
         tag: "winter",
         from: "2017-01-01",
@@ -176,14 +176,14 @@ describe("AI search trust boundary", () => {
       evidenceParameters(
         parseSearchPlan({
           ...plan,
-          entryTypes: ["first_time"],
+          itemClassifications: ["first_time"],
           dateFrom: "2020-01-01",
         })!,
         request,
         "2026-09-12",
       ),
     ).toMatchObject({
-      p_entry_types: ["standard"],
+      p_item_classifications: ["writing"],
       p_collection_names: ["Travel"],
       p_tag_names: ["winter"],
       p_date_from: "2017-01-01",

@@ -20,10 +20,10 @@ select is((select revision from public.timeline_track_settings() where name='Ren
 select is((select system_key from public.timeline_track_settings() where name='Renamed track'),'track-test','System identity survives renaming');
 select is((select count(*) from public.timeline_items where track_id='95000000-0000-4000-8000-000000000001'),1::bigint,'Hiding preserves placements');
 select is((select deleted_at from public.entries where id='95000000-0000-4000-8000-000000000002'),null::timestamptz,'Hiding never trashes content');
-select is((select count(*) from public.timeline_workspace(false) where track_id='95000000-0000-4000-8000-000000000001'),0::bigint,'Hidden track excluded from Timeline');
+select is((select count(*) from public.timeline_workspace_with_organization(false) where track_id='95000000-0000-4000-8000-000000000001'),0::bigint,'Hidden track excluded from Timeline');
 select is(public.save_timeline_track('Stale',0,false,'95000000-0000-4000-8000-000000000001',1),null::uuid,'Stale save does not overwrite');
 select is(public.save_timeline_track('Renamed track',-200,false,'95000000-0000-4000-8000-000000000001',2),'95000000-0000-4000-8000-000000000001'::uuid,'Show track again');
-select is((select count(*) from public.timeline_workspace(false) where track_id='95000000-0000-4000-8000-000000000001'),1::bigint,'Existing moment returns');
+select is((select count(*) from public.timeline_workspace_with_organization(false) where track_id='95000000-0000-4000-8000-000000000001'),1::bigint,'Existing moment returns');
 select throws_ok($$select public.save_timeline_track(' ',0,false)$$,'22023','invalid_track_details','Blank name rejected');
 select throws_ok($$select public.save_timeline_track('x',1000001,false)$$,'22023','invalid_track_details','Out-of-range order rejected');
 select throws_ok($$select public.save_timeline_track('x',0,false,null,1)$$,'22023','invalid_revision','Creation revision rejected');

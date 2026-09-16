@@ -79,7 +79,8 @@ final class VehicleController {
     color: String,
     collectionNames: [String],
     tagNames: [String],
-    originalEntry: VehicleEntry? = nil
+    originalEntry: VehicleEntry? = nil,
+    sourceCapture: CaptureExtractionSource? = nil
   ) async -> MutationResult {
     var input: VehicleEntryInput
     do {
@@ -105,6 +106,14 @@ final class VehicleController {
     }
 
     input.preserveUnchangedBounds(from: originalEntry)
+    if let sourceCapture {
+      guard entryID == nil, expectedRevision == nil else {
+        return MutationResult(
+          identity: nil, message: "A Capture can only create a new Vehicle.", status: .error)
+      }
+      input.occurredStartRaw = sourceCapture.occurredStartRaw
+      input.occurredEndRaw = sourceCapture.occurredEndRaw
+    }
     guard !isSaving else {
       return MutationResult(
         identity: nil,
@@ -117,6 +126,26 @@ final class VehicleController {
 
     do {
       try await validateSessionOwner()
+      if let sourceCapture {
+        let results: [ExtractedCaptureVehicle] =
+          try await client
+          .rpc(
+            "extract_capture_to_vehicle",
+            params: SaveVehicleEntryParameters(input: input, source: sourceCapture)
+          )
+          .execute()
+          .value
+        guard let saved = results.first else {
+          return MutationResult(
+            identity: nil,
+            message: "This Capture changed on another device. Close it, refresh, and try again.",
+            status: .conflict)
+        }
+        return MutationResult(
+          identity: SavedIdentity(id: saved.vehicleEntryID, revision: saved.vehicleRevision),
+          message: "Vehicle created from Capture.",
+          status: .saved)
+      }
       input.expectedRevision = try await EntryPhotoUpload.writingRevision(
         client: client, entryID: entryID, revision: expectedRevision)
       let results: [SavedVehicleEntry] =

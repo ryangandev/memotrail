@@ -16,7 +16,8 @@ struct RelatedEntry: Decodable, Identifiable, Sendable {
   let entryID: UUID
   let title: String?
   let excerpt: String
-  let entryType: String
+  let itemKind: WikiItemKind
+  let itemSubtype: String
   let isDeleted: Bool
   var id: UUID { entryID }
   var displayTitle: String {
@@ -25,7 +26,8 @@ struct RelatedEntry: Decodable, Identifiable, Sendable {
   enum CodingKeys: String, CodingKey {
     case title, excerpt
     case entryID = "entry_id"
-    case entryType = "entry_type"
+    case itemKind = "item_kind"
+    case itemSubtype = "item_subtype"
     case isDeleted = "is_deleted"
   }
 }
@@ -125,7 +127,7 @@ struct EntryRelationsView: View {
               EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: row.entryID)
             }
             Text(
-              row.entryType.replacingOccurrences(of: "_", with: " ")
+              row.itemKind.displayName(subtype: row.itemSubtype)
                 + (row.isDeleted ? " · In Trash" : "")
             )
             .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)

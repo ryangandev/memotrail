@@ -7,7 +7,7 @@ import {
 export type AISearchInput = { parameters: RawSearchParams; timeZone: string };
 export type SearchPlan = {
   queries: string[];
-  entryTypes: string[];
+  itemClassifications: string[];
   dateFrom: string | null;
   dateTo: string | null;
   beforeLatestHome: boolean;
@@ -88,19 +88,35 @@ export function retrievalTerms(queries: string[]) {
 }
 
 const types = [
-  "standard",
+  "capture",
+  "writing",
+  "entity",
+  "event",
+  "story",
+  "goal",
+  "note",
+  "journal",
+  "reflection",
+  "lesson",
+  "idea",
+  "person",
+  "place",
+  "memory",
   "first_time",
+  "milestone",
+  "trip",
   "life_stage",
   "home",
   "vehicle",
-  "goal",
+  "chapter",
 ];
+const acceptedManualTypes = new Set(types);
 export const searchPlanSchema = {
   type: "object",
   additionalProperties: false,
   required: [
     "queries",
-    "entryTypes",
+    "itemClassifications",
     "dateFrom",
     "dateTo",
     "beforeLatestHome",
@@ -114,7 +130,10 @@ export const searchPlanSchema = {
         "One to six short bilingual search terms, each under 200 characters. Use an empty string for broad retrieval.",
       items: { type: "string" },
     },
-    entryTypes: { type: "array", items: { type: "string", enum: types } },
+    itemClassifications: {
+      type: "array",
+      items: { type: "string", enum: types },
+    },
     dateFrom: { anyOf: [{ type: "string", format: "date" }, { type: "null" }] },
     dateTo: { anyOf: [{ type: "string", format: "date" }, { type: "null" }] },
     beforeLatestHome: { type: "boolean" },
@@ -168,7 +187,9 @@ export function parseAISearchInput(
   if (
     parsed.error ||
     !parsed.request.query ||
-    parsed.request.entryTypes.some((t) => !types.includes(t))
+    parsed.request.itemClassifications.some(
+      (classification) => !acceptedManualTypes.has(classification),
+    )
   )
     return null;
   return { request: parsed.request, timeZone: v.timeZone };
@@ -180,9 +201,9 @@ export function parseSearchPlan(raw: unknown): SearchPlan | null {
     v.queries.length < 1 ||
     v.queries.length > 6 ||
     v.queries.some((q) => typeof q !== "string" || q.length > 200) ||
-    !Array.isArray(v.entryTypes) ||
-    v.entryTypes.some((t) => !types.includes(t)) ||
-    v.entryTypes.length > 6 ||
+    !Array.isArray(v.itemClassifications) ||
+    v.itemClassifications.some((t) => !types.includes(t)) ||
+    v.itemClassifications.length > 6 ||
     !date(v.dateFrom) ||
     !date(v.dateTo) ||
     (v.dateFrom && v.dateTo && v.dateFrom > v.dateTo) ||
@@ -192,7 +213,7 @@ export function parseSearchPlan(raw: unknown): SearchPlan | null {
     return null;
   return {
     queries: [...new Set((v.queries as string[]).map((q) => q.trim()))],
-    entryTypes: v.entryTypes as string[],
+    itemClassifications: v.itemClassifications as string[],
     dateFrom: v.dateFrom,
     dateTo: v.dateTo,
     beforeLatestHome: v.beforeLatestHome,
@@ -209,13 +230,12 @@ export function evidenceParameters(
     p_queries: plan.queries,
     // All Types really means all types. Thoughts can live inside a First Time
     // or Home, so model-inferred labels must not silently narrow the archive.
-    p_entry_types: request.entryTypes,
+    p_item_classifications: request.itemClassifications,
     p_collection_names: request.collectionNames,
     p_tag_names: request.tagNames,
     p_date_from: request.dateFrom ?? plan.dateFrom,
     p_date_to: request.dateTo ?? plan.dateTo,
     p_before_latest_home: plan.beforeLatestHome,
-    p_include_habits: false,
     p_order: plan.order,
     p_as_of: asOf,
   };
@@ -317,7 +337,8 @@ export function buildSearchSources(raw: unknown, queries: string[]) {
       kind === "entry"
         ? Object.fromEntries(
             [
-              "entry_type",
+              "item_kind",
+              "item_subtype",
               "date_precision",
               "occurred_start",
               "occurred_end",

@@ -30,6 +30,7 @@ import {
   placeRegionLimit,
   type PlaceRecordInput,
 } from "@/lib/data/place-record-input";
+import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 
 export function PlacesWorkspace({
   initialPlaceId,
@@ -60,7 +61,7 @@ export function PlacesWorkspace({
           <p className={common.eyebrow}>A geography of your archive</p>
           <h1>Places</h1>
           <p>
-            Keep reusable locations once, then connect them to the Entries and
+            Keep reusable locations once, then connect them to the Items and
             Home chapters that give them meaning.
           </p>
         </div>
@@ -230,7 +231,7 @@ function PlaceCard({
             <span key={`${entry.relationship}-${entry.id}`}>
               {entry.relationship === "home"
                 ? "Home"
-                : entryTypeLabel(entry.entryType)}
+                : wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
               {": "}
               {entry.title}
             </span>
@@ -244,8 +245,8 @@ function PlaceCard({
           <span>
             {countLabel(
               place.linkedEntryCount,
-              "linked Entry",
-              "linked Entries",
+              "linked Item",
+              "linked Items",
             )}
           </span>
           <span>{countLabel(relatedEntries.length, "editable link")}</span>
@@ -536,9 +537,9 @@ function PlaceEditor({
             <fieldset
               className={`${common.formSection} ${styles.relationshipSection}`}
             >
-              <legend>Connected Entries</legend>
+              <legend>Connected Items</legend>
               <p className={styles.relationshipIntro}>
-                Link existing Entries to bring their dates, text, and private
+                Link existing Items to bring their dates, text, and private
                 photos into this Place. Home links are protected here.
               </p>
 
@@ -556,7 +557,7 @@ function PlaceEditor({
 
               {relatedEntryIds.length > 0 ? (
                 <div className={styles.editableLinks}>
-                  <strong>Related Entries</strong>
+                  <strong>Related Items</strong>
                   {relatedEntryIds.map((entryId) => {
                     const option = linkOptions.find(
                       (item) => item.id === entryId,
@@ -568,16 +569,22 @@ function PlaceEditor({
                       <div className={styles.editableLink} key={entryId}>
                         <span>
                           <small>
-                            {entryTypeLabel(
-                              option?.entryType ??
-                                existing?.entryType ??
-                                "standard",
-                            )}
+                            {option
+                              ? wikiItemIdentityLabel(
+                                  option.itemKind,
+                                  option.itemSubtype,
+                                )
+                              : existing
+                                ? wikiItemIdentityLabel(
+                                    existing.itemKind,
+                                    existing.itemSubtype,
+                                  )
+                                : "Item"}
                           </small>
-                          {option?.title ?? existing?.title ?? "Linked Entry"}
+                          {option?.title ?? existing?.title ?? "Linked Item"}
                         </span>
                         <button
-                          aria-label={`Unlink ${option?.title ?? existing?.title ?? "Entry"}`}
+                          aria-label={`Unlink ${option?.title ?? existing?.title ?? "Item"}`}
                           disabled={isPending}
                           onClick={() =>
                             setRelatedEntryIds((current) =>
@@ -596,19 +603,23 @@ function PlaceEditor({
 
               <div className={styles.linkPicker}>
                 <select
-                  aria-label="Entry to link"
+                  aria-label="Item to link"
                   disabled={isPending || availableLinkOptions.length === 0}
                   onChange={(event) => setSelectedEntryId(event.target.value)}
                   value={selectedEntryId}
                 >
                   <option value="">
                     {availableLinkOptions.length > 0
-                      ? "Choose an Entry"
-                      : "No more Entries available"}
+                      ? "Choose an Item"
+                      : "No more Items available"}
                   </option>
                   {availableLinkOptions.map((option) => (
                     <option key={option.id} value={option.id}>
-                      {entryTypeLabel(option.entryType)} · {option.title}
+                      {wikiItemIdentityLabel(
+                        option.itemKind,
+                        option.itemSubtype,
+                      )}{" "}
+                      · {option.title}
                     </option>
                   ))}
                 </select>
@@ -624,7 +635,7 @@ function PlaceEditor({
                   }}
                   type="button"
                 >
-                  <Icon name="plus" size={14} /> Link Entry
+                  <Icon name="plus" size={14} /> Link Item
                 </button>
               </div>
             </fieldset>
@@ -654,7 +665,7 @@ function PlaceEditor({
                         ? "Remove its Home link first"
                         : relatedEntryIds.length === 0
                           ? "Save the unlinked Place first"
-                          : "Unlink every Entry first"}
+                          : "Unlink every Item first"}
                     </small>
                   ) : null}
                 </div>
@@ -698,7 +709,7 @@ function LinkedEntryRow({ entry }: { entry: PlaceLinkedEntry }) {
         <small>
           {entry.relationship === "home"
             ? "Home chapter"
-            : entryTypeLabel(entry.entryType)}
+            : wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
         </small>
         {entry.title}
       </span>
@@ -710,13 +721,6 @@ function LinkedEntryRow({ entry }: { entry: PlaceLinkedEntry }) {
 function coordinateValue(value: string) {
   const normalized = value.trim();
   return normalized ? Number(normalized) : null;
-}
-
-function entryTypeLabel(value: string) {
-  return value
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
 }
 
 function countLabel(count: number, singular: string, plural = `${singular}s`) {

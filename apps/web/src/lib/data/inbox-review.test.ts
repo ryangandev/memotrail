@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { parseInboxReviewInput } from "./inbox-review";
+import { createEntryRichText, plainTextDocument } from "./rich-text";
 
 const validInput = {
   body: "Small forces trigger bone remodeling.",
   collectionNames: ["Learning", "Health"],
-  entryType: "standard",
+  itemKind: "writing",
+  itemSubtype: "note",
   id: "f4d2df16-a506-4be6-a63e-b7b18afe3468",
   occurredAt: "2026-09-01T15:00:00.000Z",
   occurredTimezone: "America/Los_Angeles",
@@ -30,8 +32,28 @@ describe("Inbox Entry review", () => {
         body: "  Small forces trigger bone remodeling.  ",
       }),
     ).toEqual({
-      data: validInput,
+      data: { ...validInput, bodyRich: null },
       success: true,
+    });
+  });
+
+  it("keeps validated rich text with its canonical note", () => {
+    const bodyRich = createEntryRichText(
+      plainTextDocument("Small forces trigger bone remodeling."),
+    );
+
+    expect(parseInboxReviewInput({ ...validInput, bodyRich })).toMatchObject({
+      data: { bodyRich },
+      success: true,
+    });
+  });
+
+  it("rejects rich text that does not match the canonical note", () => {
+    const bodyRich = createEntryRichText(plainTextDocument("Different note"));
+
+    expect(parseInboxReviewInput({ ...validInput, bodyRich })).toEqual({
+      message: "This Entry's rich text is invalid.",
+      success: false,
     });
   });
 
@@ -39,7 +61,8 @@ describe("Inbox Entry review", () => {
     expect(
       parseInboxReviewInput({
         ...validInput,
-        entryType: "first_time",
+        itemKind: "event",
+        itemSubtype: "first_time",
         title: " ",
       }),
     ).toEqual({
@@ -50,7 +73,11 @@ describe("Inbox Entry review", () => {
 
   it("rejects unsupported types and invalid revisions", () => {
     expect(
-      parseInboxReviewInput({ ...validInput, entryType: "vehicle" }).success,
+      parseInboxReviewInput({
+        ...validInput,
+        itemKind: "entity",
+        itemSubtype: "vehicle",
+      }).success,
     ).toBe(false);
     expect(parseInboxReviewInput({ ...validInput, revision: 0 }).success).toBe(
       false,

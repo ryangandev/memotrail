@@ -57,6 +57,8 @@ final class InboxEntryTests: XCTestCase {
         JSONSerialization.jsonObject(with: encoder.encode(payload)) as? [String: Any])
       XCTAssertEqual(json["date_precision"] as? String, precision.rawValue)
       XCTAssertEqual(json["occurred_timezone"] as? String, "Asia/Kathmandu")
+      XCTAssertEqual(json["item_kind"] as? String, "capture")
+      XCTAssertEqual(json["item_subtype"] as? String, "quick_capture")
       if occurrence.start == nil { XCTAssertNil(json["occurred_start"]) }
       XCTAssertEqual(json["occurred_label"] as? String, occurrence.label)
     }
@@ -66,7 +68,7 @@ final class InboxEntryTests: XCTestCase {
     let data = Data(
       """
       {"id":"95000000-0000-4000-8000-000000000001","title":"Memory","body":"Original",
-      "entry_type":"standard","inbox_status":"organized","revision":2,
+      "item_kind":"writing","item_subtype":"note","inbox_status":"organized","revision":2,
       "created_at":"2017-07-08T12:34:56Z","occurred_start":"\(raw)","occurred_end":null,
       "date_precision":"exact","occurred_timezone":"UTC","collection_names":["Active"],"tag_names":["memory"]}
       """.utf8)
@@ -81,6 +83,8 @@ final class InboxEntryTests: XCTestCase {
     }
     let entry = try decoder.decode(InboxEntry.self, from: data)
     XCTAssertEqual(entry.inboxStatus, "organized")
+    XCTAssertEqual(entry.itemKind, .writing)
+    XCTAssertEqual(entry.itemSubtype, "note")
     XCTAssertEqual(entry.collectionNames, ["Active"])
     XCTAssertEqual(entry.tagNames, ["memory"])
     let organized = entry.withOrganization(collectionNames: ["Other"], tagNames: [])
@@ -88,7 +92,8 @@ final class InboxEntryTests: XCTestCase {
     XCTAssertEqual(organized.occurredStartRaw, raw)
     let parameters = ReviewEntryParameters(
       entryID: entry.id, expectedRevision: 2, title: entry.title, body: "Edited",
-      entryType: .standard, occurredStart: entry.occurredStart, occurredTimezone: "UTC",
+      itemKind: .writing, itemSubtype: "note", occurredStart: entry.occurredStart,
+      occurredTimezone: "UTC",
       collectionNames: [], tagNames: [], markDone: false, occurredStartRaw: entry.occurredStartRaw)
     let json = try XCTUnwrap(
       JSONSerialization.jsonObject(with: JSONEncoder().encode(parameters)) as? [String: Any])
@@ -96,6 +101,25 @@ final class InboxEntryTests: XCTestCase {
     XCTAssertFalse(json["p_mark_done"] as? Bool ?? true)
     XCTAssertTrue(json["p_occurred_end"] is NSNull)
   }
+
+  func testEntryDecodesCanonicalWikiClassification() throws {
+    let data = Data(
+      """
+      {"id":"95000000-0000-4000-8000-000000000002","title":"The long way home",\
+      "body":"A story worth keeping.","item_kind":"story",\
+      "item_subtype":"chapter","inbox_status":"organized","revision":3,\
+      "created_at":"2026-09-16T12:00:00Z","occurred_start":null,"occurred_end":null,\
+      "date_precision":"unknown","occurred_timezone":"UTC"}
+      """.utf8)
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+
+    let entry = try decoder.decode(InboxEntry.self, from: data)
+
+    XCTAssertEqual(entry.itemKind, .story)
+    XCTAssertEqual(entry.itemSubtype, "chapter")
+  }
+
   func testOccurrencePreservesLaterRepeatedHourAndFractionalSeconds() throws {
     let date = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-11-01T09:30:27Z"))
       .addingTimeInterval(0.123)
@@ -142,7 +166,8 @@ final class InboxEntryTests: XCTestCase {
 
   func testOccurrenceReviewParametersEncodeNullCalendarDates() throws {
     let parameters = ReviewEntryParameters(
-      entryID: UUID(), expectedRevision: 1, title: nil, body: "Memory", entryType: .standard,
+      entryID: UUID(), expectedRevision: 1, title: nil, body: "Memory", itemKind: .event,
+      itemSubtype: "memory",
       occurredStart: nil, occurredTimezone: "UTC", collectionNames: [], tagNames: [],
       markDone: false, datePrecision: .age, occurredEnd: nil, occurredLabel: "At age 17")
     let json = try XCTUnwrap(
@@ -249,7 +274,8 @@ final class InboxEntryTests: XCTestCase {
       title: "  First time skiing  ",
       body: "  A cold and brilliant day.  ",
       collectionNames: [" Travel ", "travel", "First Times"],
-      entryType: .firstTime,
+      itemKind: .event,
+      itemSubtype: "first_time",
       occurredAt: occurredAt,
       occurredTimezone: "America/Los_Angeles",
       tagNames: [" Skiing ", "skiing", "snow"]
@@ -257,7 +283,8 @@ final class InboxEntryTests: XCTestCase {
 
     XCTAssertEqual(input.title, "First time skiing")
     XCTAssertEqual(input.body, "A cold and brilliant day.")
-    XCTAssertEqual(input.entryType, .firstTime)
+    XCTAssertEqual(input.itemKind, .event)
+    XCTAssertEqual(input.itemSubtype, "first_time")
     XCTAssertEqual(input.collectionNames, ["Travel", "First Times"])
     XCTAssertEqual(input.tagNames, ["Skiing", "snow"])
     XCTAssertEqual(input.occurredAt, occurredAt)
@@ -272,13 +299,34 @@ final class InboxEntryTests: XCTestCase {
         title: " ",
         body: "I tried something new.",
         collectionNames: [],
-        entryType: .firstTime,
+        itemKind: .event,
+        itemSubtype: "first_time",
         occurredAt: Date(),
         occurredTimezone: "UTC",
         tagNames: []
       )
     ) { error in
       XCTAssertEqual(error as? InboxReviewError, .firstTimeRequiresTitle)
+    }
+  }
+
+  func testReviewRejectsIncompatibleKindAndSubtype() {
+    XCTAssertThrowsError(
+      try InboxReviewInput.validate(
+        entryID: UUID(),
+        revision: 1,
+        title: "A chapter",
+        body: "A longer story.",
+        collectionNames: [],
+        itemKind: .story,
+        itemSubtype: "memory",
+        occurredAt: nil,
+        occurredTimezone: "UTC",
+        tagNames: [],
+        datePrecision: .unknown
+      )
+    ) { error in
+      XCTAssertEqual(error as? InboxReviewError, .invalidClassification)
     }
   }
 
@@ -290,7 +338,8 @@ final class InboxEntryTests: XCTestCase {
         title: "A thought",
         body: "",
         collectionNames: [],
-        entryType: .standard,
+        itemKind: .writing,
+        itemSubtype: "note",
         occurredAt: Date(),
         occurredTimezone: "UTC",
         tagNames: []
@@ -306,7 +355,8 @@ final class InboxEntryTests: XCTestCase {
         title: "A thought",
         body: "",
         collectionNames: [],
-        entryType: .standard,
+        itemKind: .writing,
+        itemSubtype: "note",
         occurredAt: Date(),
         occurredTimezone: "",
         tagNames: []
@@ -324,7 +374,8 @@ final class InboxEntryTests: XCTestCase {
         title: "A thought",
         body: "",
         collectionNames: [""],
-        entryType: .standard,
+        itemKind: .writing,
+        itemSubtype: "note",
         occurredAt: Date(),
         occurredTimezone: "UTC",
         tagNames: []
@@ -340,7 +391,8 @@ final class InboxEntryTests: XCTestCase {
         title: "A thought",
         body: "",
         collectionNames: [],
-        entryType: .standard,
+        itemKind: .writing,
+        itemSubtype: "note",
         occurredAt: Date(),
         occurredTimezone: "UTC",
         tagNames: [String(repeating: "t", count: 61)]
@@ -356,7 +408,8 @@ final class InboxEntryTests: XCTestCase {
       expectedRevision: 1,
       title: nil,
       body: "A body-only Entry",
-      entryType: .standard,
+      itemKind: .writing,
+      itemSubtype: "journal",
       occurredStart: Date(timeIntervalSince1970: 1_788_278_400),
       occurredTimezone: "UTC",
       collectionNames: [],
@@ -368,6 +421,8 @@ final class InboxEntryTests: XCTestCase {
 
     XCTAssertTrue(json.keys.contains("p_title"))
     XCTAssertTrue(json["p_title"] is NSNull)
+    XCTAssertEqual(json["p_item_kind"] as? String, "writing")
+    XCTAssertEqual(json["p_item_subtype"] as? String, "journal")
   }
 
   func testDraftStoreRestoresContentForOnlyItsOwner() {

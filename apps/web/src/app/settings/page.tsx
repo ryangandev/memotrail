@@ -29,7 +29,7 @@ const preferences: Array<{
     title: "AI assistance",
   },
   {
-    detail: "Open the Library to manage Collections and tags across Entries.",
+    detail: "Open the Library to manage Collections and tags across items.",
     href: "/collections",
     icon: "archive",
     title: "Archive organization",

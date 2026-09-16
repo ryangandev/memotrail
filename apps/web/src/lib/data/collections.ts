@@ -1,10 +1,16 @@
 import "server-only";
 import { displayImageURLs } from "@/lib/media/urls";
 
-import { getAuthenticatedContext, type Viewer } from "./inbox";
+import {
+  getAuthenticatedContext,
+  loadEntryRichTextMap,
+  type Viewer,
+} from "./inbox";
+import type { EntryRichText } from "./rich-text";
 import { COLLECTION_PAGE_SIZE } from "./collections-input";
 import { parseOrganizationItems, type OrganizationItem } from "./organization";
 import { normalizeCounts } from "./organization-workspace";
+import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
 
 export type CollectionSummary = {
   color: string | null;
@@ -37,17 +43,21 @@ export type CollectionAttachment = {
 export type CollectionEntry = {
   attachments: CollectionAttachment[];
   body: string;
+  bodyRich: EntryRichText | null;
   collectionNames: string[];
   createdAt: string;
   datePrecision: string;
-  entryType: string;
   id: string;
   inboxStatus: "organized" | "unreviewed";
+  itemKind: WikiItemKind;
+  itemSubtype: string;
   occurredEnd: string | null;
   occurredLabel: string | null;
   occurredStart: string | null;
   occurredTimezone: string | null;
   revision: number;
+  recordId: string;
+  recordSource: "entry" | "person" | "place";
   tagNames: string[];
   title: string | null;
   updatedAt: string;
@@ -88,13 +98,16 @@ type CollectionEntryRow = {
   created_at: string;
   date_precision: string;
   entry_id: string;
-  entry_type: string;
   inbox_status: "organized" | "unreviewed";
+  item_kind: WikiItemKind;
+  item_subtype: string;
   occurred_end: string | null;
   occurred_label: string | null;
   occurred_start: string | null;
   occurred_timezone: string | null;
   revision: number;
+  record_id: string;
+  record_source: "entry" | "person" | "place";
   tag_names: string[];
   title: string | null;
   total_count: number | string;
@@ -115,7 +128,7 @@ export async function getCollectionsWorkspace({
   }
 
   const detailRequest = collectionId
-    ? context.client.rpc("collection_entries", {
+    ? context.client.rpc("collection_wiki_items", {
         p_collection_id: collectionId,
         p_limit: COLLECTION_PAGE_SIZE,
         p_offset: (page - 1) * COLLECTION_PAGE_SIZE,
@@ -146,10 +159,16 @@ export async function getCollectionsWorkspace({
     : parseCollectionEntryRows(detailResult.data);
   const collections = (summaryRows ?? []).map(summaryFromRow);
   const parsedEntries = detailRows ?? [];
-  const signedUrls = await signedImageUrls(
-    context.client,
-    parsedEntries.flatMap((row) => parseAttachments(row.attachments) ?? []),
-  );
+  const [signedUrls, bodyRichByEntry] = await Promise.all([
+    signedImageUrls(
+      context.client,
+      parsedEntries.flatMap((row) => parseAttachments(row.attachments) ?? []),
+    ),
+    loadEntryRichTextMap(
+      context,
+      parsedEntries.map((row) => ({ body: row.body, id: row.entry_id })),
+    ),
+  ]);
 
   return {
     collections,
@@ -157,7 +176,9 @@ export async function getCollectionsWorkspace({
       collectionId && (!detailRows || detailResult.error)
         ? "MemoTrail could not load this Collection. Refresh to try again."
         : null,
-    entries: parsedEntries.map((row) => entryFromRow(row, signedUrls)),
+    entries: parsedEntries.map((row) =>
+      entryFromRow(row, signedUrls, bodyRichByEntry.get(row.entry_id)),
+    ),
     inboxCount: inboxResult.error ? undefined : (inboxResult.count ?? 0),
     loadError:
       summaryRows && !summaryResult.error
@@ -192,6 +213,7 @@ function summaryFromRow(row: CollectionSummaryRow): CollectionSummary {
 function entryFromRow(
   row: CollectionEntryRow,
   signedUrls: Map<string, string>,
+  bodyRich: EntryRichText | null = null,
 ): CollectionEntry {
   return {
     attachments: (parseAttachments(row.attachments) ?? []).map(
@@ -201,17 +223,21 @@ function entryFromRow(
       }),
     ),
     body: row.body,
+    bodyRich,
     collectionNames: row.collection_names,
     createdAt: row.created_at,
     datePrecision: row.date_precision,
-    entryType: row.entry_type,
     id: row.entry_id,
     inboxStatus: row.inbox_status,
+    itemKind: row.item_kind,
+    itemSubtype: row.item_subtype,
     occurredEnd: row.occurred_end,
     occurredLabel: row.occurred_label,
     occurredStart: row.occurred_start,
     occurredTimezone: row.occurred_timezone,
     revision: row.revision,
+    recordId: row.record_id,
+    recordSource: row.record_source,
     tagNames: row.tag_names,
     title: row.title,
     updatedAt: row.updated_at,
@@ -277,7 +303,8 @@ function isCollectionEntryRow(value: unknown): value is CollectionEntryRow {
     typeof value.entry_id === "string" &&
     nullableString(value.title) &&
     typeof value.body === "string" &&
-    typeof value.entry_type === "string" &&
+    isWikiItemKind(value.item_kind) &&
+    typeof value.item_subtype === "string" &&
     (value.inbox_status === "organized" ||
       value.inbox_status === "unreviewed") &&
     nullableString(value.occurred_start) &&
@@ -286,6 +313,8 @@ function isCollectionEntryRow(value: unknown): value is CollectionEntryRow {
     nullableString(value.occurred_label) &&
     nullableString(value.occurred_timezone) &&
     typeof value.revision === "number" &&
+    typeof value.record_id === "string" &&
+    ["entry", "person", "place"].includes(String(value.record_source)) &&
     typeof value.created_at === "string" &&
     typeof value.updated_at === "string" &&
     stringArray(value.collection_names) &&

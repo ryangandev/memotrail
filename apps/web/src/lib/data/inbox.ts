@@ -7,13 +7,17 @@ import {
   type Occurrence,
   type OccurrencePrecision,
 } from "./occurrence";
+import { entryRichTextFromMetadata, type EntryRichText } from "./rich-text";
+import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
 
 export type InboxEntry = Occurrence & {
   body: string;
+  bodyRich: EntryRichText | null;
   collectionNames: string[];
   createdAt: string;
-  entryType: "first_time" | "standard";
   id: string;
+  itemKind: WikiItemKind;
+  itemSubtype: string;
   revision: number;
   tagNames: string[];
   title: string | null;
@@ -39,8 +43,10 @@ type Claims = Record<string, unknown>;
 type EntryRow = {
   body: string;
   created_at: string;
-  entry_type: "first_time" | "standard";
   id: string;
+  item_kind: string;
+  item_subtype: string;
+  metadata: unknown;
   occurred_start: string | null;
   occurred_end: string | null;
   occurred_label: string | null;
@@ -92,30 +98,74 @@ export const getAuthenticatedContext = cache(
   },
 );
 
-export async function getInboxWorkspace(): Promise<InboxWorkspace | null> {
+export async function loadEntryRichTextMap(
+  context: NonNullable<Awaited<ReturnType<typeof getAuthenticatedContext>>>,
+  entries: readonly { body: string; id: string }[],
+) {
+  const expectedBodies = new Map(
+    entries.map((entry) => [entry.id, entry.body] as const),
+  );
+  if (expectedBodies.size === 0) return new Map<string, EntryRichText>();
+
+  const { data, error } = await context.client
+    .from("entries")
+    .select("id,body,metadata")
+    .eq("owner_id", context.userId)
+    .in("id", [...expectedBodies.keys()])
+    .returns<{ body: string; id: string; metadata: unknown }[]>();
+
+  if (error) return new Map<string, EntryRichText>();
+
+  const values = new Map<string, EntryRichText>();
+  for (const row of data ?? []) {
+    if (expectedBodies.get(row.id) !== row.body) continue;
+    const richText = entryRichTextFromMetadata(row.metadata, row.body);
+    if (richText) values.set(row.id, richText);
+  }
+  return values;
+}
+
+export async function getInboxWorkspace(
+  focusedEntryId: string | null = null,
+): Promise<InboxWorkspace | null> {
   const context = await getAuthenticatedContext();
 
   if (!context) {
     return null;
   }
 
-  const { data, error } = await context.client
+  const entryColumns =
+    "id,title,body,metadata,item_kind,item_subtype,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision";
+  const inboxRequest = context.client
     .from("entries")
-    .select(
-      "id,title,body,entry_type,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision",
-    )
+    .select(entryColumns)
     .eq("owner_id", context.userId)
     .eq("inbox_status", "unreviewed")
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(50)
     .returns<EntryRow[]>();
+  const focusedRequest = focusedEntryId
+    ? context.client
+        .from("entries")
+        .select(entryColumns)
+        .eq("owner_id", context.userId)
+        .eq("id", focusedEntryId)
+        .eq("inbox_status", "unreviewed")
+        .is("deleted_at", null)
+        .limit(1)
+        .returns<EntryRow[]>()
+    : Promise.resolve({ data: [] as EntryRow[], error: null });
+  const [inbox, focused] = await Promise.all([inboxRequest, focusedRequest]);
 
-  if (error) {
+  if (inbox.error || focused.error) {
     return unavailableWorkspace(context.viewer);
   }
 
-  const rows = data ?? [];
+  const rows = [...(focused.data ?? []), ...(inbox.data ?? [])].filter(
+    (entry, index, values) =>
+      values.findIndex((candidate) => candidate.id === entry.id) === index,
+  );
   const entryIds = rows.map((entry) => entry.id);
   const [entryCollections, entryTags, collections, tags] = await Promise.all([
     loadEntryCollections(context, entryIds),
@@ -169,10 +219,15 @@ export function entryFromRow(
 ): InboxEntry {
   return {
     body: row.body,
+    bodyRich: entryRichTextFromMetadata(row.metadata, row.body),
     collectionNames,
     createdAt: row.created_at,
-    entryType: row.entry_type,
     id: row.id,
+    itemKind: isWikiItemKind(row.item_kind) ? row.item_kind : "capture",
+    itemSubtype:
+      typeof row.item_subtype === "string" && row.item_subtype
+        ? row.item_subtype
+        : "quick_capture",
     occurredAt: row.occurred_start,
     occurredEnd: row.occurred_end,
     occurredLabel: row.occurred_label,

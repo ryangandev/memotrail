@@ -58,7 +58,7 @@ final class CollectionEntryTests: XCTestCase {
     let entry = try decodeEntry()
 
     XCTAssertEqual(entry.displayTitle, "First sunrise trail")
-    XCTAssertEqual(entry.displayType, "First Time")
+    XCTAssertEqual(entry.displayType, "Event · First Time")
     XCTAssertEqual(entry.collectionNames, ["Milestones", "Travel"])
     XCTAssertEqual(entry.tagNames, ["outdoors"])
     XCTAssertEqual(entry.coverAttachment?.mimeType, .png)
@@ -105,6 +105,21 @@ final class CollectionEntryTests: XCTestCase {
 
     XCTAssertEqual(entry.displayTitle, "A useful first line")
     XCTAssertEqual(entry.displayExcerpt, "The rest of the note remains readable.")
+  }
+
+  func testEntryPreservesCanonicalAndSpecializedRoutingIdentity() throws {
+    let entry = try decodeEntry(
+      itemKind: "entity",
+      itemSubtype: "person",
+      recordSource: "person",
+      recordID: "30000000-0000-4000-8000-000000000099"
+    )
+
+    XCTAssertEqual(entry.itemKind, .entity)
+    XCTAssertEqual(entry.itemSubtype, "person")
+    XCTAssertEqual(entry.recordSource, .person)
+    XCTAssertEqual(entry.recordID.uuidString, "30000000-0000-4000-8000-000000000099")
+    XCTAssertEqual(entry.displayType, "Entity · Person")
   }
 
   func testPaginationValidationAcceptsSharedContractBounds() throws {
@@ -181,7 +196,11 @@ final class CollectionEntryTests: XCTestCase {
     occurredEnd: String? = nil,
     occurredLabel: String? = "Labor Day week, 2026",
     datePrecision: String = "approximate",
-    timezone: String? = "America/Los_Angeles"
+    timezone: String? = "America/Los_Angeles",
+    itemKind: String = "event",
+    itemSubtype: String = "first_time",
+    recordSource: String = "entry",
+    recordID: String = "20000000-0000-4000-8000-000000000001"
   ) throws -> CollectionEntry {
     let object: [String: Any] = [
       "collection_id": "10000000-0000-4000-8000-000000000001",
@@ -190,8 +209,11 @@ final class CollectionEntryTests: XCTestCase {
       "entry_id": "20000000-0000-4000-8000-000000000001",
       "title": title ?? NSNull(),
       "body": body,
-      "entry_type": "first_time",
       "inbox_status": "unreviewed",
+      "item_kind": itemKind,
+      "item_subtype": itemSubtype,
+      "record_source": recordSource,
+      "record_id": recordID,
       "occurred_start": occurredStart ?? NSNull(),
       "occurred_end": occurredEnd ?? NSNull(),
       "date_precision": datePrecision,

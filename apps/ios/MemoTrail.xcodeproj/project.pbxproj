@@ -50,9 +50,8 @@
 		B0000000000000000000001B /* CollectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000022 /* CollectionsView.swift */; };
 		B0000000000000000000001C /* LibraryDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000023 /* LibraryDestination.swift */; };
 		B0000000000000000000001D /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000024 /* LibraryView.swift */; };
-		B0000000000000000000001E /* HabitEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000025 /* HabitEntry.swift */; };
-		B0000000000000000000001F /* HabitsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000026 /* HabitsController.swift */; };
-		B00000000000000000000020 /* HabitsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000027 /* HabitsView.swift */; };
+		B90000000000000000000001 /* WikiItemSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90000000000000000000001 /* WikiItemSummary.swift */; };
+		B90000000000000000000002 /* LibraryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90000000000000000000002 /* LibraryController.swift */; };
 		B00000000000000000000021 /* TrashItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000028 /* TrashItem.swift */; };
 		B00000000000000000000022 /* TrashController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000029 /* TrashController.swift */; };
 		B00000000000000000000023 /* TrashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000002A /* TrashView.swift */; };
@@ -78,7 +77,6 @@
 		B10000000000000000000004 /* FirstTimeEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000005 /* FirstTimeEntryTests.swift */; };
 		B10000000000000000000005 /* CollectionEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000006 /* CollectionEntryTests.swift */; };
 		B10000000000000000000006 /* LibraryDestinationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000007 /* LibraryDestinationTests.swift */; };
-		B10000000000000000000007 /* HabitEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000008 /* HabitEntryTests.swift */; };
 		B10000000000000000000008 /* TrashItemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000009 /* TrashItemTests.swift */; };
 		B10000000000000000000009 /* HomeEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000A /* HomeEntryTests.swift */; };
 		B1000000000000000000000A /* VoiceTranscriptTextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000B /* VoiceTranscriptTextTests.swift */; };
@@ -144,9 +142,8 @@
 		C00000000000000000000022 /* CollectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionsView.swift; sourceTree = "<group>"; };
 		C00000000000000000000023 /* LibraryDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryDestination.swift; sourceTree = "<group>"; };
 		C00000000000000000000024 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
-		C00000000000000000000025 /* HabitEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitEntry.swift; sourceTree = "<group>"; };
-		C00000000000000000000026 /* HabitsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitsController.swift; sourceTree = "<group>"; };
-		C00000000000000000000027 /* HabitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitsView.swift; sourceTree = "<group>"; };
+		C90000000000000000000001 /* WikiItemSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiItemSummary.swift; sourceTree = "<group>"; };
+		C90000000000000000000002 /* LibraryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryController.swift; sourceTree = "<group>"; };
 		C00000000000000000000028 /* TrashItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrashItem.swift; sourceTree = "<group>"; };
 		C00000000000000000000029 /* TrashController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrashController.swift; sourceTree = "<group>"; };
 		C0000000000000000000002A /* TrashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrashView.swift; sourceTree = "<group>"; };
@@ -173,7 +170,6 @@
 		C10000000000000000000005 /* FirstTimeEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstTimeEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000006 /* CollectionEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000007 /* LibraryDestinationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryDestinationTests.swift; sourceTree = "<group>"; };
-		C10000000000000000000008 /* HabitEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000009 /* TrashItemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrashItemTests.swift; sourceTree = "<group>"; };
 		C1000000000000000000000A /* HomeEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeEntryTests.swift; sourceTree = "<group>"; };
 		C1000000000000000000000B /* VoiceTranscriptTextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceTranscriptTextTests.swift; sourceTree = "<group>"; };
@@ -270,7 +266,6 @@
 				A10000000000000000000017 /* FirstTimes */,
 				A10000000000000000000018 /* Collections */,
 				A10000000000000000000019 /* Library */,
-				A10000000000000000000020 /* Habits */,
 				A10000000000000000000021 /* Trash */,
 			);
 			path = Features;
@@ -328,7 +323,7 @@
 				C0000000000000000000001D /* FirstTimeEntry.swift */,
 				C00000000000000000000020 /* CollectionEntry.swift */,
 				C00000000000000000000023 /* LibraryDestination.swift */,
-				C00000000000000000000025 /* HabitEntry.swift */,
+				C90000000000000000000001 /* WikiItemSummary.swift */,
 				C00000000000000000000028 /* TrashItem.swift */,
 				C0000000000000000000002F /* ResidenceEntry.swift */,
 				C00000000000000000000032 /* VehicleEntry.swift */,
@@ -380,7 +375,6 @@
 				C10000000000000000000005 /* FirstTimeEntryTests.swift */,
 				C10000000000000000000006 /* CollectionEntryTests.swift */,
 				C10000000000000000000007 /* LibraryDestinationTests.swift */,
-				C10000000000000000000008 /* HabitEntryTests.swift */,
 				C10000000000000000000009 /* TrashItemTests.swift */,
 			);
 			path = MemoTrailTests;
@@ -425,18 +419,10 @@
 		A10000000000000000000019 /* Library */ = {
 			isa = PBXGroup;
 			children = (
+				C90000000000000000000002 /* LibraryController.swift */,
 				C00000000000000000000024 /* LibraryView.swift */,
 			);
 			path = Library;
-			sourceTree = "<group>";
-		};
-		A10000000000000000000020 /* Habits */ = {
-			isa = PBXGroup;
-			children = (
-				C00000000000000000000026 /* HabitsController.swift */,
-				C00000000000000000000027 /* HabitsView.swift */,
-			);
-			path = Habits;
 			sourceTree = "<group>";
 		};
 		A10000000000000000000021 /* Trash */ = {
@@ -633,10 +619,9 @@
 				B0000000000000000000001A /* CollectionsController.swift in Sources */,
 				B0000000000000000000001B /* CollectionsView.swift in Sources */,
 				B0000000000000000000001C /* LibraryDestination.swift in Sources */,
+				B90000000000000000000001 /* WikiItemSummary.swift in Sources */,
+				B90000000000000000000002 /* LibraryController.swift in Sources */,
 				B0000000000000000000001D /* LibraryView.swift in Sources */,
-				B0000000000000000000001E /* HabitEntry.swift in Sources */,
-				B0000000000000000000001F /* HabitsController.swift in Sources */,
-				B00000000000000000000020 /* HabitsView.swift in Sources */,
 				B00000000000000000000021 /* TrashItem.swift in Sources */,
 				B00000000000000000000022 /* TrashController.swift in Sources */,
 				B00000000000000000000023 /* TrashView.swift in Sources */,
@@ -678,7 +663,6 @@
 				B10000000000000000000004 /* FirstTimeEntryTests.swift in Sources */,
 				B10000000000000000000005 /* CollectionEntryTests.swift in Sources */,
 				B10000000000000000000006 /* LibraryDestinationTests.swift in Sources */,
-				B10000000000000000000007 /* HabitEntryTests.swift in Sources */,
 				B10000000000000000000008 /* TrashItemTests.swift in Sources */,
 				B10000000000000000000009 /* HomeEntryTests.swift in Sources */,
 				B1000000000000000000000A /* VoiceTranscriptTextTests.swift in Sources */,

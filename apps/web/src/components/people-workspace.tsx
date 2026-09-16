@@ -42,7 +42,7 @@ export function PeopleWorkspace({
       {error ? <p role="alert">{error}</p> : null}
       {!people.length && !error ? (
         <p className={styles.empty}>
-          No People yet. Add a name, then connect the Entries you share.
+          No People yet. Add a name, then connect the Items you share.
         </p>
       ) : null}
       <div className={styles.grid}>
@@ -58,7 +58,7 @@ export function PeopleWorkspace({
             <h2>{person.name}</h2>
             <p>{person.relationship_label || "A person in your story"}</p>
             <p className={styles.preview}>{person.notes}</p>
-            <small>{person.linked_entries.length} connected Entries</small>
+            <small>{person.linked_entries.length} connected Items</small>
           </button>
         ))}
       </div>
@@ -204,21 +204,21 @@ function PersonEditor({
               onChange={(e) => setNotes(e.target.value)}
             />
           </label>
-          <h3>Connected Entries</h3>
+          <h3>Connected Items</h3>
           {entryIds.map((id) => {
             const entry = options.get(id);
             return (
               <div key={id} className={styles.link}>
                 <details>
                   <summary>
-                    {entry ? personEntryTitle(entry) : "Linked Entry"}
+                    {entry ? personEntryTitle(entry) : "Linked Item"}
                     {entry?.is_deleted ? " (in Trash)" : ""}
                   </summary>
                   <p>{entry?.body}</p>
                 </details>
                 <button
                   type="button"
-                  aria-label={`Unlink ${entry ? personEntryTitle(entry) : "Entry"}`}
+                  aria-label={`Unlink ${entry ? personEntryTitle(entry) : "Item"}`}
                   onClick={() => setEntryIds(entryIds.filter((i) => i !== id))}
                 >
                   Unlink
@@ -227,12 +227,12 @@ function PersonEditor({
             );
           })}
           <label>
-            Link an Entry
+            Link an Item
             <select
               value={entryId}
               onChange={(e) => setEntryId(e.target.value)}
             >
-              <option value="">Choose from recent Entries</option>
+              <option value="">Choose from recent Items</option>
               {entries
                 .filter((e) => !entryIds.includes(e.id))
                 .map((e) => (
@@ -250,7 +250,7 @@ function PersonEditor({
               setEntryId("");
             }}
           >
-            Link Entry
+            Link Item
           </button>
         </fieldset>
         {message ? <p role="alert">{message}</p> : null}
@@ -266,7 +266,7 @@ function PersonEditor({
               </button>
               {person.linked_entries.length > 0 ? (
                 <small>
-                  Unlink every Entry and save before removing this Person.
+                  Unlink every Item and save before removing this Person.
                 </small>
               ) : null}
             </div>

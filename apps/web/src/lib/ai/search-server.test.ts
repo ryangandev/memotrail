@@ -21,7 +21,7 @@ const client = { rpc } as unknown as SupabaseClient;
 const input = { parameters: { q: "When did I first ski?" }, timeZone: "UTC" };
 const plan = {
   queries: ["skiing", "滑雪"],
-  entryTypes: [],
+  itemClassifications: [],
   dateFrom: null,
   dateTo: null,
   beforeLatestHome: false,
@@ -60,7 +60,7 @@ it("plans bilingually, retrieves owner-client evidence, and validates original q
   );
   const answer = await searchWithAI(client, "owner", input);
   expect(rpc).toHaveBeenCalledWith(
-    "archive_search_evidence",
+    "archive_wiki_search_evidence",
     expect.objectContaining({
       p_queries: ["skiing", "滑雪"],
       p_order: "oldest",
@@ -100,7 +100,7 @@ it("uses a declared bounded fallback when cross-language words have no overlap",
     .mockResolvedValueOnce({ data: evidence, error: null });
   const answer = await searchWithAI(client, "owner", input);
   expect(rpc).toHaveBeenLastCalledWith(
-    "archive_search_evidence",
+    "archive_wiki_search_evidence",
     expect.objectContaining({ p_queries: [""] }),
   );
   expect(answer.notices.join(" ")).toContain("bounded record window");
@@ -127,7 +127,11 @@ it("broadens reference-only move retrieval without discarding the date boundary 
   const home = { id: "22222222-2222-4222-8222-222222222222", title: "Move" };
   generate
     .mockResolvedValueOnce(
-      output({ ...plan, beforeLatestHome: true, entryTypes: ["standard"] }),
+      output({
+        ...plan,
+        beforeLatestHome: true,
+        itemClassifications: ["writing"],
+      }),
     )
     .mockResolvedValueOnce(
       output({ insufficientEvidence: true, findings: [] }),
@@ -146,11 +150,11 @@ it("broadens reference-only move retrieval without discarding the date boundary 
     parameters: { q: "What was I thinking before my last move?", tag: "life" },
   });
   expect(rpc).toHaveBeenLastCalledWith(
-    "archive_search_evidence",
+    "archive_wiki_search_evidence",
     expect.objectContaining({
       p_queries: [""],
       p_before_latest_home: true,
-      p_entry_types: [],
+      p_item_classifications: [],
       p_tag_names: ["life"],
     }),
   );
@@ -169,7 +173,11 @@ it("rejects an invalid planner response without querying records", async () => {
 it("retains manual filters and explains an unavailable Home boundary", async () => {
   generate
     .mockResolvedValueOnce(
-      output({ ...plan, beforeLatestHome: true, entryTypes: ["home"] }),
+      output({
+        ...plan,
+        beforeLatestHome: true,
+        itemClassifications: ["home"],
+      }),
     )
     .mockResolvedValueOnce(
       output({ insufficientEvidence: true, findings: [] }),
@@ -178,7 +186,7 @@ it("retains manual filters and explains an unavailable Home boundary", async () 
     ...input,
     parameters: {
       q: "Before my last move?",
-      type: "standard",
+      type: "writing",
       collection: "Thoughts",
       tag: "life",
       from: "2020-01-01",
@@ -186,9 +194,9 @@ it("retains manual filters and explains an unavailable Home boundary", async () 
     },
   });
   expect(rpc).toHaveBeenCalledWith(
-    "archive_search_evidence",
+    "archive_wiki_search_evidence",
     expect.objectContaining({
-      p_entry_types: ["standard"],
+      p_item_classifications: ["writing"],
       p_collection_names: ["Thoughts"],
       p_tag_names: ["life"],
       p_date_from: "2020-01-01",

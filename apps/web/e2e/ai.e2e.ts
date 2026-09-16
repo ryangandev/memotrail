@@ -161,8 +161,10 @@ test("AI consent, settings persistence, API authentication, and bounded connecti
         ).error,
       ).toBeNull();
       await page.goto("/inbox");
-      await page.getByRole("button", { name: "Review", exact: true }).click();
-      const dialog = page.getByRole("dialog", { name: "Organize Entry" });
+      await page
+        .getByRole("button", { name: "Organize", exact: true })
+        .click();
+      const dialog = page.getByRole("dialog", { name: "Organize Capture" });
       const titleChoice = dialog.getByRole("button", { name: /Use title:/ });
       await expect(titleChoice).toBeVisible({ timeout: 35000 });
       await page.screenshot({

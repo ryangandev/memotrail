@@ -59,14 +59,14 @@ create temporary table pg_temp.first_times_test_baseline (entry_id uuid primary 
 
 insert into pg_temp.first_times_test_baseline (entry_id)
 select entry_id
-from public.first_times_workspace();
+from public.first_times_workspace_with_occurrence();
 
 grant select on pg_temp.first_times_test_baseline to authenticated;
 
 set local role authenticated;
 
 select is(
-  (select count(*)::integer from public.first_times_workspace()),
+  (select count(*)::integer from public.first_times_workspace_with_occurrence()),
   (select count(*)::integer from pg_temp.first_times_test_baseline),
   'First Times tests preserve any existing local workspace Entries'
 );
@@ -74,7 +74,7 @@ select is(
 select lives_ok(
   $$
     select *
-    from public.save_first_time_entry(
+    from public.save_first_time_with_occurrence(
       'First time seeing the ocean',
       '',
       null,
@@ -84,6 +84,7 @@ select lives_ok(
       '{}'::text[],
       '{}'::text[],
       null,
+      null,
       null
     )
   $$,
@@ -92,12 +93,12 @@ select lives_ok(
 
 select is(
   (
-    select entry_type
+    select item_kind || ':' || item_subtype
     from public.entries
     where title = 'First time seeing the ocean'
   ),
-  'first_time',
-  'Direct creation stores the specialized First Time Entry type'
+  'event:first_time',
+  'Direct creation stores the specialized First Time Event identity'
 );
 
 select is(
@@ -113,7 +114,7 @@ select is(
 select lives_ok(
   $$
     select *
-    from public.save_first_time_entry(
+    from public.save_first_time_with_occurrence(
       'First time skiing',
       'A clear cold day on the mountain.',
       '2026-07-03T19:00:00Z',
@@ -122,6 +123,7 @@ select lives_ok(
       'America/Los_Angeles',
       array['Travel', 'travel'],
       array['Snow', 'snow'],
+      null,
       null,
       null
     )
@@ -134,7 +136,7 @@ select is(
     select occurred_start
     from public.entries
     where title = 'First time skiing'
-      and entry_type = 'first_time'
+      and item_kind = 'event' and item_subtype = 'first_time'
   ),
   '2026-07-03T19:00:00Z'::timestamptz,
   'A First Time preserves its occurrence instant'
@@ -145,7 +147,7 @@ select is(
     select occurred_timezone
     from public.entries
     where title = 'First time skiing'
-      and entry_type = 'first_time'
+      and item_kind = 'event' and item_subtype = 'first_time'
   ),
   'America/Los_Angeles',
   'A First Time preserves its occurrence timezone'
@@ -157,7 +159,7 @@ select is(
       select lower(collection_name)
       from unnest(collection_names) as collection_name
     )
-    from public.first_times_workspace()
+    from public.first_times_workspace_with_occurrence()
     where title = 'First time skiing'
   ),
   array['travel'],
@@ -170,7 +172,7 @@ select is(
       select lower(tag_name)
       from unnest(tag_names) as tag_name
     )
-    from public.first_times_workspace()
+    from public.first_times_workspace_with_occurrence()
     where title = 'First time skiing'
   ),
   array['snow'],
@@ -180,7 +182,7 @@ select is(
 select is(
   (
     select jsonb_array_length(attachments)
-    from public.first_times_workspace()
+    from public.first_times_workspace_with_occurrence()
     where title = 'First time skiing'
   ),
   0,
@@ -190,7 +192,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.first_times_workspace()
+    from public.first_times_workspace_with_occurrence()
     where entry_id not in (select entry_id from pg_temp.first_times_test_baseline)
   ),
   2,
@@ -200,7 +202,7 @@ select is(
 select is(
   (
     select title
-    from public.first_times_workspace()
+    from public.first_times_workspace_with_occurrence()
     where entry_id not in (select entry_id from pg_temp.first_times_test_baseline)
     limit 1
   ),
@@ -212,8 +214,8 @@ select is(
   pg_temp.capture_sqlstate(
     $$
       select *
-      from public.save_first_time_entry(
-        ' ', '', null, 'unknown', null, null, '{}', '{}', null, null
+      from public.save_first_time_with_occurrence(
+        ' ', '', null, 'unknown', null, null, '{}', '{}', null, null, null
       )
     $$
   ),
@@ -225,8 +227,8 @@ select is(
   pg_temp.capture_sqlstate(
     $$
       select *
-      from public.save_first_time_entry(
-        'Invalid exact date', '', null, 'day', null, null, '{}', '{}', null, null
+      from public.save_first_time_with_occurrence(
+        'Invalid exact date', '', null, 'day', null, null, '{}', '{}', null, null, null
       )
     $$
   ),
@@ -238,7 +240,7 @@ select is(
   pg_temp.capture_sqlstate(
     $$
       select *
-      from public.save_first_time_entry(
+      from public.save_first_time_with_occurrence(
         'Invalid timezone',
         '',
         '2026-07-03T19:00:00Z',
@@ -247,6 +249,7 @@ select is(
         'Not/AZone',
         '{}',
         '{}',
+        null,
         null,
         null
       )
@@ -259,7 +262,7 @@ select is(
 select lives_ok(
   $$
     select *
-    from public.save_first_time_entry(
+    from public.save_first_time_with_occurrence(
       'First ski trip',
       'Updated reflection.',
       '2026-07-03T19:00:00Z',
@@ -272,14 +275,15 @@ select lives_ok(
         select id
         from public.entries
         where title = 'First time skiing'
-          and entry_type = 'first_time'
+          and item_kind = 'event' and item_subtype = 'first_time'
       ),
       (
         select revision
         from public.entries
         where title = 'First time skiing'
-          and entry_type = 'first_time'
-      )
+          and item_kind = 'event' and item_subtype = 'first_time'
+      ),
+      null
     )
   $$,
   'The current revision can update a First Time'
@@ -308,7 +312,7 @@ select is(
 select is(
   (
     select collection_names
-    from public.first_times_workspace()
+    from public.first_times_workspace_with_occurrence()
     where title = 'First ski trip'
   ),
   array['Milestones'],
@@ -318,7 +322,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.save_first_time_entry(
+    from public.save_first_time_with_occurrence(
       'Stale overwrite',
       '',
       null,
@@ -328,7 +332,8 @@ select is(
       '{}',
       '{}',
       (select id from public.entries where title = 'First ski trip'),
-      1
+      1,
+      null
     )
   ),
   0,
@@ -430,7 +435,7 @@ select is(
 select is(
   (
     select attachments -> 0 ->> 'mimeType'
-    from public.first_times_workspace()
+    from public.first_times_workspace_with_occurrence()
     where title = 'First ski trip'
   ),
   'image/jpeg',
@@ -538,7 +543,7 @@ select is(
 select is(
   (
     select jsonb_array_length(attachments)
-    from public.first_times_workspace()
+    from public.first_times_workspace_with_occurrence()
     where title = 'First ski trip'
   ),
   0,
@@ -569,14 +574,14 @@ insert into pg_temp.first_time_test_state (entry_id)
 select id
 from public.entries
 where title = 'First ski trip'
-  and entry_type = 'first_time';
+  and item_kind = 'event' and item_subtype = 'first_time';
 
 reset role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000003', true);
 
 select is(
-  (select count(*)::integer from public.first_times_workspace()),
+  (select count(*)::integer from public.first_times_workspace_with_occurrence()),
   0,
   'Another owner cannot see the first owner''s First Times'
 );
@@ -584,7 +589,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.save_first_time_entry(
+    from public.save_first_time_with_occurrence(
       'Cross-owner overwrite',
       '',
       null,
@@ -594,7 +599,8 @@ select is(
       '{}',
       '{}',
       (select entry_id from pg_temp.first_time_test_state),
-      2
+      2,
+      null
     )
   ),
   0,
@@ -643,7 +649,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.first_times_workspace()
+    from public.first_times_workspace_with_occurrence()
     where title = 'First ski trip'
   ),
   0,
@@ -664,7 +670,7 @@ reset role;
 select set_config('request.jwt.claim.sub', '', true);
 
 select is(
-  (select count(*)::integer from public.first_times_workspace()),
+  (select count(*)::integer from public.first_times_workspace_with_occurrence()),
   0,
   'An unauthenticated request receives no First Times'
 );
@@ -672,8 +678,8 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.save_first_time_entry(
-      'Anonymous write', '', null, 'unknown', null, null, '{}', '{}', null, null
+    from public.save_first_time_with_occurrence(
+      'Anonymous write', '', null, 'unknown', null, null, '{}', '{}', null, null, null
     )
   ),
   0,

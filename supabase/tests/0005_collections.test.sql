@@ -153,7 +153,8 @@ insert into public.entries (
   owner_id,
   title,
   body,
-  entry_type,
+  item_kind,
+  item_subtype,
   inbox_status,
   occurred_start,
   occurred_end,
@@ -170,6 +171,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Collection Test Ski Trip',
     'A bright day in the snow.',
+    'event',
     'first_time',
     'organized',
     '2026-07-03T19:00:00Z',
@@ -186,7 +188,8 @@ values
     '10000000-0000-0000-0000-000000000001',
     null,
     'A body-only Collection test thought.',
-    'standard',
+    'capture',
+    'quick_capture',
     'unreviewed',
     null,
     null,
@@ -202,7 +205,8 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Collection Test Trashed',
     'This Entry should not appear.',
-    'standard',
+    'writing',
+    'note',
     'organized',
     '2027-01-01T00:00:00Z',
     null,
@@ -218,7 +222,8 @@ values
     '10000000-0000-0000-0000-000000000004',
     'Collection Test Other Entry',
     'Private to the other owner.',
-    'standard',
+    'writing',
+    'note',
     'organized',
     '2026-06-01T00:00:00Z',
     null,
@@ -400,7 +405,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.collection_entries('21000000-0000-0000-0000-000000000001')
+    from public.collection_wiki_items('21000000-0000-0000-0000-000000000001')
   ),
   2,
   'Collection detail returns every active linked Entry'
@@ -409,7 +414,7 @@ select is(
 select is(
   (
     select min(total_count)::integer
-    from public.collection_entries('21000000-0000-0000-0000-000000000001')
+    from public.collection_wiki_items('21000000-0000-0000-0000-000000000001')
   ),
   2,
   'Every Collection detail row reports the full result count'
@@ -418,7 +423,7 @@ select is(
 select is(
   (
     select array_agg(entry_id)
-    from public.collection_entries('21000000-0000-0000-0000-000000000001')
+    from public.collection_wiki_items('21000000-0000-0000-0000-000000000001')
   ),
   array[
     '51000000-0000-0000-0000-000000000001'::uuid,
@@ -430,7 +435,7 @@ select is(
 select ok(
   (
     select title is null
-    from public.collection_entries('21000000-0000-0000-0000-000000000001')
+    from public.collection_wiki_items('21000000-0000-0000-0000-000000000001')
     where entry_id = '51000000-0000-0000-0000-000000000002'
   ),
   'Collection detail preserves a body-only Entry title'
@@ -439,7 +444,7 @@ select ok(
 select is(
   (
     select body
-    from public.collection_entries('21000000-0000-0000-0000-000000000001')
+    from public.collection_wiki_items('21000000-0000-0000-0000-000000000001')
     where entry_id = '51000000-0000-0000-0000-000000000002'
   ),
   'A body-only Collection test thought.',
@@ -448,18 +453,18 @@ select is(
 
 select is(
   (
-    select entry_type
-    from public.collection_entries('21000000-0000-0000-0000-000000000001')
+    select item_subtype
+    from public.collection_wiki_items('21000000-0000-0000-0000-000000000001')
     where entry_id = '51000000-0000-0000-0000-000000000001'
   ),
   'first_time',
-  'Collection detail preserves specialized Entry Types'
+  'Collection detail preserves specialized Wiki Item subtypes'
 );
 
 select is(
   (
     select tag_names
-    from public.collection_entries('21000000-0000-0000-0000-000000000001')
+    from public.collection_wiki_items('21000000-0000-0000-0000-000000000001')
     where entry_id = '51000000-0000-0000-0000-000000000001'
   ),
   array['collection-test-tag'],
@@ -469,7 +474,7 @@ select is(
 select is(
   (
     select collection_names
-    from public.collection_entries('21000000-0000-0000-0000-000000000001')
+    from public.collection_wiki_items('21000000-0000-0000-0000-000000000001')
     where entry_id = '51000000-0000-0000-0000-000000000001'
   ),
   array['Collection Test Learning', 'Collection Test Travel'],
@@ -479,7 +484,7 @@ select is(
 select is(
   (
     select jsonb_array_length(attachments)
-    from public.collection_entries('21000000-0000-0000-0000-000000000001')
+    from public.collection_wiki_items('21000000-0000-0000-0000-000000000001')
     where entry_id = '51000000-0000-0000-0000-000000000001'
   ),
   1,
@@ -489,7 +494,7 @@ select is(
 select is(
   (
     select attachments -> 0 ->> 'objectPath'
-    from public.collection_entries('21000000-0000-0000-0000-000000000001')
+    from public.collection_wiki_items('21000000-0000-0000-0000-000000000001')
     where entry_id = '51000000-0000-0000-0000-000000000001'
   ),
   'collection-test/active.jpg',
@@ -502,7 +507,7 @@ select is(
     from jsonb_array_elements(
       (
         select attachments
-        from public.collection_entries('21000000-0000-0000-0000-000000000001')
+        from public.collection_wiki_items('21000000-0000-0000-0000-000000000001')
         where entry_id = '51000000-0000-0000-0000-000000000001'
       )
     ) as attachment
@@ -515,7 +520,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.collection_entries('21000000-0000-0000-0000-000000000001')
+    from public.collection_wiki_items('21000000-0000-0000-0000-000000000001')
     where entry_id = '51000000-0000-0000-0000-000000000003'
   ),
   0,
@@ -525,7 +530,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.collection_entries(
+    from public.collection_wiki_items(
       '21000000-0000-0000-0000-000000000001',
       1,
       0
@@ -538,7 +543,7 @@ select is(
 select is(
   (
     select entry_id
-    from public.collection_entries(
+    from public.collection_wiki_items(
       '21000000-0000-0000-0000-000000000001',
       1,
       1
@@ -552,7 +557,7 @@ select is(
   pg_temp.capture_sqlstate(
     $$
       select *
-      from public.collection_entries(
+      from public.collection_wiki_items(
         '21000000-0000-0000-0000-000000000001',
         0,
         0
@@ -567,7 +572,7 @@ select is(
   pg_temp.capture_sqlstate(
     $$
       select *
-      from public.collection_entries(
+      from public.collection_wiki_items(
         '21000000-0000-0000-0000-000000000001',
         25,
         -1
@@ -581,7 +586,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.collection_entries('21000000-0000-0000-0000-000000000005')
+    from public.collection_wiki_items('21000000-0000-0000-0000-000000000005')
   ),
   0,
   'An owner cannot browse another owner''s Collection'
@@ -615,7 +620,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.collection_entries('21000000-0000-0000-0000-000000000005')
+    from public.collection_wiki_items('21000000-0000-0000-0000-000000000005')
   ),
   1,
   'Another owner can browse their own Collection Entries'
@@ -633,7 +638,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.collection_entries('21000000-0000-0000-0000-000000000001')
+    from public.collection_wiki_items('21000000-0000-0000-0000-000000000001')
   ),
   0,
   'An unauthenticated request receives no Collection Entries'
@@ -652,7 +657,7 @@ select ok(
 select ok(
   has_function_privilege(
     'authenticated',
-    'public.collection_entries(uuid,integer,integer)',
+    'public.collection_wiki_items(uuid,integer,integer)',
     'execute'
   ),
   'Authenticated users can execute Collection detail'
@@ -661,7 +666,7 @@ select ok(
 select ok(
   not has_function_privilege(
     'anon',
-    'public.collection_entries(uuid,integer,integer)',
+    'public.collection_wiki_items(uuid,integer,integer)',
     'execute'
   ),
   'Anonymous users cannot execute Collection detail through the API'
@@ -681,7 +686,7 @@ select is(
   (
     select proconfig
     from pg_proc
-    where oid = 'public.collection_entries(uuid,integer,integer)'::regprocedure
+    where oid = 'public.collection_wiki_items(uuid,integer,integer)'::regprocedure
   ),
   array['search_path=""'],
   'The Collection detail function uses an empty search path'

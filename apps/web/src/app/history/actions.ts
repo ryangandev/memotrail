@@ -4,8 +4,8 @@ import { getAuthenticatedContext, entryFromRow } from "@/lib/data/inbox";
 import { validHistoryID } from "@/lib/data/history";
 import { validHistoryRestore } from "@/lib/data/history";
 import {
-  parseGoalConversionInput,
-  type GoalConversionInput,
+  parseGoalExtractionInput,
+  type GoalExtractionInput,
 } from "@/lib/data/goal-record-input";
 
 export async function loadEditableEntry(id: string) {
@@ -22,28 +22,42 @@ export async function loadEditableEntry(id: string) {
   };
 }
 
-export async function convertEntryToGoal(
-  input: GoalConversionInput,
-): Promise<string | null> {
-  const parsed = parseGoalConversionInput(input);
-  if (!parsed.success) return parsed.message;
+export async function extractGoalFromItem(
+  input: GoalExtractionInput,
+): Promise<{ error: string | null; goalId: string | null }> {
+  const parsed = parseGoalExtractionInput(input);
+  if (!parsed.success) return { error: parsed.message, goalId: null };
   const context = await getAuthenticatedContext();
-  if (!context) return "Sign in again to convert this Entry.";
+  if (!context)
+    return {
+      error: "Sign in again to create a Goal from this Wiki Item.",
+      goalId: null,
+    };
   const value = parsed.data;
-  const { data, error } = await context.client.rpc("convert_entry_to_goal", {
-    p_entry_id: value.id,
-    p_expected_revision: value.revision,
+  const { data, error } = await context.client.rpc("extract_goal_from_item", {
+    p_goal_id: value.goalId,
     p_title: value.title,
     p_horizon: value.horizon,
     p_status: value.status,
     p_target_date: value.targetDate,
+    p_source_entry_id: value.sourceId,
+    p_source_revision: value.sourceRevision,
   });
   if (error)
-    return "Could not confirm conversion. Refresh to check the current Entry before retrying.";
-  if (!data)
-    return "This Entry changed, is in Trash, or is no longer Standard. Refresh before converting.";
+    return {
+      error:
+        "Could not confirm Goal creation. Refresh to check the source before retrying.",
+      goalId: null,
+    };
+  const result = Array.isArray(data) ? data[0] : data;
+  if (!result?.goal_entry_id)
+    return {
+      error:
+        "The source changed or is in Trash. Refresh before creating this Goal.",
+      goalId: null,
+    };
   revalidatePath("/", "layout");
-  return null;
+  return { error: null, goalId: result.goal_entry_id };
 }
 export async function restoreHistoryVersion(
   id: string,

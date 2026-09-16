@@ -14,6 +14,7 @@ import {
   type RelatedEntry,
   type RelationMode,
 } from "@/lib/data/entry-relations";
+import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 import styles from "./entry-relations.module.css";
 export function EntryRelationsPanel({ entryID }: { entryID: string }) {
   const router = useRouter();
@@ -57,7 +58,7 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
       busy ||
       (!linked &&
         !confirm(
-          `Unlink ${historyTitle(row)}? Neither Entry is deleted. This change can be restored through this Entry's history.`,
+          `Unlink ${historyTitle(row)}? Neither Item is deleted. This change can be restored through this Item's history.`,
         ))
     )
       return;
@@ -96,11 +97,11 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
     }
   }
   return (
-    <section className={styles.panel} aria-label="Related Entries">
-      <h3>Related Entries</h3>
+    <section className={styles.panel} aria-label="Related Items">
+      <h3>Related Items</h3>
       <p>
         Connect existing writing without copying it. Link changes save
-        immediately and stay in this Entry&apos;s history.
+        immediately and stay in this Item&apos;s history.
       </p>
       <div className={styles.controls} aria-label="Relationship views">
         {relationModes.map((value) => (
@@ -133,7 +134,7 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
         }}
       >
         <label>
-          Search related Entries
+          Search related Items
           <input
             value={query}
             maxLength={200}
@@ -146,12 +147,12 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
       </form>
       {mode === "incoming" && (
         <p>
-          These Entries link here. Open the source Entry to change its link.
+          These Items link here. Open the source Item to change its link.
         </p>
       )}
       {mode === "candidates" && (
         <p>
-          Choose an active Entry to link. Existing outgoing links are omitted.
+          Choose an active Item to link. Existing outgoing links are omitted.
         </p>
       )}
       {busy ? (
@@ -162,8 +163,8 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
             {!data.items.length && (
               <p>
                 {mode === "candidates"
-                  ? "No matching Entries to link."
-                  : "No matching linked Entries."}
+                  ? "No matching Items to link."
+                  : "No matching linked Items."}
               </p>
             )}
             <ul className={styles.list}>
@@ -174,7 +175,7 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
                       {historyTitle(row)}
                     </Link>
                     <small>
-                      {row.entry_type.replaceAll("_", " ")}
+                      {wikiItemIdentityLabel(row.item_kind, row.item_subtype)}
                       {row.is_deleted ? " · In Trash" : ""}
                     </small>
                     <p>{row.excerpt}</p>
@@ -186,7 +187,7 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
                       aria-label={`${mode === "candidates" ? "Link" : "Unlink"} ${historyTitle(row)}`}
                       onClick={() => void change(row, mode === "candidates")}
                     >
-                      {mode === "candidates" ? "Link Entry" : "Unlink"}
+                      {mode === "candidates" ? "Link Item" : "Unlink"}
                     </button>
                   )}
                 </li>
@@ -205,7 +206,7 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
               </button>
               <span>
                 Page {page + 1} · {data.total_count}{" "}
-                {data.total_count === 1 ? "Entry" : "Entries"}
+                {data.total_count === 1 ? "Item" : "Items"}
               </span>
               <button
                 type="button"

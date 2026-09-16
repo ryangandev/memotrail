@@ -92,8 +92,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
     await capture.getByLabel("Date type").selectOption("year");
     await occurrenceStartField(capture).fill("20");
     const storedDraft = await page.evaluate(
-      (ownerId) =>
-        localStorage.getItem(`memotrail:inbox-draft:${ownerId}`),
+      (ownerId) => localStorage.getItem(`memotrail:inbox-draft:${ownerId}`),
       owner,
     );
     expect(parseInboxDraft(storedDraft)).toMatchObject({

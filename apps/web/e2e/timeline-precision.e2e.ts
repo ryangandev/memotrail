@@ -81,7 +81,8 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
             owner_id: owner,
             title: "First trip to Japan",
             body: "Original travel memory",
-            entry_type: "life_stage",
+            item_kind: "event",
+            item_subtype: "life_stage",
             occurred_start: start,
             occurred_end: end,
             occurred_timezone: "UTC",
@@ -92,7 +93,8 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
             owner_id: owner,
             title: "Current role",
             body: "",
-            entry_type: "life_stage",
+            item_kind: "event",
+            item_subtype: "life_stage",
             occurred_start: "2026-04-13T12:00:00+00:00",
             occurred_end: null,
             occurred_timezone: "UTC",
@@ -103,7 +105,8 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
             owner_id: owner,
             title: "Centered vehicle",
             body: "",
-            entry_type: "vehicle",
+            item_kind: "entity",
+            item_subtype: "vehicle",
             occurred_start: "2024-01-01T12:00:00+00:00",
             occurred_end: "2025-01-01T12:00:00+00:00",
             occurred_timezone: "UTC",
@@ -212,7 +215,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       .getByRole("button", { name: "Add Vehicle", exact: true })
       .click();
     const vehicleEditor = page.getByRole("dialog", {
-      name: "Keep a ride in your story",
+      name: "Keep a Vehicle in your Life Wiki",
       exact: true,
     });
     await expect(vehicleEditor).toBeVisible();
@@ -231,13 +234,13 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       .poll(async () => {
         const result = await client
           .from("entries")
-          .select("entry_type")
+          .select("item_kind,item_subtype")
           .eq("owner_id", owner)
           .eq("title", "Timeline-created vehicle")
           .maybeSingle();
-        return result.data?.entry_type;
+        return result.data;
       })
-      .toBe("vehicle");
+      .toEqual({ item_kind: "entity", item_subtype: "vehicle" });
     const createdVehicleCard = page.getByRole("button", {
       name: /Timeline-created vehicle/,
     });
@@ -261,7 +264,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       .getByRole("button", { name: "Add a moment to Homes", exact: true })
       .click();
     const homeEditor = page.getByRole("dialog", {
-      name: "Keep a place in your story",
+      name: "Keep a Home in your Life Wiki",
       exact: true,
     });
     await expect(homeEditor).toBeVisible();

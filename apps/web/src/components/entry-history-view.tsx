@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { EntryReviewDialog } from "./entry-review-list";
 import { EntryPhotoGallery } from "./entry-photo-gallery";
 import { EntryRelationsPanel } from "./entry-relations";
+import { EntryRichTextContent } from "./entry-rich-text-content";
 import { loadEditableEntry } from "@/app/history/actions";
 import {
   restoreHistoryVersion,
-  convertEntryToGoal,
+  extractGoalFromItem,
 } from "@/app/history/actions";
 import {
   goalHorizons,
@@ -24,6 +25,11 @@ import {
   type EntryHistory,
   type HistorySnapshot,
 } from "@/lib/data/history";
+import { entryRichTextMetadataKey } from "@/lib/data/rich-text";
+import {
+  wikiItemIdentityLabel,
+  wikiItemKindLabel,
+} from "@/lib/data/wiki-item";
 import styles from "@/app/history/page.module.css";
 export function EntryHistoryView({
   history,
@@ -50,7 +56,7 @@ export function EntryHistoryView({
       if (!data) throw Error();
       setEditing(data);
     } catch {
-      setError("This Entry cannot be edited right now. Refresh and try again.");
+      setError("This item cannot be edited right now. Refresh and try again.");
     } finally {
       setBusy(false);
     }
@@ -88,12 +94,14 @@ export function EntryHistoryView({
   }
   return (
     <>
-      <Link href="/history">← All Entry history</Link>
+      <Link href="/history">← All version history</Link>
       <h2>{historyTitle(history.current)}</h2>
       {!history.current.deleted_at &&
-        ["standard", "first_time"].includes(history.current.entry_type) && (
+        ["writing", "event", "story"].includes(
+          String(history.current.item_kind),
+        ) && (
           <button disabled={busy} onClick={() => void edit()}>
-            Edit Entry
+            Edit {wikiItemKindLabel(history.current.item_kind)}
           </button>
         )}
       {editing && (
@@ -114,16 +122,15 @@ export function EntryHistoryView({
           Explore with AI
         </Link>
       )}
-      {!history.current.deleted_at &&
-        history.current.entry_type === "standard" && (
-          <GoalConversion
-            key={`${history.current.id}:${history.current.revision}`}
-            entry={history.current}
-            disabled={busy}
-            onBusyChange={setBusy}
-          />
-        )}
-      {!history.current.deleted_at && history.current.entry_type === "goal" && (
+      {!history.current.deleted_at && history.current.item_kind !== "goal" && (
+        <GoalExtraction
+          key={`${history.current.id}:${history.current.revision}`}
+          entry={history.current}
+          disabled={busy}
+          onBusyChange={setBusy}
+        />
+      )}
+      {!history.current.deleted_at && history.current.item_kind === "goal" && (
         <Link href={`/goals?entry=${history.current.id}`}>Open Goal</Link>
       )}
       {Array.isArray(history.current.links) &&
@@ -131,14 +138,20 @@ export function EntryHistoryView({
           (link: { target_entry_id?: unknown; relationship?: unknown }, i) =>
             typeof link.target_entry_id === "string" &&
             /^[0-9a-f-]{36}$/i.test(link.target_entry_id) &&
-            ["exploration_source", "exploration_conclusion"].includes(
-              String(link.relationship),
-            ) ? (
+            [
+              "derived",
+              "derived_from",
+              "exploration_source",
+              "exploration_conclusion",
+            ].includes(String(link.relationship)) ? (
               <p key={i}>
                 <Link href={`/history?entry=${link.target_entry_id}`}>
-                  {link.relationship === "exploration_source"
-                    ? "Open source Entry"
-                    : "Open saved conclusion"}
+                  {link.relationship === "derived"
+                    ? "Open extracted item"
+                    : link.relationship === "derived_from" ||
+                        link.relationship === "exploration_source"
+                      ? "Open source item"
+                      : "Open saved conclusion"}
                 </Link>
               </p>
             ) : null,
@@ -170,7 +183,7 @@ export function EntryHistoryView({
       )}
       {history.current.deleted_at && (
         <p role="status">
-          This Entry is in Trash. Restore it there before changing its history.
+          This item is in Trash. Restore it there before changing its history.
         </p>
       )}
       {error && <p role="alert">{error}</p>}
@@ -249,7 +262,7 @@ export function EntryHistoryView({
     </>
   );
 }
-function GoalConversion({
+function GoalExtraction({
   entry,
   disabled,
   onBusyChange,
@@ -260,6 +273,7 @@ function GoalConversion({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [goalId, setGoalId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [title, setTitle] = useState(entry.title ?? "");
   const [horizon, setHorizon] = useState<GoalHorizon>("someday");
@@ -268,13 +282,19 @@ function GoalConversion({
   const [error, setError] = useState<string | null>(null);
   if (!open)
     return (
-      <button disabled={disabled} onClick={() => setOpen(true)}>
-        Convert to Goal
+      <button
+        disabled={disabled}
+        onClick={() => {
+          setGoalId(crypto.randomUUID());
+          setOpen(true);
+        }}
+      >
+        Create linked Goal
       </button>
     );
   return (
     <form
-      aria-label="Convert Entry to Goal"
+      aria-label="Create linked Goal"
       className={styles.conversion}
       onSubmit={async (event) => {
         event.preventDefault();
@@ -282,22 +302,24 @@ function GoalConversion({
         onBusyChange(true);
         setError(null);
         try {
-          const message = await convertEntryToGoal({
-            id: entry.id,
-            revision: entry.revision,
+          if (!goalId) throw Error("Missing Goal identity");
+          const result = await extractGoalFromItem({
+            goalId,
+            sourceId: entry.id,
+            sourceRevision: entry.revision,
             title,
             horizon,
             status,
             targetDate: targetDate || null,
           });
-          if (message) setError(message);
-          else {
+          if (result.error) setError(result.error);
+          else if (result.goalId) {
             setOpen(false);
-            router.refresh();
+            router.push(`/goals?entry=${result.goalId}`);
           }
         } catch {
           setError(
-            "Could not confirm conversion. Refresh to check the current Entry before retrying.",
+            "Could not confirm Goal creation. Refresh to check the source before retrying.",
           );
         } finally {
           setBusy(false);
@@ -305,11 +327,10 @@ function GoalConversion({
         }
       }}
     >
-      <h3>Give this idea an intention</h3>
+      <h3>Create a Goal from this item</h3>
       <p>
-        This keeps the same Entry, original writing, dates, photos, links, and
-        Inbox state. No copy or Bucket List membership is created. You can
-        restore the Standard version through history.
+        This creates a separate Goal and links it back to this source. The
+        source keeps its Kind, writing, dates, photos, links, and history.
       </p>
       <fieldset disabled={busy || disabled}>
         <label>
@@ -356,11 +377,17 @@ function GoalConversion({
           />
         </label>
         <div className={styles.controls}>
-          <button type="button" onClick={() => setOpen(false)}>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              setGoalId(null);
+            }}
+          >
             Cancel
           </button>
           <button type="submit">
-            {busy ? "Converting..." : "Convert this Entry"}
+            {busy ? "Creating..." : "Create linked Goal"}
           </button>
         </div>
       </fieldset>
@@ -372,12 +399,14 @@ function Snapshot({ value }: { value: HistorySnapshot }) {
   return (
     <>
       <h4>{historyTitle(value)}</h4>
-      <p className={styles.body}>
-        {value.body || "No writing in this version."}
-      </p>
+      <EntryRichTextContent
+        body={value.body || "No writing in this version."}
+        className={styles.body}
+        metadata={value.body ? value.metadata : undefined}
+      />
       <dl className={styles.facts}>
         <dt>Type</dt>
-        <dd>{value.entry_type.replaceAll("_", " ")}</dd>
+        <dd>{wikiItemIdentityLabel(value.item_kind, value.item_subtype)}</dd>
         <dt>Inbox</dt>
         <dd>{value.inbox_status}</dd>
         <dt>Date</dt>
@@ -413,17 +442,18 @@ function Snapshot({ value }: { value: HistorySnapshot }) {
           </div>
         ) : null,
       )}
-      {["home", "vehicle", "goal", "metadata", "links"].map((key) =>
-        value[key] &&
-        JSON.stringify(value[key]) !== "{}" &&
-        JSON.stringify(value[key]) !== "[]" ? (
+      {["home", "vehicle", "goal", "metadata", "links"].map((key) => {
+        const detail = snapshotDetail(value, key);
+        return detail &&
+          JSON.stringify(detail) !== "{}" &&
+          JSON.stringify(detail) !== "[]" ? (
           <details key={key}>
             <summary>
               {key.charAt(0).toUpperCase() + key.slice(1)} details
             </summary>
             <pre className={styles.json}>
               {JSON.stringify(
-                value[key],
+                detail,
                 (name, item) =>
                   ["owner_id", "entry_id", "created_at", "updated_at"].includes(
                     name,
@@ -434,8 +464,21 @@ function Snapshot({ value }: { value: HistorySnapshot }) {
               )}
             </pre>
           </details>
-        ) : null,
-      )}
+        ) : null;
+      })}
     </>
   );
+}
+
+function snapshotDetail(value: HistorySnapshot, key: string) {
+  const detail = value[key];
+  if (key !== "metadata" || !isRecord(detail)) return detail;
+
+  const visibleMetadata = { ...detail };
+  delete visibleMetadata[entryRichTextMetadataKey];
+  return visibleMetadata;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

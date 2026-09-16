@@ -48,6 +48,7 @@ import {
 } from "@/lib/data/occurrence";
 import { useConfirmedRecords } from "@/components/use-confirmed-records";
 import { uploadEntryPhotos } from "@/lib/media/upload";
+import type { CaptureExtractionSource } from "@/lib/data/capture-extraction-input";
 
 export function HomesWorkspace({
   collectionOptions,
@@ -56,6 +57,7 @@ export function HomesWorkspace({
   loadError,
   ownerId,
   placeOptions,
+  sourceCapture,
   tagOptions,
 }: {
   collectionOptions: string[];
@@ -64,6 +66,7 @@ export function HomesWorkspace({
   loadError: string | null;
   ownerId: string;
   placeOptions: HomePlaceOption[];
+  sourceCapture: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
   const router = useRouter();
@@ -74,7 +77,7 @@ export function HomesWorkspace({
   } = useConfirmedRecords(serverRecords);
   const [selectedHome, setSelectedHome] = useState<
     HomeRecord | null | undefined
-  >(homes.find((home) => home.id === initialHomeId));
+  >(sourceCapture ? null : homes.find((home) => home.id === initialHomeId));
   const currentHomes = homes.filter((home) => !home.occurredEnd);
   const earlierHomes = homes.filter((home) => home.occurredEnd);
 
@@ -85,8 +88,8 @@ export function HomesWorkspace({
           <p className={styles.eyebrow}>The places that held your life</p>
           <h1>Homes</h1>
           <p>
-            Keep each residence as a chapter, from the rough dates to the
-            memories that made it yours.
+            Keep each residence as a Home Entity, with the dates, place facts,
+            and memories that made it yours.
           </p>
         </div>
         <button
@@ -147,7 +150,7 @@ export function HomesWorkspace({
       {!loadError && earlierHomes.length > 0 ? (
         <HomeSection
           homes={earlierHomes}
-          label="Chapters that came before"
+          label="Places you lived before"
           onSelect={setSelectedHome}
           title="Earlier homes"
         />
@@ -162,10 +165,13 @@ export function HomesWorkspace({
           onTrashed={forget}
           onClose={() => {
             setSelectedHome(undefined);
-            if (initialHomeId) router.replace("/homes", { scroll: false });
+            if (initialHomeId || sourceCapture)
+              router.replace("/homes", { scroll: false });
+            else router.refresh();
           }}
           ownerId={ownerId}
           placeOptions={placeOptions}
+          sourceCapture={selectedHome === null ? sourceCapture : null}
           tagOptions={tagOptions}
         />
       ) : null}
@@ -272,6 +278,7 @@ export function HomeEditor({
   onTrashed,
   ownerId,
   placeOptions,
+  sourceCapture = null,
   tagOptions,
 }: {
   collectionOptions: string[];
@@ -282,6 +289,7 @@ export function HomeEditor({
   onTrashed: (id: string) => void;
   ownerId: string;
   placeOptions: HomePlaceOption[];
+  sourceCapture?: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
   const router = useRouter();
@@ -296,7 +304,7 @@ export function HomeEditor({
         occurredTimezone: initialTimezone,
         datePrecision: home.datePrecision,
       }
-    : undefined;
+    : (sourceCapture ?? undefined);
   const [occurrence, setOccurrence] = useState(() =>
     occurrenceDraft(
       originalOccurrence ?? {
@@ -309,11 +317,11 @@ export function HomeEditor({
     ),
   );
   const [address, setAddress] = useState(home?.address ?? "");
-  const [body, setBody] = useState(home?.body ?? "");
+  const [body, setBody] = useState(home?.body ?? sourceCapture?.body ?? "");
   const [city, setCity] = useState(home?.city ?? "");
   const [collectionInput, setCollectionInput] = useState("");
   const [collectionNames, setCollectionNames] = useState(
-    home?.collectionNames ?? [],
+    home?.collectionNames ?? sourceCapture?.collectionNames ?? [],
   );
   const [country, setCountry] = useState(home?.country ?? "");
   const [currentId, setCurrentId] = useState(home?.id ?? null);
@@ -333,8 +341,10 @@ export function HomeEditor({
   const [region, setRegion] = useState(home?.region ?? "");
   const [result, setResult] = useState<HomeActionResult | null>(null);
   const [tagInput, setTagInput] = useState("");
-  const [tagNames, setTagNames] = useState(home?.tagNames ?? []);
-  const [title, setTitle] = useState(home?.title ?? "");
+  const [tagNames, setTagNames] = useState(
+    home?.tagNames ?? sourceCapture?.tagNames ?? [],
+  );
+  const [title, setTitle] = useState(home?.title ?? sourceCapture?.title ?? "");
 
   useEffect(() => {
     titleRef.current?.focus();
@@ -453,7 +463,12 @@ export function HomeEditor({
     setResult(null);
 
     try {
-      const saved = await saveHomeEntry(parsed.data);
+      const saved = await saveHomeEntry(
+        parsed.data,
+        sourceCapture
+          ? { id: sourceCapture.id, revision: sourceCapture.revision }
+          : null,
+      );
       if (
         (saved.status !== "created" && saved.status !== "saved") ||
         !saved.entry
@@ -491,7 +506,6 @@ export function HomeEditor({
         return;
       }
 
-      router.refresh();
       onClose();
     } catch {
       setResult(
@@ -554,7 +568,6 @@ export function HomeEditor({
       });
       if (nextResult.status === "trashed") {
         onTrashed(currentId);
-        router.refresh();
         onClose();
       } else {
         setResult(nextResult);
@@ -581,7 +594,11 @@ export function HomeEditor({
           <div>
             <p>{currentId ? "Edit Home" : "New Home"}</p>
             <h2 id="home-editor-title">
-              {currentId ? title || "Home" : "Keep a place in your story"}
+              {currentId
+                ? title || "Home"
+                : sourceCapture
+                  ? "Create a Home from this Capture"
+                  : "Keep a Home in your Life Wiki"}
             </h2>
           </div>
           <button
@@ -596,8 +613,20 @@ export function HomeEditor({
 
         <form onSubmit={handleSubmit}>
           <div className={styles.formGrid}>
+            {sourceCapture ? (
+              <div className={styles.extractionNotice}>
+                <Icon name="inbox" size={18} />
+                <div>
+                  <strong>Starting from an Inbox Capture</strong>
+                  <p>
+                    Saving creates a separate Home and links it to the preserved
+                    source Capture.
+                  </p>
+                </div>
+              </div>
+            ) : null}
             <fieldset className={styles.formSection}>
-              <legend>Home chapter</legend>
+              <legend>Home details</legend>
               <label className={styles.fullField}>
                 <span>Home name</span>
                 <input

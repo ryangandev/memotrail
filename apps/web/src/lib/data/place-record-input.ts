@@ -60,7 +60,7 @@ export function parsePlaceRecordInput(
     return invalid(`Notes can be up to ${placeNotesLimit} characters.`);
   }
   if (!relatedEntryIds || relatedEntryIds.length > placeRelatedEntryLimit) {
-    return invalid(`Relate up to ${placeRelatedEntryLimit} Entries.`);
+    return invalid(`Relate up to ${placeRelatedEntryLimit} Items.`);
   }
   if (!isPlaceIdentity(input.id, input.revision)) {
     return invalid("This Place version is invalid. Refresh and try again.");

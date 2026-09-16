@@ -35,7 +35,7 @@ describe("parseSearchRequest", () => {
       collectionNames: ["Travel"],
       dateFrom: "2026-01-01",
       dateTo: "2026-12-31",
-      entryTypes: ["first_time"],
+      itemClassifications: ["first_time"],
       hasCriteria: true,
       tagNames: ["Snow"],
     });

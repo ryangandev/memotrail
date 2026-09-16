@@ -7,9 +7,16 @@ struct VehiclesView: View {
   @State private var controller: VehicleController
   @State private var editorSelection: VehicleEditorSelection?
   private let embedded: Bool
+  private let focusedEntryID: UUID?
 
-  init(client: SupabaseClient, ownerID: UUID, embedded: Bool = false) {
+  init(
+    client: SupabaseClient,
+    ownerID: UUID,
+    embedded: Bool = false,
+    focusedEntryID: UUID? = nil
+  ) {
     self.embedded = embedded
+    self.focusedEntryID = focusedEntryID
     _controller = State(initialValue: VehicleController(client: client, ownerID: ownerID))
   }
 
@@ -59,7 +66,7 @@ struct VehiclesView: View {
         .tracking(1.1)
         .foregroundStyle(MTColor.warm)
       Text("Vehicles").font(MTTypography.display).foregroundStyle(MTColor.ink)
-      Text("Keep every car, bike, or other vehicle as a chapter with its dates and memories.")
+      Text("Keep every car, bike, or other vehicle with its dates, notes, and photos.")
         .font(MTTypography.body)
         .foregroundStyle(MTColor.inkMuted)
         .lineSpacing(2)
@@ -95,6 +102,16 @@ struct VehiclesView: View {
         message: loadErrorMessage,
         systemImage: "exclamationmark.triangle"
       )
+    } else if let focusedEntryID {
+      if let entry = controller.entries.first(where: { $0.id == focusedEntryID }) {
+        vehicleSection(title: "VEHICLE", entries: [entry])
+      } else {
+        archiveMessage(
+          title: "Vehicle unavailable",
+          message: "This Vehicle is no longer available in the loaded workspace.",
+          systemImage: "car"
+        )
+      }
     } else if controller.entries.isEmpty {
       archiveMessage(
         title: "Begin with a vehicle that carried you",
@@ -263,6 +280,8 @@ struct VehicleEditorSelection: Identifiable {
 struct VehicleEditorSheet: View {
   let controller: VehicleController
   let entry: VehicleEntry?
+  let sourceCapture: CaptureExtractionSource?
+  let onSaved: (@MainActor () async -> Void)?
 
   @Environment(\.dismiss) private var dismiss
   @State private var currentEntryID: UUID?
@@ -287,16 +306,23 @@ struct VehicleEditorSheet: View {
   @State private var isConfirmingTrash = false
   @State private var attachmentToRemove: VehicleAttachment?
 
-  init(controller: VehicleController, entry: VehicleEntry?) {
+  init(
+    controller: VehicleController,
+    entry: VehicleEntry?,
+    sourceCapture: CaptureExtractionSource? = nil,
+    onSaved: (@MainActor () async -> Void)? = nil
+  ) {
     self.controller = controller
     self.entry = entry
+    self.sourceCapture = sourceCapture
+    self.onSaved = onSaved
     _currentEntryID = State(initialValue: entry?.id)
     _currentRevision = State(initialValue: entry?.revision)
-    _title = State(initialValue: entry?.title ?? "")
-    _note = State(initialValue: entry?.body ?? "")
+    _title = State(initialValue: entry?.title ?? sourceCapture?.title ?? "")
+    _note = State(initialValue: entry?.body ?? sourceCapture?.body ?? "")
     _occurrence = State(
       initialValue: OccurrenceDraft(
-        entry?.occurrence
+        entry?.occurrence ?? sourceCapture?.occurrence
           ?? EntryOccurrence(
             precision: .unknown, start: nil, end: nil, label: nil,
             timezone: TimeZone.current.identifier)))
@@ -304,22 +330,32 @@ struct VehicleEditorSheet: View {
     _model = State(initialValue: entry?.model ?? "")
     _modelYear = State(initialValue: entry?.modelYear.map(String.init) ?? "")
     _color = State(initialValue: entry?.color ?? "")
-    _collectionNames = State(initialValue: entry?.collectionNames ?? [])
-    _tagNames = State(initialValue: entry?.tagNames ?? [])
+    _collectionNames = State(
+      initialValue: entry?.collectionNames ?? sourceCapture?.collectionNames ?? [])
+    _tagNames = State(initialValue: entry?.tagNames ?? sourceCapture?.tagNames ?? [])
     _attachments = State(initialValue: entry?.attachments ?? [])
   }
 
   var body: some View {
     NavigationStack {
       Form {
-        chapterSection
+        if sourceCapture != nil {
+          Section {
+            Label("Creating a Vehicle from this Capture", systemImage: "arrow.triangle.branch")
+          } footer: {
+            Text("The original Capture stays linked as provenance after this Vehicle is created.")
+          }
+        }
+        identitySection
         datesSection
         factsSection
         organizationSections
         photosSection
         statusSections
       }
-      .navigationTitle(entry == nil ? "New Vehicle" : "Edit Vehicle")
+      .navigationTitle(
+        sourceCapture == nil ? (entry == nil ? "New Vehicle" : "Edit Vehicle") : "Create Vehicle"
+      )
       .navigationBarTitleDisplayMode(.inline)
       .disabled(isWorking)
       .onChange(of: title) { trim(&title, to: VehicleEntryInput.titleLimit) }
@@ -333,7 +369,7 @@ struct VehicleEditorSheet: View {
           Button("Cancel") { dismiss() }.disabled(isWorking)
         }
         ToolbarItem(placement: .confirmationAction) {
-          Button(entry == nil ? "Add" : "Save") { Task { await save() } }
+          Button(currentEntryID == nil ? "Add" : "Save") { Task { await save() } }
             .fontWeight(.semibold)
             .disabled(isWorking)
             .accessibilityIdentifier("save-vehicle")
@@ -381,14 +417,14 @@ struct VehicleEditorSheet: View {
     .interactiveDismissDisabled(isWorking)
   }
 
-  private var chapterSection: some View {
-    Section("Vehicle chapter") {
+  private var identitySection: some View {
+    Section("Vehicle details") {
       TextField("Name or nickname", text: $title, axis: .vertical)
         .textInputAutocapitalization(.words)
         .accessibilityIdentifier("vehicle-title")
       TextEditor(text: $note)
         .frame(minHeight: 130)
-        .accessibilityLabel("Memories")
+        .accessibilityLabel("Notes")
         .accessibilityIdentifier("vehicle-memories")
     }
   }
@@ -396,7 +432,7 @@ struct VehicleEditorSheet: View {
   private var datesSection: some View {
     OccurrenceEditor(
       value: $occurrence, span: true,
-      chapterGuidance: "Leave the end date empty for a current Vehicle chapter.")
+      chapterGuidance: "Leave the end date empty while this Vehicle is still in your life.")
   }
 
   private var factsSection: some View {
@@ -584,7 +620,8 @@ struct VehicleEditorSheet: View {
       color: color,
       collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       tagNames: namesIncludingDraft(tagNames, tagInput),
-      originalEntry: entry
+      originalEntry: entry,
+      sourceCapture: currentEntryID == nil ? sourceCapture : nil
     )
     guard result.status == .saved, let identity = result.identity else {
       isWorking = false
@@ -612,6 +649,8 @@ struct VehicleEditorSheet: View {
     progressMessage = nil
     if let failedMessage {
       errorMessage = "Your Vehicle was saved. \(failedMessage)"
+    } else if let onSaved {
+      await onSaved()
     } else {
       dismiss()
     }

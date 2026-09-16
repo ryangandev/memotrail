@@ -146,19 +146,19 @@ test("Goal edits retain links to Entries in Trash until they are restored", asyn
     await page.goto("/goals?entry=" + id);
     await expect(
       dialog.getByRole("button", {
-        name: "Remove related Entry Hidden progress note",
+        name: "Remove related Item Hidden progress note",
         exact: true,
       }),
     ).toBeVisible();
     await expect(
       dialog.getByRole("button", {
-        name: "Remove related Entry Visible progress note",
+        name: "Remove related Item Visible progress note",
         exact: true,
       }),
     ).not.toBeVisible();
     await dialog
       .getByRole("button", {
-        name: "Remove related Entry Hidden progress note",
+        name: "Remove related Item Hidden progress note",
         exact: true,
       })
       .click();

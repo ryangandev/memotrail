@@ -65,7 +65,8 @@ struct HistoryIndexEntry: Decodable, Identifiable, Sendable {
   let entryID: UUID
   let title: String?
   let excerpt: String
-  let entryType: String
+  let itemKind: WikiItemKind
+  let itemSubtype: String
   let revision: Int
   let isDeleted: Bool
   let versionCount: Int
@@ -78,7 +79,8 @@ struct HistoryIndexEntry: Decodable, Identifiable, Sendable {
   enum CodingKeys: String, CodingKey {
     case title, excerpt, revision
     case entryID = "entry_id"
-    case entryType = "entry_type"
+    case itemKind = "item_kind"
+    case itemSubtype = "item_subtype"
     case isDeleted = "is_deleted"
     case versionCount = "version_count"
     case lastChanged = "last_changed"
@@ -138,7 +140,7 @@ enum HistoryPresentation {
     return format(raw) + (snapshot["occurred_end"]?.text.map { " to \(format($0))" } ?? "")
   }
   static let fields = [
-    "title", "body", "entry_type", "inbox_status", "occurred_start", "occurred_end",
+    "title", "body", "item_kind", "item_subtype", "inbox_status", "occurred_start", "occurred_end",
     "date_precision", "occurred_label", "occurred_timezone", "collections", "tags", "people",
     "places", "timeline_items", "home", "vehicle", "goal", "links", "attachments", "metadata",
     "source_language",
@@ -187,20 +189,23 @@ struct HistoryRestoreRequest: Encodable {
   }
 }
 
-struct GoalConversionRequest: Encodable {
-  let entryID: UUID
-  let expectedRevision: Int
+struct GoalExtractionRequest: Encodable {
+  let sourceEntryID: UUID
+  let sourceRevision: Int
+  let goalID: UUID
   let title: String
   let horizon: GoalHorizon
   let status: GoalStatus
   let targetDate: String?
   var isValid: Bool {
-    expectedRevision > 0 && !title.trimmed.isEmpty && title.trimmed.count <= 200
+    sourceRevision > 0 && sourceEntryID != goalID && !title.trimmed.isEmpty
+      && title.trimmed.count <= 200
       && (targetDate.map(GoalCalendarDate.isValid) ?? true)
   }
   enum CodingKeys: String, CodingKey {
-    case entryID = "p_entry_id"
-    case expectedRevision = "p_expected_revision"
+    case sourceEntryID = "p_source_entry_id"
+    case sourceRevision = "p_source_revision"
+    case goalID = "p_goal_id"
     case title = "p_title"
     case horizon = "p_horizon"
     case status = "p_status"
@@ -208,8 +213,9 @@ struct GoalConversionRequest: Encodable {
   }
   func encode(to encoder: Encoder) throws {
     var values = encoder.container(keyedBy: CodingKeys.self)
-    try values.encode(entryID, forKey: .entryID)
-    try values.encode(expectedRevision, forKey: .expectedRevision)
+    try values.encode(sourceEntryID, forKey: .sourceEntryID)
+    try values.encode(sourceRevision, forKey: .sourceRevision)
+    try values.encode(goalID, forKey: .goalID)
     try values.encode(title.trimmed, forKey: .title)
     try values.encode(horizon, forKey: .horizon)
     try values.encode(status, forKey: .status)
@@ -218,6 +224,20 @@ struct GoalConversionRequest: Encodable {
     } else {
       try values.encodeNil(forKey: .targetDate)
     }
+  }
+}
+
+struct ExtractedGoalFromItem: Decodable, Equatable, Sendable {
+  let sourceEntryID: UUID
+  let sourceRevision: Int
+  let goalEntryID: UUID
+  let goalRevision: Int
+
+  enum CodingKeys: String, CodingKey {
+    case sourceEntryID = "source_entry_id"
+    case sourceRevision = "source_revision"
+    case goalEntryID = "goal_entry_id"
+    case goalRevision = "goal_revision"
   }
 }
 
@@ -255,7 +275,7 @@ struct EntryHistoryIndexView: View {
             VStack(alignment: .leading, spacing: 8) {
               Text(row.displayTitle).font(MTTypography.titleSmall).foregroundStyle(MTColor.ink)
               Text(
-                "\(row.entryType) · \(row.versionCount) earlier versions\(row.isDeleted ? " · In Trash" : "")"
+                "\(row.itemKind.displayName(subtype: row.itemSubtype)) · \(row.versionCount) earlier versions\(row.isDeleted ? " · In Trash" : "")"
               ).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
               Text(row.excerpt).lineLimit(3).font(MTTypography.caption).foregroundStyle(
                 MTColor.inkMuted)
@@ -305,7 +325,7 @@ struct EntryHistoryDetailView: View {
   @State private var busy = false
   @State private var message: String?
   @State private var confirmRestore = false
-  @State private var showConversion = false
+  @State private var showGoalExtraction = false
   @State private var editingEntry: InboxEntry?
   var selectedVersion: EntryHistoryVersion? { record?.versions.first { $0.version == selected } }
   var body: some View {
@@ -314,15 +334,17 @@ struct EntryHistoryDetailView: View {
         if let record {
           Text(HistoryPresentation.title(record.current)).font(MTTypography.title)
           if !record.isDeleted {
-            if ["standard", "first_time"].contains(record.current["entry_type"]?.text ?? "") {
+            if ["writing", "event", "story"].contains(record.current["item_kind"]?.text ?? "") {
               Button("Edit Entry") { Task { await openEditor() } }.disabled(busy)
             }
             NavigationLink("Explore with AI") {
               ExplorationView(client: client, ownerID: ownerID, entryID: entryID)
             }
-            if record.current["entry_type"]?.text == "standard" {
-              Button("Convert to Goal") { showConversion = true }.disabled(busy)
-            } else if record.current["entry_type"]?.text == "goal" {
+            if ["writing", "entity", "event", "story"].contains(
+              record.current["item_kind"]?.text ?? ""
+            ) {
+              Button("Create linked Goal") { showGoalExtraction = true }.disabled(busy)
+            } else if record.current["item_kind"]?.text == "goal" {
               NavigationLink("Open Goals") {
                 GoalsView(client: client, ownerID: ownerID, embedded: true)
               }
@@ -332,10 +354,14 @@ struct EntryHistoryDetailView: View {
             _, value in
             if let link = value.object, let rawID = link["target_entry_id"]?.text,
               let linkedID = UUID(uuidString: rawID), let relationship = link["relationship"]?.text,
-              ["exploration_source", "exploration_conclusion"].contains(relationship)
+              ["derived", "derived_from", "exploration_source", "exploration_conclusion"]
+                .contains(relationship)
             {
               NavigationLink(
-                relationship == "exploration_source" ? "Open source Entry" : "Open saved conclusion"
+                relationship == "derived"
+                  ? "Open extracted item"
+                  : relationship == "derived_from" || relationship == "exploration_source"
+                    ? "Open source item" : "Open saved conclusion"
               ) { EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: linkedID) }
             }
           }
@@ -396,9 +422,9 @@ struct EntryHistoryDetailView: View {
         Button("Refresh") { Task { await load(nextPage: 0) } }.disabled(busy)
       }.padding()
     }.background(MTColor.canvas).navigationTitle("Version history").task { await load(nextPage: 0) }
-      .sheet(isPresented: $showConversion) {
+      .sheet(isPresented: $showGoalExtraction) {
         if let record {
-          GoalConversionSheet(client: client, ownerID: ownerID, entryID: entryID, record: record) {
+          GoalExtractionSheet(client: client, ownerID: ownerID, entryID: entryID, record: record) {
             await load(nextPage: 0)
           }
         }
@@ -421,10 +447,13 @@ struct EntryHistoryDetailView: View {
               "dismiss_ai_suggestion", params: ["p_id": id.uuidString]
             ).execute().value
           }, collectionOptions: entry.collectionNames, tagOptions: entry.tagNames
-        ) { title, body, collections, type, occurrence, tags, intent, photoPlace in
+        ) {
+          title, body, collections, itemKind, itemSubtype, occurrence, tags, intent,
+          photoPlace in
           await saveEditedEntry(
-            entry, title: title, body: body, collections: collections, type: type,
-            occurrence: occurrence, tags: tags, intent: intent, photoPlace: photoPlace)
+            entry, title: title, body: body, collections: collections, itemKind: itemKind,
+            itemSubtype: itemSubtype, occurrence: occurrence, tags: tags, intent: intent,
+            photoPlace: photoPlace)
         }
       }
       .confirmationDialog(
@@ -456,9 +485,9 @@ struct EntryHistoryDetailView: View {
     } catch { message = "This Entry cannot be edited right now. Refresh and try again." }
   }
   private func saveEditedEntry(
-    _ entry: InboxEntry, title: String, body: String, collections: [String], type: InboxEntryType,
-    occurrence: EntryOccurrence, tags: [String], intent: InboxController.ReviewIntent,
-    photoPlace: PhotoPlaceDraft?
+    _ entry: InboxEntry, title: String, body: String, collections: [String],
+    itemKind: WikiItemKind, itemSubtype: String, occurrence: EntryOccurrence, tags: [String],
+    intent: InboxController.ReviewIntent, photoPlace: PhotoPlaceDraft?
   ) async -> InboxController.ReviewResult {
     do {
       guard try await client.auth.session.user.id == ownerID else {
@@ -467,19 +496,21 @@ struct EntryHistoryDetailView: View {
       try photoPlace?.validate()
       let input = try InboxReviewInput.validate(
         entryID: entry.id, revision: entry.revision, title: title, body: body,
-        collectionNames: collections, entryType: type, occurredAt: occurrence.start,
+        collectionNames: collections, itemKind: itemKind, itemSubtype: itemSubtype,
+        occurredAt: occurrence.start,
         occurredTimezone: occurrence.timezone, tagNames: tags, datePrecision: occurrence.precision,
         occurredEnd: occurrence.end, occurredLabel: occurrence.label)
       let parameters = ReviewEntryParameters(
         entryID: entry.id, expectedRevision: entry.revision, title: input.title, body: input.body,
-        entryType: input.entryType, occurredStart: input.occurredAt,
+        itemKind: input.itemKind, itemSubtype: input.itemSubtype,
+        occurredStart: input.occurredAt,
         occurredTimezone: input.occurredTimezone, collectionNames: input.collectionNames,
         tagNames: input.tagNames, markDone: intent == .done, datePrecision: occurrence.precision,
         occurredEnd: occurrence.end, occurredLabel: occurrence.label, photoPlace: photoPlace,
         occurredStartRaw: occurrence.start == entry.occurredStart ? entry.occurredStartRaw : nil,
         occurredEndRaw: occurrence.end == entry.occurredEnd ? entry.occurredEndRaw : nil)
       let rows: [ReviewedEntryResult] = try await client.rpc(
-        "review_entry_with_photo_place", params: parameters
+        "review_wiki_item_with_photo_place", params: parameters
       ).execute().value
       guard rows.first?.entryID == entry.id else {
         return .init(
@@ -557,13 +588,14 @@ struct EntryHistoryDetailView: View {
   }
 }
 
-private struct GoalConversionSheet: View {
+private struct GoalExtractionSheet: View {
   let client: SupabaseClient
   let ownerID: UUID
   let entryID: UUID
   let record: EntryHistoryRecord
-  let onConverted: () async -> Void
+  let onExtracted: () async -> Void
   @Environment(\.dismiss) private var dismiss
+  @State private var goalID = UUID()
   @State private var title = ""
   @State private var horizon: GoalHorizon = .someday
   @State private var status: GoalStatus = .considering
@@ -589,12 +621,12 @@ private struct GoalConversionSheet: View {
           }
         } footer: {
           Text(
-            "This keeps the same Entry, original writing, dates, photos, links, and Inbox state. No copy or Bucket List membership is created. You can restore the Standard version through history."
+            "This creates a separate Goal, copies the current writing as editable context, and keeps this item unchanged and linked as its source."
           )
         }
         if let message { Text(message).foregroundStyle(MTColor.warm) }
-        Button(busy ? "Converting..." : "Convert this Entry") { Task { await convert() } }
-      }.disabled(busy).navigationTitle("Convert to Goal")
+        Button(busy ? "Creating..." : "Create Goal") { Task { await extract() } }
+      }.disabled(busy).navigationTitle("Create linked Goal")
         .toolbar {
           ToolbarItem(placement: .cancellationAction) {
             Button("Cancel") { dismiss() }.disabled(busy)
@@ -603,11 +635,12 @@ private struct GoalConversionSheet: View {
         .onAppear { title = record.current["title"]?.text ?? "" }
     }.tint(MTColor.accent).interactiveDismissDisabled(busy)
   }
-  private func convert() async {
+  private func extract() async {
     guard !busy else { return }
-    let request = GoalConversionRequest(
-      entryID: entryID, expectedRevision: record.revision, title: title, horizon: horizon,
-      status: status, targetDate: hasTargetDate ? GoalCalendarDate.string(from: targetDate) : nil)
+    let request = GoalExtractionRequest(
+      sourceEntryID: entryID, sourceRevision: record.revision, goalID: goalID, title: title,
+      horizon: horizon, status: status,
+      targetDate: hasTargetDate ? GoalCalendarDate.string(from: targetDate) : nil)
     guard request.isValid else {
       message = "Add a title up to 200 characters and a valid optional target date."
       return
@@ -619,18 +652,18 @@ private struct GoalConversionSheet: View {
       guard try await client.auth.session.user.id == ownerID else {
         throw URLError(.userAuthenticationRequired)
       }
-      let revision: Int? = try await client.rpc("convert_entry_to_goal", params: request).execute()
-        .value
-      guard revision != nil else {
+      let results: [ExtractedGoalFromItem] =
+        try await client.rpc("extract_goal_from_item", params: request).execute().value
+      guard results.first?.goalEntryID == goalID else {
         message =
-          "This Entry changed, is in Trash, or is no longer Standard. Close and refresh before converting."
+          "This item changed, is in Trash, or can no longer create this Goal. Close and refresh before retrying."
         return
       }
-      await onConverted()
+      await onExtracted()
       dismiss()
     } catch {
       message =
-        "Could not confirm conversion. Close and refresh to check the current Entry before retrying."
+        "Could not confirm Goal creation. Retry here to reuse the same Goal identity, or close and refresh before starting again."
     }
   }
 }
@@ -646,7 +679,7 @@ private struct HistorySnapshotView: View {
       LabeledContent("Date", value: HistoryPresentation.date(snapshot)).font(MTTypography.caption)
       ForEach(
         [
-          "entry_type", "inbox_status", "occurred_timezone",
+          "item_kind", "item_subtype", "inbox_status", "occurred_timezone",
         ], id: \.self
       ) { key in
         if let value = snapshot[key]?.text {

@@ -60,8 +60,11 @@ struct CollectionEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   let id: UUID
   let title: String?
   let body: String
-  let entryType: String
   let inboxStatus: String
+  let itemKind: WikiItemKind
+  let itemSubtype: String
+  let recordSource: WikiItemRecordSource
+  let recordID: UUID
   let occurredStart: Date?
   let occurredEnd: Date?
   let datePrecision: String
@@ -81,8 +84,11 @@ struct CollectionEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
     case id = "entry_id"
     case title
     case body
-    case entryType = "entry_type"
     case inboxStatus = "inbox_status"
+    case itemKind = "item_kind"
+    case itemSubtype = "item_subtype"
+    case recordSource = "record_source"
+    case recordID = "record_id"
     case occurredStart = "occurred_start"
     case occurredEnd = "occurred_end"
     case datePrecision = "date_precision"
@@ -105,8 +111,12 @@ struct CollectionEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
     id = try values.decode(UUID.self, forKey: .id)
     title = try values.decodeIfPresent(String.self, forKey: .title)?.trimmed.nonEmpty
     body = try values.decode(String.self, forKey: .body)
-    entryType = try values.decode(String.self, forKey: .entryType)
     inboxStatus = try values.decode(String.self, forKey: .inboxStatus)
+    itemKind = try values.decode(WikiItemKind.self, forKey: .itemKind)
+    itemSubtype = try values.decode(String.self, forKey: .itemSubtype)
+    recordSource =
+      try values.decodeIfPresent(WikiItemRecordSource.self, forKey: .recordSource) ?? .entry
+    recordID = try values.decodeIfPresent(UUID.self, forKey: .recordID) ?? id
     occurredStart = try values.decodeIfPresent(Date.self, forKey: .occurredStart)
     occurredEnd = try values.decodeIfPresent(Date.self, forKey: .occurredEnd)
     datePrecision = try values.decode(String.self, forKey: .datePrecision)
@@ -150,11 +160,15 @@ struct CollectionEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   }
 
   var displayType: String {
-    SearchEntryType(rawValue: entryType)?.displayName
-      ?? entryType
+    let subtype =
+      itemSubtype
       .split(separator: "_")
       .map { $0.prefix(1).uppercased() + $0.dropFirst() }
       .joined(separator: " ")
+    if itemKind == .capture || subtype == itemKind.displayName {
+      return itemKind.displayName
+    }
+    return "\(itemKind.displayName) · \(subtype)"
   }
 
   var displayDate: String {
@@ -201,6 +215,7 @@ struct CollectionEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
 
     return formatter.string(from: date)
   }
+
 }
 
 struct CollectionPageRequest: Equatable, Sendable {

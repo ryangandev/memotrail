@@ -79,7 +79,8 @@ test("Unified AI search uses bilingual source evidence, explicit requests, and n
             owner_id: ownerID,
             title: "雪山日记",
             body: original,
-            entry_type: "first_time",
+            item_kind: "event",
+            item_subtype: "first_time",
             date_precision: "day",
             occurred_start: "2017-07-08T12:00:00Z",
             occurred_timezone: "UTC",
@@ -89,7 +90,8 @@ test("Unified AI search uses bilingual source evidence, explicit requests, and n
             owner_id: ownerID,
             title: "电弧的原理",
             body: "今天学了电打火机使用电弧产生热量点燃蜡烛。",
-            entry_type: "standard",
+            item_kind: "writing",
+            item_subtype: "note",
             date_precision: "day",
             occurred_start: "2026-01-07T12:00:00Z",
             occurred_timezone: "UTC",
@@ -99,7 +101,8 @@ test("Unified AI search uses bilingual source evidence, explicit requests, and n
             owner_id: ownerID,
             title: "New home",
             body: "Moved to California.",
-            entry_type: "home",
+            item_kind: "entity",
+            item_subtype: "home",
             date_precision: "day",
             occurred_start: "2020-01-01T12:00:00Z",
             occurred_timezone: "UTC",
@@ -138,7 +141,7 @@ test("Unified AI search uses bilingual source evidence, explicit requests, and n
     ).toBe(403);
     await page.goto("/search");
     await page
-      .getByRole("searchbox", { name: "Search your Entries" })
+      .getByRole("searchbox", { name: "Search your Life Wiki" })
       .fill(request.parameters.q);
     await page.getByRole("button", { name: "Ask AI", exact: true }).click();
     await expect(

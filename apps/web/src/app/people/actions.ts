@@ -7,7 +7,7 @@ import { parsePersonInput, type PersonInput } from "@/lib/data/person";
 export async function savePerson(input: PersonInput): Promise<string | null> {
   const parsed = parsePersonInput(input);
   if (!parsed)
-    return "Add a name of up to 200 characters, a relationship up to 200, notes up to 10,000, and at most 100 Entry links.";
+    return "Add a name of up to 200 characters, a relationship up to 200, notes up to 10,000, and at most 100 Item links.";
   const context = await getAuthenticatedContext();
   if (!context) return "Sign in again to save this Person.";
   const { data, error } = await context.client.rpc("save_person", {
@@ -19,7 +19,7 @@ export async function savePerson(input: PersonInput): Promise<string | null> {
     p_related_entry_ids: parsed.entryIds,
   });
   if (error)
-    return "Could not save this Person. Check the Entry links and try again.";
+    return "Could not save this Person. Check the Item links and try again.";
   if (!Array.isArray(data) || !data.length)
     return "This Person changed on another device. Refresh before editing again.";
   refresh();
@@ -48,7 +48,7 @@ export async function trashPerson(
     p_expected_revision: revision,
   });
   if (error || !Array.isArray(data) || !data.length)
-    return "This Person changed or still has Entry links. Unlink and save before moving to Trash.";
+    return "This Person changed or still has Item links. Unlink and save before moving to Trash.";
   refresh();
   return null;
 }

@@ -1,16 +1,18 @@
 import { validHistoryID } from "./history";
+import type { WikiItemKind } from "./wiki-item";
 export const relationModes = ["outgoing", "incoming", "candidates"] as const;
 export type RelationMode = (typeof relationModes)[number];
 export const relationModeLabels: Record<RelationMode, string> = {
-  outgoing: "Linked Entries",
+  outgoing: "Linked Items",
   incoming: "Linked from",
-  candidates: "Find Entries",
+  candidates: "Find Items",
 };
 export type RelatedEntry = {
   entry_id: string;
   title: string | null;
   excerpt: string;
-  entry_type: string;
+  item_kind: WikiItemKind;
+  item_subtype: string;
   is_deleted: boolean;
 };
 export type EntryRelations = {

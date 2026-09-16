@@ -3,17 +3,19 @@ import { displayImageURLs } from "@/lib/media/urls";
 
 import { getAuthenticatedContext, type Viewer } from "./inbox";
 import { TRASH_PAGE_SIZE, type TrashItemKind } from "./trash-input";
+import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
 
 export type TrashItem = {
   deletedAt: string;
   detail: string | null;
-  entryType: string | null;
   expiresAt: string;
   id: string;
   imageUrl: string | null;
   kind: TrashItemKind;
   revision: number | null;
   title: string;
+  wikiItemKind: WikiItemKind | null;
+  wikiItemSubtype: string | null;
 };
 
 export type TrashWorkspace = {
@@ -28,7 +30,6 @@ export type TrashWorkspace = {
 type TrashRow = {
   deleted_at: string;
   detail: string | null;
-  entry_type: string | null;
   expires_at: string;
   item_id: string;
   item_kind: TrashItemKind;
@@ -37,6 +38,8 @@ type TrashRow = {
   storage_paths: string[];
   title: string;
   total_count: number | string;
+  wiki_item_kind: WikiItemKind | null;
+  wiki_item_subtype: string | null;
 };
 
 export async function getTrashWorkspace(
@@ -85,13 +88,14 @@ function itemFromRow(row: TrashRow, imageUrls: Map<string, string>): TrashItem {
   return {
     deletedAt: row.deleted_at,
     detail: row.detail,
-    entryType: row.entry_type,
     expiresAt: row.expires_at,
     id: row.item_id,
     imageUrl: imageUrls.get(row.storage_paths[0] ?? "") ?? null,
     kind: row.item_kind,
     revision: row.revision,
     title: row.title,
+    wikiItemKind: row.wiki_item_kind,
+    wikiItemSubtype: row.wiki_item_subtype,
   };
 }
 
@@ -120,7 +124,6 @@ function isTrashRow(value: unknown): value is TrashRow {
 
   return (
     (value.item_kind === "entry" ||
-      value.item_kind === "habit" ||
       value.item_kind === "place" ||
       value.item_kind === "person" ||
       value.item_kind === "collection" ||
@@ -131,7 +134,8 @@ function isTrashRow(value: unknown): value is TrashRow {
     typeof value.deleted_at === "string" &&
     typeof value.expires_at === "string" &&
     nullableInteger(value.revision) &&
-    nullableString(value.entry_type) &&
+    (value.wiki_item_kind === null || isWikiItemKind(value.wiki_item_kind)) &&
+    nullableString(value.wiki_item_subtype) &&
     nullableString(value.parent_entry_id) &&
     stringArray(value.storage_paths) &&
     countLike(value.total_count)

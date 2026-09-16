@@ -40,7 +40,8 @@ struct GoalRelatedEntry: Decodable, Equatable, Hashable, Identifiable, Sendable 
   let id: UUID
   let title: String?
   let body: String
-  let entryType: String
+  let itemKind: WikiItemKind
+  let itemSubtype: String
   let occurredStart: Date?
   let occurredLabel: String?
   let occurredTimezone: String?
@@ -52,7 +53,8 @@ struct GoalRelatedEntry: Decodable, Equatable, Hashable, Identifiable, Sendable 
     case id
     case title
     case body
-    case entryType = "entry_type"
+    case itemKind = "item_kind"
+    case itemSubtype = "item_subtype"
     case occurredStart = "occurred_start"
     case occurredLabel = "occurred_label"
     case occurredTimezone = "occurred_timezone"
@@ -210,14 +212,16 @@ struct GoalLinkOption: Decodable, Equatable, Hashable, Identifiable, Sendable {
   let id: UUID
   let title: String?
   let body: String?
-  let entryType: String
+  let itemKind: WikiItemKind
+  let itemSubtype: String
   let updatedAt: Date
 
   enum CodingKeys: String, CodingKey {
     case id
     case title
     case body
-    case entryType = "entry_type"
+    case itemKind = "item_kind"
+    case itemSubtype = "item_subtype"
     case updatedAt = "updated_at"
   }
 
@@ -227,6 +231,8 @@ struct GoalLinkOption: Decodable, Equatable, Hashable, Identifiable, Sendable {
     guard !body.isEmpty else { return "Untitled Entry" }
     return body.count > 80 ? "\(body.prefix(80).trimmingCharacters(in: .whitespaces))..." : body
   }
+
+  var displayType: String { itemKind.displayName(subtype: itemSubtype) }
 }
 
 struct GoalEntryInput: Equatable, Sendable {
@@ -332,8 +338,16 @@ struct GoalEntryInput: Equatable, Sendable {
 
 struct SaveGoalEntryParameters: Encodable, Equatable, Sendable {
   let input: GoalEntryInput
+  let source: CaptureExtractionSource?
+
+  init(input: GoalEntryInput, source: CaptureExtractionSource? = nil) {
+    self.input = input
+    self.source = source
+  }
 
   enum CodingKeys: String, CodingKey {
+    case captureID = "p_capture_id"
+    case captureRevision = "p_capture_revision"
     case title = "p_title"
     case body = "p_body"
     case horizon = "p_horizon"
@@ -348,6 +362,10 @@ struct SaveGoalEntryParameters: Encodable, Equatable, Sendable {
 
   func encode(to encoder: Encoder) throws {
     var values = encoder.container(keyedBy: CodingKeys.self)
+    if let source {
+      try values.encode(source.entryID, forKey: .captureID)
+      try values.encode(source.revision, forKey: .captureRevision)
+    }
     try values.encode(input.title, forKey: .title)
     try values.encode(input.body, forKey: .body)
     try values.encode(input.horizon, forKey: .horizon)
@@ -356,8 +374,10 @@ struct SaveGoalEntryParameters: Encodable, Equatable, Sendable {
     try values.encode(input.tagNames, forKey: .tagNames)
     try values.encode(input.relatedEntryIDs, forKey: .relatedEntryIDs)
     try encodeNullable(input.targetDate, forKey: .targetDate, into: &values)
-    try encodeNullable(input.entryID, forKey: .entryID, into: &values)
-    try encodeNullable(input.expectedRevision, forKey: .expectedRevision, into: &values)
+    if source == nil {
+      try encodeNullable(input.entryID, forKey: .entryID, into: &values)
+      try encodeNullable(input.expectedRevision, forKey: .expectedRevision, into: &values)
+    }
   }
 
   private func encodeNullable<T: Encodable>(
@@ -370,6 +390,20 @@ struct SaveGoalEntryParameters: Encodable, Equatable, Sendable {
     } else {
       try values.encodeNil(forKey: key)
     }
+  }
+}
+
+struct ExtractedCaptureGoal: Decodable, Equatable, Sendable {
+  let captureID: UUID
+  let captureRevision: Int
+  let goalEntryID: UUID
+  let goalRevision: Int
+
+  enum CodingKeys: String, CodingKey {
+    case captureID = "capture_id"
+    case captureRevision = "capture_revision"
+    case goalEntryID = "goal_entry_id"
+    case goalRevision = "goal_revision"
   }
 }
 

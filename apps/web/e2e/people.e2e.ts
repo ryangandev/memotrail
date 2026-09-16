@@ -75,15 +75,15 @@ test("People saves, links, protects, edits, trashes, and restores on desktop and
     await dialog.getByLabel("Relationship").fill("Friend");
     await dialog.getByLabel("Notes").fill("A friend from university.");
     await dialog
-      .getByLabel("Link an Entry")
+      .getByLabel("Link an Item")
       .selectOption({ label: "A walk with Alex" });
     await dialog
-      .getByRole("button", { name: "Link Entry", exact: true })
+      .getByRole("button", { name: "Link Item", exact: true })
       .click();
     await dialog.getByRole("button", { name: "Save changes" }).click();
     await expect(dialog).not.toBeVisible();
     const card = page.getByRole("button", { name: /Alex Friend/ });
-    await expect(card).toContainText("1 connected Entries");
+    await expect(card).toContainText("1 connected Items");
     await card.click();
     await expect(
       dialog.getByRole("button", { name: "Move to Trash" }),
@@ -99,7 +99,7 @@ test("People saves, links, protects, edits, trashes, and restores on desktop and
     await expect(dialog).not.toBeVisible();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
-    await expect(card).toContainText("0 connected Entries");
+    await expect(card).toContainText("0 connected Items");
     await page.screenshot({
       path: "/private/tmp/memotrail-people-mobile.png",
       fullPage: true,
@@ -117,8 +117,10 @@ test("People saves, links, protects, edits, trashes, and restores on desktop and
     await page.goto("/trash");
     await expect(page.getByText("Alex", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Restore", exact: true }).click();
-    await expect(page.getByText("Alex", { exact: true })).not.toBeVisible();
-    await page.goto("/people");
+    await expect(
+      page.getByRole("heading", { name: "Nothing in Trash" }),
+    ).toBeVisible();
+    await page.goto("/people", { waitUntil: "networkidle" });
     await expect(card).toBeVisible();
     expect(errors).toEqual([]);
   } finally {

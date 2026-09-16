@@ -1,6 +1,6 @@
 # MemoTrail Architecture
 
-Last reviewed: 2026-09-15.
+Last reviewed: 2026-09-16.
 
 ## System map
 
@@ -45,11 +45,35 @@ Pair it with the test file carrying the same feature name.
 - Supabase Postgres is the canonical synchronized data store.
 - Row Level Security is the final owner-authorization boundary for exposed data.
 - Web cookies and native bearer sessions identify the same Supabase user.
-- Entries are canonical content; specialized tables add facts without duplicating writing.
+- `entries` is the physical canonical Wiki Item table.
+  Its historical SQL name does not make Entry a product-level Kind or identity boundary.
+- `entries.item_kind` owns the structural identity boundary: Capture, Writing, Entity, Event, Story, or Goal.
+- `entries.item_subtype` selects a compatible preset within that Kind.
+- `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item. Person and Place rows expose both the canonical Entry ID and their specialized record ID so clients can preserve identity while opening the correct editor.
+- Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace. Native Library routes typed records to their focused editors and other canonical items to the shared History detail/edit boundary.
+- `collection_wiki_items` composes the established paged Collection detail with canonical Kind, subtype, and specialized routing identity. Both clients use it so Collections remain organizational lenses rather than a second generic detail system.
+- `people.entry_id` and `places.entry_id` are required owner-scoped links to canonical Entity Wiki Items. Triggers keep names, notes, revision state, and Trash state synchronized while the specialized tables retain typed facts and relationship-facing IDs.
+- A raw Capture may be finalized as one durable item or may produce linked items through a provenance-preserving extraction.
+- Established durable items never change Kind through a generic selector; cross-Kind workflows create and link another item.
+- Dedicated Web extraction routes pass only the source Capture ID, reload the owner-scoped saved source on the server, and prefill the specialized form without placing personal content in the URL or client storage.
+- `capture_extraction_source` supplies the reusable raw-Capture handoff contract. Specialized extraction RPCs create the typed target, organize the preserved Capture as `capture:source_capture`, and record `derived` plus `derived_from` links in one transaction.
+- Web Goal extraction uses a caller-generated target UUID for idempotency, preserves the source revision and identity, and records `derived` plus `derived_from` provenance links so both items remain discoverable.
+- `review_wiki_item_with_photo_place` is the plaintext-client semantic review boundary. iOS uses it to finalize a Capture or edit a same-Kind Writing, Event, or Story while preserving rich-text metadata the native editor does not author.
+- The iOS Inbox sends canonical Kind and subtype values. Its generic organizer exposes only Writing, Event, and Story; Entity and Goal creation must use their dedicated forms and extraction RPCs.
+- Native Inbox handoffs reuse the existing Home, Vehicle, and Goal editors with a `CaptureExtractionSource`. The same validated domain input drives either the normal save RPC or the matching extraction RPC, so specialized fields, source revision checks, organization, dates, and provenance stay aligned with Web.
+- Web and iOS create a separately editable Goal with `extract_goal_from_item` when an established Wiki Item inspires a Goal. The caller-generated Goal ID makes lost-response retries idempotent, and History exposes both provenance directions.
+- `convert_entry_to_goal` remains only as an administrative recovery function. Authenticated and anonymous clients have no execute grant because established items must never change Kind through a conversion.
+- Specialized tables add typed facts without duplicating common writing, organization, dates, media, or history.
 - `entries.body` remains canonical plaintext. Optional validated rich content is versioned under `entries.metadata.body_rich`, carries the exact matching plaintext, and is ignored when another client changes the body without updating the rich document.
-- Web capture uses `components/rich-text-editor.tsx` for the reusable headless editor surface, with page, dialog, and form variants instead of separate editors. Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while server synchronization writes plaintext and metadata together.
-- Collections, tags, People, Places, and Entry links are owner-scoped reusable relationships.
-- Entry Type owns specialized structure, Collections own curated cross-Type chapters, tags own lightweight cross-Type descriptors, and Timeline tracks own only generic moment placement.
+- Web capture and Entry review use `components/rich-text-editor.tsx` for the reusable headless editor surface, with page, dialog, and form variants instead of separate editors.
+  `components/entry-rich-text-content.tsx` safely renders validated formatting on note surfaces and falls back to canonical plaintext when rich metadata is absent, invalid, or stale.
+  Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while `review_entry_with_photo_place_rich` writes plaintext, formatting, organization, occurrence, and photo Place adoption in one revision.
+  Older review RPCs preserve rich metadata they do not understand.
+- Collections, tags, People, Places, and Wiki Item links are owner-scoped reusable relationships.
+- Kind owns identity, subtype owns compatible specialized structure, Collections own curated cross-Kind groupings, tags own lightweight cross-Kind descriptors, and Timeline tracks own presentation only.
+- Home and Vehicle are Entity subtypes whose occurrence range describes the user's relationship span.
+- Memory and First Time are Event subtypes.
+- Story or Chapter is explicit authored narrative and is never inferred from an Entity's date range.
 - Web Entry editors reuse `components/entry-organization-editor.tsx`; their save RPC must atomically preserve Collection and tag memberships with the canonical Entry mutation.
 - Used tags merge atomically into another stable tag identity. Only unused tags can be deleted directly.
 - Tag management loads at most five linked Entry previews on demand through a server action, so the Tags page stays lightweight and never creates a per-tag data waterfall during its initial render.
@@ -57,6 +81,8 @@ Pair it with the test file carrying the same feature name.
 - Clients send the revision they read. A stale revision surfaces a conflict instead of silently merging or overwriting another device.
 - Important mutations snapshot prior state. Restoring history creates another revision rather than deleting subsequent history.
 - Older clients must preserve fields they cannot represent or reject the write safely.
+- AI organization payloads use `classification.itemKind` and `classification.itemSubtype`.
+  The database rejects the removed `entryType` payload shape so a stale client cannot silently reintroduce the legacy model.
 
 ## Date rules
 
@@ -102,7 +128,8 @@ Pair it with the test file carrying the same feature name.
 - Interrupted provider outcomes do not trigger automatic paid retries.
 - Suggestion and search outputs are schema-validated and remain separate from original writing until explicit user action.
 - Search answers cite exact stored evidence; provenance does not imply that the model's conclusion is true.
-- The persistent Web Command Palette debounces input before calling the dynamic, private, no-store `app/api/search/quick` route. That route runs owner-scoped Entry and Library RPCs in parallel, returns a bounded result shape, and leaves filtered or AI search on the full Search page.
+- `search_wiki_items` accepts canonical Kind and subtype classifications and returns Kind, subtype, record source, and specialized routing identity in one owner-scoped result stream for Web and iOS, including People and Places.
+- The persistent Web Command Palette debounces input before calling the dynamic, private, no-store `app/api/search/quick` route. That route returns one bounded owner-scoped canonical result stream and leaves filtered or AI search on the full Search page.
 
 ## Deletion, export, and recovery rules
 

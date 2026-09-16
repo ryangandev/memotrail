@@ -3,34 +3,41 @@ import XCTest
 @testable import MemoTrail
 
 final class LibraryDestinationTests: XCTestCase {
-  func testGoalConversionPreservesIdentityAndExplicitNullTarget() throws {
-    let id = UUID()
-    let input = GoalConversionRequest(
-      entryID: id, expectedRevision: 5, title: " 学习 ", horizon: .someday, status: .considering,
-      targetDate: nil)
+  func testGoalExtractionPreservesSourceAndTargetIdentityWithExplicitNullTarget() throws {
+    let sourceID = UUID()
+    let goalID = UUID()
+    let input = GoalExtractionRequest(
+      sourceEntryID: sourceID, sourceRevision: 5, goalID: goalID, title: " 学习 ",
+      horizon: .someday, status: .considering, targetDate: nil)
     XCTAssertTrue(input.isValid)
     let json = try XCTUnwrap(
       JSONSerialization.jsonObject(with: JSONEncoder().encode(input)) as? [String: Any])
-    XCTAssertEqual(json["p_entry_id"] as? String, id.uuidString)
+    XCTAssertEqual(json["p_source_entry_id"] as? String, sourceID.uuidString)
+    XCTAssertEqual(json["p_goal_id"] as? String, goalID.uuidString)
     XCTAssertEqual(json["p_title"] as? String, "学习")
-    XCTAssertEqual(json["p_expected_revision"] as? Int, 5)
+    XCTAssertEqual(json["p_source_revision"] as? Int, 5)
     XCTAssertEqual(json["p_horizon"] as? String, "someday")
     XCTAssertTrue(json["p_target_date"] is NSNull)
     XCTAssertNil(json["p_body"])
     XCTAssertFalse(
-      GoalConversionRequest(
-        entryID: id, expectedRevision: 0, title: "Idea", horizon: .someday, status: .active,
-        targetDate: nil
+      GoalExtractionRequest(
+        sourceEntryID: sourceID, sourceRevision: 0, goalID: goalID, title: "Idea",
+        horizon: .someday, status: .active, targetDate: nil
       ).isValid)
     XCTAssertFalse(
-      GoalConversionRequest(
-        entryID: id, expectedRevision: 1, title: " ", horizon: .someday, status: .active,
-        targetDate: nil
+      GoalExtractionRequest(
+        sourceEntryID: sourceID, sourceRevision: 1, goalID: goalID, title: " ",
+        horizon: .someday, status: .active, targetDate: nil
       ).isValid)
     XCTAssertFalse(
-      GoalConversionRequest(
-        entryID: id, expectedRevision: 1, title: "Idea", horizon: .someday, status: .active,
-        targetDate: "2026-02-30"
+      GoalExtractionRequest(
+        sourceEntryID: sourceID, sourceRevision: 1, goalID: goalID, title: "Idea",
+        horizon: .someday, status: .active, targetDate: "2026-02-30"
+      ).isValid)
+    XCTAssertFalse(
+      GoalExtractionRequest(
+        sourceEntryID: sourceID, sourceRevision: 1, goalID: sourceID, title: "Idea",
+        horizon: .someday, status: .active, targetDate: nil
       ).isValid)
   }
   func testOrganizationInputAndCollectionTrashPreserveRPCContracts() throws {
@@ -124,7 +131,7 @@ final class LibraryDestinationTests: XCTestCase {
       EntryAISuggestionResponse.self, from: Data("{\"suggestion\":null,\"photoCount\":2}".utf8))
     XCTAssertEqual(photoResponse.photoCount, 2)
     let proposed = Data(
-      "{\"title\":\"牙套的原理\",\"entryType\":\"standard\",\"collections\":[\"Learning\"],\"tags\":[\"牙齿\"],\"dateText\":null,\"rationale\":\"学习记录\",\"confidence\":0.9}"
+      "{\"title\":\"牙套的原理\",\"classification\":{\"itemKind\":\"writing\",\"itemSubtype\":\"note\"},\"collections\":[\"Learning\"],\"tags\":[\"牙齿\"],\"dateText\":null,\"rationale\":\"学习记录\",\"confidence\":0.9}"
         .utf8)
     XCTAssertEqual(try JSONDecoder().decode(EntryAISuggestions.self, from: proposed).title, "牙套的原理")
   }
@@ -132,7 +139,7 @@ final class LibraryDestinationTests: XCTestCase {
     let id = UUID()
     let target = UUID()
     let data = Data(
-      "{\"revision\":3,\"total_count\":25,\"items\":[{\"entry_id\":\"\(target)\",\"title\":null,\"excerpt\":\"牙套笔记\",\"entry_type\":\"standard\",\"is_deleted\":true}]}"
+      "{\"revision\":3,\"total_count\":25,\"items\":[{\"entry_id\":\"\(target)\",\"title\":null,\"excerpt\":\"牙套笔记\",\"item_kind\":\"writing\",\"item_subtype\":\"note\",\"is_deleted\":true}]}"
         .utf8)
     let result = try JSONDecoder().decode(EntryRelationsResult.self, from: data)
     XCTAssertEqual(result.revision, 3)
@@ -214,7 +221,7 @@ final class LibraryDestinationTests: XCTestCase {
       [{"id":"92000000-0000-4000-8000-000000000001","name":"Friend","relationship_label":"Mentor",
         "notes":null,"revision":2,"total_count":1,"linked_entries":[
         {"id":"91000000-0000-4000-8000-000000000001","title":null,"body":"A shared memory",
-          "entry_type":"standard","is_deleted":true}]}]
+          "item_kind":"event","item_subtype":"memory","is_deleted":true}]}]
       """.utf8)
     let row = try XCTUnwrap(JSONDecoder().decode([PersonRecord].self, from: data).first)
     XCTAssertEqual(row.linked_entries.first?.displayTitle, "A shared memory")
@@ -249,5 +256,52 @@ final class LibraryDestinationTests: XCTestCase {
       XCTAssertFalse(destination.summary.isEmpty)
       XCTAssertFalse(destination.systemImage.isEmpty)
     }
+  }
+
+  func testWikiItemSummaryDecodesCanonicalAndSpecializedIdentity() throws {
+    let json = """
+      {
+        "record_source": "person",
+        "item_id": "98900000-0000-4000-8000-000000000001",
+        "canonical_item_id": "98900000-0000-4000-8000-000000000011",
+        "item_kind": "entity",
+        "item_subtype": "person",
+        "title": "Marina",
+        "excerpt": "Friend from the harbor",
+        "inbox_status": "organized",
+        "occurred_start": null,
+        "occurred_end": null,
+        "updated_at": "2026-09-15T12:00:00Z",
+        "total_count": 14
+      }
+      """
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    let item = try decoder.decode(WikiItemSummary.self, from: Data(json.utf8))
+
+    XCTAssertEqual(item.id.uuidString, "98900000-0000-4000-8000-000000000011")
+    XCTAssertEqual(item.recordID.uuidString, "98900000-0000-4000-8000-000000000001")
+    XCTAssertEqual(item.recordSource, .person)
+    XCTAssertEqual(item.itemKind, .entity)
+    XCTAssertEqual(item.identityLabel, "Entity · Person")
+    XCTAssertEqual(item.totalCount, 14)
+  }
+
+  func testWikiItemsPageParametersUseTheBoundedRPCContract() throws {
+    let parameters = WikiItemsPageParameters(
+      pQuery: "harbor",
+      pItemKinds: ["entity"],
+      pItemSubtypes: ["person"],
+      pLimit: 36,
+      pOffset: 72
+    )
+    let values = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(parameters)) as? [String: Any])
+
+    XCTAssertEqual(values["p_query"] as? String, "harbor")
+    XCTAssertEqual(values["p_item_kinds"] as? [String], ["entity"])
+    XCTAssertEqual(values["p_item_subtypes"] as? [String], ["person"])
+    XCTAssertEqual(values["p_limit"] as? Int, 36)
+    XCTAssertEqual(values["p_offset"] as? Int, 72)
   }
 }

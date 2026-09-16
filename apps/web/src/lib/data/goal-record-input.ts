@@ -48,24 +48,29 @@ export type GoalAchievementInput = {
   revision: number;
 };
 
-export type GoalConversionInput = Pick<
+export type GoalExtractionInput = Pick<
   GoalEntryInput,
   "title" | "horizon" | "status" | "targetDate"
-> & { id: string; revision: number };
+> & { goalId: string; sourceId: string; sourceRevision: number };
 
-export function parseGoalConversionInput(
+export function parseGoalExtractionInput(
   input: unknown,
-): Parsed<GoalConversionInput> {
+): Parsed<GoalExtractionInput> {
   if (
     !isRecord(input) ||
-    typeof input.id !== "string" ||
-    typeof input.revision !== "number"
+    !validUuid(input.goalId) ||
+    !validUuid(input.sourceId) ||
+    typeof input.sourceRevision !== "number" ||
+    !Number.isSafeInteger(input.sourceRevision) ||
+    input.sourceRevision < 1
   )
-    return invalid("Choose a current Entry to convert.");
+    return invalid("Choose a current Wiki Item to create this Goal from.");
   const parsed = parseGoalEntryInput({
     ...input,
     body: "",
     collectionNames: [],
+    id: null,
+    revision: null,
     tagNames: [],
     relatedEntryIds: [],
   });
@@ -74,8 +79,9 @@ export function parseGoalConversionInput(
   return {
     success: true,
     data: {
-      id: input.id,
-      revision: input.revision,
+      goalId: input.goalId,
+      sourceId: input.sourceId,
+      sourceRevision: input.sourceRevision,
       title,
       horizon,
       status,
@@ -127,7 +133,7 @@ export function parseGoalEntryInput(input: unknown): Parsed<GoalEntryInput> {
     return invalid("Use up to 50 tags with names under 60 characters.");
   }
   if (!relatedEntryIds || relatedEntryIds.length > goalRelatedEntryLimit) {
-    return invalid(`Relate up to ${goalRelatedEntryLimit} Entries.`);
+    return invalid(`Relate up to ${goalRelatedEntryLimit} Items.`);
   }
   if (!isGoalEntryIdentity(input.id, input.revision)) {
     return invalid("This Goal version is invalid. Refresh and try again.");

@@ -8,9 +8,16 @@ struct HomesView: View {
   @State private var editorSelection: ResidenceEditorSelection?
 
   private let embedded: Bool
+  private let focusedEntryID: UUID?
 
-  init(client: SupabaseClient, ownerID: UUID, embedded: Bool = false) {
+  init(
+    client: SupabaseClient,
+    ownerID: UUID,
+    embedded: Bool = false,
+    focusedEntryID: UUID? = nil
+  ) {
     self.embedded = embedded
+    self.focusedEntryID = focusedEntryID
     _controller = State(initialValue: ResidenceController(client: client, ownerID: ownerID))
   }
 
@@ -70,7 +77,7 @@ struct HomesView: View {
         .font(MTTypography.display)
         .foregroundStyle(MTColor.ink)
 
-      Text("Keep each residence as a chapter with its Place, dates, memories, and photos.")
+      Text("Keep each residence with its Place, dates, notes, and photos.")
         .font(MTTypography.body)
         .foregroundStyle(MTColor.inkMuted)
         .lineSpacing(2)
@@ -111,6 +118,16 @@ struct HomesView: View {
         message: loadErrorMessage,
         systemImage: "exclamationmark.triangle"
       )
+    } else if let focusedEntryID {
+      if let entry = controller.entries.first(where: { $0.id == focusedEntryID }) {
+        residenceSection(title: "HOME", entries: [entry])
+      } else {
+        archiveMessage(
+          title: "Home unavailable",
+          message: "This Home is no longer available in the loaded workspace.",
+          systemImage: "house"
+        )
+      }
     } else if controller.entries.isEmpty {
       archiveMessage(
         title: "Start with one address",
@@ -312,6 +329,8 @@ struct ResidenceEditorSelection: Identifiable {
 struct ResidenceEditorSheet: View {
   let controller: ResidenceController
   let entry: ResidenceEntry?
+  let sourceCapture: CaptureExtractionSource?
+  let onSaved: (@MainActor () async -> Void)?
 
   @Environment(\.dismiss) private var dismiss
   @State private var currentEntryID: UUID?
@@ -344,17 +363,24 @@ struct ResidenceEditorSheet: View {
   @State private var isConfirmingTrash = false
   @State private var attachmentToRemove: ResidenceAttachment?
 
-  init(controller: ResidenceController, entry: ResidenceEntry?) {
+  init(
+    controller: ResidenceController,
+    entry: ResidenceEntry?,
+    sourceCapture: CaptureExtractionSource? = nil,
+    onSaved: (@MainActor () async -> Void)? = nil
+  ) {
     self.controller = controller
     self.entry = entry
+    self.sourceCapture = sourceCapture
+    self.onSaved = onSaved
     _currentEntryID = State(initialValue: entry?.id)
     _currentRevision = State(initialValue: entry?.revision)
     _currentPlaceID = State(initialValue: entry?.placeID)
-    _title = State(initialValue: entry?.title ?? "")
-    _note = State(initialValue: entry?.body ?? "")
+    _title = State(initialValue: entry?.title ?? sourceCapture?.title ?? "")
+    _note = State(initialValue: entry?.body ?? sourceCapture?.body ?? "")
     _occurrence = State(
       initialValue: OccurrenceDraft(
-        entry?.occurrence
+        entry?.occurrence ?? sourceCapture?.occurrence
           ?? EntryOccurrence(
             precision: .unknown, start: nil, end: nil, label: nil,
             timezone: TimeZone.current.identifier)))
@@ -369,22 +395,32 @@ struct ResidenceEditorSheet: View {
     _placeNotes = State(initialValue: entry?.placeNotes ?? "")
     _moveInReason = State(initialValue: entry?.moveInReason ?? "")
     _moveOutReason = State(initialValue: entry?.moveOutReason ?? "")
-    _collectionNames = State(initialValue: entry?.collectionNames ?? [])
-    _tagNames = State(initialValue: entry?.tagNames ?? [])
+    _collectionNames = State(
+      initialValue: entry?.collectionNames ?? sourceCapture?.collectionNames ?? [])
+    _tagNames = State(initialValue: entry?.tagNames ?? sourceCapture?.tagNames ?? [])
     _attachments = State(initialValue: entry?.attachments ?? [])
   }
 
   var body: some View {
     NavigationStack {
       Form {
-        chapterSection
+        if sourceCapture != nil {
+          Section {
+            Label("Creating a Home from this Capture", systemImage: "arrow.triangle.branch")
+          } footer: {
+            Text("The original Capture stays linked as provenance after this Home is created.")
+          }
+        }
+        identitySection
         datesSection
         placeSection
         organizationSections
         photosSection
         statusSections
       }
-      .navigationTitle(entry == nil ? "New Home" : "Edit Home")
+      .navigationTitle(
+        sourceCapture == nil ? (entry == nil ? "New Home" : "Edit Home") : "Create Home"
+      )
       .navigationBarTitleDisplayMode(.inline)
       .disabled(isWorking)
       .onChange(of: title) { trim(&title, to: ResidenceEntryInput.titleLimit) }
@@ -403,7 +439,7 @@ struct ResidenceEditorSheet: View {
           Button("Cancel") { dismiss() }.disabled(isWorking)
         }
         ToolbarItem(placement: .confirmationAction) {
-          Button(entry == nil ? "Add" : "Save") { Task { await save() } }
+          Button(currentEntryID == nil ? "Add" : "Save") { Task { await save() } }
             .fontWeight(.semibold)
             .disabled(isWorking)
             .accessibilityIdentifier("save-home")
@@ -453,14 +489,14 @@ struct ResidenceEditorSheet: View {
     .interactiveDismissDisabled(isWorking)
   }
 
-  private var chapterSection: some View {
-    Section("Home chapter") {
+  private var identitySection: some View {
+    Section("Home details") {
       TextField("Home name", text: $title, axis: .vertical)
         .textInputAutocapitalization(.words)
         .accessibilityIdentifier("home-title")
       TextEditor(text: $note)
         .frame(minHeight: 130)
-        .accessibilityLabel("Memories")
+        .accessibilityLabel("Notes")
         .accessibilityIdentifier("home-memories")
     }
   }
@@ -718,7 +754,8 @@ struct ResidenceEditorSheet: View {
       moveOutReason: moveOutReason,
       collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       tagNames: namesIncludingDraft(tagNames, tagInput),
-      originalEntry: entry
+      originalEntry: entry,
+      sourceCapture: currentEntryID == nil ? sourceCapture : nil
     )
 
     guard result.status == .saved, let identity = result.identity else {
@@ -751,6 +788,8 @@ struct ResidenceEditorSheet: View {
 
     if let failedMessage {
       errorMessage = "Your Home was saved. \(failedMessage)"
+    } else if let onSaved {
+      await onSaved()
     } else {
       dismiss()
     }

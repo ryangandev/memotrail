@@ -341,7 +341,7 @@ try {
   assert(
     read(`entries/${entryID}.md`).toString().includes('occurred_label: "17岁"'),
   );
-  for (const name of ["habits", "homes", "vehicles"])
+  for (const name of ["homes", "vehicles"])
     assert(read(`tables/${name}.csv`).toString().includes('"id"'));
   const checksums = JSON.parse(read("checksums.json"));
   assert.equal(checksums.complete, true);

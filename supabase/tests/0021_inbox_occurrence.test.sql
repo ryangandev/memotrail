@@ -8,9 +8,9 @@ insert into public.collections(id,owner_id,name,archived_at) values
 insert into public.entry_collections(entry_id,owner_id,collection_id) values
  ('97000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','97000000-0000-4000-8000-000000000002');
 create function pg_temp.review(p_precision text, p_start timestamptz default null, p_end timestamptz default null, p_label text default null, p_rev integer default null, p_zone text default 'UTC') returns bigint language sql as $$
- select count(*) from public.review_entry_with_occurrence(
+ select count(*) from public.review_wiki_item_with_photo_place(
  '97000000-0000-4000-8000-000000000001',coalesce(p_rev,(select revision from public.entries where id='97000000-0000-4000-8000-000000000001'),1),
- 'Reviewed memory','My words','standard',p_start,p_zone,array['Active group'],array['memory'],false,p_end,p_label,p_precision);
+ 'Reviewed memory','My words','writing','note',p_start,p_zone,array['Active group'],array['memory'],false,p_end,p_label,p_precision,null);
 $$;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
@@ -44,7 +44,7 @@ select is(pg_temp.review('unknown',null,null,null,1),0::bigint,'Stale revision r
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000099',true);
 select is(pg_temp.review('unknown'),0::bigint,'Another owner cannot review');
 reset role;
-select ok(not has_function_privilege('anon','public.review_entry_with_occurrence(uuid,integer,text,text,text,timestamp with time zone,text,text[],text[],boolean,timestamp with time zone,text,text)','execute'),'Anonymous review denied');
-select ok(has_function_privilege('authenticated','public.review_entry(uuid,integer,text,text,text,timestamp with time zone,text,text[],text[],boolean)','execute'),'Legacy review contract remains available');
+select ok(not has_function_privilege('anon','public.review_wiki_item_with_photo_place(uuid,integer,text,text,text,text,timestamp with time zone,text,text[],text[],boolean,timestamp with time zone,text,text,jsonb)','execute'),'Anonymous review denied');
+select hasnt_function('public','review_entry',array['uuid','integer','text','text','text','timestamp with time zone','text','text[]','text[]','boolean'],'Legacy review contract is removed');
 select * from finish();
 rollback;

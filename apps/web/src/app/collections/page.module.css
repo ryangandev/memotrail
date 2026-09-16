@@ -285,8 +285,17 @@
   line-height: 1.35;
 }
 
+.entryContent h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.entryContent h2 a:hover {
+  color: var(--mt-color-accent);
+}
+
 .entryBody,
-.fullEntry p {
+.fullEntryBody {
   white-space: pre-wrap;
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-body);
@@ -294,11 +303,9 @@
 }
 
 .entryBody {
-  display: -webkit-box;
+  max-height: calc(4 * var(--mt-line-height-body) * 1em);
   margin-top: var(--mt-space-2);
   overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
 }
 
 .fullEntry {
@@ -312,7 +319,7 @@
   cursor: pointer;
 }
 
-.fullEntry p {
+.fullEntryBody {
   margin-top: var(--mt-space-3);
   padding: var(--mt-space-4);
   border-radius: var(--mt-radius-medium);

@@ -41,7 +41,6 @@ type NavigationItem = {
 
 const primaryNavigation: NavigationItem[] = [
   { destination: "home", href: "/", icon: "home", label: "Home" },
-  { destination: "search", href: "/search", icon: "search", label: "Search" },
   { destination: "inbox", href: "/inbox", icon: "inbox", label: "Inbox" },
   {
     destination: "timeline",
@@ -49,28 +48,35 @@ const primaryNavigation: NavigationItem[] = [
     icon: "timeline",
     label: "Timeline",
   },
+  {
+    destination: "library",
+    href: "/library",
+    icon: "archive",
+    label: "Library",
+  },
+  { destination: "search", href: "/search", icon: "search", label: "Search" },
 ];
 
 const recordNavigation: NavigationItem[] = [
-  { destination: "goals", href: "/goals", icon: "target", label: "Goals" },
-  { destination: "homes", href: "/homes", icon: "home", label: "Homes" },
-  { destination: "places", href: "/places", icon: "map", label: "Places" },
   { destination: "people", href: "/people", icon: "archive", label: "People" },
+  { destination: "places", href: "/places", icon: "map", label: "Places" },
+  { destination: "homes", href: "/homes", icon: "home", label: "Homes" },
   {
     destination: "vehicles",
     href: "/vehicles",
     icon: "car",
     label: "Vehicles",
   },
-];
-
-const archiveNavigation: NavigationItem[] = [
   {
     destination: "first-times",
     href: "/first-times",
     icon: "star",
     label: "First Times",
   },
+  { destination: "goals", href: "/goals", icon: "target", label: "Goals" },
+];
+
+const organizationNavigation: NavigationItem[] = [
   {
     destination: "collections",
     href: "/collections",
@@ -279,16 +285,16 @@ function Sidebar({
             items={primaryNavigation}
           />
           <div className={styles.navDivider} role="separator" />
-          <p className={styles.navLabel}>Records</p>
+          <p className={styles.navLabel}>Focused views</p>
           <NavGroup
             activeDestination={activeDestination}
             items={recordNavigation}
           />
           <div className={styles.navDivider} role="separator" />
-          <p className={styles.navLabel}>Library</p>
+          <p className={styles.navLabel}>Organize</p>
           <NavGroup
             activeDestination={activeDestination}
-            items={archiveNavigation}
+            items={organizationNavigation}
           />
         </nav>
 

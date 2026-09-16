@@ -63,6 +63,8 @@ test("Ordinary Entries link, navigate backlinks, unlink, and restore relationshi
             title: "Why I keep learning",
             body: "My original words",
             inbox_status: "organized",
+            item_kind: "writing",
+            item_subtype: "note",
             date_precision: "unknown",
           },
           {
@@ -71,6 +73,8 @@ test("Ordinary Entries link, navigate backlinks, unlink, and restore relationshi
             title: "How teeth move",
             body: "牙套的学习笔记",
             inbox_status: "organized",
+            item_kind: "writing",
+            item_subtype: "note",
             date_precision: "unknown",
           },
         ])
@@ -78,14 +82,14 @@ test("Ordinary Entries link, navigate backlinks, unlink, and restore relationshi
     ).toBeNull();
     await page.goto(`/history?entry=${source}`);
     const panel = page.getByRole("region", {
-      name: "Related Entries",
+      name: "Related Items",
       exact: true,
     });
     await expect(panel).toBeVisible();
     await panel
-      .getByRole("button", { name: "Find Entries", exact: true })
+      .getByRole("button", { name: "Find Items", exact: true })
       .click();
-    await panel.getByLabel("Search related Entries").fill("牙套");
+    await panel.getByLabel("Search related Items").fill("牙套");
     await panel.getByRole("button", { name: "Search", exact: true }).click();
     await panel
       .getByRole("button", { name: "Link How teeth move", exact: true })
@@ -128,7 +132,7 @@ test("Ordinary Entries link, navigate backlinks, unlink, and restore relationshi
     await panel
       .getByRole("button", { name: "Unlink How teeth move", exact: true })
       .click();
-    await expect(panel.getByText("No matching linked Entries.")).toBeVisible();
+    await expect(panel.getByText("No matching linked Items.")).toBeVisible();
     const unlinked = (await client.rpc("entry_history", { p_entry_id: source }))
       .data;
     expect(unlinked.current.revision).toBe(3);
@@ -177,7 +181,7 @@ test("Ordinary Entries link, navigate backlinks, unlink, and restore relationshi
       .getByRole("button", { name: "Refresh links", exact: true })
       .click();
     await expect(
-      panel.getByText("standard · In Trash", { exact: true }),
+      panel.getByText("Writing · Note · In Trash", { exact: true }),
     ).toBeVisible();
     // An intervening writing edit cannot be overwritten by a stale relationship request.
     expect(
@@ -192,7 +196,7 @@ test("Ordinary Entries link, navigate backlinks, unlink, and restore relationshi
     await panel
       .getByRole("button", { name: "Unlink How teeth move", exact: true })
       .click();
-    await expect(panel.getByRole("alert")).toContainText("This Entry changed");
+    await expect(panel.getByRole("alert")).toContainText("This Item changed");
     expect(
       (await client.rpc("entry_relations", { p_entry_id: source })).data
         .total_count,

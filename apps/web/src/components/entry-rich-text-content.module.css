@@ -1,0 +1,59 @@
+.content {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.content p,
+.content blockquote,
+.content pre,
+.content ul,
+.content ol {
+  margin: 0 0 0.65em;
+}
+
+.content > :last-child {
+  margin-bottom: 0;
+}
+
+.content p {
+  white-space: pre-wrap;
+}
+
+.content ul,
+.content ol {
+  padding-left: 1.5em;
+}
+
+.content blockquote {
+  padding-left: var(--mt-space-3);
+  border-left: 2px solid var(--mt-color-accent);
+  color: var(--mt-color-ink-muted);
+}
+
+.content code {
+  padding: 0.12em 0.35em;
+  border-radius: 4px;
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-subtle);
+  font-family: var(--mt-font-family-mono, ui-monospace, monospace);
+  font-size: 0.9em;
+}
+
+.content pre {
+  padding: var(--mt-space-3) var(--mt-space-4);
+  overflow-x: auto;
+  border-radius: var(--mt-radius-small);
+  background: var(--mt-color-surface-subtle);
+  white-space: pre;
+}
+
+.content pre code {
+  padding: 0;
+  background: transparent;
+}
+
+.content a {
+  color: var(--mt-color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

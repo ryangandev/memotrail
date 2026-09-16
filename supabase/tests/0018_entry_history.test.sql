@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(41);
+select plan(42);
 insert into public.entries(id,owner_id,title,body,date_precision,occurred_label) values
 ('94000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','History original','Original writing','year','University year'),
 ('94000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','Linked context','Another memory','unknown',null);
@@ -26,7 +26,7 @@ update public.places set name='Current shared name' where id='94400000-0000-4000
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
 select is(public.entry_history('94000000-0000-4000-8000-000000000001')->>'total_count','1','Earlier version is browsable');
-select is(public.entry_history('94000000-0000-4000-8000-000000000001')->'versions'->0->'snapshot'->>'history_schema','2','New snapshots carry complete schema marker');
+select is(public.entry_history('94000000-0000-4000-8000-000000000001')->'versions'->0->'snapshot'->>'history_schema','3','New snapshots carry the canonical schema marker');
 select is(public.entry_history('94000000-0000-4000-8000-000000000001')->'versions'->0->'snapshot'->'collections'->0->>'name','History collection','Snapshot records original Collection name');
 select is((select count(*) from public.entry_history_index('History revised')),1::bigint,'History index finds current writing');
 select is(public.restore_entry_version('94000000-0000-4000-8000-000000000001',1,2),3,'Restore creates next revision');
@@ -57,10 +57,10 @@ select is(public.restore_entry_version('94000000-0000-4000-8000-000000000001',2,
 select throws_ok($$select public.entry_history('94000000-0000-4000-8000-000000000001',21,0)$$,'22023','invalid_history_page','History page bounds enforced');
 reset role;
 -- Specialized facts travel with Entry restoration, not as independent partial writes.
-insert into public.entries(id,owner_id,title,entry_type) values
-('94600000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Goal v1','goal'),
-('94600000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','Home v1','home'),
-('94600000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000001','Vehicle v1','vehicle');
+insert into public.entries(id,owner_id,title,item_kind,item_subtype) values
+('94600000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Goal v1','goal','goal'),
+('94600000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','Home v1','entity','home'),
+('94600000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000001','Vehicle v1','entity','vehicle');
 insert into public.goals(entry_id,owner_id,status) values('94600000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','active');
 insert into public.homes(entry_id,owner_id,place_id,move_in_reason) values('94600000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','94400000-0000-4000-8000-000000000001','Study');
 insert into public.vehicles(entry_id,owner_id,model,color) values('94600000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000001','Original model','Blue');
@@ -76,13 +76,14 @@ select is((select move_in_reason from public.homes where entry_id='94600000-0000
 select is(public.restore_entry_version('94600000-0000-4000-8000-000000000003',1,2),3,'Restores Vehicle atomically');
 select is((select color from public.vehicles where entry_id='94600000-0000-4000-8000-000000000003'),'Blue','Restores Vehicle details');
 reset role;
--- Legacy snapshots without relationship state retain current relationships.
+-- Snapshots outside the canonical contract are rejected without partial writes.
 update public.entries set body='Legacy previous' where id='94000000-0000-4000-8000-000000000002';
 update public.entry_versions set snapshot=snapshot-array['collections','tags','people','places','timeline_items','timeline','links','related_entry_ids','attachments','history_schema'] where entry_id='94000000-0000-4000-8000-000000000002';
 insert into public.entry_collections values('94000000-0000-4000-8000-000000000002','94100000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001',now());
 set local role authenticated;
-select is(public.restore_entry_version('94000000-0000-4000-8000-000000000002',1,2),3,'Legacy content can be restored');
-select is((select count(*) from public.entry_collections where entry_id='94000000-0000-4000-8000-000000000002'),1::bigint,'Legacy unknown links are not cleared');
+select throws_ok($$select public.restore_entry_version('94000000-0000-4000-8000-000000000002',1,2)$$,'P0001','history_schema_unsupported','Noncanonical history cannot be restored');
+select is((select revision from public.entries where id='94000000-0000-4000-8000-000000000002'),2,'Rejected history leaves the revision unchanged');
+select is((select count(*) from public.entry_collections where entry_id='94000000-0000-4000-8000-000000000002'),1::bigint,'Rejected history leaves current relationships unchanged');
 reset role;
 select ok(not has_function_privilege('anon','public.restore_entry_version(uuid,integer,integer)','execute'),'Anonymous restoration denied');
 select ok(not has_function_privilege('authenticated','public.entry_history_snapshot(public.entries)','execute'),'Internal snapshot helper not exposed to clients');

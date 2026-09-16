@@ -117,17 +117,22 @@ test("History restores and re-restores writing, relationships, and private photo
     ).toBeNull();
     expect(
       (
-        await client.rpc("review_entry", {
+        await client.rpc("review_wiki_item_with_photo_place", {
           p_entry_id: entryID,
           p_expected_revision: 2,
           p_title: "Revised chapter",
           p_body: "The newer words before restoration.",
-          p_entry_type: "standard",
+          p_item_kind: "writing",
+          p_item_subtype: "note",
           p_occurred_start: "2024-01-01T12:00:00Z",
           p_occurred_timezone: "UTC",
           p_collection_names: [],
           p_tag_names: [],
           p_mark_done: false,
+          p_occurred_end: null,
+          p_occurred_label: null,
+          p_date_precision: "day",
+          p_photo_place: null,
         })
       ).error,
     ).toBeNull();
@@ -144,6 +149,7 @@ test("History restores and re-restores writing, relationships, and private photo
     await page.screenshot({
       path: "/private/tmp/memotrail-history-desktop.png",
       fullPage: true,
+      caret: "initial",
     });
     page.once("dialog", (d) => d.accept());
     await page
@@ -194,6 +200,7 @@ test("History restores and re-restores writing, relationships, and private photo
     await page.screenshot({
       path: "/private/tmp/memotrail-history-mobile.png",
       fullPage: true,
+      caret: "initial",
     });
     expect(
       await page.evaluate(

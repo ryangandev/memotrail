@@ -63,7 +63,8 @@ struct TimelineEntry: Equatable, Hashable, Identifiable, Sendable {
   let trackID: UUID
   let title: String
   let body: String
-  let entryType: String
+  let itemKind: WikiItemKind
+  let itemSubtype: String
   let kind: TimelineKind
   let occurredStart: Date?
   let occurredEnd: Date?
@@ -83,10 +84,11 @@ struct TimelineEntry: Equatable, Hashable, Identifiable, Sendable {
   }
 
   var specializedEditor: TimelineSpecializedEditor? {
-    switch entryType {
-    case "home": .home
-    case "vehicle": .vehicle
-    default: nil
+    guard itemKind == .entity else { return nil }
+    switch itemSubtype {
+    case "home": return .home
+    case "vehicle": return .vehicle
+    default: return nil
     }
   }
 
@@ -116,7 +118,8 @@ struct TimelineWorkspaceRow: Decodable, Equatable, Sendable {
   let entryID: UUID?
   let title: String?
   let body: String?
-  let entryType: String?
+  let itemKind: WikiItemKind?
+  let itemSubtype: String?
   let timelineKind: String?
   let occurredStart: Date?
   let occurredEnd: Date?
@@ -137,7 +140,8 @@ struct TimelineWorkspaceRow: Decodable, Equatable, Sendable {
     case entryID = "entry_id"
     case title
     case body
-    case entryType = "entry_type"
+    case itemKind = "item_kind"
+    case itemSubtype = "item_subtype"
     case timelineKind = "timeline_kind"
     case occurredStart = "occurred_start"
     case occurredEnd = "occurred_end"
@@ -153,7 +157,8 @@ struct TimelineWorkspaceRow: Decodable, Equatable, Sendable {
       let entryID,
       let title = title?.trimmed.nonEmpty,
       let body,
-      let entryType = entryType?.trimmed.nonEmpty,
+      let itemKind,
+      let itemSubtype = itemSubtype?.trimmed.nonEmpty,
       let timelineKind,
       let kind = TimelineKind(rawValue: timelineKind),
       let revision,
@@ -168,7 +173,8 @@ struct TimelineWorkspaceRow: Decodable, Equatable, Sendable {
       trackID: trackID,
       title: title,
       body: body,
-      entryType: entryType,
+      itemKind: itemKind,
+      itemSubtype: itemSubtype,
       kind: kind,
       occurredStart: occurredStart,
       occurredEnd: kind == .stage ? occurredEnd : nil,
@@ -437,7 +443,8 @@ extension TimelineWorkspaceRow {
     entryID = try values.decodeIfPresent(UUID.self, forKey: .entryID)
     title = try values.decodeIfPresent(String.self, forKey: .title)
     body = try values.decodeIfPresent(String.self, forKey: .body)
-    entryType = try values.decodeIfPresent(String.self, forKey: .entryType)
+    itemKind = try values.decodeIfPresent(WikiItemKind.self, forKey: .itemKind)
+    itemSubtype = try values.decodeIfPresent(String.self, forKey: .itemSubtype)
     timelineKind = try values.decodeIfPresent(String.self, forKey: .timelineKind)
     occurredStart = try values.decodeIfPresent(Date.self, forKey: .occurredStart)
     occurredEnd = try values.decodeIfPresent(Date.self, forKey: .occurredEnd)

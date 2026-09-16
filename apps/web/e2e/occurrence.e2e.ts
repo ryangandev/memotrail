@@ -83,7 +83,7 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
       has: page.getByRole("heading", { name: "A memory without a date" }),
     });
     await expect(card).toContainText("Date unknown");
-    await card.getByRole("button", { name: "Review", exact: true }).click();
+    await card.getByRole("button", { name: "Organize", exact: true }).click();
     await page
       .getByRole("textbox", { name: "Note", exact: true })
       .fill("The feeling is still vivid.");
@@ -110,7 +110,9 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
       ["month", "2017-07", "Jul 2017"],
       ["day", "2017-07-08", "Jul 8, 2017"],
     ]) {
-      await card.getByRole("button", { name: "Review", exact: true }).click();
+      await card
+        .getByRole("button", { name: "Organize", exact: true })
+        .click();
       await page
         .getByRole("combobox", { name: "Date type", exact: true })
         .selectOption(precision);
@@ -133,7 +135,7 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
         occurred_timezone: "Asia/Kathmandu",
       });
     }
-    await card.getByRole("button", { name: "Review", exact: true }).click();
+    await card.getByRole("button", { name: "Organize", exact: true }).click();
     await page
       .getByRole("combobox", { name: "Date type", exact: true })
       .selectOption("range");
@@ -183,7 +185,7 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
         },
       }),
     );
-    await card.getByRole("button", { name: "Review", exact: true }).click();
+    await card.getByRole("button", { name: "Organize", exact: true }).click();
     await page.getByRole("button", { name: "Use as approximate date" }).click();
     await expect(
       page.getByRole("combobox", { name: "Date type", exact: true }),
@@ -252,7 +254,7 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
       ).error,
     ).toBeNull();
     await page.reload();
-    await card.getByRole("button", { name: "Review", exact: true }).click();
+    await card.getByRole("button", { name: "Organize", exact: true }).click();
     await expect(occurrenceStartField(page)).toHaveValue("2026-11-01");
     await expect(
       page.getByRole("button", {

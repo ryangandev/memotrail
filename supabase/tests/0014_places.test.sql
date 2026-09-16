@@ -51,26 +51,26 @@ values (
 on conflict (id) do nothing;
 
 insert into public.entries (
-  id, owner_id, title, body, entry_type, inbox_status, occurred_start,
+  id, owner_id, title, body, item_kind, item_subtype, inbox_status, occurred_start,
   date_precision, occurred_timezone
 )
 values
   (
     '81000000-0000-4000-8000-000000000001',
     '10000000-0000-0000-0000-000000000001',
-    'Park journal', 'Walks and changing seasons.', 'standard', 'organized',
+    'Park journal', 'Walks and changing seasons.', 'writing', 'journal', 'organized',
     '2026-06-01T19:00:00Z', 'day', 'America/Los_Angeles'
   ),
   (
     '81000000-0000-4000-8000-000000000002',
     '10000000-0000-0000-0000-000000000001',
-    'Apartment chapter', 'A small first home.', 'home', 'organized',
+    'Apartment chapter', 'A small first home.', 'entity', 'home', 'organized',
     '2020-01-01T20:00:00Z', 'year', 'America/Los_Angeles'
   ),
   (
     '81000000-0000-4000-8000-000000000003',
     '10000000-0000-0000-0000-000000000014',
-    'Other journal', 'Private place.', 'standard', 'organized',
+    'Other journal', 'Private place.', 'writing', 'journal', 'organized',
     null, 'unknown', null
   );
 

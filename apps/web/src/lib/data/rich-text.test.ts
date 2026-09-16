@@ -135,9 +135,9 @@ describe("Entry rich text", () => {
     });
 
     expect(value).not.toBeNull();
-    expect(
-      parseEntryRichTextJson(JSON.stringify(value), value!.text),
-    ).toEqual(value);
+    expect(parseEntryRichTextJson(JSON.stringify(value), value!.text)).toEqual(
+      value,
+    );
     expect(
       parseEntryRichTextJson(JSON.stringify(value), "A different body."),
     ).toBeNull();

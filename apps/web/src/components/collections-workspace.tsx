@@ -1,6 +1,7 @@
 import Link from "next/link";
 import styles from "@/app/collections/page.module.css";
 import { Icon } from "@/components/icon";
+import { EntryRichTextContent } from "@/components/entry-rich-text-content";
 import { OrganizationControl } from "@/components/organization-control";
 import { PageFrame } from "@/components/page-frame";
 import { ProgressiveImage } from "@/components/progressive-image";
@@ -13,6 +14,7 @@ import {
   COLLECTION_PAGE_SIZE,
   collectionPageHref,
 } from "@/lib/data/collections-input";
+import { wikiEntryHref, wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 
 export function CollectionsWorkspace({
   workspace,
@@ -275,21 +277,35 @@ function CollectionEntryCard({ entry }: { entry: CollectionEntry }) {
       <div className={styles.entryContent}>
         <header>
           <div className={styles.entryMeta}>
-            <span>{entryTypeLabel(entry.entryType)}</span>
+            <span>
+              {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
+            </span>
             {entry.inboxStatus === "unreviewed" ? <span>In Inbox</span> : null}
             <time dateTime={entry.occurredStart ?? entry.updatedAt}>
               {entryDateLabel(entry)}
             </time>
           </div>
-          <h2>{title}</h2>
+          <h2>
+            <Link href={wikiEntryHref(entry)}>{title}</Link>
+          </h2>
         </header>
 
-        {body ? <p className={styles.entryBody}>{body}</p> : null}
+        {body ? (
+          <EntryRichTextContent
+            body={body}
+            className={styles.entryBody}
+            richText={entry.bodyRich}
+          />
+        ) : null}
 
         {body.length > 320 ? (
           <details className={styles.fullEntry}>
             <summary>Read full note</summary>
-            <p>{body}</p>
+            <EntryRichTextContent
+              body={body}
+              className={styles.fullEntryBody}
+              richText={entry.bodyRich}
+            />
           </details>
         ) : null}
 
@@ -418,26 +434,6 @@ function formatEntryDate(
       timeZone: "UTC",
     }).format(new Date(value));
   }
-}
-
-function entryTypeLabel(value: string) {
-  const labels: Record<string, string> = {
-    first_time: "First Time",
-    goal: "Goal",
-    home: "Home",
-    life_stage: "Life Stage",
-    standard: "Standard Entry",
-    vehicle: "Vehicle",
-  };
-
-  return (
-    labels[value] ??
-    value
-      .split("_")
-      .filter(Boolean)
-      .map((part) => `${part.charAt(0).toLocaleUpperCase()}${part.slice(1)}`)
-      .join(" ")
-  );
 }
 
 function firstUsefulLine(value: string) {

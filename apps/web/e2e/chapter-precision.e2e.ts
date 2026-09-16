@@ -164,7 +164,10 @@ for (const kind of ["home", "vehicle"] as const) {
         await dialog
           .getByRole("button", { name: "Save changes", exact: true })
           .click();
-        await expect(dialog).not.toBeVisible();
+        await expect(
+          dialog,
+          `${kind} editor should close after saving ${precision} precision`,
+        ).not.toBeVisible({ timeout: 15_000 });
         const persisted = await client
           .from("entries")
           .select(

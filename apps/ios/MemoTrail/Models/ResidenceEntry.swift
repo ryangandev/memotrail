@@ -401,8 +401,16 @@ struct ResidenceEntryInput: Equatable, Sendable {
 
 struct SaveResidenceEntryParameters: Encodable, Equatable, Sendable {
   let input: ResidenceEntryInput
+  let source: CaptureExtractionSource?
+
+  init(input: ResidenceEntryInput, source: CaptureExtractionSource? = nil) {
+    self.input = input
+    self.source = source
+  }
 
   enum CodingKeys: String, CodingKey {
+    case captureID = "p_capture_id"
+    case captureRevision = "p_capture_revision"
     case title = "p_title"
     case body = "p_body"
     case occurredStart = "p_occurred_start"
@@ -429,6 +437,10 @@ struct SaveResidenceEntryParameters: Encodable, Equatable, Sendable {
 
   func encode(to encoder: Encoder) throws {
     var values = encoder.container(keyedBy: CodingKeys.self)
+    if let source {
+      try values.encode(source.entryID, forKey: .captureID)
+      try values.encode(source.revision, forKey: .captureRevision)
+    }
     try values.encode(input.title, forKey: .title)
     try values.encode(input.body, forKey: .body)
     if let raw = input.occurredStartRaw {
@@ -457,8 +469,10 @@ struct SaveResidenceEntryParameters: Encodable, Equatable, Sendable {
     try encodeNullable(input.placeNotes, forKey: .placeNotes, into: &values)
     try encodeNullable(input.moveInReason, forKey: .moveInReason, into: &values)
     try encodeNullable(input.moveOutReason, forKey: .moveOutReason, into: &values)
-    try encodeNullable(input.entryID, forKey: .entryID, into: &values)
-    try encodeNullable(input.expectedRevision, forKey: .expectedRevision, into: &values)
+    if source == nil {
+      try encodeNullable(input.entryID, forKey: .entryID, into: &values)
+      try encodeNullable(input.expectedRevision, forKey: .expectedRevision, into: &values)
+    }
   }
 
   private func encodeNullable<T: Encodable>(
@@ -471,6 +485,22 @@ struct SaveResidenceEntryParameters: Encodable, Equatable, Sendable {
     } else {
       try values.encodeNil(forKey: key)
     }
+  }
+}
+
+struct ExtractedCaptureHome: Decodable, Equatable, Sendable {
+  let captureID: UUID
+  let captureRevision: Int
+  let homeEntryID: UUID
+  let homeRevision: Int
+  let placeID: UUID
+
+  enum CodingKeys: String, CodingKey {
+    case captureID = "capture_id"
+    case captureRevision = "capture_revision"
+    case homeEntryID = "home_entry_id"
+    case homeRevision = "home_revision"
+    case placeID = "place_id"
   }
 }
 

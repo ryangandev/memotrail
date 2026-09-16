@@ -210,7 +210,7 @@ private struct PlaceArchiveCard: View {
           VStack(alignment: .leading, spacing: 4) {
             ForEach(entry.linkedEntries.prefix(2)) { linked in
               Text(
-                "\(linked.relationship == "home" ? "Home" : linked.entryType.displayName): \(linked.displayTitle)"
+                "\(linked.relationship == "home" ? "Home" : linked.itemKind.displayName(subtype: linked.itemSubtype)): \(linked.displayTitle)"
               )
               .font(MTTypography.caption)
               .foregroundStyle(MTColor.inkMuted)
@@ -352,7 +352,7 @@ struct PlaceEditorSheet: View {
       Form {
         detailsSection
         coordinatesSection
-        memorySection
+        notesSection
         relationshipsSection
         linkedPhotosSection
         statusSections
@@ -441,8 +441,8 @@ struct PlaceEditorSheet: View {
     }
   }
 
-  private var memorySection: some View {
-    Section("Memory") {
+  private var notesSection: some View {
+    Section("Notes") {
       TextEditor(text: $notes)
         .frame(minHeight: 120)
         .accessibilityLabel("Notes")
@@ -457,7 +457,7 @@ struct PlaceEditorSheet: View {
           Label {
             VStack(alignment: .leading, spacing: 3) {
               Text(linked.displayTitle).foregroundStyle(MTColor.ink)
-              Text("Home chapter · managed from its record")
+              Text("Home record · managed from Homes")
                 .font(MTTypography.caption)
                 .foregroundStyle(MTColor.inkFaint)
             }
@@ -501,7 +501,7 @@ struct PlaceEditorSheet: View {
             Button {
               relatedEntryIDs.append(option.id)
             } label: {
-              Text("\(option.displayTitle) · \(option.entryType.displayName)")
+              Text("\(option.displayTitle) · \(option.displayType)")
             }
           }
         }
@@ -577,8 +577,12 @@ struct PlaceEditorSheet: View {
   }
 
   private func relatedType(_ id: UUID) -> String? {
-    controller.linkOptions.first { $0.id == id }?.entryType
-      ?? entry?.relatedEntries.first { $0.id == id }?.entryType
+    controller.linkOptions.first { $0.id == id }.map {
+      $0.itemKind.displayName(subtype: $0.itemSubtype)
+    }
+      ?? entry?.relatedEntries.first { $0.id == id }.map {
+        $0.itemKind.displayName(subtype: $0.itemSubtype)
+      }
   }
 
   private func trashProtectionMessage(_ entry: PlaceEntry) -> String {
@@ -645,11 +649,5 @@ struct PlaceEditorSheet: View {
 
   private func trim(_ value: inout String, to limit: Int) {
     if value.count > limit { value = String(value.prefix(limit)) }
-  }
-}
-
-extension String {
-  fileprivate var displayName: String {
-    replacingOccurrences(of: "_", with: " ").capitalized
   }
 }

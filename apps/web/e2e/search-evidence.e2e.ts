@@ -64,6 +64,8 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
           owner_id: ownerID,
           title: "How an electric lighter works",
           body: "今天学了电打火机使用电弧点燃蜡烛。Electric arcs produce heat.",
+          item_kind: "writing",
+          item_subtype: "note",
           date_precision: "day",
           occurred_start: "2026-01-05T12:00:00Z",
           occurred_timezone: "UTC",
@@ -78,7 +80,7 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
         },
       },
     });
-    const evidence = await bearer.rpc("archive_search_evidence", {
+    const evidence = await bearer.rpc("archive_wiki_search_evidence", {
       p_queries: ["电弧", "electric arc"],
       p_order: "oldest",
     });
@@ -128,8 +130,8 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
         "今天学了电打火机使用电弧点燃蜡烛。Electric arcs produce heat.",
       ),
     ).toBeVisible();
-    // The existing history reader is a stable, authenticated source Entry route,
-    // including when an Entry has no previous versions.
+    // Classified Writing opens its durable history surface even when it has
+    // not left the Inbox yet. Only raw Captures return to Inbox review.
     await page
       .getByRole("link", { name: "How an electric lighter works" })
       .click();
@@ -137,9 +139,7 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
       new RegExp(`/history\\?entry=${evidence.data.entries[0].id}$`),
     );
     await expect(
-      page.getByText(
-        "今天学了电打火机使用电弧点燃蜡烛。Electric arcs produce heat.",
-      ),
+      page.getByRole("region", { name: "Current version", exact: true }),
     ).toBeVisible();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });

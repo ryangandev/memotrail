@@ -3,12 +3,17 @@ import SwiftUI
 
 struct EntryAISuggestions: Codable, Sendable {
   let title: String?
-  let entryType: String?
+  let classification: EntryAISuggestionClassification?
   let collections: [String]
   let tags: [String]
   let dateText: String?
   let rationale: String
   let confidence: Double
+}
+
+struct EntryAISuggestionClassification: Codable, Sendable {
+  let itemKind: WikiItemKind
+  let itemSubtype: String
 }
 
 struct EntryAISuggestionRecord: Decodable, Sendable {
@@ -46,7 +51,7 @@ struct EntryAISuggestionsView: View {
   let request: @MainActor (Bool) async throws -> EntryAISuggestionResponse
   let dismiss: @MainActor (UUID) async throws -> Void
   let applyTitle: (String) -> Void
-  let applyType: (String) -> Void
+  let applyClassification: (EntryAISuggestionClassification) -> Void
   let applyDate: (String) -> Void
   let addCollection: (String) -> Void
   let addTag: (String) -> Void
@@ -78,9 +83,12 @@ struct EntryAISuggestionsView: View {
         if let title = suggestion.title {
           Button("Use title: \(title)") { applyTitle(title) }
         }
-        if let type = suggestion.entryType {
-          Button("Use Type: \(type == "first_time" ? "First Time" : "Standard")") {
-            applyType(type)
+        if let classification = suggestion.classification {
+          let label = classification.itemSubtype
+            .replacingOccurrences(of: "_", with: " ")
+            .capitalized
+          Button("Use type: \(label)") {
+            applyClassification(classification)
           }
         }
         ForEach(suggestion.collections, id: \.self) { name in

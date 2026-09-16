@@ -12,7 +12,6 @@ final class HomeEntryTests: XCTestCase {
     XCTAssertEqual(snapshot.entryCount, 4)
     XCTAssertEqual(snapshot.firstTimeCount, 1)
     XCTAssertEqual(snapshot.collectionCount, 1)
-    XCTAssertEqual(snapshot.completedHabitCount, 1)
     XCTAssertEqual(snapshot.currentStages.first?.title, "Living in California")
     XCTAssertEqual(snapshot.recentEntries.first?.collectionNames, ["Things I Learned"])
     XCTAssertEqual(snapshot.recentEntries.first?.tagNames, ["curiosity"])
@@ -144,26 +143,20 @@ final class HomeEntryTests: XCTestCase {
     XCTAssertEqual(HomePresentation.firstName("   "), "MemoTrail")
   }
 
-  func testHabitProgressExplainsDueSkippedAndEmptyStates() throws {
-    let snapshot = try decodeSnapshot()
-
-    XCTAssertEqual(snapshot.habitProgressLabel, "1 of 1 due")
-  }
-
-  func testRootTabsMatchTheFiveDestinationProductContract() {
+  func testRootTabsMatchTheFourDestinationProductContract() {
     XCTAssertEqual(
       RootTabDestination.allCases,
-      [.home, .inbox, .timeline, .habits, .library]
+      [.home, .inbox, .timeline, .library]
     )
     XCTAssertEqual(
       RootTabDestination.allCases.map(\.title),
       [
-        "Home", "Inbox", "Timeline", "Habits", "Library",
+        "Home", "Inbox", "Timeline", "Library",
       ])
     XCTAssertFalse(RootTabDestination.allCases.map(\.systemImage).contains(where: \.isEmpty))
     XCTAssertEqual(
       RootTabDestination.allCases.filter(\.usesGlobalCaptureButton),
-      [.timeline, .habits, .library]
+      [.timeline, .library]
     )
   }
 
@@ -185,10 +178,6 @@ final class HomeEntryTests: XCTestCase {
         "entry_count": 4,
         "first_time_count": 1,
         "collection_count": 1,
-        "active_habit_count": 1,
-        "due_habit_count": 1,
-        "completed_habit_count": 1,
-        "skipped_habit_count": 0,
         "current_stage_count": 1,
         "recent_entries": [
           [
@@ -196,7 +185,8 @@ final class HomeEntryTests: XCTestCase {
             "title": "Why clear aligners move teeth",
             "body":
               "A steady, gentle force encourages bone to remodel around a tooth over time.",
-            "entry_type": "standard",
+            "item_kind": "writing",
+            "item_subtype": "note",
             "inbox_status": "unreviewed",
             "occurred_start": "2026-09-03T19:00:00Z",
             "occurred_end": NSNull(),
@@ -253,7 +243,8 @@ final class HomeEntryTests: XCTestCase {
         "entry_id": "50000000-0000-4000-8000-000000000001",
         "title": "First coastal train ride",
         "body": "A quiet afternoon on the coast.",
-        "entry_type": "first_time",
+        "item_kind": "event",
+        "item_subtype": "first_time",
         "inbox_status": inboxStatus,
         "occurred_start": occurredStart.map { $0 as Any } ?? NSNull(),
         "occurred_end": NSNull(),

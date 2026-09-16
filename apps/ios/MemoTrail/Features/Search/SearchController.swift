@@ -6,7 +6,7 @@ import Observation
 @Observable
 final class SearchController {
   var query = "" { didSet { clearAIResult() } }
-  var selectedEntryType: SearchEntryType? { didSet { clearAIResult() } }
+  var selectedItemKind: WikiItemKind? { didSet { clearAIResult() } }
   var selectedCollectionName: String? { didSet { clearAIResult() } }
   var selectedTagName: String? { didSet { clearAIResult() } }
   var dateFrom: Date? { didSet { clearAIResult() } }
@@ -20,7 +20,6 @@ final class SearchController {
   private(set) var tagOptions: [String] = []
   private(set) var totalCount = 0
   private(set) var hasSearched = false
-  private(set) var libraryQuery: String?
   private(set) var isLoading = false
   private(set) var isLoadingFilters = false
   private(set) var hasLoadedFilters = false
@@ -41,7 +40,7 @@ final class SearchController {
 
   var activeFilterCount: Int {
     [
-      selectedEntryType != nil, selectedCollectionName != nil, selectedTagName != nil,
+      selectedItemKind != nil, selectedCollectionName != nil, selectedTagName != nil,
       dateFrom != nil, dateTo != nil,
     ]
     .filter { $0 }
@@ -107,7 +106,7 @@ final class SearchController {
     AISearchRequest(
       request: try EntrySearchRequest.validate(
         query: query,
-        entryTypes: selectedEntryType.map { [$0] } ?? [],
+        itemKinds: selectedItemKind.map { [$0] } ?? [],
         collectionNames: selectedCollectionName.map { [$0] } ?? [],
         tagNames: selectedTagName.map { [$0] } ?? [], dateFrom: dateFrom, dateTo: dateTo))
   }
@@ -144,7 +143,7 @@ final class SearchController {
     aiAnswer = nil
     aiError = nil
     query = ""
-    selectedEntryType = nil
+    selectedItemKind = nil
     selectedCollectionName = nil
     selectedTagName = nil
     dateFrom = nil
@@ -162,7 +161,7 @@ final class SearchController {
     do {
       request = try EntrySearchRequest.validate(
         query: query,
-        entryTypes: selectedEntryType.map { [$0] } ?? [],
+        itemKinds: selectedItemKind.map { [$0] } ?? [],
         collectionNames: selectedCollectionName.map { [$0] } ?? [],
         tagNames: selectedTagName.map { [$0] } ?? [],
         dateFrom: dateFrom,
@@ -172,7 +171,6 @@ final class SearchController {
     } catch {
       searchErrorMessage = error.localizedDescription
       if !appending {
-        libraryQuery = nil
         entries = []
         totalCount = 0
         hasSearched = true
@@ -181,7 +179,6 @@ final class SearchController {
     }
 
     guard request.hasCriteria else {
-      libraryQuery = nil
       entries = []
       totalCount = 0
       hasSearched = false
@@ -193,7 +190,6 @@ final class SearchController {
     searchErrorMessage = nil
     if !appending {
       hasSearched = true
-      libraryQuery = activeFilterCount == 0 && !request.query.isEmpty ? request.query : nil
     }
     defer { isLoading = false }
 
@@ -202,7 +198,7 @@ final class SearchController {
 
       let results: [SearchEntry] =
         try await client
-        .rpc("search_entries_with_occurrence", params: request.parameters)
+        .rpc("search_wiki_items", params: request.parameters)
         .execute()
         .value
 
@@ -214,7 +210,7 @@ final class SearchController {
       }
       totalCount = results.first?.totalCount ?? (appending ? totalCount : 0)
     } catch {
-      searchErrorMessage = "MemoTrail could not search your Entries. Try again."
+      searchErrorMessage = "MemoTrail could not search your Life Wiki. Try again."
       if !appending {
         entries = []
         totalCount = 0

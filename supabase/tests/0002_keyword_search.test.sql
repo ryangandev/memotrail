@@ -58,7 +58,8 @@ insert into public.entries (
   owner_id,
   title,
   body,
-  entry_type,
+  item_kind,
+  item_subtype,
   inbox_status,
   occurred_start,
   occurred_timezone,
@@ -71,6 +72,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'First time skiing',
     'A cold and brilliant day in the mountains.',
+    'event',
     'first_time',
     'organized',
     '2026-07-04T02:00:00Z',
@@ -83,7 +85,8 @@ values
     '10000000-0000-0000-0000-000000000001',
     '今天学到的事情',
     '为什么塑料牙套可以慢慢移动坚硬的牙齿',
-    'standard',
+    'writing',
+    'note',
     'organized',
     '2025-05-04T08:00:00Z',
     'Asia/Shanghai',
@@ -95,6 +98,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'My first car',
     'A practical daily driver.',
+    'entity',
     'vehicle',
     'organized',
     '2020-03-12T12:00:00Z',
@@ -107,7 +111,8 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Deleted skiing note',
     'This should stay in Trash.',
-    'standard',
+    'writing',
+    'note',
     'organized',
     '2024-01-01T12:00:00Z',
     'UTC',
@@ -119,7 +124,8 @@ values
     '10000000-0000-0000-0000-000000000003',
     'Private skiing note',
     'A different owner must never see this.',
-    'standard',
+    'writing',
+    'note',
     'organized',
     '2026-07-03T18:30:00Z',
     'UTC',
@@ -199,14 +205,14 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
 
 select lives_ok(
-  $$ select * from public.search_entries(p_query => 'skiing') $$,
+  $$ select * from public.search_wiki_items(p_query => 'skiing') $$,
   'An authenticated owner can search Entries'
 );
 
 select is(
   (
     select count(*)::integer
-    from public.search_entries(p_query => 'First time skiing')
+    from public.search_wiki_items(p_query => 'First time skiing')
     where entry_id = '50000000-0000-0000-0000-000000000001'
   ),
   1,
@@ -216,7 +222,7 @@ select is(
 select ok(
   (
     select match_reasons @> array['Title']::text[]
-    from public.search_entries(p_query => 'First time skiing')
+    from public.search_wiki_items(p_query => 'First time skiing')
     where entry_id = '50000000-0000-0000-0000-000000000001'
   ),
   'Search explains a title match'
@@ -225,7 +231,7 @@ select ok(
 select ok(
   (
     select match_reasons @> array['Body']::text[]
-    from public.search_entries(p_query => 'brilliant day')
+    from public.search_wiki_items(p_query => 'brilliant day')
     where entry_id = '50000000-0000-0000-0000-000000000001'
   ),
   'Search matches and explains body text'
@@ -234,7 +240,7 @@ select ok(
 select is(
   (
     select count(*)::integer
-    from public.search_entries(p_query => '牙套')
+    from public.search_wiki_items(p_query => '牙套')
     where entry_id = '50000000-0000-0000-0000-000000000002'
   ),
   1,
@@ -244,7 +250,7 @@ select is(
 select ok(
   (
     select match_reasons @> array['Tag']::text[]
-    from public.search_entries(p_query => 'snow')
+    from public.search_wiki_items(p_query => 'snow')
     where entry_id = '50000000-0000-0000-0000-000000000001'
   ),
   'Search matches and explains a tag'
@@ -253,7 +259,7 @@ select ok(
 select ok(
   (
     select match_reasons @> array['Collection']::text[]
-    from public.search_entries(p_query => 'Dental Learning')
+    from public.search_wiki_items(p_query => 'Dental Learning')
     where entry_id = '50000000-0000-0000-0000-000000000002'
   ),
   'Search matches and explains a Collection'
@@ -262,7 +268,7 @@ select ok(
 select ok(
   (
     select match_reasons @> array['Date']::text[]
-    from public.search_entries(p_query => '2026-07-03')
+    from public.search_wiki_items(p_query => '2026-07-03')
     where entry_id = '50000000-0000-0000-0000-000000000001'
   ),
   'Search matches an occurrence date in the Entry''s preserved timezone'
@@ -277,7 +283,7 @@ select is(
 select ok(
   (
     select match_reasons @> array['Details']::text[]
-    from public.search_entries(p_query => 'Tesla')
+    from public.search_wiki_items(p_query => 'Tesla')
     where entry_id = '50000000-0000-0000-0000-000000000003'
   ),
   'Search matches and explains structured Entry details'
@@ -286,7 +292,7 @@ select ok(
 select is(
   (
     select count(*)::integer
-    from public.search_entries(
+    from public.search_wiki_items(
       p_query => '',
       p_collection_names => array['travel']
     )
@@ -299,7 +305,7 @@ select is(
 select is(
   (
     select match_reasons
-    from public.search_entries(
+    from public.search_wiki_items(
       p_query => '',
       p_collection_names => array['Travel']
     )
@@ -312,9 +318,9 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.search_entries(
+    from public.search_wiki_items(
       p_query => '',
-      p_entry_types => array['FIRST_TIME']
+      p_item_classifications => array['FIRST_TIME']
     )
     where entry_id = '50000000-0000-0000-0000-000000000001'
   ),
@@ -325,7 +331,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.search_entries(
+    from public.search_wiki_items(
       p_query => '',
       p_tag_names => array['ORTHODONTICS']
     )
@@ -338,7 +344,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.search_entries(
+    from public.search_wiki_items(
       p_query => '',
       p_date_from => '2026-01-01',
       p_date_to => '2026-12-31'
@@ -352,7 +358,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.search_entries(p_query => 'Deleted skiing note')
+    from public.search_wiki_items(p_query => 'Deleted skiing note')
   ),
   0,
   'Search excludes Entries in Trash'
@@ -361,7 +367,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.search_entries(p_query => 'Private skiing note')
+    from public.search_wiki_items(p_query => 'Private skiing note')
   ),
   0,
   'Search never returns another owner''s Entry'
@@ -370,20 +376,20 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.search_entries()
+    from public.search_wiki_items()
   ),
   0,
   'An empty search without filters returns no rows'
 );
 
 select lives_ok(
-  $$ select * from public.search_entries(p_query => ''' OR true --') $$,
+  $$ select * from public.search_wiki_items(p_query => ''' OR true --') $$,
   'Punctuation is treated as search input instead of executable SQL'
 );
 
 select is(
   pg_temp.capture_sqlstate(
-    $$ select * from public.search_entries(p_query => repeat('x', 201)) $$
+    $$ select * from public.search_wiki_items(p_query => repeat('x', 201)) $$
   ),
   '22023',
   'Overlong search input is rejected'
@@ -394,7 +400,7 @@ set local role anon;
 
 select is(
   pg_temp.capture_sqlstate(
-    $$ select * from public.search_entries(p_query => 'skiing') $$
+    $$ select * from public.search_wiki_items(p_query => 'skiing') $$
   ),
   '42501',
   'Unauthenticated users cannot execute Entry search'

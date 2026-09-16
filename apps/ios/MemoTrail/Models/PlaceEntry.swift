@@ -6,7 +6,8 @@ struct PlaceLinkedEntry: Decodable, Equatable, Hashable, Identifiable, Sendable 
   let id: UUID
   let title: String?
   let body: String
-  let entryType: String
+  let itemKind: WikiItemKind
+  let itemSubtype: String
   let inboxStatus: String
   let occurredStart: Date?
   let occurredEnd: Date?
@@ -22,7 +23,8 @@ struct PlaceLinkedEntry: Decodable, Equatable, Hashable, Identifiable, Sendable 
     case id
     case title
     case body
-    case entryType = "entry_type"
+    case itemKind = "item_kind"
+    case itemSubtype = "item_subtype"
     case inboxStatus = "inbox_status"
     case occurredStart = "occurred_start"
     case occurredEnd = "occurred_end"
@@ -45,7 +47,7 @@ struct PlaceLinkedEntry: Decodable, Equatable, Hashable, Identifiable, Sendable 
   var isEditable: Bool { relationship == "related" }
 
   var relationshipLabel: String {
-    relationship == "home" ? "Home chapter" : entryType.displayEntryType
+    relationship == "home" ? "Home record" : itemKind.displayName(subtype: itemSubtype)
   }
 }
 
@@ -176,14 +178,16 @@ struct PlaceLinkOption: Decodable, Equatable, Hashable, Identifiable, Sendable {
   let id: UUID
   let title: String?
   let body: String?
-  let entryType: String
+  let itemKind: WikiItemKind
+  let itemSubtype: String
   let updatedAt: Date
 
   enum CodingKeys: String, CodingKey {
     case id
     case title
     case body
-    case entryType = "entry_type"
+    case itemKind = "item_kind"
+    case itemSubtype = "item_subtype"
     case updatedAt = "updated_at"
   }
 
@@ -193,6 +197,8 @@ struct PlaceLinkOption: Decodable, Equatable, Hashable, Identifiable, Sendable {
     guard !body.isEmpty else { return "Untitled Entry" }
     return body.count > 80 ? "\(body.prefix(80).trimmingCharacters(in: .whitespaces))..." : body
   }
+
+  var displayType: String { itemKind.displayName(subtype: itemSubtype) }
 }
 
 struct PlaceInput: Equatable, Sendable {
@@ -375,12 +381,6 @@ enum PlaceEntryError: LocalizedError, Equatable {
     case .nameTooLong: "Place names can be up to \(PlaceInput.nameLimit) characters."
     case .notesTooLong: "Notes can be up to \(PlaceInput.notesLimit) characters."
     }
-  }
-}
-
-extension String {
-  fileprivate var displayEntryType: String {
-    replacingOccurrences(of: "_", with: " ").capitalized
   }
 }
 

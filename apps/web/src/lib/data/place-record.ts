@@ -2,6 +2,7 @@ import {
   firstTimeImageMimeTypes,
   type FirstTimeImageMimeType,
 } from "./first-time-input";
+import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
 
 export type PlaceAttachment = {
   bucketId: string;
@@ -20,9 +21,10 @@ export type PlaceLinkedEntry = {
   attachments: PlaceAttachment[];
   body: string;
   datePrecision: string;
-  entryType: string;
   id: string;
   inboxStatus: string;
+  itemKind: WikiItemKind;
+  itemSubtype: string;
   occurredEnd: string | null;
   occurredLabel: string | null;
   occurredStart: string | null;
@@ -53,8 +55,9 @@ export type PlaceRecord = {
 };
 
 export type PlaceLinkOption = {
-  entryType: string;
   id: string;
+  itemKind: WikiItemKind;
+  itemSubtype: string;
   title: string;
   updatedAt: string;
 };
@@ -81,14 +84,16 @@ export function parsePlaceLinkOptions(
       typeof item.id !== "string" ||
       !nullableString(item.title) ||
       !nullableString(item.body) ||
-      typeof item.entry_type !== "string" ||
+      !isWikiItemKind(item.item_kind) ||
+      typeof item.item_subtype !== "string" ||
       typeof item.updated_at !== "string"
     ) {
       return null;
     }
     options.push({
-      entryType: item.entry_type,
       id: item.id,
+      itemKind: item.item_kind,
+      itemSubtype: item.item_subtype,
       title: entryOptionTitle(item.title, item.body),
       updatedAt: item.updated_at,
     });
@@ -167,7 +172,8 @@ function parseLinkedEntries(value: unknown): PlaceLinkedEntry[] | null {
       typeof item.id !== "string" ||
       !nullableString(item.title) ||
       typeof item.body !== "string" ||
-      typeof item.entry_type !== "string" ||
+      !isWikiItemKind(item.item_kind) ||
+      typeof item.item_subtype !== "string" ||
       typeof item.inbox_status !== "string" ||
       !nullableString(item.occurred_start) ||
       !nullableString(item.occurred_end) ||
@@ -186,9 +192,10 @@ function parseLinkedEntries(value: unknown): PlaceLinkedEntry[] | null {
       attachments,
       body: item.body,
       datePrecision: item.date_precision,
-      entryType: item.entry_type,
       id: item.id,
       inboxStatus: item.inbox_status,
+      itemKind: item.item_kind,
+      itemSubtype: item.item_subtype,
       occurredEnd: item.occurred_end,
       occurredLabel: item.occurred_label,
       occurredStart: item.occurred_start,

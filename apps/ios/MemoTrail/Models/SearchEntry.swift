@@ -1,47 +1,12 @@
 import Foundation
 
-enum LibrarySearchKind: String, Decodable, Sendable {
-  case person, place, habit
-  var title: String { rawValue.capitalized }
-}
-
-struct LibrarySearchItem: Decodable, Identifiable, Sendable {
-  let recordID: UUID
-  let kind: LibrarySearchKind
-  let name: String
-  let excerpt: String
-  let matchReasons: [String]
-  var id: String { "\(kind.rawValue):\(recordID)" }
-  enum CodingKeys: String, CodingKey {
-    case recordID = "id"
-    case kind, name, excerpt
-    case matchReasons = "match_reasons"
-  }
-}
-
-struct LibrarySearchPage: Decodable, Sendable {
-  let items: [LibrarySearchItem]
-  let totalCount: Int
-  enum CodingKeys: String, CodingKey {
-    case items
-    case totalCount = "total_count"
-  }
-  var isValid: Bool { totalCount >= 0 && items.count <= 50 }
-}
-
-struct LibrarySearchParameters: Encodable, Sendable {
-  let p_query: String
-  let p_offset: Int
-  let p_limit = 20
-}
-
 struct AISearchRequest: Encodable, Equatable, Sendable {
   let parameters: [String: [String]]
   let timeZone: String
   init(request: EntrySearchRequest, timeZone: String = TimeZone.current.identifier) {
     self.timeZone = timeZone
     parameters = [
-      "q": [request.query], "type": request.entryTypes.map(\.rawValue),
+      "q": [request.query], "type": request.itemKinds.map(\.rawValue),
       "collection": request.collectionNames, "tag": request.tagNames,
       "from": request.dateFrom.map { [$0] } ?? [], "to": request.dateTo.map { [$0] } ?? [],
     ]
@@ -76,8 +41,11 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   let id: UUID
   let title: String?
   let body: String
-  let entryType: String
   let inboxStatus: String
+  let itemKind: WikiItemKind
+  let itemSubtype: String
+  let recordSource: WikiItemRecordSource
+  let recordID: UUID
   let occurredAt: Date?
   let occurredEnd: Date?
   let datePrecision: String?
@@ -93,8 +61,11 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
     case id = "entry_id"
     case title
     case body
-    case entryType = "entry_type"
     case inboxStatus = "inbox_status"
+    case itemKind = "item_kind"
+    case itemSubtype = "item_subtype"
+    case recordSource = "record_source"
+    case recordID = "record_id"
     case occurredAt = "occurred_start"
     case occurredEnd = "occurred_end"
     case datePrecision = "date_precision"
@@ -113,8 +84,12 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
     id = try values.decode(UUID.self, forKey: .id)
     title = try values.decodeIfPresent(String.self, forKey: .title)?.trimmed.nonEmpty
     body = try values.decode(String.self, forKey: .body)
-    entryType = try values.decode(String.self, forKey: .entryType)
     inboxStatus = try values.decode(String.self, forKey: .inboxStatus)
+    itemKind = try values.decode(WikiItemKind.self, forKey: .itemKind)
+    itemSubtype = try values.decode(String.self, forKey: .itemSubtype)
+    recordSource =
+      try values.decodeIfPresent(WikiItemRecordSource.self, forKey: .recordSource) ?? .entry
+    recordID = try values.decodeIfPresent(UUID.self, forKey: .recordID) ?? id
     occurredAt = try values.decodeIfPresent(Date.self, forKey: .occurredAt)
     occurredEnd = try values.decodeIfPresent(Date.self, forKey: .occurredEnd)
     datePrecision = try values.decodeIfPresent(String.self, forKey: .datePrecision)
@@ -164,11 +139,15 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   }
 
   var displayType: String {
-    SearchEntryType(rawValue: entryType)?.displayName
-      ?? entryType
+    let subtype =
+      itemSubtype
       .split(separator: "_")
       .map { $0.prefix(1).uppercased() + $0.dropFirst() }
       .joined(separator: " ")
+    if itemSubtype == itemKind.rawValue || (itemKind == .goal && itemSubtype == "goal") {
+      return itemKind.displayName
+    }
+    return "\(itemKind.displayName) · \(subtype)"
   }
 
   var displayDate: String {
@@ -176,7 +155,8 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
       let occurrence = EntryOccurrence(
         precision: precision, start: occurredAt, end: occurredEnd, label: occurredLabel,
         timezone: occurredTimezone ?? "UTC")
-      return ["home", "vehicle", "life_stage"].contains(entryType)
+      return (itemKind == .entity && ["home", "vehicle"].contains(itemSubtype))
+        || (itemKind == .event && itemSubtype == "life_stage")
         ? occurrence.spanLabel : occurrence.displayLabel
     }
     if let occurredLabel {
@@ -195,32 +175,7 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   var isInInbox: Bool {
     inboxStatus == "unreviewed"
   }
-}
 
-enum SearchEntryType: String, CaseIterable, Codable, Equatable, Hashable, Sendable {
-  case standard
-  case firstTime = "first_time"
-  case lifeStage = "life_stage"
-  case home
-  case vehicle
-  case goal
-
-  var displayName: String {
-    switch self {
-    case .standard:
-      "Standard Entry"
-    case .firstTime:
-      "First Time"
-    case .lifeStage:
-      "Life Stage"
-    case .home:
-      "Home"
-    case .vehicle:
-      "Vehicle"
-    case .goal:
-      "Goal"
-    }
-  }
 }
 
 struct EntrySearchRequest: Equatable, Sendable {
@@ -228,7 +183,7 @@ struct EntrySearchRequest: Equatable, Sendable {
   static let queryLimit = 200
 
   let query: String
-  let entryTypes: [SearchEntryType]
+  let itemKinds: [WikiItemKind]
   let collectionNames: [String]
   let tagNames: [String]
   let dateFrom: String?
@@ -238,7 +193,7 @@ struct EntrySearchRequest: Equatable, Sendable {
 
   var hasCriteria: Bool {
     !query.isEmpty
-      || !entryTypes.isEmpty
+      || !itemKinds.isEmpty
       || !collectionNames.isEmpty
       || !tagNames.isEmpty
       || dateFrom != nil
@@ -248,7 +203,7 @@ struct EntrySearchRequest: Equatable, Sendable {
   var parameters: SearchEntryParameters {
     SearchEntryParameters(
       query: query,
-      entryTypes: entryTypes.map(\.rawValue),
+      itemKinds: itemKinds.map(\.rawValue),
       collectionNames: collectionNames,
       tagNames: tagNames,
       dateFrom: dateFrom,
@@ -260,7 +215,7 @@ struct EntrySearchRequest: Equatable, Sendable {
 
   static func validate(
     query: String,
-    entryTypes: [SearchEntryType],
+    itemKinds: [WikiItemKind],
     collectionNames: [String],
     tagNames: [String],
     dateFrom: Date?,
@@ -274,8 +229,8 @@ struct EntrySearchRequest: Equatable, Sendable {
       throw EntrySearchError.queryTooLong
     }
 
-    guard entryTypes.count <= 20 else {
-      throw EntrySearchError.invalidEntryTypes
+    guard itemKinds.count <= 20 else {
+      throw EntrySearchError.invalidItemKinds
     }
 
     guard
@@ -310,7 +265,7 @@ struct EntrySearchRequest: Equatable, Sendable {
 
     return EntrySearchRequest(
       query: normalizedQuery,
-      entryTypes: Array(Set(entryTypes)).sorted { $0.rawValue < $1.rawValue },
+      itemKinds: Array(Set(itemKinds)).sorted { $0.rawValue < $1.rawValue },
       collectionNames: normalizedCollections,
       tagNames: normalizedTags,
       dateFrom: dateFrom.map { dateOnlyString($0, calendar: calendar) },
@@ -323,7 +278,7 @@ struct EntrySearchRequest: Equatable, Sendable {
 
 struct SearchEntryParameters: Encodable, Equatable, Sendable {
   let query: String
-  let entryTypes: [String]
+  let itemKinds: [String]
   let collectionNames: [String]
   let tagNames: [String]
   let dateFrom: String?
@@ -333,7 +288,7 @@ struct SearchEntryParameters: Encodable, Equatable, Sendable {
 
   enum CodingKeys: String, CodingKey {
     case query = "p_query"
-    case entryTypes = "p_entry_types"
+    case itemKinds = "p_item_classifications"
     case collectionNames = "p_collection_names"
     case tagNames = "p_tag_names"
     case dateFrom = "p_date_from"
@@ -346,7 +301,7 @@ struct SearchEntryParameters: Encodable, Equatable, Sendable {
     var values = encoder.container(keyedBy: CodingKeys.self)
 
     try values.encode(query, forKey: .query)
-    try values.encode(entryTypes, forKey: .entryTypes)
+    try values.encode(itemKinds, forKey: .itemKinds)
     try values.encode(collectionNames, forKey: .collectionNames)
     try values.encode(tagNames, forKey: .tagNames)
     try values.encodeIfPresent(dateFrom, forKey: .dateFrom)
@@ -365,7 +320,7 @@ struct SearchEntryParameters: Encodable, Equatable, Sendable {
 enum EntrySearchError: LocalizedError, Equatable {
   case invalidCollections
   case invalidDateRange
-  case invalidEntryTypes
+  case invalidItemKinds
   case invalidPagination
   case invalidTags
   case queryTooLong
@@ -376,8 +331,8 @@ enum EntrySearchError: LocalizedError, Equatable {
       "Choose up to 20 valid Collections."
     case .invalidDateRange:
       "The start date must be on or before the end date."
-    case .invalidEntryTypes:
-      "Choose up to 20 valid Entry Types."
+    case .invalidItemKinds:
+      "Choose up to 20 valid Kinds."
     case .invalidPagination:
       "This result page is unavailable."
     case .invalidTags:

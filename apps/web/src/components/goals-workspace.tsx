@@ -54,6 +54,8 @@ import {
   resolveOccurrenceDraft,
 } from "@/lib/data/occurrence";
 import { uploadEntryPhotos } from "@/lib/media/upload";
+import type { CaptureExtractionSource } from "@/lib/data/capture-extraction-input";
+import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 
 const goalSections: Array<{
   detail: string;
@@ -89,6 +91,7 @@ export function GoalsWorkspace({
   linkOptions,
   loadError,
   ownerId,
+  sourceCapture,
   tagOptions,
 }: {
   collectionOptions: string[];
@@ -97,12 +100,13 @@ export function GoalsWorkspace({
   linkOptions: GoalLinkOption[];
   loadError: string | null;
   ownerId: string;
+  sourceCapture: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
   const router = useRouter();
   const [selectedGoal, setSelectedGoal] = useState<
     GoalRecord | null | undefined
-  >(goals.find((goal) => goal.id === initialGoalId));
+  >(sourceCapture ? null : goals.find((goal) => goal.id === initialGoalId));
   const openCount = goals.filter(
     (goal) => !["achieved", "let_go"].includes(goal.status),
   ).length;
@@ -186,13 +190,15 @@ export function GoalsWorkspace({
         <GoalEditor
           collectionOptions={collectionOptions}
           goal={selectedGoal}
-          key={selectedGoal?.id ?? "new-goal"}
+          key={selectedGoal?.id ?? sourceCapture?.id ?? "new-goal"}
           linkOptions={linkOptions}
           onClose={() => {
             setSelectedGoal(undefined);
-            if (initialGoalId) router.replace("/goals", { scroll: false });
+            if (initialGoalId || sourceCapture)
+              router.replace("/goals", { scroll: false });
           }}
           ownerId={ownerId}
+          sourceCapture={selectedGoal === null ? sourceCapture : null}
           tagOptions={tagOptions}
         />
       ) : null}
@@ -275,7 +281,7 @@ function GoalCard({
             </span>
           ) : null}
           {relatedCount > 0 ? (
-            <span>{countLabel(relatedCount, "related Entry")}</span>
+            <span>{countLabel(relatedCount, "related Item")}</span>
           ) : null}
           {hasAchievement ? <span>First Time linked</span> : null}
         </div>
@@ -306,6 +312,7 @@ function GoalEditor({
   linkOptions,
   onClose,
   ownerId,
+  sourceCapture = null,
   tagOptions,
 }: {
   collectionOptions: string[];
@@ -313,14 +320,15 @@ function GoalEditor({
   linkOptions: GoalLinkOption[];
   onClose: () => void;
   ownerId: string;
+  sourceCapture?: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
   const router = useRouter();
   const titleRef = useRef<HTMLInputElement>(null);
-  const [body, setBody] = useState(goal?.body ?? "");
+  const [body, setBody] = useState(goal?.body ?? sourceCapture?.body ?? "");
   const [collectionInput, setCollectionInput] = useState("");
   const [collectionNames, setCollectionNames] = useState(
-    goal?.collectionNames ?? [],
+    goal?.collectionNames ?? sourceCapture?.collectionNames ?? [],
   );
   const [currentId, setCurrentId] = useState(goal?.id ?? null);
   const [currentRevision, setCurrentRevision] = useState(
@@ -343,9 +351,11 @@ function GoalEditor({
     goal?.status ?? "considering",
   );
   const [tagInput, setTagInput] = useState("");
-  const [tagNames, setTagNames] = useState(goal?.tagNames ?? []);
+  const [tagNames, setTagNames] = useState(
+    goal?.tagNames ?? sourceCapture?.tagNames ?? [],
+  );
   const [targetDate, setTargetDate] = useState(goal?.targetDate ?? "");
-  const [title, setTitle] = useState(goal?.title ?? "");
+  const [title, setTitle] = useState(goal?.title ?? sourceCapture?.title ?? "");
 
   useEffect(() => {
     titleRef.current?.focus();
@@ -372,7 +382,7 @@ function GoalEditor({
     const existing = goal?.relatedEntries.find((entry) => entry.id === id);
     return {
       id,
-      title: option?.title ?? existing?.title ?? "Related Entry",
+      title: option?.title ?? existing?.title ?? "Related Item",
     };
   });
   const savedBucketListGoal = Boolean(
@@ -446,7 +456,12 @@ function GoalEditor({
     setIsPending(true);
     setResult(null);
     try {
-      const saved = await saveGoalEntry(parsed.data);
+      const saved = await saveGoalEntry(
+        parsed.data,
+        sourceCapture
+          ? { id: sourceCapture.id, revision: sourceCapture.revision }
+          : null,
+      );
       if (
         (saved.status !== "created" && saved.status !== "saved") ||
         !saved.entry
@@ -558,7 +573,11 @@ function GoalEditor({
           <div>
             <p>{currentId ? "Edit Goal" : "New Goal"}</p>
             <h2 id="goal-editor-title">
-              {currentId ? title || "Goal" : "Keep an intention close"}
+              {currentId
+                ? title || "Goal"
+                : sourceCapture
+                  ? "Create a Goal from this Capture"
+                  : "Keep an intention close"}
             </h2>
           </div>
           <button
@@ -573,6 +592,18 @@ function GoalEditor({
 
         <form onSubmit={handleSubmit}>
           <div className={common.formGrid}>
+            {sourceCapture ? (
+              <div className={common.extractionNotice}>
+                <Icon name="inbox" size={18} />
+                <div>
+                  <strong>Starting from an Inbox Capture</strong>
+                  <p>
+                    Saving creates a separate Goal and links it to the preserved
+                    source Capture.
+                  </p>
+                </div>
+              </div>
+            ) : null}
             <fieldset className={common.formSection}>
               <legend>The intention</legend>
               <label className={common.fullField}>
@@ -665,7 +696,7 @@ function GoalEditor({
             <fieldset
               className={`${common.formSection} ${styles.relatedSection}`}
             >
-              <legend>Related Entries</legend>
+              <legend>Related Items</legend>
               <p>
                 Link memories, ideas, or learning that give this Goal context.
               </p>
@@ -673,7 +704,7 @@ function GoalEditor({
                 <div className={styles.relatedChips}>
                   {selectedEntries.map((entry) => (
                     <button
-                      aria-label={`Remove related Entry ${entry.title}`}
+                      aria-label={`Remove related Item ${entry.title}`}
                       disabled={isPending}
                       key={entry.id}
                       onClick={() =>
@@ -691,19 +722,20 @@ function GoalEditor({
               ) : null}
               <div className={styles.relatedPicker}>
                 <select
-                  aria-label="Choose a related Entry"
+                  aria-label="Choose a related Item"
                   disabled={isPending || selectableEntries.length === 0}
                   onChange={(event) => setRelatedSelection(event.target.value)}
                   value={relatedSelection}
                 >
                   <option value="">
                     {selectableEntries.length > 0
-                      ? "Choose an Entry"
-                      : "No more Entries available"}
+                      ? "Choose an Item"
+                      : "No more Items available"}
                   </option>
                   {selectableEntries.map((entry) => (
                     <option key={entry.id} value={entry.id}>
-                      {entry.title} · {entryTypeLabel(entry.entryType)}
+                      {entry.title} ·{" "}
+                      {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
                     </option>
                   ))}
                 </select>
@@ -994,12 +1026,6 @@ function sameNames(first: string[], second: string[]) {
 
 function localTimezone() {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-}
-
-function entryTypeLabel(value: string) {
-  return value
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function actionError(message: string): GoalActionResult {

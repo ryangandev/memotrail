@@ -163,17 +163,22 @@ select is(
 select lives_ok(
   $$
     select *
-    from public.review_entry(
+    from public.review_wiki_item_with_photo_place(
       '40000000-0000-0000-0000-000000000002',
       2,
       'First time skiing',
       'A cold and brilliant day.',
+      'event',
       'first_time',
       '2026-07-03T18:30:00Z',
       'America/Los_Angeles',
       array['Travel', 'Learning', 'travel'],
       array['skiing', 'learning', 'Skiing'],
-      false
+      false,
+      null,
+      null,
+      'exact',
+      null
     )
   $$,
   'An owner can atomically review an Entry with Collections and tags'
@@ -191,12 +196,12 @@ select is(
 
 select is(
   (
-    select entry_type
+    select item_kind || ':' || item_subtype
     from public.entries
     where id = '40000000-0000-0000-0000-000000000002'
   ),
-  'first_time',
-  'Atomic review updates the Entry type'
+  'event:first_time',
+  'Atomic review updates the canonical Wiki Item identity'
 );
 
 select is(
@@ -232,17 +237,22 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.review_entry(
+    from public.review_wiki_item_with_photo_place(
       '40000000-0000-0000-0000-000000000002',
       2,
       'Stale overwrite',
       '',
-      'standard',
+      'event',
+      'first_time',
       '2026-07-03T18:30:00Z',
       'UTC',
       array['Wrong Collection'],
       array['wrong-tag'],
-      true
+      true,
+      null,
+      null,
+      'exact',
+      null
     )
   ),
   0,
@@ -262,17 +272,22 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.review_entry(
+    from public.review_wiki_item_with_photo_place(
       '40000000-0000-0000-0000-000000000002',
       3,
       'First time skiing',
       'A cold and brilliant day.',
+      'event',
       'first_time',
       '2026-07-03T18:30:00Z',
       'America/Los_Angeles',
       array['Travel', 'Learning'],
       array['skiing', 'learning'],
-      true
+      true,
+      null,
+      null,
+      'exact',
+      null
     )
   ),
   1,
@@ -339,17 +354,22 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.review_entry(
+    from public.review_wiki_item_with_photo_place(
       '40000000-0000-0000-0000-000000000001',
       1,
       'Changed by another user',
       '',
-      'standard',
+      'writing',
+      'reflection',
       '2026-07-03T18:30:00Z',
       'UTC',
       '{}'::text[],
       '{}'::text[],
-      false
+      false,
+      null,
+      null,
+      'exact',
+      null
     )
   ),
   0,

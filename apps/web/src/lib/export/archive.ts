@@ -268,8 +268,6 @@ export function createExportArchive(
       );
       if (
         [
-          "habits",
-          "habit_occurrences",
           "homes",
           "vehicles",
           "goals",

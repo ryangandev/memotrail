@@ -11,14 +11,23 @@ import styles from "../page.module.css";
 
 export const dynamic = "force-dynamic";
 
-export default async function InboxPage() {
-  const workspace = await getInboxWorkspace();
+export default async function InboxPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ entry?: string | string[] }>;
+}) {
+  const parameters = await searchParams;
+  const requestedEntry = Array.isArray(parameters.entry)
+    ? parameters.entry[0]
+    : parameters.entry;
+  const focusedEntryId = validEntryID(requestedEntry) ? requestedEntry : null;
+  const workspace = await getInboxWorkspace(focusedEntryId);
 
   if (!workspace) {
     return null;
   }
 
-  return <Workspace {...workspace} />;
+  return <Workspace {...workspace} focusedEntryId={focusedEntryId} />;
 }
 
 function Workspace({
@@ -27,9 +36,11 @@ function Workspace({
   loadError,
   tagOptions,
   viewer,
+  focusedEntryId,
 }: {
   collectionOptions: string[];
   entries: InboxEntry[];
+  focusedEntryId: string | null;
   loadError: string | null;
   tagOptions: string[];
   viewer: Viewer;
@@ -44,7 +55,7 @@ function Workspace({
         </div>
         <a className={styles.newEntryButton} href="#capture-title">
           <Icon name="plus" />
-          <span>New entry</span>
+          <span>Quick capture</span>
         </a>
       </header>
 
@@ -53,8 +64,8 @@ function Workspace({
       <section className={styles.entrySection} aria-labelledby="recent-heading">
         <div className={styles.sectionHeader}>
           <div>
-            <h2 id="recent-heading">Unsorted</h2>
-            <span>{entryCountLabel(entries.length)}</span>
+            <h2 id="recent-heading">Ready to organize</h2>
+            <span>{captureCountLabel(entries.length)}</span>
           </div>
         </div>
 
@@ -74,7 +85,7 @@ function Workspace({
               <Icon name="inbox" size={22} />
               <div>
                 <strong>Your Inbox is ready</strong>
-                <p>Save a thought above and it will appear here.</p>
+                <p>New captures will wait here until you give them a place.</p>
               </div>
             </div>
           ) : null}
@@ -82,6 +93,8 @@ function Workspace({
           <EntryReviewList
             collectionOptions={collectionOptions}
             entries={entries}
+            initialEntryID={focusedEntryId}
+            key={focusedEntryId ?? "inbox"}
             tagOptions={tagOptions}
           />
         </div>
@@ -98,6 +111,15 @@ function todayLabel() {
   }).format(new Date());
 }
 
-function entryCountLabel(count: number) {
-  return `${count} ${count === 1 ? "entry" : "entries"}`;
+function captureCountLabel(count: number) {
+  return `${count} ${count === 1 ? "capture" : "captures"}`;
+}
+
+function validEntryID(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      value,
+    )
+  );
 }

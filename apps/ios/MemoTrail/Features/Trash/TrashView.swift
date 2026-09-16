@@ -204,7 +204,8 @@ struct TrashView: View {
     } else if controller.items.isEmpty {
       stateView(
         title: "Nothing in Trash",
-        message: "Removed Entries, Habits, Places, and individual photos will appear here.",
+        message:
+          "Removed Entries, People, Places, Collections, and individual photos will appear here.",
         systemImage: "trash"
       )
     } else {
@@ -308,8 +309,6 @@ struct TrashView: View {
       "Only the Collection and its grouping links will be removed. Your Entries and photos stay in the archive."
     case .attachment:
       "The private photo file and its attachment record will be removed."
-    case .habit:
-      "The Habit, check-ins, relationships, and version history will be removed."
     case .place:
       "The Place, relationships, and version history will be removed."
     case .person:

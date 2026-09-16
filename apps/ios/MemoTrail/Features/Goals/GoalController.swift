@@ -89,7 +89,8 @@ final class GoalController {
     targetDate: String?,
     collectionNames: [String],
     tagNames: [String],
-    relatedEntryIDs: [UUID]
+    relatedEntryIDs: [UUID],
+    sourceCapture: CaptureExtractionSource? = nil
   ) async -> MutationResult {
     var input: GoalEntryInput
     do {
@@ -121,6 +122,31 @@ final class GoalController {
 
     do {
       try await validateSessionOwner()
+      if let sourceCapture {
+        guard entryID == nil, expectedRevision == nil else {
+          return MutationResult(
+            identity: nil, message: "A Capture can only create a new Goal.", status: .error)
+        }
+        let results: [ExtractedCaptureGoal] =
+          try await client
+          .rpc(
+            "extract_capture_to_goal",
+            params: SaveGoalEntryParameters(input: input, source: sourceCapture)
+          )
+          .execute()
+          .value
+        guard let saved = results.first else {
+          return MutationResult(
+            identity: nil,
+            message: "This Capture changed on another device. Close it, refresh, and try again.",
+            status: .conflict)
+        }
+        return MutationResult(
+          identity: SavedIdentity(
+            id: saved.goalEntryID, revision: saved.goalRevision, relatedID: nil),
+          message: "Goal created from Capture.",
+          status: .saved)
+      }
       input.expectedRevision = try await EntryPhotoUpload.writingRevision(
         client: client, entryID: entryID, revision: expectedRevision)
       let results: [SavedGoalEntry] =
@@ -349,7 +375,7 @@ final class GoalController {
   }
 
   private func loadLinkOptions() async throws -> [GoalLinkOption] {
-    try await client.from("entries").select("id,title,body,entry_type,updated_at")
+    try await client.from("entries").select("id,title,body,item_kind,item_subtype,updated_at")
       .eq("owner_id", value: ownerID.uuidString)
       .is("deleted_at", value: nil)
       .order("updated_at", ascending: false)

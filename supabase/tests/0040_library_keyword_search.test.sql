@@ -8,22 +8,14 @@ insert into public.people(id,owner_id,name,relationship_label,notes) values
 insert into public.places(id,owner_id,name,city,notes) values
  ('94000000-0000-4000-8000-000000000093','10000000-0000-0000-0000-000000000001','Learning 学习 library','Philadelphia','Quiet floor'),
  ('94000000-0000-4000-8000-000000000094','10000000-0000-0000-0000-000000000001','Literal % place','Percent City','Underscore _ note');
-insert into public.habits(id,owner_id,name,tracking_mode,measurement_unit) values
- ('94000000-0000-4000-8000-000000000095','10000000-0000-0000-0000-000000000001','Learning 学习 daily','measure','pages');
-insert into public.habit_occurrences(habit_id,owner_id,local_date,status,note) values
- ('94000000-0000-4000-8000-000000000095','10000000-0000-0000-0000-000000000001',current_date,'completed','Forgot my textbook');
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
-select is(public.search_library_entities('学习')->>'total_count','3','Chinese substring finds all three standalone kinds');
-select is(public.search_library_entities('LEARNING')->>'total_count','3','English keyword matches case-insensitively without AI');
+select is(public.search_library_entities('学习')->>'total_count','2','Chinese substring finds both entity directories');
+select is(public.search_library_entities('LEARNING')->>'total_count','2','English keyword matches case-insensitively without AI');
 select is(public.search_library_entities('LEARNING',20,0,array['person','place'])->>'total_count','2','Client scope can exclude deferred entity kinds');
 select is(public.search_library_entities('LEARNING',20,0,array['person','place'])->'items'->0->>'kind','place','Scoped pages retain deterministic ordering');
 select is(public.search_library_entities('friend')->'items'->0->>'kind','person','Relationship label is searchable');
 select is(public.search_library_entities('Philadelphia')->'items'->0->>'kind','place','Location details are searchable');
-select is(public.search_library_entities('pages')->'items'->0->>'kind','habit','Measurement unit is searchable');
-select is(public.search_library_entities('textbook')->'items'->0->>'kind','habit','Check-in notes are searchable');
-select is(public.search_library_entities('Learning textbook')->>'total_count','1','Habit names and notes can match across fields');
-select is(public.search_library_entities('textbook')->'items'->0->'match_reasons'->>0,'Check-in note','Results explain why check-in content matched');
 select is(public.search_library_entities('Reading')->'items'->0->'match_reasons'->>0,'Notes','Person notes have explicit match evidence');
 select is(public.search_library_entities('foreign')->>'total_count','0','Other owner is never exposed');
 select is(public.search_library_entities('%')->>'total_count','1','Percent is literal, not a wildcard');
@@ -34,20 +26,18 @@ select throws_ok($$select public.search_library_entities('Learning',51,0)$$,'220
 select throws_ok($$select public.search_library_entities('Learning',20,-1)$$,'22023','invalid_library_search','Negative offset rejected');
 select throws_ok($$select public.search_library_entities('Learning',20,0,array['entry'])$$,'22023','invalid_library_search','Unknown entity kind rejected');
 select is(jsonb_array_length(public.search_library_entities('Learning',1,0)->'items'),1,'Small page is bounded');
-select is(public.search_library_entities('Learning',1,0)->>'total_count','3','Count is independent of page size');
+select is(public.search_library_entities('Learning',1,0)->>'total_count','2','Count is independent of page size');
 select isnt(public.search_library_entities('Learning',1,0)->'items'->0->>'id',public.search_library_entities('Learning',1,1)->'items'->0->>'id','Pages have deterministic distinct results');
-select is(public.search_library_entities('Learning',1,3)->'items','[]'::jsonb,'Past-last page is empty');
-select is(public.search_library_entities('Learning',1,3)->>'total_count','3','Past-last page retains total count');
+select is(public.search_library_entities('Learning',1,2)->'items','[]'::jsonb,'Past-last page is empty');
+select is(public.search_library_entities('Learning',1,2)->>'total_count','2','Past-last page retains total count');
 select ok(not (public.search_library_entities('Learning')->'items'->0 ? 'owner_id'),'No owner ID projected');
 select is(count(*),1::bigint,'Exact Person source is readable') from public.person_record('94000000-0000-4000-8000-000000000091');
 select is(count(*),0::bigint,'Exact foreign Person source is denied') from public.person_record('94000000-0000-4000-8000-000000000092');
 update public.people set deleted_at=now() where id='94000000-0000-4000-8000-000000000091';
-select is(public.search_library_entities('Learning')->>'total_count','2','Person Trash immediately removes it from search');
+select is(public.search_library_entities('Learning')->>'total_count','1','Person Trash immediately removes it from search');
 select is(count(*),0::bigint,'Trashed source is unavailable') from public.person_record('94000000-0000-4000-8000-000000000091');
 update public.people set deleted_at=null where id='94000000-0000-4000-8000-000000000091';
-select is(public.search_library_entities('Learning')->>'total_count','3','Restoration makes the same source discoverable');
-update public.habits set archived_at=now() where id='94000000-0000-4000-8000-000000000095';
-select is(public.search_library_entities('textbook')->>'total_count','0','Archived Habit check-ins do not leak into active search');
+select is(public.search_library_entities('Learning')->>'total_count','2','Restoration makes the same source discoverable');
 update public.places set deleted_at=now() where id='94000000-0000-4000-8000-000000000093';
 select is(public.search_library_entities('Philadelphia')->>'total_count','0','Place Trash removes its structured details');
 reset role;

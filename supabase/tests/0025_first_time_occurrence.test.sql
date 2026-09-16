@@ -16,9 +16,9 @@ select is((select occurred_end from public.first_times_workspace_with_occurrence
 select lives_ok($$select pg_temp.save_first('range',occurred_start,occurred_end,null,entry_id,revision) from public.first_times_workspace_with_occurrence()$$,'Existing range can be saved without rewriting its precision');
 select is((select count(*) from public.entry_versions where owner_id=auth.uid()),1::bigint,'Save retains exactly one previous version');
 select is((select snapshot->>'occurred_end' from public.entry_versions where owner_id=auth.uid()),'2017-07-15T12:00:00+00:00','History retains original range end');
-select is((select count(*) from public.first_times_workspace()),1::bigint,'Legacy reads remain available');
-select throws_ok($$select public.save_first_time_entry('Old client','Original writing',occurred_start,date_precision,null,occurred_timezone,'{}','{}',entry_id,revision) from public.first_times_workspace_with_occurrence()$$,'22023','first_time_requires_current_editor','Legacy mutation cannot erase range data');
-select is((select revision from public.first_times_workspace_with_occurrence()),2,'Rejected legacy mutation leaves revision unchanged');
+select is((select count(*) from public.first_times_workspace_with_occurrence()),1::bigint,'Canonical First Time reads remain available');
+select hasnt_function('public','save_first_time_entry',array['text','text','timestamp with time zone','text','text','text','text[]','text[]','uuid','integer'],'Legacy mutation is removed');
+select is((select revision from public.first_times_workspace_with_occurrence()),2,'Removing the legacy mutation leaves revision unchanged');
 select is((select pg_temp.save_first('range',occurred_start,occurred_end,null,entry_id,1) from public.first_times_workspace_with_occurrence()),null::uuid,'Stale revision cannot overwrite a date');
 select throws_ok($$select pg_temp.save_first('range','2017-07-15','2017-07-08')$$,'22023','invalid_first_time_occurrence','End before start is rejected');
 select throws_ok($$select pg_temp.save_first('day','2017-07-08','2017-07-09')$$,'22023','invalid_first_time_occurrence','Single-day precision cannot conceal a range');

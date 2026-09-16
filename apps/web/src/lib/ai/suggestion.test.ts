@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { parseEntryAISuggestions, mergeAISuggestionNames } from "./suggestion";
 const valid = {
   title: "牙套的原理",
-  entryType: "standard",
+  classification: { itemKind: "writing", itemSubtype: "note" },
   collections: ["Learning"],
   tags: ["牙齿"],
   dateText: null,
@@ -12,9 +12,12 @@ const valid = {
 describe("Untrusted AI suggestions", () => {
   it("preserves Chinese content and optional dates", () =>
     expect(parseEntryAISuggestions(valid)).toEqual(valid));
-  it("rejects invented Entry Types and invalid confidence", () => {
+  it("rejects invalid Wiki Item classifications and confidence", () => {
     expect(
-      parseEntryAISuggestions({ ...valid, entryType: "learning" }),
+      parseEntryAISuggestions({
+        ...valid,
+        classification: { itemKind: "writing", itemSubtype: "learning" },
+      }),
     ).toBeNull();
     expect(parseEntryAISuggestions({ ...valid, confidence: 2 })).toBeNull();
     expect(parseEntryAISuggestions({ ...valid, confidence: NaN })).toBeNull();

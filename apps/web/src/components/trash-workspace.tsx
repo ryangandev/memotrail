@@ -18,6 +18,7 @@ import type {
   TrashWorkspace as TrashWorkspaceData,
 } from "@/lib/data/trash";
 import { TRASH_PAGE_SIZE, trashPageHref } from "@/lib/data/trash-input";
+import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 
 type PendingAction = {
   action: "delete" | "restore";
@@ -321,13 +322,7 @@ export function TrashWorkspace({
   );
 }
 
-function iconForKind(
-  kind: TrashItem["kind"],
-): "check" | "map" | "photo" | "timeline" {
-  if (kind === "habit") {
-    return "check";
-  }
-
+function iconForKind(kind: TrashItem["kind"]): "map" | "photo" | "timeline" {
   if (kind === "place") {
     return "map";
   }
@@ -342,15 +337,13 @@ function labelForItem(item: TrashItem) {
     return "Photo";
   }
 
-  if (item.kind === "habit") {
-    return "Habit";
-  }
-
   if (item.kind === "place") {
     return "Place";
   }
 
-  return item.entryType === "first_time" ? "First Time" : "Entry";
+  return item.wikiItemKind && item.wikiItemSubtype
+    ? wikiItemIdentityLabel(item.wikiItemKind, item.wikiItemSubtype)
+    : "Entry";
 }
 
 function formatDate(value: string) {
@@ -378,10 +371,6 @@ function deletionDescription(item: TrashItem) {
     return "The Person and their version history will be removed.";
   if (item.kind === "attachment") {
     return "The private photo file and its attachment record will be removed.";
-  }
-
-  if (item.kind === "habit") {
-    return "The Habit, check-ins, relationships, and version history will be removed.";
   }
 
   if (item.kind === "place") {

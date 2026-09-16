@@ -13,6 +13,7 @@ import { EntryAISuggestionsPanel } from "@/components/entry-ai-suggestions";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { OccurrenceEditor } from "@/components/occurrence-editor";
 import { EntryPhotoDates } from "@/components/entry-photo-dates";
+import { RichTextEditor } from "@/components/rich-text-editor";
 import { photoCalendarDateDraft } from "@/lib/media/photo-metadata";
 import {
   occurrenceDraft,
@@ -25,20 +26,31 @@ import { entryBodyLimit, entryTitleLimit } from "@/lib/data/inbox-input";
 import {
   parseInboxReviewInput,
   type InboxReviewInput,
-  type ReviewableEntryType,
 } from "@/lib/data/inbox-review";
+import {
+  initialReviewClassification,
+  reviewablePresetsForKind,
+  wikiItemKindLabel,
+  wikiItemSubtypeLabel,
+  type ReviewableWikiItemKind,
+} from "@/lib/data/wiki-item";
 import styles from "@/app/page.module.css";
 
 export function EntryReviewList({
   collectionOptions,
   entries,
+  initialEntryID = null,
   tagOptions,
 }: {
   collectionOptions: string[];
   entries: InboxEntry[];
+  initialEntryID?: string | null;
   tagOptions: string[];
 }) {
-  const [selectedEntry, setSelectedEntry] = useState<InboxEntry | null>(null);
+  const router = useRouter();
+  const [selectedEntry, setSelectedEntry] = useState<InboxEntry | null>(
+    () => entries.find((entry) => entry.id === initialEntryID) ?? null,
+  );
   // Reflect server-confirmed mutations immediately while router refresh is in
   // flight. Rapid reopening must never submit the previous revision again.
   const [savedReviews, setSavedReviews] = useState<
@@ -66,9 +78,14 @@ export function EntryReviewList({
             {excerpt ? <p>{excerpt}</p> : null}
             <footer>
               <div className={styles.tags}>
-                <span>Unreviewed</span>
-                {entry.entryType === "first_time" ? (
-                  <span>First Time</span>
+                <span>Needs review</span>
+                {entry.itemKind !== "capture" ? (
+                  <>
+                    <span>{wikiItemKindLabel(entry.itemKind)}</span>
+                    <span>
+                      {wikiItemSubtypeLabel(entry.itemKind, entry.itemSubtype)}
+                    </span>
+                  </>
                 ) : null}
                 {entry.collectionNames.map((name) => (
                   <span key={`collection:${name.toLocaleLowerCase()}`}>
@@ -87,7 +104,7 @@ export function EntryReviewList({
                 onClick={() => setSelectedEntry(entry)}
                 type="button"
               >
-                Review
+                Organize
                 <Icon name="chevron" size={14} />
               </button>
             </footer>
@@ -100,13 +117,17 @@ export function EntryReviewList({
           entry={selectedEntry}
           key={`${selectedEntry.id}:${selectedEntry.revision}`}
           collectionOptions={collectionOptions}
-          onClose={() => setSelectedEntry(null)}
+          onClose={() => {
+            setSelectedEntry(null);
+            if (initialEntryID) router.replace("/inbox", { scroll: false });
+          }}
           onSaved={(entry, done) => {
             setSavedReviews((current) => ({
               ...current,
               [entry.id]: { entry, done },
             }));
             setSelectedEntry(null);
+            if (initialEntryID) router.replace("/inbox", { scroll: false });
           }}
           tagOptions={tagOptions}
         />
@@ -133,10 +154,15 @@ export function EntryReviewDialog({
   const router = useRouter();
   const [title, setTitle] = useState(entry.title ?? "");
   const [body, setBody] = useState(entry.body);
+  const [bodyRich, setBodyRich] = useState(entry.bodyRich);
   const [collectionNames, setCollectionNames] = useState(entry.collectionNames);
   const [collectionInput, setCollectionInput] = useState("");
-  const [entryType, setEntryType] = useState<ReviewableEntryType>(
-    entry.entryType,
+  const initialClassification = initialReviewClassification(entry);
+  const [itemKind, setItemKind] = useState<ReviewableWikiItemKind>(
+    initialClassification.itemKind,
+  );
+  const [itemSubtype, setItemSubtype] = useState(
+    initialClassification.itemSubtype,
   );
   const [occurrence, setOccurrence] = useState(() => occurrenceDraft(entry));
   const [photoPlace, setPhotoPlace] = useState<PhotoPlaceDraft | null>(null);
@@ -147,7 +173,14 @@ export function EntryReviewDialog({
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isPending) {
+      if (
+        event.key === "Escape" &&
+        !(
+          event.target instanceof Element &&
+          event.target.closest("[data-escape-layer]")
+        ) &&
+        !isPending
+      ) {
         onClose();
       }
     }
@@ -166,9 +199,11 @@ export function EntryReviewDialog({
       photoPlace,
       ...resolved.value!,
       body,
+      bodyRich: bodyRich?.text === body ? bodyRich : null,
       collectionNames: namesIncludingDraft(collectionNames, collectionInput),
-      entryType,
       id: entry.id,
+      itemKind,
+      itemSubtype,
       revision: entry.revision,
       tagNames: namesIncludingDraft(tagNames, tagInput),
       title: title || null,
@@ -235,13 +270,23 @@ export function EntryReviewDialog({
       >
         <header className={styles.reviewHeader}>
           <div>
-            <p>{organized ? "Entry editor" : "Inbox review"}</p>
+            <p>{organized ? "Life Wiki editor" : "Inbox review"}</p>
             <h2 id="review-heading">
-              {organized ? "Edit Entry" : "Organize Entry"}
+              {organized
+                ? `Edit ${wikiItemKindLabel(entry.itemKind)}`
+                : "Organize Capture"}
             </h2>
             {organized ? (
-              <p>This Entry stays organized when you save.</p>
-            ) : null}
+              <p>
+                This {wikiItemKindLabel(entry.itemKind).toLocaleLowerCase()} is
+                already part of your Life Wiki.
+              </p>
+            ) : (
+              <p>
+                Keep this as Writing, an Event, or a Story, or use a focused
+                form for a structured record.
+              </p>
+            )}
             <Link href={`/history?entry=${entry.id}`}>Version history</Link>
             <p>
               <Link href={`/explore?entry=${entry.id}`}>Explore with AI</Link> ·
@@ -249,7 +294,7 @@ export function EntryReviewDialog({
             </p>
           </div>
           <button
-            aria-label="Close Entry review"
+            aria-label={organized ? "Close item editor" : "Close Inbox review"}
             className={styles.closeReviewButton}
             disabled={isPending}
             onClick={onClose}
@@ -277,10 +322,16 @@ export function EntryReviewDialog({
                 if (key === "title" && typeof value === "string")
                   setTitle(value);
                 if (
-                  key === "entryType" &&
-                  (value === "standard" || value === "first_time")
-                )
-                  setEntryType(value);
+                  key === "classification" &&
+                  entry.itemKind === "capture" &&
+                  value &&
+                  typeof value === "object" &&
+                  "itemKind" in value &&
+                  "itemSubtype" in value
+                ) {
+                  setItemKind(value.itemKind);
+                  setItemSubtype(value.itemSubtype);
+                }
                 if (key === "collections" && Array.isArray(value))
                   setCollectionNames((current) =>
                     mergeAISuggestionNames(current, value, 20),
@@ -299,37 +350,99 @@ export function EntryReviewDialog({
               disabled={isPending}
               maxLength={entryTitleLimit}
               onChange={(event) => setTitle(event.target.value)}
-              placeholder="Optional for a Standard Entry"
+              placeholder={
+                itemKind === "event" && itemSubtype === "first_time"
+                  ? "Required for a First Time"
+                  : "Optional"
+              }
               value={title}
             />
           </label>
 
-          <label>
+          <div className={styles.reviewRichTextField}>
             <span>Note</span>
-            <textarea
+            <RichTextEditor
               disabled={isPending}
               maxLength={entryBodyLimit}
-              onChange={(event) => setBody(event.target.value)}
-              rows={9}
-              value={body}
+              label="Note"
+              onChange={(value) => {
+                setBody(value.text);
+                setBodyRich(value);
+              }}
+              placeholder="Write what you want to remember"
+              richText={bodyRich}
+              text={body}
+              variant="form"
             />
-          </label>
-
-          <div className={styles.reviewFieldRow}>
-            <label>
-              <span>Type</span>
-              <select
-                disabled={isPending}
-                onChange={(event) =>
-                  setEntryType(event.target.value as ReviewableEntryType)
-                }
-                value={entryType}
-              >
-                <option value="standard">Standard Entry</option>
-                <option value="first_time">First Time</option>
-              </select>
-            </label>
           </div>
+
+          <section
+            aria-labelledby="classification-heading"
+            className={styles.classificationPanel}
+          >
+            <div className={styles.classificationHeading}>
+              <strong id="classification-heading">
+                {entry.itemKind === "capture" ? "Organize as" : "Identity"}
+              </strong>
+              <span>
+                {entry.itemKind === "capture"
+                  ? "Choose one durable home in your Life Wiki."
+                  : "Kind stays fixed; only a compatible type can change."}
+              </span>
+            </div>
+            <div className={styles.reviewFieldRow}>
+              <label>
+                <span>Kind</span>
+                <select
+                  disabled={isPending || entry.itemKind !== "capture"}
+                  onChange={(event) => {
+                    const nextKind =
+                      event.target.value as ReviewableWikiItemKind;
+                    setItemKind(nextKind);
+                    setItemSubtype(
+                      reviewablePresetsForKind(nextKind)[0]?.subtype ?? "note",
+                    );
+                  }}
+                  value={itemKind}
+                >
+                  <option value="writing">Writing</option>
+                  <option value="event">Event</option>
+                  <option value="story">Story</option>
+                </select>
+              </label>
+              <label>
+                <span>Type</span>
+                <select
+                  disabled={isPending}
+                  onChange={(event) => setItemSubtype(event.target.value)}
+                  value={itemSubtype}
+                >
+                  {reviewablePresetsForKind(itemKind).map((preset) => (
+                    <option key={preset.subtype} value={preset.subtype}>
+                      {preset.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            {entry.itemKind === "capture" ? (
+              <div className={styles.specializedHandoffs}>
+                <span>Or create a structured record</span>
+                <Link href={`/homes?source=${entry.id}`}>
+                  <Icon name="home" size={15} />
+                  Home
+                </Link>
+                <Link href={`/vehicles?source=${entry.id}`}>
+                  <Icon name="car" size={15} />
+                  Vehicle
+                </Link>
+                <Link href={`/goals?source=${entry.id}`}>
+                  <Icon name="target" size={15} />
+                  Goal
+                </Link>
+              </div>
+            ) : null}
+          </section>
           <EntryPhotoDates
             place={photoPlace}
             onPlaceChange={setPhotoPlace}
@@ -396,7 +509,7 @@ export function EntryReviewDialog({
                   type="button"
                 >
                   <Icon name="check" size={16} />
-                  {isPending ? "Saving…" : "Done"}
+                  {isPending ? "Saving…" : "Save to Library"}
                 </button>
               )}
             </div>
@@ -419,7 +532,7 @@ function entryTitle(entry: InboxEntry) {
 
   const body = entry.body.trim();
   const firstLine = body.split(/\r?\n/, 1)[0]?.trim() ?? "";
-  return truncate(firstLine || "Untitled Entry", 90);
+  return truncate(firstLine || "Untitled capture", 90);
 }
 
 function entryExcerpt(entry: InboxEntry) {

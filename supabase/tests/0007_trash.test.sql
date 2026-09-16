@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(57);
+select no_plan();
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -86,18 +86,13 @@ where id in (
   '71000000-0000-0000-0000-000000000004'
 );
 
-delete from public.habits
-where id in (
-  '72000000-0000-0000-0000-000000000001',
-  '72000000-0000-0000-0000-000000000002'
-);
-
 insert into public.entries (
   id,
   owner_id,
   title,
   body,
-  entry_type,
+  item_kind,
+  item_subtype,
   inbox_status,
   deleted_at
 )
@@ -107,6 +102,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'First ski trip',
     'A First Time with private photos.',
+    'event',
     'first_time',
     'organized',
     '2026-08-01T12:00:00Z'
@@ -116,6 +112,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Photo parent',
     'An active First Time with one removed photo.',
+    'event',
     'first_time',
     'organized',
     null
@@ -125,7 +122,8 @@ values
     '10000000-0000-0000-0000-000000000006',
     'Other owner Trash',
     'Private.',
-    'standard',
+    'writing',
+    'note',
     'organized',
     '2026-08-04T12:00:00Z'
   ),
@@ -134,7 +132,8 @@ values
     '10000000-0000-0000-0000-000000000001',
     null,
     '  A body-only deleted thought.  ',
-    'standard',
+    'capture',
+    'quick_capture',
     'unreviewed',
     '2026-07-30T12:00:00Z'
   );
@@ -181,61 +180,17 @@ values
     '2026-08-01T13:00:00Z'
   );
 
-insert into public.habits (
-  id,
-  owner_id,
-  name,
-  tracking_mode,
-  schedule,
-  starts_on,
-  deleted_at
-)
-values
-  (
-    '72000000-0000-0000-0000-000000000001',
-    '10000000-0000-0000-0000-000000000001',
-    'Take supplements',
-    'check',
-    '{"kind":"daily"}',
-    '2026-01-01',
-    '2026-08-03T12:00:00Z'
-  ),
-  (
-    '72000000-0000-0000-0000-000000000002',
-    '10000000-0000-0000-0000-000000000006',
-    'Other owner Habit',
-    'check',
-    '{"kind":"daily"}',
-    '2026-01-01',
-    '2026-08-04T12:00:00Z'
-  );
-
-insert into public.habit_occurrences (
-  id,
-  habit_id,
-  owner_id,
-  local_date,
-  status
-)
-values (
-  '74000000-0000-0000-0000-000000000001',
-  '72000000-0000-0000-0000-000000000001',
-  '10000000-0000-0000-0000-000000000001',
-  '2026-08-01',
-  'completed'
-);
-
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
 
 select is(
   (select count(*)::integer from public.trash_workspace(50, 0)),
-  4,
-  'Trash combines owned deleted Entries, Habits, and standalone removed attachments'
+  3,
+  'Trash combines owned deleted Entries and standalone removed attachments'
 );
 select is(
   (select array_agg(item_kind order by deleted_at desc) from public.trash_workspace(50, 0)),
-  array['habit', 'attachment', 'entry', 'entry'],
+  array['attachment', 'entry', 'entry'],
   'Trash sorts every item by deletion time across kinds'
 );
 select is(
@@ -283,7 +238,7 @@ select is(
     from public.trash_workspace(2, 0)
     limit 1
   ),
-  4,
+  3,
   'Paginated Trash rows preserve the complete result count'
 );
 select is(
@@ -431,46 +386,6 @@ select ok(
   ),
   'Restoring an attachment clears its deletion timestamp'
 );
-select is(
-  (
-    select count(*)::integer
-    from public.restore_trash_item(
-      'habit',
-      '72000000-0000-0000-0000-000000000001',
-      1,
-      '2026-08-03T12:00:00Z'
-    )
-  ),
-  1,
-  'An owned Habit can be restored'
-);
-select ok(
-  (
-    select deleted_at is null
-    from public.habits
-    where id = '72000000-0000-0000-0000-000000000001'
-  ),
-  'Restoring a Habit clears its deletion timestamp'
-);
-select is(
-  (
-    select revision
-    from public.habits
-    where id = '72000000-0000-0000-0000-000000000001'
-  ),
-  2,
-  'Restoring a Habit advances its revision'
-);
-select ok(
-  exists (
-    select 1
-    from public.habit_versions
-    where habit_id = '72000000-0000-0000-0000-000000000001'
-      and (snapshot ->> 'deleted_at') is not null
-  ),
-  'Restoring a Habit preserves the deleted definition in history'
-);
-
 reset role;
 
 update public.entries
@@ -480,10 +395,6 @@ where id = '71000000-0000-0000-0000-000000000001';
 update public.attachments
 set deleted_at = '2026-08-06T12:00:00Z'
 where id = '73000000-0000-0000-0000-000000000002';
-
-update public.habits
-set deleted_at = '2026-08-07T12:00:00Z'
-where id = '72000000-0000-0000-0000-000000000001';
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
@@ -513,19 +424,6 @@ select is(
   ),
   '10000000-0000-0000-0000-000000000001/71000000-0000-0000-0000-000000000002/two.jpg',
   'Permanent attachment deletion retrieves its private object path'
-);
-select is(
-  (
-    select count(*)::integer
-    from public.trash_item_storage_paths(
-      'habit',
-      '72000000-0000-0000-0000-000000000001',
-      3,
-      '2026-08-07T12:00:00Z'
-    )
-  ),
-  0,
-  'Habits correctly have no private Storage paths'
 );
 select is(
   (
@@ -627,46 +525,6 @@ select ok(
   ),
   'Permanent attachment deletion removes its metadata'
 );
-select is(
-  (
-    select count(*)::integer
-    from public.delete_trash_item_forever(
-      'habit',
-      '72000000-0000-0000-0000-000000000001',
-      3,
-      '2026-08-07T12:00:00Z'
-    )
-  ),
-  1,
-  'An owned trashed Habit can be permanently deleted'
-);
-select ok(
-  not exists (
-    select 1
-    from public.habits
-    where id = '72000000-0000-0000-0000-000000000001'
-  ),
-  'Permanent Habit deletion removes the Habit'
-);
-select is(
-  (
-    select count(*)::integer
-    from public.habit_occurrences
-    where habit_id = '72000000-0000-0000-0000-000000000001'
-  ),
-  0,
-  'Permanent Habit deletion cascades through its occurrences'
-);
-select is(
-  (
-    select count(*)::integer
-    from public.habit_versions
-    where habit_id = '72000000-0000-0000-0000-000000000001'
-  ),
-  0,
-  'Permanent Habit deletion removes its version history under the deletion policy'
-);
-
 reset role;
 
 select ok(

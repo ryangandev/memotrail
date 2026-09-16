@@ -30,7 +30,7 @@ export async function getGoalsWorkspace(): Promise<GoalsWorkspace | null> {
     context.client.rpc("goals_workspace", { p_limit: 100, p_offset: 0 }),
     context.client
       .from("entries")
-      .select("id,title,body,entry_type,updated_at")
+      .select("id,title,body,item_kind,item_subtype,updated_at")
       .eq("owner_id", context.userId)
       .is("deleted_at", null)
       .order("updated_at", { ascending: false })

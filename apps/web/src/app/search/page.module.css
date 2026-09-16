@@ -349,7 +349,7 @@
 }
 
 .resultBody,
-.fullEntry p {
+.fullEntryBody {
   white-space: pre-wrap;
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-body);
@@ -357,11 +357,9 @@
 }
 
 .resultBody {
-  display: -webkit-box;
+  max-height: calc(4 * var(--mt-line-height-body) * 1em);
   margin-top: var(--mt-space-2);
   overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
 }
 
 .fullEntry {
@@ -375,7 +373,7 @@
   cursor: pointer;
 }
 
-.fullEntry p {
+.fullEntryBody {
   margin-top: var(--mt-space-3);
   padding: var(--mt-space-4);
   border-radius: var(--mt-radius-medium);
@@ -456,11 +454,6 @@
 .pagination > span {
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
-}
-
-.libraryPagination {
-  display: flex;
-  flex-wrap: wrap;
 }
 
 .visuallyHidden {

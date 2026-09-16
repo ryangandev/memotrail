@@ -46,14 +46,247 @@
   font-size: var(--mt-font-size-caption);
 }
 
-.availableGrid {
+.wikiFilters {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(170px, 0.28fr) auto;
+  align-items: end;
+  gap: var(--mt-space-3);
+  margin-bottom: var(--mt-space-5);
+}
+
+.wikiFilters label {
+  display: grid;
+  gap: var(--mt-space-2);
+}
+
+.wikiFilters label > span {
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.wikiFilters input,
+.wikiFilters select,
+.wikiFilters button {
+  height: 44px;
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-medium);
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-raised);
+  font: inherit;
+}
+
+.wikiFilters input,
+.wikiFilters select {
+  width: 100%;
+  padding: 0 var(--mt-space-3);
+}
+
+.wikiFilters select {
+  padding-right: var(--mt-space-8);
+}
+
+.wikiFilters button {
+  padding: 0 var(--mt-space-5);
+  border-color: var(--mt-color-accent);
+  color: var(--mt-color-accent-ink);
+  background: var(--mt-color-accent);
+  cursor: pointer;
+}
+
+.wikiFilters input:focus,
+.wikiFilters select:focus,
+.wikiFilters button:focus-visible {
+  outline: 0;
+  border-color: var(--mt-color-accent);
+  box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
+}
+
+.wikiGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--mt-space-3);
 }
 
-.availableGrid > a {
+.wikiGrid > a {
+  display: grid;
+  min-width: 0;
+  min-height: 164px;
+  align-content: start;
+  gap: var(--mt-space-2);
+  padding: var(--mt-space-5);
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-large);
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-raised);
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.wikiGrid > a:hover {
+  border-color: var(--mt-color-border-strong);
+  box-shadow: var(--mt-shadow-raised);
+  transform: translateY(-1px);
+}
+
+.wikiGrid strong {
+  overflow: hidden;
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-title-small);
+  font-weight: var(--mt-font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wikiGrid p {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+  line-height: var(--mt-line-height-body);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.wikiGrid small {
+  align-self: end;
+  margin-top: auto;
+  color: var(--mt-color-ink-faint);
+  font-size: 10px;
+}
+
+.wikiBadges {
   display: flex;
-  min-height: 92px;
+  flex-wrap: wrap;
+  gap: var(--mt-space-2);
+}
+
+.wikiBadges span {
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: var(--mt-color-accent);
+  background: var(--mt-color-accent-subtle);
+  font-size: 9px;
+  font-weight: var(--mt-font-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.wikiBadges span + span {
+  color: var(--mt-color-ink-muted);
+  background: var(--mt-color-surface-subtle);
+}
+
+.wikiEmpty {
+  padding: var(--mt-space-8);
+  border: 1px dashed var(--mt-color-border-strong);
+  border-radius: var(--mt-radius-large);
+  color: var(--mt-color-ink-muted);
+  text-align: center;
+}
+
+.wikiEmpty strong {
+  display: block;
+  margin-bottom: var(--mt-space-2);
+  color: var(--mt-color-ink);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-title-small);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.pagination {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--mt-space-3);
+  margin-top: var(--mt-space-5);
+  color: var(--mt-color-ink-faint);
+  font-size: var(--mt-font-size-caption);
+}
+
+.pagination > :last-child {
+  justify-self: end;
+}
+
+.pagination a {
+  color: var(--mt-color-accent);
+}
+
+.kindGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--mt-space-3);
+}
+
+.kindGrid > a {
+  display: grid;
+  min-height: 142px;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr;
+  align-content: start;
+  gap: var(--mt-space-2) var(--mt-space-3);
+  padding: var(--mt-space-4);
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-large);
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-raised);
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.kindGrid > a:hover {
+  border-color: var(--mt-color-border-strong);
+  transform: translateY(-1px);
+}
+
+.kindGrid > a[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--mt-color-accent) 44%, transparent);
+  background: var(--mt-color-accent-subtle);
+}
+
+.kindGrid > a > span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  grid-row: 1 / span 2;
+  place-items: center;
+  border-radius: var(--mt-radius-small);
+  color: var(--mt-color-accent);
+  background: var(--mt-color-surface-subtle);
+}
+
+.kindGrid > a[aria-current="page"] > span {
+  background: var(--mt-color-surface-raised);
+}
+
+.kindGrid strong {
+  align-self: center;
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-title-small);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.kindGrid p {
+  grid-column: 2;
+  color: var(--mt-color-ink-faint);
+  font-size: var(--mt-font-size-caption);
+  line-height: var(--mt-line-height-body);
+}
+
+.destinationGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mt-space-3);
+}
+
+.destinationGrid > a {
+  display: flex;
+  min-height: 96px;
   align-items: center;
   gap: var(--mt-space-4);
   padding: var(--mt-space-4) var(--mt-space-5);
@@ -64,15 +297,15 @@
   text-decoration: none;
 }
 
-.availableGrid > a:hover {
+.destinationGrid > a:hover {
   border-color: var(--mt-color-border-strong);
   background: var(--mt-color-surface-subtle);
 }
 
-.availableGrid > a > span {
+.destinationGrid > a > span {
   display: grid;
-  width: 46px;
-  height: 46px;
+  width: 42px;
+  height: 42px;
   flex: 0 0 auto;
   place-items: center;
   border-radius: var(--mt-radius-medium);
@@ -80,53 +313,38 @@
   background: var(--mt-color-accent-subtle);
 }
 
-.availableGrid > a > div {
+.destinationGrid > a > div {
+  min-width: 0;
   flex: 1;
 }
 
-.availableGrid strong {
+.destinationGrid strong {
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-title-small);
   font-weight: var(--mt-font-weight-medium);
 }
 
-.availableGrid p {
+.destinationGrid p {
   margin-top: 4px;
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
+  line-height: var(--mt-line-height-body);
 }
 
-.plannedGrid {
+.libraryUtilities {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  overflow: hidden;
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mt-space-8);
+  margin-top: var(--mt-space-10);
 }
 
-.plannedGrid article {
-  display: grid;
-  gap: 4px;
-  padding: var(--mt-space-4);
-  border-right: 1px solid var(--mt-color-border);
+.libraryUtilities section {
+  min-width: 0;
+  margin-top: 0;
 }
 
-.plannedGrid article:last-child {
-  border-right: 0;
-}
-
-.plannedGrid span {
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-label);
-}
-
-.plannedGrid small {
-  color: var(--mt-color-warm);
-  font-size: 9px;
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.libraryUtilities .destinationGrid {
+  grid-template-columns: 1fr;
 }
 
 @media (max-width: 720px) {
@@ -134,20 +352,26 @@
     font-size: 36px;
   }
 
-  .plannedGrid {
-    grid-template-columns: 1fr 1fr;
+  .wikiFilters {
+    grid-template-columns: 1fr;
   }
 
-  .plannedGrid article {
-    border-bottom: 1px solid var(--mt-color-border);
+  .wikiFilters button {
+    width: 100%;
   }
 
-  .plannedGrid article:nth-child(2n) {
-    border-right: 0;
+  .wikiGrid {
+    grid-template-columns: 1fr;
   }
 
-  .plannedGrid article:last-child {
-    border-bottom: 0;
+  .kindGrid,
+  .destinationGrid,
+  .libraryUtilities {
+    grid-template-columns: 1fr;
+  }
+
+  .kindGrid > a {
+    min-height: 112px;
   }
 }
 

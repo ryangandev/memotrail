@@ -16,9 +16,10 @@ export type HomeEntry = {
   collectionNames: string[];
   createdAt: string;
   datePrecision: string;
-  entryType: string;
   id: string;
   inboxStatus: "organized" | "unreviewed";
+  itemKind: WikiItemKind;
+  itemSubtype: string;
   occurredEnd: string | null;
   occurredLabel: string | null;
   occurredStart: string | null;
@@ -61,7 +62,8 @@ export function parseHomeEntry(value: unknown): HomeEntry | null {
     typeof value.entry_id !== "string" ||
     typeof value.title !== "string" ||
     typeof value.body !== "string" ||
-    typeof value.entry_type !== "string" ||
+    !isWikiItemKind(value.item_kind) ||
+    typeof value.item_subtype !== "string" ||
     (value.inbox_status !== "organized" &&
       value.inbox_status !== "unreviewed") ||
     !nullableString(value.occurred_start) ||
@@ -86,9 +88,10 @@ export function parseHomeEntry(value: unknown): HomeEntry | null {
     collectionNames: value.collection_names,
     createdAt: value.created_at,
     datePrecision: value.date_precision,
-    entryType: value.entry_type,
     id: value.entry_id,
     inboxStatus: value.inbox_status,
+    itemKind: value.item_kind,
+    itemSubtype: value.item_subtype,
     occurredEnd: value.occurred_end,
     occurredLabel: value.occurred_label,
     occurredStart: value.occurred_start,
@@ -155,3 +158,4 @@ function stringArray(value: unknown): value is string[] {
     Array.isArray(value) && value.every((item) => typeof item === "string")
   );
 }
+import { isWikiItemKind, type WikiItemKind } from "./wiki-item";

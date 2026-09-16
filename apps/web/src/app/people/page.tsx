@@ -28,7 +28,7 @@ export default async function PeoplePage({
         }),
     context.client
       .from("entries")
-      .select("id,title,body,entry_type")
+      .select("id,title,body,item_kind,item_subtype")
       .eq("owner_id", context.userId)
       .is("deleted_at", null)
       .order("updated_at", { ascending: false })
@@ -44,7 +44,7 @@ export default async function PeoplePage({
         focused && !people.error && people.data?.length === 0
           ? "This Person is unavailable or in Trash."
           : people.error || entries.error
-            ? "Could not load People and Entry choices. Refresh to try again."
+            ? "Could not load People and Item choices. Refresh to try again."
             : null
       }
     />

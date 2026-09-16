@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { writingRevision } from "@/lib/media/writing-revision";
 import {
+  parseCaptureExtractionReference,
+  type CaptureExtractionReference,
+} from "@/lib/data/capture-extraction-input";
+import {
   isFirstTimeUuid,
   parseFirstTimeAttachmentInput,
   type FirstTimeAttachmentInput,
@@ -22,6 +26,7 @@ export type VehicleActionResult = {
 
 export async function saveVehicleEntry(
   input: VehicleEntryInput,
+  sourceCapture: CaptureExtractionReference | null = null,
 ): Promise<VehicleActionResult> {
   const parsed = parseVehicleEntryInput(input);
   if (!parsed.success) return result("error", parsed.message);
@@ -29,49 +34,70 @@ export async function saveVehicleEntry(
   const context = await getAuthenticatedContext();
   if (!context) return expiredSession();
 
-  const { data, error } = await context.client.rpc(
-    "save_vehicle_entry_with_occurrence",
-    {
-      p_body: parsed.data.body,
-      p_collection_names: parsed.data.collectionNames,
-      p_color: parsed.data.color,
-      p_date_precision: parsed.data.datePrecision,
-      p_entry_id: parsed.data.id,
-      p_expected_revision: await writingRevision(
-        context.client,
-        parsed.data.id,
-        parsed.data.revision,
-      ),
-      p_make: parsed.data.make,
-      p_model: parsed.data.model,
-      p_model_year: parsed.data.modelYear,
-      p_occurred_end: parsed.data.occurredEnd,
-      p_occurred_label: parsed.data.occurredLabel,
-      p_occurred_start: parsed.data.occurredStart,
-      p_occurred_timezone: parsed.data.occurredTimezone,
-      p_tag_names: parsed.data.tagNames,
-      p_title: parsed.data.title,
-    },
-  );
+  const source = sourceCapture
+    ? parseCaptureExtractionReference(sourceCapture)
+    : null;
+  if (sourceCapture && (!source || parsed.data.id !== null)) {
+    return result(
+      "error",
+      "This Capture handoff is invalid. Return to Inbox and try again.",
+    );
+  }
+  const parameters = {
+    p_body: parsed.data.body,
+    p_collection_names: parsed.data.collectionNames,
+    p_color: parsed.data.color,
+    p_date_precision: parsed.data.datePrecision,
+    p_make: parsed.data.make,
+    p_model: parsed.data.model,
+    p_model_year: parsed.data.modelYear,
+    p_occurred_end: parsed.data.occurredEnd,
+    p_occurred_label: parsed.data.occurredLabel,
+    p_occurred_start: parsed.data.occurredStart,
+    p_occurred_timezone: parsed.data.occurredTimezone,
+    p_tag_names: parsed.data.tagNames,
+    p_title: parsed.data.title,
+  };
+  const { data, error } = source
+    ? await context.client.rpc("extract_capture_to_vehicle", {
+        ...parameters,
+        p_capture_id: source.id,
+        p_capture_revision: source.revision,
+      })
+    : await context.client.rpc("save_vehicle_entry_with_occurrence", {
+        ...parameters,
+        p_entry_id: parsed.data.id,
+        p_expected_revision: await writingRevision(
+          context.client,
+          parsed.data.id,
+          parsed.data.revision,
+        ),
+      });
 
   if (error) {
     return result("error", "MemoTrail could not save this Vehicle. Try again.");
   }
 
-  const saved = savedVehicle(data);
+  const saved = source ? extractedVehicle(data) : savedVehicle(data);
   if (!saved) {
     return result(
       "conflict",
       parsed.data.id
         ? "This Vehicle changed on another device. Close it, refresh, and try again."
-        : "MemoTrail could not create this Vehicle. Refresh and try again.",
+        : source
+          ? "This Capture changed or was already organized. Return to Inbox and refresh."
+          : "MemoTrail could not create this Vehicle. Refresh and try again.",
     );
   }
 
   refreshVehiclePaths();
   return {
     entry: saved,
-    message: parsed.data.id ? "Vehicle saved." : "Vehicle added.",
+    message: parsed.data.id
+      ? "Vehicle saved."
+      : source
+        ? "Vehicle created from Capture."
+        : "Vehicle added.",
     status: parsed.data.id ? "saved" : "created",
   };
 }
@@ -193,6 +219,19 @@ function savedVehicle(value: unknown) {
     : null;
 }
 
+function extractedVehicle(value: unknown) {
+  if (!Array.isArray(value) || value.length === 0) return null;
+  const item = value[0];
+  return typeof item === "object" &&
+    item !== null &&
+    "vehicle_entry_id" in item &&
+    "vehicle_revision" in item &&
+    typeof item.vehicle_entry_id === "string" &&
+    typeof item.vehicle_revision === "number"
+    ? { id: item.vehicle_entry_id, revision: item.vehicle_revision }
+    : null;
+}
+
 function result(
   status: VehicleActionResult["status"],
   message: string,
@@ -210,6 +249,7 @@ function expiredSession(): VehicleActionResult {
 function refreshVehiclePaths() {
   revalidatePath("/");
   revalidatePath("/collections");
+  revalidatePath("/inbox");
   revalidatePath("/library");
   revalidatePath("/search");
   revalidatePath("/timeline");
