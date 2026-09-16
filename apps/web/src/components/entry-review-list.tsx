@@ -411,6 +411,10 @@ export function EntryReviewDialog({
                 <Icon name="car" size={15} />
                 Create a Vehicle
               </Link>
+              <Link href={`/goals?source=${entry.id}`}>
+                <Icon name="target" size={15} />
+                Create a Goal
+              </Link>
             </div>
           ) : null}
           <EntryPhotoDates
