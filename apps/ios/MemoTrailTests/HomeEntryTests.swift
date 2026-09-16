@@ -150,20 +150,20 @@ final class HomeEntryTests: XCTestCase {
     XCTAssertEqual(snapshot.habitProgressLabel, "1 of 1 due")
   }
 
-  func testRootTabsMatchTheFiveDestinationProductContract() {
+  func testRootTabsMatchTheFourDestinationProductContract() {
     XCTAssertEqual(
       RootTabDestination.allCases,
-      [.home, .inbox, .timeline, .habits, .library]
+      [.home, .inbox, .timeline, .library]
     )
     XCTAssertEqual(
       RootTabDestination.allCases.map(\.title),
       [
-        "Home", "Inbox", "Timeline", "Habits", "Library",
+        "Home", "Inbox", "Timeline", "Library",
       ])
     XCTAssertFalse(RootTabDestination.allCases.map(\.systemImage).contains(where: \.isEmpty))
     XCTAssertEqual(
       RootTabDestination.allCases.filter(\.usesGlobalCaptureButton),
-      [.timeline, .habits, .library]
+      [.timeline, .library]
     )
   }
 

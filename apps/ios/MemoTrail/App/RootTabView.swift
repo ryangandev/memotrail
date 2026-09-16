@@ -106,12 +106,6 @@ struct RootTabView: View {
         }
         .tag(RootTabDestination.timeline)
 
-      HabitsView(client: client, ownerID: user.id)
-        .tabItem {
-          Label(RootTabDestination.habits.title, systemImage: RootTabDestination.habits.systemImage)
-        }
-        .tag(RootTabDestination.habits)
-
       LibraryView(client: client, ownerID: user.id)
         .tabItem {
           Label(
@@ -240,7 +234,6 @@ enum RootTabDestination: String, CaseIterable, Sendable {
   case home
   case inbox
   case timeline
-  case habits
   case library
 
   var title: String {
@@ -248,7 +241,6 @@ enum RootTabDestination: String, CaseIterable, Sendable {
     case .home: "Home"
     case .inbox: "Inbox"
     case .timeline: "Timeline"
-    case .habits: "Habits"
     case .library: "Library"
     }
   }
@@ -258,7 +250,6 @@ enum RootTabDestination: String, CaseIterable, Sendable {
     case .home: "house"
     case .inbox: "tray"
     case .timeline: "point.bottomleft.forward.to.point.topright.scurvepath"
-    case .habits: "checkmark.circle"
     case .library: "books.vertical"
     }
   }
