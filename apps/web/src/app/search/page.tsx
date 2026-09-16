@@ -395,9 +395,8 @@ function resultDateLabel(entry: SearchEntry) {
       ? entry.occurredTimezone
       : "UTC",
   };
-  return entry.occurredEnd !== null ||
-    (entry.itemKind === "entity" &&
-      ["home", "vehicle"].includes(entry.itemSubtype)) ||
+  return (entry.itemKind === "entity" &&
+    ["home", "vehicle"].includes(entry.itemSubtype)) ||
     entry.itemSubtype === "life_stage"
     ? occurrenceSpanLabel(occurrence)
     : occurrenceLabel(occurrence);
