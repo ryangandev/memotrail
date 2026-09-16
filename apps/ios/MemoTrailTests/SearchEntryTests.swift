@@ -93,7 +93,7 @@ final class SearchEntryTests: XCTestCase {
 
   func testAISearchUsesSharedFiltersWithoutProviderSecrets() throws {
     let request = try EntrySearchRequest.validate(
-      query: "第一次滑雪?", entryTypes: [.event], collectionNames: ["Travel"], tagNames: ["winter"],
+      query: "第一次滑雪?", itemKinds: [.event], collectionNames: ["Travel"], tagNames: ["winter"],
       dateFrom: nil, dateTo: nil)
     let input = AISearchRequest(request: request, timeZone: "America/Los_Angeles")
     XCTAssertEqual(input.parameters["q"], ["第一次滑雪?"])
@@ -118,7 +118,7 @@ final class SearchEntryTests: XCTestCase {
   func testSearchRequestNormalizesContentAndOrganization() throws {
     let request = try EntrySearchRequest.validate(
       query: "  teeth movement  ",
-      entryTypes: [.event, .event, .writing],
+      itemKinds: [.event, .event, .writing],
       collectionNames: [" Learning ", "learning", "Health"],
       tagNames: [" Teeth ", "teeth", "science"],
       dateFrom: nil,
@@ -126,7 +126,7 @@ final class SearchEntryTests: XCTestCase {
     )
 
     XCTAssertEqual(request.query, "teeth movement")
-    XCTAssertEqual(request.entryTypes, [.event, .writing])
+    XCTAssertEqual(request.itemKinds, [.event, .writing])
     XCTAssertEqual(request.collectionNames, ["Learning", "Health"])
     XCTAssertEqual(request.tagNames, ["Teeth", "science"])
     XCTAssertTrue(request.hasCriteria)
@@ -135,7 +135,7 @@ final class SearchEntryTests: XCTestCase {
   func testFilterOnlySearchIsValidAndEmptySearchStaysIdle() throws {
     let filtered = try EntrySearchRequest.validate(
       query: " ",
-      entryTypes: [.event],
+      itemKinds: [.event],
       collectionNames: [],
       tagNames: [],
       dateFrom: nil,
@@ -143,7 +143,7 @@ final class SearchEntryTests: XCTestCase {
     )
     let empty = try EntrySearchRequest.validate(
       query: " ",
-      entryTypes: [],
+      itemKinds: [],
       collectionNames: [],
       tagNames: [],
       dateFrom: nil,
@@ -158,7 +158,7 @@ final class SearchEntryTests: XCTestCase {
     XCTAssertThrowsError(
       try EntrySearchRequest.validate(
         query: String(repeating: "a", count: EntrySearchRequest.queryLimit + 1),
-        entryTypes: [],
+        itemKinds: [],
         collectionNames: [],
         tagNames: [],
         dateFrom: nil,
@@ -171,7 +171,7 @@ final class SearchEntryTests: XCTestCase {
     XCTAssertThrowsError(
       try EntrySearchRequest.validate(
         query: "valid",
-        entryTypes: [],
+        itemKinds: [],
         collectionNames: [String(repeating: "c", count: 81)],
         tagNames: [],
         dateFrom: nil,
@@ -186,7 +186,7 @@ final class SearchEntryTests: XCTestCase {
     XCTAssertThrowsError(
       try EntrySearchRequest.validate(
         query: "",
-        entryTypes: [],
+        itemKinds: [],
         collectionNames: [],
         tagNames: [],
         dateFrom: Date(timeIntervalSince1970: 1_788_364_800),
@@ -202,7 +202,7 @@ final class SearchEntryTests: XCTestCase {
     calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "America/Los_Angeles"))
     let request = try EntrySearchRequest.validate(
       query: "Japan",
-      entryTypes: [.event],
+      itemKinds: [.event],
       collectionNames: ["Travel"],
       tagNames: ["Japan"],
       dateFrom: Date(timeIntervalSince1970: 1_499_491_800),
@@ -215,7 +215,7 @@ final class SearchEntryTests: XCTestCase {
     let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
     XCTAssertEqual(json["p_query"] as? String, "Japan")
-    XCTAssertEqual(json["p_entry_types"] as? [String], ["first_time"])
+    XCTAssertEqual(json["p_entry_types"] as? [String], ["event"])
     XCTAssertEqual(json["p_collection_names"] as? [String], ["Travel"])
     XCTAssertEqual(json["p_tag_names"] as? [String], ["Japan"])
     XCTAssertEqual(json["p_date_from"] as? String, "2017-07-07")
@@ -227,7 +227,7 @@ final class SearchEntryTests: XCTestCase {
   func testSearchParametersEncodeAbsentDatesExplicitly() throws {
     let request = try EntrySearchRequest.validate(
       query: "learning",
-      entryTypes: [],
+      itemKinds: [],
       collectionNames: [],
       tagNames: [],
       dateFrom: nil,
@@ -244,7 +244,7 @@ final class SearchEntryTests: XCTestCase {
     XCTAssertThrowsError(
       try EntrySearchRequest.validate(
         query: "learning",
-        entryTypes: [],
+        itemKinds: [],
         collectionNames: [],
         tagNames: [],
         dateFrom: nil,

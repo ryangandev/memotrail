@@ -6,7 +6,7 @@ import Observation
 @Observable
 final class SearchController {
   var query = "" { didSet { clearAIResult() } }
-  var selectedEntryType: SearchEntryType? { didSet { clearAIResult() } }
+  var selectedItemKind: WikiItemKind? { didSet { clearAIResult() } }
   var selectedCollectionName: String? { didSet { clearAIResult() } }
   var selectedTagName: String? { didSet { clearAIResult() } }
   var dateFrom: Date? { didSet { clearAIResult() } }
@@ -40,7 +40,7 @@ final class SearchController {
 
   var activeFilterCount: Int {
     [
-      selectedEntryType != nil, selectedCollectionName != nil, selectedTagName != nil,
+      selectedItemKind != nil, selectedCollectionName != nil, selectedTagName != nil,
       dateFrom != nil, dateTo != nil,
     ]
     .filter { $0 }
@@ -106,7 +106,7 @@ final class SearchController {
     AISearchRequest(
       request: try EntrySearchRequest.validate(
         query: query,
-        entryTypes: selectedEntryType.map { [$0] } ?? [],
+        itemKinds: selectedItemKind.map { [$0] } ?? [],
         collectionNames: selectedCollectionName.map { [$0] } ?? [],
         tagNames: selectedTagName.map { [$0] } ?? [], dateFrom: dateFrom, dateTo: dateTo))
   }
@@ -143,7 +143,7 @@ final class SearchController {
     aiAnswer = nil
     aiError = nil
     query = ""
-    selectedEntryType = nil
+    selectedItemKind = nil
     selectedCollectionName = nil
     selectedTagName = nil
     dateFrom = nil
@@ -161,7 +161,7 @@ final class SearchController {
     do {
       request = try EntrySearchRequest.validate(
         query: query,
-        entryTypes: selectedEntryType.map { [$0] } ?? [],
+        itemKinds: selectedItemKind.map { [$0] } ?? [],
         collectionNames: selectedCollectionName.map { [$0] } ?? [],
         tagNames: selectedTagName.map { [$0] } ?? [],
         dateFrom: dateFrom,

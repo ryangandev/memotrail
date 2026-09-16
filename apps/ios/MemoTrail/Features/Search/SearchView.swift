@@ -377,8 +377,8 @@ struct SearchView: View {
   private var activeFilterLabels: [String] {
     var labels: [String] = []
 
-    if let selectedEntryType = controller.selectedEntryType {
-      labels.append(selectedEntryType.displayName)
+    if let selectedItemKind = controller.selectedItemKind {
+      labels.append(selectedItemKind.displayName)
     }
     if let selectedCollectionName = controller.selectedCollectionName {
       labels.append(selectedCollectionName)
@@ -523,7 +523,7 @@ private struct SearchFiltersSheet: View {
   let controller: SearchController
 
   @Environment(\.dismiss) private var dismiss
-  @State private var entryType: SearchEntryType?
+  @State private var itemKind: WikiItemKind?
   @State private var collectionName: String?
   @State private var tagName: String?
   @State private var dateFrom: Date?
@@ -531,7 +531,7 @@ private struct SearchFiltersSheet: View {
 
   init(controller: SearchController) {
     self.controller = controller
-    _entryType = State(initialValue: controller.selectedEntryType)
+    _itemKind = State(initialValue: controller.selectedItemKind)
     _collectionName = State(initialValue: controller.selectedCollectionName)
     _tagName = State(initialValue: controller.selectedTagName)
     _dateFrom = State(initialValue: controller.dateFrom)
@@ -542,10 +542,10 @@ private struct SearchFiltersSheet: View {
     NavigationStack {
       Form {
         Section("Organization") {
-          Picker("Kind", selection: $entryType) {
-            Text("All Kinds").tag(nil as SearchEntryType?)
-            ForEach(SearchEntryType.allCases, id: \.self) { type in
-              Text(type.displayName).tag(type as SearchEntryType?)
+          Picker("Kind", selection: $itemKind) {
+            Text("All Kinds").tag(nil as WikiItemKind?)
+            ForEach(WikiItemKind.allCases, id: \.self) { kind in
+              Text(kind.displayName).tag(kind as WikiItemKind?)
             }
           }
 
@@ -579,14 +579,14 @@ private struct SearchFiltersSheet: View {
 
         Section {
           Button("Clear filters", role: .destructive) {
-            entryType = nil
+            itemKind = nil
             collectionName = nil
             tagName = nil
             dateFrom = nil
             dateTo = nil
           }
           .disabled(
-            entryType == nil && collectionName == nil && tagName == nil && dateFrom == nil
+            itemKind == nil && collectionName == nil && tagName == nil && dateFrom == nil
               && dateTo == nil
           )
         }
@@ -600,7 +600,7 @@ private struct SearchFiltersSheet: View {
 
         ToolbarItem(placement: .confirmationAction) {
           Button("Apply") {
-            controller.selectedEntryType = entryType
+            controller.selectedItemKind = itemKind
             controller.selectedCollectionName = collectionName
             controller.selectedTagName = tagName
             controller.dateFrom = dateFrom
