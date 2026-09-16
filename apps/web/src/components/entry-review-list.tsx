@@ -400,6 +400,15 @@ export function EntryReviewDialog({
               ? "Choose what this Capture becomes. Homes, Vehicles, and Goals use their dedicated forms."
               : `${wikiItemKindLabel(entry.itemKind)} is this item's identity. You can change only its compatible type here.`}
           </p>
+          {entry.itemKind === "capture" ? (
+            <div className={styles.specializedHandoffs}>
+              <span>Need structured fields?</span>
+              <Link href={`/homes?source=${entry.id}`}>
+                <Icon name="home" size={15} />
+                Create a Home
+              </Link>
+            </div>
+          ) : null}
           <EntryPhotoDates
             place={photoPlace}
             onPlaceChange={setPhotoPlace}

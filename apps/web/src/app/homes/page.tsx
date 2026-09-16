@@ -1,4 +1,5 @@
 import { HomesWorkspace } from "@/components/homes-workspace";
+import { getCaptureExtractionSource } from "@/lib/data/capture-extraction";
 import { getHomesWorkspace } from "@/lib/data/home-records";
 
 export const dynamic = "force-dynamic";
@@ -6,15 +7,25 @@ export const dynamic = "force-dynamic";
 export default async function HomesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ entry?: string | string[] }>;
+  searchParams: Promise<{
+    entry?: string | string[];
+    source?: string | string[];
+  }>;
 }) {
-  const workspace = await getHomesWorkspace();
+  const params = await searchParams;
+  const requestedEntry = params.entry;
+  const requestedSource = params.source;
+  const [workspace, sourceCapture] = await Promise.all([
+    getHomesWorkspace(),
+    getCaptureExtractionSource(
+      typeof requestedSource === "string" ? requestedSource : null,
+    ),
+  ]);
 
   if (!workspace) {
     return null;
   }
 
-  const requestedEntry = (await searchParams).entry;
   const initialHomeId =
     typeof requestedEntry === "string" ? requestedEntry : null;
 
@@ -26,6 +37,7 @@ export default async function HomesPage({
       loadError={workspace.loadError}
       ownerId={workspace.viewer.id}
       placeOptions={workspace.placeOptions}
+      sourceCapture={sourceCapture}
       tagOptions={workspace.tagOptions}
     />
   );

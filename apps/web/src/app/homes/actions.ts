@@ -12,6 +12,10 @@ import {
   parseHomeEntryInput,
   type HomeEntryInput,
 } from "@/lib/data/home-record-input";
+import {
+  parseCaptureExtractionReference,
+  type CaptureExtractionReference,
+} from "@/lib/data/capture-extraction-input";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 
 export type HomeActionResult = {
@@ -22,6 +26,7 @@ export type HomeActionResult = {
 
 export async function saveHomeEntry(
   input: HomeEntryInput,
+  sourceCapture: CaptureExtractionReference | null = null,
 ): Promise<HomeActionResult> {
   const parsed = parseHomeEntryInput(input);
 
@@ -35,56 +40,78 @@ export async function saveHomeEntry(
     return expiredSession();
   }
 
-  const { data, error } = await context.client.rpc(
-    "save_home_entry_with_occurrence",
-    {
-      p_address: parsed.data.address,
-      p_body: parsed.data.body,
-      p_city: parsed.data.city,
-      p_collection_names: parsed.data.collectionNames,
-      p_country: parsed.data.country,
-      p_date_precision: parsed.data.datePrecision,
-      p_entry_id: parsed.data.id,
-      p_expected_revision: await writingRevision(
-        context.client,
-        parsed.data.id,
-        parsed.data.revision,
-      ),
-      p_latitude: parsed.data.latitude,
-      p_longitude: parsed.data.longitude,
-      p_move_in_reason: parsed.data.moveInReason,
-      p_move_out_reason: parsed.data.moveOutReason,
-      p_occurred_end: parsed.data.occurredEnd,
-      p_occurred_label: parsed.data.occurredLabel,
-      p_occurred_start: parsed.data.occurredStart,
-      p_occurred_timezone: parsed.data.occurredTimezone,
-      p_place_id: parsed.data.placeId,
-      p_place_name: parsed.data.placeName,
-      p_place_notes: parsed.data.placeNotes,
-      p_region: parsed.data.region,
-      p_tag_names: parsed.data.tagNames,
-      p_title: parsed.data.title,
-    },
-  );
+  const source = sourceCapture
+    ? parseCaptureExtractionReference(sourceCapture)
+    : null;
+  if (sourceCapture && (!source || parsed.data.id !== null)) {
+    return result(
+      "error",
+      "This Capture handoff is invalid. Return to Inbox and try again.",
+    );
+  }
+
+  const parameters = {
+    p_address: parsed.data.address,
+    p_body: parsed.data.body,
+    p_city: parsed.data.city,
+    p_collection_names: parsed.data.collectionNames,
+    p_country: parsed.data.country,
+    p_date_precision: parsed.data.datePrecision,
+    p_latitude: parsed.data.latitude,
+    p_longitude: parsed.data.longitude,
+    p_move_in_reason: parsed.data.moveInReason,
+    p_move_out_reason: parsed.data.moveOutReason,
+    p_occurred_end: parsed.data.occurredEnd,
+    p_occurred_label: parsed.data.occurredLabel,
+    p_occurred_start: parsed.data.occurredStart,
+    p_occurred_timezone: parsed.data.occurredTimezone,
+    p_place_id: parsed.data.placeId,
+    p_place_name: parsed.data.placeName,
+    p_place_notes: parsed.data.placeNotes,
+    p_region: parsed.data.region,
+    p_tag_names: parsed.data.tagNames,
+    p_title: parsed.data.title,
+  };
+  const { data, error } = source
+    ? await context.client.rpc("extract_capture_to_home", {
+        ...parameters,
+        p_capture_id: source.id,
+        p_capture_revision: source.revision,
+      })
+    : await context.client.rpc("save_home_entry_with_occurrence", {
+        ...parameters,
+        p_entry_id: parsed.data.id,
+        p_expected_revision: await writingRevision(
+          context.client,
+          parsed.data.id,
+          parsed.data.revision,
+        ),
+      });
 
   if (error) {
     return result("error", "MemoTrail could not save this Home. Try again.");
   }
 
-  const saved = savedHome(data);
+  const saved = source ? extractedHome(data) : savedHome(data);
   if (!saved) {
     return result(
       "conflict",
       parsed.data.id
         ? "This Home changed on another device. Close it, refresh, and try again."
-        : "MemoTrail could not create this Home. Refresh and try again.",
+        : source
+          ? "This Capture changed or was already organized. Return to Inbox and refresh."
+          : "MemoTrail could not create this Home. Refresh and try again.",
     );
   }
 
   refreshHomePaths();
   return {
     entry: saved,
-    message: parsed.data.id ? "Home saved." : "Home added.",
+    message: parsed.data.id
+      ? "Home saved."
+      : source
+        ? "Home created from Capture."
+        : "Home added.",
     status: parsed.data.id ? "saved" : "created",
   };
 }
@@ -222,6 +249,25 @@ function savedHome(value: unknown) {
     : null;
 }
 
+function extractedHome(value: unknown) {
+  if (!Array.isArray(value) || value.length === 0) return null;
+  const item = value[0];
+  return typeof item === "object" &&
+    item !== null &&
+    "home_entry_id" in item &&
+    "home_revision" in item &&
+    "place_id" in item &&
+    typeof item.home_entry_id === "string" &&
+    typeof item.home_revision === "number" &&
+    typeof item.place_id === "string"
+    ? {
+        id: item.home_entry_id,
+        placeId: item.place_id,
+        revision: item.home_revision,
+      }
+    : null;
+}
+
 function result(
   status: HomeActionResult["status"],
   message: string,
@@ -240,6 +286,7 @@ function refreshHomePaths() {
   revalidatePath("/");
   revalidatePath("/collections");
   revalidatePath("/homes");
+  revalidatePath("/inbox");
   revalidatePath("/library");
   revalidatePath("/search");
   revalidatePath("/timeline");

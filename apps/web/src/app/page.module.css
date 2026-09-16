@@ -1145,6 +1145,34 @@
   line-height: var(--mt-line-height-body);
 }
 
+.specializedHandoffs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mt-space-2);
+  margin-top: calc(var(--mt-space-2) * -1);
+  color: var(--mt-color-ink-faint);
+  font-size: var(--mt-font-size-caption);
+}
+
+.specializedHandoffs a {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: var(--mt-space-2);
+  padding: 0 var(--mt-space-3);
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-pill);
+  color: var(--mt-color-accent);
+  background: var(--mt-color-surface-subtle);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.specializedHandoffs a:hover {
+  border-color: var(--mt-color-accent);
+  background: var(--mt-color-accent-subtle);
+}
+
 .occurrenceEditor {
   display: grid;
   gap: var(--mt-space-4);
