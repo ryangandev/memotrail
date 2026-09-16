@@ -58,7 +58,7 @@ const primaryNavigation: NavigationItem[] = [
 ];
 
 const recordNavigation: NavigationItem[] = [
-  { destination: "people", href: "/people", icon: "archive", label: "People" },
+  { destination: "people", href: "/people", icon: "person", label: "People" },
   { destination: "places", href: "/places", icon: "map", label: "Places" },
   { destination: "homes", href: "/homes", icon: "home", label: "Homes" },
   {

@@ -70,7 +70,7 @@ const focusedDestinations: LibraryDestination[] = [
   {
     detail: "Connect the people who shaped your life.",
     href: "/people",
-    icon: "archive" as const,
+    icon: "person" as const,
     title: "People",
   },
   {

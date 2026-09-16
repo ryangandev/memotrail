@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { savePerson, trashPerson } from "@/app/people/actions";
+import common from "@/app/homes/page.module.css";
 import { PageFrame } from "@/components/page-frame";
+import { Icon } from "@/components/icon";
 import {
   personEntryTitle,
   type Person,
@@ -25,27 +27,65 @@ export function PeopleWorkspace({
   page: number;
   focused?: boolean;
 }) {
-  const [selected, setSelected] = useState<Person | "new" | null>(null);
+  const router = useRouter();
+  const [selected, setSelected] = useState<Person | null | undefined>(
+    focused ? people[0] : undefined,
+  );
+  const connectionCount = people.reduce(
+    (total, person) => total + person.linked_entries.length,
+    0,
+  );
   return (
-    <PageFrame className={styles.workspace} variant="canvas">
-      <header className={styles.header}>
+    <PageFrame variant="wide">
+      <header className={common.pageHeader}>
         <div>
-          <p>THE PEOPLE IN YOUR STORY</p>
+          <p className={common.eyebrow}>The people in your story</p>
           <h1>People</h1>
-          <span>
-            Keep a little context for the people who shaped each chapter.
-          </span>
+          <p>Keep a little context for the people who shaped each chapter.</p>
         </div>
-        <button onClick={() => setSelected("new")}>Add Person</button>
+        <button
+          aria-label="Add Person"
+          className={common.addButton}
+          onClick={() => setSelected(null)}
+          type="button"
+        >
+          <Icon name="plus" />
+          <span>Add Person</span>
+        </button>
       </header>
-      {focused && <Link href="/people">All People</Link>}
-      {error ? <p role="alert">{error}</p> : null}
-      {!people.length && !error ? (
-        <p className={styles.empty}>
-          No People yet. Add a name, then connect the Items you share.
-        </p>
+
+      <div className={common.summary} aria-label="People summary">
+        <span>{countLabel(people.length, "person", "people")}</span>
+        <span aria-hidden="true">·</span>
+        <span>{countLabel(connectionCount, "connected Item")}</span>
+      </div>
+
+      {error ? (
+        <div className={common.message} role="alert">
+          <Icon name="person" size={22} />
+          <div>
+            <strong>People unavailable</strong>
+            <p>{error}</p>
+          </div>
+        </div>
       ) : null}
-      <div className={styles.grid}>
+      {!people.length && !error ? (
+        <button
+          className={common.emptyState}
+          onClick={() => setSelected(null)}
+          type="button"
+        >
+          <span className={common.emptyMark}>
+            <Icon name="person" size={24} />
+          </span>
+          <strong>Remember the first person in your story</strong>
+          <span>
+            Start with a name. Relationship context, notes, and connected Items
+            can be added whenever they become useful.
+          </span>
+        </button>
+      ) : null}
+      <div className={styles.peopleGrid}>
         {people.map((person) => (
           <button
             className={styles.card}
@@ -70,12 +110,15 @@ export function PeopleWorkspace({
           <Link href={`/people?page=${page + 1}`}>Next</Link>
         ) : null}
       </nav>
-      {selected ? (
+      {selected !== undefined ? (
         <PersonEditor
-          key={selected === "new" ? "new" : selected.id}
-          person={selected === "new" ? null : selected}
+          key={selected?.id ?? "new"}
+          person={selected}
           entries={entries}
-          onClose={() => setSelected(null)}
+          onClose={() => {
+            setSelected(undefined);
+            if (focused) router.replace("/people", { scroll: false });
+          }}
         />
       ) : null}
     </PageFrame>
@@ -164,7 +207,7 @@ function PersonEditor({
           void mutate();
         }}
       >
-        <header className={styles.header}>
+        <header className={styles.dialogHeader}>
           <h2 id="person-title">{person ? "Edit Person" : "New Person"}</h2>
           <button
             type="button"
@@ -280,4 +323,8 @@ function PersonEditor({
       </form>
     </dialog>
   );
+}
+
+function countLabel(count: number, singular: string, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
 }

@@ -23,7 +23,7 @@ const pageFamilies = [
   { path: "/homes", variant: "wide", width: 1080 },
   { path: "/places", variant: "wide", width: 1080 },
   { path: "/vehicles", variant: "wide", width: 1080 },
-  { path: "/people", variant: "canvas", width: 1180 },
+  { path: "/people", variant: "wide", width: 1080 },
   { path: "/timeline", variant: "canvas", width: 1180 },
 ] as const;
 
