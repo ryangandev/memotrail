@@ -167,6 +167,7 @@ export function HomesWorkspace({
             setSelectedHome(undefined);
             if (initialHomeId || sourceCapture)
               router.replace("/homes", { scroll: false });
+            else router.refresh();
           }}
           ownerId={ownerId}
           placeOptions={placeOptions}
@@ -505,7 +506,6 @@ export function HomeEditor({
         return;
       }
 
-      router.refresh();
       onClose();
     } catch {
       setResult(
@@ -568,7 +568,6 @@ export function HomeEditor({
       });
       if (nextResult.status === "trashed") {
         onTrashed(currentId);
-        router.refresh();
         onClose();
       } else {
         setResult(nextResult);

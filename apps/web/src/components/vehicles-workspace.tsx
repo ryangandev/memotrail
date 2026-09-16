@@ -161,6 +161,7 @@ export function VehiclesWorkspace({
             setSelectedVehicle(undefined);
             if (initialVehicleId || sourceCapture)
               router.replace("/vehicles", { scroll: false });
+            else router.refresh();
           }}
           ownerId={ownerId}
           sourceCapture={selectedVehicle === null ? sourceCapture : null}
@@ -460,7 +461,6 @@ export function VehicleEditor({
         return;
       }
 
-      router.refresh();
       onClose();
     } catch {
       setResult(
@@ -523,7 +523,6 @@ export function VehicleEditor({
       });
       if (nextResult.status === "trashed") {
         onTrashed(currentId);
-        router.refresh();
         onClose();
       } else {
         setResult(nextResult);
