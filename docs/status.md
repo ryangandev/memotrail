@@ -13,14 +13,14 @@ Use Git history for feature-level implementation and test evidence.
 | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Capture, Inbox, organization, dates, drafts, and offline queues                      | Implemented on Web and iOS                                                                                                                                                                          |
 | Timeline, Home, First Times, Homes, Vehicles, Goals, People, Places, and Collections | Implemented on Web and iOS                                                                                                                                                                          |
-| Habits                                                                               | Deferred; removed locally from the active Web, iOS, and database product surface; hosted cleanup is pending                                                                                          |
+| Habits                                                                               | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                                                   |
 | Web navigation shell                                                                 | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                                                   |
 | Web Settings                                                                         | Account, dates, timezone, appearance, simplified AI, and account controls implemented                                                                                                               |
 | Web Collections and tags                                                             | Direct Library destinations and shared Entry organization editor implemented                                                                                                                        |
 | Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI    | Implemented; Production AI configuration is not accepted                                                                                                                                            |
 | Private media, Entry history, relationships, Trash, and complete export              | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                                  |
 | Hosted Supabase contracts                                                            | Deployed to the confirmed MemoTrail project                                                                                                                                                         |
-| Capture First Life Wiki information model                                            | Database, Web, and primary native flows implemented locally; Library, Search, and Collections use canonical identity and typed routing; hosted migration and native UI acceptance remain incomplete |
+| Capture First Life Wiki information model                                            | Canonical database model is live on the confirmed hosted project; Web navigation, Library, Inbox organization, Search, Collections, and history use Kind-aware identity and routing                  |
 | Backup and restore                                                                   | Not ready                                                                                                                                                                                           |
 | Current GitHub CI                                                                    | Blocked before jobs start by account billing or spending limits                                                                                                                                     |
 
@@ -29,10 +29,11 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 ## Next work
 
-### 1. Accept Life Wiki migration
+### 1. Accept native Life Wiki UI
 
-- Review and push the feature branch, apply its migrations to the confirmed hosted project, then verify Library and Search with real People and Places.
-- The current native source changes pass Swift parser and formatting checks, but a full simulator build remains blocked until the local Xcode license is accepted.
+- The hosted cutover retained 15 curated Wiki Items, 16 versions, 6 attachments and Storage objects, and 8 Timeline placements without legacy `entry_type`, `entryType`, or Habit schema.
+- Web Library and organization flows pass real local browser tests against the canonical database contract.
+- Native source changes pass Swift parser checks, but a full simulator build and UI acceptance remain blocked until the local Xcode license is accepted.
 
 ### 2. Accept Production AI
 

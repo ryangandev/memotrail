@@ -45,10 +45,10 @@ Pair it with the test file carrying the same feature name.
 - Supabase Postgres is the canonical synchronized data store.
 - Row Level Security is the final owner-authorization boundary for exposed data.
 - Web cookies and native bearer sessions identify the same Supabase user.
-- `entries` remains the compatibility name of the canonical Wiki Item table while Web and iOS migrate to the Capture First Life Wiki vocabulary.
+- `entries` is the physical canonical Wiki Item table.
+  Its historical SQL name does not make Entry a product-level Kind or identity boundary.
 - `entries.item_kind` owns the structural identity boundary: Capture, Writing, Entity, Event, Story, or Goal.
 - `entries.item_subtype` selects a compatible preset within that Kind.
-- `entries.entry_type` is a synchronized compatibility discriminator for older clients and must not become the source of new product semantics.
 - `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item. Person and Place rows expose both the canonical Entry ID and their specialized record ID so clients can preserve identity while opening the correct editor.
 - Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace. Native Library routes typed records to their focused editors and other canonical items to the shared History detail/edit boundary.
 - `collection_wiki_items` composes the established paged Collection detail with canonical Kind, subtype, and specialized routing identity. Both clients use it so Collections remain organizational lenses rather than a second generic detail system.
@@ -81,6 +81,8 @@ Pair it with the test file carrying the same feature name.
 - Clients send the revision they read. A stale revision surfaces a conflict instead of silently merging or overwriting another device.
 - Important mutations snapshot prior state. Restoring history creates another revision rather than deleting subsequent history.
 - Older clients must preserve fields they cannot represent or reject the write safely.
+- AI organization payloads use `classification.itemKind` and `classification.itemSubtype`.
+  The database rejects the removed `entryType` payload shape so a stale client cannot silently reintroduce the legacy model.
 
 ## Date rules
 
@@ -126,7 +128,7 @@ Pair it with the test file carrying the same feature name.
 - Interrupted provider outcomes do not trigger automatic paid retries.
 - Suggestion and search outputs are schema-validated and remain separate from original writing until explicit user action.
 - Search answers cite exact stored evidence; provenance does not imply that the model's conclusion is true.
-- Search retains the compatibility parameter name `p_entry_types`, but `search_entries_ordered` interprets each value as a Wiki Item Kind, subtype, or legacy `entry_type` before pagination. `search_entries_with_occurrence` adds canonical Kind, subtype, record source, and specialized routing identity so Web and iOS use one result stream for every Wiki Item, including People and Places.
+- `search_wiki_items` accepts canonical Kind and subtype classifications and returns Kind, subtype, record source, and specialized routing identity in one owner-scoped result stream for Web and iOS, including People and Places.
 - The persistent Web Command Palette debounces input before calling the dynamic, private, no-store `app/api/search/quick` route. That route returns one bounded owner-scoped canonical result stream and leaves filtered or AI search on the full Search page.
 
 ## Deletion, export, and recovery rules
