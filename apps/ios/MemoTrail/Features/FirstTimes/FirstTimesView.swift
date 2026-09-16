@@ -8,9 +8,16 @@ struct FirstTimesView: View {
   @State private var editorSelection: FirstTimeEditorSelection?
 
   private let embedded: Bool
+  private let focusedEntryID: UUID?
 
-  init(client: SupabaseClient, ownerID: UUID, embedded: Bool = false) {
+  init(
+    client: SupabaseClient,
+    ownerID: UUID,
+    embedded: Bool = false,
+    focusedEntryID: UUID? = nil
+  ) {
     self.embedded = embedded
+    self.focusedEntryID = focusedEntryID
     _controller = State(
       initialValue: FirstTimesController(client: client, ownerID: ownerID)
     )
@@ -123,6 +130,16 @@ struct FirstTimesView: View {
         message: loadErrorMessage,
         systemImage: "exclamationmark.triangle"
       )
+    } else if let focusedEntryID {
+      if let entry = controller.entries.first(where: { $0.id == focusedEntryID }) {
+        firstTimeSection(title: "FIRST TIME", entries: [entry])
+      } else {
+        archiveMessage(
+          title: "First Time unavailable",
+          message: "This First Time is no longer available in the loaded workspace.",
+          systemImage: "star"
+        )
+      }
     } else if controller.entries.isEmpty {
       archiveMessage(
         title: "Your archive starts here",
@@ -141,6 +158,25 @@ struct FirstTimesView: View {
           .buttonStyle(.plain)
           .accessibilityLabel("Edit \(entry.title)")
         }
+      }
+    }
+  }
+
+  private func firstTimeSection(title: String, entries: [FirstTimeEntry]) -> some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s3) {
+      Text(title)
+        .font(MTTypography.label)
+        .tracking(0.7)
+        .foregroundStyle(MTColor.ink)
+
+      ForEach(entries) { entry in
+        Button {
+          editorSelection = FirstTimeEditorSelection(entry: entry)
+        } label: {
+          FirstTimeArchiveCard(entry: entry)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Edit \(entry.title)")
       }
     }
   }

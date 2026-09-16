@@ -185,7 +185,8 @@ Both clients support light and dark appearance, share semantic design intent, an
 Web appearance is a per-browser choice between System, Light, and Dark; System remains the default and follows operating-system changes.
 
 Mobile uses Home, Inbox, Timeline, and Library as its primary destinations.
-Library contains Collections, First Times, Goals, Homes, Vehicles, Places, and People.
+Library opens with the same all-items Life Wiki browser as Web, including debounced keyword search and Kind filters.
+Focused record destinations for Collections, First Times, Goals, Homes, Vehicles, Places, and People remain available below the all-items browser.
 Settings is reached from the profile control.
 
 Desktop uses a persistent sidebar for the primary areas, Trash, and one Settings entry point separated from Library.

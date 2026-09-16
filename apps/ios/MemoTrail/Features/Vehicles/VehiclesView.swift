@@ -7,9 +7,16 @@ struct VehiclesView: View {
   @State private var controller: VehicleController
   @State private var editorSelection: VehicleEditorSelection?
   private let embedded: Bool
+  private let focusedEntryID: UUID?
 
-  init(client: SupabaseClient, ownerID: UUID, embedded: Bool = false) {
+  init(
+    client: SupabaseClient,
+    ownerID: UUID,
+    embedded: Bool = false,
+    focusedEntryID: UUID? = nil
+  ) {
     self.embedded = embedded
+    self.focusedEntryID = focusedEntryID
     _controller = State(initialValue: VehicleController(client: client, ownerID: ownerID))
   }
 
@@ -95,6 +102,16 @@ struct VehiclesView: View {
         message: loadErrorMessage,
         systemImage: "exclamationmark.triangle"
       )
+    } else if let focusedEntryID {
+      if let entry = controller.entries.first(where: { $0.id == focusedEntryID }) {
+        vehicleSection(title: "VEHICLE", entries: [entry])
+      } else {
+        archiveMessage(
+          title: "Vehicle unavailable",
+          message: "This Vehicle is no longer available in the loaded workspace.",
+          systemImage: "car"
+        )
+      }
     } else if controller.entries.isEmpty {
       archiveMessage(
         title: "Begin with a vehicle that carried you",

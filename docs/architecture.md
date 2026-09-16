@@ -50,6 +50,7 @@ Pair it with the test file carrying the same feature name.
 - `entries.item_subtype` selects a compatible preset within that Kind.
 - `entries.entry_type` is a synchronized compatibility discriminator for older clients and must not become the source of new product semantics.
 - `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item. Person and Place rows expose both the canonical Entry ID and their specialized record ID so clients can preserve identity while opening the correct editor.
+- Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace. Native Library routes typed records to their focused editors and other canonical items to the shared History detail/edit boundary.
 - `people.entry_id` and `places.entry_id` are required owner-scoped links to canonical Entity Wiki Items. Triggers keep names, notes, revision state, and Trash state synchronized while the specialized tables retain typed facts and relationship-facing IDs.
 - A raw Capture may be finalized as one durable item or may produce linked items through a provenance-preserving extraction.
 - Established durable items never change Kind through a generic selector; cross-Kind workflows create and link another item.

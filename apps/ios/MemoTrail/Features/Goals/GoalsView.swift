@@ -7,9 +7,16 @@ struct GoalsView: View {
   @State private var controller: GoalController
   @State private var editorSelection: GoalEditorSelection?
   private let embedded: Bool
+  private let focusedEntryID: UUID?
 
-  init(client: SupabaseClient, ownerID: UUID, embedded: Bool = false) {
+  init(
+    client: SupabaseClient,
+    ownerID: UUID,
+    embedded: Bool = false,
+    focusedEntryID: UUID? = nil
+  ) {
     self.embedded = embedded
+    self.focusedEntryID = focusedEntryID
     _controller = State(initialValue: GoalController(client: client, ownerID: ownerID))
   }
 
@@ -95,6 +102,16 @@ struct GoalsView: View {
         message: loadErrorMessage,
         systemImage: "exclamationmark.triangle"
       )
+    } else if let focusedEntryID {
+      if let entry = controller.entries.first(where: { $0.id == focusedEntryID }) {
+        goalSection(title: "GOAL", entries: [entry])
+      } else {
+        archiveMessage(
+          title: "Goal unavailable",
+          message: "This Goal is no longer available in the loaded workspace.",
+          systemImage: "target"
+        )
+      }
     } else if controller.entries.isEmpty {
       archiveMessage(
         title: "Begin with something worth moving toward",

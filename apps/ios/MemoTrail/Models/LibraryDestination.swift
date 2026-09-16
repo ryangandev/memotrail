@@ -36,21 +36,21 @@ enum LibraryDestination: String, CaseIterable, Equatable, Hashable, Identifiable
   var summary: String {
     switch self {
     case .collections:
-      "Browse Entries grouped by meaning."
+      "Browse Wiki Items grouped by meaning."
     case .firstTimes:
       "Revisit beginnings, dates, stories, and photos."
     case .goals:
       "Keep short-term and long-term intentions."
     case .homes:
-      "Remember where you lived and for how long."
+      "Keep each residence as a structured Entity."
     case .people:
-      "Connect the people who shaped each chapter."
+      "Connect reusable people to the items they shaped."
     case .places:
-      "Map meaningful locations across your trail."
+      "Reuse meaningful locations across your Life Wiki."
     case .trash:
       "Restore removed items or delete them permanently."
     case .vehicles:
-      "Keep the story of vehicles you owned or used."
+      "Keep structured facts for vehicles you owned or used."
     }
   }
 

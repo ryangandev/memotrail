@@ -50,6 +50,8 @@
 		B0000000000000000000001B /* CollectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000022 /* CollectionsView.swift */; };
 		B0000000000000000000001C /* LibraryDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000023 /* LibraryDestination.swift */; };
 		B0000000000000000000001D /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000024 /* LibraryView.swift */; };
+		B90000000000000000000001 /* WikiItemSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90000000000000000000001 /* WikiItemSummary.swift */; };
+		B90000000000000000000002 /* LibraryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90000000000000000000002 /* LibraryController.swift */; };
 		B0000000000000000000001E /* HabitEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000025 /* HabitEntry.swift */; };
 		B0000000000000000000001F /* HabitsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000026 /* HabitsController.swift */; };
 		B00000000000000000000020 /* HabitsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000027 /* HabitsView.swift */; };
@@ -144,6 +146,8 @@
 		C00000000000000000000022 /* CollectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionsView.swift; sourceTree = "<group>"; };
 		C00000000000000000000023 /* LibraryDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryDestination.swift; sourceTree = "<group>"; };
 		C00000000000000000000024 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		C90000000000000000000001 /* WikiItemSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiItemSummary.swift; sourceTree = "<group>"; };
+		C90000000000000000000002 /* LibraryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryController.swift; sourceTree = "<group>"; };
 		C00000000000000000000025 /* HabitEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitEntry.swift; sourceTree = "<group>"; };
 		C00000000000000000000026 /* HabitsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitsController.swift; sourceTree = "<group>"; };
 		C00000000000000000000027 /* HabitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitsView.swift; sourceTree = "<group>"; };
@@ -328,6 +332,7 @@
 				C0000000000000000000001D /* FirstTimeEntry.swift */,
 				C00000000000000000000020 /* CollectionEntry.swift */,
 				C00000000000000000000023 /* LibraryDestination.swift */,
+				C90000000000000000000001 /* WikiItemSummary.swift */,
 				C00000000000000000000025 /* HabitEntry.swift */,
 				C00000000000000000000028 /* TrashItem.swift */,
 				C0000000000000000000002F /* ResidenceEntry.swift */,
@@ -425,6 +430,7 @@
 		A10000000000000000000019 /* Library */ = {
 			isa = PBXGroup;
 			children = (
+				C90000000000000000000002 /* LibraryController.swift */,
 				C00000000000000000000024 /* LibraryView.swift */,
 			);
 			path = Library;
@@ -633,6 +639,8 @@
 				B0000000000000000000001A /* CollectionsController.swift in Sources */,
 				B0000000000000000000001B /* CollectionsView.swift in Sources */,
 				B0000000000000000000001C /* LibraryDestination.swift in Sources */,
+				B90000000000000000000001 /* WikiItemSummary.swift in Sources */,
+				B90000000000000000000002 /* LibraryController.swift in Sources */,
 				B0000000000000000000001D /* LibraryView.swift in Sources */,
 				B0000000000000000000001E /* HabitEntry.swift in Sources */,
 				B0000000000000000000001F /* HabitsController.swift in Sources */,

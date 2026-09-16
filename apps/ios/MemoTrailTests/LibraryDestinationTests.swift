@@ -257,4 +257,51 @@ final class LibraryDestinationTests: XCTestCase {
       XCTAssertFalse(destination.systemImage.isEmpty)
     }
   }
+
+  func testWikiItemSummaryDecodesCanonicalAndSpecializedIdentity() throws {
+    let json = """
+      {
+        "record_source": "person",
+        "item_id": "98900000-0000-4000-8000-000000000001",
+        "canonical_item_id": "98900000-0000-4000-8000-000000000011",
+        "item_kind": "entity",
+        "item_subtype": "person",
+        "title": "Marina",
+        "excerpt": "Friend from the harbor",
+        "inbox_status": "organized",
+        "occurred_start": null,
+        "occurred_end": null,
+        "updated_at": "2026-09-15T12:00:00Z",
+        "total_count": 14
+      }
+      """
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    let item = try decoder.decode(WikiItemSummary.self, from: Data(json.utf8))
+
+    XCTAssertEqual(item.id.uuidString, "98900000-0000-4000-8000-000000000011")
+    XCTAssertEqual(item.recordID.uuidString, "98900000-0000-4000-8000-000000000001")
+    XCTAssertEqual(item.recordSource, .person)
+    XCTAssertEqual(item.itemKind, .entity)
+    XCTAssertEqual(item.identityLabel, "Entity · Person")
+    XCTAssertEqual(item.totalCount, 14)
+  }
+
+  func testWikiItemsPageParametersUseTheBoundedRPCContract() throws {
+    let parameters = WikiItemsPageParameters(
+      pQuery: "harbor",
+      pItemKinds: ["entity"],
+      pItemSubtypes: ["person"],
+      pLimit: 36,
+      pOffset: 72
+    )
+    let values = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(parameters)) as? [String: Any])
+
+    XCTAssertEqual(values["p_query"] as? String, "harbor")
+    XCTAssertEqual(values["p_item_kinds"] as? [String], ["entity"])
+    XCTAssertEqual(values["p_item_subtypes"] as? [String], ["person"])
+    XCTAssertEqual(values["p_limit"] as? Int, 36)
+    XCTAssertEqual(values["p_offset"] as? Int, 72)
+  }
 }

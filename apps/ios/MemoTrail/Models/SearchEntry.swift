@@ -1,9 +1,5 @@
 import Foundation
 
-enum SearchRecordSource: String, Codable, Equatable, Hashable, Sendable {
-  case entry, person, place
-}
-
 struct AISearchRequest: Encodable, Equatable, Sendable {
   let parameters: [String: [String]]
   let timeZone: String
@@ -49,7 +45,7 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   let inboxStatus: String
   let itemKind: WikiItemKind
   let itemSubtype: String
-  let recordSource: SearchRecordSource
+  let recordSource: WikiItemRecordSource
   let recordID: UUID
   let occurredAt: Date?
   let occurredEnd: Date?
@@ -103,7 +99,7 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
       try values.decodeIfPresent(String.self, forKey: .itemSubtype)?.trimmed.nonEmpty
       ?? compatibility.subtype
     recordSource =
-      try values.decodeIfPresent(SearchRecordSource.self, forKey: .recordSource) ?? .entry
+      try values.decodeIfPresent(WikiItemRecordSource.self, forKey: .recordSource) ?? .entry
     recordID = try values.decodeIfPresent(UUID.self, forKey: .recordID) ?? id
     occurredAt = try values.decodeIfPresent(Date.self, forKey: .occurredAt)
     occurredEnd = try values.decodeIfPresent(Date.self, forKey: .occurredEnd)

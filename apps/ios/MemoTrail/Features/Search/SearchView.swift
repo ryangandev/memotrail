@@ -408,7 +408,18 @@ struct SearchView: View {
     case .place:
       PlacesView(client: client, ownerID: ownerID, embedded: true, focusedPlaceID: entry.recordID)
     case .entry:
-      SearchEntryDetailView(entry: entry)
+      switch (entry.itemKind, entry.itemSubtype) {
+      case (.entity, "home"):
+        HomesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
+      case (.entity, "vehicle"):
+        VehiclesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
+      case (.goal, _):
+        GoalsView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
+      case (.event, "first_time"):
+        FirstTimesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
+      default:
+        EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: entry.id)
+      }
     }
   }
 
@@ -505,133 +516,6 @@ private struct SearchResultCard: View {
       .padding(.horizontal, MTSpacing.s2)
       .padding(.vertical, 4)
       .background(MTColor.surfaceSubtle, in: Capsule())
-  }
-}
-
-private struct SearchEntryDetailView: View {
-  let entry: SearchEntry
-
-  var body: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: MTSpacing.s6) {
-        VStack(alignment: .leading, spacing: MTSpacing.s3) {
-          HStack(spacing: MTSpacing.s2) {
-            Text(entry.displayType)
-              .font(MTTypography.caption)
-              .foregroundStyle(MTColor.accent)
-
-            if entry.isInInbox {
-              Text("In Inbox")
-                .font(MTTypography.caption)
-                .foregroundStyle(MTColor.warm)
-            }
-          }
-
-          Text(entry.displayTitle)
-            .font(MTTypography.title)
-            .foregroundStyle(MTColor.ink)
-
-          Text(entry.displayDate)
-            .font(MTTypography.caption)
-            .foregroundStyle(MTColor.inkFaint)
-        }
-
-        if !entry.body.trimmed.isEmpty {
-          Text(entry.body)
-            .font(MTTypography.bodyLarge)
-            .foregroundStyle(MTColor.ink)
-            .lineSpacing(4)
-            .textSelection(.enabled)
-        }
-
-        if !entry.collectionNames.isEmpty || !entry.tagNames.isEmpty {
-          VStack(alignment: .leading, spacing: MTSpacing.s2) {
-            Text("ORGANIZATION")
-              .font(MTTypography.label)
-              .tracking(0.7)
-              .foregroundStyle(MTColor.inkFaint)
-
-            FlowLayout(spacing: MTSpacing.s2) {
-              ForEach(entry.collectionNames, id: \.self) { name in
-                detailBadge(name)
-              }
-              ForEach(entry.tagNames, id: \.self) { name in
-                detailBadge("#\(name)")
-              }
-            }
-          }
-        }
-      }
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .padding(MTSpacing.s6)
-    }
-    .background(MTColor.canvas)
-    .navigationTitle("Entry")
-    .navigationBarTitleDisplayMode(.inline)
-  }
-
-  private func detailBadge(_ title: String) -> some View {
-    Text(title)
-      .font(MTTypography.caption)
-      .foregroundStyle(MTColor.inkMuted)
-      .padding(.horizontal, MTSpacing.s3)
-      .padding(.vertical, MTSpacing.s2)
-      .background(MTColor.surfaceSubtle, in: Capsule())
-  }
-}
-
-private struct FlowLayout: Layout {
-  let spacing: CGFloat
-
-  func sizeThatFits(
-    proposal: ProposedViewSize,
-    subviews: Subviews,
-    cache: inout ()
-  ) -> CGSize {
-    layout(proposal: proposal, subviews: subviews).size
-  }
-
-  func placeSubviews(
-    in bounds: CGRect,
-    proposal: ProposedViewSize,
-    subviews: Subviews,
-    cache: inout ()
-  ) {
-    let result = layout(proposal: proposal, subviews: subviews)
-
-    for (index, point) in result.points.enumerated() {
-      subviews[index].place(
-        at: CGPoint(x: bounds.minX + point.x, y: bounds.minY + point.y),
-        proposal: .unspecified
-      )
-    }
-  }
-
-  private func layout(proposal: ProposedViewSize, subviews: Subviews) -> (
-    points: [CGPoint], size: CGSize
-  ) {
-    let maximumWidth = proposal.width ?? .infinity
-    var points: [CGPoint] = []
-    var cursor = CGPoint.zero
-    var rowHeight: CGFloat = 0
-    var measuredWidth: CGFloat = 0
-
-    for subview in subviews {
-      let size = subview.sizeThatFits(.unspecified)
-
-      if cursor.x > 0, cursor.x + size.width > maximumWidth {
-        cursor.x = 0
-        cursor.y += rowHeight + spacing
-        rowHeight = 0
-      }
-
-      points.append(cursor)
-      measuredWidth = max(measuredWidth, cursor.x + size.width)
-      cursor.x += size.width + spacing
-      rowHeight = max(rowHeight, size.height)
-    }
-
-    return (points, CGSize(width: measuredWidth, height: cursor.y + rowHeight))
   }
 }
 

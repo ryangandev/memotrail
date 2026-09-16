@@ -8,9 +8,16 @@ struct HomesView: View {
   @State private var editorSelection: ResidenceEditorSelection?
 
   private let embedded: Bool
+  private let focusedEntryID: UUID?
 
-  init(client: SupabaseClient, ownerID: UUID, embedded: Bool = false) {
+  init(
+    client: SupabaseClient,
+    ownerID: UUID,
+    embedded: Bool = false,
+    focusedEntryID: UUID? = nil
+  ) {
     self.embedded = embedded
+    self.focusedEntryID = focusedEntryID
     _controller = State(initialValue: ResidenceController(client: client, ownerID: ownerID))
   }
 
@@ -111,6 +118,16 @@ struct HomesView: View {
         message: loadErrorMessage,
         systemImage: "exclamationmark.triangle"
       )
+    } else if let focusedEntryID {
+      if let entry = controller.entries.first(where: { $0.id == focusedEntryID }) {
+        residenceSection(title: "HOME", entries: [entry])
+      } else {
+        archiveMessage(
+          title: "Home unavailable",
+          message: "This Home is no longer available in the loaded workspace.",
+          systemImage: "house"
+        )
+      }
     } else if controller.entries.isEmpty {
       archiveMessage(
         title: "Start with one address",
