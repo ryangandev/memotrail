@@ -123,10 +123,13 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await expect(
       page.getByRole("link", { name: /Entity Place Ocean Beach/ }),
     ).toBeVisible();
-    await expect(page.getByText("4 items")).toBeVisible();
+    await expect(
+      page.getByRole("main").getByText("4 items", { exact: true }),
+    ).toBeVisible();
 
-    await page.getByLabel("Kind").selectOption("entity");
-    await page.getByRole("button", { name: "Browse" }).click();
+    const filters = page.locator('form:visible:has(select[name="kind"])');
+    await filters.locator('select[name="kind"]').selectOption("entity");
+    await filters.getByRole("button", { name: "Browse" }).click();
     await expect(page).toHaveURL(/kind=entity/);
     await expect(
       page.getByRole("link", { name: /Entity Person Avery/ }),
@@ -138,9 +141,9 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       page.getByRole("link", { name: /Writing Reflection Morning reflection/ }),
     ).toHaveCount(0);
 
-    await page.getByLabel("Kind").selectOption("");
-    await page.getByLabel("Find in your Life Wiki").fill("marina");
-    await page.getByRole("button", { name: "Browse" }).click();
+    await filters.locator('select[name="kind"]').selectOption("");
+    await filters.locator('input[name="q"]').fill("marina");
+    await filters.getByRole("button", { name: "Browse" }).click();
     await expect(
       page.getByRole("link", { name: /Entity Person Avery/ }),
     ).toBeVisible();
@@ -148,7 +151,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       page.getByRole("link", { name: /Entity Place Ocean Beach/ }),
     ).toHaveCount(0);
     await page.waitForLoadState("networkidle");
-    await page.getByLabel("Find in your Life Wiki").press("Tab");
+    await filters.locator('input[name="q"]').press("Tab");
 
     await page.screenshot({
       fullPage: true,
