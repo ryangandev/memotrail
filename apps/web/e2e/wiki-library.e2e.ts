@@ -125,9 +125,16 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await page.goto("/library");
     await expect(page.getByRole("heading", { name: "Library" })).toBeVisible();
     const kinds = page.getByRole("navigation", { name: "Life Wiki Kinds" });
-    await expect(
-      kinds.getByRole("link", { name: /All items/ }),
-    ).toHaveAttribute("aria-current", "page");
+    const allItemsKind = kinds.getByRole("link", { name: "All items" });
+    await expect(allItemsKind).toHaveAttribute("aria-current", "page");
+    await expect(page.getByText("What each item is", { exact: true })).toHaveCount(
+      0,
+    );
+    await expect(allItemsKind.locator("p")).toHaveCount(0);
+    await expect(kinds.getByText("Journal, reflection, or lesson.")).toBeVisible();
+    await expect
+      .poll(async () => (await allItemsKind.boundingBox())?.height)
+      .toBeLessThanOrEqual(100);
     await expect(kinds.getByRole("link", { name: /Writing/ })).toBeVisible();
     await expect(kinds.getByRole("link", { name: /Entities/ })).toBeVisible();
     await expect(
