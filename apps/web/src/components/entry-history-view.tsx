@@ -470,7 +470,7 @@ function GoalExtraction({
       </p>
       <fieldset disabled={busy || disabled}>
         <label>
-          Goal title
+          Goal title *
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -505,7 +505,7 @@ function GoalExtraction({
           </select>
         </label>
         <label>
-          Target date (optional)
+          Target date
           <input
             type="date"
             value={targetDate}

@@ -323,12 +323,19 @@
   display: flex;
   height: 65px;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 0 var(--mt-space-8);
   border-bottom: 1px solid
     color-mix(in srgb, var(--mt-color-border) 82%, transparent);
   background: color-mix(in srgb, var(--mt-color-canvas) 88%, transparent);
   backdrop-filter: blur(16px);
+}
+
+.topLeading,
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: var(--mt-space-3);
 }
 
 .mobileBrand,
@@ -419,11 +426,35 @@
     0 0 16px color-mix(in srgb, var(--mt-color-warm) 17%, transparent);
 }
 
-.topActions {
-  display: flex;
-  align-items: center;
-  gap: var(--mt-space-3);
-  margin-left: auto;
+.inboxTopAction {
+  position: relative;
+  width: 38px;
+  padding: 0;
+  text-decoration: none;
+}
+
+.inboxTopAction small {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  padding: 0 5px;
+  border: 2px solid var(--mt-color-canvas);
+  border-radius: var(--mt-radius-pill);
+  color: var(--mt-color-accent-ink);
+  background: var(--mt-color-accent);
+  font-size: 9px;
+  font-weight: var(--mt-font-weight-semibold);
+  line-height: 1;
+}
+
+.inboxTopAction[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--mt-color-accent) 48%, transparent);
+  color: var(--mt-color-accent);
+  background: var(--mt-color-accent-subtle);
 }
 
 .syncStatus {
@@ -1848,6 +1879,14 @@
 
   .topActions {
     position: static;
+  }
+
+  .topLeading {
+    min-width: 0;
+  }
+
+  .inboxTopAction {
+    display: none;
   }
 
   .pageHeader {

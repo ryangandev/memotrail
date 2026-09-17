@@ -13,6 +13,11 @@ import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import { ProgressiveImage } from "@/components/progressive-image";
 import {
+  RecordCard,
+  RecordCardBody,
+  RecordCardVisual,
+} from "@/components/record-card";
+import {
   placeCoordinateLabel,
   placeCover,
   placeLocationLabel,
@@ -188,13 +193,12 @@ function PlaceCard({
   );
 
   return (
-    <button
-      aria-label={`${place.name}, ${placeLocationLabel(place)}`}
+    <RecordCard
+      ariaLabel={`${place.name}, ${placeLocationLabel(place)}`}
       className={styles.placeCard}
       onClick={onSelect}
-      type="button"
     >
-      <div className={styles.placeVisual}>
+      <RecordCardVisual className={styles.placeVisual}>
         {cover?.imageUrl ? (
           <ProgressiveImage
             alt=""
@@ -216,9 +220,9 @@ function PlaceCard({
         {cover?.imageUrl && coordinates ? (
           <small className={styles.coordinateBadge}>{coordinates}</small>
         ) : null}
-      </div>
+      </RecordCardVisual>
 
-      <div className={styles.placeBody}>
+      <RecordCardBody className={styles.placeBody}>
         <p className={styles.locationLine}>
           <Icon name="map" size={14} />
           <span>{placeLocationLabel(place)}</span>
@@ -247,8 +251,8 @@ function PlaceCard({
           </span>
           <span>{countLabel(relatedEntries.length, "editable link")}</span>
         </footer>
-      </div>
-    </button>
+      </RecordCardBody>
+    </RecordCard>
   );
 }
 
@@ -416,7 +420,7 @@ function PlaceEditor({
             <fieldset className={common.formSection}>
               <legend>Place details</legend>
               <label className={common.fullField}>
-                <span>Name</span>
+                <span>Name *</span>
                 <input
                   maxLength={placeNameLimit}
                   onChange={(event) => setName(event.target.value)}
@@ -427,9 +431,7 @@ function PlaceEditor({
                 />
               </label>
               <label className={common.fullField}>
-                <span>
-                  Address <small>Optional</small>
-                </span>
+                <span>Address</span>
                 <input
                   autoComplete="street-address"
                   maxLength={placeAddressLimit}
@@ -439,9 +441,7 @@ function PlaceEditor({
                 />
               </label>
               <label>
-                <span>
-                  City <small>Optional</small>
-                </span>
+                <span>City</span>
                 <input
                   autoComplete="address-level2"
                   maxLength={placeCityLimit}
@@ -451,9 +451,7 @@ function PlaceEditor({
                 />
               </label>
               <label>
-                <span>
-                  Region <small>Optional</small>
-                </span>
+                <span>Region</span>
                 <input
                   autoComplete="address-level1"
                   maxLength={placeRegionLimit}
@@ -463,9 +461,7 @@ function PlaceEditor({
                 />
               </label>
               <label className={common.fullField}>
-                <span>
-                  Country <small>Optional</small>
-                </span>
+                <span>Country</span>
                 <input
                   autoComplete="country-name"
                   maxLength={placeCountryLimit}
@@ -479,9 +475,7 @@ function PlaceEditor({
             <fieldset className={common.formSection}>
               <legend>Map coordinates</legend>
               <label>
-                <span>
-                  Latitude <small>Optional</small>
-                </span>
+                <span>Latitude</span>
                 <input
                   inputMode="decimal"
                   max="90"
@@ -494,9 +488,7 @@ function PlaceEditor({
                 />
               </label>
               <label>
-                <span>
-                  Longitude <small>Optional</small>
-                </span>
+                <span>Longitude</span>
                 <input
                   inputMode="decimal"
                   max="180"
@@ -517,9 +509,7 @@ function PlaceEditor({
             <fieldset className={common.formSection}>
               <legend>Memory</legend>
               <label className={common.fullField}>
-                <span>
-                  Notes <small>Optional</small>
-                </span>
+                <span>Notes</span>
                 <textarea
                   maxLength={placeNotesLimit}
                   onChange={(event) => setNotes(event.target.value)}

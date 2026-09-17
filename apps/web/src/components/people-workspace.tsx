@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { savePerson, trashPerson } from "@/app/people/actions";
 import common from "@/app/homes/page.module.css";
 import { PageFrame } from "@/components/page-frame";
@@ -135,12 +135,6 @@ function PersonEditor({
   onClose: () => void;
 }) {
   const router = useRouter();
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    dialog?.showModal();
-    return () => dialog?.close();
-  }, []);
   const [name, setName] = useState(person?.name ?? "");
   const [relationshipLabel, setRelationshipLabel] = useState(
     person?.relationship_label ?? "",
@@ -155,6 +149,15 @@ function PersonEditor({
   const options = new Map(
     [...entries, ...(person?.linked_entries ?? [])].map((e) => [e.id, e]),
   );
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && !busy) onClose();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [busy, onClose]);
+
   async function mutate(remove = false) {
     if (busy) return;
     if (
@@ -192,136 +195,175 @@ function PersonEditor({
     }
   }
   return (
-    <dialog
-      ref={dialogRef}
-      className={styles.dialog}
+    <div
+      aria-modal="true"
       aria-labelledby="person-title"
-      onCancel={(e) => {
-        e.preventDefault();
-        if (!busy) onClose();
+      className={common.dialogBackdrop}
+      onMouseDown={(event) => {
+        if (event.currentTarget === event.target && !busy) onClose();
       }}
+      role="dialog"
     >
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void mutate();
-        }}
-      >
-        <header className={styles.dialogHeader}>
-          <h2 id="person-title">{person ? "Edit Person" : "New Person"}</h2>
+      <div className={common.dialogPanel}>
+        <header className={common.dialogHeader}>
+          <div>
+            <p>{person ? "Edit Person" : "New Person"}</p>
+            <h2 id="person-title">
+              {person ? person.name : "Keep someone in your story"}
+            </h2>
+          </div>
           <button
-            type="button"
+            aria-label="Close Person editor"
             disabled={busy}
             onClick={onClose}
-            aria-label="Close Person editor"
+            type="button"
           >
-            Close
+            ×
           </button>
         </header>
-        <fieldset disabled={busy}>
-          <label>
-            Name
-            <input
-              autoFocus
-              required
-              maxLength={200}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </label>
-          <label>
-            Relationship <small>Optional</small>
-            <input
-              maxLength={200}
-              placeholder="Friend, family, mentor..."
-              value={relationshipLabel}
-              onChange={(e) => setRelationshipLabel(e.target.value)}
-            />
-          </label>
-          <label>
-            Notes <small>Optional</small>
-            <textarea
-              rows={4}
-              maxLength={10000}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </label>
-          <h3>Connected Items</h3>
-          {entryIds.map((id) => {
-            const entry = options.get(id);
-            return (
-              <div key={id} className={styles.link}>
-                <details>
-                  <summary>
-                    {entry ? personEntryTitle(entry) : "Linked Item"}
-                    {entry?.is_deleted ? " (in Trash)" : ""}
-                  </summary>
-                  <p>{entry?.body}</p>
-                </details>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void mutate();
+          }}
+        >
+          <div className={common.formGrid}>
+            <fieldset className={common.formSection} disabled={busy}>
+              <legend>Person details</legend>
+              <label className={common.fullField}>
+                <span>Name *</span>
+                <input
+                  autoFocus
+                  maxLength={200}
+                  onChange={(event) => setName(event.target.value)}
+                  required
+                  value={name}
+                />
+              </label>
+              <label className={common.fullField}>
+                <span>Relationship</span>
+                <input
+                  maxLength={200}
+                  onChange={(event) => setRelationshipLabel(event.target.value)}
+                  placeholder="Friend, family, mentor..."
+                  value={relationshipLabel}
+                />
+              </label>
+              <label className={common.fullField}>
+                <span>Notes</span>
+                <textarea
+                  maxLength={10000}
+                  onChange={(event) => setNotes(event.target.value)}
+                  rows={4}
+                  value={notes}
+                />
+              </label>
+            </fieldset>
+
+            <fieldset
+              className={`${common.formSection} ${styles.connectionsSection}`}
+              disabled={busy}
+            >
+              <legend>Connected Items</legend>
+              {entryIds.map((id) => {
+                const entry = options.get(id);
+                return (
+                  <div key={id} className={styles.link}>
+                    <details>
+                      <summary>
+                        {entry ? personEntryTitle(entry) : "Linked Item"}
+                        {entry?.is_deleted ? " (in Trash)" : ""}
+                      </summary>
+                      <p>{entry?.body}</p>
+                    </details>
+                    <button
+                      aria-label={`Unlink ${entry ? personEntryTitle(entry) : "Item"}`}
+                      onClick={() =>
+                        setEntryIds(entryIds.filter((item) => item !== id))
+                      }
+                      type="button"
+                    >
+                      Unlink
+                    </button>
+                  </div>
+                );
+              })}
+              <div className={styles.linkPicker}>
+                <label>
+                  <span>Link an Item</span>
+                  <select
+                    onChange={(event) => setEntryId(event.target.value)}
+                    value={entryId}
+                  >
+                    <option value="">Choose from recent Items</option>
+                    {entries
+                      .filter((entry) => !entryIds.includes(entry.id))
+                      .map((entry) => (
+                        <option key={entry.id} value={entry.id}>
+                          {personEntryTitle(entry)}
+                        </option>
+                      ))}
+                  </select>
+                </label>
                 <button
+                  disabled={!entryId || entryIds.length >= 100}
+                  onClick={() => {
+                    setEntryIds([...entryIds, entryId]);
+                    setEntryId("");
+                  }}
                   type="button"
-                  aria-label={`Unlink ${entry ? personEntryTitle(entry) : "Item"}`}
-                  onClick={() => setEntryIds(entryIds.filter((i) => i !== id))}
                 >
-                  Unlink
+                  Link Item
                 </button>
               </div>
-            );
-          })}
-          <label>
-            Link an Item
-            <select
-              value={entryId}
-              onChange={(e) => setEntryId(e.target.value)}
-            >
-              <option value="">Choose from recent Items</option>
-              {entries
-                .filter((e) => !entryIds.includes(e.id))
-                .map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {personEntryTitle(e)}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <button
-            type="button"
-            disabled={!entryId || entryIds.length >= 100}
-            onClick={() => {
-              setEntryIds([...entryIds, entryId]);
-              setEntryId("");
-            }}
-          >
-            Link Item
-          </button>
-        </fieldset>
-        {message ? <p role="alert">{message}</p> : null}
-        <footer className={styles.footer}>
-          {person ? (
+            </fieldset>
+          </div>
+          {message ? (
+            <p className={common.formMessage} role="alert">
+              {message}
+            </p>
+          ) : null}
+          <footer className={common.dialogFooter}>
             <div>
-              <button
-                type="button"
-                disabled={busy || person.linked_entries.length > 0}
-                onClick={() => void mutate(true)}
-              >
-                Move to Trash
-              </button>
-              {person.linked_entries.length > 0 ? (
-                <small>
-                  Unlink every Item and save before removing this Person.
-                </small>
+              {person ? (
+                <>
+                  <button
+                    className={common.trashButton}
+                    disabled={busy || person.linked_entries.length > 0}
+                    onClick={() => void mutate(true)}
+                    type="button"
+                  >
+                    Move to Trash
+                  </button>
+                  {person.linked_entries.length > 0 ? (
+                    <small className={styles.trashNote}>
+                      Unlink every Item and save before removing this Person.
+                    </small>
+                  ) : null}
+                </>
               ) : null}
             </div>
-          ) : (
-            <span />
-          )}
-          <button disabled={busy} type="submit">
-            {busy ? "Saving..." : "Save changes"}
-          </button>
-        </footer>
-      </form>
-    </dialog>
+            <div>
+              <button
+                className={common.cancelButton}
+                disabled={busy}
+                onClick={onClose}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className={common.saveButton}
+                disabled={busy}
+                type="submit"
+              >
+                {busy ? "Saving..." : person ? "Save changes" : "Add Person"}
+              </button>
+            </div>
+          </footer>
+        </form>
+      </div>
+    </div>
   );
 }
 

@@ -195,11 +195,14 @@ Library opens with the same all-items Life Wiki browser as Web, including deboun
 Focused record destinations for Collections, First Times, Goals, Homes, Vehicles, Places, and People remain available below the all-items browser.
 Settings is reached from the profile control.
 
-Desktop treats Library as a primary destination beside Home, Inbox, Timeline, and Search.
-Its sidebar keeps optional focused views separate from Collections, tags, Trash, and the single Settings entry point.
-Compact icon-and-shortcut Search and New Entry controls share one translucent shape and motion treatment at the right of the persistent top bar on every primary screen, while a quiet warm accent distinguishes New Entry from neutral Search.
+Desktop treats Library as a primary destination beside Home, Timeline, and Search.
+Its sidebar omits Inbox, keeps optional focused views separate from Collections, tags, Trash, and the single Settings entry point.
+The persistent top bar places the warm-accented New Entry control at the far left, with neutral Search followed by an icon-only Inbox control at the far right; Inbox shows a notification count only when captures are waiting.
 A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry, People, and Place results in place, supports keyboard navigation, and keeps full-page Search with filters and AI as an explicit destination.
 New Entry opens from the top bar or Command J.
+Home, Vehicle, First Time, and Place results share one reusable card shell while preserving subtype-specific content and responsive layouts.
+Specialized editors share one unboxed photo field with consistent previews, progress, limits, and controls.
+Form labels mark required fields with `*` and leave optional fields unmarked.
 
 ## Privacy, deletion, and portability
 

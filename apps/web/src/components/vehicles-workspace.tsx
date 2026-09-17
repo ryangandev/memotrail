@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type FormEvent,
-} from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   registerVehicleAttachment,
@@ -16,12 +10,16 @@ import {
   type VehicleActionResult,
 } from "@/app/vehicles/actions";
 import styles from "@/app/homes/page.module.css";
+import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
-import { PhotoUploadProgress } from "@/components/photo-upload-progress";
 import { ProgressiveImage } from "@/components/progressive-image";
-import { SelectedPhotoPreview } from "@/components/selected-photo-preview";
+import {
+  RecordCard,
+  RecordCardBody,
+  RecordCardVisual,
+} from "@/components/record-card";
 import {
   firstTimePhotoLimit,
   firstTimePhotoSizeLimit,
@@ -218,13 +216,12 @@ function VehicleCard({
   const cover = vehicle.attachments[0];
 
   return (
-    <button
-      aria-label={`${vehicle.title}, ${vehicleRangeLabel(vehicle)}`}
+    <RecordCard
+      ariaLabel={`${vehicle.title}, ${vehicleRangeLabel(vehicle)}`}
       className={styles.homeCard}
       onClick={onSelect}
-      type="button"
     >
-      <div className={styles.homeVisual}>
+      <RecordCardVisual className={styles.homeVisual}>
         {cover?.imageUrl ? (
           <ProgressiveImage alt="" src={cover.imageUrl} />
         ) : (
@@ -243,9 +240,9 @@ function VehicleCard({
         {vehicle.attachments.length > 1 ? (
           <small>{vehicle.attachments.length} photos</small>
         ) : null}
-      </div>
+      </RecordCardVisual>
 
-      <div className={styles.cardBody}>
+      <RecordCardBody className={styles.cardBody}>
         <div className={styles.cardDates}>
           <time>{vehicleRangeLabel(vehicle)}</time>
           <span>{vehicleDurationLabel(vehicle)}</span>
@@ -269,8 +266,8 @@ function VehicleCard({
           </div>
           <Icon name="chevron" size={15} />
         </footer>
-      </div>
-    </button>
+      </RecordCardBody>
+    </RecordCard>
   );
 }
 
@@ -363,9 +360,7 @@ export function VehicleEditor({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isPending, onClose]);
 
-  function handlePhotoSelection(event: ChangeEvent<HTMLInputElement>) {
-    const selected = Array.from(event.target.files ?? []);
-    event.target.value = "";
+  function handlePhotoSelection(selected: File[]) {
     const available = Math.max(
       0,
       firstTimePhotoLimit - existingPhotos.length - pendingPhotos.length,
@@ -592,7 +587,7 @@ export function VehicleEditor({
             <fieldset className={styles.formSection}>
               <legend>Vehicle details</legend>
               <label className={styles.fullField}>
-                <span>Name or nickname</span>
+                <span>Name or nickname *</span>
                 <input
                   maxLength={vehicleTitleLimit}
                   onChange={(event) => setTitle(event.target.value)}
@@ -615,9 +610,7 @@ export function VehicleEditor({
             <fieldset className={styles.formSection}>
               <legend>Vehicle facts</legend>
               <label>
-                <span>
-                  Make <small>Optional</small>
-                </span>
+                <span>Make</span>
                 <input
                   maxLength={vehicleMakeLimit}
                   onChange={(event) => setMake(event.target.value)}
@@ -626,9 +619,7 @@ export function VehicleEditor({
                 />
               </label>
               <label>
-                <span>
-                  Model <small>Optional</small>
-                </span>
+                <span>Model</span>
                 <input
                   maxLength={vehicleModelLimit}
                   onChange={(event) => setModel(event.target.value)}
@@ -637,9 +628,7 @@ export function VehicleEditor({
                 />
               </label>
               <label>
-                <span>
-                  Model year <small>Optional</small>
-                </span>
+                <span>Model year</span>
                 <input
                   inputMode="numeric"
                   max={2200}
@@ -651,9 +640,7 @@ export function VehicleEditor({
                 />
               </label>
               <label>
-                <span>
-                  Color <small>Optional</small>
-                </span>
+                <span>Color</span>
                 <input
                   maxLength={vehicleColorLimit}
                   onChange={(event) => setColor(event.target.value)}
@@ -666,9 +653,7 @@ export function VehicleEditor({
             <fieldset className={styles.formSection}>
               <legend>Memories and organization</legend>
               <label className={styles.fullField}>
-                <span>
-                  Memories <small>Optional</small>
-                </span>
+                <span>Memories</span>
                 <textarea
                   maxLength={vehicleBodyLimit}
                   onChange={(event) => setBody(event.target.value)}
@@ -697,68 +682,21 @@ export function VehicleEditor({
               />
             </fieldset>
 
-            <fieldset className={`${styles.photoField} ${styles.formSection}`}>
-              <legend>Photos</legend>
-              {existingPhotos.length > 0 || pendingPhotos.length > 0 ? (
-                <div className={styles.photoGrid}>
-                  {existingPhotos.map((photo) => (
-                    <div className={styles.photoTile} key={photo.id}>
-                      {photo.imageUrl ? (
-                        <ProgressiveImage
-                          alt={photo.originalFilename ?? "Vehicle photo"}
-                          src={photo.imageUrl}
-                        />
-                      ) : (
-                        <span className={styles.photoFallback}>
-                          Private photo
-                        </span>
-                      )}
-                      <button
-                        aria-label={`Remove ${photo.originalFilename ?? "photo"}`}
-                        disabled={isPending}
-                        onClick={() => void handleRemovePhoto(photo)}
-                        type="button"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                  {pendingPhotos.map((file, index) => (
-                    <PendingPhoto
-                      file={file}
-                      key={`${file.name}:${file.size}:${file.lastModified}:${index}`}
-                      onRemove={() =>
-                        setPendingPhotos((current) =>
-                          current.filter((_, itemIndex) => itemIndex !== index),
-                        )
-                      }
-                    />
-                  ))}
-                </div>
-              ) : null}
-              <label className={styles.photoPicker}>
-                <Icon name="photo" size={18} />
-                <span>Add photos</span>
-                <input
-                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
-                  disabled={
-                    isPending ||
-                    existingPhotos.length + pendingPhotos.length >=
-                      firstTimePhotoLimit
-                  }
-                  multiple
-                  onChange={handlePhotoSelection}
-                  type="file"
-                />
-              </label>
-              <small>
-                Originals stay private. Up to {firstTimePhotoLimit} photos, 50
-                MB each.
-              </small>
-              {photoUploadProgress ? (
-                <PhotoUploadProgress progress={photoUploadProgress} />
-              ) : null}
-            </fieldset>
+            <EntryPhotoField
+              disabled={isPending}
+              existingPhotos={existingPhotos}
+              limit={firstTimePhotoLimit}
+              onRemoveExisting={(photo) => void handleRemovePhoto(photo)}
+              onRemovePending={(index) =>
+                setPendingPhotos((current) =>
+                  current.filter((_, itemIndex) => itemIndex !== index),
+                )
+              }
+              onSelect={handlePhotoSelection}
+              pendingPhotos={pendingPhotos}
+              progress={photoUploadProgress}
+              recordLabel="Vehicle"
+            />
           </div>
 
           {result ? (
@@ -804,28 +742,6 @@ export function VehicleEditor({
           </footer>
         </form>
       </div>
-    </div>
-  );
-}
-
-function PendingPhoto({
-  file,
-  onRemove,
-}: {
-  file: File;
-  onRemove: () => void;
-}) {
-  return (
-    <div className={`${styles.photoTile} ${styles.pendingPhoto}`}>
-      <SelectedPhotoPreview alt={`Selected ${file.name}`} file={file} />
-      <span className={styles.pendingBadge}>New</span>
-      <button
-        aria-label={`Remove selected ${file.name}`}
-        onClick={onRemove}
-        type="button"
-      >
-        ×
-      </button>
     </div>
   );
 }

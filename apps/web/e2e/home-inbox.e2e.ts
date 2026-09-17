@@ -90,6 +90,17 @@ test("Home previews the Inbox while Inbox remains a focused organization workspa
       page.getByRole("form", { name: "Quick capture", exact: true }),
     ).toBeVisible();
     const ready = page.getByRole("region", { name: "Ready to organize" });
+    await expect(
+      page
+        .getByRole("navigation", { name: "Primary navigation" })
+        .getByRole("link", { name: "Inbox", exact: true }),
+    ).toHaveCount(0);
+    const inboxShortcut = page.getByRole("link", {
+      name: "Open Inbox, 4 items",
+      exact: true,
+    });
+    await expect(inboxShortcut).toBeVisible();
+    await expect(inboxShortcut).toContainText("4");
     await expect(ready).toContainText("4 captures");
     await expect(ready.getByRole("link", { name: /Organize/ })).toHaveCount(3);
     await expect(

@@ -344,7 +344,10 @@ export function EntryReviewDialog({
             />
           )}
           <label>
-            <span>Title</span>
+            <span>
+              Title
+              {itemKind === "event" && itemSubtype === "first_time" ? " *" : ""}
+            </span>
             <input
               autoFocus
               disabled={isPending}
@@ -353,8 +356,9 @@ export function EntryReviewDialog({
               placeholder={
                 itemKind === "event" && itemSubtype === "first_time"
                   ? "Required for a First Time"
-                  : "Optional"
+                  : "Add a title"
               }
+              required={itemKind === "event" && itemSubtype === "first_time"}
               value={title}
             />
           </label>

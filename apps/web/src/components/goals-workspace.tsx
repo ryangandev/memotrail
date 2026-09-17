@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type FormEvent,
-} from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   markGoalAchieved,
@@ -19,12 +12,11 @@ import {
 } from "@/app/goals/actions";
 import styles from "@/app/goals/page.module.css";
 import common from "@/app/homes/page.module.css";
+import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
-import { PhotoUploadProgress } from "@/components/photo-upload-progress";
 import { ProgressiveImage } from "@/components/progressive-image";
-import { SelectedPhotoPreview } from "@/components/selected-photo-preview";
 import {
   firstTimePhotoLimit,
   firstTimePhotoSizeLimit,
@@ -415,9 +407,7 @@ function GoalEditor({
       pendingPhotos.length > 0),
   );
 
-  function handlePhotoSelection(event: ChangeEvent<HTMLInputElement>) {
-    const selected = Array.from(event.target.files ?? []);
-    event.target.value = "";
+  function handlePhotoSelection(selected: File[]) {
     const available = Math.max(
       0,
       firstTimePhotoLimit - existingPhotos.length - pendingPhotos.length,
@@ -616,7 +606,7 @@ function GoalEditor({
             <fieldset className={common.formSection}>
               <legend>The intention</legend>
               <label className={common.fullField}>
-                <span>Title</span>
+                <span>Title *</span>
                 <input
                   maxLength={goalTitleLimit}
                   onChange={(event) => setTitle(event.target.value)}
@@ -657,9 +647,7 @@ function GoalEditor({
                 </select>
               </label>
               <label>
-                <span>
-                  Target date <small>Optional, no overdue state</small>
-                </span>
+                <span>Target date</span>
                 <input
                   onChange={(event) => setTargetDate(event.target.value)}
                   type="date"
@@ -667,9 +655,7 @@ function GoalEditor({
                 />
               </label>
               <label className={common.fullField}>
-                <span>
-                  Reflection <small>Optional</small>
-                </span>
+                <span>Reflection</span>
                 <textarea
                   maxLength={goalBodyLimit}
                   onChange={(event) => setBody(event.target.value)}
@@ -764,68 +750,21 @@ function GoalEditor({
               </div>
             </fieldset>
 
-            <fieldset className={`${common.photoField} ${common.formSection}`}>
-              <legend>Photos</legend>
-              {existingPhotos.length > 0 || pendingPhotos.length > 0 ? (
-                <div className={common.photoGrid}>
-                  {existingPhotos.map((photo) => (
-                    <div className={common.photoTile} key={photo.id}>
-                      {photo.imageUrl ? (
-                        <ProgressiveImage
-                          alt={photo.originalFilename ?? "Goal photo"}
-                          src={photo.imageUrl}
-                        />
-                      ) : (
-                        <span className={common.photoFallback}>
-                          Private photo
-                        </span>
-                      )}
-                      <button
-                        aria-label={`Remove ${photo.originalFilename ?? "photo"}`}
-                        disabled={isPending}
-                        onClick={() => void handleRemovePhoto(photo)}
-                        type="button"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                  {pendingPhotos.map((file, index) => (
-                    <PendingPhoto
-                      file={file}
-                      key={`${file.name}:${file.size}:${file.lastModified}:${index}`}
-                      onRemove={() =>
-                        setPendingPhotos((current) =>
-                          current.filter((_, itemIndex) => itemIndex !== index),
-                        )
-                      }
-                    />
-                  ))}
-                </div>
-              ) : null}
-              <label className={common.photoPicker}>
-                <Icon name="photo" size={18} />
-                <span>Add photos</span>
-                <input
-                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
-                  disabled={
-                    isPending ||
-                    existingPhotos.length + pendingPhotos.length >=
-                      firstTimePhotoLimit
-                  }
-                  multiple
-                  onChange={handlePhotoSelection}
-                  type="file"
-                />
-              </label>
-              <small>
-                Originals stay private. Up to {firstTimePhotoLimit} photos, 50
-                MB each.
-              </small>
-              {photoUploadProgress ? (
-                <PhotoUploadProgress progress={photoUploadProgress} />
-              ) : null}
-            </fieldset>
+            <EntryPhotoField
+              disabled={isPending}
+              existingPhotos={existingPhotos}
+              limit={firstTimePhotoLimit}
+              onRemoveExisting={(photo) => void handleRemovePhoto(photo)}
+              onRemovePending={(index) =>
+                setPendingPhotos((current) =>
+                  current.filter((_, itemIndex) => itemIndex !== index),
+                )
+              }
+              onSelect={handlePhotoSelection}
+              pendingPhotos={pendingPhotos}
+              progress={photoUploadProgress}
+              recordLabel="Goal"
+            />
 
             {savedBucketListGoal && currentId && currentRevision !== null ? (
               <AchievementPanel
@@ -993,28 +932,6 @@ function AchievementPanel({
         Mark achieved and create First Time
       </button>
     </fieldset>
-  );
-}
-
-function PendingPhoto({
-  file,
-  onRemove,
-}: {
-  file: File;
-  onRemove: () => void;
-}) {
-  return (
-    <div className={`${common.photoTile} ${common.pendingPhoto}`}>
-      <SelectedPhotoPreview alt={`Selected ${file.name}`} file={file} />
-      <span className={common.pendingBadge}>New</span>
-      <button
-        aria-label={`Remove selected ${file.name}`}
-        onClick={onRemove}
-        type="button"
-      >
-        ×
-      </button>
-    </div>
   );
 }
 
