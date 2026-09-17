@@ -19,7 +19,9 @@ import styles from "@/app/homes/page.module.css";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
+import { PhotoUploadProgress } from "@/components/photo-upload-progress";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { SelectedPhotoPreview } from "@/components/selected-photo-preview";
 import {
   firstTimePhotoLimit,
   firstTimePhotoSizeLimit,
@@ -47,7 +49,10 @@ import {
   type Occurrence,
 } from "@/lib/data/occurrence";
 import { useConfirmedRecords } from "@/components/use-confirmed-records";
-import { uploadEntryPhotos } from "@/lib/media/upload";
+import {
+  uploadEntryPhotos,
+  type PhotoUploadProgress as PhotoUploadProgressValue,
+} from "@/lib/media/upload";
 import type { CaptureExtractionSource } from "@/lib/data/capture-extraction-input";
 
 export function HomesWorkspace({
@@ -330,6 +335,8 @@ export function HomeEditor({
   );
   const [existingPhotos, setExistingPhotos] = useState(home?.attachments ?? []);
   const [isPending, setIsPending] = useState(false);
+  const [photoUploadProgress, setPhotoUploadProgress] =
+    useState<PhotoUploadProgressValue | null>(null);
   const [latitude, setLatitude] = useState(home?.latitude?.toString() ?? "");
   const [longitude, setLongitude] = useState(home?.longitude?.toString() ?? "");
   const [moveInReason, setMoveInReason] = useState(home?.moveInReason ?? "");
@@ -493,6 +500,7 @@ export function HomeEditor({
         ownerId,
         saved.entry.id,
         pendingPhotos,
+        setPhotoUploadProgress,
       );
 
       if (failedPhotos.length > 0) {
@@ -514,6 +522,7 @@ export function HomeEditor({
         ),
       );
     } finally {
+      setPhotoUploadProgress(null);
       setIsPending(false);
     }
   }
@@ -867,6 +876,9 @@ export function HomeEditor({
                 Originals stay private. Up to {firstTimePhotoLimit} photos, 50
                 MB each.
               </small>
+              {photoUploadProgress ? (
+                <PhotoUploadProgress progress={photoUploadProgress} />
+              ) : null}
             </fieldset>
           </div>
 
@@ -924,13 +936,9 @@ function PendingPhoto({
   file: File;
   onRemove: () => void;
 }) {
-  const [previewUrl] = useState(() => URL.createObjectURL(file));
-
-  useEffect(() => () => URL.revokeObjectURL(previewUrl), [previewUrl]);
-
   return (
     <div className={`${styles.photoTile} ${styles.pendingPhoto}`}>
-      <ProgressiveImage alt={`Selected ${file.name}`} src={previewUrl} />
+      <SelectedPhotoPreview alt={`Selected ${file.name}`} file={file} />
       <span className={styles.pendingBadge}>New</span>
       <button
         aria-label={`Remove selected ${file.name}`}
@@ -943,8 +951,19 @@ function PendingPhoto({
   );
 }
 
-async function uploadPhotos(ownerId: string, entryId: string, photos: File[]) {
-  return uploadEntryPhotos(ownerId, entryId, photos, registerHomeAttachment);
+async function uploadPhotos(
+  ownerId: string,
+  entryId: string,
+  photos: File[],
+  onProgress: (progress: PhotoUploadProgressValue) => void,
+) {
+  return uploadEntryPhotos(
+    ownerId,
+    entryId,
+    photos,
+    registerHomeAttachment,
+    onProgress,
+  );
 }
 
 function namesIncludingDraft(names: string[], draft: string) {

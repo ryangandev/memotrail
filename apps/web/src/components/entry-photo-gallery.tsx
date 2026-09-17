@@ -10,6 +10,9 @@ import {
 import { registerEntryAttachment } from "@/app/inbox/actions";
 import { trashEntryPhoto } from "@/app/history/media-actions";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { PhotoUploadProgress } from "@/components/photo-upload-progress";
+import { SelectedPhotoPreview } from "@/components/selected-photo-preview";
+import type { PhotoUploadProgress as PhotoUploadProgressValue } from "@/lib/media/upload";
 import styles from "./entry-photo-gallery.module.css";
 
 /** Always current membership, never a historical snapshot's photo bytes. */
@@ -31,6 +34,8 @@ export function EntryPhotoGallery({
   const [selected, setSelected] = useState<number | null>(null);
   const [generation, setGeneration] = useState(0);
   const [pending, setPending] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] =
+    useState<PhotoUploadProgressValue | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const request = useRef<AbortController | null>(null);
   const observedRevision = useRef(entryRevision);
@@ -100,6 +105,7 @@ export function EntryPhotoGallery({
           const result = await registerEntryAttachment(input);
           return { status: result.status === "synced" ? "saved" : "error" };
         },
+        setUploadProgress,
       );
       setPending(failed);
       await load();
@@ -116,6 +122,7 @@ export function EntryPhotoGallery({
         "Could not confirm photo uploads. Keep this view open and retry.",
       );
     } finally {
+      setUploadProgress(null);
       setBusy(false);
     }
   }
@@ -198,6 +205,12 @@ export function EntryPhotoGallery({
           <h4>Selected photos</h4>
           {pending.map((file, index) => (
             <div key={index} className={styles.pendingRow}>
+              <span className={styles.pendingPreview}>
+                <SelectedPhotoPreview
+                  alt={`Selected ${file.name}`}
+                  file={file}
+                />
+              </span>
               <span>{file.name}</span>
               <button
                 disabled={busy}
@@ -210,6 +223,9 @@ export function EntryPhotoGallery({
               </button>
             </div>
           ))}
+          {uploadProgress ? (
+            <PhotoUploadProgress progress={uploadProgress} />
+          ) : null}
           <button disabled={busy} onClick={() => void upload()}>
             {busy ? "Saving photos…" : "Upload photos"}
           </button>

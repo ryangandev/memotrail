@@ -19,7 +19,9 @@ import styles from "@/app/first-times/page.module.css";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
+import { PhotoUploadProgress } from "@/components/photo-upload-progress";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { SelectedPhotoPreview } from "@/components/selected-photo-preview";
 import {
   firstTimeBodyLimit,
   firstTimePhotoLimit,
@@ -40,7 +42,10 @@ import {
   resolveOccurrenceDraft,
   type Occurrence,
 } from "@/lib/data/occurrence";
-import { uploadEntryPhotos } from "@/lib/media/upload";
+import {
+  uploadEntryPhotos,
+  type PhotoUploadProgress as PhotoUploadProgressValue,
+} from "@/lib/media/upload";
 
 export function FirstTimesWorkspace({
   collectionOptions,
@@ -249,6 +254,8 @@ export function FirstTimeEditor({
     entry ? originalAttachments(entry) : [],
   );
   const [isPending, setIsPending] = useState(false);
+  const [photoUploadProgress, setPhotoUploadProgress] =
+    useState<PhotoUploadProgressValue | null>(null);
   const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
   const [result, setResult] = useState<FirstTimeActionResult | null>(null);
   const [tagInput, setTagInput] = useState("");
@@ -375,6 +382,7 @@ export function FirstTimeEditor({
         ownerId,
         saved.entry.id,
         pendingPhotos,
+        setPhotoUploadProgress,
       );
 
       if (failedPhotos.length > 0) {
@@ -397,6 +405,7 @@ export function FirstTimeEditor({
         ),
       );
     } finally {
+      setPhotoUploadProgress(null);
       setIsPending(false);
     }
   }
@@ -612,6 +621,9 @@ export function FirstTimeEditor({
                 Originals stay private. Up to {firstTimePhotoLimit} photos, 50
                 MB each.
               </small>
+              {photoUploadProgress ? (
+                <PhotoUploadProgress progress={photoUploadProgress} />
+              ) : null}
             </fieldset>
           </div>
 
@@ -669,15 +681,9 @@ function PendingPhoto({
   file: File;
   onRemove: () => void;
 }) {
-  const [previewUrl] = useState(() => URL.createObjectURL(file));
-
-  useEffect(() => {
-    return () => URL.revokeObjectURL(previewUrl);
-  }, [previewUrl]);
-
   return (
     <div className={`${styles.photoTile} ${styles.pendingPhoto}`}>
-      <ProgressiveImage alt={`Selected ${file.name}`} src={previewUrl} />
+      <SelectedPhotoPreview alt={`Selected ${file.name}`} file={file} />
       <span className={styles.pendingBadge}>New</span>
       <button
         aria-label={`Remove selected ${file.name}`}
@@ -690,12 +696,18 @@ function PendingPhoto({
   );
 }
 
-async function uploadPhotos(ownerId: string, entryId: string, photos: File[]) {
+async function uploadPhotos(
+  ownerId: string,
+  entryId: string,
+  photos: File[],
+  onProgress: (progress: PhotoUploadProgressValue) => void,
+) {
   return uploadEntryPhotos(
     ownerId,
     entryId,
     photos,
     registerFirstTimeAttachment,
+    onProgress,
   );
 }
 

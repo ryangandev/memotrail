@@ -159,3 +159,12 @@
   overflow-wrap: anywhere;
   font-size: 13px;
 }
+
+.pendingRow .pendingPreview {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--mt-radius-small);
+}

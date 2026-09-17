@@ -22,7 +22,9 @@ import common from "@/app/homes/page.module.css";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
+import { PhotoUploadProgress } from "@/components/photo-upload-progress";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { SelectedPhotoPreview } from "@/components/selected-photo-preview";
 import {
   firstTimePhotoLimit,
   firstTimePhotoSizeLimit,
@@ -53,7 +55,10 @@ import {
   type OccurrenceDraft,
   resolveOccurrenceDraft,
 } from "@/lib/data/occurrence";
-import { uploadEntryPhotos } from "@/lib/media/upload";
+import {
+  uploadEntryPhotos,
+  type PhotoUploadProgress as PhotoUploadProgressValue,
+} from "@/lib/media/upload";
 import type { CaptureExtractionSource } from "@/lib/data/capture-extraction-input";
 import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 
@@ -339,6 +344,8 @@ function GoalEditor({
     goal?.horizon ?? "short_term",
   );
   const [isPending, setIsPending] = useState(false);
+  const [photoUploadProgress, setPhotoUploadProgress] =
+    useState<PhotoUploadProgressValue | null>(null);
   const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
   const [relatedEntryIds, setRelatedEntryIds] = useState(
     goal?.relatedEntries
@@ -475,6 +482,7 @@ function GoalEditor({
         ownerId,
         saved.entry.id,
         pendingPhotos,
+        setPhotoUploadProgress,
       );
       if (failedPhotos.length > 0) {
         setPendingPhotos(failedPhotos);
@@ -495,6 +503,7 @@ function GoalEditor({
         ),
       );
     } finally {
+      setPhotoUploadProgress(null);
       setIsPending(false);
     }
   }
@@ -813,6 +822,9 @@ function GoalEditor({
                 Originals stay private. Up to {firstTimePhotoLimit} photos, 50
                 MB each.
               </small>
+              {photoUploadProgress ? (
+                <PhotoUploadProgress progress={photoUploadProgress} />
+              ) : null}
             </fieldset>
 
             {savedBucketListGoal && currentId && currentRevision !== null ? (
@@ -991,11 +1003,9 @@ function PendingPhoto({
   file: File;
   onRemove: () => void;
 }) {
-  const [previewUrl] = useState(() => URL.createObjectURL(file));
-  useEffect(() => () => URL.revokeObjectURL(previewUrl), [previewUrl]);
   return (
     <div className={`${common.photoTile} ${common.pendingPhoto}`}>
-      <ProgressiveImage alt={`Selected ${file.name}`} src={previewUrl} />
+      <SelectedPhotoPreview alt={`Selected ${file.name}`} file={file} />
       <span className={common.pendingBadge}>New</span>
       <button
         aria-label={`Remove selected ${file.name}`}
@@ -1008,8 +1018,19 @@ function PendingPhoto({
   );
 }
 
-async function uploadPhotos(ownerId: string, entryId: string, photos: File[]) {
-  return uploadEntryPhotos(ownerId, entryId, photos, registerGoalAttachment);
+async function uploadPhotos(
+  ownerId: string,
+  entryId: string,
+  photos: File[],
+  onProgress: (progress: PhotoUploadProgressValue) => void,
+) {
+  return uploadEntryPhotos(
+    ownerId,
+    entryId,
+    photos,
+    registerGoalAttachment,
+    onProgress,
+  );
 }
 
 function namesIncludingDraft(names: string[], draft: string) {
