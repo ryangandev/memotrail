@@ -472,7 +472,7 @@
   display: grid;
   min-width: 0;
   align-content: start;
-  gap: 7px;
+  gap: var(--mt-space-2);
 }
 
 .formSection label > span,

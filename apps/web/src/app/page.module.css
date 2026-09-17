@@ -1216,6 +1216,13 @@
   line-height: var(--mt-line-height-body);
 }
 
+.occurrenceEditor label:not(.presentToggle) {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: var(--mt-space-2);
+}
+
 .occurrenceEditor label > span small {
   margin-left: var(--mt-space-2);
   color: var(--mt-color-ink-faint);
@@ -1232,7 +1239,7 @@
 .datePickerField {
   display: grid;
   align-content: start;
-  gap: 7px;
+  gap: var(--mt-space-2);
   min-width: 0;
 }
 

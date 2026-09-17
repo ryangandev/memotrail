@@ -684,7 +684,7 @@
 .formGrid label {
   display: grid;
   align-content: start;
-  gap: 7px;
+  gap: var(--mt-space-2);
   min-width: 0;
 }
 

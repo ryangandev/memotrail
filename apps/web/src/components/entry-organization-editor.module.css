@@ -13,13 +13,6 @@
   font-size: var(--mt-font-size-label);
 }
 
-.guidance {
-  margin: -2px 0 var(--mt-space-1);
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
-  line-height: var(--mt-line-height-body);
-}
-
 .editor > input {
   width: 100%;
   min-width: 0;

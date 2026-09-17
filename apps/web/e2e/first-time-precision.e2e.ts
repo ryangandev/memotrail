@@ -78,6 +78,21 @@ test("Editing a First Time keeps its original date range", async ({
     await page.goto("/first-times");
     await page.getByRole("button", { name: /First trip to Japan/ }).click();
     const dialog = page.getByRole("dialog");
+    await expect(
+      dialog.getByText("Add this item to a larger story or chapter."),
+    ).toHaveCount(0);
+    await expect(
+      dialog.getByText("Add specific descriptors for filtering and discovery."),
+    ).toHaveCount(0);
+    await expect
+      .poll(() =>
+        dialog
+          .getByLabel("Date type")
+          .evaluate((control) =>
+            getComputedStyle(control.closest("label")!).rowGap,
+          ),
+      )
+      .toBe("8px");
     await page.screenshot({
       path: "/private/tmp/memotrail-first-time-precision-desktop.png",
     });
