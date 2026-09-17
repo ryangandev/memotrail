@@ -30,10 +30,16 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const photo = formData.get("photo");
-    if (!(photo instanceof File) || photo.size < 1 || photo.size > MEDIA_MAX_BYTES) {
+    if (
+      !(photo instanceof File) ||
+      photo.size < 1 ||
+      photo.size > MEDIA_MAX_BYTES
+    ) {
       return new Response(null, { status: 400, headers: responseHeaders });
     }
-    const rendered = await renderPhoto(new Uint8Array(await photo.arrayBuffer()));
+    const rendered = await renderPhoto(
+      new Uint8Array(await photo.arrayBuffer()),
+    );
     const preview = rendered.find((variant) => variant.variant === "thumbnail");
     if (!preview) throw new Error("Preview unavailable");
     return new Response(Uint8Array.from(preview.bytes), {

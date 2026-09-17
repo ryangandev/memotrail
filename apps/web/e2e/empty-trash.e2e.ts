@@ -73,11 +73,7 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
         )
       ).error,
     ).toBeNull();
-    for (const table of [
-      "people",
-      "places",
-      "collections",
-    ] as const) {
+    for (const table of ["people", "places", "collections"] as const) {
       expect(
         (
           await client.from(table).insert({
@@ -246,11 +242,7 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     expect(
       (await admin.storage.from("entry-media").download(photoPath)).error,
     ).not.toBeNull();
-    for (const table of [
-      "people",
-      "places",
-      "collections",
-    ] as const) {
+    for (const table of ["people", "places", "collections"] as const) {
       expect((await client.from(table).select("id")).data).toEqual([]);
     }
   } finally {

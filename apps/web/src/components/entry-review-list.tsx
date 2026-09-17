@@ -396,8 +396,8 @@ export function EntryReviewDialog({
                 <select
                   disabled={isPending || entry.itemKind !== "capture"}
                   onChange={(event) => {
-                    const nextKind =
-                      event.target.value as ReviewableWikiItemKind;
+                    const nextKind = event.target
+                      .value as ReviewableWikiItemKind;
                     setItemKind(nextKind);
                     setItemSubtype(
                       reviewablePresetsForKind(nextKind)[0]?.subtype ?? "note",

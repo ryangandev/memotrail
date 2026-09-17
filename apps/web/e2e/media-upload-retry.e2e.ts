@@ -191,10 +191,13 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
             )
             .toBe(120);
           await expect(dialog.getByText("Photo unavailable")).toHaveCount(0);
-          await page.route("**/storage/v1/object/entry-media/**", async (route) => {
-            await new Promise((resolve) => setTimeout(resolve, 300));
-            await route.continue();
-          });
+          await page.route(
+            "**/storage/v1/object/entry-media/**",
+            async (route) => {
+              await new Promise((resolve) => setTimeout(resolve, 300));
+              await route.continue();
+            },
+          );
         }
         await dialog
           .getByRole("button", { name: "Save changes", exact: true })

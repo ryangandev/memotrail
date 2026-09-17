@@ -243,11 +243,7 @@ function PlaceCard({
 
         <footer>
           <span>
-            {countLabel(
-              place.linkedEntryCount,
-              "linked Item",
-              "linked Items",
-            )}
+            {countLabel(place.linkedEntryCount, "linked Item", "linked Items")}
           </span>
           <span>{countLabel(relatedEntries.length, "editable link")}</span>
         </footer>

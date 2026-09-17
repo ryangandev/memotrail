@@ -127,11 +127,13 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     const kinds = page.getByRole("navigation", { name: "Life Wiki Kinds" });
     const allItemsKind = kinds.getByRole("link", { name: "All items" });
     await expect(allItemsKind).toHaveAttribute("aria-current", "page");
-    await expect(page.getByText("What each item is", { exact: true })).toHaveCount(
-      0,
-    );
+    await expect(
+      page.getByText("What each item is", { exact: true }),
+    ).toHaveCount(0);
     await expect(allItemsKind.locator("p")).toHaveCount(0);
-    await expect(kinds.getByText("Journal, reflection, or lesson.")).toBeVisible();
+    await expect(
+      kinds.getByText("Journal, reflection, or lesson."),
+    ).toBeVisible();
     await expect
       .poll(async () => (await allItemsKind.boundingBox())?.height)
       .toBeLessThanOrEqual(100);

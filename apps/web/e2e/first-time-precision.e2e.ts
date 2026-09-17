@@ -88,8 +88,8 @@ test("Editing a First Time keeps its original date range", async ({
       .poll(() =>
         dialog
           .getByLabel("Date type")
-          .evaluate((control) =>
-            getComputedStyle(control.closest("label")!).rowGap,
+          .evaluate(
+            (control) => getComputedStyle(control.closest("label")!).rowGap,
           ),
       )
       .toBe("8px");
