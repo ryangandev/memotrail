@@ -395,35 +395,43 @@
 .newEntryTopAction {
   border-color: color-mix(
     in srgb,
-    var(--mt-color-warm) 34%,
+    var(--mt-color-accent) 32%,
     var(--mt-color-border-strong)
   );
-  color: var(--mt-color-warm);
-  background: color-mix(in srgb, var(--mt-color-warm-subtle) 58%, transparent);
+  color: var(--mt-color-accent);
+  background: color-mix(
+    in srgb,
+    var(--mt-color-accent-subtle) 72%,
+    transparent
+  );
 }
 
 .newEntryTopAction kbd {
   border-color: color-mix(
     in srgb,
-    var(--mt-color-warm) 26%,
+    var(--mt-color-accent) 24%,
     var(--mt-color-border)
   );
-  color: var(--mt-color-warm);
+  color: var(--mt-color-accent);
   background: color-mix(
     in srgb,
-    var(--mt-color-warm-subtle) 70%,
+    var(--mt-color-accent-subtle) 68%,
     var(--mt-color-surface-raised)
   );
 }
 
 .newEntryTopAction:hover,
 .newEntryTopAction:focus-visible {
-  border-color: color-mix(in srgb, var(--mt-color-warm) 62%, transparent);
-  color: var(--mt-color-warm);
-  background: color-mix(in srgb, var(--mt-color-warm-subtle) 78%, transparent);
+  border-color: color-mix(in srgb, var(--mt-color-accent) 58%, transparent);
+  color: var(--mt-color-accent-hover);
+  background: color-mix(
+    in srgb,
+    var(--mt-color-accent-subtle) 88%,
+    transparent
+  );
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--mt-color-warm) 12%, transparent),
-    0 0 16px color-mix(in srgb, var(--mt-color-warm) 17%, transparent);
+    0 0 0 1px color-mix(in srgb, var(--mt-color-accent) 12%, transparent),
+    0 0 16px color-mix(in srgb, var(--mt-color-accent) 16%, transparent);
 }
 
 .inboxTopAction {
@@ -1874,6 +1882,10 @@
 
   .topActionButton kbd,
   .syncStatus {
+    display: none;
+  }
+
+  .newEntryTopAction > span {
     display: none;
   }
 

@@ -197,7 +197,7 @@ Settings is reached from the profile control.
 
 Desktop treats Library as a primary destination beside Home, Timeline, and Search.
 Its sidebar omits Inbox, keeps optional focused views separate from Collections, tags, Trash, and the single Settings entry point.
-The persistent top bar places the warm-accented New Entry control at the far left, with neutral Search followed by an icon-only Inbox control at the far right; Inbox shows a notification count only when captures are waiting.
+The persistent top bar places an accent-tinted `New` control at the far left, with neutral Search followed by an icon-only Inbox control at the far right; Inbox shows a notification count only when captures are waiting.
 A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry, People, and Place results in place, supports keyboard navigation, and keeps full-page Search with filters and AI as an explicit destination.
 New Entry opens from the top bar or Command J.
 Home, Vehicle, First Time, and Place results share one reusable card shell while preserving subtype-specific content and responsive layouts.

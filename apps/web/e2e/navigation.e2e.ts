@@ -152,7 +152,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(searchShortcut).toContainText("⌘ K");
     await expect(searchShortcut).not.toContainText("Search your trail");
     await expect(newEntryShortcut).toContainText("⌘ J");
-    await expect(newEntryShortcut).not.toContainText("New entry");
+    await expect(newEntryShortcut).toContainText("New");
     const inboxShortcut = page.getByRole("link", {
       name: "Open Inbox",
       exact: true,
