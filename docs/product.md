@@ -79,6 +79,7 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - Suggestions remain editable and require explicit adoption.
 - AI may propose a Collection but cannot create it without confirmation.
 - The Capture remains in Inbox until the user selects `Save to Library` or completes another explicit organization action.
+- Home owns the persistent Quick Capture surface and shows up to three recent captures waiting for organization. Inbox is the dedicated review workspace and relies on the global New Entry action for additional capture.
 - `Save to Library` marks organization complete but never prevents later editing.
 - An unorganized Capture may be finalized as Writing, Event, or Story when its content already represents that one item.
 - Creating an Entity or Goal from a Capture uses its specialized form and links the result to the Capture instead of bypassing required structure.
@@ -140,9 +141,10 @@ Home is ordered around:
 
 1. Search.
 2. Quick Capture.
-3. Current life stages.
-4. A quiet resurfaced memory.
-5. Recent Entries.
+3. A compact preview of captures ready to organize.
+4. Current life stages.
+5. A quiet resurfaced memory.
+6. Recent Entries.
 
 Resurfacing uses organized, active, dated Entries only.
 It prefers the nearest prior On This Day match and otherwise uses a stable daily rotation of older Entries.

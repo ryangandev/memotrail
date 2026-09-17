@@ -7,6 +7,7 @@ import { greetingInTimezone } from "@/lib/data/home-input";
 import {
   getHomeWorkspace,
   type HomeEntry,
+  type HomeInboxPreview,
   type HomeResurfacedMemory,
   type HomeSnapshot,
   type HomeStage,
@@ -53,6 +54,13 @@ function HomeContent({ workspace }: { workspace: HomeWorkspace }) {
 
       <CaptureComposer ownerId={workspace.viewer.id} />
 
+      {workspace.snapshot && workspace.inboxPreview.length > 0 ? (
+        <InboxPreview
+          entries={workspace.inboxPreview}
+          total={workspace.snapshot.inboxCount}
+        />
+      ) : null}
+
       {workspace.loadError || !workspace.snapshot ? (
         <section className={styles.message} role="alert">
           <Icon name="clock" size={22} />
@@ -88,13 +96,6 @@ function HomeSnapshotContent({
         />
         <div className={styles.statGrid}>
           <HomeStat
-            detail={entryLabel(snapshot.inboxCount, "Entry")}
-            href="/inbox"
-            icon="inbox"
-            label="Waiting in Inbox"
-            value={snapshot.inboxCount}
-          />
-          <HomeStat
             detail={entryLabel(snapshot.currentStageCount, "current chapter")}
             href="/timeline"
             icon="timeline"
@@ -115,6 +116,49 @@ function HomeSnapshotContent({
       <ResurfacedMemory memory={resurfacedMemory} />
       <RecentEntries entries={snapshot.recentEntries} />
     </>
+  );
+}
+
+function InboxPreview({
+  entries,
+  total,
+}: {
+  entries: HomeInboxPreview[];
+  total: number;
+}) {
+  return (
+    <section
+      aria-labelledby="ready-to-organize-heading"
+      className={styles.inboxPreview}
+    >
+      <header className={styles.inboxPreviewHeader}>
+        <div>
+          <h2 id="ready-to-organize-heading">Ready to organize</h2>
+          <span>{entryLabel(total, "capture")}</span>
+        </div>
+        <Link href="/inbox">
+          View all
+          <Icon name="chevron" size={14} />
+        </Link>
+      </header>
+      <div className={styles.inboxPreviewList}>
+        {entries.map((entry) => (
+          <Link
+            aria-label={`Organize ${inboxPreviewTitle(entry)}`}
+            className={styles.inboxPreviewCard}
+            href={`/inbox?entry=${entry.id}`}
+            key={entry.id}
+          >
+            <span>{formatDate(entry.createdAt, null)}</span>
+            <strong>{inboxPreviewTitle(entry)}</strong>
+            {inboxPreviewExcerpt(entry) ? (
+              <p>{inboxPreviewExcerpt(entry)}</p>
+            ) : null}
+            <Icon name="chevron" size={14} />
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -187,7 +231,7 @@ function HomeStat({
 }: {
   detail: string;
   href: string;
-  icon: "archive" | "check" | "inbox" | "timeline";
+  icon: "archive" | "check" | "timeline";
   label: string;
   value: number;
 }) {
@@ -357,6 +401,18 @@ function displayFirstName(name: string) {
 
 function entryLabel(count: number, noun: string) {
   return `${count} ${count === 1 ? noun : `${noun}s`}`;
+}
+
+function inboxPreviewTitle(entry: HomeInboxPreview) {
+  if (entry.title?.trim()) return truncate(entry.title.trim(), 72);
+  const firstLine = entry.body.trim().split(/\r?\n/, 1)[0]?.trim() ?? "";
+  return truncate(firstLine || "Untitled capture", 72);
+}
+
+function inboxPreviewExcerpt(entry: HomeInboxPreview) {
+  const body = entry.body.trim();
+  if (!body || !entry.title?.trim()) return "";
+  return truncate(body, 96);
 }
 
 function stageLabel(stage: HomeStage) {
