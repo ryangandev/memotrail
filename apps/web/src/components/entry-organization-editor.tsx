@@ -50,6 +50,9 @@ export function EntryOrganizationEditor({
   const exactOption = options.some(
     (option) => option.toLocaleLowerCase() === normalizedQuery,
   );
+  const alreadyAddedName = names.find(
+    (name) => name.toLocaleLowerCase() === normalizedQuery,
+  );
   const canAdd =
     Boolean(query) &&
     query.length <= limit.length &&
@@ -139,6 +142,18 @@ export function EntryOrganizationEditor({
                 id={`${editorId}-options`}
                 role="listbox"
               >
+                {alreadyAddedName ? (
+                  <div
+                    aria-disabled="true"
+                    aria-selected="false"
+                    className={styles.statusOption}
+                    role="option"
+                  >
+                    <Icon name={kind === "tag" ? "tag" : "archive"} size={14} />
+                    <span>{alreadyAddedName}</span>
+                    <small>Already added</small>
+                  </div>
+                ) : null}
                 {suggestions.map((suggestion) => (
                   <button
                     aria-selected="false"
