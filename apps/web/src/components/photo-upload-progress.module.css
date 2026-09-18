@@ -41,8 +41,9 @@
 }
 
 .copy {
-  display: grid;
-  gap: 2px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--mt-space-2);
 }
 
 .copy strong {
@@ -54,6 +55,20 @@
   color: var(--mt-color-ink-faint);
   font-size: 10px;
   font-variant-numeric: tabular-nums;
+}
+
+.overlay {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: grid;
+  width: auto;
+  place-items: center;
+  background: color-mix(in srgb, var(--mt-color-scrim) 34%, transparent);
+}
+
+.overlay .ring {
+  box-shadow: 0 4px 18px rgb(0 0 0 / 0.24);
 }
 
 @media (prefers-reduced-motion: reduce) {

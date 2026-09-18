@@ -470,7 +470,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
               progress={
                 pendingPhotos.length
                   ? { completed: 0, total: pendingPhotos.length }
-                  : { completed: 3, total: 5 }
+                  : null
               }
               recordLabel="Entry"
             />
@@ -487,8 +487,9 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
             />
           </div>
           <p className={styles.stateNote}>
-            The first field keeps selected files in local gallery state. Its
-            circular progress specimen shows the active upload treatment.
+            Select local files to preview the circular batch progress centered
+            on the first pending photo. It counts completed files, not uploaded
+            bytes.
           </p>
         </Specimen>
       </GallerySection>

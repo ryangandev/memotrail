@@ -2,7 +2,13 @@ import type { CSSProperties } from "react";
 import type { PhotoUploadProgress as Progress } from "@/lib/media/upload";
 import styles from "./photo-upload-progress.module.css";
 
-export function PhotoUploadProgress({ progress }: { progress: Progress }) {
+export function PhotoUploadProgress({
+  progress,
+  variant = "inline",
+}: {
+  progress: Progress;
+  variant?: "inline" | "overlay";
+}) {
   const percentage =
     progress.total > 0
       ? Math.min(
@@ -16,8 +22,10 @@ export function PhotoUploadProgress({ progress }: { progress: Progress }) {
       aria-valuemax={progress.total}
       aria-valuemin={0}
       aria-valuenow={progress.completed}
-      aria-valuetext={`${percentage}%`}
-      className={styles.progress}
+      aria-valuetext={`${progress.completed} of ${progress.total} photos, ${percentage}%`}
+      className={`${styles.progress} ${
+        variant === "overlay" ? styles.overlay : ""
+      }`}
       role="progressbar"
     >
       <span
@@ -29,12 +37,14 @@ export function PhotoUploadProgress({ progress }: { progress: Progress }) {
       >
         <strong>{percentage}%</strong>
       </span>
-      <span className={styles.copy}>
-        <strong>Uploading photos</strong>
-        <small>
-          {progress.completed} of {progress.total}
-        </small>
-      </span>
+      {variant === "inline" ? (
+        <span className={styles.copy}>
+          <strong>Uploading photos</strong>
+          <small>
+            {progress.completed} of {progress.total}
+          </small>
+        </span>
+      ) : null}
     </div>
   );
 }

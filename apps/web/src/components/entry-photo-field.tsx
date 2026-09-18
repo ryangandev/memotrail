@@ -68,6 +68,12 @@ export function EntryPhotoField<Photo extends ExistingPhoto>({
             >
               <SelectedPhotoPreview alt={`Selected ${file.name}`} file={file} />
               <span className={styles.pendingBadge}>New</span>
+              {index === 0 &&
+              progress &&
+              progress.total > 0 &&
+              progress.completed < progress.total ? (
+                <PhotoUploadProgress progress={progress} variant="overlay" />
+              ) : null}
               <button
                 aria-label={`Remove selected ${file.name}`}
                 disabled={disabled}
@@ -96,7 +102,6 @@ export function EntryPhotoField<Photo extends ExistingPhoto>({
         />
       </label>
       <small>Originals stay private. Up to {limit} photos, 50 MB each.</small>
-      {progress ? <PhotoUploadProgress progress={progress} /> : null}
     </fieldset>
   );
 }
