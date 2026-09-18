@@ -232,14 +232,14 @@ values (
 
 insert into public.entry_collections (entry_id, collection_id, owner_id)
 values (
-  '81000000-0000-0000-0000-000000000001',
+  '81000000-0000-0000-0000-000000000002',
   '82000000-0000-0000-0000-000000000001',
   '10000000-0000-0000-0000-000000000001'
 );
 
 insert into public.entry_tags (entry_id, tag_id, owner_id)
 values (
-  '81000000-0000-0000-0000-000000000001',
+  '81000000-0000-0000-0000-000000000002',
   '83000000-0000-0000-0000-000000000001',
   '10000000-0000-0000-0000-000000000001'
 );
@@ -256,8 +256,8 @@ insert into public.attachments (
 values (
   '85000000-0000-0000-0000-000000000001',
   '10000000-0000-0000-0000-000000000001',
-  '81000000-0000-0000-0000-000000000001',
-  '10000000-0000-0000-0000-000000000001/81000000-0000-0000-0000-000000000001/home.jpg',
+  '81000000-0000-0000-0000-000000000002',
+  '10000000-0000-0000-0000-000000000001/81000000-0000-0000-0000-000000000002/home.jpg',
   'home.jpg',
   'image/jpeg',
   512
@@ -310,8 +310,8 @@ select is(
 );
 select is(
   (select entry_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  5::bigint,
-  'Entry count includes every active owner Entry'
+  4::bigint,
+  'Entry count includes organized active owner Entries'
 );
 select is(
   (select first_time_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
@@ -335,8 +335,15 @@ select is(
 );
 select is(
   (select recent_entries -> 0 ->> 'title' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  'Newest home thought',
-  'Recent Entries use stable newest-capture ordering'
+  'First long drive',
+  'Recent Entries use stable newest-organized ordering'
+);
+select ok(
+  not (
+    select recent_entries @> '[{"title":"Newest home thought"}]'::jsonb
+    from public.home_workspace('2026-09-03', 'America/Los_Angeles', 10)
+  ),
+  'Recent Entries exclude unreviewed Inbox Captures'
 );
 select ok(
   not (

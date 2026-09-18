@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type FormEvent,
-} from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   registerFirstTimeAttachment,
@@ -16,10 +10,16 @@ import {
   type FirstTimeActionResult,
 } from "@/app/first-times/actions";
 import styles from "@/app/first-times/page.module.css";
+import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import { ProgressiveImage } from "@/components/progressive-image";
+import {
+  RecordCard,
+  RecordCardBody,
+  RecordCardVisual,
+} from "@/components/record-card";
 import {
   firstTimeBodyLimit,
   firstTimePhotoLimit,
@@ -40,7 +40,10 @@ import {
   resolveOccurrenceDraft,
   type Occurrence,
 } from "@/lib/data/occurrence";
-import { uploadEntryPhotos } from "@/lib/media/upload";
+import {
+  uploadEntryPhotos,
+  type PhotoUploadProgress as PhotoUploadProgressValue,
+} from "@/lib/media/upload";
 
 export function FirstTimesWorkspace({
   collectionOptions,
@@ -167,14 +170,13 @@ function FirstTimeCard({
   const cover = photos[0];
 
   return (
-    <button
-      aria-label={`${entry.title}, ${firstTimeDateLabel(entry)}`}
+    <RecordCard
+      ariaLabel={`${entry.title}, ${firstTimeDateLabel(entry)}`}
       className={styles.firstCard}
       onClick={onSelect}
-      type="button"
     >
       {cover ? (
-        <div className={styles.coverPhoto}>
+        <RecordCardVisual className={styles.coverPhoto}>
           {cover.imageUrl ? (
             <ProgressiveImage alt="" src={cover.imageUrl} />
           ) : (
@@ -184,14 +186,14 @@ function FirstTimeCard({
             </span>
           )}
           {photos.length > 1 ? <small>{photos.length} photos</small> : null}
-        </div>
+        </RecordCardVisual>
       ) : (
-        <div className={styles.cardIndex} aria-hidden="true">
+        <RecordCardVisual className={styles.cardIndex}>
           {String(index + 1).padStart(2, "0")}
-        </div>
+        </RecordCardVisual>
       )}
 
-      <div className={styles.cardBody}>
+      <RecordCardBody className={styles.cardBody}>
         <time dateTime={entry.occurredStart ?? undefined}>
           {firstTimeDateLabel(entry)}
         </time>
@@ -209,8 +211,8 @@ function FirstTimeCard({
           </div>
           <Icon name="chevron" size={15} />
         </footer>
-      </div>
-    </button>
+      </RecordCardBody>
+    </RecordCard>
   );
 }
 
@@ -249,6 +251,8 @@ export function FirstTimeEditor({
     entry ? originalAttachments(entry) : [],
   );
   const [isPending, setIsPending] = useState(false);
+  const [photoUploadProgress, setPhotoUploadProgress] =
+    useState<PhotoUploadProgressValue | null>(null);
   const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
   const [result, setResult] = useState<FirstTimeActionResult | null>(null);
   const [tagInput, setTagInput] = useState("");
@@ -270,14 +274,7 @@ export function FirstTimeEditor({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isPending, onClose]);
 
-  function handlePhotoSelection(event: ChangeEvent<HTMLInputElement>) {
-    const selected = Array.from(event.target.files ?? []);
-    event.target.value = "";
-
-    if (selected.length === 0) {
-      return;
-    }
-
+  function handlePhotoSelection(selected: File[]) {
     const available = Math.max(
       0,
       firstTimePhotoLimit - existingPhotos.length - pendingPhotos.length,
@@ -375,6 +372,7 @@ export function FirstTimeEditor({
         ownerId,
         saved.entry.id,
         pendingPhotos,
+        setPhotoUploadProgress,
       );
 
       if (failedPhotos.length > 0) {
@@ -397,6 +395,7 @@ export function FirstTimeEditor({
         ),
       );
     } finally {
+      setPhotoUploadProgress(null);
       setIsPending(false);
     }
   }
@@ -503,12 +502,16 @@ export function FirstTimeEditor({
         <form onSubmit={handleSubmit}>
           <div className={styles.formGrid}>
             <label className={styles.fullField}>
-              <span>Title</span>
+              <span>
+                Title <span aria-hidden="true">*</span>
+              </span>
               <input
+                aria-label="Title"
                 maxLength={firstTimeTitleLimit}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="First time skiing"
                 ref={titleRef}
+                required
                 value={title}
               />
             </label>
@@ -522,9 +525,7 @@ export function FirstTimeEditor({
             </div>
 
             <label className={styles.fullField}>
-              <span>
-                Reflection <small>Optional</small>
-              </span>
+              <span>Reflection</span>
               <textarea
                 maxLength={firstTimeBodyLimit}
                 onChange={(event) => setBody(event.target.value)}
@@ -554,65 +555,21 @@ export function FirstTimeEditor({
               options={tagOptions}
             />
 
-            <fieldset className={`${styles.photoField} ${styles.fullField}`}>
-              <legend>Photos</legend>
-              {existingPhotos.length > 0 || pendingPhotos.length > 0 ? (
-                <div className={styles.photoGrid}>
-                  {existingPhotos.map((photo) => (
-                    <div className={styles.photoTile} key={photo.id}>
-                      {photo.imageUrl ? (
-                        <ProgressiveImage
-                          alt={photo.originalFilename ?? "First Time photo"}
-                          src={photo.imageUrl}
-                        />
-                      ) : (
-                        <span className={styles.photoFallback}>
-                          Private photo
-                        </span>
-                      )}
-                      <button
-                        aria-label={`Remove ${photo.originalFilename ?? "photo"}`}
-                        disabled={isPending}
-                        onClick={() => void handleRemovePhoto(photo)}
-                        type="button"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                  {pendingPhotos.map((file, index) => (
-                    <PendingPhoto
-                      file={file}
-                      key={`${file.name}:${file.size}:${file.lastModified}:${index}`}
-                      onRemove={() =>
-                        setPendingPhotos((current) =>
-                          current.filter((_, itemIndex) => itemIndex !== index),
-                        )
-                      }
-                    />
-                  ))}
-                </div>
-              ) : null}
-              <label className={styles.photoPicker}>
-                <Icon name="photo" size={18} />
-                <span>Add photos</span>
-                <input
-                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
-                  disabled={
-                    isPending ||
-                    existingPhotos.length + pendingPhotos.length >=
-                      firstTimePhotoLimit
-                  }
-                  multiple
-                  onChange={handlePhotoSelection}
-                  type="file"
-                />
-              </label>
-              <small>
-                Originals stay private. Up to {firstTimePhotoLimit} photos, 50
-                MB each.
-              </small>
-            </fieldset>
+            <EntryPhotoField
+              disabled={isPending}
+              existingPhotos={existingPhotos}
+              limit={firstTimePhotoLimit}
+              onRemoveExisting={(photo) => void handleRemovePhoto(photo)}
+              onRemovePending={(index) =>
+                setPendingPhotos((current) =>
+                  current.filter((_, itemIndex) => itemIndex !== index),
+                )
+              }
+              onSelect={handlePhotoSelection}
+              pendingPhotos={pendingPhotos}
+              progress={photoUploadProgress}
+              recordLabel="First Time"
+            />
           </div>
 
           {result ? (
@@ -662,40 +619,18 @@ export function FirstTimeEditor({
   );
 }
 
-function PendingPhoto({
-  file,
-  onRemove,
-}: {
-  file: File;
-  onRemove: () => void;
-}) {
-  const [previewUrl] = useState(() => URL.createObjectURL(file));
-
-  useEffect(() => {
-    return () => URL.revokeObjectURL(previewUrl);
-  }, [previewUrl]);
-
-  return (
-    <div className={`${styles.photoTile} ${styles.pendingPhoto}`}>
-      <ProgressiveImage alt={`Selected ${file.name}`} src={previewUrl} />
-      <span className={styles.pendingBadge}>New</span>
-      <button
-        aria-label={`Remove selected ${file.name}`}
-        onClick={onRemove}
-        type="button"
-      >
-        ×
-      </button>
-    </div>
-  );
-}
-
-async function uploadPhotos(ownerId: string, entryId: string, photos: File[]) {
+async function uploadPhotos(
+  ownerId: string,
+  entryId: string,
+  photos: File[],
+  onProgress: (progress: PhotoUploadProgressValue) => void,
+) {
   return uploadEntryPhotos(
     ownerId,
     entryId,
     photos,
     registerFirstTimeAttachment,
+    onProgress,
   );
 }
 

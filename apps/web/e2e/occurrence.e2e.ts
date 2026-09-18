@@ -110,9 +110,7 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
       ["month", "2017-07", "Jul 2017"],
       ["day", "2017-07-08", "Jul 8, 2017"],
     ]) {
-      await card
-        .getByRole("button", { name: "Organize", exact: true })
-        .click();
+      await card.getByRole("button", { name: "Organize", exact: true }).click();
       await page
         .getByRole("combobox", { name: "Date type", exact: true })
         .selectOption(precision);

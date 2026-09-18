@@ -43,7 +43,7 @@ describe("Life Wiki workspace data", () => {
 
   it("routes specialized and registry Entities to their editors", () => {
     const parsed = parseWikiItemRows([item])![0];
-    expect(wikiItemHref(parsed)).toBe(`/history?entry=${parsed.id}`);
+    expect(wikiItemHref(parsed)).toBe(`/items/${parsed.id}`);
     expect(
       wikiItemHref({
         ...parsed,

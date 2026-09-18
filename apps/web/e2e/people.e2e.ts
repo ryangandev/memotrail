@@ -69,6 +69,12 @@ test("People saves, links, protects, edits, trashes, and restores on desktop and
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto("/people");
+    await expect(
+      page.locator('[data-page-frame="wide"]').filter({ visible: true }),
+    ).toHaveCount(1);
+    await expect(
+      page.getByRole("heading", { name: "People", exact: true }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "Add Person", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByLabel("Name", { exact: true }).fill("Alex");
@@ -80,10 +86,16 @@ test("People saves, links, protects, edits, trashes, and restores on desktop and
     await dialog
       .getByRole("button", { name: "Link Item", exact: true })
       .click();
-    await dialog.getByRole("button", { name: "Save changes" }).click();
+    await dialog
+      .getByRole("button", { name: "Add Person", exact: true })
+      .click();
     await expect(dialog).not.toBeVisible();
     const card = page.getByRole("button", { name: /Alex Friend/ });
     await expect(card).toContainText("1 connected Items");
+    await page.screenshot({
+      path: "/private/tmp/memotrail-people-desktop.png",
+      fullPage: true,
+    });
     await card.click();
     await expect(
       dialog.getByRole("button", { name: "Move to Trash" }),

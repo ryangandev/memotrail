@@ -63,4 +63,31 @@ describe("photo retry identity", () => {
       new Set(register.mock.calls.map(([input]) => input.attachmentId)).size,
     ).toBe(4);
   });
+
+  it("uploads with bounded concurrency and reports completed files", async () => {
+    const batch = createPhotoUploadBatch();
+    const files = Array.from(
+      { length: 5 },
+      (_, index) =>
+        new File([`${index}`], `${index}.png`, { type: "image/png" }),
+    );
+    let active = 0;
+    let peak = 0;
+    const upload = vi.fn(async () => {
+      active += 1;
+      peak = Math.max(peak, active);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      active -= 1;
+      return true;
+    });
+    const register = vi.fn().mockResolvedValue({ status: "saved" });
+    const progress = vi.fn();
+
+    expect(
+      await batch(owner, entry, files, { upload, register }, progress),
+    ).toEqual([]);
+    expect(peak).toBe(3);
+    expect(progress).toHaveBeenNthCalledWith(1, { completed: 0, total: 5 });
+    expect(progress).toHaveBeenLastCalledWith({ completed: 5, total: 5 });
+  });
 });

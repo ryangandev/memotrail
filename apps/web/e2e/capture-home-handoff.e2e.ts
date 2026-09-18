@@ -88,7 +88,9 @@ test("Inbox Capture creates a linked Home through the specialized form", async (
     });
     await card.getByRole("button", { name: "Organize", exact: true }).click();
     const review = page.getByRole("dialog", { name: "Organize Capture" });
-    await expect(review.getByText("Organize as", { exact: true })).toBeVisible();
+    await expect(
+      review.getByText("Organize as", { exact: true }),
+    ).toBeVisible();
     await expect(
       review.getByRole("combobox", { name: "Kind", exact: true }),
     ).toHaveValue("writing");

@@ -170,7 +170,7 @@ test("An Idea creates a linked Goal without changing the source", async ({
     await form
       .getByRole("combobox", { name: "Status", exact: true })
       .selectOption("active");
-    await form.getByLabel("Target date (optional)").fill("2027-12-31");
+    await form.getByLabel("Target date", { exact: true }).fill("2027-12-31");
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
       path: "/private/tmp/memotrail-goal-extraction-desktop.png",

@@ -112,6 +112,7 @@ for (const kind of ["home", "vehicle"] as const) {
       const id = saved.data[0].entry_id;
       await page.goto(config.path + "?entry=" + id);
       const dialog = page.getByRole("dialog");
+      await expect(dialog).toBeVisible({ timeout: 15_000 });
       await expect(
         dialog.getByRole("combobox", { name: "Date type", exact: true }),
       ).toHaveValue("exact");

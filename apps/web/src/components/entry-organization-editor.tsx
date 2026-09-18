@@ -57,11 +57,6 @@ export function EntryOrganizationEditor({
   return (
     <fieldset className={styles.editor} disabled={disabled}>
       <legend>{label}</legend>
-      <p className={styles.guidance}>
-        {kind === "collection"
-          ? "Add this item to a larger story or chapter."
-          : "Add specific descriptors for filtering and discovery."}
-      </p>
       {names.length > 0 ? (
         <div className={styles.chips}>
           {names.map((name) => (

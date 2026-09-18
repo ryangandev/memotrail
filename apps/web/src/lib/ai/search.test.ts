@@ -209,7 +209,7 @@ describe("AI search trust boundary", () => {
       ["滑雪"],
     );
     expect(sources).toHaveLength(1);
-    expect(sources[0].href).toBe(`/history?entry=${id}`);
+    expect(sources[0].href).toBe(`/items/${id}`);
     expect(sources[0].text).toContain('"date_precision": "age"');
     expect(sources[0].text).not.toContain("secret");
   });

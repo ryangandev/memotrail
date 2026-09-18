@@ -50,7 +50,9 @@ Pair it with the test file carrying the same feature name.
 - `entries.item_kind` owns the structural identity boundary: Capture, Writing, Entity, Event, Story, or Goal.
 - `entries.item_subtype` selects a compatible preset within that Kind.
 - `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item. Person and Place rows expose both the canonical Entry ID and their specialized record ID so clients can preserve identity while opening the correct editor.
-- Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace. Native Library routes typed records to their focused editors and other canonical items to the shared History detail/edit boundary.
+- Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace.
+  Web routes typed records to focused editors and general items to `/items/[entry]`, where current content and primary actions precede an explicit history link.
+  Native Library routes typed records to their focused editors and other canonical items to the shared History detail/edit boundary.
 - `collection_wiki_items` composes the established paged Collection detail with canonical Kind, subtype, and specialized routing identity. Both clients use it so Collections remain organizational lenses rather than a second generic detail system.
 - `people.entry_id` and `places.entry_id` are required owner-scoped links to canonical Entity Wiki Items. Triggers keep names, notes, revision state, and Trash state synchronized while the specialized tables retain typed facts and relationship-facing IDs.
 - A raw Capture may be finalized as one durable item or may produce linked items through a provenance-preserving extraction.
@@ -113,6 +115,7 @@ Pair it with the test file carrying the same feature name.
 - Display and thumbnail files are derived caches, never substitutes for originals.
 - Signed access is short-lived and owner-scoped.
 - Image and metadata decoding runs on the server through `packages/media-runtime`; provider secrets and decoder internals do not enter either client.
+- Selected Web photos reuse the shared local-or-server preview and upload-progress components; browser-displayable formats stay local while HEIC and HEIF receive an authenticated derived preview.
 - Generation validates source identity and bounded output before registration.
 - Database rows coordinate deletion, but Storage objects are removed through the Storage API.
 - Permanent deletion includes registered and interrupted-generation artifacts and must remain retryable after uncertain cleanup.
@@ -152,6 +155,9 @@ Pair it with the test file carrying the same feature name.
 - Page frame variants are semantic: `compact` is 880px for forms and focused reading, `standard` is 960px for lists and search, `wide` is 1080px for dashboards and card grids, and `canvas` is 1180px for dense spatial views.
 - New route pages choose the narrowest variant that fits their content and keep internal grid, dialog, and visualization breakpoints in page-specific CSS instead of redefining the outer page geometry.
 - Web photo surfaces reuse `components/progressive-image.tsx` for a reserved skeleton, decode fade-in, failure fallback, and reduced-motion behavior while private expiring media URLs continue to bypass the public Next image cache.
+- Home, Vehicle, First Time, and Place result layouts reuse `components/record-card.tsx`; subtype modules own only their visual, metadata, and responsive content rules.
+- Specialized record editors reuse `components/entry-photo-field.tsx` for selected and existing previews, removal controls, limits, and upload progress.
+- Web domain editors own label-to-control spacing in their shared field wrapper; route forms reuse that wrapper and the spacing tokens instead of compensating field by field.
 - Quick Capture restores local text and occurrence state before paint, keeps the loading and editor geometries equal, and loads IndexedDB photo drafts separately so editor initialization cannot move the open dialog.
 - Web appearance uses the existing light and dark semantic tokens, stores a per-browser System, Light, or Dark choice in a same-site cookie, and lets the server root layout apply explicit themes before first paint without adding a client-side flash.
 

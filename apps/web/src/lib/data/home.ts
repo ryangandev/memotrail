@@ -46,7 +46,15 @@ export type HomeSnapshot = {
   snapshotDate: string;
 };
 
+export type HomeInboxPreview = {
+  body: string;
+  createdAt: string;
+  id: string;
+  title: string | null;
+};
+
 export type HomeWorkspace = {
+  inboxPreview: HomeInboxPreview[];
   loadError: string | null;
   resurfacedMemory: HomeResurfacedMemory | null;
   snapshot: HomeSnapshot | null;
@@ -66,7 +74,7 @@ export async function getHomeWorkspace(): Promise<HomeWorkspace | null> {
     cookieStore.get(homeTimezoneCookieName)?.value,
   );
   const snapshotDate = localDateInTimezone(new Date(), timezone);
-  const [result, resurfacingResult] = await Promise.all([
+  const [result, resurfacingResult, inboxPreviewResult] = await Promise.all([
     context.client.rpc("home_workspace", {
       p_local_date: snapshotDate,
       p_recent_limit: 5,
@@ -76,6 +84,16 @@ export async function getHomeWorkspace(): Promise<HomeWorkspace | null> {
       p_local_date: snapshotDate,
       p_timezone: timezone,
     }),
+    context.client
+      .from("entries")
+      .select("id,title,body,created_at")
+      .eq("owner_id", context.userId)
+      .eq("inbox_status", "unreviewed")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(3)
+      .returns<HomeInboxPreviewRow[]>(),
   ]);
   const row = result.error ? null : parseHomeRow(result.data);
   const resurfacedMemory = resurfacingResult.error
@@ -84,6 +102,7 @@ export async function getHomeWorkspace(): Promise<HomeWorkspace | null> {
 
   if (!row) {
     return {
+      inboxPreview: parseInboxPreview(inboxPreviewResult.data),
       loadError: "MemoTrail could not load Home. Refresh to try again.",
       resurfacedMemory: null,
       snapshot: null,
@@ -99,6 +118,7 @@ export async function getHomeWorkspace(): Promise<HomeWorkspace | null> {
   const signedUrls = await signedImageUrls(context.client, attachments);
 
   return {
+    inboxPreview: parseInboxPreview(inboxPreviewResult.data),
     loadError: null,
     resurfacedMemory: resurfacedMemory
       ? withSignedImageUrls(resurfacedMemory, signedUrls)
@@ -112,6 +132,22 @@ export async function getHomeWorkspace(): Promise<HomeWorkspace | null> {
     timezone,
     viewer: context.viewer,
   };
+}
+
+type HomeInboxPreviewRow = {
+  body: string;
+  created_at: string;
+  id: string;
+  title: string | null;
+};
+
+function parseInboxPreview(rows: HomeInboxPreviewRow[] | null) {
+  return (rows ?? []).map((row) => ({
+    body: row.body,
+    createdAt: row.created_at,
+    id: row.id,
+    title: row.title,
+  }));
 }
 
 function parseHomeRow(value: unknown): HomeSnapshot | null {

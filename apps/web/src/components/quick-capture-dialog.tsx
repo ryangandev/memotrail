@@ -138,6 +138,7 @@ export function QuickCaptureDialog({
         type="button"
       >
         <Icon name="plus" size={17} />
+        <span>New</span>
         <kbd aria-hidden="true">⌘ J</kbd>
       </button>
 

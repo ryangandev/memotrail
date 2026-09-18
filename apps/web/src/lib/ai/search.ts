@@ -381,7 +381,7 @@ export function buildSearchSources(raw: unknown, queries: string[]) {
       text,
       href:
         kind === "entry"
-          ? `/history?entry=${row.id}`
+          ? `/items/${row.id}`
           : kind === "place"
             ? `/places?place=${row.id}`
             : null,

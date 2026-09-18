@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
@@ -132,6 +133,17 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
         })
           .png()
           .toBuffer();
+        const previewCase =
+          kind === "first_time" && interrupted === "registration";
+        const selectedBytes = previewCase
+          ? Buffer.from(
+              readFileSync(
+                "src/lib/media/fixtures/synthetic.heic.base64",
+                "utf8",
+              ).trim(),
+              "base64",
+            )
+          : bytes;
         let dropped = false;
         await page.route(
           interrupted !== "upload"
@@ -158,9 +170,9 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
         const dialog = page.getByRole("dialog");
         const selection = [
           {
-            name: "retry.png",
-            mimeType: "image/png",
-            buffer: bytes,
+            name: previewCase ? "retry.heic" : "retry.png",
+            mimeType: previewCase ? "image/heic" : "image/png",
+            buffer: selectedBytes,
           },
         ];
         if (interrupted !== "upload")
@@ -170,9 +182,33 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
             buffer: bytes,
           });
         await dialog.locator('input[type="file"]').setInputFiles(selection);
+        if (previewCase) {
+          const preview = dialog.locator('img[alt="Selected retry.heic"]');
+          await expect(preview).toBeVisible();
+          await expect
+            .poll(() =>
+              preview.evaluate((image: HTMLImageElement) => image.naturalWidth),
+            )
+            .toBe(120);
+          await expect(dialog.getByText("Photo unavailable")).toHaveCount(0);
+          await page.route(
+            "**/storage/v1/object/entry-media/**",
+            async (route) => {
+              await new Promise((resolve) => setTimeout(resolve, 300));
+              await route.continue();
+            },
+          );
+        }
         await dialog
           .getByRole("button", { name: "Save changes", exact: true })
           .click();
+        if (previewCase) {
+          await expect(
+            dialog.getByRole("progressbar", {
+              name: "Photo upload progress",
+            }),
+          ).toBeVisible();
+        }
         await expect.poll(() => dropped).toBe(true);
         if (interrupted !== "upload") {
           await expect(
@@ -231,7 +267,11 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
             .download(photo.object_path);
           expect(original.error).toBeNull();
           expect(Buffer.from(await original.data!.arrayBuffer())).toEqual(
-            bytes,
+            selection.find((item) =>
+              photo.object_path.endsWith(
+                item.mimeType === "image/heic" ? ".heic" : ".png",
+              ),
+            )?.buffer ?? bytes,
           );
         }
       } finally {

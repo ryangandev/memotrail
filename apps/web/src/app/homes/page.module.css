@@ -161,46 +161,6 @@
   gap: var(--mt-space-5);
 }
 
-.homeCard {
-  display: grid;
-  width: 100%;
-  min-width: 0;
-  padding: 0;
-  appearance: none;
-  overflow: hidden;
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface-raised);
-  box-shadow: 0 1px 2px rgb(38 37 31 / 0.025);
-  text-align: left;
-  font: inherit;
-  cursor: pointer;
-  transition:
-    transform var(--mt-motion-quick),
-    border-color var(--mt-motion-quick),
-    box-shadow var(--mt-motion-quick);
-}
-
-.homeCard:hover {
-  transform: translateY(-2px);
-  border-color: var(--mt-color-border-strong);
-  box-shadow: var(--mt-shadow-raised);
-}
-
-.homeVisual {
-  position: relative;
-  height: 190px;
-  overflow: hidden;
-  background: var(--mt-color-surface-subtle);
-}
-
-.homeVisual img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .homeMark {
   display: flex;
   height: 100%;
@@ -271,10 +231,6 @@
   bottom: var(--mt-space-3);
   color: white;
   background: rgb(24 24 20 / 0.72);
-}
-
-.cardBody {
-  padding: var(--mt-space-5);
 }
 
 .cardDates {
@@ -362,6 +318,7 @@
 .dialogPanel {
   width: min(100%, 780px);
   max-height: min(920px, calc(100dvh - 48px));
+  overflow-x: hidden;
   overflow-y: auto;
   border: 1px solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-xlarge);
@@ -466,26 +423,21 @@
   text-transform: uppercase;
 }
 
-.formSection > label,
-.organizationEditor,
-.photoField {
+.formSection > label {
   display: grid;
   min-width: 0;
   align-content: start;
-  gap: 7px;
+  gap: var(--mt-space-2);
 }
 
-.formSection label > span,
-.organizationEditor legend {
+.formSection label > span {
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
   font-weight: var(--mt-font-weight-medium);
 }
 
 .formSection label > span small,
-.formSection label > small,
-.organizationEditor > small,
-.photoField > small {
+.formSection label > small {
   color: var(--mt-color-ink-faint);
   font-size: 10px;
   font-weight: var(--mt-font-weight-regular);
@@ -493,8 +445,7 @@
 
 .formSection input,
 .formSection select,
-.formSection textarea,
-.organizationEditor > input {
+.formSection textarea {
   width: 100%;
   min-width: 0;
   padding: 0 var(--mt-space-3);
@@ -508,8 +459,7 @@
 }
 
 .formSection input,
-.formSection select,
-.organizationEditor > input {
+.formSection select {
   height: 42px;
 }
 
@@ -522,8 +472,7 @@
 
 .formSection input:focus,
 .formSection select:focus,
-.formSection textarea:focus,
-.organizationEditor > input:focus {
+.formSection textarea:focus {
   border-color: var(--mt-color-accent);
   box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
 }
@@ -541,139 +490,6 @@
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
   line-height: var(--mt-line-height-body);
-}
-
-.organizationEditor {
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.organizationEditor legend {
-  margin-bottom: 7px;
-}
-
-.organizationEditor > small {
-  text-align: right;
-}
-
-.organizationChips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.organizationChips button {
-  display: flex;
-  min-height: 28px;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 9px;
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-subtle);
-  font-size: var(--mt-font-size-caption);
-  cursor: pointer;
-}
-
-.organizationChips button:hover {
-  color: var(--mt-color-warm);
-}
-
-.organizationChips span {
-  color: var(--mt-color-ink-faint);
-  font-size: 16px;
-}
-
-.photoField {
-  grid-template-columns: 1fr;
-}
-
-.photoGrid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--mt-space-2);
-}
-
-.photoTile {
-  position: relative;
-  aspect-ratio: 1;
-  overflow: hidden;
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-ink-faint);
-  background: var(--mt-color-surface-subtle);
-}
-
-.photoTile img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.photoFallback {
-  display: grid;
-  height: 100%;
-  place-items: center;
-  padding: var(--mt-space-2);
-  font-size: 10px;
-  text-align: center;
-}
-
-.photoTile > button {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  display: grid;
-  width: 25px;
-  height: 25px;
-  place-items: center;
-  border-radius: 50%;
-  color: white;
-  background: rgb(24 24 20 / 0.72);
-  font-size: 18px;
-  cursor: pointer;
-  backdrop-filter: blur(6px);
-}
-
-.pendingBadge {
-  position: absolute;
-  bottom: 6px;
-  left: 6px;
-  padding: 3px 6px;
-  border-radius: var(--mt-radius-pill);
-  color: white;
-  background: var(--mt-color-accent);
-  font-size: 9px;
-}
-
-.photoPicker {
-  position: relative;
-  display: inline-flex;
-  width: max-content;
-  height: 38px;
-  align-items: center;
-  justify-content: center;
-  gap: var(--mt-space-2);
-  margin-top: var(--mt-space-1);
-  padding: 0 var(--mt-space-3);
-  border: 1px solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-raised);
-  cursor: pointer;
-}
-
-.photoPicker:hover {
-  color: var(--mt-color-accent);
-}
-
-.photoPicker input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  opacity: 0;
 }
 
 .formMessage {
@@ -742,8 +558,7 @@
 .saveButton:disabled,
 .cancelButton:disabled,
 .trashButton:disabled,
-.dialogHeader > button:disabled,
-.photoTile > button:disabled {
+.dialogHeader > button:disabled {
   cursor: wait;
   opacity: 0.55;
 }
@@ -825,10 +640,6 @@
 
   .fullField {
     grid-column: auto;
-  }
-
-  .photoGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

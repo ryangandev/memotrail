@@ -256,5 +256,5 @@ export function wikiEntryHref(item: {
   if (item.itemKind === "capture" && item.inboxStatus === "unreviewed") {
     return `/inbox?entry=${item.id}`;
   }
-  return `/history?entry=${item.id}`;
+  return `/items/${item.id}`;
 }

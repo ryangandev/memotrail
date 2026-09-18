@@ -223,12 +223,12 @@
 
 .kindGrid > a {
   display: grid;
-  min-height: 142px;
+  min-height: 88px;
   grid-template-columns: auto 1fr;
-  grid-template-rows: auto 1fr;
-  align-content: start;
-  gap: var(--mt-space-2) var(--mt-space-3);
-  padding: var(--mt-space-4);
+  grid-template-rows: auto auto;
+  align-content: center;
+  gap: 2px var(--mt-space-3);
+  padding: var(--mt-space-3);
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   color: var(--mt-color-ink);
@@ -251,8 +251,8 @@
 
 .kindGrid > a > span {
   display: grid;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   grid-row: 1 / span 2;
   place-items: center;
   border-radius: var(--mt-radius-small);
@@ -267,7 +267,7 @@
 .kindGrid strong {
   align-self: center;
   font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title-small);
+  font-size: var(--mt-font-size-label);
   font-weight: var(--mt-font-weight-medium);
 }
 
@@ -371,7 +371,7 @@
   }
 
   .kindGrid > a {
-    min-height: 112px;
+    min-height: 76px;
   }
 }
 

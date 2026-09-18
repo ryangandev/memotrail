@@ -1,12 +1,7 @@
-import { CaptureComposer } from "@/components/capture-composer";
 import { EntryReviewList } from "@/components/entry-review-list";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
-import {
-  getInboxWorkspace,
-  type InboxEntry,
-  type Viewer,
-} from "@/lib/data/inbox";
+import { getInboxWorkspace, type InboxEntry } from "@/lib/data/inbox";
 import styles from "../page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +30,6 @@ function Workspace({
   entries,
   loadError,
   tagOptions,
-  viewer,
   focusedEntryId,
 }: {
   collectionOptions: string[];
@@ -43,7 +37,6 @@ function Workspace({
   focusedEntryId: string | null;
   loadError: string | null;
   tagOptions: string[];
-  viewer: Viewer;
 }) {
   return (
     <PageFrame variant="compact">
@@ -51,15 +44,9 @@ function Workspace({
         <div>
           <p className={styles.eyebrow}>{todayLabel()}</p>
           <h1>Inbox</h1>
-          <p>Capture now. Make sense of it when you are ready.</p>
+          <p>Review and organize the captures waiting for a place.</p>
         </div>
-        <a className={styles.newEntryButton} href="#capture-title">
-          <Icon name="plus" />
-          <span>Quick capture</span>
-        </a>
       </header>
-
-      <CaptureComposer ownerId={viewer.id} />
 
       <section className={styles.entrySection} aria-labelledby="recent-heading">
         <div className={styles.sectionHeader}>

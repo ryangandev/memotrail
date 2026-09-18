@@ -79,6 +79,7 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - Suggestions remain editable and require explicit adoption.
 - AI may propose a Collection but cannot create it without confirmation.
 - The Capture remains in Inbox until the user selects `Save to Library` or completes another explicit organization action.
+- Home owns the persistent Quick Capture surface and shows up to three recent captures waiting for organization. Inbox is the dedicated review workspace and relies on the global New Entry action for additional capture.
 - `Save to Library` marks organization complete but never prevents later editing.
 - An unorganized Capture may be finalized as Writing, Event, or Story when its content already represents that one item.
 - Creating an Entity or Goal from a Capture uses its specialized form and links the result to the Capture instead of bypassing required structure.
@@ -97,6 +98,9 @@ Photo metadata may be offered as a date or Place suggestion but is never adopted
 - Inbox, Timeline, Home, Search, and Library are views or workflow states, not organization labels.
 - Library is the primary all-items entry point for the Life Wiki.
   It presents Writing, Events, Entities, Stories, and Goals as the main browsing lenses, keeps source Captures available as provenance rather than a peer content choice, supports Kind and keyword filters, and links each preset to its appropriate editor or detail surface.
+- Opening a general Wiki Item shows its current content and primary actions first.
+  Version history is an explicit secondary action, while typed Entities continue to open their focused editors.
+- Current Wiki Item detail supports moving the item to Trash, where it remains restorable.
 - Collections and tags are created and managed from separate Library destinations without a second in-page switcher, and remain available in every compatible Wiki Item editor.
 - Collection and tag management opens in viewport-level dialogs. The Tags Library uses compact usage-count badges that open tag management, recent linked Entries, and a path to the complete filtered result set.
 - Renaming a Collection or tag preserves its identity and linked Wiki Items.
@@ -137,9 +141,10 @@ Home is ordered around:
 
 1. Search.
 2. Quick Capture.
-3. Current life stages.
-4. A quiet resurfaced memory.
-5. Recent Entries.
+3. A compact preview of captures ready to organize.
+4. Current life stages.
+5. A quiet resurfaced memory.
+6. Recent Entries.
 
 Resurfacing uses organized, active, dated Entries only.
 It prefers the nearest prior On This Day match and otherwise uses a stable daily rotation of older Entries.
@@ -190,11 +195,14 @@ Library opens with the same all-items Life Wiki browser as Web, including deboun
 Focused record destinations for Collections, First Times, Goals, Homes, Vehicles, Places, and People remain available below the all-items browser.
 Settings is reached from the profile control.
 
-Desktop treats Library as a primary destination beside Home, Inbox, Timeline, and Search.
-Its sidebar keeps optional focused views separate from Collections, tags, Trash, and the single Settings entry point.
-Compact icon-and-shortcut Search and New Entry controls share one translucent shape and motion treatment at the right of the persistent top bar on every primary screen, while a quiet warm accent distinguishes New Entry from neutral Search.
+Desktop treats Library as a primary destination beside Home, Timeline, and Search.
+Its sidebar omits Inbox, keeps optional focused views separate from Collections, tags, Trash, and the single Settings entry point.
+The persistent top bar places an accent-tinted `New` control at the far left, with neutral Search followed by an icon-only Inbox control at the far right; Inbox shows a notification count only when captures are waiting.
 A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry, People, and Place results in place, supports keyboard navigation, and keeps full-page Search with filters and AI as an explicit destination.
 New Entry opens from the top bar or Command J.
+Home, Vehicle, First Time, and Place results share one reusable card shell while preserving subtype-specific content and responsive layouts.
+Specialized editors share one unboxed photo field with consistent previews, progress, limits, and controls.
+Form labels mark required fields with `*` and leave optional fields unmarked.
 
 ## Privacy, deletion, and portability
 

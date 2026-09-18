@@ -72,7 +72,7 @@ it("plans bilingually, retrieves owner-client evidence, and validates original q
     ),
   ).toBe(true);
   expect(answer.findings[0].citations[0].quote).toBe("第一次滑雪是在17岁。");
-  expect(answer.sources[0].href).toContain("/history?entry=");
+  expect(answer.sources[0].href).toContain("/items/");
 });
 it("spends nothing for invalid input", async () => {
   await expect(

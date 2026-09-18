@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type FormEvent,
-} from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   markGoalAchieved,
@@ -19,6 +12,7 @@ import {
 } from "@/app/goals/actions";
 import styles from "@/app/goals/page.module.css";
 import common from "@/app/homes/page.module.css";
+import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
@@ -53,7 +47,10 @@ import {
   type OccurrenceDraft,
   resolveOccurrenceDraft,
 } from "@/lib/data/occurrence";
-import { uploadEntryPhotos } from "@/lib/media/upload";
+import {
+  uploadEntryPhotos,
+  type PhotoUploadProgress as PhotoUploadProgressValue,
+} from "@/lib/media/upload";
 import type { CaptureExtractionSource } from "@/lib/data/capture-extraction-input";
 import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 
@@ -339,6 +336,8 @@ function GoalEditor({
     goal?.horizon ?? "short_term",
   );
   const [isPending, setIsPending] = useState(false);
+  const [photoUploadProgress, setPhotoUploadProgress] =
+    useState<PhotoUploadProgressValue | null>(null);
   const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
   const [relatedEntryIds, setRelatedEntryIds] = useState(
     goal?.relatedEntries
@@ -408,9 +407,7 @@ function GoalEditor({
       pendingPhotos.length > 0),
   );
 
-  function handlePhotoSelection(event: ChangeEvent<HTMLInputElement>) {
-    const selected = Array.from(event.target.files ?? []);
-    event.target.value = "";
+  function handlePhotoSelection(selected: File[]) {
     const available = Math.max(
       0,
       firstTimePhotoLimit - existingPhotos.length - pendingPhotos.length,
@@ -475,6 +472,7 @@ function GoalEditor({
         ownerId,
         saved.entry.id,
         pendingPhotos,
+        setPhotoUploadProgress,
       );
       if (failedPhotos.length > 0) {
         setPendingPhotos(failedPhotos);
@@ -495,6 +493,7 @@ function GoalEditor({
         ),
       );
     } finally {
+      setPhotoUploadProgress(null);
       setIsPending(false);
     }
   }
@@ -607,8 +606,11 @@ function GoalEditor({
             <fieldset className={common.formSection}>
               <legend>The intention</legend>
               <label className={common.fullField}>
-                <span>Title</span>
+                <span>
+                  Title <span aria-hidden="true">*</span>
+                </span>
                 <input
+                  aria-label="Title"
                   maxLength={goalTitleLimit}
                   onChange={(event) => setTitle(event.target.value)}
                   placeholder="Learn to sail"
@@ -648,9 +650,7 @@ function GoalEditor({
                 </select>
               </label>
               <label>
-                <span>
-                  Target date <small>Optional, no overdue state</small>
-                </span>
+                <span>Target date</span>
                 <input
                   onChange={(event) => setTargetDate(event.target.value)}
                   type="date"
@@ -658,9 +658,7 @@ function GoalEditor({
                 />
               </label>
               <label className={common.fullField}>
-                <span>
-                  Reflection <small>Optional</small>
-                </span>
+                <span>Reflection</span>
                 <textarea
                   maxLength={goalBodyLimit}
                   onChange={(event) => setBody(event.target.value)}
@@ -755,65 +753,21 @@ function GoalEditor({
               </div>
             </fieldset>
 
-            <fieldset className={`${common.photoField} ${common.formSection}`}>
-              <legend>Photos</legend>
-              {existingPhotos.length > 0 || pendingPhotos.length > 0 ? (
-                <div className={common.photoGrid}>
-                  {existingPhotos.map((photo) => (
-                    <div className={common.photoTile} key={photo.id}>
-                      {photo.imageUrl ? (
-                        <ProgressiveImage
-                          alt={photo.originalFilename ?? "Goal photo"}
-                          src={photo.imageUrl}
-                        />
-                      ) : (
-                        <span className={common.photoFallback}>
-                          Private photo
-                        </span>
-                      )}
-                      <button
-                        aria-label={`Remove ${photo.originalFilename ?? "photo"}`}
-                        disabled={isPending}
-                        onClick={() => void handleRemovePhoto(photo)}
-                        type="button"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                  {pendingPhotos.map((file, index) => (
-                    <PendingPhoto
-                      file={file}
-                      key={`${file.name}:${file.size}:${file.lastModified}:${index}`}
-                      onRemove={() =>
-                        setPendingPhotos((current) =>
-                          current.filter((_, itemIndex) => itemIndex !== index),
-                        )
-                      }
-                    />
-                  ))}
-                </div>
-              ) : null}
-              <label className={common.photoPicker}>
-                <Icon name="photo" size={18} />
-                <span>Add photos</span>
-                <input
-                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
-                  disabled={
-                    isPending ||
-                    existingPhotos.length + pendingPhotos.length >=
-                      firstTimePhotoLimit
-                  }
-                  multiple
-                  onChange={handlePhotoSelection}
-                  type="file"
-                />
-              </label>
-              <small>
-                Originals stay private. Up to {firstTimePhotoLimit} photos, 50
-                MB each.
-              </small>
-            </fieldset>
+            <EntryPhotoField
+              disabled={isPending}
+              existingPhotos={existingPhotos}
+              limit={firstTimePhotoLimit}
+              onRemoveExisting={(photo) => void handleRemovePhoto(photo)}
+              onRemovePending={(index) =>
+                setPendingPhotos((current) =>
+                  current.filter((_, itemIndex) => itemIndex !== index),
+                )
+              }
+              onSelect={handlePhotoSelection}
+              pendingPhotos={pendingPhotos}
+              progress={photoUploadProgress}
+              recordLabel="Goal"
+            />
 
             {savedBucketListGoal && currentId && currentRevision !== null ? (
               <AchievementPanel
@@ -984,32 +938,19 @@ function AchievementPanel({
   );
 }
 
-function PendingPhoto({
-  file,
-  onRemove,
-}: {
-  file: File;
-  onRemove: () => void;
-}) {
-  const [previewUrl] = useState(() => URL.createObjectURL(file));
-  useEffect(() => () => URL.revokeObjectURL(previewUrl), [previewUrl]);
-  return (
-    <div className={`${common.photoTile} ${common.pendingPhoto}`}>
-      <ProgressiveImage alt={`Selected ${file.name}`} src={previewUrl} />
-      <span className={common.pendingBadge}>New</span>
-      <button
-        aria-label={`Remove selected ${file.name}`}
-        onClick={onRemove}
-        type="button"
-      >
-        ×
-      </button>
-    </div>
+async function uploadPhotos(
+  ownerId: string,
+  entryId: string,
+  photos: File[],
+  onProgress: (progress: PhotoUploadProgressValue) => void,
+) {
+  return uploadEntryPhotos(
+    ownerId,
+    entryId,
+    photos,
+    registerGoalAttachment,
+    onProgress,
   );
-}
-
-async function uploadPhotos(ownerId: string, entryId: string, photos: File[]) {
-  return uploadEntryPhotos(ownerId, entryId, photos, registerGoalAttachment);
 }
 
 function namesIncludingDraft(names: string[], draft: string) {

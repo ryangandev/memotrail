@@ -344,8 +344,14 @@ export function EntryReviewDialog({
             />
           )}
           <label>
-            <span>Title</span>
+            <span>
+              Title
+              {itemKind === "event" && itemSubtype === "first_time" ? (
+                <span aria-hidden="true"> *</span>
+              ) : null}
+            </span>
             <input
+              aria-label="Title"
               autoFocus
               disabled={isPending}
               maxLength={entryTitleLimit}
@@ -353,8 +359,9 @@ export function EntryReviewDialog({
               placeholder={
                 itemKind === "event" && itemSubtype === "first_time"
                   ? "Required for a First Time"
-                  : "Optional"
+                  : "Add a title"
               }
+              required={itemKind === "event" && itemSubtype === "first_time"}
               value={title}
             />
           </label>
@@ -396,8 +403,8 @@ export function EntryReviewDialog({
                 <select
                   disabled={isPending || entry.itemKind !== "capture"}
                   onChange={(event) => {
-                    const nextKind =
-                      event.target.value as ReviewableWikiItemKind;
+                    const nextKind = event.target
+                      .value as ReviewableWikiItemKind;
                     setItemKind(nextKind);
                     setItemSubtype(
                       reviewablePresetsForKind(nextKind)[0]?.subtype ?? "note",

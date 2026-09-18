@@ -17,8 +17,9 @@ import {
   type SyncInboxEntryResult,
 } from "@/app/inbox/actions";
 import { Icon } from "@/components/icon";
-import { ProgressiveImage } from "@/components/progressive-image";
+import { PhotoUploadProgress } from "@/components/photo-upload-progress";
 import { RichTextEditor } from "@/components/rich-text-editor";
+import { SelectedPhotoPreview } from "@/components/selected-photo-preview";
 import {
   clearInboxDraft,
   loadInboxDraft,
@@ -63,6 +64,7 @@ import {
 } from "@/lib/data/voice-transcript";
 import { createClient } from "@/lib/supabase/client";
 import type { EntryRichText } from "@/lib/data/rich-text";
+import type { PhotoUploadProgress as PhotoUploadProgressValue } from "@/lib/media/upload";
 import styles from "@/app/page.module.css";
 
 type CaptureFeedback = {
@@ -96,6 +98,8 @@ export function CaptureComposer({
   const [hasLocalDraft, setHasLocalDraft] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [photoUploadProgress, setPhotoUploadProgress] =
+    useState<PhotoUploadProgressValue | null>(null);
   const [feedback, setFeedback] = useState<CaptureFeedback>(idleFeedback);
   const [photos, setPhotos] = useState<InboxPhotoDraft[]>([]);
   const [isPhotoStateReady, setIsPhotoStateReady] = useState(false);
@@ -175,7 +179,11 @@ export function CaptureComposer({
 
       if (entry.attachments.length > 0) {
         try {
-          latestResult = await synchronizeAttachments(ownerId, entry);
+          latestResult = await synchronizeAttachments(
+            ownerId,
+            entry,
+            setPhotoUploadProgress,
+          );
         } catch {
           latestResult = {
             message:
@@ -211,6 +219,7 @@ export function CaptureComposer({
     }
 
     syncInFlightRef.current = false;
+    setPhotoUploadProgress(null);
     setIsSyncing(false);
 
     if (latestResult) {
@@ -780,6 +789,9 @@ export function CaptureComposer({
             />
           </div>
           <div className={styles.captureSubmitGroup}>
+            {photoUploadProgress ? (
+              <PhotoUploadProgress progress={photoUploadProgress} />
+            ) : null}
             <p
               className={
                 composerFeedback.isError
@@ -861,15 +873,12 @@ function CapturePhoto({
   onRemove: () => void;
   photo: InboxPhotoDraft;
 }) {
-  const [previewUrl] = useState(() => URL.createObjectURL(photo.file));
-
-  useEffect(() => {
-    return () => URL.revokeObjectURL(previewUrl);
-  }, [previewUrl]);
-
   return (
     <div className={styles.capturePhoto}>
-      <ProgressiveImage alt={`Selected ${photo.file.name}`} src={previewUrl} />
+      <SelectedPhotoPreview
+        alt={`Selected ${photo.file.name}`}
+        file={photo.file}
+      />
       <button
         aria-label={`Remove selected ${photo.file.name}`}
         onClick={onRemove}
@@ -884,11 +893,14 @@ function CapturePhoto({
 async function synchronizeAttachments(
   ownerId: string,
   entry: QueuedInboxEntry,
+  onProgress?: (progress: PhotoUploadProgressValue) => void,
 ): Promise<SyncInboxEntryResult> {
   const storedPhotos = await loadInboxPhotoDrafts(ownerId);
   const photosById = new Map(storedPhotos.map((photo) => [photo.id, photo]));
   const client = createClient();
 
+  let completed = 0;
+  onProgress?.({ completed, total: entry.attachments.length });
   for (const attachment of entry.attachments) {
     const photo = photosById.get(attachment.id);
     const objectPath = createFirstTimeObjectPath(
@@ -964,6 +976,8 @@ async function synchronizeAttachments(
         status: "retry",
       };
     }
+    completed += 1;
+    onProgress?.({ completed, total: entry.attachments.length });
   }
 
   return {

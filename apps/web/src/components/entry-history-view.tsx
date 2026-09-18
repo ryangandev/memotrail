@@ -6,10 +6,12 @@ import { EntryReviewDialog } from "./entry-review-list";
 import { EntryPhotoGallery } from "./entry-photo-gallery";
 import { EntryRelationsPanel } from "./entry-relations";
 import { EntryRichTextContent } from "./entry-rich-text-content";
+import { Icon } from "./icon";
 import { loadEditableEntry } from "@/app/history/actions";
 import {
   restoreHistoryVersion,
   extractGoalFromItem,
+  trashWikiItem,
 } from "@/app/history/actions";
 import {
   goalHorizons,
@@ -26,17 +28,16 @@ import {
   type HistorySnapshot,
 } from "@/lib/data/history";
 import { entryRichTextMetadataKey } from "@/lib/data/rich-text";
-import {
-  wikiItemIdentityLabel,
-  wikiItemKindLabel,
-} from "@/lib/data/wiki-item";
+import { wikiItemIdentityLabel, wikiItemKindLabel } from "@/lib/data/wiki-item";
 import styles from "@/app/history/page.module.css";
 export function EntryHistoryView({
   history,
+  mode = "history",
   page,
   ownerId,
 }: {
   history: EntryHistory;
+  mode?: "detail" | "history";
   page: number;
   ownerId: string;
 }) {
@@ -92,47 +93,119 @@ export function EntryHistoryView({
       setBusy(false);
     }
   }
+  async function moveToTrash() {
+    if (
+      busy ||
+      !confirm(
+        `Move “${historyTitle(history.current)}” to Trash? You can restore it later.`,
+      )
+    ) {
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+    try {
+      const message = await trashWikiItem(
+        history.current.id,
+        history.current.revision,
+      );
+      if (message) setError(message);
+      else {
+        router.push("/library");
+        router.refresh();
+      }
+    } catch {
+      setError(
+        "Could not confirm the move to Trash. Refresh before trying again.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+  const detailMode = mode === "detail";
   return (
     <>
-      <Link href="/history">← All version history</Link>
-      <h2>{historyTitle(history.current)}</h2>
-      {!history.current.deleted_at &&
-        ["writing", "event", "story"].includes(
-          String(history.current.item_kind),
-        ) && (
-          <button disabled={busy} onClick={() => void edit()}>
-            Edit {wikiItemKindLabel(history.current.item_kind)}
-          </button>
+      <Link
+        className={styles.backLink}
+        href={detailMode ? "/library" : "/history"}
+      >
+        ← {detailMode ? "Library" : "All version history"}
+      </Link>
+      {detailMode ? (
+        <header className={styles.detailHeader}>
+          <div className={styles.detailIdentity}>
+            <span>
+              {wikiItemIdentityLabel(
+                history.current.item_kind,
+                history.current.item_subtype,
+              )}
+            </span>
+            <span>{historyDateLabel(history.current)}</span>
+          </div>
+          <h1>{historyTitle(history.current)}</h1>
+        </header>
+      ) : (
+        <h2>{historyTitle(history.current)}</h2>
+      )}
+      <div className={styles.itemActions}>
+        {!history.current.deleted_at &&
+          ["writing", "event", "story"].includes(
+            String(history.current.item_kind),
+          ) && (
+            <button disabled={busy} onClick={() => void edit()}>
+              Edit {wikiItemKindLabel(history.current.item_kind)}
+            </button>
+          )}
+        {detailMode && history.versions.length > 0 ? (
+          <Link href={`/history?entry=${history.current.id}`}>
+            View version history ({history.total_count})
+          </Link>
+        ) : null}
+        {editing && (
+          <EntryReviewDialog
+            entry={editing.entry}
+            organized={editing.organized}
+            collectionOptions={editing.entry.collectionNames}
+            tagOptions={editing.entry.tagNames}
+            onClose={() => setEditing(null)}
+            onSaved={() => {
+              setEditing(null);
+              router.refresh();
+            }}
+          />
         )}
-      {editing && (
-        <EntryReviewDialog
-          entry={editing.entry}
-          organized={editing.organized}
-          collectionOptions={editing.entry.collectionNames}
-          tagOptions={editing.entry.tagNames}
-          onClose={() => setEditing(null)}
-          onSaved={() => {
-            setEditing(null);
-            router.refresh();
-          }}
-        />
-      )}
-      {!history.current.deleted_at && (
-        <Link href={`/explore?entry=${history.current.id}`}>
-          Explore with AI
-        </Link>
-      )}
-      {!history.current.deleted_at && history.current.item_kind !== "goal" && (
-        <GoalExtraction
-          key={`${history.current.id}:${history.current.revision}`}
-          entry={history.current}
-          disabled={busy}
-          onBusyChange={setBusy}
-        />
-      )}
-      {!history.current.deleted_at && history.current.item_kind === "goal" && (
-        <Link href={`/goals?entry=${history.current.id}`}>Open Goal</Link>
-      )}
+        {!history.current.deleted_at && (
+          <Link href={`/explore?entry=${history.current.id}`}>
+            Explore with AI
+          </Link>
+        )}
+        {!history.current.deleted_at &&
+          history.current.item_kind !== "goal" && (
+            <GoalExtraction
+              key={`${history.current.id}:${history.current.revision}`}
+              entry={history.current}
+              disabled={busy}
+              onBusyChange={setBusy}
+            />
+          )}
+        {!history.current.deleted_at &&
+          history.current.item_kind === "goal" && (
+            <Link href={`/goals?entry=${history.current.id}`}>Open Goal</Link>
+          )}
+        {detailMode && !history.current.deleted_at ? (
+          <button
+            className={styles.trashButton}
+            disabled={busy}
+            onClick={() => void moveToTrash()}
+            type="button"
+          >
+            <Icon name="trash" size={16} />
+            Move to Trash
+          </button>
+        ) : null}
+      </div>
+      {error && <p role="alert">{error}</p>}
       {Array.isArray(history.current.links) &&
         history.current.links.map(
           (link: { target_entry_id?: unknown; relationship?: unknown }, i) =>
@@ -145,7 +218,7 @@ export function EntryHistoryView({
               "exploration_conclusion",
             ].includes(String(link.relationship)) ? (
               <p key={i}>
-                <Link href={`/history?entry=${link.target_entry_id}`}>
+                <Link href={`/items/${link.target_entry_id}`}>
                   {link.relationship === "derived"
                     ? "Open extracted item"
                     : link.relationship === "derived_from" ||
@@ -156,7 +229,7 @@ export function EntryHistoryView({
               </p>
             ) : null,
         )}
-      {history.versions.length > 0 && (
+      {!detailMode && history.versions.length > 0 && (
         <div className={styles.controls}>
           <label>
             Earlier version
@@ -186,8 +259,9 @@ export function EntryHistoryView({
           This item is in Trash. Restore it there before changing its history.
         </p>
       )}
-      {error && <p role="alert">{error}</p>}
-      {selected && (
+      {detailMode ? (
+        <CurrentItem value={history.current} />
+      ) : selected ? (
         <>
           <p className={styles.notice}>
             Differences from current version:{" "}
@@ -219,8 +293,7 @@ export function EntryHistoryView({
             </section>
           </div>
         </>
-      )}
-      {!selected && (
+      ) : (
         <>
           <p>No earlier versions on this page.</p>
           <div className={`${styles.comparison} ${styles.currentOnly}`}>
@@ -246,20 +319,83 @@ export function EntryHistoryView({
           onChanged={() => router.refresh()}
         />
       )}
-      <nav className={styles.pagination} aria-label="Version pages">
-        {page > 1 && (
-          <Link href={`/history?entry=${history.current.id}&page=${page - 1}`}>
-            Newer versions
-          </Link>
-        )}
-        <span>Page {page}</span>
-        {history.total_count > page * 20 && (
-          <Link href={`/history?entry=${history.current.id}&page=${page + 1}`}>
-            Older versions
-          </Link>
-        )}
-      </nav>
+      {!detailMode ? (
+        <nav className={styles.pagination} aria-label="Version pages">
+          {page > 1 && (
+            <Link
+              href={`/history?entry=${history.current.id}&page=${page - 1}`}
+            >
+              Newer versions
+            </Link>
+          )}
+          <span>Page {page}</span>
+          {history.total_count > page * 20 && (
+            <Link
+              href={`/history?entry=${history.current.id}&page=${page + 1}`}
+            >
+              Older versions
+            </Link>
+          )}
+        </nav>
+      ) : null}
     </>
+  );
+}
+
+function CurrentItem({ value }: { value: HistorySnapshot }) {
+  const groups = [
+    "collections",
+    "tags",
+    "people",
+    "places",
+    "timeline_items",
+  ].flatMap((key) => {
+    const items = value[key];
+    if (!Array.isArray(items) || items.length === 0) return [];
+    return [
+      {
+        key,
+        label: key.replaceAll("_", " "),
+        value: (items as Record<string, unknown>[])
+          .map((item) =>
+            String(
+              item.name ??
+                item.track_name ??
+                item.original_filename ??
+                item.id ??
+                item.person_id ??
+                item.place_id,
+            ),
+          )
+          .join(", "),
+      },
+    ];
+  });
+
+  return (
+    <article className={styles.currentItem} aria-label="Current item">
+      <EntryRichTextContent
+        body={value.body || "No writing has been added yet."}
+        className={styles.currentBody}
+        metadata={value.body ? value.metadata : undefined}
+      />
+      <dl className={styles.currentFacts}>
+        <div>
+          <dt>Type</dt>
+          <dd>{wikiItemIdentityLabel(value.item_kind, value.item_subtype)}</dd>
+        </div>
+        <div>
+          <dt>Date</dt>
+          <dd>{historyDateLabel(value)}</dd>
+        </div>
+        {groups.map((group) => (
+          <div key={group.key}>
+            <dt>{group.label}</dt>
+            <dd>{group.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </article>
   );
 }
 function GoalExtraction({
@@ -334,8 +470,9 @@ function GoalExtraction({
       </p>
       <fieldset disabled={busy || disabled}>
         <label>
-          Goal title
+          Goal title <span aria-hidden="true">*</span>
           <input
+            aria-label="Goal title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={200}
@@ -369,7 +506,7 @@ function GoalExtraction({
           </select>
         </label>
         <label>
-          Target date (optional)
+          Target date
           <input
             type="date"
             value={targetDate}

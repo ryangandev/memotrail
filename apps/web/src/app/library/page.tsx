@@ -23,43 +23,42 @@ type LibraryDestination = {
 };
 
 const kindDestinations: Array<{
-  detail: string;
+  detail?: string;
   icon: IconName;
   kind: "entity" | "event" | "goal" | "story" | "writing" | null;
   title: string;
 }> = [
   {
-    detail: "Everything you have chosen to keep.",
     icon: "archive" as const,
     kind: null,
     title: "All items",
   },
   {
-    detail: "Notes, journals, reflections, lessons, and ideas.",
+    detail: "Journal, reflection, or lesson.",
     icon: "bold" as const,
     kind: "writing",
     title: "Writing",
   },
   {
-    detail: "Memories, first times, milestones, trips, and moments.",
+    detail: "Memory, first time, or milestone.",
     icon: "timeline" as const,
     kind: "event",
     title: "Events",
   },
   {
-    detail: "People, places, homes, vehicles, and other life facts.",
+    detail: "Person, place, home, or vehicle.",
     icon: "archive" as const,
     kind: "entity",
     title: "Entities",
   },
   {
-    detail: "Chapters and narratives you deliberately author.",
+    detail: "An authored life chapter.",
     icon: "star" as const,
     kind: "story",
     title: "Stories",
   },
   {
-    detail: "Intentions you may pursue without task-list pressure.",
+    detail: "An intention you want to pursue.",
     icon: "target" as const,
     kind: "goal",
     title: "Goals",
@@ -70,7 +69,7 @@ const focusedDestinations: LibraryDestination[] = [
   {
     detail: "Connect the people who shaped your life.",
     href: "/people",
-    icon: "archive" as const,
+    icon: "person" as const,
     title: "People",
   },
   {
@@ -174,7 +173,6 @@ export default async function LibraryPage({
       <section aria-labelledby="kinds-heading">
         <div className={styles.sectionHeading}>
           <h2 id="kinds-heading">Browse by Kind</h2>
-          <span>What each item is</span>
         </div>
         <nav className={styles.kindGrid} aria-label="Life Wiki Kinds">
           {kindDestinations.map((destination) => (
@@ -192,7 +190,7 @@ export default async function LibraryPage({
                 <Icon name={destination.icon} size={18} />
               </span>
               <strong>{destination.title}</strong>
-              <p>{destination.detail}</p>
+              {destination.detail ? <p>{destination.detail}</p> : null}
             </Link>
           ))}
         </nav>

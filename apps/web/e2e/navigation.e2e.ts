@@ -131,6 +131,9 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       primaryNavigation.getByRole("link", { name: "Library", exact: true }),
     ).toBeVisible();
     await expect(
+      primaryNavigation.getByRole("link", { name: "Inbox", exact: true }),
+    ).toHaveCount(0);
+    await expect(
       shell.getByText("Focused views", { exact: true }),
     ).toBeVisible();
     await expect(shell.getByText("Organize", { exact: true })).toBeVisible();
@@ -149,7 +152,20 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(searchShortcut).toContainText("⌘ K");
     await expect(searchShortcut).not.toContainText("Search your trail");
     await expect(newEntryShortcut).toContainText("⌘ J");
-    await expect(newEntryShortcut).not.toContainText("New entry");
+    await expect(newEntryShortcut).toContainText("New");
+    const inboxShortcut = page.getByRole("link", {
+      name: "Open Inbox",
+      exact: true,
+    });
+    await expect(inboxShortcut).toBeVisible();
+    await expect(inboxShortcut).not.toContainText("Inbox");
+    const [newEntryBox, searchBox, inboxBox] = await Promise.all([
+      newEntryShortcut.boundingBox(),
+      searchShortcut.boundingBox(),
+      inboxShortcut.boundingBox(),
+    ]);
+    expect(newEntryBox?.x).toBeLessThan(searchBox?.x ?? 0);
+    expect(searchBox?.x).toBeLessThan(inboxBox?.x ?? 0);
     const topActionStyle = async (button: typeof searchShortcut) =>
       button.evaluate((element) => {
         const style = getComputedStyle(element);
@@ -309,10 +325,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       page.getByRole("heading", { name: "Search your trail", exact: true }),
     ).toBeVisible();
 
-    await page
-      .getByRole("navigation", { name: "Primary navigation" })
-      .getByRole("link", { name: "Inbox", exact: true })
-      .click();
+    await page.getByRole("link", { name: "Open Inbox", exact: true }).click();
     await expect(page).toHaveURL(/\/inbox$/);
     await expect(shell).toHaveAttribute("data-shell-instance", "kept");
 

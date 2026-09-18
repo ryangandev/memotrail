@@ -100,7 +100,6 @@ test("Canonical keyword search finds People and Places without deferred Habits",
       .getByRole("link", { name: "Learning 学习 partner", exact: true })
       .click();
     await expect(page).toHaveURL(new RegExp(`/people\\?person=${person}$`));
-    await page.getByRole("button", { name: /Learning 学习 partner/ }).click();
     await expect(
       page.getByRole("dialog").getByRole("textbox", { name: /^Notes/ }),
     ).toHaveValue("A standalone Person");

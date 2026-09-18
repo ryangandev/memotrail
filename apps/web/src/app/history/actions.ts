@@ -86,3 +86,32 @@ export async function restoreHistoryVersion(
   revalidatePath("/", "layout");
   return null;
 }
+
+export async function trashWikiItem(
+  id: string,
+  revision: number,
+): Promise<string | null> {
+  if (!validHistoryID(id) || !Number.isSafeInteger(revision) || revision < 1) {
+    return "This item cannot be moved to Trash.";
+  }
+
+  const context = await getAuthenticatedContext();
+  if (!context) return "Sign in again to move this item to Trash.";
+
+  const { data, error } = await context.client
+    .from("entries")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("revision", revision)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
+
+  if (error) return "MemoTrail could not move this item to Trash.";
+  if (!data) {
+    return "This item changed on another device or is already in Trash. Refresh and try again.";
+  }
+
+  revalidatePath("/", "layout");
+  return null;
+}

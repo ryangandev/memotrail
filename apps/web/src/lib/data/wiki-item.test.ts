@@ -59,7 +59,7 @@ describe("Life Wiki item classification", () => {
         itemKind: "writing",
         itemSubtype: "journal",
       }),
-    ).toBe("/history?entry=2");
+    ).toBe("/items/2");
     expect(
       wikiEntryHref({
         id: "3",

@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type FormEvent,
-} from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   registerHomeAttachment,
@@ -16,10 +10,16 @@ import {
   type HomeActionResult,
 } from "@/app/homes/actions";
 import styles from "@/app/homes/page.module.css";
+import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import { ProgressiveImage } from "@/components/progressive-image";
+import {
+  RecordCard,
+  RecordCardBody,
+  RecordCardVisual,
+} from "@/components/record-card";
 import {
   firstTimePhotoLimit,
   firstTimePhotoSizeLimit,
@@ -47,7 +47,10 @@ import {
   type Occurrence,
 } from "@/lib/data/occurrence";
 import { useConfirmedRecords } from "@/components/use-confirmed-records";
-import { uploadEntryPhotos } from "@/lib/media/upload";
+import {
+  uploadEntryPhotos,
+  type PhotoUploadProgress as PhotoUploadProgressValue,
+} from "@/lib/media/upload";
 import type { CaptureExtractionSource } from "@/lib/data/capture-extraction-input";
 
 export function HomesWorkspace({
@@ -215,13 +218,12 @@ function HomeCard({
   const cover = home.attachments[0];
 
   return (
-    <button
-      aria-label={`${home.title}, ${homeRangeLabel(home)}`}
+    <RecordCard
+      ariaLabel={`${home.title}, ${homeRangeLabel(home)}`}
       className={styles.homeCard}
       onClick={onSelect}
-      type="button"
     >
-      <div className={styles.homeVisual}>
+      <RecordCardVisual className={styles.homeVisual}>
         {cover?.imageUrl ? (
           <ProgressiveImage alt="" src={cover.imageUrl} />
         ) : (
@@ -238,9 +240,9 @@ function HomeCard({
         {home.attachments.length > 1 ? (
           <small>{home.attachments.length} photos</small>
         ) : null}
-      </div>
+      </RecordCardVisual>
 
-      <div className={styles.cardBody}>
+      <RecordCardBody className={styles.cardBody}>
         <div className={styles.cardDates}>
           <time>{homeRangeLabel(home)}</time>
           <span>{homeDurationLabel(home)}</span>
@@ -264,8 +266,8 @@ function HomeCard({
           </div>
           <Icon name="chevron" size={15} />
         </footer>
-      </div>
-    </button>
+      </RecordCardBody>
+    </RecordCard>
   );
 }
 
@@ -330,6 +332,8 @@ export function HomeEditor({
   );
   const [existingPhotos, setExistingPhotos] = useState(home?.attachments ?? []);
   const [isPending, setIsPending] = useState(false);
+  const [photoUploadProgress, setPhotoUploadProgress] =
+    useState<PhotoUploadProgressValue | null>(null);
   const [latitude, setLatitude] = useState(home?.latitude?.toString() ?? "");
   const [longitude, setLongitude] = useState(home?.longitude?.toString() ?? "");
   const [moveInReason, setMoveInReason] = useState(home?.moveInReason ?? "");
@@ -389,9 +393,7 @@ export function HomeEditor({
     setPlaceNotes(place.notes ?? "");
   }
 
-  function handlePhotoSelection(event: ChangeEvent<HTMLInputElement>) {
-    const selected = Array.from(event.target.files ?? []);
-    event.target.value = "";
+  function handlePhotoSelection(selected: File[]) {
     const available = Math.max(
       0,
       firstTimePhotoLimit - existingPhotos.length - pendingPhotos.length,
@@ -493,6 +495,7 @@ export function HomeEditor({
         ownerId,
         saved.entry.id,
         pendingPhotos,
+        setPhotoUploadProgress,
       );
 
       if (failedPhotos.length > 0) {
@@ -514,6 +517,7 @@ export function HomeEditor({
         ),
       );
     } finally {
+      setPhotoUploadProgress(null);
       setIsPending(false);
     }
   }
@@ -628,12 +632,16 @@ export function HomeEditor({
             <fieldset className={styles.formSection}>
               <legend>Home details</legend>
               <label className={styles.fullField}>
-                <span>Home name</span>
+                <span>
+                  Home name <span aria-hidden="true">*</span>
+                </span>
                 <input
+                  aria-label="Home name"
                   maxLength={homeTitleLimit}
                   onChange={(event) => setTitle(event.target.value)}
                   placeholder="Philadelphia rowhome"
                   ref={titleRef}
+                  required
                   value={title}
                 />
               </label>
@@ -646,9 +654,7 @@ export function HomeEditor({
                 />
               </div>
               <label>
-                <span>
-                  Why you moved in <small>Optional</small>
-                </span>
+                <span>Why you moved in</span>
                 <input
                   maxLength={10_000}
                   onChange={(event) => setMoveInReason(event.target.value)}
@@ -656,9 +662,7 @@ export function HomeEditor({
                 />
               </label>
               <label>
-                <span>
-                  Why you left <small>Optional</small>
-                </span>
+                <span>Why you left</span>
                 <input
                   maxLength={10_000}
                   onChange={(event) => setMoveOutReason(event.target.value)}
@@ -671,9 +675,7 @@ export function HomeEditor({
               <legend>Place</legend>
               {placeOptions.length > 0 ? (
                 <label className={styles.fullField}>
-                  <span>
-                    Saved Place <small>Optional</small>
-                  </span>
+                  <span>Saved Place</span>
                   <select
                     onChange={(event) => selectPlace(event.target.value)}
                     value={placeId ?? ""}
@@ -691,18 +693,20 @@ export function HomeEditor({
                 </label>
               ) : null}
               <label className={styles.fullField}>
-                <span>Place name</span>
+                <span>
+                  Place name <span aria-hidden="true">*</span>
+                </span>
                 <input
+                  aria-label="Place name"
                   maxLength={homePlaceNameLimit}
                   onChange={(event) => setPlaceName(event.target.value)}
                   placeholder="The house on Pine Street"
+                  required
                   value={placeName}
                 />
               </label>
               <label>
-                <span>
-                  City <small>Optional</small>
-                </span>
+                <span>City</span>
                 <input
                   maxLength={200}
                   onChange={(event) => setCity(event.target.value)}
@@ -710,9 +714,7 @@ export function HomeEditor({
                 />
               </label>
               <label>
-                <span>
-                  Region <small>Optional</small>
-                </span>
+                <span>Region</span>
                 <input
                   maxLength={200}
                   onChange={(event) => setRegion(event.target.value)}
@@ -720,9 +722,7 @@ export function HomeEditor({
                 />
               </label>
               <label>
-                <span>
-                  Country <small>Optional</small>
-                </span>
+                <span>Country</span>
                 <input
                   maxLength={200}
                   onChange={(event) => setCountry(event.target.value)}
@@ -731,7 +731,7 @@ export function HomeEditor({
               </label>
               <label>
                 <span>
-                  Exact address <small>Private and optional</small>
+                  Exact address <small>Private</small>
                 </span>
                 <input
                   maxLength={500}
@@ -740,9 +740,7 @@ export function HomeEditor({
                 />
               </label>
               <label>
-                <span>
-                  Latitude <small>Optional</small>
-                </span>
+                <span>Latitude</span>
                 <input
                   onChange={(event) => setLatitude(event.target.value)}
                   step="any"
@@ -751,9 +749,7 @@ export function HomeEditor({
                 />
               </label>
               <label>
-                <span>
-                  Longitude <small>Optional</small>
-                </span>
+                <span>Longitude</span>
                 <input
                   onChange={(event) => setLongitude(event.target.value)}
                   step="any"
@@ -762,9 +758,7 @@ export function HomeEditor({
                 />
               </label>
               <label className={styles.fullField}>
-                <span>
-                  Place notes <small>Optional</small>
-                </span>
+                <span>Place notes</span>
                 <textarea
                   maxLength={10_000}
                   onChange={(event) => setPlaceNotes(event.target.value)}
@@ -778,9 +772,7 @@ export function HomeEditor({
             <fieldset className={styles.formSection}>
               <legend>Memories and organization</legend>
               <label className={styles.fullField}>
-                <span>
-                  Memories <small>Optional</small>
-                </span>
+                <span>Memories</span>
                 <textarea
                   maxLength={homeBodyLimit}
                   onChange={(event) => setBody(event.target.value)}
@@ -809,65 +801,21 @@ export function HomeEditor({
               />
             </fieldset>
 
-            <fieldset className={`${styles.photoField} ${styles.formSection}`}>
-              <legend>Photos</legend>
-              {existingPhotos.length > 0 || pendingPhotos.length > 0 ? (
-                <div className={styles.photoGrid}>
-                  {existingPhotos.map((photo) => (
-                    <div className={styles.photoTile} key={photo.id}>
-                      {photo.imageUrl ? (
-                        <ProgressiveImage
-                          alt={photo.originalFilename ?? "Home photo"}
-                          src={photo.imageUrl}
-                        />
-                      ) : (
-                        <span className={styles.photoFallback}>
-                          Private photo
-                        </span>
-                      )}
-                      <button
-                        aria-label={`Remove ${photo.originalFilename ?? "photo"}`}
-                        disabled={isPending}
-                        onClick={() => void handleRemovePhoto(photo)}
-                        type="button"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                  {pendingPhotos.map((file, index) => (
-                    <PendingPhoto
-                      file={file}
-                      key={`${file.name}:${file.size}:${file.lastModified}:${index}`}
-                      onRemove={() =>
-                        setPendingPhotos((current) =>
-                          current.filter((_, itemIndex) => itemIndex !== index),
-                        )
-                      }
-                    />
-                  ))}
-                </div>
-              ) : null}
-              <label className={styles.photoPicker}>
-                <Icon name="photo" size={18} />
-                <span>Add photos</span>
-                <input
-                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
-                  disabled={
-                    isPending ||
-                    existingPhotos.length + pendingPhotos.length >=
-                      firstTimePhotoLimit
-                  }
-                  multiple
-                  onChange={handlePhotoSelection}
-                  type="file"
-                />
-              </label>
-              <small>
-                Originals stay private. Up to {firstTimePhotoLimit} photos, 50
-                MB each.
-              </small>
-            </fieldset>
+            <EntryPhotoField
+              disabled={isPending}
+              existingPhotos={existingPhotos}
+              limit={firstTimePhotoLimit}
+              onRemoveExisting={(photo) => void handleRemovePhoto(photo)}
+              onRemovePending={(index) =>
+                setPendingPhotos((current) =>
+                  current.filter((_, itemIndex) => itemIndex !== index),
+                )
+              }
+              onSelect={handlePhotoSelection}
+              pendingPhotos={pendingPhotos}
+              progress={photoUploadProgress}
+              recordLabel="Home"
+            />
           </div>
 
           {result ? (
@@ -917,34 +865,19 @@ export function HomeEditor({
   );
 }
 
-function PendingPhoto({
-  file,
-  onRemove,
-}: {
-  file: File;
-  onRemove: () => void;
-}) {
-  const [previewUrl] = useState(() => URL.createObjectURL(file));
-
-  useEffect(() => () => URL.revokeObjectURL(previewUrl), [previewUrl]);
-
-  return (
-    <div className={`${styles.photoTile} ${styles.pendingPhoto}`}>
-      <ProgressiveImage alt={`Selected ${file.name}`} src={previewUrl} />
-      <span className={styles.pendingBadge}>New</span>
-      <button
-        aria-label={`Remove selected ${file.name}`}
-        onClick={onRemove}
-        type="button"
-      >
-        ×
-      </button>
-    </div>
+async function uploadPhotos(
+  ownerId: string,
+  entryId: string,
+  photos: File[],
+  onProgress: (progress: PhotoUploadProgressValue) => void,
+) {
+  return uploadEntryPhotos(
+    ownerId,
+    entryId,
+    photos,
+    registerHomeAttachment,
+    onProgress,
   );
-}
-
-async function uploadPhotos(ownerId: string, entryId: string, photos: File[]) {
-  return uploadEntryPhotos(ownerId, entryId, photos, registerHomeAttachment);
 }
 
 function namesIncludingDraft(names: string[], draft: string) {

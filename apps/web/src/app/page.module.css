@@ -323,12 +323,19 @@
   display: flex;
   height: 65px;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 0 var(--mt-space-8);
   border-bottom: 1px solid
     color-mix(in srgb, var(--mt-color-border) 82%, transparent);
   background: color-mix(in srgb, var(--mt-color-canvas) 88%, transparent);
   backdrop-filter: blur(16px);
+}
+
+.topLeading,
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: var(--mt-space-3);
 }
 
 .mobileBrand,
@@ -388,42 +395,74 @@
 .newEntryTopAction {
   border-color: color-mix(
     in srgb,
-    var(--mt-color-warm) 34%,
+    var(--mt-color-accent) 32%,
     var(--mt-color-border-strong)
   );
-  color: var(--mt-color-warm);
-  background: color-mix(in srgb, var(--mt-color-warm-subtle) 58%, transparent);
+  color: var(--mt-color-accent);
+  background: color-mix(
+    in srgb,
+    var(--mt-color-accent-subtle) 72%,
+    transparent
+  );
 }
 
 .newEntryTopAction kbd {
   border-color: color-mix(
     in srgb,
-    var(--mt-color-warm) 26%,
+    var(--mt-color-accent) 24%,
     var(--mt-color-border)
   );
-  color: var(--mt-color-warm);
+  color: var(--mt-color-accent);
   background: color-mix(
     in srgb,
-    var(--mt-color-warm-subtle) 70%,
+    var(--mt-color-accent-subtle) 68%,
     var(--mt-color-surface-raised)
   );
 }
 
 .newEntryTopAction:hover,
 .newEntryTopAction:focus-visible {
-  border-color: color-mix(in srgb, var(--mt-color-warm) 62%, transparent);
-  color: var(--mt-color-warm);
-  background: color-mix(in srgb, var(--mt-color-warm-subtle) 78%, transparent);
+  border-color: color-mix(in srgb, var(--mt-color-accent) 58%, transparent);
+  color: var(--mt-color-accent-hover);
+  background: color-mix(
+    in srgb,
+    var(--mt-color-accent-subtle) 88%,
+    transparent
+  );
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--mt-color-warm) 12%, transparent),
-    0 0 16px color-mix(in srgb, var(--mt-color-warm) 17%, transparent);
+    0 0 0 1px color-mix(in srgb, var(--mt-color-accent) 12%, transparent),
+    0 0 16px color-mix(in srgb, var(--mt-color-accent) 16%, transparent);
 }
 
-.topActions {
-  display: flex;
-  align-items: center;
-  gap: var(--mt-space-3);
-  margin-left: auto;
+.inboxTopAction {
+  position: relative;
+  width: 38px;
+  padding: 0;
+  text-decoration: none;
+}
+
+.inboxTopAction small {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  padding: 0 5px;
+  border: 2px solid var(--mt-color-canvas);
+  border-radius: var(--mt-radius-pill);
+  color: var(--mt-color-accent-ink);
+  background: var(--mt-color-accent);
+  font-size: 9px;
+  font-weight: var(--mt-font-weight-semibold);
+  line-height: 1;
+}
+
+.inboxTopAction[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--mt-color-accent) 48%, transparent);
+  color: var(--mt-color-accent);
+  background: var(--mt-color-accent-subtle);
 }
 
 .syncStatus {
@@ -1216,6 +1255,13 @@
   line-height: var(--mt-line-height-body);
 }
 
+.occurrenceEditor label:not(.presentToggle) {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: var(--mt-space-2);
+}
+
 .occurrenceEditor label > span small {
   margin-left: var(--mt-space-2);
   color: var(--mt-color-ink-faint);
@@ -1232,7 +1278,7 @@
 .datePickerField {
   display: grid;
   align-content: start;
-  gap: 7px;
+  gap: var(--mt-space-2);
   min-width: 0;
 }
 
@@ -1839,8 +1885,20 @@
     display: none;
   }
 
+  .newEntryTopAction > span {
+    display: none;
+  }
+
   .topActions {
     position: static;
+  }
+
+  .topLeading {
+    min-width: 0;
+  }
+
+  .inboxTopAction {
+    display: none;
   }
 
   .pageHeader {

@@ -41,7 +41,6 @@ type NavigationItem = {
 
 const primaryNavigation: NavigationItem[] = [
   { destination: "home", href: "/", icon: "home", label: "Home" },
-  { destination: "inbox", href: "/inbox", icon: "inbox", label: "Inbox" },
   {
     destination: "timeline",
     href: "/timeline",
@@ -58,7 +57,7 @@ const primaryNavigation: NavigationItem[] = [
 ];
 
 const recordNavigation: NavigationItem[] = [
-  { destination: "people", href: "/people", icon: "archive", label: "People" },
+  { destination: "people", href: "/people", icon: "person", label: "People" },
   { destination: "places", href: "/places", icon: "map", label: "Places" },
   { destination: "homes", href: "/homes", icon: "home", label: "Homes" },
   {
@@ -177,21 +176,15 @@ export function WorkspaceShell({
 
       <main className={styles.workspace}>
         <header className={styles.topBar}>
-          <Link
-            className={styles.mobileBrand}
-            href="/"
-            aria-label="MemoTrail home"
-          >
-            <BrandMark className={styles.brandMark} />
-            <span>MemoTrail</span>
-          </Link>
-
-          <div className={styles.topActions}>
-            <SyncStatus ownerId={viewer.id} />
-            <SearchShortcutButton
-              className={styles.topActionButton}
-              onOpen={openCommandPalette}
-            />
+          <div className={styles.topLeading}>
+            <Link
+              className={styles.mobileBrand}
+              href="/"
+              aria-label="MemoTrail home"
+            >
+              <BrandMark className={styles.brandMark} />
+              <span>MemoTrail</span>
+            </Link>
             <QuickCaptureDialog
               idPrefix="topbar-capture"
               onClose={closeQuickCapture}
@@ -200,6 +193,30 @@ export function WorkspaceShell({
               ownerId={viewer.id}
               triggerClassName={`${styles.topActionButton} ${styles.newEntryTopAction}`}
             />
+          </div>
+
+          <div className={styles.topActions}>
+            <SyncStatus ownerId={viewer.id} />
+            <SearchShortcutButton
+              className={styles.topActionButton}
+              onOpen={openCommandPalette}
+            />
+            <Link
+              aria-current={activeDestination === "inbox" ? "page" : undefined}
+              aria-label={
+                inboxCount
+                  ? `Open Inbox, ${inboxCount} ${inboxCount === 1 ? "item" : "items"}`
+                  : "Open Inbox"
+              }
+              className={`${styles.topActionButton} ${styles.inboxTopAction}`}
+              href="/inbox"
+            >
+              <Icon name="inbox" size={18} />
+              {inboxCount ? (
+                <small aria-hidden="true">{inboxCount}</small>
+              ) : null}
+              <NavigationPendingIndicator label="Inbox" />
+            </Link>
             <Link
               aria-current={activeDestination === "trash" ? "page" : undefined}
               aria-label="Open Trash"
