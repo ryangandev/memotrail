@@ -1,4 +1,6 @@
 "use client";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/button";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -134,18 +136,7 @@ export function EntryHistoryView({
         ← {detailMode ? "Library" : "All version history"}
       </Link>
       {detailMode ? (
-        <header className={styles.detailHeader}>
-          <div className={styles.detailIdentity}>
-            <span>
-              {wikiItemIdentityLabel(
-                history.current.item_kind,
-                history.current.item_subtype,
-              )}
-            </span>
-            <span>{historyDateLabel(history.current)}</span>
-          </div>
-          <h1>{historyTitle(history.current)}</h1>
-        </header>
+        <PageHeader title={<>{historyTitle(history.current)}</>} />
       ) : (
         <h2>{historyTitle(history.current)}</h2>
       )}
@@ -154,9 +145,14 @@ export function EntryHistoryView({
           ["writing", "event", "story"].includes(
             String(history.current.item_kind),
           ) && (
-            <button disabled={busy} onClick={() => void edit()}>
+            <Button
+              variant="secondary"
+              type="submit"
+              disabled={busy}
+              onClick={() => void edit()}
+            >
               Edit {wikiItemKindLabel(history.current.item_kind)}
-            </button>
+            </Button>
           )}
         {detailMode && history.versions.length > 0 ? (
           <Link href={`/history?entry=${history.current.id}`}>
@@ -195,15 +191,16 @@ export function EntryHistoryView({
             <Link href={`/goals?entry=${history.current.id}`}>Open Goal</Link>
           )}
         {detailMode && !history.current.deleted_at ? (
-          <button
-            className={styles.trashButton}
+          <Button
+            variant="danger"
+
             disabled={busy}
             onClick={() => void moveToTrash()}
             type="button"
           >
             <Icon name="trash" size={16} />
             Move to Trash
-          </button>
+          </Button>
         ) : null}
       </div>
       {error && <p role="alert">{error}</p>}
@@ -247,12 +244,14 @@ export function EntryHistoryView({
               ))}
             </select>
           </label>
-          <button
+          <Button
+            variant="secondary"
+            type="submit"
             disabled={busy || !selected || Boolean(history.current.deleted_at)}
             onClick={restore}
           >
             {busy ? "Restoring…" : "Restore selected version"}
-          </button>
+          </Button>
         </div>
       )}
       {history.current.deleted_at && (
@@ -419,7 +418,9 @@ function GoalExtraction({
   const [error, setError] = useState<string | null>(null);
   if (!open)
     return (
-      <button
+      <Button
+        variant="primary"
+        type="submit"
         disabled={disabled}
         onClick={() => {
           setGoalId(crypto.randomUUID());
@@ -427,7 +428,7 @@ function GoalExtraction({
         }}
       >
         Create linked Goal
-      </button>
+      </Button>
     );
   return (
     <form
@@ -513,7 +514,8 @@ function GoalExtraction({
           onChange={setTargetDate}
         />
         <div className={styles.controls}>
-          <button
+          <Button
+            variant="secondary"
             type="button"
             onClick={() => {
               setOpen(false);
@@ -521,10 +523,10 @@ function GoalExtraction({
             }}
           >
             Cancel
-          </button>
-          <button type="submit">
+          </Button>
+          <Button variant="primary" type="submit">
             {busy ? "Creating..." : "Create linked Goal"}
-          </button>
+          </Button>
         </div>
       </fieldset>
       {error && <p role="alert">{error}</p>}

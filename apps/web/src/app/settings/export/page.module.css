@@ -3,7 +3,7 @@
   gap: var(--mt-space-6);
   color: var(--mt-color-ink);
 }
-.content header {
+.content header:not([data-ui-page-header]) {
   display: grid;
   gap: var(--mt-space-3);
 }
@@ -23,10 +23,6 @@
   color: var(--mt-color-ink-muted);
   overflow-wrap: anywhere;
 }
-.eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.12em;
-}
 .card {
   display: grid;
   gap: 14px;
@@ -40,7 +36,10 @@
   flex-wrap: wrap;
   gap: 10px;
 }
-.content button {
+.content
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   border: 1px solid var(--mt-color-border);
   border-radius: 9px;
   padding: 11px var(--mt-space-4);
@@ -51,14 +50,23 @@
   cursor: pointer;
   min-height: 44px;
 }
-.content button:hover:not(:disabled) {
+.content
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover:not(:disabled) {
   background: var(--mt-color-surface-subtle);
 }
-.content button:focus-visible {
+.content
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):focus-visible {
   outline: 2px solid var(--mt-color-accent);
   outline-offset: 3px;
 }
-.content button:disabled {
+.content
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):disabled {
   opacity: 0.45;
   cursor: default;
 }

@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/button";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type {
@@ -221,7 +222,9 @@ export function ExplorationView({
         </nav>
       )}
       <div className={styles.toolbar}>
-        <button
+        <Button
+          variant="secondary"
+          type="submit"
           disabled={busy}
           onClick={() => {
             pollCount.current = 0;
@@ -229,7 +232,7 @@ export function ExplorationView({
           }}
         >
           Refresh conversation
-        </button>
+        </Button>
         <Link href="/settings/ai">AI settings</Link>
       </div>
       <p className={styles.notice}>
@@ -239,9 +242,14 @@ export function ExplorationView({
         memories. Opening this page and refreshing are free.
       </p>
       {workspace.turns.length < workspace.total_count && (
-        <button disabled={busy} onClick={() => void run(() => reload(true))}>
+        <Button
+          variant="secondary"
+          type="submit"
+          disabled={busy}
+          onClick={() => void run(() => reload(true))}
+        >
           Load earlier turns
-        </button>
+        </Button>
       )}
       <section
         className={styles.conversation}
@@ -263,9 +271,14 @@ export function ExplorationView({
             {turn.status === "completed" ? (
               <>
                 <p className={styles.writing}>{turn.answer}</p>
-                <button disabled={busy} onClick={() => selectConclusion(turn)}>
+                <Button
+                  variant="primary"
+                  type="submit"
+                  disabled={busy}
+                  onClick={() => selectConclusion(turn)}
+                >
                   Save as Entry
-                </button>
+                </Button>
               </>
             ) : (
               <p role="status">
@@ -275,7 +288,9 @@ export function ExplorationView({
               </p>
             )}
             {turn.status === "failed" && (
-              <button
+              <Button
+                variant="secondary"
+                type="submit"
                 disabled={busy}
                 onClick={() => {
                   setPending(null);
@@ -284,7 +299,7 @@ export function ExplorationView({
                 }}
               >
                 Use question for a new attempt
-              </button>
+              </Button>
             )}
             <details>
               <summary>Recorded source snapshot</summary>
@@ -332,13 +347,17 @@ export function ExplorationView({
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="What could I learn from this thought?"
         />
-        <button disabled={busy || generating || !question.trim()}>
+        <Button
+          variant="primary"
+          type="submit"
+          disabled={busy || generating || !question.trim()}
+        >
           {busy
             ? "Working…"
             : pending
               ? "Retry the same request"
               : "Send question"}
-        </button>
+        </Button>
         {pending && (
           <p className={styles.notice}>
             The last request is unconfirmed. Refresh to check the conversation.
@@ -401,10 +420,15 @@ export function ExplorationView({
               />
             </div>
             <div className={styles.toolbar}>
-              <button disabled={busy || !save.body.trim()}>
+              <Button
+                variant="primary"
+                type="submit"
+                disabled={busy || !save.body.trim()}
+              >
                 {save.attempted ? "Retry same save" : "Save conclusion"}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
                 type="button"
                 disabled={busy}
                 onClick={() => {
@@ -417,7 +441,7 @@ export function ExplorationView({
                 }}
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </form>
         </section>

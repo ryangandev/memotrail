@@ -304,7 +304,10 @@
   box-shadow: var(--mt-shadow-floating);
 }
 
-.suggestions button,
+.suggestions
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ),
 .suggestions .statusOption {
   display: grid;
   min-height: 36px;
@@ -324,12 +327,22 @@
   border-top: 1px solid var(--mt-color-border);
 }
 
-.suggestions button:hover,
-.suggestions button:focus-visible {
+.suggestions
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover,
+.suggestions
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):focus-visible {
   background: var(--mt-color-surface-subtle);
 }
 
-.suggestions button small,
+.suggestions
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  )
+  small,
 .suggestions .statusOption small {
   color: var(--mt-color-ink-faint);
   font-size: 10px;
@@ -359,7 +372,10 @@
   opacity: 0.56;
 }
 
-.editor:disabled button {
+.editor:disabled
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   cursor: default;
 }
 

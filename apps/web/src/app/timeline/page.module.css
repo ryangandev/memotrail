@@ -1,63 +1,3 @@
-.pageHeader {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--mt-space-6);
-}
-
-.eyebrow {
-  margin-bottom: var(--mt-space-2);
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.pageHeader h1 {
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-display);
-  font-weight: var(--mt-font-weight-medium);
-  letter-spacing: -0.035em;
-  line-height: var(--mt-line-height-tight);
-}
-
-.pageHeader > div > p:last-child {
-  max-width: 650px;
-  margin-top: var(--mt-space-2);
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-body);
-  line-height: var(--mt-line-height-body);
-}
-
-.addButton,
-.saveButton {
-  display: inline-flex;
-  height: 40px;
-  align-items: center;
-  justify-content: center;
-  gap: var(--mt-space-2);
-  padding: 0 var(--mt-space-4);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent);
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-medium);
-  cursor: pointer;
-  transition: background var(--mt-motion-quick);
-}
-
-.addButton:hover,
-.saveButton:hover {
-  background: var(--mt-color-accent-hover);
-}
-
-.addButton:disabled,
-.saveButton:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
 .summary {
   display: flex;
   flex-wrap: wrap;
@@ -66,18 +6,6 @@
   margin-top: var(--mt-space-5);
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
-}
-
-.birthDateLink {
-  padding: 0;
-  color: var(--mt-color-accent);
-  background: transparent;
-  font: inherit;
-  cursor: pointer;
-}
-
-.birthDateLink:hover {
-  text-decoration: underline;
 }
 
 .message {
@@ -253,8 +181,15 @@
   font-size: 10px;
 }
 
-.trackLabel button,
-.mobileTrack header button {
+.trackLabel
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ),
+.mobileTrack
+  header:not([data-ui-page-header])
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   display: grid;
   width: 27px;
   height: 27px;
@@ -267,8 +202,15 @@
   cursor: pointer;
 }
 
-.trackLabel button:hover,
-.mobileTrack header button:hover {
+.trackLabel
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover,
+.mobileTrack
+  header:not([data-ui-page-header])
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover {
   border-color: var(--mt-color-border);
   color: var(--mt-color-accent);
   background: var(--mt-color-surface);
@@ -544,7 +486,10 @@
   gap: var(--mt-space-2);
 }
 
-.birthDateActions button {
+.birthDateActions
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   min-height: 40px;
   padding: 0 var(--mt-space-4);
   border-radius: var(--mt-radius-medium);
@@ -555,22 +500,34 @@
   cursor: pointer;
 }
 
-.birthDateActions button:last-child {
+.birthDateActions
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):last-child {
   color: var(--mt-color-accent-ink);
   background: var(--mt-color-accent);
 }
 
-.birthDateActions button:hover:not(:disabled) {
+.birthDateActions
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover:not(:disabled) {
   color: var(--mt-color-ink);
   background: var(--mt-color-surface-subtle);
 }
 
-.birthDateActions button:last-child:hover:not(:disabled) {
+.birthDateActions
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):last-child:hover:not(:disabled) {
   color: var(--mt-color-accent-ink);
   background: var(--mt-color-accent-hover);
 }
 
-.birthDateActions button:disabled {
+.birthDateActions
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):disabled {
   cursor: not-allowed;
   opacity: 0.5;
 }
@@ -609,7 +566,10 @@
   letter-spacing: -0.025em;
 }
 
-.dialogHeader > button {
+.dialogHeader
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   display: grid;
   width: 34px;
   height: 34px;
@@ -622,7 +582,10 @@
   cursor: pointer;
 }
 
-.dialogHeader > button:hover {
+.dialogHeader
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover {
   color: var(--mt-color-ink);
 }
 
@@ -649,7 +612,10 @@
   background: var(--mt-color-surface-subtle);
 }
 
-.kindPicker button {
+.kindPicker
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   display: flex;
   height: 40px;
   align-items: center;
@@ -744,16 +710,6 @@
   grid-column: 1 / -1;
 }
 
-.presentNote {
-  display: flex;
-  height: 42px;
-  align-self: end;
-  align-items: center;
-  gap: var(--mt-space-2);
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
-}
-
 .formMessage {
   margin: calc(-1 * var(--mt-space-3)) var(--mt-space-6) var(--mt-space-5);
   padding: var(--mt-space-3);
@@ -786,37 +742,6 @@
   gap: var(--mt-space-2);
 }
 
-.cancelButton,
-.trashButton {
-  height: 40px;
-  padding: 0 var(--mt-space-4);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-ink-muted);
-  background: transparent;
-  font-size: var(--mt-font-size-label);
-  cursor: pointer;
-}
-
-.cancelButton:hover {
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface-subtle);
-}
-
-.trashButton {
-  padding-inline: 0;
-  color: var(--mt-color-warm);
-}
-
-.trashButton:hover {
-  color: var(--mt-color-ink);
-}
-
-.cancelButton:disabled,
-.trashButton:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
 .mobileTrack {
   overflow: hidden;
   border: 1px solid var(--mt-color-border);
@@ -824,7 +749,7 @@
   background: var(--mt-color-surface-raised);
 }
 
-.mobileTrack header {
+.mobileTrack header:not([data-ui-page-header]) {
   display: flex;
   min-height: 62px;
   align-items: center;
@@ -834,13 +759,13 @@
   border-bottom: 1px solid var(--mt-color-border);
 }
 
-.mobileTrack header h2 {
+.mobileTrack header:not([data-ui-page-header]) h2 {
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-title-small);
   font-weight: var(--mt-font-weight-medium);
 }
 
-.mobileTrack header span {
+.mobileTrack header:not([data-ui-page-header]) span {
   color: var(--mt-color-ink-faint);
   font-size: 10px;
 }
@@ -855,7 +780,13 @@
   display: grid;
 }
 
-.mobileItems > :is(button, a) {
+.mobileItems
+  > :is(
+    button:not(
+      :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+    ),
+    a
+  ) {
   display: grid;
   grid-template-columns: 14px minmax(0, 1fr) auto;
   align-items: center;
@@ -870,15 +801,34 @@
   cursor: pointer;
 }
 
-.mobileItems > :is(button, a):last-child {
+.mobileItems
+  > :is(
+    button:not(
+      :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+    ),
+    a
+  ):last-child {
   border-bottom: 0;
 }
 
-.mobileItems > :is(button, a):hover {
+.mobileItems
+  > :is(
+    button:not(
+      :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+    ),
+    a
+  ):hover {
   background: var(--mt-color-surface);
 }
 
-.mobileItems > :is(button, a) > span:nth-child(2) {
+.mobileItems
+  > :is(
+    button:not(
+      :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+    ),
+    a
+  )
+  > span:nth-child(2) {
   display: grid;
   min-width: 0;
   gap: 3px;
@@ -914,23 +864,6 @@
 }
 
 @media (max-width: 780px) {
-  .pageHeader {
-    align-items: flex-start;
-  }
-
-  .pageHeader h1 {
-    font-size: 36px;
-  }
-
-  .addButton span {
-    display: none;
-  }
-
-  .addButton {
-    width: 40px;
-    padding: 0;
-  }
-
   .desktopTimeline {
     display: none;
   }
@@ -962,17 +895,9 @@
   .fullField {
     grid-column: auto;
   }
-
-  .presentNote {
-    align-self: auto;
-  }
 }
 
 @media (max-width: 480px) {
-  .pageHeader > div > p:last-child {
-    font-size: var(--mt-font-size-label);
-  }
-
   .summary {
     margin-top: var(--mt-space-4);
   }
@@ -997,9 +922,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .addButton,
-  .creationOption,
-  .saveButton {
+  .creationOption {
     transition: none;
   }
 
@@ -1041,7 +964,10 @@
   display: grid;
   gap: var(--mt-space-2);
 }
-.undatedMoments button,
+.undatedMoments
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ),
 .undatedMoments a {
   text-align: left;
   color: inherit;

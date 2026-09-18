@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/button";
 
 import { useCallback, useState, useSyncExternalStore } from "react";
 import styles from "@/app/page.module.css";
@@ -54,14 +55,15 @@ export function DismissibleSyncNote({ ownerId }: { ownerId: string }) {
         <strong>Private cloud sync</strong>
         <span>Available on Web and iPhone</span>
       </div>
-      <button
+      <Button
+        variant="secondary"
         aria-label="Dismiss private cloud sync"
         onClick={dismiss}
         title="Dismiss"
         type="button"
       >
         <Icon name="close" size={15} />
-      </button>
+      </Button>
     </div>
   );
 }

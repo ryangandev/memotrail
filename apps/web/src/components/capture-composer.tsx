@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/button";
 
 import {
   type ChangeEvent,
@@ -676,14 +677,15 @@ export function CaptureComposer({
               onChange={(value) => updateDraft(title, body, value)}
               disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
             />
-            <button
-              className={styles.removeCaptureDateButton}
+            <Button
+              variant="secondary"
+
               disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
               onClick={() => updateDraft(title, body, null)}
               type="button"
             >
               Use capture time
-            </button>
+            </Button>
           </div>
         ) : null}
         {photos.length > 0 ? (
@@ -802,8 +804,9 @@ export function CaptureComposer({
             >
               {composerFeedback.message}
             </p>
-            <button
-              className={styles.saveButton}
+            <Button
+              variant="primary"
+
               disabled={
                 isSaving ||
                 isSyncing ||
@@ -815,7 +818,7 @@ export function CaptureComposer({
             >
               {isSaving ? "Saving…" : "Save to Inbox"}
               <Icon name="chevron" size={16} />
-            </button>
+            </Button>
           </div>
         </div>
       </form>
@@ -830,15 +833,16 @@ export function CaptureComposer({
               <h2 id={`${idPrefix}-pending-heading`}>Pending sync</h2>
               <span>{pendingCountLabel(pendingEntries.length)}</span>
             </div>
-            <button
-              className={styles.retryButton}
+            <Button
+              variant="secondary"
+
               disabled={isSyncing}
               onClick={() => void synchronizeQueue()}
               type="button"
             >
               <Icon name="refresh" size={14} />
               {isSyncing ? "Syncing…" : "Retry now"}
-            </button>
+            </Button>
           </div>
           <div className={styles.entryList}>
             {pendingEntries.map((entry) => (

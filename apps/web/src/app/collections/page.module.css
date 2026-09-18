@@ -1,56 +1,3 @@
-.pageHeader {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--mt-space-6);
-}
-
-.eyebrow {
-  margin-bottom: var(--mt-space-2);
-  color: var(--mt-color-warm);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.pageHeader h1 {
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-display);
-  font-weight: var(--mt-font-weight-medium);
-  letter-spacing: -0.035em;
-  line-height: var(--mt-line-height-tight);
-}
-
-.pageHeader > div > p:last-child {
-  max-width: 650px;
-  margin-top: var(--mt-space-2);
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-body);
-  line-height: var(--mt-line-height-body);
-}
-
-.newEntryButton {
-  display: inline-flex;
-  height: 40px;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  gap: var(--mt-space-2);
-  padding: 0 var(--mt-space-4);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent);
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-medium);
-  text-decoration: none;
-  transition: background var(--mt-motion-quick);
-}
-
-.newEntryButton:hover {
-  background: var(--mt-color-accent-hover);
-}
-
 .summary {
   display: flex;
   align-items: center;
@@ -193,7 +140,10 @@
   font-size: var(--mt-font-size-caption);
 }
 
-.detailToolbar > button {
+.detailToolbar
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   margin-left: var(--mt-space-2);
 }
 
@@ -349,8 +299,7 @@
   font-size: 10px;
 }
 
-.message,
-.emptyState {
+.message {
   min-height: 190px;
   margin-top: var(--mt-space-8);
   border: 1px solid var(--mt-color-border);
@@ -375,48 +324,6 @@
 .message p {
   margin-top: var(--mt-space-1);
   color: var(--mt-color-ink-muted);
-}
-
-.emptyState {
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: var(--mt-space-2);
-  padding: var(--mt-space-8);
-  color: var(--mt-color-ink-muted);
-  text-align: center;
-}
-
-.emptyMark {
-  display: grid;
-  width: 50px;
-  height: 50px;
-  margin-bottom: var(--mt-space-2);
-  place-items: center;
-  border-radius: 50%;
-  color: var(--mt-color-warm);
-  background: var(--mt-color-warm-subtle);
-}
-
-.emptyState strong {
-  color: var(--mt-color-ink);
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title-small);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.emptyState p {
-  max-width: 480px;
-  font-size: var(--mt-font-size-label);
-  line-height: var(--mt-line-height-body);
-}
-
-.emptyState a {
-  margin-top: var(--mt-space-2);
-  color: var(--mt-color-accent);
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-medium);
-  text-decoration: none;
 }
 
 .pagination {
@@ -458,31 +365,6 @@
 }
 
 @media (max-width: 720px) {
-  .pageHeader {
-    align-items: center;
-  }
-
-  .pageHeader h1 {
-    font-size: 34px;
-  }
-
-  .pageHeader > div > p:last-child {
-    display: none;
-  }
-
-  .newEntryButton {
-    width: 40px;
-    padding: 0;
-  }
-
-  .newEntryButton span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-  }
-
   .collectionGrid {
     grid-template-columns: 1fr;
     margin-top: var(--mt-space-6);
@@ -520,15 +402,13 @@
     margin-left: 0;
   }
 
-  .message,
-  .emptyState {
+  .message {
     margin-top: var(--mt-space-6);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .collectionCard,
-  .newEntryButton {
+  .collectionCard {
     transition: none;
   }
 }

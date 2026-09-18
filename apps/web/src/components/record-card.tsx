@@ -7,7 +7,7 @@ export function RecordCard({
   className,
   onClick,
 }: {
-  ariaLabel: string;
+  ariaLabel?: string;
   children: ReactNode;
   className?: string;
   onClick: () => void;

@@ -1,4 +1,7 @@
 "use client";
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/button";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -90,25 +93,30 @@ export function VehiclesWorkspace({
 
   return (
     <PageFrame variant="wide">
-      <header className={styles.pageHeader}>
-        <div>
-          <p className={styles.eyebrow}>The machines that carried your story</p>
-          <h1>Vehicles</h1>
-          <p>
+      <PageHeader
+        title={<>Vehicles</>}
+        eyebrow={<>The machines that carried your story</>}
+        description={
+          <>
             Keep each car, bike, or other vehicle as an Entity, with the dates,
             facts, and memories that made it yours.
-          </p>
-        </div>
-        <button
-          aria-label="Add Vehicle"
-          className={styles.addButton}
-          onClick={() => setSelectedVehicle(null)}
-          type="button"
-        >
-          <Icon name="plus" />
-          <span>Add Vehicle</span>
-        </button>
-      </header>
+          </>
+        }
+        actions={
+          <>
+            <Button
+              variant="primary"
+              aria-label="Add Vehicle"
+
+              onClick={() => setSelectedVehicle(null)}
+              type="button"
+            >
+              <Icon name="plus" />
+              <span>Add Vehicle</span>
+            </Button>
+          </>
+        }
+      />
 
       <div className={styles.summary} aria-label="Vehicles summary">
         <span>{countLabel(vehicles.length, "vehicle")}</span>
@@ -129,20 +137,21 @@ export function VehiclesWorkspace({
       ) : null}
 
       {!loadError && vehicles.length === 0 ? (
-        <button
-          className={styles.emptyState}
+        <EmptyState
+          title={<>Begin with a vehicle that carried you</>}
+          icon={
+            <>
+              <Icon name="car" size={24} />
+            </>
+          }
+          description={
+            <>
+              Add its name and best-known start date now. Specs, photos, and
+              memories can come later.
+            </>
+          }
           onClick={() => setSelectedVehicle(null)}
-          type="button"
-        >
-          <span className={styles.emptyMark}>
-            <Icon name="car" size={24} />
-          </span>
-          <strong>Begin with a vehicle that carried you</strong>
-          <span>
-            Add its name and best-known start date now. Specs, photos, and
-            memories can come later.
-          </span>
-        </button>
+        />
       ) : null}
 
       {!loadError && orderedVehicles.length > 0 ? (
@@ -711,27 +720,30 @@ export function VehicleEditor({
           <footer className={styles.dialogFooter}>
             <div>
               {currentId ? (
-                <button
-                  className={styles.trashButton}
+                <Button
+                  variant="danger"
+
                   disabled={isPending}
                   onClick={() => void handleTrashEntry()}
                   type="button"
                 >
                   Move to Trash
-                </button>
+                </Button>
               ) : null}
             </div>
             <div>
-              <button
-                className={styles.cancelButton}
+              <Button
+                variant="secondary"
+
                 disabled={isPending}
                 onClick={onClose}
                 type="button"
               >
                 Cancel
-              </button>
-              <button
-                className={styles.saveButton}
+              </Button>
+              <Button
+                variant="primary"
+
                 disabled={isPending}
                 type="submit"
               >
@@ -740,7 +752,7 @@ export function VehicleEditor({
                   : currentId
                     ? "Save changes"
                     : "Add Vehicle"}
-              </button>
+              </Button>
             </div>
           </footer>
         </form>

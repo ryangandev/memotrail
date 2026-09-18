@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/button";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -243,37 +244,41 @@ export function OrganizationControl({
                   <footer>
                     <div>
                       {item && kind === "collection" ? (
-                        <button
-                          className={styles.danger}
+                        <Button
+                          variant="danger"
+
                           disabled={busy}
                           onClick={() => void remove()}
                           type="button"
                         >
                           Move to Trash
-                        </button>
+                        </Button>
                       ) : null}
                       {item && kind === "tag" && item.entry_count === 0 ? (
-                        <button
-                          className={styles.danger}
+                        <Button
+                          variant="danger"
+
                           disabled={busy}
                           onClick={() => void remove()}
                           type="button"
                         >
                           Delete unused tag
-                        </button>
+                        </Button>
                       ) : null}
                     </div>
                     <div>
-                      <button
-                        className={styles.cancel}
+                      <Button
+                        variant="secondary"
+
                         disabled={busy}
                         onClick={() => setOpen(false)}
                         type="button"
                       >
                         Cancel
-                      </button>
-                      <button
-                        className={styles.save}
+                      </Button>
+                      <Button
+                        variant="primary"
+
                         disabled={busy || !validOrganizationInput(input)}
                         type="submit"
                       >
@@ -282,7 +287,7 @@ export function OrganizationControl({
                           : item
                             ? "Save changes"
                             : `Create ${label}`}
-                      </button>
+                      </Button>
                     </div>
                   </footer>
                 </form>
@@ -312,13 +317,14 @@ export function OrganizationControl({
                         ))}
                       </select>
                     </label>
-                    <button
+                    <Button
+                      variant="secondary"
                       disabled={busy || !targetId}
                       onClick={() => void merge()}
                       type="button"
                     >
                       Merge tag
-                    </button>
+                    </Button>
                   </div>
                 ) : null}
 

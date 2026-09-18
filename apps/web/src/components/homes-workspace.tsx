@@ -1,4 +1,7 @@
 "use client";
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/button";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -86,25 +89,30 @@ export function HomesWorkspace({
 
   return (
     <PageFrame variant="wide">
-      <header className={styles.pageHeader}>
-        <div>
-          <p className={styles.eyebrow}>The places that held your life</p>
-          <h1>Homes</h1>
-          <p>
+      <PageHeader
+        title={<>Homes</>}
+        eyebrow={<>The places that held your life</>}
+        description={
+          <>
             Keep each residence as a Home Entity, with the dates, place facts,
             and memories that made it yours.
-          </p>
-        </div>
-        <button
-          aria-label="Add Home"
-          className={styles.addButton}
-          onClick={() => setSelectedHome(null)}
-          type="button"
-        >
-          <Icon name="plus" />
-          <span>Add Home</span>
-        </button>
-      </header>
+          </>
+        }
+        actions={
+          <>
+            <Button
+              variant="primary"
+              aria-label="Add Home"
+
+              onClick={() => setSelectedHome(null)}
+              type="button"
+            >
+              <Icon name="plus" />
+              <span>Add Home</span>
+            </Button>
+          </>
+        }
+      />
 
       <div className={styles.summary} aria-label="Homes summary">
         <span>{countLabel(homes.length, "home")}</span>
@@ -125,20 +133,21 @@ export function HomesWorkspace({
       ) : null}
 
       {!loadError && homes.length === 0 ? (
-        <button
-          className={styles.emptyState}
+        <EmptyState
+          title={<>Begin with somewhere you called home</>}
+          icon={
+            <>
+              <Icon name="home" size={24} />
+            </>
+          }
+          description={
+            <>
+              Add the best-known move-in date now. Exact addresses, reasons,
+              photos, and memories can come later.
+            </>
+          }
           onClick={() => setSelectedHome(null)}
-          type="button"
-        >
-          <span className={styles.emptyMark}>
-            <Icon name="home" size={24} />
-          </span>
-          <strong>Begin with somewhere you called home</strong>
-          <span>
-            Add the best-known move-in date now. Exact addresses, reasons,
-            photos, and memories can come later.
-          </span>
-        </button>
+        />
       ) : null}
 
       {!loadError && currentHomes.length > 0 ? (
@@ -827,27 +836,30 @@ export function HomeEditor({
           <footer className={styles.dialogFooter}>
             <div>
               {currentId ? (
-                <button
-                  className={styles.trashButton}
+                <Button
+                  variant="danger"
+
                   disabled={isPending}
                   onClick={() => void handleTrashEntry()}
                   type="button"
                 >
                   Move to Trash
-                </button>
+                </Button>
               ) : null}
             </div>
             <div>
-              <button
-                className={styles.cancelButton}
+              <Button
+                variant="secondary"
+
                 disabled={isPending}
                 onClick={onClose}
                 type="button"
               >
                 Cancel
-              </button>
-              <button
-                className={styles.saveButton}
+              </Button>
+              <Button
+                variant="primary"
+
                 disabled={isPending}
                 type="submit"
               >
@@ -856,7 +868,7 @@ export function HomeEditor({
                   : currentId
                     ? "Save changes"
                     : "Add Home"}
-              </button>
+              </Button>
             </div>
           </footer>
         </form>

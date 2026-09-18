@@ -1,4 +1,7 @@
 "use client";
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/button";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -61,25 +64,30 @@ export function PlacesWorkspace({
 
   return (
     <PageFrame variant="wide">
-      <header className={common.pageHeader}>
-        <div>
-          <p className={common.eyebrow}>A geography of your archive</p>
-          <h1>Places</h1>
-          <p>
+      <PageHeader
+        title={<>Places</>}
+        eyebrow={<>A geography of your archive</>}
+        description={
+          <>
             Keep reusable locations once, then connect them to the Items and
             Home chapters that give them meaning.
-          </p>
-        </div>
-        <button
-          aria-label="Add Place"
-          className={common.addButton}
-          onClick={() => setSelectedPlace(null)}
-          type="button"
-        >
-          <Icon name="plus" />
-          <span>Add Place</span>
-        </button>
-      </header>
+          </>
+        }
+        actions={
+          <>
+            <Button
+              variant="primary"
+              aria-label="Add Place"
+
+              onClick={() => setSelectedPlace(null)}
+              type="button"
+            >
+              <Icon name="plus" />
+              <span>Add Place</span>
+            </Button>
+          </>
+        }
+      />
 
       <div className={common.summary} aria-label="Places summary">
         <span>{countLabel(places.length, "place")}</span>
@@ -100,20 +108,21 @@ export function PlacesWorkspace({
       ) : null}
 
       {!loadError && places.length === 0 ? (
-        <button
-          className={common.emptyState}
+        <EmptyState
+          title={<>Pin the first place in your story</>}
+          icon={
+            <>
+              <Icon name="map" size={24} />
+            </>
+          }
+          description={
+            <>
+              Start with a name. Address, coordinates, notes, and connected
+              memories can be added whenever they become useful.
+            </>
+          }
           onClick={() => setSelectedPlace(null)}
-          type="button"
-        >
-          <span className={common.emptyMark}>
-            <Icon name="map" size={24} />
-          </span>
-          <strong>Pin the first place in your story</strong>
-          <span>
-            Start with a name. Address, coordinates, notes, and connected
-            memories can be added whenever they become useful.
-          </span>
-        </button>
+        />
       ) : null}
 
       {!loadError && remembered.length > 0 ? (
@@ -612,7 +621,8 @@ function PlaceEditor({
                     </option>
                   ))}
                 </select>
-                <button
+                <Button
+                  variant="secondary"
                   disabled={!selectedEntryId || isPending}
                   onClick={() => {
                     if (!selectedEntryId) return;
@@ -625,7 +635,7 @@ function PlaceEditor({
                   type="button"
                 >
                   <Icon name="plus" size={14} /> Link Item
-                </button>
+                </Button>
               </div>
             </fieldset>
           </div>
@@ -640,14 +650,15 @@ function PlaceEditor({
             <div>
               {currentId ? (
                 <div className={styles.trashControl}>
-                  <button
-                    className={common.trashButton}
+                  <Button
+                    variant="danger"
+
                     disabled={isPending || !canTrash}
                     onClick={() => void handleTrash()}
                     type="button"
                   >
                     Move to Trash
-                  </button>
+                  </Button>
                   {!canTrash ? (
                     <small>
                       {protectedEntries.length > 0
@@ -661,16 +672,18 @@ function PlaceEditor({
               ) : null}
             </div>
             <div>
-              <button
-                className={common.cancelButton}
+              <Button
+                variant="secondary"
+
                 disabled={isPending}
                 onClick={onClose}
                 type="button"
               >
                 Cancel
-              </button>
-              <button
-                className={common.saveButton}
+              </Button>
+              <Button
+                variant="primary"
+
                 disabled={isPending}
                 type="submit"
               >
@@ -679,7 +692,7 @@ function PlaceEditor({
                   : currentId
                     ? "Save changes"
                     : "Add Place"}
-              </button>
+              </Button>
             </div>
           </footer>
         </form>

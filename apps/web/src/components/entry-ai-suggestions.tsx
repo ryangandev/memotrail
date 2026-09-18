@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/button";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { dismissAISuggestion } from "@/app/settings/ai/actions";
@@ -149,16 +150,18 @@ export function EntryAISuggestionsPanel({
           <p>{content.rationale}</p>
           <div className={styles.choices}>
             {content.title && (
-              <button
+              <Button
+                variant="secondary"
                 type="button"
                 disabled={disabled}
                 onClick={() => onApply("title", content.title)}
               >
                 Use title: {content.title}
-              </button>
+              </Button>
             )}
             {content.classification && (
-              <button
+              <Button
+                variant="secondary"
                 type="button"
                 disabled={disabled}
                 onClick={() =>
@@ -169,47 +172,55 @@ export function EntryAISuggestionsPanel({
                 {content.classification.itemSubtype === "first_time"
                   ? "First Time"
                   : "Note"}
-              </button>
+              </Button>
             )}
             {content.collections.map((name) => (
-              <button
+              <Button
+                variant="secondary"
                 type="button"
                 disabled={disabled}
                 key={`c:${name}`}
                 onClick={() => onApply("collections", [name])}
               >
                 Add Collection: {name}
-              </button>
+              </Button>
             ))}
             {content.tags.map((name) => (
-              <button
+              <Button
+                variant="secondary"
                 type="button"
                 disabled={disabled}
                 key={`t:${name}`}
                 onClick={() => onApply("tags", [name])}
               >
                 Add tag: {name}
-              </button>
+              </Button>
             ))}
           </div>
           {content.dateText && (
             <p>
               <strong>Date idea:</strong> {content.dateText}
               <br />
-              <button
+              <Button
+                variant="secondary"
                 type="button"
                 disabled={disabled || busy}
                 onClick={() => onApply("dateText", content.dateText)}
               >
                 Use as approximate date
-              </button>{" "}
+              </Button>{" "}
               Copies the description only. Review the precision and calendar
               fields below before saving.
             </p>
           )}
-          <button type="button" disabled={disabled || busy} onClick={dismiss}>
+          <Button
+            variant="secondary"
+            type="button"
+            disabled={disabled || busy}
+            onClick={dismiss}
+          >
             Dismiss suggestions
-          </button>
+          </Button>
         </>
       ) : (
         <>
@@ -218,11 +229,16 @@ export function EntryAISuggestionsPanel({
               ? "Suggestions are being prepared. Check again shortly."
               : "No suggestions are ready yet."}
           </p>
-          <button type="button" disabled={disabled || busy} onClick={reload}>
+          <Button
+            variant="secondary"
+            type="button"
+            disabled={disabled || busy}
+            onClick={reload}
+          >
             {record?.status === "failed"
               ? "Retry suggestions"
               : "Check suggestions"}
-          </button>
+          </Button>
         </>
       )}
       {message && <p role="status">{message}</p>}

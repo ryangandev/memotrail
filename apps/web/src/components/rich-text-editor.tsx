@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/button";
 
 import {
   useCallback,
@@ -390,11 +391,12 @@ function FormattingToolbar({
             value={linkValue}
           />
           {formatState.link ? (
-            <button onClick={removeLink} type="button">
+            <Button variant="secondary" onClick={removeLink} type="button">
               Remove
-            </button>
+            </Button>
           ) : null}
-          <button
+          <Button
+            variant="secondary"
             onClick={() => {
               setIsLinkEditorOpen(false);
               editor?.commands.focus();
@@ -402,14 +404,15 @@ function FormattingToolbar({
             type="button"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
             disabled={!normalizedLink(linkValue)}
             onClick={applyLink}
             type="button"
           >
             Apply
-          </button>
+          </Button>
         </div>
       ) : null}
     </div>

@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/page-header";
 import Link from "next/link";
 import { ExplorationView } from "@/components/exploration-view";
 import { PageFrame } from "@/components/page-frame";
@@ -29,11 +30,13 @@ export default async function ExplorePage({
   }
   return (
     <PageFrame className={styles.workspace} variant="compact">
-      <header>
-        <p className={styles.eyebrow}>ROOM FOR A THOUGHT TO GROW</p>
-        <h1>Explore with AI</h1>
-        <p>A separate conversation. Your original words stay yours.</p>
-      </header>
+      <PageHeader
+        title={<>Explore with AI</>}
+        eyebrow={<>ROOM FOR A THOUGHT TO GROW</>}
+        description={
+          <>A separate conversation. Your original words stay yours.</>
+        }
+      />
       {workspace ? (
         <ExplorationView
           key={`${context.viewer.id}:${entry}`}

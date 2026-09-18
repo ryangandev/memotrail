@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/button";
 
 import { useState, type FormEvent } from "react";
 import { saveProfileTimezone } from "@/app/settings/actions";
@@ -54,9 +55,13 @@ export function TimezoneSetting({
         />
       </label>
       <div className={styles.timezoneControls}>
-        <button disabled={busy || timezone === savedTimezone} type="submit">
+        <Button
+          variant="primary"
+          disabled={busy || timezone === savedTimezone}
+          type="submit"
+        >
           {busy ? "Saving..." : "Save time zone"}
-        </button>
+        </Button>
         {message ? <span role="status">{message}</span> : null}
       </div>
     </form>

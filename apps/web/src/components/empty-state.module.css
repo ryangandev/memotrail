@@ -1,4 +1,6 @@
 .state {
+  width: 100%;
+  font: inherit;
   display: flex;
   min-width: 0;
   flex-direction: column;
@@ -9,6 +11,17 @@
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface);
   text-align: center;
+}
+
+.state:is(button) {
+  cursor: pointer;
+}
+.state:is(button):hover {
+  border-color: var(--mt-color-accent);
+}
+.state:is(button):focus-visible {
+  outline: 2px solid var(--mt-color-accent);
+  outline-offset: 3px;
 }
 
 .icon {

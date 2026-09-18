@@ -27,7 +27,10 @@
   gap: var(--mt-space-2);
   margin: var(--mt-space-3) 0;
 }
-.panel button {
+.panel
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-small);
   padding: var(--mt-space-2) 10px;
@@ -37,7 +40,10 @@
   cursor: pointer;
   overflow-wrap: anywhere;
 }
-.panel button:disabled {
+.panel
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):disabled {
   opacity: 0.5;
   cursor: default;
 }

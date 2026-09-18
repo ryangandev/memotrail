@@ -5,35 +5,15 @@
   margin-top: var(--mt-space-8);
 }
 
-.card {
+.personBody {
   display: flex;
-  min-width: 0;
   min-height: 260px;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--mt-space-2);
-  padding: var(--mt-space-5);
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface-raised);
-  box-shadow: 0 1px 2px rgb(38 37 31 / 0.025);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition:
-    transform var(--mt-motion-quick),
-    border-color var(--mt-motion-quick),
-    box-shadow var(--mt-motion-quick);
 }
 
-.card:hover {
-  transform: translateY(-2px);
-  border-color: var(--mt-color-border-strong);
-  box-shadow: var(--mt-shadow-raised);
-}
-
-.card h2 {
+.personBody h2 {
   margin-top: var(--mt-space-2);
   overflow-wrap: anywhere;
   font-family: var(--mt-font-family-serif);
@@ -43,13 +23,13 @@
   line-height: var(--mt-line-height-tight);
 }
 
-.card p {
+.personBody p {
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
   line-height: var(--mt-line-height-body);
 }
 
-.card small {
+.personBody small {
   width: 100%;
   margin-top: auto;
   padding-top: var(--mt-space-4);
@@ -105,7 +85,10 @@
   overflow-wrap: anywhere;
 }
 
-.link > button {
+.link
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   min-height: 34px;
   padding: 0 var(--mt-space-3);
   border: 1px solid var(--mt-color-border);
@@ -115,7 +98,10 @@
   cursor: pointer;
 }
 
-.link > button:hover {
+.link
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover {
   color: var(--mt-color-warm);
   border-color: var(--mt-color-warm);
 }
@@ -140,7 +126,10 @@
   gap: var(--mt-space-2);
 }
 
-.linkPicker button {
+.linkPicker
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   height: 42px;
   padding: 0 var(--mt-space-3);
   border: 1px solid var(--mt-color-border);
@@ -150,13 +139,22 @@
   cursor: pointer;
 }
 
-.linkPicker button:hover {
+.linkPicker
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover {
   color: var(--mt-color-accent);
   border-color: var(--mt-color-accent);
 }
 
-.linkPicker button:disabled,
-.link > button:disabled {
+.linkPicker
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):disabled,
+.link
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):disabled {
   cursor: wait;
   opacity: 0.55;
 }

@@ -26,6 +26,7 @@ export function Button({
       aria-busy={loading || props["aria-busy"]}
       className={[styles.button, className].filter(Boolean).join(" ")}
       data-size={size}
+      data-ui-button
       data-variant={variant}
       disabled={disabled || loading}
       type={type}
@@ -68,6 +69,7 @@ export function ButtonLink({
       {...props}
       className={[styles.button, className].filter(Boolean).join(" ")}
       data-size={size}
+      data-ui-button
       data-variant={variant}
     />
   );

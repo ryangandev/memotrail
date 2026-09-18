@@ -122,7 +122,7 @@
   box-shadow: var(--mt-shadow-raised);
 }
 
-.specimen > header {
+.specimen > header:not([data-ui-page-header]) {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -132,7 +132,7 @@
   background: var(--mt-color-surface);
 }
 
-.specimen > header > div {
+.specimen > header:not([data-ui-page-header]) > div {
   display: grid;
   gap: var(--mt-space-1);
 }
@@ -142,15 +142,15 @@
   font-weight: var(--mt-font-weight-semibold);
 }
 
-.specimen header p,
-.specimen header code,
+.specimen header:not([data-ui-page-header]) p,
+.specimen header:not([data-ui-page-header]) code,
 .specimen small {
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
   line-height: var(--mt-line-height-body);
 }
 
-.specimen header code {
+.specimen header:not([data-ui-page-header]) code {
   max-width: 520px;
   font-family: var(--mt-font-family-mono);
   text-align: right;
@@ -513,16 +513,16 @@
     gap: var(--mt-space-2);
   }
 
-  .specimen > header,
+  .specimen > header:not([data-ui-page-header]),
   .specimenBody {
     padding: var(--mt-space-4);
   }
 
-  .specimen > header {
+  .specimen > header:not([data-ui-page-header]) {
     display: grid;
   }
 
-  .specimen header code {
+  .specimen header:not([data-ui-page-header]) code {
     text-align: left;
   }
 

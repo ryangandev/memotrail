@@ -1,4 +1,8 @@
 "use client";
+import { RecordCard, RecordCardBody } from "@/components/record-card";
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/button";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -37,22 +41,27 @@ export function PeopleWorkspace({
   );
   return (
     <PageFrame variant="wide">
-      <header className={common.pageHeader}>
-        <div>
-          <p className={common.eyebrow}>The people in your story</p>
-          <h1>People</h1>
-          <p>Keep a little context for the people who shaped each chapter.</p>
-        </div>
-        <button
-          aria-label="Add Person"
-          className={common.addButton}
-          onClick={() => setSelected(null)}
-          type="button"
-        >
-          <Icon name="plus" />
-          <span>Add Person</span>
-        </button>
-      </header>
+      <PageHeader
+        title={<>People</>}
+        eyebrow={<>The people in your story</>}
+        description={
+          <>Keep a little context for the people who shaped each chapter.</>
+        }
+        actions={
+          <>
+            <Button
+              variant="primary"
+              aria-label="Add Person"
+
+              onClick={() => setSelected(null)}
+              type="button"
+            >
+              <Icon name="plus" />
+              <span>Add Person</span>
+            </Button>
+          </>
+        }
+      />
 
       <div className={common.summary} aria-label="People summary">
         <span>{countLabel(people.length, "person", "people")}</span>
@@ -70,36 +79,35 @@ export function PeopleWorkspace({
         </div>
       ) : null}
       {!people.length && !error ? (
-        <button
-          className={common.emptyState}
+        <EmptyState
+          title={<>Remember the first person in your story</>}
+          icon={
+            <>
+              <Icon name="person" size={24} />
+            </>
+          }
+          description={
+            <>
+              Start with a name. Relationship context, notes, and connected
+              Items can be added whenever they become useful.
+            </>
+          }
           onClick={() => setSelected(null)}
-          type="button"
-        >
-          <span className={common.emptyMark}>
-            <Icon name="person" size={24} />
-          </span>
-          <strong>Remember the first person in your story</strong>
-          <span>
-            Start with a name. Relationship context, notes, and connected Items
-            can be added whenever they become useful.
-          </span>
-        </button>
+        />
       ) : null}
       <div className={styles.peopleGrid}>
         {people.map((person) => (
-          <button
-            className={styles.card}
-            key={person.id}
-            onClick={() => setSelected(person)}
-          >
-            <span className={styles.initial}>
-              {Array.from(person.name)[0]?.toUpperCase()}
-            </span>
-            <h2>{person.name}</h2>
-            <p>{person.relationship_label || "A person in your story"}</p>
-            <p className={styles.preview}>{person.notes}</p>
-            <small>{person.linked_entries.length} connected Items</small>
-          </button>
+          <RecordCard key={person.id} onClick={() => setSelected(person)}>
+            <RecordCardBody className={styles.personBody}>
+              <span className={styles.initial}>
+                {Array.from(person.name)[0]?.toUpperCase()}
+              </span>
+              <h2>{person.name}</h2>
+              <p>{person.relationship_label || "A person in your story"}</p>
+              <p className={styles.preview}>{person.notes}</p>
+              <small>{person.linked_entries.length} connected Items</small>
+            </RecordCardBody>
+          </RecordCard>
         ))}
       </div>
       <nav className={styles.pagination} aria-label="People pages">
@@ -279,7 +287,8 @@ function PersonEditor({
                       </summary>
                       <p>{entry?.body}</p>
                     </details>
-                    <button
+                    <Button
+                      variant="secondary"
                       aria-label={`Unlink ${entry ? personEntryTitle(entry) : "Item"}`}
                       onClick={() =>
                         setEntryIds(entryIds.filter((item) => item !== id))
@@ -287,7 +296,7 @@ function PersonEditor({
                       type="button"
                     >
                       Unlink
-                    </button>
+                    </Button>
                   </div>
                 );
               })}
@@ -308,7 +317,8 @@ function PersonEditor({
                       ))}
                   </select>
                 </label>
-                <button
+                <Button
+                  variant="secondary"
                   disabled={!entryId || entryIds.length >= 100}
                   onClick={() => {
                     setEntryIds([...entryIds, entryId]);
@@ -317,7 +327,7 @@ function PersonEditor({
                   type="button"
                 >
                   Link Item
-                </button>
+                </Button>
               </div>
             </fieldset>
           </div>
@@ -330,14 +340,15 @@ function PersonEditor({
             <div>
               {person ? (
                 <>
-                  <button
-                    className={common.trashButton}
+                  <Button
+                    variant="danger"
+
                     disabled={busy || person.linked_entries.length > 0}
                     onClick={() => void mutate(true)}
                     type="button"
                   >
                     Move to Trash
-                  </button>
+                  </Button>
                   {person.linked_entries.length > 0 ? (
                     <small className={styles.trashNote}>
                       Unlink every Item and save before removing this Person.
@@ -347,21 +358,23 @@ function PersonEditor({
               ) : null}
             </div>
             <div>
-              <button
-                className={common.cancelButton}
+              <Button
+                variant="secondary"
+
                 disabled={busy}
                 onClick={onClose}
                 type="button"
               >
                 Cancel
-              </button>
-              <button
-                className={common.saveButton}
+              </Button>
+              <Button
+                variant="primary"
+
                 disabled={busy}
                 type="submit"
               >
                 {busy ? "Saving..." : person ? "Save changes" : "Add Person"}
-              </button>
+              </Button>
             </div>
           </footer>
         </form>

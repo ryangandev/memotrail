@@ -48,7 +48,10 @@
   text-align: center;
 }
 
-.tile > button {
+.tile
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   position: absolute;
   z-index: 2;
   top: 6px;
@@ -65,7 +68,10 @@
   backdrop-filter: blur(6px);
 }
 
-.tile > button:disabled {
+.tile
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):disabled {
   cursor: wait;
   opacity: 0.58;
 }

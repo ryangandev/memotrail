@@ -1,4 +1,4 @@
-.workspace header {
+.workspace header:not([data-ui-page-header]) {
   margin-bottom: 28px;
 }
 .workspace h1 {
@@ -10,16 +10,10 @@
 .workspace a {
   color: var(--mt-color-accent);
 }
-.workspace header > p:last-child,
+.workspace header:not([data-ui-page-header]) > p:last-child,
 .hint {
   color: var(--mt-color-ink-muted);
   line-height: 1.6;
-}
-.eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.15em;
-  margin-top: 28px;
-  color: var(--mt-color-ink-muted);
 }
 .actions,
 .pagination {
@@ -89,7 +83,10 @@
   height: 18px;
   accent-color: var(--mt-color-accent);
 }
-.workspace button {
+.workspace
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   min-height: 44px;
   padding: 10px var(--mt-space-4);
   border: 1px solid var(--mt-color-border);
@@ -98,11 +95,17 @@
   background: var(--mt-color-surface);
   cursor: pointer;
 }
-.workspace button:disabled {
+.workspace
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):disabled {
   opacity: 0.5;
   cursor: default;
 }
-.workspace button:focus-visible,
+.workspace
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):focus-visible,
 .workspace input:focus-visible {
   outline: 2px solid var(--mt-color-accent);
   outline-offset: 3px;

@@ -61,7 +61,10 @@
   gap: 3px;
 }
 
-.navGroup button,
+.navGroup
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ),
 .navGroup a {
   display: flex;
   width: 100%;
@@ -81,22 +84,36 @@
     background var(--mt-motion-quick);
 }
 
-.navGroup button:hover,
+.navGroup
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover,
 .navGroup a:hover {
   color: var(--mt-color-ink);
   background: var(--mt-color-surface-subtle);
 }
 
-.navGroup button:disabled {
+.navGroup
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):disabled {
   cursor: default;
 }
 
-.navGroup button span,
+.navGroup
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  )
+  span,
 .navGroup a span {
   flex: 1;
 }
 
-.navGroup button small,
+.navGroup
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  )
+  small,
 .navGroup a small {
   min-width: 24px;
   padding: 2px 7px;
@@ -156,7 +173,10 @@
   gap: 2px;
 }
 
-.archiveNote > button {
+.archiveNote
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   position: absolute;
   top: 7px;
   right: 7px;
@@ -170,13 +190,22 @@
   cursor: pointer;
 }
 
-.archiveNote > button:hover,
-.archiveNote > button:focus-visible {
+.archiveNote
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover,
+.archiveNote
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):focus-visible {
   color: var(--mt-color-ink);
   background: color-mix(in srgb, var(--mt-color-warm) 12%, transparent);
 }
 
-.archiveNote > button:focus-visible {
+.archiveNote
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):focus-visible {
   outline: 2px solid var(--mt-color-accent);
   outline-offset: 1px;
 }
@@ -480,59 +509,6 @@
   background: var(--mt-color-warm);
 }
 
-.pageHeader {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--mt-space-6);
-}
-
-.eyebrow {
-  margin-bottom: var(--mt-space-2);
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.pageHeader h1 {
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-display);
-  font-weight: var(--mt-font-weight-medium);
-  letter-spacing: -0.035em;
-  line-height: var(--mt-line-height-tight);
-}
-
-.pageHeader > div > p:last-child {
-  margin-top: var(--mt-space-2);
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-body);
-}
-
-.newEntryButton,
-.saveButton {
-  display: flex;
-  height: 40px;
-  align-items: center;
-  justify-content: center;
-  gap: var(--mt-space-2);
-  padding: 0 var(--mt-space-4);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent);
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-medium);
-  text-decoration: none;
-  cursor: pointer;
-  transition: background var(--mt-motion-quick);
-}
-
-.newEntryButton:hover,
-.saveButton:hover {
-  background: var(--mt-color-accent-hover);
-}
-
 .captureCard {
   --capture-inline-padding: var(--mt-space-6);
 
@@ -621,59 +597,6 @@
   }
 }
 
-.captureDatePanel {
-  display: flex;
-  min-height: 64px;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--mt-space-4);
-  padding: var(--mt-space-3) var(--capture-inline-padding);
-  border-top: 1px solid var(--mt-color-border);
-  background: var(--mt-color-accent-subtle);
-}
-
-.captureDatePanel label {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: var(--mt-space-3);
-}
-
-.captureDatePanel label > span {
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.captureDatePanel input {
-  min-width: 210px;
-  height: 36px;
-  padding: 0 var(--mt-space-3);
-  border: 1px solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-small);
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface-raised);
-  color-scheme: light dark;
-  font: inherit;
-  font-size: var(--mt-font-size-label);
-}
-
-.removeCaptureDateButton {
-  flex: 0 0 auto;
-  min-height: 32px;
-  padding: 0 var(--mt-space-2);
-  border-radius: var(--mt-radius-small);
-  color: var(--mt-color-ink-muted);
-  background: transparent;
-  font-size: var(--mt-font-size-caption);
-  cursor: pointer;
-}
-
-.removeCaptureDateButton:hover {
-  color: var(--mt-color-ink);
-  background: color-mix(in srgb, var(--mt-color-surface) 55%, transparent);
-}
-
 .capturePhotoStrip {
   display: flex;
   gap: var(--mt-space-3);
@@ -700,7 +623,10 @@
   object-fit: cover;
 }
 
-.capturePhoto button {
+.capturePhoto
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   position: absolute;
   top: 6px;
   right: 6px;
@@ -717,7 +643,10 @@
   cursor: pointer;
 }
 
-.capturePhoto button:hover {
+.capturePhoto
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover {
   background: color-mix(in srgb, black 78%, transparent);
 }
 
@@ -812,45 +741,12 @@
   opacity: 0.58;
 }
 
-.saveButton {
-  height: 36px;
-}
-
-.saveButton:disabled {
-  cursor: wait;
-  opacity: 0.72;
-}
-
 .entrySection {
   margin-top: var(--mt-space-10);
 }
 
 .pendingSection {
   margin-top: var(--mt-space-8);
-}
-
-.retryButton {
-  display: flex;
-  height: 32px;
-  align-items: center;
-  gap: 6px;
-  padding: 0 var(--mt-space-3);
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-small);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface);
-  font-size: var(--mt-font-size-caption);
-  cursor: pointer;
-}
-
-.retryButton:hover {
-  color: var(--mt-color-ink);
-  border-color: var(--mt-color-border-strong);
-}
-
-.retryButton:disabled {
-  cursor: wait;
-  opacity: 0.65;
 }
 
 .pendingPhotoCount {
@@ -980,24 +876,6 @@
   justify-content: space-between;
   gap: var(--mt-space-4);
   margin-top: var(--mt-space-3);
-}
-
-.reviewEntryButton {
-  display: flex;
-  height: 30px;
-  align-items: center;
-  gap: var(--mt-space-1);
-  padding: 0 var(--mt-space-2);
-  border-radius: var(--mt-radius-small);
-  color: var(--mt-color-ink-muted);
-  background: transparent;
-  font-size: var(--mt-font-size-caption);
-  cursor: pointer;
-}
-
-.reviewEntryButton:hover {
-  color: var(--mt-color-accent);
-  background: var(--mt-color-accent-subtle);
 }
 
 .tags {
@@ -1234,70 +1112,6 @@
   background: var(--mt-color-accent-subtle);
 }
 
-.organizationEditor {
-  display: grid;
-  gap: var(--mt-space-2);
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.organizationEditor legend {
-  margin-bottom: var(--mt-space-2);
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.organizationEditor > input {
-  width: 100%;
-}
-
-.organizationEditor > p {
-  color: var(--mt-color-ink-faint);
-  font-size: 10px;
-  text-align: right;
-}
-
-.organizationEditor:disabled {
-  opacity: 0.65;
-}
-
-.organizationChips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.organizationChips button {
-  display: flex;
-  min-height: 28px;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 9px;
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-subtle);
-  font-size: var(--mt-font-size-caption);
-  cursor: pointer;
-}
-
-.organizationChips button:hover {
-  color: var(--mt-color-warm);
-}
-
-.organizationChips span {
-  color: var(--mt-color-ink-faint);
-  font-size: 16px;
-  line-height: 1;
-}
-
-.reviewHint {
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
-}
-
 .reviewError {
   padding: var(--mt-space-3);
   border-radius: var(--mt-radius-small);
@@ -1320,38 +1134,6 @@
   gap: var(--mt-space-2);
 }
 
-.cancelReviewButton,
-.secondaryReviewButton,
-.doneButton {
-  display: flex;
-  height: 38px;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 0 var(--mt-space-3);
-  border-radius: var(--mt-radius-medium);
-  font-size: var(--mt-font-size-label);
-  cursor: pointer;
-}
-
-.cancelReviewButton {
-  color: var(--mt-color-ink-muted);
-  background: transparent;
-}
-
-.secondaryReviewButton {
-  border: 1px solid var(--mt-color-border-strong);
-  background: var(--mt-color-surface);
-}
-
-.doneButton {
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent);
-}
-
-.cancelReviewButton:disabled,
-.secondaryReviewButton:disabled,
-.doneButton:disabled,
 .closeReviewButton:disabled {
   cursor: wait;
   opacity: 0.65;
@@ -1491,31 +1273,6 @@
     display: none;
   }
 
-  .pageHeader {
-    align-items: center;
-  }
-
-  .pageHeader h1 {
-    font-size: 34px;
-  }
-
-  .pageHeader > div > p:last-child {
-    display: none;
-  }
-
-  .newEntryButton {
-    width: 40px;
-    padding: 0;
-  }
-
-  .newEntryButton span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-  }
-
   .captureCard {
     --capture-inline-padding: var(--mt-space-5);
 
@@ -1530,30 +1287,9 @@
     min-height: 0;
   }
 
-  .captureDatePanel {
-    align-items: stretch;
-    flex-direction: column;
-    gap: var(--mt-space-2);
-  }
-
-  .captureDatePanel label {
-    align-items: stretch;
-    flex-direction: column;
-    gap: var(--mt-space-1);
-  }
-
-  .captureDatePanel input {
-    width: 100%;
-    min-width: 0;
-  }
-
   .capturePhoto {
     width: 76px;
     height: 76px;
-  }
-
-  .removeCaptureDateButton {
-    align-self: flex-start;
   }
 
   .quietButton {
@@ -1561,10 +1297,6 @@
     padding: 0;
     justify-content: center;
     font-size: 0;
-  }
-
-  .saveButton {
-    padding-inline: var(--mt-space-3);
   }
 
   .captureStatus,
@@ -1632,7 +1364,10 @@
     backdrop-filter: blur(20px);
   }
 
-  .mobileNavigation button,
+  .mobileNavigation
+    button:not(
+      :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+    ),
   .mobileNavigation a {
     display: flex;
     min-width: 0;
@@ -1657,10 +1392,6 @@
     --capture-inline-padding: var(--mt-space-4);
   }
 
-  .saveButton {
-    font-size: var(--mt-font-size-caption);
-  }
-
   .inboxMessage {
     padding: var(--mt-space-6) var(--mt-space-4);
   }
@@ -1675,10 +1406,11 @@
     transition: none;
   }
 
-  .navGroup button,
-  .navGroup a,
-  .newEntryButton,
-  .saveButton {
+  .navGroup
+    button:not(
+      :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+    ),
+  .navGroup a {
     transition: none;
   }
 

@@ -1,57 +1,3 @@
-.pageHeader {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--mt-space-6);
-}
-
-.eyebrow {
-  margin-bottom: var(--mt-space-2);
-  color: var(--mt-color-warm);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.pageHeader h1 {
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-display);
-  font-weight: var(--mt-font-weight-medium);
-  letter-spacing: -0.035em;
-  line-height: var(--mt-line-height-tight);
-}
-
-.pageHeader > div > p:last-child {
-  max-width: 610px;
-  margin-top: var(--mt-space-2);
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-body);
-  line-height: var(--mt-line-height-body);
-}
-
-.addButton,
-.saveButton {
-  display: inline-flex;
-  height: 40px;
-  align-items: center;
-  justify-content: center;
-  gap: var(--mt-space-2);
-  padding: 0 var(--mt-space-4);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent);
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-medium);
-  cursor: pointer;
-  transition: background var(--mt-motion-quick);
-}
-
-.addButton:hover,
-.saveButton:hover {
-  background: var(--mt-color-accent-hover);
-}
-
 .summary {
   display: flex;
   align-items: center;
@@ -61,8 +7,7 @@
   font-size: var(--mt-font-size-caption);
 }
 
-.message,
-.emptyState {
+.message {
   min-height: 190px;
   margin-top: var(--mt-space-8);
   border: 1px solid var(--mt-color-border);
@@ -87,47 +32,6 @@
 .message p {
   margin-top: var(--mt-space-1);
   color: var(--mt-color-ink-muted);
-}
-
-.emptyState {
-  display: grid;
-  width: 100%;
-  place-items: center;
-  align-content: center;
-  gap: var(--mt-space-2);
-  padding: var(--mt-space-8);
-  color: var(--mt-color-ink-muted);
-  text-align: center;
-  cursor: pointer;
-}
-
-.emptyState:hover {
-  border-color: var(--mt-color-warm);
-  background: var(--mt-color-surface-raised);
-}
-
-.emptyMark {
-  display: grid;
-  width: 50px;
-  height: 50px;
-  margin-bottom: var(--mt-space-2);
-  place-items: center;
-  border-radius: 50%;
-  color: var(--mt-color-warm);
-  background: var(--mt-color-warm-subtle);
-}
-
-.emptyState strong {
-  color: var(--mt-color-ink);
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title-small);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.emptyState > span:last-child {
-  max-width: 420px;
-  font-size: var(--mt-font-size-label);
-  line-height: var(--mt-line-height-body);
 }
 
 .firstGrid {
@@ -285,7 +189,10 @@
   letter-spacing: -0.025em;
 }
 
-.dialogHeader > button {
+.dialogHeader
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   display: grid;
   width: 34px;
   height: 34px;
@@ -396,58 +303,15 @@
   gap: var(--mt-space-2);
 }
 
-.cancelButton {
-  height: 40px;
-  padding: 0 var(--mt-space-3);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-ink-muted);
-  background: transparent;
-  font-size: var(--mt-font-size-label);
-  cursor: pointer;
-}
-
-.cancelButton:hover {
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface-subtle);
-}
-
-.trashButton {
-  color: var(--mt-color-warm);
-  font-size: var(--mt-font-size-label);
-  cursor: pointer;
-}
-
-.addButton:disabled,
-.saveButton:disabled,
-.cancelButton:disabled,
-.trashButton:disabled,
-.dialogHeader > button:disabled {
+.dialogHeader
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):disabled {
   cursor: wait;
   opacity: 0.55;
 }
 
 @media (max-width: 780px) {
-  .pageHeader {
-    align-items: flex-start;
-  }
-
-  .pageHeader h1 {
-    font-size: 36px;
-  }
-
-  .pageHeader > div > p:last-child {
-    display: none;
-  }
-
-  .addButton {
-    width: 40px;
-    padding: 0;
-  }
-
-  .addButton span {
-    display: none;
-  }
-
   .firstGrid {
     grid-template-columns: 1fr;
   }
@@ -547,8 +411,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .addButton,
-  .saveButton,
   .firstCard {
     transition: none;
   }

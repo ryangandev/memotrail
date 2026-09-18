@@ -1,4 +1,7 @@
 "use client";
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/button";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -73,24 +76,29 @@ export function FirstTimesWorkspace({
 
   return (
     <PageFrame variant="wide">
-      <header className={styles.pageHeader}>
-        <div>
-          <p className={styles.eyebrow}>A record of beginnings</p>
-          <h1>First Times</h1>
-          <p>
+      <PageHeader
+        title={<>First Times</>}
+        eyebrow={<>A record of beginnings</>}
+        description={
+          <>
             Keep the small beginnings and major milestones worth finding again.
-          </p>
-        </div>
-        <button
-          aria-label="Add First Time"
-          className={styles.addButton}
-          onClick={() => setSelectedEntry(null)}
-          type="button"
-        >
-          <Icon name="plus" />
-          <span>Add First Time</span>
-        </button>
-      </header>
+          </>
+        }
+        actions={
+          <>
+            <Button
+              variant="primary"
+              aria-label="Add First Time"
+
+              onClick={() => setSelectedEntry(null)}
+              type="button"
+            >
+              <Icon name="plus" />
+              <span>Add First Time</span>
+            </Button>
+          </>
+        }
+      />
 
       <div className={styles.summary} aria-label="First Times summary">
         <span>{countLabel(entries.length, "First Time")}</span>
@@ -109,19 +117,20 @@ export function FirstTimesWorkspace({
       ) : null}
 
       {!loadError && entries.length === 0 ? (
-        <button
-          className={styles.emptyState}
+        <EmptyState
+          title={<>Start with a first worth remembering</>}
+          icon={
+            <>
+              <Icon name="star" size={24} />
+            </>
+          }
+          description={
+            <>
+              Only a title is required. Dates, notes, and photos can come later.
+            </>
+          }
           onClick={() => setSelectedEntry(null)}
-          type="button"
-        >
-          <span className={styles.emptyMark}>
-            <Icon name="star" size={24} />
-          </span>
-          <strong>Start with a first worth remembering</strong>
-          <span>
-            Only a title is required. Dates, notes, and photos can come later.
-          </span>
-        </button>
+        />
       ) : null}
 
       {!loadError && entries.length > 0 ? (
@@ -581,27 +590,30 @@ export function FirstTimeEditor({
           <footer className={styles.dialogFooter}>
             <div>
               {currentId ? (
-                <button
-                  className={styles.trashButton}
+                <Button
+                  variant="danger"
+
                   disabled={isPending}
                   onClick={() => void handleTrashEntry()}
                   type="button"
                 >
                   Move to Trash
-                </button>
+                </Button>
               ) : null}
             </div>
             <div>
-              <button
-                className={styles.cancelButton}
+              <Button
+                variant="secondary"
+
                 disabled={isPending}
                 onClick={onClose}
                 type="button"
               >
                 Cancel
-              </button>
-              <button
-                className={styles.saveButton}
+              </Button>
+              <Button
+                variant="primary"
+
                 disabled={isPending}
                 type="submit"
               >
@@ -610,7 +622,7 @@ export function FirstTimeEditor({
                   : currentId
                     ? "Save changes"
                     : "Add First Time"}
-              </button>
+              </Button>
             </div>
           </footer>
         </form>

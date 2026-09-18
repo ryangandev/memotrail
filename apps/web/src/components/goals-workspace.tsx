@@ -1,4 +1,12 @@
 "use client";
+import {
+  RecordCard,
+  RecordCardBody,
+  RecordCardVisual,
+} from "@/components/record-card";
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/button";
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -112,25 +120,30 @@ export function GoalsWorkspace({
 
   return (
     <PageFrame variant="wide">
-      <header className={common.pageHeader}>
-        <div>
-          <p className={common.eyebrow}>Intentions without pressure</p>
-          <h1>Goals</h1>
-          <p>
+      <PageHeader
+        title={<>Goals</>}
+        eyebrow={<>Intentions without pressure</>}
+        description={
+          <>
             Keep near-term plans, distant hopes, and someday ideas together as
             part of your personal archive.
-          </p>
-        </div>
-        <button
-          aria-label="Add Goal"
-          className={common.addButton}
-          onClick={() => setSelectedGoal(null)}
-          type="button"
-        >
-          <Icon name="plus" />
-          <span>Add Goal</span>
-        </button>
-      </header>
+          </>
+        }
+        actions={
+          <>
+            <Button
+              variant="primary"
+              aria-label="Add Goal"
+
+              onClick={() => setSelectedGoal(null)}
+              type="button"
+            >
+              <Icon name="plus" />
+              <span>Add Goal</span>
+            </Button>
+          </>
+        }
+      />
 
       <div className={common.summary} aria-label="Goals summary">
         <span>{countLabel(goals.length, "goal")}</span>
@@ -151,20 +164,21 @@ export function GoalsWorkspace({
       ) : null}
 
       {!loadError && goals.length === 0 ? (
-        <button
-          className={common.emptyState}
+        <EmptyState
+          title={<>Keep one possibility close</>}
+          icon={
+            <>
+              <Icon name="sparkle" size={24} />
+            </>
+          }
+          description={
+            <>
+              Give it a name now. Its horizon, context, and meaning can evolve
+              with you.
+            </>
+          }
           onClick={() => setSelectedGoal(null)}
-          type="button"
-        >
-          <span className={common.emptyMark}>
-            <Icon name="sparkle" size={24} />
-          </span>
-          <strong>Keep one possibility close</strong>
-          <span>
-            Give it a name now. Its horizon, context, and meaning can evolve
-            with you.
-          </span>
-        </button>
+        />
       ) : null}
 
       {!loadError
@@ -246,23 +260,21 @@ function GoalCard({
   );
 
   return (
-    <button
-      aria-label={`${goal.title}, ${goalStatusLabels[goal.status]}`}
-      className={styles.goalCard}
+    <RecordCard
+      ariaLabel={`${goal.title}, ${goalStatusLabels[goal.status]}`}
       onClick={onSelect}
-      type="button"
     >
       {cover?.imageUrl ? (
-        <div className={styles.goalCover}>
+        <RecordCardVisual className={styles.goalCover}>
           <ProgressiveImage alt="" src={cover.imageUrl} />
           {goal.attachments.length > 1 ? (
             <span className={styles.photoCount}>
               {goal.attachments.length} photos
             </span>
           ) : null}
-        </div>
+        </RecordCardVisual>
       ) : null}
-      <div className={styles.goalCardBody}>
+      <RecordCardBody className={styles.goalCardBody}>
         <div className={styles.goalMeta}>
           <span data-status={goal.status}>{goalStatusLabels[goal.status]}</span>
           <span>{goalHorizonLabels[goal.horizon]}</span>
@@ -299,8 +311,8 @@ function GoalCard({
           </div>
           <Icon name="chevron" size={15} />
         </footer>
-      </div>
-    </button>
+      </RecordCardBody>
+    </RecordCard>
   );
 }
 
@@ -700,7 +712,8 @@ function GoalEditor({
               {selectedEntries.length > 0 ? (
                 <div className={styles.relatedChips}>
                   {selectedEntries.map((entry) => (
-                    <button
+                    <Button
+                      variant="secondary"
                       aria-label={`Remove related Item ${entry.title}`}
                       disabled={isPending}
                       key={entry.id}
@@ -713,7 +726,7 @@ function GoalEditor({
                     >
                       {entry.title}
                       <span aria-hidden="true">×</span>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               ) : null}
@@ -736,7 +749,8 @@ function GoalEditor({
                     </option>
                   ))}
                 </select>
-                <button
+                <Button
+                  variant="secondary"
                   disabled={!relatedSelection || isPending}
                   onClick={() => {
                     setRelatedEntryIds((current) => [
@@ -748,7 +762,7 @@ function GoalEditor({
                   type="button"
                 >
                   Add link
-                </button>
+                </Button>
               </div>
             </fieldset>
 
@@ -799,27 +813,30 @@ function GoalEditor({
           <footer className={common.dialogFooter}>
             <div>
               {currentId ? (
-                <button
-                  className={common.trashButton}
+                <Button
+                  variant="danger"
+
                   disabled={isPending}
                   onClick={() => void handleTrashEntry()}
                   type="button"
                 >
                   Move to Trash
-                </button>
+                </Button>
               ) : null}
             </div>
             <div>
-              <button
-                className={common.cancelButton}
+              <Button
+                variant="secondary"
+
                 disabled={isPending}
                 onClick={onClose}
                 type="button"
               >
                 Cancel
-              </button>
-              <button
-                className={common.saveButton}
+              </Button>
+              <Button
+                variant="primary"
+
                 disabled={isPending}
                 type="submit"
               >
@@ -828,7 +845,7 @@ function GoalEditor({
                   : currentId
                     ? "Save changes"
                     : "Add Goal"}
-              </button>
+              </Button>
             </div>
           </footer>
         </form>
@@ -924,15 +941,16 @@ function AchievementPanel({
           Save your other Goal changes before recording this milestone.
         </p>
       ) : null}
-      <button
-        className={styles.achievementButton}
+      <Button
+        variant="primary"
+
         disabled={disabled || unsavedChanges}
         onClick={() => void handleAchievement()}
         type="button"
       >
         <Icon name="check" size={16} />
         Mark achieved and create First Time
-      </button>
+      </Button>
     </fieldset>
   );
 }

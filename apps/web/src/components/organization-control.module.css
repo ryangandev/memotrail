@@ -62,7 +62,7 @@
   box-shadow: var(--mt-shadow-floating);
 }
 
-.dialog > header {
+.dialog > header:not([data-ui-page-header]) {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -71,7 +71,7 @@
   border-bottom: 1px solid var(--mt-color-border);
 }
 
-.dialog > header p {
+.dialog > header:not([data-ui-page-header]) p {
   color: var(--mt-color-warm);
   font-size: var(--mt-font-size-caption);
   font-weight: var(--mt-font-weight-semibold);
@@ -79,7 +79,7 @@
   text-transform: uppercase;
 }
 
-.dialog > header h2 {
+.dialog > header:not([data-ui-page-header]) h2 {
   margin-top: 3px;
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-title);
@@ -93,7 +93,11 @@
   font-size: var(--mt-font-size-caption);
 }
 
-.dialog > header button {
+.dialog
+  > header:not([data-ui-page-header])
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   display: grid;
   width: 38px;
   height: 38px;
@@ -171,8 +175,16 @@
   gap: var(--mt-space-2);
 }
 
-.dialog form footer button,
-.mergePanel > button {
+.dialog
+  form
+  footer
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ),
+.mergePanel
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   min-height: 38px;
   padding: 0 var(--mt-space-3);
   border: 0;
@@ -182,23 +194,18 @@
   cursor: pointer;
 }
 
-.cancel {
-  color: var(--mt-color-ink-muted);
-  background: transparent;
-}
-
-.save,
-.mergePanel > button {
+.mergePanel
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   color: var(--mt-color-accent-ink);
   background: var(--mt-color-accent);
 }
 
-.danger {
-  color: var(--mt-color-warm);
-  background: var(--mt-color-warm-subtle);
-}
-
-.dialog button:disabled,
+.dialog
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):disabled,
 .dialog input:disabled,
 .dialog select:disabled {
   cursor: not-allowed;
@@ -234,25 +241,25 @@
   border-top: 1px solid var(--mt-color-border);
 }
 
-.entryPanel > header {
+.entryPanel > header:not([data-ui-page-header]) {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: var(--mt-space-3);
 }
 
-.entryPanel > header > div {
+.entryPanel > header:not([data-ui-page-header]) > div {
   display: flex;
   align-items: baseline;
   gap: var(--mt-space-2);
 }
 
-.entryPanel > header strong {
+.entryPanel > header:not([data-ui-page-header]) strong {
   color: var(--mt-color-ink);
   font-size: var(--mt-font-size-label);
 }
 
-.entryPanel > header span,
+.entryPanel > header:not([data-ui-page-header]) span,
 .emptyEntries,
 .entryError {
   color: var(--mt-color-ink-faint);
@@ -362,7 +369,12 @@
   }
 
   .dialog form footer > div,
-  .dialog form footer button {
+  .dialog
+    form
+    footer
+    button:not(
+      :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+    ) {
     width: 100%;
   }
 

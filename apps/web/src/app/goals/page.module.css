@@ -4,45 +4,8 @@
   gap: var(--mt-space-4);
 }
 
-.goalCard {
-  display: grid;
-  width: 100%;
-  min-width: 0;
-  padding: 0;
-  appearance: none;
-  overflow: hidden;
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface-raised);
-  box-shadow: 0 1px 2px rgb(38 37 31 / 0.025);
-  text-align: left;
-  font: inherit;
-  cursor: pointer;
-  transition:
-    transform var(--mt-motion-quick),
-    border-color var(--mt-motion-quick),
-    box-shadow var(--mt-motion-quick);
-}
-
-.goalCard:hover {
-  transform: translateY(-2px);
-  border-color: var(--mt-color-border-strong);
-  box-shadow: var(--mt-shadow-raised);
-}
-
 .goalCover {
-  position: relative;
   height: 138px;
-  overflow: hidden;
-  border-bottom: 1px solid var(--mt-color-border);
-  background: var(--mt-color-surface-subtle);
-}
-
-.goalCover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .photoCount {
@@ -63,7 +26,6 @@
   display: flex;
   min-height: 245px;
   flex-direction: column;
-  padding: var(--mt-space-5);
 }
 
 .goalMeta {
@@ -180,7 +142,10 @@
   gap: 6px;
 }
 
-.relatedChips button {
+.relatedChips
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   display: flex;
   max-width: 100%;
   min-height: 31px;
@@ -198,7 +163,10 @@
   cursor: pointer;
 }
 
-.relatedChips button:hover {
+.relatedChips
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover {
   color: var(--mt-color-warm);
   border-color: var(--mt-color-border-strong);
 }
@@ -232,8 +200,10 @@
   box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
 }
 
-.relatedPicker button,
-.achievementButton {
+.relatedPicker
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   display: inline-flex;
   height: 42px;
   align-items: center;
@@ -249,15 +219,22 @@
   cursor: pointer;
 }
 
-.relatedPicker button:hover,
-.achievementButton:hover {
+.relatedPicker
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover {
   color: var(--mt-color-accent);
   border-color: var(--mt-color-accent);
 }
 
-.relatedPicker button:disabled,
-.achievementButton:disabled,
-.relatedChips button:disabled {
+.relatedPicker
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):disabled,
+.relatedChips
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):disabled {
   cursor: wait;
   opacity: 0.5;
 }
@@ -306,19 +283,6 @@
   line-height: var(--mt-line-height-body);
 }
 
-.achievementButton {
-  grid-column: 1 / -1;
-  width: max-content;
-  color: var(--mt-color-accent-ink);
-  border-color: var(--mt-color-accent);
-  background: var(--mt-color-accent);
-}
-
-.achievementButton:hover {
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent-hover);
-}
-
 .achievementError {
   grid-column: 1 / -1;
   color: var(--mt-color-warm);
@@ -355,8 +319,10 @@
     grid-template-columns: 1fr;
   }
 
-  .relatedPicker button,
-  .achievementButton {
+  .relatedPicker
+    button:not(
+      :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+    ) {
     width: 100%;
   }
 }

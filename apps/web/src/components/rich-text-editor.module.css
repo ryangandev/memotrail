@@ -284,26 +284,6 @@
   box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
 }
 
-.linkEditor button {
-  height: 34px;
-  padding: 0 var(--mt-space-3);
-  border-radius: 6px;
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface-subtle);
-  font-size: var(--mt-font-size-caption);
-  cursor: pointer;
-}
-
-.linkEditor button:last-child {
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent);
-}
-
-.linkEditor button:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
-}
-
 @media (max-width: 720px) {
   .content :global(.tiptap) {
     font-size: 14px;

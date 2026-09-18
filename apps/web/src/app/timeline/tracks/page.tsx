@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/page-header";
 import Link from "next/link";
 import { PageFrame } from "@/components/page-frame";
 import { TrackSettings } from "@/components/track-settings";
@@ -24,15 +25,16 @@ export default async function TrackSettingsPage({
   const tracks = (result.data ?? []) as TrackSetting[];
   return (
     <PageFrame className={styles.workspace} variant="standard">
-      <header>
-        <Link href="/timeline">Back to Timeline</Link>
-        <p className={styles.eyebrow}>CHOOSE THE CHAPTERS YOU SEE</p>
-        <h1>Timeline tracks</h1>
-        <p>
-          Create space for each part of your life. Hidden tracks keep every
-          moment and can be shown again anytime.
-        </p>
-      </header>
+      <PageHeader
+        title={<>Timeline tracks</>}
+        eyebrow={<>CHOOSE THE CHAPTERS YOU SEE</>}
+        description={
+          <>
+            Create space for each part of your life. Hidden tracks keep every
+            moment and can be shown again anytime.
+          </>
+        }
+      />
       {result.error ? (
         <p role="alert">Tracks could not load. Refresh to try again.</p>
       ) : (

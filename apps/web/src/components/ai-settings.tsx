@@ -1,4 +1,5 @@
 "use client";
+import { PageHeader } from "@/components/page-header";
 
 import { useState } from "react";
 import { saveAISettings } from "@/app/settings/ai/actions";
@@ -87,14 +88,16 @@ export function AISettings({
 
   return (
     <PageFrame className={styles.content} variant="compact">
-      <header className={styles.header}>
-        <p>Your archive, your choice</p>
-        <h1>AI assistance</h1>
-        <span>
-          Choose when MemoTrail may help. Your original words always remain
-          yours.
-        </span>
-      </header>
+      <PageHeader
+        title={<>AI assistance</>}
+        eyebrow={<>Your archive, your choice</>}
+        description={
+          <>
+            Choose when MemoTrail may help. Your original words always remain
+            yours.
+          </>
+        }
+      />
 
       <section className={styles.primaryCard} aria-labelledby="ai-master-title">
         <div className={styles.primaryHeading}>

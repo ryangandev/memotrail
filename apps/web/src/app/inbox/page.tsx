@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/page-header";
 import { EntryReviewList } from "@/components/entry-review-list";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
@@ -40,13 +41,11 @@ function Workspace({
 }) {
   return (
     <PageFrame variant="compact">
-      <header className={styles.pageHeader}>
-        <div>
-          <p className={styles.eyebrow}>{todayLabel()}</p>
-          <h1>Inbox</h1>
-          <p>Review and organize the captures waiting for a place.</p>
-        </div>
-      </header>
+      <PageHeader
+        title={<>Inbox</>}
+        eyebrow={<>{todayLabel()}</>}
+        description={<>Review and organize the captures waiting for a place.</>}
+      />
 
       <section className={styles.entrySection} aria-labelledby="recent-heading">
         <div className={styles.sectionHeader}>

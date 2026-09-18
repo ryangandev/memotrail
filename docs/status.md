@@ -68,8 +68,8 @@ The latest automated native UI attempt was blocked by the locked development Mac
 
 - The user accepted the reviewed gallery as the canonical Web source and authorized production migration while preserving product behavior.
 - Token references are validated during Web lint; date fields and occurrence styling are component-owned, with shared date controls used by Search and Goal forms.
-- Per the user's review gate, proposed Button, Dialog, PageHeader, and EmptyState implementations appear first in `/design-system#pending-review`; do not adopt these categories in production until approved.
-- After review, continue record-card consolidation, remaining shared primitives and component-owned CSS, then full regression verification.
+- The user also accepted Button, Dialog, PageHeader, and EmptyState; remaining production migration is authorized without further visual review unless a new design or behavioral decision is required.
+- Complete shared primitives, dialog shells and component-owned CSS, then full regression verification.
 
 ## Watch list
 

@@ -152,7 +152,7 @@ Pair it with the test file carrying the same feature name.
 - Generated Web CSS and Swift values are never edited directly.
 - Token changes run `pnpm tokens:generate` and `pnpm tokens:check`.
 - The development-only `/design-system` route renders production Web components and current generated tokens for review; it is unavailable in Production.
-- New primitives in the gallery's Pending review section are proposals, not approved migration targets.
+- Button, Dialog, PageHeader, EmptyState, and the previously reviewed gallery components are approved migration targets.
 - DatePickerField and OccurrenceEditor own `components/date-fields.module.css`; named date fields preserve native form validation and GET serialization without importing route styling.
 - Inside a modal, date/time fields use a `portalContainer` within the dialog so their popovers stay inside its accessibility and theme boundary.
 - Cross-platform components preserve meaning and state while allowing native interaction differences.

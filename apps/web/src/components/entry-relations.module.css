@@ -21,7 +21,10 @@
   align-items: center;
   gap: var(--mt-space-2);
 }
-.controls button[aria-pressed="true"] {
+.controls
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  )[aria-pressed="true"] {
   background: var(--mt-color-accent-subtle);
   border-color: var(--mt-color-accent);
 }
@@ -69,7 +72,10 @@
 .list small {
   color: var(--mt-color-ink-muted);
 }
-.list button {
+.list
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   flex-shrink: 0;
 }
 @media (max-width: 480px) {

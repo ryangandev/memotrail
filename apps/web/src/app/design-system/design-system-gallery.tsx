@@ -154,10 +154,10 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
         <p>This control changes only the development gallery preview.</p>
       </div>
       <GallerySection
-        description="New shared primitives awaiting review. These examples use local demo state only; production pages have not adopted them."
+        description="Approved shared primitives used by production pages. These interactive examples use local demo state only."
         id="pending-review"
         index="00"
-        title="Pending review"
+        title="Shared primitives"
       >
         <PendingComponentReview />
       </GallerySection>
@@ -543,7 +543,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="Reviewed media feedback. The proposed generic EmptyState is in Pending review above."
+        description="Reviewed media feedback. The shared EmptyState is demonstrated above."
         id="feedback"
         index="06"
         title="Feedback and media states"

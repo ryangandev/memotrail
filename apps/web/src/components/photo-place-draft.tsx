@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/button";
 import { useState } from "react";
 import type {
   PhotoPlaceDraft,
@@ -109,9 +110,9 @@ export function PhotoPlaceEditor({
           onChange={(e) => setQuery(e.target.value)}
         />
       </label>
-      <button type="button" onClick={() => void search()}>
+      <Button variant="secondary" type="button" onClick={() => void search()}>
         Search Places
-      </button>
+      </Button>
       {options.length ? (
         <label>
           Existing Place
@@ -141,9 +142,9 @@ export function PhotoPlaceEditor({
         </label>
       ) : null}
       {message ? <p role="status">{message}</p> : null}
-      <button type="button" onClick={() => onChange(null)}>
+      <Button variant="secondary" type="button" onClick={() => onChange(null)}>
         Remove Place from draft
-      </button>
+      </Button>
     </fieldset>
   );
 }

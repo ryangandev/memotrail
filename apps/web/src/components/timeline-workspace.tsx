@@ -1,4 +1,6 @@
 "use client";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/button";
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -225,23 +227,28 @@ export function TimelineWorkspace({
 
   return (
     <PageFrame variant="canvas">
-      <header className={styles.pageHeader}>
-        <div>
-          <p className={styles.eyebrow}>Your life in context</p>
-          <h1>Timeline</h1>
-          <p>See the chapters, places, and moments that overlap your story.</p>
-        </div>
-        <button
-          aria-label="Add moment"
-          className={styles.addButton}
-          disabled={tracks.length === 0}
-          onClick={() => setSelection({ type: "chooser" })}
-          type="button"
-        >
-          <Icon name="plus" />
-          <span>Add moment</span>
-        </button>
-      </header>
+      <PageHeader
+        title={<>Timeline</>}
+        eyebrow={<>Your life in context</>}
+        description={
+          <>See the chapters, places, and moments that overlap your story.</>
+        }
+        actions={
+          <>
+            <Button
+              variant="primary"
+              aria-label="Add moment"
+
+              disabled={tracks.length === 0}
+              onClick={() => setSelection({ type: "chooser" })}
+              type="button"
+            >
+              <Icon name="plus" />
+              <span>Add moment</span>
+            </Button>
+          </>
+        }
+      />
 
       <div className={styles.summary} aria-label="Timeline summary">
         <Link href="/timeline/tracks">Manage tracks</Link>
@@ -258,13 +265,14 @@ export function TimelineWorkspace({
         {birthDateAvailable && !birthDate && !loadError ? (
           <>
             <span aria-hidden="true">·</span>
-            <button
-              className={styles.birthDateLink}
+            <Button
+              variant="secondary"
+
               onClick={() => setShowBirthDatePrompt(true)}
               type="button"
             >
               Set birth date
-            </button>
+            </Button>
           </>
         ) : null}
       </div>
@@ -705,12 +713,21 @@ function BirthDatePrompt({
             </p>
           ) : null}
           <div className={styles.birthDateActions}>
-            <button disabled={busy} onClick={onClose} type="button">
+            <Button
+              variant="secondary"
+              disabled={busy}
+              onClick={onClose}
+              type="button"
+            >
               Not now
-            </button>
-            <button disabled={!birthDate || busy} type="submit">
+            </Button>
+            <Button
+              variant="primary"
+              disabled={!birthDate || busy}
+              type="submit"
+            >
               {busy ? "Saving…" : "Start my Timeline"}
-            </button>
+            </Button>
           </div>
         </form>
       </section>
@@ -1155,27 +1172,30 @@ function TimelineEditor({
           <footer className={styles.dialogFooter}>
             <div>
               {entry ? (
-                <button
-                  className={styles.trashButton}
+                <Button
+                  variant="danger"
+
                   disabled={isPending}
                   onClick={() => void handleTrash()}
                   type="button"
                 >
                   Move to Trash
-                </button>
+                </Button>
               ) : null}
             </div>
             <div>
-              <button
-                className={styles.cancelButton}
+              <Button
+                variant="secondary"
+
                 disabled={isPending}
                 onClick={onClose}
                 type="button"
               >
                 Cancel
-              </button>
-              <button
-                className={styles.saveButton}
+              </Button>
+              <Button
+                variant="primary"
+
                 disabled={isPending}
                 type="submit"
               >
@@ -1184,7 +1204,7 @@ function TimelineEditor({
                   : entry
                     ? "Save changes"
                     : "Add moment"}
-              </button>
+              </Button>
             </div>
           </footer>
         </form>

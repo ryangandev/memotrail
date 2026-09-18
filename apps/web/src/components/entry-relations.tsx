@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/button";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -143,7 +144,9 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
             placeholder="Title or words, including Chinese"
           />
         </label>
-        <button disabled={busy}>Search</button>
+        <Button variant="primary" type="submit" disabled={busy}>
+          Search
+        </Button>
       </form>
       {mode === "incoming" && (
         <p>These Items link here. Open the source Item to change its link.</p>
@@ -179,20 +182,22 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
                     <p>{row.excerpt}</p>
                   </div>
                   {mode !== "incoming" && (
-                    <button
+                    <Button
+                      variant="secondary"
                       type="button"
                       disabled={busy}
                       aria-label={`${mode === "candidates" ? "Link" : "Unlink"} ${historyTitle(row)}`}
                       onClick={() => void change(row, mode === "candidates")}
                     >
                       {mode === "candidates" ? "Link Item" : "Unlink"}
-                    </button>
+                    </Button>
                   )}
                 </li>
               ))}
             </ul>
             <div className={styles.controls} aria-label="Relationship pages">
-              <button
+              <Button
+                variant="secondary"
                 type="button"
                 disabled={page === 0}
                 onClick={() => {
@@ -201,12 +206,13 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
                 }}
               >
                 Previous links
-              </button>
+              </Button>
               <span>
                 Page {page + 1} · {data.total_count}{" "}
                 {data.total_count === 1 ? "Item" : "Items"}
               </span>
-              <button
+              <Button
+                variant="secondary"
                 type="button"
                 disabled={(page + 1) * 20 >= data.total_count}
                 onClick={() => {
@@ -215,15 +221,20 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
                 }}
               >
                 Next links
-              </button>
+              </Button>
             </div>
           </>
         )
       )}
       {message && <p role="alert">{message}</p>}
-      <button type="button" disabled={busy} onClick={reload}>
+      <Button
+        variant="secondary"
+        type="button"
+        disabled={busy}
+        onClick={reload}
+      >
         Refresh links
-      </button>
+      </Button>
     </section>
   );
 }

@@ -32,33 +32,6 @@
 .backLink:hover {
   color: var(--mt-color-accent) !important;
 }
-.detailHeader {
-  display: grid;
-  gap: var(--mt-space-2);
-}
-.detailHeader h1 {
-  margin: 0;
-  overflow-wrap: anywhere;
-  font-size: clamp(34px, 6vw, 52px);
-  line-height: var(--mt-line-height-tight);
-}
-.detailIdentity {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--mt-space-2);
-  color: var(--mt-color-ink-faint);
-  font-size: 10px;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-.detailIdentity span:first-child {
-  padding: var(--mt-space-1) var(--mt-space-2);
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-accent);
-  background: var(--mt-color-accent-subtle);
-  font-weight: var(--mt-font-weight-semibold);
-}
 .itemActions {
   display: flex;
   flex-wrap: wrap;
@@ -66,7 +39,10 @@
   gap: var(--mt-space-2);
 }
 .itemActions > a,
-.itemActions > button {
+.itemActions
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   display: inline-flex;
   min-height: 40px;
   align-items: center;
@@ -81,13 +57,11 @@
   text-decoration: none;
 }
 .itemActions > a:hover,
-.itemActions > button:hover {
+.itemActions
+  > button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover {
   border-color: var(--mt-color-border-strong);
-}
-.itemActions .trashButton {
-  margin-left: auto;
-  color: var(--mt-color-warm);
-  background: var(--mt-color-warm-subtle);
 }
 .currentItem {
   display: grid;
@@ -143,7 +117,10 @@
 .detailUnavailable p {
   margin: 0;
 }
-.workspace button:not(:where([data-date-picker-field] *)),
+.workspace
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):not(:where([data-date-picker-field] *)),
 .workspace input:not(:where([data-date-picker-field] *)),
 .workspace select:not(:where([data-date-picker-field] *)) {
   background: var(--mt-color-surface);
@@ -153,10 +130,16 @@
   padding: var(--mt-space-3);
   font: inherit;
 }
-.workspace button {
+.workspace
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   cursor: pointer;
 }
-.workspace button:disabled {
+.workspace
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):disabled {
   opacity: 0.5;
   cursor: default;
 }
@@ -324,9 +307,6 @@
   }
   .search div {
     flex-direction: column;
-  }
-  .itemActions .trashButton {
-    margin-left: 0;
   }
   .currentFacts {
     grid-template-columns: minmax(0, 1fr);

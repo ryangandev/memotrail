@@ -226,7 +226,10 @@
   flex: 0 0 auto;
 }
 
-.editableLink button {
+.editableLink
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   display: grid;
   width: 28px;
   height: 28px;
@@ -239,7 +242,10 @@
   cursor: pointer;
 }
 
-.editableLink button:hover {
+.editableLink
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover {
   color: var(--mt-color-warm);
 }
 
@@ -250,7 +256,10 @@
 }
 
 .linkPicker select,
-.linkPicker button {
+.linkPicker
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   height: 42px;
   min-width: 0;
   padding: 0 var(--mt-space-3);
@@ -262,7 +271,10 @@
   font-size: var(--mt-font-size-label);
 }
 
-.linkPicker button {
+.linkPicker
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -271,14 +283,23 @@
   cursor: pointer;
 }
 
-.linkPicker button:hover {
+.linkPicker
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover {
   color: var(--mt-color-accent);
   border-color: var(--mt-color-accent);
 }
 
-.linkPicker button:disabled,
+.linkPicker
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):disabled,
 .linkPicker select:disabled,
-.editableLink button:disabled {
+.editableLink
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):disabled {
   cursor: wait;
   opacity: 0.52;
 }

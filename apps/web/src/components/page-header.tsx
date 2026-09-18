@@ -8,15 +8,15 @@ export function PageHeader({
   actions,
   headingLevel = 1,
 }: {
-  title: string;
-  eyebrow?: string;
+  title: ReactNode;
+  eyebrow?: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
   headingLevel?: 1 | 2;
 }) {
   const Heading = headingLevel === 1 ? "h1" : "h2";
   return (
-    <header className={styles.header}>
+    <header data-ui-page-header className={styles.header}>
       <div className={styles.copy}>
         {eyebrow ? <p className={styles.eyebrow}>{eyebrow}</p> : null}
         <Heading className={styles.title}>{title}</Heading>

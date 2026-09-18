@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/button";
 
 import { useState, type FormEvent } from "react";
 import { saveBirthDate } from "@/app/settings/actions";
@@ -57,9 +58,13 @@ export function BirthDateSetting({
         value={birthDate}
       />
       <div className={styles.birthDateControls}>
-        <button disabled={busy || birthDate === savedBirthDate} type="submit">
+        <Button
+          variant="primary"
+          disabled={busy || birthDate === savedBirthDate}
+          type="submit"
+        >
           {busy ? "Saving…" : "Save birth date"}
-        </button>
+        </Button>
         {message ? <span role="status">{message}</span> : null}
       </div>
     </form>

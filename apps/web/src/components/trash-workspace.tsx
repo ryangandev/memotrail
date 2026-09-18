@@ -1,4 +1,7 @@
 "use client";
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/button";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -95,23 +98,27 @@ export function TrashWorkspace({
 
   return (
     <PageFrame variant="standard">
-      <header className={styles.pageHeader}>
-        <div>
-          <p className={styles.eyebrow}>Recoverable by design</p>
-          <h1>Trash</h1>
-          <p>
+      <PageHeader
+        title={<>Trash</>}
+        eyebrow={<>Recoverable by design</>}
+        description={
+          <>
             Restore something you still need, or permanently remove it with an
             explicit confirmation.
-          </p>
-        </div>
-        <div className={styles.retentionBadge}>
-          <Icon name="clock" size={18} />
-          <span>
-            <strong>30-day retention</strong>
-            <small>Dates are shown per item</small>
-          </span>
-        </div>
-      </header>
+          </>
+        }
+        actions={
+          <>
+            <div className={styles.retentionBadge}>
+              <Icon name="clock" size={18} />
+              <span>
+                <strong>30-day retention</strong>
+                <small>Dates are shown per item</small>
+              </span>
+            </div>
+          </>
+        }
+      />
 
       <aside className={styles.retentionNote}>
         <Icon name="archive" size={19} />
@@ -151,20 +158,30 @@ export function TrashWorkspace({
       ) : null}
 
       {workspace.loadError ? (
-        <section className={styles.emptyState}>
-          <Icon name="refresh" size={25} />
-          <h2>Trash is unavailable</h2>
-          <p>{workspace.loadError}</p>
-        </section>
+        <EmptyState
+          title={<>Trash is unavailable</>}
+          description={<>{workspace.loadError}</>}
+          icon={
+            <>
+              <Icon name="refresh" size={25} />
+            </>
+          }
+        />
       ) : workspace.items.length === 0 ? (
-        <section className={styles.emptyState}>
-          <Icon name="trash" size={25} />
-          <h2>Nothing in Trash</h2>
-          <p>
-            Removed Entries, Places, People, and individual photos will appear
-            here. Legacy records remain recoverable too.
-          </p>
-        </section>
+        <EmptyState
+          title={<>Nothing in Trash</>}
+          description={
+            <>
+              Removed Entries, Places, People, and individual photos will appear
+              here. Legacy records remain recoverable too.
+            </>
+          }
+          icon={
+            <>
+              <Icon name="trash" size={25} />
+            </>
+          }
+        />
       ) : (
         <>
           <div className={styles.listSummary}>
@@ -217,8 +234,9 @@ export function TrashWorkspace({
                   </div>
 
                   <div className={styles.itemActions}>
-                    <button
-                      className={styles.restoreButton}
+                    <Button
+                      variant="secondary"
+
                       disabled={Boolean(pending) || batchBusy}
                       onClick={() => runAction(item, "restore")}
                       type="button"
@@ -226,9 +244,10 @@ export function TrashWorkspace({
                       {isPending && pending?.action === "restore"
                         ? "Restoring..."
                         : "Restore"}
-                    </button>
-                    <button
-                      className={styles.deleteButton}
+                    </Button>
+                    <Button
+                      variant="danger"
+
                       disabled={Boolean(pending) || batchBusy}
                       onClick={() => {
                         setResult(null);
@@ -237,7 +256,7 @@ export function TrashWorkspace({
                       type="button"
                     >
                       Delete forever
-                    </button>
+                    </Button>
                   </div>
                 </article>
               );
@@ -296,16 +315,18 @@ export function TrashWorkspace({
               </p>
             ) : null}
             <div className={styles.dialogActions}>
-              <button
+              <Button
+                variant="secondary"
                 disabled={Boolean(pending)}
                 onClick={() => setConfirmation(null)}
                 type="button"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
                 autoFocus
-                className={styles.confirmDeleteButton}
+
                 disabled={Boolean(pending)}
                 onClick={() => runAction(confirmation, "delete")}
                 type="button"
@@ -313,7 +334,7 @@ export function TrashWorkspace({
                 {pending?.action === "delete"
                   ? "Deleting..."
                   : "Delete forever"}
-              </button>
+              </Button>
             </div>
           </section>
         </div>

@@ -22,7 +22,10 @@
   color: var(--mt-color-ink-muted);
   margin: var(--mt-space-2) 0;
 }
-.panel button {
+.panel
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-small);
   padding: var(--mt-space-2) var(--mt-space-3);
@@ -32,11 +35,17 @@
   font-size: var(--mt-font-size-caption);
   cursor: pointer;
 }
-.panel button:disabled {
+.panel
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):disabled {
   opacity: 0.5;
   cursor: default;
 }
-.panel button:focus-visible {
+.panel
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):focus-visible {
   outline: 2px solid var(--mt-color-accent);
   outline-offset: 2px;
 }
@@ -78,7 +87,11 @@
   font-size: var(--mt-font-size-label);
   font-weight: var(--mt-font-weight-semibold);
 }
-.panel fieldset button {
+.panel
+  fieldset
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   margin-right: var(--mt-space-2);
   margin-top: var(--mt-space-2);
 }

@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/button";
 import type { PhotoPlaceDraft } from "@/lib/media/photo-place";
 
 import { useEffect, useState, type FormEvent } from "react";
@@ -99,14 +100,15 @@ export function EntryReviewList({
                   <span>+{entry.tagNames.length - 3}</span>
                 ) : null}
               </div>
-              <button
-                className={styles.reviewEntryButton}
+              <Button
+                variant="secondary"
+
                 onClick={() => setSelectedEntry(entry)}
                 type="button"
               >
                 Organize
                 <Icon name="chevron" size={14} />
-              </button>
+              </Button>
             </footer>
           </article>
         );
@@ -492,32 +494,35 @@ export function EntryReviewDialog({
           ) : null}
 
           <footer className={styles.reviewActions}>
-            <button
-              className={styles.cancelReviewButton}
+            <Button
+              variant="secondary"
+
               disabled={isPending}
               onClick={onClose}
               type="button"
             >
               Cancel
-            </button>
+            </Button>
             <div>
-              <button
-                className={styles.secondaryReviewButton}
+              <Button
+                variant="primary"
+
                 disabled={isPending}
                 type="submit"
               >
                 Save changes
-              </button>
+              </Button>
               {!organized && (
-                <button
-                  className={styles.doneButton}
+                <Button
+                  variant="primary"
+
                   disabled={isPending}
                   onClick={() => void submitReview("done")}
                   type="button"
                 >
                   <Icon name="check" size={16} />
                   {isPending ? "Saving…" : "Save to Library"}
-                </button>
+                </Button>
               )}
             </div>
           </footer>

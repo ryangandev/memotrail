@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/button";
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -104,14 +105,15 @@ export function EmptyTrashControl({
   }
   return (
     <>
-      <button
-        className={styles.emptyTrashButton}
+      <Button
+        variant="danger"
+
         disabled={disabled || preparing || running || snapshot !== null}
         onClick={prepare}
         type="button"
       >
         {preparing ? "Preparing Trash…" : "Empty Trash"}
-      </button>
+      </Button>
       {snapshot && (
         <dialog
           className={`${styles.confirmationDialog} ${styles.emptyTrashDialog}`}
@@ -147,11 +149,18 @@ export function EmptyTrashControl({
             </p>
           )}
           <div className={styles.dialogActions}>
-            <button autoFocus disabled={running} onClick={close} type="button">
+            <Button
+              variant="secondary"
+              autoFocus
+              disabled={running}
+              onClick={close}
+              type="button"
+            >
               Cancel
-            </button>
-            <button
-              className={styles.confirmDeleteButton}
+            </Button>
+            <Button
+              variant="danger"
+
               disabled={running}
               onClick={confirm}
               type="button"
@@ -159,7 +168,7 @@ export function EmptyTrashControl({
               {running
                 ? "Emptying Trash…"
                 : "Permanently delete confirmed items"}
-            </button>
+            </Button>
           </div>
         </dialog>
       )}

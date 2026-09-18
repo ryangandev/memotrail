@@ -1,3 +1,5 @@
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/button";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { signOut } from "@/app/auth/actions";
@@ -63,11 +65,13 @@ export default async function SettingsPage() {
 
   return (
     <PageFrame className={styles.content} variant="compact">
-      <header className={styles.header}>
-        <p>Your private space</p>
-        <h1>Settings</h1>
-        <span>Manage your account and the way MemoTrail works for you.</span>
-      </header>
+      <PageHeader
+        title={<>Settings</>}
+        eyebrow={<>Your private space</>}
+        description={
+          <>Manage your account and the way MemoTrail works for you.</>
+        }
+      />
 
       <section aria-labelledby="account-heading">
         <div className={styles.sectionHeading}>
@@ -86,7 +90,9 @@ export default async function SettingsPage() {
             <small>Google Sign-In</small>
           </div>
           <form action={signOut}>
-            <button type="submit">Sign out</button>
+            <Button variant="primary" type="submit">
+              Sign out
+            </Button>
           </form>
         </div>
 
