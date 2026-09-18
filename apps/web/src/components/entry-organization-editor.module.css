@@ -117,14 +117,9 @@
   top: -3px;
   bottom: -3px;
   width: 8px;
-  border: 2px solid
-    color-mix(in srgb, var(--mt-color-warm) 58%, var(--mt-color-accent));
+  border: 2px solid var(--mt-color-warm);
   border-radius: 0;
-  background: color-mix(
-    in srgb,
-    var(--mt-color-accent) 34%,
-    var(--mt-color-warm-subtle)
-  );
+  background: var(--mt-color-warm-subtle);
   box-shadow: none;
   content: "";
 }
@@ -250,8 +245,8 @@
 }
 
 .editor[data-kind="collection"] .inlineEditor {
-  width: 240px;
-  flex-basis: 240px;
+  width: 220px;
+  flex-basis: 220px;
 }
 
 .inputShell {
