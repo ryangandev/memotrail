@@ -17,7 +17,7 @@
   margin: 0;
 }
 .panel p {
-  font-size: 12px;
+  font-size: var(--mt-font-size-caption);
   line-height: 1.6;
   color: var(--mt-color-ink-muted);
   margin: var(--mt-space-2) 0;
@@ -29,7 +29,7 @@
   color: var(--mt-color-ink);
   background: var(--mt-color-surface);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--mt-font-size-caption);
   cursor: pointer;
 }
 .panel button:disabled {
@@ -60,7 +60,7 @@
 .photo strong {
   display: block;
   overflow-wrap: anywhere;
-  font-size: 13px;
+  font-size: var(--mt-font-size-label);
   margin-bottom: var(--mt-space-2);
 }
 .coordinates {
@@ -75,8 +75,8 @@
   min-width: 0;
 }
 .panel legend {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-semibold);
 }
 .panel fieldset button {
   margin-right: var(--mt-space-2);
@@ -84,7 +84,7 @@
 }
 .panel label {
   display: block;
-  font-size: 12px;
+  font-size: var(--mt-font-size-caption);
   margin-block: var(--mt-space-2);
 }
 .panel input,

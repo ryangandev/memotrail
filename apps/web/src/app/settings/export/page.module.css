@@ -1,16 +1,16 @@
 .content {
   display: grid;
-  gap: 24px;
+  gap: var(--mt-space-6);
   color: var(--mt-color-ink);
 }
 .content header {
   display: grid;
-  gap: 12px;
+  gap: var(--mt-space-3);
 }
 .content h1 {
   font-family: var(--mt-font-family-serif);
   font-size: clamp(32px, 5vw, 44px);
-  font-weight: 500;
+  font-weight: var(--mt-font-weight-medium);
 }
 .content h2 {
   font-size: 18px;
@@ -30,7 +30,7 @@
 .card {
   display: grid;
   gap: 14px;
-  padding: 24px;
+  padding: var(--mt-space-6);
   border: 1px solid var(--mt-color-border);
   border-radius: 16px;
   background: var(--mt-color-surface);
@@ -43,11 +43,11 @@
 .content button {
   border: 1px solid var(--mt-color-border);
   border-radius: 9px;
-  padding: 11px 16px;
+  padding: 11px var(--mt-space-4);
   background: var(--mt-color-surface);
   color: var(--mt-color-accent);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--mt-font-size-label);
   cursor: pointer;
   min-height: 44px;
 }
@@ -63,23 +63,23 @@
   cursor: default;
 }
 .notice {
-  padding: 16px;
+  padding: var(--mt-space-4);
   border: 1px solid var(--mt-color-border);
   border-radius: 10px;
   background: var(--mt-color-surface-subtle);
   display: grid;
-  gap: 12px;
+  gap: var(--mt-space-3);
 }
 .snapshots {
   display: grid;
-  gap: 16px;
+  gap: var(--mt-space-4);
 }
 .footnote {
-  font-size: 12px;
+  font-size: var(--mt-font-size-caption);
 }
 @media (max-width: 600px) {
   .content {
-    gap: 20px;
+    gap: var(--mt-space-5);
   }
   .card {
     padding: 18px;

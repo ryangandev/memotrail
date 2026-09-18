@@ -47,7 +47,7 @@
 .coordinateBadge {
   position: absolute;
   z-index: 1;
-  padding: 5px 8px;
+  padding: 5px var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
   font-size: 9px;
   font-weight: var(--mt-font-weight-semibold);
@@ -59,7 +59,7 @@
   left: var(--mt-space-3);
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--mt-space-1);
   color: var(--mt-color-accent);
   background: color-mix(
     in srgb,

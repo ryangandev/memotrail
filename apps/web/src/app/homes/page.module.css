@@ -131,7 +131,7 @@
 }
 
 .homeSection {
-  margin-top: var(--mt-space-9);
+  margin-top: var(--mt-space-8);
 }
 
 .homeSection > header {
@@ -345,7 +345,7 @@
 }
 
 .dialogHeader p {
-  margin-bottom: 4px;
+  margin-bottom: var(--mt-space-1);
   color: var(--mt-color-accent);
   font-size: 10px;
   font-weight: var(--mt-font-weight-semibold);
@@ -645,7 +645,7 @@
 
 @media (max-width: 480px) {
   .homeSection {
-    margin-top: var(--mt-space-7);
+    margin-top: var(--mt-space-6);
   }
 
   .homeSection > header span {

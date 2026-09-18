@@ -169,7 +169,7 @@
 }
 
 .itemMeta span {
-  padding: 3px 8px;
+  padding: 3px var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-warm);
   background: var(--mt-color-warm-subtle);

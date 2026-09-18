@@ -49,7 +49,7 @@
   position: absolute;
   right: var(--mt-space-3);
   bottom: var(--mt-space-3);
-  padding: 4px 8px;
+  padding: var(--mt-space-1) var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
   color: white;
   background: rgb(24 24 20 / 0.72);
@@ -73,7 +73,7 @@
 }
 
 .goalMeta span {
-  padding: 4px 8px;
+  padding: var(--mt-space-1) var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface-subtle);
@@ -135,7 +135,7 @@
 .contextLine span {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--mt-space-1);
 }
 
 .goalCardBody footer {
@@ -186,7 +186,7 @@
   min-height: 31px;
   align-items: center;
   gap: 7px;
-  padding: 4px 10px;
+  padding: var(--mt-space-1) 10px;
   overflow: hidden;
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-pill);

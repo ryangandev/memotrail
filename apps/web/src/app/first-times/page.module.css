@@ -173,7 +173,7 @@
     var(--mt-color-surface)
   );
   font-family: var(--mt-font-family-mono);
-  font-size: 20px;
+  font-size: var(--mt-font-size-title-small);
 }
 
 .cardBody time {
@@ -270,7 +270,7 @@
 }
 
 .dialogHeader p {
-  margin-bottom: 4px;
+  margin-bottom: var(--mt-space-1);
   color: var(--mt-color-warm);
   font-size: 10px;
   font-weight: var(--mt-font-weight-semibold);

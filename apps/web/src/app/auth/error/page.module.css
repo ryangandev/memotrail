@@ -8,7 +8,7 @@
 
 .card {
   width: min(100%, 440px);
-  padding: 40px;
+  padding: var(--mt-space-10);
   border: 1px solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-xlarge);
   background: var(--mt-color-surface-raised);

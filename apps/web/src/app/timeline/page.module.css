@@ -165,7 +165,7 @@
   position: absolute;
   top: 7px;
   right: 6px;
-  padding: 1px 4px;
+  padding: 1px var(--mt-space-1);
   border-radius: var(--mt-radius-small);
   color: var(--mt-color-accent);
   background: var(--mt-color-surface);
@@ -594,7 +594,7 @@
 }
 
 .dialogHeader p {
-  margin-bottom: 4px;
+  margin-bottom: var(--mt-space-1);
   color: var(--mt-color-ink-faint);
   font-size: 10px;
   font-weight: var(--mt-font-weight-semibold);
@@ -644,7 +644,7 @@
   grid-template-columns: 1fr 1fr;
   gap: var(--mt-space-2);
   margin-top: var(--mt-space-2);
-  padding: 4px;
+  padding: var(--mt-space-1);
   border-radius: var(--mt-radius-medium);
   background: var(--mt-color-surface-subtle);
 }
@@ -1013,9 +1013,9 @@
 }
 .undatedMoments {
   border-top: 1px solid var(--mt-color-border);
-  padding: 24px;
+  padding: var(--mt-space-6);
   display: grid;
-  gap: 16px;
+  gap: var(--mt-space-4);
 }
 
 .undatedMoments p {
@@ -1039,7 +1039,7 @@
 }
 .undatedMoments div {
   display: grid;
-  gap: 8px;
+  gap: var(--mt-space-2);
 }
 .undatedMoments button,
 .undatedMoments a {
@@ -1047,7 +1047,7 @@
   color: inherit;
   background: transparent;
   border: 1px solid var(--mt-color-border);
-  border-radius: 12px;
-  padding: 12px 16px;
+  border-radius: var(--mt-radius-medium);
+  padding: var(--mt-space-3) var(--mt-space-4);
   cursor: pointer;
 }

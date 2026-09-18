@@ -17,14 +17,14 @@
   gap: var(--mt-space-3);
 }
 .heading h3 {
-  font-size: 15px;
+  font-size: var(--mt-font-size-body);
   margin: 0;
   overflow-wrap: anywhere;
   min-width: 0;
 }
 .panel p {
   color: var(--mt-color-ink-muted);
-  font-size: 13px;
+  font-size: var(--mt-font-size-label);
   line-height: 1.6;
 }
 .panel button,
@@ -35,7 +35,7 @@
   border-radius: var(--mt-radius-small);
   padding: var(--mt-space-2) var(--mt-space-3);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--mt-font-size-label);
   min-height: 44px;
   cursor: pointer;
 }
@@ -80,7 +80,7 @@
   display: grid;
   place-items: center;
   text-align: center;
-  font-size: 13px;
+  font-size: var(--mt-font-size-label);
   color: var(--mt-color-ink-muted);
 }
 .unavailable {
@@ -103,7 +103,7 @@
   margin-block: var(--mt-space-3);
 }
 .navigation {
-  font-size: 13px;
+  font-size: var(--mt-font-size-label);
 }
 .photoCard {
   display: flex;
@@ -118,7 +118,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--mt-space-2);
-  font-size: 13px;
+  font-size: var(--mt-font-size-label);
   margin-top: var(--mt-space-3);
 }
 .picker input {
@@ -157,7 +157,7 @@
 .pendingRow span {
   min-width: 0;
   overflow-wrap: anywhere;
-  font-size: 13px;
+  font-size: var(--mt-font-size-label);
 }
 
 .pendingRow .pendingPreview {

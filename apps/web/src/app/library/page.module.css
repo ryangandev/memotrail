@@ -165,8 +165,8 @@
 }
 
 .wikiBadges span {
-  padding: 3px 8px;
-  border-radius: 999px;
+  padding: 3px var(--mt-space-2);
+  border-radius: var(--mt-radius-pill);
   color: var(--mt-color-accent);
   background: var(--mt-color-accent-subtle);
   font-size: 9px;
@@ -325,7 +325,7 @@
 }
 
 .destinationGrid p {
-  margin-top: 4px;
+  margin-top: var(--mt-space-1);
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
   line-height: var(--mt-line-height-body);

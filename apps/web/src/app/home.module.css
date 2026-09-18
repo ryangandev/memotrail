@@ -88,7 +88,7 @@
 .inboxPreviewHeader > a {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--mt-space-1);
   color: var(--mt-color-accent);
   font-size: var(--mt-font-size-caption);
   font-weight: var(--mt-font-weight-medium);
@@ -172,7 +172,7 @@
 }
 
 .sectionHeading p {
-  margin-top: 4px;
+  margin-top: var(--mt-space-1);
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
 }
@@ -232,7 +232,7 @@
 .statValue {
   margin-bottom: var(--mt-space-2);
   font-family: var(--mt-font-family-serif);
-  font-size: 42px;
+  font-size: var(--mt-font-size-display);
   line-height: 0.9;
 }
 
@@ -242,7 +242,7 @@
 }
 
 .statCard small {
-  margin-top: 4px;
+  margin-top: var(--mt-space-1);
   overflow: hidden;
   color: var(--mt-color-ink-faint);
   font-size: 10px;
@@ -279,7 +279,7 @@
 .stageCard h3 {
   margin-top: var(--mt-space-4);
   font-family: var(--mt-font-family-serif);
-  font-size: 20px;
+  font-size: var(--mt-font-size-title-small);
   font-weight: var(--mt-font-weight-medium);
   line-height: 1.2;
 }
@@ -367,7 +367,7 @@
 }
 
 .memoryCard footer span {
-  padding: 3px 8px;
+  padding: 3px var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-accent);
   background: var(--mt-color-surface);
@@ -446,7 +446,7 @@
 }
 
 .recentCard footer span {
-  padding: 3px 8px;
+  padding: 3px var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-accent);
   background: var(--mt-color-accent-subtle);

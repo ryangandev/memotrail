@@ -48,7 +48,7 @@
 }
 
 .connectedStatus {
-  padding: 4px 9px;
+  padding: var(--mt-space-1) 9px;
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-accent);
   background: var(--mt-color-accent-subtle);
@@ -152,7 +152,7 @@
 }
 
 .birthDateCard p {
-  margin-top: 4px;
+  margin-top: var(--mt-space-1);
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
   line-height: var(--mt-line-height-body);
@@ -214,7 +214,7 @@
 }
 
 .timezoneCard p {
-  margin-top: 4px;
+  margin-top: var(--mt-space-1);
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
   line-height: var(--mt-line-height-body);
@@ -335,7 +335,7 @@
 }
 
 .preferenceList p {
-  margin-top: 4px;
+  margin-top: var(--mt-space-1);
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
   line-height: var(--mt-line-height-body);

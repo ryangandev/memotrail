@@ -74,7 +74,7 @@
 .featureRow p,
 .switchRow small {
   display: block;
-  margin-top: 4px;
+  margin-top: var(--mt-space-1);
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
   line-height: var(--mt-line-height-body);
@@ -273,7 +273,7 @@
 
 .privacyNote > div {
   display: grid;
-  gap: 4px;
+  gap: var(--mt-space-1);
 }
 
 .privacyNote strong {

@@ -133,7 +133,7 @@
 }
 
 .searchScope span {
-  padding: 3px 8px;
+  padding: 3px var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-accent);
   background: var(--mt-color-accent-subtle);
@@ -322,7 +322,7 @@
 }
 
 .resultMeta span {
-  padding: 3px 8px;
+  padding: 3px var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface-subtle);
@@ -388,7 +388,7 @@
 }
 
 .organization span {
-  padding: 3px 8px;
+  padding: 3px var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface-subtle);

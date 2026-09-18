@@ -1,6 +1,6 @@
 # MemoTrail Status
 
-Last reviewed: 2026-09-17.
+Last reviewed: 2026-09-18.
 
 ## Current state
 
@@ -21,7 +21,7 @@ Use Git history for feature-level implementation and test evidence.
 | Private media, Entry history, relationships, Trash, and complete export              | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                  |
 | Hosted Supabase contracts                                                            | Deployed to the confirmed MemoTrail project                                                                                                                                         |
 | Capture First Life Wiki information model                                            | Canonical database model is live on the confirmed hosted project; Web navigation, Library, Inbox organization, Search, Collections, and history use Kind-aware identity and routing |
-| Web design system audit                                                              | Development-only token and production-component gallery implemented at `/design-system`; consolidation and application migration await human review                                 |
+| Web design system                                                                    | Gallery review accepted; production migration in progress, starting with token validation and existing canonical components |
 | Backup and restore                                                                   | Not ready                                                                                                                                                                           |
 | Current GitHub CI                                                                    | Blocked before jobs start by account billing or spending limits                                                                                                                     |
 
@@ -64,12 +64,11 @@ The latest automated native UI attempt was blocked by the locked development Mac
 - Resolve the GitHub account billing or spending-limit issue.
 - Rerun all Web, iOS, and database jobs for current `main` and confirm they actually execute.
 
-### 6. Review the Web design system audit
+### 6. Complete the Web design system migration
 
-- Review foundations, production component variants, states, and documented component gaps at the development-only `/design-system` route.
-- Foundations, identity and icons, layout, and RecordCard are accepted; form, organization, and media component review is still in progress.
-- Decide the canonical Button, form-field, dialog, card, page-header, and feedback boundaries before starting consolidation or application migration.
-- Do not start application-wide migration or duplicate reduction until the component gallery receives explicit final acceptance.
+- The user accepted the reviewed gallery as the canonical Web source and authorized production migration while preserving product behavior.
+- Migrate in dependency order: tokens, date/form components, record cards, component-owned CSS, then full regression verification.
+- The current gallery has no generic Button, Dialog, PageHeader, or EmptyState implementation; these categories need an explicit exception or a separate component review before replacing their production implementations.
 
 ## Watch list
 

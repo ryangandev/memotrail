@@ -19,7 +19,7 @@
   overflow: hidden;
   border: 1px solid
     color-mix(in srgb, var(--mt-color-border-strong) 82%, transparent);
-  border-radius: 18px;
+  border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface-raised);
   box-shadow: 0 24px 80px rgb(25 25 22 / 0.24);
   animation: palette-dialog-enter var(--mt-motion-standard)
@@ -254,7 +254,7 @@
 
   .dialog {
     max-height: min(78dvh, 680px);
-    border-radius: 18px;
+    border-radius: var(--mt-radius-large);
   }
 
   .searchField {

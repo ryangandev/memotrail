@@ -178,7 +178,7 @@
   max-width: 180px;
   align-items: center;
   gap: var(--mt-space-2);
-  padding: 6px 8px;
+  padding: 6px var(--mt-space-2);
   border: 1px solid transparent;
   border-radius: 6px;
   visibility: hidden;
@@ -198,7 +198,7 @@
 }
 
 .tooltip kbd {
-  padding: 2px 4px;
+  padding: 2px var(--mt-space-1);
   border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
   border-radius: 4px;
   color: inherit;
@@ -244,7 +244,7 @@
 .separator {
   width: 1px;
   height: 18px;
-  margin: 0 4px;
+  margin: 0 var(--mt-space-1);
   flex: 0 0 auto;
   background: var(--mt-color-border);
 }

@@ -5,7 +5,7 @@
   font-family: var(--mt-font-family-serif);
   font-size: 38px;
   letter-spacing: -0.04em;
-  margin: 12px 0;
+  margin: var(--mt-space-3) 0;
 }
 .workspace a {
   color: var(--mt-color-accent);
@@ -25,7 +25,7 @@
 .pagination {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: var(--mt-space-4);
   align-items: center;
 }
 .pagination {
@@ -33,49 +33,49 @@
 }
 .list {
   display: grid;
-  gap: 16px;
+  gap: var(--mt-space-4);
 }
 .card {
-  padding: 24px;
+  padding: var(--mt-space-6);
   border: 1px solid var(--mt-color-border);
   background: var(--mt-color-surface);
   border-radius: 16px;
-  margin-bottom: 16px;
+  margin-bottom: var(--mt-space-4);
   min-width: 0;
 }
 .cardHeading h2 {
-  font-size: 20px;
-  margin: 0 0 8px;
+  font-size: var(--mt-font-size-title-small);
+  margin: 0 0 var(--mt-space-2);
   overflow-wrap: anywhere;
 }
 .cardHeading span {
-  font-size: 12px;
+  font-size: var(--mt-font-size-caption);
   color: var(--mt-color-ink-muted);
 }
 .card fieldset {
   border: 0;
   padding: 0;
-  margin: 20px 0 0;
+  margin: var(--mt-space-5) 0 0;
   min-width: 0;
 }
 .fields {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 130px;
-  gap: 16px;
+  gap: var(--mt-space-4);
 }
 .fields label {
   display: grid;
-  gap: 8px;
-  font-size: 13px;
+  gap: var(--mt-space-2);
+  font-size: var(--mt-font-size-label);
 }
 .fields input {
   width: 100%;
   min-width: 0;
-  padding: 12px;
+  padding: var(--mt-space-3);
   background: var(--mt-color-canvas);
   color: var(--mt-color-ink);
   border: 1px solid var(--mt-color-border);
-  border-radius: 8px;
+  border-radius: var(--mt-radius-small);
 }
 .toggle {
   display: flex;
@@ -91,9 +91,9 @@
 }
 .workspace button {
   min-height: 44px;
-  padding: 10px 16px;
+  padding: 10px var(--mt-space-4);
   border: 1px solid var(--mt-color-border);
-  border-radius: 8px;
+  border-radius: var(--mt-radius-small);
   color: var(--mt-color-ink);
   background: var(--mt-color-surface);
   cursor: pointer;
@@ -108,8 +108,8 @@
   outline-offset: 3px;
 }
 .hint {
-  font-size: 13px;
-  margin-bottom: 24px;
+  font-size: var(--mt-font-size-label);
+  margin-bottom: var(--mt-space-6);
 }
 @media (max-width: 600px) {
   .workspace h1 {

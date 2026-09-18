@@ -88,7 +88,7 @@
 
 .usageCount {
   display: block;
-  margin-top: 4px;
+  margin-top: var(--mt-space-1);
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
 }

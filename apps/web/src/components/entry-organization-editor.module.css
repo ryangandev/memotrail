@@ -45,7 +45,7 @@
 
 .item {
   gap: 3px;
-  padding: 4px 2px 4px 10px;
+  padding: var(--mt-space-1) 2px var(--mt-space-1) 10px;
   border: 1px solid color-mix(in srgb, var(--mt-color-accent) 34%, transparent);
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-accent);
@@ -95,7 +95,7 @@
 
 .editor[data-kind="collection"] .item {
   min-height: 40px;
-  padding: 7px 24px;
+  padding: 7px var(--mt-space-6);
   border: 1px solid color-mix(in srgb, var(--mt-color-warm) 48%, transparent);
   border-right: 0;
   border-left: 0;

@@ -258,7 +258,7 @@
 }
 
 .entryMeta span {
-  padding: 3px 8px;
+  padding: 3px var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface-subtle);
@@ -339,10 +339,10 @@
 .organization a {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--mt-space-1);
   color: inherit;
   text-decoration: none;
-  padding: 3px 8px;
+  padding: 3px var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface-subtle);
