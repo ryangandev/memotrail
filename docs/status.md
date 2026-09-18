@@ -1,6 +1,6 @@
 # MemoTrail Status
 
-Last reviewed: 2026-09-16.
+Last reviewed: 2026-09-17.
 
 ## Current state
 
@@ -21,6 +21,7 @@ Use Git history for feature-level implementation and test evidence.
 | Private media, Entry history, relationships, Trash, and complete export              | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                  |
 | Hosted Supabase contracts                                                            | Deployed to the confirmed MemoTrail project                                                                                                                                         |
 | Capture First Life Wiki information model                                            | Canonical database model is live on the confirmed hosted project; Web navigation, Library, Inbox organization, Search, Collections, and history use Kind-aware identity and routing |
+| Web design system audit                                                              | Development-only token and production-component gallery implemented at `/design-system`; consolidation and application migration await human review                                 |
 | Backup and restore                                                                   | Not ready                                                                                                                                                                           |
 | Current GitHub CI                                                                    | Blocked before jobs start by account billing or spending limits                                                                                                                     |
 
@@ -62,6 +63,11 @@ The latest automated native UI attempt was blocked by the locked development Mac
 
 - Resolve the GitHub account billing or spending-limit issue.
 - Rerun all Web, iOS, and database jobs for current `main` and confirm they actually execute.
+
+### 6. Review the Web design system audit
+
+- Review foundations, production component variants, states, and documented component gaps at the development-only `/design-system` route.
+- Decide the canonical Button, form-field, dialog, card, page-header, and feedback boundaries before starting consolidation or application migration.
 
 ## Watch list
 

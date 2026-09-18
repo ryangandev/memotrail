@@ -127,6 +127,10 @@ export function WorkspaceBoundary({
     return children;
   }
 
+  if (pathname === "/design-system" && process.env.NODE_ENV !== "production") {
+    return children;
+  }
+
   if (!viewer) {
     return <AuthGate configured={configured} />;
   }

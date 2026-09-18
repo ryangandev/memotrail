@@ -11,7 +11,8 @@ Last reviewed: 2026-09-16.
 | Native client     | SwiftUI screens, controllers, device drafts and queues, native integrations | `apps/ios/MemoTrail/Features`, `apps/ios/MemoTrail/Models`, `apps/ios/MemoTrail/App`               |
 | Shared data       | Postgres schema, RLS, Storage policies, atomic RPCs, history, and search    | `supabase/migrations`                                                                              |
 | Data verification | Ownership, denial, concurrency, lifecycle, and contract tests               | `supabase/tests`                                                                                   |
-| Design system     | Semantic source tokens and generated Web and Swift outputs                  | `packages/design-tokens`                                                                           |
+| Design tokens     | Semantic source tokens and generated Web and Swift outputs                  | `packages/design-tokens`                                                                           |
+| Web design system | Reusable Web components and the development-only audit gallery              | `apps/web/src/components`, `apps/web/src/app/design-system`                                        |
 | Media runtime     | Deployable image and metadata decoder dependencies                          | `packages/media-runtime`                                                                           |
 | Delivery          | Web, iOS, and database CI                                                   | `.github/workflows/ci.yml`                                                                         |
 
@@ -150,6 +151,7 @@ Pair it with the test file carrying the same feature name.
 - `packages/design-tokens/tokens.json` is the semantic source of truth.
 - Generated Web CSS and Swift values are never edited directly.
 - Token changes run `pnpm tokens:generate` and `pnpm tokens:check`.
+- The development-only `/design-system` route renders production Web components and current generated tokens for review; it is unavailable in Production.
 - Cross-platform components preserve meaning and state while allowing native interaction differences.
 - Authenticated Web routes use `components/page-frame.tsx` for outer width, centering, responsive gutters, and vertical page rhythm.
 - Page frame variants are semantic: `compact` is 880px for forms and focused reading, `standard` is 960px for lists and search, `wide` is 1080px for dashboards and card grids, and `canvas` is 1180px for dense spatial views.
