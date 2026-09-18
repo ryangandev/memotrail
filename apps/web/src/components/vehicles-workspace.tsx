@@ -1,7 +1,8 @@
 "use client";
 import { Dialog } from "@/components/dialog";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
-import { PageHeader } from "@/components/page-header";
+import { FocusedViewLayout } from "@/components/focused-view-layout";
 import { Button } from "@/components/button";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -17,7 +18,6 @@ import styles from "@/components/record-workspace.module.css";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
-import { PageFrame } from "@/components/page-frame";
 import { ProgressiveImage } from "@/components/progressive-image";
 import {
   RecordCard,
@@ -93,38 +93,37 @@ export function VehiclesWorkspace({
   const orderedVehicles = [...currentVehicles, ...earlierVehicles];
 
   return (
-    <PageFrame variant="wide">
-      <PageHeader
-        title={<>Vehicles</>}
-        eyebrow={<>The machines that carried your story</>}
-        description={
-          <>
-            Keep each car, bike, or other vehicle as an Entity, with the dates,
-            facts, and memories that made it yours.
-          </>
-        }
-        actions={
-          <>
-            <Button
-              variant="primary"
-              aria-label="Add Vehicle"
-              onClick={() => setSelectedVehicle(null)}
-              type="button"
-            >
-              <Icon name="plus" />
-              <span>Add Vehicle</span>
-            </Button>
-          </>
-        }
-      />
-      <div className={styles.summary} aria-label="Vehicles summary">
-        <span>{countLabel(vehicles.length, "vehicle")}</span>
-        <span aria-hidden="true">·</span>
-        <span>{countLabel(currentVehicles.length, "current vehicle")}</span>
-        <span aria-hidden="true">·</span>
-        <span>{countLabel(earlierVehicles.length, "earlier vehicle")}</span>
-      </div>
-
+    <FocusedViewLayout
+      actions={
+        <Button
+          variant="primary"
+          aria-label="Add Vehicle"
+          onClick={() => setSelectedVehicle(null)}
+          type="button"
+        >
+          <Icon name="plus" />
+          <span>Add Vehicle</span>
+        </Button>
+      }
+      description={
+        <>
+          Keep each car, bike, or other vehicle as an Entity, with the dates,
+          facts, and memories that made it yours.
+        </>
+      }
+      eyebrow={<>The machines that carried your story</>}
+      summary={
+        <>
+          <span>{countLabel(vehicles.length, "vehicle")}</span>
+          <span aria-hidden="true">·</span>
+          <span>{countLabel(currentVehicles.length, "current vehicle")}</span>
+          <span aria-hidden="true">·</span>
+          <span>{countLabel(earlierVehicles.length, "earlier vehicle")}</span>
+        </>
+      }
+      summaryLabel="Vehicles summary"
+      title={<>Vehicles</>}
+    >
       {loadError ? (
         <div className={styles.message} role="alert">
           <Icon name="car" size={22} />
@@ -180,7 +179,7 @@ export function VehiclesWorkspace({
           vehicle={selectedVehicle}
         />
       ) : null}
-    </PageFrame>
+    </FocusedViewLayout>
   );
 }
 
@@ -301,6 +300,7 @@ export function VehicleEditor({
   vehicle: VehicleRecord | null;
 }) {
   const router = useRouter();
+  const requestConfirmation = useConfirmationDialog();
   const titleRef = useRef<HTMLInputElement>(null);
   const initialTimezone =
     vehicle?.occurredTimezone ?? defaultTimezone ?? localTimezone();
@@ -477,13 +477,14 @@ export function VehicleEditor({
   }
 
   async function handleRemovePhoto(photo: VehicleAttachment) {
-    if (
-      !window.confirm(
-        "Move this photo to Trash? The original will be preserved.",
-      )
-    ) {
-      return;
-    }
+    const confirmed = await requestConfirmation({
+      title: <>Move this photo to Trash?</>,
+      description: <>The original will be preserved for recovery.</>,
+      confirmLabel: "Move photo to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setIsPending(true);
     setResult(null);
     try {
@@ -508,15 +509,15 @@ export function VehicleEditor({
   }
 
   async function handleTrashEntry() {
-    if (
-      !currentId ||
-      currentRevision === null ||
-      !window.confirm(
-        `Move “${title.trim() || "this Vehicle"}” to Trash? Its history and private photos will be preserved.`,
-      )
-    ) {
-      return;
-    }
+    if (!currentId || currentRevision === null) return;
+    const confirmed = await requestConfirmation({
+      title: <>Move “{title.trim() || "this Vehicle"}” to Trash?</>,
+      description: <>Its history and private photos will be preserved.</>,
+      confirmLabel: "Move to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setIsPending(true);
     setResult(null);
     try {

@@ -356,7 +356,7 @@ final class ResidenceController {
 
   private func loadPlaces() async throws -> [ResidencePlace] {
     try await client
-      .from("places")
+      .from("locations")
       .select("id,name,address,city,region,country,latitude,longitude,notes")
       .eq("owner_id", value: ownerID.uuidString)
       .is("deleted_at", value: nil)

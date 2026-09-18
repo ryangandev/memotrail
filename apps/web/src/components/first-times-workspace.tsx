@@ -1,7 +1,8 @@
 "use client";
 import { Dialog } from "@/components/dialog";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
-import { PageHeader } from "@/components/page-header";
+import { FocusedViewLayout } from "@/components/focused-view-layout";
 import { Button } from "@/components/button";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -17,7 +18,6 @@ import styles from "@/components/first-times-workspace.module.css";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
-import { PageFrame } from "@/components/page-frame";
 import { ProgressiveImage } from "@/components/progressive-image";
 import {
   RecordCard,
@@ -76,35 +76,32 @@ export function FirstTimesWorkspace({
   );
 
   return (
-    <PageFrame variant="wide">
-      <PageHeader
-        title={<>First Times</>}
-        eyebrow={<>A record of beginnings</>}
-        description={
-          <>
-            Keep the small beginnings and major milestones worth finding again.
-          </>
-        }
-        actions={
-          <>
-            <Button
-              variant="primary"
-              aria-label="Add First Time"
-              onClick={() => setSelectedEntry(null)}
-              type="button"
-            >
-              <Icon name="plus" />
-              <span>Add First Time</span>
-            </Button>
-          </>
-        }
-      />
-      <div className={styles.summary} aria-label="First Times summary">
-        <span>{countLabel(entries.length, "First Time")}</span>
-        <span aria-hidden="true">·</span>
-        <span>{countLabel(photoCount, "photo")}</span>
-      </div>
-
+    <FocusedViewLayout
+      actions={
+        <Button
+          variant="primary"
+          aria-label="Add First Time"
+          onClick={() => setSelectedEntry(null)}
+          type="button"
+        >
+          <Icon name="plus" />
+          <span>Add First Time</span>
+        </Button>
+      }
+      description={
+        <>Keep the small beginnings and major milestones worth finding again.</>
+      }
+      eyebrow={<>A record of beginnings</>}
+      summary={
+        <>
+          <span>{countLabel(entries.length, "First Time")}</span>
+          <span aria-hidden="true">·</span>
+          <span>{countLabel(photoCount, "photo")}</span>
+        </>
+      }
+      summaryLabel="First Times summary"
+      title={<>First Times</>}
+    >
       {loadError ? (
         <div className={styles.message} role="alert">
           <Icon name="star" size={22} />
@@ -161,7 +158,7 @@ export function FirstTimesWorkspace({
           tagOptions={tagOptions}
         />
       ) : null}
-    </PageFrame>
+    </FocusedViewLayout>
   );
 }
 
@@ -242,6 +239,7 @@ export function FirstTimeEditor({
   tagOptions: string[];
 }) {
   const router = useRouter();
+  const requestConfirmation = useConfirmationDialog();
   const titleRef = useRef<HTMLInputElement>(null);
   const [body, setBody] = useState(entry?.body ?? "");
   const [collectionInput, setCollectionInput] = useState("");
@@ -398,13 +396,14 @@ export function FirstTimeEditor({
   }
 
   async function handleRemovePhoto(photo: FirstTimeAttachment) {
-    if (
-      !window.confirm(
-        "Move this photo to Trash? The original will be preserved.",
-      )
-    ) {
-      return;
-    }
+    const confirmed = await requestConfirmation({
+      title: <>Move this photo to Trash?</>,
+      description: <>The original will be preserved for recovery.</>,
+      confirmLabel: "Move photo to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
 
     setIsPending(true);
     setResult(null);
@@ -432,15 +431,15 @@ export function FirstTimeEditor({
   }
 
   async function handleTrashEntry() {
-    if (
-      !currentId ||
-      currentRevision === null ||
-      !window.confirm(
-        `Move “${title.trim() || "this First Time"}” to Trash? Its history and private photos will be preserved.`,
-      )
-    ) {
-      return;
-    }
+    if (!currentId || currentRevision === null) return;
+    const confirmed = await requestConfirmation({
+      title: <>Move “{title.trim() || "this First Time"}” to Trash?</>,
+      description: <>Its history and private photos will be preserved.</>,
+      confirmLabel: "Move to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
 
     setIsPending(true);
     setResult(null);

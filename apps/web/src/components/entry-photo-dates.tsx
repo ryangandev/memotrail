@@ -131,8 +131,7 @@ export function EntryPhotoDates({
                   {info.latitude !== null && info.longitude !== null ? (
                     <>
                       <p className={styles.coordinates}>
-                        GPS: {info.latitude.toFixed(6)},{" "}
-                        {info.longitude.toFixed(6)}. No Place linked
+                        Private GPS metadata is available. No Location is linked
                         automatically.
                       </p>
                       <Button
@@ -154,7 +153,7 @@ export function EntryPhotoDates({
                           })
                         }
                       >
-                        Use GPS for a Place
+                        Use GPS for a Location
                       </Button>
                     </>
                   ) : null}

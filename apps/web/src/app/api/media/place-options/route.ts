@@ -10,7 +10,7 @@ export async function POST(request: Request) {
         { status: 400, headers },
       );
     let rows = client
-      .from("places")
+      .from("locations")
       .select("id,name,revision,latitude,longitude")
       .eq("owner_id", ownerID)
       .is("deleted_at", null)
@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     if (error) throw error;
     return Response.json(
       {
+        locations: (data ?? []).slice(0, 100),
         places: (data ?? []).slice(0, 100),
         hasMore: (data ?? []).length > 100,
       },
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     return Response.json(
-      { error: "Places unavailable. Try again." },
+      { error: "Locations unavailable. Try again." },
       { status: error instanceof AIError ? error.status : 503, headers },
     );
   }

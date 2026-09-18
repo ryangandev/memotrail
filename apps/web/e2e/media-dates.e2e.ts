@@ -219,9 +219,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     await expect(
       dialog.getByText("Camera time:", { exact: false }),
     ).toContainText("2017-07-08 12:34:56 (UTC-04:00)");
-    await expect(dialog.getByText("GPS:", { exact: false })).toContainText(
-      "39.950000, -75.166667",
-    );
+    await expect(dialog.getByText("39.950000, -75.166667")).toHaveCount(0);
     await dialog
       .getByRole("button", {
         name: "Use calendar date 2017-07-08",
@@ -315,41 +313,48 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
         .getByRole("button", { name: "Read camera date", exact: true })
         .click();
       await dialog
-        .getByRole("button", { name: "Use GPS for a Place", exact: true })
+        .getByRole("button", { name: "Use GPS for a Location", exact: true })
         .click();
     }
     await openPlaceDraft();
     await dialog
-      .getByLabel("New Place name", { exact: true })
-      .fill("Canceled Place");
+      .getByLabel("New Location name", { exact: true })
+      .fill("Canceled Location");
     expect(
-      (await client.from("places").select("id").eq("name", "Canceled Place"))
-        .data,
+      (
+        await client
+          .from("locations")
+          .select("id")
+          .eq("name", "Canceled Location")
+      ).data,
     ).toEqual([]);
     await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
     expect(
-      (await client.from("places").select("id").eq("name", "Canceled Place"))
-        .data,
+      (
+        await client
+          .from("locations")
+          .select("id")
+          .eq("name", "Canceled Location")
+      ).data,
     ).toEqual([]);
     await openPlaceDraft();
     await dialog
-      .getByLabel("New Place name", { exact: true })
+      .getByLabel("New Location name", { exact: true })
       .fill("Photo ski slope");
-    await dialog.getByLabel("Latitude", { exact: true }).fill("");
-    await dialog
-      .getByLabel("Latitude", { exact: true })
-      .pressSequentially("-39.95");
-    await expect(dialog.getByLabel("Latitude", { exact: true })).toHaveValue(
-      "-39.95",
+    await expect(dialog.getByLabel("Latitude", { exact: true })).toHaveCount(0);
+    await expect(dialog.getByLabel("Longitude", { exact: true })).toHaveCount(
+      0,
     );
-    await dialog.getByLabel("Longitude", { exact: true }).fill("175.166667");
     await expect(
-      dialog.getByRole("button", { name: "Use GPS for a Place", exact: true }),
+      dialog.getByRole("button", {
+        name: "Use GPS for a Location",
+        exact: true,
+      }),
     ).toBeDisabled();
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.emulateMedia({ colorScheme: "light" });
     await dialog
-      .getByLabel("Longitude", { exact: true })
+      .getByLabel("New Location name", { exact: true })
       .scrollIntoViewIfNeeded();
     await page.screenshot({
       caret: "initial",
@@ -362,14 +367,14 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       .getByRole("button", { name: "Save changes", exact: true })
       .click();
     await expect(dialog).not.toBeVisible();
-    const newPlace = await client
-      .from("places")
+    const newLocation = await client
+      .from("locations")
       .select("*")
       .eq("name", "Photo ski slope")
       .single();
-    expect(newPlace.data).toMatchObject({
-      latitude: -39.95,
-      longitude: 175.166667,
+    expect(newLocation.data).toMatchObject({
+      latitude: 39.95,
+      longitude: -75.166667,
     });
     expect(
       (
@@ -378,35 +383,33 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
           .select("place_id")
           .eq("entry_id", entry)
       ).data,
-    ).toEqual([{ place_id: newPlace.data!.id }]);
-    const existingPlace = await client.rpc("save_place", {
-      p_name: "Reusable Place",
-      p_address: null,
-      p_city: null,
-      p_country: null,
-      p_region: null,
-      p_latitude: 10,
-      p_longitude: 20,
-      p_notes: "Keep these facts",
-      p_related_entry_ids: [],
-      p_place_id: null,
-      p_expected_revision: null,
-    });
-    expect(existingPlace.error).toBeNull();
-    const existingID = existingPlace.data[0].place_id;
+    ).toEqual([{ place_id: newLocation.data!.id }]);
+    const existingLocation = await client
+      .from("locations")
+      .insert({
+        owner_id: owner,
+        name: "Reusable Location",
+        latitude: 10,
+        longitude: 20,
+        notes: "Keep these facts",
+      })
+      .select("id")
+      .single();
+    expect(existingLocation.error).toBeNull();
+    const existingID = existingLocation.data!.id;
     await openPlaceDraft();
-    await dialog.getByLabel("Find an existing Place").fill("Reusable");
+    await dialog.getByLabel("Find an existing Location").fill("Reusable");
     await dialog
-      .getByRole("button", { name: "Search Places", exact: true })
+      .getByRole("button", { name: "Search Locations", exact: true })
       .click();
     await dialog
-      .getByLabel("Existing Place", { exact: true })
+      .getByLabel("Existing Location", { exact: true })
       .selectOption(existingID);
     await expect(
-      dialog.getByText("Link existing Place:", { exact: false }),
-    ).toContainText("Reusable Place");
+      dialog.getByText("Link existing Location:", { exact: false }),
+    ).toContainText("Reusable Location");
     await dialog
-      .getByText("Link existing Place:", { exact: false })
+      .getByText("Link existing Location:", { exact: false })
       .scrollIntoViewIfNeeded();
     await page.screenshot({
       caret: "initial",
@@ -417,7 +420,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       "/api/media/place-options?query=Reusable",
       { headers: bearer },
     );
-    expect((await nativeOptions.json()).places[0].id).toBe(existingID);
+    expect((await nativeOptions.json()).locations[0].id).toBe(existingID);
     expect(
       (
         await (
@@ -425,7 +428,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
             headers: otherHeaders,
           })
         ).json()
-      ).places,
+      ).locations,
     ).toEqual([]);
     await dialog
       .getByRole("button", { name: "Save changes", exact: true })
@@ -442,7 +445,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     expect(
       (
         await client
-          .from("places")
+          .from("locations")
           .select("latitude,longitude,notes")
           .eq("id", existingID)
           .single()
@@ -467,7 +470,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       p_photo_place: {
         kind: "new",
         attachmentId: attachment,
-        name: "Concurrent photo Place",
+        name: "Concurrent photo Location",
         latitude: 30,
         longitude: 40,
       },
@@ -481,9 +484,9 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     expect(
       (
         await client
-          .from("places")
+          .from("locations")
           .select("id")
-          .eq("name", "Concurrent photo Place")
+          .eq("name", "Concurrent photo Location")
       ).data,
     ).toHaveLength(1);
     expect(

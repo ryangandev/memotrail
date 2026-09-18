@@ -87,7 +87,7 @@ describe("Home records", () => {
     ).toBeNull();
   });
 
-  it("parses reusable Place options", () => {
+  it("parses reusable Location options", () => {
     expect(
       parseHomePlaceOptions([
         {

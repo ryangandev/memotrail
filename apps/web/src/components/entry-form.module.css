@@ -16,7 +16,7 @@
 
 .reviewForm label:not(:where([data-ui-field] *)) {
   display: grid;
-  gap: var(--mt-space-2);
+  gap: var(--mt-space-1);
 }
 
 .reviewForm label:not(:where([data-ui-field] *)) > span {

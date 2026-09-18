@@ -118,7 +118,7 @@ test("Inbox Capture creates a linked Home through the specialized form", async (
       "First evening in the new apartment.",
     );
     await editor
-      .getByLabel("Place name", { exact: true })
+      .getByLabel("Location name", { exact: true })
       .fill("Lake Merritt apartment");
     await page.screenshot({
       caret: "initial",

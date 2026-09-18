@@ -26,8 +26,8 @@ select ok(not (public.prepare_empty_trash()->0 ? 'title'),'Preparation excludes 
 select ok(not (public.prepare_empty_trash()->0 ? 'owner_id'),'Preparation excludes owner identifiers');
 select is(
   (select count(*) from public.entries),
-  4::bigint,
-  'Read-only preparation preserves the owner entries and canonical Entity identities without exposing foreign records'
+  3::bigint,
+  'Read-only preparation preserves canonical owner Entries without duplicating standalone Places or exposing foreign records'
 );
 select is(public.prepare_empty_trash(),(select snapshot from captured),'Unchanged archive has a deterministic manifest');
 update public.entries set deleted_at=null where id='95000000-0000-4000-8000-000000000001';

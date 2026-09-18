@@ -618,7 +618,7 @@ enum ResidenceEntryError: LocalizedError, Equatable {
     case .bodyTooLong:
       "Memories can be up to \(ResidenceEntryInput.bodyLimit) characters."
     case .detailsTooLong:
-      "One of this Home's Place or move details is too long."
+      "One of this Home's Location or move details is too long."
     case .invalidCollections:
       "Use up to 20 Collections with names under 80 characters."
     case .invalidCoordinates:
@@ -636,9 +636,9 @@ enum ResidenceEntryError: LocalizedError, Equatable {
     case .moveOutRequiresDate:
       "Add a move-out date before recording why you left."
     case .placeRequired:
-      "Add a Place name for this Home."
+      "Add a Location name for this Home."
     case .placeTooLong:
-      "Place names can be up to \(ResidenceEntryInput.placeNameLimit) characters."
+      "Location names can be up to \(ResidenceEntryInput.placeNameLimit) characters."
     case .reversedRange:
       "The move-out date must be on or after the move-in date."
     case .titleRequired:

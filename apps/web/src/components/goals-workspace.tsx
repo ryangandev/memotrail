@@ -1,12 +1,13 @@
 "use client";
 import { Dialog } from "@/components/dialog";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import {
   RecordCard,
   RecordCardBody,
   RecordCardVisual,
 } from "@/components/record-card";
 import { EmptyState } from "@/components/empty-state";
-import { PageHeader } from "@/components/page-header";
+import { FocusedViewLayout } from "@/components/focused-view-layout";
 import { Button } from "@/components/button";
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
@@ -25,7 +26,6 @@ import { EntryPhotoField } from "@/components/entry-photo-field";
 import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
-import { PageFrame } from "@/components/page-frame";
 import { ProgressiveImage } from "@/components/progressive-image";
 import {
   firstTimePhotoLimit,
@@ -120,38 +120,37 @@ export function GoalsWorkspace({
   const bucketCount = goals.filter(isBucketListGoal).length;
 
   return (
-    <PageFrame variant="wide">
-      <PageHeader
-        title={<>Goals</>}
-        eyebrow={<>Intentions without pressure</>}
-        description={
-          <>
-            Keep near-term plans, distant hopes, and someday ideas together as
-            part of your personal archive.
-          </>
-        }
-        actions={
-          <>
-            <Button
-              variant="primary"
-              aria-label="Add Goal"
-              onClick={() => setSelectedGoal(null)}
-              type="button"
-            >
-              <Icon name="plus" />
-              <span>Add Goal</span>
-            </Button>
-          </>
-        }
-      />
-      <div className={common.summary} aria-label="Goals summary">
-        <span>{countLabel(goals.length, "goal")}</span>
-        <span aria-hidden="true">·</span>
-        <span>{openCount} open</span>
-        <span aria-hidden="true">·</span>
-        <span>{bucketCount} in Bucket List</span>
-      </div>
-
+    <FocusedViewLayout
+      actions={
+        <Button
+          variant="primary"
+          aria-label="Add Goal"
+          onClick={() => setSelectedGoal(null)}
+          type="button"
+        >
+          <Icon name="plus" />
+          <span>Add Goal</span>
+        </Button>
+      }
+      description={
+        <>
+          Keep near-term plans, distant hopes, and someday ideas together as
+          part of your personal archive.
+        </>
+      }
+      eyebrow={<>Intentions without pressure</>}
+      summary={
+        <>
+          <span>{countLabel(goals.length, "goal")}</span>
+          <span aria-hidden="true">·</span>
+          <span>{openCount} open</span>
+          <span aria-hidden="true">·</span>
+          <span>{bucketCount} in Bucket List</span>
+        </>
+      }
+      summaryLabel="Goals summary"
+      title={<>Goals</>}
+    >
       {loadError ? (
         <div className={common.message} role="alert">
           <Icon name="sparkle" size={22} />
@@ -213,7 +212,7 @@ export function GoalsWorkspace({
           tagOptions={tagOptions}
         />
       ) : null}
-    </PageFrame>
+    </FocusedViewLayout>
   );
 }
 
@@ -333,6 +332,7 @@ function GoalEditor({
   tagOptions: string[];
 }) {
   const router = useRouter();
+  const requestConfirmation = useConfirmationDialog();
   const titleRef = useRef<HTMLInputElement>(null);
   const [body, setBody] = useState(goal?.body ?? sourceCapture?.body ?? "");
   const [collectionInput, setCollectionInput] = useState("");
@@ -503,13 +503,14 @@ function GoalEditor({
   }
 
   async function handleRemovePhoto(photo: GoalAttachment) {
-    if (
-      !window.confirm(
-        "Move this photo to Trash? The original will be preserved.",
-      )
-    ) {
-      return;
-    }
+    const confirmed = await requestConfirmation({
+      title: <>Move this photo to Trash?</>,
+      description: <>The original will be preserved for recovery.</>,
+      confirmLabel: "Move photo to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setIsPending(true);
     setResult(null);
     try {
@@ -532,15 +533,15 @@ function GoalEditor({
   }
 
   async function handleTrashEntry() {
-    if (
-      !currentId ||
-      currentRevision === null ||
-      !window.confirm(
-        `Move “${title.trim() || "this Goal"}” to Trash? Its history and private photos will be preserved.`,
-      )
-    ) {
-      return;
-    }
+    if (!currentId || currentRevision === null) return;
+    const confirmed = await requestConfirmation({
+      title: <>Move “{title.trim() || "this Goal"}” to Trash?</>,
+      description: <>Its history and private photos will be preserved.</>,
+      confirmLabel: "Move to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setIsPending(true);
     setResult(null);
     try {

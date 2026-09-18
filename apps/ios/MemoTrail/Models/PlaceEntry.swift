@@ -1,56 +1,5 @@
 import Foundation
 
-typealias PlaceAttachment = ResidenceAttachment
-
-struct PlaceLinkedEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
-  let id: UUID
-  let title: String?
-  let body: String
-  let itemKind: WikiItemKind
-  let itemSubtype: String
-  let inboxStatus: String
-  let occurredStart: Date?
-  let occurredEnd: Date?
-  let datePrecision: String
-  let occurredLabel: String?
-  let occurredTimezone: String?
-  let revision: Int
-  let updatedAt: Date
-  let relationship: String
-  var attachments: [PlaceAttachment]
-
-  enum CodingKeys: String, CodingKey {
-    case id
-    case title
-    case body
-    case itemKind = "item_kind"
-    case itemSubtype = "item_subtype"
-    case inboxStatus = "inbox_status"
-    case occurredStart = "occurred_start"
-    case occurredEnd = "occurred_end"
-    case datePrecision = "date_precision"
-    case occurredLabel = "occurred_label"
-    case occurredTimezone = "occurred_timezone"
-    case revision
-    case updatedAt = "updated_at"
-    case relationship
-    case attachments
-  }
-
-  var displayTitle: String {
-    if let title = title?.trimmed.nonEmpty { return title }
-    let body = body.trimmed
-    guard !body.isEmpty else { return "Untitled Entry" }
-    return body.count > 80 ? "\(body.prefix(80).trimmingCharacters(in: .whitespaces))..." : body
-  }
-
-  var isEditable: Bool { relationship == "related" }
-
-  var relationshipLabel: String {
-    relationship == "home" ? "Home record" : itemKind.displayName(subtype: itemSubtype)
-  }
-}
-
 struct PlaceEntry: Equatable, Hashable, Identifiable, Sendable {
   let id: UUID
   let name: String
@@ -64,18 +13,9 @@ struct PlaceEntry: Equatable, Hashable, Identifiable, Sendable {
   let revision: Int
   let createdAt: Date
   let updatedAt: Date
-  var linkedEntries: [PlaceLinkedEntry]
-  let linkedEntryCount: Int
-  let homeCount: Int
   let totalCount: Int
 
-  var relatedEntries: [PlaceLinkedEntry] { linkedEntries.filter(\.isEditable) }
-  var protectedEntries: [PlaceLinkedEntry] { linkedEntries.filter { !$0.isEditable } }
-  var isLinked: Bool { linkedEntryCount > 0 }
-  var canMoveToTrash: Bool { linkedEntryCount == 0 }
-  var coverAttachment: PlaceAttachment? {
-    linkedEntries.lazy.flatMap(\.attachments).first
-  }
+  var canMoveToTrash: Bool { true }
 
   var locationLabel: String {
     var seen: Set<String> = []
@@ -91,17 +31,6 @@ struct PlaceEntry: Equatable, Hashable, Identifiable, Sendable {
       ?? "Location details not added"
   }
 
-  var coordinateLabel: String? {
-    guard let latitude, let longitude else { return nil }
-    return "\(Self.coordinate(latitude, positive: "N", negative: "S")), "
-      + "\(Self.coordinate(longitude, positive: "E", negative: "W"))"
-  }
-
-  private static func coordinate(_ value: Double, positive: String, negative: String) -> String {
-    let raw = String(format: "%.4f", abs(value))
-    let number = raw.replacingOccurrences(of: #"\.?0+$"#, with: "", options: .regularExpression)
-    return "\(number)°\(value < 0 ? negative : positive)"
-  }
 }
 
 struct PlaceWorkspaceRow: Decodable, Equatable, Sendable {
@@ -117,9 +46,6 @@ struct PlaceWorkspaceRow: Decodable, Equatable, Sendable {
   let revision: Int
   let createdAt: Date
   let updatedAt: Date
-  let linkedEntries: [PlaceLinkedEntry]
-  let linkedEntryCount: Int
-  let homeCount: Int
   let totalCount: Int
 
   enum CodingKeys: String, CodingKey {
@@ -135,9 +61,6 @@ struct PlaceWorkspaceRow: Decodable, Equatable, Sendable {
     case revision
     case createdAt = "created_at"
     case updatedAt = "updated_at"
-    case linkedEntries = "linked_entries"
-    case linkedEntryCount = "linked_entry_count"
-    case homeCount = "home_count"
     case totalCount = "total_count"
   }
 
@@ -155,9 +78,6 @@ struct PlaceWorkspaceRow: Decodable, Equatable, Sendable {
       revision: revision,
       createdAt: createdAt,
       updatedAt: updatedAt,
-      linkedEntries: linkedEntries,
-      linkedEntryCount: linkedEntryCount,
-      homeCount: homeCount,
       totalCount: totalCount
     )
   }
@@ -174,39 +94,11 @@ enum PlaceWorkspace {
   }
 }
 
-struct PlaceLinkOption: Decodable, Equatable, Hashable, Identifiable, Sendable {
-  let id: UUID
-  let title: String?
-  let body: String?
-  let itemKind: WikiItemKind
-  let itemSubtype: String
-  let updatedAt: Date
-
-  enum CodingKeys: String, CodingKey {
-    case id
-    case title
-    case body
-    case itemKind = "item_kind"
-    case itemSubtype = "item_subtype"
-    case updatedAt = "updated_at"
-  }
-
-  var displayTitle: String {
-    if let title = title?.trimmed.nonEmpty { return title }
-    let body = body?.trimmed ?? ""
-    guard !body.isEmpty else { return "Untitled Entry" }
-    return body.count > 80 ? "\(body.prefix(80).trimmingCharacters(in: .whitespaces))..." : body
-  }
-
-  var displayType: String { itemKind.displayName(subtype: itemSubtype) }
-}
-
 struct PlaceInput: Equatable, Sendable {
   static let nameLimit = 200
   static let addressLimit = 500
   static let locationPartLimit = 200
   static let notesLimit = 10_000
-  static let relatedEntryLimit = 100
 
   let placeID: UUID?
   let expectedRevision: Int?
@@ -218,7 +110,6 @@ struct PlaceInput: Equatable, Sendable {
   let latitude: Double?
   let longitude: Double?
   let notes: String?
-  let relatedEntryIDs: [UUID]
 
   static func validate(
     placeID: UUID?,
@@ -230,8 +121,7 @@ struct PlaceInput: Equatable, Sendable {
     country: String,
     latitude: Double?,
     longitude: Double?,
-    notes: String,
-    relatedEntryIDs: [UUID]
+    notes: String
   ) throws -> PlaceInput {
     let name = name.trimmed
     let address = address.trimmed.nonEmpty
@@ -260,12 +150,6 @@ struct PlaceInput: Equatable, Sendable {
       else { throw PlaceEntryError.invalidCoordinates }
     }
 
-    var seen: Set<UUID> = []
-    let relatedEntryIDs = relatedEntryIDs.filter { seen.insert($0).inserted }
-    guard relatedEntryIDs.count <= relatedEntryLimit else {
-      throw PlaceEntryError.invalidRelatedEntries
-    }
-
     return PlaceInput(
       placeID: placeID,
       expectedRevision: expectedRevision,
@@ -277,7 +161,6 @@ struct PlaceInput: Equatable, Sendable {
       latitude: latitude,
       longitude: longitude,
       notes: notes,
-      relatedEntryIDs: relatedEntryIDs
     )
   }
 }
@@ -302,7 +185,7 @@ struct SavePlaceParameters: Encodable, Equatable, Sendable {
   func encode(to encoder: Encoder) throws {
     var values = encoder.container(keyedBy: CodingKeys.self)
     try values.encode(input.name, forKey: .name)
-    try values.encode(input.relatedEntryIDs, forKey: .relatedEntryIDs)
+    try values.encode([UUID](), forKey: .relatedEntryIDs)
     try encodeNullable(input.address, forKey: .address, into: &values)
     try encodeNullable(input.city, forKey: .city, into: &values)
     try encodeNullable(input.region, forKey: .region, into: &values)
@@ -362,7 +245,6 @@ struct TrashedPlace: Decodable, Equatable, Sendable {
 enum PlaceEntryError: LocalizedError, Equatable {
   case addressTooLong
   case invalidCoordinates
-  case invalidRelatedEntries
   case invalidRevision
   case locationTooLong
   case nameRequired
@@ -373,7 +255,6 @@ enum PlaceEntryError: LocalizedError, Equatable {
     switch self {
     case .addressTooLong: "Addresses can be up to \(PlaceInput.addressLimit) characters."
     case .invalidCoordinates: "Add both valid latitude and longitude values, or leave both empty."
-    case .invalidRelatedEntries: "Link up to \(PlaceInput.relatedEntryLimit) Entries."
     case .invalidRevision: "This Place version is invalid. Refresh and try again."
     case .locationTooLong:
       "City, region, and country can each be up to \(PlaceInput.locationPartLimit) characters."

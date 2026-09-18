@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
+import { ConfirmationDialogProvider } from "@/components/confirmation-dialog";
 import { WorkspaceBoundary } from "@/components/workspace-shell";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
@@ -41,13 +42,15 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   return (
     <html data-theme={theme} lang="en">
       <body>
-        <WorkspaceBoundary
-          configured={configured}
-          inboxCount={inbox?.error ? undefined : (inbox?.count ?? undefined)}
-          viewer={context?.viewer ?? null}
-        >
-          {children}
-        </WorkspaceBoundary>
+        <ConfirmationDialogProvider>
+          <WorkspaceBoundary
+            configured={configured}
+            inboxCount={inbox?.error ? undefined : (inbox?.count ?? undefined)}
+            viewer={context?.viewer ?? null}
+          >
+            {children}
+          </WorkspaceBoundary>
+        </ConfirmationDialogProvider>
       </body>
     </html>
   );

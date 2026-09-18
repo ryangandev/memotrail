@@ -1,8 +1,9 @@
 "use client";
 import { Dialog } from "@/components/dialog";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { RecordCard, RecordCardBody } from "@/components/record-card";
 import { EmptyState } from "@/components/empty-state";
-import { PageHeader } from "@/components/page-header";
+import { FocusedViewLayout } from "@/components/focused-view-layout";
 import { Button } from "@/components/button";
 
 import Link from "next/link";
@@ -10,7 +11,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { savePerson, trashPerson } from "@/app/people/actions";
 import common from "@/components/record-workspace.module.css";
-import { PageFrame } from "@/components/page-frame";
 import { Icon } from "@/components/icon";
 import {
   personEntryTitle,
@@ -41,33 +41,32 @@ export function PeopleWorkspace({
     0,
   );
   return (
-    <PageFrame variant="wide">
-      <PageHeader
-        title={<>People</>}
-        eyebrow={<>The people in your story</>}
-        description={
-          <>Keep a little context for the people who shaped each chapter.</>
-        }
-        actions={
-          <>
-            <Button
-              variant="primary"
-              aria-label="Add Person"
-              onClick={() => setSelected(null)}
-              type="button"
-            >
-              <Icon name="plus" />
-              <span>Add Person</span>
-            </Button>
-          </>
-        }
-      />
-      <div className={common.summary} aria-label="People summary">
-        <span>{countLabel(people.length, "person", "people")}</span>
-        <span aria-hidden="true">·</span>
-        <span>{countLabel(connectionCount, "connected Item")}</span>
-      </div>
-
+    <FocusedViewLayout
+      actions={
+        <Button
+          variant="primary"
+          aria-label="Add Person"
+          onClick={() => setSelected(null)}
+          type="button"
+        >
+          <Icon name="plus" />
+          <span>Add Person</span>
+        </Button>
+      }
+      description={
+        <>Keep a little context for the people who shaped each chapter.</>
+      }
+      eyebrow={<>The people in your story</>}
+      summary={
+        <>
+          <span>{countLabel(people.length, "person", "people")}</span>
+          <span aria-hidden="true">·</span>
+          <span>{countLabel(connectionCount, "connected Item")}</span>
+        </>
+      }
+      summaryLabel="People summary"
+      title={<>People</>}
+    >
       {error ? (
         <div className={common.message} role="alert">
           <Icon name="person" size={22} />
@@ -94,29 +93,33 @@ export function PeopleWorkspace({
           onClick={() => setSelected(null)}
         />
       ) : null}
-      <div className={styles.peopleGrid}>
-        {people.map((person) => (
-          <RecordCard key={person.id} onClick={() => setSelected(person)}>
-            <RecordCardBody className={styles.personBody}>
-              <span className={styles.initial}>
-                {Array.from(person.name)[0]?.toUpperCase()}
-              </span>
-              <h2>{person.name}</h2>
-              <p>{person.relationship_label || "A person in your story"}</p>
-              <p className={styles.preview}>{person.notes}</p>
-              <small>{person.linked_entries.length} connected Items</small>
-            </RecordCardBody>
-          </RecordCard>
-        ))}
-      </div>
-      <nav className={styles.pagination} aria-label="People pages">
-        {page > 1 ? (
-          <Link href={`/people?page=${page - 1}`}>Previous</Link>
-        ) : null}
-        {(people[0]?.total_count ?? 0) > page * 100 ? (
-          <Link href={`/people?page=${page + 1}`}>Next</Link>
-        ) : null}
-      </nav>
+      {people.length ? (
+        <div className={styles.peopleResults}>
+          <div className={styles.peopleGrid}>
+            {people.map((person) => (
+              <RecordCard key={person.id} onClick={() => setSelected(person)}>
+                <RecordCardBody className={styles.personBody}>
+                  <span className={styles.initial}>
+                    {Array.from(person.name)[0]?.toUpperCase()}
+                  </span>
+                  <h2>{person.name}</h2>
+                  <p>{person.relationship_label || "A person in your story"}</p>
+                  <p className={styles.preview}>{person.notes}</p>
+                  <small>{person.linked_entries.length} connected Items</small>
+                </RecordCardBody>
+              </RecordCard>
+            ))}
+          </div>
+          <nav className={styles.pagination} aria-label="People pages">
+            {page > 1 ? (
+              <Link href={`/people?page=${page - 1}`}>Previous</Link>
+            ) : null}
+            {(people[0]?.total_count ?? 0) > page * 100 ? (
+              <Link href={`/people?page=${page + 1}`}>Next</Link>
+            ) : null}
+          </nav>
+        </div>
+      ) : null}
       {selected !== undefined ? (
         <PersonEditor
           key={selected?.id ?? "new"}
@@ -128,7 +131,7 @@ export function PeopleWorkspace({
           }}
         />
       ) : null}
-    </PageFrame>
+    </FocusedViewLayout>
   );
 }
 
@@ -142,6 +145,7 @@ function PersonEditor({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const requestConfirmation = useConfirmationDialog();
   const [name, setName] = useState(person?.name ?? "");
   const [relationshipLabel, setRelationshipLabel] = useState(
     person?.relationship_label ?? "",
@@ -159,13 +163,16 @@ function PersonEditor({
 
   async function mutate(remove = false) {
     if (busy) return;
-    if (
-      remove &&
-      !window.confirm(
-        `Move ${person?.name} to Trash? You can restore it later.`,
-      )
-    )
-      return;
+    if (remove) {
+      const confirmed = await requestConfirmation({
+        title: <>Move “{person?.name ?? "this Person"}” to Trash?</>,
+        description: <>You can restore it later from Trash.</>,
+        confirmLabel: "Move to Trash",
+        eyebrow: <>Recoverable action</>,
+        variant: "danger",
+      });
+      if (!confirmed) return;
+    }
     setBusy(true);
     setMessage(null);
     try {

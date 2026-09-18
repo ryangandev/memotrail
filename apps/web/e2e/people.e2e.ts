@@ -126,8 +126,11 @@ test("People saves, links, protects, edits, trashes, and restores on desktop and
       ),
     ).toBe(true);
     await card.click();
-    page.once("dialog", (d) => d.accept());
     await dialog.getByRole("button", { name: "Move to Trash" }).click();
+    await page
+      .getByRole("dialog", { name: "Move “Alex” to Trash?", exact: true })
+      .getByRole("button", { name: "Move to Trash", exact: true })
+      .click();
     await expect(dialog).not.toBeVisible();
     await expect(card).not.toBeVisible();
     await page.goto("/trash");

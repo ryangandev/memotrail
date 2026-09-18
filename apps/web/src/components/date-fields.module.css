@@ -1,6 +1,6 @@
 .fieldRow {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
   gap: var(--mt-space-4);
 }
 
@@ -29,7 +29,7 @@
   display: grid;
   min-width: 0;
   align-content: start;
-  gap: var(--mt-space-2);
+  gap: var(--mt-space-1);
 }
 
 .occurrenceEditor label > span {
@@ -78,12 +78,12 @@
 .datePickerField {
   display: grid;
   align-content: start;
-  gap: var(--mt-space-2);
+  gap: var(--mt-space-1);
   min-width: 0;
 }
 
 .occurrenceDateArea {
-  gap: var(--mt-space-2);
+  gap: var(--mt-space-3);
 }
 
 .occurrenceDateRow {

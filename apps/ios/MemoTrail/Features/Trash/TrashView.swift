@@ -310,7 +310,7 @@ struct TrashView: View {
     case .attachment:
       "The private photo file and its attachment record will be removed."
     case .place:
-      "The Place, relationships, and version history will be removed."
+      "The Place and its version history will be removed."
     case .person:
       "The Person and their version history will be removed."
     case .entry:

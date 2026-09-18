@@ -221,7 +221,7 @@ for (const kind of ["home", "vehicle"] as const) {
         .fill("Undated chapter");
       if (kind === "home")
         await dialog
-          .getByRole("textbox", { name: "Place name", exact: true })
+          .getByRole("textbox", { name: "Location name", exact: true })
           .fill("New place");
       await dialog
         .getByRole("button", {

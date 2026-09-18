@@ -121,7 +121,7 @@ test("Search filters and labels Life Wiki Kinds and types", async ({
 
     await page.goto("/search?q=marina&type=entity");
     await expect(visibleResult("Marina mentor")).toBeVisible();
-    await expect(visibleResult("Marina dock")).toBeVisible();
+    await expect(visibleResult("Marina dock")).toHaveCount(0);
     await page.getByLabel("Kind or type").selectOption("person");
     await page.getByRole("button", { name: "Search", exact: true }).click();
     await expect(page).toHaveURL(/type=person/);

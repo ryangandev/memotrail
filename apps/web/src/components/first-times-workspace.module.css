@@ -1,15 +1,5 @@
-.summary {
-  display: flex;
-  align-items: center;
-  gap: var(--mt-space-2);
-  margin-top: var(--mt-space-5);
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
-}
-
 .message {
   min-height: 190px;
-  margin-top: var(--mt-space-8);
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface);
@@ -38,7 +28,6 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--mt-space-5);
-  margin-top: var(--mt-space-8);
 }
 
 .coverPhoto {
@@ -210,13 +199,8 @@
 }
 
 @media (max-width: 480px) {
-  .summary {
-    margin-top: var(--mt-space-4);
-  }
-
   .firstGrid {
     gap: var(--mt-space-3);
-    margin-top: var(--mt-space-6);
   }
 
   .firstCard {

@@ -312,8 +312,11 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await expect(
       travelDialog.getByRole("button", { name: "Merge tag" }),
     ).toHaveCSS("height", "40px");
-    page.once("dialog", (dialog) => dialog.accept());
     await travelDialog.getByRole("button", { name: "Merge tag" }).click();
+    await page
+      .getByRole("dialog", { name: /Merge “travel” into “journeys”\?/ })
+      .getByRole("button", { name: "Merge tags", exact: true })
+      .click();
     await expect(travelDialog).not.toBeVisible();
     await expect(
       page.getByRole("button", {
@@ -347,9 +350,12 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       .getByRole("button", { name: "Manage tag unused, used by 0 Entries" })
       .click();
     const unusedDialog = page.getByRole("dialog", { name: "unused" });
-    page.once("dialog", (dialog) => dialog.accept());
     await unusedDialog
       .getByRole("button", { name: "Delete unused tag" })
+      .click();
+    await page
+      .getByRole("dialog", { name: "Delete the unused tag “unused”?" })
+      .getByRole("button", { name: "Delete tag", exact: true })
       .click();
     await expect(unusedDialog).not.toBeVisible();
     await expect(

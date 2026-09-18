@@ -1,5 +1,6 @@
 "use client";
 import { Button } from "@/components/button";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type {
@@ -36,6 +37,7 @@ export function ExplorationView({
 }: {
   initial: ExplorationWorkspace;
 }) {
+  const requestConfirmation = useConfirmationDialog();
   const [workspace, setWorkspace] = useState(initial);
   const [question, setQuestion] = useState("");
   const [busy, setBusy] = useState(false);
@@ -177,14 +179,22 @@ export function ExplorationView({
         setQuestion("");
     });
   }
-  function selectConclusion(turn: ExplorationTurn) {
-    if (
-      save &&
-      !confirm(
-        "Replace the open conclusion draft? If its save was interrupted, refresh first to check whether it was saved.",
-      )
-    )
-      return;
+  async function selectConclusion(turn: ExplorationTurn) {
+    if (save) {
+      const confirmed = await requestConfirmation({
+        title: <>Replace the open conclusion draft?</>,
+        description: (
+          <>
+            If its save was interrupted, refresh first to check whether it was
+            saved.
+          </>
+        ),
+        confirmLabel: "Replace draft",
+        eyebrow: <>Unsaved work</>,
+        variant: "danger",
+      });
+      if (!confirmed) return;
+    }
     setSave({
       turnID: turn.id,
       title: "",
@@ -275,7 +285,7 @@ export function ExplorationView({
                   variant="primary"
                   type="submit"
                   disabled={busy}
-                  onClick={() => selectConclusion(turn)}
+                  onClick={() => void selectConclusion(turn)}
                 >
                   Save as Entry
                 </Button>
@@ -432,12 +442,20 @@ export function ExplorationView({
                 type="button"
                 disabled={busy}
                 onClick={() => {
-                  if (
-                    confirm(
-                      "Close this editor? If a save was interrupted, refresh the conversation to check whether it was already saved.",
-                    )
-                  )
-                    setSave(null);
+                  void requestConfirmation({
+                    title: <>Close this editor?</>,
+                    description: (
+                      <>
+                        If a save was interrupted, refresh the conversation to
+                        check whether it was already saved.
+                      </>
+                    ),
+                    confirmLabel: "Close editor",
+                    eyebrow: <>Unsaved work</>,
+                    variant: "danger",
+                  }).then((confirmed) => {
+                    if (confirmed) setSave(null);
+                  });
                 }}
               >
                 Cancel

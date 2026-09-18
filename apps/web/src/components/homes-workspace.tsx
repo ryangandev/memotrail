@@ -1,7 +1,8 @@
 "use client";
 import { Dialog } from "@/components/dialog";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
-import { PageHeader } from "@/components/page-header";
+import { FocusedViewLayout } from "@/components/focused-view-layout";
 import { Button } from "@/components/button";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -17,7 +18,6 @@ import styles from "@/components/record-workspace.module.css";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
-import { PageFrame } from "@/components/page-frame";
 import { ProgressiveImage } from "@/components/progressive-image";
 import {
   RecordCard,
@@ -89,38 +89,37 @@ export function HomesWorkspace({
   const earlierHomes = homes.filter((home) => home.occurredEnd);
 
   return (
-    <PageFrame variant="wide">
-      <PageHeader
-        title={<>Homes</>}
-        eyebrow={<>The places that held your life</>}
-        description={
-          <>
-            Keep each residence as a Home Entity, with the dates, place facts,
-            and memories that made it yours.
-          </>
-        }
-        actions={
-          <>
-            <Button
-              variant="primary"
-              aria-label="Add Home"
-              onClick={() => setSelectedHome(null)}
-              type="button"
-            >
-              <Icon name="plus" />
-              <span>Add Home</span>
-            </Button>
-          </>
-        }
-      />
-      <div className={styles.summary} aria-label="Homes summary">
-        <span>{countLabel(homes.length, "home")}</span>
-        <span aria-hidden="true">·</span>
-        <span>{countLabel(currentHomes.length, "current residence")}</span>
-        <span aria-hidden="true">·</span>
-        <span>{countLabel(earlierHomes.length, "earlier home")}</span>
-      </div>
-
+    <FocusedViewLayout
+      actions={
+        <Button
+          variant="primary"
+          aria-label="Add Home"
+          onClick={() => setSelectedHome(null)}
+          type="button"
+        >
+          <Icon name="plus" />
+          <span>Add Home</span>
+        </Button>
+      }
+      description={
+        <>
+          Keep each residence as a Home Entity, with the dates, location, and
+          memories that made it yours.
+        </>
+      }
+      eyebrow={<>The places that held your life</>}
+      summary={
+        <>
+          <span>{countLabel(homes.length, "home")}</span>
+          <span aria-hidden="true">·</span>
+          <span>{countLabel(currentHomes.length, "current residence")}</span>
+          <span aria-hidden="true">·</span>
+          <span>{countLabel(earlierHomes.length, "earlier home")}</span>
+        </>
+      }
+      summaryLabel="Homes summary"
+      title={<>Homes</>}
+    >
       {loadError ? (
         <div className={styles.message} role="alert">
           <Icon name="home" size={22} />
@@ -186,7 +185,7 @@ export function HomesWorkspace({
           tagOptions={tagOptions}
         />
       ) : null}
-    </PageFrame>
+    </FocusedViewLayout>
   );
 }
 
@@ -303,6 +302,7 @@ export function HomeEditor({
   tagOptions: string[];
 }) {
   const router = useRouter();
+  const requestConfirmation = useConfirmationDialog();
   const titleRef = useRef<HTMLInputElement>(null);
   const initialTimezone =
     home?.occurredTimezone ?? defaultTimezone ?? localTimezone();
@@ -362,7 +362,7 @@ export function HomeEditor({
     titleRef.current?.focus();
   }, []);
 
-  function selectPlace(nextId: string) {
+  function selectLocation(nextId: string) {
     if (!nextId) {
       setPlaceId(null);
       setPlaceName("");
@@ -520,13 +520,14 @@ export function HomeEditor({
   }
 
   async function handleRemovePhoto(photo: HomeAttachment) {
-    if (
-      !window.confirm(
-        "Move this photo to Trash? The original will be preserved.",
-      )
-    ) {
-      return;
-    }
+    const confirmed = await requestConfirmation({
+      title: <>Move this photo to Trash?</>,
+      description: <>The original will be preserved for recovery.</>,
+      confirmLabel: "Move photo to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
 
     setIsPending(true);
     setResult(null);
@@ -550,15 +551,17 @@ export function HomeEditor({
   }
 
   async function handleTrashEntry() {
-    if (
-      !currentId ||
-      currentRevision === null ||
-      !window.confirm(
-        `Move “${title.trim() || "this Home"}” to Trash? Its history, Place, and private photos will be preserved.`,
-      )
-    ) {
-      return;
-    }
+    if (!currentId || currentRevision === null) return;
+    const confirmed = await requestConfirmation({
+      title: <>Move “{title.trim() || "this Home"}” to Trash?</>,
+      description: (
+        <>Its history, Location, and private photos will be preserved.</>
+      ),
+      confirmLabel: "Move to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
 
     setIsPending(true);
     setResult(null);
@@ -697,15 +700,15 @@ export function HomeEditor({
           </fieldset>
 
           <fieldset className={styles.formSection}>
-            <legend>Place</legend>
+            <legend>Location</legend>
             {placeOptions.length > 0 ? (
               <label className={styles.fullField}>
-                <span>Saved Place</span>
+                <span>Saved Location</span>
                 <select
-                  onChange={(event) => selectPlace(event.target.value)}
+                  onChange={(event) => selectLocation(event.target.value)}
                   value={placeId ?? ""}
                 >
-                  <option value="">Create a new Place</option>
+                  <option value="">Add a new Location</option>
                   {placeOptions.map((place) => (
                     <option key={place.id} value={place.id}>
                       {place.name}
@@ -713,16 +716,17 @@ export function HomeEditor({
                   ))}
                 </select>
                 <small>
-                  Editing a saved Place updates it anywhere it is reused.
+                  Locations are reusable geographic data and do not create a
+                  Place in Focused Views.
                 </small>
               </label>
             ) : null}
             <label className={styles.fullField}>
               <span>
-                Place name <span aria-hidden="true">*</span>
+                Location name <span aria-hidden="true">*</span>
               </span>
               <input
-                aria-label="Place name"
+                aria-label="Location name"
                 maxLength={homePlaceNameLimit}
                 onChange={(event) => setPlaceName(event.target.value)}
                 placeholder="The house on Pine Street"
@@ -764,26 +768,8 @@ export function HomeEditor({
                 value={address}
               />
             </label>
-            <label>
-              <span>Latitude</span>
-              <input
-                onChange={(event) => setLatitude(event.target.value)}
-                step="any"
-                type="number"
-                value={latitude}
-              />
-            </label>
-            <label>
-              <span>Longitude</span>
-              <input
-                onChange={(event) => setLongitude(event.target.value)}
-                step="any"
-                type="number"
-                value={longitude}
-              />
-            </label>
             <label className={styles.fullField}>
-              <span>Place notes</span>
+              <span>Location notes</span>
               <textarea
                 maxLength={10_000}
                 onChange={(event) => setPlaceNotes(event.target.value)}

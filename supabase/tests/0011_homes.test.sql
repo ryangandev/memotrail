@@ -128,15 +128,15 @@ select ok(
     join public.entries on entries.id = homes.entry_id
     where entries.title = 'California apartment'
   ),
-  'The Home owns a reusable Place relationship'
+  'The Home owns a reusable Location relationship'
 );
 
 select is(
   (
-    select concat_ws('|', places.name, places.address, places.city, places.region, places.country)
+    select concat_ws('|', locations.name, locations.address, locations.city, locations.region, locations.country)
     from public.homes
     join public.entries on entries.id = homes.entry_id
-    join public.places on places.id = homes.place_id
+    join public.locations on locations.id = homes.place_id
     where entries.title = 'California apartment'
   ),
   'California apartment|123 Palm Street|Los Angeles|California|United States',
@@ -145,10 +145,10 @@ select is(
 
 select is(
   (
-    select concat(places.latitude::text, ',', places.longitude::text)
+    select concat(locations.latitude::text, ',', locations.longitude::text)
     from public.homes
     join public.entries on entries.id = homes.entry_id
-    join public.places on places.id = homes.place_id
+    join public.locations on locations.id = homes.place_id
     where entries.title = 'California apartment'
   ),
   '34.052235,-118.243683',
@@ -174,7 +174,7 @@ select is(
     where entries.title = 'California apartment'
   ),
   'home',
-  'The Home is linked to its reusable Place through the shared Entry relationship'
+  'The Home is linked to its reusable Location through the shared Entry relationship'
 );
 
 select is(
@@ -265,7 +265,7 @@ select is(
   'The Homes workspace includes active private attachment metadata'
 );
 
-insert into public.places (
+insert into public.locations (
   id,
   owner_id,
   name,
@@ -314,7 +314,7 @@ select lives_ok(
 );
 
 select is(
-  (select count(*)::integer from public.places),
+  (select count(*)::integer from public.locations),
   2,
   'Reusing a Place does not create a duplicate Place row'
 );
@@ -567,10 +567,10 @@ select is(
 
 select is(
   (
-    select places.name
+    select locations.name
     from public.homes
     join public.entries on entries.id = homes.entry_id
-    join public.places on places.id = homes.place_id
+    join public.locations on locations.id = homes.place_id
     where entries.title = 'California home'
   ),
   'California home',

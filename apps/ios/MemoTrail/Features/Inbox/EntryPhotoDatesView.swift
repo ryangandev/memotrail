@@ -135,10 +135,10 @@ struct EntryPhotoDatesView: View {
             }
             if let latitude = info.latitude, let longitude = info.longitude {
               Text(
-                "GPS: \(latitude.formatted(.number.precision(.fractionLength(6)))), \(longitude.formatted(.number.precision(.fractionLength(6)))). No Place linked automatically."
+                "Private GPS metadata is available. No Location is linked automatically."
               )
               .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted).textSelection(.enabled)
-              Button("Use GPS for a Place") {
+              Button("Use GPS for a Location") {
                 photoPlace = PhotoPlaceDraft(
                   attachmentId: photo.id, latitude: latitude, longitude: longitude)
               }.disabled(
@@ -198,40 +198,27 @@ private struct PhotoPlaceDraftEditor: View {
   @State private var options: [PhotoPlaceOption] = []
   @State private var message: String?
   @State private var busy = false
-  @State private var latitude: String
-  @State private var longitude: String
-  init(client: SupabaseClient, ownerID: UUID, value: Binding<PhotoPlaceDraft?>) {
-    self.client = client
-    self.ownerID = ownerID
-    self._value = value
-    _latitude = State(initialValue: value.wrappedValue?.latitude.map { String($0) } ?? "")
-    _longitude = State(initialValue: value.wrappedValue?.longitude.map { String($0) } ?? "")
-  }
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      Text("Place to add when you save").font(MTTypography.body).bold()
+      Text("Location to add when you save").font(MTTypography.body).bold()
       Text(
-        "No Place is created or linked until Save changes or Done. Existing links stay unchanged."
+        "No Location is created or linked until Save changes or Done. Existing links stay unchanged."
       ).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
       if value?.kind == "new" {
         TextField(
-          "New Place name", text: Binding(get: { value?.name ?? "" }, set: { value?.name = $0 }))
-        TextField("Latitude", text: $latitude).keyboardType(.numbersAndPunctuation)
-          .onChange(of: latitude) { _, text in value?.latitude = Double(text) }
-        TextField("Longitude", text: $longitude).keyboardType(.numbersAndPunctuation)
-          .onChange(of: longitude) { _, text in value?.longitude = Double(text) }
-        Text("Coordinates came from this photo. Review or correct them; no address is inferred.")
+          "New Location name", text: Binding(get: { value?.name ?? "" }, set: { value?.name = $0 }))
+        Text("Geographic coordinates came from this photo and stay private. No address is inferred.")
           .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
       } else {
         Text(
-          "Link existing Place: \(value?.name ?? ""). Its name, coordinates, and other facts will not change."
+          "Link existing Location: \(value?.name ?? ""). Its name, coordinates, and other facts will not change."
         ).font(MTTypography.caption)
       }
-      TextField("Find an existing Place", text: $query)
-      Button("Search Places") { Task { await search() } }.disabled(busy)
+      TextField("Find an existing Location", text: $query)
+      Button("Search Locations") { Task { await search() } }.disabled(busy)
       if !options.isEmpty {
         Picker(
-          "Existing Place",
+          "Existing Location",
           selection: Binding(
             get: { value?.placeId?.uuidString ?? "" },
             set: { raw in
@@ -243,15 +230,14 @@ private struct PhotoPlaceDraftEditor: View {
                 revision: place.revision, name: place.name)
             })
         ) {
-          Text("Choose a Place").tag("")
+          Text("Choose a Location").tag("")
           ForEach(options) { p in
-            Text(p.name + (p.latitude.map { " (\($0), \(p.longitude ?? 0))" } ?? "")).tag(
-              p.id.uuidString)
+            Text(p.name).tag(p.id.uuidString)
           }
         }
       }
       if let message { Text(message).font(MTTypography.caption) }
-      Button("Remove Place from draft") { value = nil }
+      Button("Remove Location from draft") { value = nil }
     }
   }
   @MainActor private func search() async {
@@ -266,9 +252,9 @@ private struct PhotoPlaceDraftEditor: View {
       options = result.places
       message =
         result.hasMore
-        ? "First 100 Places shown. Refine your search."
-        : result.places.isEmpty ? "No matching Places." : nil
-    } catch { message = "Places could not be loaded. Try again." }
+        ? "First 100 Locations shown. Refine your search."
+        : result.places.isEmpty ? "No matching Locations." : nil
+    } catch { message = "Locations could not be loaded. Try again." }
   }
 }
 

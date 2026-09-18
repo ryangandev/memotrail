@@ -115,20 +115,19 @@ export function TrashWorkspace({
         </p>
       </aside>
 
-      <EmptyTrashControl
-        disabled={
-          Boolean(pending) ||
-          Boolean(confirmation) ||
-          Boolean(workspace.loadError) ||
-          workspace.totalCount === 0
-        }
-        onBusy={setBatchBusy}
-        onResult={setResult}
-        onFinish={() => {
-          if (workspace.page > 1) router.push("/trash");
-          else router.refresh();
-        }}
-      />
+      {!workspace.loadError && workspace.totalCount > 0 ? (
+        <div className={styles.actionRow}>
+          <EmptyTrashControl
+            disabled={Boolean(pending) || Boolean(confirmation)}
+            onBusy={setBatchBusy}
+            onResult={setResult}
+            onFinish={() => {
+              if (workspace.page > 1) router.push("/trash");
+              else router.refresh();
+            }}
+          />
+        </div>
+      ) : null}
 
       {result ? (
         <p
@@ -144,30 +143,34 @@ export function TrashWorkspace({
       ) : null}
 
       {workspace.loadError ? (
-        <EmptyState
-          title={<>Trash is unavailable</>}
-          description={<>{workspace.loadError}</>}
-          icon={
-            <>
-              <Icon name="refresh" size={25} />
-            </>
-          }
-        />
+        <div className={styles.emptyState}>
+          <EmptyState
+            title={<>Trash is unavailable</>}
+            description={<>{workspace.loadError}</>}
+            icon={
+              <>
+                <Icon name="refresh" size={25} />
+              </>
+            }
+          />
+        </div>
       ) : workspace.items.length === 0 ? (
-        <EmptyState
-          title={<>Nothing in Trash</>}
-          description={
-            <>
-              Removed Entries, Places, People, and individual photos will appear
-              here. Legacy records remain recoverable too.
-            </>
-          }
-          icon={
-            <>
-              <Icon name="trash" size={25} />
-            </>
-          }
-        />
+        <div className={styles.emptyState}>
+          <EmptyState
+            title={<>Nothing in Trash</>}
+            description={
+              <>
+                Removed Entries, Places, People, and individual photos will
+                appear here. Legacy records remain recoverable too.
+              </>
+            }
+            icon={
+              <>
+                <Icon name="trash" size={25} />
+              </>
+            }
+          />
+        </div>
       ) : (
         <>
           <div className={styles.listSummary}>

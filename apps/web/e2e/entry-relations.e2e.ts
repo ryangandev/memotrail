@@ -133,9 +133,12 @@ test("Ordinary Entries link, navigate backlinks, unlink, and restore relationshi
       .getByRole("link", { name: "Why I keep learning", exact: true })
       .click();
     await expect(page).toHaveURL(new RegExp(`/items/${source}$`));
-    page.once("dialog", (dialog) => dialog.accept());
     await panel
       .getByRole("button", { name: "Unlink How teeth move", exact: true })
+      .click();
+    await page
+      .getByRole("dialog", { name: "Unlink “How teeth move”?", exact: true })
+      .getByRole("button", { name: "Unlink Item", exact: true })
       .click();
     await expect(panel.getByText("No matching linked Items.")).toBeVisible();
     const unlinked = (await client.rpc("entry_history", { p_entry_id: source }))
@@ -199,9 +202,12 @@ test("Ordinary Entries link, navigate backlinks, unlink, and restore relationshi
           .eq("id", source)
       ).error,
     ).toBeNull();
-    page.once("dialog", (dialog) => dialog.accept());
     await panel
       .getByRole("button", { name: "Unlink How teeth move", exact: true })
+      .click();
+    await page
+      .getByRole("dialog", { name: "Unlink “How teeth move”?", exact: true })
+      .getByRole("button", { name: "Unlink Item", exact: true })
       .click();
     await expect(panel.getByRole("alert")).toContainText("This Item changed");
     expect(

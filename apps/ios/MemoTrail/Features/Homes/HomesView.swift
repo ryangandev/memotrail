@@ -77,7 +77,7 @@ struct HomesView: View {
         .font(MTTypography.display)
         .foregroundStyle(MTColor.ink)
 
-      Text("Keep each residence with its Place, dates, notes, and photos.")
+      Text("Keep each residence with its Location, dates, notes, and photos.")
         .font(MTTypography.body)
         .foregroundStyle(MTColor.inkMuted)
         .lineSpacing(2)
@@ -467,7 +467,7 @@ struct ResidenceEditorSheet: View {
         Button("Move to Trash", role: .destructive) { Task { await moveToTrash() } }
         Button("Cancel", role: .cancel) {}
       } message: {
-        Text("Its Place, photos, and edit history will be preserved.")
+        Text("Its Location, photos, and edit history will be preserved.")
       }
       .confirmationDialog(
         "Remove this photo?",
@@ -516,14 +516,14 @@ struct ResidenceEditorSheet: View {
   private var placeSection: some View {
     Section {
       if !controller.placeOptions.isEmpty {
-        Picker("Saved Place", selection: $selectedSavedPlaceID) {
-          Text("Create a new Place").tag(nil as UUID?)
+        Picker("Saved Location", selection: $selectedSavedPlaceID) {
+          Text("Add a new Location").tag(nil as UUID?)
           ForEach(controller.placeOptions) { place in
             Text(place.name).tag(place.id as UUID?)
           }
         }
       }
-      TextField("Place name", text: $placeName)
+      TextField("Location name", text: $placeName)
         .textInputAutocapitalization(.words)
       TextField("Exact address", text: $address, axis: .vertical)
         .textContentType(.fullStreetAddress)
@@ -533,15 +533,13 @@ struct ResidenceEditorSheet: View {
         .textInputAutocapitalization(.words)
       TextField("Country", text: $country)
         .textInputAutocapitalization(.words)
-      TextField("Latitude (optional)", text: $latitude)
-        .keyboardType(.numbersAndPunctuation)
-      TextField("Longitude (optional)", text: $longitude)
-        .keyboardType(.numbersAndPunctuation)
-      TextField("Place notes (optional)", text: $placeNotes, axis: .vertical)
+      TextField("Location notes (optional)", text: $placeNotes, axis: .vertical)
     } header: {
-      Text("Place")
+      Text("Location")
     } footer: {
-      Text("Exact addresses stay private and remain searchable only inside your account.")
+      Text(
+        "Locations are reusable geographic data and do not create a Place in Focused Views. Exact addresses stay private."
+      )
     }
   }
 
@@ -643,7 +641,7 @@ struct ResidenceEditorSheet: View {
         Button("Move to Trash", role: .destructive) { isConfirmingTrash = true }
           .disabled(isWorking)
       } footer: {
-        Text("The Home, Place, photos, and edit history remain available for restoration.")
+        Text("The Home, Location, photos, and edit history remain available for restoration.")
       }
     }
   }

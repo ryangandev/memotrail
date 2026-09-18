@@ -26,7 +26,7 @@ export function Dialog({
   closeOnInteractOutside = true,
   portalContainer,
 }: {
-  children: ReactNode;
+  children?: ReactNode;
   title: ReactNode;
   titleId?: string;
   eyebrow?: ReactNode;
@@ -114,7 +114,9 @@ export function Dialog({
                 </ArkDialog.CloseTrigger>
               </header>
               <OverlayContainerContext value={container}>
-                <div className={styles.body}>{children}</div>
+                {children ? (
+                  <div className={styles.body}>{children}</div>
+                ) : null}
               </OverlayContainerContext>
               {footer ? (
                 <footer className={styles.footer}>{footer}</footer>

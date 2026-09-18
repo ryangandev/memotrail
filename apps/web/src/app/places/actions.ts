@@ -34,7 +34,7 @@ export async function savePlace(
     p_notes: parsed.data.notes,
     p_place_id: parsed.data.id,
     p_region: parsed.data.region,
-    p_related_entry_ids: parsed.data.relatedEntryIds,
+    p_related_entry_ids: [],
   });
   if (error) {
     return result("error", "MemoTrail could not save this Place. Try again.");
@@ -85,7 +85,7 @@ export async function trashPlace(input: {
   if (!Array.isArray(data) || data.length === 0) {
     return result(
       "conflict",
-      "This Place changed or is still linked to an Item. Refresh and unlink it before trying again.",
+      "This Place changed on another device. Refresh and try again.",
     );
   }
 

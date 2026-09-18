@@ -1,5 +1,6 @@
 "use client";
 import { Dialog } from "@/components/dialog";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { Button, IconButton } from "@/components/button";
 
 import Link from "next/link";
@@ -34,6 +35,7 @@ export function OrganizationControl({
   trigger?: ReactNode;
   triggerClassName?: string;
 }) {
+  const requestConfirmation = useConfirmationDialog();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -79,11 +81,24 @@ export function OrganizationControl({
 
   async function remove() {
     if (!item || busy) return;
-    const confirmed = window.confirm(
-      kind === "collection"
-        ? `Move “${item.name}” to Trash? Entries stay in your archive and the Collection can be restored.`
-        : `Delete the unused tag “${item.name}”?`,
-    );
+    const confirmed = await requestConfirmation({
+      title:
+        kind === "collection" ? (
+          <>Move “{item.name}” to Trash?</>
+        ) : (
+          <>Delete the unused tag “{item.name}”?</>
+        ),
+      description:
+        kind === "collection" ? (
+          <>Entries stay in your archive and the Collection can be restored.</>
+        ) : (
+          <>This tag is unused and will be removed permanently.</>
+        ),
+      confirmLabel: kind === "collection" ? "Move to Trash" : "Delete tag",
+      eyebrow:
+        kind === "collection" ? <>Recoverable action</> : <>Permanent action</>,
+      variant: "danger",
+    });
     if (!confirmed) return;
     await run(() =>
       kind === "collection"
@@ -95,13 +110,23 @@ export function OrganizationControl({
   async function merge() {
     const target = mergeTargets.find((candidate) => candidate.id === targetId);
     if (!item || !target || busy) return;
-    if (
-      !window.confirm(
-        `Merge “${item.name}” into “${target.name}”? Every Entry will use “${target.name}” and “${item.name}” will be removed.`,
-      )
-    ) {
-      return;
-    }
+    const confirmed = await requestConfirmation({
+      title: (
+        <>
+          Merge “{item.name}” into “{target.name}”?
+        </>
+      ),
+      description: (
+        <>
+          Every Entry will use “{target.name}” and “{item.name}” will be
+          removed.
+        </>
+      ),
+      confirmLabel: "Merge tags",
+      eyebrow: <>Permanent action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
     await run(() =>
       mergeTags({
         source: { id: item.id, revision: item.revision },

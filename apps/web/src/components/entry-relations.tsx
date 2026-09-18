@@ -1,5 +1,6 @@
 "use client";
 import { Button } from "@/components/button";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -19,6 +20,7 @@ import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 import styles from "./entry-relations.module.css";
 export function EntryRelationsPanel({ entryID }: { entryID: string }) {
   const router = useRouter();
+  const requestConfirmation = useConfirmationDialog();
   const [mode, setMode] = useState<RelationMode>("outgoing");
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState("");
@@ -54,15 +56,22 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
     setRefresh((v) => v + 1);
   }
   async function change(row: RelatedEntry, linked: boolean) {
-    if (
-      !data ||
-      busy ||
-      (!linked &&
-        !confirm(
-          `Unlink ${historyTitle(row)}? Neither Item is deleted. This change can be restored through this Item's history.`,
-        ))
-    )
-      return;
+    if (!data || busy) return;
+    if (!linked) {
+      const confirmed = await requestConfirmation({
+        title: <>Unlink “{historyTitle(row)}”?</>,
+        description: (
+          <>
+            Neither Item is deleted. This change can be restored through this
+            Item&apos;s history.
+          </>
+        ),
+        confirmLabel: "Unlink Item",
+        eyebrow: <>Relationship action</>,
+        variant: "danger",
+      });
+      if (!confirmed) return;
+    }
     setBusy(true);
     setMessage(null);
     try {

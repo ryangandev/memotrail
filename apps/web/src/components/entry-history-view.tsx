@@ -1,6 +1,7 @@
 "use client";
 import { PageHeader } from "@/components/page-header";
 import { Button, ButtonLink } from "@/components/button";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -45,6 +46,7 @@ export function EntryHistoryView({
   ownerId: string;
 }) {
   const router = useRouter();
+  const requestConfirmation = useConfirmationDialog();
   const [version, setVersion] = useState<number | undefined>(
     history.versions[0]?.version,
   );
@@ -68,13 +70,20 @@ export function EntryHistoryView({
   const selected =
     history.versions.find((v) => v.version === version) ?? history.versions[0];
   async function restore() {
-    if (
-      !selected ||
-      !confirm(
-        `Restore version ${selected.version}? Your current version will be kept in history. Recorded links and photo membership will also be restored; shared names and definitions, including Collections and tags, stay current.`,
-      )
-    )
-      return;
+    if (!selected) return;
+    const confirmed = await requestConfirmation({
+      title: <>Restore version {selected.version}?</>,
+      description: (
+        <>
+          Your current version will remain in history. Recorded links and photo
+          membership will also be restored, while shared Collection and tag
+          definitions stay current.
+        </>
+      ),
+      confirmLabel: "Restore version",
+      eyebrow: <>History action</>,
+    });
+    if (!confirmed) return;
     setBusy(true);
     setError(null);
     try {
@@ -97,14 +106,15 @@ export function EntryHistoryView({
     }
   }
   async function moveToTrash() {
-    if (
-      busy ||
-      !confirm(
-        `Move “${historyTitle(history.current)}” to Trash? You can restore it later.`,
-      )
-    ) {
-      return;
-    }
+    if (busy) return;
+    const confirmed = await requestConfirmation({
+      title: <>Move “{historyTitle(history.current)}” to Trash?</>,
+      description: <>You can restore it later from Trash.</>,
+      confirmLabel: "Move to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
 
     setBusy(true);
     setError(null);
@@ -280,7 +290,7 @@ export function EntryHistoryView({
             </p>
           )}
           <p className={styles.note}>
-            Shared People, Place, Collection, and track definitions stay
+            Shared People, Location, Collection, and track definitions stay
             current. Photo files are not deleted. Missing historical links or
             originals stop the restore safely.
           </p>

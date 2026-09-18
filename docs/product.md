@@ -31,7 +31,7 @@ Organizing a Capture may finalize it as one Wiki Item or extract several linked 
 Every durable Wiki Item has one structural Kind:
 
 - Writing records what the user wrote, including Notes, Journals, Reflections, Lessons, and Ideas;
-- Entity records a person, place, or thing in the user's life, including People, Places, Homes, Vehicles, and future optional presets;
+- Entity records a person or thing in the user's life, including People, Homes, Vehicles, and future optional presets;
 - Event records something that happened, including Memories, First Times, Milestones, Trips, and other point or ranged events;
 - Story organizes a deliberately authored narrative or Chapter without treating every dated record as a story;
 - Goal records an intention and its lifecycle without turning the archive into a task manager.
@@ -75,7 +75,7 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - Offline captures remain visible and retryable until synchronization is confirmed.
 - Voice capture produces editable text and never retains the original audio.
 - Every new free-form Capture enters Inbox, even when AI suggestions are available.
-- AI may suggest title, Kind, subtype, Collections, tags, date, and photo-derived date or Place context.
+- AI may suggest title, Kind, subtype, Collections, tags, date, and photo-derived date or Location context.
 - Suggestions remain editable and require explicit adoption.
 - AI may propose a Collection but cannot create it without confirmation.
 - The Capture remains in Inbox until the user selects `Save to Library` or completes another explicit organization action.
@@ -86,7 +86,7 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - Once a durable Wiki Item exists, cross-Kind actions use Extract, Create and Link, or another explicit workflow instead of a generic Type selector.
 
 Original photos remain private and unchanged.
-Photo metadata may be offered as a date or Place suggestion but is never adopted automatically.
+Photo metadata may be offered as a date or Location suggestion but is never adopted automatically.
 
 ## Organization, history, and relationships
 
@@ -94,7 +94,10 @@ Photo metadata may be offered as a date or Place suggestion but is never adopted
 - Kind defines the identity boundary, subtype selects compatible structure, and a Timeline track only controls where a dated item is shown.
 - Collections are curated, browsable groupings that may contain Wiki Items of different Kinds.
 - Tags are lightweight cross-Kind descriptors for filtering and discovery.
-- People and Places are reusable Entities linked to other Wiki Items, not alternate tags.
+- People are reusable Entities linked to other Wiki Items, not alternate tags.
+- Places are independent, user-authored Mini Place records available in their own Focused View.
+- Places are not automatically created from Homes or Locations and do not link to other Focused View records.
+- Locations are lightweight geographic data that may be attached to one or many Wiki Items without becoming Library items.
 - Inbox, Timeline, Home, Search, and Library are views or workflow states, not organization labels.
 - Library is the primary all-items entry point for the Life Wiki.
   It presents Writing, Events, Entities, Stories, and Goals as the main browsing lenses, keeps source Captures available as provenance rather than a peer content choice, supports Kind and keyword filters, and links each preset to its appropriate editor or detail surface.
@@ -107,14 +110,15 @@ Photo metadata may be offered as a date or Place suggestion but is never adopted
 - Moving a Collection to Trash never deletes its Wiki Items or photos.
 - A used tag must be merged into another tag or removed from its Entries before deletion, so organization is never silently lost.
 - Entries may link to other Entries and expose incoming backlinks without copying writing.
-- Reusable People and Places are canonical Entity Wiki Items with typed detail records and may link to many other Wiki Items.
+- Reusable People are canonical Entity Wiki Items with typed detail records and may link to many other Wiki Items.
+- Places keep their own typed record and history but do not create duplicate canonical Wiki Items.
 - Important content, organization, relationship, specialized-field, and photo-membership changes remain recoverable through version history.
 - Restoring history creates a new revision and does not erase later history.
 
 ## Retrieval and AI
 
 - One search experience supports literal keyword search and an explicit AI question action.
-- Keyword search covers Wiki Items, including People and Places.
+- Keyword search covers canonical Wiki Items, including People, and uses linked Location data as searchable context.
 - Filters include date, Kind, subtype, Collection, and tag and do not pretend to apply where a field is irrelevant.
 - Search results explain matches and open the original source.
 - AI answers are grounded in bounded source evidence and cite the Entries used.
@@ -155,7 +159,7 @@ Inbox content, Trash, and Life Stages do not appear as resurfaced memory cards.
 ### First Times
 
 A First Time is an Event preset.
-It requires only a title and accepts the full date-precision model, optional writing, photos, Place, People, Goal, Collections, tags, and Timeline context.
+It requires only a title and accepts the full date-precision model, optional writing, photos, Location, People, Goal, Collections, tags, and Timeline context.
 It may be created directly, finalized from a raw Capture, or extracted and linked from established Writing without changing the Writing's identity.
 
 ### Homes and Vehicles
@@ -179,10 +183,14 @@ An explicit achievement action may atomically mark one Achieved and create a lin
 
 ### Places and People
 
-Places contain a name plus optional address, coordinates, and notes.
+Places contain a name plus optional address context and notes.
+They are deliberately saved personal landmarks, remain available in the Places Focused View, and do not duplicate or organize Entries.
+Locations are separate owner-scoped geographic records used by Homes and other Wiki Items.
+A Location may be shared by several Wiki Items, may retain provider identity and coordinates for future map and geographic summaries, and does not appear in Library by itself.
+Normal editors show a human-readable name and address context rather than raw latitude and longitude.
 People contain a name plus optional relationship label and notes.
-Both remain reusable across Entries.
-The data model preserves future Map capability, but Map UI is deferred.
+People remain reusable across Entries.
+The Location data model preserves future Map capability, but Map UI and an external geographic provider are deferred.
 
 ## Experience and navigation
 

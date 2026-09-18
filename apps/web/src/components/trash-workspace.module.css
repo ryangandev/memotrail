@@ -50,6 +50,16 @@
   line-height: var(--mt-line-height-body);
 }
 
+.actionRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--mt-space-4);
+}
+
+.emptyState {
+  margin-top: var(--mt-space-6);
+}
+
 .successMessage,
 .errorMessage {
   margin-top: var(--mt-space-4);

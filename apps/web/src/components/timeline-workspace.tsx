@@ -1,5 +1,6 @@
 "use client";
 import { Dialog } from "@/components/dialog";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/button";
 
@@ -826,6 +827,7 @@ function TimelineEditor({
   tagOptions: string[];
 }) {
   const router = useRouter();
+  const requestConfirmation = useConfirmationDialog();
   const titleRef = useRef<HTMLInputElement>(null);
   const initialTimezone = entry?.occurredTimezone ?? defaultTimezone;
   const [body, setBody] = useState(entry?.body ?? "");
@@ -937,14 +939,15 @@ function TimelineEditor({
   }
 
   async function handleTrash() {
-    if (
-      !entry ||
-      !window.confirm(
-        `Move “${entry.title}” to Trash? Its history will be preserved.`,
-      )
-    ) {
-      return;
-    }
+    if (!entry) return;
+    const confirmed = await requestConfirmation({
+      title: <>Move “{entry.title}” to Trash?</>,
+      description: <>{"Its history will be preserved."}</>,
+      confirmLabel: "Move to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
 
     setIsPending(true);
     setResult(null);
@@ -1021,7 +1024,11 @@ function TimelineEditor({
       }
     >
       {" "}
-      <form id="timeline-workspace-form" onSubmit={handleSubmit}>
+      <form
+        className={styles.editorForm}
+        id="timeline-workspace-form"
+        onSubmit={handleSubmit}
+      >
         <fieldset className={styles.kindPicker}>
           <legend>Moment type</legend>
           <div>
@@ -1072,7 +1079,7 @@ function TimelineEditor({
             />
           </label>
 
-          <label>
+          <label className={styles.fullField}>
             <span>
               Track
               <span aria-hidden="true" className={styles.requiredMark}>

@@ -71,7 +71,7 @@
 
 .timezoneCard label {
   display: grid;
-  gap: var(--mt-space-2);
+  gap: var(--mt-space-1);
 }
 
 .timezoneCard label > span {

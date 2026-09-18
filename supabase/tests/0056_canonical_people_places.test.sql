@@ -38,13 +38,12 @@ select is(
 
 select is(
   (
-    select entry.item_kind || ':' || entry.item_subtype || ':' || entry.title
-    from public.places as place
-    join public.entries as entry on entry.id=place.id and entry.owner_id=place.owner_id
-    where place.id='98800000-0000-4000-8000-000000000002'
+    select count(*)
+    from public.entries
+    where id='98800000-0000-4000-8000-000000000002'
   ),
-  'entity:place:Berkeley Marina',
-  'A Place is created with one canonical Entity Wiki Item'
+  0::bigint,
+  'A Place does not create a duplicate canonical Wiki Item'
 );
 
 select is(
@@ -58,8 +57,8 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000119'
 
 select is(
   (select count(*) from public.wiki_items_workspace('',array[]::text[],array[]::text[],50,0)),
-  2::bigint,
-  'The Life Wiki returns each specialized Entity exactly once'
+  1::bigint,
+  'The Life Wiki returns canonical People without duplicating standalone Places'
 );
 
 select is(
@@ -110,30 +109,23 @@ select is(
     )
   ),
   1::bigint,
-  'The existing Place writer updates the Entity atomically'
+  'The existing Place writer updates the standalone record atomically'
 );
 
 select is(
   (
-    select entry.title || ':' || entry.body || ':' || entry.revision
+    select place.name || ':' || place.notes || ':' || place.revision
     from public.places as place
-    join public.entries as entry on entry.id=place.id and entry.owner_id=place.owner_id
     where place.id='98800000-0000-4000-8000-000000000002'
   ),
   'Berkeley Marina:Evening sails.:2',
-  'Place edits synchronize title, notes, and optimistic revision'
+  'Place edits preserve their independent details and optimistic revision'
 );
 
 select is(
-  (
-    select entry_id
-    from public.search_wiki_items(
-      '201 University Avenue',array['place'],array[]::text[],array[]::text[],
-      null,null,50,0
-    )
-  ),
-  (select id from public.places where id='98800000-0000-4000-8000-000000000002'),
-  'Canonical Place search includes specialized address fields'
+  (select count(*) from public.search_wiki_items('201 University Avenue')),
+  0::bigint,
+  'Canonical Wiki Item search does not duplicate a standalone Place'
 );
 
 select is(

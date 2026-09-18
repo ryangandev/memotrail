@@ -1,5 +1,6 @@
 "use client";
 import { Button } from "@/components/button";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { EntryPhoto } from "@/lib/media/photo-metadata";
@@ -28,6 +29,7 @@ export function EntryPhotoGallery({
   ownerId: string;
   onChanged: () => void;
 }) {
+  const requestConfirmation = useConfirmationDialog();
   const [photos, setPhotos] = useState<EntryPhoto[] | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -129,11 +131,15 @@ export function EntryPhotoGallery({
   }
 
   async function remove(photo: EntryPhoto) {
-    if (
-      busy ||
-      !confirm(`Move ${photo.name} to Trash? The original will be preserved.`)
-    )
-      return;
+    if (busy) return;
+    const shouldRemove = await requestConfirmation({
+      title: <>Move “{photo.name}” to Trash?</>,
+      description: <>The original will be preserved for recovery.</>,
+      confirmLabel: "Move photo to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!shouldRemove) return;
     setBusy(true);
     setError(null);
     setNotice(null);

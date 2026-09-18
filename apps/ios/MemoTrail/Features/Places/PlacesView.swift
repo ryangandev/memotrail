@@ -54,29 +54,23 @@ struct PlacesView: View {
 
   private var header: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
-      Text("A GEOGRAPHY OF YOUR ARCHIVE")
+      Text("PERSONAL LANDMARKS IN YOUR STORY")
         .font(MTTypography.caption)
         .tracking(1.1)
         .foregroundStyle(MTColor.warm)
       Text("Places")
         .font(MTTypography.display)
         .foregroundStyle(MTColor.ink)
-      Text(
-        "Keep reusable locations once, then connect them to the memories that give them meaning."
-      )
-      .font(MTTypography.body)
-      .foregroundStyle(MTColor.inkMuted)
-      .lineSpacing(2)
+      Text("Save the personally meaningful places you want to remember.")
+        .font(MTTypography.body)
+        .foregroundStyle(MTColor.inkMuted)
+        .lineSpacing(2)
     }
   }
 
   private var summary: some View {
     HStack(spacing: MTSpacing.s2) {
       Text("\(controller.entries.count) \(controller.entries.count == 1 ? "place" : "places")")
-      Text("·")
-      Text("\(controller.linkedEntries.count) with memories")
-      Text("·")
-      Label("\(controller.mappedCount)", systemImage: "map")
       Spacer()
       if controller.isLoading, controller.hasLoaded { ProgressView().controlSize(.small) }
     }
@@ -97,11 +91,10 @@ struct PlacesView: View {
       archiveMessage(
         title: "Places unavailable",
         message: loadErrorMessage,
-        systemImage: "exclamationmark.triangle"
-      )
+        systemImage: "exclamationmark.triangle")
     } else if let focusedPlaceID {
       if let place = controller.entries.first(where: { $0.id == focusedPlaceID }) {
-        placeSection(title: "SOURCE PLACE", entries: [place])
+        placeSection(entries: [place])
       } else {
         archiveMessage(
           title: "Place unavailable",
@@ -113,27 +106,20 @@ struct PlacesView: View {
         editorSelection = PlaceEditorSelection(entry: nil)
       } label: {
         archiveMessage(
-          title: "Pin the first place in your story",
-          message:
-            "Start with a name. Address, coordinates, notes, and connected memories can come later.",
-          systemImage: "map"
-        )
+          title: "Remember your first Place",
+          message: "A Place is a small personal record, not a copy of an Entry or Home.",
+          systemImage: "map")
       }
       .buttonStyle(.plain)
       .accessibilityLabel("Add your first Place")
     } else {
-      if !controller.linkedEntries.isEmpty {
-        placeSection(title: "IN YOUR STORY", entries: controller.linkedEntries)
-      }
-      if !controller.unlinkedEntries.isEmpty {
-        placeSection(title: "UNLINKED PLACES", entries: controller.unlinkedEntries)
-      }
+      placeSection(entries: controller.entries)
     }
   }
 
-  private func placeSection(title: String, entries: [PlaceEntry]) -> some View {
+  private func placeSection(entries: [PlaceEntry]) -> some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      Text(title)
+      Text("SAVED PLACES")
         .font(MTTypography.label)
         .tracking(0.7)
         .foregroundStyle(MTColor.ink)
@@ -176,133 +162,36 @@ private struct PlaceArchiveCard: View {
   let entry: PlaceEntry
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      placeVisual
-        .frame(height: 154)
-        .clipped()
-
-      VStack(alignment: .leading, spacing: MTSpacing.s3) {
+    HStack(alignment: .top, spacing: MTSpacing.s4) {
+      Image(systemName: "map")
+        .font(.system(size: 24, weight: .medium))
+        .foregroundStyle(MTColor.accent)
+        .frame(width: 54, height: 54)
+        .background(MTColor.surfaceSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
+      VStack(alignment: .leading, spacing: MTSpacing.s2) {
+        Text(entry.name)
+          .font(MTTypography.titleSmall)
+          .foregroundStyle(MTColor.ink)
         Label(entry.locationLabel, systemImage: "mappin.and.ellipse")
           .font(MTTypography.caption)
           .foregroundStyle(MTColor.accent)
-          .lineLimit(2)
-
-        HStack(alignment: .firstTextBaseline) {
-          Text(entry.name)
-            .font(MTTypography.titleSmall)
-            .foregroundStyle(MTColor.ink)
-            .multilineTextAlignment(.leading)
-          Spacer(minLength: MTSpacing.s2)
-          Image(systemName: "chevron.right")
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(MTColor.inkFaint)
-        }
-
         if let notes = entry.notes?.trimmed.nonEmpty {
           Text(notes)
             .font(MTTypography.body)
             .foregroundStyle(MTColor.inkMuted)
             .lineLimit(3)
-            .multilineTextAlignment(.leading)
         }
-
-        if !entry.linkedEntries.isEmpty {
-          VStack(alignment: .leading, spacing: 4) {
-            ForEach(entry.linkedEntries.prefix(2)) { linked in
-              Text(
-                "\(linked.relationship == "home" ? "Home" : linked.itemKind.displayName(subtype: linked.itemSubtype)): \(linked.displayTitle)"
-              )
-              .font(MTTypography.caption)
-              .foregroundStyle(MTColor.inkMuted)
-              .lineLimit(1)
-            }
-            if entry.linkedEntries.count > 2 {
-              Text("+\(entry.linkedEntries.count - 2) more")
-                .font(MTTypography.caption)
-                .foregroundStyle(MTColor.inkFaint)
-            }
-          }
-        }
-
-        HStack(spacing: MTSpacing.s3) {
-          Label(
-            "\(entry.linkedEntryCount) linked \(entry.linkedEntryCount == 1 ? "Entry" : "Entries")",
-            systemImage: "link"
-          )
-          if entry.homeCount > 0 { Label("Home", systemImage: "house.fill") }
-        }
-        .font(MTTypography.caption)
-        .foregroundStyle(MTColor.inkFaint)
       }
-      .padding(MTSpacing.s4)
+      Spacer(minLength: MTSpacing.s2)
+      Image(systemName: "chevron.right")
+        .font(.system(size: 11, weight: .semibold))
+        .foregroundStyle(MTColor.inkFaint)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(MTSpacing.s4)
     .background(MTColor.surfaceRaised)
     .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay { RoundedRectangle(cornerRadius: MTRadius.large).stroke(MTColor.border) }
-  }
-
-  @ViewBuilder
-  private var placeVisual: some View {
-    if let attachment = entry.coverAttachment {
-      PlaceRemoteImage(attachment: attachment)
-    } else {
-      ZStack {
-        MTColor.surfaceSubtle
-        Canvas { context, size in
-          var path = Path()
-          let interval: CGFloat = 34
-          for x in stride(from: 0, through: size.width, by: interval) {
-            path.move(to: CGPoint(x: x, y: 0))
-            path.addLine(to: CGPoint(x: x, y: size.height))
-          }
-          for y in stride(from: 0, through: size.height, by: interval) {
-            path.move(to: CGPoint(x: 0, y: y))
-            path.addLine(to: CGPoint(x: size.width, y: y))
-          }
-          context.stroke(path, with: .color(MTColor.border), lineWidth: 0.7)
-        }
-        VStack(spacing: MTSpacing.s2) {
-          Image(systemName: "map")
-            .font(.system(size: 27, weight: .medium))
-            .foregroundStyle(MTColor.accent)
-          Text(entry.coordinateLabel ?? "Coordinates not added")
-            .font(.system(size: 10, weight: .medium))
-            .foregroundStyle(MTColor.inkMuted)
-        }
-        .padding(MTSpacing.s3)
-        .background(MTColor.surface.opacity(0.86), in: Capsule())
-      }
-    }
-  }
-}
-
-private struct PlaceRemoteImage: View {
-  let attachment: PlaceAttachment
-
-  var body: some View {
-    AsyncImage(url: attachment.signedURL) { phase in
-      switch phase {
-      case .success(let image): image.resizable().scaledToFill()
-      case .failure: placeholder(systemImage: "exclamationmark.triangle")
-      case .empty:
-        ZStack {
-          MTColor.surfaceSubtle
-          ProgressView()
-        }
-      @unknown default: placeholder(systemImage: "photo")
-      }
-    }
-    .accessibilityLabel(attachment.originalFilename ?? "Place memory photo")
-  }
-
-  private func placeholder(systemImage: String) -> some View {
-    ZStack {
-      MTColor.surfaceSubtle
-      Image(systemName: systemImage)
-        .font(.system(size: 24))
-        .foregroundStyle(MTColor.inkFaint)
-    }
   }
 }
 
@@ -323,10 +212,7 @@ struct PlaceEditorSheet: View {
   @State private var city: String
   @State private var region: String
   @State private var country: String
-  @State private var latitude: String
-  @State private var longitude: String
   @State private var notes: String
-  @State private var relatedEntryIDs: [UUID]
   @State private var isWorking = false
   @State private var errorMessage: String?
   @State private var isConfirmingTrash = false
@@ -341,21 +227,46 @@ struct PlaceEditorSheet: View {
     _city = State(initialValue: entry?.city ?? "")
     _region = State(initialValue: entry?.region ?? "")
     _country = State(initialValue: entry?.country ?? "")
-    _latitude = State(initialValue: entry?.latitude.map { String($0) } ?? "")
-    _longitude = State(initialValue: entry?.longitude.map { String($0) } ?? "")
     _notes = State(initialValue: entry?.notes ?? "")
-    _relatedEntryIDs = State(initialValue: entry?.relatedEntries.map(\.id) ?? [])
   }
 
   var body: some View {
     NavigationStack {
       Form {
-        detailsSection
-        coordinatesSection
-        notesSection
-        relationshipsSection
-        linkedPhotosSection
-        statusSections
+        Section("Place details") {
+          TextField("Name", text: $name)
+            .textInputAutocapitalization(.words)
+            .accessibilityIdentifier("place-name")
+          TextField("Address or description (optional)", text: $address, axis: .vertical)
+            .textInputAutocapitalization(.words)
+          TextField("City (optional)", text: $city)
+            .textInputAutocapitalization(.words)
+          TextField("Region (optional)", text: $region)
+            .textInputAutocapitalization(.words)
+          TextField("Country (optional)", text: $country)
+            .textInputAutocapitalization(.words)
+        }
+        Section("Memory") {
+          TextEditor(text: $notes)
+            .frame(minHeight: 120)
+            .accessibilityLabel("Notes")
+            .accessibilityIdentifier("place-notes")
+        }
+        if let errorMessage {
+          Section {
+            Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
+              .font(MTTypography.caption)
+              .foregroundStyle(MTColor.warm)
+          }
+        }
+        if currentPlaceID != nil {
+          Section {
+            Button("Move to Trash", role: .destructive) { isConfirmingTrash = true }
+              .disabled(isWorking)
+          } footer: {
+            Text("The Place and edit history remain available for restoration.")
+          }
+        }
       }
       .navigationTitle(entry == nil ? "New Place" : "Edit Place")
       .navigationBarTitleDisplayMode(.inline)
@@ -404,203 +315,9 @@ struct PlaceEditorSheet: View {
     .interactiveDismissDisabled(isWorking)
   }
 
-  private var detailsSection: some View {
-    Section("Place details") {
-      TextField("Name", text: $name)
-        .textInputAutocapitalization(.words)
-        .accessibilityIdentifier("place-name")
-      TextField("Address (optional)", text: $address, axis: .vertical)
-        .textInputAutocapitalization(.words)
-        .textContentType(.fullStreetAddress)
-      TextField("City (optional)", text: $city)
-        .textInputAutocapitalization(.words)
-        .textContentType(.addressCity)
-      TextField("Region (optional)", text: $region)
-        .textInputAutocapitalization(.words)
-        .textContentType(.addressState)
-      TextField("Country (optional)", text: $country)
-        .textInputAutocapitalization(.words)
-        .textContentType(.countryName)
-    }
-  }
-
-  private var coordinatesSection: some View {
-    Section {
-      TextField("Latitude", text: $latitude)
-        .keyboardType(.numbersAndPunctuation)
-        .accessibilityIdentifier("place-latitude")
-      TextField("Longitude", text: $longitude)
-        .keyboardType(.numbersAndPunctuation)
-        .accessibilityIdentifier("place-longitude")
-    } header: {
-      Text("Map coordinates")
-    } footer: {
-      Text(
-        "Add both values or leave both empty. Coordinates prepare this archive for a future map view."
-      )
-    }
-  }
-
-  private var notesSection: some View {
-    Section("Notes") {
-      TextEditor(text: $notes)
-        .frame(minHeight: 120)
-        .accessibilityLabel("Notes")
-        .accessibilityIdentifier("place-notes")
-    }
-  }
-
-  private var relationshipsSection: some View {
-    Section {
-      if let entry, !entry.protectedEntries.isEmpty {
-        ForEach(entry.protectedEntries) { linked in
-          Label {
-            VStack(alignment: .leading, spacing: 3) {
-              Text(linked.displayTitle).foregroundStyle(MTColor.ink)
-              Text("Home record · managed from Homes")
-                .font(MTTypography.caption)
-                .foregroundStyle(MTColor.inkFaint)
-            }
-          } icon: {
-            Image(systemName: "house.fill").foregroundStyle(MTColor.accent)
-          }
-        }
-      }
-
-      if relatedEntryIDs.isEmpty {
-        Text("No related Entries yet")
-          .font(MTTypography.body)
-          .foregroundStyle(MTColor.inkFaint)
-      } else {
-        ForEach(relatedEntryIDs, id: \.self) { id in
-          HStack {
-            VStack(alignment: .leading, spacing: 3) {
-              Text(relatedTitle(id)).foregroundStyle(MTColor.ink).lineLimit(2)
-              if let type = relatedType(id) {
-                Text(type.displayName)
-                  .font(MTTypography.caption)
-                  .foregroundStyle(MTColor.inkFaint)
-              }
-            }
-            Spacer()
-            Button {
-              relatedEntryIDs.removeAll { $0 == id }
-            } label: {
-              Image(systemName: "xmark.circle.fill")
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(MTColor.inkFaint)
-            .accessibilityLabel("Unlink \(relatedTitle(id))")
-          }
-        }
-      }
-
-      if !availableLinkOptions.isEmpty, relatedEntryIDs.count < PlaceInput.relatedEntryLimit {
-        Menu("Link an Entry", systemImage: "link.badge.plus") {
-          ForEach(availableLinkOptions) { option in
-            Button {
-              relatedEntryIDs.append(option.id)
-            } label: {
-              Text("\(option.displayTitle) · \(option.displayType)")
-            }
-          }
-        }
-      }
-    } header: {
-      Text("Connected Entries")
-    } footer: {
-      Text("Related links are editable here. Home links stay protected and are managed from Homes.")
-    }
-  }
-
-  @ViewBuilder
-  private var linkedPhotosSection: some View {
-    if !linkedAttachments.isEmpty {
-      Section {
-        ScrollView(.horizontal, showsIndicators: false) {
-          HStack(spacing: MTSpacing.s3) {
-            ForEach(linkedAttachments) { attachment in
-              PlaceRemoteImage(attachment: attachment)
-                .frame(width: 132, height: 112)
-                .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
-            }
-          }
-        }
-      } header: {
-        Text("Memory photos")
-      } footer: {
-        Text("These originals belong to connected Entries and remain managed from those records.")
-      }
-    }
-  }
-
-  @ViewBuilder
-  private var statusSections: some View {
-    if let errorMessage {
-      Section {
-        Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
-          .font(MTTypography.caption)
-          .foregroundStyle(MTColor.warm)
-          .accessibilityIdentifier("place-editor-error")
-      }
-    }
-
-    if currentPlaceID != nil {
-      Section {
-        Button("Move to Trash", role: .destructive) { isConfirmingTrash = true }
-          .disabled(!(entry?.canMoveToTrash ?? false))
-      } footer: {
-        if let entry, !entry.canMoveToTrash {
-          Text(trashProtectionMessage(entry))
-        } else {
-          Text("The Place and edit history remain available for restoration.")
-        }
-      }
-    }
-  }
-
-  private var availableLinkOptions: [PlaceLinkOption] {
-    let protectedIDs = Set(entry?.protectedEntries.map(\.id) ?? [])
-    return controller.linkOptions.filter {
-      !relatedEntryIDs.contains($0.id) && !protectedIDs.contains($0.id)
-    }
-  }
-
-  private var linkedAttachments: [PlaceAttachment] {
-    entry?.linkedEntries.flatMap(\.attachments) ?? []
-  }
-
-  private func relatedTitle(_ id: UUID) -> String {
-    controller.linkOptions.first { $0.id == id }?.displayTitle
-      ?? entry?.relatedEntries.first { $0.id == id }?.displayTitle
-      ?? "Related Entry"
-  }
-
-  private func relatedType(_ id: UUID) -> String? {
-    controller.linkOptions.first { $0.id == id }.map {
-      $0.itemKind.displayName(subtype: $0.itemSubtype)
-    }
-      ?? entry?.relatedEntries.first { $0.id == id }.map {
-        $0.itemKind.displayName(subtype: $0.itemSubtype)
-      }
-  }
-
-  private func trashProtectionMessage(_ entry: PlaceEntry) -> String {
-    if !entry.protectedEntries.isEmpty { return "Remove its Home link before trashing this Place." }
-    if relatedEntryIDs.isEmpty { return "Save the unlinked Place before moving it to Trash." }
-    return "Unlink every Entry before moving this Place to Trash."
-  }
-
   @MainActor
   private func save() async {
     errorMessage = nil
-    let parsedLatitude = coordinate(latitude)
-    let parsedLongitude = coordinate(longitude)
-    guard parsedLatitude.isValid, parsedLongitude.isValid else {
-      errorMessage = PlaceEntryError.invalidCoordinates.localizedDescription
-      return
-    }
-
     isWorking = true
     let result = await controller.save(
       placeID: currentPlaceID,
@@ -610,10 +327,9 @@ struct PlaceEditorSheet: View {
       city: city,
       region: region,
       country: country,
-      latitude: parsedLatitude.value,
-      longitude: parsedLongitude.value,
-      notes: notes,
-      relatedEntryIDs: relatedEntryIDs
+      latitude: entry?.latitude,
+      longitude: entry?.longitude,
+      notes: notes
     )
     guard result.status == .saved, let identity = result.identity else {
       isWorking = false
@@ -629,7 +345,7 @@ struct PlaceEditorSheet: View {
 
   @MainActor
   private func moveToTrash() async {
-    guard let currentPlaceID, let currentRevision, entry?.canMoveToTrash == true else { return }
+    guard let currentPlaceID, let currentRevision else { return }
     isWorking = true
     errorMessage = nil
     let result = await controller.moveToTrash(
@@ -638,13 +354,6 @@ struct PlaceEditorSheet: View {
     )
     isWorking = false
     if result.status == .trashed { dismiss() } else { errorMessage = result.message }
-  }
-
-  private func coordinate(_ value: String) -> (isValid: Bool, value: Double?) {
-    let value = value.trimmed
-    guard !value.isEmpty else { return (true, nil) }
-    guard let number = Double(value), number.isFinite else { return (false, nil) }
-    return (true, number)
   }
 
   private func trim(_ value: inout String, to limit: Int) {

@@ -22,18 +22,18 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000109'
 
 select is(
   (select count(*) from public.wiki_items_workspace('',array[]::text[],array[]::text[],50,0)),
-  4::bigint,
-  'The Life Wiki page combines Entries, People, and Places'
+  3::bigint,
+  'The Life Wiki page combines canonical Entries and People without duplicating Places'
 );
 select is(
   (select max(total_count) from public.wiki_items_workspace('',array[]::text[],array[]::text[],2,0)),
-  4::bigint,
+  3::bigint,
   'Pagination reports the complete matching count'
 );
 select is(
   (select count(*) from public.wiki_items_workspace('',array['entity'],array[]::text[],50,0)),
-  2::bigint,
-  'Kind filtering includes Person and Place Entities'
+  1::bigint,
+  'Kind filtering includes canonical Person Entities without standalone Places'
 );
 select is(
   (select title from public.wiki_items_workspace('',array[]::text[],array['person'],50,0)),

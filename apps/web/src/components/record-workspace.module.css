@@ -1,16 +1,5 @@
-.summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--mt-space-2);
-  margin-top: var(--mt-space-5);
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
-}
-
 .message {
   min-height: 210px;
-  margin-top: var(--mt-space-8);
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface);
@@ -33,10 +22,6 @@
 .message p {
   margin-top: var(--mt-space-1);
   color: var(--mt-color-ink-muted);
-}
-
-.homeSection {
-  margin-top: var(--mt-space-8);
 }
 
 .homeSection > header:not([data-ui-page-header]) {

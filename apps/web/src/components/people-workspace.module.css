@@ -1,8 +1,12 @@
+.peopleResults {
+  display: grid;
+  gap: var(--mt-space-5);
+}
+
 .peopleGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--mt-space-4);
-  margin-top: var(--mt-space-8);
 }
 
 .personBody {
@@ -61,7 +65,6 @@
   display: flex;
   justify-content: space-between;
   gap: var(--mt-space-4);
-  margin-top: var(--mt-space-5);
   font-size: var(--mt-font-size-caption);
 }
 
@@ -102,7 +105,7 @@
 
 .linkPicker label {
   display: grid;
-  gap: var(--mt-space-2);
+  gap: var(--mt-space-1);
 }
 
 .trashNote {

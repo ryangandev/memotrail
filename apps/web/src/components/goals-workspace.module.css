@@ -161,7 +161,7 @@
   border-radius: var(--mt-radius-small);
   outline: 0;
   color: var(--mt-color-ink);
-  background: var(--mt-color-surface-raised);
+  background: var(--mt-color-surface);
   font-family: var(--mt-font-family-sans);
   font-size: var(--mt-font-size-label);
 }
