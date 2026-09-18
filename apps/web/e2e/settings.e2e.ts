@@ -119,6 +119,7 @@ test("Settings is reachable from the sidebar and owns account controls", async (
       )
       .toBe("dark");
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-settings-appearance-dark.png",
@@ -166,6 +167,8 @@ test("Settings is reachable from the sidebar and owns account controls", async (
       .toBe("America/Los_Angeles");
 
     await page.screenshot({
+      caret: "initial",
+      animations: "disabled",
       path: "/private/tmp/memotrail-settings-desktop.png",
     });
 
@@ -174,6 +177,8 @@ test("Settings is reachable from the sidebar and owns account controls", async (
       page.getByRole("link", { name: `Open settings for ${displayName}` }),
     ).toHaveAttribute("aria-current", "page");
     await page.screenshot({
+      caret: "initial",
+      animations: "disabled",
       fullPage: true,
       path: "/private/tmp/memotrail-settings-mobile.png",
     });

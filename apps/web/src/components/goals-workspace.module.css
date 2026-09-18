@@ -4,52 +4,15 @@
   gap: var(--mt-space-4);
 }
 
-.goalCard {
-  display: grid;
-  width: 100%;
-  min-width: 0;
-  padding: 0;
-  appearance: none;
-  overflow: hidden;
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface-raised);
-  box-shadow: 0 1px 2px rgb(38 37 31 / 0.025);
-  text-align: left;
-  font: inherit;
-  cursor: pointer;
-  transition:
-    transform var(--mt-motion-quick),
-    border-color var(--mt-motion-quick),
-    box-shadow var(--mt-motion-quick);
-}
-
-.goalCard:hover {
-  transform: translateY(-2px);
-  border-color: var(--mt-color-border-strong);
-  box-shadow: var(--mt-shadow-raised);
-}
-
 .goalCover {
-  position: relative;
   height: 138px;
-  overflow: hidden;
-  border-bottom: 1px solid var(--mt-color-border);
-  background: var(--mt-color-surface-subtle);
-}
-
-.goalCover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .photoCount {
   position: absolute;
   right: var(--mt-space-3);
   bottom: var(--mt-space-3);
-  padding: 4px 8px;
+  padding: var(--mt-space-1) var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
   color: white;
   background: rgb(24 24 20 / 0.72);
@@ -63,7 +26,6 @@
   display: flex;
   min-height: 245px;
   flex-direction: column;
-  padding: var(--mt-space-5);
 }
 
 .goalMeta {
@@ -73,7 +35,7 @@
 }
 
 .goalMeta span {
-  padding: 4px 8px;
+  padding: var(--mt-space-1) var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface-subtle);
@@ -135,7 +97,7 @@
 .contextLine span {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--mt-space-1);
 }
 
 .goalCardBody footer {
@@ -180,29 +142,6 @@
   gap: 6px;
 }
 
-.relatedChips button {
-  display: flex;
-  max-width: 100%;
-  min-height: 31px;
-  align-items: center;
-  gap: 7px;
-  padding: 4px 10px;
-  overflow: hidden;
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-raised);
-  font-size: var(--mt-font-size-caption);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.relatedChips button:hover {
-  color: var(--mt-color-warm);
-  border-color: var(--mt-color-border-strong);
-}
-
 .relatedChips span {
   color: var(--mt-color-ink-faint);
   font-size: 16px;
@@ -222,7 +161,7 @@
   border-radius: var(--mt-radius-small);
   outline: 0;
   color: var(--mt-color-ink);
-  background: var(--mt-color-surface-raised);
+  background: var(--mt-color-surface);
   font-family: var(--mt-font-family-sans);
   font-size: var(--mt-font-size-label);
 }
@@ -230,36 +169,6 @@
 .relatedPicker select:focus {
   border-color: var(--mt-color-accent);
   box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
-}
-
-.relatedPicker button,
-.achievementButton {
-  display: inline-flex;
-  height: 42px;
-  align-items: center;
-  justify-content: center;
-  gap: var(--mt-space-2);
-  padding: 0 var(--mt-space-3);
-  border: 1px solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-raised);
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-medium);
-  cursor: pointer;
-}
-
-.relatedPicker button:hover,
-.achievementButton:hover {
-  color: var(--mt-color-accent);
-  border-color: var(--mt-color-accent);
-}
-
-.relatedPicker button:disabled,
-.achievementButton:disabled,
-.relatedChips button:disabled {
-  cursor: wait;
-  opacity: 0.5;
 }
 
 .achievementPanel {
@@ -280,6 +189,16 @@
   grid-column: 1 / -1;
   gap: var(--mt-space-3);
   align-items: flex-start;
+}
+
+.achievementAction {
+  grid-column: 1 / -1;
+  align-self: start;
+  justify-self: start;
+}
+
+.achievementPanel > [data-ui-field] {
+  grid-column: 1 / -1;
 }
 
 .achievementIntro > span {
@@ -304,19 +223,6 @@
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
   line-height: var(--mt-line-height-body);
-}
-
-.achievementButton {
-  grid-column: 1 / -1;
-  width: max-content;
-  color: var(--mt-color-accent-ink);
-  border-color: var(--mt-color-accent);
-  background: var(--mt-color-accent);
-}
-
-.achievementButton:hover {
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent-hover);
 }
 
 .achievementError {
@@ -353,10 +259,5 @@
 @media (max-width: 560px) {
   .relatedPicker {
     grid-template-columns: 1fr;
-  }
-
-  .relatedPicker button,
-  .achievementButton {
-    width: 100%;
   }
 }

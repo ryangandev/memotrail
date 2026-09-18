@@ -153,12 +153,14 @@ test("AI photo suggestions require opt-in and share only synthetic previews", as
       await expect(titleInput).toHaveValue("Archery inspiration");
     }
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-ai-photos-desktop.png",
       fullPage: true,
     });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-ai-photos-mobile-dark.png",
       fullPage: true,
     });

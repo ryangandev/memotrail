@@ -112,6 +112,7 @@ test("Inbox Capture creates a linked Goal through the specialized form", async (
       .selectOption("active");
     await editor.getByLabel(/Target date/).fill("2028-06-01");
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-capture-goal-handoff.png",
       fullPage: true,
     });

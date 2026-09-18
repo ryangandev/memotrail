@@ -2,21 +2,21 @@
   background: var(--mt-color-accent-subtle);
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-medium);
-  padding: 16px;
-  margin-bottom: 20px;
+  padding: var(--mt-space-4);
+  margin-bottom: var(--mt-space-5);
 }
 .heading {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: var(--mt-space-4);
 }
 .heading a {
-  font-size: 12px;
+  font-size: var(--mt-font-size-caption);
   color: var(--mt-color-ink);
 }
 .panel p {
-  font-size: 12px;
+  font-size: var(--mt-font-size-caption);
   line-height: 1.6;
   color: var(--mt-color-ink-muted);
   margin: 10px 0;
@@ -24,20 +24,6 @@
 .choices {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin: 12px 0;
-}
-.panel button {
-  border: 1px solid var(--mt-color-border);
-  border-radius: 8px;
-  padding: 8px 10px;
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface);
-  text-align: left;
-  cursor: pointer;
-  overflow-wrap: anywhere;
-}
-.panel button:disabled {
-  opacity: 0.5;
-  cursor: default;
+  gap: var(--mt-space-2);
+  margin: var(--mt-space-3) 0;
 }

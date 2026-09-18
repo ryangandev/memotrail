@@ -1,14 +1,18 @@
 "use client";
+import { Dialog } from "@/components/dialog";
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/button";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   deleteTrashItemForever,
   restoreTrashItem,
   type TrashActionResult,
 } from "@/app/trash/actions";
-import styles from "@/app/trash/page.module.css";
+import styles from "@/components/trash-workspace.module.css";
 import { Icon } from "@/components/icon";
 import { EmptyTrashControl } from "@/components/empty-trash-control";
 import { PageFrame } from "@/components/page-frame";
@@ -41,21 +45,6 @@ export function TrashWorkspace({
     workspace.totalCount,
   );
   const totalPages = Math.ceil(workspace.totalCount / TRASH_PAGE_SIZE);
-
-  useEffect(() => {
-    if (!confirmation) {
-      return;
-    }
-
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape" && !pending) {
-        setConfirmation(null);
-      }
-    }
-
-    document.addEventListener("keydown", closeOnEscape);
-    return () => document.removeEventListener("keydown", closeOnEscape);
-  }, [confirmation, pending]);
 
   async function runAction(item: TrashItem, action: "delete" | "restore") {
     setPending({ action, itemId: item.id });
@@ -95,23 +84,27 @@ export function TrashWorkspace({
 
   return (
     <PageFrame variant="standard">
-      <header className={styles.pageHeader}>
-        <div>
-          <p className={styles.eyebrow}>Recoverable by design</p>
-          <h1>Trash</h1>
-          <p>
+      <PageHeader
+        title={<>Trash</>}
+        eyebrow={<>Recoverable by design</>}
+        description={
+          <>
             Restore something you still need, or permanently remove it with an
             explicit confirmation.
-          </p>
-        </div>
-        <div className={styles.retentionBadge}>
-          <Icon name="clock" size={18} />
-          <span>
-            <strong>30-day retention</strong>
-            <small>Dates are shown per item</small>
-          </span>
-        </div>
-      </header>
+          </>
+        }
+        actions={
+          <>
+            <div className={styles.retentionBadge}>
+              <Icon name="clock" size={18} />
+              <span>
+                <strong>30-day retention</strong>
+                <small>Dates are shown per item</small>
+              </span>
+            </div>
+          </>
+        }
+      />
 
       <aside className={styles.retentionNote}>
         <Icon name="archive" size={19} />
@@ -122,20 +115,19 @@ export function TrashWorkspace({
         </p>
       </aside>
 
-      <EmptyTrashControl
-        disabled={
-          Boolean(pending) ||
-          Boolean(confirmation) ||
-          Boolean(workspace.loadError) ||
-          workspace.totalCount === 0
-        }
-        onBusy={setBatchBusy}
-        onResult={setResult}
-        onFinish={() => {
-          if (workspace.page > 1) router.push("/trash");
-          else router.refresh();
-        }}
-      />
+      {!workspace.loadError && workspace.totalCount > 0 ? (
+        <div className={styles.actionRow}>
+          <EmptyTrashControl
+            disabled={Boolean(pending) || Boolean(confirmation)}
+            onBusy={setBatchBusy}
+            onResult={setResult}
+            onFinish={() => {
+              if (workspace.page > 1) router.push("/trash");
+              else router.refresh();
+            }}
+          />
+        </div>
+      ) : null}
 
       {result ? (
         <p
@@ -151,20 +143,34 @@ export function TrashWorkspace({
       ) : null}
 
       {workspace.loadError ? (
-        <section className={styles.emptyState}>
-          <Icon name="refresh" size={25} />
-          <h2>Trash is unavailable</h2>
-          <p>{workspace.loadError}</p>
-        </section>
+        <div className={styles.emptyState}>
+          <EmptyState
+            title={<>Trash is unavailable</>}
+            description={<>{workspace.loadError}</>}
+            icon={
+              <>
+                <Icon name="refresh" size={25} />
+              </>
+            }
+          />
+        </div>
       ) : workspace.items.length === 0 ? (
-        <section className={styles.emptyState}>
-          <Icon name="trash" size={25} />
-          <h2>Nothing in Trash</h2>
-          <p>
-            Removed Entries, Places, People, and individual photos will appear
-            here. Legacy records remain recoverable too.
-          </p>
-        </section>
+        <div className={styles.emptyState}>
+          <EmptyState
+            title={<>Nothing in Trash</>}
+            description={
+              <>
+                Removed Entries, Places, People, and individual photos will
+                appear here. Legacy records remain recoverable too.
+              </>
+            }
+            icon={
+              <>
+                <Icon name="trash" size={25} />
+              </>
+            }
+          />
+        </div>
       ) : (
         <>
           <div className={styles.listSummary}>
@@ -217,8 +223,8 @@ export function TrashWorkspace({
                   </div>
 
                   <div className={styles.itemActions}>
-                    <button
-                      className={styles.restoreButton}
+                    <Button
+                      variant="secondary"
                       disabled={Boolean(pending) || batchBusy}
                       onClick={() => runAction(item, "restore")}
                       type="button"
@@ -226,9 +232,9 @@ export function TrashWorkspace({
                       {isPending && pending?.action === "restore"
                         ? "Restoring..."
                         : "Restore"}
-                    </button>
-                    <button
-                      className={styles.deleteButton}
+                    </Button>
+                    <Button
+                      variant="danger"
                       disabled={Boolean(pending) || batchBusy}
                       onClick={() => {
                         setResult(null);
@@ -237,7 +243,7 @@ export function TrashWorkspace({
                       type="button"
                     >
                       Delete forever
-                    </button>
+                    </Button>
                   </div>
                 </article>
               );
@@ -265,47 +271,32 @@ export function TrashWorkspace({
       )}
 
       {confirmation ? (
-        <div
-          className={styles.dialogBackdrop}
-          onMouseDown={(event) => {
-            if (event.currentTarget === event.target && !pending) {
-              setConfirmation(null);
-            }
+        <Dialog
+          open
+          size="compact"
+          title={<>Delete “{confirmation.title}” forever?</>}
+          titleId="trash-confirmation-title"
+          description={
+            <>{deletionDescription(confirmation)} This cannot be undone.</>
+          }
+          eyebrow={<>Permanent action</>}
+          busy={Boolean(pending)}
+          onOpenChange={(open) => {
+            if (!open) setConfirmation(null);
           }}
-        >
-          <section
-            aria-describedby="trash-confirmation-description"
-            aria-labelledby="trash-confirmation-title"
-            aria-modal="true"
-            className={styles.confirmationDialog}
-            role="dialog"
-          >
-            <div className={styles.dialogIcon}>
-              <Icon name="trash" size={22} />
-            </div>
-            <p className={styles.dialogEyebrow}>Permanent action</p>
-            <h2 id="trash-confirmation-title">
-              Delete “{confirmation.title}” forever?
-            </h2>
-            <p id="trash-confirmation-description">
-              {deletionDescription(confirmation)} This cannot be undone.
-            </p>
-            {result?.status === "error" ? (
-              <p className={styles.dialogError} aria-live="polite">
-                {result.message}
-              </p>
-            ) : null}
-            <div className={styles.dialogActions}>
-              <button
+          footer={
+            <>
+              <Button
+                variant="secondary"
                 disabled={Boolean(pending)}
                 onClick={() => setConfirmation(null)}
                 type="button"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
                 autoFocus
-                className={styles.confirmDeleteButton}
                 disabled={Boolean(pending)}
                 onClick={() => runAction(confirmation, "delete")}
                 type="button"
@@ -313,10 +304,17 @@ export function TrashWorkspace({
                 {pending?.action === "delete"
                   ? "Deleting..."
                   : "Delete forever"}
-              </button>
-            </div>
-          </section>
-        </div>
+              </Button>
+            </>
+          }
+        >
+          {" "}
+          {result?.status === "error" ? (
+            <p className={styles.dialogError} aria-live="polite">
+              {result.message}
+            </p>
+          ) : null}
+        </Dialog>
       ) : null}
     </PageFrame>
   );

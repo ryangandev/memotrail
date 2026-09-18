@@ -11,7 +11,8 @@ Last reviewed: 2026-09-16.
 | Native client     | SwiftUI screens, controllers, device drafts and queues, native integrations | `apps/ios/MemoTrail/Features`, `apps/ios/MemoTrail/Models`, `apps/ios/MemoTrail/App`               |
 | Shared data       | Postgres schema, RLS, Storage policies, atomic RPCs, history, and search    | `supabase/migrations`                                                                              |
 | Data verification | Ownership, denial, concurrency, lifecycle, and contract tests               | `supabase/tests`                                                                                   |
-| Design system     | Semantic source tokens and generated Web and Swift outputs                  | `packages/design-tokens`                                                                           |
+| Design tokens     | Semantic source tokens and generated Web and Swift outputs                  | `packages/design-tokens`                                                                           |
+| Web design system | Reusable Web components and the development-only audit gallery              | `apps/web/src/components`, `apps/web/src/app/design-system`                                        |
 | Media runtime     | Deployable image and metadata decoder dependencies                          | `packages/media-runtime`                                                                           |
 | Delivery          | Web, iOS, and database CI                                                   | `.github/workflows/ci.yml`                                                                         |
 
@@ -49,12 +50,15 @@ Pair it with the test file carrying the same feature name.
   Its historical SQL name does not make Entry a product-level Kind or identity boundary.
 - `entries.item_kind` owns the structural identity boundary: Capture, Writing, Entity, Event, Story, or Goal.
 - `entries.item_subtype` selects a compatible preset within that Kind.
-- `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item. Person and Place rows expose both the canonical Entry ID and their specialized record ID so clients can preserve identity while opening the correct editor.
+- `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item. Person rows expose both the canonical Entry ID and their specialized record ID so clients can preserve identity while opening the correct editor.
 - Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace.
   Web routes typed records to focused editors and general items to `/items/[entry]`, where current content and primary actions precede an explicit history link.
   Native Library routes typed records to their focused editors and other canonical items to the shared History detail/edit boundary.
 - `collection_wiki_items` composes the established paged Collection detail with canonical Kind, subtype, and specialized routing identity. Both clients use it so Collections remain organizational lenses rather than a second generic detail system.
-- `people.entry_id` and `places.entry_id` are required owner-scoped links to canonical Entity Wiki Items. Triggers keep names, notes, revision state, and Trash state synchronized while the specialized tables retain typed facts and relationship-facing IDs.
+- `people.entry_id` is a required owner-scoped link to a canonical Entity Wiki Item. Triggers keep its name, notes, revision state, and Trash state synchronized.
+- `places` is an independent owner-scoped Focused View record with its own revision and Trash history. It has no canonical `entries` mirror and owns no links to other Focused View records.
+- `locations` stores lightweight geographic identity, provider metadata, human-readable address context, private coordinates, revision state, and soft deletion. It is not a Wiki Item.
+- `homes.place_id` and `entry_places.place_id` remain compatibility column names for one cross-client window, but their foreign keys target `locations`; new reads use the `entry_locations` view and Location vocabulary.
 - A raw Capture may be finalized as one durable item or may produce linked items through a provenance-preserving extraction.
 - Established durable items never change Kind through a generic selector; cross-Kind workflows create and link another item.
 - Dedicated Web extraction routes pass only the source Capture ID, reload the owner-scoped saved source on the server, and prefill the specialized form without placing personal content in the URL or client storage.
@@ -69,9 +73,9 @@ Pair it with the test file carrying the same feature name.
 - `entries.body` remains canonical plaintext. Optional validated rich content is versioned under `entries.metadata.body_rich`, carries the exact matching plaintext, and is ignored when another client changes the body without updating the rich document.
 - Web capture and Entry review use `components/rich-text-editor.tsx` for the reusable headless editor surface, with page, dialog, and form variants instead of separate editors.
   `components/entry-rich-text-content.tsx` safely renders validated formatting on note surfaces and falls back to canonical plaintext when rich metadata is absent, invalid, or stale.
-  Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while `review_entry_with_photo_place_rich` writes plaintext, formatting, organization, occurrence, and photo Place adoption in one revision.
+  Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while the compatibility RPC `review_entry_with_photo_place_rich` writes plaintext, formatting, organization, occurrence, and photo Location adoption in one revision.
   Older review RPCs preserve rich metadata they do not understand.
-- Collections, tags, People, Places, and Wiki Item links are owner-scoped reusable relationships.
+- Collections, tags, People, Locations, and Wiki Item links are owner-scoped reusable relationships. Places remain independent personal records.
 - Kind owns identity, subtype owns compatible specialized structure, Collections own curated cross-Kind groupings, tags own lightweight cross-Kind descriptors, and Timeline tracks own presentation only.
 - Home and Vehicle are Entity subtypes whose occurrence range describes the user's relationship span.
 - Memory and First Time are Event subtypes.
@@ -99,7 +103,7 @@ Pair it with the test file carrying the same feature name.
 - A private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings.
 - Web Timeline lanes use each item's rendered pixel bounds, including minimum stage and event-label widths, so non-overlapping periods share a lane without allowing visible cards to collide. A dashed Today line uses the same reference instant as open stages; short ongoing labels end against it with a flat right edge, and stage labels share the same vertically centered layout whether rendered as buttons or links.
 - Timeline creation routes by Entry type, not track name. Generic moments use the Timeline editor; Home, Vehicle, and First Time creation and editing reuse the exported Records editors in a lazy-loaded Timeline modal. System track shortcuts select the corresponding specialized type, while ordinary tracks preselect the generic editor's placement.
-- Timeline server data loads the specialized records and shared Place, Collection, and tag choices needed by those editors in parallel, so opening a known specialized Entry does not require a route transition or client-side data waterfall.
+- Timeline server data loads the specialized records and shared Location, Collection, and tag choices needed by those editors in parallel, so opening a known specialized Entry does not require a route transition or client-side data waterfall.
 - Web occurrence and profile date forms use `components/date-picker-field.tsx`; domain editors map their precision into its generic granularity, time, editability, and size props instead of duplicating picker UI.
 
 ## Offline rules
@@ -131,7 +135,7 @@ Pair it with the test file carrying the same feature name.
 - Interrupted provider outcomes do not trigger automatic paid retries.
 - Suggestion and search outputs are schema-validated and remain separate from original writing until explicit user action.
 - Search answers cite exact stored evidence; provenance does not imply that the model's conclusion is true.
-- `search_wiki_items` accepts canonical Kind and subtype classifications and returns Kind, subtype, record source, and specialized routing identity in one owner-scoped result stream for Web and iOS, including People and Places.
+- `search_wiki_items` accepts canonical Kind and subtype classifications and returns Kind, subtype, record source, and specialized routing identity in one owner-scoped result stream for Web and iOS. Linked Location fields contribute searchable context; independent Places remain in their Focused View.
 - The persistent Web Command Palette debounces input before calling the dynamic, private, no-store `app/api/search/quick` route. That route returns one bounded owner-scoped canonical result stream and leaves filtered or AI search on the full Search page.
 
 ## Deletion, export, and recovery rules
@@ -150,12 +154,24 @@ Pair it with the test file carrying the same feature name.
 - `packages/design-tokens/tokens.json` is the semantic source of truth.
 - Generated Web CSS and Swift values are never edited directly.
 - Token changes run `pnpm tokens:generate` and `pnpm tokens:check`.
+- The development-only `/design-system` route renders production Web components and current generated tokens for review; it is unavailable in Production.
+- Button, Dialog, PageHeader, EmptyState, and the previously reviewed gallery components are approved migration targets.
+- Production actions use Button, IconButton, or ButtonLink without changing submit or navigation semantics; composite internals and navigation controls retain their distinct roles.
+- Dialog owns generic editor and confirmation shells, scroll containment, focus trapping/restoration, busy dismissal, and nested overlay containers.
+  Editor forms retain their handlers; footer submit actions use native form associations.
+  Native Quick Capture keeps its photo-picker cancellation and full-screen mobile behavior, PhotoViewer keeps native top-layer media geometry, and Command Palette keeps its combobox/listbox interaction model.
+- Reusable components do not import `app/**.module.css`; Web lint enforces this boundary along with valid token references.
+  Feature modules own composition, and `editor-fields.module.css` shares native field spacing and states while excluding the reviewed composites' internals.
+- DatePickerField and OccurrenceEditor own `components/date-fields.module.css`; named date fields preserve native form validation and GET serialization without importing route styling.
+- Inside a modal, date/time fields inherit its overlay container or accept an explicit `portalContainer` so their popovers stay inside its accessibility and theme boundary.
+  Unnamed domain date fields retain the editor's contextual submit validation rather than introducing native custom-validity interception.
 - Cross-platform components preserve meaning and state while allowing native interaction differences.
 - Authenticated Web routes use `components/page-frame.tsx` for outer width, centering, responsive gutters, and vertical page rhythm.
 - Page frame variants are semantic: `compact` is 880px for forms and focused reading, `standard` is 960px for lists and search, `wide` is 1080px for dashboards and card grids, and `canvas` is 1180px for dense spatial views.
-- New route pages choose the narrowest variant that fits their content and keep internal grid, dialog, and visualization breakpoints in page-specific CSS instead of redefining the outer page geometry.
+- New route pages choose the narrowest variant that fits their content; feature grids and visualizations own their internal breakpoints instead of redefining the outer page geometry.
 - Web photo surfaces reuse `components/progressive-image.tsx` for a reserved skeleton, decode fade-in, failure fallback, and reduced-motion behavior while private expiring media URLs continue to bypass the public Next image cache.
-- Home, Vehicle, First Time, and Place result layouts reuse `components/record-card.tsx`; subtype modules own only their visual, metadata, and responsive content rules.
+- Home, Vehicle, First Time, Goal, Person, and Place result layouts reuse `components/record-card.tsx`; subtype modules own only their visual, metadata, and responsive content rules.
+  Noninteractive history, Collection, and Trash surfaces retain their distinct link or multi-action semantics instead of nesting actions inside a button card.
 - Specialized record editors reuse `components/entry-photo-field.tsx` for selected and existing previews, removal controls, limits, and upload progress.
 - Web domain editors own label-to-control spacing in their shared field wrapper; route forms reuse that wrapper and the spacing tokens instead of compensating field by field.
 - Quick Capture restores local text and occurrence state before paint, keeps the loading and editor geometries equal, and loads IndexedDB photo drafts separately so editor initialization cannot move the open dialog.

@@ -1,4 +1,9 @@
 "use client";
+import { Dialog } from "@/components/dialog";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
+import { EmptyState } from "@/components/empty-state";
+import { FocusedViewLayout } from "@/components/focused-view-layout";
+import { Button } from "@/components/button";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -9,11 +14,10 @@ import {
   trashHomeEntry,
   type HomeActionResult,
 } from "@/app/homes/actions";
-import styles from "@/app/homes/page.module.css";
+import styles from "@/components/record-workspace.module.css";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
-import { PageFrame } from "@/components/page-frame";
 import { ProgressiveImage } from "@/components/progressive-image";
 import {
   RecordCard,
@@ -85,35 +89,37 @@ export function HomesWorkspace({
   const earlierHomes = homes.filter((home) => home.occurredEnd);
 
   return (
-    <PageFrame variant="wide">
-      <header className={styles.pageHeader}>
-        <div>
-          <p className={styles.eyebrow}>The places that held your life</p>
-          <h1>Homes</h1>
-          <p>
-            Keep each residence as a Home Entity, with the dates, place facts,
-            and memories that made it yours.
-          </p>
-        </div>
-        <button
+    <FocusedViewLayout
+      actions={
+        <Button
+          variant="primary"
           aria-label="Add Home"
-          className={styles.addButton}
           onClick={() => setSelectedHome(null)}
           type="button"
         >
           <Icon name="plus" />
           <span>Add Home</span>
-        </button>
-      </header>
-
-      <div className={styles.summary} aria-label="Homes summary">
-        <span>{countLabel(homes.length, "home")}</span>
-        <span aria-hidden="true">·</span>
-        <span>{countLabel(currentHomes.length, "current residence")}</span>
-        <span aria-hidden="true">·</span>
-        <span>{countLabel(earlierHomes.length, "earlier home")}</span>
-      </div>
-
+        </Button>
+      }
+      description={
+        <>
+          Keep each residence as a Home Entity, with the dates, location, and
+          memories that made it yours.
+        </>
+      }
+      eyebrow={<>The places that held your life</>}
+      summary={
+        <>
+          <span>{countLabel(homes.length, "home")}</span>
+          <span aria-hidden="true">·</span>
+          <span>{countLabel(currentHomes.length, "current residence")}</span>
+          <span aria-hidden="true">·</span>
+          <span>{countLabel(earlierHomes.length, "earlier home")}</span>
+        </>
+      }
+      summaryLabel="Homes summary"
+      title={<>Homes</>}
+    >
       {loadError ? (
         <div className={styles.message} role="alert">
           <Icon name="home" size={22} />
@@ -125,20 +131,21 @@ export function HomesWorkspace({
       ) : null}
 
       {!loadError && homes.length === 0 ? (
-        <button
-          className={styles.emptyState}
+        <EmptyState
+          title={<>Begin with somewhere you called home</>}
+          icon={
+            <>
+              <Icon name="home" size={24} />
+            </>
+          }
+          description={
+            <>
+              Add the best-known move-in date now. Exact addresses, reasons,
+              photos, and memories can come later.
+            </>
+          }
           onClick={() => setSelectedHome(null)}
-          type="button"
-        >
-          <span className={styles.emptyMark}>
-            <Icon name="home" size={24} />
-          </span>
-          <strong>Begin with somewhere you called home</strong>
-          <span>
-            Add the best-known move-in date now. Exact addresses, reasons,
-            photos, and memories can come later.
-          </span>
-        </button>
+        />
       ) : null}
 
       {!loadError && currentHomes.length > 0 ? (
@@ -178,7 +185,7 @@ export function HomesWorkspace({
           tagOptions={tagOptions}
         />
       ) : null}
-    </PageFrame>
+    </FocusedViewLayout>
   );
 }
 
@@ -295,6 +302,7 @@ export function HomeEditor({
   tagOptions: string[];
 }) {
   const router = useRouter();
+  const requestConfirmation = useConfirmationDialog();
   const titleRef = useRef<HTMLInputElement>(null);
   const initialTimezone =
     home?.occurredTimezone ?? defaultTimezone ?? localTimezone();
@@ -354,18 +362,7 @@ export function HomeEditor({
     titleRef.current?.focus();
   }, []);
 
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isPending) {
-        onClose();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPending, onClose]);
-
-  function selectPlace(nextId: string) {
+  function selectLocation(nextId: string) {
     if (!nextId) {
       setPlaceId(null);
       setPlaceName("");
@@ -523,13 +520,14 @@ export function HomeEditor({
   }
 
   async function handleRemovePhoto(photo: HomeAttachment) {
-    if (
-      !window.confirm(
-        "Move this photo to Trash? The original will be preserved.",
-      )
-    ) {
-      return;
-    }
+    const confirmed = await requestConfirmation({
+      title: <>Move this photo to Trash?</>,
+      description: <>The original will be preserved for recovery.</>,
+      confirmLabel: "Move photo to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
 
     setIsPending(true);
     setResult(null);
@@ -553,15 +551,17 @@ export function HomeEditor({
   }
 
   async function handleTrashEntry() {
-    if (
-      !currentId ||
-      currentRevision === null ||
-      !window.confirm(
-        `Move “${title.trim() || "this Home"}” to Trash? Its history, Place, and private photos will be preserved.`,
-      )
-    ) {
-      return;
-    }
+    if (!currentId || currentRevision === null) return;
+    const confirmed = await requestConfirmation({
+      title: <>Move “{title.trim() || "this Home"}” to Trash?</>,
+      description: (
+        <>Its history, Location, and private photos will be preserved.</>
+      ),
+      confirmLabel: "Move to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
 
     setIsPending(true);
     setResult(null);
@@ -584,284 +584,258 @@ export function HomeEditor({
   }
 
   return (
-    <div
-      aria-labelledby="home-editor-title"
-      aria-modal="true"
-      className={styles.dialogBackdrop}
-      onMouseDown={(event) => {
-        if (event.currentTarget === event.target && !isPending) onClose();
+    <Dialog
+      open
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
       }}
-      role="dialog"
-    >
-      <div className={styles.dialogPanel}>
-        <header className={styles.dialogHeader}>
+      title={
+        <>
+          {currentId
+            ? title || "Home"
+            : sourceCapture
+              ? "Create a Home from this Capture"
+              : "Keep a Home in your Life Wiki"}
+        </>
+      }
+      titleId="home-editor-title"
+      eyebrow={<>{currentId ? "Edit Home" : "New Home"}</>}
+      closeLabel="Close Home editor"
+      busy={isPending}
+      size="wide"
+      footer={
+        <div className={styles.dialogFooter}>
           <div>
-            <p>{currentId ? "Edit Home" : "New Home"}</p>
-            <h2 id="home-editor-title">
-              {currentId
-                ? title || "Home"
-                : sourceCapture
-                  ? "Create a Home from this Capture"
-                  : "Keep a Home in your Life Wiki"}
-            </h2>
-          </div>
-          <button
-            aria-label="Close Home editor"
-            disabled={isPending}
-            onClick={onClose}
-            type="button"
-          >
-            ×
-          </button>
-        </header>
-
-        <form onSubmit={handleSubmit}>
-          <div className={styles.formGrid}>
-            {sourceCapture ? (
-              <div className={styles.extractionNotice}>
-                <Icon name="inbox" size={18} />
-                <div>
-                  <strong>Starting from an Inbox Capture</strong>
-                  <p>
-                    Saving creates a separate Home and links it to the preserved
-                    source Capture.
-                  </p>
-                </div>
-              </div>
-            ) : null}
-            <fieldset className={styles.formSection}>
-              <legend>Home details</legend>
-              <label className={styles.fullField}>
-                <span>
-                  Home name <span aria-hidden="true">*</span>
-                </span>
-                <input
-                  aria-label="Home name"
-                  maxLength={homeTitleLimit}
-                  onChange={(event) => setTitle(event.target.value)}
-                  placeholder="Philadelphia rowhome"
-                  ref={titleRef}
-                  required
-                  value={title}
-                />
-              </label>
-              <div className={styles.fullField}>
-                <OccurrenceEditor
-                  value={occurrence}
-                  onChange={setOccurrence}
-                  disabled={isPending}
-                  span
-                />
-              </div>
-              <label>
-                <span>Why you moved in</span>
-                <input
-                  maxLength={10_000}
-                  onChange={(event) => setMoveInReason(event.target.value)}
-                  value={moveInReason}
-                />
-              </label>
-              <label>
-                <span>Why you left</span>
-                <input
-                  maxLength={10_000}
-                  onChange={(event) => setMoveOutReason(event.target.value)}
-                  value={moveOutReason}
-                />
-              </label>
-            </fieldset>
-
-            <fieldset className={styles.formSection}>
-              <legend>Place</legend>
-              {placeOptions.length > 0 ? (
-                <label className={styles.fullField}>
-                  <span>Saved Place</span>
-                  <select
-                    onChange={(event) => selectPlace(event.target.value)}
-                    value={placeId ?? ""}
-                  >
-                    <option value="">Create a new Place</option>
-                    {placeOptions.map((place) => (
-                      <option key={place.id} value={place.id}>
-                        {place.name}
-                      </option>
-                    ))}
-                  </select>
-                  <small>
-                    Editing a saved Place updates it anywhere it is reused.
-                  </small>
-                </label>
-              ) : null}
-              <label className={styles.fullField}>
-                <span>
-                  Place name <span aria-hidden="true">*</span>
-                </span>
-                <input
-                  aria-label="Place name"
-                  maxLength={homePlaceNameLimit}
-                  onChange={(event) => setPlaceName(event.target.value)}
-                  placeholder="The house on Pine Street"
-                  required
-                  value={placeName}
-                />
-              </label>
-              <label>
-                <span>City</span>
-                <input
-                  maxLength={200}
-                  onChange={(event) => setCity(event.target.value)}
-                  value={city}
-                />
-              </label>
-              <label>
-                <span>Region</span>
-                <input
-                  maxLength={200}
-                  onChange={(event) => setRegion(event.target.value)}
-                  value={region}
-                />
-              </label>
-              <label>
-                <span>Country</span>
-                <input
-                  maxLength={200}
-                  onChange={(event) => setCountry(event.target.value)}
-                  value={country}
-                />
-              </label>
-              <label>
-                <span>
-                  Exact address <small>Private</small>
-                </span>
-                <input
-                  maxLength={500}
-                  onChange={(event) => setAddress(event.target.value)}
-                  value={address}
-                />
-              </label>
-              <label>
-                <span>Latitude</span>
-                <input
-                  onChange={(event) => setLatitude(event.target.value)}
-                  step="any"
-                  type="number"
-                  value={latitude}
-                />
-              </label>
-              <label>
-                <span>Longitude</span>
-                <input
-                  onChange={(event) => setLongitude(event.target.value)}
-                  step="any"
-                  type="number"
-                  value={longitude}
-                />
-              </label>
-              <label className={styles.fullField}>
-                <span>Place notes</span>
-                <textarea
-                  maxLength={10_000}
-                  onChange={(event) => setPlaceNotes(event.target.value)}
-                  placeholder="Neighborhood, what was nearby, or anything about the place itself."
-                  rows={3}
-                  value={placeNotes}
-                />
-              </label>
-            </fieldset>
-
-            <fieldset className={styles.formSection}>
-              <legend>Memories and organization</legend>
-              <label className={styles.fullField}>
-                <span>Memories</span>
-                <textarea
-                  maxLength={homeBodyLimit}
-                  onChange={(event) => setBody(event.target.value)}
-                  placeholder="What was life like here? What do you want to remember?"
-                  rows={5}
-                  value={body}
-                />
-              </label>
-              <EntryOrganizationEditor
+            {currentId ? (
+              <Button
+                variant="danger"
                 disabled={isPending}
-                input={collectionInput}
-                kind="collection"
-                names={collectionNames}
-                onChange={setCollectionNames}
-                onInputChange={setCollectionInput}
-                options={collectionOptions}
-              />
-              <EntryOrganizationEditor
-                disabled={isPending}
-                input={tagInput}
-                kind="tag"
-                names={tagNames}
-                onChange={setTagNames}
-                onInputChange={setTagInput}
-                options={tagOptions}
-              />
-            </fieldset>
-
-            <EntryPhotoField
-              disabled={isPending}
-              existingPhotos={existingPhotos}
-              limit={firstTimePhotoLimit}
-              onRemoveExisting={(photo) => void handleRemovePhoto(photo)}
-              onRemovePending={(index) =>
-                setPendingPhotos((current) =>
-                  current.filter((_, itemIndex) => itemIndex !== index),
-                )
-              }
-              onSelect={handlePhotoSelection}
-              pendingPhotos={pendingPhotos}
-              progress={photoUploadProgress}
-              recordLabel="Home"
-            />
-          </div>
-
-          {result ? (
-            <p className={styles.formMessage} role="alert">
-              {result.message}
-            </p>
-          ) : null}
-
-          <footer className={styles.dialogFooter}>
-            <div>
-              {currentId ? (
-                <button
-                  className={styles.trashButton}
-                  disabled={isPending}
-                  onClick={() => void handleTrashEntry()}
-                  type="button"
-                >
-                  Move to Trash
-                </button>
-              ) : null}
-            </div>
-            <div>
-              <button
-                className={styles.cancelButton}
-                disabled={isPending}
-                onClick={onClose}
+                onClick={() => void handleTrashEntry()}
                 type="button"
               >
-                Cancel
-              </button>
-              <button
-                className={styles.saveButton}
-                disabled={isPending}
-                type="submit"
-              >
-                {isPending
-                  ? "Saving..."
-                  : currentId
-                    ? "Save changes"
-                    : "Add Home"}
-              </button>
+                Move to Trash
+              </Button>
+            ) : null}
+          </div>
+          <div>
+            <Button
+              variant="secondary"
+              disabled={isPending}
+              onClick={onClose}
+              type="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              form="homes-workspace-form"
+              variant="primary"
+              disabled={isPending}
+              type="submit"
+            >
+              {isPending
+                ? "Saving..."
+                : currentId
+                  ? "Save changes"
+                  : "Add Home"}
+            </Button>
+          </div>
+        </div>
+      }
+    >
+      {" "}
+      <form id="homes-workspace-form" onSubmit={handleSubmit}>
+        <div className={styles.formGrid}>
+          {sourceCapture ? (
+            <div className={styles.extractionNotice}>
+              <Icon name="inbox" size={18} />
+              <div>
+                <strong>Starting from an Inbox Capture</strong>
+                <p>
+                  Saving creates a separate Home and links it to the preserved
+                  source Capture.
+                </p>
+              </div>
             </div>
-          </footer>
-        </form>
-      </div>
-    </div>
+          ) : null}
+          <fieldset className={styles.formSection}>
+            <legend>Home details</legend>
+            <label className={styles.fullField}>
+              <span>
+                Home name <span aria-hidden="true">*</span>
+              </span>
+              <input
+                aria-label="Home name"
+                maxLength={homeTitleLimit}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="Philadelphia rowhome"
+                ref={titleRef}
+                required
+                value={title}
+              />
+            </label>
+            <div className={styles.fullField}>
+              <OccurrenceEditor
+                value={occurrence}
+                onChange={setOccurrence}
+                disabled={isPending}
+                span
+              />
+            </div>
+            <label>
+              <span>Why you moved in</span>
+              <input
+                maxLength={10_000}
+                onChange={(event) => setMoveInReason(event.target.value)}
+                value={moveInReason}
+              />
+            </label>
+            <label>
+              <span>Why you left</span>
+              <input
+                maxLength={10_000}
+                onChange={(event) => setMoveOutReason(event.target.value)}
+                value={moveOutReason}
+              />
+            </label>
+          </fieldset>
+
+          <fieldset className={styles.formSection}>
+            <legend>Location</legend>
+            {placeOptions.length > 0 ? (
+              <label className={styles.fullField}>
+                <span>Saved Location</span>
+                <select
+                  onChange={(event) => selectLocation(event.target.value)}
+                  value={placeId ?? ""}
+                >
+                  <option value="">Add a new Location</option>
+                  {placeOptions.map((place) => (
+                    <option key={place.id} value={place.id}>
+                      {place.name}
+                    </option>
+                  ))}
+                </select>
+                <small>
+                  Locations are reusable geographic data and do not create a
+                  Place in Focused Views.
+                </small>
+              </label>
+            ) : null}
+            <label className={styles.fullField}>
+              <span>
+                Location name <span aria-hidden="true">*</span>
+              </span>
+              <input
+                aria-label="Location name"
+                maxLength={homePlaceNameLimit}
+                onChange={(event) => setPlaceName(event.target.value)}
+                placeholder="The house on Pine Street"
+                required
+                value={placeName}
+              />
+            </label>
+            <label>
+              <span>City</span>
+              <input
+                maxLength={200}
+                onChange={(event) => setCity(event.target.value)}
+                value={city}
+              />
+            </label>
+            <label>
+              <span>Region</span>
+              <input
+                maxLength={200}
+                onChange={(event) => setRegion(event.target.value)}
+                value={region}
+              />
+            </label>
+            <label>
+              <span>Country</span>
+              <input
+                maxLength={200}
+                onChange={(event) => setCountry(event.target.value)}
+                value={country}
+              />
+            </label>
+            <label>
+              <span>
+                Exact address <small>Private</small>
+              </span>
+              <input
+                maxLength={500}
+                onChange={(event) => setAddress(event.target.value)}
+                value={address}
+              />
+            </label>
+            <label className={styles.fullField}>
+              <span>Location notes</span>
+              <textarea
+                maxLength={10_000}
+                onChange={(event) => setPlaceNotes(event.target.value)}
+                placeholder="Neighborhood, what was nearby, or anything about the place itself."
+                rows={3}
+                value={placeNotes}
+              />
+            </label>
+          </fieldset>
+
+          <fieldset className={styles.formSection}>
+            <legend>Memories and organization</legend>
+            <label className={styles.fullField}>
+              <span>Memories</span>
+              <textarea
+                maxLength={homeBodyLimit}
+                onChange={(event) => setBody(event.target.value)}
+                placeholder="What was life like here? What do you want to remember?"
+                rows={5}
+                value={body}
+              />
+            </label>
+            <EntryOrganizationEditor
+              disabled={isPending}
+              input={collectionInput}
+              kind="collection"
+              names={collectionNames}
+              onChange={setCollectionNames}
+              onInputChange={setCollectionInput}
+              options={collectionOptions}
+            />
+            <EntryOrganizationEditor
+              disabled={isPending}
+              input={tagInput}
+              kind="tag"
+              names={tagNames}
+              onChange={setTagNames}
+              onInputChange={setTagInput}
+              options={tagOptions}
+            />
+          </fieldset>
+
+          <EntryPhotoField
+            disabled={isPending}
+            existingPhotos={existingPhotos}
+            limit={firstTimePhotoLimit}
+            onRemoveExisting={(photo) => void handleRemovePhoto(photo)}
+            onRemovePending={(index) =>
+              setPendingPhotos((current) =>
+                current.filter((_, itemIndex) => itemIndex !== index),
+              )
+            }
+            onSelect={handlePhotoSelection}
+            pendingPhotos={pendingPhotos}
+            progress={photoUploadProgress}
+            recordLabel="Home"
+          />
+        </div>
+
+        {result ? (
+          <p className={styles.formMessage} role="alert">
+            {result.message}
+          </p>
+        ) : null}
+      </form>
+    </Dialog>
   );
 }
 

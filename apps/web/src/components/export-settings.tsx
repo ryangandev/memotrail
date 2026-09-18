@@ -1,4 +1,6 @@
 "use client";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/button";
 import { useEffect, useRef, useState } from "react";
 import { PageFrame } from "@/components/page-frame";
 import {
@@ -8,7 +10,7 @@ import {
   type ExportAction,
   type ExportSnapshot,
 } from "@/lib/export/contracts";
-import styles from "@/app/settings/export/page.module.css";
+import styles from "@/components/export-settings.module.css";
 
 type FileSink = {
   write(data: Uint8Array): Promise<void>;
@@ -203,11 +205,11 @@ export function ExportSettings({
   }
   return (
     <PageFrame className={styles.content} variant="compact">
-      <header>
-        <p className={styles.eyebrow}>YOUR ARCHIVE, TO KEEP</p>
-        <h1>Export archive</h1>
-        <p>A portable copy of your story. No AI processing.</p>
-      </header>
+      <PageHeader
+        title={<>Export archive</>}
+        eyebrow={<>YOUR ARCHIVE, TO KEEP</>}
+        description={<>A portable copy of your story. No AI processing.</>}
+      />
       <section className={styles.card}>
         <h2>Everything, in one ZIP</h2>
         <p>
@@ -232,15 +234,22 @@ export function ExportSettings({
           changed or missing files stop the export.
         </p>
         <div className={styles.actions}>
-          <button
+          <Button
+            variant="primary"
+            type="submit"
             disabled={busy || snapshots.length >= 2}
             onClick={() => void change("create")}
           >
             Prepare snapshot
-          </button>
-          <button disabled={busy} onClick={() => void change("list")}>
+          </Button>
+          <Button
+            variant="secondary"
+            type="submit"
+            disabled={busy}
+            onClick={() => void change("list")}
+          >
             Refresh
-          </button>
+          </Button>
         </div>
       </section>
       {message && (
@@ -251,9 +260,13 @@ export function ExportSettings({
       {bytes !== null && (
         <div className={styles.notice} role="status">
           <p>Downloading · {(bytes / 1_048_576).toFixed(1)} MB received</p>
-          <button onClick={() => active.current?.abort()}>
+          <Button
+            variant="secondary"
+            type="submit"
+            onClick={() => active.current?.abort()}
+          >
             Cancel download
-          </button>
+          </Button>
         </div>
       )}
       <section aria-label="Available snapshots" className={styles.snapshots}>
@@ -271,12 +284,22 @@ export function ExportSettings({
               </p>
               <p>Expires {new Date(snapshot.expires_at).toLocaleString()}</p>
               <div className={styles.actions}>
-                <button disabled={busy} onClick={() => void download(snapshot)}>
+                <Button
+                  variant="secondary"
+                  type="submit"
+                  disabled={busy}
+                  onClick={() => void download(snapshot)}
+                >
                   Download ZIP
-                </button>
-                <button disabled={busy} onClick={() => setDiscard(snapshot)}>
+                </Button>
+                <Button
+                  variant="danger"
+                  type="submit"
+                  disabled={busy}
+                  onClick={() => setDiscard(snapshot)}
+                >
                   Discard snapshot
-                </button>
+                </Button>
               </div>
               {discard?.id === snapshot.id && (
                 <div className={styles.notice}>
@@ -285,15 +308,22 @@ export function ExportSettings({
                     downloaded ZIPs will stay unchanged.
                   </p>
                   <div className={styles.actions}>
-                    <button
+                    <Button
+                      variant="danger"
+                      type="submit"
                       disabled={busy}
                       onClick={() => void change("discard", snapshot.id)}
                     >
                       Confirm discard
-                    </button>
-                    <button disabled={busy} onClick={() => setDiscard(null)}>
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      type="submit"
+                      disabled={busy}
+                      onClick={() => setDiscard(null)}
+                    >
                       Keep snapshot
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}

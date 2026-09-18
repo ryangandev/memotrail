@@ -1,0 +1,354 @@
+.captureCard {
+  --capture-inline-padding: var(--mt-space-6);
+
+  margin-top: var(--mt-space-10);
+  overflow: hidden;
+  border: 1px solid var(--mt-color-border-strong);
+  border-radius: var(--mt-radius-large);
+  background: var(--mt-color-surface-raised);
+  box-shadow: var(--mt-shadow-raised);
+}
+
+.dialogCaptureCard {
+  --capture-inline-padding: var(--mt-space-5);
+
+  margin-top: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.dialogCaptureCard .captureIntro {
+  min-height: 0;
+}
+
+.captureComposerHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--mt-space-3);
+  padding: var(--mt-space-5) var(--capture-inline-padding) 0;
+}
+
+.captureComposerHeader h2 {
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-title-small);
+  font-weight: var(--mt-font-weight-medium);
+  letter-spacing: -0.015em;
+  line-height: var(--mt-line-height-tight);
+}
+
+.captureIntro {
+  min-height: 0;
+  padding: var(--mt-space-4) var(--capture-inline-padding) var(--mt-space-5);
+}
+
+.captureSpark {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--mt-color-accent);
+  background: var(--mt-color-accent-subtle);
+}
+
+.captureFields {
+  display: grid;
+  flex: 1;
+  gap: var(--mt-space-2);
+  min-width: 0;
+}
+
+.captureEditorLoading {
+  min-height: calc(
+    3 * var(--mt-line-height-body) * var(--mt-font-size-body) + 38px
+  );
+  border-radius: var(--mt-radius-small);
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    var(--mt-color-surface-subtle) 45%,
+    transparent 70%
+  );
+  background-size: 220% 100%;
+  animation: capture-editor-loading 1.2s ease-in-out infinite;
+}
+
+.capturePhotoStrip {
+  display: flex;
+  gap: var(--mt-space-3);
+  padding: var(--mt-space-4) var(--capture-inline-padding);
+  overflow-x: auto;
+  border-top: 1px solid var(--mt-color-border);
+  background: var(--mt-color-surface-subtle);
+}
+
+.capturePhoto {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 1px solid var(--mt-color-border-strong);
+  border-radius: var(--mt-radius-medium);
+  background: var(--mt-color-surface);
+}
+
+.capturePhoto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.capturePhoto
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, white 40%, transparent);
+  border-radius: 50%;
+  color: white;
+  background: color-mix(in srgb, black 64%, transparent);
+  font-size: var(--mt-font-size-body-large);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.capturePhoto
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover {
+  background: color-mix(in srgb, black 78%, transparent);
+}
+
+.captureVoiceStatus {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: var(--mt-space-2);
+  margin: 0;
+  padding: var(--mt-space-2) var(--capture-inline-padding);
+  border-top: 1px solid var(--mt-color-border);
+  color: var(--mt-color-accent);
+  background: var(--mt-color-accent-subtle);
+  font-size: var(--mt-font-size-caption);
+}
+
+.captureVoiceError {
+  color: var(--mt-color-warm);
+  background: var(--mt-color-warm-subtle);
+}
+
+.captureActions {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mt-space-4);
+  padding: var(--mt-space-2) var(--capture-inline-padding);
+  border-top: 1px solid var(--mt-color-border);
+  background: var(--mt-color-surface);
+}
+
+.captureActions > div {
+  display: flex;
+  gap: var(--mt-space-1);
+}
+
+.captureActions .captureSubmitGroup {
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--mt-space-3);
+}
+
+.captureStatus,
+.captureError {
+  max-width: 250px;
+  font-size: var(--mt-font-size-caption);
+  text-align: right;
+}
+
+.captureStatus {
+  color: var(--mt-color-success);
+}
+
+.captureError {
+  color: var(--mt-color-warm);
+}
+
+.quietButton {
+  display: flex;
+  height: 36px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 var(--mt-space-3);
+  border-radius: var(--mt-radius-small);
+  color: var(--mt-color-ink-muted);
+  background: transparent;
+  font-size: var(--mt-font-size-label);
+  cursor: pointer;
+}
+
+.quietButton:hover {
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-subtle);
+}
+
+.activeQuietButton {
+  color: var(--mt-color-accent);
+  background: var(--mt-color-accent-subtle);
+}
+
+.listeningQuietButton,
+.listeningQuietButton:hover {
+  color: var(--mt-color-warm);
+  background: var(--mt-color-warm-subtle);
+}
+
+.quietButton:disabled {
+  color: var(--mt-color-ink-faint);
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.pendingSection {
+  margin-top: var(--mt-space-8);
+}
+
+.pendingPhotoCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--mt-space-3);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+}
+
+.pendingEntryCard {
+  padding: var(--mt-space-5) var(--mt-space-6);
+  border-bottom: 1px solid var(--mt-color-border);
+  background: color-mix(
+    in srgb,
+    var(--mt-color-accent-subtle) 24%,
+    var(--mt-color-surface)
+  );
+}
+
+.pendingEntryCard:last-child {
+  border-bottom: 0;
+}
+
+.pendingEntryCard h3 {
+  margin-top: var(--mt-space-2);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-body-large);
+  font-weight: var(--mt-font-weight-medium);
+  line-height: 1.35;
+}
+
+.pendingEntryCard > p {
+  display: -webkit-box;
+  max-width: 680px;
+  margin-top: 6px;
+  overflow: hidden;
+  color: var(--mt-color-ink-muted);
+  font-size: 14px;
+  line-height: var(--mt-line-height-body);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.pendingBadge {
+  padding: 3px var(--mt-space-2);
+  border-radius: var(--mt-radius-pill);
+  color: var(--mt-color-accent);
+  background: var(--mt-color-accent-subtle);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+@media (max-width: 720px) {
+  .captureCard {
+    --capture-inline-padding: var(--mt-space-5);
+
+    margin-top: var(--mt-space-6);
+  }
+
+  .dialogCaptureCard {
+    --capture-inline-padding: var(--mt-space-4);
+  }
+
+  .captureIntro {
+    min-height: 0;
+  }
+
+  .capturePhoto {
+    width: 76px;
+    height: 76px;
+  }
+
+  .quietButton {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+    font-size: 0;
+  }
+
+  .captureStatus,
+  .captureError {
+    display: none;
+  }
+
+  .pendingSection {
+    margin-top: var(--mt-space-6);
+  }
+
+  .pendingEntryCard {
+    padding: var(--mt-space-4);
+  }
+}
+
+@media (max-width: 390px) {
+  .captureCard {
+    --capture-inline-padding: var(--mt-space-4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .captureEditorLoading {
+    animation: none;
+  }
+}
+.captureOccurrencePanel {
+  padding: var(--mt-space-4) var(--capture-inline-padding);
+  border-top: 1px solid var(--mt-color-border);
+}
+
+@keyframes capture-editor-loading {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}

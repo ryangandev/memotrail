@@ -93,6 +93,8 @@ test("People saves, links, protects, edits, trashes, and restores on desktop and
     const card = page.getByRole("button", { name: /Alex Friend/ });
     await expect(card).toContainText("1 connected Items");
     await page.screenshot({
+      caret: "initial",
+      animations: "disabled",
       path: "/private/tmp/memotrail-people-desktop.png",
       fullPage: true,
     });
@@ -113,6 +115,8 @@ test("People saves, links, protects, edits, trashes, and restores on desktop and
     await page.emulateMedia({ colorScheme: "dark" });
     await expect(card).toContainText("0 connected Items");
     await page.screenshot({
+      caret: "initial",
+      animations: "disabled",
       path: "/private/tmp/memotrail-people-mobile.png",
       fullPage: true,
     });
@@ -122,8 +126,11 @@ test("People saves, links, protects, edits, trashes, and restores on desktop and
       ),
     ).toBe(true);
     await card.click();
-    page.once("dialog", (d) => d.accept());
     await dialog.getByRole("button", { name: "Move to Trash" }).click();
+    await page
+      .getByRole("dialog", { name: "Move “Alex” to Trash?", exact: true })
+      .getByRole("button", { name: "Move to Trash", exact: true })
+      .click();
     await expect(dialog).not.toBeVisible();
     await expect(card).not.toBeVisible();
     await page.goto("/trash");

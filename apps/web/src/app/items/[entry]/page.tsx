@@ -1,9 +1,10 @@
-import Link from "next/link";
+import { ButtonLink } from "@/components/button";
+import { PageHeader } from "@/components/page-header";
 import { EntryHistoryView } from "@/components/entry-history-view";
 import { PageFrame } from "@/components/page-frame";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { validHistoryID, type EntryHistory } from "@/lib/data/history";
-import styles from "@/app/history/page.module.css";
+import styles from "@/components/entry-history-view.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -53,10 +54,12 @@ export default async function WikiItemPage({
 function UnavailableItem() {
   return (
     <section className={styles.detailUnavailable}>
-      <p className={styles.eyebrow}>Life Wiki</p>
-      <h1>Item unavailable</h1>
-      <p>It may have moved to Trash or no longer be accessible.</p>
-      <Link href="/library">Back to Library</Link>
+      <PageHeader
+        eyebrow="Life Wiki"
+        title="Item unavailable"
+        description="It may have moved to Trash or no longer be accessible."
+      />
+      <ButtonLink href="/library">Back to Library</ButtonLink>
     </section>
   );
 }

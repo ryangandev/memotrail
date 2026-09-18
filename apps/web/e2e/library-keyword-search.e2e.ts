@@ -4,7 +4,7 @@ import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 
-test("Canonical keyword search finds People and Places without deferred Habits", async ({
+test("Canonical keyword search finds People without standalone Places", async ({
   page,
   context,
 }) => {
@@ -80,7 +80,7 @@ test("Canonical keyword search finds People and Places without deferred Habits",
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Learning 学习 library", exact: true }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await page.screenshot({
       path: "/private/tmp/memotrail-library-keyword-desktop.png",
       fullPage: true,
@@ -129,14 +129,6 @@ test("Canonical keyword search finds People and Places without deferred Habits",
       page.getByRole("link", { name: "Learning 学习 library", exact: true }),
     ).toHaveCount(0);
     await page.goto("/search?q=" + encodeURIComponent("学习"));
-    await page
-      .getByRole("link", { name: "Learning 学习 library", exact: true })
-      .click();
-    await expect(page).toHaveURL(new RegExp(`/places\\?place=${place}$`));
-    await expect(
-      page.getByRole("button", { name: /Learning 学习 library/ }),
-    ).toBeVisible();
-    await page.goto("/search?q=" + encodeURIComponent("学习"));
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
@@ -168,16 +160,16 @@ test("Canonical keyword search finds People and Places without deferred Habits",
       p_offset: 0,
     });
     expect(response.error).toBeNull();
-    expect(response.data).toHaveLength(2);
-    expect(response.data[0].total_count).toBe(2);
+    expect(response.data).toHaveLength(1);
+    expect(response.data[0].total_count).toBe(1);
     expect(
       response.data
         .map((item: { record_source: string }) => item.record_source)
         .sort(),
-    ).toEqual(["person", "place"]);
+    ).toEqual(["person"]);
     expect(
       response.data.map((item: { item_kind: string }) => item.item_kind),
-    ).toEqual(["entity", "entity"]);
+    ).toEqual(["entity"]);
     const personScope = await native.rpc("search_wiki_items", {
       p_collection_names: [],
       p_date_from: null,

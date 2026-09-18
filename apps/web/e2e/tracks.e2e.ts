@@ -148,6 +148,7 @@ test("Timeline tracks create, rename, reorder, hide and reveal moments with revi
     });
     await expect(renamed).toBeVisible();
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-tracks-desktop.png",
       fullPage: true,
     });
@@ -188,6 +189,7 @@ test("Timeline tracks create, rename, reorder, hide and reveal moments with revi
     await expect(form.getByRole("status")).toContainText("already exists");
     await page.getByRole("button", { name: "Cancel new track" }).click();
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-tracks-mobile.png",
       fullPage: true,
     });

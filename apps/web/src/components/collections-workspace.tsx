@@ -1,5 +1,8 @@
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
+import { ButtonLink } from "@/components/button";
 import Link from "next/link";
-import styles from "@/app/collections/page.module.css";
+import styles from "@/components/collections-workspace.module.css";
 import { Icon } from "@/components/icon";
 import { EntryRichTextContent } from "@/components/entry-rich-text-content";
 import { OrganizationControl } from "@/components/organization-control";
@@ -25,30 +28,34 @@ export function CollectionsWorkspace({
 
   return (
     <PageFrame variant="wide">
-      <header className={styles.pageHeader}>
-        <div>
-          <p className={styles.eyebrow}>
-            {selectedCollection ? "Collection archive" : "Browse by meaning"}
-          </p>
-          <h1>{selectedCollection?.name ?? "Collections"}</h1>
-          <p>
+      <PageHeader
+        title={<>{selectedCollection?.name ?? "Collections"}</>}
+        eyebrow={
+          <>{selectedCollection ? "Collection archive" : "Browse by meaning"}</>
+        }
+        description={
+          <>
             {selectedCollection
               ? "Entries can belong to more than one Collection without being copied or separated."
               : "Open a theme to revisit the Entries, moments, and firsts you filed together."}
-          </p>
-        </div>
-        {selectedCollection ? (
-          <Link className={styles.newEntryButton} href="/inbox#capture-title">
-            <Icon name="plus" />
-            <span>New entry</span>
-          </Link>
-        ) : (
-          <OrganizationControl
-            items={workspace.organizationItems}
-            kind="collection"
-          />
-        )}
-      </header>
+          </>
+        }
+        actions={
+          <>
+            {selectedCollection ? (
+              <ButtonLink href="/inbox#capture-title">
+                <Icon name="plus" />
+                <span>New entry</span>
+              </ButtonLink>
+            ) : (
+              <OrganizationControl
+                items={workspace.organizationItems}
+                kind="collection"
+              />
+            )}
+          </>
+        }
+      />
 
       {selectedCollection ? (
         <CollectionDetail workspace={workspace} />
@@ -75,17 +82,25 @@ function CollectionOverview({
 
   if (workspace.collections.length === 0) {
     return (
-      <div className={styles.emptyState}>
-        <span className={styles.emptyMark}>
-          <Icon name="archive" size={23} />
-        </span>
-        <strong>No Collections yet</strong>
-        <p>
-          Add a Collection while organizing an Inbox Entry or saving a First
-          Time. It will appear here automatically.
-        </p>
-        <Link href="/inbox">Open Inbox</Link>
-      </div>
+      <EmptyState
+        title={<>No Collections yet</>}
+        icon={
+          <>
+            <Icon name="archive" size={23} />
+          </>
+        }
+        description={
+          <>
+            Add a Collection while organizing an Inbox Entry or saving a First
+            Time. It will appear here automatically.
+          </>
+        }
+        actions={
+          <>
+            <Link href="/inbox">Open Inbox</Link>
+          </>
+        }
+      />
     );
   }
 
@@ -218,17 +233,25 @@ function CollectionDetail({
           title="Collection unavailable"
         />
       ) : workspace.entries.length === 0 ? (
-        <div className={styles.emptyState}>
-          <span className={styles.emptyMark}>
-            <Icon name="archive" size={23} />
-          </span>
-          <strong>This Collection is empty</strong>
-          <p>
-            Assign “{collection.name}” while organizing an Entry and it will
-            appear here.
-          </p>
-          <Link href="/inbox">Open Inbox</Link>
-        </div>
+        <EmptyState
+          title={<>This Collection is empty</>}
+          icon={
+            <>
+              <Icon name="archive" size={23} />
+            </>
+          }
+          description={
+            <>
+              Assign “{collection.name}” while organizing an Entry and it will
+              appear here.
+            </>
+          }
+          actions={
+            <>
+              <Link href="/inbox">Open Inbox</Link>
+            </>
+          }
+        />
       ) : (
         <section
           className={styles.entryList}

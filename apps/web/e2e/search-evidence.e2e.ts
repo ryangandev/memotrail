@@ -116,6 +116,7 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
     await expect(page).toHaveURL(/\/$/);
     expect(quickSearchRequests).toBe(1);
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-quick-search.png",
     });
     await commandPalette

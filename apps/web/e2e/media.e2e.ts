@@ -175,6 +175,7 @@ test("Private photo previews preserve originals across Web, native bearer access
       .poll(() => cover.evaluate((img: HTMLImageElement) => img.naturalHeight))
       .toBe(1600);
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-media-desktop.png",
       fullPage: true,
     });
@@ -299,6 +300,7 @@ test("Private photo previews preserve originals across Web, native bearer access
       page.locator('img[src*="/api/media/image"]').first(),
     ).toBeVisible();
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-media-mobile.png",
       fullPage: true,
     });

@@ -1,4 +1,9 @@
 "use client";
+import { Dialog } from "@/components/dialog";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
+import { EmptyState } from "@/components/empty-state";
+import { FocusedViewLayout } from "@/components/focused-view-layout";
+import { Button } from "@/components/button";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -9,11 +14,10 @@ import {
   trashVehicleEntry,
   type VehicleActionResult,
 } from "@/app/vehicles/actions";
-import styles from "@/app/homes/page.module.css";
+import styles from "@/components/record-workspace.module.css";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
-import { PageFrame } from "@/components/page-frame";
 import { ProgressiveImage } from "@/components/progressive-image";
 import {
   RecordCard,
@@ -89,35 +93,37 @@ export function VehiclesWorkspace({
   const orderedVehicles = [...currentVehicles, ...earlierVehicles];
 
   return (
-    <PageFrame variant="wide">
-      <header className={styles.pageHeader}>
-        <div>
-          <p className={styles.eyebrow}>The machines that carried your story</p>
-          <h1>Vehicles</h1>
-          <p>
-            Keep each car, bike, or other vehicle as an Entity, with the dates,
-            facts, and memories that made it yours.
-          </p>
-        </div>
-        <button
+    <FocusedViewLayout
+      actions={
+        <Button
+          variant="primary"
           aria-label="Add Vehicle"
-          className={styles.addButton}
           onClick={() => setSelectedVehicle(null)}
           type="button"
         >
           <Icon name="plus" />
           <span>Add Vehicle</span>
-        </button>
-      </header>
-
-      <div className={styles.summary} aria-label="Vehicles summary">
-        <span>{countLabel(vehicles.length, "vehicle")}</span>
-        <span aria-hidden="true">·</span>
-        <span>{countLabel(currentVehicles.length, "current vehicle")}</span>
-        <span aria-hidden="true">·</span>
-        <span>{countLabel(earlierVehicles.length, "earlier vehicle")}</span>
-      </div>
-
+        </Button>
+      }
+      description={
+        <>
+          Keep each car, bike, or other vehicle as an Entity, with the dates,
+          facts, and memories that made it yours.
+        </>
+      }
+      eyebrow={<>The machines that carried your story</>}
+      summary={
+        <>
+          <span>{countLabel(vehicles.length, "vehicle")}</span>
+          <span aria-hidden="true">·</span>
+          <span>{countLabel(currentVehicles.length, "current vehicle")}</span>
+          <span aria-hidden="true">·</span>
+          <span>{countLabel(earlierVehicles.length, "earlier vehicle")}</span>
+        </>
+      }
+      summaryLabel="Vehicles summary"
+      title={<>Vehicles</>}
+    >
       {loadError ? (
         <div className={styles.message} role="alert">
           <Icon name="car" size={22} />
@@ -129,20 +135,21 @@ export function VehiclesWorkspace({
       ) : null}
 
       {!loadError && vehicles.length === 0 ? (
-        <button
-          className={styles.emptyState}
+        <EmptyState
+          title={<>Begin with a vehicle that carried you</>}
+          icon={
+            <>
+              <Icon name="car" size={24} />
+            </>
+          }
+          description={
+            <>
+              Add its name and best-known start date now. Specs, photos, and
+              memories can come later.
+            </>
+          }
           onClick={() => setSelectedVehicle(null)}
-          type="button"
-        >
-          <span className={styles.emptyMark}>
-            <Icon name="car" size={24} />
-          </span>
-          <strong>Begin with a vehicle that carried you</strong>
-          <span>
-            Add its name and best-known start date now. Specs, photos, and
-            memories can come later.
-          </span>
-        </button>
+        />
       ) : null}
 
       {!loadError && orderedVehicles.length > 0 ? (
@@ -172,7 +179,7 @@ export function VehiclesWorkspace({
           vehicle={selectedVehicle}
         />
       ) : null}
-    </PageFrame>
+    </FocusedViewLayout>
   );
 }
 
@@ -293,6 +300,7 @@ export function VehicleEditor({
   vehicle: VehicleRecord | null;
 }) {
   const router = useRouter();
+  const requestConfirmation = useConfirmationDialog();
   const titleRef = useRef<HTMLInputElement>(null);
   const initialTimezone =
     vehicle?.occurredTimezone ?? defaultTimezone ?? localTimezone();
@@ -350,15 +358,6 @@ export function VehicleEditor({
   useEffect(() => {
     titleRef.current?.focus();
   }, []);
-
-  useEffect(() => {
-    titleRef.current?.focus();
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isPending) onClose();
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPending, onClose]);
 
   function handlePhotoSelection(selected: File[]) {
     const available = Math.max(
@@ -478,13 +477,14 @@ export function VehicleEditor({
   }
 
   async function handleRemovePhoto(photo: VehicleAttachment) {
-    if (
-      !window.confirm(
-        "Move this photo to Trash? The original will be preserved.",
-      )
-    ) {
-      return;
-    }
+    const confirmed = await requestConfirmation({
+      title: <>Move this photo to Trash?</>,
+      description: <>The original will be preserved for recovery.</>,
+      confirmLabel: "Move photo to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setIsPending(true);
     setResult(null);
     try {
@@ -509,15 +509,15 @@ export function VehicleEditor({
   }
 
   async function handleTrashEntry() {
-    if (
-      !currentId ||
-      currentRevision === null ||
-      !window.confirm(
-        `Move “${title.trim() || "this Vehicle"}” to Trash? Its history and private photos will be preserved.`,
-      )
-    ) {
-      return;
-    }
+    if (!currentId || currentRevision === null) return;
+    const confirmed = await requestConfirmation({
+      title: <>Move “{title.trim() || "this Vehicle"}” to Trash?</>,
+      description: <>Its history and private photos will be preserved.</>,
+      confirmLabel: "Move to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setIsPending(true);
     setResult(null);
     try {
@@ -539,213 +539,204 @@ export function VehicleEditor({
   }
 
   return (
-    <div
-      aria-labelledby="vehicle-editor-title"
-      aria-modal="true"
-      className={styles.dialogBackdrop}
-      onMouseDown={(event) => {
-        if (event.currentTarget === event.target && !isPending) onClose();
+    <Dialog
+      open
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
       }}
-      role="dialog"
-    >
-      <div className={styles.dialogPanel}>
-        <header className={styles.dialogHeader}>
+      title={
+        <>
+          {currentId
+            ? title || "Vehicle"
+            : sourceCapture
+              ? "Create a Vehicle from this Capture"
+              : "Keep a Vehicle in your Life Wiki"}
+        </>
+      }
+      titleId="vehicle-editor-title"
+      eyebrow={<>{currentId ? "Edit Vehicle" : "New Vehicle"}</>}
+      closeLabel="Close Vehicle editor"
+      busy={isPending}
+      size="wide"
+      footer={
+        <div className={styles.dialogFooter}>
           <div>
-            <p>{currentId ? "Edit Vehicle" : "New Vehicle"}</p>
-            <h2 id="vehicle-editor-title">
-              {currentId
-                ? title || "Vehicle"
-                : sourceCapture
-                  ? "Create a Vehicle from this Capture"
-                  : "Keep a Vehicle in your Life Wiki"}
-            </h2>
-          </div>
-          <button
-            aria-label="Close Vehicle editor"
-            disabled={isPending}
-            onClick={onClose}
-            type="button"
-          >
-            ×
-          </button>
-        </header>
-
-        <form onSubmit={handleSubmit}>
-          <div className={styles.formGrid}>
-            {sourceCapture ? (
-              <div className={styles.extractionNotice}>
-                <Icon name="inbox" size={18} />
-                <div>
-                  <strong>Starting from an Inbox Capture</strong>
-                  <p>
-                    Saving creates a separate Vehicle and links it to the
-                    preserved source Capture.
-                  </p>
-                </div>
-              </div>
-            ) : null}
-            <fieldset className={styles.formSection}>
-              <legend>Vehicle details</legend>
-              <label className={styles.fullField}>
-                <span>
-                  Name or nickname <span aria-hidden="true">*</span>
-                </span>
-                <input
-                  aria-label="Name or nickname"
-                  maxLength={vehicleTitleLimit}
-                  onChange={(event) => setTitle(event.target.value)}
-                  placeholder="Blue Civic"
-                  ref={titleRef}
-                  required
-                  value={title}
-                />
-              </label>
-              <div className={styles.fullField}>
-                <OccurrenceEditor
-                  value={occurrence}
-                  onChange={setOccurrence}
-                  disabled={isPending}
-                  span
-                />
-              </div>
-            </fieldset>
-
-            <fieldset className={styles.formSection}>
-              <legend>Vehicle facts</legend>
-              <label>
-                <span>Make</span>
-                <input
-                  maxLength={vehicleMakeLimit}
-                  onChange={(event) => setMake(event.target.value)}
-                  placeholder="Honda"
-                  value={make}
-                />
-              </label>
-              <label>
-                <span>Model</span>
-                <input
-                  maxLength={vehicleModelLimit}
-                  onChange={(event) => setModel(event.target.value)}
-                  placeholder="Civic"
-                  value={model}
-                />
-              </label>
-              <label>
-                <span>Model year</span>
-                <input
-                  inputMode="numeric"
-                  max={2200}
-                  min={1886}
-                  onChange={(event) => setModelYear(event.target.value)}
-                  placeholder="2018"
-                  type="number"
-                  value={modelYear}
-                />
-              </label>
-              <label>
-                <span>Color</span>
-                <input
-                  maxLength={vehicleColorLimit}
-                  onChange={(event) => setColor(event.target.value)}
-                  placeholder="Midnight blue"
-                  value={color}
-                />
-              </label>
-            </fieldset>
-
-            <fieldset className={styles.formSection}>
-              <legend>Memories and organization</legend>
-              <label className={styles.fullField}>
-                <span>Memories</span>
-                <textarea
-                  maxLength={vehicleBodyLimit}
-                  onChange={(event) => setBody(event.target.value)}
-                  placeholder="Where did it take you? What do you want to remember?"
-                  rows={5}
-                  value={body}
-                />
-              </label>
-              <EntryOrganizationEditor
+            {currentId ? (
+              <Button
+                variant="danger"
                 disabled={isPending}
-                input={collectionInput}
-                kind="collection"
-                names={collectionNames}
-                onChange={setCollectionNames}
-                onInputChange={setCollectionInput}
-                options={collectionOptions}
-              />
-              <EntryOrganizationEditor
-                disabled={isPending}
-                input={tagInput}
-                kind="tag"
-                names={tagNames}
-                onChange={setTagNames}
-                onInputChange={setTagInput}
-                options={tagOptions}
-              />
-            </fieldset>
-
-            <EntryPhotoField
-              disabled={isPending}
-              existingPhotos={existingPhotos}
-              limit={firstTimePhotoLimit}
-              onRemoveExisting={(photo) => void handleRemovePhoto(photo)}
-              onRemovePending={(index) =>
-                setPendingPhotos((current) =>
-                  current.filter((_, itemIndex) => itemIndex !== index),
-                )
-              }
-              onSelect={handlePhotoSelection}
-              pendingPhotos={pendingPhotos}
-              progress={photoUploadProgress}
-              recordLabel="Vehicle"
-            />
-          </div>
-
-          {result ? (
-            <p className={styles.formMessage} role="alert">
-              {result.message}
-            </p>
-          ) : null}
-
-          <footer className={styles.dialogFooter}>
-            <div>
-              {currentId ? (
-                <button
-                  className={styles.trashButton}
-                  disabled={isPending}
-                  onClick={() => void handleTrashEntry()}
-                  type="button"
-                >
-                  Move to Trash
-                </button>
-              ) : null}
-            </div>
-            <div>
-              <button
-                className={styles.cancelButton}
-                disabled={isPending}
-                onClick={onClose}
+                onClick={() => void handleTrashEntry()}
                 type="button"
               >
-                Cancel
-              </button>
-              <button
-                className={styles.saveButton}
-                disabled={isPending}
-                type="submit"
-              >
-                {isPending
-                  ? "Saving..."
-                  : currentId
-                    ? "Save changes"
-                    : "Add Vehicle"}
-              </button>
+                Move to Trash
+              </Button>
+            ) : null}
+          </div>
+          <div>
+            <Button
+              variant="secondary"
+              disabled={isPending}
+              onClick={onClose}
+              type="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              form="vehicles-workspace-form"
+              variant="primary"
+              disabled={isPending}
+              type="submit"
+            >
+              {isPending
+                ? "Saving..."
+                : currentId
+                  ? "Save changes"
+                  : "Add Vehicle"}
+            </Button>
+          </div>
+        </div>
+      }
+    >
+      {" "}
+      <form id="vehicles-workspace-form" onSubmit={handleSubmit}>
+        <div className={styles.formGrid}>
+          {sourceCapture ? (
+            <div className={styles.extractionNotice}>
+              <Icon name="inbox" size={18} />
+              <div>
+                <strong>Starting from an Inbox Capture</strong>
+                <p>
+                  Saving creates a separate Vehicle and links it to the
+                  preserved source Capture.
+                </p>
+              </div>
             </div>
-          </footer>
-        </form>
-      </div>
-    </div>
+          ) : null}
+          <fieldset className={styles.formSection}>
+            <legend>Vehicle details</legend>
+            <label className={styles.fullField}>
+              <span>
+                Name or nickname <span aria-hidden="true">*</span>
+              </span>
+              <input
+                aria-label="Name or nickname"
+                maxLength={vehicleTitleLimit}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="Blue Civic"
+                ref={titleRef}
+                required
+                value={title}
+              />
+            </label>
+            <div className={styles.fullField}>
+              <OccurrenceEditor
+                value={occurrence}
+                onChange={setOccurrence}
+                disabled={isPending}
+                span
+              />
+            </div>
+          </fieldset>
+
+          <fieldset className={styles.formSection}>
+            <legend>Vehicle facts</legend>
+            <label>
+              <span>Make</span>
+              <input
+                maxLength={vehicleMakeLimit}
+                onChange={(event) => setMake(event.target.value)}
+                placeholder="Honda"
+                value={make}
+              />
+            </label>
+            <label>
+              <span>Model</span>
+              <input
+                maxLength={vehicleModelLimit}
+                onChange={(event) => setModel(event.target.value)}
+                placeholder="Civic"
+                value={model}
+              />
+            </label>
+            <label>
+              <span>Model year</span>
+              <input
+                inputMode="numeric"
+                max={2200}
+                min={1886}
+                onChange={(event) => setModelYear(event.target.value)}
+                placeholder="2018"
+                type="number"
+                value={modelYear}
+              />
+            </label>
+            <label>
+              <span>Color</span>
+              <input
+                maxLength={vehicleColorLimit}
+                onChange={(event) => setColor(event.target.value)}
+                placeholder="Midnight blue"
+                value={color}
+              />
+            </label>
+          </fieldset>
+
+          <fieldset className={styles.formSection}>
+            <legend>Memories and organization</legend>
+            <label className={styles.fullField}>
+              <span>Memories</span>
+              <textarea
+                maxLength={vehicleBodyLimit}
+                onChange={(event) => setBody(event.target.value)}
+                placeholder="Where did it take you? What do you want to remember?"
+                rows={5}
+                value={body}
+              />
+            </label>
+            <EntryOrganizationEditor
+              disabled={isPending}
+              input={collectionInput}
+              kind="collection"
+              names={collectionNames}
+              onChange={setCollectionNames}
+              onInputChange={setCollectionInput}
+              options={collectionOptions}
+            />
+            <EntryOrganizationEditor
+              disabled={isPending}
+              input={tagInput}
+              kind="tag"
+              names={tagNames}
+              onChange={setTagNames}
+              onInputChange={setTagInput}
+              options={tagOptions}
+            />
+          </fieldset>
+
+          <EntryPhotoField
+            disabled={isPending}
+            existingPhotos={existingPhotos}
+            limit={firstTimePhotoLimit}
+            onRemoveExisting={(photo) => void handleRemovePhoto(photo)}
+            onRemovePending={(index) =>
+              setPendingPhotos((current) =>
+                current.filter((_, itemIndex) => itemIndex !== index),
+              )
+            }
+            onSelect={handlePhotoSelection}
+            pendingPhotos={pendingPhotos}
+            progress={photoUploadProgress}
+            recordLabel="Vehicle"
+          />
+        </div>
+
+        {result ? (
+          <p className={styles.formMessage} role="alert">
+            {result.message}
+          </p>
+        ) : null}
+      </form>
+    </Dialog>
   );
 }
 

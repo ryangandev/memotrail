@@ -132,7 +132,7 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
     context.client.rpc("vehicles_workspace", { p_limit: 100, p_offset: 0 }),
     context.client.rpc("first_times_workspace_with_occurrence"),
     context.client
-      .from("places")
+      .from("locations")
       .select("id,name,address,city,region,country,latitude,longitude,notes")
       .eq("owner_id", context.userId)
       .is("deleted_at", null)

@@ -1,26 +1,16 @@
 .workspace {
   display: grid;
-  gap: 20px;
+  gap: var(--mt-space-5);
 }
-.workspace h1 {
-  font-family: var(--mt-font-family-serif);
-  font-size: 36px;
-  margin: 8px 0;
-}
-.workspace h2 {
+.workspace h2:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
   font-family: var(--mt-font-family-serif);
   font-size: 26px;
 }
-.workspace p {
+.workspace p:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
   color: var(--mt-color-ink-muted);
   line-height: 1.6;
 }
-.eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  color: var(--mt-color-warm) !important;
-}
-.workspace a {
+.workspace a:not([data-ui-button]) {
   color: var(--mt-color-accent);
 }
 .backLink {
@@ -32,62 +22,11 @@
 .backLink:hover {
   color: var(--mt-color-accent) !important;
 }
-.detailHeader {
-  display: grid;
-  gap: var(--mt-space-2);
-}
-.detailHeader h1 {
-  margin: 0;
-  overflow-wrap: anywhere;
-  font-size: clamp(34px, 6vw, 52px);
-  line-height: var(--mt-line-height-tight);
-}
-.detailIdentity {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--mt-space-2);
-  color: var(--mt-color-ink-faint);
-  font-size: 10px;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-.detailIdentity span:first-child {
-  padding: 4px 8px;
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-accent);
-  background: var(--mt-color-accent-subtle);
-  font-weight: var(--mt-font-weight-semibold);
-}
 .itemActions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--mt-space-2);
-}
-.itemActions > a,
-.itemActions > button {
-  display: inline-flex;
-  min-height: 40px;
-  align-items: center;
-  justify-content: center;
-  gap: var(--mt-space-2);
-  padding: 0 var(--mt-space-3);
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface-raised);
-  font-size: var(--mt-font-size-caption);
-  text-decoration: none;
-}
-.itemActions > a:hover,
-.itemActions > button:hover {
-  border-color: var(--mt-color-border-strong);
-}
-.itemActions .trashButton {
-  margin-left: auto;
-  color: var(--mt-color-warm);
-  background: var(--mt-color-warm-subtle);
 }
 .currentItem {
   display: grid;
@@ -118,7 +57,7 @@
 .currentFacts > div {
   display: grid;
   min-width: 0;
-  gap: 4px;
+  gap: var(--mt-space-1);
 }
 .currentFacts dt {
   color: var(--mt-color-ink-faint);
@@ -139,35 +78,23 @@
   gap: var(--mt-space-3);
   padding-top: var(--mt-space-12);
 }
-.detailUnavailable h1,
-.detailUnavailable p {
-  margin: 0;
-}
-.workspace button,
-.workspace input,
-.workspace select {
+.workspace input:not(:where([data-ui-field] *)),
+.workspace select:not(:where([data-ui-field] *)) {
   background: var(--mt-color-surface);
   color: var(--mt-color-ink);
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-medium);
-  padding: 12px;
+  padding: var(--mt-space-3);
   font: inherit;
 }
-.workspace button {
-  cursor: pointer;
-}
-.workspace button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-.workspace label {
+.workspace label:not(:where([data-ui-field] *)) {
   display: grid;
-  gap: 8px;
+  gap: var(--mt-space-2);
 }
 .search div {
   display: flex;
   gap: 10px;
-  margin-top: 8px;
+  margin-top: var(--mt-space-2);
 }
 .search input {
   flex: 1;
@@ -175,12 +102,12 @@
 }
 .list {
   display: grid;
-  gap: 12px;
+  gap: var(--mt-space-3);
 }
 .list a {
   display: grid;
-  gap: 8px;
-  padding: 20px;
+  gap: var(--mt-space-2);
+  padding: var(--mt-space-5);
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface);
@@ -188,30 +115,30 @@
   color: var(--mt-color-ink);
 }
 .list span {
-  font-size: 12px;
+  font-size: var(--mt-font-size-caption);
   color: var(--mt-color-ink-muted);
 }
 .list p {
   margin: 0;
   overflow-wrap: anywhere;
-  font-size: 13px;
+  font-size: var(--mt-font-size-label);
 }
 .pagination {
   display: flex;
   justify-content: space-between;
   gap: 14px;
-  font-size: 13px;
+  font-size: var(--mt-font-size-label);
 }
 .empty,
 .notice {
-  padding: 20px;
+  padding: var(--mt-space-5);
   background: var(--mt-color-accent-subtle);
   border-radius: var(--mt-radius-medium);
 }
 .controls {
   display: flex;
   align-items: end;
-  gap: 16px;
+  gap: var(--mt-space-4);
 }
 .controls label {
   flex: 1;
@@ -226,23 +153,23 @@
 .conversion fieldset {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: var(--mt-space-4);
   border: 0;
   padding: 0;
   margin: 0;
   min-width: 0;
 }
 .conversion h3 {
-  margin: 0 0 8px;
+  margin: 0 0 var(--mt-space-2);
 }
 .conversion p {
-  margin: 0 0 20px;
+  margin: 0 0 var(--mt-space-5);
 }
 .conversion label:first-child,
 .conversion .controls {
   grid-column: 1 / -1;
 }
-.conversion input,
+.conversion input:not(:where([data-date-picker-field] *)),
 .conversion select {
   min-width: 0;
   width: 100%;
@@ -250,7 +177,7 @@
 .comparison {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: var(--mt-space-5);
 }
 .comparison section {
   min-width: 0;
@@ -263,12 +190,12 @@
   grid-template-columns: minmax(0, 1fr);
 }
 .comparison h3 {
-  margin: 0 0 20px;
-  font-size: 12px;
+  margin: 0 0 var(--mt-space-5);
+  font-size: var(--mt-font-size-caption);
   color: var(--mt-color-warm);
 }
 .comparison h4 {
-  font-size: 20px;
+  font-size: var(--mt-font-size-title-small);
   overflow-wrap: anywhere;
 }
 .body {
@@ -276,7 +203,7 @@
   overflow-wrap: anywhere;
 }
 .facts {
-  font-size: 12px;
+  font-size: var(--mt-font-size-caption);
   display: grid;
   grid-template-columns: 80px 1fr;
   gap: 10px;
@@ -286,9 +213,9 @@
   overflow-wrap: anywhere;
 }
 .relationships {
-  font-size: 12px;
+  font-size: var(--mt-font-size-caption);
   border-top: 1px solid var(--mt-color-border);
-  padding-top: 12px;
+  padding-top: var(--mt-space-3);
 }
 .relationships strong {
   text-transform: capitalize;
@@ -297,7 +224,7 @@
   overflow-wrap: anywhere;
 }
 .note {
-  font-size: 12px;
+  font-size: var(--mt-font-size-caption);
 }
 .json {
   white-space: pre-wrap;
@@ -305,8 +232,8 @@
   font-size: 11px;
 }
 .comparison details {
-  font-size: 12px;
-  padding: 12px 0;
+  font-size: var(--mt-font-size-caption);
+  padding: var(--mt-space-3) 0;
 }
 @media (max-width: 700px) {
   .conversion fieldset {
@@ -325,10 +252,16 @@
   .search div {
     flex-direction: column;
   }
-  .itemActions .trashButton {
-    margin-left: 0;
-  }
   .currentFacts {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+.itemActions .trashAction {
+  margin-left: auto;
+}
+
+@media (max-width: 700px) {
+  .itemActions .trashAction {
+    margin-left: 0;
   }
 }

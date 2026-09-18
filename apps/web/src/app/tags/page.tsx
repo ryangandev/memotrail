@@ -1,3 +1,6 @@
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/button";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { OrganizationControl } from "@/components/organization-control";
@@ -28,18 +31,22 @@ export default async function TagsPage({
 
   return (
     <PageFrame variant="standard">
-      <header className={styles.pageHeader}>
-        <div>
-          <p className={styles.eyebrow}>Filter across your archive</p>
-          <h1>Tags</h1>
-          <p>
+      <PageHeader
+        title={<>Tags</>}
+        eyebrow={<>Filter across your archive</>}
+        description={
+          <>
             Tags are lightweight descriptors such as travel, family, or funny.
             Use them across Entry types when you want a flexible filter, not a
             curated chapter.
-          </p>
-        </div>
-        <OrganizationControl items={workspace.items} kind="tag" />
-      </header>
+          </>
+        }
+        actions={
+          <>
+            <OrganizationControl items={workspace.items} kind="tag" />
+          </>
+        }
+      />
 
       <form aria-label="Find tags" className={styles.search} role="search">
         <label className={styles.visuallyHidden} htmlFor="tag-search">
@@ -53,10 +60,10 @@ export default async function TagsPage({
             name="q"
             placeholder="Search tag names"
           />
-          <button type="submit">
+          <Button variant="primary" type="submit">
             <Icon name="search" size={17} />
             Search
-          </button>
+          </Button>
         </div>
       </form>
 
@@ -69,17 +76,17 @@ export default async function TagsPage({
           </div>
         </div>
       ) : workspace.items.length === 0 ? (
-        <div className={styles.emptyState}>
-          <span>
-            <Icon name="tag" size={22} />
-          </span>
-          <strong>{query ? "No matching tags" : "No tags yet"}</strong>
-          <p>
-            {query
-              ? "Try a different name or clear your search."
-              : "Add a tag here or while editing any Entry. It will become available everywhere."}
-          </p>
-        </div>
+        <EmptyState
+          title={<>{query ? "No matching tags" : "No tags yet"}</>}
+          description={
+            <>
+              <Icon name="tag" size={22} />
+              {query
+                ? "Try a different name or clear your search."
+                : "Add a tag here or while editing any Entry. It will become available everywhere."}
+            </>
+          }
+        />
       ) : (
         <section className={styles.tagList} aria-label="Tags">
           <div className={styles.summary}>

@@ -118,6 +118,10 @@ test("Ordinary Entries link, navigate backlinks, unlink, and restore relationshi
     await panel
       .getByRole("link", { name: "How teeth move", exact: true })
       .click();
+    await expect(page).toHaveURL(new RegExp(`/items/${target}$`));
+    await expect(
+      page.getByRole("heading", { name: "How teeth move", exact: true }),
+    ).toBeVisible();
     await panel
       .getByRole("button", { name: "Linked from", exact: true })
       .click();
@@ -128,9 +132,13 @@ test("Ordinary Entries link, navigate backlinks, unlink, and restore relationshi
     await panel
       .getByRole("link", { name: "Why I keep learning", exact: true })
       .click();
-    page.once("dialog", (dialog) => dialog.accept());
+    await expect(page).toHaveURL(new RegExp(`/items/${source}$`));
     await panel
       .getByRole("button", { name: "Unlink How teeth move", exact: true })
+      .click();
+    await page
+      .getByRole("dialog", { name: "Unlink “How teeth move”?", exact: true })
+      .getByRole("button", { name: "Unlink Item", exact: true })
       .click();
     await expect(panel.getByText("No matching linked Items.")).toBeVisible();
     const unlinked = (await client.rpc("entry_history", { p_entry_id: source }))
@@ -151,12 +159,14 @@ test("Ordinary Entries link, navigate backlinks, unlink, and restore relationshi
       panel.getByRole("link", { name: "How teeth move", exact: true }),
     ).toBeVisible();
     await panel.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-entry-relations-desktop.png",
     });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await panel.scrollIntoViewIfNeeded();
     await panel.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-entry-relations-mobile-dark.png",
     });
     expect(
@@ -192,9 +202,12 @@ test("Ordinary Entries link, navigate backlinks, unlink, and restore relationshi
           .eq("id", source)
       ).error,
     ).toBeNull();
-    page.once("dialog", (dialog) => dialog.accept());
     await panel
       .getByRole("button", { name: "Unlink How teeth move", exact: true })
+      .click();
+    await page
+      .getByRole("dialog", { name: "Unlink “How teeth move”?", exact: true })
+      .getByRole("button", { name: "Unlink Item", exact: true })
       .click();
     await expect(panel.getByRole("alert")).toContainText("This Item changed");
     expect(

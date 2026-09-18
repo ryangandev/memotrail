@@ -86,16 +86,16 @@ select is(
   'The specialized form controls the Home content'
 );
 select is(
-  (select places.name || ':' || places.city || ':' || homes.move_in_reason
+  (select locations.name || ':' || locations.city || ':' || homes.move_in_reason
    from public.homes
-   join public.places on places.id=homes.place_id and places.owner_id=homes.owner_id
+   join public.locations on locations.id=homes.place_id and locations.owner_id=homes.owner_id
    where homes.entry_id = (
      select target_entry_id from public.entry_links
      where source_entry_id='98400000-0000-4000-8000-000000000001'
        and relationship='derived'
    )),
   'Lake Merritt apartment:Oakland:A new job',
-  'Home and Place-specific facts are saved'
+  'Home and Location-specific facts are saved'
 );
 select is(
   (select count(*) from public.entry_links

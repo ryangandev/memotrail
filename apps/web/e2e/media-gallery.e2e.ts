@@ -175,6 +175,7 @@ test("Current Entry photos are browsable without changing history", async ({
       viewer.getByRole("button", { name: "Previous photo", exact: true }),
     ).toBeDisabled();
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-gallery-desktop-light.png",
     });
     await viewer
@@ -187,6 +188,7 @@ test("Current Entry photos are browsable without changing history", async ({
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-gallery-mobile-dark.png",
     });
     await page.keyboard.press("Escape");

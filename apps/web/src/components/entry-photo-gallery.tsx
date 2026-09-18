@@ -1,4 +1,6 @@
 "use client";
+import { Button } from "@/components/button";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { EntryPhoto } from "@/lib/media/photo-metadata";
@@ -27,6 +29,7 @@ export function EntryPhotoGallery({
   ownerId: string;
   onChanged: () => void;
 }) {
+  const requestConfirmation = useConfirmationDialog();
   const [photos, setPhotos] = useState<EntryPhoto[] | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -128,11 +131,15 @@ export function EntryPhotoGallery({
   }
 
   async function remove(photo: EntryPhoto) {
-    if (
-      busy ||
-      !confirm(`Move ${photo.name} to Trash? The original will be preserved.`)
-    )
-      return;
+    if (busy) return;
+    const shouldRemove = await requestConfirmation({
+      title: <>Move “{photo.name}” to Trash?</>,
+      description: <>The original will be preserved for recovery.</>,
+      confirmLabel: "Move photo to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!shouldRemove) return;
     setBusy(true);
     setError(null);
     setNotice(null);
@@ -160,9 +167,14 @@ export function EntryPhotoGallery({
     <section className={styles.panel} aria-label="Current photos">
       <div className={styles.heading}>
         <h3>Current photos</h3>
-        <button disabled={busy} onClick={() => void load()}>
+        <Button
+          variant="secondary"
+          type="submit"
+          disabled={busy}
+          onClick={() => void load()}
+        >
           {busy ? "Loading photos…" : photos ? "Refresh photos" : "Show photos"}
-        </button>
+        </Button>
       </div>
       <p>
         Photos attached now, not the selected earlier version. Refresh to renew
@@ -212,7 +224,9 @@ export function EntryPhotoGallery({
                 />
               </span>
               <span>{file.name}</span>
-              <button
+              <Button
+                variant="secondary"
+                type="submit"
                 disabled={busy}
                 aria-label={`Discard selected ${file.name}`}
                 onClick={() =>
@@ -220,15 +234,20 @@ export function EntryPhotoGallery({
                 }
               >
                 Discard selection
-              </button>
+              </Button>
             </div>
           ))}
           {uploadProgress ? (
             <PhotoUploadProgress progress={uploadProgress} />
           ) : null}
-          <button disabled={busy} onClick={() => void upload()}>
+          <Button
+            variant="primary"
+            type="submit"
+            disabled={busy}
+            onClick={() => void upload()}
+          >
             {busy ? "Saving photos…" : "Upload photos"}
-          </button>
+          </Button>
         </div>
       )}
       {photos?.length === 0 && (
@@ -246,13 +265,15 @@ export function EntryPhotoGallery({
               <PhotoImage photo={photo} />
               <span>{photo.name}</span>
             </button>
-            <button
+            <Button
+              variant="danger"
+              type="submit"
               disabled={busy || pending.length > 0}
               aria-label={`Move ${photo.name} to Trash`}
               onClick={() => void remove(photo)}
             >
               Move to Trash
-            </button>
+            </Button>
           </div>
         ))}
       </div>
@@ -312,29 +333,35 @@ function PhotoViewer({
     >
       <div className={styles.heading}>
         <h3>{photos[index].name}</h3>
-        <button onClick={onClose}>Close</button>
+        <Button variant="secondary" type="submit" onClick={onClose}>
+          Close
+        </Button>
       </div>
       <div className={styles.fullImage}>
         <PhotoImage key={photos[index].id} photo={photos[index]} />
       </div>
       <div className={styles.navigation}>
-        <button
+        <Button
+          variant="secondary"
+          type="submit"
           aria-label="Previous photo"
           disabled={index === 0}
           onClick={() => setIndex(index - 1)}
         >
           Previous
-        </button>
+        </Button>
         <span aria-live="polite">
           {index + 1} of {photos.length}
         </span>
-        <button
+        <Button
+          variant="secondary"
+          type="submit"
           aria-label="Next photo"
           disabled={index === photos.length - 1}
           onClick={() => setIndex(index + 1)}
         >
           Next
-        </button>
+        </Button>
       </div>
     </dialog>
   );

@@ -73,7 +73,7 @@ test("Collections and Tags are first-class and organize generic Timeline moments
 
     await page.goto("/collections");
     await expect(
-      page.getByRole("heading", { name: "Collections" }),
+      page.getByRole("heading", { name: "Collections", exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole("navigation", { name: "Archive organization" }),
@@ -194,6 +194,7 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       Math.abs(searchControlHeights[0] - searchControlHeights[1]),
     ).toBeLessThan(1);
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-tags-consistent.png",
@@ -223,10 +224,24 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       .getByRole("combobox", { name: "Date type", exact: true })
       .selectOption("day");
     await fillOccurrenceStart(momentDialog, "2025-03-14");
-    await momentDialog.getByLabel("Add a Collection").fill("City chapters");
-    await momentDialog.getByLabel("Add a Collection").press("Enter");
-    await momentDialog.getByLabel("Add a tag").fill("travel");
-    await momentDialog.getByLabel("Add a tag").press("Enter");
+    await momentDialog
+      .getByRole("button", { name: "Add Collection", exact: true })
+      .click();
+    await momentDialog
+      .getByRole("combobox", { name: "Search or create a Collection" })
+      .fill("City chapters");
+    await momentDialog
+      .getByRole("combobox", { name: "Search or create a Collection" })
+      .press("Enter");
+    await momentDialog
+      .getByRole("button", { name: "Add tag", exact: true })
+      .click();
+    await momentDialog
+      .getByRole("combobox", { name: "Search or create a tag" })
+      .fill("travel");
+    await momentDialog
+      .getByRole("combobox", { name: "Search or create a tag" })
+      .press("Enter");
     await momentDialog.getByRole("button", { name: "Add moment" }).click();
     await expect(momentDialog).not.toBeVisible();
 
@@ -280,11 +295,13 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       }),
     ).toBeVisible();
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       path: "/private/tmp/memotrail-tag-editor.png",
     });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       path: "/private/tmp/memotrail-tag-editor-dark.png",
     });
@@ -292,8 +309,14 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await travelDialog
       .getByLabel("Destination tag")
       .selectOption({ label: "#journeys (0)" });
-    page.once("dialog", (dialog) => dialog.accept());
+    await expect(
+      travelDialog.getByRole("button", { name: "Merge tag" }),
+    ).toHaveCSS("height", "40px");
     await travelDialog.getByRole("button", { name: "Merge tag" }).click();
+    await page
+      .getByRole("dialog", { name: /Merge “travel” into “journeys”\?/ })
+      .getByRole("button", { name: "Merge tags", exact: true })
+      .click();
     await expect(travelDialog).not.toBeVisible();
     await expect(
       page.getByRole("button", {
@@ -327,9 +350,12 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       .getByRole("button", { name: "Manage tag unused, used by 0 Entries" })
       .click();
     const unusedDialog = page.getByRole("dialog", { name: "unused" });
-    page.once("dialog", (dialog) => dialog.accept());
     await unusedDialog
       .getByRole("button", { name: "Delete unused tag" })
+      .click();
+    await page
+      .getByRole("dialog", { name: "Delete the unused tag “unused”?" })
+      .getByRole("button", { name: "Delete tag", exact: true })
       .click();
     await expect(unusedDialog).not.toBeVisible();
     await expect(
@@ -341,12 +367,14 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await page.goto("/settings/organization?kind=tag");
     await expect(page).toHaveURL(/\/tags$/);
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-tags-desktop.png",
     });
     await page.setViewportSize({ height: 844, width: 390 });
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-tags-mobile.png",

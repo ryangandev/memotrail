@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/button";
 
 import {
   useCallback,
@@ -173,7 +174,9 @@ export function RichTextEditor({
   return (
     <div
       className={`${styles.editor} ${variantClassNames[variant]}`}
+      data-disabled={disabled || undefined}
       data-rich-text-editor
+      data-ui-field
       data-variant={variant}
     >
       <EditorContent className={styles.content} editor={editor} />
@@ -389,11 +392,12 @@ function FormattingToolbar({
             value={linkValue}
           />
           {formatState.link ? (
-            <button onClick={removeLink} type="button">
+            <Button variant="secondary" onClick={removeLink} type="button">
               Remove
-            </button>
+            </Button>
           ) : null}
-          <button
+          <Button
+            variant="secondary"
             onClick={() => {
               setIsLinkEditorOpen(false);
               editor?.commands.focus();
@@ -401,14 +405,15 @@ function FormattingToolbar({
             type="button"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
             disabled={!normalizedLink(linkValue)}
             onClick={applyLink}
             type="button"
           >
             Apply
-          </button>
+          </Button>
         </div>
       ) : null}
     </div>

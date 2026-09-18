@@ -23,18 +23,15 @@ select is(
 );
 
 select is(
-  (
-    select concat_ws('|',item_kind,item_subtype,record_source,record_id::text)
-    from public.search_wiki_items('Pier 7')
-  ),
-  'entity|place|place|98900000-0000-4000-8000-000000000002',
-  'Canonical search indexes Place details and returns its specialized routing identity'
+  (select count(*) from public.search_wiki_items('Pier 7')),
+  0::bigint,
+  'Canonical search does not duplicate an independent Place as a Wiki Item'
 );
 
 select is(
   (select count(*) from public.search_wiki_items('',array['entity'])),
-  2::bigint,
-  'Entity Kind filtering returns canonical People and Places once'
+  1::bigint,
+  'Entity Kind filtering returns canonical People without standalone Places'
 );
 
 reset role;

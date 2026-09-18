@@ -27,6 +27,15 @@ const pageFamilies = [
   { path: "/timeline", variant: "canvas", width: 1180 },
 ] as const;
 
+const focusedViewPaths = new Set([
+  "/first-times",
+  "/goals",
+  "/homes",
+  "/people",
+  "/places",
+  "/vehicles",
+]);
+
 test("authenticated pages use the shared responsive page frame", async ({
   context,
   page,
@@ -87,11 +96,25 @@ test("authenticated pages use the shared responsive page frame", async ({
         .filter({ visible: true });
       await expect(frame).toHaveCount(1);
       await expect(frame).toBeVisible();
+      for (const title of await frame
+        .locator("[data-ui-page-header] h1")
+        .all()) {
+        const canonicalSize = await title.evaluate((element) =>
+          getComputedStyle(element)
+            .getPropertyValue("--mt-font-size-display")
+            .trim(),
+        );
+        await expect(title).toHaveCSS("font-size", canonicalSize);
+        await expect(title).toHaveCSS("margin-top", "0px");
+      }
       expect(
         await frame.evaluate(
           (element) => element.getBoundingClientRect().width,
         ),
       ).toBeCloseTo(family.width, 0);
+      if (focusedViewPaths.has(family.path)) {
+        await expectFocusedViewContentGap(frame, 32);
+      }
     }
 
     await page.setViewportSize({ width: 390, height: 844 });
@@ -102,14 +125,44 @@ test("authenticated pages use the shared responsive page frame", async ({
         .filter({ visible: true });
       await expect(frame).toHaveCount(1);
       await expect(frame).toBeVisible();
+      for (const title of await frame
+        .locator("[data-ui-page-header] h1")
+        .all()) {
+        const canonicalSize = await title.evaluate((element) =>
+          getComputedStyle(element)
+            .getPropertyValue("--mt-font-size-title")
+            .trim(),
+        );
+        await expect(title).toHaveCSS("font-size", canonicalSize);
+        await expect(title).toHaveCSS("margin-top", "0px");
+      }
       expect(
         await frame.evaluate(
           (element) => element.getBoundingClientRect().width,
         ),
       ).toBeCloseTo(366, 0);
+      if (focusedViewPaths.has(family.path)) {
+        await expectFocusedViewContentGap(frame, 24);
+      }
     }
   } finally {
     await page.close();
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }
 });
+
+async function expectFocusedViewContentGap(
+  frame: import("@playwright/test").Locator,
+  expectedGap: number,
+) {
+  const summary = frame.locator("[data-focused-view-summary]");
+  const content = frame.locator("[data-focused-view-content]");
+  await expect(summary).toBeVisible();
+  await expect(content).toBeVisible();
+  const gap = await summary.evaluate((element) => {
+    const summaryRect = element.getBoundingClientRect();
+    const contentRect = element.nextElementSibling!.getBoundingClientRect();
+    return contentRect.top - summaryRect.bottom;
+  });
+  expect(gap).toBeCloseTo(expectedGap, 0);
+}

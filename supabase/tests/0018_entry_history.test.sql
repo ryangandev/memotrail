@@ -7,7 +7,7 @@ insert into public.entries(id,owner_id,title,body,date_precision,occurred_label)
 insert into public.collections(id,owner_id,name) values('94100000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','History collection');
 insert into public.tags(id,owner_id,name) values('94200000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','history-tag');
 insert into public.people(id,owner_id,name) values('94300000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Historical friend');
-insert into public.places(id,owner_id,name) values('94400000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Old place name');
+insert into public.locations(id,owner_id,name) values('94400000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Old location name');
 insert into public.timeline_tracks(id,owner_id,name) values('94500000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','History track');
 insert into public.entry_collections values('94000000-0000-4000-8000-000000000001','94100000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001',now());
 insert into public.entry_tags values('94000000-0000-4000-8000-000000000001','94200000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001',now());
@@ -22,7 +22,7 @@ delete from public.entry_people where entry_id='94000000-0000-4000-8000-00000000
 delete from public.entry_places where entry_id='94000000-0000-4000-8000-000000000001';
 delete from public.timeline_items where entry_id='94000000-0000-4000-8000-000000000001';
 delete from public.entry_links where source_entry_id='94000000-0000-4000-8000-000000000001';
-update public.places set name='Current shared name' where id='94400000-0000-4000-8000-000000000001';
+update public.locations set name='Current shared name' where id='94400000-0000-4000-8000-000000000001';
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
 select is(public.entry_history('94000000-0000-4000-8000-000000000001')->>'total_count','1','Earlier version is browsable');
@@ -38,7 +38,7 @@ select is((select count(*) from public.entry_people where entry_id='94000000-000
 select is((select count(*) from public.entry_places where entry_id='94000000-0000-4000-8000-000000000001'),1::bigint,'Restores Place links');
 select is((select count(*) from public.timeline_items where entry_id='94000000-0000-4000-8000-000000000001'),1::bigint,'Restores Timeline placement');
 select is((select count(*) from public.entry_links where source_entry_id='94000000-0000-4000-8000-000000000001'),1::bigint,'Restores Entry links');
-select is((select name from public.places where id='94400000-0000-4000-8000-000000000001'),'Current shared name','Shared Place definition is not overwritten');
+select is((select name from public.locations where id='94400000-0000-4000-8000-000000000001'),'Current shared name','Shared Location definition is not overwritten');
 select is((select snapshot->>'body' from public.entry_versions where entry_id='94000000-0000-4000-8000-000000000001' and version=2),'Current writing','Pre-restore current version remains available');
 select is(public.restore_entry_version('94000000-0000-4000-8000-000000000001',1,2),null::integer,'Stale restore rejected');
 select is(public.restore_entry_version('94000000-0000-4000-8000-000000000001',2,3),4,'Restoration can itself be undone');

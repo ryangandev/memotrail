@@ -1,3 +1,6 @@
+import { PageHeader } from "@/components/page-header";
+import { EmptyState } from "@/components/empty-state";
+import { ButtonLink } from "@/components/button";
 import Link from "next/link";
 import { CaptureComposer } from "@/components/capture-composer";
 import { Icon } from "@/components/icon";
@@ -36,21 +39,25 @@ function HomeContent({ workspace }: { workspace: HomeWorkspace }) {
 
   return (
     <PageFrame variant="wide">
-      <header className={styles.pageHeader}>
-        <div>
-          <p className={styles.eyebrow}>
-            {todayLabel(now, workspace.timezone)}
-          </p>
-          <h1>
+      <PageHeader
+        title={
+          <>
             {greetingInTimezone(now, workspace.timezone)}, {firstName}.
-          </h1>
-          <p>A calm view of what is active, recent, and waiting for you.</p>
-        </div>
-        <Link className={styles.searchLink} href="/search">
-          <Icon name="search" size={17} />
-          <span>Search your trail</span>
-        </Link>
-      </header>
+          </>
+        }
+        eyebrow={<>{todayLabel(now, workspace.timezone)}</>}
+        description={
+          <>A calm view of what is active, recent, and waiting for you.</>
+        }
+        actions={
+          <>
+            <ButtonLink href="/search">
+              <Icon name="search" size={17} />
+              <span>Search your trail</span>
+            </ButtonLink>
+          </>
+        }
+      />
 
       <CaptureComposer ownerId={workspace.viewer.id} />
 
@@ -289,16 +296,12 @@ function RecentEntries({ entries }: { entries: HomeEntry[] }) {
       />
 
       {entries.length === 0 ? (
-        <div className={styles.emptyState}>
-          <Icon name="sparkle" size={22} />
-          <div>
-            <strong>Your trail starts here</strong>
-            <p>
-              Capture a thought above and it will become your first recent
-              Entry.
-            </p>
-          </div>
-        </div>
+        <EmptyState
+          headingLevel={3}
+          icon={<Icon name="sparkle" size={22} />}
+          title="Your trail starts here"
+          description="Capture a thought above and it will become your first recent Entry."
+        />
       ) : (
         <div className={styles.recentGrid}>
           {entries.map((entry) => (

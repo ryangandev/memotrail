@@ -384,7 +384,7 @@ struct EntryHistoryDetailView: View {
               ).foregroundStyle(MTColor.warm)
             }
             Text(
-              "Shared People, Place, Collection, and track definitions stay current. Missing linked items or photo originals stop restoration safely. Photo files are not deleted."
+              "Shared People, Location, Collection, and track definitions stay current. Missing linked items or photo originals stop restoration safely. Photo files are not deleted."
             ).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
             if record.isDeleted {
               Text("Restore this Entry from Trash first.").foregroundStyle(MTColor.warm)

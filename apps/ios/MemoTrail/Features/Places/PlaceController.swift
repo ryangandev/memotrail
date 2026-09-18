@@ -6,7 +6,6 @@ import Observation
 @Observable
 final class PlaceController {
   private(set) var entries: [PlaceEntry] = []
-  private(set) var linkOptions: [PlaceLinkOption] = []
   private(set) var hasLoaded = false
   private(set) var isLoading = false
   private(set) var isSaving = false
@@ -19,10 +18,6 @@ final class PlaceController {
     self.client = client
     self.ownerID = ownerID
   }
-
-  var linkedEntries: [PlaceEntry] { entries.filter(\.isLinked) }
-  var unlinkedEntries: [PlaceEntry] { entries.filter { !$0.isLinked } }
-  var mappedCount: Int { entries.count { $0.coordinateLabel != nil } }
 
   func load() async {
     guard !isLoading else { return }
@@ -40,34 +35,7 @@ final class PlaceController {
         .rpc("places_workspace", params: PlaceWorkspaceParameters(limit: 100, offset: 0))
         .execute()
         .value
-      async let linksRequest: [PlaceLinkOption] = loadLinkOptions()
-
-      var loadedEntries = PlaceWorkspace.entries(from: try await workspaceRequest)
-      let paths = Array(
-        Set(
-          loadedEntries.flatMap { place in
-            place.linkedEntries.flatMap { $0.attachments.map(\.objectPath) }
-          }
-        )
-      )
-      let signedURLs = await signedURLMap(paths: paths)
-
-      for placeIndex in loadedEntries.indices {
-        for entryIndex in loadedEntries[placeIndex].linkedEntries.indices {
-          for attachmentIndex in loadedEntries[placeIndex].linkedEntries[entryIndex].attachments
-            .indices
-          {
-            let path =
-              loadedEntries[placeIndex].linkedEntries[entryIndex].attachments[attachmentIndex]
-              .objectPath
-            loadedEntries[placeIndex].linkedEntries[entryIndex].attachments[attachmentIndex]
-              .signedURL = signedURLs[path]
-          }
-        }
-      }
-
-      entries = loadedEntries
-      linkOptions = try await linksRequest
+      entries = PlaceWorkspace.entries(from: try await workspaceRequest)
     } catch {
       loadErrorMessage = "MemoTrail could not load your Places. Pull to refresh or try again."
     }
@@ -83,8 +51,7 @@ final class PlaceController {
     country: String,
     latitude: Double?,
     longitude: Double?,
-    notes: String,
-    relatedEntryIDs: [UUID]
+    notes: String
   ) async -> MutationResult {
     let input: PlaceInput
     do {
@@ -98,8 +65,7 @@ final class PlaceController {
         country: country,
         latitude: latitude,
         longitude: longitude,
-        notes: notes,
-        relatedEntryIDs: relatedEntryIDs
+        notes: notes
       )
     } catch {
       return MutationResult(identity: nil, message: error.localizedDescription, status: .error)
@@ -172,7 +138,7 @@ final class PlaceController {
       guard rows.first?.placeID == placeID else {
         return MutationResult(
           identity: nil,
-          message: "This Place changed or is still linked to an Entry. Refresh and try again.",
+          message: "This Place changed on another device. Refresh and try again.",
           status: .conflict
         )
       }
@@ -192,23 +158,11 @@ final class PlaceController {
     await load()
   }
 
-  private func loadLinkOptions() async throws -> [PlaceLinkOption] {
-    try await client.from("entries").select("id,title,body,item_kind,item_subtype,updated_at")
-      .eq("owner_id", value: ownerID.uuidString)
-      .is("deleted_at", value: nil)
-      .order("updated_at", ascending: false)
-      .limit(200)
-      .execute().value
-  }
-
   private func validateSessionOwner() async throws {
     let session = try await client.auth.session
     guard session.user.id == ownerID else { throw PlaceControllerError.ownerChanged }
   }
 
-  private func signedURLMap(paths: [String]) async -> [String: URL] {
-    await MediaDelivery.displayURLs(paths: paths, client: client, ownerID: ownerID)
-  }
 }
 
 extension PlaceController {

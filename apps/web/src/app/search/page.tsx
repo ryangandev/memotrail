@@ -1,3 +1,5 @@
+import { PageHeader } from "@/components/page-header";
+import { ButtonLink, Button } from "@/components/button";
 import {
   occurrenceLabel,
   occurrenceSpanLabel,
@@ -8,6 +10,7 @@ import { EntryRichTextContent } from "@/components/entry-rich-text-content";
 import { Icon } from "@/components/icon";
 import { AISearchForm } from "@/components/ai-search-form";
 import { PageFrame } from "@/components/page-frame";
+import { DatePickerField } from "@/components/date-picker-field";
 import {
   SEARCH_PAGE_SIZE,
   parseSearchRequest,
@@ -50,17 +53,19 @@ export default async function SearchPage({
 
   return (
     <PageFrame variant="standard">
-      <header className={styles.pageHeader}>
-        <div>
-          <p className={styles.eyebrow}>Your personal archive</p>
-          <h1>Search your trail</h1>
-          <p>Find anything in your Life Wiki by what you remember.</p>
-        </div>
-        <Link className={styles.newEntryButton} href="/inbox#capture-title">
-          <Icon name="plus" />
-          <span>New entry</span>
-        </Link>
-      </header>
+      <PageHeader
+        title={<>Search your trail</>}
+        eyebrow={<>Your personal archive</>}
+        description={<>Find anything in your Life Wiki by what you remember.</>}
+        actions={
+          <>
+            <ButtonLink href="/inbox#capture-title">
+              <Icon name="plus" />
+              <span>New entry</span>
+            </ButtonLink>
+          </>
+        }
+      />
 
       <AISearchForm
         key={JSON.stringify(request)}
@@ -92,17 +97,12 @@ export default async function SearchPage({
                 type="search"
               />
             </label>
-            <button className={styles.searchSubmit} type="submit">
+            <Button variant="primary" type="submit">
               Search
-            </button>
-            <button
-              className={styles.askSubmit}
-              name="mode"
-              value="ai"
-              type="submit"
-            >
+            </Button>
+            <Button variant="primary" name="mode" value="ai" type="submit">
               Ask AI
-            </button>
+            </Button>
           </div>
 
           <div className={styles.searchScope}>
@@ -167,23 +167,20 @@ export default async function SearchPage({
               </select>
             </label>
 
-            <label>
-              <span>From</span>
-              <input
-                defaultValue={request.dateFrom ?? ""}
-                name="from"
-                type="date"
-              />
-            </label>
-
-            <label>
-              <span>To</span>
-              <input
-                defaultValue={request.dateTo ?? ""}
-                name="to"
-                type="date"
-              />
-            </label>
+            <DatePickerField
+              defaultValue={request.dateFrom ?? ""}
+              key={`from-${request.dateFrom ?? ""}`}
+              label="From"
+              name="from"
+              size="small"
+            />
+            <DatePickerField
+              defaultValue={request.dateTo ?? ""}
+              key={`to-${request.dateTo ?? ""}`}
+              label="To"
+              name="to"
+              size="small"
+            />
 
             {request.hasCriteria ? (
               <Link className={styles.clearFilters} href="/search">

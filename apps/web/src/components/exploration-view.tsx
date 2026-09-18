@@ -1,4 +1,6 @@
 "use client";
+import { Button } from "@/components/button";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type {
@@ -6,7 +8,7 @@ import type {
   ExplorationTurn,
   ExplorationWorkspace,
 } from "@/lib/ai/exploration";
-import styles from "@/app/explore/page.module.css";
+import styles from "@/components/exploration-view.module.css";
 class ExplorationFailure extends Error {
   constructor(
     message: string,
@@ -35,6 +37,7 @@ export function ExplorationView({
 }: {
   initial: ExplorationWorkspace;
 }) {
+  const requestConfirmation = useConfirmationDialog();
   const [workspace, setWorkspace] = useState(initial);
   const [question, setQuestion] = useState("");
   const [busy, setBusy] = useState(false);
@@ -176,14 +179,22 @@ export function ExplorationView({
         setQuestion("");
     });
   }
-  function selectConclusion(turn: ExplorationTurn) {
-    if (
-      save &&
-      !confirm(
-        "Replace the open conclusion draft? If its save was interrupted, refresh first to check whether it was saved.",
-      )
-    )
-      return;
+  async function selectConclusion(turn: ExplorationTurn) {
+    if (save) {
+      const confirmed = await requestConfirmation({
+        title: <>Replace the open conclusion draft?</>,
+        description: (
+          <>
+            If its save was interrupted, refresh first to check whether it was
+            saved.
+          </>
+        ),
+        confirmLabel: "Replace draft",
+        eyebrow: <>Unsaved work</>,
+        variant: "danger",
+      });
+      if (!confirmed) return;
+    }
     setSave({
       turnID: turn.id,
       title: "",
@@ -221,7 +232,9 @@ export function ExplorationView({
         </nav>
       )}
       <div className={styles.toolbar}>
-        <button
+        <Button
+          variant="secondary"
+          type="submit"
           disabled={busy}
           onClick={() => {
             pollCount.current = 0;
@@ -229,7 +242,7 @@ export function ExplorationView({
           }}
         >
           Refresh conversation
-        </button>
+        </Button>
         <Link href="/settings/ai">AI settings</Link>
       </div>
       <p className={styles.notice}>
@@ -239,9 +252,14 @@ export function ExplorationView({
         memories. Opening this page and refreshing are free.
       </p>
       {workspace.turns.length < workspace.total_count && (
-        <button disabled={busy} onClick={() => void run(() => reload(true))}>
+        <Button
+          variant="secondary"
+          type="submit"
+          disabled={busy}
+          onClick={() => void run(() => reload(true))}
+        >
           Load earlier turns
-        </button>
+        </Button>
       )}
       <section
         className={styles.conversation}
@@ -263,9 +281,14 @@ export function ExplorationView({
             {turn.status === "completed" ? (
               <>
                 <p className={styles.writing}>{turn.answer}</p>
-                <button disabled={busy} onClick={() => selectConclusion(turn)}>
+                <Button
+                  variant="primary"
+                  type="submit"
+                  disabled={busy}
+                  onClick={() => void selectConclusion(turn)}
+                >
                   Save as Entry
-                </button>
+                </Button>
               </>
             ) : (
               <p role="status">
@@ -275,7 +298,9 @@ export function ExplorationView({
               </p>
             )}
             {turn.status === "failed" && (
-              <button
+              <Button
+                variant="secondary"
+                type="submit"
                 disabled={busy}
                 onClick={() => {
                   setPending(null);
@@ -284,7 +309,7 @@ export function ExplorationView({
                 }}
               >
                 Use question for a new attempt
-              </button>
+              </Button>
             )}
             <details>
               <summary>Recorded source snapshot</summary>
@@ -332,13 +357,17 @@ export function ExplorationView({
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="What could I learn from this thought?"
         />
-        <button disabled={busy || generating || !question.trim()}>
+        <Button
+          variant="primary"
+          type="submit"
+          disabled={busy || generating || !question.trim()}
+        >
           {busy
             ? "Working…"
             : pending
               ? "Retry the same request"
               : "Send question"}
-        </button>
+        </Button>
         {pending && (
           <p className={styles.notice}>
             The last request is unconfirmed. Refresh to check the conversation.
@@ -401,23 +430,36 @@ export function ExplorationView({
               />
             </div>
             <div className={styles.toolbar}>
-              <button disabled={busy || !save.body.trim()}>
+              <Button
+                variant="primary"
+                type="submit"
+                disabled={busy || !save.body.trim()}
+              >
                 {save.attempted ? "Retry same save" : "Save conclusion"}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
                 type="button"
                 disabled={busy}
                 onClick={() => {
-                  if (
-                    confirm(
-                      "Close this editor? If a save was interrupted, refresh the conversation to check whether it was already saved.",
-                    )
-                  )
-                    setSave(null);
+                  void requestConfirmation({
+                    title: <>Close this editor?</>,
+                    description: (
+                      <>
+                        If a save was interrupted, refresh the conversation to
+                        check whether it was already saved.
+                      </>
+                    ),
+                    confirmLabel: "Close editor",
+                    eyebrow: <>Unsaved work</>,
+                    variant: "danger",
+                  }).then((confirmed) => {
+                    if (confirmed) setSave(null);
+                  });
                 }}
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </form>
         </section>

@@ -18,7 +18,6 @@ export default async function PlacesPage({
   return (
     <PlacesWorkspace
       initialPlaceId={initialPlaceId}
-      linkOptions={workspace.linkOptions}
       loadError={workspace.loadError}
       places={workspace.places}
     />

@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/button";
 import { useState } from "react";
 import { ProgressiveImage } from "@/components/progressive-image";
 import type { PhotoPlaceDraft } from "@/lib/media/photo-place";
@@ -63,13 +64,14 @@ export function EntryPhotoDates({
     <section className={styles.panel} aria-label="Photo date suggestions">
       <div className={styles.heading}>
         <h3>Photos & camera dates</h3>
-        <button
+        <Button
+          variant="secondary"
           type="button"
           disabled={busy || disabled}
           onClick={() => void load()}
         >
           {busy ? "Loading…" : photos ? "Refresh photos" : "Show photos"}
-        </button>
+        </Button>
       </div>
       <p>
         Read the original photo&apos;s camera metadata. No AI, no automatic
@@ -89,13 +91,14 @@ export function EntryPhotoDates({
             ) : null}
             <div>
               <strong>{photo.name}</strong>
-              <button
+              <Button
+                variant="secondary"
                 type="button"
                 disabled={busy || disabled}
                 onClick={() => void load(photo)}
               >
                 {info ? "Read metadata again" : "Read camera date"}
-              </button>
+              </Button>
               {info ? (
                 <>
                   <p>
@@ -105,7 +108,8 @@ export function EntryPhotoDates({
                   </p>
                   {info.calendarDate ? (
                     <>
-                      <button
+                      <Button
+                        variant="secondary"
                         type="button"
                         disabled={busy || disabled}
                         onClick={() => {
@@ -116,7 +120,7 @@ export function EntryPhotoDates({
                         }}
                       >
                         Use calendar date {info.calendarDate}
-                      </button>
+                      </Button>
                       <p>
                         Uses Day precision and replaces the draft&apos;s date
                         range. It does not infer a time zone or save until you
@@ -127,11 +131,11 @@ export function EntryPhotoDates({
                   {info.latitude !== null && info.longitude !== null ? (
                     <>
                       <p className={styles.coordinates}>
-                        GPS: {info.latitude.toFixed(6)},{" "}
-                        {info.longitude.toFixed(6)}. No Place linked
+                        Private GPS metadata is available. No Location is linked
                         automatically.
                       </p>
-                      <button
+                      <Button
+                        variant="secondary"
                         type="button"
                         disabled={
                           disabled ||
@@ -149,8 +153,8 @@ export function EntryPhotoDates({
                           })
                         }
                       >
-                        Use GPS for a Place
-                      </button>
+                        Use GPS for a Location
+                      </Button>
                     </>
                   ) : null}
                 </>

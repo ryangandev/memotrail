@@ -1,10 +1,11 @@
+import { PageHeader } from "@/components/page-header";
 import Link from "next/link";
 import { ExplorationView } from "@/components/exploration-view";
 import { PageFrame } from "@/components/page-frame";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { explorationID } from "@/lib/ai/exploration";
 import { explorationWorkspace } from "@/lib/ai/exploration-server";
-import styles from "./page.module.css";
+import styles from "@/components/exploration-view.module.css";
 export const dynamic = "force-dynamic";
 export default async function ExplorePage({
   searchParams,
@@ -29,11 +30,13 @@ export default async function ExplorePage({
   }
   return (
     <PageFrame className={styles.workspace} variant="compact">
-      <header>
-        <p className={styles.eyebrow}>ROOM FOR A THOUGHT TO GROW</p>
-        <h1>Explore with AI</h1>
-        <p>A separate conversation. Your original words stay yours.</p>
-      </header>
+      <PageHeader
+        title={<>Explore with AI</>}
+        eyebrow={<>ROOM FOR A THOUGHT TO GROW</>}
+        description={
+          <>A separate conversation. Your original words stay yours.</>
+        }
+      />
       {workspace ? (
         <ExplorationView
           key={`${context.viewer.id}:${entry}`}

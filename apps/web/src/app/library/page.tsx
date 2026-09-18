@@ -1,3 +1,5 @@
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/button";
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
@@ -161,14 +163,16 @@ export default async function LibraryPage({
 
   return (
     <PageFrame className={styles.content} variant="standard">
-      <header className={styles.header}>
-        <p>Your Life Wiki</p>
-        <h1>Library</h1>
-        <span>
-          One place for the writing, people, places, moments, stories, and goals
-          that make up your life.
-        </span>
-      </header>
+      <PageHeader
+        title={<>Library</>}
+        eyebrow={<>Your Life Wiki</>}
+        description={
+          <>
+            One place for the writing, people, places, moments, stories, and
+            goals that make up your life.
+          </>
+        }
+      />
 
       <section aria-labelledby="kinds-heading">
         <div className={styles.sectionHeading}>
@@ -228,7 +232,9 @@ export default async function LibraryPage({
               <option value="capture">Source captures</option>
             </select>
           </label>
-          <button type="submit">Apply</button>
+          <Button variant="primary" type="submit">
+            Apply
+          </Button>
         </form>
 
         {workspace.error ? (

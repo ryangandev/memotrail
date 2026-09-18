@@ -158,9 +158,9 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: /Entity Place Ocean Beach/ }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await expect(
-      page.getByRole("main").getByText("4 items", { exact: true }),
+      page.getByRole("main").getByText("3 items", { exact: true }),
     ).toBeVisible();
 
     await reflectionLink.click();
@@ -178,6 +178,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       page.getByRole("button", { name: "Move to Trash" }),
     ).toBeVisible();
     await page.screenshot({
+      caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-wiki-item-detail-desktop.png",
     });
@@ -192,8 +193,14 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     ).toContainText("The quiet helped me notice what mattered.");
 
     await page.goto(`/items/${reflectionID}`);
-    page.once("dialog", (dialog) => dialog.accept());
     await page.getByRole("button", { name: "Move to Trash" }).click();
+    await page
+      .getByRole("dialog", {
+        name: "Move “Morning reflection” to Trash?",
+        exact: true,
+      })
+      .getByRole("button", { name: "Move to Trash", exact: true })
+      .click();
     await expect(page).toHaveURL(/\/library$/);
     await expect(
       page.getByRole("link", { name: /Writing Reflection Morning reflection/ }),
@@ -215,7 +222,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: /Entity Place Ocean Beach/ }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await expect(
       page.getByRole("link", { name: /Writing Reflection Morning reflection/ }),
     ).toHaveCount(0);
@@ -233,12 +240,14 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await filters.locator('input[name="q"]').press("Tab");
 
     await page.screenshot({
+      caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-wiki-library-desktop.png",
     });
     await page.setViewportSize({ height: 844, width: 390 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
+      caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-wiki-library-mobile.png",
     });

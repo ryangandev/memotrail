@@ -1,6 +1,6 @@
 # MemoTrail Status
 
-Last reviewed: 2026-09-16.
+Last reviewed: 2026-09-18.
 
 ## Current state
 
@@ -13,6 +13,7 @@ Use Git history for feature-level implementation and test evidence.
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Capture, Inbox, organization, dates, drafts, and offline queues                      | Implemented on Web and iOS                                                                                                                                                          |
 | Timeline, Home, First Times, Homes, Vehicles, Goals, People, Places, and Collections | Implemented on Web and iOS                                                                                                                                                          |
+| Location data layer                                                                  | Deployed to hosted Supabase and implemented in Web/iOS clients; provider-backed search and map summaries remain future work                                                         |
 | Habits                                                                               | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                                  |
 | Web navigation shell                                                                 | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                                   |
 | Web Settings                                                                         | Account, dates, timezone, appearance, simplified AI, and account controls implemented                                                                                               |
@@ -21,6 +22,7 @@ Use Git history for feature-level implementation and test evidence.
 | Private media, Entry history, relationships, Trash, and complete export              | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                  |
 | Hosted Supabase contracts                                                            | Deployed to the confirmed MemoTrail project                                                                                                                                         |
 | Capture First Life Wiki information model                                            | Canonical database model is live on the confirmed hosted project; Web navigation, Library, Inbox organization, Search, Collections, and history use Kind-aware identity and routing |
+| Web design system                                                                    | Approved canonical components migrated across Web; component-owned CSS and token boundaries enforced; local regression passed; production browser acceptance pending                |
 | Backup and restore                                                                   | Not ready                                                                                                                                                                           |
 | Current GitHub CI                                                                    | Blocked before jobs start by account billing or spending limits                                                                                                                     |
 

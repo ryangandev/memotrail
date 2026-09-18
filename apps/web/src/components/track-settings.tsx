@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveTrack } from "@/app/timeline/tracks/actions";
@@ -7,7 +8,7 @@ import {
   type TrackSetting,
   type TrackInput,
 } from "@/lib/data/tracks";
-import styles from "@/app/timeline/tracks/page.module.css";
+import styles from "@/components/track-settings.module.css";
 export function TrackSettings({ tracks }: { tracks: TrackSetting[] }) {
   const [adding, setAdding] = useState(false);
   const [generation, setGeneration] = useState(0);
@@ -15,10 +16,15 @@ export function TrackSettings({ tracks }: { tracks: TrackSetting[] }) {
   return (
     <>
       <div className={styles.actions}>
-        <button type="button" onClick={() => setAdding(!adding)}>
+        <Button
+          variant="secondary"
+          type="button"
+          onClick={() => setAdding(!adding)}
+        >
           {adding ? "Cancel new track" : "Add track"}
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="secondary"
           type="button"
           onClick={() => {
             setGeneration((value) => value + 1);
@@ -26,7 +32,7 @@ export function TrackSettings({ tracks }: { tracks: TrackSetting[] }) {
           }}
         >
           Reload tracks
-        </button>
+        </Button>
       </div>
       <p className={styles.hint}>
         Lower order numbers appear first. Equal numbers sort by name. Reloading
@@ -138,9 +144,13 @@ function TrackForm({
           />
           Hide from Timeline
         </label>
-        <button disabled={!validTrackInput(input)}>
+        <Button
+          variant="primary"
+          type="submit"
+          disabled={!validTrackInput(input)}
+        >
           {busy ? "Saving…" : track ? "Save track" : "Create track"}
-        </button>
+        </Button>
       </fieldset>
       {message && <p role="status">{message}</p>}
     </form>

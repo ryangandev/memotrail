@@ -259,12 +259,16 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
     expect(sink.aborted).toBe(false);
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-export-desktop.png",
     });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.evaluate(() => window.scrollTo(0, 0));
-    await page.screenshot({ path: "/private/tmp/memotrail-export-mobile.png" });
+    await page.screenshot({
+      caret: "initial",
+      path: "/private/tmp/memotrail-export-mobile.png",
+    });
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= window.innerWidth,

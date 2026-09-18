@@ -135,6 +135,8 @@ test("Organized Entries stay editable without returning to Inbox", async ({
     });
     await expect(noteEditor.locator("strong")).toHaveText("Original words");
     await page.screenshot({
+      caret: "initial",
+      animations: "disabled",
       path: "/private/tmp/memotrail-organized-editor-desktop.png",
     });
     await noteEditor.press("Meta+k");
@@ -159,6 +161,8 @@ test("Organized Entries stay editable without returning to Inbox", async ({
     await page.emulateMedia({ colorScheme: "dark" });
     await expect(noteEditor.locator("strong")).toHaveText("Original words");
     await page.screenshot({
+      caret: "initial",
+      animations: "disabled",
       path: "/private/tmp/memotrail-organized-editor-mobile.png",
     });
     await noteEditor.fill("Updated after organizing");

@@ -1,7 +1,11 @@
 "use client";
+import entryReviewListStyles from "@/components/entry-review-list.module.css";
+import entryFormStyles from "@/components/entry-form.module.css";
+import { Dialog } from "@/components/dialog";
+import { Button, ButtonLink } from "@/components/button";
 import type { PhotoPlaceDraft } from "@/lib/media/photo-place";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -34,7 +38,6 @@ import {
   wikiItemSubtypeLabel,
   type ReviewableWikiItemKind,
 } from "@/lib/data/wiki-item";
-import styles from "@/app/page.module.css";
 
 export function EntryReviewList({
   collectionOptions,
@@ -68,8 +71,8 @@ export function EntryReviewList({
         const excerpt = entryExcerpt(entry);
 
         return (
-          <article className={styles.entryCard} key={entry.id}>
-            <div className={styles.entryMeta}>
+          <article className={entryReviewListStyles.entryCard} key={entry.id}>
+            <div className={entryFormStyles.entryMeta}>
               <time dateTime={entry.occurredAt ?? undefined}>
                 {occurrenceLabel(entry)}
               </time>
@@ -77,7 +80,7 @@ export function EntryReviewList({
             <h3>{entryTitle(entry)}</h3>
             {excerpt ? <p>{excerpt}</p> : null}
             <footer>
-              <div className={styles.tags}>
+              <div className={entryReviewListStyles.tags}>
                 <span>Needs review</span>
                 {entry.itemKind !== "capture" ? (
                   <>
@@ -99,14 +102,14 @@ export function EntryReviewList({
                   <span>+{entry.tagNames.length - 3}</span>
                 ) : null}
               </div>
-              <button
-                className={styles.reviewEntryButton}
+              <Button
+                variant="secondary"
                 onClick={() => setSelectedEntry(entry)}
                 type="button"
               >
                 Organize
                 <Icon name="chevron" size={14} />
-              </button>
+              </Button>
             </footer>
           </article>
         );
@@ -170,24 +173,6 @@ export function EntryReviewDialog({
   const [result, setResult] = useState<ReviewInboxEntryResult | null>(null);
   const [tagNames, setTagNames] = useState(entry.tagNames);
   const [tagInput, setTagInput] = useState("");
-
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (
-        event.key === "Escape" &&
-        !(
-          event.target instanceof Element &&
-          event.target.closest("[data-escape-layer]")
-        ) &&
-        !isPending
-      ) {
-        onClose();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPending, onClose]);
 
   async function submitReview(intent: "done" | "save") {
     const resolved = resolveOccurrenceDraft(occurrence, entry);
@@ -254,276 +239,268 @@ export function EntryReviewDialog({
   }
 
   return (
-    <div
-      className={styles.reviewBackdrop}
-      onMouseDown={(event) => {
-        if (event.currentTarget === event.target && !isPending) {
-          onClose();
-        }
+    <Dialog
+      open
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
       }}
-    >
-      <section
-        aria-labelledby="review-heading"
-        aria-modal="true"
-        className={styles.reviewDialog}
-        role="dialog"
-      >
-        <header className={styles.reviewHeader}>
-          <div>
-            <p>{organized ? "Life Wiki editor" : "Inbox review"}</p>
-            <h2 id="review-heading">
-              {organized
-                ? `Edit ${wikiItemKindLabel(entry.itemKind)}`
-                : "Organize Capture"}
-            </h2>
-            {organized ? (
-              <p>
-                This {wikiItemKindLabel(entry.itemKind).toLocaleLowerCase()} is
-                already part of your Life Wiki.
-              </p>
-            ) : (
-              <p>
-                Keep this as Writing, an Event, or a Story, or use a focused
-                form for a structured record.
-              </p>
-            )}
-            <Link href={`/history?entry=${entry.id}`}>Version history</Link>
+      title={
+        <>
+          {organized
+            ? `Edit ${wikiItemKindLabel(entry.itemKind)}`
+            : "Organize Capture"}
+        </>
+      }
+      titleId="review-heading"
+      eyebrow={<>{organized ? "Life Wiki editor" : "Inbox review"}</>}
+      headerContent={
+        <>
+          {organized ? (
             <p>
-              <Link href={`/explore?entry=${entry.id}`}>Explore with AI</Link> ·
-              Uses the saved version. Save your edits first.
+              This {wikiItemKindLabel(entry.itemKind).toLocaleLowerCase()} is
+              already part of your Life Wiki.
             </p>
-          </div>
-          <button
-            aria-label={organized ? "Close item editor" : "Close Inbox review"}
-            className={styles.closeReviewButton}
+          ) : (
+            <p>
+              Keep this as Writing, an Event, or a Story, or use a focused form
+              for a structured record.
+            </p>
+          )}
+          <Link href={`/history?entry=${entry.id}`}>Version history</Link>
+          <p>
+            <Link href={`/explore?entry=${entry.id}`}>Explore with AI</Link> ·
+            Uses the saved version. Save your edits first.
+          </p>
+        </>
+      }
+      closeLabel={organized ? "Close item editor" : "Close Inbox review"}
+      busy={isPending}
+      size="wide"
+      footer={
+        <div className={entryReviewListStyles.reviewActions}>
+          <Button
+            variant="secondary"
             disabled={isPending}
             onClick={onClose}
             type="button"
           >
-            ×
-          </button>
-        </header>
-
-        <form className={styles.reviewForm} onSubmit={handleSubmit}>
-          {!organized && (
-            <EntryAISuggestionsPanel
-              entryID={entry.id}
-              revision={entry.revision}
+            Cancel
+          </Button>
+          <div>
+            <Button
+              form="entry-review-list-form"
+              variant="primary"
               disabled={isPending}
-              onApply={(key, value) => {
-                if (key === "dateText" && typeof value === "string")
-                  setOccurrence((current) => ({
-                    ...current,
-                    precision: "approximate",
-                    label: value,
-                    start: "",
-                    end: "",
-                  }));
-                if (key === "title" && typeof value === "string")
-                  setTitle(value);
-                if (
-                  key === "classification" &&
-                  entry.itemKind === "capture" &&
-                  value &&
-                  typeof value === "object" &&
-                  "itemKind" in value &&
-                  "itemSubtype" in value
-                ) {
-                  setItemKind(value.itemKind);
-                  setItemSubtype(value.itemSubtype);
-                }
-                if (key === "collections" && Array.isArray(value))
-                  setCollectionNames((current) =>
-                    mergeAISuggestionNames(current, value, 20),
-                  );
-                if (key === "tags" && Array.isArray(value))
-                  setTagNames((current) =>
-                    mergeAISuggestionNames(current, value, 50),
-                  );
-              }}
-            />
-          )}
-          <label>
-            <span>
-              Title
-              {itemKind === "event" && itemSubtype === "first_time" ? (
-                <span aria-hidden="true"> *</span>
-              ) : null}
-            </span>
-            <input
-              aria-label="Title"
-              autoFocus
-              disabled={isPending}
-              maxLength={entryTitleLimit}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder={
-                itemKind === "event" && itemSubtype === "first_time"
-                  ? "Required for a First Time"
-                  : "Add a title"
-              }
-              required={itemKind === "event" && itemSubtype === "first_time"}
-              value={title}
-            />
-          </label>
-
-          <div className={styles.reviewRichTextField}>
-            <span>Note</span>
-            <RichTextEditor
-              disabled={isPending}
-              maxLength={entryBodyLimit}
-              label="Note"
-              onChange={(value) => {
-                setBody(value.text);
-                setBodyRich(value);
-              }}
-              placeholder="Write what you want to remember"
-              richText={bodyRich}
-              text={body}
-              variant="form"
-            />
-          </div>
-
-          <section
-            aria-labelledby="classification-heading"
-            className={styles.classificationPanel}
-          >
-            <div className={styles.classificationHeading}>
-              <strong id="classification-heading">
-                {entry.itemKind === "capture" ? "Organize as" : "Identity"}
-              </strong>
-              <span>
-                {entry.itemKind === "capture"
-                  ? "Choose one durable home in your Life Wiki."
-                  : "Kind stays fixed; only a compatible type can change."}
-              </span>
-            </div>
-            <div className={styles.reviewFieldRow}>
-              <label>
-                <span>Kind</span>
-                <select
-                  disabled={isPending || entry.itemKind !== "capture"}
-                  onChange={(event) => {
-                    const nextKind = event.target
-                      .value as ReviewableWikiItemKind;
-                    setItemKind(nextKind);
-                    setItemSubtype(
-                      reviewablePresetsForKind(nextKind)[0]?.subtype ?? "note",
-                    );
-                  }}
-                  value={itemKind}
-                >
-                  <option value="writing">Writing</option>
-                  <option value="event">Event</option>
-                  <option value="story">Story</option>
-                </select>
-              </label>
-              <label>
-                <span>Type</span>
-                <select
-                  disabled={isPending}
-                  onChange={(event) => setItemSubtype(event.target.value)}
-                  value={itemSubtype}
-                >
-                  {reviewablePresetsForKind(itemKind).map((preset) => (
-                    <option key={preset.subtype} value={preset.subtype}>
-                      {preset.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            {entry.itemKind === "capture" ? (
-              <div className={styles.specializedHandoffs}>
-                <span>Or create a structured record</span>
-                <Link href={`/homes?source=${entry.id}`}>
-                  <Icon name="home" size={15} />
-                  Home
-                </Link>
-                <Link href={`/vehicles?source=${entry.id}`}>
-                  <Icon name="car" size={15} />
-                  Vehicle
-                </Link>
-                <Link href={`/goals?source=${entry.id}`}>
-                  <Icon name="target" size={15} />
-                  Goal
-                </Link>
-              </div>
-            ) : null}
-          </section>
-          <EntryPhotoDates
-            place={photoPlace}
-            onPlaceChange={setPhotoPlace}
-            entryId={entry.id}
-            disabled={isPending}
-            onUseDate={(date) =>
-              setOccurrence((current) => photoCalendarDateDraft(date, current))
-            }
-          />
-          <OccurrenceEditor
-            value={occurrence}
-            onChange={setOccurrence}
-            disabled={isPending}
-          />
-
-          <EntryOrganizationEditor
-            disabled={isPending}
-            kind="collection"
-            names={collectionNames}
-            onChange={setCollectionNames}
-            input={collectionInput}
-            onInputChange={setCollectionInput}
-            options={collectionOptions}
-          />
-
-          <EntryOrganizationEditor
-            disabled={isPending}
-            kind="tag"
-            names={tagNames}
-            onChange={setTagNames}
-            input={tagInput}
-            onInputChange={setTagInput}
-            options={tagOptions}
-          />
-
-          {result ? (
-            <p className={styles.reviewError} role="alert">
-              {result.message}
-            </p>
-          ) : null}
-
-          <footer className={styles.reviewActions}>
-            <button
-              className={styles.cancelReviewButton}
-              disabled={isPending}
-              onClick={onClose}
-              type="button"
+              type="submit"
             >
-              Cancel
-            </button>
-            <div>
-              <button
-                className={styles.secondaryReviewButton}
+              Save changes
+            </Button>
+            {!organized && (
+              <Button
+                variant="primary"
                 disabled={isPending}
-                type="submit"
+                onClick={() => void submitReview("done")}
+                type="button"
               >
-                Save changes
-              </button>
-              {!organized && (
-                <button
-                  className={styles.doneButton}
-                  disabled={isPending}
-                  onClick={() => void submitReview("done")}
-                  type="button"
-                >
-                  <Icon name="check" size={16} />
-                  {isPending ? "Saving…" : "Save to Library"}
-                </button>
-              )}
+                <Icon name="check" size={16} />
+                {isPending ? "Saving…" : "Save to Library"}
+              </Button>
+            )}
+          </div>
+        </div>
+      }
+    >
+      {" "}
+      <form
+        id="entry-review-list-form"
+        className={entryFormStyles.reviewForm}
+        onSubmit={handleSubmit}
+      >
+        {!organized && (
+          <EntryAISuggestionsPanel
+            entryID={entry.id}
+            revision={entry.revision}
+            disabled={isPending}
+            onApply={(key, value) => {
+              if (key === "dateText" && typeof value === "string")
+                setOccurrence((current) => ({
+                  ...current,
+                  precision: "approximate",
+                  label: value,
+                  start: "",
+                  end: "",
+                }));
+              if (key === "title" && typeof value === "string") setTitle(value);
+              if (
+                key === "classification" &&
+                entry.itemKind === "capture" &&
+                value &&
+                typeof value === "object" &&
+                "itemKind" in value &&
+                "itemSubtype" in value
+              ) {
+                setItemKind(value.itemKind);
+                setItemSubtype(value.itemSubtype);
+              }
+              if (key === "collections" && Array.isArray(value))
+                setCollectionNames((current) =>
+                  mergeAISuggestionNames(current, value, 20),
+                );
+              if (key === "tags" && Array.isArray(value))
+                setTagNames((current) =>
+                  mergeAISuggestionNames(current, value, 50),
+                );
+            }}
+          />
+        )}
+        <label>
+          <span>
+            Title
+            {itemKind === "event" && itemSubtype === "first_time" ? (
+              <span aria-hidden="true"> *</span>
+            ) : null}
+          </span>
+          <input
+            aria-label="Title"
+            autoFocus
+            disabled={isPending}
+            maxLength={entryTitleLimit}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder={
+              itemKind === "event" && itemSubtype === "first_time"
+                ? "Required for a First Time"
+                : "Add a title"
+            }
+            required={itemKind === "event" && itemSubtype === "first_time"}
+            value={title}
+          />
+        </label>
+
+        <div className={entryReviewListStyles.reviewRichTextField}>
+          <span>Note</span>
+          <RichTextEditor
+            disabled={isPending}
+            maxLength={entryBodyLimit}
+            label="Note"
+            onChange={(value) => {
+              setBody(value.text);
+              setBodyRich(value);
+            }}
+            placeholder="Write what you want to remember"
+            richText={bodyRich}
+            text={body}
+            variant="form"
+          />
+        </div>
+
+        <section
+          aria-labelledby="classification-heading"
+          className={entryReviewListStyles.classificationPanel}
+        >
+          <div className={entryReviewListStyles.classificationHeading}>
+            <strong id="classification-heading">
+              {entry.itemKind === "capture" ? "Organize as" : "Identity"}
+            </strong>
+            <span>
+              {entry.itemKind === "capture"
+                ? "Choose one durable home in your Life Wiki."
+                : "Kind stays fixed; only a compatible type can change."}
+            </span>
+          </div>
+          <div className={entryReviewListStyles.reviewFieldRow}>
+            <label>
+              <span>Kind</span>
+              <select
+                disabled={isPending || entry.itemKind !== "capture"}
+                onChange={(event) => {
+                  const nextKind = event.target.value as ReviewableWikiItemKind;
+                  setItemKind(nextKind);
+                  setItemSubtype(
+                    reviewablePresetsForKind(nextKind)[0]?.subtype ?? "note",
+                  );
+                }}
+                value={itemKind}
+              >
+                <option value="writing">Writing</option>
+                <option value="event">Event</option>
+                <option value="story">Story</option>
+              </select>
+            </label>
+            <label>
+              <span>Type</span>
+              <select
+                disabled={isPending}
+                onChange={(event) => setItemSubtype(event.target.value)}
+                value={itemSubtype}
+              >
+                {reviewablePresetsForKind(itemKind).map((preset) => (
+                  <option key={preset.subtype} value={preset.subtype}>
+                    {preset.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          {entry.itemKind === "capture" ? (
+            <div className={entryReviewListStyles.specializedHandoffs}>
+              <span>Or create a structured record</span>
+              <ButtonLink size="small" href={`/homes?source=${entry.id}`}>
+                <Icon name="home" size={15} />
+                Home
+              </ButtonLink>
+              <ButtonLink size="small" href={`/vehicles?source=${entry.id}`}>
+                <Icon name="car" size={15} />
+                Vehicle
+              </ButtonLink>
+              <ButtonLink size="small" href={`/goals?source=${entry.id}`}>
+                <Icon name="target" size={15} />
+                Goal
+              </ButtonLink>
             </div>
-          </footer>
-        </form>
-      </section>
-    </div>
+          ) : null}
+        </section>
+        <EntryPhotoDates
+          place={photoPlace}
+          onPlaceChange={setPhotoPlace}
+          entryId={entry.id}
+          disabled={isPending}
+          onUseDate={(date) =>
+            setOccurrence((current) => photoCalendarDateDraft(date, current))
+          }
+        />
+        <OccurrenceEditor
+          value={occurrence}
+          onChange={setOccurrence}
+          disabled={isPending}
+        />
+
+        <EntryOrganizationEditor
+          disabled={isPending}
+          kind="collection"
+          names={collectionNames}
+          onChange={setCollectionNames}
+          input={collectionInput}
+          onInputChange={setCollectionInput}
+          options={collectionOptions}
+        />
+
+        <EntryOrganizationEditor
+          disabled={isPending}
+          kind="tag"
+          names={tagNames}
+          onChange={setTagNames}
+          input={tagInput}
+          onInputChange={setTagInput}
+          options={tagOptions}
+        />
+
+        {result ? (
+          <p className={entryReviewListStyles.reviewError} role="alert">
+            {result.message}
+          </p>
+        ) : null}
+      </form>
+    </Dialog>
   );
 }
 

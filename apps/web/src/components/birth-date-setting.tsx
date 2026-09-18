@@ -1,9 +1,10 @@
 "use client";
+import settingsFieldsStyles from "@/components/settings-fields.module.css";
+import { Button } from "@/components/button";
 
 import { useState, type FormEvent } from "react";
 import { saveBirthDate } from "@/app/settings/actions";
 import { DatePickerField } from "@/components/date-picker-field";
-import styles from "@/app/settings/page.module.css";
 
 export function BirthDateSetting({
   initialBirthDate,
@@ -38,7 +39,7 @@ export function BirthDateSetting({
   }
 
   return (
-    <form className={styles.birthDateCard} onSubmit={submit}>
+    <form className={settingsFieldsStyles.birthDateCard} onSubmit={submit}>
       <div>
         <strong>Timeline starting point</strong>
         <p>
@@ -56,10 +57,14 @@ export function BirthDateSetting({
         size="medium"
         value={birthDate}
       />
-      <div className={styles.birthDateControls}>
-        <button disabled={busy || birthDate === savedBirthDate} type="submit">
+      <div className={settingsFieldsStyles.birthDateControls}>
+        <Button
+          variant="primary"
+          disabled={busy || birthDate === savedBirthDate}
+          type="submit"
+        >
           {busy ? "Saving…" : "Save birth date"}
-        </button>
+        </Button>
         {message ? <span role="status">{message}</span> : null}
       </div>
     </form>

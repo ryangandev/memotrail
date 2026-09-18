@@ -1,3 +1,5 @@
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/button";
 import Link from "next/link";
 import { EntryHistoryView } from "@/components/entry-history-view";
 import { PageFrame } from "@/components/page-frame";
@@ -10,7 +12,7 @@ import {
   type HistoryIndexEntry,
 } from "@/lib/data/history";
 import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
-import styles from "./page.module.css";
+import styles from "@/components/entry-history-view.module.css";
 export const dynamic = "force-dynamic";
 export default async function HistoryPage({
   searchParams,
@@ -43,14 +45,16 @@ export default async function HistoryPage({
   const rows = (selected ? [] : (result.data ?? [])) as HistoryIndexEntry[];
   return (
     <PageFrame className={styles.workspace} variant="wide">
-      <header>
-        <p className={styles.eyebrow}>NOTHING GOOD HAS TO BE LOST</p>
-        <h1>Version history</h1>
-        <p>
-          Revisit earlier versions of anything in your Life Wiki. Restoring
-          always keeps the current version first.
-        </p>
-      </header>
+      <PageHeader
+        title={<>Version history</>}
+        eyebrow={<>NOTHING GOOD HAS TO BE LOST</>}
+        description={
+          <>
+            Revisit earlier versions of anything in your Life Wiki. Restoring
+            always keeps the current version first.
+          </>
+        }
+      />
       {result.error ? (
         <p role="alert">History could not load. Refresh to try again.</p>
       ) : selected ? (
@@ -79,7 +83,9 @@ export default async function HistoryPage({
                 maxLength={200}
                 placeholder="Title or words in the current item"
               />
-              <button>Search history</button>
+              <Button variant="primary" type="submit">
+                Search history
+              </Button>
             </div>
           </form>
           {rows.length === 0 ? (

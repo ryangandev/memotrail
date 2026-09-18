@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { isPlaceIdentity, parsePlaceRecordInput } from "./place-record-input";
 
 const placeId = "40000000-0000-4000-8000-000000000001";
-const entryId = "40000000-0000-4000-8000-000000000002";
 const validPlace = {
   address: " 123 Walnut Street ",
   city: " Philadelphia ",
@@ -13,7 +12,6 @@ const validPlace = {
   name: " Center City apartment ",
   notes: " First place on my own. ",
   region: " Pennsylvania ",
-  relatedEntryIds: [entryId, entryId.toUpperCase()],
   revision: 3,
 };
 
@@ -32,7 +30,6 @@ describe("parsePlaceRecordInput", () => {
         name: "Center City apartment",
         notes: "First place on my own.",
         region: "Pennsylvania",
-        relatedEntryIds: [entryId],
       });
     }
   });
@@ -49,7 +46,6 @@ describe("parsePlaceRecordInput", () => {
         longitude: null,
         notes: null,
         region: null,
-        relatedEntryIds: [],
         revision: null,
       }),
     ).toMatchObject({ success: true });
@@ -67,13 +63,10 @@ describe("parsePlaceRecordInput", () => {
     ).toMatchObject({ success: false });
   });
 
-  it("rejects invalid content, links, and identity", () => {
+  it("rejects invalid content and identity", () => {
     expect(parsePlaceRecordInput({ ...validPlace, name: " " })).toMatchObject({
       success: false,
     });
-    expect(
-      parsePlaceRecordInput({ ...validPlace, relatedEntryIds: ["not-a-uuid"] }),
-    ).toMatchObject({ success: false });
     expect(
       parsePlaceRecordInput({ ...validPlace, revision: null }),
     ).toMatchObject({ success: false });

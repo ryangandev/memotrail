@@ -1,4 +1,6 @@
 "use client";
+import { Button } from "@/components/button";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -18,6 +20,7 @@ import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 import styles from "./entry-relations.module.css";
 export function EntryRelationsPanel({ entryID }: { entryID: string }) {
   const router = useRouter();
+  const requestConfirmation = useConfirmationDialog();
   const [mode, setMode] = useState<RelationMode>("outgoing");
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState("");
@@ -53,15 +56,22 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
     setRefresh((v) => v + 1);
   }
   async function change(row: RelatedEntry, linked: boolean) {
-    if (
-      !data ||
-      busy ||
-      (!linked &&
-        !confirm(
-          `Unlink ${historyTitle(row)}? Neither Item is deleted. This change can be restored through this Item's history.`,
-        ))
-    )
-      return;
+    if (!data || busy) return;
+    if (!linked) {
+      const confirmed = await requestConfirmation({
+        title: <>Unlink “{historyTitle(row)}”?</>,
+        description: (
+          <>
+            Neither Item is deleted. This change can be restored through this
+            Item&apos;s history.
+          </>
+        ),
+        confirmLabel: "Unlink Item",
+        eyebrow: <>Relationship action</>,
+        variant: "danger",
+      });
+      if (!confirmed) return;
+    }
     setBusy(true);
     setMessage(null);
     try {
@@ -143,7 +153,9 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
             placeholder="Title or words, including Chinese"
           />
         </label>
-        <button disabled={busy}>Search</button>
+        <Button variant="primary" type="submit" disabled={busy}>
+          Search
+        </Button>
       </form>
       {mode === "incoming" && (
         <p>These Items link here. Open the source Item to change its link.</p>
@@ -179,20 +191,22 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
                     <p>{row.excerpt}</p>
                   </div>
                   {mode !== "incoming" && (
-                    <button
+                    <Button
+                      variant="secondary"
                       type="button"
                       disabled={busy}
                       aria-label={`${mode === "candidates" ? "Link" : "Unlink"} ${historyTitle(row)}`}
                       onClick={() => void change(row, mode === "candidates")}
                     >
                       {mode === "candidates" ? "Link Item" : "Unlink"}
-                    </button>
+                    </Button>
                   )}
                 </li>
               ))}
             </ul>
             <div className={styles.controls} aria-label="Relationship pages">
-              <button
+              <Button
+                variant="secondary"
                 type="button"
                 disabled={page === 0}
                 onClick={() => {
@@ -201,12 +215,13 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
                 }}
               >
                 Previous links
-              </button>
+              </Button>
               <span>
                 Page {page + 1} · {data.total_count}{" "}
                 {data.total_count === 1 ? "Item" : "Items"}
               </span>
-              <button
+              <Button
+                variant="secondary"
                 type="button"
                 disabled={(page + 1) * 20 >= data.total_count}
                 onClick={() => {
@@ -215,15 +230,20 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
                 }}
               >
                 Next links
-              </button>
+              </Button>
             </div>
           </>
         )
       )}
       {message && <p role="alert">{message}</p>}
-      <button type="button" disabled={busy} onClick={reload}>
+      <Button
+        variant="secondary"
+        type="button"
+        disabled={busy}
+        onClick={reload}
+      >
         Refresh links
-      </button>
+      </Button>
     </section>
   );
 }

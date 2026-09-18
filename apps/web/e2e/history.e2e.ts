@@ -151,9 +151,12 @@ test("History restores and re-restores writing, relationships, and private photo
       fullPage: true,
       caret: "initial",
     });
-    page.once("dialog", (d) => d.accept());
     await page
       .getByRole("button", { name: "Restore selected version" })
+      .click();
+    await page
+      .getByRole("dialog", { name: /Restore version \d+\?/ })
+      .getByRole("button", { name: "Restore version", exact: true })
       .click();
     await expect(current).toContainText("Current · version 4");
     await expect(current).toContainText("The original words I want to keep.");
@@ -162,9 +165,12 @@ test("History restores and re-restores writing, relationships, and private photo
       .select("collection_id")
       .eq("entry_id", entryID);
     expect(restored.data?.[0]?.collection_id).toBe(collectionID);
-    page.once("dialog", (d) => d.accept());
     await page
       .getByRole("button", { name: "Restore selected version" })
+      .click();
+    await page
+      .getByRole("dialog", { name: /Restore version \d+\?/ })
+      .getByRole("button", { name: "Restore version", exact: true })
       .click();
     await expect(current).toContainText("Current · version 5");
     await expect(current).toContainText("The newer words before restoration.");
@@ -176,9 +182,12 @@ test("History restores and re-restores writing, relationships, and private photo
           .eq("id", entryID)
       ).error,
     ).toBeNull();
-    page.once("dialog", (d) => d.accept());
     await page
       .getByRole("button", { name: "Restore selected version" })
+      .click();
+    await page
+      .getByRole("dialog", { name: /Restore version \d+\?/ })
+      .getByRole("button", { name: "Restore version", exact: true })
       .click();
     await expect(
       page.getByRole("alert").filter({ hasText: "changed on another device" }),

@@ -25,7 +25,8 @@ create function pg_temp.page(p_after bigint default 0,p_limit integer default 10
 select set_eq($$select unnest(public.export_dataset_names()) except select 'media_objects'$$,
  -- Internal photo revision reconciliation has no user content; complete snapshots
  -- and original membership are already exported through entry_versions/attachments.
- $$select tablename from pg_tables where schemaname='public' and tablename not in ('export_snapshots','export_snapshot_rows','entry_photo_changes')$$,
+ $$select tablename from pg_tables where schemaname='public' and tablename not in ('export_snapshots','export_snapshot_rows','entry_photo_changes','entry_places')
+   union all select 'entry_locations'$$,
  'Explicit export inventory covers every canonical table and requires updates for new tables');
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000095',true);

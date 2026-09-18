@@ -192,12 +192,14 @@ for (const kind of ["home", "vehicle"] as const) {
         dialog.getByRole("combobox", { name: "Date type", exact: true }),
       ).toHaveValue("unknown");
       await page.screenshot({
+        caret: "initial",
         path: `/private/tmp/memotrail-${kind}-chapter-desktop.png`,
         fullPage: true,
       });
       await page.setViewportSize({ width: 390, height: 844 });
       await page.emulateMedia({ colorScheme: "dark" });
       await page.screenshot({
+        caret: "initial",
         path: `/private/tmp/memotrail-${kind}-chapter-mobile.png`,
         fullPage: true,
       });
@@ -219,7 +221,7 @@ for (const kind of ["home", "vehicle"] as const) {
         .fill("Undated chapter");
       if (kind === "home")
         await dialog
-          .getByRole("textbox", { name: "Place name", exact: true })
+          .getByRole("textbox", { name: "Location name", exact: true })
           .fill("New place");
       await dialog
         .getByRole("button", {

@@ -47,7 +47,7 @@
 .coordinateBadge {
   position: absolute;
   z-index: 1;
-  padding: 5px 8px;
+  padding: 5px var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
   font-size: 9px;
   font-weight: var(--mt-font-weight-semibold);
@@ -59,7 +59,7 @@
   left: var(--mt-space-3);
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--mt-space-1);
   color: var(--mt-color-accent);
   background: color-mix(
     in srgb,
@@ -226,7 +226,10 @@
   flex: 0 0 auto;
 }
 
-.editableLink button {
+.editableLink
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ) {
   display: grid;
   width: 28px;
   height: 28px;
@@ -239,7 +242,10 @@
   cursor: pointer;
 }
 
-.editableLink button:hover {
+.editableLink
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):hover {
   color: var(--mt-color-warm);
 }
 
@@ -249,36 +255,23 @@
   gap: var(--mt-space-2);
 }
 
-.linkPicker select,
-.linkPicker button {
+.linkPicker select {
   height: 42px;
   min-width: 0;
   padding: 0 var(--mt-space-3);
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-small);
   color: var(--mt-color-ink);
-  background: var(--mt-color-surface-raised);
+  background: var(--mt-color-surface);
   font-family: var(--mt-font-family-sans);
   font-size: var(--mt-font-size-label);
 }
 
-.linkPicker button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  color: var(--mt-color-ink-muted);
-  cursor: pointer;
-}
-
-.linkPicker button:hover {
-  color: var(--mt-color-accent);
-  border-color: var(--mt-color-accent);
-}
-
-.linkPicker button:disabled,
 .linkPicker select:disabled,
-.editableLink button:disabled {
+.editableLink
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  ):disabled {
   cursor: wait;
   opacity: 0.52;
 }

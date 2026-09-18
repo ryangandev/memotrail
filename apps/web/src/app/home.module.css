@@ -1,54 +1,3 @@
-.pageHeader {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: var(--mt-space-6);
-}
-
-.eyebrow {
-  margin-bottom: var(--mt-space-2);
-  color: var(--mt-color-warm);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-}
-
-.pageHeader h1 {
-  max-width: 680px;
-  font-family: var(--mt-font-family-serif);
-  font-size: clamp(38px, 5vw, 58px);
-  font-weight: var(--mt-font-weight-medium);
-  letter-spacing: -0.045em;
-  line-height: 1.02;
-}
-
-.pageHeader > div > p:last-child {
-  margin-top: var(--mt-space-3);
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-body);
-}
-
-.searchLink {
-  display: flex;
-  height: 42px;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: var(--mt-space-2);
-  padding: 0 var(--mt-space-4);
-  border: 1px solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface);
-  font-size: var(--mt-font-size-label);
-  text-decoration: none;
-}
-
-.searchLink:hover {
-  color: var(--mt-color-accent);
-  border-color: var(--mt-color-accent);
-}
-
 .todaySection,
 .homeSection,
 .message {
@@ -88,7 +37,7 @@
 .inboxPreviewHeader > a {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--mt-space-1);
   color: var(--mt-color-accent);
   font-size: var(--mt-font-size-caption);
   font-weight: var(--mt-font-weight-medium);
@@ -172,7 +121,7 @@
 }
 
 .sectionHeading p {
-  margin-top: 4px;
+  margin-top: var(--mt-space-1);
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
 }
@@ -232,7 +181,7 @@
 .statValue {
   margin-bottom: var(--mt-space-2);
   font-family: var(--mt-font-family-serif);
-  font-size: 42px;
+  font-size: var(--mt-font-size-display);
   line-height: 0.9;
 }
 
@@ -242,7 +191,7 @@
 }
 
 .statCard small {
-  margin-top: 4px;
+  margin-top: var(--mt-space-1);
   overflow: hidden;
   color: var(--mt-color-ink-faint);
   font-size: 10px;
@@ -279,7 +228,7 @@
 .stageCard h3 {
   margin-top: var(--mt-space-4);
   font-family: var(--mt-font-family-serif);
-  font-size: 20px;
+  font-size: var(--mt-font-size-title-small);
   font-weight: var(--mt-font-weight-medium);
   line-height: 1.2;
 }
@@ -322,14 +271,14 @@
   padding: var(--mt-space-8);
 }
 
-.memoryCard header {
+.memoryCard header:not([data-ui-page-header]) {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--mt-space-3);
 }
 
-.memoryCard header span {
+.memoryCard header:not([data-ui-page-header]) span {
   color: var(--mt-color-warm);
   font-size: 10px;
   font-weight: var(--mt-font-weight-semibold);
@@ -367,7 +316,7 @@
 }
 
 .memoryCard footer span {
-  padding: 3px 8px;
+  padding: 3px var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-accent);
   background: var(--mt-color-surface);
@@ -403,14 +352,14 @@
   padding: var(--mt-space-5) var(--mt-space-6);
 }
 
-.recentCard header {
+.recentCard header:not([data-ui-page-header]) {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--mt-space-3);
 }
 
-.recentCard header span {
+.recentCard header:not([data-ui-page-header]) span {
   color: var(--mt-color-warm);
   font-size: 10px;
   font-weight: var(--mt-font-weight-semibold);
@@ -446,15 +395,14 @@
 }
 
 .recentCard footer span {
-  padding: 3px 8px;
+  padding: 3px var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-accent);
   background: var(--mt-color-accent-subtle);
   font-size: 10px;
 }
 
-.message,
-.emptyState {
+.message {
   display: flex;
   align-items: flex-start;
   gap: var(--mt-space-3);
@@ -465,14 +413,12 @@
   background: var(--mt-color-surface);
 }
 
-.message strong,
-.emptyState strong {
+.message strong {
   color: var(--mt-color-ink);
   font-size: var(--mt-font-size-label);
 }
 
-.message p,
-.emptyState p {
+.message p {
   margin-top: 3px;
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
@@ -493,34 +439,6 @@
 }
 
 @media (max-width: 720px) {
-  .pageHeader {
-    align-items: flex-start;
-  }
-
-  .pageHeader h1 {
-    font-size: 36px;
-  }
-
-  .pageHeader > div > p:last-child {
-    display: none;
-  }
-
-  .searchLink {
-    width: 40px;
-    padding: 0;
-    justify-content: center;
-  }
-
-  .searchLink span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-    clip-path: inset(50%);
-  }
-
   .todaySection,
   .homeSection,
   .message {

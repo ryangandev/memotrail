@@ -271,6 +271,7 @@ export function createExportArchive(
           "homes",
           "vehicles",
           "goals",
+          "locations",
           "places",
           "people",
           "timeline_items",

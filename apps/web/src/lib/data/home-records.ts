@@ -29,10 +29,10 @@ export async function getHomesWorkspace(): Promise<HomesWorkspace | null> {
     return null;
   }
 
-  const [homes, places, collections, tags, inbox] = await Promise.all([
+  const [homes, locations, collections, tags, inbox] = await Promise.all([
     context.client.rpc("homes_workspace", { p_limit: 100, p_offset: 0 }),
     context.client
-      .from("places")
+      .from("locations")
       .select("id,name,address,city,region,country,latitude,longitude,notes")
       .eq("owner_id", context.userId)
       .is("deleted_at", null)
@@ -65,9 +65,9 @@ export async function getHomesWorkspace(): Promise<HomesWorkspace | null> {
 
   const attachments = rows.flatMap((home) => home.attachments);
   const signedUrls = await signedImageUrls(context.client, attachments);
-  const placeOptions = places.error
+  const placeOptions = locations.error
     ? []
-    : (parseHomePlaceOptions(places.data) ?? []);
+    : (parseHomePlaceOptions(locations.data) ?? []);
 
   return {
     collectionOptions: collections.error

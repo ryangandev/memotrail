@@ -1,7 +1,7 @@
 .panel {
   display: grid;
   gap: 14px;
-  padding: 20px;
+  padding: var(--mt-space-5);
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface-raised);
@@ -12,32 +12,35 @@
   margin: 0;
 }
 .panel p {
-  font-size: 13px;
+  font-size: var(--mt-font-size-label);
   overflow-wrap: anywhere;
 }
 .controls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: var(--mt-space-2);
 }
-.controls button[aria-pressed="true"] {
+.controls
+  button:not(
+    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+  )[aria-pressed="true"] {
   background: var(--mt-color-accent-subtle);
   border-color: var(--mt-color-accent);
 }
 .controls span {
-  font-size: 12px;
+  font-size: var(--mt-font-size-caption);
   color: var(--mt-color-ink-muted);
 }
 .search {
   display: flex;
   align-items: flex-end;
-  gap: 8px;
+  gap: var(--mt-space-2);
 }
 .search label {
   flex: 1;
   min-width: 0;
-  font-size: 12px;
+  font-size: var(--mt-font-size-caption);
 }
 .search input {
   width: 100%;
@@ -46,7 +49,7 @@
 .list {
   list-style: none;
   display: grid;
-  gap: 12px;
+  gap: var(--mt-space-3);
   padding: 0;
   margin: 0;
 }
@@ -54,8 +57,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px 0;
+  gap: var(--mt-space-3);
+  padding: var(--mt-space-3) 0;
   border-bottom: 1px solid var(--mt-color-border);
 }
 .list li > div {
@@ -68,9 +71,6 @@
 }
 .list small {
   color: var(--mt-color-ink-muted);
-}
-.list button {
-  flex-shrink: 0;
 }
 @media (max-width: 480px) {
   .panel {

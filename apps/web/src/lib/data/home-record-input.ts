@@ -83,12 +83,12 @@ export function parseHomeEntryInput(input: unknown): Parsed<HomeEntryInput> {
   }
 
   if (!placeName) {
-    return invalid("Add a Place name for this Home.");
+    return invalid("Add a Location name for this Home.");
   }
 
   if (placeName.length > homePlaceNameLimit) {
     return invalid(
-      `Place names can be up to ${homePlaceNameLimit} characters.`,
+      `Location names can be up to ${homePlaceNameLimit} characters.`,
     );
   }
 
@@ -101,7 +101,7 @@ export function parseHomeEntryInput(input: unknown): Parsed<HomeEntryInput> {
     exceeds(moveInReason, 10_000) ||
     exceeds(moveOutReason, 10_000)
   ) {
-    return invalid("One of this Home's Place or move details is too long.");
+    return invalid("One of this Home's Location or move details is too long.");
   }
 
   if (occurredLabel && occurredLabel.length > homeLabelLimit) {
@@ -173,7 +173,7 @@ export function parseHomeEntryInput(input: unknown): Parsed<HomeEntryInput> {
   const placeId = input.placeId === null ? null : validUuid(input.placeId);
 
   if (input.placeId !== null && !placeId) {
-    return invalid("Choose a valid saved Place or create a new one.");
+    return invalid("Choose a valid saved Location or add a new one.");
   }
 
   return {

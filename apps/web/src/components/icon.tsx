@@ -1,39 +1,42 @@
-export type IconName =
-  | "archive"
-  | "bold"
-  | "bulletList"
-  | "calendar"
-  | "car"
-  | "check"
-  | "chevron"
-  | "close"
-  | "clock"
-  | "code"
-  | "codeBlock"
-  | "inbox"
-  | "home"
-  | "italic"
-  | "link"
-  | "map"
-  | "mic"
-  | "more"
-  | "photo"
-  | "person"
-  | "plus"
-  | "quote"
-  | "refresh"
-  | "search"
-  | "settings"
-  | "sparkle"
-  | "star"
-  | "stop"
-  | "strike"
-  | "target"
-  | "tag"
-  | "timeline"
-  | "trash"
-  | "underline"
-  | "orderedList";
+export const iconNames = [
+  "archive",
+  "bold",
+  "bulletList",
+  "calendar",
+  "car",
+  "check",
+  "chevron",
+  "close",
+  "clock",
+  "code",
+  "codeBlock",
+  "inbox",
+  "home",
+  "italic",
+  "link",
+  "map",
+  "mic",
+  "more",
+  "photo",
+  "person",
+  "plus",
+  "quote",
+  "refresh",
+  "search",
+  "settings",
+  "sparkle",
+  "star",
+  "stop",
+  "strike",
+  "target",
+  "tag",
+  "timeline",
+  "trash",
+  "underline",
+  "orderedList",
+] as const;
+
+export type IconName = (typeof iconNames)[number];
 
 type IconProps = {
   name: IconName;

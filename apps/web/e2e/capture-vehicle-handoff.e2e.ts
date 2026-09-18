@@ -111,6 +111,7 @@ test("Inbox Capture creates a linked Vehicle through the specialized form", asyn
     await editor.getByRole("spinbutton", { name: /Model year/ }).fill("2025");
     await editor.getByRole("textbox", { name: /Color/ }).fill("White Pearl");
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-capture-vehicle-handoff.png",
       fullPage: true,
     });

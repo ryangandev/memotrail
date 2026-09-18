@@ -12,6 +12,30 @@
   background: var(--mt-color-surface);
 }
 
+.form[data-disabled="true"] {
+  border-color: var(--mt-color-border);
+  background: var(--mt-color-surface-subtle);
+}
+
+.editor[data-disabled="true"] .content :global(.tiptap) {
+  color: var(--mt-color-ink-faint);
+}
+
+.editor[data-disabled="true"] .content :global(.tiptap blockquote),
+.editor[data-disabled="true"] .content :global(.tiptap a) {
+  color: var(--mt-color-ink-faint);
+}
+
+.editor[data-disabled="true"] .content :global(.tiptap code),
+.editor[data-disabled="true"] .content :global(.tiptap pre) {
+  color: var(--mt-color-ink-faint);
+  background: color-mix(
+    in srgb,
+    var(--mt-color-surface-subtle) 76%,
+    var(--mt-color-canvas)
+  );
+}
+
 .page,
 .dialog {
   background: transparent;
@@ -119,6 +143,11 @@
   border-top: 1px solid var(--mt-color-border);
 }
 
+.form[data-disabled="true"] .toolbar {
+  color: var(--mt-color-ink-faint);
+  border-color: var(--mt-color-border);
+}
+
 .toolbarButton {
   position: relative;
   display: grid;
@@ -149,7 +178,7 @@
   max-width: 180px;
   align-items: center;
   gap: var(--mt-space-2);
-  padding: 6px 8px;
+  padding: 6px var(--mt-space-2);
   border: 1px solid transparent;
   border-radius: 6px;
   visibility: hidden;
@@ -169,7 +198,7 @@
 }
 
 .tooltip kbd {
-  padding: 2px 4px;
+  padding: 2px var(--mt-space-1);
   border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
   border-radius: 4px;
   color: inherit;
@@ -215,7 +244,7 @@
 .separator {
   width: 1px;
   height: 18px;
-  margin: 0 4px;
+  margin: 0 var(--mt-space-1);
   flex: 0 0 auto;
   background: var(--mt-color-border);
 }
@@ -253,26 +282,6 @@
 .linkEditor input:focus {
   border-color: var(--mt-color-accent);
   box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
-}
-
-.linkEditor button {
-  height: 34px;
-  padding: 0 var(--mt-space-3);
-  border-radius: 6px;
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface-subtle);
-  font-size: var(--mt-font-size-caption);
-  cursor: pointer;
-}
-
-.linkEditor button:last-child {
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent);
-}
-
-.linkEditor button:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
 }
 
 @media (max-width: 720px) {

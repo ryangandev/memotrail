@@ -158,6 +158,8 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     await open.click();
     await expect(dialog).toContainText("Empty 34 items from Trash?");
     await page.screenshot({
+      caret: "initial",
+      animations: "disabled",
       path: "/private/tmp/memotrail-empty-trash-desktop.png",
     });
     await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
@@ -186,6 +188,8 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     await open.click();
     await expect(dialog).toContainText("Empty 33 items from Trash?");
     await page.screenshot({
+      caret: "initial",
+      animations: "disabled",
       path: "/private/tmp/memotrail-empty-trash-mobile.png",
     });
     expect(

@@ -109,10 +109,12 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
       buffer: bytes,
     });
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-photo-management-desktop.png",
       fullPage: true,
     });
     await gallery.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-photo-management-panel-light.png",
     });
     let dropped = false;
@@ -153,12 +155,15 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
       (await client.rpc("entry_history", { p_entry_id: entry })).data.current
         .revision,
     ).toBe(2);
-    page.once("dialog", (dialog) => dialog.dismiss());
     await gallery
       .getByRole("button", {
         name: "Move New memory.png to Trash",
         exact: true,
       })
+      .click();
+    await page
+      .getByRole("dialog", { name: "Move “New memory.png” to Trash?" })
+      .getByRole("button", { name: "Cancel", exact: true })
       .click();
     await expect(
       gallery.getByRole("button", { name: "Open New memory.png", exact: true }),
@@ -166,18 +171,23 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-photo-management-mobile.png",
       fullPage: true,
     });
     await gallery.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-photo-management-panel-dark.png",
     });
-    page.once("dialog", (dialog) => dialog.accept());
     await gallery
       .getByRole("button", {
         name: "Move New memory.png to Trash",
         exact: true,
       })
+      .click();
+    await page
+      .getByRole("dialog", { name: "Move “New memory.png” to Trash?" })
+      .getByRole("button", { name: "Move photo to Trash", exact: true })
       .click();
     await expect(
       gallery.getByRole("button", { name: "Open New memory.png", exact: true }),
@@ -243,9 +253,12 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
     await page
       .getByRole("combobox", { name: /Earlier version/ })
       .selectOption("1");
-    page.once("dialog", (dialog) => dialog.accept());
     await page
       .getByRole("button", { name: "Restore selected version", exact: true })
+      .click();
+    await page
+      .getByRole("dialog", { name: /Restore version \d+\?/ })
+      .getByRole("button", { name: "Restore version", exact: true })
       .click();
     await expect(
       page.getByRole("region", { name: "Current version", exact: true }),
@@ -256,9 +269,12 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
     await expect(
       gallery.getByText("No saved photos on this Entry."),
     ).toBeVisible();
-    page.once("dialog", (dialog) => dialog.accept());
     await page
       .getByRole("button", { name: "Restore selected version", exact: true })
+      .click();
+    await page
+      .getByRole("dialog", { name: /Restore version \d+\?/ })
+      .getByRole("button", { name: "Restore version", exact: true })
       .click();
     await expect(
       page.getByRole("region", { name: "Current version", exact: true }),

@@ -1,4 +1,7 @@
 "use client";
+import { PageHeader } from "@/components/page-header";
+import { Button, ButtonLink } from "@/components/button";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -7,6 +10,7 @@ import { EntryPhotoGallery } from "./entry-photo-gallery";
 import { EntryRelationsPanel } from "./entry-relations";
 import { EntryRichTextContent } from "./entry-rich-text-content";
 import { Icon } from "./icon";
+import { DatePickerField } from "./date-picker-field";
 import { loadEditableEntry } from "@/app/history/actions";
 import {
   restoreHistoryVersion,
@@ -29,7 +33,7 @@ import {
 } from "@/lib/data/history";
 import { entryRichTextMetadataKey } from "@/lib/data/rich-text";
 import { wikiItemIdentityLabel, wikiItemKindLabel } from "@/lib/data/wiki-item";
-import styles from "@/app/history/page.module.css";
+import styles from "@/components/entry-history-view.module.css";
 export function EntryHistoryView({
   history,
   mode = "history",
@@ -42,6 +46,7 @@ export function EntryHistoryView({
   ownerId: string;
 }) {
   const router = useRouter();
+  const requestConfirmation = useConfirmationDialog();
   const [version, setVersion] = useState<number | undefined>(
     history.versions[0]?.version,
   );
@@ -65,13 +70,20 @@ export function EntryHistoryView({
   const selected =
     history.versions.find((v) => v.version === version) ?? history.versions[0];
   async function restore() {
-    if (
-      !selected ||
-      !confirm(
-        `Restore version ${selected.version}? Your current version will be kept in history. Recorded links and photo membership will also be restored; shared names and definitions, including Collections and tags, stay current.`,
-      )
-    )
-      return;
+    if (!selected) return;
+    const confirmed = await requestConfirmation({
+      title: <>Restore version {selected.version}?</>,
+      description: (
+        <>
+          Your current version will remain in history. Recorded links and photo
+          membership will also be restored, while shared Collection and tag
+          definitions stay current.
+        </>
+      ),
+      confirmLabel: "Restore version",
+      eyebrow: <>History action</>,
+    });
+    if (!confirmed) return;
     setBusy(true);
     setError(null);
     try {
@@ -94,14 +106,15 @@ export function EntryHistoryView({
     }
   }
   async function moveToTrash() {
-    if (
-      busy ||
-      !confirm(
-        `Move “${historyTitle(history.current)}” to Trash? You can restore it later.`,
-      )
-    ) {
-      return;
-    }
+    if (busy) return;
+    const confirmed = await requestConfirmation({
+      title: <>Move “{historyTitle(history.current)}” to Trash?</>,
+      description: <>You can restore it later from Trash.</>,
+      confirmLabel: "Move to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
 
     setBusy(true);
     setError(null);
@@ -133,18 +146,7 @@ export function EntryHistoryView({
         ← {detailMode ? "Library" : "All version history"}
       </Link>
       {detailMode ? (
-        <header className={styles.detailHeader}>
-          <div className={styles.detailIdentity}>
-            <span>
-              {wikiItemIdentityLabel(
-                history.current.item_kind,
-                history.current.item_subtype,
-              )}
-            </span>
-            <span>{historyDateLabel(history.current)}</span>
-          </div>
-          <h1>{historyTitle(history.current)}</h1>
-        </header>
+        <PageHeader title={<>{historyTitle(history.current)}</>} />
       ) : (
         <h2>{historyTitle(history.current)}</h2>
       )}
@@ -153,14 +155,19 @@ export function EntryHistoryView({
           ["writing", "event", "story"].includes(
             String(history.current.item_kind),
           ) && (
-            <button disabled={busy} onClick={() => void edit()}>
+            <Button
+              variant="secondary"
+              type="submit"
+              disabled={busy}
+              onClick={() => void edit()}
+            >
               Edit {wikiItemKindLabel(history.current.item_kind)}
-            </button>
+            </Button>
           )}
         {detailMode && history.versions.length > 0 ? (
-          <Link href={`/history?entry=${history.current.id}`}>
+          <ButtonLink href={`/history?entry=${history.current.id}`}>
             View version history ({history.total_count})
-          </Link>
+          </ButtonLink>
         ) : null}
         {editing && (
           <EntryReviewDialog
@@ -176,9 +183,9 @@ export function EntryHistoryView({
           />
         )}
         {!history.current.deleted_at && (
-          <Link href={`/explore?entry=${history.current.id}`}>
+          <ButtonLink href={`/explore?entry=${history.current.id}`}>
             Explore with AI
-          </Link>
+          </ButtonLink>
         )}
         {!history.current.deleted_at &&
           history.current.item_kind !== "goal" && (
@@ -191,18 +198,21 @@ export function EntryHistoryView({
           )}
         {!history.current.deleted_at &&
           history.current.item_kind === "goal" && (
-            <Link href={`/goals?entry=${history.current.id}`}>Open Goal</Link>
+            <ButtonLink href={`/goals?entry=${history.current.id}`}>
+              Open Goal
+            </ButtonLink>
           )}
         {detailMode && !history.current.deleted_at ? (
-          <button
-            className={styles.trashButton}
+          <Button
+            variant="danger"
+            className={styles.trashAction}
             disabled={busy}
             onClick={() => void moveToTrash()}
             type="button"
           >
             <Icon name="trash" size={16} />
             Move to Trash
-          </button>
+          </Button>
         ) : null}
       </div>
       {error && <p role="alert">{error}</p>}
@@ -246,12 +256,14 @@ export function EntryHistoryView({
               ))}
             </select>
           </label>
-          <button
+          <Button
+            variant="secondary"
+            type="submit"
             disabled={busy || !selected || Boolean(history.current.deleted_at)}
             onClick={restore}
           >
             {busy ? "Restoring…" : "Restore selected version"}
-          </button>
+          </Button>
         </div>
       )}
       {history.current.deleted_at && (
@@ -278,7 +290,7 @@ export function EntryHistoryView({
             </p>
           )}
           <p className={styles.note}>
-            Shared People, Place, Collection, and track definitions stay
+            Shared People, Location, Collection, and track definitions stay
             current. Photo files are not deleted. Missing historical links or
             originals stop the restore safely.
           </p>
@@ -418,7 +430,9 @@ function GoalExtraction({
   const [error, setError] = useState<string | null>(null);
   if (!open)
     return (
-      <button
+      <Button
+        variant="primary"
+        type="submit"
         disabled={disabled}
         onClick={() => {
           setGoalId(crypto.randomUUID());
@@ -426,7 +440,7 @@ function GoalExtraction({
         }}
       >
         Create linked Goal
-      </button>
+      </Button>
     );
   return (
     <form
@@ -505,16 +519,15 @@ function GoalExtraction({
             ))}
           </select>
         </label>
-        <label>
-          Target date
-          <input
-            type="date"
-            value={targetDate}
-            onChange={(e) => setTargetDate(e.target.value)}
-          />
-        </label>
+        <DatePickerField
+          disabled={busy}
+          label="Target date"
+          value={targetDate}
+          onChange={setTargetDate}
+        />
         <div className={styles.controls}>
-          <button
+          <Button
+            variant="secondary"
             type="button"
             onClick={() => {
               setOpen(false);
@@ -522,10 +535,10 @@ function GoalExtraction({
             }}
           >
             Cancel
-          </button>
-          <button type="submit">
+          </Button>
+          <Button variant="primary" type="submit">
             {busy ? "Creating..." : "Create linked Goal"}
-          </button>
+          </Button>
         </div>
       </fieldset>
       {error && <p role="alert">{error}</p>}

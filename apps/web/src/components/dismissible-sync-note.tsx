@@ -1,7 +1,9 @@
 "use client";
+import workspaceShellStyles from "@/components/workspace-shell.module.css";
+import { Button } from "@/components/button";
 
 import { useCallback, useState, useSyncExternalStore } from "react";
-import styles from "@/app/page.module.css";
+
 import { Icon } from "@/components/icon";
 
 export function DismissibleSyncNote({ ownerId }: { ownerId: string }) {
@@ -46,7 +48,7 @@ export function DismissibleSyncNote({ ownerId }: { ownerId: string }) {
   return (
     <div
       aria-label="Private cloud sync"
-      className={styles.archiveNote}
+      className={workspaceShellStyles.archiveNote}
       role="note"
     >
       <Icon name="clock" size={17} />
@@ -54,14 +56,15 @@ export function DismissibleSyncNote({ ownerId }: { ownerId: string }) {
         <strong>Private cloud sync</strong>
         <span>Available on Web and iPhone</span>
       </div>
-      <button
+      <Button
+        variant="secondary"
         aria-label="Dismiss private cloud sync"
         onClick={dismiss}
         title="Dismiss"
         type="button"
       >
         <Icon name="close" size={15} />
-      </button>
+      </Button>
     </div>
   );
 }
