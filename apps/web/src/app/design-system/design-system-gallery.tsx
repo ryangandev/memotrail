@@ -19,6 +19,7 @@ import { RichTextEditor } from "@/components/rich-text-editor";
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import type { EntryRichText } from "@/lib/data/rich-text";
 import styles from "./page.module.css";
+import { PendingComponentReview } from "./pending-component-review";
 
 type TokenSet = {
   meta: { name: string; version: string };
@@ -152,6 +153,14 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
         </label>
         <p>This control changes only the development gallery preview.</p>
       </div>
+      <GallerySection
+        description="New shared primitives awaiting review. These examples use local demo state only; production pages have not adopted them."
+        id="pending-review"
+        index="00"
+        title="Pending review"
+      >
+        <PendingComponentReview />
+      </GallerySection>
       <GallerySection
         description="Values come directly from packages/design-tokens/tokens.json. The nested previews exercise the generated light and dark CSS variables."
         id="foundations"
@@ -534,7 +543,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="Current reusable feedback is specialized rather than a generic Alert, Toast, Badge, EmptyState, or Skeleton API."
+        description="Reviewed media feedback. The proposed generic EmptyState is in Pending review above."
         id="feedback"
         index="06"
         title="Feedback and media states"

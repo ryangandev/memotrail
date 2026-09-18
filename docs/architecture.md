@@ -152,6 +152,9 @@ Pair it with the test file carrying the same feature name.
 - Generated Web CSS and Swift values are never edited directly.
 - Token changes run `pnpm tokens:generate` and `pnpm tokens:check`.
 - The development-only `/design-system` route renders production Web components and current generated tokens for review; it is unavailable in Production.
+- New primitives in the gallery's Pending review section are proposals, not approved migration targets.
+- DatePickerField and OccurrenceEditor own `components/date-fields.module.css`; named date fields preserve native form validation and GET serialization without importing route styling.
+- Inside a modal, date/time fields use a `portalContainer` within the dialog so their popovers stay inside its accessibility and theme boundary.
 - Cross-platform components preserve meaning and state while allowing native interaction differences.
 - Authenticated Web routes use `components/page-frame.tsx` for outer width, centering, responsive gutters, and vertical page rhythm.
 - Page frame variants are semantic: `compact` is 880px for forms and focused reading, `standard` is 960px for lists and search, `wide` is 1080px for dashboards and card grids, and `canvas` is 1180px for dense spatial views.

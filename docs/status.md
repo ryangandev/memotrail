@@ -21,7 +21,7 @@ Use Git history for feature-level implementation and test evidence.
 | Private media, Entry history, relationships, Trash, and complete export              | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                  |
 | Hosted Supabase contracts                                                            | Deployed to the confirmed MemoTrail project                                                                                                                                         |
 | Capture First Life Wiki information model                                            | Canonical database model is live on the confirmed hosted project; Web navigation, Library, Inbox organization, Search, Collections, and history use Kind-aware identity and routing |
-| Web design system                                                                    | Gallery review accepted; production migration in progress, starting with token validation and existing canonical components |
+| Web design system                                                                    | Token/date batches implemented; new Button, Dialog, PageHeader, and EmptyState await gallery review before corresponding migration                                                  |
 | Backup and restore                                                                   | Not ready                                                                                                                                                                           |
 | Current GitHub CI                                                                    | Blocked before jobs start by account billing or spending limits                                                                                                                     |
 
@@ -67,8 +67,9 @@ The latest automated native UI attempt was blocked by the locked development Mac
 ### 6. Complete the Web design system migration
 
 - The user accepted the reviewed gallery as the canonical Web source and authorized production migration while preserving product behavior.
-- Migrate in dependency order: tokens, date/form components, record cards, component-owned CSS, then full regression verification.
-- The current gallery has no generic Button, Dialog, PageHeader, or EmptyState implementation; these categories need an explicit exception or a separate component review before replacing their production implementations.
+- Token references are validated during Web lint; date fields and occurrence styling are component-owned, with shared date controls used by Search and Goal forms.
+- Per the user's review gate, proposed Button, Dialog, PageHeader, and EmptyState implementations appear first in `/design-system#pending-review`; do not adopt these categories in production until approved.
+- After review, continue record-card consolidation, remaining shared primitives and component-owned CSS, then full regression verification.
 
 ## Watch list
 

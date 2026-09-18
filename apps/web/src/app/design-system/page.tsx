@@ -20,8 +20,8 @@ export default function DesignSystemPage() {
         <h1>Web Design System</h1>
         <p>
           A live inventory of MemoTrail&apos;s current tokens, reusable Web
-          components, variants, and states. Every component specimen below
-          imports the production implementation.
+          components, variants, and states. Specimens import shared component
+          implementations; new proposals are explicitly marked Pending review.
         </p>
       </header>
       <DesignSystemGallery tokens={tokens} />
