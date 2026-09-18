@@ -72,12 +72,6 @@
 .list small {
   color: var(--mt-color-ink-muted);
 }
-.list
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
-  flex-shrink: 0;
-}
 @media (max-width: 480px) {
   .panel {
     padding: 14px;

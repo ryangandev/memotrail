@@ -34,35 +34,6 @@
   box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
 }
 
-.search
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
-  display: inline-flex;
-  min-width: 104px;
-  min-height: 48px;
-  align-items: center;
-  justify-content: center;
-  gap: var(--mt-space-2);
-  padding: 0 var(--mt-space-4);
-  border: 0;
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent);
-  font: inherit;
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-medium);
-  cursor: pointer;
-  transition: background var(--mt-motion-quick);
-}
-
-.search
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):hover {
-  background: var(--mt-color-accent-hover);
-}
-
 .tagList {
   margin-top: var(--mt-space-8);
 }
@@ -196,13 +167,6 @@
   .search > div {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .search
-    button:not(
-      :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-    ) {
-    width: 100%;
   }
 }
 

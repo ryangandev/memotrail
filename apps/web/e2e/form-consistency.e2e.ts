@@ -134,7 +134,7 @@ test("specialized forms share photo fields and required-label conventions", asyn
       name: "Close Person editor",
       exact: true,
     });
-    await expect(close).toHaveText("×");
+    await expect(close.locator("svg")).toHaveCount(1);
     const personPanel = personDialog.locator(":scope > div");
     await expect
       .poll(() => personPanel.evaluate((element) => element.scrollLeft))

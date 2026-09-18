@@ -1,9 +1,10 @@
 "use client";
+import { Dialog } from "@/components/dialog";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/button";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   savePlace,
@@ -311,15 +312,6 @@ function PlaceEditor({
   const hasPersistedLinks = (place?.linkedEntryCount ?? 0) > 0;
   const canTrash = Boolean(currentId) && !hasPersistedLinks;
 
-  useEffect(() => {
-    nameRef.current?.focus();
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isPending) onClose();
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPending, onClose]);
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const input: PlaceRecordInput = {
@@ -397,307 +389,290 @@ function PlaceEditor({
   }
 
   return (
-    <div
-      aria-labelledby="place-editor-title"
-      aria-modal="true"
-      className={common.dialogBackdrop}
-      onMouseDown={(event) => {
-        if (event.currentTarget === event.target && !isPending) onClose();
+    <Dialog
+      open
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
       }}
-      role="dialog"
-    >
-      <div className={common.dialogPanel}>
-        <header className={common.dialogHeader}>
+      title={<>{currentId ? name || "Place" : "Pin a place in your story"}</>}
+      titleId="place-editor-title"
+      eyebrow={<>{currentId ? "Edit Place" : "New Place"}</>}
+      closeLabel="Close Place editor"
+      busy={isPending}
+      size="wide"
+      footer={
+        <div className={common.dialogFooter}>
           <div>
-            <p>{currentId ? "Edit Place" : "New Place"}</p>
-            <h2 id="place-editor-title">
-              {currentId ? name || "Place" : "Pin a place in your story"}
-            </h2>
-          </div>
-          <button
-            aria-label="Close Place editor"
-            disabled={isPending}
-            onClick={onClose}
-            type="button"
-          >
-            ×
-          </button>
-        </header>
-
-        <form onSubmit={handleSubmit}>
-          <div className={common.formGrid}>
-            <fieldset className={common.formSection}>
-              <legend>Place details</legend>
-              <label className={common.fullField}>
-                <span>
-                  Name <span aria-hidden="true">*</span>
-                </span>
-                <input
-                  aria-label="Name"
-                  maxLength={placeNameLimit}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Rittenhouse Square apartment"
-                  ref={nameRef}
-                  required
-                  value={name}
-                />
-              </label>
-              <label className={common.fullField}>
-                <span>Address</span>
-                <input
-                  autoComplete="street-address"
-                  maxLength={placeAddressLimit}
-                  onChange={(event) => setAddress(event.target.value)}
-                  placeholder="A street address or descriptive location"
-                  value={address}
-                />
-              </label>
-              <label>
-                <span>City</span>
-                <input
-                  autoComplete="address-level2"
-                  maxLength={placeCityLimit}
-                  onChange={(event) => setCity(event.target.value)}
-                  placeholder="Philadelphia"
-                  value={city}
-                />
-              </label>
-              <label>
-                <span>Region</span>
-                <input
-                  autoComplete="address-level1"
-                  maxLength={placeRegionLimit}
-                  onChange={(event) => setRegion(event.target.value)}
-                  placeholder="Pennsylvania"
-                  value={region}
-                />
-              </label>
-              <label className={common.fullField}>
-                <span>Country</span>
-                <input
-                  autoComplete="country-name"
-                  maxLength={placeCountryLimit}
-                  onChange={(event) => setCountry(event.target.value)}
-                  placeholder="United States"
-                  value={country}
-                />
-              </label>
-            </fieldset>
-
-            <fieldset className={common.formSection}>
-              <legend>Map coordinates</legend>
-              <label>
-                <span>Latitude</span>
-                <input
-                  inputMode="decimal"
-                  max="90"
-                  min="-90"
-                  onChange={(event) => setLatitude(event.target.value)}
-                  placeholder="39.9526"
-                  step="any"
-                  type="number"
-                  value={latitude}
-                />
-              </label>
-              <label>
-                <span>Longitude</span>
-                <input
-                  inputMode="decimal"
-                  max="180"
-                  min="-180"
-                  onChange={(event) => setLongitude(event.target.value)}
-                  placeholder="-75.1652"
-                  step="any"
-                  type="number"
-                  value={longitude}
-                />
-              </label>
-              <p className={`${common.fullField} ${styles.coordinateNote}`}>
-                Add both values or leave both empty. Coordinates are stored now
-                so this archive can support a map view later.
-              </p>
-            </fieldset>
-
-            <fieldset className={common.formSection}>
-              <legend>Memory</legend>
-              <label className={common.fullField}>
-                <span>Notes</span>
-                <textarea
-                  maxLength={placeNotesLimit}
-                  onChange={(event) => setNotes(event.target.value)}
-                  placeholder="What makes this place worth remembering?"
-                  rows={5}
-                  value={notes}
-                />
-              </label>
-            </fieldset>
-
-            <fieldset
-              className={`${common.formSection} ${styles.relationshipSection}`}
-            >
-              <legend>Connected Items</legend>
-              <p className={styles.relationshipIntro}>
-                Link existing Items to bring their dates, text, and private
-                photos into this Place. Home links are protected here.
-              </p>
-
-              {protectedEntries.length > 0 ? (
-                <div className={styles.protectedLinks}>
-                  <strong>Protected context</strong>
-                  {protectedEntries.map((entry) => (
-                    <LinkedEntryRow
-                      entry={entry}
-                      key={`${entry.relationship}-${entry.id}`}
-                    />
-                  ))}
-                </div>
-              ) : null}
-
-              {relatedEntryIds.length > 0 ? (
-                <div className={styles.editableLinks}>
-                  <strong>Related Items</strong>
-                  {relatedEntryIds.map((entryId) => {
-                    const option = linkOptions.find(
-                      (item) => item.id === entryId,
-                    );
-                    const existing = place?.linkedEntries.find(
-                      (item) => item.id === entryId,
-                    );
-                    return (
-                      <div className={styles.editableLink} key={entryId}>
-                        <span>
-                          <small>
-                            {option
-                              ? wikiItemIdentityLabel(
-                                  option.itemKind,
-                                  option.itemSubtype,
-                                )
-                              : existing
-                                ? wikiItemIdentityLabel(
-                                    existing.itemKind,
-                                    existing.itemSubtype,
-                                  )
-                                : "Item"}
-                          </small>
-                          {option?.title ?? existing?.title ?? "Linked Item"}
-                        </span>
-                        <button
-                          aria-label={`Unlink ${option?.title ?? existing?.title ?? "Item"}`}
-                          disabled={isPending}
-                          onClick={() =>
-                            setRelatedEntryIds((current) =>
-                              current.filter((id) => id !== entryId),
-                            )
-                          }
-                          type="button"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : null}
-
-              <div className={styles.linkPicker}>
-                <select
-                  aria-label="Item to link"
-                  disabled={isPending || availableLinkOptions.length === 0}
-                  onChange={(event) => setSelectedEntryId(event.target.value)}
-                  value={selectedEntryId}
-                >
-                  <option value="">
-                    {availableLinkOptions.length > 0
-                      ? "Choose an Item"
-                      : "No more Items available"}
-                  </option>
-                  {availableLinkOptions.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {wikiItemIdentityLabel(
-                        option.itemKind,
-                        option.itemSubtype,
-                      )}{" "}
-                      · {option.title}
-                    </option>
-                  ))}
-                </select>
+            {currentId ? (
+              <div className={styles.trashControl}>
                 <Button
-                  variant="secondary"
-                  disabled={!selectedEntryId || isPending}
-                  onClick={() => {
-                    if (!selectedEntryId) return;
-                    setRelatedEntryIds((current) => [
-                      ...current,
-                      selectedEntryId,
-                    ]);
-                    setSelectedEntryId("");
-                  }}
+                  variant="danger"
+
+                  disabled={isPending || !canTrash}
+                  onClick={() => void handleTrash()}
                   type="button"
                 >
-                  <Icon name="plus" size={14} /> Link Item
+                  Move to Trash
                 </Button>
+                {!canTrash ? (
+                  <small>
+                    {protectedEntries.length > 0
+                      ? "Remove its Home link first"
+                      : relatedEntryIds.length === 0
+                        ? "Save the unlinked Place first"
+                        : "Unlink every Item first"}
+                  </small>
+                ) : null}
               </div>
-            </fieldset>
+            ) : null}
           </div>
+          <div>
+            <Button
+              variant="secondary"
 
-          {result ? (
-            <p className={common.formMessage} role="alert">
-              {result.message}
+              disabled={isPending}
+              onClick={onClose}
+              type="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              form="places-workspace-form"
+              variant="primary"
+
+              disabled={isPending}
+              type="submit"
+            >
+              {isPending
+                ? "Saving..."
+                : currentId
+                  ? "Save changes"
+                  : "Add Place"}
+            </Button>
+          </div>
+        </div>
+      }
+    >
+      <form id="places-workspace-form" onSubmit={handleSubmit}>
+        <div className={common.formGrid}>
+          <fieldset className={common.formSection}>
+            <legend>Place details</legend>
+            <label className={common.fullField}>
+              <span>
+                Name <span aria-hidden="true">*</span>
+              </span>
+              <input
+                aria-label="Name"
+                maxLength={placeNameLimit}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Rittenhouse Square apartment"
+                ref={nameRef}
+                required
+                value={name}
+              />
+            </label>
+            <label className={common.fullField}>
+              <span>Address</span>
+              <input
+                autoComplete="street-address"
+                maxLength={placeAddressLimit}
+                onChange={(event) => setAddress(event.target.value)}
+                placeholder="A street address or descriptive location"
+                value={address}
+              />
+            </label>
+            <label>
+              <span>City</span>
+              <input
+                autoComplete="address-level2"
+                maxLength={placeCityLimit}
+                onChange={(event) => setCity(event.target.value)}
+                placeholder="Philadelphia"
+                value={city}
+              />
+            </label>
+            <label>
+              <span>Region</span>
+              <input
+                autoComplete="address-level1"
+                maxLength={placeRegionLimit}
+                onChange={(event) => setRegion(event.target.value)}
+                placeholder="Pennsylvania"
+                value={region}
+              />
+            </label>
+            <label className={common.fullField}>
+              <span>Country</span>
+              <input
+                autoComplete="country-name"
+                maxLength={placeCountryLimit}
+                onChange={(event) => setCountry(event.target.value)}
+                placeholder="United States"
+                value={country}
+              />
+            </label>
+          </fieldset>
+
+          <fieldset className={common.formSection}>
+            <legend>Map coordinates</legend>
+            <label>
+              <span>Latitude</span>
+              <input
+                inputMode="decimal"
+                max="90"
+                min="-90"
+                onChange={(event) => setLatitude(event.target.value)}
+                placeholder="39.9526"
+                step="any"
+                type="number"
+                value={latitude}
+              />
+            </label>
+            <label>
+              <span>Longitude</span>
+              <input
+                inputMode="decimal"
+                max="180"
+                min="-180"
+                onChange={(event) => setLongitude(event.target.value)}
+                placeholder="-75.1652"
+                step="any"
+                type="number"
+                value={longitude}
+              />
+            </label>
+            <p className={`${common.fullField} ${styles.coordinateNote}`}>
+              Add both values or leave both empty. Coordinates are stored now so
+              this archive can support a map view later.
             </p>
-          ) : null}
+          </fieldset>
 
-          <footer className={common.dialogFooter}>
-            <div>
-              {currentId ? (
-                <div className={styles.trashControl}>
-                  <Button
-                    variant="danger"
+          <fieldset className={common.formSection}>
+            <legend>Memory</legend>
+            <label className={common.fullField}>
+              <span>Notes</span>
+              <textarea
+                maxLength={placeNotesLimit}
+                onChange={(event) => setNotes(event.target.value)}
+                placeholder="What makes this place worth remembering?"
+                rows={5}
+                value={notes}
+              />
+            </label>
+          </fieldset>
 
-                    disabled={isPending || !canTrash}
-                    onClick={() => void handleTrash()}
-                    type="button"
-                  >
-                    Move to Trash
-                  </Button>
-                  {!canTrash ? (
-                    <small>
-                      {protectedEntries.length > 0
-                        ? "Remove its Home link first"
-                        : relatedEntryIds.length === 0
-                          ? "Save the unlinked Place first"
-                          : "Unlink every Item first"}
-                    </small>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-            <div>
+          <fieldset
+            className={`${common.formSection} ${styles.relationshipSection}`}
+          >
+            <legend>Connected Items</legend>
+            <p className={styles.relationshipIntro}>
+              Link existing Items to bring their dates, text, and private photos
+              into this Place. Home links are protected here.
+            </p>
+
+            {protectedEntries.length > 0 ? (
+              <div className={styles.protectedLinks}>
+                <strong>Protected context</strong>
+                {protectedEntries.map((entry) => (
+                  <LinkedEntryRow
+                    entry={entry}
+                    key={`${entry.relationship}-${entry.id}`}
+                  />
+                ))}
+              </div>
+            ) : null}
+
+            {relatedEntryIds.length > 0 ? (
+              <div className={styles.editableLinks}>
+                <strong>Related Items</strong>
+                {relatedEntryIds.map((entryId) => {
+                  const option = linkOptions.find(
+                    (item) => item.id === entryId,
+                  );
+                  const existing = place?.linkedEntries.find(
+                    (item) => item.id === entryId,
+                  );
+                  return (
+                    <div className={styles.editableLink} key={entryId}>
+                      <span>
+                        <small>
+                          {option
+                            ? wikiItemIdentityLabel(
+                                option.itemKind,
+                                option.itemSubtype,
+                              )
+                            : existing
+                              ? wikiItemIdentityLabel(
+                                  existing.itemKind,
+                                  existing.itemSubtype,
+                                )
+                              : "Item"}
+                        </small>
+                        {option?.title ?? existing?.title ?? "Linked Item"}
+                      </span>
+                      <button
+                        aria-label={`Unlink ${option?.title ?? existing?.title ?? "Item"}`}
+                        disabled={isPending}
+                        onClick={() =>
+                          setRelatedEntryIds((current) =>
+                            current.filter((id) => id !== entryId),
+                          )
+                        }
+                        type="button"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+
+            <div className={styles.linkPicker}>
+              <select
+                aria-label="Item to link"
+                disabled={isPending || availableLinkOptions.length === 0}
+                onChange={(event) => setSelectedEntryId(event.target.value)}
+                value={selectedEntryId}
+              >
+                <option value="">
+                  {availableLinkOptions.length > 0
+                    ? "Choose an Item"
+                    : "No more Items available"}
+                </option>
+                {availableLinkOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {wikiItemIdentityLabel(option.itemKind, option.itemSubtype)}{" "}
+                    · {option.title}
+                  </option>
+                ))}
+              </select>
               <Button
                 variant="secondary"
-
-                disabled={isPending}
-                onClick={onClose}
+                disabled={!selectedEntryId || isPending}
+                onClick={() => {
+                  if (!selectedEntryId) return;
+                  setRelatedEntryIds((current) => [
+                    ...current,
+                    selectedEntryId,
+                  ]);
+                  setSelectedEntryId("");
+                }}
                 type="button"
               >
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-
-                disabled={isPending}
-                type="submit"
-              >
-                {isPending
-                  ? "Saving..."
-                  : currentId
-                    ? "Save changes"
-                    : "Add Place"}
+                <Icon name="plus" size={14} /> Link Item
               </Button>
             </div>
-          </footer>
-        </form>
-      </div>
-    </div>
+          </fieldset>
+        </div>
+
+        {result ? (
+          <p className={common.formMessage} role="alert">
+            {result.message}
+          </p>
+        ) : null}
+      </form>
+    </Dialog>
   );
 }
 

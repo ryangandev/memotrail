@@ -352,20 +352,6 @@
   backdrop-filter: blur(5px);
 }
 
-.dialogPanel {
-  width: min(100%, 650px);
-  max-height: min(860px, calc(100dvh - 48px));
-  overflow-y: auto;
-  border: 1px solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-xlarge);
-  background: var(--mt-color-surface-raised);
-  box-shadow: var(--mt-shadow-floating);
-}
-
-.creationDialog {
-  width: min(100%, 540px);
-}
-
 .editorLoading {
   display: flex;
   align-items: center;
@@ -397,7 +383,6 @@
 .creationOptions {
   display: grid;
   gap: var(--mt-space-3);
-  padding: var(--mt-space-6);
 }
 
 .creationOption {
@@ -456,14 +441,9 @@
   color: var(--mt-color-ink-faint);
 }
 
-.birthDateDialog {
-  width: min(100%, 520px);
-}
-
 .birthDateForm {
   display: grid;
   gap: var(--mt-space-5);
-  padding: var(--mt-space-6);
 }
 
 .birthDateForm > p:first-child {
@@ -484,109 +464,6 @@
   display: flex;
   justify-content: flex-end;
   gap: var(--mt-space-2);
-}
-
-.birthDateActions
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
-  min-height: 40px;
-  padding: 0 var(--mt-space-4);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-ink-muted);
-  background: transparent;
-  font: inherit;
-  font-size: var(--mt-font-size-label);
-  cursor: pointer;
-}
-
-.birthDateActions
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):last-child {
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent);
-}
-
-.birthDateActions
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):hover:not(:disabled) {
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface-subtle);
-}
-
-.birthDateActions
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):last-child:hover:not(:disabled) {
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent-hover);
-}
-
-.birthDateActions
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.dialogHeader {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--mt-space-4);
-  padding: var(--mt-space-6);
-  border-bottom: 1px solid var(--mt-color-border);
-  background: color-mix(
-    in srgb,
-    var(--mt-color-surface-raised) 94%,
-    transparent
-  );
-  backdrop-filter: blur(14px);
-}
-
-.dialogHeader p {
-  margin-bottom: var(--mt-space-1);
-  color: var(--mt-color-ink-faint);
-  font-size: 10px;
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.dialogHeader h2 {
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title);
-  font-weight: var(--mt-font-weight-medium);
-  letter-spacing: -0.025em;
-}
-
-.dialogHeader
-  > button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-subtle);
-  font-size: 24px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.dialogHeader
-  > button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):hover {
-  color: var(--mt-color-ink);
 }
 
 .kindPicker {
@@ -644,7 +521,6 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--mt-space-4);
-  padding: var(--mt-space-5) var(--mt-space-6) var(--mt-space-6);
 }
 
 .formGrid label {
@@ -711,7 +587,7 @@
 }
 
 .formMessage {
-  margin: calc(-1 * var(--mt-space-3)) var(--mt-space-6) var(--mt-space-5);
+  margin: var(--mt-space-3) 0;
   padding: var(--mt-space-3);
   border-radius: var(--mt-radius-small);
   color: var(--mt-color-warm);
@@ -720,21 +596,11 @@
 }
 
 .dialogFooter {
-  position: sticky;
-  bottom: 0;
   display: flex;
-  min-height: 70px;
   align-items: center;
   justify-content: space-between;
   gap: var(--mt-space-4);
-  padding: var(--mt-space-3) var(--mt-space-6);
-  border-top: 1px solid var(--mt-color-border);
-  background: color-mix(
-    in srgb,
-    var(--mt-color-surface-raised) 94%,
-    transparent
-  );
-  backdrop-filter: blur(14px);
+  width: 100%;
 }
 
 .dialogFooter > div {
@@ -879,15 +745,6 @@
     padding: 0;
   }
 
-  .dialogPanel {
-    width: 100%;
-    max-height: calc(100dvh - 24px);
-    border-right: 0;
-    border-bottom: 0;
-    border-left: 0;
-    border-radius: var(--mt-radius-xlarge) var(--mt-radius-xlarge) 0 0;
-  }
-
   .formGrid {
     grid-template-columns: 1fr;
   }
@@ -902,17 +759,15 @@
     margin-top: var(--mt-space-4);
   }
 
-  .dialogHeader,
   .kindPicker,
   .formGrid {
-    padding-right: var(--mt-space-4);
-    padding-left: var(--mt-space-4);
   }
 
   .dialogFooter {
     align-items: stretch;
     padding-right: var(--mt-space-4);
     padding-left: var(--mt-space-4);
+    width: 100%;
   }
 
   .dialogFooter > div:last-child {

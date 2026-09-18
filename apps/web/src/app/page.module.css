@@ -61,10 +61,6 @@
   gap: 3px;
 }
 
-.navGroup
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ),
 .navGroup a {
   display: flex;
   width: 100%;
@@ -84,36 +80,15 @@
     background var(--mt-motion-quick);
 }
 
-.navGroup
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):hover,
 .navGroup a:hover {
   color: var(--mt-color-ink);
   background: var(--mt-color-surface-subtle);
 }
 
-.navGroup
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):disabled {
-  cursor: default;
-}
-
-.navGroup
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  )
-  span,
 .navGroup a span {
   flex: 1;
 }
 
-.navGroup
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  )
-  small,
 .navGroup a small {
   min-width: 24px;
   padding: 2px 7px;
@@ -171,43 +146,6 @@
   display: grid;
   min-width: 0;
   gap: 2px;
-}
-
-.archiveNote
-  > button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
-  position: absolute;
-  top: 7px;
-  right: 7px;
-  display: grid;
-  width: 28px;
-  height: 28px;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--mt-color-ink-muted);
-  background: transparent;
-  cursor: pointer;
-}
-
-.archiveNote
-  > button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):hover,
-.archiveNote
-  > button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):focus-visible {
-  color: var(--mt-color-ink);
-  background: color-mix(in srgb, var(--mt-color-warm) 12%, transparent);
-}
-
-.archiveNote
-  > button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):focus-visible {
-  outline: 2px solid var(--mt-color-accent);
-  outline-offset: 1px;
 }
 
 .archiveNote strong {
@@ -923,81 +861,9 @@
   line-height: var(--mt-line-height-body);
 }
 
-.reviewBackdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: grid;
-  place-items: center;
-  padding: var(--mt-space-6);
-  background: color-mix(in srgb, var(--mt-color-scrim) 48%, transparent);
-  backdrop-filter: blur(5px);
-}
-
-.reviewDialog {
-  width: min(100%, 720px);
-  max-height: min(840px, calc(100vh - 48px));
-  overflow: auto;
-  border: 1px solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface-raised);
-  box-shadow: var(--mt-shadow-raised);
-}
-
-.reviewHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--mt-space-4);
-  padding: var(--mt-space-6);
-  border-bottom: 1px solid var(--mt-color-border);
-}
-
-.reviewHeader p {
-  margin-bottom: var(--mt-space-1);
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-
-.reviewHeader h2 {
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title-small);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.reviewHeader a {
-  display: inline-block;
-  margin-top: var(--mt-space-2);
-  color: var(--mt-color-ink);
-  font-size: var(--mt-font-size-caption);
-  text-underline-offset: 3px;
-}
-
-.reviewHeader p:not(:first-child) {
-  letter-spacing: normal;
-  line-height: 1.6;
-  text-transform: none;
-}
-
-.closeReviewButton {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-subtle);
-  font-size: 24px;
-  line-height: 1;
-  cursor: pointer;
-}
-
 .reviewForm {
   display: grid;
   gap: var(--mt-space-5);
-  padding: var(--mt-space-6);
 }
 
 .reviewForm label {
@@ -1126,17 +992,12 @@
   justify-content: space-between;
   gap: var(--mt-space-3);
   padding-top: var(--mt-space-2);
-  border-top: 1px solid var(--mt-color-border);
+  width: 100%;
 }
 
 .reviewActions > div {
   display: flex;
   gap: var(--mt-space-2);
-}
-
-.closeReviewButton:disabled {
-  cursor: wait;
-  opacity: 0.65;
 }
 
 .visuallyHidden {
@@ -1321,20 +1182,7 @@
     align-items: flex-end;
   }
 
-  .reviewBackdrop {
-    align-items: end;
-    padding: 0;
-  }
-
-  .reviewDialog {
-    width: 100%;
-    max-height: calc(100dvh - 24px);
-    border-radius: var(--mt-radius-large) var(--mt-radius-large) 0 0;
-  }
-
-  .reviewHeader,
   .reviewForm {
-    padding: var(--mt-space-5);
   }
 
   .reviewFieldRow {
@@ -1344,6 +1192,7 @@
   .reviewActions {
     align-items: stretch;
     flex-direction: column-reverse;
+    width: 100%;
   }
 
   .reviewActions > div {
@@ -1364,10 +1213,6 @@
     backdrop-filter: blur(20px);
   }
 
-  .mobileNavigation
-    button:not(
-      :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-    ),
   .mobileNavigation a {
     display: flex;
     min-width: 0;
@@ -1406,10 +1251,6 @@
     transition: none;
   }
 
-  .navGroup
-    button:not(
-      :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-    ),
   .navGroup a {
     transition: none;
   }

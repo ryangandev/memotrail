@@ -42,11 +42,7 @@
 }
 
 .wikiFilters input,
-.wikiFilters select,
-.wikiFilters
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
+.wikiFilters select {
   height: 44px;
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-medium);
@@ -65,23 +61,8 @@
   padding-right: var(--mt-space-8);
 }
 
-.wikiFilters
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
-  padding: 0 var(--mt-space-5);
-  border-color: var(--mt-color-accent);
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent);
-  cursor: pointer;
-}
-
 .wikiFilters input:focus,
-.wikiFilters select:focus,
-.wikiFilters
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):focus-visible {
+.wikiFilters select:focus {
   outline: 0;
   border-color: var(--mt-color-accent);
   box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
@@ -335,13 +316,6 @@
 @media (max-width: 720px) {
   .wikiFilters {
     grid-template-columns: 1fr;
-  }
-
-  .wikiFilters
-    button:not(
-      :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-    ) {
-    width: 100%;
   }
 
   .wikiGrid {

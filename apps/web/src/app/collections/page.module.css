@@ -140,13 +140,6 @@
   font-size: var(--mt-font-size-caption);
 }
 
-.detailToolbar
-  > button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
-  margin-left: var(--mt-space-2);
-}
-
 .detailToolbar > div span + span::before {
   margin-right: var(--mt-space-2);
   content: "·";

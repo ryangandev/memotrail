@@ -30,10 +30,6 @@
 .panel
   button:not(
     :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ),
-.viewer
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
   ) {
   color: var(--mt-color-ink);
   background: var(--mt-color-surface);
@@ -48,19 +44,11 @@
 .panel
   button:not(
     :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):disabled,
-.viewer
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
   ):disabled {
   opacity: 0.5;
   cursor: default;
 }
 .panel
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):focus-visible,
-.viewer
   button:not(
     :where([data-ui-button], [data-ui-empty-state], [data-record-card])
   ):focus-visible {
@@ -145,10 +133,7 @@
   width: 100%;
   min-width: 0;
 }
-.picker
-  input::file-selector-button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
+.picker input::file-selector-button {
   font: inherit;
   color: var(--mt-color-ink);
   background: var(--mt-color-surface);
@@ -157,6 +142,7 @@
   padding: var(--mt-space-3);
   margin-right: var(--mt-space-2);
 }
+
 .pending {
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-small);

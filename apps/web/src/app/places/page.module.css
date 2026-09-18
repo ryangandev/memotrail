@@ -255,11 +255,7 @@
   gap: var(--mt-space-2);
 }
 
-.linkPicker select,
-.linkPicker
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
+.linkPicker select {
   height: 42px;
   min-width: 0;
   padding: 0 var(--mt-space-3);
@@ -271,30 +267,6 @@
   font-size: var(--mt-font-size-label);
 }
 
-.linkPicker
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  color: var(--mt-color-ink-muted);
-  cursor: pointer;
-}
-
-.linkPicker
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):hover {
-  color: var(--mt-color-accent);
-  border-color: var(--mt-color-accent);
-}
-
-.linkPicker
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):disabled,
 .linkPicker select:disabled,
 .editableLink
   button:not(

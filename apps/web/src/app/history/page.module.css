@@ -38,11 +38,7 @@
   align-items: center;
   gap: var(--mt-space-2);
 }
-.itemActions > a,
-.itemActions
-  > button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
+.itemActions > a {
   display: inline-flex;
   min-height: 40px;
   align-items: center;
@@ -56,11 +52,7 @@
   font-size: var(--mt-font-size-caption);
   text-decoration: none;
 }
-.itemActions > a:hover,
-.itemActions
-  > button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):hover {
+.itemActions > a:hover {
   border-color: var(--mt-color-border-strong);
 }
 .currentItem {
@@ -117,10 +109,6 @@
 .detailUnavailable p {
   margin: 0;
 }
-.workspace
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):not(:where([data-date-picker-field] *)),
 .workspace input:not(:where([data-date-picker-field] *)),
 .workspace select:not(:where([data-date-picker-field] *)) {
   background: var(--mt-color-surface);
@@ -129,19 +117,6 @@
   border-radius: var(--mt-radius-medium);
   padding: var(--mt-space-3);
   font: inherit;
-}
-.workspace
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
-  cursor: pointer;
-}
-.workspace
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):disabled {
-  opacity: 0.5;
-  cursor: default;
 }
 .workspace label {
   display: grid;

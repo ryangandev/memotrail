@@ -85,28 +85,6 @@
   resize: vertical;
   line-height: 1.6;
 }
-.workspace
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
-  justify-self: start;
-  min-height: 44px;
-  border: 1px solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-medium);
-  background: var(--mt-color-accent-subtle);
-  color: var(--mt-color-accent);
-  padding: 10px var(--mt-space-4);
-  cursor: pointer;
-  font: inherit;
-  font-size: var(--mt-font-size-label);
-}
-.workspace
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):disabled {
-  opacity: 0.5;
-  cursor: default;
-}
 .workspace summary {
   margin: var(--mt-space-4) 0;
   color: var(--mt-color-ink-muted);

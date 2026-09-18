@@ -367,10 +367,7 @@
   margin-bottom: var(--mt-space-2);
 }
 
-.calendarHeader
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
+.calendarHeader button {
   display: grid;
   min-width: 36px;
   height: 36px;
@@ -382,20 +379,14 @@
   cursor: pointer;
 }
 
-.calendarHeader
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):nth-child(2) {
+.calendarHeader button:nth-child(2) {
   padding: 0 var(--mt-space-2);
   color: var(--mt-color-ink);
   font-size: var(--mt-font-size-label);
   font-weight: var(--mt-font-weight-medium);
 }
 
-.calendarHeader
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):hover {
+.calendarHeader button:hover {
   color: var(--mt-color-accent);
   background: var(--mt-color-accent-subtle);
 }

@@ -124,6 +124,9 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
       await dialog
         .getByRole("combobox", { name: "Date type", exact: true })
         .selectOption(value.precision);
+      await expect(
+        dialog.getByRole("combobox", { name: "Date type", exact: true }),
+      ).toHaveValue(value.precision);
       await dialog
         .getByRole("combobox", { name: "Time zone", exact: true })
         .selectOption("America/Los_Angeles");
@@ -132,6 +135,9 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
       await dialog
         .getByRole("textbox", { name: /Human date label|Date description/ })
         .fill(value.label);
+      await expect(
+        dialog.getByRole("combobox", { name: "Date type", exact: true }),
+      ).toHaveValue(value.precision);
       await expect(
         dialog.getByRole("textbox", { name: "Title", exact: true }),
       ).toHaveValue("Try skiing");

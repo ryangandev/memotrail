@@ -1,4 +1,5 @@
 "use client";
+import { Dialog } from "@/components/dialog";
 import {
   RecordCard,
   RecordCardBody,
@@ -373,14 +374,6 @@ function GoalEditor({
     titleRef.current?.focus();
   }, []);
 
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isPending) onClose();
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPending, onClose]);
-
   const selectableEntries = useMemo(
     () =>
       linkOptions.filter(
@@ -571,286 +564,276 @@ function GoalEditor({
   }
 
   return (
-    <div
-      aria-labelledby="goal-editor-title"
-      aria-modal="true"
-      className={common.dialogBackdrop}
-      onMouseDown={(event) => {
-        if (event.currentTarget === event.target && !isPending) onClose();
+    <Dialog
+      open
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
       }}
-      role="dialog"
-    >
-      <div className={common.dialogPanel}>
-        <header className={common.dialogHeader}>
+      title={
+        <>
+          {currentId
+            ? title || "Goal"
+            : sourceCapture
+              ? "Create a Goal from this Capture"
+              : "Keep an intention close"}
+        </>
+      }
+      titleId="goal-editor-title"
+      eyebrow={<>{currentId ? "Edit Goal" : "New Goal"}</>}
+      closeLabel="Close Goal editor"
+      busy={isPending}
+      size="wide"
+      footer={
+        <div className={common.dialogFooter}>
           <div>
-            <p>{currentId ? "Edit Goal" : "New Goal"}</p>
-            <h2 id="goal-editor-title">
-              {currentId
-                ? title || "Goal"
-                : sourceCapture
-                  ? "Create a Goal from this Capture"
-                  : "Keep an intention close"}
-            </h2>
-          </div>
-          <button
-            aria-label="Close Goal editor"
-            disabled={isPending}
-            onClick={onClose}
-            type="button"
-          >
-            ×
-          </button>
-        </header>
-
-        <form onSubmit={handleSubmit}>
-          <div className={common.formGrid}>
-            {sourceCapture ? (
-              <div className={common.extractionNotice}>
-                <Icon name="inbox" size={18} />
-                <div>
-                  <strong>Starting from an Inbox Capture</strong>
-                  <p>
-                    Saving creates a separate Goal and links it to the preserved
-                    source Capture.
-                  </p>
-                </div>
-              </div>
-            ) : null}
-            <fieldset className={common.formSection}>
-              <legend>The intention</legend>
-              <label className={common.fullField}>
-                <span>
-                  Title <span aria-hidden="true">*</span>
-                </span>
-                <input
-                  aria-label="Title"
-                  maxLength={goalTitleLimit}
-                  onChange={(event) => setTitle(event.target.value)}
-                  placeholder="Learn to sail"
-                  ref={titleRef}
-                  required
-                  value={title}
-                />
-              </label>
-              <label>
-                <span>Horizon</span>
-                <select
-                  onChange={(event) =>
-                    setHorizon(event.target.value as GoalHorizon)
-                  }
-                  value={horizon}
-                >
-                  {goalHorizons.map((value) => (
-                    <option key={value} value={value}>
-                      {goalHorizonLabels[value]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <span>Reflective state</span>
-                <select
-                  onChange={(event) =>
-                    setStatus(event.target.value as GoalStatus)
-                  }
-                  value={status}
-                >
-                  {goalStatuses.map((value) => (
-                    <option key={value} value={value}>
-                      {goalStatusLabels[value]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <DatePickerField
-                disabled={isPending}
-                label="Target date"
-                onChange={setTargetDate}
-                value={targetDate}
-              />
-              <label className={common.fullField}>
-                <span>Reflection</span>
-                <textarea
-                  maxLength={goalBodyLimit}
-                  onChange={(event) => setBody(event.target.value)}
-                  placeholder="Why does this matter? What would you like to remember about wanting it?"
-                  rows={6}
-                  value={body}
-                />
-              </label>
-            </fieldset>
-
-            <fieldset className={common.formSection}>
-              <legend>Organization</legend>
-              <EntryOrganizationEditor
-                disabled={isPending}
-                input={collectionInput}
-                kind="collection"
-                names={collectionNames}
-                onChange={setCollectionNames}
-                onInputChange={setCollectionInput}
-                options={collectionOptions}
-              />
-              <EntryOrganizationEditor
-                disabled={isPending}
-                input={tagInput}
-                kind="tag"
-                names={tagNames}
-                onChange={setTagNames}
-                onInputChange={setTagInput}
-                options={tagOptions}
-              />
-            </fieldset>
-
-            <fieldset
-              className={`${common.formSection} ${styles.relatedSection}`}
-            >
-              <legend>Related Items</legend>
-              <p>
-                Link memories, ideas, or learning that give this Goal context.
-              </p>
-              {selectedEntries.length > 0 ? (
-                <div className={styles.relatedChips}>
-                  {selectedEntries.map((entry) => (
-                    <Button
-                      variant="secondary"
-                      aria-label={`Remove related Item ${entry.title}`}
-                      disabled={isPending}
-                      key={entry.id}
-                      onClick={() =>
-                        setRelatedEntryIds((current) =>
-                          current.filter((id) => id !== entry.id),
-                        )
-                      }
-                      type="button"
-                    >
-                      {entry.title}
-                      <span aria-hidden="true">×</span>
-                    </Button>
-                  ))}
-                </div>
-              ) : null}
-              <div className={styles.relatedPicker}>
-                <select
-                  aria-label="Choose a related Item"
-                  disabled={isPending || selectableEntries.length === 0}
-                  onChange={(event) => setRelatedSelection(event.target.value)}
-                  value={relatedSelection}
-                >
-                  <option value="">
-                    {selectableEntries.length > 0
-                      ? "Choose an Item"
-                      : "No more Items available"}
-                  </option>
-                  {selectableEntries.map((entry) => (
-                    <option key={entry.id} value={entry.id}>
-                      {entry.title} ·{" "}
-                      {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
-                    </option>
-                  ))}
-                </select>
-                <Button
-                  variant="secondary"
-                  disabled={!relatedSelection || isPending}
-                  onClick={() => {
-                    setRelatedEntryIds((current) => [
-                      ...current,
-                      relatedSelection,
-                    ]);
-                    setRelatedSelection("");
-                  }}
-                  type="button"
-                >
-                  Add link
-                </Button>
-              </div>
-            </fieldset>
-
-            <EntryPhotoField
-              disabled={isPending}
-              existingPhotos={existingPhotos}
-              limit={firstTimePhotoLimit}
-              onRemoveExisting={(photo) => void handleRemovePhoto(photo)}
-              onRemovePending={(index) =>
-                setPendingPhotos((current) =>
-                  current.filter((_, itemIndex) => itemIndex !== index),
-                )
-              }
-              onSelect={handlePhotoSelection}
-              pendingPhotos={pendingPhotos}
-              progress={photoUploadProgress}
-              recordLabel="Goal"
-            />
-
-            {savedBucketListGoal && currentId && currentRevision !== null ? (
-              <AchievementPanel
-                disabled={isPending}
-                goalId={currentId}
-                revision={currentRevision}
-                unsavedChanges={hasUnsavedChanges}
-                onAchieved={(nextResult) => {
-                  if (nextResult.entry) {
-                    setCurrentRevision(nextResult.entry.revision);
-                    setStatus("achieved");
-                  }
-                  setResult(nextResult);
-                  router.refresh();
-                }}
-                onPendingChange={setIsPending}
-              />
-            ) : null}
-          </div>
-
-          {result ? (
-            <p
-              className={`${common.formMessage} ${result.status === "achieved" ? styles.successMessage : ""}`}
-              role="status"
-            >
-              {result.message}
-            </p>
-          ) : null}
-
-          <footer className={common.dialogFooter}>
-            <div>
-              {currentId ? (
-                <Button
-                  variant="danger"
-
-                  disabled={isPending}
-                  onClick={() => void handleTrashEntry()}
-                  type="button"
-                >
-                  Move to Trash
-                </Button>
-              ) : null}
-            </div>
-            <div>
+            {currentId ? (
               <Button
-                variant="secondary"
+                variant="danger"
 
                 disabled={isPending}
-                onClick={onClose}
+                onClick={() => void handleTrashEntry()}
                 type="button"
               >
-                Cancel
+                Move to Trash
               </Button>
-              <Button
-                variant="primary"
+            ) : null}
+          </div>
+          <div>
+            <Button
+              variant="secondary"
 
-                disabled={isPending}
-                type="submit"
+              disabled={isPending}
+              onClick={onClose}
+              type="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              form="goals-workspace-form"
+              variant="primary"
+
+              disabled={isPending}
+              type="submit"
+            >
+              {isPending
+                ? "Saving..."
+                : currentId
+                  ? "Save changes"
+                  : "Add Goal"}
+            </Button>
+          </div>
+        </div>
+      }
+    >
+      <form id="goals-workspace-form" onSubmit={handleSubmit}>
+        <div className={common.formGrid}>
+          {sourceCapture ? (
+            <div className={common.extractionNotice}>
+              <Icon name="inbox" size={18} />
+              <div>
+                <strong>Starting from an Inbox Capture</strong>
+                <p>
+                  Saving creates a separate Goal and links it to the preserved
+                  source Capture.
+                </p>
+              </div>
+            </div>
+          ) : null}
+          <fieldset className={common.formSection}>
+            <legend>The intention</legend>
+            <label className={common.fullField}>
+              <span>
+                Title <span aria-hidden="true">*</span>
+              </span>
+              <input
+                aria-label="Title"
+                maxLength={goalTitleLimit}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="Learn to sail"
+                ref={titleRef}
+                required
+                value={title}
+              />
+            </label>
+            <label>
+              <span>Horizon</span>
+              <select
+                onChange={(event) =>
+                  setHorizon(event.target.value as GoalHorizon)
+                }
+                value={horizon}
               >
-                {isPending
-                  ? "Saving..."
-                  : currentId
-                    ? "Save changes"
-                    : "Add Goal"}
+                {goalHorizons.map((value) => (
+                  <option key={value} value={value}>
+                    {goalHorizonLabels[value]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Reflective state</span>
+              <select
+                onChange={(event) =>
+                  setStatus(event.target.value as GoalStatus)
+                }
+                value={status}
+              >
+                {goalStatuses.map((value) => (
+                  <option key={value} value={value}>
+                    {goalStatusLabels[value]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <DatePickerField
+              disabled={isPending}
+              label="Target date"
+              onChange={setTargetDate}
+              value={targetDate}
+            />
+            <label className={common.fullField}>
+              <span>Reflection</span>
+              <textarea
+                maxLength={goalBodyLimit}
+                onChange={(event) => setBody(event.target.value)}
+                placeholder="Why does this matter? What would you like to remember about wanting it?"
+                rows={6}
+                value={body}
+              />
+            </label>
+          </fieldset>
+
+          <fieldset className={common.formSection}>
+            <legend>Organization</legend>
+            <EntryOrganizationEditor
+              disabled={isPending}
+              input={collectionInput}
+              kind="collection"
+              names={collectionNames}
+              onChange={setCollectionNames}
+              onInputChange={setCollectionInput}
+              options={collectionOptions}
+            />
+            <EntryOrganizationEditor
+              disabled={isPending}
+              input={tagInput}
+              kind="tag"
+              names={tagNames}
+              onChange={setTagNames}
+              onInputChange={setTagInput}
+              options={tagOptions}
+            />
+          </fieldset>
+
+          <fieldset
+            className={`${common.formSection} ${styles.relatedSection}`}
+          >
+            <legend>Related Items</legend>
+            <p>
+              Link memories, ideas, or learning that give this Goal context.
+            </p>
+            {selectedEntries.length > 0 ? (
+              <div className={styles.relatedChips}>
+                {selectedEntries.map((entry) => (
+                  <Button
+                    variant="secondary"
+                    aria-label={`Remove related Item ${entry.title}`}
+                    disabled={isPending}
+                    key={entry.id}
+                    onClick={() =>
+                      setRelatedEntryIds((current) =>
+                        current.filter((id) => id !== entry.id),
+                      )
+                    }
+                    type="button"
+                  >
+                    {entry.title}
+                    <span aria-hidden="true">×</span>
+                  </Button>
+                ))}
+              </div>
+            ) : null}
+            <div className={styles.relatedPicker}>
+              <select
+                aria-label="Choose a related Item"
+                disabled={isPending || selectableEntries.length === 0}
+                onChange={(event) => setRelatedSelection(event.target.value)}
+                value={relatedSelection}
+              >
+                <option value="">
+                  {selectableEntries.length > 0
+                    ? "Choose an Item"
+                    : "No more Items available"}
+                </option>
+                {selectableEntries.map((entry) => (
+                  <option key={entry.id} value={entry.id}>
+                    {entry.title} ·{" "}
+                    {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
+                  </option>
+                ))}
+              </select>
+              <Button
+                variant="secondary"
+                disabled={!relatedSelection || isPending}
+                onClick={() => {
+                  setRelatedEntryIds((current) => [
+                    ...current,
+                    relatedSelection,
+                  ]);
+                  setRelatedSelection("");
+                }}
+                type="button"
+              >
+                Add link
               </Button>
             </div>
-          </footer>
-        </form>
-      </div>
-    </div>
+          </fieldset>
+
+          <EntryPhotoField
+            disabled={isPending}
+            existingPhotos={existingPhotos}
+            limit={firstTimePhotoLimit}
+            onRemoveExisting={(photo) => void handleRemovePhoto(photo)}
+            onRemovePending={(index) =>
+              setPendingPhotos((current) =>
+                current.filter((_, itemIndex) => itemIndex !== index),
+              )
+            }
+            onSelect={handlePhotoSelection}
+            pendingPhotos={pendingPhotos}
+            progress={photoUploadProgress}
+            recordLabel="Goal"
+          />
+
+          {savedBucketListGoal && currentId && currentRevision !== null ? (
+            <AchievementPanel
+              disabled={isPending}
+              goalId={currentId}
+              revision={currentRevision}
+              unsavedChanges={hasUnsavedChanges}
+              onAchieved={(nextResult) => {
+                if (nextResult.entry) {
+                  setCurrentRevision(nextResult.entry.revision);
+                  setStatus("achieved");
+                }
+                setResult(nextResult);
+                router.refresh();
+              }}
+              onPendingChange={setIsPending}
+            />
+          ) : null}
+        </div>
+
+        {result ? (
+          <p
+            className={`${common.formMessage} ${result.status === "achieved" ? styles.successMessage : ""}`}
+            role="status"
+          >
+            {result.message}
+          </p>
+        ) : null}
+      </form>
+    </Dialog>
   );
 }
 

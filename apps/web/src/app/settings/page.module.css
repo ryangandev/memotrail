@@ -87,30 +87,6 @@
   font-size: 10px;
 }
 
-.accountCard
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
-  min-height: 40px;
-  padding: 0 var(--mt-space-4);
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface);
-  font: inherit;
-  font-size: var(--mt-font-size-caption);
-  cursor: pointer;
-}
-
-.accountCard
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):hover {
-  border-color: var(--mt-color-border-strong);
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface-subtle);
-}
-
 .birthDateCard {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(230px, 300px);
@@ -146,35 +122,6 @@
   min-height: 40px;
   align-items: center;
   gap: var(--mt-space-3);
-}
-
-.birthDateControls
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
-  min-height: 40px;
-  padding: 0 var(--mt-space-4);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent);
-  font: inherit;
-  font-size: var(--mt-font-size-caption);
-  cursor: pointer;
-}
-
-.birthDateControls
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):hover:not(:disabled) {
-  background: var(--mt-color-accent-hover);
-}
-
-.birthDateControls
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
 }
 
 .birthDateControls span {
@@ -245,35 +192,6 @@
   min-height: 40px;
   align-items: center;
   gap: var(--mt-space-3);
-}
-
-.timezoneControls
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
-  min-height: 40px;
-  padding: 0 var(--mt-space-4);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent);
-  font: inherit;
-  font-size: var(--mt-font-size-caption);
-  cursor: pointer;
-}
-
-.timezoneControls
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):hover:not(:disabled) {
-  background: var(--mt-color-accent-hover);
-}
-
-.timezoneControls
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
 }
 
 .timezoneControls span {
@@ -458,13 +376,6 @@
   }
 
   .accountCard form {
-    width: 100%;
-  }
-
-  .accountCard
-    button:not(
-      :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-    ) {
     width: 100%;
   }
 

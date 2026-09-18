@@ -6,6 +6,7 @@ import { Portal } from "@ark-ui/react/portal";
 import { parseDate, type CalendarDate } from "@internationalized/date";
 import { useEffect, useId, useRef, useState, type RefObject } from "react";
 import { Icon } from "@/components/icon";
+import { useOverlayContainer } from "./overlay-container";
 import styles from "./date-fields.module.css";
 
 export type DatePickerGranularity = "day" | "month" | "year";
@@ -43,8 +44,10 @@ export function DatePickerField({
   defaultValue = "",
   value: controlledValue,
   onChange: onValueChange,
-  portalContainer,
+  portalContainer: explicitPortalContainer,
 }: DatePickerFieldProps) {
+  const inheritedPortalContainer = useOverlayContainer();
+  const portalContainer = explicitPortalContainer ?? inheritedPortalContainer;
   const [localValue, setLocalValue] = useState(defaultValue);
   const value = controlledValue ?? localValue;
   const inputRef = useRef<HTMLInputElement>(null);

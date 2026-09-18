@@ -112,6 +112,7 @@ export function EntryOrganizationEditor({
             <div className={styles.inputShell}>
               <Icon name={kind === "tag" ? "tag" : "archive"} size={14} />
               <input
+                data-escape-layer="organization"
                 aria-controls={`${editorId}-options`}
                 aria-expanded={Boolean(query)}
                 aria-label={`Search or create a ${singular}`}

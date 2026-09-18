@@ -134,81 +134,10 @@
   font-size: 9px;
 }
 
-.dialogBackdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: grid;
-  place-items: center;
-  padding: var(--mt-space-6);
-  background: color-mix(in srgb, var(--mt-color-scrim) 48%, transparent);
-  backdrop-filter: blur(5px);
-}
-
-.dialogPanel {
-  width: min(100%, 680px);
-  max-height: min(900px, calc(100dvh - 48px));
-  overflow-y: auto;
-  border: 1px solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-xlarge);
-  background: var(--mt-color-surface-raised);
-  box-shadow: var(--mt-shadow-floating);
-}
-
-.dialogHeader {
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--mt-space-4);
-  padding: var(--mt-space-6);
-  border-bottom: 1px solid var(--mt-color-border);
-  background: color-mix(
-    in srgb,
-    var(--mt-color-surface-raised) 94%,
-    transparent
-  );
-  backdrop-filter: blur(14px);
-}
-
-.dialogHeader p {
-  margin-bottom: var(--mt-space-1);
-  color: var(--mt-color-warm);
-  font-size: 10px;
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.dialogHeader h2 {
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title);
-  font-weight: var(--mt-font-weight-medium);
-  letter-spacing: -0.025em;
-}
-
-.dialogHeader
-  > button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-subtle);
-  font-size: 24px;
-  cursor: pointer;
-}
-
 .formGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--mt-space-5) var(--mt-space-4);
-  padding: var(--mt-space-6);
 }
 
 .formGrid > label {
@@ -270,7 +199,7 @@
 }
 
 .formMessage {
-  margin: 0 var(--mt-space-6) var(--mt-space-2);
+  margin: var(--mt-space-3) 0;
   padding: var(--mt-space-3);
   border-radius: var(--mt-radius-small);
   color: var(--mt-color-warm);
@@ -279,36 +208,17 @@
 }
 
 .dialogFooter {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
   display: flex;
-  min-height: 72px;
   align-items: center;
   justify-content: space-between;
   gap: var(--mt-space-4);
-  padding: var(--mt-space-4) var(--mt-space-6);
-  border-top: 1px solid var(--mt-color-border);
-  background: color-mix(
-    in srgb,
-    var(--mt-color-surface-raised) 94%,
-    transparent
-  );
-  backdrop-filter: blur(14px);
+  width: 100%;
 }
 
 .dialogFooter > div {
   display: flex;
   align-items: center;
   gap: var(--mt-space-2);
-}
-
-.dialogHeader
-  > button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):disabled {
-  cursor: wait;
-  opacity: 0.55;
 }
 
 @media (max-width: 780px) {
@@ -339,20 +249,6 @@
 
   .cardBody > p {
     -webkit-line-clamp: 2;
-  }
-
-  .dialogBackdrop {
-    align-items: end;
-    padding: 0;
-  }
-
-  .dialogPanel {
-    width: 100%;
-    max-height: calc(100dvh - 24px);
-    border-right: 0;
-    border-bottom: 0;
-    border-left: 0;
-    border-radius: var(--mt-radius-xlarge) var(--mt-radius-xlarge) 0 0;
   }
 
   .formGrid {
@@ -388,20 +284,19 @@
     display: none;
   }
 
-  .dialogHeader,
   .formGrid,
   .dialogFooter {
-    padding-right: var(--mt-space-4);
-    padding-left: var(--mt-space-4);
+    width: 100%;
   }
 
   .formMessage {
-    margin-right: var(--mt-space-4);
-    margin-left: var(--mt-space-4);
+    margin-right: var(--mt-space-3) 0;
+    margin-left: var(--mt-space-3) 0;
   }
 
   .dialogFooter {
     align-items: stretch;
+    width: 100%;
   }
 
   .dialogFooter > div:last-child {

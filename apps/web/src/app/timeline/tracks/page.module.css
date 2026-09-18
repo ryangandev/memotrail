@@ -83,29 +83,6 @@
   height: 18px;
   accent-color: var(--mt-color-accent);
 }
-.workspace
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
-  min-height: 44px;
-  padding: 10px var(--mt-space-4);
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-small);
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface);
-  cursor: pointer;
-}
-.workspace
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-.workspace
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):focus-visible,
 .workspace input:focus-visible {
   outline: 2px solid var(--mt-color-accent);
   outline-offset: 3px;

@@ -1,9 +1,9 @@
 "use client";
-import { Button } from "@/components/button";
+import { Dialog } from "@/components/dialog";
+import { Button, IconButton } from "@/components/button";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createPortal } from "react-dom";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import {
   deleteUnusedTag,
@@ -53,15 +53,6 @@ export function OrganizationControl({
     order: kind === "tag" ? 0 : Number(order),
     revision: item?.revision ?? null,
   } as const;
-
-  useEffect(() => {
-    if (!open) return;
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !busy) setOpen(false);
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [busy, open]);
 
   useEffect(() => {
     if (!open || kind !== "tag" || !item) return;
@@ -137,209 +128,201 @@ export function OrganizationControl({
     }
   }
 
+  function openEditor() {
+    setMessage(null);
+    setTagPreview(null);
+    setOpen(true);
+  }
+
   return (
     <>
-      <button
-        aria-label={
-          trigger && item
-            ? `Manage tag ${item.name}, used by ${countLabel(item.entry_count, "Entry")}`
-            : item
-              ? `Edit ${item.name}`
-              : `New ${label}`
-        }
-        className={
-          triggerClassName ?? (item ? styles.editTrigger : styles.newTrigger)
-        }
-        onClick={() => {
-          setMessage(null);
-          setTagPreview(null);
-          setOpen(true);
-        }}
-        type="button"
-      >
-        {trigger ?? (
-          <>
-            <Icon name={item ? "more" : "plus"} size={17} />
-            {!item ? `New ${label}` : null}
-          </>
-        )}
-      </button>
+      {trigger ? (
+        <button
+          aria-label={
+            trigger && item
+              ? `Manage tag ${item.name}, used by ${countLabel(item.entry_count, "Entry")}`
+              : item
+                ? `Edit ${item.name}`
+                : `New ${label}`
+          }
+          className={triggerClassName}
+          onClick={openEditor}
+          type="button"
+        >
+          {trigger}
+        </button>
+      ) : item ? (
+        <IconButton
+          label={`Edit ${item.name}`}
+          variant="ghost"
+          onClick={openEditor}
+        >
+          <Icon name="more" size={17} />
+        </IconButton>
+      ) : (
+        <Button onClick={openEditor}>
+          <Icon name="plus" size={17} /> New {label}
+        </Button>
+      )}
 
-      {open
-        ? createPortal(
-            <div
-              className={styles.backdrop}
-              data-organization-overlay
-              onMouseDown={(event) => {
-                if (event.currentTarget === event.target && !busy)
-                  setOpen(false);
-              }}
-            >
-              <section
-                aria-labelledby={`organization-control-${item?.id ?? kind}`}
-                aria-modal="true"
-                className={styles.dialog}
-                role="dialog"
-              >
-                <header>
-                  <div>
-                    <p>{item ? `Edit ${label}` : `New ${label}`}</p>
-                    <h2 id={`organization-control-${item?.id ?? kind}`}>
-                      {item?.name ?? `Create a ${label}`}
-                    </h2>
-                    {item && kind === "tag" ? (
-                      <span className={styles.usageCount}>
-                        Used by {countLabel(item.entry_count, "Entry")}
-                      </span>
-                    ) : null}
-                  </div>
-                  <button
-                    aria-label="Close organization editor"
+      {open ? (
+        <Dialog
+          open
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) (() => setOpen(false))();
+          }}
+          title={<>{item?.name ?? `Create a ${label}`}</>}
+          titleId={`organization-control-${item?.id ?? kind}`}
+          eyebrow={<>{item ? `Edit ${label}` : `New ${label}`}</>}
+          headerContent={
+            <>
+              {item && kind === "tag" ? (
+                <span className={styles.usageCount}>
+                  Used by {countLabel(item.entry_count, "Entry")}
+                </span>
+              ) : null}
+            </>
+          }
+          closeLabel="Close organization editor"
+          busy={busy}
+          size="standard"
+          footer={
+            <div className={styles.editorActions}>
+              <div>
+                {item && kind === "collection" ? (
+                  <Button
+                    variant="danger"
+
                     disabled={busy}
-                    onClick={() => setOpen(false)}
+                    onClick={() => void remove()}
                     type="button"
                   >
-                    <Icon name="close" size={20} />
-                  </button>
-                </header>
-
-                <form onSubmit={submit}>
-                  <fieldset disabled={busy}>
-                    <label>
-                      <span>Name *</span>
-                      <input
-                        autoFocus
-                        maxLength={kind === "tag" ? 60 : 80}
-                        onChange={(event) => setName(event.target.value)}
-                        required
-                        value={name}
-                      />
-                    </label>
-                    {kind === "collection" ? (
-                      <label>
-                        <span>Display order *</span>
-                        <input
-                          max={1000000}
-                          min={-1000000}
-                          onChange={(event) => setOrder(event.target.value)}
-                          required
-                          step={1}
-                          type="number"
-                          value={order}
-                        />
-                      </label>
-                    ) : null}
-                  </fieldset>
-                  {item?.system_key === "bucket_list" ? (
-                    <p className={styles.helper}>
-                      This is your Bucket List Collection. Renaming it preserves
-                      Goal milestone behavior.
-                    </p>
-                  ) : null}
-                  {message ? (
-                    <p className={styles.message} role="alert">
-                      {message}
-                    </p>
-                  ) : null}
-                  <footer>
-                    <div>
-                      {item && kind === "collection" ? (
-                        <Button
-                          variant="danger"
-
-                          disabled={busy}
-                          onClick={() => void remove()}
-                          type="button"
-                        >
-                          Move to Trash
-                        </Button>
-                      ) : null}
-                      {item && kind === "tag" && item.entry_count === 0 ? (
-                        <Button
-                          variant="danger"
-
-                          disabled={busy}
-                          onClick={() => void remove()}
-                          type="button"
-                        >
-                          Delete unused tag
-                        </Button>
-                      ) : null}
-                    </div>
-                    <div>
-                      <Button
-                        variant="secondary"
-
-                        disabled={busy}
-                        onClick={() => setOpen(false)}
-                        type="button"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        variant="primary"
-
-                        disabled={busy || !validOrganizationInput(input)}
-                        type="submit"
-                      >
-                        {busy
-                          ? "Saving..."
-                          : item
-                            ? "Save changes"
-                            : `Create ${label}`}
-                      </Button>
-                    </div>
-                  </footer>
-                </form>
-
-                {item && kind === "tag" && item.entry_count > 0 ? (
-                  <div className={styles.mergePanel}>
-                    <div>
-                      <strong>Merge this tag</strong>
-                      <p>
-                        This tag is used by{" "}
-                        {countLabel(item.entry_count, "Entry")}. Merge it to
-                        preserve every assignment.
-                      </p>
-                    </div>
-                    <label>
-                      <span>Destination tag</span>
-                      <select
-                        disabled={busy || mergeTargets.length === 0}
-                        onChange={(event) => setTargetId(event.target.value)}
-                        value={targetId}
-                      >
-                        <option value="">Choose a tag</option>
-                        {mergeTargets.map((candidate) => (
-                          <option key={candidate.id} value={candidate.id}>
-                            #{candidate.name} ({candidate.entry_count})
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <Button
-                      variant="secondary"
-                      disabled={busy || !targetId}
-                      onClick={() => void merge()}
-                      type="button"
-                    >
-                      Merge tag
-                    </Button>
-                  </div>
+                    Move to Trash
+                  </Button>
                 ) : null}
+                {item && kind === "tag" && item.entry_count === 0 ? (
+                  <Button
+                    variant="danger"
 
-                {item && kind === "tag" ? (
-                  <TagEntryList
-                    count={item.entry_count}
-                    name={item.name}
-                    preview={tagPreview}
+                    disabled={busy}
+                    onClick={() => void remove()}
+                    type="button"
+                  >
+                    Delete unused tag
+                  </Button>
+                ) : null}
+              </div>
+              <div>
+                <Button
+                  variant="secondary"
+
+                  disabled={busy}
+                  onClick={() => setOpen(false)}
+                  type="button"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  form="organization-control-form"
+                  variant="primary"
+
+                  disabled={busy || !validOrganizationInput(input)}
+                  type="submit"
+                >
+                  {busy
+                    ? "Saving..."
+                    : item
+                      ? "Save changes"
+                      : `Create ${label}`}
+                </Button>
+              </div>
+            </div>
+          }
+        >
+          <div className={styles.editorContent}>
+            <form id="organization-control-form" onSubmit={submit}>
+              <fieldset disabled={busy}>
+                <label>
+                  <span>Name *</span>
+                  <input
+                    autoFocus
+                    maxLength={kind === "tag" ? 60 : 80}
+                    onChange={(event) => setName(event.target.value)}
+                    required
+                    value={name}
                   />
+                </label>
+                {kind === "collection" ? (
+                  <label>
+                    <span>Display order *</span>
+                    <input
+                      max={1000000}
+                      min={-1000000}
+                      onChange={(event) => setOrder(event.target.value)}
+                      required
+                      step={1}
+                      type="number"
+                      value={order}
+                    />
+                  </label>
                 ) : null}
-              </section>
-            </div>,
-            document.body,
-          )
-        : null}
+              </fieldset>
+              {item?.system_key === "bucket_list" ? (
+                <p className={styles.helper}>
+                  This is your Bucket List Collection. Renaming it preserves
+                  Goal milestone behavior.
+                </p>
+              ) : null}
+              {message ? (
+                <p className={styles.message} role="alert">
+                  {message}
+                </p>
+              ) : null}
+            </form>
+            {item && kind === "tag" && item.entry_count > 0 ? (
+              <div className={styles.mergePanel}>
+                <div>
+                  <strong>Merge this tag</strong>
+                  <p>
+                    This tag is used by {countLabel(item.entry_count, "Entry")}.
+                    Merge it to preserve every assignment.
+                  </p>
+                </div>
+                <label>
+                  <span>Destination tag</span>
+                  <select
+                    disabled={busy || mergeTargets.length === 0}
+                    onChange={(event) => setTargetId(event.target.value)}
+                    value={targetId}
+                  >
+                    <option value="">Choose a tag</option>
+                    {mergeTargets.map((candidate) => (
+                      <option key={candidate.id} value={candidate.id}>
+                        #{candidate.name} ({candidate.entry_count})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <Button
+                  variant="secondary"
+                  disabled={busy || !targetId}
+                  onClick={() => void merge()}
+                  type="button"
+                >
+                  Merge tag
+                </Button>
+              </div>
+            ) : null}
+            {item && kind === "tag" ? (
+              <TagEntryList
+                count={item.entry_count}
+                name={item.name}
+                preview={tagPreview}
+              />
+            ) : null}
+          </div>
+        </Dialog>
+      ) : null}
     </>
   );
 }

@@ -73,7 +73,7 @@ test("Collections and Tags are first-class and organize generic Timeline moments
 
     await page.goto("/collections");
     await expect(
-      page.getByRole("heading", { name: "Collections" }),
+      page.getByRole("heading", { name: "Collections", exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole("navigation", { name: "Archive organization" }),

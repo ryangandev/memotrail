@@ -1,10 +1,11 @@
 "use client";
+import { Dialog } from "@/components/dialog";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/button";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   deleteTrashItemForever,
@@ -44,21 +45,6 @@ export function TrashWorkspace({
     workspace.totalCount,
   );
   const totalPages = Math.ceil(workspace.totalCount / TRASH_PAGE_SIZE);
-
-  useEffect(() => {
-    if (!confirmation) {
-      return;
-    }
-
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape" && !pending) {
-        setConfirmation(null);
-      }
-    }
-
-    document.addEventListener("keydown", closeOnEscape);
-    return () => document.removeEventListener("keydown", closeOnEscape);
-  }, [confirmation, pending]);
 
   async function runAction(item: TrashItem, action: "delete" | "restore") {
     setPending({ action, itemId: item.id });
@@ -284,37 +270,21 @@ export function TrashWorkspace({
       )}
 
       {confirmation ? (
-        <div
-          className={styles.dialogBackdrop}
-          onMouseDown={(event) => {
-            if (event.currentTarget === event.target && !pending) {
-              setConfirmation(null);
-            }
+        <Dialog
+          open
+          size="compact"
+          title={<>Delete “{confirmation.title}” forever?</>}
+          titleId="trash-confirmation-title"
+          description={
+            <>{deletionDescription(confirmation)} This cannot be undone.</>
+          }
+          eyebrow={<>Permanent action</>}
+          busy={Boolean(pending)}
+          onOpenChange={(open) => {
+            if (!open) setConfirmation(null);
           }}
-        >
-          <section
-            aria-describedby="trash-confirmation-description"
-            aria-labelledby="trash-confirmation-title"
-            aria-modal="true"
-            className={styles.confirmationDialog}
-            role="dialog"
-          >
-            <div className={styles.dialogIcon}>
-              <Icon name="trash" size={22} />
-            </div>
-            <p className={styles.dialogEyebrow}>Permanent action</p>
-            <h2 id="trash-confirmation-title">
-              Delete “{confirmation.title}” forever?
-            </h2>
-            <p id="trash-confirmation-description">
-              {deletionDescription(confirmation)} This cannot be undone.
-            </p>
-            {result?.status === "error" ? (
-              <p className={styles.dialogError} aria-live="polite">
-                {result.message}
-              </p>
-            ) : null}
-            <div className={styles.dialogActions}>
+          footer={
+            <>
               <Button
                 variant="secondary"
                 disabled={Boolean(pending)}
@@ -335,9 +305,15 @@ export function TrashWorkspace({
                   ? "Deleting..."
                   : "Delete forever"}
               </Button>
-            </div>
-          </section>
-        </div>
+            </>
+          }
+        >
+          {result?.status === "error" ? (
+            <p className={styles.dialogError} aria-live="polite">
+              {result.message}
+            </p>
+          ) : null}
+        </Dialog>
       ) : null}
     </PageFrame>
   );

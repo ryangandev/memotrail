@@ -36,40 +36,6 @@
   flex-wrap: wrap;
   gap: 10px;
 }
-.content
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
-  border: 1px solid var(--mt-color-border);
-  border-radius: 9px;
-  padding: 11px var(--mt-space-4);
-  background: var(--mt-color-surface);
-  color: var(--mt-color-accent);
-  font: inherit;
-  font-size: var(--mt-font-size-label);
-  cursor: pointer;
-  min-height: 44px;
-}
-.content
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):hover:not(:disabled) {
-  background: var(--mt-color-surface-subtle);
-}
-.content
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):focus-visible {
-  outline: 2px solid var(--mt-color-accent);
-  outline-offset: 3px;
-}
-.content
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):disabled {
-  opacity: 0.45;
-  cursor: default;
-}
 .notice {
   padding: var(--mt-space-4);
   border: 1px solid var(--mt-color-border);

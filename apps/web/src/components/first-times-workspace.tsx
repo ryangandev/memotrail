@@ -1,4 +1,5 @@
 "use client";
+import { Dialog } from "@/components/dialog";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/button";
@@ -272,17 +273,6 @@ export function FirstTimeEditor({
     titleRef.current?.focus();
   }, []);
 
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isPending) {
-        onClose();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPending, onClose]);
-
   function handlePhotoSelection(selected: File[]) {
     const available = Math.max(
       0,
@@ -479,155 +469,139 @@ export function FirstTimeEditor({
   }
 
   return (
-    <div
-      aria-labelledby="first-time-editor-title"
-      aria-modal="true"
-      className={styles.dialogBackdrop}
-      onMouseDown={(event) => {
-        if (event.currentTarget === event.target && !isPending) {
-          onClose();
-        }
+    <Dialog
+      open
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
       }}
-      role="dialog"
-    >
-      <div className={styles.dialogPanel}>
-        <header className={styles.dialogHeader}>
+      title={<>{currentId ? title || "First Time" : "Keep a beginning"}</>}
+      titleId="first-time-editor-title"
+      eyebrow={<>{currentId ? "Edit First Time" : "New First Time"}</>}
+      closeLabel="Close First Time editor"
+      busy={isPending}
+      size="wide"
+      footer={
+        <div className={styles.dialogFooter}>
           <div>
-            <p>{currentId ? "Edit First Time" : "New First Time"}</p>
-            <h2 id="first-time-editor-title">
-              {currentId ? title || "First Time" : "Keep a beginning"}
-            </h2>
-          </div>
-          <button
-            aria-label="Close First Time editor"
-            disabled={isPending}
-            onClick={onClose}
-            type="button"
-          >
-            ×
-          </button>
-        </header>
-
-        <form onSubmit={handleSubmit}>
-          <div className={styles.formGrid}>
-            <label className={styles.fullField}>
-              <span>
-                Title <span aria-hidden="true">*</span>
-              </span>
-              <input
-                aria-label="Title"
-                maxLength={firstTimeTitleLimit}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="First time skiing"
-                ref={titleRef}
-                required
-                value={title}
-              />
-            </label>
-
-            <div className={styles.fullField}>
-              <OccurrenceEditor
-                value={occurrence}
-                onChange={setOccurrence}
-                disabled={isPending}
-              />
-            </div>
-
-            <label className={styles.fullField}>
-              <span>Reflection</span>
-              <textarea
-                maxLength={firstTimeBodyLimit}
-                onChange={(event) => setBody(event.target.value)}
-                placeholder="What happened, and what do you want to remember?"
-                rows={5}
-                value={body}
-              />
-            </label>
-
-            <EntryOrganizationEditor
-              disabled={isPending}
-              input={collectionInput}
-              kind="collection"
-              names={collectionNames}
-              onChange={setCollectionNames}
-              onInputChange={setCollectionInput}
-              options={collectionOptions}
-            />
-
-            <EntryOrganizationEditor
-              disabled={isPending}
-              input={tagInput}
-              kind="tag"
-              names={tagNames}
-              onChange={setTagNames}
-              onInputChange={setTagInput}
-              options={tagOptions}
-            />
-
-            <EntryPhotoField
-              disabled={isPending}
-              existingPhotos={existingPhotos}
-              limit={firstTimePhotoLimit}
-              onRemoveExisting={(photo) => void handleRemovePhoto(photo)}
-              onRemovePending={(index) =>
-                setPendingPhotos((current) =>
-                  current.filter((_, itemIndex) => itemIndex !== index),
-                )
-              }
-              onSelect={handlePhotoSelection}
-              pendingPhotos={pendingPhotos}
-              progress={photoUploadProgress}
-              recordLabel="First Time"
-            />
-          </div>
-
-          {result ? (
-            <p className={styles.formMessage} role="alert">
-              {result.message}
-            </p>
-          ) : null}
-
-          <footer className={styles.dialogFooter}>
-            <div>
-              {currentId ? (
-                <Button
-                  variant="danger"
-
-                  disabled={isPending}
-                  onClick={() => void handleTrashEntry()}
-                  type="button"
-                >
-                  Move to Trash
-                </Button>
-              ) : null}
-            </div>
-            <div>
+            {currentId ? (
               <Button
-                variant="secondary"
+                variant="danger"
 
                 disabled={isPending}
-                onClick={onClose}
+                onClick={() => void handleTrashEntry()}
                 type="button"
               >
-                Cancel
+                Move to Trash
               </Button>
-              <Button
-                variant="primary"
+            ) : null}
+          </div>
+          <div>
+            <Button
+              variant="secondary"
 
-                disabled={isPending}
-                type="submit"
-              >
-                {isPending
-                  ? "Saving..."
-                  : currentId
-                    ? "Save changes"
-                    : "Add First Time"}
-              </Button>
-            </div>
-          </footer>
-        </form>
-      </div>
-    </div>
+              disabled={isPending}
+              onClick={onClose}
+              type="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              form="first-times-workspace-form"
+              variant="primary"
+
+              disabled={isPending}
+              type="submit"
+            >
+              {isPending
+                ? "Saving..."
+                : currentId
+                  ? "Save changes"
+                  : "Add First Time"}
+            </Button>
+          </div>
+        </div>
+      }
+    >
+      <form id="first-times-workspace-form" onSubmit={handleSubmit}>
+        <div className={styles.formGrid}>
+          <label className={styles.fullField}>
+            <span>
+              Title <span aria-hidden="true">*</span>
+            </span>
+            <input
+              aria-label="Title"
+              maxLength={firstTimeTitleLimit}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="First time skiing"
+              ref={titleRef}
+              required
+              value={title}
+            />
+          </label>
+
+          <div className={styles.fullField}>
+            <OccurrenceEditor
+              value={occurrence}
+              onChange={setOccurrence}
+              disabled={isPending}
+            />
+          </div>
+
+          <label className={styles.fullField}>
+            <span>Reflection</span>
+            <textarea
+              maxLength={firstTimeBodyLimit}
+              onChange={(event) => setBody(event.target.value)}
+              placeholder="What happened, and what do you want to remember?"
+              rows={5}
+              value={body}
+            />
+          </label>
+
+          <EntryOrganizationEditor
+            disabled={isPending}
+            input={collectionInput}
+            kind="collection"
+            names={collectionNames}
+            onChange={setCollectionNames}
+            onInputChange={setCollectionInput}
+            options={collectionOptions}
+          />
+
+          <EntryOrganizationEditor
+            disabled={isPending}
+            input={tagInput}
+            kind="tag"
+            names={tagNames}
+            onChange={setTagNames}
+            onInputChange={setTagInput}
+            options={tagOptions}
+          />
+
+          <EntryPhotoField
+            disabled={isPending}
+            existingPhotos={existingPhotos}
+            limit={firstTimePhotoLimit}
+            onRemoveExisting={(photo) => void handleRemovePhoto(photo)}
+            onRemovePending={(index) =>
+              setPendingPhotos((current) =>
+                current.filter((_, itemIndex) => itemIndex !== index),
+              )
+            }
+            onSelect={handlePhotoSelection}
+            pendingPhotos={pendingPhotos}
+            progress={photoUploadProgress}
+            recordLabel="First Time"
+          />
+        </div>
+
+        {result ? (
+          <p className={styles.formMessage} role="alert">
+            {result.message}
+          </p>
+        ) : null}
+      </form>
+    </Dialog>
   );
 }
 

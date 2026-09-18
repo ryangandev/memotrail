@@ -70,6 +70,13 @@
   line-height: var(--mt-line-height-body);
 }
 
+.eyebrow {
+  margin: 0 0 var(--mt-space-2);
+  color: var(--mt-color-warm);
+  font-size: var(--mt-font-size-caption);
+  font-weight: var(--mt-font-weight-semibold);
+}
+
 .body {
   min-height: 0;
   overflow: auto;

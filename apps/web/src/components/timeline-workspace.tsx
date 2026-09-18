@@ -1,4 +1,5 @@
 "use client";
+import { Dialog } from "@/components/dialog";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/button";
 
@@ -579,51 +580,38 @@ function MomentTypeChooser({
   ];
 
   return (
-    <div
-      aria-labelledby="moment-type-heading"
-      aria-modal="true"
-      className={styles.dialogBackdrop}
-      onMouseDown={(event) => {
-        if (event.currentTarget === event.target) onClose();
+    <Dialog
+      open
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
       }}
-      role="dialog"
+      title={<>What are you adding?</>}
+      titleId="moment-type-heading"
+      eyebrow={<>New entry</>}
+      closeLabel="Close entry type chooser"
+      size="standard"
     >
-      <section className={`${styles.dialogPanel} ${styles.creationDialog}`}>
-        <header className={styles.dialogHeader}>
-          <div>
-            <p>New entry</p>
-            <h2 id="moment-type-heading">What are you adding?</h2>
-          </div>
+      <div className={styles.creationOptions}>
+        {options.map((option) => (
           <button
-            aria-label="Close entry type chooser"
-            onClick={onClose}
+            aria-label={`Add ${option.label}`}
+            className={styles.creationOption}
+            key={option.type}
+            onClick={() => onSelect(option.type)}
             type="button"
           >
-            ×
+            <span>
+              <Icon name={option.icon} size={21} />
+            </span>
+            <span>
+              <strong>{option.label}</strong>
+              <small>{option.description}</small>
+            </span>
+            <Icon name="chevron" size={16} />
           </button>
-        </header>
-        <div className={styles.creationOptions}>
-          {options.map((option) => (
-            <button
-              aria-label={`Add ${option.label}`}
-              className={styles.creationOption}
-              key={option.type}
-              onClick={() => onSelect(option.type)}
-              type="button"
-            >
-              <span>
-                <Icon name={option.icon} size={21} />
-              </span>
-              <span>
-                <strong>{option.label}</strong>
-                <small>{option.description}</small>
-              </span>
-              <Icon name="chevron" size={16} />
-            </button>
-          ))}
-        </div>
-      </section>
-    </div>
+        ))}
+      </div>
+    </Dialog>
   );
 }
 
@@ -668,70 +656,57 @@ function BirthDatePrompt({
   }
 
   return (
-    <div className={styles.dialogBackdrop}>
-      <section
-        aria-labelledby="birth-date-heading"
-        aria-modal="true"
-        className={`${styles.dialogPanel} ${styles.birthDateDialog}`}
-        ref={markHydrated}
-        role="dialog"
-      >
-        <header className={styles.dialogHeader}>
-          <div>
-            <p>Your starting point</p>
-            <h2 id="birth-date-heading">When did your story begin?</h2>
-          </div>
-          <button
-            aria-label="Close birth date prompt"
+    <Dialog
+      open
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
+      }}
+      title={<>When did your story begin?</>}
+      titleId="birth-date-heading"
+      eyebrow={<>Your starting point</>}
+      closeLabel="Close birth date prompt"
+      contentRef={markHydrated}
+      size="compact"
+      closeOnInteractOutside={false}
+    >
+      <form className={styles.birthDateForm} onSubmit={submit}>
+        <p>
+          Add your birth date so Timeline begins with your life, not just your
+          earliest saved moment. It stays private and can be changed in
+          Settings.
+        </p>
+        <DatePickerField
+          disabled={busy}
+          editable={false}
+          granularity="day"
+          label="Birth date"
+          initialView="year"
+          maxValue={maxValue}
+          onChange={setBirthDate}
+          required
+          size="large"
+          value={birthDate}
+        />
+        {message ? (
+          <p className={styles.birthDateMessage} role="alert">
+            {message}
+          </p>
+        ) : null}
+        <div className={styles.birthDateActions}>
+          <Button
+            variant="secondary"
+            disabled={busy}
             onClick={onClose}
             type="button"
           >
-            ×
-          </button>
-        </header>
-        <form className={styles.birthDateForm} onSubmit={submit}>
-          <p>
-            Add your birth date so Timeline begins with your life, not just your
-            earliest saved moment. It stays private and can be changed in
-            Settings.
-          </p>
-          <DatePickerField
-            disabled={busy}
-            editable={false}
-            granularity="day"
-            label="Birth date"
-            initialView="year"
-            maxValue={maxValue}
-            onChange={setBirthDate}
-            required
-            size="large"
-            value={birthDate}
-          />
-          {message ? (
-            <p className={styles.birthDateMessage} role="alert">
-              {message}
-            </p>
-          ) : null}
-          <div className={styles.birthDateActions}>
-            <Button
-              variant="secondary"
-              disabled={busy}
-              onClick={onClose}
-              type="button"
-            >
-              Not now
-            </Button>
-            <Button
-              variant="primary"
-              disabled={!birthDate || busy}
-              type="submit"
-            >
-              {busy ? "Saving…" : "Start my Timeline"}
-            </Button>
-          </div>
-        </form>
-      </section>
-    </div>
+            Not now
+          </Button>
+          <Button variant="primary" disabled={!birthDate || busy} type="submit">
+            {busy ? "Saving…" : "Start my Timeline"}
+          </Button>
+        </div>
+      </form>
+    </Dialog>
   );
 }
 
@@ -889,17 +864,6 @@ function TimelineEditor({
   );
 
   useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isPending) {
-        onClose();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPending, onClose]);
-
-  useEffect(() => {
     titleRef.current?.focus();
   }, []);
 
@@ -1018,198 +982,178 @@ function TimelineEditor({
   }
 
   return (
-    <div
-      aria-labelledby="timeline-editor-title"
-      aria-modal="true"
-      className={styles.dialogBackdrop}
-      onMouseDown={(event) => {
-        if (event.currentTarget === event.target && !isPending) {
-          onClose();
-        }
+    <Dialog
+      open
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
       }}
-      role="dialog"
-    >
-      <div className={styles.dialogPanel}>
-        <header className={styles.dialogHeader}>
+      title={<>{entry ? entry.title : "Add to your story"}</>}
+      titleId="timeline-editor-title"
+      eyebrow={<>{entry ? "Edit moment" : "New Timeline moment"}</>}
+      closeLabel="Close Timeline editor"
+      busy={isPending}
+      size="wide"
+      footer={
+        <div className={styles.dialogFooter}>
           <div>
-            <p>{entry ? "Edit moment" : "New Timeline moment"}</p>
-            <h2 id="timeline-editor-title">
-              {entry ? entry.title : "Add to your story"}
-            </h2>
+            {entry ? (
+              <Button
+                variant="danger"
+
+                disabled={isPending}
+                onClick={() => void handleTrash()}
+                type="button"
+              >
+                Move to Trash
+              </Button>
+            ) : null}
           </div>
-          <button
-            aria-label="Close Timeline editor"
+          <div>
+            <Button
+              variant="secondary"
+
+              disabled={isPending}
+              onClick={onClose}
+              type="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              form="timeline-workspace-form"
+              variant="primary"
+
+              disabled={isPending}
+              type="submit"
+            >
+              {isPending ? "Saving..." : entry ? "Save changes" : "Add moment"}
+            </Button>
+          </div>
+        </div>
+      }
+    >
+      <form id="timeline-workspace-form" onSubmit={handleSubmit}>
+        <fieldset className={styles.kindPicker}>
+          <legend>Moment type</legend>
+          <div>
+            <button
+              aria-pressed={kind === "stage"}
+              className={kind === "stage" ? styles.kindActive : undefined}
+              onClick={() => changeKind("stage")}
+              type="button"
+            >
+              <Icon name="timeline" size={17} />
+              Stage
+            </button>
+            <button
+              aria-pressed={kind === "event"}
+              className={kind === "event" ? styles.kindActive : undefined}
+              onClick={() => changeKind("event")}
+              type="button"
+            >
+              <Icon name="star" size={17} />
+              Event
+            </button>
+          </div>
+          <p>
+            {kind === "stage"
+              ? "A chapter that spans time and may still be ongoing."
+              : "A meaningful moment on one date."}
+          </p>
+        </fieldset>
+
+        <div className={styles.formGrid}>
+          <label className={styles.fullField}>
+            <span>
+              Title
+              <span aria-hidden="true" className={styles.requiredMark}>
+                *
+              </span>
+            </span>
+            <input
+              aria-label="Title"
+              maxLength={timelineTitleLimit}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder={
+                kind === "stage" ? "Living in Philadelphia" : "First ski day"
+              }
+              ref={titleRef}
+              required
+              value={title}
+            />
+          </label>
+
+          <label>
+            <span>
+              Track
+              <span aria-hidden="true" className={styles.requiredMark}>
+                *
+              </span>
+            </span>
+            <select
+              aria-label="Track"
+              onChange={(event) => setTrackId(event.target.value)}
+              required
+              value={trackId}
+            >
+              {tracks.map((track) => (
+                <option key={track.id} value={track.id}>
+                  {track.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <div className={styles.fullField}>
+            <OccurrenceEditor
+              defaultTimezone={defaultTimezone}
+              value={occurrence}
+              onChange={setOccurrence}
+              disabled={isPending}
+              span={kind === "stage"}
+              point={kind === "event"}
+            />
+          </div>
+
+          <label className={styles.fullField}>
+            <span>Notes</span>
+            <textarea
+              aria-label="Notes"
+              maxLength={timelineBodyLimit}
+              onChange={(event) => setBody(event.target.value)}
+              placeholder="What made this chapter or moment meaningful?"
+              rows={5}
+              value={body}
+            />
+          </label>
+
+          <EntryOrganizationEditor
             disabled={isPending}
-            onClick={onClose}
-            type="button"
-          >
-            ×
-          </button>
-        </header>
+            input={collectionInput}
+            kind="collection"
+            names={collectionNames}
+            onChange={setCollectionNames}
+            onInputChange={setCollectionInput}
+            options={collectionOptions}
+          />
 
-        <form onSubmit={handleSubmit}>
-          <fieldset className={styles.kindPicker}>
-            <legend>Moment type</legend>
-            <div>
-              <button
-                aria-pressed={kind === "stage"}
-                className={kind === "stage" ? styles.kindActive : undefined}
-                onClick={() => changeKind("stage")}
-                type="button"
-              >
-                <Icon name="timeline" size={17} />
-                Stage
-              </button>
-              <button
-                aria-pressed={kind === "event"}
-                className={kind === "event" ? styles.kindActive : undefined}
-                onClick={() => changeKind("event")}
-                type="button"
-              >
-                <Icon name="star" size={17} />
-                Event
-              </button>
-            </div>
-            <p>
-              {kind === "stage"
-                ? "A chapter that spans time and may still be ongoing."
-                : "A meaningful moment on one date."}
-            </p>
-          </fieldset>
+          <EntryOrganizationEditor
+            disabled={isPending}
+            input={tagInput}
+            kind="tag"
+            names={tagNames}
+            onChange={setTagNames}
+            onInputChange={setTagInput}
+            options={tagOptions}
+          />
+        </div>
 
-          <div className={styles.formGrid}>
-            <label className={styles.fullField}>
-              <span>
-                Title
-                <span aria-hidden="true" className={styles.requiredMark}>
-                  *
-                </span>
-              </span>
-              <input
-                aria-label="Title"
-                maxLength={timelineTitleLimit}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder={
-                  kind === "stage" ? "Living in Philadelphia" : "First ski day"
-                }
-                ref={titleRef}
-                required
-                value={title}
-              />
-            </label>
-
-            <label>
-              <span>
-                Track
-                <span aria-hidden="true" className={styles.requiredMark}>
-                  *
-                </span>
-              </span>
-              <select
-                aria-label="Track"
-                onChange={(event) => setTrackId(event.target.value)}
-                required
-                value={trackId}
-              >
-                {tracks.map((track) => (
-                  <option key={track.id} value={track.id}>
-                    {track.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <div className={styles.fullField}>
-              <OccurrenceEditor
-                defaultTimezone={defaultTimezone}
-                value={occurrence}
-                onChange={setOccurrence}
-                disabled={isPending}
-                span={kind === "stage"}
-                point={kind === "event"}
-              />
-            </div>
-
-            <label className={styles.fullField}>
-              <span>Notes</span>
-              <textarea
-                aria-label="Notes"
-                maxLength={timelineBodyLimit}
-                onChange={(event) => setBody(event.target.value)}
-                placeholder="What made this chapter or moment meaningful?"
-                rows={5}
-                value={body}
-              />
-            </label>
-
-            <EntryOrganizationEditor
-              disabled={isPending}
-              input={collectionInput}
-              kind="collection"
-              names={collectionNames}
-              onChange={setCollectionNames}
-              onInputChange={setCollectionInput}
-              options={collectionOptions}
-            />
-
-            <EntryOrganizationEditor
-              disabled={isPending}
-              input={tagInput}
-              kind="tag"
-              names={tagNames}
-              onChange={setTagNames}
-              onInputChange={setTagInput}
-              options={tagOptions}
-            />
-          </div>
-
-          {result ? (
-            <p className={styles.formMessage} role="alert">
-              {result.message}
-            </p>
-          ) : null}
-
-          <footer className={styles.dialogFooter}>
-            <div>
-              {entry ? (
-                <Button
-                  variant="danger"
-
-                  disabled={isPending}
-                  onClick={() => void handleTrash()}
-                  type="button"
-                >
-                  Move to Trash
-                </Button>
-              ) : null}
-            </div>
-            <div>
-              <Button
-                variant="secondary"
-
-                disabled={isPending}
-                onClick={onClose}
-                type="button"
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-
-                disabled={isPending}
-                type="submit"
-              >
-                {isPending
-                  ? "Saving..."
-                  : entry
-                    ? "Save changes"
-                    : "Add moment"}
-              </Button>
-            </div>
-          </footer>
-        </form>
-      </div>
-    </div>
+        {result ? (
+          <p className={styles.formMessage} role="alert">
+            {result.message}
+          </p>
+        ) : null}
+      </form>
+    </Dialog>
   );
 }
 
