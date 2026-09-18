@@ -127,7 +127,25 @@ test("Search date filters include overlapping periods without inventing date pre
         )
       ).error,
     ).toBeNull();
-    await page.goto("/search?from=2017-07-10&to=2017-07-10");
+    await page.goto("/search");
+    await page
+      .getByRole("textbox", { name: "From", exact: true })
+      .fill("2017-02-31");
+    await expect
+      .poll(() =>
+        page
+          .getByRole("textbox", { name: "From", exact: true })
+          .evaluate((input: HTMLInputElement) => input.validity.valid),
+      )
+      .toBe(false);
+    await page
+      .getByRole("textbox", { name: "From", exact: true })
+      .fill("2017-07-10");
+    await page
+      .getByRole("textbox", { name: "To", exact: true })
+      .fill("2017-07-10");
+    await page.getByRole("button", { name: "Search", exact: true }).click();
+    await expect(page).toHaveURL(/from=2017-07-10&to=2017-07-10/);
     await expect(
       page.getByRole("heading", { name: "Year-only memory", exact: true }),
     ).toBeVisible({ timeout: 5000 });

@@ -10,7 +10,7 @@ import {
   type DatePickerGranularity,
 } from "@/components/date-picker-field";
 import { TimezoneSelect } from "@/components/timezone-select";
-import styles from "@/app/page.module.css";
+import styles from "./date-fields.module.css";
 
 export function OccurrenceEditor({
   value,
@@ -46,7 +46,7 @@ export function OccurrenceEditor({
   return (
     <fieldset disabled={disabled} className={styles.occurrenceEditor}>
       <legend>When it happened</legend>
-      <div className={styles.reviewFieldRow}>
+      <div className={styles.fieldRow}>
         <label>
           <span>
             Date type
@@ -109,9 +109,7 @@ export function OccurrenceEditor({
       </div>
       {calendar && (
         <div className={styles.occurrenceDateArea}>
-          <div
-            className={`${styles.reviewFieldRow} ${styles.occurrenceDateRow}`}
-          >
+          <div className={`${styles.fieldRow} ${styles.occurrenceDateRow}`}>
             <DatePickerField
               disabled={disabled}
               granularity={dateGranularity(value.precision)}

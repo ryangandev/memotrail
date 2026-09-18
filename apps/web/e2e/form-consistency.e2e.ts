@@ -75,22 +75,29 @@ test("specialized forms share photo fields and required-label conventions", asyn
       caret: "initial",
       path: "/private/tmp/memotrail-goal-photo-field.png",
     });
-    for (const [legendText, inputName] of [
-      ["Collections", "Add a Collection"],
-      ["Tags", "Add a tag"],
+    for (const [legendText, kind] of [
+      ["Collections", "Collection"],
+      ["Tags", "tag"],
     ] as const) {
       const legend = goalDialog.getByText(legendText, { exact: true });
-      const input = goalDialog.locator(`input[aria-label="${inputName}"]`);
+      await goalDialog
+        .getByRole("button", { name: `Add ${kind}`, exact: true })
+        .click();
+      const input = goalDialog.getByRole("combobox", {
+        name: `Search or create a ${kind}`,
+      });
       await input.scrollIntoViewIfNeeded();
+      const fieldShell = input.locator("..");
       const [legendBox, inputBox] = await Promise.all([
         legend.boundingBox(),
-        input.boundingBox(),
+        fieldShell.boundingBox(),
       ]);
       expect(
         Math.round(
           (inputBox?.y ?? 0) - ((legendBox?.y ?? 0) + (legendBox?.height ?? 0)),
         ),
       ).toBeGreaterThanOrEqual(8);
+      await input.press("Escape");
     }
     await goalDialog
       .getByRole("button", { name: "Close Goal editor", exact: true })

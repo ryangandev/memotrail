@@ -121,6 +121,7 @@ export function EntryOrganizationEditor({
                 onKeyDown={(event) => {
                   if (event.key === "Escape") {
                     event.preventDefault();
+                    event.stopPropagation();
                     closeEditor();
                   }
                   if (

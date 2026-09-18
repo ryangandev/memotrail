@@ -223,10 +223,24 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       .getByRole("combobox", { name: "Date type", exact: true })
       .selectOption("day");
     await fillOccurrenceStart(momentDialog, "2025-03-14");
-    await momentDialog.getByLabel("Add a Collection").fill("City chapters");
-    await momentDialog.getByLabel("Add a Collection").press("Enter");
-    await momentDialog.getByLabel("Add a tag").fill("travel");
-    await momentDialog.getByLabel("Add a tag").press("Enter");
+    await momentDialog
+      .getByRole("button", { name: "Add Collection", exact: true })
+      .click();
+    await momentDialog
+      .getByRole("combobox", { name: "Search or create a Collection" })
+      .fill("City chapters");
+    await momentDialog
+      .getByRole("combobox", { name: "Search or create a Collection" })
+      .press("Enter");
+    await momentDialog
+      .getByRole("button", { name: "Add tag", exact: true })
+      .click();
+    await momentDialog
+      .getByRole("combobox", { name: "Search or create a tag" })
+      .fill("travel");
+    await momentDialog
+      .getByRole("combobox", { name: "Search or create a tag" })
+      .press("Enter");
     await momentDialog.getByRole("button", { name: "Add moment" }).click();
     await expect(momentDialog).not.toBeVisible();
 

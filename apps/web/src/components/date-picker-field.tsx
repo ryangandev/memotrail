@@ -4,9 +4,9 @@ import { DatePicker, type DateValue } from "@ark-ui/react/date-picker";
 import { Popover } from "@ark-ui/react/popover";
 import { Portal } from "@ark-ui/react/portal";
 import { parseDate, type CalendarDate } from "@internationalized/date";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState, type RefObject } from "react";
 import { Icon } from "@/components/icon";
-import styles from "@/app/page.module.css";
+import styles from "./date-fields.module.css";
 
 export type DatePickerGranularity = "day" | "month" | "year";
 export type DatePickerFieldSize = "small" | "medium" | "large";
@@ -21,8 +21,11 @@ export type DatePickerFieldProps = {
   maxValue?: string;
   required?: boolean;
   size?: DatePickerFieldSize;
-  value: string;
-  onChange: (value: string) => void;
+  name?: string;
+  defaultValue?: string;
+  value?: string;
+  onChange?: (value: string) => void;
+  portalContainer?: RefObject<HTMLElement | null>;
 };
 
 export function DatePickerField({
@@ -36,15 +39,39 @@ export function DatePickerField({
   maxValue,
   required = false,
   size = "medium",
-  value,
-  onChange,
+  name,
+  defaultValue = "",
+  value: controlledValue,
+  onChange: onValueChange,
+  portalContainer,
 }: DatePickerFieldProps) {
+  const [localValue, setLocalValue] = useState(defaultValue);
+  const value = controlledValue ?? localValue;
+  const inputRef = useRef<HTMLInputElement>(null);
+  function onChange(nextValue: string) {
+    if (controlledValue === undefined) setLocalValue(nextValue);
+    onValueChange?.(nextValue);
+  }
   const pickerId = useId();
   const [pickerOpen, setPickerOpen] = useState(false);
   const dateText = includeTime ? datePart(value) : value;
   const timeText = includeTime ? timePart(value) : "";
   const selected = calendarDate(dateText, granularity);
   const maximum = maxValue ? calendarDate(maxValue, "day") : null;
+
+  // Preserve native date-field validation when used inside a form.
+  useEffect(() => {
+    const invalid = Boolean(dateText && !calendarDate(dateText, granularity));
+    inputRef.current?.setCustomValidity(invalid ? "Enter a valid date." : "");
+  }, [dateText, granularity]);
+
+  useEffect(() => {
+    if (controlledValue !== undefined) return;
+    const form = inputRef.current?.form;
+    const reset = () => setLocalValue(defaultValue);
+    form?.addEventListener("reset", reset);
+    return () => form?.removeEventListener("reset", reset);
+  }, [controlledValue, defaultValue]);
 
   function changeDate(nextDate: string) {
     onChange(includeTime && timeText ? `${nextDate}T${timeText}` : nextDate);
@@ -61,7 +88,7 @@ export function DatePickerField({
   }
 
   return (
-    <div className={styles.datePickerField}>
+    <div className={styles.datePickerField} data-date-picker-field>
       {hideLabel ? null : (
         <span>
           {label}
@@ -101,12 +128,14 @@ export function DatePickerField({
             <Icon name="calendar" size={17} />
           </DatePicker.Trigger>
           <input
+            ref={inputRef}
             aria-haspopup={!editable ? "dialog" : undefined}
             aria-label={label}
             autoComplete="off"
             data-picker-only={!editable || undefined}
             disabled={disabled}
             inputMode="numeric"
+            name={includeTime ? undefined : name}
             onChange={
               editable
                 ? (event) =>
@@ -146,8 +175,17 @@ export function DatePickerField({
             type="text"
             value={dateText}
           />
+          {includeTime && name ? (
+            <input
+              disabled={disabled}
+              name={name}
+              type="hidden"
+              value={value}
+            />
+          ) : null}
           {includeTime ? (
             <TimePicker
+              portalContainer={portalContainer}
               disabled={disabled}
               label={label}
               onChange={changeTime}
@@ -167,7 +205,7 @@ export function DatePickerField({
           </button>
         </DatePicker.Control>
 
-        <Portal>
+        <Portal container={portalContainer}>
           <DatePicker.Positioner className={styles.datePickerPositioner}>
             <DatePicker.Content className={styles.datePickerContent}>
               <DatePicker.Context>
@@ -282,11 +320,13 @@ function TimePicker({
   label,
   value,
   onChange,
+  portalContainer,
 }: {
   disabled: boolean;
   label: string;
   value: string;
   onChange: (value: string) => void;
+  portalContainer?: RefObject<HTMLElement | null>;
 }) {
   const parts = timeParts(value);
   const title = `Choose ${label.toLowerCase()} time`;
@@ -313,7 +353,7 @@ function TimePicker({
         <Icon name="clock" size={15} />
         <span>{timeDisplay(parts)}</span>
       </Popover.Trigger>
-      <Portal>
+      <Portal container={portalContainer}>
         <Popover.Positioner className={styles.timePickerPositioner}>
           <Popover.Content className={styles.timePickerContent}>
             <Popover.Title>{title}</Popover.Title>

@@ -7,6 +7,7 @@ import { EntryPhotoGallery } from "./entry-photo-gallery";
 import { EntryRelationsPanel } from "./entry-relations";
 import { EntryRichTextContent } from "./entry-rich-text-content";
 import { Icon } from "./icon";
+import { DatePickerField } from "./date-picker-field";
 import { loadEditableEntry } from "@/app/history/actions";
 import {
   restoreHistoryVersion,
@@ -505,14 +506,12 @@ function GoalExtraction({
             ))}
           </select>
         </label>
-        <label>
-          Target date
-          <input
-            type="date"
-            value={targetDate}
-            onChange={(e) => setTargetDate(e.target.value)}
-          />
-        </label>
+        <DatePickerField
+          disabled={busy}
+          label="Target date"
+          value={targetDate}
+          onChange={setTargetDate}
+        />
         <div className={styles.controls}>
           <button
             type="button"

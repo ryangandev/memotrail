@@ -143,9 +143,9 @@
 .detailUnavailable p {
   margin: 0;
 }
-.workspace button,
-.workspace input,
-.workspace select {
+.workspace button:not(:where([data-date-picker-field] *)),
+.workspace input:not(:where([data-date-picker-field] *)),
+.workspace select:not(:where([data-date-picker-field] *)) {
   background: var(--mt-color-surface);
   color: var(--mt-color-ink);
   border: 1px solid var(--mt-color-border);
@@ -242,7 +242,7 @@
 .conversion .controls {
   grid-column: 1 / -1;
 }
-.conversion input,
+.conversion input:not(:where([data-date-picker-field] *)),
 .conversion select {
   min-width: 0;
   width: 100%;

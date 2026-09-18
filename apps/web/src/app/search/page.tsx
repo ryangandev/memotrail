@@ -8,6 +8,7 @@ import { EntryRichTextContent } from "@/components/entry-rich-text-content";
 import { Icon } from "@/components/icon";
 import { AISearchForm } from "@/components/ai-search-form";
 import { PageFrame } from "@/components/page-frame";
+import { DatePickerField } from "@/components/date-picker-field";
 import {
   SEARCH_PAGE_SIZE,
   parseSearchRequest,
@@ -167,23 +168,20 @@ export default async function SearchPage({
               </select>
             </label>
 
-            <label>
-              <span>From</span>
-              <input
-                defaultValue={request.dateFrom ?? ""}
-                name="from"
-                type="date"
-              />
-            </label>
-
-            <label>
-              <span>To</span>
-              <input
-                defaultValue={request.dateTo ?? ""}
-                name="to"
-                type="date"
-              />
-            </label>
+            <DatePickerField
+              defaultValue={request.dateFrom ?? ""}
+              key={`from-${request.dateFrom ?? ""}`}
+              label="From"
+              name="from"
+              size="small"
+            />
+            <DatePickerField
+              defaultValue={request.dateTo ?? ""}
+              key={`to-${request.dateTo ?? ""}`}
+              label="To"
+              name="to"
+              size="small"
+            />
 
             {request.hasCriteria ? (
               <Link className={styles.clearFilters} href="/search">

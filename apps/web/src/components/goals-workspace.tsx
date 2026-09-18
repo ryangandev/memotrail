@@ -13,6 +13,7 @@ import {
 import styles from "@/app/goals/page.module.css";
 import common from "@/app/homes/page.module.css";
 import { EntryPhotoField } from "@/components/entry-photo-field";
+import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
@@ -649,14 +650,12 @@ function GoalEditor({
                   ))}
                 </select>
               </label>
-              <label>
-                <span>Target date</span>
-                <input
-                  onChange={(event) => setTargetDate(event.target.value)}
-                  type="date"
-                  value={targetDate}
-                />
-              </label>
+              <DatePickerField
+                disabled={isPending}
+                label="Target date"
+                onChange={setTargetDate}
+                value={targetDate}
+              />
               <label className={common.fullField}>
                 <span>Reflection</span>
                 <textarea
