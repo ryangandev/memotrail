@@ -178,6 +178,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       page.getByRole("button", { name: "Move to Trash" }),
     ).toBeVisible();
     await page.screenshot({
+      caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-wiki-item-detail-desktop.png",
     });
@@ -233,12 +234,14 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await filters.locator('input[name="q"]').press("Tab");
 
     await page.screenshot({
+      caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-wiki-library-desktop.png",
     });
     await page.setViewportSize({ height: 844, width: 390 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
+      caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-wiki-library-mobile.png",
     });

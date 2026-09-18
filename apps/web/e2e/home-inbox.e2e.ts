@@ -128,6 +128,7 @@ test("Home previews the Inbox while Inbox remains a focused organization workspa
       page.getByRole("textbox", { name: "Entry text" }),
     ).toBeEnabled();
     await page.screenshot({
+      caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-home-inbox-preview.png",
     });
@@ -152,6 +153,7 @@ test("Home previews the Inbox while Inbox remains a focused organization workspa
       0,
     );
     await page.screenshot({
+      caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-inbox-organize-only.png",
     });

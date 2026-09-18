@@ -192,12 +192,14 @@ for (const kind of ["home", "vehicle"] as const) {
         dialog.getByRole("combobox", { name: "Date type", exact: true }),
       ).toHaveValue("unknown");
       await page.screenshot({
+        caret: "initial",
         path: `/private/tmp/memotrail-${kind}-chapter-desktop.png`,
         fullPage: true,
       });
       await page.setViewportSize({ width: 390, height: 844 });
       await page.emulateMedia({ colorScheme: "dark" });
       await page.screenshot({
+        caret: "initial",
         path: `/private/tmp/memotrail-${kind}-chapter-mobile.png`,
         fullPage: true,
       });

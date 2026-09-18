@@ -131,12 +131,14 @@ test("Search filters and labels Life Wiki Kinds and types", async ({
     await page.waitForLoadState("networkidle");
     await page.getByLabel("Kind or type").press("Tab");
     await page.screenshot({
+      caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-semantic-search-desktop.png",
     });
     await page.setViewportSize({ height: 844, width: 390 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
+      caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-semantic-search-mobile.png",
     });

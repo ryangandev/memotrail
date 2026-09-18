@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/page-header";
 import styles from "./page.module.css";
 import review from "./pending-component-review.module.css";
 
-export function PendingComponentReview() {
+export function SharedPrimitivesGallery() {
   const portal = useRef<HTMLDivElement>(null);
   const formPortal = useRef<HTMLFormElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);

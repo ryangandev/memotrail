@@ -19,8 +19,8 @@ import {
   trashGoalEntry,
   type GoalActionResult,
 } from "@/app/goals/actions";
-import styles from "@/app/goals/page.module.css";
-import common from "@/app/homes/page.module.css";
+import styles from "@/components/goals-workspace.module.css";
+import common from "@/components/record-workspace.module.css";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
@@ -135,7 +135,6 @@ export function GoalsWorkspace({
             <Button
               variant="primary"
               aria-label="Add Goal"
-
               onClick={() => setSelectedGoal(null)}
               type="button"
             >
@@ -145,7 +144,6 @@ export function GoalsWorkspace({
           </>
         }
       />
-
       <div className={common.summary} aria-label="Goals summary">
         <span>{countLabel(goals.length, "goal")}</span>
         <span aria-hidden="true">·</span>
@@ -589,7 +587,6 @@ function GoalEditor({
             {currentId ? (
               <Button
                 variant="danger"
-
                 disabled={isPending}
                 onClick={() => void handleTrashEntry()}
                 type="button"
@@ -601,7 +598,6 @@ function GoalEditor({
           <div>
             <Button
               variant="secondary"
-
               disabled={isPending}
               onClick={onClose}
               type="button"
@@ -611,7 +607,6 @@ function GoalEditor({
             <Button
               form="goals-workspace-form"
               variant="primary"
-
               disabled={isPending}
               type="submit"
             >
@@ -625,6 +620,7 @@ function GoalEditor({
         </div>
       }
     >
+      {" "}
       <form id="goals-workspace-form" onSubmit={handleSubmit}>
         <div className={common.formGrid}>
           {sourceCapture ? (
@@ -926,7 +922,7 @@ function AchievementPanel({
       ) : null}
       <Button
         variant="primary"
-
+        className={styles.achievementAction}
         disabled={disabled || unsavedChanges}
         onClick={() => void handleAchievement()}
         type="button"

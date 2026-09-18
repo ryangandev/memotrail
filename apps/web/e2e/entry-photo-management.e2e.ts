@@ -109,10 +109,12 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
       buffer: bytes,
     });
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-photo-management-desktop.png",
       fullPage: true,
     });
     await gallery.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-photo-management-panel-light.png",
     });
     let dropped = false;
@@ -166,10 +168,12 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-photo-management-mobile.png",
       fullPage: true,
     });
     await gallery.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-photo-management-panel-dark.png",
     });
     page.once("dialog", (dialog) => dialog.accept());

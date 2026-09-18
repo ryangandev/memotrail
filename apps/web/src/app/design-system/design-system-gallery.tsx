@@ -19,7 +19,7 @@ import { RichTextEditor } from "@/components/rich-text-editor";
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import type { EntryRichText } from "@/lib/data/rich-text";
 import styles from "./page.module.css";
-import { PendingComponentReview } from "./pending-component-review";
+import { SharedPrimitivesGallery } from "./shared-primitives-gallery";
 
 type TokenSet = {
   meta: { name: string; version: string };
@@ -155,11 +155,11 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </div>
       <GallerySection
         description="Approved shared primitives used by production pages. These interactive examples use local demo state only."
-        id="pending-review"
+        id="shared-primitives"
         index="00"
         title="Shared primitives"
       >
-        <PendingComponentReview />
+        <SharedPrimitivesGallery />
       </GallerySection>
       <GallerySection
         description="Values come directly from packages/design-tokens/tokens.json. The nested previews exercise the generated light and dark CSS variables."

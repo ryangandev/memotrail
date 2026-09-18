@@ -176,6 +176,7 @@ export function RichTextEditor({
       className={`${styles.editor} ${variantClassNames[variant]}`}
       data-disabled={disabled || undefined}
       data-rich-text-editor
+      data-ui-field
       data-variant={variant}
     >
       <EditorContent className={styles.content} editor={editor} />

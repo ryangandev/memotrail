@@ -1,4 +1,7 @@
 "use client";
+import captureComposerStyles from "@/components/capture-composer.module.css";
+import entryFormStyles from "@/components/entry-form.module.css";
+import entryListStyles from "@/components/entry-list.module.css";
 import { Button } from "@/components/button";
 
 import {
@@ -66,7 +69,6 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import type { EntryRichText } from "@/lib/data/rich-text";
 import type { PhotoUploadProgress as PhotoUploadProgressValue } from "@/lib/media/upload";
-import styles from "@/app/page.module.css";
 
 type CaptureFeedback = {
   isError: boolean;
@@ -631,20 +633,23 @@ export function CaptureComposer({
   return (
     <>
       <form
-        className={`${styles.captureCard} ${variant === "dialog" ? styles.dialogCaptureCard : ""}`}
+        className={`${captureComposerStyles.captureCard} ${variant === "dialog" ? captureComposerStyles.dialogCaptureCard : ""}`}
         aria-label="Quick capture"
         onSubmit={handleSubmit}
       >
         {variant === "page" ? (
-          <header className={styles.captureComposerHeader}>
-            <span className={styles.captureSpark} aria-hidden="true">
+          <header className={captureComposerStyles.captureComposerHeader}>
+            <span
+              className={captureComposerStyles.captureSpark}
+              aria-hidden="true"
+            >
               <Icon name="sparkle" size={17} />
             </span>
             <h2>What’s on your mind?</h2>
           </header>
         ) : null}
-        <div className={styles.captureIntro}>
-          <div className={styles.captureFields}>
+        <div className={captureComposerStyles.captureIntro}>
+          <div className={captureComposerStyles.captureFields}>
             {isLocalStateReady ? (
               <RichTextEditor
                 autoFocus={variant === "dialog"}
@@ -662,7 +667,7 @@ export function CaptureComposer({
             ) : (
               <div
                 aria-label="Preparing writing space"
-                className={styles.captureEditorLoading}
+                className={captureComposerStyles.captureEditorLoading}
                 role="status"
               />
             )}
@@ -670,7 +675,7 @@ export function CaptureComposer({
         </div>
         {occurrence ? (
           <div
-            className={`${styles.reviewForm} ${styles.captureOccurrencePanel}`}
+            className={`${entryFormStyles.reviewForm} ${captureComposerStyles.captureOccurrencePanel}`}
           >
             <OccurrenceEditor
               value={occurrence}
@@ -679,7 +684,6 @@ export function CaptureComposer({
             />
             <Button
               variant="secondary"
-
               disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
               onClick={() => updateDraft(title, body, null)}
               type="button"
@@ -689,7 +693,10 @@ export function CaptureComposer({
           </div>
         ) : null}
         {photos.length > 0 ? (
-          <div className={styles.capturePhotoStrip} aria-label="Draft photos">
+          <div
+            className={captureComposerStyles.capturePhotoStrip}
+            aria-label="Draft photos"
+          >
             {photos.map((photo) => (
               <CapturePhoto
                 key={photo.id}
@@ -702,18 +709,21 @@ export function CaptureComposer({
         {voiceFeedback ? (
           <p
             aria-live="polite"
-            className={`${styles.captureVoiceStatus} ${voiceFeedback.isError ? styles.captureVoiceError : ""}`}
+            className={`${captureComposerStyles.captureVoiceStatus} ${voiceFeedback.isError ? captureComposerStyles.captureVoiceError : ""}`}
             role={voiceFeedback.isError ? "alert" : "status"}
           >
             <Icon name={voiceFeedback.isError ? "mic" : "sparkle"} size={15} />
             {voiceFeedback.message}
           </p>
         ) : null}
-        <div className={styles.captureActions} data-capture-actions>
+        <div
+          className={captureComposerStyles.captureActions}
+          data-capture-actions
+        >
           <div>
             <button
               aria-pressed={Boolean(occurrence)}
-              className={`${styles.quietButton} ${occurrence ? styles.activeQuietButton : ""}`}
+              className={`${captureComposerStyles.quietButton} ${occurrence ? captureComposerStyles.activeQuietButton : ""}`}
               disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
               onClick={toggleRelevantDate}
               type="button"
@@ -730,7 +740,7 @@ export function CaptureComposer({
                     : "Start voice capture"
               }
               aria-pressed={voiceState === "listening"}
-              className={`${styles.quietButton} ${voiceState === "listening" ? styles.listeningQuietButton : ""}`}
+              className={`${captureComposerStyles.quietButton} ${voiceState === "listening" ? captureComposerStyles.listeningQuietButton : ""}`}
               disabled={
                 isSaving ||
                 !isLocalStateReady ||
@@ -755,7 +765,7 @@ export function CaptureComposer({
             <button
               aria-label="Add photos"
               aria-pressed={photos.length > 0}
-              className={`${styles.quietButton} ${photos.length > 0 ? styles.activeQuietButton : ""}`}
+              className={`${captureComposerStyles.quietButton} ${photos.length > 0 ? captureComposerStyles.activeQuietButton : ""}`}
               disabled={
                 isSaving ||
                 !isLocalStateReady ||
@@ -776,7 +786,7 @@ export function CaptureComposer({
             </button>
             <input
               accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-              className={styles.visuallyHidden}
+              className={captureComposerStyles.visuallyHidden}
               disabled={
                 isSaving ||
                 !isLocalStateReady ||
@@ -790,15 +800,15 @@ export function CaptureComposer({
               type="file"
             />
           </div>
-          <div className={styles.captureSubmitGroup}>
+          <div className={captureComposerStyles.captureSubmitGroup}>
             {photoUploadProgress ? (
               <PhotoUploadProgress progress={photoUploadProgress} />
             ) : null}
             <p
               className={
                 composerFeedback.isError
-                  ? styles.captureError
-                  : styles.captureStatus
+                  ? captureComposerStyles.captureError
+                  : captureComposerStyles.captureStatus
               }
               aria-live="polite"
             >
@@ -806,7 +816,6 @@ export function CaptureComposer({
             </p>
             <Button
               variant="primary"
-
               disabled={
                 isSaving ||
                 isSyncing ||
@@ -825,17 +834,16 @@ export function CaptureComposer({
 
       {pendingEntries.length > 0 ? (
         <section
-          className={styles.pendingSection}
+          className={captureComposerStyles.pendingSection}
           aria-labelledby={`${idPrefix}-pending-heading`}
         >
-          <div className={styles.sectionHeader}>
+          <div className={entryListStyles.sectionHeader}>
             <div>
               <h2 id={`${idPrefix}-pending-heading`}>Pending sync</h2>
               <span>{pendingCountLabel(pendingEntries.length)}</span>
             </div>
             <Button
               variant="secondary"
-
               disabled={isSyncing}
               onClick={() => void synchronizeQueue()}
               type="button"
@@ -844,19 +852,24 @@ export function CaptureComposer({
               {isSyncing ? "Syncing…" : "Retry now"}
             </Button>
           </div>
-          <div className={styles.entryList}>
+          <div className={entryListStyles.entryList}>
             {pendingEntries.map((entry) => (
-              <article className={styles.pendingEntryCard} key={entry.id}>
-                <div className={styles.entryMeta}>
+              <article
+                className={captureComposerStyles.pendingEntryCard}
+                key={entry.id}
+              >
+                <div className={entryFormStyles.entryMeta}>
                   <time dateTime={entry.occurredAt ?? undefined}>
                     {occurrenceLabel(queuedOccurrence(entry))}
                   </time>
-                  <span className={styles.pendingBadge}>On this device</span>
+                  <span className={captureComposerStyles.pendingBadge}>
+                    On this device
+                  </span>
                 </div>
                 <h3>{entry.title ?? "Untitled Entry"}</h3>
                 {entry.body ? <p>{entry.body}</p> : null}
                 {entry.attachments.length > 0 ? (
-                  <span className={styles.pendingPhotoCount}>
+                  <span className={captureComposerStyles.pendingPhotoCount}>
                     <Icon name="photo" size={14} />
                     {photoCountLabel(entry.attachments.length)}
                   </span>
@@ -878,7 +891,7 @@ function CapturePhoto({
   photo: InboxPhotoDraft;
 }) {
   return (
-    <div className={styles.capturePhoto}>
+    <div className={captureComposerStyles.capturePhoto}>
       <SelectedPhotoPreview
         alt={`Selected ${photo.file.name}`}
         file={photo.file}

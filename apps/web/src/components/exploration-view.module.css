@@ -2,20 +2,15 @@
   display: grid;
   gap: var(--mt-space-6);
 }
-.workspace h1,
-.workspace h2 {
+.workspace h2:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
   font-family: var(--mt-font-family-serif);
   font-weight: var(--mt-font-weight-medium);
 }
-.workspace h1 {
-  font-size: 36px;
-  margin-bottom: var(--mt-space-3);
-}
-.workspace h2 {
+.workspace h2:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
   font-size: 24px;
   margin-bottom: var(--mt-space-3);
 }
-.workspace a {
+.workspace a:not([data-ui-button]) {
   color: var(--mt-color-accent);
   text-underline-offset: 3px;
 }

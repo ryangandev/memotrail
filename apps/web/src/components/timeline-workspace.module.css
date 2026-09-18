@@ -472,8 +472,7 @@
   border: 0;
 }
 
-.kindPicker legend,
-.formGrid label > span {
+.kindPicker legend {
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
   font-weight: var(--mt-font-weight-medium);
@@ -518,68 +517,12 @@
 }
 
 .formGrid {
+  composes: fields from "./editor-fields.module.css";
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--mt-space-4);
-}
-
-.formGrid label {
-  display: grid;
-  align-content: start;
-  gap: var(--mt-space-2);
-  min-width: 0;
-}
-
-.formGrid label > span {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.formGrid label > span small,
-.formGrid label > small {
-  color: var(--mt-color-ink-faint);
-  font-size: 10px;
-  font-weight: var(--mt-font-weight-regular);
-}
-
-.formGrid input,
-.formGrid select,
-.formGrid textarea {
-  width: 100%;
-  min-width: 0;
-  padding: 0 var(--mt-space-3);
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-small);
-  outline: 0;
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface);
-  font-family: var(--mt-font-family-sans);
-  font-size: var(--mt-font-size-label);
-}
-
-.formGrid input,
-.formGrid select {
-  height: 42px;
-}
-
-.formGrid textarea {
-  min-height: 116px;
-  padding-block: var(--mt-space-3);
-  resize: vertical;
-  line-height: var(--mt-line-height-body);
-}
-
-.formGrid input:focus,
-.formGrid select:focus,
-.formGrid textarea:focus {
-  border-color: var(--mt-color-accent);
-  box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
-}
-
-.formGrid input::placeholder,
-.formGrid textarea::placeholder {
-  color: var(--mt-color-ink-faint);
+  --editor-textarea-height: 116px;
+  --editor-field-surface: var(--mt-color-surface);
 }
 
 .fullField {
@@ -759,10 +702,6 @@
     margin-top: var(--mt-space-4);
   }
 
-  .kindPicker,
-  .formGrid {
-  }
-
   .dialogFooter {
     align-items: stretch;
     padding-right: var(--mt-space-4);
@@ -831,4 +770,8 @@
   border-radius: var(--mt-radius-medium);
   padding: var(--mt-space-3) var(--mt-space-4);
   cursor: pointer;
+}
+.requiredMark {
+  margin-left: var(--mt-space-1);
+  color: var(--mt-color-warm);
 }

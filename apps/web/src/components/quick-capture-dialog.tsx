@@ -6,6 +6,8 @@ import {
   type NativePhotoPickerState,
 } from "@/components/capture-composer";
 import { Icon } from "@/components/icon";
+import { IconButton } from "@/components/button";
+import { OverlayContainerContext } from "./overlay-container";
 import styles from "./quick-capture-dialog.module.css";
 
 export function QuickCaptureDialog({
@@ -86,7 +88,7 @@ export function QuickCaptureDialog({
     if (!open) return;
 
     function closeOnEscape(event: KeyboardEvent) {
-      if (event.key !== "Escape") return;
+      if (event.key !== "Escape" || event.defaultPrevented) return;
 
       if (
         event.target instanceof Element &&
@@ -166,22 +168,25 @@ export function QuickCaptureDialog({
               </span>
               <h2 id={`${idPrefix}-heading`}>What’s on your mind?</h2>
             </div>
-            <button
-              aria-label="Close quick capture"
-              className={styles.closeButton}
+            <IconButton
+              label="Close quick capture"
+              size="small"
+              variant="ghost"
               onClick={close}
               type="button"
             >
-              ×
-            </button>
+              <Icon name="close" size={18} />
+            </IconButton>
           </header>
           <div className={styles.dialogBody}>
-            <CaptureComposer
-              idPrefix={idPrefix}
-              onNativePhotoPickerChange={handleNativePhotoPickerChange}
-              ownerId={ownerId}
-              variant="dialog"
-            />
+            <OverlayContainerContext value={dialogRef}>
+              <CaptureComposer
+                idPrefix={idPrefix}
+                onNativePhotoPickerChange={handleNativePhotoPickerChange}
+                ownerId={ownerId}
+                variant="dialog"
+              />
+            </OverlayContainerContext>
           </div>
         </dialog>
       ) : null}

@@ -173,12 +173,14 @@ test("An Idea creates a linked Goal without changing the source", async ({
     await form.getByLabel("Target date", { exact: true }).fill("2027-12-31");
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-goal-extraction-desktop.png",
     });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-goal-extraction-mobile.png",
     });
     expect(

@@ -1,9 +1,10 @@
+import pageStyles from "@/app/page.module.css";
+import entryListStyles from "@/components/entry-list.module.css";
 import { PageHeader } from "@/components/page-header";
 import { EntryReviewList } from "@/components/entry-review-list";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import { getInboxWorkspace, type InboxEntry } from "@/lib/data/inbox";
-import styles from "../page.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -47,17 +48,20 @@ function Workspace({
         description={<>Review and organize the captures waiting for a place.</>}
       />
 
-      <section className={styles.entrySection} aria-labelledby="recent-heading">
-        <div className={styles.sectionHeader}>
+      <section
+        className={pageStyles.entrySection}
+        aria-labelledby="recent-heading"
+      >
+        <div className={entryListStyles.sectionHeader}>
           <div>
             <h2 id="recent-heading">Ready to organize</h2>
             <span>{captureCountLabel(entries.length)}</span>
           </div>
         </div>
 
-        <div className={styles.entryList}>
+        <div className={entryListStyles.entryList}>
           {loadError ? (
-            <div className={styles.inboxMessage} role="alert">
+            <div className={pageStyles.inboxMessage} role="alert">
               <Icon name="clock" size={20} />
               <div>
                 <strong>Inbox unavailable</strong>
@@ -67,7 +71,7 @@ function Workspace({
           ) : null}
 
           {!loadError && entries.length === 0 ? (
-            <div className={styles.inboxMessage}>
+            <div className={pageStyles.inboxMessage}>
               <Icon name="inbox" size={22} />
               <div>
                 <strong>Your Inbox is ready</strong>

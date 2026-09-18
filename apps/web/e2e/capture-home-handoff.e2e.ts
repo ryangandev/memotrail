@@ -98,6 +98,7 @@ test("Inbox Capture creates a linked Home through the specialized form", async (
       review.getByRole("button", { name: "Save to Library", exact: true }),
     ).toBeVisible();
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-capture-organizer.png",
       fullPage: true,
     });
@@ -120,6 +121,7 @@ test("Inbox Capture creates a linked Home through the specialized form", async (
       .getByLabel("Place name", { exact: true })
       .fill("Lake Merritt apartment");
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-capture-home-handoff.png",
       fullPage: true,
     });

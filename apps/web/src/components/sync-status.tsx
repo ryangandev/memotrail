@@ -1,8 +1,8 @@
 "use client";
+import syncStatusStyles from "@/components/sync-status.module.css";
 
 import { useEffect, useState } from "react";
 import { inboxQueueChangedEvent, loadInboxQueue } from "@/lib/data/inbox-queue";
-import styles from "@/app/page.module.css";
 
 type QueueChangedDetail = {
   count: number;
@@ -42,7 +42,11 @@ export function SyncStatus({ ownerId }: { ownerId: string }) {
   }
 
   return (
-    <span aria-live="polite" className={styles.syncStatus} role="status">
+    <span
+      aria-live="polite"
+      className={syncStatusStyles.syncStatus}
+      role="status"
+    >
       <span />
       {pendingCount} pending
     </span>

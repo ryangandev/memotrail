@@ -12,7 +12,7 @@ import {
   type HistoryIndexEntry,
 } from "@/lib/data/history";
 import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
-import styles from "./page.module.css";
+import styles from "@/components/entry-history-view.module.css";
 export const dynamic = "force-dynamic";
 export default async function HistoryPage({
   searchParams,

@@ -407,7 +407,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     ).toBeLessThanOrEqual(1);
     const dialogHeader = quickCapture.locator("header");
     await expect(dialogHeader).toHaveCSS("border-bottom-width", "0px");
-    await expect(dialogHeader.locator("svg")).toHaveCount(1);
+    await expect(dialogHeader.locator("svg")).toHaveCount(2);
     expect(
       await dialogHeader.evaluate(
         (element) => element.getBoundingClientRect().height,
@@ -467,6 +467,29 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.keyboard.press("Escape");
     await expect(linkEditor).not.toBeVisible();
     await expect(quickCapture).toBeVisible();
+
+    await quickCapture
+      .getByRole("button", { name: "Date", exact: true })
+      .click();
+    await quickCapture.getByLabel("Date type").selectOption("day");
+    await quickCapture
+      .getByRole("button", { name: "Choose occurred", exact: true })
+      .click();
+    const captureCalendar = page.locator(
+      '[data-scope="date-picker"][data-part="content"][data-state="open"]',
+    );
+    await expect(captureCalendar).toBeVisible();
+    expect(
+      await captureCalendar.evaluate((element) =>
+        Boolean(element.closest("dialog[open]")),
+      ),
+    ).toBe(true);
+    await page.keyboard.press("Escape");
+    await expect(captureCalendar).not.toBeVisible();
+    await expect(quickCapture).toBeVisible();
+    await quickCapture
+      .getByRole("button", { name: "Use capture time", exact: true })
+      .click();
 
     await page.keyboard.press("Escape");
     await expect(quickCapture).not.toBeVisible();

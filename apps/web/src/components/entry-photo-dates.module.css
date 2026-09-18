@@ -60,6 +60,11 @@
   font-size: var(--mt-font-size-label);
   font-weight: var(--mt-font-weight-semibold);
 }
+
+.panel fieldset > [data-ui-button] {
+  margin-right: var(--mt-space-2);
+  margin-top: var(--mt-space-2);
+}
 .panel label {
   display: block;
   font-size: var(--mt-font-size-caption);

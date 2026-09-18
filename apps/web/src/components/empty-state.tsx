@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 import styles from "./empty-state.module.css";
 
+type EmptyStateAction =
+  | { onClick: () => void; actions?: never }
+  | { onClick?: undefined; actions?: ReactNode };
+
 export function EmptyState({
   title,
   description,
@@ -12,12 +16,11 @@ export function EmptyState({
   title: ReactNode;
   description?: ReactNode;
   icon?: ReactNode;
-  actions?: ReactNode;
   headingLevel?: 2 | 3;
-  onClick?: () => void;
-}) {
+} & EmptyStateAction) {
   const Heading = onClick ? "strong" : headingLevel === 2 ? "h2" : "h3";
   const Root = onClick ? "button" : "div";
+  const Description = onClick ? "span" : "div";
   return (
     <Root
       data-ui-empty-state
@@ -32,7 +35,7 @@ export function EmptyState({
       ) : null}
       <Heading className={styles.title}>{title}</Heading>
       {description ? (
-        <div className={styles.description}>{description}</div>
+        <Description className={styles.description}>{description}</Description>
       ) : null}
       {actions ? <div className={styles.actions}>{actions}</div> : null}
     </Root>

@@ -70,6 +70,7 @@
 .mergePanel {
   display: grid;
   grid-template-columns: 1fr auto;
+  align-items: end;
   gap: var(--mt-space-3);
   padding: var(--mt-space-5);
   border-top: 1px solid var(--mt-color-border);

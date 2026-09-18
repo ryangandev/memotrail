@@ -194,6 +194,7 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       Math.abs(searchControlHeights[0] - searchControlHeights[1]),
     ).toBeLessThan(1);
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-tags-consistent.png",
@@ -294,11 +295,13 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       }),
     ).toBeVisible();
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       path: "/private/tmp/memotrail-tag-editor.png",
     });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       path: "/private/tmp/memotrail-tag-editor-dark.png",
     });
@@ -306,6 +309,9 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await travelDialog
       .getByLabel("Destination tag")
       .selectOption({ label: "#journeys (0)" });
+    await expect(
+      travelDialog.getByRole("button", { name: "Merge tag" }),
+    ).toHaveCSS("height", "40px");
     page.once("dialog", (dialog) => dialog.accept());
     await travelDialog.getByRole("button", { name: "Merge tag" }).click();
     await expect(travelDialog).not.toBeVisible();
@@ -355,12 +361,14 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await page.goto("/settings/organization?kind=tag");
     await expect(page).toHaveURL(/\/tags$/);
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-tags-desktop.png",
     });
     await page.setViewportSize({ height: 844, width: 390 });
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-tags-mobile.png",

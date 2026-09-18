@@ -81,7 +81,6 @@ export default async function TagsPage({
           description={
             <>
               <Icon name="tag" size={22} />
-
               {query
                 ? "Try a different name or clear your search."
                 : "Add a tag here or while editing any Entry. It will become available everywhere."}

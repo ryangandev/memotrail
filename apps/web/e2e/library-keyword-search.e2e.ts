@@ -133,6 +133,17 @@ test("Canonical keyword search finds People and Places without deferred Habits",
       .getByRole("link", { name: "Learning 学习 library", exact: true })
       .click();
     await expect(page).toHaveURL(new RegExp(`/places\\?place=${place}$`));
+    const placeDialog = page.getByRole("dialog", {
+      name: "Learning 学习 library",
+      exact: true,
+    });
+    await expect(
+      placeDialog.getByRole("textbox", { name: /^Name/ }),
+    ).toHaveValue("Learning 学习 library");
+    await placeDialog
+      .getByRole("button", { name: "Close Place editor", exact: true })
+      .click();
+    await expect(placeDialog).not.toBeVisible();
     await expect(
       page.getByRole("button", { name: /Learning 学习 library/ }),
     ).toBeVisible();

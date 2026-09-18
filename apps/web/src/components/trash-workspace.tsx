@@ -12,7 +12,7 @@ import {
   restoreTrashItem,
   type TrashActionResult,
 } from "@/app/trash/actions";
-import styles from "@/app/trash/page.module.css";
+import styles from "@/components/trash-workspace.module.css";
 import { Icon } from "@/components/icon";
 import { EmptyTrashControl } from "@/components/empty-trash-control";
 import { PageFrame } from "@/components/page-frame";
@@ -222,7 +222,6 @@ export function TrashWorkspace({
                   <div className={styles.itemActions}>
                     <Button
                       variant="secondary"
-
                       disabled={Boolean(pending) || batchBusy}
                       onClick={() => runAction(item, "restore")}
                       type="button"
@@ -233,7 +232,6 @@ export function TrashWorkspace({
                     </Button>
                     <Button
                       variant="danger"
-
                       disabled={Boolean(pending) || batchBusy}
                       onClick={() => {
                         setResult(null);
@@ -296,7 +294,6 @@ export function TrashWorkspace({
               <Button
                 variant="danger"
                 autoFocus
-
                 disabled={Boolean(pending)}
                 onClick={() => runAction(confirmation, "delete")}
                 type="button"
@@ -308,6 +305,7 @@ export function TrashWorkspace({
             </>
           }
         >
+          {" "}
           {result?.status === "error" ? (
             <p className={styles.dialogError} aria-live="polite">
               {result.message}

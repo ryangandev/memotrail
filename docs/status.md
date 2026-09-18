@@ -21,7 +21,7 @@ Use Git history for feature-level implementation and test evidence.
 | Private media, Entry history, relationships, Trash, and complete export              | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                  |
 | Hosted Supabase contracts                                                            | Deployed to the confirmed MemoTrail project                                                                                                                                         |
 | Capture First Life Wiki information model                                            | Canonical database model is live on the confirmed hosted project; Web navigation, Library, Inbox organization, Search, Collections, and history use Kind-aware identity and routing |
-| Web design system                                                                    | Token/date batches implemented; new Button, Dialog, PageHeader, and EmptyState await gallery review before corresponding migration                                                  |
+| Web design system                                                                    | Approved canonical components migrated across Web; component-owned CSS and token boundaries enforced; local regression passed; not deployed                                         |
 | Backup and restore                                                                   | Not ready                                                                                                                                                                           |
 | Current GitHub CI                                                                    | Blocked before jobs start by account billing or spending limits                                                                                                                     |
 
@@ -63,13 +63,6 @@ The latest automated native UI attempt was blocked by the locked development Mac
 
 - Resolve the GitHub account billing or spending-limit issue.
 - Rerun all Web, iOS, and database jobs for current `main` and confirm they actually execute.
-
-### 6. Complete the Web design system migration
-
-- The user accepted the reviewed gallery as the canonical Web source and authorized production migration while preserving product behavior.
-- Token references are validated during Web lint; date fields and occurrence styling are component-owned, with shared date controls used by Search and Goal forms.
-- The user also accepted Button, Dialog, PageHeader, and EmptyState; remaining production migration is authorized without further visual review unless a new design or behavioral decision is required.
-- Complete shared primitives, dialog shells and component-owned CSS, then full regression verification.
 
 ## Watch list
 

@@ -11,8 +11,8 @@ import {
   trashPlace,
   type PlaceActionResult,
 } from "@/app/places/actions";
-import common from "@/app/homes/page.module.css";
-import styles from "@/app/places/page.module.css";
+import common from "@/components/record-workspace.module.css";
+import styles from "@/components/places-workspace.module.css";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import { ProgressiveImage } from "@/components/progressive-image";
@@ -79,7 +79,6 @@ export function PlacesWorkspace({
             <Button
               variant="primary"
               aria-label="Add Place"
-
               onClick={() => setSelectedPlace(null)}
               type="button"
             >
@@ -89,7 +88,6 @@ export function PlacesWorkspace({
           </>
         }
       />
-
       <div className={common.summary} aria-label="Places summary">
         <span>{countLabel(places.length, "place")}</span>
         <span aria-hidden="true">·</span>
@@ -407,7 +405,6 @@ function PlaceEditor({
               <div className={styles.trashControl}>
                 <Button
                   variant="danger"
-
                   disabled={isPending || !canTrash}
                   onClick={() => void handleTrash()}
                   type="button"
@@ -429,7 +426,6 @@ function PlaceEditor({
           <div>
             <Button
               variant="secondary"
-
               disabled={isPending}
               onClick={onClose}
               type="button"
@@ -439,7 +435,6 @@ function PlaceEditor({
             <Button
               form="places-workspace-form"
               variant="primary"
-
               disabled={isPending}
               type="submit"
             >
@@ -453,6 +448,7 @@ function PlaceEditor({
         </div>
       }
     >
+      {" "}
       <form id="places-workspace-form" onSubmit={handleSubmit}>
         <div className={common.formGrid}>
           <fieldset className={common.formSection}>

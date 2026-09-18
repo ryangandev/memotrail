@@ -1,13 +1,7 @@
 .workspace header:not([data-ui-page-header]) {
   margin-bottom: 28px;
 }
-.workspace h1 {
-  font-family: var(--mt-font-family-serif);
-  font-size: 38px;
-  letter-spacing: -0.04em;
-  margin: var(--mt-space-3) 0;
-}
-.workspace a {
+.workspace a:not([data-ui-button]) {
   color: var(--mt-color-accent);
 }
 .workspace header:not([data-ui-page-header]) > p:last-child,
@@ -92,9 +86,6 @@
   margin-bottom: var(--mt-space-6);
 }
 @media (max-width: 600px) {
-  .workspace h1 {
-    font-size: 30px;
-  }
   .card {
     padding: 18px;
   }

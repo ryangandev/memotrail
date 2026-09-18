@@ -8,7 +8,7 @@ import {
   type TrackSetting,
   type TrackInput,
 } from "@/lib/data/tracks";
-import styles from "@/app/timeline/tracks/page.module.css";
+import styles from "@/components/track-settings.module.css";
 export function TrackSettings({ tracks }: { tracks: TrackSetting[] }) {
   const [adding, setAdding] = useState(false);
   const [generation, setGeneration] = useState(0);

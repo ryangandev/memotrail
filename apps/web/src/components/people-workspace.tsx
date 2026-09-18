@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { savePerson, trashPerson } from "@/app/people/actions";
-import common from "@/app/homes/page.module.css";
+import common from "@/components/record-workspace.module.css";
 import { PageFrame } from "@/components/page-frame";
 import { Icon } from "@/components/icon";
 import {
@@ -17,7 +17,7 @@ import {
   type Person,
   type PersonEntry,
 } from "@/lib/data/person";
-import styles from "@/app/people/page.module.css";
+import styles from "@/components/people-workspace.module.css";
 
 export function PeopleWorkspace({
   people,
@@ -53,7 +53,6 @@ export function PeopleWorkspace({
             <Button
               variant="primary"
               aria-label="Add Person"
-
               onClick={() => setSelected(null)}
               type="button"
             >
@@ -63,7 +62,6 @@ export function PeopleWorkspace({
           </>
         }
       />
-
       <div className={common.summary} aria-label="People summary">
         <span>{countLabel(people.length, "person", "people")}</span>
         <span aria-hidden="true">·</span>
@@ -214,7 +212,6 @@ function PersonEditor({
               <>
                 <Button
                   variant="danger"
-
                   disabled={busy || person.linked_entries.length > 0}
                   onClick={() => void mutate(true)}
                   type="button"
@@ -232,7 +229,6 @@ function PersonEditor({
           <div>
             <Button
               variant="secondary"
-
               disabled={busy}
               onClick={onClose}
               type="button"
@@ -242,7 +238,6 @@ function PersonEditor({
             <Button
               form="people-workspace-form"
               variant="primary"
-
               disabled={busy}
               type="submit"
             >
@@ -252,6 +247,7 @@ function PersonEditor({
         </div>
       }
     >
+      {" "}
       <form
         id="people-workspace-form"
         onSubmit={(event) => {

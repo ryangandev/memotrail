@@ -129,6 +129,7 @@ test("AI consent, settings persistence, API authentication, and bounded connecti
       "Photo understanding is off.",
     );
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-ai-settings-simple-desktop.png",
       fullPage: true,
     });
@@ -166,6 +167,7 @@ test("AI consent, settings persistence, API authentication, and bounded connecti
       const titleChoice = dialog.getByRole("button", { name: /Use title:/ });
       await expect(titleChoice).toBeVisible({ timeout: 35000 });
       await page.screenshot({
+        caret: "initial",
         path: "/private/tmp/memotrail-ai-suggestions-desktop.png",
         fullPage: true,
       });
@@ -205,6 +207,7 @@ test("AI consent, settings persistence, API authentication, and bounded connecti
       await page.setViewportSize({ width: 390, height: 844 });
       await page.emulateMedia({ colorScheme: "dark" });
       await page.screenshot({
+        caret: "initial",
         path: "/private/tmp/memotrail-ai-review-mobile.png",
         fullPage: true,
       });
@@ -248,6 +251,7 @@ test("AI consent, settings persistence, API authentication, and bounded connecti
     await page.emulateMedia({ colorScheme: "dark" });
     await expect(enable).toBeChecked();
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-ai-settings-mobile.png",
       fullPage: true,
     });

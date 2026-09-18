@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/page-header";
 
 import { useState } from "react";
 import { saveAISettings } from "@/app/settings/ai/actions";
-import styles from "@/app/settings/ai/page.module.css";
+import styles from "@/components/ai-settings.module.css";
 import { Icon, type IconName } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import {

@@ -13,7 +13,7 @@ import {
   trashHomeEntry,
   type HomeActionResult,
 } from "@/app/homes/actions";
-import styles from "@/app/homes/page.module.css";
+import styles from "@/components/record-workspace.module.css";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
@@ -104,7 +104,6 @@ export function HomesWorkspace({
             <Button
               variant="primary"
               aria-label="Add Home"
-
               onClick={() => setSelectedHome(null)}
               type="button"
             >
@@ -114,7 +113,6 @@ export function HomesWorkspace({
           </>
         }
       />
-
       <div className={styles.summary} aria-label="Homes summary">
         <span>{countLabel(homes.length, "home")}</span>
         <span aria-hidden="true">·</span>
@@ -608,7 +606,6 @@ export function HomeEditor({
             {currentId ? (
               <Button
                 variant="danger"
-
                 disabled={isPending}
                 onClick={() => void handleTrashEntry()}
                 type="button"
@@ -620,7 +617,6 @@ export function HomeEditor({
           <div>
             <Button
               variant="secondary"
-
               disabled={isPending}
               onClick={onClose}
               type="button"
@@ -630,7 +626,6 @@ export function HomeEditor({
             <Button
               form="homes-workspace-form"
               variant="primary"
-
               disabled={isPending}
               type="submit"
             >
@@ -644,6 +639,7 @@ export function HomeEditor({
         </div>
       }
     >
+      {" "}
       <form id="homes-workspace-form" onSubmit={handleSubmit}>
         <div className={styles.formGrid}>
           {sourceCapture ? (

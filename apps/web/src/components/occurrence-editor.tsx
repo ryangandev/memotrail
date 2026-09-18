@@ -44,7 +44,11 @@ export function OccurrenceEditor({
   const precisionHelp = helpText(value.precision);
   const timezoneIsDefault = value.timezone === defaultTimezone;
   return (
-    <fieldset disabled={disabled} className={styles.occurrenceEditor}>
+    <fieldset
+      disabled={disabled}
+      className={styles.occurrenceEditor}
+      data-ui-field
+    >
       <legend>When it happened</legend>
       <div className={styles.fieldRow}>
         <label>

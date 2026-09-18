@@ -60,12 +60,13 @@ test("Timeline asks for a private birth date and starts the story there", async 
     const prompt = page.getByRole("dialog", {
       name: "When did your story begin?",
     });
+    // Shared Dialog mounts only on the client, so visibility implies hydration.
     await expect(prompt).toBeVisible();
-    await expect(prompt).toHaveAttribute("data-hydrated", "true");
     const birthDateInput = prompt.getByLabel("Birth date", { exact: true });
     await expect(birthDateInput).toHaveValue("");
     await expect(birthDateInput).toHaveAttribute("readonly", "");
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-timeline-birth-prompt.png",
     });
     await page.setViewportSize({ width: 390, height: 844 });
@@ -76,6 +77,7 @@ test("Timeline asks for a private birth date and starts the story there", async 
       ),
     ).toBe(true);
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-timeline-birth-prompt-mobile.png",
     });
     await page.setViewportSize({ width: 1280, height: 720 });
@@ -89,6 +91,7 @@ test("Timeline asks for a private birth date and starts the story there", async 
       page.getByTestId("timeline-axis").locator("span").first(),
     ).toHaveText("1994");
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-timeline-from-birth.png",
     });
     await expect

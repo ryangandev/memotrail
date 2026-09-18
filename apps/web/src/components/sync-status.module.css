@@ -1,0 +1,20 @@
+.syncStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--mt-color-ink-faint);
+  font-size: 11px;
+}
+
+.syncStatus > span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mt-color-warm);
+}
+
+@media (max-width: 720px) {
+  .syncStatus {
+    display: none;
+  }
+}

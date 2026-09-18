@@ -83,7 +83,12 @@ export function EntryOrganizationEditor({
   }
 
   return (
-    <fieldset className={styles.editor} data-kind={kind} disabled={disabled}>
+    <fieldset
+      className={styles.editor}
+      data-kind={kind}
+      disabled={disabled}
+      data-ui-field
+    >
       <legend>{label}</legend>
       <div className={styles.items}>
         {names.map((name) => (

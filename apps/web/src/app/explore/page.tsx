@@ -5,7 +5,7 @@ import { PageFrame } from "@/components/page-frame";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { explorationID } from "@/lib/ai/exploration";
 import { explorationWorkspace } from "@/lib/ai/exploration-server";
-import styles from "./page.module.css";
+import styles from "@/components/exploration-view.module.css";
 export const dynamic = "force-dynamic";
 export default async function ExplorePage({
   searchParams,

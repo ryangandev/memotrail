@@ -62,11 +62,14 @@ export function DatePickerField({
   const selected = calendarDate(dateText, granularity);
   const maximum = maxValue ? calendarDate(maxValue, "day") : null;
 
-  // Preserve native date-field validation when used inside a form.
+  // Named fields replace native GET/form controls. Domain editors without a
+  // name retain their existing submit validation and contextual error messages.
   useEffect(() => {
-    const invalid = Boolean(dateText && !calendarDate(dateText, granularity));
+    const invalid = Boolean(
+      name && dateText && !calendarDate(dateText, granularity),
+    );
     inputRef.current?.setCustomValidity(invalid ? "Enter a valid date." : "");
-  }, [dateText, granularity]);
+  }, [dateText, granularity, name]);
 
   useEffect(() => {
     if (controlledValue !== undefined) return;
@@ -91,7 +94,11 @@ export function DatePickerField({
   }
 
   return (
-    <div className={styles.datePickerField} data-date-picker-field>
+    <div
+      className={styles.datePickerField}
+      data-date-picker-field
+      data-ui-field
+    >
       {hideLabel ? null : (
         <span>
           {label}
@@ -210,7 +217,10 @@ export function DatePickerField({
 
         <Portal container={portalContainer}>
           <DatePicker.Positioner className={styles.datePickerPositioner}>
-            <DatePicker.Content className={styles.datePickerContent}>
+            <DatePicker.Content
+              className={styles.datePickerContent}
+              data-escape-layer="calendar"
+            >
               <DatePicker.Context>
                 {(picker) => (
                   <>

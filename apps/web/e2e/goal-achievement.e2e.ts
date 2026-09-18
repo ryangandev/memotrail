@@ -142,8 +142,16 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
         dialog.getByRole("textbox", { name: "Title", exact: true }),
       ).toHaveValue("Try skiing");
       if (value.precision === "age") {
+        const achieveButton = dialog.getByRole("button", {
+          name: "Mark achieved and create First Time",
+          exact: true,
+        });
+        await expect(achieveButton).toBeVisible();
+        expect((await achieveButton.boundingBox())!.height).toBeLessThan(70);
         await page.screenshot({
+          caret: "initial",
           path: "/private/tmp/memotrail-goal-achievement-light.png",
+          animations: "disabled",
         });
         await page.setViewportSize({ width: 390, height: 844 });
         await page.emulateMedia({ colorScheme: "dark" });
@@ -154,7 +162,9 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
           })
           .scrollIntoViewIfNeeded();
         await page.screenshot({
+          caret: "initial",
           path: "/private/tmp/memotrail-goal-achievement-mobile.png",
+          animations: "disabled",
         });
         await page.setViewportSize({ width: 1280, height: 900 });
         await page.emulateMedia({ colorScheme: "light" });

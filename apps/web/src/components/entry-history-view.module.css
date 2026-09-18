@@ -2,25 +2,15 @@
   display: grid;
   gap: var(--mt-space-5);
 }
-.workspace h1 {
-  font-family: var(--mt-font-family-serif);
-  font-size: 36px;
-  margin: var(--mt-space-2) 0;
-}
-.workspace h2 {
+.workspace h2:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
   font-family: var(--mt-font-family-serif);
   font-size: 26px;
 }
-.workspace p {
+.workspace p:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
   color: var(--mt-color-ink-muted);
   line-height: 1.6;
 }
-.eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  color: var(--mt-color-warm) !important;
-}
-.workspace a {
+.workspace a:not([data-ui-button]) {
   color: var(--mt-color-accent);
 }
 .backLink {
@@ -37,23 +27,6 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--mt-space-2);
-}
-.itemActions > a {
-  display: inline-flex;
-  min-height: 40px;
-  align-items: center;
-  justify-content: center;
-  gap: var(--mt-space-2);
-  padding: 0 var(--mt-space-3);
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface-raised);
-  font-size: var(--mt-font-size-caption);
-  text-decoration: none;
-}
-.itemActions > a:hover {
-  border-color: var(--mt-color-border-strong);
 }
 .currentItem {
   display: grid;
@@ -105,12 +78,8 @@
   gap: var(--mt-space-3);
   padding-top: var(--mt-space-12);
 }
-.detailUnavailable h1,
-.detailUnavailable p {
-  margin: 0;
-}
-.workspace input:not(:where([data-date-picker-field] *)),
-.workspace select:not(:where([data-date-picker-field] *)) {
+.workspace input:not(:where([data-ui-field] *)),
+.workspace select:not(:where([data-ui-field] *)) {
   background: var(--mt-color-surface);
   color: var(--mt-color-ink);
   border: 1px solid var(--mt-color-border);
@@ -118,7 +87,7 @@
   padding: var(--mt-space-3);
   font: inherit;
 }
-.workspace label {
+.workspace label:not(:where([data-ui-field] *)) {
   display: grid;
   gap: var(--mt-space-2);
 }
@@ -285,5 +254,14 @@
   }
   .currentFacts {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+.itemActions .trashAction {
+  margin-left: auto;
+}
+
+@media (max-width: 700px) {
+  .itemActions .trashAction {
+    margin-left: 0;
   }
 }

@@ -153,14 +153,22 @@ Pair it with the test file carrying the same feature name.
 - Token changes run `pnpm tokens:generate` and `pnpm tokens:check`.
 - The development-only `/design-system` route renders production Web components and current generated tokens for review; it is unavailable in Production.
 - Button, Dialog, PageHeader, EmptyState, and the previously reviewed gallery components are approved migration targets.
+- Production actions use Button, IconButton, or ButtonLink without changing submit or navigation semantics; composite internals and navigation controls retain their distinct roles.
+- Dialog owns generic editor and confirmation shells, scroll containment, focus trapping/restoration, busy dismissal, and nested overlay containers.
+  Editor forms retain their handlers; footer submit actions use native form associations.
+  Native Quick Capture keeps its photo-picker cancellation and full-screen mobile behavior, PhotoViewer keeps native top-layer media geometry, and Command Palette keeps its combobox/listbox interaction model.
+- Reusable components do not import `app/**.module.css`; Web lint enforces this boundary along with valid token references.
+  Feature modules own composition, and `editor-fields.module.css` shares native field spacing and states while excluding the reviewed composites' internals.
 - DatePickerField and OccurrenceEditor own `components/date-fields.module.css`; named date fields preserve native form validation and GET serialization without importing route styling.
-- Inside a modal, date/time fields use a `portalContainer` within the dialog so their popovers stay inside its accessibility and theme boundary.
+- Inside a modal, date/time fields inherit its overlay container or accept an explicit `portalContainer` so their popovers stay inside its accessibility and theme boundary.
+  Unnamed domain date fields retain the editor's contextual submit validation rather than introducing native custom-validity interception.
 - Cross-platform components preserve meaning and state while allowing native interaction differences.
 - Authenticated Web routes use `components/page-frame.tsx` for outer width, centering, responsive gutters, and vertical page rhythm.
 - Page frame variants are semantic: `compact` is 880px for forms and focused reading, `standard` is 960px for lists and search, `wide` is 1080px for dashboards and card grids, and `canvas` is 1180px for dense spatial views.
-- New route pages choose the narrowest variant that fits their content and keep internal grid, dialog, and visualization breakpoints in page-specific CSS instead of redefining the outer page geometry.
+- New route pages choose the narrowest variant that fits their content; feature grids and visualizations own their internal breakpoints instead of redefining the outer page geometry.
 - Web photo surfaces reuse `components/progressive-image.tsx` for a reserved skeleton, decode fade-in, failure fallback, and reduced-motion behavior while private expiring media URLs continue to bypass the public Next image cache.
-- Home, Vehicle, First Time, and Place result layouts reuse `components/record-card.tsx`; subtype modules own only their visual, metadata, and responsive content rules.
+- Home, Vehicle, First Time, Goal, Person, and Place result layouts reuse `components/record-card.tsx`; subtype modules own only their visual, metadata, and responsive content rules.
+  Noninteractive history, Collection, and Trash surfaces retain their distinct link or multi-action semantics instead of nesting actions inside a button card.
 - Specialized record editors reuse `components/entry-photo-field.tsx` for selected and existing previews, removal controls, limits, and upload progress.
 - Web domain editors own label-to-control spacing in their shared field wrapper; route forms reuse that wrapper and the spacing tokens instead of compensating field by field.
 - Quick Capture restores local text and occurrence state before paint, keeps the loading and editor geometries equal, and loads IndexedDB photo drafts separately so editor initialization cannot move the open dialog.

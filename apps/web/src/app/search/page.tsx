@@ -100,13 +100,7 @@ export default async function SearchPage({
             <Button variant="primary" type="submit">
               Search
             </Button>
-            <Button
-              variant="primary"
-
-              name="mode"
-              value="ai"
-              type="submit"
-            >
+            <Button variant="primary" name="mode" value="ai" type="submit">
               Ask AI
             </Button>
           </div>

@@ -87,6 +87,17 @@ test("authenticated pages use the shared responsive page frame", async ({
         .filter({ visible: true });
       await expect(frame).toHaveCount(1);
       await expect(frame).toBeVisible();
+      for (const title of await frame
+        .locator("[data-ui-page-header] h1")
+        .all()) {
+        const canonicalSize = await title.evaluate((element) =>
+          getComputedStyle(element)
+            .getPropertyValue("--mt-font-size-display")
+            .trim(),
+        );
+        await expect(title).toHaveCSS("font-size", canonicalSize);
+        await expect(title).toHaveCSS("margin-top", "0px");
+      }
       expect(
         await frame.evaluate(
           (element) => element.getBoundingClientRect().width,
@@ -102,6 +113,17 @@ test("authenticated pages use the shared responsive page frame", async ({
         .filter({ visible: true });
       await expect(frame).toHaveCount(1);
       await expect(frame).toBeVisible();
+      for (const title of await frame
+        .locator("[data-ui-page-header] h1")
+        .all()) {
+        const canonicalSize = await title.evaluate((element) =>
+          getComputedStyle(element)
+            .getPropertyValue("--mt-font-size-title")
+            .trim(),
+        );
+        await expect(title).toHaveCSS("font-size", canonicalSize);
+        await expect(title).toHaveCSS("margin-top", "0px");
+      }
       expect(
         await frame.evaluate(
           (element) => element.getBoundingClientRect().width,

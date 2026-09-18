@@ -235,6 +235,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     );
     expect(await snapshot()).toEqual(before);
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-photo-dates-desktop.png",
       fullPage: true,
     });
@@ -247,6 +248,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       })
       .scrollIntoViewIfNeeded();
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-photo-dates-mobile.png",
       fullPage: true,
     });
@@ -350,6 +352,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       .getByLabel("Longitude", { exact: true })
       .scrollIntoViewIfNeeded();
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-photo-place-desktop.png",
       fullPage: true,
     });
@@ -406,6 +409,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       .getByText("Link existing Place:", { exact: false })
       .scrollIntoViewIfNeeded();
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-photo-place-mobile.png",
       fullPage: true,
     });

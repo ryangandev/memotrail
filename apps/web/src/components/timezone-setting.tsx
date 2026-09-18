@@ -1,10 +1,10 @@
 "use client";
+import settingsFieldsStyles from "@/components/settings-fields.module.css";
 import { Button } from "@/components/button";
 
 import { useState, type FormEvent } from "react";
 import { saveProfileTimezone } from "@/app/settings/actions";
 import { TimezoneSelect } from "@/components/timezone-select";
-import styles from "@/app/settings/page.module.css";
 
 export function TimezoneSetting({
   initialTimezone,
@@ -37,7 +37,7 @@ export function TimezoneSetting({
   }
 
   return (
-    <form className={styles.timezoneCard} onSubmit={submit}>
+    <form className={settingsFieldsStyles.timezoneCard} onSubmit={submit}>
       <div>
         <strong>Default time zone</strong>
         <p>
@@ -54,7 +54,7 @@ export function TimezoneSetting({
           value={timezone}
         />
       </label>
-      <div className={styles.timezoneControls}>
+      <div className={settingsFieldsStyles.timezoneControls}>
         <Button
           variant="primary"
           disabled={busy || timezone === savedTimezone}

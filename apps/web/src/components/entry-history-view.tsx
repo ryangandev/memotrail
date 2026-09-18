@@ -1,6 +1,6 @@
 "use client";
 import { PageHeader } from "@/components/page-header";
-import { Button } from "@/components/button";
+import { Button, ButtonLink } from "@/components/button";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -32,7 +32,7 @@ import {
 } from "@/lib/data/history";
 import { entryRichTextMetadataKey } from "@/lib/data/rich-text";
 import { wikiItemIdentityLabel, wikiItemKindLabel } from "@/lib/data/wiki-item";
-import styles from "@/app/history/page.module.css";
+import styles from "@/components/entry-history-view.module.css";
 export function EntryHistoryView({
   history,
   mode = "history",
@@ -155,9 +155,9 @@ export function EntryHistoryView({
             </Button>
           )}
         {detailMode && history.versions.length > 0 ? (
-          <Link href={`/history?entry=${history.current.id}`}>
+          <ButtonLink href={`/history?entry=${history.current.id}`}>
             View version history ({history.total_count})
-          </Link>
+          </ButtonLink>
         ) : null}
         {editing && (
           <EntryReviewDialog
@@ -173,9 +173,9 @@ export function EntryHistoryView({
           />
         )}
         {!history.current.deleted_at && (
-          <Link href={`/explore?entry=${history.current.id}`}>
+          <ButtonLink href={`/explore?entry=${history.current.id}`}>
             Explore with AI
-          </Link>
+          </ButtonLink>
         )}
         {!history.current.deleted_at &&
           history.current.item_kind !== "goal" && (
@@ -188,12 +188,14 @@ export function EntryHistoryView({
           )}
         {!history.current.deleted_at &&
           history.current.item_kind === "goal" && (
-            <Link href={`/goals?entry=${history.current.id}`}>Open Goal</Link>
+            <ButtonLink href={`/goals?entry=${history.current.id}`}>
+              Open Goal
+            </ButtonLink>
           )}
         {detailMode && !history.current.deleted_at ? (
           <Button
             variant="danger"
-
+            className={styles.trashAction}
             disabled={busy}
             onClick={() => void moveToTrash()}
             type="button"

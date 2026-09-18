@@ -294,6 +294,7 @@ test("Exploration persists across devices, recovers an interrupted response, and
     const savedID = (await open.getAttribute("href"))!.split("/").at(-1)!;
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-explore-desktop.png",
       fullPage: true,
     });
@@ -301,6 +302,7 @@ test("Exploration persists across devices, recovers an interrupted response, and
     await page.emulateMedia({ colorScheme: "dark" });
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-explore-mobile.png",
       fullPage: true,
     });

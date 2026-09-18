@@ -13,7 +13,7 @@ import {
   trashVehicleEntry,
   type VehicleActionResult,
 } from "@/app/vehicles/actions";
-import styles from "@/app/homes/page.module.css";
+import styles from "@/components/record-workspace.module.css";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
@@ -108,7 +108,6 @@ export function VehiclesWorkspace({
             <Button
               variant="primary"
               aria-label="Add Vehicle"
-
               onClick={() => setSelectedVehicle(null)}
               type="button"
             >
@@ -118,7 +117,6 @@ export function VehiclesWorkspace({
           </>
         }
       />
-
       <div className={styles.summary} aria-label="Vehicles summary">
         <span>{countLabel(vehicles.length, "vehicle")}</span>
         <span aria-hidden="true">·</span>
@@ -565,7 +563,6 @@ export function VehicleEditor({
             {currentId ? (
               <Button
                 variant="danger"
-
                 disabled={isPending}
                 onClick={() => void handleTrashEntry()}
                 type="button"
@@ -577,7 +574,6 @@ export function VehicleEditor({
           <div>
             <Button
               variant="secondary"
-
               disabled={isPending}
               onClick={onClose}
               type="button"
@@ -587,7 +583,6 @@ export function VehicleEditor({
             <Button
               form="vehicles-workspace-form"
               variant="primary"
-
               disabled={isPending}
               type="submit"
             >
@@ -601,6 +596,7 @@ export function VehicleEditor({
         </div>
       }
     >
+      {" "}
       <form id="vehicles-workspace-form" onSubmit={handleSubmit}>
         <div className={styles.formGrid}>
           {sourceCapture ? (

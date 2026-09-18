@@ -7,7 +7,6 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
   useEffect,
-  useCallback,
   useMemo,
   useRef,
   useState,
@@ -37,7 +36,7 @@ import {
   type TimelineKind,
 } from "@/lib/data/timeline-input";
 import { createTimelineLayout } from "@/lib/data/timeline-layout";
-import styles from "@/app/timeline/page.module.css";
+import styles from "@/components/timeline-workspace.module.css";
 
 import { OccurrenceEditor } from "@/components/occurrence-editor";
 import {
@@ -239,7 +238,6 @@ export function TimelineWorkspace({
             <Button
               variant="primary"
               aria-label="Add moment"
-
               disabled={tracks.length === 0}
               onClick={() => setSelection({ type: "chooser" })}
               type="button"
@@ -250,7 +248,6 @@ export function TimelineWorkspace({
           </>
         }
       />
-
       <div className={styles.summary} aria-label="Timeline summary">
         <Link href="/timeline/tracks">Manage tracks</Link>
         <span aria-hidden="true">·</span>
@@ -268,7 +265,6 @@ export function TimelineWorkspace({
             <span aria-hidden="true">·</span>
             <Button
               variant="secondary"
-
               onClick={() => setShowBirthDatePrompt(true)}
               type="button"
             >
@@ -628,9 +624,6 @@ function BirthDatePrompt({
   const [birthDate, setBirthDate] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const markHydrated = useCallback((node: HTMLElement | null) => {
-    node?.setAttribute("data-hydrated", "true");
-  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -665,7 +658,6 @@ function BirthDatePrompt({
       titleId="birth-date-heading"
       eyebrow={<>Your starting point</>}
       closeLabel="Close birth date prompt"
-      contentRef={markHydrated}
       size="compact"
       closeOnInteractOutside={false}
     >
@@ -999,7 +991,6 @@ function TimelineEditor({
             {entry ? (
               <Button
                 variant="danger"
-
                 disabled={isPending}
                 onClick={() => void handleTrash()}
                 type="button"
@@ -1011,7 +1002,6 @@ function TimelineEditor({
           <div>
             <Button
               variant="secondary"
-
               disabled={isPending}
               onClick={onClose}
               type="button"
@@ -1021,7 +1011,6 @@ function TimelineEditor({
             <Button
               form="timeline-workspace-form"
               variant="primary"
-
               disabled={isPending}
               type="submit"
             >
@@ -1031,6 +1020,7 @@ function TimelineEditor({
         </div>
       }
     >
+      {" "}
       <form id="timeline-workspace-form" onSubmit={handleSubmit}>
         <fieldset className={styles.kindPicker}>
           <legend>Moment type</legend>

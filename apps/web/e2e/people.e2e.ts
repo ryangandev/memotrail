@@ -93,6 +93,8 @@ test("People saves, links, protects, edits, trashes, and restores on desktop and
     const card = page.getByRole("button", { name: /Alex Friend/ });
     await expect(card).toContainText("1 connected Items");
     await page.screenshot({
+      caret: "initial",
+      animations: "disabled",
       path: "/private/tmp/memotrail-people-desktop.png",
       fullPage: true,
     });
@@ -113,6 +115,8 @@ test("People saves, links, protects, edits, trashes, and restores on desktop and
     await page.emulateMedia({ colorScheme: "dark" });
     await expect(card).toContainText("0 connected Items");
     await page.screenshot({
+      caret: "initial",
+      animations: "disabled",
       path: "/private/tmp/memotrail-people-mobile.png",
       fullPage: true,
     });

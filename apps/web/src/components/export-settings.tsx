@@ -10,7 +10,7 @@ import {
   type ExportAction,
   type ExportSnapshot,
 } from "@/lib/export/contracts";
-import styles from "@/app/settings/export/page.module.css";
+import styles from "@/components/export-settings.module.css";
 
 type FileSink = {
   write(data: Uint8Array): Promise<void>;

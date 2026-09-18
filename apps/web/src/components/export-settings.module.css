@@ -7,18 +7,13 @@
   display: grid;
   gap: var(--mt-space-3);
 }
-.content h1 {
-  font-family: var(--mt-font-family-serif);
-  font-size: clamp(32px, 5vw, 44px);
-  font-weight: var(--mt-font-weight-medium);
-}
-.content h2 {
+.content h2:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
   font-size: 18px;
 }
-.content h3 {
+.content h3:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
   font-size: 16px;
 }
-.content p {
+.content p:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
   line-height: 1.65;
   color: var(--mt-color-ink-muted);
   overflow-wrap: anywhere;

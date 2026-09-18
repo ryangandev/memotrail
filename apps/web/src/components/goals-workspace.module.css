@@ -191,6 +191,16 @@
   align-items: flex-start;
 }
 
+.achievementAction {
+  grid-column: 1 / -1;
+  align-self: start;
+  justify-self: start;
+}
+
+.achievementPanel > [data-ui-field] {
+  grid-column: 1 / -1;
+}
+
 .achievementIntro > span {
   display: grid;
   width: 36px;

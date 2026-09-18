@@ -1,3 +1,5 @@
+import pageStyles from "@/app/settings/page.module.css";
+import settingsFieldsStyles from "@/components/settings-fields.module.css";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/button";
 import Link from "next/link";
@@ -14,7 +16,6 @@ import {
   storedProfileTimezone,
 } from "@/lib/data/profile-input";
 import { storedThemePreference, THEME_COOKIE_NAME } from "@/lib/theme";
-import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -64,7 +65,7 @@ export default async function SettingsPage() {
   );
 
   return (
-    <PageFrame className={styles.content} variant="compact">
+    <PageFrame className={pageStyles.content} variant="compact">
       <PageHeader
         title={<>Settings</>}
         eyebrow={<>Your private space</>}
@@ -74,17 +75,17 @@ export default async function SettingsPage() {
       />
 
       <section aria-labelledby="account-heading">
-        <div className={styles.sectionHeading}>
+        <div className={pageStyles.sectionHeading}>
           <div>
             <h2 id="account-heading">Account</h2>
             <p>Your current MemoTrail identity</p>
           </div>
-          <span className={styles.connectedStatus}>Connected</span>
+          <span className={pageStyles.connectedStatus}>Connected</span>
         </div>
 
-        <div className={styles.accountCard}>
-          <span className={styles.accountAvatar}>{viewer.initial}</span>
-          <div className={styles.accountIdentity}>
+        <div className={pageStyles.accountCard}>
+          <span className={pageStyles.accountAvatar}>{viewer.initial}</span>
+          <div className={pageStyles.accountIdentity}>
             <strong>{viewer.name}</strong>
             <span>{viewer.email}</span>
             <small>Google Sign-In</small>
@@ -105,7 +106,7 @@ export default async function SettingsPage() {
       </section>
 
       <section aria-labelledby="preferences-heading">
-        <div className={styles.sectionHeading}>
+        <div className={pageStyles.sectionHeading}>
           <div>
             <h2 id="preferences-heading">Preferences</h2>
             <p>Controls already available in this version</p>
@@ -116,12 +117,12 @@ export default async function SettingsPage() {
           <TimezoneSetting initialTimezone={profileTimezone.timezone} />
         ) : null}
 
-        <div className={styles.preferenceList}>
+        <div className={pageStyles.preferenceList}>
           <AppearanceSetting initialPreference={themePreference} />
 
           {preferences.map((preference) => (
             <Link href={preference.href} key={preference.href}>
-              <span className={styles.preferenceIcon}>
+              <span className={settingsFieldsStyles.preferenceIcon}>
                 <Icon name={preference.icon} size={20} />
               </span>
               <div>
@@ -134,7 +135,7 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      <aside className={styles.privacyNote}>
+      <aside className={pageStyles.privacyNote}>
         <Icon name="check" size={18} />
         <div>
           <strong>Private by default</strong>

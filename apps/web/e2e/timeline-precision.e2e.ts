@@ -195,6 +195,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     ).toBeVisible();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-entry-type-chooser-mobile.png",
     });
     expect(
@@ -326,6 +327,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     });
     await timelineStage.click();
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-timeline-precision-desktop.png",
     });
     const startDatePicker = dialog.getByRole("button", {
@@ -339,12 +341,14 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       ),
     ).toBeVisible();
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-date-picker-desktop.png",
     });
     await startDatePicker.click();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-timeline-precision-mobile.png",
     });
     expect(
@@ -423,6 +427,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       dialog.getByRole("button", { name: "Change", exact: true }),
     ).toHaveCount(0);
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-exact-datetime-desktop.png",
     });
     await dialog
@@ -445,6 +450,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       timePicker.getByRole("combobox", { name: "Second" }),
     ).toHaveCount(0);
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-time-picker-desktop.png",
     });
     await timePicker.getByRole("button", { name: "Done", exact: true }).click();
@@ -497,6 +503,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       page.getByRole("region", { name: "Without a calendar date" }),
     ).toContainText("First trip to Japan");
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-timeline-undated.png",
     });
     await page.getByRole("button", { name: "Add moment", exact: true }).click();
@@ -632,6 +639,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       dialog.getByRole("textbox", { name: "End date", exact: true }),
     ).toHaveCount(0);
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-present-layout-mobile.png",
     });
     await dialog

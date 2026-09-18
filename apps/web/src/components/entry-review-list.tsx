@@ -1,6 +1,8 @@
 "use client";
+import entryReviewListStyles from "@/components/entry-review-list.module.css";
+import entryFormStyles from "@/components/entry-form.module.css";
 import { Dialog } from "@/components/dialog";
-import { Button } from "@/components/button";
+import { Button, ButtonLink } from "@/components/button";
 import type { PhotoPlaceDraft } from "@/lib/media/photo-place";
 
 import { useState, type FormEvent } from "react";
@@ -36,7 +38,6 @@ import {
   wikiItemSubtypeLabel,
   type ReviewableWikiItemKind,
 } from "@/lib/data/wiki-item";
-import styles from "@/app/page.module.css";
 
 export function EntryReviewList({
   collectionOptions,
@@ -70,8 +71,8 @@ export function EntryReviewList({
         const excerpt = entryExcerpt(entry);
 
         return (
-          <article className={styles.entryCard} key={entry.id}>
-            <div className={styles.entryMeta}>
+          <article className={entryReviewListStyles.entryCard} key={entry.id}>
+            <div className={entryFormStyles.entryMeta}>
               <time dateTime={entry.occurredAt ?? undefined}>
                 {occurrenceLabel(entry)}
               </time>
@@ -79,7 +80,7 @@ export function EntryReviewList({
             <h3>{entryTitle(entry)}</h3>
             {excerpt ? <p>{excerpt}</p> : null}
             <footer>
-              <div className={styles.tags}>
+              <div className={entryReviewListStyles.tags}>
                 <span>Needs review</span>
                 {entry.itemKind !== "capture" ? (
                   <>
@@ -103,7 +104,6 @@ export function EntryReviewList({
               </div>
               <Button
                 variant="secondary"
-
                 onClick={() => setSelectedEntry(entry)}
                 type="button"
               >
@@ -277,10 +277,9 @@ export function EntryReviewDialog({
       busy={isPending}
       size="wide"
       footer={
-        <div className={styles.reviewActions}>
+        <div className={entryReviewListStyles.reviewActions}>
           <Button
             variant="secondary"
-
             disabled={isPending}
             onClick={onClose}
             type="button"
@@ -291,7 +290,6 @@ export function EntryReviewDialog({
             <Button
               form="entry-review-list-form"
               variant="primary"
-
               disabled={isPending}
               type="submit"
             >
@@ -300,7 +298,6 @@ export function EntryReviewDialog({
             {!organized && (
               <Button
                 variant="primary"
-
                 disabled={isPending}
                 onClick={() => void submitReview("done")}
                 type="button"
@@ -313,9 +310,10 @@ export function EntryReviewDialog({
         </div>
       }
     >
+      {" "}
       <form
         id="entry-review-list-form"
-        className={styles.reviewForm}
+        className={entryFormStyles.reviewForm}
         onSubmit={handleSubmit}
       >
         {!organized && (
@@ -378,7 +376,7 @@ export function EntryReviewDialog({
           />
         </label>
 
-        <div className={styles.reviewRichTextField}>
+        <div className={entryReviewListStyles.reviewRichTextField}>
           <span>Note</span>
           <RichTextEditor
             disabled={isPending}
@@ -397,9 +395,9 @@ export function EntryReviewDialog({
 
         <section
           aria-labelledby="classification-heading"
-          className={styles.classificationPanel}
+          className={entryReviewListStyles.classificationPanel}
         >
-          <div className={styles.classificationHeading}>
+          <div className={entryReviewListStyles.classificationHeading}>
             <strong id="classification-heading">
               {entry.itemKind === "capture" ? "Organize as" : "Identity"}
             </strong>
@@ -409,7 +407,7 @@ export function EntryReviewDialog({
                 : "Kind stays fixed; only a compatible type can change."}
             </span>
           </div>
-          <div className={styles.reviewFieldRow}>
+          <div className={entryReviewListStyles.reviewFieldRow}>
             <label>
               <span>Kind</span>
               <select
@@ -444,20 +442,20 @@ export function EntryReviewDialog({
             </label>
           </div>
           {entry.itemKind === "capture" ? (
-            <div className={styles.specializedHandoffs}>
+            <div className={entryReviewListStyles.specializedHandoffs}>
               <span>Or create a structured record</span>
-              <Link href={`/homes?source=${entry.id}`}>
+              <ButtonLink size="small" href={`/homes?source=${entry.id}`}>
                 <Icon name="home" size={15} />
                 Home
-              </Link>
-              <Link href={`/vehicles?source=${entry.id}`}>
+              </ButtonLink>
+              <ButtonLink size="small" href={`/vehicles?source=${entry.id}`}>
                 <Icon name="car" size={15} />
                 Vehicle
-              </Link>
-              <Link href={`/goals?source=${entry.id}`}>
+              </ButtonLink>
+              <ButtonLink size="small" href={`/goals?source=${entry.id}`}>
                 <Icon name="target" size={15} />
                 Goal
-              </Link>
+              </ButtonLink>
             </div>
           ) : null}
         </section>
@@ -497,7 +495,7 @@ export function EntryReviewDialog({
         />
 
         {result ? (
-          <p className={styles.reviewError} role="alert">
+          <p className={entryReviewListStyles.reviewError} role="alert">
             {result.message}
           </p>
         ) : null}

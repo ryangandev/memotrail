@@ -1,8 +1,9 @@
 "use client";
+import settingsFieldsStyles from "@/components/settings-fields.module.css";
 
 import { useState, useTransition } from "react";
 import { saveThemePreference } from "@/app/settings/actions";
-import styles from "@/app/settings/page.module.css";
+
 import { Icon } from "@/components/icon";
 import { themePreferences, type ThemePreference } from "@/lib/theme";
 
@@ -33,8 +34,8 @@ export function AppearanceSetting({
   }
 
   return (
-    <div className={styles.appearanceRow}>
-      <span className={styles.preferenceIcon}>
+    <div className={settingsFieldsStyles.appearanceRow}>
+      <span className={settingsFieldsStyles.preferenceIcon}>
         <Icon name="settings" size={20} />
       </span>
       <div>
@@ -43,7 +44,7 @@ export function AppearanceSetting({
       </div>
       <fieldset
         aria-busy={isPending}
-        className={styles.appearanceControl}
+        className={settingsFieldsStyles.appearanceControl}
         disabled={isPending}
       >
         <legend>Appearance mode</legend>

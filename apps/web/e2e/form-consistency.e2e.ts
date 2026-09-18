@@ -72,6 +72,7 @@ test("specialized forms share photo fields and required-label conventions", asyn
     expect(goalPhotoStyle.borderTopWidth).toBe("0px");
     expect(goalPhotoStyle.pickerHeight).toBe("42px");
     await goalPhotos.screenshot({
+      animations: "disabled",
       caret: "initial",
       path: "/private/tmp/memotrail-goal-photo-field.png",
     });
@@ -142,6 +143,7 @@ test("specialized forms share photo fields and required-label conventions", asyn
     await page.screenshot({
       caret: "initial",
       path: "/private/tmp/memotrail-person-editor.png",
+      animations: "disabled",
     });
     await close.click();
     await expect(personDialog).not.toBeVisible();

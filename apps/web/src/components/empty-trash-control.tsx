@@ -107,7 +107,6 @@ export function EmptyTrashControl({
     <>
       <Button
         variant="danger"
-
         disabled={disabled || preparing || running || snapshot !== null}
         onClick={prepare}
         type="button"
@@ -147,7 +146,6 @@ export function EmptyTrashControl({
               </Button>
               <Button
                 variant="danger"
-
                 disabled={running}
                 onClick={confirm}
                 type="button"
@@ -159,6 +157,7 @@ export function EmptyTrashControl({
             </>
           }
         >
+          {" "}
           <p>
             Only this prepared list is included. Items added to Trash later are
             not deleted. If an item changes or a request cannot be confirmed,

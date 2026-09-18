@@ -6,7 +6,7 @@
   align-items: start;
   justify-items: center;
   padding: min(14vh, 120px) var(--mt-space-4) var(--mt-space-8);
-  background: rgb(28 28 25 / 0.34);
+  background: color-mix(in srgb, var(--mt-color-scrim) 34%, transparent);
   backdrop-filter: blur(8px);
   animation: palette-backdrop-enter var(--mt-motion-standard) ease-out both;
 }
@@ -21,7 +21,7 @@
     color-mix(in srgb, var(--mt-color-border-strong) 82%, transparent);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface-raised);
-  box-shadow: 0 24px 80px rgb(25 25 22 / 0.24);
+  box-shadow: var(--mt-shadow-floating);
   animation: palette-dialog-enter var(--mt-motion-standard)
     cubic-bezier(0.22, 1, 0.36, 1) both;
 }

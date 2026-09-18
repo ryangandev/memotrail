@@ -1,12 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-test("Pending primitives support actions, modal focus, nested calendars, and busy submission", async ({
+test("Shared primitives support actions, modal focus, nested calendars, and busy submission", async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/design-system");
-  const review = page.locator("#pending-review");
+  const review = page.locator("#shared-primitives");
   await review
     .getByRole("button", { name: "Continue", exact: true })
     .first()
@@ -84,7 +84,7 @@ test("Pending primitives support actions, modal focus, nested calendars, and bus
 
 for (const theme of ["light", "dark"] as const) {
   for (const width of [1280, 390]) {
-    test(`Pending primitives fit ${theme} at ${width}px`, async ({ page }) => {
+    test(`Shared primitives fit ${theme} at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto("/design-system");
@@ -93,10 +93,11 @@ for (const theme of ["light", "dark"] as const) {
         await expect(
           page
             .locator("[data-theme]")
-            .filter({ has: page.locator("#pending-review") }),
+            .filter({ has: page.locator("#shared-primitives") }),
         ).toHaveAttribute("data-theme", theme);
       }).toPass();
-      await page.locator("#pending-review").screenshot({
+      await page.locator("#shared-primitives").screenshot({
+        caret: "initial",
         path: `/private/tmp/memotrail-primitives-${theme}-${width}.png`,
       });
       expect(
@@ -120,6 +121,7 @@ for (const theme of ["light", "dark"] as const) {
         dialog.getByRole("button", { name: "Done reading" }),
       ).toBeInViewport();
       await page.screenshot({
+        caret: "initial",
         path: `/private/tmp/memotrail-dialog-${theme}-${width}.png`,
       });
       await dialog.getByRole("button", { name: "Done reading" }).click();

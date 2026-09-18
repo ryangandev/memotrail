@@ -4,7 +4,7 @@ import { PageFrame } from "@/components/page-frame";
 import { TrackSettings } from "@/components/track-settings";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import type { TrackSetting } from "@/lib/data/tracks";
-import styles from "./page.module.css";
+import styles from "@/components/track-settings.module.css";
 export const dynamic = "force-dynamic";
 export default async function TrackSettingsPage({
   searchParams,

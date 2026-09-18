@@ -1,24 +1,24 @@
+import pageStyles from "@/app/page.module.css";
 import { PageFrame } from "@/components/page-frame";
-import styles from "./page.module.css";
 
 export default function Loading() {
   return (
     <PageFrame
       aria-label="Loading page"
       aria-live="polite"
-      className={styles.routeLoading}
+      className={pageStyles.routeLoading}
       role="status"
       variant="wide"
     >
-      <span className={styles.loadingEyebrow} />
-      <span className={styles.loadingTitle} />
-      <span className={styles.loadingIntro} />
-      <div className={styles.loadingCards} aria-hidden="true">
+      <span className={pageStyles.loadingEyebrow} />
+      <span className={pageStyles.loadingTitle} />
+      <span className={pageStyles.loadingIntro} />
+      <div className={pageStyles.loadingCards} aria-hidden="true">
         <span />
         <span />
         <span />
       </div>
-      <span className={styles.loadingLabel}>Loading your trail...</span>
+      <span className={pageStyles.loadingLabel}>Loading your trail...</span>
     </PageFrame>
   );
 }

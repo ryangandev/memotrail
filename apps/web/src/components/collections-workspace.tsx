@@ -2,7 +2,7 @@ import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { ButtonLink } from "@/components/button";
 import Link from "next/link";
-import styles from "@/app/collections/page.module.css";
+import styles from "@/components/collections-workspace.module.css";
 import { Icon } from "@/components/icon";
 import { EntryRichTextContent } from "@/components/entry-rich-text-content";
 import { OrganizationControl } from "@/components/organization-control";

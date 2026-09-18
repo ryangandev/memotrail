@@ -240,6 +240,7 @@
 }
 
 .formSection {
+  composes: fields from "./editor-fields.module.css";
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--mt-space-4);
@@ -248,6 +249,8 @@
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface);
+  --editor-textarea-height: 96px;
+  --editor-field-surface: var(--mt-color-surface-raised);
 }
 
 .formSection > legend {
@@ -257,65 +260,6 @@
   font-weight: var(--mt-font-weight-semibold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-}
-
-.formSection > label {
-  display: grid;
-  min-width: 0;
-  align-content: start;
-  gap: var(--mt-space-2);
-}
-
-.formSection label > span {
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.formSection label > span small,
-.formSection label > small {
-  color: var(--mt-color-ink-faint);
-  font-size: 10px;
-  font-weight: var(--mt-font-weight-regular);
-}
-
-.formSection input,
-.formSection select,
-.formSection textarea {
-  width: 100%;
-  min-width: 0;
-  padding: 0 var(--mt-space-3);
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-small);
-  outline: 0;
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface-raised);
-  font-family: var(--mt-font-family-sans);
-  font-size: var(--mt-font-size-label);
-}
-
-.formSection input,
-.formSection select {
-  height: 42px;
-}
-
-.formSection textarea {
-  min-height: 96px;
-  padding-block: var(--mt-space-3);
-  resize: vertical;
-  line-height: var(--mt-line-height-body);
-}
-
-.formSection input:focus,
-.formSection select:focus,
-.formSection textarea:focus {
-  border-color: var(--mt-color-accent);
-  box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
-}
-
-.formSection input:disabled {
-  color: var(--mt-color-ink-faint);
-  background: var(--mt-color-surface-subtle);
 }
 
 .fullField {

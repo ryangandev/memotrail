@@ -37,7 +37,11 @@ export function EntryPhotoField<Photo extends ExistingPhoto>({
   const full = existingPhotos.length + pendingPhotos.length >= limit;
 
   return (
-    <fieldset className={styles.field} data-entry-photo-field="true">
+    <fieldset
+      className={styles.field}
+      data-entry-photo-field="true"
+      data-ui-field
+    >
       <legend>Photos</legend>
       {existingPhotos.length > 0 || pendingPhotos.length > 0 ? (
         <div className={styles.grid}>

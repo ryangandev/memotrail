@@ -13,7 +13,7 @@ import {
   trashFirstTimeEntry,
   type FirstTimeActionResult,
 } from "@/app/first-times/actions";
-import styles from "@/app/first-times/page.module.css";
+import styles from "@/components/first-times-workspace.module.css";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
@@ -90,7 +90,6 @@ export function FirstTimesWorkspace({
             <Button
               variant="primary"
               aria-label="Add First Time"
-
               onClick={() => setSelectedEntry(null)}
               type="button"
             >
@@ -100,7 +99,6 @@ export function FirstTimesWorkspace({
           </>
         }
       />
-
       <div className={styles.summary} aria-label="First Times summary">
         <span>{countLabel(entries.length, "First Time")}</span>
         <span aria-hidden="true">·</span>
@@ -486,7 +484,6 @@ export function FirstTimeEditor({
             {currentId ? (
               <Button
                 variant="danger"
-
                 disabled={isPending}
                 onClick={() => void handleTrashEntry()}
                 type="button"
@@ -498,7 +495,6 @@ export function FirstTimeEditor({
           <div>
             <Button
               variant="secondary"
-
               disabled={isPending}
               onClick={onClose}
               type="button"
@@ -508,7 +504,6 @@ export function FirstTimeEditor({
             <Button
               form="first-times-workspace-form"
               variant="primary"
-
               disabled={isPending}
               type="submit"
             >
@@ -522,6 +517,7 @@ export function FirstTimeEditor({
         </div>
       }
     >
+      {" "}
       <form id="first-times-workspace-form" onSubmit={handleSubmit}>
         <div className={styles.formGrid}>
           <label className={styles.fullField}>

@@ -1,9 +1,10 @@
 "use client";
+import workspaceShellStyles from "@/components/workspace-shell.module.css";
 
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useState, type ReactNode } from "react";
-import styles from "@/app/page.module.css";
+
 import { AuthGate } from "@/components/auth-gate";
 import { BrandMark } from "@/components/brand-mark";
 import { CommandPalette } from "@/components/command-palette";
@@ -169,7 +170,7 @@ export function WorkspaceShell({
   }, []);
 
   return (
-    <div className={styles.appShell}>
+    <div className={workspaceShellStyles.appShell}>
       <TimezoneSync />
       <CommandPalette onClose={closeCommandPalette} open={commandPaletteOpen} />
       <Sidebar
@@ -178,15 +179,15 @@ export function WorkspaceShell({
         viewer={viewer}
       />
 
-      <main className={styles.workspace}>
-        <header className={styles.topBar}>
-          <div className={styles.topLeading}>
+      <main className={workspaceShellStyles.workspace}>
+        <header className={workspaceShellStyles.topBar}>
+          <div className={workspaceShellStyles.topLeading}>
             <Link
-              className={styles.mobileBrand}
+              className={workspaceShellStyles.mobileBrand}
               href="/"
               aria-label="MemoTrail home"
             >
-              <BrandMark className={styles.brandMark} />
+              <BrandMark className={workspaceShellStyles.brandMark} />
               <span>MemoTrail</span>
             </Link>
             <QuickCaptureDialog
@@ -195,14 +196,14 @@ export function WorkspaceShell({
               onOpen={openQuickCapture}
               open={quickCaptureOpen}
               ownerId={viewer.id}
-              triggerClassName={`${styles.topActionButton} ${styles.newEntryTopAction}`}
+              triggerClassName={`${workspaceShellStyles.topActionButton} ${workspaceShellStyles.newEntryTopAction}`}
             />
           </div>
 
-          <div className={styles.topActions}>
+          <div className={workspaceShellStyles.topActions}>
             <SyncStatus ownerId={viewer.id} />
             <SearchShortcutButton
-              className={styles.topActionButton}
+              className={workspaceShellStyles.topActionButton}
               onOpen={openCommandPalette}
             />
             <Link
@@ -212,7 +213,7 @@ export function WorkspaceShell({
                   ? `Open Inbox, ${inboxCount} ${inboxCount === 1 ? "item" : "items"}`
                   : "Open Inbox"
               }
-              className={`${styles.topActionButton} ${styles.inboxTopAction}`}
+              className={`${workspaceShellStyles.topActionButton} ${workspaceShellStyles.inboxTopAction}`}
               href="/inbox"
             >
               <Icon name="inbox" size={18} />
@@ -224,7 +225,7 @@ export function WorkspaceShell({
             <Link
               aria-current={activeDestination === "trash" ? "page" : undefined}
               aria-label="Open Trash"
-              className={styles.mobileTrashButton}
+              className={workspaceShellStyles.mobileTrashButton}
               href="/trash"
             >
               <Icon name="trash" size={19} />
@@ -234,7 +235,7 @@ export function WorkspaceShell({
                 activeDestination === "settings" ? "page" : undefined
               }
               aria-label={`Open settings for ${viewer.name}`}
-              className={styles.avatarButton}
+              className={workspaceShellStyles.avatarButton}
               href="/settings"
             >
               {viewer.initial}
@@ -245,7 +246,10 @@ export function WorkspaceShell({
         {children}
       </main>
 
-      <nav className={styles.mobileNavigation} aria-label="Mobile navigation">
+      <nav
+        className={workspaceShellStyles.mobileNavigation}
+        aria-label="Mobile navigation"
+      >
         {mobileNavigation.map((item) => (
           <NavigationControl
             active={isNavigationActive(item, activeDestination)}
@@ -288,41 +292,44 @@ function Sidebar({
   viewer: Viewer;
 }) {
   return (
-    <aside className={styles.sidebar}>
-      <Link className={styles.brand} href="/">
-        <BrandMark className={styles.brandMark} />
+    <aside className={workspaceShellStyles.sidebar}>
+      <Link className={workspaceShellStyles.brand} href="/">
+        <BrandMark className={workspaceShellStyles.brandMark} />
         <span>MemoTrail</span>
       </Link>
 
       <div
         aria-label="Sidebar navigation"
-        className={styles.sidebarScrollRegion}
+        className={workspaceShellStyles.sidebarScrollRegion}
         role="region"
       >
-        <nav className={styles.sidebarNav} aria-label="Primary navigation">
+        <nav aria-label="Primary navigation">
           <NavGroup
             activeDestination={activeDestination}
             inboxCount={inboxCount}
             items={primaryNavigation}
           />
-          <div className={styles.navDivider} role="separator" />
-          <p className={styles.navLabel}>Focused views</p>
+          <div className={workspaceShellStyles.navDivider} role="separator" />
+          <p className={workspaceShellStyles.navLabel}>Focused views</p>
           <NavGroup
             activeDestination={activeDestination}
             items={recordNavigation}
           />
-          <div className={styles.navDivider} role="separator" />
-          <p className={styles.navLabel}>Organize</p>
+          <div className={workspaceShellStyles.navDivider} role="separator" />
+          <p className={workspaceShellStyles.navLabel}>Organize</p>
           <NavGroup
             activeDestination={activeDestination}
             items={organizationNavigation}
           />
         </nav>
 
-        <div className={styles.sidebarFooter}>
+        <div className={workspaceShellStyles.sidebarFooter}>
           <DismissibleSyncNote ownerId={viewer.id} />
-          <div className={styles.navDivider} role="separator" />
-          <nav className={styles.navGroup} aria-label="Settings navigation">
+          <div className={workspaceShellStyles.navDivider} role="separator" />
+          <nav
+            className={workspaceShellStyles.navGroup}
+            aria-label="Settings navigation"
+          >
             <NavigationControl
               active={activeDestination === "settings"}
               item={settingsNavigation}
@@ -344,7 +351,7 @@ function NavGroup({
   items: NavigationItem[];
 }) {
   return (
-    <div className={styles.navGroup}>
+    <div className={workspaceShellStyles.navGroup}>
       {items.map((item) => (
         <NavigationControl
           active={item.destination === activeDestination}
@@ -379,8 +386,8 @@ function NavigationControl({
   );
   const className = active
     ? mobile
-      ? styles.mobileActive
-      : styles.activeNavItem
+      ? workspaceShellStyles.mobileActive
+      : workspaceShellStyles.activeNavItem
     : undefined;
 
   if (item.href) {
@@ -411,7 +418,7 @@ function NavigationPendingIndicator({ label }: { label: string }) {
   return (
     <span
       aria-label={`Opening ${label}`}
-      className={styles.navigationProgress}
+      className={workspaceShellStyles.navigationProgress}
       role="status"
     />
   );

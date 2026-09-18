@@ -169,7 +169,7 @@ export function OrganizationControl({
         <Dialog
           open
           onOpenChange={(nextOpen) => {
-            if (!nextOpen) (() => setOpen(false))();
+            if (!nextOpen) setOpen(false);
           }}
           title={<>{item?.name ?? `Create a ${label}`}</>}
           titleId={`organization-control-${item?.id ?? kind}`}
@@ -192,7 +192,6 @@ export function OrganizationControl({
                 {item && kind === "collection" ? (
                   <Button
                     variant="danger"
-
                     disabled={busy}
                     onClick={() => void remove()}
                     type="button"
@@ -203,7 +202,6 @@ export function OrganizationControl({
                 {item && kind === "tag" && item.entry_count === 0 ? (
                   <Button
                     variant="danger"
-
                     disabled={busy}
                     onClick={() => void remove()}
                     type="button"
@@ -215,7 +213,6 @@ export function OrganizationControl({
               <div>
                 <Button
                   variant="secondary"
-
                   disabled={busy}
                   onClick={() => setOpen(false)}
                   type="button"
@@ -225,7 +222,6 @@ export function OrganizationControl({
                 <Button
                   form="organization-control-form"
                   variant="primary"
-
                   disabled={busy || !validOrganizationInput(input)}
                   type="submit"
                 >
@@ -239,6 +235,7 @@ export function OrganizationControl({
             </div>
           }
         >
+          {" "}
           <div className={styles.editorContent}>
             <form id="organization-control-form" onSubmit={submit}>
               <fieldset disabled={busy}>

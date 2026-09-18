@@ -3,7 +3,7 @@
 import { Dialog as ArkDialog } from "@ark-ui/react/dialog";
 import { Portal } from "@ark-ui/react/portal";
 import { ClientOnly } from "@ark-ui/react/client-only";
-import { useCallback, useRef, type ReactNode, type RefObject } from "react";
+import { useRef, type ReactNode, type RefObject } from "react";
 import { OverlayContainerContext } from "./overlay-container";
 import { IconButton } from "./button";
 import { Icon } from "./icon";
@@ -15,7 +15,6 @@ export function Dialog({
   titleId,
   eyebrow,
   closeLabel,
-  contentRef,
   headerContent,
   description,
   footer,
@@ -32,7 +31,6 @@ export function Dialog({
   titleId?: string;
   eyebrow?: ReactNode;
   closeLabel?: string;
-  contentRef?: (node: HTMLDivElement | null) => void;
   headerContent?: ReactNode;
   description?: ReactNode;
   footer?: ReactNode;
@@ -45,13 +43,6 @@ export function Dialog({
   portalContainer?: RefObject<HTMLElement | null>;
 }) {
   const container = useRef<HTMLDivElement>(null);
-  const setContentRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      container.current = node;
-      contentRef?.(node);
-    },
-    [contentRef],
-  );
   return (
     <ClientOnly>
       <ArkDialog.Root
@@ -89,7 +80,7 @@ export function Dialog({
           <ArkDialog.Backdrop className={styles.backdrop} />
           <ArkDialog.Positioner className={styles.positioner}>
             <ArkDialog.Content
-              ref={setContentRef}
+              ref={container}
               className={styles.dialog}
               data-size={size}
               aria-busy={busy}

@@ -7,7 +7,7 @@ import type {
   ExplorationTurn,
   ExplorationWorkspace,
 } from "@/lib/ai/exploration";
-import styles from "@/app/explore/page.module.css";
+import styles from "@/components/exploration-view.module.css";
 class ExplorationFailure extends Error {
   constructor(
     message: string,
