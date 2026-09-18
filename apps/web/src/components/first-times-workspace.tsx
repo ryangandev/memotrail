@@ -502,8 +502,11 @@ export function FirstTimeEditor({
         <form onSubmit={handleSubmit}>
           <div className={styles.formGrid}>
             <label className={styles.fullField}>
-              <span>Title *</span>
+              <span>
+                Title <span aria-hidden="true">*</span>
+              </span>
               <input
+                aria-label="Title"
                 maxLength={firstTimeTitleLimit}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="First time skiing"

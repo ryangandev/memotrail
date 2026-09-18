@@ -587,8 +587,11 @@ export function VehicleEditor({
             <fieldset className={styles.formSection}>
               <legend>Vehicle details</legend>
               <label className={styles.fullField}>
-                <span>Name or nickname *</span>
+                <span>
+                  Name or nickname <span aria-hidden="true">*</span>
+                </span>
                 <input
+                  aria-label="Name or nickname"
                   maxLength={vehicleTitleLimit}
                   onChange={(event) => setTitle(event.target.value)}
                   placeholder="Blue Civic"

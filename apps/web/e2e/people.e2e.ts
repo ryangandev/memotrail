@@ -86,7 +86,9 @@ test("People saves, links, protects, edits, trashes, and restores on desktop and
     await dialog
       .getByRole("button", { name: "Link Item", exact: true })
       .click();
-    await dialog.getByRole("button", { name: "Save changes" }).click();
+    await dialog
+      .getByRole("button", { name: "Add Person", exact: true })
+      .click();
     await expect(dialog).not.toBeVisible();
     const card = page.getByRole("button", { name: /Alex Friend/ });
     await expect(card).toContainText("1 connected Items");

@@ -606,8 +606,11 @@ function GoalEditor({
             <fieldset className={common.formSection}>
               <legend>The intention</legend>
               <label className={common.fullField}>
-                <span>Title *</span>
+                <span>
+                  Title <span aria-hidden="true">*</span>
+                </span>
                 <input
+                  aria-label="Title"
                   maxLength={goalTitleLimit}
                   onChange={(event) => setTitle(event.target.value)}
                   placeholder="Learn to sail"

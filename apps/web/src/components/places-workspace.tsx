@@ -420,8 +420,11 @@ function PlaceEditor({
             <fieldset className={common.formSection}>
               <legend>Place details</legend>
               <label className={common.fullField}>
-                <span>Name *</span>
+                <span>
+                  Name <span aria-hidden="true">*</span>
+                </span>
                 <input
+                  aria-label="Name"
                   maxLength={placeNameLimit}
                   onChange={(event) => setName(event.target.value)}
                   placeholder="Rittenhouse Square apartment"

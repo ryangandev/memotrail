@@ -231,8 +231,11 @@ function PersonEditor({
             <fieldset className={common.formSection} disabled={busy}>
               <legend>Person details</legend>
               <label className={common.fullField}>
-                <span>Name *</span>
+                <span>
+                  Name <span aria-hidden="true">*</span>
+                </span>
                 <input
+                  aria-label="Name"
                   autoFocus
                   maxLength={200}
                   onChange={(event) => setName(event.target.value)}

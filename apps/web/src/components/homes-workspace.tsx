@@ -632,8 +632,11 @@ export function HomeEditor({
             <fieldset className={styles.formSection}>
               <legend>Home details</legend>
               <label className={styles.fullField}>
-                <span>Home name *</span>
+                <span>
+                  Home name <span aria-hidden="true">*</span>
+                </span>
                 <input
+                  aria-label="Home name"
                   maxLength={homeTitleLimit}
                   onChange={(event) => setTitle(event.target.value)}
                   placeholder="Philadelphia rowhome"
@@ -690,8 +693,11 @@ export function HomeEditor({
                 </label>
               ) : null}
               <label className={styles.fullField}>
-                <span>Place name *</span>
+                <span>
+                  Place name <span aria-hidden="true">*</span>
+                </span>
                 <input
+                  aria-label="Place name"
                   maxLength={homePlaceNameLimit}
                   onChange={(event) => setPlaceName(event.target.value)}
                   placeholder="The house on Pine Street"

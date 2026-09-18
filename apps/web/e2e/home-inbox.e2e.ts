@@ -113,8 +113,10 @@ test("Home previews the Inbox while Inbox remains a focused organization workspa
       page.getByText("Waiting in Inbox", { exact: true }),
     ).toHaveCount(0);
     await expect(
-      page.getByText("Entries kept", { exact: true }).locator(".."),
-    ).toContainText("0");
+      page.getByRole("link", {
+        name: /0 Entries kept 0 First Times/,
+      }),
+    ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Recent Entries", exact: true }),
     ).toBeVisible();

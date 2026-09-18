@@ -470,8 +470,9 @@ function GoalExtraction({
       </p>
       <fieldset disabled={busy || disabled}>
         <label>
-          Goal title *
+          Goal title <span aria-hidden="true">*</span>
           <input
+            aria-label="Goal title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={200}

@@ -346,9 +346,12 @@ export function EntryReviewDialog({
           <label>
             <span>
               Title
-              {itemKind === "event" && itemSubtype === "first_time" ? " *" : ""}
+              {itemKind === "event" && itemSubtype === "first_time" ? (
+                <span aria-hidden="true"> *</span>
+              ) : null}
             </span>
             <input
+              aria-label="Title"
               autoFocus
               disabled={isPending}
               maxLength={entryTitleLimit}
