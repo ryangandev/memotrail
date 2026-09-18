@@ -67,7 +67,9 @@ The latest automated native UI attempt was blocked by the locked development Mac
 ### 6. Review the Web design system audit
 
 - Review foundations, production component variants, states, and documented component gaps at the development-only `/design-system` route.
+- Foundations, identity and icons, layout, and RecordCard are accepted; form, organization, and media component review is still in progress.
 - Decide the canonical Button, form-field, dialog, card, page-header, and feedback boundaries before starting consolidation or application migration.
+- Do not start application-wide migration or duplicate reduction until the component gallery receives explicit final acceptance.
 
 ## Watch list
 

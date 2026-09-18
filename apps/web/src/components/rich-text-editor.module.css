@@ -12,6 +12,30 @@
   background: var(--mt-color-surface);
 }
 
+.form[data-disabled="true"] {
+  border-color: var(--mt-color-border);
+  background: var(--mt-color-surface-subtle);
+}
+
+.editor[data-disabled="true"] .content :global(.tiptap) {
+  color: var(--mt-color-ink-faint);
+}
+
+.editor[data-disabled="true"] .content :global(.tiptap blockquote),
+.editor[data-disabled="true"] .content :global(.tiptap a) {
+  color: var(--mt-color-ink-faint);
+}
+
+.editor[data-disabled="true"] .content :global(.tiptap code),
+.editor[data-disabled="true"] .content :global(.tiptap pre) {
+  color: var(--mt-color-ink-faint);
+  background: color-mix(
+    in srgb,
+    var(--mt-color-surface-subtle) 76%,
+    var(--mt-color-canvas)
+  );
+}
+
 .page,
 .dialog {
   background: transparent;
@@ -117,6 +141,11 @@
 .form .toolbar {
   padding: var(--mt-space-2) var(--mt-space-3);
   border-top: 1px solid var(--mt-color-border);
+}
+
+.form[data-disabled="true"] .toolbar {
+  color: var(--mt-color-ink-faint);
+  border-color: var(--mt-color-border);
 }
 
 .toolbarButton {

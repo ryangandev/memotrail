@@ -102,10 +102,23 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
   );
   const [date, setDate] = useState("2026-09-17");
   const [emptyDate, setEmptyDate] = useState("");
+  const [dateTime, setDateTime] = useState("2026-09-17T14:30");
+  const [month, setMonth] = useState("2026-09");
+  const [year, setYear] = useState("2026");
   const [editorValue, setEditorValue] = useState<EntryRichText | null>(null);
   const [editorText, setEditorText] = useState("");
   const [tags, setTags] = useState(["family", "travel"]);
   const [tagInput, setTagInput] = useState("");
+  const [collections, setCollections] = useState(["Early years"]);
+  const [collectionInput, setCollectionInput] = useState("");
+  const [existingPhotos, setExistingPhotos] = useState([
+    {
+      id: "design-system-photo",
+      imageUrl: loadedImage,
+      originalFilename: "coast-memory.jpg",
+    },
+  ]);
+  const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
   const [occurrence, setOccurrence] = useState<OccurrenceDraft>({
     precision: "day",
     start: "2026-09-17",
@@ -305,23 +318,9 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="There is no reusable Button or Link component yet. Production actions are native elements with route-specific CSS, so this audit does not manufacture button variants for the gallery."
-        id="actions"
-        index="04"
-        title="Actions"
-      >
-        <GapNotice>
-          Candidate consolidation: primary, quiet, destructive, icon-only, and
-          link-styled action patterns. Preserve submit behavior, loading,
-          disabled state, keyboard focus, and pending navigation before any
-          migration.
-        </GapNotice>
-      </GallerySection>
-
-      <GallerySection
         description="The current production date, rich-text, occurrence, and organization editors are reusable. Plain text inputs, selects, textareas, labels, and validation messages are still route-level patterns."
         id="forms"
-        index="05"
+        index="04"
         title="Forms"
       >
         <Specimen
@@ -347,6 +346,24 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
               onChange={setEmptyDate}
               size="large"
               value={emptyDate}
+            />
+            <DatePickerField
+              includeTime
+              label="Exact date and time"
+              onChange={setDateTime}
+              value={dateTime}
+            />
+            <DatePickerField
+              granularity="month"
+              label="Month precision"
+              onChange={setMonth}
+              value={month}
+            />
+            <DatePickerField
+              granularity="year"
+              label="Year precision"
+              onChange={setYear}
+              value={year}
             />
             <DatePickerField
               disabled
@@ -402,13 +419,13 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
               options={["family", "travel", "milestone", "home"]}
             />
             <EntryOrganizationEditor
-              disabled
-              input=""
+              disabled={false}
+              input={collectionInput}
               kind="collection"
-              names={["Early years"]}
-              onChange={() => undefined}
-              onInputChange={() => undefined}
-              options={[]}
+              names={collections}
+              onChange={setCollections}
+              onInputChange={setCollectionInput}
+              options={["Early years", "Family archive", "Travel journals"]}
             />
           </div>
         </Specimen>
@@ -434,13 +451,27 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
           <div className={styles.formGrid}>
             <EntryPhotoField
               disabled={false}
-              existingPhotos={[]}
+              existingPhotos={existingPhotos}
               limit={10}
-              onRemoveExisting={() => undefined}
-              onRemovePending={() => undefined}
-              onSelect={() => undefined}
-              pendingPhotos={[]}
-              progress={null}
+              onRemoveExisting={(photo) =>
+                setExistingPhotos((current) =>
+                  current.filter((item) => item.id !== photo.id),
+                )
+              }
+              onRemovePending={(index) =>
+                setPendingPhotos((current) =>
+                  current.filter((_, itemIndex) => itemIndex !== index),
+                )
+              }
+              onSelect={(files) =>
+                setPendingPhotos((current) => [...current, ...files])
+              }
+              pendingPhotos={pendingPhotos}
+              progress={
+                pendingPhotos.length
+                  ? { completed: 0, total: pendingPhotos.length }
+                  : null
+              }
               recordLabel="Entry"
             />
             <EntryPhotoField
@@ -461,7 +492,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       <GallerySection
         description="RecordCard is the shared interactive record surface used by Homes, Vehicles, Places, and First Times. Other card families remain route-specific."
         id="containers"
-        index="06"
+        index="05"
         title="Containers and data display"
       >
         <Specimen
@@ -500,7 +531,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       <GallerySection
         description="Current reusable feedback is specialized rather than a generic Alert, Toast, Badge, EmptyState, or Skeleton API."
         id="feedback"
-        index="07"
+        index="06"
         title="Feedback and media states"
       >
         <div className={styles.feedbackGrid}>
@@ -512,6 +543,10 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
             title="ProgressiveImage"
           >
             <div className={styles.imageStates}>
+              <div>
+                <ProgressiveImage alt="Loading sample" />
+                <small>Loading skeleton</small>
+              </div>
               <div>
                 <ProgressiveImage alt="Loaded sample" src={loadedImage} />
                 <small>Loaded</small>
@@ -525,22 +560,12 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
                 <small>Failure fallback</small>
               </div>
             </div>
+            <p className={styles.stateNote}>
+              Loading is normally transient while the image decodes. Failure
+              replaces the image and skeleton with the supplied fallback.
+            </p>
           </Specimen>
         </div>
-      </GallerySection>
-
-      <GallerySection
-        description="WorkspaceShell, Sidebar, mobile navigation, CommandPalette, QuickCaptureDialog, and several confirmation dialogs are real production composites, but they are not safely isolated primitives today."
-        id="navigation"
-        index="08"
-        title="Navigation and overlays"
-      >
-        <GapNotice>
-          These surfaces remain visible in their real application context. The
-          audit records their overlapping navigation, backdrop, panel, header,
-          close-action, and footer patterns as consolidation candidates instead
-          of reproducing them here.
-        </GapNotice>
       </GallerySection>
     </div>
   );
@@ -595,15 +620,6 @@ function Specimen({
       </header>
       <div className={styles.specimenBody}>{children}</div>
     </article>
-  );
-}
-
-function GapNotice({ children }: { children: React.ReactNode }) {
-  return (
-    <div className={styles.gapNotice}>
-      <Icon name="search" size={20} />
-      <p>{children}</p>
-    </div>
   );
 }
 

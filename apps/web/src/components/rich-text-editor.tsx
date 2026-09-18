@@ -173,6 +173,7 @@ export function RichTextEditor({
   return (
     <div
       className={`${styles.editor} ${variantClassNames[variant]}`}
+      data-disabled={disabled || undefined}
       data-rich-text-editor
       data-variant={variant}
     >
