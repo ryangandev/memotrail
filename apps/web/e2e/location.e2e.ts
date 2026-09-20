@@ -166,10 +166,19 @@ test("one Entry can replace a shared Location without rewriting the other", asyn
       .click();
     const dialog = page.getByRole("dialog");
     await expect(
+      dialog.getByPlaceholder("Search a saved Location or address"),
+    ).toHaveCSS("border-top-width", "0px");
+    await dialog
+      .getByPlaceholder("Search a saved Location or address")
+      .focus();
+    await expect(
+      dialog.getByPlaceholder("Search a saved Location or address"),
+    ).toHaveCSS("box-shadow", "none");
+    await expect(
       dialog.getByRole("img", { name: "Map showing Shared Pine Street" }),
     ).toBeVisible();
     await dialog
-      .getByRole("textbox", { name: "Change Location" })
+      .getByRole("searchbox", { name: "Change Location" })
       .fill("Reading Terminal");
     await dialog.getByRole("button", { name: "Search", exact: true }).click();
     await dialog
@@ -248,11 +257,24 @@ test("one Entry can replace a shared Location without rewriting the other", asyn
     await page.goto("/homes");
     await page.getByRole("button", { name: "Add Home" }).first().click();
     const homeDialog = page.getByRole("dialog");
+    await expect(
+      homeDialog.getByPlaceholder("Search a saved Location or address"),
+    ).toHaveCSS("border-top-width", "0px");
+    await homeDialog
+      .getByPlaceholder("Search a saved Location or address")
+      .focus();
+    await expect(
+      homeDialog.getByPlaceholder("Search a saved Location or address"),
+    ).toHaveCSS("box-shadow", "none");
+    await homeDialog.locator("[data-search-field]").screenshot({
+      animations: "disabled",
+      path: "/private/tmp/memotrail-home-search-focused.png",
+    });
     await homeDialog
       .getByRole("textbox", { name: "Home name" })
       .fill("Market Street Home");
     await homeDialog
-      .getByRole("textbox", { name: "Find a Location" })
+      .getByRole("searchbox", { name: "Find a Location" })
       .fill("Reading Terminal");
     await expect(
       homeDialog.getByRole("button", { name: /Reading Terminal Market/ }),

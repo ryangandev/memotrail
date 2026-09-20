@@ -48,43 +48,6 @@
   gap: var(--mt-space-3);
 }
 
-.searchRow label {
-  display: grid;
-  gap: var(--mt-space-2);
-}
-
-.searchRow label > span {
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.searchInput {
-  display: flex;
-  align-items: center;
-  gap: var(--mt-space-2);
-  padding-left: var(--mt-space-3);
-  border: 1px solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-ink-faint);
-  background: var(--mt-color-surface);
-}
-
-.searchInput:focus-within {
-  border-color: var(--mt-color-accent);
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--mt-color-accent) 14%, transparent);
-}
-
-.searchInput input {
-  width: 100%;
-  min-width: 0;
-  padding-left: 0;
-  border: 0;
-  outline: 0;
-  box-shadow: none;
-}
-
 .selected {
   overflow: hidden;
   border: 1px solid var(--mt-color-border);

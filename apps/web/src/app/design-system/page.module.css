@@ -412,6 +412,20 @@
   align-items: start;
 }
 
+.searchFieldDemo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--mt-space-3);
+}
+
+.searchFieldVariants {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mt-space-4);
+  margin-top: var(--mt-space-5);
+}
+
 .formGrid > * {
   min-width: 0;
 }
@@ -486,6 +500,11 @@
 }
 
 @media (max-width: 600px) {
+  .searchFieldDemo,
+  .searchFieldVariants {
+    grid-template-columns: 1fr;
+  }
+
   .page {
     gap: var(--mt-space-10);
   }

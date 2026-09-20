@@ -34,6 +34,7 @@ Its marked account and Storage objects were confirmed removed without accessing 
 ### 1. Accept Web Location search
 
 - Accept Entry and Home Location search, coordinates, static-map previews, and copy-on-write in the local browser using a personal test record.
+- The shared SearchField at `/design-system#search-field` is accepted. Extend it to remaining Web search surfaces without changing each surface's search behavior.
 - Set the server-only Production `GEOAPIFY_API_KEY` and deploy Web when Production acceptance is wanted; the local key and provider-backed `localhost:3000` browser flow are verified.
 - Keep native iOS provider UI deferred until the Web interaction is accepted.
 

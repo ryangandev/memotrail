@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import Image from "next/image";
 import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
+import { SearchField } from "@/components/search-field";
 import {
   locationSubtitle,
   type ExistingLocation,
@@ -146,21 +147,15 @@ export function LocationPicker({
       ) : null}
 
       <div className={styles.searchRow}>
-        <label>
-          <span>{value ? "Change Location" : "Find a Location"}</span>
-          <div className={styles.searchInput}>
-            <Icon name="search" size={17} />
-            <input
-              autoComplete="off"
-              disabled={disabled}
-              maxLength={200}
-              onChange={(event) => changeQuery(event.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Search a saved Location or address"
-              value={query}
-            />
-          </div>
-        </label>
+        <SearchField
+          disabled={disabled}
+          label={value ? "Change Location" : "Find a Location"}
+          maxLength={200}
+          onChange={(event) => changeQuery(event.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Search a saved Location or address"
+          value={query}
+        />
         <Button
           disabled={disabled || busy}
           onClick={searchNow}

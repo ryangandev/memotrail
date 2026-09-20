@@ -1,5 +1,55 @@
 import { expect, test } from "@playwright/test";
 
+test("SearchField has one focus surface and composes with a Search action", async ({
+  page,
+}) => {
+  await page.goto("/design-system#search-field");
+  const specimen = page.locator("#search-field");
+  const input = specimen.getByRole("searchbox", { name: "Search Locations" });
+  await expect(input).toBeVisible();
+  await expect(input).toHaveCSS("border-top-width", "0px");
+  await input.focus();
+  await expect(input).toHaveCSS("box-shadow", "none");
+  await expect(input.locator("..")).toHaveCSS("border-top-width", "1px");
+  await input.fill("Philadelphia City Hall");
+  await specimen.getByRole("button", { name: "Search" }).click();
+  await expect(specimen.getByRole("status")).toHaveText(
+    "Demo search: Philadelphia City Hall. No request was sent.",
+  );
+  await expect(
+    specimen.getByRole("searchbox", { name: "Disabled search" }),
+  ).toBeDisabled();
+});
+
+for (const [theme, width] of [
+  ["light", 1280],
+  ["dark", 1280],
+  ["light", 390],
+  ["dark", 390],
+] as const) {
+  test(`SearchField fits ${theme} at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/design-system#search-field");
+    const specimen = page.locator("#search-field");
+    await expect(async () => {
+      await page.getByLabel("Gallery theme").selectOption(theme);
+      await expect(
+        page.locator("[data-theme]").filter({ has: specimen }),
+      ).toHaveAttribute("data-theme", theme);
+    }).toPass();
+    await expect(specimen).toBeVisible();
+    await specimen.screenshot({
+      animations: "disabled",
+      path: `/private/tmp/memotrail-search-field-${theme}-${width}.png`,
+    });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+  });
+}
+
 test("Shared primitives support actions, modal focus, nested calendars, and busy submission", async ({
   page,
 }) => {
