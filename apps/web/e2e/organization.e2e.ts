@@ -185,9 +185,11 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       true,
     );
     const searchControlHeights = await Promise.all(
-      [tagSearch.getByRole("textbox"), tagSearch.getByRole("button")].map(
-        (control) =>
-          control.evaluate((element) => element.getBoundingClientRect().height),
+      [
+        tagSearch.locator("[data-search-control]"),
+        tagSearch.getByRole("button"),
+      ].map((control) =>
+        control.evaluate((element) => element.getBoundingClientRect().height),
       ),
     );
     expect(

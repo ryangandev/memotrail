@@ -17,6 +17,7 @@ import {
 import styles from "@/components/first-times-workspace.module.css";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
+import { LocationPicker } from "@/components/location-picker";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
 import {
@@ -48,6 +49,7 @@ import {
   uploadEntryPhotos,
   type PhotoUploadProgress as PhotoUploadProgressValue,
 } from "@/lib/media/upload";
+import type { LocationSelection } from "@/lib/locations/location";
 
 export function FirstTimesWorkspace({
   collectionOptions,
@@ -203,6 +205,12 @@ function FirstTimeCard({
           {firstTimeDateLabel(entry)}
         </time>
         <h2>{entry.title}</h2>
+        {entry.location ? (
+          <p className={styles.locationLine}>
+            <Icon name="map" size={14} />
+            {entry.location.name}
+          </p>
+        ) : null}
         {entry.body ? <p>{truncate(entry.body, 180)}</p> : null}
         <footer>
           <div>
@@ -250,6 +258,10 @@ export function FirstTimeEditor({
   const [currentRevision, setCurrentRevision] = useState(
     entry?.revision ?? null,
   );
+  const [location, setLocation] = useState<LocationSelection | null>(
+    entry?.location ?? null,
+  );
+  const [locationDirty, setLocationDirty] = useState(false);
   const [occurrence, setOccurrence] = useState(() =>
     occurrenceDraft(firstTimeOccurrence(entry, defaultTimezone)),
   );
@@ -335,7 +347,10 @@ export function FirstTimeEditor({
     setResult(null);
 
     try {
-      const saved = await saveFirstTimeEntry(parsed.data);
+      const saved = await saveFirstTimeEntry(
+        parsed.data,
+        locationDirty ? location : undefined,
+      );
 
       if (
         (saved.status !== "created" && saved.status !== "saved") ||
@@ -347,6 +362,7 @@ export function FirstTimeEditor({
 
       setCurrentId(saved.entry.id);
       setCurrentRevision(saved.entry.revision);
+      setLocationDirty(false);
       if (entry && pendingPhotos.length === 0) {
         onSaved({
           ...entry,
@@ -354,6 +370,7 @@ export function FirstTimeEditor({
           revision: saved.entry.revision,
           title: parsed.data.title,
           body: parsed.data.body,
+          location,
           collectionNames: parsed.data.collectionNames,
           tagNames: parsed.data.tagNames,
           datePrecision: parsed.data.datePrecision,
@@ -539,6 +556,17 @@ export function FirstTimeEditor({
               value={occurrence}
               onChange={setOccurrence}
               disabled={isPending}
+            />
+          </div>
+
+          <div className={styles.fullField}>
+            <LocationPicker
+              disabled={isPending}
+              onChange={(selection) => {
+                setLocation(selection);
+                setLocationDirty(true);
+              }}
+              value={location}
             />
           </div>
 

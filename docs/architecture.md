@@ -61,6 +61,7 @@ Pair it with the test file carrying the same feature name.
 - Location rows are immutable through the authenticated table API.
   `review_wiki_item_with_location_rich` atomically resolves a saved or Geoapify Location and replaces only the current Entry's `primary` relationship.
   Home's provider-backed save uses `save_home_entry_with_geoapify` to resolve and link the Location in the same transaction; manual Home saves use `resolve_home_location_copy_on_write`.
+  Specialized First Time and Vehicle editors use `save_first_time_with_location` and `save_vehicle_with_location` when changing a primary Location, preserving their existing save paths when Location is untouched.
   Changed Location facts fork a new row while identical facts reuse an existing identity, including in the photo-derived `save_location` path.
 - `homes.place_id` and `entry_places.place_id` remain compatibility column names for one cross-client window, but their foreign keys target `locations`; new reads use the `entry_locations` view and Location vocabulary.
 - A raw Capture may be finalized as one durable item or may produce linked items through a provenance-preserving extraction.

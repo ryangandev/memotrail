@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Icon, type IconName } from "@/components/icon";
+import { SearchField } from "@/components/search-field";
 import {
   parseQuickSearchResult,
   type QuickSearchResult,
@@ -263,11 +264,11 @@ export function CommandPalette({
         <h2 id="command-palette-title" className={styles.visuallyHidden}>
           Search MemoTrail
         </h2>
-        <label className={styles.searchField}>
-          <Icon name="search" size={22} />
-          <span className={styles.visuallyHidden}>Search your archive</span>
-          <input
+        <div className={styles.searchRow}>
+          <SearchField
             autoFocus
+            hideLabel
+            label="Search your archive"
             maxLength={200}
             onChange={(event) => {
               setQuery(event.target.value);
@@ -275,11 +276,11 @@ export function CommandPalette({
             }}
             onKeyDown={handleInputKeyDown}
             placeholder="Search your archive or jump somewhere..."
-            type="search"
+            size="large"
+            trailing={<kbd aria-hidden="true">esc</kbd>}
             value={query}
           />
-          <kbd aria-hidden="true">esc</kbd>
-        </label>
+        </div>
 
         <div className={styles.resultsViewport}>
           {normalizedQuery ? (

@@ -48,6 +48,12 @@
   flex: 0 0 auto;
 }
 
+.trailing {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
 .control input,
 .control input:focus,
 .control input:focus-visible {

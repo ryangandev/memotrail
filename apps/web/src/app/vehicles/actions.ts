@@ -13,6 +13,10 @@ import {
 } from "@/lib/data/first-time-input";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
+  validLocationSelection,
+  type LocationSelection,
+} from "@/lib/locations/location";
+import {
   isVehicleEntryIdentity,
   parseVehicleEntryInput,
   type VehicleEntryInput,
@@ -27,9 +31,13 @@ export type VehicleActionResult = {
 export async function saveVehicleEntry(
   input: VehicleEntryInput,
   sourceCapture: CaptureExtractionReference | null = null,
+  location?: LocationSelection | null,
 ): Promise<VehicleActionResult> {
   const parsed = parseVehicleEntryInput(input);
   if (!parsed.success) return result("error", parsed.message);
+  if (location != null && !validLocationSelection(location)) {
+    return result("error", "Choose the Location again before saving.");
+  }
 
   const context = await getAuthenticatedContext();
   if (!context) return expiredSession();
@@ -58,27 +66,40 @@ export async function saveVehicleEntry(
     p_tag_names: parsed.data.tagNames,
     p_title: parsed.data.title,
   };
-  const { data, error } = source
-    ? await context.client.rpc("extract_capture_to_vehicle", {
-        ...parameters,
-        p_capture_id: source.id,
-        p_capture_revision: source.revision,
-      })
-    : await context.client.rpc("save_vehicle_entry_with_occurrence", {
-        ...parameters,
-        p_entry_id: parsed.data.id,
-        p_expected_revision: await writingRevision(
-          context.client,
-          parsed.data.id,
-          parsed.data.revision,
-        ),
-      });
+  const expectedRevision = source
+    ? null
+    : await writingRevision(
+        context.client,
+        parsed.data.id,
+        parsed.data.revision,
+      );
+  const { data, error } =
+    location !== undefined
+      ? await context.client.rpc("save_vehicle_with_location", {
+          p_input: { ...parsed.data, revision: expectedRevision },
+          p_location: location,
+          p_source: source,
+        })
+      : source
+        ? await context.client.rpc("extract_capture_to_vehicle", {
+            ...parameters,
+            p_capture_id: source.id,
+            p_capture_revision: source.revision,
+          })
+        : await context.client.rpc("save_vehicle_entry_with_occurrence", {
+            ...parameters,
+            p_entry_id: parsed.data.id,
+            p_expected_revision: expectedRevision,
+          });
 
   if (error) {
     return result("error", "MemoTrail could not save this Vehicle. Try again.");
   }
 
-  const saved = source ? extractedVehicle(data) : savedVehicle(data);
+  const saved =
+    source && location === undefined
+      ? extractedVehicle(data)
+      : savedVehicle(data);
   if (!saved) {
     return result(
       "conflict",

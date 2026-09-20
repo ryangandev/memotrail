@@ -13,7 +13,7 @@ Use Git history for feature-level implementation and test evidence.
 | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Capture, Inbox, organization, dates, drafts, and offline queues                      | Implemented on Web and iOS                                                                                                                                                                                                                    |
 | Timeline, Home, First Times, Homes, Vehicles, Goals, People, Places, and Collections | Implemented on Web and iOS                                                                                                                                                                                                                    |
-| Location data layer                                                                  | Geoapify schema migration deployed to the confirmed hosted Supabase project; Web Entry and Home search, map preview, and copy-on-write pass local browser and database tests; personal acceptance and Production Web deployment remain         |
+| Location data layer                                                                  | Entry and Home schema deployed; First Time and Vehicle forms plus atomic save pass local tests. Migration `202609200001` is local only pending hosted authorization and personal acceptance.                                   |
 | Habits                                                                               | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                                                                                            |
 | Web navigation shell                                                                 | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                                                                                             |
 | Web Settings                                                                         | Account, dates, timezone, appearance, simplified AI, and account controls implemented                                                                                                                                                         |
@@ -34,7 +34,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
 ### 1. Accept Web Location search
 
 - Accept Entry and Home Location search, coordinates, static-map previews, and copy-on-write in the local browser using a personal test record.
-- The shared SearchField at `/design-system#search-field` is accepted. Extend it to remaining Web search surfaces without changing each surface's search behavior.
+- The accepted shared SearchField is now used across Web search surfaces, including Location, full Search, Library, Tags, related Items, organization pickers, and Command Palette.
+- Accept the new First Time and Vehicle Location controls after migration `202609200001` is applied to the confirmed hosted project.
 - Set the server-only Production `GEOAPIFY_API_KEY` and deploy Web when Production acceptance is wanted; the local key and provider-backed `localhost:3000` browser flow are verified.
 - Keep native iOS provider UI deferred until the Web interaction is accepted.
 

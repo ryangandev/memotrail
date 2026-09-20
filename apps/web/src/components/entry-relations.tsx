@@ -4,6 +4,7 @@ import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { SearchField } from "@/components/search-field";
 import {
   changeEntryRelation,
   loadEntryRelations,
@@ -143,16 +144,14 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
           setRefresh((v) => v + 1);
         }}
       >
-        <label>
-          Search related Items
-          <input
-            value={query}
-            maxLength={200}
-            onChange={(e) => setQuery(e.target.value)}
-            disabled={busy}
-            placeholder="Title or words, including Chinese"
-          />
-        </label>
+        <SearchField
+          value={query}
+          label="Search related Items"
+          maxLength={200}
+          onChange={(e) => setQuery(e.target.value)}
+          disabled={busy}
+          placeholder="Title or words, including Chinese"
+        />
         <Button variant="primary" type="submit" disabled={busy}>
           Search
         </Button>

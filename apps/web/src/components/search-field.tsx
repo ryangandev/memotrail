@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, type ComponentProps } from "react";
+import { useId, type ComponentProps, type ReactNode } from "react";
 import { Icon } from "@/components/icon";
 import styles from "./search-field.module.css";
 
@@ -11,6 +11,7 @@ export type SearchFieldProps = Omit<
   hideLabel?: boolean;
   label: string;
   size?: "small" | "medium" | "large";
+  trailing?: ReactNode;
 };
 
 export function SearchField({
@@ -21,6 +22,7 @@ export function SearchField({
   id,
   label,
   size = "medium",
+  trailing,
   ...inputProps
 }: SearchFieldProps) {
   const generatedId = useId();
@@ -41,7 +43,7 @@ export function SearchField({
       >
         {label}
       </label>
-      <div className={styles.control}>
+      <div className={styles.control} data-search-control>
         <Icon name="search" size={size === "small" ? 15 : 17} />
         <input
           {...inputProps}
@@ -50,6 +52,7 @@ export function SearchField({
           id={inputId}
           type="search"
         />
+        {trailing ? <span className={styles.trailing}>{trailing}</span> : null}
       </div>
     </div>
   );

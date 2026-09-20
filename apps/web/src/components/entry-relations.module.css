@@ -37,13 +37,8 @@
   align-items: flex-end;
   gap: var(--mt-space-2);
 }
-.search label {
+.search > :global([data-search-field]) {
   flex: 1;
-  min-width: 0;
-  font-size: var(--mt-font-size-caption);
-}
-.search input {
-  width: 100%;
   min-width: 0;
 }
 .list {

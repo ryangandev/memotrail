@@ -17,6 +17,7 @@ import {
 import styles from "@/components/record-workspace.module.css";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
+import { LocationPicker } from "@/components/location-picker";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
 import {
@@ -57,6 +58,7 @@ import {
   type PhotoUploadProgress as PhotoUploadProgressValue,
 } from "@/lib/media/upload";
 import type { CaptureExtractionSource } from "@/lib/data/capture-extraction-input";
+import type { LocationSelection } from "@/lib/locations/location";
 
 export function VehiclesWorkspace({
   collectionOptions,
@@ -259,6 +261,12 @@ function VehicleCard({
           <Icon name="car" size={14} />
           {vehicleFactsLabel(vehicle)}
         </p>
+        {vehicle.location ? (
+          <p className={styles.location}>
+            <Icon name="map" size={14} />
+            {vehicle.location.name}
+          </p>
+        ) : null}
         {vehicle.body ? (
           <p className={styles.memory}>{truncate(vehicle.body, 150)}</p>
         ) : null}
@@ -334,6 +342,10 @@ export function VehicleEditor({
   const [currentRevision, setCurrentRevision] = useState(
     vehicle?.revision ?? null,
   );
+  const [location, setLocation] = useState<LocationSelection | null>(
+    vehicle?.location ?? null,
+  );
+  const [locationDirty, setLocationDirty] = useState(false);
   const [existingPhotos, setExistingPhotos] = useState(
     vehicle?.attachments ?? [],
   );
@@ -426,6 +438,7 @@ export function VehicleEditor({
         sourceCapture
           ? { id: sourceCapture.id, revision: sourceCapture.revision }
           : null,
+        locationDirty ? location : undefined,
       );
       if (
         (saved.status !== "created" && saved.status !== "saved") ||
@@ -439,6 +452,7 @@ export function VehicleEditor({
         ...parsed.data,
         ...saved.entry,
         attachments: existingPhotos,
+        location,
         timelineTrackId: vehicle?.timelineTrackId ?? null,
         timelineTrackName: vehicle?.timelineTrackName ?? "Vehicles",
         totalCount: vehicle?.totalCount ?? 1,
@@ -446,6 +460,7 @@ export function VehicleEditor({
       });
       setCurrentId(saved.entry.id);
       setCurrentRevision(saved.entry.revision);
+      setLocationDirty(false);
       const failedPhotos = await uploadPhotos(
         ownerId,
         saved.entry.id,
@@ -634,6 +649,16 @@ export function VehicleEditor({
                 onChange={setOccurrence}
                 disabled={isPending}
                 span
+              />
+            </div>
+            <div className={styles.fullField}>
+              <LocationPicker
+                disabled={isPending}
+                onChange={(selection) => {
+                  setLocation(selection);
+                  setLocationDirty(true);
+                }}
+                value={location}
               />
             </div>
           </fieldset>

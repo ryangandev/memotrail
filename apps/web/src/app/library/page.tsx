@@ -3,6 +3,7 @@ import { Button } from "@/components/button";
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
+import { SearchField } from "@/components/search-field";
 import {
   isWikiItemKind,
   wikiItemKindLabel,
@@ -210,16 +211,13 @@ export default async function LibraryPage({
           </span>
         </div>
         <form className={styles.wikiFilters}>
-          <label>
-            <span>Find in your Life Wiki</span>
-            <input
-              defaultValue={query}
-              maxLength={200}
-              name="q"
-              placeholder="Search titles, writing, people, or places"
-              type="search"
-            />
-          </label>
+          <SearchField
+            defaultValue={query}
+            label="Find in your Life Wiki"
+            maxLength={200}
+            name="q"
+            placeholder="Search titles, writing, people, or places"
+          />
           <label>
             <span>Kind</span>
             <select defaultValue={itemKind ?? ""} name="kind">

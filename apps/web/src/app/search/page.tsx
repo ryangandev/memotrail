@@ -11,6 +11,7 @@ import { Icon } from "@/components/icon";
 import { AISearchForm } from "@/components/ai-search-form";
 import { PageFrame } from "@/components/page-frame";
 import { DatePickerField } from "@/components/date-picker-field";
+import { SearchField } from "@/components/search-field";
 import {
   SEARCH_PAGE_SIZE,
   parseSearchRequest,
@@ -82,21 +83,17 @@ export default async function SearchPage({
       >
         <section className={styles.searchSurface} aria-label="Entry search">
           <div className={styles.queryRow}>
-            <label className={styles.queryField} htmlFor="trail-search">
-              <Icon name="search" size={21} />
-              <span className={styles.visuallyHidden}>
-                Search your Life Wiki
-              </span>
-              <input
-                autoFocus
-                defaultValue={request.query}
-                id="trail-search"
-                maxLength={200}
-                name="q"
-                placeholder="A phrase, date, or question about your life..."
-                type="search"
-              />
-            </label>
+            <SearchField
+              autoFocus
+              defaultValue={request.query}
+              hideLabel
+              id="trail-search"
+              label="Search your Life Wiki"
+              maxLength={200}
+              name="q"
+              placeholder="A phrase, date, or question about your life..."
+              size="large"
+            />
             <Button variant="primary" type="submit">
               Search
             </Button>

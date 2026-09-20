@@ -164,7 +164,7 @@ It may be created directly, finalized from a raw Capture, or extracted and linke
 
 ### Homes and Vehicles
 
-Homes and Vehicles are Entity presets with the full date-precision model, optional facts, writing, photos, relationships, and Timeline context.
+Homes and Vehicles are Entity presets with the full date-precision model, optional facts, writing, photos, Location, relationships, and Timeline context.
 Their dates describe when the Entity was part of the user's life.
 An absent end means that relationship is current, not that the Entity is automatically a Chapter.
 Duration labels must not imply more precision than the recorded dates.
@@ -192,7 +192,7 @@ No Location edit may silently rewrite the geographic facts shown by other Wiki I
 Normal editors show a human-readable name and address context rather than raw latitude and longitude.
 People contain a name plus optional relationship label and notes.
 People remain reusable across Entries.
-Web Writing, Event, Story, and Home editors can reuse a saved Location or search Geoapify for an address, then preview its coordinates on a map before saving.
+Web Writing, Event, Story, Home, Vehicle, and First Time editors can reuse a saved Location or search Geoapify for an address, then preview its coordinates on a map before saving.
 Provider-backed Location editing on native iOS remains deferred until the Web flow is accepted.
 
 ## Experience and navigation

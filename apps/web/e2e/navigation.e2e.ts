@@ -293,6 +293,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
         (element) => getComputedStyle(element).animationDuration,
       ),
     ).not.toBe("0s");
+    await expect(commandPalette).toHaveCSS("opacity", "1");
     await page.screenshot({
       caret: "initial",
       path: "/private/tmp/memotrail-command-palette.png",

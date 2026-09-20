@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { OrganizationControl } from "@/components/organization-control";
 import { PageFrame } from "@/components/page-frame";
+import { SearchField } from "@/components/search-field";
 import { getOrganizationWorkspace } from "@/lib/data/organization-workspace";
 import styles from "./page.module.css";
 
@@ -49,16 +50,16 @@ export default async function TagsPage({
       />
 
       <form aria-label="Find tags" className={styles.search} role="search">
-        <label className={styles.visuallyHidden} htmlFor="tag-search">
-          Find a tag
-        </label>
         <div>
-          <input
+          <SearchField
             defaultValue={query}
+            hideLabel
             id="tag-search"
+            label="Find a tag"
             maxLength={200}
             name="q"
             placeholder="Search tag names"
+            size="large"
           />
           <Button variant="primary" type="submit">
             <Icon name="search" size={17} />
