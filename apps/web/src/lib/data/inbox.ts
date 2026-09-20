@@ -9,6 +9,11 @@ import {
 } from "./occurrence";
 import { entryRichTextFromMetadata, type EntryRichText } from "./rich-text";
 import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
+import {
+  existingLocationFromRow,
+  type ExistingLocation,
+  type LocationSelection,
+} from "@/lib/locations/location";
 
 export type InboxEntry = Occurrence & {
   body: string;
@@ -18,6 +23,7 @@ export type InboxEntry = Occurrence & {
   id: string;
   itemKind: WikiItemKind;
   itemSubtype: string;
+  location?: LocationSelection | null;
   revision: number;
   tagNames: string[];
   title: string | null;
@@ -68,6 +74,11 @@ type EntryTagRow = {
 
 type NameRow = {
   name: string;
+};
+
+type EntryLocationRow = {
+  entry_id: string;
+  location: unknown;
 };
 
 export const getAuthenticatedContext = cache(
@@ -167,25 +178,27 @@ export async function getInboxWorkspace(
       values.findIndex((candidate) => candidate.id === entry.id) === index,
   );
   const entryIds = rows.map((entry) => entry.id);
-  const [entryCollections, entryTags, collections, tags] = await Promise.all([
-    loadEntryCollections(context, entryIds),
-    loadEntryTags(context, entryIds),
-    context.client
-      .from("collections")
-      .select("name")
-      .eq("owner_id", context.userId)
-      .is("archived_at", null)
-      .order("name")
-      .returns<NameRow[]>(),
-    context.client
-      .from("tags")
-      .select("name")
-      .eq("owner_id", context.userId)
-      .order("name")
-      .returns<NameRow[]>(),
-  ]);
+  const [entryCollections, entryTags, entryLocations, collections, tags] =
+    await Promise.all([
+      loadEntryCollections(context, entryIds),
+      loadEntryTags(context, entryIds),
+      loadEntryLocations(context, entryIds),
+      context.client
+        .from("collections")
+        .select("name")
+        .eq("owner_id", context.userId)
+        .is("archived_at", null)
+        .order("name")
+        .returns<NameRow[]>(),
+      context.client
+        .from("tags")
+        .select("name")
+        .eq("owner_id", context.userId)
+        .order("name")
+        .returns<NameRow[]>(),
+    ]);
 
-  if (entryCollections.error || entryTags.error) {
+  if (entryCollections.error || entryTags.error || entryLocations.error) {
     return unavailableWorkspace(context.viewer);
   }
 
@@ -194,6 +207,12 @@ export async function getInboxWorkspace(
     "collection",
   );
   const tagNamesByEntry = namesByEntry(entryTags.data ?? [], "tag");
+  const locationsByEntry = new Map(
+    (entryLocations.data ?? []).flatMap((row) => {
+      const location = existingLocationFromRow(row.location);
+      return location ? [[row.entry_id, location] as const] : [];
+    }),
+  );
 
   return {
     collectionOptions: collections.error
@@ -204,6 +223,7 @@ export async function getInboxWorkspace(
         row,
         collectionNamesByEntry.get(row.id) ?? [],
         tagNamesByEntry.get(row.id) ?? [],
+        locationsByEntry.get(row.id) ?? null,
       ),
     ),
     loadError: null,
@@ -216,6 +236,7 @@ export function entryFromRow(
   row: EntryRow,
   collectionNames: string[],
   tagNames: string[],
+  location: ExistingLocation | null = null,
 ): InboxEntry {
   return {
     body: row.body,
@@ -228,6 +249,7 @@ export function entryFromRow(
       typeof row.item_subtype === "string" && row.item_subtype
         ? row.item_subtype
         : "quick_capture",
+    location,
     occurredAt: row.occurred_start,
     occurredEnd: row.occurred_end,
     occurredLabel: row.occurred_label,
@@ -242,6 +264,24 @@ export function entryFromRow(
     tagNames,
     title: stringValue(row.title),
   };
+}
+
+function loadEntryLocations(
+  context: NonNullable<Awaited<ReturnType<typeof getAuthenticatedContext>>>,
+  entryIds: string[],
+) {
+  if (entryIds.length === 0) {
+    return Promise.resolve({ data: [] as EntryLocationRow[], error: null });
+  }
+  return context.client
+    .from("entry_places")
+    .select(
+      "entry_id,location:locations!entry_places_location_id_owner_id_fkey(id,revision,name,formatted_address,address,city,region,postal_code,country,country_code,latitude,longitude,timezone_id,result_type)",
+    )
+    .eq("owner_id", context.userId)
+    .eq("relationship", "primary")
+    .in("entry_id", entryIds)
+    .returns<EntryLocationRow[]>();
 }
 
 function loadEntryCollections(

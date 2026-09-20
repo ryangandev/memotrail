@@ -15,6 +15,10 @@ const env = {
   NEXT_PUBLIC_SUPABASE_URL: local.API_URL,
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: local.PUBLISHABLE_KEY || local.ANON_KEY,
   SUPABASE_SECRET_KEY: local.SECRET_KEY || local.SERVICE_ROLE_KEY,
+  GEOAPIFY_API_KEY:
+    process.env.MEMOTRAIL_E2E_LIVE_GEOAPIFY === "1"
+      ? process.env.GEOAPIFY_API_KEY
+      : "",
   // Real provider testing is explicit, bounded, and still uses synthetic local records.
   AI_PROVIDER:
     process.env.MEMOTRAIL_E2E_LIVE_AI === "1" ? "anthropic" : "disabled",

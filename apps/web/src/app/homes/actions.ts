@@ -17,6 +17,10 @@ import {
   type CaptureExtractionReference,
 } from "@/lib/data/capture-extraction-input";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
+import {
+  validLocationSelection,
+  type ProviderLocation,
+} from "@/lib/locations/location";
 
 export type HomeActionResult = {
   entry: { id: string; placeId: string; revision: number } | null;
@@ -27,6 +31,7 @@ export type HomeActionResult = {
 export async function saveHomeEntry(
   input: HomeEntryInput,
   sourceCapture: CaptureExtractionReference | null = null,
+  providerLocation: ProviderLocation | null = null,
 ): Promise<HomeActionResult> {
   const parsed = parseHomeEntryInput(input);
 
@@ -48,6 +53,26 @@ export async function saveHomeEntry(
       "error",
       "This Capture handoff is invalid. Return to Inbox and try again.",
     );
+  }
+
+  if (providerLocation) {
+    if (
+      !validLocationSelection(providerLocation) ||
+      providerLocation.kind !== "provider" ||
+      parsed.data.placeId !== null ||
+      parsed.data.placeName !== providerLocation.name ||
+      parsed.data.address !== providerLocation.address ||
+      parsed.data.city !== providerLocation.city ||
+      parsed.data.region !== providerLocation.region ||
+      parsed.data.country !== providerLocation.country ||
+      parsed.data.latitude !== providerLocation.latitude ||
+      parsed.data.longitude !== providerLocation.longitude
+    ) {
+      return result(
+        "error",
+        "Choose the address again before saving this Home.",
+      );
+    }
   }
 
   const parameters = {
@@ -72,27 +97,43 @@ export async function saveHomeEntry(
     p_tag_names: parsed.data.tagNames,
     p_title: parsed.data.title,
   };
-  const { data, error } = source
-    ? await context.client.rpc("extract_capture_to_home", {
-        ...parameters,
-        p_capture_id: source.id,
-        p_capture_revision: source.revision,
+  const expectedRevision = source
+    ? null
+    : await writingRevision(
+        context.client,
+        parsed.data.id,
+        parsed.data.revision,
+      );
+  const { data, error } = providerLocation
+    ? await context.client.rpc("save_home_entry_with_geoapify", {
+        p_input: { ...parsed.data, revision: expectedRevision },
+        p_source: source,
+        p_provider_location: providerLocation,
       })
-    : await context.client.rpc("save_home_entry_with_occurrence", {
-        ...parameters,
-        p_entry_id: parsed.data.id,
-        p_expected_revision: await writingRevision(
-          context.client,
-          parsed.data.id,
-          parsed.data.revision,
-        ),
-      });
+    : source
+      ? await context.client.rpc("extract_capture_to_home", {
+          ...parameters,
+          p_capture_id: source.id,
+          p_capture_revision: source.revision,
+        })
+      : await context.client.rpc("save_home_entry_with_occurrence", {
+          ...parameters,
+          p_entry_id: parsed.data.id,
+          p_expected_revision: expectedRevision,
+        });
 
+  if (error?.code === "40001") {
+    return result(
+      "conflict",
+      "This Home changed on another device. Close it, refresh, and try again.",
+    );
+  }
   if (error) {
     return result("error", "MemoTrail could not save this Home. Try again.");
   }
 
-  const saved = source ? extractedHome(data) : savedHome(data);
+  const payload = providerLocation ? [data] : data;
+  const saved = source ? extractedHome(payload) : savedHome(payload);
   if (!saved) {
     return result(
       "conflict",

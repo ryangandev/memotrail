@@ -1,0 +1,186 @@
+export type ExistingLocation = {
+  kind: "existing";
+  id: string;
+  revision: number;
+  name: string;
+  formattedAddress: string | null;
+  address: string | null;
+  city: string | null;
+  region: string | null;
+  postalCode: string | null;
+  country: string | null;
+  countryCode: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  timezone: string | null;
+  resultType: string | null;
+};
+
+export type ProviderLocation = {
+  kind: "provider";
+  provider: "geoapify";
+  providerLocationId: string;
+  name: string;
+  formattedAddress: string;
+  address: string | null;
+  city: string | null;
+  region: string | null;
+  postalCode: string | null;
+  country: string | null;
+  countryCode: string | null;
+  latitude: number;
+  longitude: number;
+  timezone: string | null;
+  resultType: string | null;
+  confidence: number | null;
+  matchType: string | null;
+  dataSource: string | null;
+};
+
+export type LocationSelection = ExistingLocation | ProviderLocation;
+
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function validLocationSelection(
+  value: unknown,
+): value is LocationSelection {
+  if (!isRecord(value) || !validLocationFields(value)) return false;
+  if (value.kind === "existing") {
+    return (
+      typeof value.id === "string" &&
+      uuidPattern.test(value.id) &&
+      Number.isInteger(value.revision) &&
+      Number(value.revision) > 0
+    );
+  }
+  return (
+    value.kind === "provider" &&
+    value.provider === "geoapify" &&
+    validBoundedString(value.providerLocationId, 500) &&
+    validBoundedString(value.formattedAddress, 1000) &&
+    typeof value.latitude === "number" &&
+    Number.isFinite(value.latitude) &&
+    value.latitude >= -90 &&
+    value.latitude <= 90 &&
+    typeof value.longitude === "number" &&
+    Number.isFinite(value.longitude) &&
+    value.longitude >= -180 &&
+    value.longitude <= 180 &&
+    nullableNumber(value.confidence) &&
+    (value.confidence === null ||
+      (typeof value.confidence === "number" &&
+        value.confidence >= 0 &&
+        value.confidence <= 1)) &&
+    nullableBoundedString(value.matchType, 100) &&
+    nullableBoundedString(value.dataSource, 200)
+  );
+}
+
+export function existingLocationFromRow(
+  value: unknown,
+): ExistingLocation | null {
+  if (!isRecord(value)) return null;
+  const location: ExistingLocation = {
+    kind: "existing",
+    id: stringValue(value.id) ?? "",
+    revision: numberValue(value.revision) ?? 0,
+    name: stringValue(value.name) ?? "",
+    formattedAddress: nullableStringValue(value.formatted_address),
+    address: nullableStringValue(value.address),
+    city: nullableStringValue(value.city),
+    region: nullableStringValue(value.region),
+    postalCode: nullableStringValue(value.postal_code),
+    country: nullableStringValue(value.country),
+    countryCode: nullableStringValue(value.country_code),
+    latitude: nullableNumberValue(value.latitude),
+    longitude: nullableNumberValue(value.longitude),
+    timezone: nullableStringValue(value.timezone_id),
+    resultType: nullableStringValue(value.result_type),
+  };
+  return validLocationSelection(location) ? location : null;
+}
+
+export function locationSubtitle(location: LocationSelection) {
+  return (
+    location.formattedAddress ??
+    [location.address, location.city, location.region, location.country]
+      .filter((part): part is string => Boolean(part))
+      .join(", ") ??
+    ""
+  );
+}
+
+function validLocationFields(value: Record<string, unknown>) {
+  return (
+    validBoundedString(value.name, 200) &&
+    nullableBoundedString(value.formattedAddress, 1000) &&
+    nullableBoundedString(value.address, 500) &&
+    nullableBoundedString(value.city, 200) &&
+    nullableBoundedString(value.region, 200) &&
+    nullableBoundedString(value.postalCode, 40) &&
+    nullableBoundedString(value.country, 200) &&
+    nullableBoundedString(value.countryCode, 2) &&
+    nullableCoordinate(value.latitude, -90, 90) &&
+    nullableCoordinate(value.longitude, -180, 180) &&
+    (value.latitude === null) === (value.longitude === null) &&
+    nullableBoundedString(value.timezone, 100) &&
+    nullableBoundedString(value.resultType, 100)
+  );
+}
+
+function validBoundedString(value: unknown, limit: number) {
+  return (
+    typeof value === "string" &&
+    value.trim().length > 0 &&
+    value.length <= limit
+  );
+}
+
+function nullableBoundedString(value: unknown, limit: number) {
+  return value === null || (typeof value === "string" && value.length <= limit);
+}
+
+function nullableCoordinate(value: unknown, minimum: number, maximum: number) {
+  return (
+    value === null ||
+    (typeof value === "number" &&
+      Number.isFinite(value) &&
+      value >= minimum &&
+      value <= maximum)
+  );
+}
+
+function nullableNumber(value: unknown) {
+  return (
+    value === null || (typeof value === "number" && Number.isFinite(value))
+  );
+}
+
+function nullableStringValue(value: unknown) {
+  return value === null || value === undefined
+    ? null
+    : typeof value === "string"
+      ? value
+      : null;
+}
+
+function nullableNumberValue(value: unknown) {
+  return value === null || value === undefined
+    ? null
+    : typeof value === "number" && Number.isFinite(value)
+      ? value
+      : null;
+}
+
+function stringValue(value: unknown) {
+  return typeof value === "string" ? value : null;
+}
+
+function numberValue(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}

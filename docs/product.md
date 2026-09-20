@@ -186,11 +186,14 @@ An explicit achievement action may atomically mark one Achieved and create a lin
 Places contain a name plus optional address context and notes.
 They are deliberately saved personal landmarks, remain available in the Places Focused View, and do not duplicate or organize Entries.
 Locations are separate owner-scoped geographic records used by Homes and other Wiki Items.
-A Location may be shared by several Wiki Items, may retain provider identity and coordinates for future map and geographic summaries, and does not appear in Library by itself.
+A Location may be shared by several Wiki Items, may retain provider identity and coordinates for map and geographic summaries, and does not appear in Library by itself.
+Location facts are copy-on-write: editing the Location shown by one Wiki Item creates or reuses another Location and changes only that Wiki Item's relationship.
+No Location edit may silently rewrite the geographic facts shown by other Wiki Items.
 Normal editors show a human-readable name and address context rather than raw latitude and longitude.
 People contain a name plus optional relationship label and notes.
 People remain reusable across Entries.
-The Location data model preserves future Map capability, but Map UI and an external geographic provider are deferred.
+Web Writing, Event, Story, and Home editors can reuse a saved Location or search Geoapify for an address, then preview its coordinates on a map before saving.
+Provider-backed Location editing on native iOS remains deferred until the Web flow is accepted.
 
 ## Experience and navigation
 

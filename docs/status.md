@@ -1,6 +1,6 @@
 # MemoTrail Status
 
-Last reviewed: 2026-09-18.
+Last reviewed: 2026-09-20.
 
 ## Current state
 
@@ -9,42 +9,48 @@ The product is not yet fully accepted for production because live configuration,
 
 Use Git history for feature-level implementation and test evidence.
 
-| Area                                                                                 | State                                                                                                                                                                               |
-| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Capture, Inbox, organization, dates, drafts, and offline queues                      | Implemented on Web and iOS                                                                                                                                                          |
-| Timeline, Home, First Times, Homes, Vehicles, Goals, People, Places, and Collections | Implemented on Web and iOS                                                                                                                                                          |
-| Location data layer                                                                  | Deployed to hosted Supabase and implemented in Web/iOS clients; provider-backed search and map summaries remain future work                                                         |
-| Habits                                                                               | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                                  |
-| Web navigation shell                                                                 | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                                   |
-| Web Settings                                                                         | Account, dates, timezone, appearance, simplified AI, and account controls implemented                                                                                               |
-| Web Collections and tags                                                             | Direct Library destinations and shared Entry organization editor implemented                                                                                                        |
-| Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI    | Implemented; Production AI configuration is not accepted                                                                                                                            |
-| Private media, Entry history, relationships, Trash, and complete export              | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                  |
-| Hosted Supabase contracts                                                            | Deployed to the confirmed MemoTrail project                                                                                                                                         |
-| Capture First Life Wiki information model                                            | Canonical database model is live on the confirmed hosted project; Web navigation, Library, Inbox organization, Search, Collections, and history use Kind-aware identity and routing |
-| Web design system                                                                    | Approved canonical components migrated across Web; component-owned CSS and token boundaries enforced; local regression passed; production browser acceptance pending                |
-| Backup and restore                                                                   | Not ready                                                                                                                                                                           |
-| Current GitHub CI                                                                    | Blocked before jobs start by account billing or spending limits                                                                                                                     |
+| Area                                                                                 | State                                                                                                                                                                                                                                         |
+| ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Capture, Inbox, organization, dates, drafts, and offline queues                      | Implemented on Web and iOS                                                                                                                                                                                                                    |
+| Timeline, Home, First Times, Homes, Vehicles, Goals, People, Places, and Collections | Implemented on Web and iOS                                                                                                                                                                                                                    |
+| Location data layer                                                                  | Geoapify schema migration deployed to the confirmed hosted Supabase project; Web Entry and Home search, map preview, and copy-on-write pass local browser and database tests; personal acceptance and Production Web deployment remain         |
+| Habits                                                                               | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                                                                                            |
+| Web navigation shell                                                                 | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                                                                                             |
+| Web Settings                                                                         | Account, dates, timezone, appearance, simplified AI, and account controls implemented                                                                                                                                                         |
+| Web Collections and tags                                                             | Direct Library destinations and shared Entry organization editor implemented                                                                                                                                                                  |
+| Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI    | Implemented; Production AI configuration is not accepted                                                                                                                                                                                      |
+| Private media, Entry history, relationships, Trash, and complete export              | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                                                                            |
+| Hosted Supabase contracts                                                            | Deployed to the confirmed MemoTrail project                                                                                                                                                                                                   |
+| Capture First Life Wiki information model                                            | Canonical database model is live on the confirmed hosted project; Web navigation, Library, Inbox organization, Search, Collections, and history use Kind-aware identity and routing                                                           |
+| Web design system                                                                    | Approved canonical components migrated across Web; component-owned CSS and token boundaries enforced; local regression passed; production browser acceptance pending                                                                          |
+| Backup and restore                                                                   | Not ready                                                                                                                                                                                                                                     |
+| Current GitHub CI                                                                    | Blocked before jobs start by account billing or spending limits                                                                                                                                                                               |
 
 The latest hosted synthetic run verified JPEG, HEIC, and PNG display derivatives, metadata extraction, unchanged originals, and a complete ZIP with all canonical datasets.
 Its marked account and Storage objects were confirmed removed without accessing personal data or calling AI.
 
 ## Next work
 
-### 1. Accept native Life Wiki UI
+### 1. Accept Web Location search
+
+- Accept Entry and Home Location search, coordinates, static-map previews, and copy-on-write in the local browser using a personal test record.
+- Set the server-only Production `GEOAPIFY_API_KEY` and deploy Web when Production acceptance is wanted; the local key and provider-backed `localhost:3000` browser flow are verified.
+- Keep native iOS provider UI deferred until the Web interaction is accepted.
+
+### 2. Accept native Life Wiki UI
 
 - The hosted cutover retained 15 curated Wiki Items, 16 versions, 6 attachments and Storage objects, and 8 Timeline placements without legacy `entry_type`, `entryType`, or Habit schema.
 - Web Library and organization flows pass real local browser tests against the canonical database contract.
 - Native source changes pass Swift parser checks, but a full simulator build and UI acceptance remain blocked until the local Xcode license is accepted.
 
-### 2. Accept Production AI
+### 3. Accept Production AI
 
 - Set the Production Vercel values for `AI_PROVIDER`, server-only `AI_API_KEY`, `AI_CHAT_MODEL`, and `AI_TOTAL_BUDGET_USD`.
 - Confirm the existing server-only `SUPABASE_SECRET_KEY` remains present.
 - Redeploy and run `MEMOTRAIL_VERIFY_HOSTED_AI=1 node apps/web/scripts/verify-hosted-ai.mjs` with synthetic data.
 - The last authenticated check returned HTTP 503 `provider_unavailable`; a valid local key does not configure Production.
 
-### 3. Complete real interaction acceptance
+### 4. Complete real interaction acceptance
 
 - Verify an actual production browser export download.
 - Verify native Save and share for a production export.
@@ -53,14 +59,14 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 The latest automated native UI attempt was blocked by the locked development Mac.
 
-### 4. Establish recovery
+### 5. Establish recovery
 
 - Choose separately protected destinations for database backups and original Storage objects.
 - Decide whether to enable point-in-time recovery; the latest inventory showed PITR disabled and no listed restore point.
 - Complete and inspect a full restore in a non-production project.
 - Audit abandoned unregistered uploads before approving automatic retention cleanup.
 
-### 5. Restore current CI evidence
+### 6. Restore current CI evidence
 
 - Resolve the GitHub account billing or spending-limit issue.
 - Rerun all Web, iOS, and database jobs for current `main` and confirm they actually execute.

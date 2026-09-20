@@ -7,6 +7,7 @@ import {
   parseGoalExtractionInput,
   type GoalExtractionInput,
 } from "@/lib/data/goal-record-input";
+import { existingLocationFromRow } from "@/lib/locations/location";
 
 export async function loadEditableEntry(id: string) {
   if (!validHistoryID(id)) return null;
@@ -17,7 +18,12 @@ export async function loadEditableEntry(id: string) {
   });
   if (error || !data) return null;
   return {
-    entry: entryFromRow(data, data.collection_names, data.tag_names),
+    entry: entryFromRow(
+      data,
+      data.collection_names,
+      data.tag_names,
+      existingLocationFromRow(data.primary_location),
+    ),
     organized: data.inbox_status === "organized",
   };
 }

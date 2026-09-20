@@ -58,6 +58,10 @@ Pair it with the test file carrying the same feature name.
 - `people.entry_id` is a required owner-scoped link to a canonical Entity Wiki Item. Triggers keep its name, notes, revision state, and Trash state synchronized.
 - `places` is an independent owner-scoped Focused View record with its own revision and Trash history. It has no canonical `entries` mirror and owns no links to other Focused View records.
 - `locations` stores lightweight geographic identity, provider metadata, human-readable address context, private coordinates, revision state, and soft deletion. It is not a Wiki Item.
+- Location rows are immutable through the authenticated table API.
+  `review_wiki_item_with_location_rich` atomically resolves a saved or Geoapify Location and replaces only the current Entry's `primary` relationship.
+  Home's provider-backed save uses `save_home_entry_with_geoapify` to resolve and link the Location in the same transaction; manual Home saves use `resolve_home_location_copy_on_write`.
+  Changed Location facts fork a new row while identical facts reuse an existing identity, including in the photo-derived `save_location` path.
 - `homes.place_id` and `entry_places.place_id` remain compatibility column names for one cross-client window, but their foreign keys target `locations`; new reads use the `entry_locations` view and Location vocabulary.
 - A raw Capture may be finalized as one durable item or may produce linked items through a provenance-preserving extraction.
 - Established durable items never change Kind through a generic selector; cross-Kind workflows create and link another item.
@@ -181,7 +185,9 @@ Pair it with the test file carrying the same feature name.
 
 - Production Web runs on Vercel from `apps/web`.
 - Production data changes are versioned Supabase migrations without development seed data.
-- Server-only Supabase and AI credentials exist only in trusted environments.
+- Server-only Supabase, Geoapify, and AI credentials exist only in trusted environments.
+- Web address searches and static maps pass through authenticated route handlers, so `GEOAPIFY_API_KEY` is never exposed to the browser.
+  The proxy sends only the requested search text or coordinates to Geoapify, not the signed-in user's identity.
 - iOS receives public backend configuration and the Web API base URL.
 - Shared behavior should be implemented and tested across Web, iOS, and Supabase in the same product slice.
 - Validation should cover the narrow unit or SQL contract first, then builds, then the closest real browser or native interaction.
