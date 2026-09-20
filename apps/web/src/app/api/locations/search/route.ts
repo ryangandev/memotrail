@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { geoapifyConfigured, searchGeoapify } from "@/lib/locations/geoapify";
-import { existingLocationFromRow } from "@/lib/locations/location";
 
 export async function POST(request: Request) {
   const context = await getAuthenticatedContext();
@@ -17,26 +16,21 @@ export async function POST(request: Request) {
   }
 
   const configured = geoapifyConfigured();
-  const [savedResult, providerResult] = await Promise.allSettled([
-    context.client.rpc("search_locations", { p_query: query, p_limit: 7 }),
-    configured ? searchGeoapify(query, language) : Promise.resolve([]),
-  ]);
-  const savedResponse =
-    savedResult.status === "fulfilled" ? savedResult.value : null;
-  const saved =
-    savedResponse && !savedResponse.error && Array.isArray(savedResponse.data)
-      ? savedResponse.data
-          .map(existingLocationFromRow)
-          .filter((location) => location !== null)
-      : [];
+  let provider = [] as Awaited<ReturnType<typeof searchGeoapify>>;
+  let providerUnavailable = false;
+  if (configured) {
+    try {
+      provider = await searchGeoapify(query, language);
+    } catch {
+      providerUnavailable = true;
+    }
+  }
 
   return NextResponse.json(
     {
       configured,
-      provider:
-        providerResult.status === "fulfilled" ? providerResult.value : [],
-      providerUnavailable: configured && providerResult.status === "rejected",
-      saved,
+      provider,
+      providerUnavailable,
     },
     { headers: { "Cache-Control": "private, no-store" } },
   );

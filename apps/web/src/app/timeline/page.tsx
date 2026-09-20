@@ -20,7 +20,6 @@ export default async function TimelinePage() {
       homes={workspace.homes}
       loadError={workspace.loadError}
       ownerId={workspace.viewer.id}
-      placeOptions={workspace.placeOptions}
       referenceDate={new Date().toISOString()}
       tagOptions={workspace.tagOptions}
       tracks={workspace.tracks}

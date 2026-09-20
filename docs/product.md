@@ -97,7 +97,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - People are reusable Entities linked to other Wiki Items, not alternate tags.
 - Places are independent, user-authored Mini Place records available in their own Focused View.
 - Places are not automatically created from Homes or Locations and do not link to other Focused View records.
-- Locations are lightweight geographic data that may be attached to one or many Wiki Items without becoming Library items.
+- Locations are private address and coordinate snapshots owned by individual Wiki Items, not Library items or reusable personal records.
 - Inbox, Timeline, Home, Search, and Library are views or workflow states, not organization labels.
 - Library is the primary all-items entry point for the Life Wiki.
   It presents Writing, Events, Entities, Stories, and Goals as the main browsing lenses, keeps source Captures available as provenance rather than a peer content choice, supports Kind and keyword filters, and links each preset to its appropriate editor or detail surface.
@@ -185,14 +185,14 @@ An explicit achievement action may atomically mark one Achieved and create a lin
 
 Places contain a name plus optional address context and notes.
 They are deliberately saved personal landmarks, remain available in the Places Focused View, and do not duplicate or organize Entries.
-Locations are separate owner-scoped geographic records used by Homes and other Wiki Items.
-A Location may be shared by several Wiki Items, may retain provider identity and coordinates for map and geographic summaries, and does not appear in Library by itself.
-Location facts are copy-on-write: editing the Location shown by one Wiki Item creates or reuses another Location and changes only that Wiki Item's relationship.
-No Location edit may silently rewrite the geographic facts shown by other Wiki Items.
-Normal editors show a human-readable name and address context rather than raw latitude and longitude.
+Locations store address context, optional provider provenance, and private coordinates for one Wiki Item at a time.
+The same physical address may appear in several Items, but each Item keeps an independent snapshot so later edits never change another Item.
+Locations have no user-authored name or notes, no Saved Location catalog, and no Library destination.
+Editors show a formatted address and map preview when coordinates exist; a photo's GPS position may be saved without an inferred address.
+Future maps may cluster Entry coordinates and open the memories and events associated with a selected area without turning Location into a named Place.
 People contain a name plus optional relationship label and notes.
 People remain reusable across Entries.
-Web Writing, Event, Story, Home, Vehicle, and First Time editors can reuse a saved Location or search Geoapify for an address, then preview its coordinates on a map before saving.
+Web Writing, Event, Story, Home, Vehicle, and First Time editors can search Geoapify for an address, preview its coordinates, and save it as that Item's Location.
 Provider-backed Location editing on native iOS remains deferred until the Web flow is accepted.
 
 ## Experience and navigation

@@ -34,6 +34,7 @@ describe("Geoapify location normalization", () => {
       expect.objectContaining({
         provider: "geoapify",
         providerLocationId: "51bf7-test",
+        name: "2600 Benjamin Franklin Parkway, Philadelphia, PA 19130, USA",
         postalCode: "19130",
         timezone: "America/New_York",
         latitude: 39.9656,
@@ -42,7 +43,7 @@ describe("Geoapify location normalization", () => {
     ]);
   });
 
-  it("drops provider results that cannot be deduplicated or mapped", () => {
+  it("drops provider results without stable identity or coordinates", () => {
     expect(
       parseGeoapifyResponse({
         results: [

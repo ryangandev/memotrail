@@ -147,7 +147,7 @@ export function EntryPhotoDates({
                           onPlaceChange({
                             kind: "new",
                             attachmentId: photo.id,
-                            name: "",
+                            name: "Photo GPS location",
                             latitude: info.latitude!,
                             longitude: info.longitude!,
                           })

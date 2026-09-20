@@ -6,8 +6,7 @@ import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
 import { SearchField } from "@/components/search-field";
 import {
-  locationSubtitle,
-  type ExistingLocation,
+  locationDisplayLabel,
   type LocationSelection,
   type ProviderLocation,
 } from "@/lib/locations/location";
@@ -17,7 +16,6 @@ type SearchResponse = {
   configured: boolean;
   provider: ProviderLocation[];
   providerUnavailable: boolean;
-  saved: ExistingLocation[];
 };
 
 export function LocationPicker({
@@ -67,16 +65,15 @@ export function LocationPicker({
       const data = (await response.json()) as SearchResponse;
       if (request !== searchRequest.current) return;
       setResults(data);
-      if (!data.saved.length && !data.provider.length) {
+      if (!data.provider.length) {
         setMessage(
           data.configured
-            ? "No matching Locations or addresses."
-            : "No saved Locations matched. Address search will be available after Geoapify is configured.",
+            ? "No matching addresses."
+            : "Address search will be available after Geoapify is configured.",
         );
-      } else if (data.providerUnavailable) {
-        setMessage(
-          "Saved Locations are shown, but address search is temporarily unavailable.",
-        );
+      }
+      if (data.providerUnavailable) {
+        setMessage("Address search is temporarily unavailable.");
       }
     } catch {
       if (request === searchRequest.current) {
@@ -132,8 +129,8 @@ export function LocationPicker({
         <div>
           <strong id="location-picker-heading">Location</strong>
           <p>
-            Reuse a saved Location or find an address. Choosing a different
-            Location changes only this {subject}.
+            Search for an address and preview its position. This {subject} keeps
+            its own Location.
           </p>
         </div>
       </div>
@@ -153,7 +150,7 @@ export function LocationPicker({
           maxLength={200}
           onChange={(event) => changeQuery(event.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Search a saved Location or address"
+          placeholder="Search for an address"
           value={query}
         />
         <Button
@@ -166,13 +163,6 @@ export function LocationPicker({
         </Button>
       </div>
 
-      {results?.saved.length ? (
-        <ResultGroup
-          label="Saved Locations"
-          locations={results.saved}
-          onSelect={selectLocation}
-        />
-      ) : null}
       {results?.provider.length ? (
         <ResultGroup
           label="Address results"
@@ -182,9 +172,8 @@ export function LocationPicker({
       ) : null}
       {results && !results.configured ? (
         <p className={styles.configurationNote}>
-          Geoapify is not configured yet. Saved Location search works now;
-          address search and the full map will turn on when the server key is
-          added.
+          Geoapify is not configured yet. Address search and map previews need
+          the server key.
         </p>
       ) : null}
       {results?.provider.length ? (
@@ -221,7 +210,7 @@ function SelectedLocation({
   location: LocationSelection;
   onRemove: (() => void) | null;
 }) {
-  const subtitle = locationSubtitle(location);
+  const label = locationDisplayLabel(location);
   const latitude = location.latitude;
   const longitude = location.longitude;
   const hasCoordinates = latitude !== null && longitude !== null;
@@ -229,7 +218,7 @@ function SelectedLocation({
     <div className={styles.selected}>
       {hasCoordinates ? (
         <Image
-          alt={`Map showing ${location.name}`}
+          alt={`Map showing ${label}`}
           className={styles.map}
           height={280}
           loading="lazy"
@@ -240,13 +229,12 @@ function SelectedLocation({
       ) : (
         <div className={styles.mapUnavailable}>
           <Icon name="map" size={24} />
-          <span>This saved Location does not have coordinates yet.</span>
+          <span>This Location does not have coordinates yet.</span>
         </div>
       )}
       <div className={styles.selectedSummary}>
         <div>
-          <strong>{location.name}</strong>
-          {subtitle ? <span>{subtitle}</span> : null}
+          <strong>{label}</strong>
         </div>
         {onRemove ? (
           <Button
@@ -284,8 +272,8 @@ function ResultGroup({
   onSelect,
 }: {
   label: string;
-  locations: LocationSelection[];
-  onSelect: (location: LocationSelection) => void;
+  locations: ProviderLocation[];
+  onSelect: (location: ProviderLocation) => void;
 }) {
   return (
     <div className={styles.results}>
@@ -293,11 +281,7 @@ function ResultGroup({
       <div>
         {locations.map((location) => (
           <button
-            key={
-              location.kind === "existing"
-                ? location.id
-                : `${location.provider}:${location.providerLocationId}`
-            }
+            key={`${location.provider}:${location.providerLocationId}`}
             onClick={() => onSelect(location)}
             type="button"
           >
@@ -305,8 +289,12 @@ function ResultGroup({
               <Icon name="map" size={16} />
             </span>
             <span>
-              <strong>{location.name}</strong>
-              <small>{locationSubtitle(location)}</small>
+              <strong>{locationDisplayLabel(location)}</strong>
+              <small>
+                {[location.city, location.region, location.country]
+                  .filter(Boolean)
+                  .join(", ")}
+              </small>
             </span>
             <Icon name="chevron" size={15} />
           </button>

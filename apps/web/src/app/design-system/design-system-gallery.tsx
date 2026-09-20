@@ -358,7 +358,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
             <SearchField
               label="Search Locations"
               onChange={(event) => setSearchSample(event.target.value)}
-              placeholder="Search a saved Location or address"
+              placeholder="Search for an address"
               value={searchSample}
             />
             <Button type="submit" variant="secondary">

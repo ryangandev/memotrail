@@ -55,18 +55,6 @@ export type HomeRecord = {
   updatedAt: string;
 };
 
-export type HomePlaceOption = {
-  address: string | null;
-  city: string | null;
-  country: string | null;
-  id: string;
-  latitude: number | null;
-  longitude: number | null;
-  name: string;
-  notes: string | null;
-  region: string | null;
-};
-
 export function parseHomeRows(value: unknown): HomeRecord[] | null {
   if (!Array.isArray(value)) {
     return null;
@@ -83,47 +71,6 @@ export function parseHomeRows(value: unknown): HomeRecord[] | null {
   }
 
   return records;
-}
-
-export function parseHomePlaceOptions(
-  value: unknown,
-): HomePlaceOption[] | null {
-  if (!Array.isArray(value)) {
-    return null;
-  }
-
-  const places: HomePlaceOption[] = [];
-
-  for (const item of value) {
-    if (
-      !isRecord(item) ||
-      typeof item.id !== "string" ||
-      typeof item.name !== "string" ||
-      !nullableString(item.address) ||
-      !nullableString(item.city) ||
-      !nullableString(item.region) ||
-      !nullableString(item.country) ||
-      !nullableNumber(item.latitude) ||
-      !nullableNumber(item.longitude) ||
-      !nullableString(item.notes)
-    ) {
-      return null;
-    }
-
-    places.push({
-      address: item.address,
-      city: item.city,
-      country: item.country,
-      id: item.id,
-      latitude: item.latitude,
-      longitude: item.longitude,
-      name: item.name,
-      notes: item.notes,
-      region: item.region,
-    });
-  }
-
-  return places;
 }
 
 export function homeLocationLabel(home: HomeRecord) {

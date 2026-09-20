@@ -31,7 +31,6 @@ import {
 } from "@/lib/data/first-time-input";
 import {
   homeBodyLimit,
-  homePlaceNameLimit,
   homeTitleLimit,
   parseHomeEntryInput,
   type HomeEntryInput,
@@ -41,7 +40,6 @@ import {
   homeLocationLabel,
   homeRangeLabel,
   type HomeAttachment,
-  type HomePlaceOption,
   type HomeRecord,
 } from "@/lib/data/home-record";
 import { OccurrenceEditor } from "@/components/occurrence-editor";
@@ -65,7 +63,6 @@ export function HomesWorkspace({
   initialHomeId,
   loadError,
   ownerId,
-  placeOptions,
   sourceCapture,
   tagOptions,
 }: {
@@ -74,7 +71,6 @@ export function HomesWorkspace({
   initialHomeId: string | null;
   loadError: string | null;
   ownerId: string;
-  placeOptions: HomePlaceOption[];
   sourceCapture: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
@@ -182,7 +178,6 @@ export function HomesWorkspace({
             else router.refresh();
           }}
           ownerId={ownerId}
-          placeOptions={placeOptions}
           sourceCapture={selectedHome === null ? sourceCapture : null}
           tagOptions={tagOptions}
         />
@@ -288,7 +283,6 @@ export function HomeEditor({
   onSaved,
   onTrashed,
   ownerId,
-  placeOptions,
   sourceCapture = null,
   tagOptions,
 }: {
@@ -299,7 +293,6 @@ export function HomeEditor({
   onSaved: (record: HomeRecord) => void;
   onTrashed: (id: string) => void;
   ownerId: string;
-  placeOptions: HomePlaceOption[];
   sourceCapture?: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
@@ -352,8 +345,6 @@ export function HomeEditor({
   const [placeId, setPlaceId] = useState(home?.placeId ?? null);
   const [locationPreview, setLocationPreview] =
     useState<LocationSelection | null>(home ? homeLocationPreview(home) : null);
-  const [placeName, setPlaceName] = useState(home?.placeName ?? "");
-  const [placeNotes, setPlaceNotes] = useState(home?.placeNotes ?? "");
   const [region, setRegion] = useState(home?.region ?? "");
   const [result, setResult] = useState<HomeActionResult | null>(null);
   const [tagInput, setTagInput] = useState("");
@@ -366,48 +357,16 @@ export function HomeEditor({
     titleRef.current?.focus();
   }, []);
 
-  function selectLocation(nextId: string) {
-    if (!nextId) {
-      setLocationPreview(null);
-      setPlaceId(null);
-      setPlaceName("");
-      setAddress("");
-      setCity("");
-      setRegion("");
-      setCountry("");
-      setLatitude("");
-      setLongitude("");
-      setPlaceNotes("");
-      return;
-    }
-
-    const place = placeOptions.find((option) => option.id === nextId);
-    if (!place) return;
-
-    setPlaceId(place.id);
-    setLocationPreview(homeOptionPreview(place));
-    setPlaceName(place.name);
-    setAddress(place.address ?? "");
-    setCity(place.city ?? "");
-    setRegion(place.region ?? "");
-    setCountry(place.country ?? "");
-    setLatitude(place.latitude?.toString() ?? "");
-    setLongitude(place.longitude?.toString() ?? "");
-    setPlaceNotes(place.notes ?? "");
-  }
-
   function chooseLocation(location: LocationSelection | null) {
     if (!location) return;
     setLocationPreview(location);
     setPlaceId(location.kind === "existing" ? location.id : null);
-    setPlaceName(location.name);
     setAddress(location.address ?? "");
     setCity(location.city ?? "");
     setRegion(location.region ?? "");
     setCountry(location.country ?? "");
     setLatitude(location.latitude?.toString() ?? "");
     setLongitude(location.longitude?.toString() ?? "");
-    setPlaceNotes("");
   }
 
   function handlePhotoSelection(selected: File[]) {
@@ -464,8 +423,14 @@ export function HomeEditor({
       occurredStart: resolved.value.occurredAt,
       occurredTimezone: resolved.value.occurredTimezone,
       placeId,
-      placeName,
-      placeNotes: placeNotes || null,
+      placeName: homeAddressLabel(
+        locationPreview?.kind === "provider" ? locationPreview.name : null,
+        address,
+        city,
+        region,
+        country,
+      ),
+      placeNotes: null,
       region: region || null,
       revision: currentRevision,
       tagNames: namesIncludingDraft(tagNames, tagInput),
@@ -731,51 +696,10 @@ export function HomeEditor({
                 value={locationPreview}
               />
             </div>
-            {placeOptions.length > 0 ? (
-              <label className={styles.fullField}>
-                <span>Saved Location</span>
-                <select
-                  onChange={(event) => selectLocation(event.target.value)}
-                  value={placeId ?? ""}
-                >
-                  <option value="">
-                    {locationPreview?.kind === "provider"
-                      ? "New address from search"
-                      : "Add a new Location"}
-                  </option>
-                  {placeOptions.map((place) => (
-                    <option key={place.id} value={place.id}>
-                      {place.name}
-                    </option>
-                  ))}
-                </select>
-                <small>
-                  Locations are reusable geographic data and do not create a
-                  Place in Focused Views.
-                </small>
-              </label>
-            ) : null}
             <p className={styles.fullField}>
-              Editing the details below never rewrites a shared Location. Saving
-              changed facts creates a new Location for this Home and leaves
-              every other Entry unchanged.
+              Save an address or position for this Home. It can appear on a
+              future map alongside memories and events from the same area.
             </p>
-            <label className={styles.fullField}>
-              <span>
-                Location name <span aria-hidden="true">*</span>
-              </span>
-              <input
-                aria-label="Location name"
-                maxLength={homePlaceNameLimit}
-                onChange={(event) => {
-                  setLocationPreview(null);
-                  setPlaceName(event.target.value);
-                }}
-                placeholder="The house on Pine Street"
-                required
-                value={placeName}
-              />
-            </label>
             <label>
               <span>City</span>
               <input
@@ -820,16 +744,6 @@ export function HomeEditor({
                   setAddress(event.target.value);
                 }}
                 value={address}
-              />
-            </label>
-            <label className={styles.fullField}>
-              <span>Location notes</span>
-              <textarea
-                maxLength={10_000}
-                onChange={(event) => setPlaceNotes(event.target.value)}
-                placeholder="Neighborhood, what was nearby, or anything about the place itself."
-                rows={3}
-                value={placeNotes}
               />
             </label>
           </fieldset>
@@ -921,17 +835,21 @@ function homeLocationPreview(home: HomeRecord): LocationSelection {
   );
 }
 
-function homeOptionPreview(option: HomePlaceOption): LocationSelection {
-  return locationPreviewFromFields(
-    option.id,
-    option.name,
-    option.address,
-    option.city,
-    option.region,
-    option.country,
-    option.latitude,
-    option.longitude,
-  );
+function homeAddressLabel(
+  providerLabel: string | null,
+  address: string,
+  city: string,
+  region: string,
+  country: string,
+) {
+  return (
+    providerLabel ||
+    [address, city, region, country]
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .join(", ") ||
+    "Location not set"
+  ).slice(0, 200);
 }
 
 function locationPreviewFromFields(

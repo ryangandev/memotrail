@@ -2,12 +2,7 @@ import "server-only";
 
 import { displayImageURLs } from "@/lib/media/urls";
 import { getAuthenticatedContext, type Viewer } from "@/lib/data/inbox";
-import {
-  parseHomePlaceOptions,
-  parseHomeRows,
-  type HomePlaceOption,
-  type HomeRecord,
-} from "@/lib/data/home-record";
+import { parseHomeRows, type HomeRecord } from "@/lib/data/home-record";
 import {
   parseVehicleRows,
   type VehicleRecord,
@@ -63,7 +58,6 @@ export type TimelineWorkspace = {
   homes: HomeRecord[];
   inboxCount: number | undefined;
   loadError: string | null;
-  placeOptions: HomePlaceOption[];
   tagOptions: string[];
   tracks: TimelineTrack[];
   vehicles: VehicleRecord[];
@@ -110,7 +104,6 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
     homes,
     vehicles,
     firstTimes,
-    places,
     collections,
     tags,
   ] = await Promise.all([
@@ -131,12 +124,6 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
     context.client.rpc("homes_workspace", { p_limit: 100, p_offset: 0 }),
     context.client.rpc("vehicles_workspace", { p_limit: 100, p_offset: 0 }),
     context.client.rpc("first_times_workspace_with_occurrence"),
-    context.client
-      .from("locations")
-      .select("id,name,address,city,region,country,latitude,longitude,notes")
-      .eq("owner_id", context.userId)
-      .is("deleted_at", null)
-      .order("name"),
     context.client
       .from("collections")
       .select("name")
@@ -215,9 +202,6 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
       timeline.error || !rows
         ? "MemoTrail could not load your Timeline. Refresh to try again."
         : null,
-    placeOptions: places.error
-      ? []
-      : (parseHomePlaceOptions(places.data) ?? []),
     tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
     tracks: rows ? tracksFromRows(rows) : [],
     vehicles: vehicleRows.map((vehicle) => ({

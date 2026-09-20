@@ -101,13 +101,13 @@ export function existingLocationFromRow(
   return validLocationSelection(location) ? location : null;
 }
 
-export function locationSubtitle(location: LocationSelection) {
+export function locationDisplayLabel(location: LocationSelection) {
   return (
-    location.formattedAddress ??
+    location.formattedAddress ||
     [location.address, location.city, location.region, location.country]
       .filter((part): part is string => Boolean(part))
-      .join(", ") ??
-    ""
+      .join(", ") ||
+    "Location not set"
   );
 }
 

@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
-test("one Entry can replace a shared Location without rewriting the other", async ({
+test("repeating an address creates independent Entry and Home Locations", async ({
   context,
   page,
 }) => {
@@ -23,7 +23,6 @@ test("one Entry can replace a shared Location without rewriting the other", asyn
   const owner = created.data.user!.id;
   const firstEntryId = randomUUID();
   const secondEntryId = randomUUID();
-  const sharedLocationId = randomUUID();
 
   try {
     const cookies: { name: string; value: string }[] = [];
@@ -64,25 +63,6 @@ test("one Entry can replace a shared Location without rewriting the other", asyn
 
     expect(
       (
-        await client.from("locations").insert({
-          id: sharedLocationId,
-          owner_id: owner,
-          name: "Shared Pine Street",
-          formatted_address: "10 Pine Street, Philadelphia, PA",
-          address: "10 Pine Street",
-          city: "Philadelphia",
-          region: "Pennsylvania",
-          country: "United States",
-          country_code: "us",
-          latitude: 39.9526,
-          longitude: -75.1652,
-          timezone_id: "America/New_York",
-          result_type: "building",
-        })
-      ).error,
-    ).toBeNull();
-    expect(
-      (
         await client.from("entries").insert([
           {
             id: firstEntryId,
@@ -107,38 +87,18 @@ test("one Entry can replace a shared Location without rewriting the other", asyn
         ])
       ).error,
     ).toBeNull();
-    expect(
-      (
-        await client.from("entry_places").insert([
-          {
-            entry_id: firstEntryId,
-            owner_id: owner,
-            place_id: sharedLocationId,
-            relationship: "primary",
-          },
-          {
-            entry_id: secondEntryId,
-            owner_id: owner,
-            place_id: sharedLocationId,
-            relationship: "primary",
-          },
-        ])
-      ).error,
-    ).toBeNull();
-
     await page.route("**/api/locations/search**", async (route) => {
       await route.fulfill({
         contentType: "application/json",
         json: {
           configured: true,
           providerUnavailable: false,
-          saved: [],
           provider: [
             {
               kind: "provider",
               provider: "geoapify",
               providerLocationId: "synthetic-market-street",
-              name: "Reading Terminal Market",
+              name: "1136 Arch Street, Philadelphia, PA 19107, United States",
               formattedAddress:
                 "1136 Arch Street, Philadelphia, PA 19107, United States",
               address: "1136 Arch Street",
@@ -165,27 +125,22 @@ test("one Entry can replace a shared Location without rewriting the other", asyn
       .getByRole("button", { name: "Edit Writing", exact: true })
       .click();
     const dialog = page.getByRole("dialog");
-    await expect(
-      dialog.getByPlaceholder("Search a saved Location or address"),
-    ).toHaveCSS("border-top-width", "0px");
+    await expect(dialog.getByPlaceholder("Search for an address")).toHaveCSS(
+      "border-top-width",
+      "0px",
+    );
+    await dialog.getByPlaceholder("Search for an address").focus();
+    await expect(dialog.getByPlaceholder("Search for an address")).toHaveCSS(
+      "box-shadow",
+      "none",
+    );
     await dialog
-      .getByPlaceholder("Search a saved Location or address")
-      .focus();
-    await expect(
-      dialog.getByPlaceholder("Search a saved Location or address"),
-    ).toHaveCSS("box-shadow", "none");
-    await expect(
-      dialog.getByRole("img", { name: "Map showing Shared Pine Street" }),
-    ).toBeVisible();
-    await dialog
-      .getByRole("searchbox", { name: "Change Location" })
+      .getByRole("searchbox", { name: "Find a Location" })
       .fill("Reading Terminal");
     await dialog.getByRole("button", { name: "Search", exact: true }).click();
-    await dialog
-      .getByRole("button", { name: /Reading Terminal Market/ })
-      .click();
+    await dialog.getByRole("button", { name: /1136 Arch Street/ }).click();
     await expect(
-      dialog.getByRole("img", { name: "Map showing Reading Terminal Market" }),
+      dialog.getByRole("img", { name: /Map showing 1136 Arch Street/ }),
     ).toBeVisible();
     await expect(dialog.getByText("39.95330, -75.15930")).toBeVisible();
     await page.screenshot({
@@ -209,62 +164,77 @@ test("one Entry can replace a shared Location without rewriting the other", asyn
       .click();
     await expect(dialog).not.toBeVisible();
 
-    const providerLocation = (
+    const firstLocation = (
       await client
         .from("locations")
-        .select("id,name,provider,provider_location_id")
+        .select("id,name,provider,provider_location_id,bound_entry_id")
         .eq("provider", "geoapify")
         .eq("provider_location_id", "synthetic-market-street")
         .single()
     ).data!;
-    expect(providerLocation).toMatchObject({
-      name: "Reading Terminal Market",
+    expect(firstLocation).toMatchObject({
+      name: "1136 Arch Street, Philadelphia, PA 19107, United States",
       provider: "geoapify",
+      bound_entry_id: firstEntryId,
     });
-    const links = (
+    expect(
+      await (
+        await page.request.post("/api/locations/search?query=Arch")
+      ).json(),
+    ).toEqual({
+      configured: false,
+      provider: [],
+      providerUnavailable: false,
+    });
+
+    await page.goto(`/history?entry=${secondEntryId}`);
+    await page
+      .getByRole("button", { name: "Edit Writing", exact: true })
+      .click();
+    const secondDialog = page.getByRole("dialog");
+    await secondDialog
+      .getByRole("searchbox", { name: "Find a Location" })
+      .fill("Reading Terminal");
+    await secondDialog
+      .getByRole("button", { name: /1136 Arch Street/ })
+      .click();
+    await secondDialog
+      .getByRole("button", { name: "Save changes", exact: true })
+      .click();
+    await expect(secondDialog).not.toBeVisible();
+
+    const entryLocations = (
       await client
-        .from("entry_places")
-        .select("entry_id,place_id,relationship")
-        .in("entry_id", [firstEntryId, secondEntryId])
-        .eq("relationship", "primary")
+        .from("locations")
+        .select("id,bound_entry_id")
+        .eq("provider_location_id", "synthetic-market-street")
     ).data!;
-    expect(links).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          entry_id: firstEntryId,
-          place_id: providerLocation.id,
-        }),
-        expect.objectContaining({
-          entry_id: secondEntryId,
-          place_id: sharedLocationId,
-        }),
-      ]),
-    );
+    expect(entryLocations).toHaveLength(2);
+    expect(new Set(entryLocations.map((location) => location.id)).size).toBe(2);
+    expect(
+      entryLocations.map((location) => location.bound_entry_id).sort(),
+    ).toEqual([firstEntryId, secondEntryId].sort());
     expect(
       (
-        await client
-          .from("locations")
-          .select("name,formatted_address")
-          .eq("id", sharedLocationId)
-          .single()
-      ).data,
-    ).toEqual({
-      name: "Shared Pine Street",
-      formatted_address: "10 Pine Street, Philadelphia, PA",
-    });
+        await client.from("entry_places").insert({
+          entry_id: secondEntryId,
+          owner_id: owner,
+          place_id: firstLocation.id,
+          relationship: "related",
+        })
+      ).error?.message,
+    ).toContain("location_belongs_to_another_entry");
 
     await page.setViewportSize({ height: 900, width: 1280 });
     await page.goto("/homes");
     await page.getByRole("button", { name: "Add Home" }).first().click();
     const homeDialog = page.getByRole("dialog");
     await expect(
-      homeDialog.getByPlaceholder("Search a saved Location or address"),
+      homeDialog.getByPlaceholder("Search for an address"),
     ).toHaveCSS("border-top-width", "0px");
-    await homeDialog
-      .getByPlaceholder("Search a saved Location or address")
-      .focus();
+    await homeDialog.getByPlaceholder("Search for an address").focus();
     await expect(
-      homeDialog.getByPlaceholder("Search a saved Location or address"),
+      homeDialog.getByPlaceholder("Search for an address"),
     ).toHaveCSS("box-shadow", "none");
     await homeDialog.locator("[data-search-field]").screenshot({
       animations: "disabled",
@@ -277,20 +247,17 @@ test("one Entry can replace a shared Location without rewriting the other", asyn
       .getByRole("searchbox", { name: "Find a Location" })
       .fill("Reading Terminal");
     await expect(
-      homeDialog.getByRole("button", { name: /Reading Terminal Market/ }),
+      homeDialog.getByRole("button", { name: /1136 Arch Street/ }),
     ).toBeVisible();
-    await homeDialog
-      .getByRole("button", { name: /Reading Terminal Market/ })
-      .click();
+    await homeDialog.getByRole("button", { name: /1136 Arch Street/ }).click();
     await expect(
       homeDialog.getByRole("img", {
-        name: "Map showing Reading Terminal Market",
+        name: /Map showing 1136 Arch Street/,
       }),
     ).toBeVisible();
     await expect(homeDialog.getByText("39.95330, -75.15930")).toBeVisible();
-    await expect(
-      homeDialog.getByRole("textbox", { name: "Location name" }),
-    ).toHaveValue("Reading Terminal Market");
+    await expect(homeDialog.getByText("Saved Location")).toHaveCount(0);
+    await expect(homeDialog.getByText("Location notes")).toHaveCount(0);
     await page.screenshot({
       animations: "disabled",
       caret: "hide",
@@ -306,7 +273,10 @@ test("one Entry can replace a shared Location without rewriting the other", asyn
         .eq("owner_id", owner)
         .single()
     ).data;
-    expect(homeLocation?.place_id).toBe(providerLocation.id);
+    expect(homeLocation?.place_id).not.toBe(firstLocation.id);
+    expect(entryLocations.map((location) => location.id)).not.toContain(
+      homeLocation?.place_id,
+    );
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }

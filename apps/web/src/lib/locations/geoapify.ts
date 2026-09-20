@@ -40,14 +40,9 @@ export function parseGeoapifyResponse(value: unknown): ProviderLocation[] {
     const formattedAddress = string(candidate.formatted);
     const latitude = number(candidate.lat);
     const longitude = number(candidate.lon);
-    const name =
-      string(candidate.name) ??
-      string(candidate.address_line1) ??
-      formattedAddress;
     if (
       !providerLocationId ||
       !formattedAddress ||
-      !name ||
       latitude === null ||
       longitude === null ||
       latitude < -90 ||
@@ -65,7 +60,7 @@ export function parseGeoapifyResponse(value: unknown): ProviderLocation[] {
         kind: "provider" as const,
         provider: "geoapify" as const,
         providerLocationId,
-        name: name.slice(0, 200),
+        name: formattedAddress.slice(0, 200),
         formattedAddress: formattedAddress.slice(0, 1000),
         address: optionalString(candidate.address_line1, 500),
         city:

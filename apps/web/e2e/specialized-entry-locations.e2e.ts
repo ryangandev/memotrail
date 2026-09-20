@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
-test("First Time and Vehicle forms reuse a Location without changing each other", async ({
+test("First Time and Vehicle keep separate snapshots of one address", async ({
   context,
   page,
 }) => {
@@ -26,7 +26,6 @@ test("First Time and Vehicle forms reuse a Location without changing each other"
     email_confirm: true,
   });
   const owner = created.data.user!.id;
-  const locationId = randomUUID();
 
   try {
     const cookies: { name: string; value: string }[] = [];
@@ -64,22 +63,37 @@ test("First Time and Vehicle forms reuse a Location without changing each other"
         sameSite: "Lax",
       })),
     );
-    expect(
-      (
-        await client.from("locations").insert({
-          id: locationId,
-          owner_id: owner,
-          name: "Shared Pine Street",
-          formatted_address: "10 Pine Street, Philadelphia, PA",
-          address: "10 Pine Street",
-          city: "Philadelphia",
-          region: "Pennsylvania",
-          country: "United States",
-          latitude: 39.9526,
-          longitude: -75.1652,
-        })
-      ).error,
-    ).toBeNull();
+    await page.route("**/api/locations/search**", async (route) => {
+      await route.fulfill({
+        contentType: "application/json",
+        json: {
+          configured: true,
+          providerUnavailable: false,
+          provider: [
+            {
+              kind: "provider",
+              provider: "geoapify",
+              providerLocationId: "pine-street-provider-id",
+              name: "10 Pine Street, Philadelphia, PA",
+              formattedAddress: "10 Pine Street, Philadelphia, PA",
+              address: "10 Pine Street",
+              city: "Philadelphia",
+              region: "Pennsylvania",
+              postalCode: null,
+              country: "United States",
+              countryCode: "us",
+              latitude: 39.9526,
+              longitude: -75.1652,
+              timezone: "America/New_York",
+              resultType: "building",
+              confidence: 0.99,
+              matchType: "full_match",
+              dataSource: "openstreetmap",
+            },
+          ],
+        },
+      });
+    });
 
     await page.goto("/first-times");
     await page.getByRole("button", { name: "Add First Time" }).first().click();
@@ -89,20 +103,20 @@ test("First Time and Vehicle forms reuse a Location without changing each other"
       .fill("First hike");
     await firstTimeEditor
       .getByRole("searchbox", { name: "Find a Location" })
-      .fill("Shared Pine");
+      .fill("10 Pine");
     await firstTimeEditor
       .getByRole("button", { name: "Search", exact: true })
       .click();
     await firstTimeEditor
-      .getByRole("button", { name: /Shared Pine Street/ })
+      .getByRole("button", { name: /10 Pine Street/ })
       .click();
     await expect(
       firstTimeEditor.getByRole("img", {
-        name: "Map showing Shared Pine Street",
+        name: /Map showing 10 Pine Street/,
       }),
     ).toBeVisible();
     const firstTimeMap = firstTimeEditor.getByRole("img", {
-      name: "Map showing Shared Pine Street",
+      name: /Map showing 10 Pine Street/,
     });
     await firstTimeMap.scrollIntoViewIfNeeded();
     await expect
@@ -128,15 +142,13 @@ test("First Time and Vehicle forms reuse a Location without changing each other"
       .fill("Blue Civic");
     await vehicleEditor
       .getByRole("searchbox", { name: "Find a Location" })
-      .fill("Shared Pine");
+      .fill("10 Pine");
     await vehicleEditor
       .getByRole("button", { name: "Search", exact: true })
       .click();
+    await vehicleEditor.getByRole("button", { name: /10 Pine Street/ }).click();
     await vehicleEditor
-      .getByRole("button", { name: /Shared Pine Street/ })
-      .click();
-    await vehicleEditor
-      .getByRole("img", { name: "Map showing Shared Pine Street" })
+      .getByRole("img", { name: /Map showing 10 Pine Street/ })
       .scrollIntoViewIfNeeded();
     await page.setViewportSize({ width: 390, height: 844 });
     expect(
@@ -163,17 +175,38 @@ test("First Time and Vehicle forms reuse a Location without changing each other"
       (entry) => entry.title === "First hike",
     )!.id;
     const vehicleId = entries.find((entry) => entry.title === "Blue Civic")!.id;
-    const sharedLinks = (
+    const links = (
       await client
         .from("entry_places")
         .select("entry_id,place_id")
         .in("entry_id", [firstTimeId, vehicleId])
         .eq("relationship", "primary")
     ).data!;
-    expect(sharedLinks).toEqual(
+    expect(links).toHaveLength(2);
+    expect(links[0].place_id).not.toBe(links[1].place_id);
+    const firstTimeLocationId = links.find(
+      (link) => link.entry_id === firstTimeId,
+    )!.place_id;
+    const vehicleLocationId = links.find(
+      (link) => link.entry_id === vehicleId,
+    )!.place_id;
+    expect(
+      (
+        await client
+          .from("locations")
+          .select("provider_location_id,bound_entry_id")
+          .in("id", [firstTimeLocationId, vehicleLocationId])
+      ).data,
+    ).toEqual(
       expect.arrayContaining([
-        { entry_id: firstTimeId, place_id: locationId },
-        { entry_id: vehicleId, place_id: locationId },
+        {
+          provider_location_id: "pine-street-provider-id",
+          bound_entry_id: firstTimeId,
+        },
+        {
+          provider_location_id: "pine-street-provider-id",
+          bound_entry_id: vehicleId,
+        },
       ]),
     );
 
@@ -181,7 +214,7 @@ test("First Time and Vehicle forms reuse a Location without changing each other"
     await page.getByRole("button", { name: /First hike/ }).click();
     const editDialog = page.getByRole("dialog");
     await expect(
-      editDialog.getByRole("img", { name: "Map showing Shared Pine Street" }),
+      editDialog.getByRole("img", { name: /Map showing 10 Pine Street/ }),
     ).toBeVisible();
     await editDialog.getByRole("button", { name: "Remove" }).click();
     await editDialog.getByRole("button", { name: "Save changes" }).click();
@@ -193,7 +226,9 @@ test("First Time and Vehicle forms reuse a Location without changing each other"
         .in("entry_id", [firstTimeId, vehicleId])
         .eq("relationship", "primary")
     ).data!;
-    expect(remaining).toEqual([{ entry_id: vehicleId, place_id: locationId }]);
+    expect(remaining).toEqual([
+      { entry_id: vehicleId, place_id: vehicleLocationId },
+    ]);
     expect(errors).toEqual([]);
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
