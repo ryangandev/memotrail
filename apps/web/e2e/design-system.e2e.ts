@@ -46,34 +46,38 @@ test("SearchField has one focus surface and composes with a Search action", asyn
   ).toBeDisabled();
 });
 
-for (const [theme, width] of [
-  ["light", 1280],
-  ["dark", 1280],
-  ["light", 390],
-  ["dark", 390],
-] as const) {
-  test(`SearchField fits ${theme} at ${width}px`, async ({ page }) => {
-    await page.setViewportSize({ width, height: 900 });
-    await page.goto("/design-system#search-field");
-    const specimen = page.locator("#search-field");
-    await expect(async () => {
-      await page.getByLabel("Gallery theme").selectOption(theme);
-      await expect(
-        page.locator("[data-theme]").filter({ has: specimen }),
-      ).toHaveAttribute("data-theme", theme);
-    }).toPass();
-    await expect(specimen).toBeVisible();
-    await specimen.screenshot({
-      animations: "disabled",
-      path: `/private/tmp/memotrail-search-field-${theme}-${width}.png`,
+test("SearchField fits both themes at desktop and mobile widths", async ({
+  page,
+}) => {
+  await page.goto("/design-system#search-field");
+  const specimen = page.locator("#search-field");
+  for (const [theme, width] of [
+    ["light", 1280],
+    ["dark", 1280],
+    ["light", 390],
+    ["dark", 390],
+  ] as const) {
+    await test.step(`${theme} at ${width}px`, async () => {
+      await page.setViewportSize({ width, height: 900 });
+      await expect(async () => {
+        await page.getByLabel("Gallery theme").selectOption(theme);
+        await expect(
+          page.locator("[data-theme]").filter({ has: specimen }),
+        ).toHaveAttribute("data-theme", theme);
+      }).toPass();
+      await expect(specimen).toBeVisible();
+      await specimen.screenshot({
+        animations: "disabled",
+        path: `/private/tmp/memotrail-search-field-${theme}-${width}.png`,
+      });
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth,
+        ),
+      ).toBe(true);
     });
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= window.innerWidth,
-      ),
-    ).toBe(true);
-  });
-}
+  }
+});
 
 test("Shared primitives support actions, modal focus, nested calendars, and busy submission", async ({
   page,
@@ -157,50 +161,54 @@ test("Shared primitives support actions, modal focus, nested calendars, and busy
   expect(errors).toEqual([]);
 });
 
-for (const theme of ["light", "dark"] as const) {
-  for (const width of [1280, 390]) {
-    test(`Shared primitives fit ${theme} at ${width}px`, async ({ page }) => {
-      await page.setViewportSize({ width, height: 900 });
-      await page.emulateMedia({ reducedMotion: "reduce" });
-      await page.goto("/design-system");
-      await expect(async () => {
-        await page.getByLabel("Gallery theme").selectOption(theme);
+test("Shared primitives fit both themes at desktop and mobile widths", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/design-system");
+  for (const theme of ["light", "dark"] as const) {
+    for (const width of [1280, 390]) {
+      await test.step(`${theme} at ${width}px`, async () => {
+        await page.setViewportSize({ width, height: 900 });
+        await expect(async () => {
+          await page.getByLabel("Gallery theme").selectOption(theme);
+          await expect(
+            page
+              .locator("[data-theme]")
+              .filter({ has: page.locator("#shared-primitives") }),
+          ).toHaveAttribute("data-theme", theme);
+        }).toPass();
+        await page.locator("#shared-primitives").screenshot({
+          caret: "initial",
+          path: `/private/tmp/memotrail-primitives-${theme}-${width}.png`,
+        });
+        expect(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= window.innerWidth,
+          ),
+        ).toBe(true);
+        await page.getByRole("button", { name: "Open long content" }).click();
+        const dialog = page.getByRole("dialog", { name: "A longer story" });
+        await expect(dialog).toBeVisible();
+        await expect(dialog).toHaveCSS("opacity", "1");
+        await expect(dialog).toHaveCSS(
+          "background-color",
+          theme === "dark" ? "rgb(38, 40, 36)" : "rgb(255, 255, 255)",
+        );
+        const bounds = await dialog.boundingBox();
+        expect(bounds!.x).toBeGreaterThanOrEqual(0);
+        expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+        expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(900);
         await expect(
-          page
-            .locator("[data-theme]")
-            .filter({ has: page.locator("#shared-primitives") }),
-        ).toHaveAttribute("data-theme", theme);
-      }).toPass();
-      await page.locator("#shared-primitives").screenshot({
-        caret: "initial",
-        path: `/private/tmp/memotrail-primitives-${theme}-${width}.png`,
+          dialog.getByRole("button", { name: "Done reading" }),
+        ).toBeInViewport();
+        await page.screenshot({
+          caret: "initial",
+          path: `/private/tmp/memotrail-dialog-${theme}-${width}.png`,
+        });
+        await dialog.getByRole("button", { name: "Done reading" }).click();
+        await expect(dialog).not.toBeVisible();
       });
-      expect(
-        await page.evaluate(
-          () => document.documentElement.scrollWidth <= window.innerWidth,
-        ),
-      ).toBe(true);
-      await page.getByRole("button", { name: "Open long content" }).click();
-      const dialog = page.getByRole("dialog", { name: "A longer story" });
-      await expect(dialog).toBeVisible();
-      await expect(dialog).toHaveCSS("opacity", "1");
-      await expect(dialog).toHaveCSS(
-        "background-color",
-        theme === "dark" ? "rgb(38, 40, 36)" : "rgb(255, 255, 255)",
-      );
-      const bounds = await dialog.boundingBox();
-      expect(bounds!.x).toBeGreaterThanOrEqual(0);
-      expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
-      expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(900);
-      await expect(
-        dialog.getByRole("button", { name: "Done reading" }),
-      ).toBeInViewport();
-      await page.screenshot({
-        caret: "initial",
-        path: `/private/tmp/memotrail-dialog-${theme}-${width}.png`,
-      });
-      await dialog.getByRole("button", { name: "Done reading" }).click();
-      await expect(dialog).not.toBeVisible();
-    });
+    }
   }
-}
+});
