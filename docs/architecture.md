@@ -57,7 +57,16 @@ Pair it with the test file carrying the same feature name.
 - `collection_wiki_items` composes the established paged Collection detail with canonical Kind, subtype, and specialized routing identity. Both clients use it so Collections remain organizational lenses rather than a second generic detail system.
 - `people.entry_id` is a required owner-scoped link to a canonical Entity Wiki Item. Triggers keep its name, notes, revision state, and Trash state synchronized.
 - `places` is an independent owner-scoped Focused View record with its own revision and Trash history. It has no canonical `entries` mirror and owns no links to other Focused View records.
-- `locations` stores lightweight geographic identity, provider metadata, human-readable address context, private coordinates, revision state, and soft deletion. It is not a Wiki Item.
+- `locations` stores private per-Entry address and coordinate snapshots with provider provenance, revision state, and soft deletion. It is not a Wiki Item or reusable catalog.
+- Location rows are immutable through the authenticated table API.
+  `review_wiki_item_with_location_rich` atomically creates a Geoapify snapshot or keeps the current Entry's Location and replaces only its `primary` relationship.
+  Home's provider-backed save uses `save_home_entry_with_geoapify` to create and link a snapshot in the same transaction; manual Home saves use `resolve_home_location_copy_on_write` for an unchanged current value or a new snapshot.
+  Specialized First Time and Vehicle editors use `save_first_time_with_location` and `save_vehicle_with_location` when changing a primary Location, preserving their existing save paths when Location is untouched.
+  `locations.bound_entry_id`, owner-scoped foreign keys, and deferred link constraints reject attempts to attach one snapshot to another Entry or commit an active unbound snapshot. Provider identity is provenance, not a deduplication key.
+  Replaced or removed snapshots stay bound to their Entry so history restoration remains possible. Permanently deleting that Entry cascades its Location snapshots; moving an Entry to Trash does not.
+  Legacy `name` and `notes` columns remain for existing RPC and iOS wire shapes, but compatibility writers ignore those inputs, derive the label from address facts, and clear notes; Web exposes neither custom field nor saved-Location search.
+  Homes may omit a Location entirely; `homes_workspace` keeps them visible with a left join, and manual address edits discard stale provider coordinates.
+  `coordinate_source` distinguishes manual, Geoapify, and explicitly adopted photo GPS coordinates; `source_attachment_id` points to the adopted original photo while it exists.
 - `homes.place_id` and `entry_places.place_id` remain compatibility column names for one cross-client window, but their foreign keys target `locations`; new reads use the `entry_locations` view and Location vocabulary.
 - A raw Capture may be finalized as one durable item or may produce linked items through a provenance-preserving extraction.
 - Established durable items never change Kind through a generic selector; cross-Kind workflows create and link another item.
@@ -75,7 +84,7 @@ Pair it with the test file carrying the same feature name.
   `components/entry-rich-text-content.tsx` safely renders validated formatting on note surfaces and falls back to canonical plaintext when rich metadata is absent, invalid, or stale.
   Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while the compatibility RPC `review_entry_with_photo_place_rich` writes plaintext, formatting, organization, occurrence, and photo Location adoption in one revision.
   Older review RPCs preserve rich metadata they do not understand.
-- Collections, tags, People, Locations, and Wiki Item links are owner-scoped reusable relationships. Places remain independent personal records.
+- Collections, tags, People, and Wiki Item links are owner-scoped reusable relationships. Locations are Entry-owned snapshots; Places remain independent personal records.
 - Kind owns identity, subtype owns compatible specialized structure, Collections own curated cross-Kind groupings, tags own lightweight cross-Kind descriptors, and Timeline tracks own presentation only.
 - Home and Vehicle are Entity subtypes whose occurrence range describes the user's relationship span.
 - Memory and First Time are Event subtypes.
@@ -103,7 +112,7 @@ Pair it with the test file carrying the same feature name.
 - A private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings.
 - Web Timeline lanes use each item's rendered pixel bounds, including minimum stage and event-label widths, so non-overlapping periods share a lane without allowing visible cards to collide. A dashed Today line uses the same reference instant as open stages; short ongoing labels end against it with a flat right edge, and stage labels share the same vertically centered layout whether rendered as buttons or links.
 - Timeline creation routes by Entry type, not track name. Generic moments use the Timeline editor; Home, Vehicle, and First Time creation and editing reuse the exported Records editors in a lazy-loaded Timeline modal. System track shortcuts select the corresponding specialized type, while ordinary tracks preselect the generic editor's placement.
-- Timeline server data loads the specialized records and shared Location, Collection, and tag choices needed by those editors in parallel, so opening a known specialized Entry does not require a route transition or client-side data waterfall.
+- Timeline server data loads specialized records, Collection, and tag choices needed by those editors in parallel, so opening a known specialized Entry does not require a route transition or client-side data waterfall.
 - Web occurrence and profile date forms use `components/date-picker-field.tsx`; domain editors map their precision into its generic granularity, time, editability, and size props instead of duplicating picker UI.
 
 ## Offline rules
@@ -181,7 +190,13 @@ Pair it with the test file carrying the same feature name.
 
 - Production Web runs on Vercel from `apps/web`.
 - Production data changes are versioned Supabase migrations without development seed data.
-- Server-only Supabase and AI credentials exist only in trusted environments.
+- Server-only Supabase, Geoapify, and AI credentials exist only in trusted environments.
+- Web address searches and static maps pass through authenticated route handlers, so `GEOAPIFY_API_KEY` is never exposed to the browser.
+  The proxy sends only the requested search text or coordinates to Geoapify, not the signed-in user's identity.
+- The Web Map reads current Entry-Location links through owner-scoped RLS and proxies Geoapify raster tiles through an authenticated route.
+  Its 5,000-link bound is ordered newest first and explicitly disclosed in the UI; filters apply to loaded results.
+- Search, preview, and tile routes each consume an owner-scoped hourly database quota before contacting Geoapify.
+  Place address search reuses the shared autocomplete without persisting a Location.
 - iOS receives public backend configuration and the Web API base URL.
 - Shared behavior should be implemented and tested across Web, iOS, and Supabase in the same product slice.
 - Validation should cover the narrow unit or SQL contract first, then builds, then the closest real browser or native interaction.

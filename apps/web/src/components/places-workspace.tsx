@@ -2,12 +2,14 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   savePlace,
   trashPlace,
   type PlaceActionResult,
 } from "@/app/places/actions";
 import { Button } from "@/components/button";
+import { AddressSearch } from "@/components/address-search";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { Dialog } from "@/components/dialog";
 import { EmptyState } from "@/components/empty-state";
@@ -170,6 +172,12 @@ function PlaceEditor({
   const [address, setAddress] = useState(place?.address ?? "");
   const [city, setCity] = useState(place?.city ?? "");
   const [country, setCountry] = useState(place?.country ?? "");
+  const [latitude, setLatitude] = useState<number | null>(
+    place?.latitude ?? null,
+  );
+  const [longitude, setLongitude] = useState<number | null>(
+    place?.longitude ?? null,
+  );
   const [currentId, setCurrentId] = useState(place?.id ?? null);
   const [currentRevision, setCurrentRevision] = useState(
     place?.revision ?? null,
@@ -187,8 +195,8 @@ function PlaceEditor({
       city: city || null,
       country: country || null,
       id: currentId,
-      latitude: place?.latitude ?? null,
-      longitude: place?.longitude ?? null,
+      latitude,
+      longitude,
       name,
       notes: notes || null,
       region: region || null,
@@ -325,11 +333,48 @@ function PlaceEditor({
                 value={name}
               />
             </label>
+            <div className={common.fullField}>
+              <AddressSearch
+                disabled={isPending}
+                label="Find an address for this Place"
+                onSelect={(location) => {
+                  setAddress(location.address ?? location.formattedAddress);
+                  setCity(location.city ?? "");
+                  setRegion(location.region ?? "");
+                  setCountry(location.country ?? "");
+                  setLatitude(location.latitude);
+                  setLongitude(location.longitude);
+                }}
+              />
+              <p className={styles.coordinateNote}>
+                Search fills this Place&apos;s address. It does not create a
+                Location or change the Place&apos;s name and notes.
+              </p>
+            </div>
+            {latitude !== null && longitude !== null ? (
+              <div className={common.fullField}>
+                <Image
+                  alt={`Map preview for ${name || "this Place"}`}
+                  className={styles.addressMap}
+                  height={280}
+                  src={`/api/locations/map?lat=${latitude}&lon=${longitude}`}
+                  width={720}
+                  unoptimized
+                />
+                <p className={styles.coordinateNote}>
+                  {latitude.toFixed(5)}, {longitude.toFixed(5)}
+                </p>
+              </div>
+            ) : null}
             <label className={common.fullField}>
               <span>Address or description</span>
               <input
                 maxLength={placeAddressLimit}
-                onChange={(event) => setAddress(event.target.value)}
+                onChange={(event) => {
+                  setAddress(event.target.value);
+                  setLatitude(null);
+                  setLongitude(null);
+                }}
                 placeholder="A street address or a description you recognize"
                 value={address}
               />
@@ -338,7 +383,11 @@ function PlaceEditor({
               <span>City</span>
               <input
                 maxLength={placeCityLimit}
-                onChange={(event) => setCity(event.target.value)}
+                onChange={(event) => {
+                  setCity(event.target.value);
+                  setLatitude(null);
+                  setLongitude(null);
+                }}
                 value={city}
               />
             </label>
@@ -346,7 +395,11 @@ function PlaceEditor({
               <span>Region</span>
               <input
                 maxLength={placeRegionLimit}
-                onChange={(event) => setRegion(event.target.value)}
+                onChange={(event) => {
+                  setRegion(event.target.value);
+                  setLatitude(null);
+                  setLongitude(null);
+                }}
                 value={region}
               />
             </label>
@@ -354,7 +407,11 @@ function PlaceEditor({
               <span>Country</span>
               <input
                 maxLength={placeCountryLimit}
-                onChange={(event) => setCountry(event.target.value)}
+                onChange={(event) => {
+                  setCountry(event.target.value);
+                  setLatitude(null);
+                  setLongitude(null);
+                }}
                 value={country}
               />
             </label>

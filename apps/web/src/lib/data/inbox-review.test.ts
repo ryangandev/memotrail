@@ -8,6 +8,7 @@ const validInput = {
   itemKind: "writing",
   itemSubtype: "note",
   id: "f4d2df16-a506-4be6-a63e-b7b18afe3468",
+  location: null,
   occurredAt: "2026-09-01T15:00:00.000Z",
   occurredTimezone: "America/Los_Angeles",
   occurredEnd: null,
@@ -82,6 +83,38 @@ describe("Inbox Entry review", () => {
     expect(parseInboxReviewInput({ ...validInput, revision: 0 }).success).toBe(
       false,
     );
+  });
+
+  it("accepts a provider Location and rejects incomplete coordinates", () => {
+    const location = {
+      kind: "provider",
+      provider: "geoapify",
+      providerLocationId: "provider-location",
+      name: "10 Pine Street",
+      formattedAddress: "10 Pine Street, Philadelphia, PA",
+      address: "10 Pine Street",
+      city: "Philadelphia",
+      region: "Pennsylvania",
+      postalCode: "19107",
+      country: "United States",
+      countryCode: "us",
+      latitude: 39.95,
+      longitude: -75.16,
+      timezone: "America/New_York",
+      resultType: "building",
+      confidence: 0.98,
+      matchType: "full_match",
+      dataSource: "openstreetmap",
+    };
+    expect(parseInboxReviewInput({ ...validInput, location }).success).toBe(
+      true,
+    );
+    expect(
+      parseInboxReviewInput({
+        ...validInput,
+        location: { ...location, longitude: null },
+      }).success,
+    ).toBe(false);
   });
 
   it("rejects an empty Entry and invalid occurrence date", () => {

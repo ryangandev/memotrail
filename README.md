@@ -58,6 +58,8 @@ pnpm --filter @memotrail/web dev
 
 The Web app is available at `http://localhost:3000`.
 It remains buildable before credentials exist.
+Set the server-only `GEOAPIFY_API_KEY` to enable address search and static maps in Web Entry and Home Location fields.
+Without it, existing Entry Locations and coordinates remain accessible, but provider search and map imagery are unavailable.
 
 ## iOS setup
 

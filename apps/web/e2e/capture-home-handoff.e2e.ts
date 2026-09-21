@@ -117,9 +117,7 @@ test("Inbox Capture creates a linked Home through the specialized form", async (
     await expect(editor.getByRole("textbox", { name: /Memories/ })).toHaveValue(
       "First evening in the new apartment.",
     );
-    await editor
-      .getByLabel("Location name", { exact: true })
-      .fill("Lake Merritt apartment");
+    await editor.getByLabel("City", { exact: true }).fill("Oakland");
     await page.screenshot({
       caret: "initial",
       path: "/private/tmp/memotrail-capture-home-handoff.png",

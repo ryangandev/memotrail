@@ -253,12 +253,7 @@
   flex-basis: 220px;
 }
 
-.inputShell {
-  display: flex;
-  height: 34px;
-  align-items: center;
-  gap: 6px;
-  padding: 0 var(--mt-space-2) 0 var(--organization-control-icon-inset);
+.searchField :global([data-search-control]) {
   border: 1px solid var(--mt-color-accent);
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-accent);
@@ -266,7 +261,7 @@
   box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
 }
 
-.editor[data-kind="collection"] .inputShell {
+.editor[data-kind="collection"] .searchField :global([data-search-control]) {
   height: 40px;
   border-color: var(--mt-color-warm);
   border-radius: 2px;
@@ -274,21 +269,6 @@
   box-shadow:
     inset 4px 0 0 var(--mt-color-warm),
     3px 3px 0 var(--mt-color-border-strong);
-}
-
-.inputShell input {
-  width: 100%;
-  min-width: 0;
-  border: 0;
-  outline: 0;
-  color: var(--mt-color-ink);
-  background: transparent;
-  font: inherit;
-  font-size: var(--mt-font-size-caption);
-}
-
-.inputShell input::placeholder {
-  color: var(--mt-color-ink-faint);
 }
 
 .suggestions {

@@ -2,6 +2,8 @@ import "server-only";
 import { displayImageURLs } from "@/lib/media/urls";
 
 import { getAuthenticatedContext, type Viewer } from "./inbox";
+import { getPrimaryEntryLocations } from "./entry-locations";
+import type { LocationSelection } from "@/lib/locations/location";
 import {
   firstTimeDatePrecisions,
   firstTimeImageMimeTypes,
@@ -31,6 +33,7 @@ export type FirstTimeEntry = {
   datePrecision: FirstTimeDatePrecision;
   id: string;
   inboxStatus: "organized" | "unreviewed";
+  location?: LocationSelection | null;
   occurredLabel: string | null;
   occurredStart: string | null;
   occurredEnd: string | null;
@@ -104,6 +107,14 @@ export async function getFirstTimesWorkspace(): Promise<FirstTimesWorkspace | nu
     return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
   }
 
+  const locations = await getPrimaryEntryLocations(
+    context,
+    rows.map((row) => row.entry_id),
+  );
+  if (!locations) {
+    return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+  }
+
   const attachments = rows.flatMap((row) => row.attachments);
   const signedUrls = await signedImageUrls(context.client, attachments);
 
@@ -121,6 +132,7 @@ export async function getFirstTimesWorkspace(): Promise<FirstTimesWorkspace | nu
       datePrecision: row.date_precision,
       id: row.entry_id,
       inboxStatus: row.inbox_status,
+      location: locations.get(row.entry_id) ?? null,
       occurredLabel: row.occurred_label,
       occurredStart: row.occurred_start,
       occurredEnd: row.occurred_end,

@@ -128,7 +128,7 @@ select ok(
     join public.entries on entries.id = homes.entry_id
     where entries.title = 'California apartment'
   ),
-  'The Home owns a reusable Location relationship'
+  'The Home owns an Entry-specific Location relationship'
 );
 
 select is(
@@ -139,8 +139,8 @@ select is(
     join public.locations on locations.id = homes.place_id
     where entries.title = 'California apartment'
   ),
-  'California apartment|123 Palm Street|Los Angeles|California|United States',
-  'The Place preserves normalized address fields'
+  '123 Palm Street, Los Angeles, California, United States|123 Palm Street|Los Angeles|California|United States',
+  'The Location derives its label from normalized address fields'
 );
 
 select is(
@@ -152,7 +152,7 @@ select is(
     where entries.title = 'California apartment'
   ),
   '34.052235,-118.243683',
-  'The Place preserves optional coordinates'
+  'The Location preserves optional coordinates'
 );
 
 select is(
@@ -174,7 +174,7 @@ select is(
     where entries.title = 'California apartment'
   ),
   'home',
-  'The Home is linked to its reusable Location through the shared Entry relationship'
+  'The Home is linked to its Entry-owned Location through the compatibility relationship'
 );
 
 select is(
@@ -316,7 +316,7 @@ select lives_ok(
 select is(
   (select count(*)::integer from public.locations),
   2,
-  'Reusing a Place does not create a duplicate Place row'
+  'Saving an unchanged Entry-owned Location keeps the same snapshot'
 );
 
 select is(
@@ -361,6 +361,7 @@ select is(
   'A Home requires a title'
 );
 
+savepoint optional_home_location;
 select is(
   pg_temp.capture_sqlstate(
     $$
@@ -371,9 +372,10 @@ select is(
       )
     $$
   ),
-  '22023',
-  'A Home requires a Place name'
+  null::text,
+  'A Home can be saved without a Location'
 );
+rollback to savepoint optional_home_location;
 
 select is(
   pg_temp.capture_sqlstate(
@@ -525,7 +527,7 @@ select is(
     where title = 'California home'
   ),
   '456 Elm Street|San Francisco|Needed more space.',
-  'The Homes workspace returns the updated Place and move details'
+  'The Homes workspace returns the updated Location and move details'
 );
 
 select is(
@@ -546,7 +548,7 @@ select is(
       and title = 'California home'
   ),
   1,
-  'Global search finds a Home through its structured Place fields'
+  'Global search finds a Home through its structured Location fields'
 );
 
 select is(
@@ -573,8 +575,8 @@ select is(
     join public.locations on locations.id = homes.place_id
     where entries.title = 'California home'
   ),
-  'California home',
-  'A stale Home update does not partially mutate its Place'
+  '456 Elm Street, San Francisco, California, United States',
+  'A stale Home update does not partially replace its Location snapshot'
 );
 
 select set_config(

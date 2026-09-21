@@ -7,13 +7,6 @@ export type PhotoPlaceDraft = {
   latitude?: number;
   longitude?: number;
 };
-export type PhotoPlaceOption = {
-  id: string;
-  name: string;
-  revision: number;
-  latitude: number | null;
-  longitude: number | null;
-};
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 export function validPhotoPlace(value: unknown): value is PhotoPlaceDraft {
   if (!value || typeof value !== "object") return false;

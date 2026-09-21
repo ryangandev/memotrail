@@ -3,10 +3,8 @@ import { displayImageURLs } from "@/lib/media/urls";
 
 import { getAuthenticatedContext, type Viewer } from "./inbox";
 import {
-  parseHomePlaceOptions,
   parseHomeRows,
   type HomeAttachment,
-  type HomePlaceOption,
   type HomeRecord,
 } from "./home-record";
 
@@ -15,7 +13,6 @@ export type HomesWorkspace = {
   homes: HomeRecord[];
   inboxCount: number | undefined;
   loadError: string | null;
-  placeOptions: HomePlaceOption[];
   tagOptions: string[];
   viewer: Viewer;
 };
@@ -29,14 +26,8 @@ export async function getHomesWorkspace(): Promise<HomesWorkspace | null> {
     return null;
   }
 
-  const [homes, locations, collections, tags, inbox] = await Promise.all([
+  const [homes, collections, tags, inbox] = await Promise.all([
     context.client.rpc("homes_workspace", { p_limit: 100, p_offset: 0 }),
-    context.client
-      .from("locations")
-      .select("id,name,address,city,region,country,latitude,longitude,notes")
-      .eq("owner_id", context.userId)
-      .is("deleted_at", null)
-      .order("name"),
     context.client
       .from("collections")
       .select("name")
@@ -65,9 +56,6 @@ export async function getHomesWorkspace(): Promise<HomesWorkspace | null> {
 
   const attachments = rows.flatMap((home) => home.attachments);
   const signedUrls = await signedImageUrls(context.client, attachments);
-  const placeOptions = locations.error
-    ? []
-    : (parseHomePlaceOptions(locations.data) ?? []);
 
   return {
     collectionOptions: collections.error
@@ -82,7 +70,6 @@ export async function getHomesWorkspace(): Promise<HomesWorkspace | null> {
     })),
     inboxCount: inbox.error ? undefined : (inbox.count ?? 0),
     loadError: null,
-    placeOptions,
     tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
     viewer: context.viewer,
   };
@@ -107,7 +94,6 @@ function unavailableWorkspace(
     homes: [],
     inboxCount,
     loadError: "MemoTrail could not load your Homes. Refresh to try again.",
-    placeOptions: [],
     tagOptions: [],
     viewer,
   };

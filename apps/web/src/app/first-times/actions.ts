@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { writingRevision } from "@/lib/media/writing-revision";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
+  validLocationSelection,
+  type LocationSelection,
+} from "@/lib/locations/location";
+import {
   isFirstTimeEntryIdentity,
   isFirstTimeUuid,
   parseFirstTimeAttachmentInput,
@@ -20,11 +24,15 @@ export type FirstTimeActionResult = {
 
 export async function saveFirstTimeEntry(
   input: FirstTimeEntryInput,
+  location?: LocationSelection | null,
 ): Promise<FirstTimeActionResult> {
   const parsed = parseFirstTimeEntryInput(input);
 
   if (!parsed.success) {
     return result("error", parsed.message);
+  }
+  if (location != null && !validLocationSelection(location)) {
+    return result("error", "Choose the Location again before saving.");
   }
 
   const context = await getAuthenticatedContext();
@@ -36,26 +44,30 @@ export async function saveFirstTimeEntry(
     );
   }
 
-  const { data, error } = await context.client.rpc(
-    "save_first_time_with_occurrence",
-    {
-      p_body: parsed.data.body,
-      p_collection_names: parsed.data.collectionNames,
-      p_date_precision: parsed.data.datePrecision,
-      p_entry_id: parsed.data.id,
-      p_expected_revision: await writingRevision(
-        context.client,
-        parsed.data.id,
-        parsed.data.revision,
-      ),
-      p_occurred_label: parsed.data.occurredLabel,
-      p_occurred_start: parsed.data.occurredStart,
-      p_occurred_end: parsed.data.occurredEnd ?? null,
-      p_occurred_timezone: parsed.data.occurredTimezone,
-      p_tag_names: parsed.data.tagNames,
-      p_title: parsed.data.title,
-    },
-  );
+  const parameters = {
+    p_body: parsed.data.body,
+    p_collection_names: parsed.data.collectionNames,
+    p_date_precision: parsed.data.datePrecision,
+    p_entry_id: parsed.data.id,
+    p_expected_revision: await writingRevision(
+      context.client,
+      parsed.data.id,
+      parsed.data.revision,
+    ),
+    p_occurred_label: parsed.data.occurredLabel,
+    p_occurred_start: parsed.data.occurredStart,
+    p_occurred_end: parsed.data.occurredEnd ?? null,
+    p_occurred_timezone: parsed.data.occurredTimezone,
+    p_tag_names: parsed.data.tagNames,
+    p_title: parsed.data.title,
+  };
+  const { data, error } =
+    location === undefined
+      ? await context.client.rpc("save_first_time_with_occurrence", parameters)
+      : await context.client.rpc("save_first_time_with_location", {
+          p_input: { ...parsed.data, revision: parameters.p_expected_revision },
+          p_location: location,
+        });
 
   if (error) {
     return result(

@@ -97,6 +97,13 @@
   -webkit-line-clamp: 3;
 }
 
+.cardBody > .locationLine {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  -webkit-line-clamp: unset;
+}
+
 .cardBody footer {
   display: flex;
   min-height: 31px;

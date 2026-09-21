@@ -196,7 +196,7 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
         maxBuffer: 10 * 1024 * 1024,
       });
     const manifest = JSON.parse(read("manifest.json").toString());
-    expect(Object.keys(manifest.datasets)).toHaveLength(26);
+    expect(Object.keys(manifest.datasets)).toHaveLength(27);
     for (const [name, value] of Object.entries(snapshot.datasets))
       expect(JSON.parse(read(`data/${name}.json`).toString())).toHaveLength(
         value as number,

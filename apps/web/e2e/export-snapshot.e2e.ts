@@ -95,7 +95,7 @@ test("Complete export snapshot pages preserve original media and history across 
     const snapshot = snapshots[0].data;
     expect(new Set(snapshots.map((s) => s.data.captured_at)).size).toBe(1);
     expect(snapshot.datasets.entries).toBe(1005);
-    expect(Object.keys(snapshot.datasets)).toHaveLength(26);
+    expect(Object.keys(snapshot.datasets)).toHaveLength(27);
     const current = (
       await first.from("entries").select("revision").eq("id", entryID).single()
     ).data!;

@@ -317,30 +317,16 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
         .click();
     }
     await openPlaceDraft();
-    await dialog
-      .getByLabel("New Location name", { exact: true })
-      .fill("Canceled Location");
+    await expect(dialog.getByText("39.95000, -75.16667")).toBeVisible();
+    await expect(dialog.getByLabel("New Location name")).toHaveCount(0);
     expect(
-      (
-        await client
-          .from("locations")
-          .select("id")
-          .eq("name", "Canceled Location")
-      ).data,
+      (await client.from("locations").select("id").eq("owner_id", owner)).data,
     ).toEqual([]);
     await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
     expect(
-      (
-        await client
-          .from("locations")
-          .select("id")
-          .eq("name", "Canceled Location")
-      ).data,
+      (await client.from("locations").select("id").eq("owner_id", owner)).data,
     ).toEqual([]);
     await openPlaceDraft();
-    await dialog
-      .getByLabel("New Location name", { exact: true })
-      .fill("Photo ski slope");
     await expect(dialog.getByLabel("Latitude", { exact: true })).toHaveCount(0);
     await expect(dialog.getByLabel("Longitude", { exact: true })).toHaveCount(
       0,
@@ -353,9 +339,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     ).toBeDisabled();
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.emulateMedia({ colorScheme: "light" });
-    await dialog
-      .getByLabel("New Location name", { exact: true })
-      .scrollIntoViewIfNeeded();
+    await dialog.getByText("39.95000, -75.16667").scrollIntoViewIfNeeded();
     await page.screenshot({
       caret: "initial",
       path: "/private/tmp/memotrail-photo-place-desktop.png",
@@ -370,11 +354,13 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     const newLocation = await client
       .from("locations")
       .select("*")
-      .eq("name", "Photo ski slope")
+      .eq("owner_id", owner)
       .single();
     expect(newLocation.data).toMatchObject({
+      name: "Location not set",
       latitude: 39.95,
       longitude: -75.166667,
+      bound_entry_id: entry,
     });
     expect(
       (
@@ -384,73 +370,11 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
           .eq("entry_id", entry)
       ).data,
     ).toEqual([{ place_id: newLocation.data!.id }]);
-    const existingLocation = await client
-      .from("locations")
-      .insert({
-        owner_id: owner,
-        name: "Reusable Location",
-        latitude: 10,
-        longitude: 20,
-        notes: "Keep these facts",
-      })
-      .select("id")
-      .single();
-    expect(existingLocation.error).toBeNull();
-    const existingID = existingLocation.data!.id;
-    await openPlaceDraft();
-    await dialog.getByLabel("Find an existing Location").fill("Reusable");
-    await dialog
-      .getByRole("button", { name: "Search Locations", exact: true })
-      .click();
-    await dialog
-      .getByLabel("Existing Location", { exact: true })
-      .selectOption(existingID);
-    await expect(
-      dialog.getByText("Link existing Location:", { exact: false }),
-    ).toContainText("Reusable Location");
-    await dialog
-      .getByText("Link existing Location:", { exact: false })
-      .scrollIntoViewIfNeeded();
-    await page.screenshot({
-      caret: "initial",
-      path: "/private/tmp/memotrail-photo-place-mobile.png",
-      fullPage: true,
-    });
     const nativeOptions = await page.request.post(
-      "/api/media/place-options?query=Reusable",
+      "/api/media/place-options?query=anything",
       { headers: bearer },
     );
-    expect((await nativeOptions.json()).locations[0].id).toBe(existingID);
-    expect(
-      (
-        await (
-          await page.request.post("/api/media/place-options?query=Reusable", {
-            headers: otherHeaders,
-          })
-        ).json()
-      ).locations,
-    ).toEqual([]);
-    await dialog
-      .getByRole("button", { name: "Save changes", exact: true })
-      .click();
-    await expect(dialog).not.toBeVisible();
-    expect(
-      (
-        await client
-          .from("entry_places")
-          .select("place_id")
-          .eq("entry_id", entry)
-      ).data,
-    ).toHaveLength(2);
-    expect(
-      (
-        await client
-          .from("locations")
-          .select("latitude,longitude,notes")
-          .eq("id", existingID)
-          .single()
-      ).data,
-    ).toEqual({ latitude: 10, longitude: 20, notes: "Keep these facts" });
+    expect(nativeOptions.status()).toBe(410);
     const raceBefore = await snapshot();
     const raceInput = {
       p_entry_id: entry,
@@ -486,7 +410,9 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
         await client
           .from("locations")
           .select("id")
-          .eq("name", "Concurrent photo Location")
+          .eq("owner_id", owner)
+          .eq("latitude", 30)
+          .eq("longitude", 40)
       ).data,
     ).toHaveLength(1);
     expect(

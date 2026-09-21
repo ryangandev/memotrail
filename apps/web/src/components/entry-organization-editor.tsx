@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { Icon } from "@/components/icon";
+import { SearchField } from "@/components/search-field";
 import styles from "./entry-organization-editor.module.css";
 
 type EntryOrganizationEditorProps = {
@@ -114,35 +115,35 @@ export function EntryOrganizationEditor({
               }
             }}
           >
-            <div className={styles.inputShell}>
-              <Icon name={kind === "tag" ? "tag" : "archive"} size={14} />
-              <input
-                data-escape-layer="organization"
-                aria-controls={`${editorId}-options`}
-                aria-expanded={Boolean(query)}
-                aria-label={`Search or create a ${singular}`}
-                autoFocus
-                maxLength={limit.length}
-                onChange={(event) => onInputChange(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Escape") {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    closeEditor();
-                  }
-                  if (
-                    event.key === "Enter" ||
-                    (kind === "tag" && event.key === ",")
-                  ) {
-                    event.preventDefault();
-                    if (canAdd) addName(query);
-                  }
-                }}
-                placeholder={`Find or create ${singular.toLowerCase()}`}
-                role="combobox"
-                value={input}
-              />
-            </div>
+            <SearchField
+              className={styles.searchField}
+              data-escape-layer="organization"
+              aria-controls={`${editorId}-options`}
+              aria-expanded={Boolean(query)}
+              autoFocus
+              hideLabel
+              label={`Search or create a ${singular}`}
+              maxLength={limit.length}
+              onChange={(event) => onInputChange(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  closeEditor();
+                }
+                if (
+                  event.key === "Enter" ||
+                  (kind === "tag" && event.key === ",")
+                ) {
+                  event.preventDefault();
+                  if (canAdd) addName(query);
+                }
+              }}
+              placeholder={`Find or create ${singular.toLowerCase()}`}
+              role="combobox"
+              size="small"
+              value={input}
+            />
             {query ? (
               <div
                 className={styles.suggestions}

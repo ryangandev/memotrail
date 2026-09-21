@@ -22,6 +22,7 @@ export type WorkspaceDestination =
   | "homes"
   | "inbox"
   | "library"
+  | "map"
   | "goals"
   | "places"
   | "people"
@@ -54,6 +55,7 @@ const primaryNavigation: NavigationItem[] = [
     icon: "archive",
     label: "Library",
   },
+  { destination: "map", href: "/map", icon: "map", label: "Map" },
   { destination: "search", href: "/search", icon: "search", label: "Search" },
 ];
 
@@ -272,6 +274,7 @@ function destinationForPathname(pathname: string): WorkspaceDestination {
   if (pathname.startsWith("/timeline")) return "timeline";
   if (pathname.startsWith("/goals")) return "goals";
   if (pathname.startsWith("/homes")) return "homes";
+  if (pathname.startsWith("/map")) return "map";
   if (pathname.startsWith("/places")) return "places";
   if (pathname.startsWith("/people")) return "people";
   if (pathname.startsWith("/vehicles")) return "vehicles";

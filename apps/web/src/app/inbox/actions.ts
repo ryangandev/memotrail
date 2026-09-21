@@ -184,10 +184,11 @@ export async function reviewInboxEntry(
   }
 
   const { data, error } = await context.client.rpc(
-    "review_wiki_item_with_photo_place_rich",
+    "review_wiki_item_with_location_rich",
     {
       p_body_rich: parsedInput.data.bodyRich ?? null,
       p_photo_place: parsedInput.data.photoPlace ?? null,
+      p_primary_location: parsedInput.data.location,
       p_body: parsedInput.data.body,
       p_collection_names: parsedInput.data.collectionNames,
       p_entry_id: parsedInput.data.id,
@@ -209,7 +210,7 @@ export async function reviewInboxEntry(
     return {
       status: "conflict",
       message:
-        "The photo or Place changed. Close this review, refresh, and confirm the latest version before saving.",
+        "The photo or Location changed. Close this review, refresh, and confirm the latest version before saving.",
     };
 
   if (error) {

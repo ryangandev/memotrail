@@ -18,6 +18,8 @@ import { EntryOrganizationEditor } from "@/components/entry-organization-editor"
 import { OccurrenceEditor } from "@/components/occurrence-editor";
 import { EntryPhotoDates } from "@/components/entry-photo-dates";
 import { RichTextEditor } from "@/components/rich-text-editor";
+import { LocationPicker } from "@/components/location-picker";
+import type { LocationSelection } from "@/lib/locations/location";
 import { photoCalendarDateDraft } from "@/lib/media/photo-metadata";
 import {
   occurrenceDraft,
@@ -167,6 +169,9 @@ export function EntryReviewDialog({
   const [itemSubtype, setItemSubtype] = useState(
     initialClassification.itemSubtype,
   );
+  const [location, setLocation] = useState<LocationSelection | null>(
+    entry.location ?? null,
+  );
   const [occurrence, setOccurrence] = useState(() => occurrenceDraft(entry));
   const [photoPlace, setPhotoPlace] = useState<PhotoPlaceDraft | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -181,6 +186,7 @@ export function EntryReviewDialog({
       return;
     }
     const input: InboxReviewInput = {
+      location,
       photoPlace,
       ...resolved.value!,
       body,
@@ -472,6 +478,12 @@ export function EntryReviewDialog({
           value={occurrence}
           onChange={setOccurrence}
           disabled={isPending}
+        />
+
+        <LocationPicker
+          disabled={isPending}
+          onChange={setLocation}
+          value={location}
         />
 
         <EntryOrganizationEditor

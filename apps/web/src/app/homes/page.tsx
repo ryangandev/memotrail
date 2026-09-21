@@ -36,7 +36,6 @@ export default async function HomesPage({
       initialHomeId={initialHomeId}
       loadError={workspace.loadError}
       ownerId={workspace.viewer.id}
-      placeOptions={workspace.placeOptions}
       sourceCapture={sourceCapture}
       tagOptions={workspace.tagOptions}
     />

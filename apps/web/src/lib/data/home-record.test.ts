@@ -3,7 +3,6 @@ import {
   homeDurationLabel,
   homeLocationLabel,
   homeRangeLabel,
-  parseHomePlaceOptions,
   parseHomeRows,
 } from "./home-record";
 
@@ -80,30 +79,29 @@ describe("Home records", () => {
     });
   });
 
+  it("keeps a Home with no Location visible", () => {
+    const home = parseHomeRows([
+      {
+        ...row,
+        place_id: null,
+        place_name: null,
+        address: null,
+        city: null,
+        region: null,
+        country: null,
+        latitude: null,
+        longitude: null,
+      },
+    ])?.[0];
+    expect(home?.placeId).toBeNull();
+    expect(home && homeLocationLabel(home)).toBe("Location not added");
+  });
+
   it("rejects malformed Home and attachment rows", () => {
     expect(parseHomeRows([{ ...row, occurred_start: null }])).toBeNull();
     expect(
       parseHomeRows([{ ...row, attachments: [{ mime_type: "image/gif" }] }]),
     ).toBeNull();
-  });
-
-  it("parses reusable Location options", () => {
-    expect(
-      parseHomePlaceOptions([
-        {
-          address: null,
-          city: "Philadelphia",
-          country: "United States",
-          id: "50000000-0000-4000-8000-000000000002",
-          latitude: null,
-          longitude: null,
-          name: "Philadelphia rowhome",
-          notes: null,
-          region: "Pennsylvania",
-        },
-      ]),
-    ).toMatchObject([{ city: "Philadelphia" }]);
-    expect(parseHomePlaceOptions([{ id: 2 }])).toBeNull();
   });
 
   it("presents location, range, and current duration context", () => {

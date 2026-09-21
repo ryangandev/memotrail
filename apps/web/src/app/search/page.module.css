@@ -23,36 +23,6 @@
   gap: var(--mt-space-3);
 }
 
-.queryField {
-  display: flex;
-  height: 48px;
-  align-items: center;
-  gap: var(--mt-space-3);
-  padding: 0 var(--mt-space-4);
-  border: 1px solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-ink-faint);
-  background: var(--mt-color-surface);
-}
-
-.queryField:focus-within {
-  border-color: var(--mt-color-accent);
-  box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
-}
-
-.queryField input {
-  width: 100%;
-  border: 0;
-  outline: 0;
-  color: var(--mt-color-ink);
-  background: transparent;
-  font-size: var(--mt-font-size-body-large);
-}
-
-.queryField input::placeholder {
-  color: var(--mt-color-ink-faint);
-}
-
 .searchScope {
   display: flex;
   align-items: baseline;
@@ -410,10 +380,6 @@
   .searchSurface {
     margin-top: var(--mt-space-6);
     padding: var(--mt-space-4);
-  }
-
-  .queryField {
-    padding-inline: var(--mt-space-3);
   }
 
   .searchScope {

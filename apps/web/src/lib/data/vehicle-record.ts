@@ -11,6 +11,7 @@ import {
   vehicleDatePrecisions,
   type VehicleDatePrecision,
 } from "./vehicle-record-input";
+import type { LocationSelection } from "@/lib/locations/location";
 
 export type VehicleAttachment = {
   bucketId: string;
@@ -32,6 +33,7 @@ export type VehicleRecord = {
   color: string | null;
   datePrecision: VehicleDatePrecision;
   id: string;
+  location?: LocationSelection | null;
   make: string | null;
   model: string | null;
   modelYear: number | null;

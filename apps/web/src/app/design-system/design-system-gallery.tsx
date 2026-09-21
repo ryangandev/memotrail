@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
+import { Button } from "@/components/button";
 import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { EntryPhotoField } from "@/components/entry-photo-field";
@@ -16,6 +17,7 @@ import {
   RecordCardVisual,
 } from "@/components/record-card";
 import { RichTextEditor } from "@/components/rich-text-editor";
+import { SearchField } from "@/components/search-field";
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import type { EntryRichText } from "@/lib/data/rich-text";
 import styles from "./page.module.css";
@@ -112,6 +114,10 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
   const [tagInput, setTagInput] = useState("");
   const [collections, setCollections] = useState(["Early years"]);
   const [collectionInput, setCollectionInput] = useState("");
+  const [searchSample, setSearchSample] = useState("");
+  const [searchMessage, setSearchMessage] = useState(
+    "Type a query to try this local-only preview.",
+  );
   const [existingPhotos, setExistingPhotos] = useState([
     {
       id: "design-system-photo",
@@ -327,11 +333,54 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="The current production date, rich-text, occurrence, and organization editors are reusable. Plain text inputs, selects, textareas, labels, and validation messages are still route-level patterns."
+        description="SearchField and the current production date, rich-text, occurrence, and organization editors are reusable. Other plain text inputs, selects, textareas, labels, and validation messages are still route-level patterns."
         id="forms"
         index="04"
         title="Forms"
       >
+        <Specimen
+          api="label · hideLabel · size: small | medium | large · disabled · native input props"
+          description="One focus surface for the icon and text. The search action stays composable, so each feature can choose its own submit behavior."
+          id="search-field"
+          title="SearchField"
+        >
+          <form
+            className={styles.searchFieldDemo}
+            onSubmit={(event) => {
+              event.preventDefault();
+              setSearchMessage(
+                searchSample.trim()
+                  ? `Demo search: ${searchSample.trim()}. No request was sent.`
+                  : "Enter a search term first.",
+              );
+            }}
+          >
+            <SearchField
+              label="Search Locations"
+              onChange={(event) => setSearchSample(event.target.value)}
+              placeholder="Search for an address"
+              value={searchSample}
+            />
+            <Button type="submit" variant="secondary">
+              Search
+            </Button>
+          </form>
+          <div className={styles.searchFieldVariants}>
+            <SearchField
+              label="Compact search"
+              placeholder="Search your trail"
+              size="small"
+            />
+            <SearchField
+              disabled
+              label="Disabled search"
+              placeholder="Search unavailable"
+            />
+          </div>
+          <p className={styles.stateNote} role="status">
+            {searchMessage}
+          </p>
+        </Specimen>
         <Specimen
           api="size: small | medium | large · granularity: day | month | year · editable · includeTime · disabled"
           title="DatePickerField"
@@ -616,15 +665,17 @@ function Specimen({
   api,
   children,
   description,
+  id,
   title,
 }: {
   api?: string;
   children: React.ReactNode;
   description?: string;
+  id?: string;
   title: string;
 }) {
   return (
-    <article className={styles.specimen}>
+    <article className={styles.specimen} id={id}>
       <header>
         <div>
           <h3>{title}</h3>

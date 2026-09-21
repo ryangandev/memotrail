@@ -26,7 +26,7 @@ import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { PageFrame } from "@/components/page-frame";
 import type { FirstTimeEntry } from "@/lib/data/first-times";
-import type { HomePlaceOption, HomeRecord } from "@/lib/data/home-record";
+import type { HomeRecord } from "@/lib/data/home-record";
 import type { TimelineEntry, TimelineTrack } from "@/lib/data/timeline";
 import type { VehicleRecord } from "@/lib/data/vehicle-record";
 import {
@@ -101,7 +101,6 @@ export function TimelineWorkspace({
   homes,
   loadError,
   ownerId,
-  placeOptions,
   referenceDate,
   tagOptions,
   tracks: serverTracks,
@@ -115,7 +114,6 @@ export function TimelineWorkspace({
   homes: HomeRecord[];
   loadError: string | null;
   ownerId: string;
-  placeOptions: HomePlaceOption[];
   referenceDate: string;
   tagOptions: string[];
   tracks: TimelineTrack[];
@@ -480,7 +478,6 @@ export function TimelineWorkspace({
           onSaved={() => undefined}
           onTrashed={() => undefined}
           ownerId={ownerId}
-          placeOptions={placeOptions}
           tagOptions={tagOptions}
         />
       ) : null}

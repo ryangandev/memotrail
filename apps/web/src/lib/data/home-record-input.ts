@@ -82,13 +82,9 @@ export function parseHomeEntryInput(input: unknown): Parsed<HomeEntryInput> {
     return invalid(`Memories can be up to ${homeBodyLimit} characters.`);
   }
 
-  if (!placeName) {
-    return invalid("Add a Location name for this Home.");
-  }
-
   if (placeName.length > homePlaceNameLimit) {
     return invalid(
-      `Location names can be up to ${homePlaceNameLimit} characters.`,
+      `Address labels can be up to ${homePlaceNameLimit} characters.`,
     );
   }
 
@@ -173,7 +169,7 @@ export function parseHomeEntryInput(input: unknown): Parsed<HomeEntryInput> {
   const placeId = input.placeId === null ? null : validUuid(input.placeId);
 
   if (input.placeId !== null && !placeId) {
-    return invalid("Choose a valid saved Location or add a new one.");
+    return invalid("This Home's Location changed. Refresh and try again.");
   }
 
   return {

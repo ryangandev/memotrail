@@ -3,6 +3,7 @@ import { Button } from "@/components/button";
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
+import { SearchField } from "@/components/search-field";
 import {
   isWikiItemKind,
   wikiItemKindLabel,
@@ -87,11 +88,16 @@ const focusedDestinations: LibraryDestination[] = [
     title: "Vehicles",
   },
   {
-    detail:
-      "Revisit the locations connected to your writing, events, and homes.",
+    detail: "Keep the places that matter to you as personal records.",
     href: "/places",
     icon: "map" as const,
     title: "Places",
+  },
+  {
+    detail: "Explore the memories and events tied to coordinates on a map.",
+    href: "/map",
+    icon: "map" as const,
+    title: "Map",
   },
   {
     detail: "Revisit the experiences you tried, saw, or learned first.",
@@ -210,16 +216,13 @@ export default async function LibraryPage({
           </span>
         </div>
         <form className={styles.wikiFilters}>
-          <label>
-            <span>Find in your Life Wiki</span>
-            <input
-              defaultValue={query}
-              maxLength={200}
-              name="q"
-              placeholder="Search titles, writing, people, or places"
-              type="search"
-            />
-          </label>
+          <SearchField
+            defaultValue={query}
+            label="Find in your Life Wiki"
+            maxLength={200}
+            name="q"
+            placeholder="Search titles, writing, people, or places"
+          />
           <label>
             <span>Kind</span>
             <select defaultValue={itemKind ?? ""} name="kind">

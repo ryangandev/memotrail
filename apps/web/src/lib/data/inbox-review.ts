@@ -1,4 +1,8 @@
 import { entryBodyLimit, entryTitleLimit } from "./inbox-input";
+import {
+  validLocationSelection,
+  type LocationSelection,
+} from "@/lib/locations/location";
 import { validPhotoPlace, type PhotoPlaceDraft } from "@/lib/media/photo-place";
 import { validateOccurrence, type OccurrencePrecision } from "./occurrence";
 import { isEntryRichText, type EntryRichText } from "./rich-text";
@@ -8,6 +12,7 @@ import {
 } from "./wiki-item";
 
 export type InboxReviewInput = {
+  location: LocationSelection | null;
   photoPlace?: PhotoPlaceDraft | null;
   body: string;
   bodyRich?: EntryRichText | null;
@@ -38,6 +43,10 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
   }
 
   const values = input as Partial<Record<keyof InboxReviewInput, unknown>>;
+  if (values.location != null && !validLocationSelection(values.location))
+    return invalidReview(
+      "Choose a valid Location or remove it from this Entry.",
+    );
   if (values.photoPlace != null && !validPhotoPlace(values.photoPlace))
     return invalidReview(
       "Review the Place name and coordinates, or remove it from this draft.",
@@ -130,6 +139,7 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
       itemKind: values.itemKind as ReviewableWikiItemKind,
       itemSubtype: values.itemSubtype as string,
       id: values.id,
+      location: (values.location ?? null) as LocationSelection | null,
       ...occurrence,
       occurredAt: occurrence.occurredAt,
       occurredEnd: occurrence.occurredEnd,

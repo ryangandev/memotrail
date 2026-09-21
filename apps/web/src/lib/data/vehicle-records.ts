@@ -2,6 +2,7 @@ import "server-only";
 import { displayImageURLs } from "@/lib/media/urls";
 
 import { getAuthenticatedContext, type Viewer } from "./inbox";
+import { getPrimaryEntryLocations } from "./entry-locations";
 import {
   parseVehicleRows,
   type VehicleAttachment,
@@ -50,6 +51,14 @@ export async function getVehiclesWorkspace(): Promise<VehiclesWorkspace | null> 
     return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
   }
 
+  const locations = await getPrimaryEntryLocations(
+    context,
+    rows.map((row) => row.id),
+  );
+  if (!locations) {
+    return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+  }
+
   const attachments = rows.flatMap((vehicle) => vehicle.attachments);
   const signedUrls = await signedImageUrls(context.client, attachments);
 
@@ -62,6 +71,7 @@ export async function getVehiclesWorkspace(): Promise<VehiclesWorkspace | null> 
     tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
     vehicles: rows.map((vehicle) => ({
       ...vehicle,
+      location: locations.get(vehicle.id) ?? null,
       attachments: vehicle.attachments.map((attachment) => ({
         ...attachment,
         imageUrl: signedUrls.get(attachment.objectPath) ?? null,

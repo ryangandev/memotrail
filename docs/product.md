@@ -97,7 +97,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - People are reusable Entities linked to other Wiki Items, not alternate tags.
 - Places are independent, user-authored Mini Place records available in their own Focused View.
 - Places are not automatically created from Homes or Locations and do not link to other Focused View records.
-- Locations are lightweight geographic data that may be attached to one or many Wiki Items without becoming Library items.
+- Locations are private address and coordinate snapshots owned by individual Wiki Items, not Library items or reusable personal records.
 - Inbox, Timeline, Home, Search, and Library are views or workflow states, not organization labels.
 - Library is the primary all-items entry point for the Life Wiki.
   It presents Writing, Events, Entities, Stories, and Goals as the main browsing lenses, keeps source Captures available as provenance rather than a peer content choice, supports Kind and keyword filters, and links each preset to its appropriate editor or detail surface.
@@ -164,7 +164,7 @@ It may be created directly, finalized from a raw Capture, or extracted and linke
 
 ### Homes and Vehicles
 
-Homes and Vehicles are Entity presets with the full date-precision model, optional facts, writing, photos, relationships, and Timeline context.
+Homes and Vehicles are Entity presets with the full date-precision model, optional facts, writing, photos, Location, relationships, and Timeline context.
 Their dates describe when the Entity was part of the user's life.
 An absent end means that relationship is current, not that the Entity is automatically a Chapter.
 Duration labels must not imply more precision than the recorded dates.
@@ -185,12 +185,20 @@ An explicit achievement action may atomically mark one Achieved and create a lin
 
 Places contain a name plus optional address context and notes.
 They are deliberately saved personal landmarks, remain available in the Places Focused View, and do not duplicate or organize Entries.
-Locations are separate owner-scoped geographic records used by Homes and other Wiki Items.
-A Location may be shared by several Wiki Items, may retain provider identity and coordinates for future map and geographic summaries, and does not appear in Library by itself.
-Normal editors show a human-readable name and address context rather than raw latitude and longitude.
+Geoapify address search can fill a Place's address and coordinates without creating a Location or changing its personal name and notes.
+Locations store address context, optional provider provenance, and private coordinates for one Wiki Item at a time.
+The same physical address may appear in several Items, but each Item keeps an independent snapshot so later edits never change another Item.
+Locations have no user-authored name or notes, no Saved Location catalog, and no Library destination.
+Replaced Location snapshots remain private history for their owning Item, while permanently deleting the Item also deletes all of its Location snapshots.
+Editors show a formatted address and map preview when coordinates exist; a photo's GPS position may be saved without an inferred address.
+Homes may be saved without a Location; manually editing an address clears any provider-backed coordinate preview until another address is selected.
+The Web Map clusters current Entry coordinates, filters by Kind and year, and opens the Entries associated with a selected point without turning Location into a named Place.
+Photo GPS Locations retain their source photo identity as provenance after explicit adoption.
 People contain a name plus optional relationship label and notes.
 People remain reusable across Entries.
-The Location data model preserves future Map capability, but Map UI and an external geographic provider are deferred.
+Web Writing, Event, Story, Home, Vehicle, and First Time editors can search Geoapify for an address, preview its coordinates, and save it as that Item's Location.
+Web address search supports keyboard selection and authenticated server-side usage limits.
+Provider-backed Location editing on native iOS remains deferred until the Web flow is accepted.
 
 ## Experience and navigation
 
@@ -227,7 +235,6 @@ It is not a social network, publishing platform, collaboration system, generic t
 
 Deferred or undecided work includes:
 
-- Map UI;
 - Habits and reminders;
 - a native iOS Share Extension;
 - bulk Inbox review;
