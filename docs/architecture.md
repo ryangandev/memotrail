@@ -65,6 +65,8 @@ Pair it with the test file carrying the same feature name.
   `locations.bound_entry_id`, owner-scoped foreign keys, and deferred link constraints reject attempts to attach one snapshot to another Entry or commit an active unbound snapshot. Provider identity is provenance, not a deduplication key.
   Replaced or removed snapshots stay bound to their Entry so history restoration remains possible. Permanently deleting that Entry cascades its Location snapshots; moving an Entry to Trash does not.
   Legacy `name` and `notes` columns remain for existing RPC and iOS wire shapes, but compatibility writers ignore those inputs, derive the label from address facts, and clear notes; Web exposes neither custom field nor saved-Location search.
+  Homes may omit a Location entirely; `homes_workspace` keeps them visible with a left join, and manual address edits discard stale provider coordinates.
+  `coordinate_source` distinguishes manual, Geoapify, and explicitly adopted photo GPS coordinates; `source_attachment_id` points to the adopted original photo while it exists.
 - `homes.place_id` and `entry_places.place_id` remain compatibility column names for one cross-client window, but their foreign keys target `locations`; new reads use the `entry_locations` view and Location vocabulary.
 - A raw Capture may be finalized as one durable item or may produce linked items through a provenance-preserving extraction.
 - Established durable items never change Kind through a generic selector; cross-Kind workflows create and link another item.
@@ -191,6 +193,10 @@ Pair it with the test file carrying the same feature name.
 - Server-only Supabase, Geoapify, and AI credentials exist only in trusted environments.
 - Web address searches and static maps pass through authenticated route handlers, so `GEOAPIFY_API_KEY` is never exposed to the browser.
   The proxy sends only the requested search text or coordinates to Geoapify, not the signed-in user's identity.
+- The Web Map reads current Entry-Location links through owner-scoped RLS and proxies Geoapify raster tiles through an authenticated route.
+  Its 5,000-link bound is ordered newest first and explicitly disclosed in the UI; filters apply to loaded results.
+- Search, preview, and tile routes each consume an owner-scoped hourly database quota before contacting Geoapify.
+  Place address search reuses the shared autocomplete without persisting a Location.
 - iOS receives public backend configuration and the Web API base URL.
 - Shared behavior should be implemented and tested across Web, iOS, and Supabase in the same product slice.
 - Validation should cover the narrow unit or SQL contract first, then builds, then the closest real browser or native interaction.

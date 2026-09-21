@@ -96,13 +96,13 @@ describe("parseHomeEntryInput", () => {
     ).toMatchObject({ success: true });
   });
 
-  it("requires a Home and Place name", () => {
+  it("requires a Home name but allows an absent Location", () => {
     expect(parseHomeEntryInput({ ...validInput, title: " " })).toMatchObject({
       success: false,
     });
     expect(
       parseHomeEntryInput({ ...validInput, placeName: " " }),
-    ).toMatchObject({ success: false });
+    ).toMatchObject({ success: true });
   });
 
   it("requires the best-known move-in date and timezone", () => {

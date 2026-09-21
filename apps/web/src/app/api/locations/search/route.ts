@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { geoapifyConfigured, searchGeoapify } from "@/lib/locations/geoapify";
+import { locationProviderQuota } from "@/lib/locations/provider-quota";
 
 export async function POST(request: Request) {
   const context = await getAuthenticatedContext();
@@ -19,6 +20,18 @@ export async function POST(request: Request) {
   let provider = [] as Awaited<ReturnType<typeof searchGeoapify>>;
   let providerUnavailable = false;
   if (configured) {
+    const quota = await locationProviderQuota(context, "search");
+    if (quota !== "allowed") {
+      return NextResponse.json(
+        {
+          error:
+            quota === "limited"
+              ? "location_rate_limit"
+              : "provider_unavailable",
+        },
+        { status: quota === "limited" ? 429 : 503 },
+      );
+    }
     try {
       provider = await searchGeoapify(query, language);
     } catch {

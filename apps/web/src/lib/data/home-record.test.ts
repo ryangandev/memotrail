@@ -79,6 +79,24 @@ describe("Home records", () => {
     });
   });
 
+  it("keeps a Home with no Location visible", () => {
+    const home = parseHomeRows([
+      {
+        ...row,
+        place_id: null,
+        place_name: null,
+        address: null,
+        city: null,
+        region: null,
+        country: null,
+        latitude: null,
+        longitude: null,
+      },
+    ])?.[0];
+    expect(home?.placeId).toBeNull();
+    expect(home && homeLocationLabel(home)).toBe("Location not added");
+  });
+
   it("rejects malformed Home and attachment rows", () => {
     expect(parseHomeRows([{ ...row, occurred_start: null }])).toBeNull();
     expect(

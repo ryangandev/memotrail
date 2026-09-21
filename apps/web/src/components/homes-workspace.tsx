@@ -358,7 +358,17 @@ export function HomeEditor({
   }, []);
 
   function chooseLocation(location: LocationSelection | null) {
-    if (!location) return;
+    if (!location) {
+      setLocationPreview(null);
+      setPlaceId(null);
+      setAddress("");
+      setCity("");
+      setRegion("");
+      setCountry("");
+      setLatitude("");
+      setLongitude("");
+      return;
+    }
     setLocationPreview(location);
     setPlaceId(location.kind === "existing" ? location.id : null);
     setAddress(location.address ?? "");
@@ -689,7 +699,6 @@ export function HomeEditor({
             <legend>Location</legend>
             <div className={styles.fullField}>
               <LocationPicker
-                allowRemove={false}
                 disabled={isPending}
                 onChange={chooseLocation}
                 subject="Home"
@@ -706,6 +715,9 @@ export function HomeEditor({
                 maxLength={200}
                 onChange={(event) => {
                   setLocationPreview(null);
+                  setPlaceId(null);
+                  setLatitude("");
+                  setLongitude("");
                   setCity(event.target.value);
                 }}
                 value={city}
@@ -717,6 +729,9 @@ export function HomeEditor({
                 maxLength={200}
                 onChange={(event) => {
                   setLocationPreview(null);
+                  setPlaceId(null);
+                  setLatitude("");
+                  setLongitude("");
                   setRegion(event.target.value);
                 }}
                 value={region}
@@ -728,6 +743,9 @@ export function HomeEditor({
                 maxLength={200}
                 onChange={(event) => {
                   setLocationPreview(null);
+                  setPlaceId(null);
+                  setLatitude("");
+                  setLongitude("");
                   setCountry(event.target.value);
                 }}
                 value={country}
@@ -741,6 +759,9 @@ export function HomeEditor({
                 maxLength={500}
                 onChange={(event) => {
                   setLocationPreview(null);
+                  setPlaceId(null);
+                  setLatitude("");
+                  setLongitude("");
                   setAddress(event.target.value);
                 }}
                 value={address}
@@ -822,7 +843,8 @@ async function uploadPhotos(
   );
 }
 
-function homeLocationPreview(home: HomeRecord): LocationSelection {
+function homeLocationPreview(home: HomeRecord): LocationSelection | null {
+  if (!home.placeId || !home.placeName) return null;
   return locationPreviewFromFields(
     home.placeId,
     home.placeName,
@@ -848,7 +870,7 @@ function homeAddressLabel(
       .map((part) => part.trim())
       .filter(Boolean)
       .join(", ") ||
-    "Location not set"
+    ""
   ).slice(0, 200);
 }
 

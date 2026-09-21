@@ -23,7 +23,7 @@ import {
 } from "@/lib/locations/location";
 
 export type HomeActionResult = {
-  entry: { id: string; placeId: string; revision: number } | null;
+  entry: { id: string; placeId: string | null; revision: number } | null;
   message: string;
   status: "conflict" | "created" | "error" | "saved" | "trashed";
 };
@@ -284,7 +284,7 @@ function savedHome(value: unknown) {
     "place_id" in item &&
     "revision" in item &&
     typeof item.entry_id === "string" &&
-    typeof item.place_id === "string" &&
+    (item.place_id === null || typeof item.place_id === "string") &&
     typeof item.revision === "number"
     ? { id: item.entry_id, placeId: item.place_id, revision: item.revision }
     : null;
@@ -300,7 +300,7 @@ function extractedHome(value: unknown) {
     "place_id" in item &&
     typeof item.home_entry_id === "string" &&
     typeof item.home_revision === "number" &&
-    typeof item.place_id === "string"
+    (item.place_id === null || typeof item.place_id === "string")
     ? {
         id: item.home_entry_id,
         placeId: item.place_id,

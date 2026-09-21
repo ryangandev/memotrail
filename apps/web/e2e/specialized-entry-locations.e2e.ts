@@ -102,13 +102,13 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
       .getByRole("textbox", { name: "Title" })
       .fill("First hike");
     await firstTimeEditor
-      .getByRole("searchbox", { name: "Find a Location" })
+      .getByRole("combobox", { name: "Find a Location" })
       .fill("10 Pine");
     await firstTimeEditor
       .getByRole("button", { name: "Search", exact: true })
       .click();
     await firstTimeEditor
-      .getByRole("button", { name: /10 Pine Street/ })
+      .getByRole("option", { name: /10 Pine Street/ })
       .click();
     await expect(
       firstTimeEditor.getByRole("img", {
@@ -141,12 +141,12 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
       .getByRole("textbox", { name: "Name or nickname" })
       .fill("Blue Civic");
     await vehicleEditor
-      .getByRole("searchbox", { name: "Find a Location" })
+      .getByRole("combobox", { name: "Find a Location" })
       .fill("10 Pine");
     await vehicleEditor
       .getByRole("button", { name: "Search", exact: true })
       .click();
-    await vehicleEditor.getByRole("button", { name: /10 Pine Street/ }).click();
+    await vehicleEditor.getByRole("option", { name: /10 Pine Street/ }).click();
     await vehicleEditor
       .getByRole("img", { name: /Map showing 10 Pine Street/ })
       .scrollIntoViewIfNeeded();

@@ -82,10 +82,6 @@ export function parseHomeEntryInput(input: unknown): Parsed<HomeEntryInput> {
     return invalid(`Memories can be up to ${homeBodyLimit} characters.`);
   }
 
-  if (!placeName) {
-    return invalid("Add an address or position for this Home.");
-  }
-
   if (placeName.length > homePlaceNameLimit) {
     return invalid(
       `Address labels can be up to ${homePlaceNameLimit} characters.`,

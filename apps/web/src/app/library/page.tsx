@@ -94,6 +94,12 @@ const focusedDestinations: LibraryDestination[] = [
     title: "Places",
   },
   {
+    detail: "Explore the memories and events tied to coordinates on a map.",
+    href: "/map",
+    icon: "map" as const,
+    title: "Map",
+  },
+  {
     detail: "Revisit the experiences you tried, saw, or learned first.",
     href: "/first-times",
     icon: "star" as const,

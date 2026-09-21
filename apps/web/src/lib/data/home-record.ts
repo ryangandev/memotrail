@@ -42,8 +42,8 @@ export type HomeRecord = {
   occurredLabel: string | null;
   occurredStart: string | null;
   occurredTimezone: string;
-  placeId: string;
-  placeName: string;
+  placeId: string | null;
+  placeName: string | null;
   placeNotes: string | null;
   region: string | null;
   revision: number;
@@ -78,7 +78,9 @@ export function homeLocationLabel(home: HomeRecord) {
     (part): part is string => Boolean(part),
   );
 
-  return [...new Set(parts)].join(", ") || home.placeName;
+  return (
+    [...new Set(parts)].join(", ") || home.placeName || "Location not added"
+  );
 }
 
 export function homeOccurrence(value: HomeRecord): Occurrence {
@@ -117,8 +119,8 @@ function parseHomeRow(value: unknown): HomeRecord | null {
     typeof value.updated_at !== "string" ||
     !nullableString(value.move_in_reason) ||
     !nullableString(value.move_out_reason) ||
-    typeof value.place_id !== "string" ||
-    typeof value.place_name !== "string" ||
+    !nullableString(value.place_id) ||
+    !nullableString(value.place_name) ||
     !nullableString(value.address) ||
     !nullableString(value.city) ||
     !nullableString(value.region) ||

@@ -166,6 +166,14 @@
   line-height: var(--mt-line-height-body);
 }
 
+.addressMap {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-medium);
+}
+
 .relationshipSection {
   grid-template-columns: 1fr;
 }

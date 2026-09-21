@@ -1,4 +1,5 @@
 import { getAuthenticatedContext } from "@/lib/data/inbox";
+import { locationProviderQuota } from "@/lib/locations/provider-quota";
 
 export async function GET(request: Request) {
   const context = await getAuthenticatedContext();
@@ -20,6 +21,10 @@ export async function GET(request: Request) {
 
   const apiKey = process.env.GEOAPIFY_API_KEY?.trim();
   if (!apiKey) return coordinatePreview(latitude, longitude);
+  const quota = await locationProviderQuota(context, "preview");
+  if (quota !== "allowed") {
+    return new Response(null, { status: quota === "limited" ? 429 : 503 });
+  }
 
   const upstream = new URL("https://maps.geoapify.com/v1/staticmap");
   upstream.searchParams.set("style", "osm-bright-grey");

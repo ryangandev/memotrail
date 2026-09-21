@@ -27,6 +27,8 @@ select is(pg_temp.review(pg_temp.proposal()),1::bigint,'Explicit review atomical
 select is((select count(*) from public.locations where owner_id='10000000-0000-0000-0000-000000000093' and latitude=39.95 and longitude=-75.166667),1::bigint,'New photo GPS Location is created once');
 select is((select latitude from public.locations where owner_id='10000000-0000-0000-0000-000000000093' and latitude=39.95 and longitude=-75.166667),39.95::numeric,'Confirmed latitude saved');
 select is((select longitude from public.locations where owner_id='10000000-0000-0000-0000-000000000093' and latitude=39.95 and longitude=-75.166667),(-75.166667)::numeric,'Confirmed longitude saved');
+select is((select coordinate_source from public.locations where owner_id='10000000-0000-0000-0000-000000000093' and latitude=39.95 and longitude=-75.166667),'photo_gps','Explicit adoption records photo GPS as coordinate provenance');
+select is((select source_attachment_id from public.locations where owner_id='10000000-0000-0000-0000-000000000093' and latitude=39.95 and longitude=-75.166667),'93000000-0000-4000-8000-000000000002'::uuid,'Explicit adoption retains the source photo identity');
 select is((select count(*) from public.entry_places where entry_id='93000000-0000-4000-8000-000000000001'),1::bigint,'Entry link is saved in the same transaction');
 select is((select body from public.entries where id='93000000-0000-4000-8000-000000000001'),'My edited words','Writing save succeeds with Location adoption');
 select is((select snapshot->>'body' from public.entry_versions where entry_id='93000000-0000-4000-8000-000000000001' and version=1),'Original writing','Prior original writing remains in history');

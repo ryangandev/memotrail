@@ -185,15 +185,19 @@ An explicit achievement action may atomically mark one Achieved and create a lin
 
 Places contain a name plus optional address context and notes.
 They are deliberately saved personal landmarks, remain available in the Places Focused View, and do not duplicate or organize Entries.
+Geoapify address search can fill a Place's address and coordinates without creating a Location or changing its personal name and notes.
 Locations store address context, optional provider provenance, and private coordinates for one Wiki Item at a time.
 The same physical address may appear in several Items, but each Item keeps an independent snapshot so later edits never change another Item.
 Locations have no user-authored name or notes, no Saved Location catalog, and no Library destination.
 Replaced Location snapshots remain private history for their owning Item, while permanently deleting the Item also deletes all of its Location snapshots.
 Editors show a formatted address and map preview when coordinates exist; a photo's GPS position may be saved without an inferred address.
-Future maps may cluster Entry coordinates and open the memories and events associated with a selected area without turning Location into a named Place.
+Homes may be saved without a Location; manually editing an address clears any provider-backed coordinate preview until another address is selected.
+The Web Map clusters current Entry coordinates, filters by Kind and year, and opens the Entries associated with a selected point without turning Location into a named Place.
+Photo GPS Locations retain their source photo identity as provenance after explicit adoption.
 People contain a name plus optional relationship label and notes.
 People remain reusable across Entries.
 Web Writing, Event, Story, Home, Vehicle, and First Time editors can search Geoapify for an address, preview its coordinates, and save it as that Item's Location.
+Web address search supports keyboard selection and authenticated server-side usage limits.
 Provider-backed Location editing on native iOS remains deferred until the Web flow is accepted.
 
 ## Experience and navigation

@@ -361,6 +361,7 @@ select is(
   'A Home requires a title'
 );
 
+savepoint optional_home_location;
 select is(
   pg_temp.capture_sqlstate(
     $$
@@ -371,9 +372,10 @@ select is(
       )
     $$
   ),
-  '22023',
-  'A Home requires a Place name'
+  null::text,
+  'A Home can be saved without a Location'
 );
+rollback to savepoint optional_home_location;
 
 select is(
   pg_temp.capture_sqlstate(

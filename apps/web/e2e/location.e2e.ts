@@ -135,10 +135,10 @@ test("repeating an address creates independent Entry and Home Locations", async 
       "none",
     );
     await dialog
-      .getByRole("searchbox", { name: "Find a Location" })
+      .getByRole("combobox", { name: "Find a Location" })
       .fill("Reading Terminal");
     await dialog.getByRole("button", { name: "Search", exact: true }).click();
-    await dialog.getByRole("button", { name: /1136 Arch Street/ }).click();
+    await dialog.getByRole("option", { name: /1136 Arch Street/ }).click();
     await expect(
       dialog.getByRole("img", { name: /Map showing 1136 Arch Street/ }),
     ).toBeVisible();
@@ -193,10 +193,10 @@ test("repeating an address creates independent Entry and Home Locations", async 
       .click();
     const secondDialog = page.getByRole("dialog");
     await secondDialog
-      .getByRole("searchbox", { name: "Find a Location" })
+      .getByRole("combobox", { name: "Find a Location" })
       .fill("Reading Terminal");
     await secondDialog
-      .getByRole("button", { name: /1136 Arch Street/ })
+      .getByRole("option", { name: /1136 Arch Street/ })
       .click();
     await secondDialog
       .getByRole("button", { name: "Save changes", exact: true })
@@ -244,12 +244,12 @@ test("repeating an address creates independent Entry and Home Locations", async 
       .getByRole("textbox", { name: "Home name" })
       .fill("Market Street Home");
     await homeDialog
-      .getByRole("searchbox", { name: "Find a Location" })
+      .getByRole("combobox", { name: "Find a Location" })
       .fill("Reading Terminal");
     await expect(
-      homeDialog.getByRole("button", { name: /1136 Arch Street/ }),
+      homeDialog.getByRole("option", { name: /1136 Arch Street/ }),
     ).toBeVisible();
-    await homeDialog.getByRole("button", { name: /1136 Arch Street/ }).click();
+    await homeDialog.getByRole("option", { name: /1136 Arch Street/ }).click();
     await expect(
       homeDialog.getByRole("img", {
         name: /Map showing 1136 Arch Street/,
