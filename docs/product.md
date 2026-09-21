@@ -235,7 +235,6 @@ It is not a social network, publishing platform, collaboration system, generic t
 
 Deferred or undecided work includes:
 
-- Map UI;
 - Habits and reminders;
 - a native iOS Share Extension;
 - bulk Inbox review;

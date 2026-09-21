@@ -1,6 +1,6 @@
 # MemoTrail Status
 
-Last reviewed: 2026-09-20.
+Last reviewed: 2026-09-21.
 
 ## Current state
 
@@ -39,7 +39,7 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - `localhost:3000` points to the linked cloud Supabase project. Its health endpoint returned 200, and an authenticated browser loaded Geoapify address suggestions, a selected coordinate preview, and the Map's raster tiles after migration; the test form was canceled without saving.
 - Accept the revised UI with a personal `localhost:3000` record, including Home removal/manual address edits, Entry map points, and Place address filling. The current cloud account showed no Entry Locations with coordinates, so its map clustering is locally browser-tested but not yet personally accepted against hosted data.
 - The accepted shared SearchField is now used across Web search surfaces, including Location, full Search, Library, Tags, related Items, organization pickers, and Command Palette.
-- Set the server-only Production `GEOAPIFY_API_KEY` and deploy Web when Production acceptance is wanted; the local key and provider-backed `localhost:3000` browser flow are verified.
+- The server-only Production `GEOAPIFY_API_KEY` is configured in Vercel. The local key and provider-backed `localhost:3000` browser flow are verified; Production browser acceptance remains pending.
 - Native iOS provider UI and its legacy custom Location fields remain deferred until Web acceptance.
 
 ### 2. Accept native Life Wiki UI
