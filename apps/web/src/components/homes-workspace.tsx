@@ -19,6 +19,7 @@ import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { RecordCardMap } from "@/components/record-card-map";
 import {
   RecordCard,
   RecordCardBody,
@@ -204,8 +205,13 @@ function HomeSection({
         <span>{label}</span>
       </header>
       <div className={styles.homeGrid}>
-        {homes.map((home) => (
-          <HomeCard home={home} key={home.id} onSelect={() => onSelect(home)} />
+        {homes.map((home, index) => (
+          <HomeCard
+            eagerMap={index < 3}
+            home={home}
+            key={home.id}
+            onSelect={() => onSelect(home)}
+          />
         ))}
       </div>
     </section>
@@ -213,9 +219,11 @@ function HomeSection({
 }
 
 function HomeCard({
+  eagerMap,
   home,
   onSelect,
 }: {
+  eagerMap: boolean;
   home: HomeRecord;
   onSelect: () => void;
 }) {
@@ -231,10 +239,19 @@ function HomeCard({
         {cover?.imageUrl ? (
           <ProgressiveImage alt="" src={cover.imageUrl} />
         ) : (
-          <div className={styles.homeMark}>
-            <Icon name="home" size={24} />
-            <span>{home.city ?? home.country ?? "A place in your trail"}</span>
-          </div>
+          <RecordCardMap
+            eager={eagerMap}
+            fallback={
+              <div className={styles.homeMark}>
+                <Icon name="home" size={24} />
+                <span>
+                  {home.city ?? home.country ?? "A place in your trail"}
+                </span>
+              </div>
+            }
+            latitude={home.latitude}
+            longitude={home.longitude}
+          />
         )}
         <span
           className={home.occurredEnd ? styles.pastBadge : styles.currentBadge}

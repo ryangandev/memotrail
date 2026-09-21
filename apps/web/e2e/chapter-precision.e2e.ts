@@ -3,7 +3,11 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
-import { fillOccurrenceEnd, fillOccurrenceStart } from "./helpers/occurrence";
+import {
+  fillOccurrenceEnd,
+  fillOccurrenceStart,
+  setDateDescription,
+} from "./helpers/occurrence";
 
 for (const kind of ["home", "vehicle"] as const) {
   test(`${kind} editing preserves uncertain dates and original exact instants`, async ({
@@ -146,9 +150,7 @@ for (const kind of ["home", "vehicle"] as const) {
           if (start) await fillOccurrenceStart(dialog, start);
           if (end) await fillOccurrenceEnd(dialog, end);
         }
-        await dialog
-          .getByLabel("Date description", { exact: true })
-          .fill(label);
+        await setDateDescription(dialog, label);
         if (kind === "home" && !end) {
           // Removing the end must not silently discard the existing reason.
           if (precision === "range") {

@@ -7,6 +7,7 @@ import {
   fillOccurrenceEnd,
   fillOccurrenceStart,
   occurrenceStartField,
+  setDateDescription,
 } from "./helpers/occurrence";
 import { parseInboxDraft } from "../src/lib/data/inbox-draft";
 
@@ -134,9 +135,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
         .getByRole("combobox", { name: "Time zone", exact: true })
         .selectOption("Asia/Kathmandu");
       if (item.start) await fillOccurrenceStart(capture, item.start);
-      await capture
-        .getByLabel("Date description", { exact: true })
-        .fill(item.label);
+      await setDateDescription(capture, item.label);
       if (item.end) await fillOccurrenceEnd(capture, item.end);
       if (item.precision === "age") {
         await page.setViewportSize({ width: 390, height: 844 });

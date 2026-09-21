@@ -1,5 +1,30 @@
 import { expect, test } from "@playwright/test";
 
+test("OccurrenceEditor keeps the optional date description collapsed", async ({
+  page,
+}) => {
+  await page.goto("/design-system#forms");
+  const editor = page.getByRole("group", { name: "Date" });
+  await expect(editor).toBeVisible();
+  await expect(page.getByText("When it happened")).toHaveCount(0);
+  await expect(
+    editor.getByRole("textbox", { name: "Date description" }),
+  ).toHaveCount(0);
+  await editor.getByRole("checkbox", { name: "Add date description" }).check();
+  await expect(
+    editor.getByRole("textbox", { name: "Date description" }),
+  ).toBeVisible();
+  await editor
+    .getByRole("textbox", { name: "Date description" })
+    .fill("Near sunrise");
+  await editor
+    .getByRole("checkbox", { name: "Add date description" })
+    .uncheck();
+  await expect(
+    editor.getByRole("textbox", { name: "Date description" }),
+  ).toHaveCount(0);
+});
+
 test("SearchField has one focus surface and composes with a Search action", async ({
   page,
 }) => {

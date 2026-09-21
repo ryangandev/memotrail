@@ -15,6 +15,7 @@ import { Dialog } from "@/components/dialog";
 import { EmptyState } from "@/components/empty-state";
 import { FocusedViewLayout } from "@/components/focused-view-layout";
 import { Icon } from "@/components/icon";
+import { RecordCardMap } from "@/components/record-card-map";
 import {
   RecordCard,
   RecordCardBody,
@@ -100,8 +101,9 @@ export function PlacesWorkspace({
             <span>Independent personal records</span>
           </header>
           <div className={styles.placeGrid}>
-            {places.map((place) => (
+            {places.map((place, index) => (
               <PlaceCard
+                eagerMap={index < 4}
                 key={place.id}
                 onSelect={() => setSelectedPlace(place)}
                 place={place}
@@ -126,9 +128,11 @@ export function PlacesWorkspace({
 }
 
 function PlaceCard({
+  eagerMap,
   onSelect,
   place,
 }: {
+  eagerMap: boolean;
   onSelect: () => void;
   place: PlaceRecord;
 }) {
@@ -139,10 +143,17 @@ function PlaceCard({
       onClick={onSelect}
     >
       <RecordCardVisual className={styles.placeVisual}>
-        <div className={styles.mapMark}>
-          <span aria-hidden="true" />
-          <Icon name="map" size={27} />
-        </div>
+        <RecordCardMap
+          eager={eagerMap}
+          fallback={
+            <div className={styles.mapMark}>
+              <span aria-hidden="true" />
+              <Icon name="map" size={27} />
+            </div>
+          }
+          latitude={place.latitude}
+          longitude={place.longitude}
+        />
       </RecordCardVisual>
       <RecordCardBody className={styles.placeBody}>
         <p className={styles.locationLine}>

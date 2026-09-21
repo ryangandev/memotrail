@@ -206,9 +206,7 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
       .selectOption("age");
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
-    await page
-      .getByRole("group", { name: "When it happened" })
-      .scrollIntoViewIfNeeded();
+    await page.getByRole("group", { name: "Date" }).scrollIntoViewIfNeeded();
     await page.screenshot({
       path: "/private/tmp/memotrail-occurrence-mobile.png",
       fullPage: true,

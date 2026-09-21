@@ -151,6 +151,13 @@ test("Map shows current Entry coordinates and Place search only fills its form",
       ).error,
     ).toBeNull();
 
+    await page.goto("/first-times");
+    await expect(
+      page
+        .getByRole("button", { name: /A day at Pine Street/ })
+        .locator('[data-record-card-map="true"]'),
+    ).toBeVisible();
+
     await page.goto("/map");
     await expect(
       page.getByRole("status").filter({ hasText: "2 Entry Locations" }),
@@ -238,7 +245,9 @@ test("Map shows current Entry coordinates and Place search only fills its form",
       name: "Find an address for this Place",
     });
     await addressSearch.fill("20 Pine");
-    await expect(editor.getByRole("option", { name: /20 Pine Street/ })).toBeVisible();
+    await expect(
+      editor.getByRole("option", { name: /20 Pine Street/ }),
+    ).toBeVisible();
     await addressSearch.press("ArrowDown");
     await expect(addressSearch).toHaveAttribute("aria-activedescendant", /.+/);
     await addressSearch.press("Enter");
@@ -261,6 +270,11 @@ test("Map shows current Entry coordinates and Place search only fills its form",
       latitude: 39.9527,
       longitude: -75.1653,
     });
+    await expect(
+      page
+        .getByRole("button", { name: /The corner café/ })
+        .locator('[data-record-card-map="true"]'),
+    ).toBeVisible();
     const locations = await client
       .from("locations")
       .select("id", { count: "exact", head: true })

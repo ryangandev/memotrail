@@ -123,6 +123,33 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
       .getByRole("button", { name: /Search all for “electric”/ })
       .click();
     await expect(page).toHaveURL(/\/search\?q=electric$/);
+    const searchSurface = page.getByRole("region", { name: "Entry search" });
+    await expect(searchSurface).not.toContainText("Date filters include");
+    await expect(searchSurface).toHaveCSS(
+      "background-color",
+      "rgba(0, 0, 0, 0)",
+    );
+    for (const width of [1500, 1050, 700, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      const dates = searchSurface.locator("[data-date-picker-field]");
+      const from = await dates.nth(0).boundingBox();
+      const to = await dates.nth(1).boundingBox();
+      expect(from).not.toBeNull();
+      expect(to).not.toBeNull();
+      expect(from!.x + from!.width).toBeLessThanOrEqual(width);
+      expect(to!.x + to!.width).toBeLessThanOrEqual(width);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+      if (width === 1500 || width === 390) {
+        await searchSurface.screenshot({
+          animations: "disabled",
+          path: `/private/tmp/memotrail-search-filters-${width}.png`,
+        });
+      }
+    }
     await expect(
       page.getByRole("heading", { name: "How an electric lighter works" }),
     ).toBeVisible();

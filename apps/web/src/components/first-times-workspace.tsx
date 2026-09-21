@@ -20,6 +20,7 @@ import { EntryOrganizationEditor } from "@/components/entry-organization-editor"
 import { LocationPicker } from "@/components/location-picker";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { RecordCardMap } from "@/components/record-card-map";
 import {
   RecordCard,
   RecordCardBody,
@@ -195,8 +196,17 @@ function FirstTimeCard({
           {photos.length > 1 ? <small>{photos.length} photos</small> : null}
         </RecordCardVisual>
       ) : (
-        <RecordCardVisual className={styles.cardIndex}>
-          {String(index + 1).padStart(2, "0")}
+        <RecordCardVisual className={styles.coverPhoto}>
+          <RecordCardMap
+            eager={index < 4}
+            fallback={
+              <span className={styles.cardIndexFallback}>
+                {String(index + 1).padStart(2, "0")}
+              </span>
+            }
+            latitude={entry.location?.latitude}
+            longitude={entry.location?.longitude}
+          />
         </RecordCardVisual>
       )}
 

@@ -20,6 +20,7 @@ import { EntryOrganizationEditor } from "@/components/entry-organization-editor"
 import { LocationPicker } from "@/components/location-picker";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { RecordCardMap } from "@/components/record-card-map";
 import {
   RecordCard,
   RecordCardBody,
@@ -203,8 +204,9 @@ function VehicleSection({
         <span>{label}</span>
       </header>
       <div className={styles.homeGrid}>
-        {vehicles.map((vehicle) => (
+        {vehicles.map((vehicle, index) => (
           <VehicleCard
+            eagerMap={index < 3}
             key={vehicle.id}
             onSelect={() => onSelect(vehicle)}
             vehicle={vehicle}
@@ -216,9 +218,11 @@ function VehicleSection({
 }
 
 function VehicleCard({
+  eagerMap,
   onSelect,
   vehicle,
 }: {
+  eagerMap: boolean;
   onSelect: () => void;
   vehicle: VehicleRecord;
 }) {
@@ -234,10 +238,17 @@ function VehicleCard({
         {cover?.imageUrl ? (
           <ProgressiveImage alt="" src={cover.imageUrl} />
         ) : (
-          <div className={styles.homeMark}>
-            <Icon name="car" size={24} />
-            <span>{vehicleFactsLabel(vehicle)}</span>
-          </div>
+          <RecordCardMap
+            eager={eagerMap}
+            fallback={
+              <div className={styles.homeMark}>
+                <Icon name="car" size={24} />
+                <span>{vehicleFactsLabel(vehicle)}</span>
+              </div>
+            }
+            latitude={vehicle.location?.latitude}
+            longitude={vehicle.location?.longitude}
+          />
         )}
         <span
           className={

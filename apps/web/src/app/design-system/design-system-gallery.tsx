@@ -131,7 +131,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
     start: "2026-09-17",
     end: "",
     endMode: "date",
-    label: "A clear September afternoon",
+    label: "",
     timezone: "America/Los_Angeles",
   });
   const [recordMessage, setRecordMessage] = useState(
