@@ -13,7 +13,7 @@ Use Git history for feature-level implementation and test evidence.
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Capture, Inbox, organization, dates, drafts, and offline queues                      | Implemented on Web and iOS                                                                                                                                                                                  |
 | Timeline, Home, First Times, Homes, Vehicles, Goals, People, Places, and Collections | Implemented on Web and iOS                                                                                                                                                                                  |
-| Location data layer                                                                  | Hosted through `202609200003`. New Web Map, optional Home Location, photo GPS provenance, and provider quotas are implemented and locally migrated through `202609200006`; cloud migration awaits explicit target confirmation. |
+| Location data layer                                                                  | Hosted through `202609200006`. Web Map, optional Home Location, photo GPS provenance, and provider quotas are implemented; personal browser acceptance remains. |
 | Habits                                                                               | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                                                          |
 | Web navigation shell                                                                 | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                                                           |
 | Web Settings                                                                         | Account, dates, timezone, appearance, simplified AI, and account controls implemented                                                                                                                       |
@@ -31,13 +31,13 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 ## Next work
 
-### 1. Accept Web Location and migrate its new contracts
+### 1. Accept Web Location
 
-- The confirmed hosted project is migrated through `202609200003`. Under explicit authorization to proceed without a backup, the one legacy Location note was cleared; verification found one bound Location, no shared rows, no orphan rows, and no ownership mismatches.
+- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202609200006`; the linked migration ledger matches the repository. The new migrations add an optional Home Location, coordinate provenance, and per-user Geoapify quotas without deleting records.
 - Web now has optional Home Locations, address search that fills Places without creating Locations, keyboard-accessible address suggestions, explicit photo GPS source identity, owner-scoped Geoapify quotas, and a clustered Map of current Entry coordinates with Kind and year filters.
 - Local database validation passes 63 files and 1,549 assertions. Web type checking, lint, production build, 445 unit tests, and the complete 75-test browser suite pass.
-- `localhost:3000` currently points to the linked cloud Supabase project. Migrations `202609200004` through `202609200006` are applied only to the local database; applying them to the confirmed cloud target is needed before Home and provider-limit acceptance there.
-- Accept the revised UI with a personal `localhost:3000` record after cloud migration, including Home removal/manual address edits, the Map, and Place address filling.
+- `localhost:3000` points to the linked cloud Supabase project. Its health endpoint returned 200, and an authenticated browser loaded Geoapify address suggestions, a selected coordinate preview, and the Map's raster tiles after migration; the test form was canceled without saving.
+- Accept the revised UI with a personal `localhost:3000` record, including Home removal/manual address edits, Entry map points, and Place address filling. The current cloud account showed no Entry Locations with coordinates, so its map clustering is locally browser-tested but not yet personally accepted against hosted data.
 - The accepted shared SearchField is now used across Web search surfaces, including Location, full Search, Library, Tags, related Items, organization pickers, and Command Palette.
 - Set the server-only Production `GEOAPIFY_API_KEY` and deploy Web when Production acceptance is wanted; the local key and provider-backed `localhost:3000` browser flow are verified.
 - Native iOS provider UI and its legacy custom Location fields remain deferred until Web acceptance.
