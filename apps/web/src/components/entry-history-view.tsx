@@ -290,9 +290,10 @@ export function EntryHistoryView({
             </p>
           )}
           <p className={styles.note}>
-            Shared People, Location, Collection, and track definitions stay
-            current. Photo files are not deleted. Missing historical links or
-            originals stop the restore safely.
+            People, Collection, and track definitions stay current. Historical
+            Location links return to their original snapshots. Photo files are
+            not deleted. Missing historical links or originals stop the restore
+            safely.
           </p>
           <div className={styles.comparison}>
             <section aria-label="Earlier version">

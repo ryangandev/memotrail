@@ -5,13 +5,21 @@ select no_plan();
 insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000125','specialized-locations@memotrail.local');
 
-insert into public.locations(
-  id,owner_id,name,formatted_address,latitude,longitude
-) values (
-  '99200000-0000-4000-8000-000000000001',
-  '10000000-0000-0000-0000-000000000125',
-  'Shared Location', '10 Pine Street, Philadelphia', 39.9526, -75.1652
-);
+create function pg_temp.provider(provider_id text, formatted text)
+returns jsonb
+language sql
+as $$
+  select jsonb_build_object(
+    'kind','provider','provider','geoapify',
+    'providerLocationId',provider_id,
+    'name',formatted,'formattedAddress',formatted,
+    'address','10 Pine Street','city','Philadelphia','region','Pennsylvania',
+    'postalCode',null,'country','United States','countryCode','us',
+    'latitude',39.9526,'longitude',-75.1652,'timezone','America/New_York',
+    'resultType','building','confidence',0.99,'matchType','full_match',
+    'dataSource','openstreetmap'
+  );
+$$;
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000125',true);
@@ -22,13 +30,10 @@ select is(
       'title','First hike','body','A memory','datePrecision','unknown',
       'collectionNames',jsonb_build_array(),'tagNames',jsonb_build_array()
     ),
-    jsonb_build_object(
-      'kind','existing','id','99200000-0000-4000-8000-000000000001',
-      'revision',1
-    )
+    pg_temp.provider('specialized-pine-10','10 Pine Street, Philadelphia')
   )),
   1::bigint,
-  'A First Time and an existing Location save together'
+  'A First Time and provider Location save together'
 );
 
 select is(
@@ -38,22 +43,31 @@ select is(
       'collectionNames',jsonb_build_array(),'tagNames',jsonb_build_array()
     ),
     null,
-    jsonb_build_object(
-      'kind','existing','id','99200000-0000-4000-8000-000000000001',
-      'revision',1
-    )
+    pg_temp.provider('specialized-pine-10','10 Pine Street, Philadelphia')
   )),
   1::bigint,
-  'A Vehicle can reuse the same Location'
+  'A Vehicle independently saves the same provider result'
+);
+
+select is(
+  (select count(distinct link.place_id)
+   from public.entry_places as link
+   join public.entries as entry on entry.id=link.entry_id
+   where entry.title in ('First hike','Blue Civic')
+     and link.relationship='primary'),
+  2::bigint,
+  'The specialized Items own different Location snapshots'
 );
 
 select is(
   (select count(*)
-   from public.entry_places as link
-   where link.place_id = '99200000-0000-4000-8000-000000000001'
-     and link.relationship = 'primary'),
+   from public.locations
+   where provider_location_id='specialized-pine-10'
+     and bound_entry_id in (
+       select id from public.entries where title in ('First hike','Blue Civic')
+     )),
   2::bigint,
-  'Both specialized Items initially share the Location'
+  'Each same-address snapshot is bound to its own specialized Item'
 );
 
 select is(
@@ -65,35 +79,29 @@ select is(
       'id',(select id from public.entries where title='First hike'),
       'revision',(select revision from public.entries where title='First hike')
     ),
-    jsonb_build_object(
-      'kind','provider','provider','geoapify',
-      'providerLocationId','specialized-market-1',
-      'name','Market Street','formattedAddress','Market Street, Philadelphia',
-      'address','Market Street','city','Philadelphia','region','Pennsylvania',
-      'postalCode',null,'country','United States','countryCode','us',
-      'latitude',39.95,'longitude',-75.16,'timezone','America/New_York',
-      'resultType','street','confidence',0.9,'matchType','full_match',
-      'dataSource','openstreetmap'
-    )
+    pg_temp.provider('specialized-market-1','Market Street, Philadelphia')
   )),
   1::bigint,
-  'Changing one First Time resolves a provider Location and relinks only it'
+  'Changing one First Time creates and links a replacement snapshot'
 );
 
 select is(
-  (select link.place_id
-   from public.entry_places as link
-   join public.entries as entry on entry.id = link.entry_id
-   where entry.title = 'Blue Civic' and link.relationship = 'primary'),
-  '99200000-0000-4000-8000-000000000001'::uuid,
-  'The Vehicle retains the original shared Location'
+  (
+    select location.provider_location_id
+    from public.entry_places as link
+    join public.entries as entry on entry.id=link.entry_id
+    join public.locations as location on location.id=link.place_id
+    where entry.title='Blue Civic' and link.relationship='primary'
+  ),
+  'specialized-pine-10',
+  'The Vehicle retains its independent original snapshot'
 );
 
 select is(
-  (select location.name from public.locations as location
-   where location.id='99200000-0000-4000-8000-000000000001'),
-  'Shared Location',
-  'The shared geographic facts remain unchanged'
+  (select count(*) from public.locations
+   where bound_entry_id=(select id from public.entries where title='First hike')),
+  2::bigint,
+  'The First Time keeps its earlier snapshot for history restoration'
 );
 
 select is(
@@ -116,15 +124,14 @@ select is(
    join public.entries as entry on entry.id=link.entry_id
    where entry.title='Blue Civic' and link.relationship='primary'),
   0::bigint,
-  'Removing one association does not delete the Location'
+  'Removing the active association clears the Vehicle primary link'
 );
 
 select is(
-  (select count(*) from public.entry_places as link
-   join public.entries as entry on entry.id=link.entry_id
-   where entry.title='First hike' and link.relationship='primary'),
+  (select count(*) from public.locations
+   where bound_entry_id=(select id from public.entries where title='Blue Civic')),
   1::bigint,
-  'The other specialized Item keeps its provider Location'
+  'The removed Vehicle snapshot remains available to history'
 );
 
 select throws_ok(

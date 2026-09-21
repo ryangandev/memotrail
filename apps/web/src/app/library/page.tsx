@@ -88,8 +88,7 @@ const focusedDestinations: LibraryDestination[] = [
     title: "Vehicles",
   },
   {
-    detail:
-      "Revisit the locations connected to your writing, events, and homes.",
+    detail: "Keep the places that matter to you as personal records.",
     href: "/places",
     icon: "map" as const,
     title: "Places",

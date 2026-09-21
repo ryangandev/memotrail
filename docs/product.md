@@ -188,6 +188,7 @@ They are deliberately saved personal landmarks, remain available in the Places F
 Locations store address context, optional provider provenance, and private coordinates for one Wiki Item at a time.
 The same physical address may appear in several Items, but each Item keeps an independent snapshot so later edits never change another Item.
 Locations have no user-authored name or notes, no Saved Location catalog, and no Library destination.
+Replaced Location snapshots remain private history for their owning Item, while permanently deleting the Item also deletes all of its Location snapshots.
 Editors show a formatted address and map preview when coordinates exist; a photo's GPS position may be saved without an inferred address.
 Future maps may cluster Entry coordinates and open the memories and events associated with a selected area without turning Location into a named Place.
 People contain a name plus optional relationship label and notes.

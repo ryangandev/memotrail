@@ -86,7 +86,7 @@ select is(
   'The specialized form controls the Home content'
 );
 select is(
-  (select locations.name || ':' || locations.city || ':' || homes.move_in_reason
+  (select locations.formatted_address || ':' || locations.city || ':' || homes.move_in_reason
    from public.homes
    join public.locations on locations.id=homes.place_id and locations.owner_id=homes.owner_id
    where homes.entry_id = (
@@ -94,7 +94,7 @@ select is(
      where source_entry_id='98400000-0000-4000-8000-000000000001'
        and relationship='derived'
    )),
-  'Lake Merritt apartment:Oakland:A new job',
+  '123 Grand Ave, Oakland, California, US:Oakland:A new job',
   'Home and Location-specific facts are saved'
 );
 select is(

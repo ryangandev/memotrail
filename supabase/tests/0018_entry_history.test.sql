@@ -7,7 +7,9 @@ insert into public.entries(id,owner_id,title,body,date_precision,occurred_label)
 insert into public.collections(id,owner_id,name) values('94100000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','History collection');
 insert into public.tags(id,owner_id,name) values('94200000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','history-tag');
 insert into public.people(id,owner_id,name) values('94300000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Historical friend');
-insert into public.locations(id,owner_id,name) values('94400000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Old location name');
+insert into public.locations(id,owner_id,name) values
+('94400000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Old location name'),
+('94400000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','Home location');
 insert into public.timeline_tracks(id,owner_id,name) values('94500000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','History track');
 insert into public.entry_collections values('94000000-0000-4000-8000-000000000001','94100000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001',now());
 insert into public.entry_tags values('94000000-0000-4000-8000-000000000001','94200000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001',now());
@@ -38,7 +40,7 @@ select is((select count(*) from public.entry_people where entry_id='94000000-000
 select is((select count(*) from public.entry_places where entry_id='94000000-0000-4000-8000-000000000001'),1::bigint,'Restores Place links');
 select is((select count(*) from public.timeline_items where entry_id='94000000-0000-4000-8000-000000000001'),1::bigint,'Restores Timeline placement');
 select is((select count(*) from public.entry_links where source_entry_id='94000000-0000-4000-8000-000000000001'),1::bigint,'Restores Entry links');
-select is((select name from public.locations where id='94400000-0000-4000-8000-000000000001'),'Current shared name','Shared Location definition is not overwritten');
+select is((select name from public.locations where id='94400000-0000-4000-8000-000000000001'),'Location not set','Location label remains derived rather than user-authored');
 select is((select snapshot->>'body' from public.entry_versions where entry_id='94000000-0000-4000-8000-000000000001' and version=2),'Current writing','Pre-restore current version remains available');
 select is(public.restore_entry_version('94000000-0000-4000-8000-000000000001',1,2),null::integer,'Stale restore rejected');
 select is(public.restore_entry_version('94000000-0000-4000-8000-000000000001',2,3),4,'Restoration can itself be undone');
@@ -62,7 +64,7 @@ insert into public.entries(id,owner_id,title,item_kind,item_subtype) values
 ('94600000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','Home v1','entity','home'),
 ('94600000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000001','Vehicle v1','entity','vehicle');
 insert into public.goals(entry_id,owner_id,status) values('94600000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','active');
-insert into public.homes(entry_id,owner_id,place_id,move_in_reason) values('94600000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','94400000-0000-4000-8000-000000000001','Study');
+insert into public.homes(entry_id,owner_id,place_id,move_in_reason) values('94600000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','94400000-0000-4000-8000-000000000002','Study');
 insert into public.vehicles(entry_id,owner_id,model,color) values('94600000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000001','Original model','Blue');
 update public.entries set title=title||' changed' where id in ('94600000-0000-4000-8000-000000000001','94600000-0000-4000-8000-000000000002','94600000-0000-4000-8000-000000000003');
 update public.goals set status='paused' where entry_id='94600000-0000-4000-8000-000000000001';
