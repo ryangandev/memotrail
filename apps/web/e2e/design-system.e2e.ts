@@ -1,6 +1,29 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
 
+test("Toast uses the shared feedback surface without an inline message", async ({
+  page,
+}) => {
+  await page.goto("/design-system#feedback");
+  const feedback = page.locator("#feedback");
+  await feedback.getByRole("button", { name: "Show success" }).click();
+  const success = page.locator('[data-sonner-toast][data-type="success"]');
+  await expect(success).toContainText("Changes saved.");
+  await expect(success).toHaveCSS("border-left-width", "3px");
+  await success.getByRole("button", { name: "Close toast" }).click();
+  await expect(success).toHaveCount(0);
+  await feedback.getByRole("button", { name: "Show error" }).click();
+  const error = page.locator('[data-sonner-toast][data-type="error"]');
+  await expect(error).toContainText("Could not save. Try again.");
+  await expect(error).toHaveCSS("border-left-width", "3px");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ colorScheme: "dark" });
+  const rightEdge = await error.evaluate(
+    (element) => element.getBoundingClientRect().right,
+  );
+  expect(rightEdge).toBeLessThanOrEqual(390);
+});
+
 test("Photo field previews existing and selected images without removing them", async ({
   page,
 }) => {

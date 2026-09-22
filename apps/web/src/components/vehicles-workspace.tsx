@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import { Dialog } from "@/components/dialog";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
@@ -489,6 +490,9 @@ export function VehicleEditor({
         return;
       }
 
+      notify.success(
+        saved.status === "created" ? "Vehicle created." : "Vehicle saved.",
+      );
       onClose();
     } catch {
       setResult(
@@ -522,6 +526,7 @@ export function VehicleEditor({
           current.filter((item) => item.id !== photo.id),
         );
         router.refresh();
+        notify.info("Photo moved to Trash.");
       } else {
         setResult(nextResult);
       }
@@ -554,6 +559,7 @@ export function VehicleEditor({
       if (nextResult.status === "trashed") {
         onTrashed(currentId);
         onClose();
+        notify.info("Vehicle moved to Trash.");
       } else {
         setResult(nextResult);
       }

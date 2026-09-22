@@ -90,6 +90,11 @@ test("People saves, links, protects, edits, trashes, and restores on desktop and
       .getByRole("button", { name: "Add Person", exact: true })
       .click();
     await expect(dialog).not.toBeVisible();
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "Person created.",
+      }),
+    ).toBeVisible();
     const card = page.getByRole("button", { name: /Alex Friend/ });
     await expect(card).toContainText("1 connected Items");
     await page.screenshot({
@@ -133,9 +138,17 @@ test("People saves, links, protects, edits, trashes, and restores on desktop and
       .click();
     await expect(dialog).not.toBeVisible();
     await expect(card).not.toBeVisible();
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "Person moved to Trash.",
+      }),
+    ).toBeVisible();
     await page.goto("/trash");
     await expect(page.getByText("Alex", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Restore", exact: true }).click();
+    await expect(
+      page.locator("[data-sonner-toast]").filter({ hasText: "Item restored." }),
+    ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Nothing in Trash" }),
     ).toBeVisible();

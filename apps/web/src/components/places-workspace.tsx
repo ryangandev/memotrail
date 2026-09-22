@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 
 import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -233,6 +234,9 @@ function PlaceEditor({
       setCurrentId(saved.place.id);
       setCurrentRevision(saved.place.revision);
       router.refresh();
+      notify.success(
+        saved.status === "created" ? "Place created." : "Place saved.",
+      );
       onClose();
     } catch {
       setResult(
@@ -265,6 +269,7 @@ function PlaceEditor({
       if (nextResult.status === "trashed") {
         router.refresh();
         onClose();
+        notify.info("Place moved to Trash.");
       } else {
         setResult(nextResult);
       }

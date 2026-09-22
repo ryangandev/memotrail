@@ -38,8 +38,7 @@
   box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
 }
 
-.helper,
-.message {
+.helper {
   margin-top: var(--mt-space-3);
   font-size: var(--mt-font-size-caption);
   line-height: var(--mt-line-height-body);
@@ -47,10 +46,6 @@
 
 .helper {
   color: var(--mt-color-ink-faint);
-}
-
-.message {
-  color: var(--mt-color-warm);
 }
 
 .editorActions {

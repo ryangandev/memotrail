@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import { Dialog } from "@/components/dialog";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { RecordCard, RecordCardBody } from "@/components/record-card";
@@ -156,7 +157,6 @@ function PersonEditor({
   );
   const [entryId, setEntryId] = useState("");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
   const options = new Map(
     [...entries, ...(person?.linked_entries ?? [])].map((e) => [e.id, e]),
   );
@@ -174,7 +174,6 @@ function PersonEditor({
       if (!confirmed) return;
     }
     setBusy(true);
-    setMessage(null);
     try {
       const failure =
         remove && person
@@ -187,13 +186,15 @@ function PersonEditor({
               notes,
               entryIds,
             });
-      if (failure) setMessage(failure);
+      if (failure) notify.error(failure);
       else {
         router.refresh();
         onClose();
+        if (remove) notify.info("Person moved to Trash.");
+        else notify.success(person ? "Person saved." : "Person created.");
       }
     } catch {
-      setMessage(
+      notify.error(
         "Could not reach MemoTrail. Your edits are still here; try again when online.",
       );
     } finally {
@@ -358,11 +359,6 @@ function PersonEditor({
             </div>
           </fieldset>
         </div>
-        {message ? (
-          <p className={common.formMessage} role="alert">
-            {message}
-          </p>
-        ) : null}
       </form>
     </Dialog>
   );

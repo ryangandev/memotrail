@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import { Dialog } from "@/components/dialog";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
@@ -409,6 +410,11 @@ export function FirstTimeEditor({
       }
 
       router.refresh();
+      notify.success(
+        saved.status === "created"
+          ? "First Time created."
+          : "First Time saved.",
+      );
       onClose();
     } catch {
       setResult(
@@ -445,6 +451,7 @@ export function FirstTimeEditor({
           current.filter((item) => item.id !== photo.id),
         );
         router.refresh();
+        notify.info("Photo moved to Trash.");
       } else {
         setResult(nextResult);
       }
@@ -480,6 +487,7 @@ export function FirstTimeEditor({
       if (nextResult.status === "trashed") {
         router.refresh();
         onClose();
+        notify.info("First Time moved to Trash.");
       } else {
         setResult(nextResult);
       }

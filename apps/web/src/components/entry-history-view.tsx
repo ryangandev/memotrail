@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import { PageHeader } from "@/components/page-header";
 import { Button, ButtonLink } from "@/components/button";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
@@ -96,6 +97,7 @@ export function EntryHistoryView({
       else {
         setVersion(undefined);
         router.refresh();
+        notify.success("Version restored.");
       }
     } catch {
       setError(
@@ -127,6 +129,7 @@ export function EntryHistoryView({
       else {
         router.push("/library");
         router.refresh();
+        notify.info("Entry moved to Trash.");
       }
     } catch {
       setError(

@@ -18,6 +18,7 @@ import {
 } from "@/components/record-card";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { SearchField } from "@/components/search-field";
+import { notify } from "@/components/app-toast";
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import type { EntryRichText } from "@/lib/data/rich-text";
 import styles from "./page.module.css";
@@ -592,12 +593,34 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="Reviewed media feedback. The shared EmptyState is demonstrated above."
+        description="Transient action feedback and reviewed media states. The shared EmptyState is demonstrated above."
         id="feedback"
         index="06"
         title="Feedback and media states"
       >
         <div className={styles.feedbackGrid}>
+          <Specimen
+            api="notify.success · notify.error · notify.info"
+            title="Toast"
+          >
+            <div className={styles.toastPreviewActions}>
+              <Button onClick={() => notify.success("Changes saved.")}>
+                Show success
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => notify.info("Moved to Trash.")}
+              >
+                Show info
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => notify.error("Could not save. Try again.")}
+              >
+                Show error
+              </Button>
+            </div>
+          </Specimen>
           <Specimen api="completed · total" title="PhotoUploadProgress">
             <PhotoUploadProgress progress={{ completed: 3, total: 5 }} />
           </Specimen>

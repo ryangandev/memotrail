@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import settingsFieldsStyles from "@/components/settings-fields.module.css";
 import { Button } from "@/components/button";
 
@@ -16,23 +17,22 @@ export function BirthDateSetting({
   const [birthDate, setBirthDate] = useState(initialBirthDate ?? "");
   const [savedBirthDate, setSavedBirthDate] = useState(initialBirthDate ?? "");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy || birthDate === savedBirthDate) return;
 
     setBusy(true);
-    setMessage(null);
 
     try {
       const result = await saveBirthDate(birthDate);
-      setMessage(result.message);
+      if (result.status === "saved") notify.success(result.message);
+      else notify.error(result.message);
       if (result.status === "saved") {
         setSavedBirthDate(result.birthDate ?? "");
       }
     } catch {
-      setMessage("MemoTrail could not save your birth date. Try again.");
+      notify.error("MemoTrail could not save your birth date. Try again.");
     } finally {
       setBusy(false);
     }
@@ -65,7 +65,6 @@ export function BirthDateSetting({
         >
           {busy ? "Saving…" : "Save birth date"}
         </Button>
-        {message ? <span role="status">{message}</span> : null}
       </div>
     </form>
   );

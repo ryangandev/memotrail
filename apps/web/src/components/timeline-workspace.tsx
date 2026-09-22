@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import { Dialog } from "@/components/dialog";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { PageHeader } from "@/components/page-header";
@@ -621,26 +622,25 @@ function BirthDatePrompt({
   const router = useRouter();
   const [birthDate, setBirthDate] = useState("");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!birthDate || busy) return;
 
     setBusy(true);
-    setMessage(null);
 
     try {
       const result = await saveBirthDate(birthDate);
       if (result.status === "error" || !result.birthDate) {
-        setMessage(result.message);
+        notify.error(result.message);
         return;
       }
 
       onSaved(result.birthDate);
       router.refresh();
+      notify.success(result.message);
     } catch {
-      setMessage("MemoTrail could not save your birth date. Try again.");
+      notify.error("MemoTrail could not save your birth date. Try again.");
     } finally {
       setBusy(false);
     }
@@ -677,11 +677,6 @@ function BirthDatePrompt({
           size="large"
           value={birthDate}
         />
-        {message ? (
-          <p className={styles.birthDateMessage} role="alert">
-            {message}
-          </p>
-        ) : null}
         <div className={styles.birthDateActions}>
           <Button
             variant="secondary"
@@ -921,6 +916,9 @@ function TimelineEditor({
           });
         router.refresh();
         onClose();
+        notify.success(
+          nextResult.status === "created" ? "Moment created." : "Moment saved.",
+        );
         return;
       }
 
@@ -959,6 +957,7 @@ function TimelineEditor({
         onTrashed(entry.id);
         router.refresh();
         onClose();
+        notify.info("Moment moved to Trash.");
         return;
       }
 

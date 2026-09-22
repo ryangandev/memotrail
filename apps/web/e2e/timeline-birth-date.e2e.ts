@@ -119,7 +119,11 @@ test("Timeline asks for a private birth date and starts the story there", async 
     await page
       .getByRole("button", { name: "Save birth date", exact: true })
       .click();
-    await expect(page.getByRole("status")).toHaveText("Birth date saved.");
+    await expect(
+      page
+        .locator("[data-sonner-toast]")
+        .filter({ hasText: "Birth date saved." }),
+    ).toBeVisible();
 
     await page.goto("/timeline");
     await expect(prompt).toHaveCount(0);

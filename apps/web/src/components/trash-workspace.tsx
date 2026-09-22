@@ -3,6 +3,7 @@ import { Dialog } from "@/components/dialog";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/button";
+import { notify } from "@/components/app-toast";
 
 import Link from "next/link";
 import { useState } from "react";
@@ -37,7 +38,6 @@ export function TrashWorkspace({
   const router = useRouter();
   const [confirmation, setConfirmation] = useState<TrashItem | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
-  const [result, setResult] = useState<TrashActionResult | null>(null);
   const [batchBusy, setBatchBusy] = useState(false);
   const firstItemNumber = (workspace.page - 1) * TRASH_PAGE_SIZE + 1;
   const lastItemNumber = Math.min(
@@ -48,7 +48,6 @@ export function TrashWorkspace({
 
   async function runAction(item: TrashItem, action: "delete" | "restore") {
     setPending({ action, itemId: item.id });
-    setResult(null);
 
     try {
       const input = {
@@ -61,7 +60,7 @@ export function TrashWorkspace({
         action === "restore"
           ? await restoreTrashItem(input)
           : await deleteTrashItemForever(input);
-      setResult(nextResult);
+      announceResult(nextResult);
 
       if (nextResult.status !== "error") {
         setConfirmation(null);
@@ -73,10 +72,9 @@ export function TrashWorkspace({
         }
       }
     } catch {
-      setResult({
-        message: "MemoTrail could not reach the server. Try again when online.",
-        status: "error",
-      });
+      notify.error(
+        "MemoTrail could not reach the server. Try again when online.",
+      );
     } finally {
       setPending(null);
     }
@@ -120,26 +118,13 @@ export function TrashWorkspace({
           <EmptyTrashControl
             disabled={Boolean(pending) || Boolean(confirmation)}
             onBusy={setBatchBusy}
-            onResult={setResult}
+            onResult={announceResult}
             onFinish={() => {
               if (workspace.page > 1) router.push("/trash");
               else router.refresh();
             }}
           />
         </div>
-      ) : null}
-
-      {result ? (
-        <p
-          aria-live="polite"
-          className={
-            result.status === "error"
-              ? styles.errorMessage
-              : styles.successMessage
-          }
-        >
-          {result.message}
-        </p>
       ) : null}
 
       {workspace.loadError ? (
@@ -237,7 +222,6 @@ export function TrashWorkspace({
                       variant="danger"
                       disabled={Boolean(pending) || batchBusy}
                       onClick={() => {
-                        setResult(null);
                         setConfirmation(item);
                       }}
                       type="button"
@@ -307,17 +291,15 @@ export function TrashWorkspace({
               </Button>
             </>
           }
-        >
-          {" "}
-          {result?.status === "error" ? (
-            <p className={styles.dialogError} aria-live="polite">
-              {result.message}
-            </p>
-          ) : null}
-        </Dialog>
+        />
       ) : null}
     </PageFrame>
   );
+}
+
+function announceResult(result: TrashActionResult) {
+  if (result.status === "error") notify.error(result.message);
+  else notify.success(result.message);
 }
 
 function iconForKind(kind: TrashItem["kind"]): "map" | "photo" | "timeline" {

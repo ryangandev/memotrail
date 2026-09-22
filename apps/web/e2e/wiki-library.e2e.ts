@@ -203,6 +203,11 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       .click();
     await expect(page).toHaveURL(/\/library$/);
     await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "Entry moved to Trash.",
+      }),
+    ).toBeVisible();
+    await expect(
       page.getByRole("link", { name: /Writing Reflection Morning reflection/ }),
     ).toHaveCount(0);
     const trashedReflection = await client

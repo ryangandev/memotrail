@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import entryReviewListStyles from "@/components/entry-review-list.module.css";
 import entryFormStyles from "@/components/entry-form.module.css";
 import { Dialog } from "@/components/dialog";
@@ -225,6 +226,9 @@ export function EntryReviewDialog({
           nextResult.status === "done",
         );
         router.refresh();
+        notify.success(
+          nextResult.status === "done" ? "Entry organized." : "Entry saved.",
+        );
         return;
       }
 

@@ -455,14 +455,6 @@
   line-height: var(--mt-line-height-body);
 }
 
-.birthDateMessage {
-  padding: var(--mt-space-3);
-  border-radius: var(--mt-radius-small);
-  color: var(--mt-color-warm);
-  background: var(--mt-color-warm-subtle);
-  font-size: var(--mt-font-size-caption);
-}
-
 .birthDateActions {
   display: flex;
   justify-content: flex-end;
