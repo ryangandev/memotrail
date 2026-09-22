@@ -26,7 +26,6 @@ test("Photo field previews existing and selected images without removing them", 
   await expect(
     photos.getByRole("button", { name: "Remove coast-memory.jpg" }),
   ).toBeVisible();
-
   await photos.locator('input[type="file"]').setInputFiles({
     name: "new-memory.png",
     mimeType: "image/png",
@@ -36,6 +35,24 @@ test("Photo field previews existing and selected images without removing them", 
       .png()
       .toBuffer(),
   });
+  for (const name of [
+    "Remove coast-memory.jpg",
+    "Remove selected new-memory.png",
+  ]) {
+    const iconOffset = await photos
+      .getByRole("button", { name })
+      .evaluate((button) => {
+        const icon = button.querySelector("svg")?.getBoundingClientRect();
+        const bounds = button.getBoundingClientRect();
+        return icon
+          ? Math.hypot(
+              icon.x + icon.width / 2 - (bounds.x + bounds.width / 2),
+              icon.y + icon.height / 2 - (bounds.y + bounds.height / 2),
+            )
+          : Infinity;
+      });
+    expect(iconOffset).toBeLessThan(0.5);
+  }
   await photos
     .getByRole("button", { name: "Preview selected new-memory.png" })
     .click();

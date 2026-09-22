@@ -290,6 +290,7 @@
   width: 126px;
   align-items: center;
   gap: 7px;
+  padding: 0;
   transform: translateX(-6px);
   overflow: hidden;
   background: transparent;
@@ -298,7 +299,9 @@
 }
 
 .eventItem[data-edge="end"] {
-  transform: translateX(-100%);
+  flex-direction: row-reverse;
+  transform: translateX(calc(-100% + 6px));
+  text-align: right;
 }
 
 .eventItem > span:last-child {

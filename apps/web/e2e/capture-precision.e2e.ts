@@ -77,6 +77,20 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
         .png()
         .toBuffer(),
     });
+    const removePhoto = capture.getByRole("button", {
+      name: "Remove selected quick-preview.png",
+    });
+    const removeIconOffset = await removePhoto.evaluate((button) => {
+      const icon = button.querySelector("svg")?.getBoundingClientRect();
+      const bounds = button.getBoundingClientRect();
+      return icon
+        ? Math.hypot(
+            icon.x + icon.width / 2 - (bounds.x + bounds.width / 2),
+            icon.y + icon.height / 2 - (bounds.y + bounds.height / 2),
+          )
+        : Infinity;
+    });
+    expect(removeIconOffset).toBeLessThan(0.5);
     await capture
       .getByRole("button", { name: "Preview selected quick-preview.png" })
       .click();
@@ -87,9 +101,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
     await photoPreview
       .getByRole("button", { name: "Close", exact: true })
       .click();
-    await capture
-      .getByRole("button", { name: "Remove selected quick-preview.png" })
-      .click();
+    await removePhoto.click();
     await expect(
       capture.getByRole("button", {
         name: "Preview selected quick-preview.png",

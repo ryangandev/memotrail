@@ -34,7 +34,8 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
   const owner = created.data.user!.id,
     id = randomUUID(),
     ongoingId = randomUUID(),
-    vehicleId = randomUUID();
+    vehicleId = randomUUID(),
+    firstTimeId = randomUUID();
   try {
     const cookies: { name: string; value: string }[] = [];
     const client = createServerClient(env.API_URL, env.ANON_KEY, {
@@ -116,6 +117,18 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
             occurred_timezone: "UTC",
             date_precision: "range",
           },
+          {
+            id: firstTimeId,
+            owner_id: owner,
+            title: "First summer visit",
+            body: "",
+            item_kind: "event",
+            item_subtype: "first_time",
+            occurred_start: "2026-07-15T12:00:00+00:00",
+            occurred_end: null,
+            occurred_timezone: "UTC",
+            date_precision: "day",
+          },
         ])
       ).error,
     ).toBeNull();
@@ -162,9 +175,20 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     const vehicleStage = page.getByRole("button", {
       name: /Centered vehicle/,
     });
+    const firstTimeMarker = page.getByRole("button", {
+      name: /First summer visit/,
+    });
     await expect(todayLine).toBeVisible();
     await expect(ongoingStage).toHaveAttribute("data-ongoing", "true");
     await expect(vehicleStage).toBeVisible();
+    await expect(firstTimeMarker).toBeVisible();
+    const firstTimeAlignment = await firstTimeMarker.evaluate((element) => {
+      const dot = element.querySelector("span")!.getBoundingClientRect();
+      const canvas = element.parentElement!.getBoundingClientRect();
+      const anchor = canvas.left + parseFloat(getComputedStyle(element).left);
+      return Math.abs(dot.left + dot.width / 2 - anchor);
+    });
+    expect(firstTimeAlignment).toBeLessThan(1);
     for (const stage of [ongoingStage, vehicleStage]) {
       const appearance = await stage.evaluate((element) => {
         const card = element.getBoundingClientRect();

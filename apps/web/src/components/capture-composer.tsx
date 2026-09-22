@@ -902,7 +902,7 @@ function CapturePhoto({
         onClick={onRemove}
         type="button"
       >
-        ×
+        <Icon name="close" size={16} />
       </button>
     </div>
   );

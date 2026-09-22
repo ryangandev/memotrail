@@ -131,7 +131,7 @@ export function createTimelineLayout(
             0,
             anchor -
               (leftPercent > endAlignedEventThresholdPercent
-                ? eventWidthPixels
+                ? eventWidthPixels - eventLeadingOffsetPixels
                 : eventLeadingOffsetPixels),
           )
         : anchor + stageLabelOffsetPixels;
@@ -141,7 +141,7 @@ export function createTimelineLayout(
             canvasWidth,
             anchor +
               (leftPercent > endAlignedEventThresholdPercent
-                ? 0
+                ? eventLeadingOffsetPixels
                 : eventWidthPixels - eventLeadingOffsetPixels),
           )
         : Math.min(

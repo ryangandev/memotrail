@@ -75,7 +75,7 @@ export function EntryPhotoField<Photo extends ExistingPhoto>({
                 onClick={() => onRemoveExisting(photo)}
                 type="button"
               >
-                ×
+                <Icon name="close" size={16} />
               </button>
             </div>
           ))}
@@ -99,7 +99,7 @@ export function EntryPhotoField<Photo extends ExistingPhoto>({
                 onClick={() => onRemovePending(index)}
                 type="button"
               >
-                ×
+                <Icon name="close" size={16} />
               </button>
             </div>
           ))}
