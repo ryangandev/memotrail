@@ -1,6 +1,6 @@
 # MemoTrail Status
 
-Last reviewed: 2026-09-21.
+Last reviewed: 2026-09-22.
 
 ## Current state
 
@@ -13,7 +13,7 @@ Use Git history for feature-level implementation and test evidence.
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Capture, Inbox, organization, dates, drafts, and offline queues                      | Implemented on Web and iOS                                                                                                                                                          |
 | Timeline, Home, First Times, Homes, Vehicles, Goals, People, Places, and Collections | Implemented on Web and iOS                                                                                                                                                          |
-| Location data layer                                                                  | Hosted through `202609200006`. Web Map, optional Home Location, photo GPS provenance, and provider quotas are implemented; personal browser acceptance remains.                     |
+| Location data layer                                                                  | Hosted through `202609210001`. Web Map, optional Home Location, photo GPS provenance, and provider quotas are implemented; personal browser acceptance remains.                     |
 | Habits                                                                               | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                                  |
 | Web navigation shell                                                                 | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                                   |
 | Web Settings                                                                         | Account, dates, timezone, appearance, simplified AI, and account controls implemented                                                                                               |
@@ -33,11 +33,11 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 ### 1. Accept Web Location
 
-- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202609200006`; the linked migration ledger matches the repository. The new migrations add an optional Home Location, coordinate provenance, and per-user Geoapify quotas without deleting records.
+- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202609210001`; the linked migration ledger matches the repository. The latest migration makes Home Location copy-on-write compare coordinates at the database's six-decimal storage precision, fixing provider-backed saves without rewriting existing records.
 - Web now has optional Home Locations, address search that fills Places without creating Locations, keyboard-accessible address suggestions, explicit photo GPS source identity, owner-scoped Geoapify quotas, and a clustered Map of current Entry coordinates with Kind and year filters.
-- Local database validation passes 61 files and 1,547 assertions. Web type checking, lint, production build, 448 unit tests, and the complete 70-test browser suite pass.
+- Local database validation passes 61 files and 1,552 assertions. Web type checking, lint, production build, and 448 unit tests pass. The latest complete 70-test browser run passed 69 tests; an unrelated People loading failure in Library search passed on isolated rerun. High-precision Home create/edit and visible save-error regression paths pass in an isolated browser test.
 - `localhost:3000` points to the linked cloud Supabase project. Its health endpoint returned 200, and an authenticated browser loaded Geoapify address suggestions, a selected coordinate preview, and the Map's raster tiles after migration; the test form was canceled without saving.
-- Accept the revised UI with a personal `localhost:3000` record, including Home removal/manual address edits, Entry map points, and Place address filling. The current cloud account showed no Entry Locations with coordinates, so its map clustering is locally browser-tested but not yet personally accepted against hosted data.
+- Accept the revised UI with a personal `localhost:3000` record, including retrying a provider-backed Home Location save after the precision migration, Home removal/manual address edits, Entry map points, and Place address filling. No personal record was changed during the repair; map clustering is locally browser-tested but not yet personally accepted against hosted data.
 - The accepted shared SearchField is now used across Web search surfaces, including Location, full Search, Library, Tags, related Items, organization pickers, and Command Palette.
 - The server-only Production `GEOAPIFY_API_KEY` is configured in Vercel. The local key and provider-backed `localhost:3000` browser flow are verified; Production browser acceptance remains pending.
 - Native iOS provider UI and its legacy custom Location fields remain deferred until Web acceptance.

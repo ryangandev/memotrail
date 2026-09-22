@@ -617,7 +617,17 @@ export function HomeEditor({
       busy={isPending}
       size="wide"
       footer={
-        <div className={styles.dialogFooter}>
+        <div
+          className={`${styles.dialogFooter} ${result ? styles.dialogFooterWithMessage : ""}`}
+        >
+          {result ? (
+            <p
+              className={`${styles.formMessage} ${styles.footerMessage}`}
+              role="alert"
+            >
+              {result.message}
+            </p>
+          ) : null}
           <div>
             {currentId ? (
               <Button
@@ -834,12 +844,6 @@ export function HomeEditor({
             recordLabel="Home"
           />
         </div>
-
-        {result ? (
-          <p className={styles.formMessage} role="alert">
-            {result.message}
-          </p>
-        ) : null}
       </form>
     </Dialog>
   );

@@ -280,6 +280,16 @@
   width: 100%;
 }
 
+.dialogFooterWithMessage {
+  flex-wrap: wrap;
+}
+
+.footerMessage {
+  flex: 0 0 100%;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .dialogFooter > div {
   display: flex;
   align-items: center;
