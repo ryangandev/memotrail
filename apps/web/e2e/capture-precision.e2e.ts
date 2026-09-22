@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
+import sharp from "sharp";
 import {
   fillOccurrenceEnd,
   fillOccurrenceStart,
@@ -67,6 +68,33 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       name: "Quick capture",
       exact: true,
     });
+    await capture.locator('input[type="file"]').setInputFiles({
+      name: "quick-preview.png",
+      mimeType: "image/png",
+      buffer: await sharp({
+        create: { width: 320, height: 240, channels: 3, background: "#426e83" },
+      })
+        .png()
+        .toBuffer(),
+    });
+    await capture
+      .getByRole("button", { name: "Preview selected quick-preview.png" })
+      .click();
+    const photoPreview = page.getByRole("dialog", {
+      name: "quick-preview.png",
+    });
+    await expect(photoPreview).toBeVisible();
+    await photoPreview
+      .getByRole("button", { name: "Close", exact: true })
+      .click();
+    await capture
+      .getByRole("button", { name: "Remove selected quick-preview.png" })
+      .click();
+    await expect(
+      capture.getByRole("button", {
+        name: "Preview selected quick-preview.png",
+      }),
+    ).toHaveCount(0);
     await capture.getByRole("button", { name: "Date", exact: true }).click();
     await expect(capture.getByLabel("Date type")).toBeVisible({
       timeout: 5000,

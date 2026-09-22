@@ -130,6 +130,7 @@ Pair it with the test file carrying the same feature name.
 - Signed access is short-lived and owner-scoped.
 - Image and metadata decoding runs on the server through `packages/media-runtime`; provider secrets and decoder internals do not enter either client.
 - Selected Web photos reuse the shared local-or-server preview and upload-progress components; browser-displayable formats stay local while HEIC and HEIF receive an authenticated derived preview.
+- `SelectedPhotoPreview` reuses its prepared image URL for a single-photo dialog; `EntryPhotoField` opens the same dialog for saved photos, while preview and removal remain separate controls.
 - Generation validates source identity and bounded output before registration.
 - Database rows coordinate deletion, but Storage objects are removed through the Storage API.
 - Permanent deletion includes registered and interrupted-generation artifacts and must remain retryable after uncertain cleanup.

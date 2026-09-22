@@ -898,6 +898,7 @@ function CapturePhoto({
       />
       <button
         aria-label={`Remove selected ${photo.file.name}`}
+        className={captureComposerStyles.removePhotoButton}
         onClick={onRemove}
         type="button"
       >

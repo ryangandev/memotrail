@@ -102,10 +102,7 @@
   object-fit: cover;
 }
 
-.capturePhoto
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
+.capturePhoto > .removePhotoButton {
   position: absolute;
   top: 6px;
   right: 6px;
@@ -122,10 +119,7 @@
   cursor: pointer;
 }
 
-.capturePhoto
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):hover {
+.capturePhoto > .removePhotoButton:hover {
   background: color-mix(in srgb, black 78%, transparent);
 }
 

@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { Icon } from "@/components/icon";
+import { PhotoPreviewDialog } from "@/components/photo-preview-dialog";
 import { PhotoUploadProgress } from "@/components/photo-upload-progress";
 import { ProgressiveImage } from "@/components/progressive-image";
 import { SelectedPhotoPreview } from "@/components/selected-photo-preview";
@@ -35,6 +37,10 @@ export function EntryPhotoField<Photo extends ExistingPhoto>({
   recordLabel: string;
 }) {
   const full = existingPhotos.length + pendingPhotos.length >= limit;
+  const [previewPhotoId, setPreviewPhotoId] = useState<string | null>(null);
+  const previewPhoto = existingPhotos.find(
+    (photo) => photo.id === previewPhotoId,
+  );
 
   return (
     <fieldset
@@ -48,15 +54,23 @@ export function EntryPhotoField<Photo extends ExistingPhoto>({
           {existingPhotos.map((photo) => (
             <div className={styles.tile} key={photo.id}>
               {photo.imageUrl ? (
-                <ProgressiveImage
-                  alt={photo.originalFilename ?? `${recordLabel} photo`}
-                  src={photo.imageUrl}
-                />
+                <button
+                  aria-label={`Preview ${photo.originalFilename ?? `${recordLabel} photo`}`}
+                  className={styles.previewTrigger}
+                  onClick={() => setPreviewPhotoId(photo.id)}
+                  type="button"
+                >
+                  <ProgressiveImage
+                    alt={photo.originalFilename ?? `${recordLabel} photo`}
+                    src={photo.imageUrl}
+                  />
+                </button>
               ) : (
                 <span className={styles.fallback}>Private photo</span>
               )}
               <button
                 aria-label={`Remove ${photo.originalFilename ?? "photo"}`}
+                className={styles.removeButton}
                 disabled={disabled}
                 onClick={() => onRemoveExisting(photo)}
                 type="button"
@@ -80,6 +94,7 @@ export function EntryPhotoField<Photo extends ExistingPhoto>({
               ) : null}
               <button
                 aria-label={`Remove selected ${file.name}`}
+                className={styles.removeButton}
                 disabled={disabled}
                 onClick={() => onRemovePending(index)}
                 type="button"
@@ -89,6 +104,13 @@ export function EntryPhotoField<Photo extends ExistingPhoto>({
             </div>
           ))}
         </div>
+      ) : null}
+      {previewPhoto?.imageUrl ? (
+        <PhotoPreviewDialog
+          name={previewPhoto.originalFilename ?? `${recordLabel} photo`}
+          onClose={() => setPreviewPhotoId(null)}
+          src={previewPhoto.imageUrl}
+        />
       ) : null}
       <label className={styles.picker}>
         <Icon name="photo" size={18} />

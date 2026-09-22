@@ -1,0 +1,7 @@
+.image {
+  width: 100%;
+  height: min(65dvh, 680px);
+  min-height: 160px;
+  border-radius: var(--mt-radius-medium);
+  background: var(--mt-color-surface-subtle);
+}

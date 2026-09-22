@@ -220,6 +220,7 @@ A customizable Command Palette opens from the global search control or Command K
 New Entry opens from the top bar or Command J.
 Home, Vehicle, First Time, and Place results share one reusable card shell while preserving subtype-specific content and responsive layouts.
 Specialized editors share one unboxed photo field with consistent previews, progress, limits, and controls.
+On Web, selecting a photo thumbnail in an editor or capture draft opens a single-photo dialog without removing it; the separate X control removes the photo.
 Form labels mark required fields with `*` and leave optional fields unmarked.
 
 ## Privacy, deletion, and portability

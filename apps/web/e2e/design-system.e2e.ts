@@ -1,4 +1,76 @@
 import { expect, test } from "@playwright/test";
+import sharp from "sharp";
+
+test("Photo field previews existing and selected images without removing them", async ({
+  page,
+}) => {
+  await page.goto("/design-system#forms");
+  const specimen = page.locator("article").filter({
+    has: page.getByRole("heading", { name: "EntryPhotoField", exact: true }),
+  });
+  const photos = specimen.locator('[data-entry-photo-field="true"]').first();
+
+  await photos
+    .getByRole("button", { name: "Preview coast-memory.jpg" })
+    .click();
+  const existingPreview = page.getByRole("dialog", {
+    name: "coast-memory.jpg",
+  });
+  await expect(existingPreview).toBeVisible();
+  await expect(existingPreview.locator("img")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(existingPreview).not.toBeVisible();
+  await expect(
+    photos.getByRole("button", { name: "Preview coast-memory.jpg" }),
+  ).toBeFocused();
+  await expect(
+    photos.getByRole("button", { name: "Remove coast-memory.jpg" }),
+  ).toBeVisible();
+
+  await photos.locator('input[type="file"]').setInputFiles({
+    name: "new-memory.png",
+    mimeType: "image/png",
+    buffer: await sharp({
+      create: { width: 320, height: 240, channels: 3, background: "#426e83" },
+    })
+      .png()
+      .toBuffer(),
+  });
+  await photos
+    .getByRole("button", { name: "Preview selected new-memory.png" })
+    .click();
+  const selectedPreview = page.getByRole("dialog", {
+    name: "new-memory.png",
+  });
+  await expect(selectedPreview).toBeVisible();
+  await expect
+    .poll(() =>
+      selectedPreview
+        .locator("img")
+        .evaluate((img: HTMLImageElement) => img.naturalWidth),
+    )
+    .toBeGreaterThan(0);
+  await selectedPreview.screenshot({
+    path: "/private/tmp/memotrail-photo-preview-desktop.png",
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await selectedPreview.screenshot({
+    path: "/private/tmp/memotrail-photo-preview-mobile.png",
+  });
+  await selectedPreview
+    .getByRole("button", { name: "Close photo preview" })
+    .click();
+  await expect(selectedPreview).not.toBeVisible();
+  await photos
+    .getByRole("button", { name: "Remove selected new-memory.png" })
+    .click();
+  await expect(
+    photos.getByRole("button", { name: "Preview selected new-memory.png" }),
+  ).toHaveCount(0);
+  await expect(
+    photos.getByRole("button", { name: "Remove coast-memory.jpg" }),
+  ).toBeVisible();
+});
 
 test("OccurrenceEditor keeps the optional date description collapsed", async ({
   page,
