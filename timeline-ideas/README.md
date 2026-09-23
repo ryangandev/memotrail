@@ -23,6 +23,18 @@ Then open <http://localhost:8000/> in your browser. Any static server works - fo
 example `npx serve` from the repo root, then open the printed URL and navigate to
 `/timeline-ideas/`.
 
+## Jumping between designs
+
+Every design page has a floating **navigator** pinned to the bottom of the screen:
+
+- **Hover it** to reveal a list of all 20 designs and jump straight to any one.
+- Use the **left / right arrow keys** to step through them in order.
+- The **grid button** returns to this gallery.
+
+Like the gallery, the navigator loads a small shared script (`shared/nav.js`), so
+view the designs through the local server above for it to work everywhere. Each
+design still renders fine on its own if the script is unavailable.
+
 ## About these designs
 
 Twenty standalone HTML mockups exploring how MemoTrail could visualize a life
