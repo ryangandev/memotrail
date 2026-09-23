@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home Redesign · 17 Chapters Spotlight</title>
+  <link rel="stylesheet" href="shared/tokens.css" />
+  <link rel="stylesheet" href="shared/frame.css" />
+  <style>
+    /* Concept 17 - Chapters Spotlight
+       The life-stages lead. Three large cover cards with photo backgrounds and
+       overlaid title / dates form a prominent row up top. The capture composer
+       sits directly under them as a wide bar. Memory, recent, and inbox follow
+       as a calm supporting grid. */
+
+    .cs {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: var(--mt-space-10) var(--mt-space-8) 0;
+    }
+
+    .cs-greet {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--mt-space-6);
+      margin-bottom: var(--mt-space-6);
+    }
+    .cs-greet .mt-eyebrow { display: block; margin-bottom: var(--mt-space-3); }
+    .cs-greet h1 {
+      margin: 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-title);
+      font-weight: var(--mt-font-weight-regular);
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+    }
+    .cs-greet p { margin: var(--mt-space-2) 0 0; color: var(--mt-color-ink-muted); font-size: var(--mt-font-size-body); }
+
+    /* Slim stats ribbon */
+    .cs-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--mt-space-3);
+      margin-bottom: var(--mt-space-8);
+    }
+    .cs-stat {
+      display: flex;
+      align-items: center;
+      gap: var(--mt-space-3);
+      padding: var(--mt-space-3) var(--mt-space-5);
+      border: 1px solid var(--mt-color-border);
+      border-radius: var(--mt-radius-pill);
+      background: var(--mt-color-surface);
+      color: var(--mt-color-ink);
+      text-decoration: none;
+      transition: border-color var(--mt-motion-quick);
+    }
+    .cs-stat:hover { border-color: var(--mt-color-border-strong); }
+    .cs-stat .ico { color: var(--mt-color-accent); font-size: 16px; }
+    .cs-stat .n { font-family: var(--mt-font-family-serif); font-size: var(--mt-font-size-title-small); line-height: 1; }
+    .cs-stat .t { font-size: var(--mt-font-size-label); font-weight: var(--mt-font-weight-medium); }
+    .cs-stat .t em { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); font-style: normal; font-weight: var(--mt-font-weight-regular); }
+
+    /* Hero row of chapter covers */
+    .cs-covers {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--mt-space-5);
+      margin-bottom: var(--mt-space-6);
+    }
+    .cs-cover {
+      position: relative;
+      display: flex;
+      min-height: 260px;
+      flex-direction: column;
+      justify-content: flex-end;
+      overflow: hidden;
+      border-radius: var(--mt-radius-large);
+      color: var(--mt-color-accent-ink);
+      text-decoration: none;
+      box-shadow: var(--mt-shadow-raised);
+    }
+    .cs-cover .mt-photo { position: absolute; inset: 0; }
+    .cs-cover .scrim {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--mt-color-scrim) 6%, transparent) 0%,
+        color-mix(in srgb, var(--mt-color-scrim) 62%, transparent) 100%
+      );
+    }
+    .cs-cover .c-body { position: relative; padding: var(--mt-space-6); }
+    .cs-cover .c-kind {
+      color: color-mix(in srgb, var(--mt-color-accent-ink) 82%, transparent);
+      font-size: 10px;
+      font-weight: var(--mt-font-weight-semibold);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .cs-cover h2 {
+      margin: var(--mt-space-2) 0 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: 25px;
+      font-weight: var(--mt-font-weight-medium);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    .cs-cover .c-when {
+      margin-top: var(--mt-space-2);
+      color: color-mix(in srgb, var(--mt-color-accent-ink) 88%, transparent);
+      font-size: var(--mt-font-size-caption);
+    }
+    .cs-cover .c-open {
+      position: absolute;
+      top: var(--mt-space-4);
+      right: var(--mt-space-4);
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--mt-color-accent-ink);
+      background: color-mix(in srgb, var(--mt-color-scrim) 30%, transparent);
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity var(--mt-motion-standard);
+    }
+    .cs-cover:hover .c-open { opacity: 1; }
+
+    .cs-covers-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--mt-space-4);
+      margin-bottom: var(--mt-space-4);
+    }
+    .cs-covers-head h2 {
+      margin: 0;
+      color: var(--mt-color-ink);
+      font-size: 11px;
+      font-weight: var(--mt-font-weight-semibold);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    /* Capture as a wide bar */
+    .cs-capture.mt-capture { margin-bottom: var(--mt-space-10); }
+    @media (min-width: 861px) {
+      .cs-capture.mt-capture {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: var(--mt-space-5);
+        padding: var(--mt-space-3) var(--mt-space-5);
+      }
+      .cs-capture .mt-capture-head { padding: 0; white-space: nowrap; }
+      .cs-capture .mt-capture-field {
+        min-height: 0;
+        margin: 0;
+        padding: var(--mt-space-3) 0;
+        font-size: var(--mt-font-size-body);
+      }
+      .cs-capture .mt-capture-actions {
+        padding: 0;
+        border-top: 0;
+        background: transparent;
+      }
+    }
+
+    /* Supporting grid */
+    .cs-support {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      grid-template-areas:
+        "memory recent"
+        "inbox recent";
+      gap: var(--mt-space-6);
+    }
+    .cs-memory { grid-area: memory; }
+    .cs-inbox { grid-area: inbox; }
+    .cs-recent { grid-area: recent; }
+
+    .cs-card {
+      border: 1px solid var(--mt-color-border);
+      border-radius: var(--mt-radius-large);
+      background: var(--mt-color-surface);
+    }
+    .cs-card-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--mt-space-4);
+      padding: var(--mt-space-5) var(--mt-space-6) 0;
+    }
+    .cs-card-head h2 { margin: 0; font-family: var(--mt-font-family-serif); font-size: 20px; font-weight: var(--mt-font-weight-medium); letter-spacing: -0.02em; }
+
+    /* Memory */
+    .cs-memory .mt-photo { height: 180px; margin: var(--mt-space-5) var(--mt-space-6) 0; border-radius: var(--mt-radius-medium); }
+    .cs-memory .m-body { padding: var(--mt-space-5) var(--mt-space-6) var(--mt-space-6); }
+    .cs-memory .m-top { display: flex; align-items: center; justify-content: space-between; }
+    .cs-memory time { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); }
+    .cs-memory h3 { margin: var(--mt-space-2) 0 0; font-family: var(--mt-font-family-serif); font-size: 24px; font-weight: var(--mt-font-weight-medium); letter-spacing: -0.02em; line-height: 1.12; }
+    .cs-memory p { margin: var(--mt-space-3) 0 0; color: var(--mt-color-ink-muted); font-size: var(--mt-font-size-body); }
+    .cs-memory footer { display: flex; flex-wrap: wrap; gap: 5px; margin-top: var(--mt-space-4); }
+    .cs-memory .m-eyebrow { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); }
+
+    /* Inbox */
+    .cs-inbox { padding-bottom: var(--mt-space-3); }
+    .cs-inbox-list { display: grid; gap: 2px; padding: var(--mt-space-4) var(--mt-space-3) var(--mt-space-3); }
+    .cs-inbox-list a {
+      display: grid;
+      grid-template-columns: 66px 1fr auto;
+      align-items: baseline;
+      gap: var(--mt-space-3);
+      padding: var(--mt-space-3);
+      border-radius: var(--mt-radius-small);
+      color: var(--mt-color-ink);
+      text-decoration: none;
+      transition: background var(--mt-motion-quick);
+    }
+    .cs-inbox-list a:hover { background: var(--mt-color-surface-subtle); }
+    .cs-inbox-list time { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); font-variant-numeric: tabular-nums; }
+    .cs-inbox-list strong { font-size: var(--mt-font-size-body); font-weight: var(--mt-font-weight-medium); }
+    .cs-inbox-list span.body { display: block; margin-top: 2px; overflow: hidden; color: var(--mt-color-ink-muted); font-size: var(--mt-font-size-caption); text-overflow: ellipsis; white-space: nowrap; }
+    .cs-inbox-list .ico { align-self: center; color: var(--mt-color-ink-faint); font-size: 14px; }
+
+    /* Recent */
+    .cs-recent-list { padding: var(--mt-space-3) var(--mt-space-6) var(--mt-space-4); }
+    .cs-recent-list article {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: var(--mt-space-4);
+      padding: var(--mt-space-4) 0;
+      border-top: 1px solid var(--mt-color-border);
+    }
+    .cs-recent-list article:first-child { border-top: 0; }
+    .cs-recent-list .r-top { display: flex; align-items: center; gap: var(--mt-space-3); }
+    .cs-recent-list time { color: var(--mt-color-ink-faint); font-size: 11px; }
+    .cs-recent-list h3 { margin: var(--mt-space-2) 0 0; font-family: var(--mt-font-family-serif); font-size: var(--mt-font-size-body-large); font-weight: var(--mt-font-weight-medium); }
+    .cs-recent-list p { margin: 4px 0 0; color: var(--mt-color-ink-muted); font-size: 14px; }
+    .cs-recent-list .r-thumb { width: 66px; height: 66px; flex: none; border-radius: var(--mt-radius-medium); overflow: hidden; }
+
+    @media (max-width: 860px) {
+      .cs { padding: var(--mt-space-8) var(--mt-space-6) 0; }
+      .cs-greet { flex-direction: column; align-items: flex-start; gap: var(--mt-space-3); }
+      .cs-covers { grid-template-columns: 1fr; }
+      .cs-cover { min-height: 200px; }
+      .cs-support {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "memory"
+          "recent"
+          "inbox";
+      }
+    }
+    @media (max-width: 520px) {
+      .cs { padding-inline: var(--mt-space-5); }
+      .cs-inbox-list a { grid-template-columns: 56px 1fr auto; }
+      .cs-recent-list .r-thumb { display: none; }
+    }
+  </style>
+</head>
+<body data-nav="home" data-page-name="Home">
+  <main class="mt-main">
+    <div class="cs">
+
+      <header class="cs-greet">
+        <div>
+          <span class="mt-eyebrow">Tuesday · September 23</span>
+          <h1>Good morning, Ryan.</h1>
+        </div>
+        <p>A calm view of what is active, recent, and waiting for you.</p>
+      </header>
+
+      <div class="cs-stats">
+        <a class="cs-stat" href="#">
+          <span class="ico ico-timeline"></span>
+          <span class="n">3</span>
+          <span class="t">Life in progress <em>current chapters</em></span>
+        </a>
+        <a class="cs-stat" href="#">
+          <span class="ico ico-archive"></span>
+          <span class="n">128</span>
+          <span class="t">Entries kept <em>12 First Times · 7 Collections</em></span>
+        </a>
+      </div>
+
+      <div class="cs-covers-head">
+        <h2>Current chapters</h2>
+        <a class="mt-section-link" href="#">Open Timeline <span class="ico ico-chevron"></span></a>
+      </div>
+      <div class="cs-covers">
+        <a class="cs-cover" href="#">
+          <div class="mt-photo"></div>
+          <div class="scrim"></div>
+          <span class="c-open"><span class="ico ico-arrow"></span></span>
+          <div class="c-body">
+            <span class="c-kind">Homes</span>
+            <h2>Apartment on Bedford Ave</h2>
+            <div class="c-when">Aug 2023 – Present</div>
+          </div>
+        </a>
+        <a class="cs-cover" href="#">
+          <div class="mt-photo"></div>
+          <div class="scrim"></div>
+          <span class="c-open"><span class="ico ico-arrow"></span></span>
+          <div class="c-body">
+            <span class="c-kind">Career</span>
+            <h2>Building MemoTrail</h2>
+            <div class="c-when">2024 – Present</div>
+          </div>
+        </a>
+        <a class="cs-cover" href="#">
+          <div class="mt-photo"></div>
+          <div class="scrim"></div>
+          <span class="c-open"><span class="ico ico-arrow"></span></span>
+          <div class="c-body">
+            <span class="c-kind">Learning</span>
+            <h2>Piano, slowly</h2>
+            <div class="c-when">This year</div>
+          </div>
+        </a>
+      </div>
+
+      <!-- Quick capture - preserved (wide bar) -->
+      <section class="mt-capture cs-capture" aria-label="Quick capture">
+        <div class="mt-capture-head">
+          <span class="mt-capture-spark"><span class="ico ico-spark"></span></span>
+          <h2>Capture something</h2>
+        </div>
+        <div class="mt-capture-field">A thought, a moment, a fact worth keeping…</div>
+        <div class="mt-capture-actions">
+          <div class="mt-capture-tools">
+            <button class="mt-tool"><span class="ico ico-image"></span> Photo</button>
+            <button class="mt-tool"><span class="ico ico-mic"></span> Voice</button>
+            <button class="mt-tool"><span class="ico ico-calendar"></span> Date</button>
+          </div>
+          <button class="mt-btn"><span class="ico ico-arrow"></span> Capture</button>
+        </div>
+      </section>
+
+      <div class="cs-support">
+
+        <article class="cs-card cs-memory">
+          <div class="cs-card-head">
+            <h2>A memory for today</h2>
+            <span class="m-eyebrow">On this day, 2 years ago</span>
+          </div>
+          <div class="mt-photo"></div>
+          <div class="m-body">
+            <div class="m-top">
+              <span class="mt-kind">Memory</span>
+              <time>Sep 23, 2023</time>
+            </div>
+            <h3>The morning we hiked Breakneck Ridge</h3>
+            <p>The fog didn't lift until noon, and we ate cold bagels on the summit anyway. Best decision of that whole trip.</p>
+            <footer>
+              <span class="mt-chip">Trips</span>
+              <span class="mt-chip">#hiking</span>
+              <span class="mt-chip">Mara</span>
+            </footer>
+          </div>
+        </article>
+
+        <section class="cs-card cs-recent">
+          <div class="cs-card-head">
+            <h2>Recent entries</h2>
+            <a class="mt-section-link" href="#">Search all <span class="ico ico-chevron"></span></a>
+          </div>
+          <div class="cs-recent-list">
+            <article>
+              <div>
+                <div class="r-top"><span class="mt-kind">Reflection</span><time>Sep 22</time></div>
+                <h3>On keeping a slower record</h3>
+                <p>I don't want a feed. I want a place that gets richer the longer I keep it.</p>
+              </div>
+            </article>
+            <article>
+              <div>
+                <div class="r-top"><span class="mt-kind">First Time</span><time>Sep 20</time></div>
+                <h3>First time making pasta from scratch</h3>
+                <p>Flour everywhere. The dough came together on the third try.</p>
+              </div>
+              <div class="r-thumb mt-photo"></div>
+            </article>
+            <article>
+              <div>
+                <div class="r-top"><span class="mt-kind">Note</span><time>Sep 18</time></div>
+                <h3>Books to reread this winter</h3>
+                <p>Gilead, The Dispossessed, and whatever Mara keeps recommending.</p>
+              </div>
+            </article>
+            <article>
+              <div>
+                <div class="r-top"><span class="mt-kind">Person</span><time>Sep 17</time></div>
+                <h3>Called Grandma Lin</h3>
+                <p>She told the story about the bicycle again. I wrote it down this time.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="cs-card cs-inbox">
+          <div class="cs-card-head">
+            <h2>Ready to organize</h2>
+            <a class="mt-section-link" href="#">Inbox · 3 <span class="ico ico-chevron"></span></a>
+          </div>
+          <div class="cs-inbox-list">
+            <a href="#">
+              <time>Sep 23</time>
+              <span><strong>Coffee with Mara before her flight</strong><span class="body">She mentioned wanting to move back east by spring…</span></span>
+              <span class="ico ico-chevron"></span>
+            </a>
+            <a href="#">
+              <time>Sep 22</time>
+              <span><strong>Idea: a slower kind of journal</strong><span class="body">Something that rewards returning, not streaks.</span></span>
+              <span class="ico ico-chevron"></span>
+            </a>
+            <a href="#">
+              <time>Sep 21</time>
+              <span><strong>Dad's borscht recipe, finally written down</strong><span class="body">A palmful of dill at the very end, never before.</span></span>
+              <span class="ico ico-chevron"></span>
+            </a>
+          </div>
+        </section>
+
+      </div>
+
+    </div>
+  </main>
+  <script src="shared/ui.js"></script>
+</body>
+</html>

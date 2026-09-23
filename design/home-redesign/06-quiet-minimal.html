@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home Redesign · 06 Quiet Minimal</title>
+  <link rel="stylesheet" href="shared/tokens.css" />
+  <link rel="stylesheet" href="shared/frame.css" />
+  <style>
+    /* Concept 06 — Quiet Minimal
+       Extreme calm. A narrow, centered column with generous whitespace puts the
+       greeting and the capture composer front and center. Everything else is
+       compressed: one quiet line of counters, one understated memory, and a very
+       restrained recent list revealed below. The least chrome of the whole set. */
+    .quiet {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: var(--mt-space-16) var(--mt-space-6) 0;
+      text-align: center;
+    }
+
+    .quiet-greeting { margin-bottom: var(--mt-space-10); }
+    .quiet-greeting .mt-eyebrow { display: block; margin-bottom: var(--mt-space-4); }
+    .quiet-greeting h1 {
+      margin: 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-display);
+      font-weight: var(--mt-font-weight-regular);
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+    }
+    .quiet-greeting p {
+      max-width: 40ch;
+      margin: var(--mt-space-4) auto 0;
+      color: var(--mt-color-ink-muted);
+      font-size: var(--mt-font-size-body-large);
+    }
+
+    /* Capture stays the focal action; its own contents read left-aligned */
+    .quiet .mt-capture { text-align: left; }
+
+    /* One quiet line of counters replaces the stat/inbox/chapter blocks */
+    .quiet-counters {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: var(--mt-space-2) var(--mt-space-4);
+      margin: var(--mt-space-12) 0 0;
+      color: var(--mt-color-ink-faint);
+      font-size: var(--mt-font-size-label);
+    }
+    .quiet-counters a {
+      color: var(--mt-color-ink-muted);
+      text-decoration: none;
+      transition: color var(--mt-motion-quick);
+    }
+    .quiet-counters a:hover { color: var(--mt-color-accent); }
+    .quiet-counters strong {
+      color: var(--mt-color-ink);
+      font-weight: var(--mt-font-weight-semibold);
+      font-variant-numeric: tabular-nums;
+    }
+    .quiet-counters .sep { color: var(--mt-color-border-strong); }
+
+    /* One understated memory line */
+    .quiet-memory {
+      margin-top: var(--mt-space-16);
+      text-align: left;
+    }
+    .quiet-memory .qm-label {
+      display: block;
+      margin-bottom: var(--mt-space-4);
+      text-align: center;
+      color: var(--mt-color-ink-faint);
+      font-size: var(--mt-font-size-caption);
+      letter-spacing: 0.04em;
+    }
+    .quiet-memory .qm-line {
+      display: grid;
+      grid-template-columns: 60px 1fr auto;
+      align-items: center;
+      gap: var(--mt-space-4);
+      padding: var(--mt-space-4);
+      border-radius: var(--mt-radius-large);
+      color: var(--mt-color-ink);
+      text-decoration: none;
+      transition: background var(--mt-motion-quick);
+    }
+    .quiet-memory .qm-line:hover { background: var(--mt-color-surface-subtle); }
+    .quiet-memory .qm-thumb { width: 60px; height: 60px; border-radius: var(--mt-radius-medium); }
+    .quiet-memory .qm-text { min-width: 0; }
+    .quiet-memory .qm-text strong {
+      display: block;
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-body-large);
+      font-weight: var(--mt-font-weight-medium);
+    }
+    .quiet-memory .qm-text span {
+      display: block;
+      margin-top: 2px;
+      overflow: hidden;
+      color: var(--mt-color-ink-muted);
+      font-size: var(--mt-font-size-caption);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .quiet-memory time { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); white-space: nowrap; }
+
+    /* A very restrained recent list */
+    .quiet-recent { margin-top: var(--mt-space-12); text-align: left; }
+    .quiet-recent .qr-head {
+      margin: 0 0 var(--mt-space-1);
+      padding: 0 var(--mt-space-4);
+      color: var(--mt-color-ink-faint);
+      font-size: 11px;
+      font-weight: var(--mt-font-weight-semibold);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .quiet-recent ul { margin: 0; padding: 0; list-style: none; }
+    .quiet-recent li a {
+      display: flex;
+      align-items: baseline;
+      gap: var(--mt-space-3);
+      padding: var(--mt-space-4);
+      border-top: 1px solid var(--mt-color-border);
+      color: var(--mt-color-ink);
+      text-decoration: none;
+      transition: background var(--mt-motion-quick);
+    }
+    .quiet-recent li a:hover { background: var(--mt-color-surface-subtle); }
+    .quiet-recent li strong {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-body);
+      font-weight: var(--mt-font-weight-medium);
+    }
+    .quiet-recent .qr-meta { display: inline-flex; align-items: baseline; gap: var(--mt-space-3); flex: none; }
+    .quiet-recent li time { color: var(--mt-color-ink-faint); font-size: 11px; }
+
+    @media (max-width: 720px) {
+      .quiet { padding-top: var(--mt-space-10); }
+      .quiet-greeting h1 { font-size: 34px; }
+    }
+    @media (max-width: 420px) {
+      .quiet-recent li a { flex-wrap: wrap; gap: var(--mt-space-1); }
+      .quiet-memory .qm-line { grid-template-columns: 48px 1fr; }
+      .quiet-memory time { display: none; }
+    }
+  </style>
+</head>
+<body data-nav="home" data-page-name="Home">
+  <main class="mt-main">
+    <div class="quiet">
+
+      <header class="quiet-greeting">
+        <span class="mt-eyebrow">Tuesday · September 23</span>
+        <h1>Good morning, Ryan.</h1>
+        <p>A calm view of what is active, recent, and waiting for you.</p>
+      </header>
+
+      <!-- Quick capture — preserved, front and center -->
+      <section class="mt-capture" aria-label="Quick capture">
+        <div class="mt-capture-head">
+          <span class="mt-capture-spark"><span class="ico ico-spark"></span></span>
+          <h2>Capture something</h2>
+        </div>
+        <div class="mt-capture-field">A thought, a moment, a fact worth keeping…</div>
+        <div class="mt-capture-actions">
+          <div class="mt-capture-tools">
+            <button class="mt-tool"><span class="ico ico-image"></span> Photo</button>
+            <button class="mt-tool"><span class="ico ico-mic"></span> Voice</button>
+            <button class="mt-tool"><span class="ico ico-calendar"></span> Date</button>
+          </div>
+          <button class="mt-btn"><span class="ico ico-arrow"></span> Capture</button>
+        </div>
+      </section>
+
+      <!-- Everything else, compressed to one quiet line -->
+      <p class="quiet-counters">
+        <a href="#"><strong>3</strong> to organize</a>
+        <span class="sep">·</span>
+        <a href="#"><strong>128</strong> kept</a>
+        <span class="sep">·</span>
+        <a href="#"><strong>3</strong> chapters open</a>
+      </p>
+
+      <!-- One understated memory -->
+      <section class="quiet-memory" aria-label="A memory for today">
+        <span class="qm-label">On this day, 2 years ago</span>
+        <a class="qm-line" href="#">
+          <span class="qm-thumb mt-photo"></span>
+          <span class="qm-text">
+            <strong>The morning we hiked Breakneck Ridge</strong>
+            <span>The fog didn't lift until noon, and we ate cold bagels on the summit anyway. Best decision of that whole trip.</span>
+          </span>
+          <time>Sep 23, 2023</time>
+        </a>
+      </section>
+
+      <!-- A very restrained recent list -->
+      <section class="quiet-recent" aria-label="Recent entries">
+        <p class="qr-head">Recent</p>
+        <ul>
+          <li><a href="#">
+            <strong>On keeping a slower record</strong>
+            <span class="qr-meta"><span class="mt-kind">Reflection</span><time>Sep 22</time></span>
+          </a></li>
+          <li><a href="#">
+            <strong>First time making pasta from scratch</strong>
+            <span class="qr-meta"><span class="mt-kind">First Time</span><time>Sep 20</time></span>
+          </a></li>
+          <li><a href="#">
+            <strong>Books to reread this winter</strong>
+            <span class="qr-meta"><span class="mt-kind">Note</span><time>Sep 18</time></span>
+          </a></li>
+          <li><a href="#">
+            <strong>Called Grandma Lin</strong>
+            <span class="qr-meta"><span class="mt-kind">Person</span><time>Sep 17</time></span>
+          </a></li>
+        </ul>
+      </section>
+
+    </div>
+  </main>
+  <script src="shared/ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home Redesign · 13 Notebook</title>
+  <link rel="stylesheet" href="shared/tokens.css" />
+  <link rel="stylesheet" href="shared/frame.css" />
+  <style>
+    /* Concept 13 - Notebook
+       A refined legal pad. A warm paper sheet with faint ruled lines and a subtle
+       warm margin rule down the left. Capture reads as writing on the page, and
+       index "tabs" (Today / Chapters / Recent) sit on the sheet's top edge. Serif,
+       tactile, still calm. */
+    .nb {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: var(--mt-space-10) var(--mt-space-6) 0;
+    }
+
+    /* Index tabs sitting on the sheet edge */
+    .nb-tabs {
+      display: flex;
+      gap: var(--mt-space-2);
+      justify-content: flex-end;
+      padding-right: var(--mt-space-5);
+      position: relative;
+      z-index: 2;
+    }
+    .nb-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: var(--mt-space-2) var(--mt-space-4) var(--mt-space-4);
+      margin-bottom: -12px;
+      border: 1px solid var(--mt-color-border);
+      border-bottom: 0;
+      border-radius: var(--mt-radius-medium) var(--mt-radius-medium) 0 0;
+      background: var(--mt-color-surface-subtle);
+      color: var(--mt-color-ink-muted);
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-label);
+      text-decoration: none;
+    }
+    .nb-tab:hover { color: var(--mt-color-ink); }
+    .nb-tab.is-active {
+      background: var(--mt-color-surface);
+      color: var(--mt-color-warm);
+      font-weight: var(--mt-font-weight-medium);
+    }
+
+    /* The paper sheet */
+    .nb-sheet {
+      position: relative;
+      overflow: hidden;
+      padding: var(--mt-space-8) var(--mt-space-8) var(--mt-space-10);
+      padding-left: var(--mt-space-16);
+      border: 1px solid var(--mt-color-border-strong);
+      border-radius: var(--mt-radius-large);
+      background-color: var(--mt-color-surface);
+      background-image: repeating-linear-gradient(
+        var(--mt-color-surface) 0,
+        var(--mt-color-surface) 33px,
+        color-mix(in srgb, var(--mt-color-border) 55%, transparent) 33px,
+        color-mix(in srgb, var(--mt-color-border) 55%, transparent) 34px
+      );
+      background-position: 0 6px;
+      box-shadow: var(--mt-shadow-raised);
+    }
+    /* subtle warm margin rule */
+    .nb-sheet::before {
+      content: "";
+      position: absolute;
+      top: 0; bottom: 0;
+      left: var(--mt-space-10);
+      width: 2px;
+      background: color-mix(in srgb, var(--mt-color-warm) 42%, transparent);
+    }
+
+    .nb-block { position: relative; margin-bottom: var(--mt-space-8); scroll-margin-top: 80px; }
+
+    /* handwritten-feel greeting */
+    .nb-greeting .mt-eyebrow { display: block; margin-bottom: var(--mt-space-2); }
+    .nb-greeting h1 {
+      margin: 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: 38px;
+      font-weight: var(--mt-font-weight-regular);
+      font-style: italic;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    .nb-greeting p { margin: var(--mt-space-3) 0 0; color: var(--mt-color-ink-muted); font-size: var(--mt-font-size-body-large); }
+
+    /* section kicker */
+    .nb-kicker {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--mt-space-3);
+      margin-bottom: var(--mt-space-4);
+    }
+    .nb-kicker h2 {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      padding-bottom: 3px;
+      border-bottom: 2px solid color-mix(in srgb, var(--mt-color-warm) 42%, transparent);
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-title-small);
+      font-weight: var(--mt-font-weight-medium);
+    }
+    .nb-kicker h2 .ico { color: var(--mt-color-warm); font-size: 16px; }
+
+    /* capture reads as writing on the page */
+    .nb-capture {
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      overflow: visible;
+      margin-bottom: var(--mt-space-8);
+    }
+    .nb-capture .mt-capture-head { padding: 0; }
+    .nb-capture .mt-capture-field {
+      min-height: 68px;
+      margin: var(--mt-space-3) 0 var(--mt-space-4);
+      padding-bottom: var(--mt-space-2);
+      font-family: var(--mt-font-family-serif);
+      font-style: italic;
+      font-size: var(--mt-font-size-title-small);
+      color: var(--mt-color-ink-faint);
+    }
+    .nb-capture .mt-capture-actions {
+      padding: var(--mt-space-3) 0 0;
+      border-top: 1px dashed var(--mt-color-border-strong);
+      background: transparent;
+    }
+
+    /* inbox as a checklist to organize */
+    .nb-inbox { display: grid; gap: var(--mt-space-1); }
+    .nb-inbox a {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--mt-space-3);
+      padding: var(--mt-space-2) var(--mt-space-2);
+      border-radius: var(--mt-radius-small);
+      color: var(--mt-color-ink);
+      text-decoration: none;
+      transition: background var(--mt-motion-quick);
+    }
+    .nb-inbox a:hover { background: color-mix(in srgb, var(--mt-color-surface-subtle) 70%, transparent); }
+    .nb-check {
+      display: grid; place-items: center;
+      width: 18px; height: 18px; flex: none; margin-top: 2px;
+      border: 1.5px solid var(--mt-color-border-strong);
+      border-radius: 5px;
+      color: transparent;
+      font-size: 11px;
+    }
+    .nb-inbox .body { min-width: 0; }
+    .nb-inbox time { color: var(--mt-color-ink-faint); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .nb-inbox strong { display: block; font-family: var(--mt-font-family-serif); font-size: var(--mt-font-size-body-large); font-weight: var(--mt-font-weight-medium); }
+    .nb-inbox span.sub { color: var(--mt-color-ink-muted); font-size: var(--mt-font-size-caption); }
+
+    /* stats jotted in the margin feel */
+    .nb-stats { display: flex; flex-wrap: wrap; gap: var(--mt-space-10); margin-top: var(--mt-space-5); }
+    .nb-stat .n { font-family: var(--mt-font-family-serif); font-size: var(--mt-font-size-title); line-height: 1; }
+    .nb-stat .l { margin-top: 4px; color: var(--mt-color-ink); font-size: var(--mt-font-size-label); font-weight: var(--mt-font-weight-medium); }
+    .nb-stat .d { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); }
+
+    /* chapters */
+    .nb-chapters { display: grid; gap: var(--mt-space-3); }
+    .nb-chapter { display: flex; align-items: baseline; justify-content: space-between; gap: var(--mt-space-4); }
+    .nb-chapter .mt-kind { display: block; margin-bottom: 2px; }
+    .nb-chapter h3 { margin: 0; font-family: var(--mt-font-family-serif); font-size: var(--mt-font-size-body-large); font-weight: var(--mt-font-weight-medium); }
+    .nb-chapter .when { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); white-space: nowrap; }
+
+    /* memory, taped-in photo feel */
+    .nb-memory {
+      display: grid;
+      grid-template-columns: 168px 1fr;
+      gap: var(--mt-space-5);
+      align-items: start;
+      padding: var(--mt-space-5);
+      border: 1px solid var(--mt-color-border);
+      border-radius: var(--mt-radius-medium);
+      background: var(--mt-color-surface-raised);
+      box-shadow: var(--mt-shadow-raised);
+    }
+    .nb-memory .mt-photo { height: 168px; border-radius: var(--mt-radius-small); }
+    .nb-memory .m-top { display: flex; align-items: center; justify-content: space-between; }
+    .nb-memory time { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); }
+    .nb-memory h3 { margin: var(--mt-space-2) 0 0; font-family: var(--mt-font-family-serif); font-size: 22px; font-weight: var(--mt-font-weight-medium); letter-spacing: -0.01em; line-height: 1.15; }
+    .nb-memory p { margin: var(--mt-space-2) 0 0; color: var(--mt-color-ink-muted); font-size: var(--mt-font-size-body); }
+    .nb-memory footer { display: flex; flex-wrap: wrap; gap: 5px; margin-top: var(--mt-space-3); }
+
+    /* recent */
+    .nb-recent { display: grid; gap: 0; }
+    .nb-recent article { padding: var(--mt-space-4) 0; border-top: 1px solid color-mix(in srgb, var(--mt-color-border) 70%, transparent); }
+    .nb-recent article:first-child { border-top: 0; padding-top: 0; }
+    .nb-recent .top { display: flex; align-items: center; gap: var(--mt-space-3); }
+    .nb-recent time { color: var(--mt-color-ink-faint); font-size: 11px; }
+    .nb-recent h3 { margin: var(--mt-space-1) 0 0; font-family: var(--mt-font-family-serif); font-size: var(--mt-font-size-body-large); font-weight: var(--mt-font-weight-medium); }
+    .nb-recent p { margin: 3px 0 0; color: var(--mt-color-ink-muted); font-size: 14px; }
+
+    @media (max-width: 720px) {
+      .nb { padding-top: var(--mt-space-8); }
+      .nb-sheet { padding: var(--mt-space-6); padding-left: var(--mt-space-12); }
+      .nb-sheet::before { left: var(--mt-space-6); }
+      .nb-greeting h1 { font-size: 30px; }
+    }
+    @media (max-width: 520px) {
+      .nb-tabs { padding-right: var(--mt-space-2); }
+      .nb-tab { padding-inline: var(--mt-space-3); }
+      .nb-memory { grid-template-columns: 1fr; }
+      .nb-memory .mt-photo { height: 150px; }
+      .nb-stats { gap: var(--mt-space-6); }
+    }
+  </style>
+</head>
+<body data-nav="home" data-page-name="Home">
+  <main class="mt-main">
+    <div class="nb">
+
+      <nav class="nb-tabs" aria-label="Sections">
+        <a class="nb-tab is-active" href="#today">Today</a>
+        <a class="nb-tab" href="#chapters">Chapters</a>
+        <a class="nb-tab" href="#recent">Recent</a>
+      </nav>
+
+      <div class="nb-sheet">
+
+        <header class="nb-block nb-greeting">
+          <span class="mt-eyebrow">Tuesday · September 23</span>
+          <h1>Good morning, Ryan.</h1>
+          <p>A calm view of what is active, recent, and waiting for you.</p>
+        </header>
+
+        <!-- Quick capture - preserved, written on the page -->
+        <section class="mt-capture nb-capture" aria-label="Quick capture">
+          <div class="mt-capture-head">
+            <span class="mt-capture-spark"><span class="ico ico-spark"></span></span>
+            <h2>Capture something</h2>
+          </div>
+          <div class="mt-capture-field">A thought, a moment, a fact worth keeping…</div>
+          <div class="mt-capture-actions">
+            <div class="mt-capture-tools">
+              <button class="mt-tool"><span class="ico ico-image"></span> Photo</button>
+              <button class="mt-tool"><span class="ico ico-mic"></span> Voice</button>
+              <button class="mt-tool"><span class="ico ico-calendar"></span> Date</button>
+            </div>
+            <button class="mt-btn"><span class="ico ico-arrow"></span> Capture</button>
+          </div>
+        </section>
+
+        <!-- Today: to organize + stats -->
+        <section class="nb-block" id="today">
+          <div class="nb-kicker">
+            <h2><span class="ico ico-inbox"></span> Ready to organize</h2>
+            <a class="mt-section-link" href="#">Inbox · 3 <span class="ico ico-chevron"></span></a>
+          </div>
+          <div class="nb-inbox">
+            <a href="#">
+              <span class="nb-check"><span class="ico ico-check"></span></span>
+              <span class="body">
+                <time>Sep 23</time>
+                <strong>Coffee with Mara before her flight</strong>
+                <span class="sub">She mentioned wanting to move back east by spring…</span>
+              </span>
+            </a>
+            <a href="#">
+              <span class="nb-check"><span class="ico ico-check"></span></span>
+              <span class="body">
+                <time>Sep 22</time>
+                <strong>Idea: a slower kind of journal</strong>
+                <span class="sub">Something that rewards returning, not streaks.</span>
+              </span>
+            </a>
+            <a href="#">
+              <span class="nb-check"><span class="ico ico-check"></span></span>
+              <span class="body">
+                <time>Sep 21</time>
+                <strong>Dad's borscht recipe, finally written down</strong>
+                <span class="sub">A palmful of dill at the very end, never before.</span>
+              </span>
+            </a>
+          </div>
+          <div class="nb-stats">
+            <div class="nb-stat">
+              <div class="n">3</div>
+              <div class="l">Life in progress</div>
+              <div class="d">current chapters</div>
+            </div>
+            <div class="nb-stat">
+              <div class="n">128</div>
+              <div class="l">Entries kept</div>
+              <div class="d">12 First Times · 7 Collections</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Chapters -->
+        <section class="nb-block" id="chapters">
+          <div class="nb-kicker">
+            <h2><span class="ico ico-book"></span> Current chapters</h2>
+            <a class="mt-section-link" href="#">Open Timeline <span class="ico ico-chevron"></span></a>
+          </div>
+          <div class="nb-chapters">
+            <div class="nb-chapter">
+              <div><span class="mt-kind">Homes</span><h3>Apartment on Bedford Ave</h3></div>
+              <span class="when">Aug 2023 – Present</span>
+            </div>
+            <div class="nb-chapter">
+              <div><span class="mt-kind">Career</span><h3>Building MemoTrail</h3></div>
+              <span class="when">2024 – Present</span>
+            </div>
+            <div class="nb-chapter">
+              <div><span class="mt-kind">Learning</span><h3>Piano, slowly</h3></div>
+              <span class="when">This year</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Memory -->
+        <section class="nb-block">
+          <div class="nb-kicker">
+            <h2><span class="ico ico-clock"></span> A memory for today</h2>
+            <span class="mt-section-link" style="color:var(--mt-color-ink-faint);">On this day, 2 years ago</span>
+          </div>
+          <article class="nb-memory">
+            <div class="mt-photo"></div>
+            <div>
+              <div class="m-top">
+                <span class="mt-kind">Memory</span>
+                <time>Sep 23, 2023</time>
+              </div>
+              <h3>The morning we hiked Breakneck Ridge</h3>
+              <p>The fog didn't lift until noon, and we ate cold bagels on the summit anyway. Best decision of that whole trip.</p>
+              <footer>
+                <span class="mt-chip">Trips</span>
+                <span class="mt-chip">#hiking</span>
+                <span class="mt-chip">Mara</span>
+              </footer>
+            </div>
+          </article>
+        </section>
+
+        <!-- Recent -->
+        <section class="nb-block" id="recent">
+          <div class="nb-kicker">
+            <h2><span class="ico ico-edit"></span> Recent entries</h2>
+            <a class="mt-section-link" href="#">Search all <span class="ico ico-chevron"></span></a>
+          </div>
+          <div class="nb-recent">
+            <article>
+              <div class="top"><span class="mt-kind">Reflection</span><time>Sep 22</time></div>
+              <h3>On keeping a slower record</h3>
+              <p>I don't want a feed. I want a place that gets richer the longer I keep it.</p>
+            </article>
+            <article>
+              <div class="top"><span class="mt-kind">First Time</span><time>Sep 20</time></div>
+              <h3>First time making pasta from scratch</h3>
+              <p>Flour everywhere. The dough came together on the third try.</p>
+            </article>
+            <article>
+              <div class="top"><span class="mt-kind">Note</span><time>Sep 18</time></div>
+              <h3>Books to reread this winter</h3>
+              <p>Gilead, The Dispossessed, and whatever Mara keeps recommending.</p>
+            </article>
+            <article>
+              <div class="top"><span class="mt-kind">Person</span><time>Sep 17</time></div>
+              <h3>Called Grandma Lin</h3>
+              <p>She told the story about the bicycle again. I wrote it down this time.</p>
+            </article>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+  <script src="shared/ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home Redesign · 19 Floating Capture</title>
+  <link rel="stylesheet" href="shared/tokens.css" />
+  <link rel="stylesheet" href="shared/frame.css" />
+  <style>
+    /* Concept 19 - Floating Capture
+       A calm content-first reading feed (memory hero, recent, chapters, a
+       compact inbox strip) with the quick capture lifted out of the flow into
+       a prominent floating composer docked bottom-center, always in reach. */
+    .feed {
+      max-width: 720px;
+      margin: 0 auto;
+      /* extra bottom room so the floating composer never covers the last card */
+      padding: var(--mt-space-8) var(--mt-space-6) 220px;
+    }
+
+    /* Greeting */
+    .fc-greeting { margin-bottom: var(--mt-space-8); }
+    .fc-greeting .mt-eyebrow { display: block; margin-bottom: var(--mt-space-3); }
+    .fc-greeting h1 {
+      margin: 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-display);
+      font-weight: var(--mt-font-weight-regular);
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+    }
+    .fc-greeting p {
+      max-width: 48ch;
+      margin: var(--mt-space-4) 0 0;
+      color: var(--mt-color-ink-muted);
+      font-size: var(--mt-font-size-body-large);
+    }
+
+    .fc-block { margin-bottom: var(--mt-space-10); }
+    .fc-eyebrow-line { display: block; margin-bottom: var(--mt-space-3); }
+
+    /* Memory hero */
+    .fc-memory {
+      overflow: hidden;
+      border: 1px solid var(--mt-color-border);
+      border-radius: var(--mt-radius-xlarge);
+      background: var(--mt-color-surface);
+      box-shadow: var(--mt-shadow-raised);
+    }
+    .fc-memory .mt-photo { height: 300px; }
+    .fc-mem-body { padding: var(--mt-space-6) var(--mt-space-8) var(--mt-space-8); }
+    .fc-mem-top { display: flex; align-items: center; gap: var(--mt-space-3); margin-bottom: var(--mt-space-3); }
+    .fc-mem-top time { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); }
+    .fc-memory h2 {
+      margin: 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: 32px;
+      font-weight: var(--mt-font-weight-medium);
+      letter-spacing: -0.025em;
+      line-height: 1.12;
+    }
+    .fc-memory p {
+      max-width: 56ch;
+      margin: var(--mt-space-4) 0 0;
+      color: var(--mt-color-ink-muted);
+      font-size: var(--mt-font-size-body-large);
+    }
+    .fc-memory footer { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--mt-space-5); }
+
+    /* Recent feed cards */
+    .fc-recent { display: grid; gap: var(--mt-space-4); }
+    .fc-entry {
+      display: grid;
+      grid-template-columns: 1fr;
+      overflow: hidden;
+      border: 1px solid var(--mt-color-border);
+      border-radius: var(--mt-radius-large);
+      background: var(--mt-color-surface);
+      transition: border-color var(--mt-motion-quick);
+    }
+    .fc-entry:hover { border-color: var(--mt-color-border-strong); }
+    .fc-entry.has-photo { grid-template-columns: 132px 1fr; }
+    .fc-entry .mt-photo { min-height: 100%; }
+    .fc-entry-body { padding: var(--mt-space-5) var(--mt-space-6); }
+    .fc-entry-top { display: flex; align-items: center; gap: var(--mt-space-3); }
+    .fc-entry-top time { color: var(--mt-color-ink-faint); font-size: 11px; }
+    .fc-entry h3 {
+      margin: var(--mt-space-2) 0 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-body-large);
+      font-weight: var(--mt-font-weight-medium);
+    }
+    .fc-entry p { margin: 4px 0 0; color: var(--mt-color-ink-muted); font-size: 14px; }
+
+    /* Chapters row */
+    .fc-chapters {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--mt-space-4);
+    }
+    .fc-chapter {
+      display: block;
+      padding: var(--mt-space-5);
+      border: 1px solid var(--mt-color-border);
+      border-radius: var(--mt-radius-large);
+      background: var(--mt-color-surface);
+      text-decoration: none;
+      color: var(--mt-color-ink);
+      transition: border-color var(--mt-motion-quick), background var(--mt-motion-quick);
+    }
+    .fc-chapter:hover { border-color: var(--mt-color-border-strong); background: var(--mt-color-surface-raised); }
+    .fc-chapter .mt-kind { display: block; margin-bottom: var(--mt-space-2); }
+    .fc-chapter h3 {
+      margin: 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-title-small);
+      font-weight: var(--mt-font-weight-medium);
+      line-height: 1.2;
+    }
+    .fc-chapter .when { display: block; margin-top: var(--mt-space-3); color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); }
+
+    /* Compact inbox strip */
+    .fc-inbox {
+      padding: var(--mt-space-5) var(--mt-space-6);
+      border: 1px dashed var(--mt-color-border-strong);
+      border-radius: var(--mt-radius-large);
+      background: var(--mt-color-surface);
+    }
+    .fc-inbox-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--mt-space-4);
+      margin-bottom: var(--mt-space-3);
+    }
+    .fc-inbox-head strong {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--mt-space-2);
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-body-large);
+      font-weight: var(--mt-font-weight-medium);
+    }
+    .fc-inbox-head strong .ico { color: var(--mt-color-warm); font-size: 16px; }
+    .fc-inbox-list { display: grid; }
+    .fc-inbox-row {
+      display: grid;
+      grid-template-columns: 66px 1fr auto;
+      align-items: baseline;
+      gap: var(--mt-space-3);
+      padding: var(--mt-space-3) 0;
+      border-top: 1px solid var(--mt-color-border);
+      color: var(--mt-color-ink);
+      text-decoration: none;
+    }
+    .fc-inbox-row:hover strong { color: var(--mt-color-accent); }
+    .fc-inbox-row time { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); font-variant-numeric: tabular-nums; }
+    .fc-inbox-row strong { font-size: var(--mt-font-size-label); font-weight: var(--mt-font-weight-medium); }
+    .fc-inbox-row .ico { color: var(--mt-color-ink-faint); font-size: 14px; }
+
+    /* Floating composer dock */
+    .fc-dock {
+      position: fixed;
+      left: 244px;
+      right: 0;
+      bottom: 84px;
+      z-index: 30;
+      display: flex;
+      justify-content: center;
+      padding: 0 var(--mt-space-4);
+      pointer-events: none;
+    }
+    .fc-dock .mt-capture {
+      width: 100%;
+      max-width: 680px;
+      border-color: var(--mt-color-border-strong);
+      box-shadow: var(--mt-shadow-floating);
+      pointer-events: auto;
+    }
+    /* Slimmer composer so it reads as a docked bar */
+    .fc-dock .mt-capture-head { padding-top: var(--mt-space-4); }
+    .fc-dock .mt-capture-field {
+      min-height: 44px;
+      margin-top: var(--mt-space-3);
+      margin-bottom: var(--mt-space-4);
+      font-size: var(--mt-font-size-body);
+    }
+
+    @media (max-width: 900px) {
+      .fc-dock { left: 218px; }
+    }
+    @media (max-width: 720px) {
+      .fc-dock { left: 0; }
+      .feed { padding-top: var(--mt-space-6); }
+    }
+    @media (max-width: 620px) {
+      .fc-greeting h1 { font-size: 34px; }
+      .fc-memory .mt-photo { height: 220px; }
+      .fc-memory h2 { font-size: 26px; }
+      .fc-mem-body { padding: var(--mt-space-5) var(--mt-space-5) var(--mt-space-6); }
+      .fc-chapters { grid-template-columns: 1fr; }
+      .fc-entry.has-photo { grid-template-columns: 96px 1fr; }
+    }
+  </style>
+</head>
+<body data-nav="home" data-page-name="Home">
+  <main class="mt-main">
+    <div class="feed">
+
+      <header class="fc-greeting">
+        <span class="mt-eyebrow">Tuesday · September 23</span>
+        <h1>Good morning, Ryan.</h1>
+        <p>A calm view of what is active, recent, and waiting for you.</p>
+      </header>
+
+      <!-- Memory hero -->
+      <section class="fc-block">
+        <span class="mt-eyebrow fc-eyebrow-line">On this day, 2 years ago</span>
+        <article class="fc-memory">
+          <div class="mt-photo"></div>
+          <div class="fc-mem-body">
+            <div class="fc-mem-top">
+              <span class="mt-kind">Memory</span>
+              <time>Sep 23, 2023</time>
+            </div>
+            <h2>The morning we hiked Breakneck Ridge</h2>
+            <p>The fog didn't lift until noon, and we ate cold bagels on the summit anyway. Best decision of that whole trip.</p>
+            <footer>
+              <span class="mt-chip">Trips</span>
+              <span class="mt-chip">#hiking</span>
+              <span class="mt-chip">Mara</span>
+            </footer>
+          </div>
+        </article>
+      </section>
+
+      <!-- Recent feed -->
+      <section class="fc-block">
+        <div class="mt-section-head">
+          <h2>Recent entries</h2>
+          <a class="mt-section-link" href="#">Search all <span class="ico ico-chevron"></span></a>
+        </div>
+        <div class="fc-recent">
+          <article class="fc-entry">
+            <div class="fc-entry-body">
+              <div class="fc-entry-top"><span class="mt-kind">Reflection</span><time>Sep 22</time></div>
+              <h3>On keeping a slower record</h3>
+              <p>I don't want a feed. I want a place that gets richer the longer I keep it.</p>
+            </div>
+          </article>
+          <article class="fc-entry has-photo">
+            <div class="mt-photo"></div>
+            <div class="fc-entry-body">
+              <div class="fc-entry-top"><span class="mt-kind">First Time</span><time>Sep 20</time></div>
+              <h3>First time making pasta from scratch</h3>
+              <p>Flour everywhere. The dough came together on the third try.</p>
+            </div>
+          </article>
+          <article class="fc-entry">
+            <div class="fc-entry-body">
+              <div class="fc-entry-top"><span class="mt-kind">Note</span><time>Sep 18</time></div>
+              <h3>Books to reread this winter</h3>
+              <p>Gilead, The Dispossessed, and whatever Mara keeps recommending.</p>
+            </div>
+          </article>
+          <article class="fc-entry">
+            <div class="fc-entry-body">
+              <div class="fc-entry-top"><span class="mt-kind">Person</span><time>Sep 17</time></div>
+              <h3>Called Grandma Lin</h3>
+              <p>She told the story about the bicycle again. I wrote it down this time.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Chapters -->
+      <section class="fc-block">
+        <div class="mt-section-head">
+          <h2>Current chapters</h2>
+          <a class="mt-section-link" href="#">Open Timeline <span class="ico ico-chevron"></span></a>
+        </div>
+        <div class="fc-chapters">
+          <a class="fc-chapter" href="#">
+            <span class="mt-kind">Homes</span>
+            <h3>Apartment on Bedford Ave</h3>
+            <span class="when">Aug 2023 – Present</span>
+          </a>
+          <a class="fc-chapter" href="#">
+            <span class="mt-kind">Career</span>
+            <h3>Building MemoTrail</h3>
+            <span class="when">2024 – Present</span>
+          </a>
+          <a class="fc-chapter" href="#">
+            <span class="mt-kind">Learning</span>
+            <h3>Piano, slowly</h3>
+            <span class="when">This year</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- Compact inbox strip -->
+      <section class="fc-inbox" aria-label="Ready to organize">
+        <div class="fc-inbox-head">
+          <strong><span class="ico ico-inbox"></span> Ready to organize</strong>
+          <a class="mt-section-link" href="#">Inbox · 3 <span class="ico ico-chevron"></span></a>
+        </div>
+        <div class="fc-inbox-list">
+          <a class="fc-inbox-row" href="#">
+            <time>Sep 23</time>
+            <strong>Coffee with Mara before her flight</strong>
+            <span class="ico ico-chevron"></span>
+          </a>
+          <a class="fc-inbox-row" href="#">
+            <time>Sep 22</time>
+            <strong>Idea: a slower kind of journal</strong>
+            <span class="ico ico-chevron"></span>
+          </a>
+          <a class="fc-inbox-row" href="#">
+            <time>Sep 21</time>
+            <strong>Dad's borscht recipe, finally written down</strong>
+            <span class="ico ico-chevron"></span>
+          </a>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Floating quick capture - preserved, docked above the switcher -->
+    <div class="fc-dock">
+      <section class="mt-capture" aria-label="Quick capture">
+        <div class="mt-capture-head">
+          <span class="mt-capture-spark"><span class="ico ico-spark"></span></span>
+          <h2>Capture something</h2>
+        </div>
+        <div class="mt-capture-field">A thought, a moment, a fact worth keeping…</div>
+        <div class="mt-capture-actions">
+          <div class="mt-capture-tools">
+            <button class="mt-tool"><span class="ico ico-image"></span> Photo</button>
+            <button class="mt-tool"><span class="ico ico-mic"></span> Voice</button>
+            <button class="mt-tool"><span class="ico ico-calendar"></span> Date</button>
+          </div>
+          <button class="mt-btn"><span class="ico ico-arrow"></span> Capture</button>
+        </div>
+      </section>
+    </div>
+
+  </main>
+  <script src="shared/ui.js"></script>
+</body>
+</html>

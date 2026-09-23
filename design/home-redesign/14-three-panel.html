@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home Redesign · 14 Three Panel</title>
+  <link rel="stylesheet" href="shared/tokens.css" />
+  <link rel="stylesheet" href="shared/frame.css" />
+  <style>
+    /* Concept 14 - Three Panel
+       The day is split into three equal, independently scrolling columns:
+       Capture, Living now, and Recent. Hairline rules divide them like the
+       spreads of an open ledger. On narrow screens the panels stack calmly. */
+
+    /* Panels own the full viewport height, so drop the shared bottom pad here. */
+    .mt-workspace .mt-main { padding-bottom: 0; }
+
+    .tp {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      height: calc(100dvh - 65px);
+    }
+
+    .tp-col {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow-y: auto;
+      padding: var(--mt-space-8) var(--mt-space-6) 120px;
+      border-right: 1px solid var(--mt-color-border);
+    }
+    .tp-col:last-child { border-right: 0; }
+    /* Fixed-height flex columns must not shrink their children, or cards
+       (like the capture composer) collapse instead of letting the column scroll. */
+    .tp-col > * { flex: 0 0 auto; }
+    .tp-col a { text-decoration: none; color: inherit; }
+
+    .tp-label {
+      display: flex;
+      align-items: center;
+      gap: var(--mt-space-2);
+      margin-bottom: var(--mt-space-6);
+      padding-bottom: var(--mt-space-4);
+      border-bottom: 1px solid var(--mt-color-border);
+      color: var(--mt-color-ink);
+      font-size: 11px;
+      font-weight: var(--mt-font-weight-semibold);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .tp-label .ico { color: var(--mt-color-warm); font-size: 15px; }
+    .tp-label .tp-count {
+      margin-left: auto;
+      color: var(--mt-color-ink-faint);
+      font-size: var(--mt-font-size-caption);
+      font-weight: var(--mt-font-weight-medium);
+      letter-spacing: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Panel 1 - greeting */
+    .tp-greet { margin-bottom: var(--mt-space-6); }
+    .tp-greet .mt-eyebrow { display: block; margin-bottom: var(--mt-space-3); }
+    .tp-greet h1 {
+      margin: 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: clamp(28px, 2.6vw, 34px);
+      font-weight: var(--mt-font-weight-regular);
+      letter-spacing: -0.03em;
+      line-height: 1.08;
+    }
+    .tp-greet p {
+      margin: var(--mt-space-3) 0 0;
+      color: var(--mt-color-ink-muted);
+      font-size: var(--mt-font-size-body);
+    }
+
+    .tp-capture { margin-bottom: var(--mt-space-8); }
+    /* Panels are narrow; let the capture action row wrap so the button never clips. */
+    .tp-capture .mt-capture-actions { flex-wrap: wrap; row-gap: var(--mt-space-2); }
+    .tp-capture .mt-capture-tools { flex-wrap: wrap; }
+
+    .tp-sub {
+      margin: 0 0 var(--mt-space-4);
+      color: var(--mt-color-ink);
+      font-family: var(--mt-font-family-sans);
+      font-size: 11px;
+      font-weight: var(--mt-font-weight-semibold);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .tp-sub-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--mt-space-3);
+      margin-bottom: var(--mt-space-4);
+    }
+    .tp-sub-row .tp-sub { margin: 0; }
+    .tp-onthis { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); }
+
+    /* Inbox rows */
+    .tp-inbox { display: grid; gap: 2px; }
+    .tp-inbox a {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: var(--mt-space-2);
+      padding: var(--mt-space-3);
+      border-radius: var(--mt-radius-medium);
+      color: var(--mt-color-ink);
+      text-decoration: none;
+      transition: background var(--mt-motion-quick);
+    }
+    .tp-inbox a:hover { background: var(--mt-color-surface-subtle); }
+    .tp-inbox time { grid-column: 1 / -1; color: var(--mt-color-ink-faint); font-size: 11px; letter-spacing: 0.04em; }
+    .tp-inbox strong { font-size: var(--mt-font-size-body); font-weight: var(--mt-font-weight-medium); }
+    .tp-inbox span.body { display: block; margin-top: 3px; overflow: hidden; color: var(--mt-color-ink-muted); font-size: var(--mt-font-size-caption); text-overflow: ellipsis; white-space: nowrap; }
+    .tp-inbox .ico { align-self: center; color: var(--mt-color-ink-faint); font-size: 14px; }
+
+    /* Panel 2 - stats */
+    .tp-stats {
+      display: grid;
+      gap: var(--mt-space-3);
+      margin-bottom: var(--mt-space-8);
+    }
+    .tp-stat {
+      display: flex;
+      align-items: center;
+      gap: var(--mt-space-4);
+      padding: var(--mt-space-5);
+      border: 1px solid var(--mt-color-border);
+      border-radius: var(--mt-radius-large);
+      background: var(--mt-color-surface);
+    }
+    .tp-stat .ico {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      flex: none;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--mt-color-accent);
+      background: var(--mt-color-accent-subtle);
+      font-size: 18px;
+    }
+    .tp-stat .n { font-family: var(--mt-font-family-serif); font-size: var(--mt-font-size-title); line-height: 1; }
+    .tp-stat .l { margin-top: 3px; font-size: var(--mt-font-size-label); font-weight: var(--mt-font-weight-medium); }
+    .tp-stat .d { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); }
+
+    /* Panel 2 - chapters */
+    .tp-chapters { display: grid; gap: var(--mt-space-2); margin-bottom: var(--mt-space-8); }
+    .tp-chapter {
+      display: block;
+      padding: var(--mt-space-4) var(--mt-space-3);
+      border-radius: var(--mt-radius-medium);
+      transition: background var(--mt-motion-quick);
+    }
+    .tp-chapter:hover { background: var(--mt-color-surface-subtle); }
+    .tp-chapter .mt-kind { display: block; margin-bottom: 3px; }
+    .tp-chapter h3 { margin: 0; font-family: var(--mt-font-family-serif); font-size: var(--mt-font-size-body-large); font-weight: var(--mt-font-weight-medium); line-height: 1.2; }
+    .tp-chapter .when { display: block; margin-top: 4px; color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); }
+
+    /* Panel 2 - memory */
+    .tp-memory {
+      overflow: hidden;
+      border: 1px solid var(--mt-color-border);
+      border-radius: var(--mt-radius-large);
+      background: var(--mt-color-surface);
+    }
+    .tp-memory .mt-photo { height: 148px; }
+    .tp-memory .m-body { padding: var(--mt-space-5); }
+    .tp-memory .m-top { display: flex; align-items: center; justify-content: space-between; }
+    .tp-memory time { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); }
+    .tp-memory h3 { margin: var(--mt-space-3) 0 0; font-family: var(--mt-font-family-serif); font-size: 22px; font-weight: var(--mt-font-weight-medium); letter-spacing: -0.02em; line-height: 1.15; }
+    .tp-memory p { margin: var(--mt-space-3) 0 0; color: var(--mt-color-ink-muted); font-size: var(--mt-font-size-body); }
+    .tp-memory footer { display: flex; flex-wrap: wrap; gap: 5px; margin-top: var(--mt-space-4); }
+
+    /* Panel 3 - recent */
+    .tp-recent { display: grid; }
+    .tp-recent article {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--mt-space-3);
+      padding: var(--mt-space-5) 0;
+      border-top: 1px solid var(--mt-color-border);
+    }
+    .tp-recent article:first-child { border-top: 0; padding-top: 0; }
+    .tp-recent .r-top { display: flex; align-items: center; gap: var(--mt-space-3); }
+    .tp-recent time { color: var(--mt-color-ink-faint); font-size: 11px; }
+    .tp-recent h3 { margin: var(--mt-space-2) 0 0; font-family: var(--mt-font-family-serif); font-size: var(--mt-font-size-body-large); font-weight: var(--mt-font-weight-medium); }
+    .tp-recent p { margin: 4px 0 0; color: var(--mt-color-ink-muted); font-size: 14px; }
+    .tp-recent .r-thumb { height: 132px; border-radius: var(--mt-radius-medium); overflow: hidden; }
+
+    @media (max-width: 960px) {
+      .mt-workspace .mt-main { padding-bottom: 96px; }
+      .tp { grid-template-columns: 1fr; height: auto; }
+      .tp-col {
+        overflow: visible;
+        padding: var(--mt-space-8) var(--mt-space-6) var(--mt-space-10);
+        border-right: 0;
+        border-bottom: 1px solid var(--mt-color-border);
+      }
+      .tp-col:last-child { border-bottom: 0; }
+      .tp-greet h1 { font-size: 32px; }
+    }
+    @media (max-width: 520px) {
+      .tp-col { padding-inline: var(--mt-space-5); }
+    }
+  </style>
+</head>
+<body data-nav="home" data-page-name="Home">
+  <main class="mt-main">
+    <div class="tp">
+
+      <!-- Panel 1 - Capture -->
+      <section class="tp-col" aria-label="Capture">
+        <div class="tp-label"><span class="ico ico-spark"></span> Capture</div>
+
+        <header class="tp-greet">
+          <span class="mt-eyebrow">Tuesday · September 23</span>
+          <h1>Good morning, Ryan.</h1>
+          <p>A calm view of what is active, recent, and waiting for you.</p>
+        </header>
+
+        <!-- Quick capture - preserved -->
+        <section class="mt-capture tp-capture" aria-label="Quick capture">
+          <div class="mt-capture-head">
+            <span class="mt-capture-spark"><span class="ico ico-spark"></span></span>
+            <h2>Capture something</h2>
+          </div>
+          <div class="mt-capture-field">A thought, a moment, a fact worth keeping…</div>
+          <div class="mt-capture-actions">
+            <div class="mt-capture-tools">
+              <button class="mt-tool"><span class="ico ico-image"></span> Photo</button>
+              <button class="mt-tool"><span class="ico ico-mic"></span> Voice</button>
+              <button class="mt-tool"><span class="ico ico-calendar"></span> Date</button>
+            </div>
+            <button class="mt-btn"><span class="ico ico-arrow"></span> Capture</button>
+          </div>
+        </section>
+
+        <p class="tp-sub">Ready to organize</p>
+        <div class="tp-inbox">
+          <a href="#">
+            <time>Sep 23</time>
+            <div><strong>Coffee with Mara before her flight</strong><span class="body">She mentioned wanting to move back east by spring…</span></div>
+            <span class="ico ico-chevron"></span>
+          </a>
+          <a href="#">
+            <time>Sep 22</time>
+            <div><strong>Idea: a slower kind of journal</strong><span class="body">Something that rewards returning, not streaks.</span></div>
+            <span class="ico ico-chevron"></span>
+          </a>
+          <a href="#">
+            <time>Sep 21</time>
+            <div><strong>Dad's borscht recipe, finally written down</strong><span class="body">A palmful of dill at the very end, never before.</span></div>
+            <span class="ico ico-chevron"></span>
+          </a>
+        </div>
+      </section>
+
+      <!-- Panel 2 - Living now -->
+      <section class="tp-col" aria-label="Living now">
+        <div class="tp-label"><span class="ico ico-compass"></span> Living now</div>
+
+        <div class="tp-stats">
+          <a class="tp-stat" href="#">
+            <span class="ico ico-timeline"></span>
+            <span>
+              <span class="n">3</span>
+              <div class="l">Life in progress</div>
+              <div class="d">current chapters</div>
+            </span>
+          </a>
+          <a class="tp-stat" href="#">
+            <span class="ico ico-archive"></span>
+            <span>
+              <span class="n">128</span>
+              <div class="l">Entries kept</div>
+              <div class="d">12 First Times · 7 Collections</div>
+            </span>
+          </a>
+        </div>
+
+        <p class="tp-sub">Current chapters</p>
+        <div class="tp-chapters">
+          <a class="tp-chapter" href="#">
+            <div><span class="mt-kind">Homes</span><h3>Apartment on Bedford Ave</h3></div>
+            <span class="when">Aug 2023 – Present</span>
+          </a>
+          <a class="tp-chapter" href="#">
+            <div><span class="mt-kind">Career</span><h3>Building MemoTrail</h3></div>
+            <span class="when">2024 – Present</span>
+          </a>
+          <a class="tp-chapter" href="#">
+            <div><span class="mt-kind">Learning</span><h3>Piano, slowly</h3></div>
+            <span class="when">This year</span>
+          </a>
+        </div>
+
+        <div class="tp-sub-row">
+          <p class="tp-sub">A memory for today</p>
+          <span class="tp-onthis">On this day, 2 years ago</span>
+        </div>
+        <article class="tp-memory">
+          <div class="mt-photo"></div>
+          <div class="m-body">
+            <div class="m-top">
+              <span class="mt-kind">Memory</span>
+              <time>Sep 23, 2023</time>
+            </div>
+            <h3>The morning we hiked Breakneck Ridge</h3>
+            <p>The fog didn't lift until noon, and we ate cold bagels on the summit anyway. Best decision of that whole trip.</p>
+            <footer>
+              <span class="mt-chip">Trips</span>
+              <span class="mt-chip">#hiking</span>
+              <span class="mt-chip">Mara</span>
+            </footer>
+          </div>
+        </article>
+      </section>
+
+      <!-- Panel 3 - Recent -->
+      <section class="tp-col" aria-label="Recent">
+        <div class="tp-label"><span class="ico ico-clock"></span> Recent <span class="tp-count">128 kept</span></div>
+
+        <div class="tp-recent">
+          <article>
+            <div>
+              <div class="r-top"><span class="mt-kind">Reflection</span><time>Sep 22</time></div>
+              <h3>On keeping a slower record</h3>
+              <p>I don't want a feed. I want a place that gets richer the longer I keep it.</p>
+            </div>
+          </article>
+          <article>
+            <div class="r-thumb mt-photo"></div>
+            <div>
+              <div class="r-top"><span class="mt-kind">First Time</span><time>Sep 20</time></div>
+              <h3>First time making pasta from scratch</h3>
+              <p>Flour everywhere. The dough came together on the third try.</p>
+            </div>
+          </article>
+          <article>
+            <div>
+              <div class="r-top"><span class="mt-kind">Note</span><time>Sep 18</time></div>
+              <h3>Books to reread this winter</h3>
+              <p>Gilead, The Dispossessed, and whatever Mara keeps recommending.</p>
+            </div>
+          </article>
+          <article>
+            <div>
+              <div class="r-top"><span class="mt-kind">Person</span><time>Sep 17</time></div>
+              <h3>Called Grandma Lin</h3>
+              <p>She told the story about the bicycle again. I wrote it down this time.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+    </div>
+  </main>
+  <script src="shared/ui.js"></script>
+</body>
+</html>

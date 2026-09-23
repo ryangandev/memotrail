@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home Redesign · 05 Editorial Masthead</title>
+  <link rel="stylesheet" href="shared/tokens.css" />
+  <link rel="stylesheet" href="shared/frame.css" />
+  <style>
+    /* Concept 05 - Editorial Masthead
+       A magazine cover. A ruled serif masthead with a dateline sits above an
+       elegant capture bar; the memory of today runs full-bleed as the cover hero
+       with its title overlaid on the photo; below, an editorial grid sets chapters
+       as ruled columns and recent entries as a story list with a drop cap. */
+    .mag {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: var(--mt-space-8) var(--mt-space-6) 0;
+    }
+
+    /* Masthead */
+    .masthead { text-align: center; }
+    .masthead-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--mt-space-4);
+      padding-bottom: var(--mt-space-4);
+      border-bottom: 2px solid var(--mt-color-ink);
+    }
+    .masthead-top .meta {
+      color: var(--mt-color-ink-faint);
+      font-size: var(--mt-font-size-caption);
+      letter-spacing: 0.04em;
+      font-variant-numeric: tabular-nums;
+    }
+    .masthead h1 {
+      margin: var(--mt-space-6) 0 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: 56px;
+      font-weight: var(--mt-font-weight-regular);
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .masthead .standfirst {
+      max-width: 52ch;
+      margin: var(--mt-space-4) auto var(--mt-space-5);
+      color: var(--mt-color-ink-muted);
+      font-family: var(--mt-font-family-serif);
+      font-style: italic;
+      font-size: var(--mt-font-size-body-large);
+    }
+    .masthead-rule { height: 1px; background: var(--mt-color-border-strong); }
+
+    /* Capture bar */
+    .mag-capture { margin: var(--mt-space-6) 0 var(--mt-space-12); }
+    .mag-capture .mt-capture {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--mt-space-2);
+      padding: var(--mt-space-2) var(--mt-space-3);
+    }
+    .mag-capture .mt-capture-head { padding: 0 var(--mt-space-2); }
+    .mag-capture .mt-capture-head h2 { font-size: var(--mt-font-size-body-large); }
+    .mag-capture .mt-capture-field {
+      flex: 1 1 260px;
+      min-height: 0;
+      margin: 0 var(--mt-space-2);
+      padding: var(--mt-space-3) 0;
+    }
+    .mag-capture .mt-capture-actions {
+      padding: 0;
+      border-top: 0;
+      background: transparent;
+    }
+
+    /* Cover hero - full-bleed memory */
+    .cover {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--mt-color-border);
+      border-radius: var(--mt-radius-xlarge);
+      margin-bottom: var(--mt-space-12);
+    }
+    .cover .mt-photo { min-height: 460px; }
+    .cover-veil {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        var(--mt-color-surface-raised) 0%,
+        color-mix(in srgb, var(--mt-color-surface-raised) 58%, transparent) 34%,
+        transparent 66%
+      );
+    }
+    .cover-issue {
+      position: absolute;
+      top: var(--mt-space-6);
+      left: var(--mt-space-8);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--mt-space-2);
+      padding: 6px var(--mt-space-3);
+      border-radius: var(--mt-radius-pill);
+      background: color-mix(in srgb, var(--mt-color-surface-raised) 82%, transparent);
+      color: var(--mt-color-warm);
+      font-size: 11px;
+      font-weight: var(--mt-font-weight-semibold);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      backdrop-filter: blur(8px);
+    }
+    .cover-body {
+      position: absolute;
+      inset: auto 0 0 0;
+      padding: var(--mt-space-10) var(--mt-space-10) var(--mt-space-8);
+    }
+    .cover-tag { display: flex; align-items: center; gap: var(--mt-space-3); margin-bottom: var(--mt-space-3); }
+    .cover-tag time { color: var(--mt-color-ink-muted); font-size: var(--mt-font-size-caption); }
+    .cover h2 {
+      margin: 0;
+      max-width: 18ch;
+      font-family: var(--mt-font-family-serif);
+      font-size: 48px;
+      font-weight: var(--mt-font-weight-medium);
+      letter-spacing: -0.025em;
+      line-height: 1.02;
+      color: var(--mt-color-ink);
+    }
+    .cover p {
+      max-width: 52ch;
+      margin: var(--mt-space-4) 0 0;
+      color: var(--mt-color-ink-muted);
+      font-size: var(--mt-font-size-body-large);
+    }
+    .cover footer { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--mt-space-5); }
+
+    /* Editorial section headings */
+    .section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--mt-space-4);
+      margin-bottom: var(--mt-space-5);
+      padding-bottom: var(--mt-space-3);
+      border-bottom: 1px solid var(--mt-color-border-strong);
+    }
+    .section-title h2 {
+      margin: 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-title);
+      font-weight: var(--mt-font-weight-medium);
+      letter-spacing: -0.02em;
+    }
+
+    /* Chapters as ruled columns */
+    .chap-cols {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin-bottom: var(--mt-space-12);
+    }
+    .chap-col { padding: 0 var(--mt-space-6); border-left: 1px solid var(--mt-color-border); }
+    .chap-col:first-child { padding-left: 0; border-left: 0; }
+    .chap-col:last-child { padding-right: 0; }
+    .chap-col .mt-kind { display: block; margin-bottom: var(--mt-space-2); }
+    .chap-col h3 {
+      margin: 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-title-small);
+      font-weight: var(--mt-font-weight-medium);
+      line-height: 1.15;
+    }
+    .chap-col .when { display: block; margin-top: var(--mt-space-3); color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); }
+
+    /* Two-column editorial body */
+    .edi { display: grid; grid-template-columns: 1.7fr 1fr; gap: var(--mt-space-12); }
+
+    .stories article { padding: var(--mt-space-6) 0; border-top: 1px solid var(--mt-color-border); }
+    .stories article:first-child { border-top: 0; padding-top: 0; }
+    .stories .s-top { display: flex; align-items: center; gap: var(--mt-space-3); margin-bottom: var(--mt-space-2); }
+    .stories time { color: var(--mt-color-ink-faint); font-size: 11px; }
+    .stories h3 { margin: 0; font-family: var(--mt-font-family-serif); font-size: var(--mt-font-size-title-small); font-weight: var(--mt-font-weight-medium); }
+    .stories p { margin: var(--mt-space-2) 0 0; color: var(--mt-color-ink-muted); font-size: var(--mt-font-size-body); }
+    .stories article:first-child p::first-letter {
+      float: left;
+      padding: 6px var(--mt-space-2) 0 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: 54px;
+      line-height: 0.8;
+      color: var(--mt-color-warm);
+    }
+
+    /* Editorial sidebar */
+    .edi-side { display: grid; gap: var(--mt-space-8); align-content: start; }
+    .side-h {
+      font-family: var(--mt-font-family-sans);
+      font-size: 11px;
+      font-weight: var(--mt-font-weight-semibold);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mt-color-ink-muted);
+      padding-bottom: var(--mt-space-3);
+      border-bottom: 1px solid var(--mt-color-border-strong);
+      margin-bottom: var(--mt-space-3);
+    }
+    .side-inbox a {
+      display: block;
+      padding: var(--mt-space-3) 0;
+      border-bottom: 1px solid var(--mt-color-border);
+      color: var(--mt-color-ink);
+      text-decoration: none;
+    }
+    .side-inbox a:last-child { border-bottom: 0; }
+    .side-inbox time { color: var(--mt-color-ink-faint); font-size: 10px; font-variant-numeric: tabular-nums; }
+    .side-inbox strong { display: block; margin-top: 2px; font-size: 14px; font-weight: var(--mt-font-weight-medium); }
+    .side-inbox p { margin: 3px 0 0; color: var(--mt-color-ink-muted); font-size: var(--mt-font-size-caption); }
+
+    .side-stats { display: grid; gap: var(--mt-space-5); }
+    .side-stat { display: flex; align-items: baseline; gap: var(--mt-space-4); }
+    .side-stat .n { font-family: var(--mt-font-family-serif); font-size: var(--mt-font-size-title); line-height: 1; }
+    .side-stat .l { color: var(--mt-color-ink-muted); font-size: var(--mt-font-size-label); }
+    .side-stat .l b { display: block; color: var(--mt-color-ink); font-weight: var(--mt-font-weight-medium); }
+
+    @media (max-width: 860px) {
+      .masthead h1 { font-size: 44px; }
+      .cover .mt-photo { min-height: 380px; }
+      .cover-body { padding: var(--mt-space-8) var(--mt-space-6) var(--mt-space-6); }
+      .cover h2 { font-size: 38px; }
+      .chap-cols { grid-template-columns: 1fr; }
+      .chap-col { padding: var(--mt-space-5) 0; border-left: 0; border-top: 1px solid var(--mt-color-border); }
+      .chap-col:first-child { border-top: 0; padding-top: 0; }
+      .edi { grid-template-columns: 1fr; gap: var(--mt-space-10); }
+    }
+    @media (max-width: 520px) {
+      .mag { padding-top: var(--mt-space-6); }
+      .masthead-top { flex-direction: column; gap: 6px; align-items: flex-start; text-align: left; }
+      .masthead h1 { font-size: 34px; }
+      .cover .mt-photo { min-height: 340px; }
+      .cover-issue { left: var(--mt-space-5); }
+      .cover-body { padding: var(--mt-space-6) var(--mt-space-5); }
+      .cover h2 { font-size: 29px; }
+    }
+  </style>
+</head>
+<body data-nav="home" data-page-name="Home">
+  <main class="mt-main">
+    <div class="mag">
+
+      <header class="masthead">
+        <div class="masthead-top">
+          <span class="mt-eyebrow">Tuesday · September 23</span>
+          <span class="meta">128 kept · 3 in progress</span>
+        </div>
+        <h1>Good morning, Ryan.</h1>
+        <p class="standfirst">A calm view of what is active, recent, and waiting for you.</p>
+        <div class="masthead-rule"></div>
+      </header>
+
+      <!-- Quick capture - preserved as an elegant bar -->
+      <div class="mag-capture">
+        <section class="mt-capture" aria-label="Quick capture">
+          <div class="mt-capture-head">
+            <span class="mt-capture-spark"><span class="ico ico-spark"></span></span>
+            <h2>Capture something</h2>
+          </div>
+          <div class="mt-capture-field">A thought, a moment, a fact worth keeping…</div>
+          <div class="mt-capture-actions">
+            <div class="mt-capture-tools">
+              <button class="mt-tool"><span class="ico ico-image"></span> Photo</button>
+              <button class="mt-tool"><span class="ico ico-mic"></span> Voice</button>
+              <button class="mt-tool"><span class="ico ico-calendar"></span> Date</button>
+            </div>
+            <button class="mt-btn"><span class="ico ico-arrow"></span> Capture</button>
+          </div>
+        </section>
+      </div>
+
+      <!-- Cover hero - the memory of today -->
+      <article class="cover">
+        <div class="mt-photo"></div>
+        <div class="cover-veil"></div>
+        <span class="cover-issue"><span class="ico ico-star"></span> On this day, 2 years ago</span>
+        <div class="cover-body">
+          <div class="cover-tag">
+            <span class="mt-kind">Memory</span>
+            <time>Sep 23, 2023</time>
+          </div>
+          <h2>The morning we hiked Breakneck Ridge</h2>
+          <p>The fog didn't lift until noon, and we ate cold bagels on the summit anyway. Best decision of that whole trip.</p>
+          <footer>
+            <span class="mt-chip">Trips</span>
+            <span class="mt-chip">#hiking</span>
+            <span class="mt-chip">Mara</span>
+          </footer>
+        </div>
+      </article>
+
+      <!-- Chapters as ruled columns -->
+      <section>
+        <div class="section-title">
+          <h2>Current chapters</h2>
+          <a class="mt-section-link" href="#">Open Timeline <span class="ico ico-chevron"></span></a>
+        </div>
+        <div class="chap-cols">
+          <div class="chap-col">
+            <span class="mt-kind">Homes</span>
+            <h3>Apartment on Bedford Ave</h3>
+            <span class="when">Aug 2023 – Present</span>
+          </div>
+          <div class="chap-col">
+            <span class="mt-kind">Career</span>
+            <h3>Building MemoTrail</h3>
+            <span class="when">2024 – Present</span>
+          </div>
+          <div class="chap-col">
+            <span class="mt-kind">Learning</span>
+            <h3>Piano, slowly</h3>
+            <span class="when">This year</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Editorial body -->
+      <div class="edi">
+        <section class="stories">
+          <div class="section-title">
+            <h2>Recent entries</h2>
+            <a class="mt-section-link" href="#">Search all <span class="ico ico-chevron"></span></a>
+          </div>
+          <article>
+            <div class="s-top"><span class="mt-kind">Reflection</span><time>Sep 22</time></div>
+            <h3>On keeping a slower record</h3>
+            <p>I don't want a feed. I want a place that gets richer the longer I keep it.</p>
+          </article>
+          <article>
+            <div class="s-top"><span class="mt-kind">First Time</span><time>Sep 20</time></div>
+            <h3>First time making pasta from scratch</h3>
+            <p>Flour everywhere. The dough came together on the third try.</p>
+          </article>
+          <article>
+            <div class="s-top"><span class="mt-kind">Note</span><time>Sep 18</time></div>
+            <h3>Books to reread this winter</h3>
+            <p>Gilead, The Dispossessed, and whatever Mara keeps recommending.</p>
+          </article>
+          <article>
+            <div class="s-top"><span class="mt-kind">Person</span><time>Sep 17</time></div>
+            <h3>Called Grandma Lin</h3>
+            <p>She told the story about the bicycle again. I wrote it down this time.</p>
+          </article>
+        </section>
+
+        <aside class="edi-side">
+          <section>
+            <div class="side-h">Ready to organize · 3</div>
+            <div class="side-inbox">
+              <a href="#">
+                <time>Sep 23</time>
+                <strong>Coffee with Mara before her flight</strong>
+                <p>She mentioned wanting to move back east by spring…</p>
+              </a>
+              <a href="#">
+                <time>Sep 22</time>
+                <strong>Idea: a slower kind of journal</strong>
+                <p>Something that rewards returning, not streaks.</p>
+              </a>
+              <a href="#">
+                <time>Sep 21</time>
+                <strong>Dad's borscht recipe, finally written down</strong>
+                <p>A palmful of dill at the very end, never before.</p>
+              </a>
+            </div>
+          </section>
+
+          <section>
+            <div class="side-h">By the numbers</div>
+            <div class="side-stats">
+              <div class="side-stat">
+                <span class="n">3</span>
+                <span class="l"><b>Life in progress</b>current chapters</span>
+              </div>
+              <div class="side-stat">
+                <span class="n">128</span>
+                <span class="l"><b>Entries kept</b>12 First Times · 7 Collections</span>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </div>
+
+    </div>
+  </main>
+  <script src="shared/ui.js"></script>
+</body>
+</html>

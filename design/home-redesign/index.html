@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MemoTrail · Home Redesign — 20 concepts</title>
+  <link rel="stylesheet" href="shared/tokens.css" />
+  <link rel="stylesheet" href="shared/frame.css" />
+  <style>
+    body { background: var(--mt-color-canvas); }
+
+    .gallery-head {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: var(--mt-space-12) var(--mt-space-8) var(--mt-space-6);
+    }
+    .gallery-head .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: var(--mt-space-8);
+      color: var(--mt-color-ink);
+      font-family: var(--mt-font-family-serif);
+      font-size: 19px;
+      font-weight: var(--mt-font-weight-medium);
+      letter-spacing: -0.02em;
+      text-decoration: none;
+    }
+    .gallery-head .brand .mt-brand-mark { width: 29px; height: 29px; }
+    .gallery-head .mt-eyebrow { display: block; margin-bottom: var(--mt-space-3); }
+    .gallery-head h1 {
+      margin: 0;
+      max-width: 20ch;
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-display);
+      font-weight: var(--mt-font-weight-regular);
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+    }
+    .gallery-head p {
+      max-width: 62ch;
+      margin: var(--mt-space-4) 0 0;
+      color: var(--mt-color-ink-muted);
+      font-size: var(--mt-font-size-body-large);
+      line-height: var(--mt-line-height-body);
+    }
+    .gallery-note {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--mt-space-2);
+      margin-top: var(--mt-space-6);
+    }
+    .gallery-note span {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px var(--mt-space-3);
+      border: 1px solid var(--mt-color-border);
+      border-radius: var(--mt-radius-pill);
+      color: var(--mt-color-ink-muted);
+      background: var(--mt-color-surface);
+      font-size: var(--mt-font-size-caption);
+    }
+    .gallery-note span .ico { font-size: 14px; color: var(--mt-color-accent); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: var(--mt-space-6);
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: var(--mt-space-6) var(--mt-space-8) var(--mt-space-16);
+    }
+
+    .concept {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid var(--mt-color-border);
+      border-radius: var(--mt-radius-large);
+      background: var(--mt-color-surface);
+      color: inherit;
+      text-decoration: none;
+      transition: border-color var(--mt-motion-standard), box-shadow var(--mt-motion-standard), transform var(--mt-motion-standard);
+    }
+    .concept:hover {
+      border-color: var(--mt-color-border-strong);
+      box-shadow: var(--mt-shadow-raised);
+      transform: translateY(-2px);
+    }
+
+    .thumb {
+      position: relative;
+      aspect-ratio: 1280 / 800;
+      overflow: hidden;
+      border-bottom: 1px solid var(--mt-color-border);
+      background: var(--mt-color-surface-subtle);
+    }
+    .thumb iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1280px;
+      height: 800px;
+      border: 0;
+      transform-origin: top left;
+      pointer-events: none;
+      /* scaled by JS to match the card width */
+    }
+    .thumb .badge {
+      position: absolute;
+      top: var(--mt-space-3);
+      left: var(--mt-space-3);
+      z-index: 2;
+      display: grid;
+      min-width: 30px;
+      height: 26px;
+      place-items: center;
+      padding: 0 9px;
+      border-radius: var(--mt-radius-pill);
+      color: var(--mt-color-accent-ink);
+      background: color-mix(in srgb, var(--mt-color-scrim) 62%, transparent);
+      font-size: var(--mt-font-size-caption);
+      font-weight: var(--mt-font-weight-semibold);
+      font-variant-numeric: tabular-nums;
+      backdrop-filter: blur(4px);
+    }
+    .thumb .open {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+    }
+
+    .meta { padding: var(--mt-space-4) var(--mt-space-5) var(--mt-space-5); }
+    .meta h2 {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-body-large);
+      font-weight: var(--mt-font-weight-medium);
+      letter-spacing: -0.01em;
+    }
+    .meta h2 .open-ico { color: var(--mt-color-ink-faint); font-size: 14px; margin-left: auto; }
+    .meta p {
+      margin: 6px 0 0;
+      color: var(--mt-color-ink-muted);
+      font-size: var(--mt-font-size-caption);
+      line-height: var(--mt-line-height-body);
+    }
+
+    @media (max-width: 720px) {
+      .gallery-head { padding: var(--mt-space-8) var(--mt-space-5) var(--mt-space-4); }
+      .gallery-head h1 { font-size: 32px; }
+      .grid { padding-inline: var(--mt-space-5); grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="gallery-head">
+    <a class="brand" href="index.html">
+      <span class="mt-brand-mark">M</span><span>MemoTrail</span>
+    </a>
+    <span class="mt-eyebrow">Home page redesign</span>
+    <h1>Twenty ways to open the archive.</h1>
+    <p>
+      Today's Home is essentially the Inbox. These are twenty distinct layout concepts for a
+      reconceived Home — each a different idea about what you should see first when you arrive.
+      Quick Capture is preserved in every one. Open any concept, then use the ← → keys or the
+      switcher at the bottom to move between them.
+    </p>
+    <div class="gallery-note">
+      <span><span class="ico ico-spark"></span> Quick Capture kept everywhere</span>
+      <span><span class="ico ico-grid"></span> 20 unique layouts</span>
+      <span><span class="ico ico-sun"></span> Soft Ledger, light &amp; dark</span>
+    </div>
+  </header>
+
+  <main class="grid" id="grid"></main>
+
+  <script>
+    var CONCEPTS = [
+      ["01-ledger-column.html", "01", "Ledger Column", "One calm centered column; everything stacks like entries in a paper ledger, split by hairline rules."],
+      ["02-today-dashboard.html", "02", "Today Dashboard", "A bento of tiles so today's captures, stats, memory and chapters are all visible at a glance."],
+      ["03-split-focus.html", "03", "Split Focus", "Sticky left rail keeps Capture and the inbox always in view; the archive scrolls on the right."],
+      ["04-timeline-spine.html", "04", "Timeline Spine", "A vertical time rail; each section hangs off the spine as a dated stop, newest at the top."],
+      ["05-editorial-masthead.html", "05", "Editorial Masthead", "A magazine cover: serif masthead, a full-bleed memory hero, then an editorial column grid."],
+      ["06-quiet-minimal.html", "06", "Quiet Minimal", "Radical calm; greeting and Capture, then one quiet line of counters. The least chrome."],
+      ["07-command-center.html", "07", "Command Center", "Search-first launcher with quick-jump chips; Capture and the feed play supporting roles."],
+      ["08-card-wall.html", "08", "Card Wall", "A masonry wall of mixed-height cards you can scan and browse; Capture pinned first."],
+      ["09-warm-hero.html", "09", "Warm Greeting Hero", "A time-of-day gradient banner holds the greeting and an inline Capture; tidy rows below."],
+      ["10-context-rail.html", "10", "Context Rail", "Capture and recent lead on the left; a sticky right rail carries today's context."],
+      ["11-shelves.html", "11", "Horizontal Shelves", "Streaming-style shelves that scroll sideways, one row per kind of thing."],
+      ["12-memory-first.html", "12", "Memory First", "The resurfaced memory is an immersive hero; Capture is a compact bar beneath it."],
+      ["13-notebook.html", "13", "Notebook", "A warm ruled page with a margin line and divider tabs; Capture reads as writing on paper."],
+      ["14-three-panel.html", "14", "Three Panel", "Three independently scrolling columns: Capture, Living now, and Recent side by side."],
+      ["15-big-type.html", "15", "Big Type Statement", "Oversized typography states the day in words; Capture is a wide, quiet field below."],
+      ["16-scratchpad.html", "16", "Scratchpad Sidebar", "A persistent right notepad panel holds Capture and pending notes; the archive fills the left."],
+      ["17-chapters-spotlight.html", "17", "Chapters Spotlight", "Current life chapters become large cover cards up top; everything else supports them."],
+      ["18-data-ribbon.html", "18", "Data Ribbon", "A thin metrics ribbon crowns a balanced two-column body of Capture, inbox, memory and recent."],
+      ["19-floating-capture.html", "19", "Floating Capture", "A clean content feed with Capture docked as a floating composer bar at the bottom."],
+      ["20-bento-pro.html", "20", "Bento Pro", "The flagship: a refined asymmetric bento with Capture as the hero tile and a big memory tile."]
+    ];
+
+    var grid = document.getElementById("grid");
+    CONCEPTS.forEach(function (c) {
+      var a = document.createElement("a");
+      a.className = "concept";
+      a.href = c[0];
+      a.innerHTML =
+        '<div class="thumb">' +
+          '<span class="badge">' + c[1] + '</span>' +
+          '<iframe loading="lazy" scrolling="no" title="' + c[2] + ' preview" src="' + c[0] + '"></iframe>' +
+          '<span class="open" aria-hidden="true"></span>' +
+        '</div>' +
+        '<div class="meta">' +
+          '<h2>' + c[2] + '<span class="ico ico-arrow open-ico"></span></h2>' +
+          '<p>' + c[3] + '</p>' +
+        '</div>';
+      grid.appendChild(a);
+    });
+
+    // Scale each iframe (rendered at 1280px wide) to fit its card.
+    function scaleThumbs() {
+      document.querySelectorAll(".thumb").forEach(function (t) {
+        var f = t.querySelector("iframe");
+        if (!f) return;
+        var s = t.clientWidth / 1280;
+        f.style.transform = "scale(" + s + ")";
+      });
+    }
+    window.addEventListener("load", scaleThumbs);
+    window.addEventListener("resize", scaleThumbs);
+    scaleThumbs();
+  </script>
+</body>
+</html>

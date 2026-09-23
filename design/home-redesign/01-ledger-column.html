@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home Redesign · 01 Ledger Column</title>
+  <link rel="stylesheet" href="shared/tokens.css" />
+  <link rel="stylesheet" href="shared/frame.css" />
+  <style>
+    /* Concept 01 — Ledger Column
+       One calm, centered reading column. Everything stacks in a single vertical
+       ledger separated by hairline rules, the way a paper journal reads. */
+    .ledger {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: var(--mt-space-12) var(--mt-space-6) 0;
+    }
+
+    .ledger-greeting {
+      margin-bottom: var(--mt-space-8);
+    }
+    .ledger-greeting .mt-eyebrow { display: block; margin-bottom: var(--mt-space-3); }
+    .ledger-greeting h1 {
+      margin: 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-display);
+      font-weight: var(--mt-font-weight-regular);
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+    }
+    .ledger-greeting p {
+      max-width: 46ch;
+      margin: var(--mt-space-4) 0 0;
+      color: var(--mt-color-ink-muted);
+      font-size: var(--mt-font-size-body-large);
+    }
+
+    .ledger-rule {
+      height: 1px;
+      margin: var(--mt-space-10) 0;
+      background: var(--mt-color-border);
+    }
+    .ledger-block { margin: 0; }
+
+    .ledger-kicker {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--mt-space-3);
+      margin-bottom: var(--mt-space-5);
+    }
+    .ledger-kicker h2 {
+      margin: 0;
+      color: var(--mt-color-ink);
+      font-family: var(--mt-font-family-sans);
+      font-size: 11px;
+      font-weight: var(--mt-font-weight-semibold);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    /* Ready to organize — inline ledger rows */
+    .ledger-inbox { display: grid; gap: 2px; }
+    .ledger-inbox a {
+      display: grid;
+      grid-template-columns: 74px 1fr auto;
+      align-items: baseline;
+      gap: var(--mt-space-4);
+      padding: var(--mt-space-3) var(--mt-space-2);
+      border-radius: var(--mt-radius-small);
+      color: var(--mt-color-ink);
+      text-decoration: none;
+      transition: background var(--mt-motion-quick);
+    }
+    .ledger-inbox a:hover { background: var(--mt-color-surface-subtle); }
+    .ledger-inbox time { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); font-variant-numeric: tabular-nums; }
+    .ledger-inbox .li-body { min-width: 0; }
+    .ledger-inbox .li-body strong { font-size: var(--mt-font-size-body); font-weight: var(--mt-font-weight-medium); }
+    .ledger-inbox .li-body span { display: block; margin-top: 2px; overflow: hidden; color: var(--mt-color-ink-muted); font-size: var(--mt-font-size-caption); text-overflow: ellipsis; white-space: nowrap; }
+    .ledger-inbox .ico { color: var(--mt-color-ink-faint); font-size: 14px; align-self: center; }
+
+    /* Stat line */
+    .ledger-stats { display: flex; flex-wrap: wrap; gap: var(--mt-space-10); }
+    .ledger-stat .n { font-family: var(--mt-font-family-serif); font-size: var(--mt-font-size-title); line-height: 1; }
+    .ledger-stat .l { margin-top: 6px; color: var(--mt-color-ink-muted); font-size: var(--mt-font-size-label); }
+    .ledger-stat .d { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); }
+
+    /* Chapters as ledger entries */
+    .ledger-chapters { display: grid; gap: var(--mt-space-4); }
+    .ledger-chapter { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: var(--mt-space-4); }
+    .ledger-chapter .mt-kind { display: block; margin-bottom: 3px; }
+    .ledger-chapter h3 { margin: 0; font-family: var(--mt-font-family-serif); font-size: var(--mt-font-size-title-small); font-weight: var(--mt-font-weight-medium); }
+    .ledger-chapter .when { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); white-space: nowrap; }
+
+    /* Memory */
+    .ledger-memory {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      overflow: hidden;
+      border: 1px solid var(--mt-color-border);
+      border-radius: var(--mt-radius-large);
+      background: linear-gradient(145deg, var(--mt-color-accent-subtle), var(--mt-color-surface) 60%);
+    }
+    .ledger-memory .mt-photo { min-height: 210px; }
+    .ledger-memory .lm-body { padding: var(--mt-space-6) var(--mt-space-6) var(--mt-space-6) var(--mt-space-8); }
+    .ledger-memory .lm-top { display: flex; align-items: center; justify-content: space-between; }
+    .ledger-memory time { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); }
+    .ledger-memory h3 { margin: var(--mt-space-3) 0 0; font-family: var(--mt-font-family-serif); font-size: 28px; font-weight: var(--mt-font-weight-medium); letter-spacing: -0.02em; line-height: 1.12; }
+    .ledger-memory p { margin: var(--mt-space-3) 0 0; color: var(--mt-color-ink-muted); font-size: var(--mt-font-size-body); }
+    .ledger-memory footer { display: flex; flex-wrap: wrap; gap: 5px; margin-top: var(--mt-space-4); }
+
+    /* Recent list */
+    .ledger-recent { display: grid; gap: 0; }
+    .ledger-recent article { display: grid; grid-template-columns: 1fr auto; gap: var(--mt-space-5); padding: var(--mt-space-5) 0; border-top: 1px solid var(--mt-color-border); }
+    .ledger-recent article:first-child { border-top: 0; padding-top: 0; }
+    .ledger-recent .lr-top { display: flex; align-items: center; gap: var(--mt-space-3); }
+    .ledger-recent time { color: var(--mt-color-ink-faint); font-size: 11px; }
+    .ledger-recent h3 { margin: var(--mt-space-2) 0 0; font-family: var(--mt-font-family-serif); font-size: var(--mt-font-size-body-large); font-weight: var(--mt-font-weight-medium); }
+    .ledger-recent p { margin: 4px 0 0; color: var(--mt-color-ink-muted); font-size: 14px; }
+    .ledger-recent .lr-thumb { width: 92px; height: 92px; flex: none; border-radius: var(--mt-radius-medium); overflow: hidden; }
+
+    @media (max-width: 720px) {
+      .ledger { padding-top: var(--mt-space-8); }
+      .ledger-greeting h1 { font-size: 34px; }
+      .ledger-memory { grid-template-columns: 1fr; }
+      .ledger-memory .mt-photo { min-height: 180px; }
+      .ledger-recent article { grid-template-columns: 1fr; }
+      .ledger-recent .lr-thumb { display: none; }
+      .ledger-inbox a { grid-template-columns: 60px 1fr auto; gap: var(--mt-space-3); }
+    }
+  </style>
+</head>
+<body data-nav="home" data-page-name="Home">
+  <main class="mt-main">
+    <div class="ledger">
+
+      <header class="ledger-greeting">
+        <span class="mt-eyebrow">Tuesday · September 23</span>
+        <h1>Good morning, Ryan.</h1>
+        <p>A calm view of what is active, recent, and waiting for you.</p>
+      </header>
+
+      <!-- Quick capture — preserved -->
+      <section class="mt-capture" aria-label="Quick capture">
+        <div class="mt-capture-head">
+          <span class="mt-capture-spark"><span class="ico ico-spark"></span></span>
+          <h2>Capture something</h2>
+        </div>
+        <div class="mt-capture-field">A thought, a moment, a fact worth keeping…</div>
+        <div class="mt-capture-actions">
+          <div class="mt-capture-tools">
+            <button class="mt-tool"><span class="ico ico-image"></span> Photo</button>
+            <button class="mt-tool"><span class="ico ico-mic"></span> Voice</button>
+            <button class="mt-tool"><span class="ico ico-calendar"></span> Date</button>
+          </div>
+          <button class="mt-btn"><span class="ico ico-arrow"></span> Capture</button>
+        </div>
+      </section>
+
+      <div class="ledger-rule"></div>
+
+      <section class="ledger-block">
+        <div class="ledger-kicker">
+          <h2>Ready to organize</h2>
+          <a class="mt-section-link" href="#">Inbox · 3 <span class="ico ico-chevron"></span></a>
+        </div>
+        <div class="ledger-inbox">
+          <a href="#">
+            <time>Sep 23</time>
+            <span class="li-body"><strong>Coffee with Mara before her flight</strong><span>She mentioned wanting to move back east by spring…</span></span>
+            <span class="ico ico-chevron"></span>
+          </a>
+          <a href="#">
+            <time>Sep 22</time>
+            <span class="li-body"><strong>Idea: a slower kind of journal</strong><span>Something that rewards returning, not streaks.</span></span>
+            <span class="ico ico-chevron"></span>
+          </a>
+          <a href="#">
+            <time>Sep 21</time>
+            <span class="li-body"><strong>Dad's borscht recipe, finally written down</strong><span>A palmful of dill at the very end, never before.</span></span>
+            <span class="ico ico-chevron"></span>
+          </a>
+        </div>
+      </section>
+
+      <div class="ledger-rule"></div>
+
+      <section class="ledger-block">
+        <div class="ledger-stats">
+          <div class="ledger-stat">
+            <div class="n">3</div>
+            <div class="l">Life in progress</div>
+            <div class="d">current chapters</div>
+          </div>
+          <div class="ledger-stat">
+            <div class="n">128</div>
+            <div class="l">Entries kept</div>
+            <div class="d">12 First Times · 7 Collections</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="ledger-rule"></div>
+
+      <section class="ledger-block">
+        <div class="ledger-kicker">
+          <h2>Current chapters</h2>
+          <a class="mt-section-link" href="#">Open Timeline <span class="ico ico-chevron"></span></a>
+        </div>
+        <div class="ledger-chapters">
+          <div class="ledger-chapter">
+            <div><span class="mt-kind">Homes</span><h3>Apartment on Bedford Ave</h3></div>
+            <span class="when">Aug 2023 – Present</span>
+          </div>
+          <div class="ledger-chapter">
+            <div><span class="mt-kind">Career</span><h3>Building MemoTrail</h3></div>
+            <span class="when">2024 – Present</span>
+          </div>
+          <div class="ledger-chapter">
+            <div><span class="mt-kind">Learning</span><h3>Piano, slowly</h3></div>
+            <span class="when">This year</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="ledger-rule"></div>
+
+      <section class="ledger-block">
+        <div class="ledger-kicker">
+          <h2>A memory for today</h2>
+          <span class="mt-eyebrow" style="text-transform:none;letter-spacing:0;color:var(--mt-color-ink-faint);font-weight:400;">On this day, 2 years ago</span>
+        </div>
+        <article class="ledger-memory">
+          <div class="mt-photo"></div>
+          <div class="lm-body">
+            <div class="lm-top">
+              <span class="mt-kind">Memory</span>
+              <time>Sep 23, 2023</time>
+            </div>
+            <h3>The morning we hiked Breakneck Ridge</h3>
+            <p>The fog didn't lift until noon, and we ate cold bagels on the summit anyway. Best decision of that whole trip.</p>
+            <footer>
+              <span class="mt-chip">Trips</span>
+              <span class="mt-chip">#hiking</span>
+              <span class="mt-chip">Mara</span>
+            </footer>
+          </div>
+        </article>
+      </section>
+
+      <div class="ledger-rule"></div>
+
+      <section class="ledger-block">
+        <div class="ledger-kicker">
+          <h2>Recent entries</h2>
+          <a class="mt-section-link" href="#">Search all <span class="ico ico-chevron"></span></a>
+        </div>
+        <div class="ledger-recent">
+          <article>
+            <div>
+              <div class="lr-top"><span class="mt-kind">Reflection</span><time>Sep 22</time></div>
+              <h3>On keeping a slower record</h3>
+              <p>I don't want a feed. I want a place that gets richer the longer I keep it.</p>
+            </div>
+          </article>
+          <article>
+            <div>
+              <div class="lr-top"><span class="mt-kind">First Time</span><time>Sep 20</time></div>
+              <h3>First time making pasta from scratch</h3>
+              <p>Flour everywhere. The dough came together on the third try.</p>
+            </div>
+            <div class="lr-thumb mt-photo"></div>
+          </article>
+          <article>
+            <div>
+              <div class="lr-top"><span class="mt-kind">Note</span><time>Sep 18</time></div>
+              <h3>Books to reread this winter</h3>
+              <p>Gilead, The Dispossessed, and whatever Mara keeps recommending.</p>
+            </div>
+          </article>
+          <article>
+            <div>
+              <div class="lr-top"><span class="mt-kind">Person</span><time>Sep 17</time></div>
+              <h3>Called Grandma Lin</h3>
+              <p>She told the story about the bicycle again. I wrote it down this time.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+    </div>
+  </main>
+  <script src="shared/ui.js"></script>
+</body>
+</html>

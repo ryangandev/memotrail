@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home Redesign · 18 Data Ribbon</title>
+  <link rel="stylesheet" href="shared/tokens.css" />
+  <link rel="stylesheet" href="shared/frame.css" />
+  <style>
+    /* Concept 18 - Data Ribbon
+       A thin analytics ribbon of life-metrics spans the very top, then a calm
+       editorial two-column body: left is the working desk (capture + inbox +
+       recent), right is the reflective rail (memory + chapters). */
+    .ribbon-page {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: var(--mt-space-8) var(--mt-space-6) 0;
+    }
+
+    /* Metrics ribbon */
+    .rb-ribbon {
+      display: flex;
+      flex-wrap: wrap;
+      overflow: hidden;
+      margin-bottom: var(--mt-space-8);
+      border: 1px solid var(--mt-color-border);
+      border-radius: var(--mt-radius-large);
+      background: var(--mt-color-surface);
+      box-shadow: var(--mt-shadow-raised);
+    }
+    .rb-metric {
+      display: flex;
+      flex: 1 1 0;
+      min-width: 150px;
+      align-items: center;
+      gap: var(--mt-space-3);
+      padding: var(--mt-space-4) var(--mt-space-5);
+      border-left: 1px solid var(--mt-color-border);
+    }
+    .rb-metric:first-child { border-left: 0; }
+    .rb-metric-mark {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      flex: none;
+      place-items: center;
+      border-radius: var(--mt-radius-medium);
+      color: var(--mt-color-accent);
+      background: var(--mt-color-accent-subtle);
+      font-size: 17px;
+    }
+    .rb-metric.is-warm .rb-metric-mark {
+      color: var(--mt-color-warm);
+      background: var(--mt-color-warm-subtle);
+    }
+    .rb-metric .m-n {
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-title-small);
+      font-weight: var(--mt-font-weight-medium);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .rb-metric .m-l {
+      margin-top: 3px;
+      color: var(--mt-color-ink-muted);
+      font-size: 11px;
+      font-weight: var(--mt-font-weight-medium);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* Greeting */
+    .rb-greeting { margin-bottom: var(--mt-space-8); }
+    .rb-greeting .mt-eyebrow { display: block; margin-bottom: var(--mt-space-3); }
+    .rb-greeting h1 {
+      margin: 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-display);
+      font-weight: var(--mt-font-weight-regular);
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+    }
+    .rb-greeting p {
+      max-width: 52ch;
+      margin: var(--mt-space-4) 0 0;
+      color: var(--mt-color-ink-muted);
+      font-size: var(--mt-font-size-body-large);
+    }
+
+    /* Two-column body */
+    .rb-body {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: var(--mt-space-8);
+      align-items: start;
+      padding-bottom: var(--mt-space-12);
+    }
+    .rb-col { display: grid; gap: var(--mt-space-8); }
+    .rb-rail {
+      position: sticky;
+      top: 84px;
+      gap: var(--mt-space-8);
+    }
+
+    .rb-section-note {
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--mt-color-ink-faint);
+      font-weight: var(--mt-font-weight-regular);
+      font-size: var(--mt-font-size-caption);
+    }
+
+    /* Inbox cards */
+    .rb-inbox { display: grid; gap: var(--mt-space-3); }
+    .rb-inbox-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: var(--mt-space-4);
+      padding: var(--mt-space-4) var(--mt-space-5);
+      border: 1px solid var(--mt-color-border);
+      border-radius: var(--mt-radius-medium);
+      background: var(--mt-color-surface);
+      color: var(--mt-color-ink);
+      text-decoration: none;
+      transition: border-color var(--mt-motion-quick), background var(--mt-motion-quick);
+    }
+    .rb-inbox-item:hover {
+      border-color: var(--mt-color-border-strong);
+      background: var(--mt-color-surface-raised);
+    }
+    .rb-inbox-item time {
+      color: var(--mt-color-ink-faint);
+      font-size: var(--mt-font-size-caption);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .rb-ii-body { min-width: 0; }
+    .rb-ii-body strong {
+      display: block;
+      font-size: var(--mt-font-size-body);
+      font-weight: var(--mt-font-weight-medium);
+    }
+    .rb-ii-body span {
+      display: block;
+      margin-top: 2px;
+      overflow: hidden;
+      color: var(--mt-color-ink-muted);
+      font-size: var(--mt-font-size-caption);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .rb-inbox-item .ico { color: var(--mt-color-ink-faint); font-size: 15px; }
+
+    /* Recent list */
+    .rb-recent { display: grid; }
+    .rb-recent article {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: var(--mt-space-5);
+      padding: var(--mt-space-5) 0;
+      border-top: 1px solid var(--mt-color-border);
+    }
+    .rb-recent article:first-child { padding-top: 0; border-top: 0; }
+    .rb-ri-top { display: flex; align-items: center; gap: var(--mt-space-3); }
+    .rb-recent time { color: var(--mt-color-ink-faint); font-size: 11px; }
+    .rb-recent h3 {
+      margin: var(--mt-space-2) 0 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-body-large);
+      font-weight: var(--mt-font-weight-medium);
+    }
+    .rb-recent p { margin: 4px 0 0; color: var(--mt-color-ink-muted); font-size: 14px; }
+    .rb-ri-thumb {
+      width: 84px;
+      height: 84px;
+      flex: none;
+      overflow: hidden;
+      border-radius: var(--mt-radius-medium);
+    }
+
+    /* Memory card (rail) */
+    .rb-memory {
+      overflow: hidden;
+      border: 1px solid var(--mt-color-border);
+      border-radius: var(--mt-radius-large);
+      background: var(--mt-color-surface);
+    }
+    .rb-mem-photo { height: 168px; }
+    .rb-mem-body { padding: var(--mt-space-5) var(--mt-space-6) var(--mt-space-6); }
+    .rb-mem-top { display: flex; align-items: center; justify-content: space-between; }
+    .rb-mem-top time { color: var(--mt-color-ink-faint); font-size: var(--mt-font-size-caption); }
+    .rb-memory h3 {
+      margin: var(--mt-space-3) 0 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: 24px;
+      font-weight: var(--mt-font-weight-medium);
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+    .rb-memory p { margin: var(--mt-space-3) 0 0; color: var(--mt-color-ink-muted); font-size: 14px; }
+    .rb-memory footer { display: flex; flex-wrap: wrap; gap: 5px; margin-top: var(--mt-space-4); }
+
+    /* Chapters (rail) */
+    .rb-chapters {
+      display: grid;
+      gap: var(--mt-space-1);
+      padding: var(--mt-space-2);
+      border: 1px solid var(--mt-color-border);
+      border-radius: var(--mt-radius-large);
+      background: var(--mt-color-surface);
+    }
+    .rb-chapter {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: var(--mt-space-3);
+      padding: var(--mt-space-3) var(--mt-space-4);
+      border-radius: var(--mt-radius-medium);
+      text-decoration: none;
+      color: var(--mt-color-ink);
+      transition: background var(--mt-motion-quick);
+    }
+    .rb-chapter:hover { background: var(--mt-color-surface-subtle); }
+    .rb-chapter .mt-kind { display: block; margin-bottom: 3px; }
+    .rb-chapter h3 {
+      margin: 0;
+      font-family: var(--mt-font-family-serif);
+      font-size: var(--mt-font-size-title-small);
+      font-weight: var(--mt-font-weight-medium);
+    }
+    .rb-chapter .when {
+      color: var(--mt-color-ink-faint);
+      font-size: var(--mt-font-size-caption);
+      white-space: nowrap;
+    }
+
+    @media (max-width: 980px) {
+      .rb-body { grid-template-columns: 1fr; gap: var(--mt-space-10); }
+      .rb-rail { position: static; }
+    }
+    @media (max-width: 720px) {
+      .ribbon-page { padding-top: var(--mt-space-6); }
+    }
+    @media (max-width: 560px) {
+      .rb-greeting h1 { font-size: 34px; }
+      .rb-metric { flex-basis: 50%; min-width: 0; }
+      .rb-recent article { grid-template-columns: 1fr; }
+      .rb-ri-thumb { display: none; }
+    }
+  </style>
+</head>
+<body data-nav="home" data-page-name="Home">
+  <main class="mt-main">
+    <div class="ribbon-page">
+
+      <!-- Metrics ribbon -->
+      <section class="rb-ribbon" aria-label="Life in numbers">
+        <div class="rb-metric">
+          <span class="rb-metric-mark"><span class="ico ico-timeline"></span></span>
+          <div><div class="m-n">3</div><div class="m-l">Chapters</div></div>
+        </div>
+        <div class="rb-metric">
+          <span class="rb-metric-mark"><span class="ico ico-archive"></span></span>
+          <div><div class="m-n">128</div><div class="m-l">Entries</div></div>
+        </div>
+        <div class="rb-metric is-warm">
+          <span class="rb-metric-mark"><span class="ico ico-star"></span></span>
+          <div><div class="m-n">12</div><div class="m-l">First Times</div></div>
+        </div>
+        <div class="rb-metric">
+          <span class="rb-metric-mark"><span class="ico ico-layers"></span></span>
+          <div><div class="m-n">7</div><div class="m-l">Collections</div></div>
+        </div>
+        <div class="rb-metric is-warm">
+          <span class="rb-metric-mark"><span class="ico ico-inbox"></span></span>
+          <div><div class="m-n">3</div><div class="m-l">To organize</div></div>
+        </div>
+      </section>
+
+      <header class="rb-greeting">
+        <span class="mt-eyebrow">Tuesday · September 23</span>
+        <h1>Good morning, Ryan.</h1>
+        <p>A calm view of what is active, recent, and waiting for you.</p>
+      </header>
+
+      <div class="rb-body">
+
+        <!-- Left: working desk -->
+        <div class="rb-col">
+
+          <!-- Quick capture - preserved -->
+          <section class="mt-capture" aria-label="Quick capture">
+            <div class="mt-capture-head">
+              <span class="mt-capture-spark"><span class="ico ico-spark"></span></span>
+              <h2>Capture something</h2>
+            </div>
+            <div class="mt-capture-field">A thought, a moment, a fact worth keeping…</div>
+            <div class="mt-capture-actions">
+              <div class="mt-capture-tools">
+                <button class="mt-tool"><span class="ico ico-image"></span> Photo</button>
+                <button class="mt-tool"><span class="ico ico-mic"></span> Voice</button>
+                <button class="mt-tool"><span class="ico ico-calendar"></span> Date</button>
+              </div>
+              <button class="mt-btn"><span class="ico ico-arrow"></span> Capture</button>
+            </div>
+          </section>
+
+          <section>
+            <div class="mt-section-head">
+              <div>
+                <h2>Ready to organize</h2>
+                <p>Loose captures waiting for a home.</p>
+              </div>
+              <a class="mt-section-link" href="#">Inbox · 3 <span class="ico ico-chevron"></span></a>
+            </div>
+            <div class="rb-inbox">
+              <a class="rb-inbox-item" href="#">
+                <time>Sep 23</time>
+                <span class="rb-ii-body"><strong>Coffee with Mara before her flight</strong><span>She mentioned wanting to move back east by spring…</span></span>
+                <span class="ico ico-chevron"></span>
+              </a>
+              <a class="rb-inbox-item" href="#">
+                <time>Sep 22</time>
+                <span class="rb-ii-body"><strong>Idea: a slower kind of journal</strong><span>Something that rewards returning, not streaks.</span></span>
+                <span class="ico ico-chevron"></span>
+              </a>
+              <a class="rb-inbox-item" href="#">
+                <time>Sep 21</time>
+                <span class="rb-ii-body"><strong>Dad's borscht recipe, finally written down</strong><span>A palmful of dill at the very end, never before.</span></span>
+                <span class="ico ico-chevron"></span>
+              </a>
+            </div>
+          </section>
+
+          <section>
+            <div class="mt-section-head">
+              <h2>Recent entries</h2>
+              <a class="mt-section-link" href="#">Search all <span class="ico ico-chevron"></span></a>
+            </div>
+            <div class="rb-recent">
+              <article>
+                <div>
+                  <div class="rb-ri-top"><span class="mt-kind">Reflection</span><time>Sep 22</time></div>
+                  <h3>On keeping a slower record</h3>
+                  <p>I don't want a feed. I want a place that gets richer the longer I keep it.</p>
+                </div>
+              </article>
+              <article>
+                <div>
+                  <div class="rb-ri-top"><span class="mt-kind">First Time</span><time>Sep 20</time></div>
+                  <h3>First time making pasta from scratch</h3>
+                  <p>Flour everywhere. The dough came together on the third try.</p>
+                </div>
+                <div class="rb-ri-thumb mt-photo"></div>
+              </article>
+              <article>
+                <div>
+                  <div class="rb-ri-top"><span class="mt-kind">Note</span><time>Sep 18</time></div>
+                  <h3>Books to reread this winter</h3>
+                  <p>Gilead, The Dispossessed, and whatever Mara keeps recommending.</p>
+                </div>
+              </article>
+              <article>
+                <div>
+                  <div class="rb-ri-top"><span class="mt-kind">Person</span><time>Sep 17</time></div>
+                  <h3>Called Grandma Lin</h3>
+                  <p>She told the story about the bicycle again. I wrote it down this time.</p>
+                </div>
+              </article>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- Right: reflective rail -->
+        <div class="rb-col rb-rail">
+
+          <section>
+            <div class="mt-section-head">
+              <h2>A memory for today</h2>
+              <span class="rb-section-note">On this day, 2 years ago</span>
+            </div>
+            <article class="rb-memory">
+              <div class="mt-photo rb-mem-photo"></div>
+              <div class="rb-mem-body">
+                <div class="rb-mem-top">
+                  <span class="mt-kind">Memory</span>
+                  <time>Sep 23, 2023</time>
+                </div>
+                <h3>The morning we hiked Breakneck Ridge</h3>
+                <p>The fog didn't lift until noon, and we ate cold bagels on the summit anyway. Best decision of that whole trip.</p>
+                <footer>
+                  <span class="mt-chip">Trips</span>
+                  <span class="mt-chip">#hiking</span>
+                  <span class="mt-chip">Mara</span>
+                </footer>
+              </div>
+            </article>
+          </section>
+
+          <section>
+            <div class="mt-section-head">
+              <h2>Current chapters</h2>
+              <a class="mt-section-link" href="#">Timeline <span class="ico ico-chevron"></span></a>
+            </div>
+            <div class="rb-chapters">
+              <a class="rb-chapter" href="#">
+                <div><span class="mt-kind">Homes</span><h3>Apartment on Bedford Ave</h3></div>
+                <span class="when">Aug 2023 – Present</span>
+              </a>
+              <a class="rb-chapter" href="#">
+                <div><span class="mt-kind">Career</span><h3>Building MemoTrail</h3></div>
+                <span class="when">2024 – Present</span>
+              </a>
+              <a class="rb-chapter" href="#">
+                <div><span class="mt-kind">Learning</span><h3>Piano, slowly</h3></div>
+                <span class="when">This year</span>
+              </a>
+            </div>
+          </section>
+
+        </div>
+
+      </div>
+    </div>
+  </main>
+  <script src="shared/ui.js"></script>
+</body>
+</html>
