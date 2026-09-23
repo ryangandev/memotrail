@@ -1,18 +1,38 @@
 # Timeline design explorations
 
+## How to run
+
+These are plain, dependency-free HTML files - no build step and nothing to
+install.
+
+**View a single design (quickest):** open any `NN-*.html` file directly in your
+browser - double-click it in your file manager, or drag it into a browser window.
+Every individual design works fine straight from disk.
+
+**View the gallery (`index.html`):** the gallery loads each design in a live
+preview frame, and browsers block those frames when a page is opened straight from
+disk (`file://`), so the thumbnails come up blank. Serve the folder over a local
+web server instead:
+
+```bash
+cd timeline-ideas
+python3 -m http.server 8000
+```
+
+Then open <http://localhost:8000/> in your browser. Any static server works - for
+example `npx serve` from the repo root, then open the printed URL and navigate to
+`/timeline-ideas/`.
+
+## About these designs
+
 Twenty standalone HTML mockups exploring how MemoTrail could visualize a life
-timeline from **birth to the present** — with **events** (points in time),
+timeline from **birth to the present** - with **events** (points in time),
 **stages** (spans), **milestones** (pivotal moments), and multiple **tracks**
 (Career, Home, Relationships, Travel, Health).
 
 These are **throwaway prototypes** for picking a direction. They intentionally
 ignore the app's current styling and have **no external dependencies** (no CDNs,
-fonts, or remote images) — open any file directly in a browser.
-
-## Start here
-
-Open [`index.html`](./index.html) for a filterable gallery of all 20, or open any
-file below directly.
+fonts, or remote images).
 
 ## The 20 concepts
 
@@ -41,7 +61,7 @@ file below directly.
 
 ## Shared sample data
 
-Every design uses the same fictional life — **Ava Chen**, born March 14, 1990 in
-Portland, present year 2025 — so the concepts are directly comparable. The events
+Every design uses the same fictional life - **Ava Chen**, born March 14, 1990 in
+Portland, present year 2025 - so the concepts are directly comparable. The events
 span career, homes, relationships, travel, and hobbies, and include a few
 approximate ("~2014") dates to show date-precision handling.
