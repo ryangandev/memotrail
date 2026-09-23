@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MemoTrail · Years Heatmap</title>
+<style>
+  :root{
+    --bg:#f6f7fb;
+    --panel:#ffffff;
+    --ink:#1f2430;
+    --muted:#6b7280;
+    --line:#e6e8ef;
+    --cell0:#eef1f6;
+    --cell1:#cfe8dc;
+    --cell2:#84cbaa;
+    --cell3:#3f9e73;
+    --cell4:#1f7a52;
+    --gold:#e0a010;
+    --career:#3b82f6;
+    --home:#10b981;
+    --rel:#f43f5e;
+    --travel:#f59e0b;
+    --health:#8b5cf6;
+    --shadow:0 1px 2px rgba(20,25,40,.05),0 10px 30px rgba(20,25,40,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%,#eef2ff 0%,var(--bg) 55%);
+    color:var(--ink);
+    line-height:1.5;
+    padding:32px 20px 64px;
+  }
+  .wrap{max-width:1040px;margin:0 auto}
+  header.page{margin-bottom:24px}
+  .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  h1{font-size:26px;margin:6px 0 4px;letter-spacing:-.01em}
+  .lede{color:var(--muted);font-size:14px;max-width:60ch}
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:18px;
+    box-shadow:var(--shadow);padding:22px 24px;
+  }
+  .toolbar{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .totals{display:flex;align-items:baseline;gap:10px}
+  .totals .big{font-size:30px;font-weight:700;letter-spacing:-.02em}
+  .totals .sub{color:var(--muted);font-size:13px}
+  .legend{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+  .legend .sw{width:15px;height:15px;border-radius:4px;border:1px solid rgba(0,0,0,.04)}
+  .grid-shell{display:grid;grid-template-columns:1.35fr .95fr;gap:22px;align-items:start}
+  @media(max-width:800px){.grid-shell{grid-template-columns:1fr}}
+  .decade-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .decade-label{width:52px;flex:none;font-size:12px;font-weight:700;color:var(--muted);text-align:right}
+  .cells{display:grid;grid-template-columns:repeat(10,1fr);gap:7px;flex:1}
+  .cell{
+    position:relative;aspect-ratio:1/1;border-radius:6px;background:var(--cell0);
+    border:1px solid rgba(20,25,40,.05);cursor:pointer;
+    transition:transform .12s ease,box-shadow .12s ease,outline-color .12s ease;
+    outline:2px solid transparent;outline-offset:2px;
+  }
+  .cell .yr{
+    position:absolute;left:0;right:0;bottom:2px;text-align:center;font-size:8.5px;
+    color:rgba(31,36,48,.42);font-weight:600;pointer-events:none;
+  }
+  .cell.l1{background:var(--cell1)} .cell.l2{background:var(--cell2)}
+  .cell.l3{background:var(--cell3)} .cell.l4{background:var(--cell4)}
+  .cell.l2 .yr,.cell.l3 .yr,.cell.l4 .yr{color:rgba(255,255,255,.85)}
+  .cell.milestone{box-shadow:0 0 0 2px var(--panel),0 0 0 3.5px var(--gold)}
+  .cell.empty{cursor:default;opacity:.9}
+  .cell:not(.empty):hover{transform:translateY(-2px) scale(1.06);box-shadow:0 6px 16px rgba(20,25,40,.18)}
+  .cell.sel{outline-color:#111827}
+  .cell:focus-visible{outline-color:#111827}
+  .now-note{margin:14px 0 2px 64px;font-size:12px;color:var(--muted)}
+  .now-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#111827;margin-right:6px;vertical-align:middle}
+
+  .detail{min-height:280px}
+  .detail h2{font-size:15px;margin:0 0 2px}
+  .detail .dsub{color:var(--muted);font-size:12.5px;margin-bottom:14px}
+  .moment{display:flex;gap:11px;padding:11px 0;border-top:1px solid var(--line)}
+  .moment:first-of-type{border-top:none}
+  .dot{width:11px;height:11px;border-radius:50%;flex:none;margin-top:5px}
+  .dot.Career{background:var(--career)} .dot.Home{background:var(--home)}
+  .dot.Relationships{background:var(--rel)} .dot.Travel{background:var(--travel)}
+  .dot.Health{background:var(--health)}
+  .m-title{font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px}
+  .m-title .star{color:var(--gold)}
+  .m-meta{font-size:12px;color:var(--muted)}
+  .m-note{font-size:12.5px;color:#4b5563;margin-top:2px}
+  .chip{display:inline-block;font-size:10.5px;padding:1px 7px;border-radius:999px;background:#f1f3f8;color:var(--muted);margin-left:6px;border:1px solid var(--line)}
+  .empty-state{color:var(--muted);font-size:13px;padding:24px 4px}
+  .tracks-key{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+  .tracks-key span{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+  .tracks-key i{width:9px;height:9px;border-radius:50%;display:inline-block}
+  @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .moment{animation:rise .22s ease both}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <div class="kicker">MemoTrail · design 06</div>
+    <h1>Years Heatmap</h1>
+    <p class="lede">Ava Chen's life as a contribution grid - one cell per year, 1990&ndash;2025. Darker years held more moments. Ringed cells are milestones. Pick a year to read what happened.</p>
+  </header>
+
+  <section class="card">
+    <div class="toolbar">
+      <div class="totals">
+        <span class="big" id="totYears">35</span>
+        <span class="sub">years lived&nbsp; · &nbsp;<strong id="totMoments">25</strong> moments&nbsp; · &nbsp;6 milestones</span>
+      </div>
+      <div class="legend" aria-label="intensity legend from fewer to more moments">
+        <span>Less</span>
+        <span class="sw" style="background:var(--cell0)"></span>
+        <span class="sw" style="background:var(--cell1)"></span>
+        <span class="sw" style="background:var(--cell2)"></span>
+        <span class="sw" style="background:var(--cell3)"></span>
+        <span class="sw" style="background:var(--cell4)"></span>
+        <span>More</span>
+      </div>
+    </div>
+
+    <div class="grid-shell">
+      <div>
+        <div id="grid" role="grid" aria-label="Years from 1990 to 2025 by decade"></div>
+        <p class="now-note"><span class="now-dot"></span>2025 - <strong>Now.</strong> Age 35, in Oakland.</p>
+        <div class="tracks-key" aria-hidden="false">
+          <span><i style="background:var(--career)"></i>Career</span>
+          <span><i style="background:var(--home)"></i>Home</span>
+          <span><i style="background:var(--rel)"></i>Relationships</span>
+          <span><i style="background:var(--travel)"></i>Travel</span>
+          <span><i style="background:var(--health)"></i>Health &amp; hobbies</span>
+          <span><i style="background:var(--gold)"></i>&#9733; milestone</span>
+        </div>
+      </div>
+      <aside class="card detail" style="box-shadow:none;background:#fbfcfe" aria-live="polite">
+        <div id="detailBody"></div>
+      </aside>
+    </div>
+  </section>
+</div>
+
+<script>
+const EVENTS = [
+  {year:1990,title:"Born in Portland, Oregon",track:"Home",milestone:true,note:"The beginning - a spring baby, born March 14."},
+  {year:2002,title:"Family moved to Seattle",track:"Home",note:"A new city at age 12."},
+  {year:2008,title:"Graduated high school",track:"Career",milestone:true,note:"Cap, gown, and a wide-open summer."},
+  {year:2011,title:"First internship at a startup",track:"Career",note:"First taste of shipping real code."},
+  {year:2012,title:"Graduated university - B.S. Computer Science",track:"Career",milestone:true,note:"Four years of late-night labs, done."},
+  {year:2012,title:"First job: Junior Developer",track:"Career",note:"Badge, laptop, and a wall of new acronyms."},
+  {year:2012,title:"Moved to San Francisco",track:"Home",note:"A U-Haul and a studio near the Bay."},
+  {year:2013,title:"Backpacked Southeast Asia",track:"Travel",note:"Three months, one backpack."},
+  {year:2014,title:"Started photography",track:"Health",approx:true,note:"A thrifted film camera started it all."},
+  {year:2015,title:"Promoted to Senior Engineer",track:"Career",note:"Owning bigger systems."},
+  {year:2015,title:"Met Sam",track:"Relationships",note:"At a friend's rooftop birthday."},
+  {year:2016,title:"First marathon, Chicago",track:"Travel",approx:true,note:"26.2 miles and one very sore body."},
+  {year:2018,title:"Became Tech Lead",track:"Career",note:"Leading a team for the first time."},
+  {year:2018,title:"Trip to Japan (cherry blossoms)",track:"Travel",note:"Hanami season in Kyoto."},
+  {year:2019,title:"Married Sam",track:"Relationships",milestone:true,note:"A small garden wedding."},
+  {year:2020,title:"Bought first home, Oakland",track:"Home",milestone:true,note:"Keys to a little craftsman."},
+  {year:2021,title:"Learned pottery",track:"Health",note:"Muddy hands, wobbly bowls."},
+  {year:2022,title:"First child, Noah, born",track:"Relationships",milestone:true,note:"The world got much bigger."},
+  {year:2023,title:"Raised seed funding ($2M)",track:"Career",note:"Loomly's first real fuel."},
+  {year:2023,title:"Summited Mount Rainier",track:"Travel",note:"14,411 ft and a sunrise."},
+  {year:2024,title:"Adopted a dog, Miso",track:"Relationships",note:"A very good, very loud dog."},
+  {year:2024,title:"Learned to sail",track:"Health",note:"Wind, tiller, and salt."}
+];
+const STAGES = [
+  {start:1990,end:2002,startYear:1990,title:"Childhood home - Portland, Oregon",track:"Home",note:"Twelve years of first everything."},
+  {start:2008,end:2012,startYear:2008,title:"University - B.S. Computer Science",track:"Career",note:"Four-year stage."},
+  {start:2021,end:2025,startYear:2021,title:"Founded “Loomly”, a design tool",track:"Career",ongoing:true,note:"Ongoing - the current chapter."}
+];
+const MILESTONE_YEARS = new Set([1990,2008,2012,2019,2020,2022]);
+const START=1990, END=2025;
+
+// count moments per year (events + stage starts)
+const perYear={};
+for(let y=START;y<=END;y++) perYear[y]=[];
+EVENTS.forEach(e=>perYear[e.year].push(e));
+STAGES.forEach(s=>perYear[s.startYear].push(Object.assign({year:s.startYear,isStage:true,span:s.start+"–"+(s.ongoing?"now":s.end)},s)));
+
+const totalMoments = EVENTS.length + STAGES.length;
+document.getElementById('totMoments').textContent = totalMoments;
+
+function level(n){ if(n<=0)return 0; if(n===1)return 1; if(n===2)return 2; if(n===3)return 3; return 4; }
+
+const grid=document.getElementById('grid');
+const decades=[[1990,1999],[2000,2009],[2010,2019],[2020,2025]];
+decades.forEach(([a,b])=>{
+  const row=document.createElement('div'); row.className='decade-row'; row.setAttribute('role','row');
+  const lab=document.createElement('div'); lab.className='decade-label'; lab.textContent=(a+"s"); row.appendChild(lab);
+  const cells=document.createElement('div'); cells.className='cells';
+  for(let y=a;y<=b;y++){
+    const n=perYear[y].length;
+    const cell=document.createElement('div');
+    cell.className='cell l'+level(n)+(n===0?' empty':'')+(MILESTONE_YEARS.has(y)?' milestone':'');
+    cell.setAttribute('role','gridcell');
+    cell.dataset.year=y;
+    const label=n===0?(y+": no recorded moments"):(y+": "+n+" moment"+(n>1?"s":"")+(MILESTONE_YEARS.has(y)?" · milestone year":""));
+    cell.setAttribute('aria-label',label);
+    cell.title=label;
+    const yr=document.createElement('span'); yr.className='yr'; yr.textContent=String(y).slice(2); cell.appendChild(yr);
+    if(n>0){
+      cell.tabIndex=0;
+      cell.addEventListener('click',()=>select(y));
+      cell.addEventListener('mouseenter',()=>render(y,true));
+      cell.addEventListener('mouseleave',()=>render(selected,false));
+      cell.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();select(y);}});
+    }
+    cells.appendChild(cell);
+  }
+  row.appendChild(cells); grid.appendChild(row);
+});
+
+let selected=2012;
+function select(y){ selected=y; document.querySelectorAll('.cell.sel').forEach(c=>c.classList.remove('sel'));
+  const c=grid.querySelector('.cell[data-year="'+y+'"]'); if(c)c.classList.add('sel'); render(y,false); }
+
+const body=document.getElementById('detailBody');
+function el(tag,cls,txt){const n=document.createElement(tag); if(cls)n.className=cls; if(txt!=null)n.textContent=txt; return n;}
+function render(y){
+  body.textContent='';
+  const items=perYear[y]||[];
+  const head=el('h2',null, y + (MILESTONE_YEARS.has(y)?' ★':''));
+  const sub=el('div','dsub', 'Age '+(y-START)+'  ·  '+ (items.length? items.length+' moment'+(items.length>1?'s':'') : 'a quiet year'));
+  body.appendChild(head); body.appendChild(sub);
+  if(items.length===0){ body.appendChild(el('div','empty-state','No recorded moments this year.')); return; }
+  items.forEach(it=>{
+    const row=el('div','moment');
+    row.appendChild(el('span','dot '+it.track));
+    const col=document.createElement('div');
+    const t=el('div','m-title'); t.appendChild(document.createTextNode(it.title));
+    if(it.milestone){const s=el('span','star','★'); s.title='Milestone'; t.appendChild(s);}
+    if(it.isStage){const ch=el('span','chip','stage · '+it.span); t.appendChild(ch);}
+    if(it.approx){const ch=el('span','chip','~ approximate'); t.appendChild(ch);}
+    col.appendChild(t);
+    col.appendChild(el('div','m-meta', it.track));
+    if(it.note) col.appendChild(el('div','m-note', it.note));
+    row.appendChild(col);
+    body.appendChild(row);
+  });
+}
+select(2012);
+</script>
+</body>
+</html>

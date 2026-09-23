@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tree of Life · MemoTrail timeline concept</title>
+<style>
+  :root{
+    --ink:#3a2a1a; --muted:#6b5641; --faint:#977f63;
+    --career:#e0a13b; --home:#c9603f; --rel:#d94f7a; --travel:#2f9d8b; --health:#8a6fc0;
+    --bark:#6b4a2f;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(180deg,#d3ecf5 0%,#e6f0ea 42%,#f6ecd6 78%,#efe0c2 100%);
+    min-height:100vh;
+  }
+  header.page{max-width:1180px;margin:0 auto;padding:22px 30px 4px}
+  header.page h1{margin:0;font-size:26px;letter-spacing:.3px;color:#4a3620}
+  header.page p{color:var(--muted);font-size:14px;margin:6px 0 0;max-width:82ch}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 16px 34px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+  .canvas{flex:1 1 640px;min-width:320px}
+  svg#tree{width:100%;height:auto;display:block;filter:drop-shadow(0 14px 30px rgba(90,70,40,.25))}
+  aside.legend{flex:0 0 232px;background:rgba(255,255,255,.5);border:1px solid rgba(120,90,50,.2);
+    border-radius:16px;padding:16px 18px;backdrop-filter:blur(3px)}
+  aside.legend h2{font-size:12px;text-transform:uppercase;letter-spacing:1.3px;color:var(--faint);margin:0 0 10px}
+  .legrow{display:flex;align-items:center;gap:10px;font-size:13.5px;margin:8px 0;color:var(--muted)}
+  .fruit{width:14px;height:14px;border-radius:50%;box-shadow:inset -2px -2px 3px rgba(0,0,0,.2)}
+  .note{margin-top:14px;padding-top:12px;border-top:1px solid rgba(120,90,50,.22);font-size:12.5px;line-height:1.55;color:var(--muted)}
+  .note b{color:#4a3620}
+  .blossom-key{display:inline-block;width:15px;height:15px;border-radius:50%;background:radial-gradient(circle,#ffd94f 0 30%,#ffe0ec 32%);box-shadow:0 0 0 2px #ffcfe0}
+  @keyframes sway{0%,100%{transform:rotate(-0.6deg)}50%{transform:rotate(0.6deg)}}
+  #canopy{transform-origin:560px 800px;animation:sway 7s ease-in-out infinite}
+  @keyframes grow{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .evt{animation:grow .9s ease both}
+  .evt .lbl{transition:fill .2s}
+  .evt:hover .lbl{fill:#000}
+  .lbl{font-size:10.5px;fill:var(--muted)}
+  .lbl.ms{font-size:11.5px;font-weight:700;fill:#4a3620}
+  .yr{font-weight:700;fill:#7a5a2f}
+  @media (max-width:860px){aside.legend{flex-basis:100%}}
+</style>
+</head>
+<body>
+  <header class="page">
+    <h1>Tree of Life</h1>
+    <p>Ava Chen's life as a growing tree - roots in Portland 1990, the trunk counting up the years, each track a limb, each event a fruit ripening outward, and milestones bursting into blossom. The crown reaches the present.</p>
+  </header>
+  <div class="wrap">
+    <div class="canvas">
+      <svg id="tree" viewBox="0 0 1120 900" role="img"
+        aria-label="A tree diagram of Ava Chen's life. The trunk rises from roots labeled Portland 1990 at the base to a crown labeled 2025. Each major branch is a life track; fruit along the branches are events, placed chronologically from the trunk outward, and milestones appear as blossoms.">
+        <defs>
+          <linearGradient id="barkg" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#5a3d26"/><stop offset="45%" stop-color="#7a5636"/>
+            <stop offset="100%" stop-color="#513623"/>
+          </linearGradient>
+          <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#fff3c8"/><stop offset="60%" stop-color="rgba(255,235,170,.5)"/>
+            <stop offset="100%" stop-color="rgba(255,235,170,0)"/>
+          </radialGradient>
+          <radialGradient id="leafg" cx="40%" cy="35%" r="70%">
+            <stop offset="0%" stop-color="#a6d178"/><stop offset="100%" stop-color="#5f9440"/>
+          </radialGradient>
+          <filter id="soft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6"/></filter>
+        </defs>
+
+        <circle cx="930" cy="130" r="150" fill="url(#sun)"/>
+        <!-- ground -->
+        <path d="M0 792 Q 560 760 1120 792 L1120 900 L0 900 Z" fill="#7d5a37"/>
+        <path d="M0 792 Q 560 760 1120 792 L1120 812 Q 560 786 0 812 Z" fill="#8fb35f"/>
+
+        <g id="canopy">
+          <!-- soft canopy cloud behind -->
+          <g opacity="0.55" filter="url(#soft)">
+            <ellipse cx="300" cy="330" rx="180" ry="130" fill="url(#leafg)"/>
+            <ellipse cx="840" cy="330" rx="200" ry="140" fill="url(#leafg)"/>
+            <ellipse cx="560" cy="210" rx="220" ry="150" fill="url(#leafg)"/>
+            <ellipse cx="560" cy="470" rx="150" ry="110" fill="url(#leafg)"/>
+          </g>
+          <g id="branches"></g>
+          <g id="foliage"></g>
+          <g id="events"></g>
+        </g>
+
+        <!-- roots -->
+        <g id="roots"></g>
+        <!-- trunk drawn above ground base -->
+        <path d="M 522 800 C 538 620 545 400 549 150 L 571 150 C 575 400 582 620 598 800 Z" fill="url(#barkg)"/>
+        <g id="ticks"></g>
+        <g id="anchors"></g>
+      </svg>
+    </div>
+    <aside class="legend">
+      <h2>Branches → Tracks</h2>
+      <div class="legrow"><span class="fruit" style="background:var(--career)"></span>Career &amp; School</div>
+      <div class="legrow"><span class="fruit" style="background:var(--home)"></span>Home &amp; Places</div>
+      <div class="legrow"><span class="fruit" style="background:var(--rel)"></span>Relationships</div>
+      <div class="legrow"><span class="fruit" style="background:var(--travel)"></span>Travel</div>
+      <div class="legrow"><span class="fruit" style="background:var(--health)"></span>Health &amp; Hobbies</div>
+      <div class="note">
+        <b>Roots</b> = birth (Portland, 1990). The <b>trunk</b> counts the years upward; the <b>crown</b> is today, 2025.
+        Fruit ripen <b>outward</b> in time along each limb. <span class="blossom-key"></span> A <b>blossom</b> marks a milestone. Dashed fruit = <b>~approximate</b> date.
+      </div>
+    </aside>
+  </div>
+
+<script>
+(function(){
+  const NS="http://www.w3.org/2000/svg";
+  const $=id=>document.getElementById(id);
+  const el=(n,a,p)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;};
+  const text=(x,y,s,a,p)=>{const t=el("text",Object.assign({x,y},a),p);t.textContent=s;return t;};
+
+  const baseY=800, crownY=150, Y0=1990, Y1=2025;
+  const yFor=y=>baseY-(y-Y0)*((baseY-crownY)/(Y1-Y0));
+  const COL={career:"#e0a13b",home:"#c9603f",rel:"#d94f7a",travel:"#2f9d8b",health:"#8a6fc0"};
+
+  // ---- year ticks on trunk ----
+  for(let yr=1990;yr<=2025;yr+=5){
+    const y=yFor(yr);
+    el("line",{x1:600,y1:y,x2:626,y2:y,stroke:"#5a3d26","stroke-width":2,opacity:.8},$("ticks"));
+    text(632,y+4,yr,{"font-size":11,"font-weight":700,fill:"#6b4a2f"},$("ticks"));
+  }
+
+  // ---- roots + birth label ----
+  const rootP=$("roots");
+  ["M560 796 C 520 830 470 850 420 880","M560 796 C 600 832 660 850 720 882",
+   "M560 800 C 545 840 520 866 500 895","M560 800 C 578 840 606 866 630 895"]
+   .forEach(d=>el("path",{d,fill:"none",stroke:"#5a3d26","stroke-width":7,"stroke-linecap":"round",opacity:.9},rootP));
+  el("circle",{cx:560,cy:812,r:10,fill:"#4a3320"},rootP);
+  text(560,878,"ROOTS · Portland · 1990",{"text-anchor":"middle","font-size":12.5,"font-weight":800,fill:"#5a3d26","letter-spacing":".5px"},rootP);
+
+  // ---- branches ----
+  const branches=[
+    {key:"career",side:"left",d:"M 534 466 C 460 470 330 456 205 424",
+      events:[{yr:2008,t:"Graduated high school",ms:true},{yr:2011,t:"First internship"},
+              {yr:2012,t:"B.S. Computer Science",ms:true},{yr:2015,t:"Senior Engineer"},
+              {yr:2018,t:"Tech Lead"},{yr:2021,t:"Founded Loomly"},{yr:2023,t:"Seed · $2M"}],
+      stage:"University ’08–’12"},
+    {key:"travel",side:"left",d:"M 538 373 C 468 350 356 320 236 244",
+      events:[{yr:2013,t:"Backpacked SE Asia"},{yr:2016,t:"Marathon · Chicago",appx:true},
+              {yr:2018,t:"Japan 🌸"},{yr:2023,t:"Summited Rainier"}]},
+    {key:"home",side:"right",d:"M 588 577 C 664 566 768 560 858 506",
+      events:[{yr:2002,t:"Moved to Seattle"},{yr:2012,t:"San Francisco"},{yr:2020,t:"First home · Oakland",ms:true}],
+      stage:"Childhood ’90–’02"},
+    {key:"rel",side:"right",d:"M 581 430 C 686 424 800 420 906 398",
+      events:[{yr:2015,t:"Met Sam"},{yr:2019,t:"Married Sam",ms:true},
+              {yr:2022,t:"Noah born",ms:true},{yr:2024,t:"Adopted Miso 🐶"}]},
+    {key:"health",side:"right",d:"M 582 336 C 664 320 786 300 906 246",
+      events:[{yr:2014,t:"Photography",appx:true},{yr:2021,t:"Pottery"},{yr:2024,t:"Learned to sail ⛵"}]}
+  ];
+
+  function drawBlossom(g,x,y,col){
+    for(let i=0;i<5;i++){
+      const a=i/5*Math.PI*2 - Math.PI/2;
+      el("ellipse",{cx:x+Math.cos(a)*7,cy:y+Math.sin(a)*7,rx:6,ry:3.4,fill:"#ffe0ec",stroke:"#ffb9d4","stroke-width":.6,
+        transform:`rotate(${a*180/Math.PI+90} ${x+Math.cos(a)*7} ${y+Math.sin(a)*7})`},g);
+    }
+    el("circle",{cx:x,cy:y,r:4.6,fill:"#ffd94f",stroke:col,"stroke-width":1.6},g);
+  }
+
+  branches.forEach((br,bi)=>{
+    // draw branch (tapered: thick base stroke + thinner overlay)
+    el("path",{d:br.d,fill:"none",stroke:"url(#barkg)","stroke-width":13,"stroke-linecap":"round"},$("branches"));
+    el("path",{d:br.d,fill:"none",stroke:"#6b4a2f","stroke-width":6,"stroke-linecap":"round",opacity:.6},$("branches"));
+
+    // measure
+    const path=el("path",{d:br.d,fill:"none",stroke:"none"},$("branches"));
+    const L=path.getTotalLength();
+    const evs=br.events.slice().sort((a,b)=>a.yr-b.yr);
+    const yrMin=evs[0].yr, yrMax=evs[evs.length-1].yr;
+    const span=Math.max(1,yrMax-yrMin);
+
+    // scatter a few decorative leaves
+    for(let k=0;k<7;k++){
+      const p=path.getPointAtLength(L*(0.15+0.8*k/6));
+      const off=(k%2?1:-1)*13;
+      el("ellipse",{cx:p.x,cy:p.y+off,rx:9,ry:5,fill:"url(#leafg)",opacity:.85,
+        transform:`rotate(${br.side==="left"?-25:25} ${p.x} ${p.y+off})`},$("foliage"));
+    }
+
+    evs.forEach(e=>{
+      const frac=0.16+0.78*((e.yr-yrMin)/span);
+      const p=path.getPointAtLength(L*frac);
+      const g=el("g",{class:"evt"},$("events"));
+      g.style.animationDelay=(0.25+ (e.yr-1990)*0.02).toFixed(2)+"s";
+      // fruit / blossom
+      if(e.ms){ drawBlossom(g,p.x,p.y,COL[br.key]); }
+      else if(e.appx){
+        el("circle",{cx:p.x,cy:p.y,r:6,fill:"none",stroke:COL[br.key],"stroke-width":2,"stroke-dasharray":"2.5 2.5"},g);
+      } else {
+        el("circle",{cx:p.x,cy:p.y,r:6,fill:COL[br.key],stroke:"#4a3320","stroke-width":.8},g);
+        el("circle",{cx:p.x-1.6,cy:p.y-1.8,r:1.7,fill:"rgba(255,255,255,.6)"},g);
+      }
+      // label outward
+      const dir=br.side==="left"?-1:1;
+      const lx=p.x+dir*(e.ms?16:13), ly=p.y+ (e.yr%2? -10: 8);
+      const anchor=br.side==="left"?"end":"start";
+      const t=text(lx,ly,"",{"text-anchor":anchor,class:"lbl"+(e.ms?" ms":"")},g);
+      const yr=el("tspan",{class:"yr"},t); yr.textContent=(e.appx?"~":"")+e.yr+"  ";
+      const tt=el("tspan",{},t); tt.textContent=e.t;
+    });
+
+    // stage label near branch base
+    if(br.stage){
+      const p=path.getPointAtLength(L*0.30);
+      text(p.x,p.y+(br.side==="left"?20:-14),br.stage,{"text-anchor":"middle","font-size":10,"font-style":"italic",
+        fill:COL[br.key],"font-weight":600,opacity:.9},$("events"));
+    }
+  });
+
+  // ---- crown ----
+  el("circle",{cx:560,cy:150,r:20,fill:"url(#leafg)"},$("anchors"));
+  text(560,120,"CROWN · 2025",{"text-anchor":"middle","font-size":13,"font-weight":800,fill:"#3f6b2e","letter-spacing":".5px"},$("anchors"));
+  text(560,104,"the present · age 35",{"text-anchor":"middle","font-size":10.5,fill:"#5f7a4a"},$("anchors"));
+})();
+</script>
+</body>
+</html>

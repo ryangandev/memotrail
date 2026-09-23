@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Life of Ava Chen · a reel</title>
+<style>
+  :root{--bg:#0c0b10; --strip:#141218; --ink:#ece7dd; --muted:#9a92a6; --gold:#e8b54a;}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    font-family:"Courier New",ui-monospace,SFMono-Regular,Menlo,monospace;
+    color:var(--ink); background:radial-gradient(120% 100% at 50% 0%,#1a1822 0%,#0c0b10 60%,#050409 100%);
+    overflow-y:hidden; overflow-x:auto;
+  }
+  /* grain + vignette overlays */
+  body::before{content:""; position:fixed; inset:0; pointer-events:none; z-index:60; opacity:.06;
+    background-image:radial-gradient(#fff 1px, transparent 1.2px); background-size:3px 3px; mix-blend-mode:screen}
+  body::after{content:""; position:fixed; inset:0; pointer-events:none; z-index:59;
+    background:radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(0,0,0,.55) 100%)}
+
+  header.page{position:fixed; top:0; left:0; right:0; z-index:70; padding:14px 24px;
+    background:linear-gradient(180deg,rgba(8,7,11,.95),rgba(8,7,11,.55) 70%,transparent);
+    display:flex; align-items:baseline; gap:16px; flex-wrap:wrap}
+  header.page .titleblk{font-family:Georgia,"Times New Roman",serif}
+  header.page h1{margin:0; font-size:22px; letter-spacing:2px; text-transform:uppercase; color:#f4ecdd}
+  header.page h1 .amp{color:var(--gold)}
+  header.page p{margin:2px 0 0; font-size:12px; color:var(--muted); letter-spacing:.5px}
+  .reelmeta{margin-left:auto; font-size:11px; color:var(--gold); letter-spacing:3px; text-align:right}
+  .reelmeta small{display:block; color:var(--muted); letter-spacing:2px}
+
+  .stage{display:flex; align-items:center; min-height:100%; padding:96px 40px 40px}
+  .reel{position:relative; background:var(--strip); border-radius:6px;
+    box-shadow:0 0 0 1px #000, 0 30px 70px rgba(0,0,0,.6); padding:0}
+  .sprockets{height:26px; background-color:#050406;
+    background-image:radial-gradient(circle at center, #d8cfbe 0, #d8cfbe 5px, transparent 6px);
+    background-size:30px 26px; background-repeat:repeat-x}
+  .frames{display:flex; gap:0; padding:16px 10px; background:linear-gradient(180deg,#181620,#121017)}
+  .frame{position:relative; width:264px; flex:0 0 auto; margin:0 9px;
+    opacity:0; transform:translateY(14px) scale(.98); animation:pop .5s ease forwards}
+  @keyframes pop{to{opacity:1; transform:none}}
+  .photo{height:186px; border-radius:5px; position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:center; font-size:64px;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.08), inset 0 -40px 60px rgba(0,0,0,.35)}
+  .photo .emoji{filter:drop-shadow(0 6px 10px rgba(0,0,0,.4))}
+  .photo .scene-no{position:absolute; top:8px; left:9px; font-size:10px; letter-spacing:2px;
+    color:rgba(255,255,255,.75); background:rgba(0,0,0,.35); padding:2px 6px; border-radius:3px}
+  .photo .flick{position:absolute; inset:0; background:linear-gradient(90deg,rgba(255,255,255,.05),transparent 30%);
+    pointer-events:none}
+  .slate{margin-top:9px; padding:9px 10px; background:#0d0b12; border:1px solid #26222f; border-radius:5px}
+  .slate .row1{display:flex; justify-content:space-between; align-items:baseline; gap:8px}
+  .slate .yr{color:var(--gold); font-weight:700; font-size:13px; letter-spacing:1px}
+  .slate .track{font-size:9.5px; letter-spacing:2px; text-transform:uppercase; color:var(--muted)}
+  .slate .cap{margin-top:4px; font-size:12.5px; line-height:1.3; color:#efe9de;
+    font-family:Georgia,serif}
+  .slate .body{margin-top:5px; font-size:10.5px; line-height:1.4; color:var(--muted)}
+  .slate .tags{margin-top:6px; font-size:9px; color:#c9bfae; letter-spacing:1px}
+
+  .frame.key .photo{box-shadow:inset 0 0 0 2px var(--gold), 0 0 22px rgba(232,181,74,.35)}
+  .frame.key .slate{border-color:var(--gold)}
+  .keytab{position:absolute; top:-11px; left:50%; transform:translateX(-50%); z-index:3;
+    background:var(--gold); color:#241a04; font-size:9px; font-weight:700; letter-spacing:2px;
+    padding:2px 10px; border-radius:12px; white-space:nowrap; box-shadow:0 3px 10px rgba(232,181,74,.45)}
+
+  .endcard .photo{background:radial-gradient(circle at 50% 40%,#3a3550,#0d0b12); font-family:Georgia,serif}
+  .endcard .photo .big{font-size:26px; color:#f4ecdd; letter-spacing:3px; text-align:center}
+
+  .hint{position:fixed; bottom:16px; left:50%; transform:translateX(-50%); z-index:70;
+    font-size:11px; letter-spacing:3px; color:var(--muted); background:rgba(10,9,14,.7);
+    padding:6px 16px; border-radius:20px; border:1px solid #2a2633}
+</style>
+</head>
+<body>
+  <header class="page">
+    <div class="titleblk">
+      <h1>The Life of <span class="amp">Ava Chen</span></h1>
+      <p>A cinematic reel · scroll through the scenes of a life, birth to present. ★ marks the key scenes.</p>
+    </div>
+    <div class="reelmeta">REEL 01<small>1990 – 2025</small></div>
+  </header>
+
+  <div class="stage">
+    <div class="reel" id="reel" aria-label="Filmstrip of Ava Chen's life">
+      <div class="sprockets top"></div>
+      <div class="frames" id="frames"></div>
+      <div class="sprockets bottom"></div>
+    </div>
+  </div>
+
+  <div class="hint">◄ ◄ &nbsp; SCROLL THE REEL &nbsp; ► ►</div>
+
+<script>
+(function(){
+  var G={
+    Home:"linear-gradient(160deg,#1f6f63,#0d3b36)",
+    Career:"linear-gradient(160deg,#2f6aa8,#123a5e)",
+    Relationships:"linear-gradient(160deg,#b0457f,#5c1f45)",
+    Travel:"linear-gradient(160deg,#3f9a66,#154d31)",
+    Health:"linear-gradient(160deg,#6a55c0,#2f2560)"
+  };
+  var frames=[
+    {y:"1990",t:"Born in Portland, Oregon",tr:"Home",e:"👶",ms:true,b:"Opening shot: March 14, a life begins.",g:"#home #family"},
+    {y:"2002",t:"Family moves to Seattle",tr:"Home",e:"🌲",b:"A change of scenery, new city lights.",g:"#home #big-moves"},
+    {y:"2008",t:"Graduates high school",tr:"Career",e:"🎓",ms:true,b:"The first act closes with a diploma.",g:"#career #firsts"},
+    {y:"2011",t:"First internship",tr:"Career",e:"💻",b:"Ships real code at a scrappy startup.",g:"#career"},
+    {y:"2012",t:"Graduates university, B.S. CS",tr:"Career",e:"🎓",ms:true,b:"Computer Science, four years in the frame.",g:"#career #firsts"},
+    {y:"2012",t:"First job: Junior Developer",tr:"Career",e:"⌨️",b:"Enter the working world.",g:"#career"},
+    {y:"2012",t:"Moves to San Francisco",tr:"Home",e:"🌉",b:"Follows the current to the bay.",g:"#home #big-moves"},
+    {y:"2013",t:"Backpacks Southeast Asia",tr:"Travel",e:"🎒",b:"Three months, one backpack, wide angle.",g:"#travel #adventures"},
+    {y:"~2014",t:"Picks up photography",tr:"Health",e:"📷",approx:true,b:"Approx. 2014 - learns to see in frames.",g:"#creative #health"},
+    {y:"2015",t:"Promoted to Senior Engineer",tr:"Career",e:"📈",b:"A bigger role in the story.",g:"#career"},
+    {y:"2015",t:"Meets Sam",tr:"Relationships",e:"💫",b:"A meet-cute worth its own scene.",g:"#family"},
+    {y:"~2016",t:"First marathon, Chicago",tr:"Travel",e:"🏅",approx:true,b:"Approx. 2016 - 26.2 miles to the finish.",g:"#health #firsts"},
+    {y:"2018",t:"Becomes Tech Lead",tr:"Career",e:"🧭",b:"Directing the team now.",g:"#career"},
+    {y:"2018",t:"Trip to Japan",tr:"Travel",e:"🌸",b:"Cherry blossoms, full bloom montage.",g:"#travel #adventures"},
+    {y:"2019",t:"Marries Sam",tr:"Relationships",e:"💍",ms:true,b:"A wedding, the emotional peak.",g:"#family #firsts"},
+    {y:"2020",t:"Buys first home, Oakland",tr:"Home",e:"🏡",ms:true,b:"Roots on the east bay.",g:"#home #firsts"},
+    {y:"2021",t:"Learns pottery",tr:"Health",e:"🏺",b:"A slower, hands-on interlude.",g:"#creative #health"},
+    {y:"2021",t:"Founds “Loomly”",tr:"Career",e:"🚀",b:"Rolls camera on a design tool venture.",g:"#career #loomly"},
+    {y:"2022",t:"First child, Noah, born",tr:"Relationships",e:"🍼",ms:true,b:"A new co-star arrives.",g:"#family #firsts"},
+    {y:"2023",t:"Raises seed funding ($2M)",tr:"Career",e:"💰",b:"Backers believe in the plot.",g:"#career #loomly"},
+    {y:"2023",t:"Summits Mount Rainier",tr:"Travel",e:"🏔️",b:"14,411 feet, sweeping crane shot.",g:"#travel #adventures"},
+    {y:"2024",t:"Adopts a dog, Miso",tr:"Relationships",e:"🐕",b:"Comic relief joins the cast.",g:"#family"},
+    {y:"2024",t:"Learns to sail",tr:"Health",e:"⛵",b:"Reads the wind on open water.",g:"#health #adventures"},
+    {y:"2025",t:"Now",tr:"Present",e:"",end:true,ms:true,b:"The reel catches up to today. Age 35. To be continued.",g:"#present"}
+  ];
+
+  var wrap=document.getElementById("frames");
+  frames.forEach(function(f,i){
+    var fr=document.createElement("article");
+    fr.className="frame"+(f.ms?" key":"")+(f.end?" endcard":"");
+    fr.style.animationDelay=(i*55)+"ms";
+
+    if(f.ms){var tab=document.createElement("div"); tab.className="keytab";
+      tab.textContent=f.end?"★ FINAL SCENE":"★ KEY SCENE"; fr.appendChild(tab);}
+
+    var photo=document.createElement("div"); photo.className="photo";
+    photo.style.background=f.end?"":G[f.tr]||"linear-gradient(160deg,#444,#111)";
+    var sn=document.createElement("div"); sn.className="scene-no";
+    sn.textContent=f.end?"FIN":("SC "+String(i+1).padStart(2,"0")); photo.appendChild(sn);
+    if(f.end){var big=document.createElement("div"); big.className="big";
+      big.textContent="· NOW ·"; photo.appendChild(big);}
+    else{var em=document.createElement("div"); em.className="emoji";
+      em.setAttribute("role","img"); em.setAttribute("aria-label",f.t);
+      em.textContent=f.e; photo.appendChild(em);}
+    var flick=document.createElement("div"); flick.className="flick"; photo.appendChild(flick);
+
+    var slate=document.createElement("div"); slate.className="slate";
+    var r1=document.createElement("div"); r1.className="row1";
+    var yr=document.createElement("span"); yr.className="yr";
+    yr.textContent=f.y+(f.approx?" ~":""); r1.appendChild(yr);
+    var tk=document.createElement("span"); tk.className="track"; tk.textContent=f.tr; r1.appendChild(tk);
+    var cap=document.createElement("div"); cap.className="cap"; cap.textContent=f.t;
+    var body=document.createElement("div"); body.className="body"; body.textContent=f.b;
+    var tags=document.createElement("div"); tags.className="tags"; tags.textContent=f.g;
+    slate.appendChild(r1); slate.appendChild(cap); slate.appendChild(body); slate.appendChild(tags);
+
+    fr.appendChild(photo); fr.appendChild(slate);
+    wrap.appendChild(fr);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Precision Ruler · The life of Ava Chen</title>
+<style>
+  :root{
+    --bg:#f4f5f6; --paper:#ffffff; --ink:#1a1d21; --muted:#6b7178; --grid:#d9dde1;
+    --grid2:#c4c9ce; --accent:#1f6feb; --accent-soft:#9ec0fb;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+  body{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    background:var(--bg); color:var(--ink); overflow:hidden}
+  header.page{display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+    padding:12px 20px; background:var(--paper); border-bottom:1px solid var(--grid)}
+  header.page h1{margin:0; font-size:16px; letter-spacing:.5px}
+  header.page h1 .tk{color:var(--accent)}
+  header.page p{margin:0; font-size:11.5px; color:var(--muted); max-width:420px}
+  .controls{margin-left:auto; display:flex; align-items:center; gap:10px; font-size:12px}
+  .controls button{font:inherit; font-size:13px; width:30px; height:28px; border:1px solid var(--grid2);
+    background:var(--paper); color:var(--ink); border-radius:6px; cursor:pointer}
+  .controls button:hover{background:#eef2f7; border-color:var(--accent)}
+  .controls input[type=range]{width:150px; accent-color:var(--accent)}
+  .controls .zlabel{color:var(--muted); min-width:78px}
+  .readout{display:flex; align-items:center; gap:8px; padding:5px 12px; border:1px solid var(--accent);
+    border-radius:7px; background:#eef4ff; font-size:12px}
+  .readout .big{font-size:15px; font-weight:700; color:var(--accent); letter-spacing:.5px}
+  .readout .sub{color:var(--muted)}
+
+  .viewport{position:relative; height:calc(100vh - 58px); overflow-x:auto; overflow-y:hidden;
+    background:
+      linear-gradient(var(--paper),var(--paper)) padding-box}
+  .track{position:relative; height:100%; min-width:100%;
+    background-image:linear-gradient(90deg, rgba(0,0,0,.015) 1px, transparent 1px);
+  }
+  /* structural rows (top → bottom):
+     decades ~ 40, stages ~ 78, ruler baseline at RY, pins below */
+  .decade{position:absolute; top:14px; height:22px; border-left:1px solid var(--grid2);
+    border-right:1px solid var(--grid2); border-top:1px solid var(--grid2)}
+  .decade span{position:absolute; top:-1px; left:0; right:0; text-align:center;
+    font-size:10px; color:var(--muted); letter-spacing:2px; transform:translateY(-100%); white-space:nowrap}
+
+  .stage{position:absolute; height:20px; border:1px solid var(--ink); border-radius:4px;
+    background:repeating-linear-gradient(45deg, rgba(31,111,235,.10) 0 6px, rgba(31,111,235,.02) 6px 12px);
+    display:flex; align-items:center; justify-content:center}
+  .stage .br{position:absolute; top:0; bottom:0; width:7px; border-top:2px solid var(--ink)}
+  .stage .lbl{font-size:10px; color:var(--ink); white-space:nowrap; padding:0 6px; overflow:hidden; text-overflow:ellipsis}
+
+  .baseline{position:absolute; left:0; right:0; height:0; border-top:2px solid var(--ink)}
+  .tick{position:absolute; width:0; border-left:1px solid var(--grid2)}
+  .tick.major{border-left:1px solid var(--ink)}
+  .tick.q{border-left:1px solid var(--grid)}
+  .tlabel{position:absolute; font-size:10px; color:var(--muted); transform:translateX(-50%); white-space:nowrap}
+  .tlabel .age{display:block; text-align:center; font-size:8.5px; color:#9aa1a8}
+
+  .pin{position:absolute; width:0}
+  .pin .stem{position:absolute; left:0; top:0; border-left:1px solid var(--accent); }
+  .pin.approx .stem{border-left:1px dashed var(--accent-soft)}
+  .pin .head{position:absolute; left:0; top:0; width:11px; height:11px; border-radius:50%;
+    transform:translate(-50%,-50%); background:var(--paper); border:2px solid var(--accent)}
+  .pin.approx .head{border-color:var(--accent-soft); border-style:dashed; background:#f0f5ff}
+  .pin.ms .head{width:14px; height:14px; background:var(--accent); border-color:var(--paper);
+    box-shadow:0 0 0 2px var(--accent)}
+  .pin .card{position:absolute; left:0; width:132px; transform:translateX(-50%);
+    background:var(--paper); border:1px solid var(--grid2); border-radius:6px; padding:6px 8px;
+    box-shadow:0 4px 12px rgba(0,0,0,.08)}
+  .pin.ms .card{border-color:var(--accent)}
+  .pin .card .yr{font-size:10px; color:var(--accent); font-weight:700; letter-spacing:.5px}
+  .pin .card .yr .fz{color:var(--muted); font-weight:600}
+  .pin .card .ti{font-size:11px; line-height:1.25; margin-top:2px}
+  .pin .card .bd{font-size:9.5px; line-height:1.35; color:var(--muted); margin-top:3px}
+  .pin .card .tg{font-size:8.5px; color:#5a6b8a; margin-top:3px; letter-spacing:.5px}
+  .pin .card .tr{display:inline-block; font-size:8px; letter-spacing:1px; text-transform:uppercase;
+    color:var(--muted); border:1px solid var(--grid2); border-radius:8px; padding:0 5px; margin-top:3px}
+
+  .playhead{position:absolute; top:0; bottom:0; width:0; border-left:2px solid #e5484d; z-index:30}
+  .playhead .grab{position:absolute; top:6px; left:0; transform:translateX(-50%);
+    background:#e5484d; color:#fff; font-size:10px; padding:3px 8px; border-radius:6px; cursor:grab;
+    white-space:nowrap; user-select:none; box-shadow:0 3px 10px rgba(229,72,61,.4)}
+  .playhead .grab:active{cursor:grabbing}
+  .playhead .flag{position:absolute; bottom:8px; left:0; transform:translateX(-50%);
+    background:#e5484d; color:#fff; font-size:10px; padding:2px 7px; border-radius:5px; white-space:nowrap}
+  .hint{position:absolute; right:14px; bottom:12px; font-size:10.5px; color:var(--muted);
+    background:rgba(255,255,255,.85); padding:4px 10px; border-radius:6px; border:1px solid var(--grid)}
+</style>
+</head>
+<body>
+  <header class="page">
+    <h1>Precision <span class="tk">Ruler</span></h1>
+    <p>A life measured to scale. Major ticks are years, minor ticks are quarters. Zoom to change resolution, drag the playhead to scrub.</p>
+    <div class="controls">
+      <div class="readout"><span class="big" id="rdYear">2007</span><span class="sub" id="rdAge">age 17</span></div>
+      <button id="zout" title="Zoom out" aria-label="Zoom out">−</button>
+      <input id="zoom" type="range" min="34" max="220" value="82" aria-label="Zoom level">
+      <button id="zin" title="Zoom in" aria-label="Zoom in">+</button>
+      <span class="zlabel" id="zlabel">82 px/yr</span>
+    </div>
+  </header>
+
+  <div class="viewport" id="viewport">
+    <div class="track" id="track">
+      <div class="playhead" id="playhead" tabindex="0" role="slider" aria-label="Timeline playhead"
+           aria-valuemin="1990" aria-valuemax="2025" aria-valuenow="2007">
+        <div class="grab" id="grab">⇔ scrub</div>
+        <div class="flag" id="phflag">2007</div>
+      </div>
+    </div>
+  </div>
+  <div class="hint">tip: drag the red playhead or click the ruler · ← → arrow keys nudge</div>
+
+<script>
+(function(){
+  var Y0=1990, YN=2025, MARL=120, MARR=140, RY=0.46; // RY = baseline fraction of height
+  var state={ppy:82, head:2007};
+
+  var events=[
+    {y:1990.20,lbl:"1990",prec:"exact",ms:true,tr:"Home",ti:"Born · Portland, OR",bd:"March 14, 1990.",tg:"#home #family"},
+    {y:2002.0,lbl:"2002",prec:"year",tr:"Home",ti:"Moved to Seattle",bd:"Family relocation.",tg:"#big-moves"},
+    {y:2008.0,lbl:"2008",prec:"year",ms:true,tr:"Career",ti:"Graduated high school",bd:"End of first chapter.",tg:"#firsts"},
+    {y:2011.0,lbl:"2011",prec:"year",tr:"Career",ti:"First internship",bd:"At a startup.",tg:"#career"},
+    {y:2012.05,lbl:"2012",prec:"year",ms:true,tr:"Career",ti:"Graduated university",bd:"B.S. Computer Science.",tg:"#firsts"},
+    {y:2012.5,lbl:"2012",prec:"year",tr:"Career",ti:"Junior Developer",bd:"First job.",tg:"#career"},
+    {y:2012.8,lbl:"2012",prec:"year",tr:"Home",ti:"Moved to San Francisco",bd:"New coast.",tg:"#big-moves"},
+    {y:2013.4,lbl:"2013",prec:"year",tr:"Travel",ti:"Backpacked SE Asia",bd:"Three months away.",tg:"#adventures"},
+    {y:2014.5,lbl:"~2014",prec:"approx",tr:"Health",ti:"Started photography",bd:"Approximate date.",tg:"#creative"},
+    {y:2015.2,lbl:"2015",prec:"year",tr:"Career",ti:"Senior Engineer",bd:"Promotion.",tg:"#career"},
+    {y:2015.7,lbl:"2015",prec:"year",tr:"Relationships",ti:"Met Sam",bd:"A pivotal meeting.",tg:"#family"},
+    {y:2016.5,lbl:"~2016",prec:"approx",tr:"Travel",ti:"First marathon",bd:"Chicago, approx.",tg:"#health #firsts"},
+    {y:2018.15,lbl:"2018",prec:"year",tr:"Career",ti:"Became Tech Lead",bd:"Leading the team.",tg:"#career"},
+    {y:2018.7,lbl:"2018",prec:"year",tr:"Travel",ti:"Trip to Japan",bd:"Cherry blossoms.",tg:"#adventures"},
+    {y:2019.5,lbl:"2019",prec:"year",ms:true,tr:"Relationships",ti:"Married Sam",bd:"Wedding day.",tg:"#firsts #family"},
+    {y:2020.3,lbl:"2020",prec:"year",ms:true,tr:"Home",ti:"Bought first home",bd:"Oakland.",tg:"#firsts #big-moves"},
+    {y:2021.2,lbl:"2021",prec:"year",tr:"Health",ti:"Learned pottery",bd:"New craft.",tg:"#creative"},
+    {y:2022.4,lbl:"2022",prec:"year",ms:true,tr:"Relationships",ti:"Noah born",bd:"First child.",tg:"#firsts #family"},
+    {y:2023.2,lbl:"2023",prec:"year",tr:"Career",ti:"Seed funding $2M",bd:"For Loomly.",tg:"#loomly"},
+    {y:2023.7,lbl:"2023",prec:"year",tr:"Travel",ti:"Summited Rainier",bd:"14,411 ft.",tg:"#adventures"},
+    {y:2024.3,lbl:"2024",prec:"year",tr:"Relationships",ti:"Adopted dog Miso",bd:"New family member.",tg:"#family"},
+    {y:2024.7,lbl:"2024",prec:"year",tr:"Health",ti:"Learned to sail",bd:"On open water.",tg:"#health"}
+  ];
+  var stages=[
+    {from:1990,to:2002,lbl:"Childhood home · Portland",tr:"Home"},
+    {from:2008,to:2012,lbl:"University · CS",tr:"Career"},
+    {from:2021,to:2025,lbl:"Founded Loomly",tr:"Career"}
+  ];
+
+  var viewport=document.getElementById("viewport"), track=document.getElementById("track");
+  var playhead=document.getElementById("playhead"), phflag=document.getElementById("phflag");
+  var rdYear=document.getElementById("rdYear"), rdAge=document.getElementById("rdAge");
+
+  function xOf(y){return MARL+(y-Y0)*state.ppy;}
+  function yToYear(x){return Y0+(x-MARL)/state.ppy;}
+  function trackW(){return MARL+(YN-Y0)*state.ppy+MARR;}
+  function H(){return viewport.clientHeight;}
+
+  function clearGen(){
+    Array.prototype.slice.call(track.querySelectorAll(".gen")).forEach(function(n){n.remove();});
+  }
+
+  function render(){
+    clearGen();
+    track.style.width=trackW()+"px";
+    var h=H(); var by=Math.round(h*RY);
+
+    // baseline
+    var bl=document.createElement("div"); bl.className="baseline gen"; bl.style.top=by+"px";
+    track.appendChild(bl);
+
+    var showQuarter=state.ppy>=52;
+    var labelEvery=state.ppy<46?5:1;
+
+    for(var y=Y0;y<=YN;y++){
+      var x=xOf(y);
+      var major=document.createElement("div"); major.className="tick major gen";
+      major.style.left=x+"px"; major.style.top=(by-9)+"px"; major.style.height="18px";
+      track.appendChild(major);
+      if((y-Y0)%labelEvery===0 || y===YN){
+        var tl=document.createElement("div"); tl.className="tlabel gen";
+        tl.style.left=x+"px"; tl.style.top=(by+12)+"px";
+        var a=document.createElement("span"); a.className="age"; a.textContent="age "+(y-Y0);
+        tl.appendChild(document.createTextNode(y)); tl.appendChild(a);
+        track.appendChild(tl);
+      }
+      if(showQuarter && y<YN){
+        for(var q=1;q<4;q++){
+          var qx=xOf(y+q/4);
+          var qt=document.createElement("div"); qt.className="tick q gen";
+          qt.style.left=qx+"px"; qt.style.top=(by-4)+"px"; qt.style.height="8px";
+          track.appendChild(qt);
+        }
+      }
+    }
+
+    // decade brackets
+    [[1990,2000,"1990s"],[2000,2010,"2000s"],[2010,2020,"2010s"],[2020,2025,"2020s"]].forEach(function(d){
+      var el=document.createElement("div"); el.className="decade gen";
+      el.style.left=xOf(d[0])+"px"; el.style.width=(xOf(d[1])-xOf(d[0]))+"px";
+      var s=document.createElement("span"); s.textContent=d[2]; el.appendChild(s);
+      track.appendChild(el);
+    });
+
+    // stages (brackets above baseline)
+    stages.forEach(function(st,i){
+      var el=document.createElement("div"); el.className="stage gen";
+      var left=xOf(st.from), w=xOf(st.to)-xOf(st.from);
+      el.style.left=left+"px"; el.style.width=w+"px";
+      el.style.top=(by-52-(i%2)*26)+"px";
+      var l=document.createElement("div"); l.className="br"; l.style.left="0"; l.style.borderLeft="2px solid var(--ink)";
+      var r=document.createElement("div"); r.className="br"; r.style.right="0"; r.style.borderRight="2px solid var(--ink)";
+      var lbl=document.createElement("div"); lbl.className="lbl"; lbl.textContent=st.lbl;
+      el.appendChild(l); el.appendChild(r); el.appendChild(lbl);
+      el.title=st.lbl+" ("+st.from+"–"+(st.to===YN?"present":st.to)+")";
+      track.appendChild(el);
+    });
+
+    // pins with anti-collision leveling
+    var sorted=events.slice().sort(function(a,b){return a.y-b.y;});
+    var levelLastX=[]; var LEVELS=4; var minGap=138; var levelH=76;
+    sorted.forEach(function(ev){
+      var x=xOf(ev.y); var lvl=0;
+      for(var L=0;L<LEVELS;L++){ if(levelLastX[L]===undefined || x-levelLastX[L]>=minGap){lvl=L; break;} lvl=L; }
+      levelLastX[lvl]=x;
+      var cardTop=by+34+lvl*levelH;
+      var pin=document.createElement("div");
+      pin.className="pin gen"+(ev.ms?" ms":"")+(ev.prec==="approx"?" approx":"");
+      pin.style.left=x+"px"; pin.style.top=by+"px";
+      var stem=document.createElement("div"); stem.className="stem";
+      stem.style.height=(cardTop-by)+"px"; pin.appendChild(stem);
+      var head=document.createElement("div"); head.className="head"; pin.appendChild(head);
+      var card=document.createElement("div"); card.className="card"; card.style.top=(cardTop-by)+"px";
+      var yr=document.createElement("div"); yr.className="yr";
+      if(ev.prec==="approx"){var fz=document.createElement("span");fz.className="fz";fz.textContent=ev.lbl+" approx";yr.appendChild(fz);}
+      else if(ev.prec==="exact"){yr.textContent=ev.lbl; var ex=document.createElement("span");ex.className="fz";ex.textContent=" exact";yr.appendChild(ex);}
+      else{yr.textContent=ev.lbl;}
+      var ti=document.createElement("div"); ti.className="ti"; ti.textContent=(ev.ms?"★ ":"")+ev.ti;
+      var bd=document.createElement("div"); bd.className="bd"; bd.textContent=ev.bd;
+      var tg=document.createElement("div"); tg.className="tg"; tg.textContent=ev.tg;
+      var tr=document.createElement("div"); tr.className="tr"; tr.textContent=ev.tr;
+      card.appendChild(yr); card.appendChild(ti); card.appendChild(bd); card.appendChild(tg); card.appendChild(tr);
+      pin.appendChild(card);
+      track.appendChild(pin);
+    });
+
+    positionHead();
+  }
+
+  function positionHead(){
+    playhead.style.left=xOf(state.head)+"px";
+    var yr=Math.floor(state.head);
+    var frac=state.head - yr;
+    var yShow=state.head.toFixed(2);
+    rdYear.textContent=yShow;
+    rdAge.textContent="age "+(yr-Y0)+(frac>0.02?"–"+(yr-Y0+1):"");
+    phflag.textContent=yShow;
+    playhead.setAttribute("aria-valuenow",yShow);
+  }
+
+  function setHead(y){ state.head=Math.max(Y0,Math.min(YN,y)); positionHead(); }
+
+  // dragging / clicking to scrub
+  var dragging=false;
+  function clientToYear(clientX){
+    var rect=track.getBoundingClientRect();
+    var x=clientX-rect.left;
+    return yToYear(x);
+  }
+  playhead.addEventListener("pointerdown",function(e){dragging=true; playhead.setPointerCapture(e.pointerId); e.preventDefault();});
+  window.addEventListener("pointermove",function(e){ if(dragging){ setHead(clientToYear(e.clientX)); } });
+  window.addEventListener("pointerup",function(){dragging=false;});
+  viewport.addEventListener("pointerdown",function(e){
+    // clicking empty ruler area moves playhead (ignore clicks on cards for readability)
+    if(e.target.closest(".pin, .stage, .controls")) return;
+    setHead(clientToYear(e.clientX));
+  });
+  playhead.addEventListener("keydown",function(e){
+    if(e.key==="ArrowRight"){setHead(state.head+ (e.shiftKey?1:0.25)); e.preventDefault();}
+    if(e.key==="ArrowLeft"){setHead(state.head- (e.shiftKey?1:0.25)); e.preventDefault();}
+  });
+
+  // zoom
+  var zoom=document.getElementById("zoom"), zlabel=document.getElementById("zlabel");
+  function applyZoom(v,anchorYear){
+    var prevScroll=viewport.scrollLeft;
+    state.ppy=v; zoom.value=v; zlabel.textContent=v+" px/yr";
+    render();
+    // keep the anchor year at the same screen position
+    if(anchorYear!==undefined){
+      viewport.scrollLeft=xOf(anchorYear)-viewport.clientWidth/2;
+    }
+  }
+  zoom.addEventListener("input",function(){applyZoom(+zoom.value, state.head);});
+  document.getElementById("zin").addEventListener("click",function(){applyZoom(Math.min(220,state.ppy+18), state.head);});
+  document.getElementById("zout").addEventListener("click",function(){applyZoom(Math.max(34,state.ppy-18), state.head);});
+
+  window.addEventListener("resize",render);
+  render();
+  // start centered on the playhead
+  viewport.scrollLeft=xOf(state.head)-viewport.clientWidth/2;
+})();
+</script>
+</body>
+</html>

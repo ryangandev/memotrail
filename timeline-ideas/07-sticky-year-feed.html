@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MemoTrail · Sticky-Year Feed</title>
+<style>
+  :root {
+    --bg: #fbfbfd;
+    --ink: #17171f;
+    --muted: #71717f;
+    --hair: #ececf2;
+    --card: #ffffff;
+    --shadow: 0 6px 20px -12px rgba(20, 20, 40, 0.35);
+
+    --career: #4f7cff;
+    --home: #14a37f;
+    --rel: #e0567a;
+    --travel: #f39c2d;
+    --health: #8a63d2;
+    --milestone: #d99a12;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(900px 500px at 100% -5%, #f0f3ff 0%, transparent 55%),
+      var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  header.page {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 44px 24px 4px;
+  }
+  .eyebrow {
+    display: inline-flex; gap: 8px; align-items: center;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    font-weight: 700; color: #4f7cff;
+    background: #eaf0ff; padding: 6px 12px; border-radius: 999px;
+  }
+  header.page h1 { font-size: clamp(28px,4vw,40px); margin: 16px 0 6px; letter-spacing: -0.02em; }
+  header.page p.desc { margin: 0; color: var(--muted); max-width: 62ch; font-size: 15px; }
+
+  .layout {
+    max-width: 1000px;
+    margin: 24px auto 96px;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* left sticky rail */
+  .rail { position: sticky; top: 24px; }
+  .rail .year-big {
+    font-size: clamp(56px, 8vw, 84px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 0.9;
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(180deg, #2b2b3c, #5b5b76);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    transition: opacity 0.25s ease;
+  }
+  .rail .year-sub { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .rail .rail-track {
+    margin-top: 18px;
+    border-left: 2px solid var(--hair);
+    padding-left: 12px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .rail .legend { margin-top: 18px; display: grid; gap: 6px; }
+  .legend .lg { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #4b4b5a; }
+  .legend .sw { width: 10px; height: 10px; border-radius: 3px; }
+
+  /* feed */
+  .feed { display: grid; gap: 16px; min-width: 0; }
+
+  .year-marker {
+    display: flex; align-items: center; gap: 12px;
+    margin: 8px 2px 0;
+    color: var(--muted);
+    font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .year-marker::after { content: ""; flex: 1; height: 1px; background: var(--hair); }
+
+  .post {
+    background: var(--card);
+    border: 1px solid var(--hair);
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: 46px 1fr;
+    gap: 14px;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .post.in { opacity: 1; transform: none; }
+
+  .avatar {
+    width: 46px; height: 46px; border-radius: 14px;
+    display: grid; place-items: center; font-size: 22px;
+    background: #f2f2f7;
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,0.03);
+  }
+  .avatar.career { background: #e9f0ff; }
+  .avatar.home   { background: #e2f6f0; }
+  .avatar.rel    { background: #fdeaf0; }
+  .avatar.travel { background: #fdf1e0; }
+  .avatar.health { background: #f0eafb; }
+
+  .post .top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .post .track-name {
+    font-weight: 700; font-size: 13px;
+  }
+  .post .track-name.career { color: var(--career); }
+  .post .track-name.home   { color: var(--home); }
+  .post .track-name.rel    { color: var(--rel); }
+  .post .track-name.travel { color: var(--travel); }
+  .post .track-name.health { color: var(--health); }
+  .post .dot-sep { color: var(--hair); }
+  .post .when { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .post .approx { color: var(--milestone); font-weight: 700; }
+
+  .post h3 { margin: 8px 0 4px; font-size: 17px; letter-spacing: -0.01em; }
+  .post p.body { margin: 0 0 10px; color: #52525f; font-size: 14px; }
+
+  .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip {
+    font-size: 11.5px; font-weight: 600;
+    padding: 4px 10px; border-radius: 999px;
+    background: #f1f1f6; color: #55556a;
+  }
+  .chip.collection {
+    background: #eef4ff; color: #3f63c8;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .chip.collection::before { content: "🗂"; font-size: 11px; }
+
+  /* milestone ribbon */
+  .post.is-milestone {
+    border: 1.5px solid var(--milestone);
+    box-shadow: 0 10px 26px -14px rgba(217,154,18,0.55);
+    background: linear-gradient(180deg, #fffdf6, #fff);
+    position: relative;
+    overflow: hidden;
+  }
+  .post.is-milestone::before {
+    content: "⭐ Milestone";
+    position: absolute; top: 12px; right: -34px;
+    transform: rotate(38deg);
+    background: var(--milestone); color: #fff;
+    font-size: 10px; font-weight: 800; letter-spacing: 0.06em;
+    padding: 4px 40px;
+    box-shadow: 0 4px 10px -4px rgba(217,154,18,0.6);
+  }
+
+  @media (max-width: 800px) {
+    .layout { grid-template-columns: 1fr; }
+    .rail {
+      position: sticky; top: 0; z-index: 5;
+      background: rgba(251,251,253,0.9);
+      backdrop-filter: blur(8px);
+      padding: 10px 0; display: flex; align-items: baseline; gap: 12px;
+    }
+    .rail .year-big { font-size: 40px; }
+    .rail .rail-track, .rail .legend, .rail .year-sub { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .post { transition: none; opacity: 1; transform: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+  <header class="page">
+    <span class="eyebrow">◆ MemoTrail · 07</span>
+    <h1>Sticky-Year Feed</h1>
+    <p class="desc">A single scrolling column, like a polished social timeline. The year on the left rail is a giant sticky label that swaps as you scroll into each year. Every entry is a track-colored card; milestones get a corner ribbon.</p>
+  </header>
+
+  <div class="layout">
+    <aside class="rail" aria-hidden="true">
+      <div class="year-big" id="railYear">1990</div>
+      <div class="year-sub" id="railSub">Ava Chen · the beginning</div>
+      <div class="rail-track">Scroll to travel through the years →</div>
+      <div class="legend">
+        <div class="lg"><span class="sw" style="background:var(--career)"></span>Career</div>
+        <div class="lg"><span class="sw" style="background:var(--home)"></span>Home &amp; Places</div>
+        <div class="lg"><span class="sw" style="background:var(--rel)"></span>Relationships</div>
+        <div class="lg"><span class="sw" style="background:var(--travel)"></span>Travel</div>
+        <div class="lg"><span class="sw" style="background:var(--health)"></span>Health &amp; Hobbies</div>
+      </div>
+    </aside>
+
+    <main class="feed" aria-label="Ava Chen life feed">
+
+      <div class="year-marker" data-year="1990" data-sub="Born in Portland">1990</div>
+      <article class="post is-milestone" data-year="1990" data-sub="Born in Portland">
+        <div class="avatar rel" aria-hidden="true">👶</div>
+        <div>
+          <div class="top"><span class="track-name rel">Relationships</span><span class="dot-sep">·</span><span class="when">Mar 14, 1990 · Portland, OR</span></div>
+          <h3>Born in Portland, Oregon</h3>
+          <p class="body">Where the whole story starts - the birth anchor.</p>
+          <div class="meta"><span class="chip">#family</span><span class="chip collection">Firsts</span></div>
+        </div>
+      </article>
+
+      <div class="year-marker" data-year="2002" data-sub="Family moved to Seattle">2002</div>
+      <article class="post" data-year="2002" data-sub="Family moved to Seattle">
+        <div class="avatar home" aria-hidden="true">📦</div>
+        <div>
+          <div class="top"><span class="track-name home">Home &amp; Places</span><span class="dot-sep">·</span><span class="when">2002 · Seattle, WA</span></div>
+          <h3>Family moved to Seattle</h3>
+          <p class="body">Closing out childhood in Portland (1990–2002) and starting fresh up north.</p>
+          <div class="meta"><span class="chip">#home</span><span class="chip collection">Big moves</span></div>
+        </div>
+      </article>
+
+      <div class="year-marker" data-year="2008" data-sub="Graduated high school">2008</div>
+      <article class="post is-milestone" data-year="2008" data-sub="Graduated high school">
+        <div class="avatar career" aria-hidden="true">🎓</div>
+        <div>
+          <div class="top"><span class="track-name career">Career</span><span class="dot-sep">·</span><span class="when">2008</span></div>
+          <h3>Graduated high school</h3>
+          <p class="body">One chapter closes; university is next.</p>
+          <div class="meta"><span class="chip">#career</span><span class="chip collection">Firsts</span></div>
+        </div>
+      </article>
+
+      <article class="post" data-year="2008" data-sub="Started university">
+        <div class="avatar career" aria-hidden="true">📚</div>
+        <div>
+          <div class="top"><span class="track-name career">Career</span><span class="dot-sep">·</span><span class="when">2008 – 2012 · stage</span></div>
+          <h3>University · Computer Science</h3>
+          <p class="body">Four years studying CS - the runway for everything after.</p>
+          <div class="meta"><span class="chip">#career</span><span class="chip">span</span></div>
+        </div>
+      </article>
+
+      <div class="year-marker" data-year="2011" data-sub="First internship">2011</div>
+      <article class="post" data-year="2011" data-sub="First internship">
+        <div class="avatar career" aria-hidden="true">💼</div>
+        <div>
+          <div class="top"><span class="track-name career">Career</span><span class="dot-sep">·</span><span class="when">2011</span></div>
+          <h3>First internship at a startup</h3>
+          <p class="body">First taste of shipping real software.</p>
+          <div class="meta"><span class="chip">#career</span><span class="chip collection">Firsts</span></div>
+        </div>
+      </article>
+
+      <div class="year-marker" data-year="2012" data-sub="Graduated · first job · moved to SF">2012</div>
+      <article class="post is-milestone" data-year="2012" data-sub="Graduated university">
+        <div class="avatar career" aria-hidden="true">🎓</div>
+        <div>
+          <div class="top"><span class="track-name career">Career</span><span class="dot-sep">·</span><span class="when">2012</span></div>
+          <h3>Graduated university · B.S. Computer Science</h3>
+          <p class="body">Degree earned - onward to the working world.</p>
+          <div class="meta"><span class="chip">#career</span></div>
+        </div>
+      </article>
+
+      <article class="post" data-year="2012" data-sub="First job">
+        <div class="avatar career" aria-hidden="true">🧑‍💻</div>
+        <div>
+          <div class="top"><span class="track-name career">Career</span><span class="dot-sep">·</span><span class="when">2012 · Junior Developer</span></div>
+          <h3>First job · Junior Developer</h3>
+          <p class="body">The career officially begins.</p>
+          <div class="meta"><span class="chip">#career</span><span class="chip collection">Firsts</span></div>
+        </div>
+      </article>
+
+      <article class="post" data-year="2012" data-sub="Moved to San Francisco">
+        <div class="avatar home" aria-hidden="true">🌉</div>
+        <div>
+          <div class="top"><span class="track-name home">Home &amp; Places</span><span class="dot-sep">·</span><span class="when">2012 · San Francisco</span></div>
+          <h3>Moved to San Francisco</h3>
+          <p class="body">Chasing the work, the fog, the hills.</p>
+          <div class="meta"><span class="chip">#home</span><span class="chip collection">Big moves</span></div>
+        </div>
+      </article>
+
+      <div class="year-marker" data-year="2013" data-sub="Backpacked Southeast Asia">2013</div>
+      <article class="post" data-year="2013" data-sub="Backpacked Southeast Asia">
+        <div class="avatar travel" aria-hidden="true">🎒</div>
+        <div>
+          <div class="top"><span class="track-name travel">Travel</span><span class="dot-sep">·</span><span class="when">2013 · Southeast Asia</span></div>
+          <h3>Backpacked Southeast Asia</h3>
+          <p class="body">Two months, six countries, one backpack.</p>
+          <div class="meta"><span class="chip">#travel</span><span class="chip collection">Adventures</span></div>
+        </div>
+      </article>
+
+      <div class="year-marker" data-year="2014" data-sub="Started photography">2014</div>
+      <article class="post" data-year="2014" data-sub="Started photography">
+        <div class="avatar health" aria-hidden="true">📷</div>
+        <div>
+          <div class="top"><span class="track-name health">Health &amp; Hobbies</span><span class="dot-sep">·</span><span class="when"><span class="approx">~</span>2014 · approximate</span></div>
+          <h3>Started photography</h3>
+          <p class="body">Around 2014 - a lens became a second way of seeing.</p>
+          <div class="meta"><span class="chip">#creative</span></div>
+        </div>
+      </article>
+
+      <div class="year-marker" data-year="2015" data-sub="Met Sam · promoted">2015</div>
+      <article class="post" data-year="2015" data-sub="Promoted to Senior Engineer">
+        <div class="avatar career" aria-hidden="true">🚀</div>
+        <div>
+          <div class="top"><span class="track-name career">Career</span><span class="dot-sep">·</span><span class="when">2015 · Senior Engineer</span></div>
+          <h3>Promoted to Senior Engineer</h3>
+          <p class="body">Ownership grows; so does the impact.</p>
+          <div class="meta"><span class="chip">#career</span></div>
+        </div>
+      </article>
+
+      <article class="post" data-year="2015" data-sub="Met Sam">
+        <div class="avatar rel" aria-hidden="true">💫</div>
+        <div>
+          <div class="top"><span class="track-name rel">Relationships</span><span class="dot-sep">·</span><span class="when">2015</span></div>
+          <h3>Met Sam</h3>
+          <p class="body">A chance introduction that would change everything.</p>
+          <div class="meta"><span class="chip">#family</span></div>
+        </div>
+      </article>
+
+      <div class="year-marker" data-year="2016" data-sub="First marathon">2016</div>
+      <article class="post" data-year="2016" data-sub="First marathon · Chicago">
+        <div class="avatar health" aria-hidden="true">🏃‍♀️</div>
+        <div>
+          <div class="top"><span class="track-name health">Health &amp; Hobbies</span><span class="dot-sep">·</span><span class="when"><span class="approx">~</span>2016 · Chicago</span></div>
+          <h3>First marathon · Chicago</h3>
+          <p class="body">Approximate date - 26.2 miles, one finish line.</p>
+          <div class="meta"><span class="chip">#health</span><span class="chip collection">Firsts</span></div>
+        </div>
+      </article>
+
+      <div class="year-marker" data-year="2018" data-sub="Tech Lead · Japan">2018</div>
+      <article class="post" data-year="2018" data-sub="Became Tech Lead">
+        <div class="avatar career" aria-hidden="true">🧭</div>
+        <div>
+          <div class="top"><span class="track-name career">Career</span><span class="dot-sep">·</span><span class="when">2018 · Tech Lead</span></div>
+          <h3>Became Tech Lead</h3>
+          <p class="body">From writing code to steering the team.</p>
+          <div class="meta"><span class="chip">#career</span></div>
+        </div>
+      </article>
+
+      <article class="post" data-year="2018" data-sub="Trip to Japan">
+        <div class="avatar travel" aria-hidden="true">🌸</div>
+        <div>
+          <div class="top"><span class="track-name travel">Travel</span><span class="dot-sep">·</span><span class="when">2018 · Japan</span></div>
+          <h3>Trip to Japan · cherry blossoms</h3>
+          <p class="body">Pink petals and slow trains through spring.</p>
+          <div class="meta"><span class="chip">#travel</span><span class="chip collection">Adventures</span></div>
+        </div>
+      </article>
+
+      <div class="year-marker" data-year="2019" data-sub="Married Sam">2019</div>
+      <article class="post is-milestone" data-year="2019" data-sub="Married Sam">
+        <div class="avatar rel" aria-hidden="true">💍</div>
+        <div>
+          <div class="top"><span class="track-name rel">Relationships</span><span class="dot-sep">·</span><span class="when">2019</span></div>
+          <h3>Married Sam</h3>
+          <p class="body">Two paths become one.</p>
+          <div class="meta"><span class="chip">#family</span></div>
+        </div>
+      </article>
+
+      <div class="year-marker" data-year="2020" data-sub="Bought first home">2020</div>
+      <article class="post is-milestone" data-year="2020" data-sub="Bought first home · Oakland">
+        <div class="avatar home" aria-hidden="true">🏠</div>
+        <div>
+          <div class="top"><span class="track-name home">Home &amp; Places</span><span class="dot-sep">·</span><span class="when">2020 · Oakland</span></div>
+          <h3>Bought first home · Oakland</h3>
+          <p class="body">Keys to a place that is finally theirs.</p>
+          <div class="meta"><span class="chip">#home</span><span class="chip collection">Big moves</span></div>
+        </div>
+      </article>
+
+      <div class="year-marker" data-year="2021" data-sub="Founded Loomly · pottery">2021</div>
+      <article class="post" data-year="2021" data-sub="Founded Loomly">
+        <div class="avatar career" aria-hidden="true">🛠️</div>
+        <div>
+          <div class="top"><span class="track-name career">Career</span><span class="dot-sep">·</span><span class="when">2021 – present · stage</span></div>
+          <h3>Founded "Loomly" · a design tool</h3>
+          <p class="body">Left the desk to build something of her own.</p>
+          <div class="meta"><span class="chip">#career</span><span class="chip collection">Loomly</span></div>
+        </div>
+      </article>
+
+      <article class="post" data-year="2021" data-sub="Learned pottery">
+        <div class="avatar health" aria-hidden="true">🏺</div>
+        <div>
+          <div class="top"><span class="track-name health">Health &amp; Hobbies</span><span class="dot-sep">·</span><span class="when">2021</span></div>
+          <h3>Learned pottery</h3>
+          <p class="body">Hands in clay, mind at rest.</p>
+          <div class="meta"><span class="chip">#creative</span></div>
+        </div>
+      </article>
+
+      <div class="year-marker" data-year="2022" data-sub="Noah born">2022</div>
+      <article class="post is-milestone" data-year="2022" data-sub="First child, Noah, born">
+        <div class="avatar rel" aria-hidden="true">🍼</div>
+        <div>
+          <div class="top"><span class="track-name rel">Relationships</span><span class="dot-sep">·</span><span class="when">2022</span></div>
+          <h3>First child, Noah, born</h3>
+          <p class="body">The house gets louder and warmer.</p>
+          <div class="meta"><span class="chip">#family</span><span class="chip collection">Firsts</span></div>
+        </div>
+      </article>
+
+      <div class="year-marker" data-year="2023" data-sub="Seed funding · Rainier">2023</div>
+      <article class="post" data-year="2023" data-sub="Raised seed funding">
+        <div class="avatar career" aria-hidden="true">💰</div>
+        <div>
+          <div class="top"><span class="track-name career">Career</span><span class="dot-sep">·</span><span class="when">2023 · $2M seed</span></div>
+          <h3>Raised seed funding · $2M</h3>
+          <p class="body">Loomly gets fuel for the next climb.</p>
+          <div class="meta"><span class="chip">#career</span><span class="chip collection">Loomly</span></div>
+        </div>
+      </article>
+
+      <article class="post" data-year="2023" data-sub="Summited Mount Rainier">
+        <div class="avatar travel" aria-hidden="true">🏔️</div>
+        <div>
+          <div class="top"><span class="track-name travel">Travel</span><span class="dot-sep">·</span><span class="when">2023 · Mount Rainier</span></div>
+          <h3>Summited Mount Rainier</h3>
+          <p class="body">14,411 feet of grit and thin air.</p>
+          <div class="meta"><span class="chip">#travel</span><span class="chip collection">Adventures</span></div>
+        </div>
+      </article>
+
+      <div class="year-marker" data-year="2024" data-sub="Adopted Miso · learned to sail">2024</div>
+      <article class="post" data-year="2024" data-sub="Adopted a dog, Miso">
+        <div class="avatar rel" aria-hidden="true">🐕</div>
+        <div>
+          <div class="top"><span class="track-name rel">Relationships</span><span class="dot-sep">·</span><span class="when">2024</span></div>
+          <h3>Adopted a dog, Miso</h3>
+          <p class="body">A wagging tail joins the family.</p>
+          <div class="meta"><span class="chip">#family</span></div>
+        </div>
+      </article>
+
+      <article class="post" data-year="2024" data-sub="Learned to sail">
+        <div class="avatar health" aria-hidden="true">⛵</div>
+        <div>
+          <div class="top"><span class="track-name health">Health &amp; Hobbies</span><span class="dot-sep">·</span><span class="when">2024</span></div>
+          <h3>Learned to sail</h3>
+          <p class="body">Reading the wind, one tack at a time.</p>
+          <div class="meta"><span class="chip">#health</span></div>
+        </div>
+      </article>
+
+      <div class="year-marker" data-year="2025" data-sub="Now · age 35">2025 · Now</div>
+      <article class="post" data-year="2025" data-sub="Now · age 35">
+        <div class="avatar health" aria-hidden="true">📍</div>
+        <div>
+          <div class="top"><span class="track-name health">Present</span><span class="dot-sep">·</span><span class="when">2025 · age 35</span></div>
+          <h3>Now</h3>
+          <p class="body">The story is still being written.</p>
+          <div class="meta"><span class="chip">#life</span></div>
+        </div>
+      </article>
+
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      var railYear = document.getElementById('railYear');
+      var railSub = document.getElementById('railSub');
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // entrance animation
+      var posts = document.querySelectorAll('.post');
+      if (reduce || !('IntersectionObserver' in window)) {
+        posts.forEach(function (p) { p.classList.add('in'); });
+      } else {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+          });
+        }, { threshold: 0.12 });
+        posts.forEach(function (p) { io.observe(p); });
+      }
+
+      // sticky-year swapping: observe every element that carries a year
+      var tracked = document.querySelectorAll('[data-year]');
+      if ('IntersectionObserver' in window) {
+        var current = null;
+        var yio = new IntersectionObserver(function (entries) {
+          // pick the top-most currently-intersecting element
+          var visible = entries.filter(function (e) { return e.isIntersecting; });
+          if (!visible.length) return;
+          visible.sort(function (a, b) { return a.boundingClientRect.top - b.boundingClientRect.top; });
+          var el = visible[0].target;
+          var y = el.getAttribute('data-year');
+          if (y && y !== current) {
+            current = y;
+            railYear.style.opacity = '0';
+            window.setTimeout(function () {
+              railYear.textContent = y;
+              railSub.textContent = el.getAttribute('data-sub') || '';
+              railYear.style.opacity = '1';
+            }, 120);
+          }
+        }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 });
+        tracked.forEach(function (el) { yio.observe(el); });
+      }
+    })();
+  </script>
+</body>
+</html>

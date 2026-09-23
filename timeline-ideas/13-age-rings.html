@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Age Rings · MemoTrail timeline concept</title>
+<style>
+  :root{
+    --ink:#3a2614; --muted:#6b4d30; --faint:#8a6b46;
+    --career:#c9781f; --home:#b0472b; --rel:#c23c69; --travel:#2f8a6d; --health:#7a5aa8;
+    --amber:#f0a92b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:radial-gradient(1200px 900px at 50% 40%, #f3e4c8 0%, #e9d3ab 55%, #dcc092 100%);
+    min-height:100vh;
+  }
+  header.page{max-width:1200px;margin:0 auto;padding:22px 30px 4px}
+  header.page h1{margin:0;font-size:26px;letter-spacing:.3px;color:#4a3018}
+  header.page p{color:var(--muted);font-size:14px;margin:6px 0 0;max-width:82ch}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 16px 34px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+  .canvas{flex:1 1 640px;min-width:320px}
+  svg#rings{width:100%;height:auto;display:block;filter:drop-shadow(0 14px 34px rgba(90,60,20,.3))}
+  aside.legend{flex:0 0 236px;background:rgba(255,250,240,.55);border:1px solid rgba(150,110,60,.28);
+    border-radius:16px;padding:16px 18px;backdrop-filter:blur(3px)}
+  aside.legend h2{font-size:12px;text-transform:uppercase;letter-spacing:1.3px;color:var(--faint);margin:0 0 10px}
+  .legrow{display:flex;align-items:center;gap:10px;font-size:13.5px;margin:8px 0;color:var(--muted)}
+  .swatch{width:13px;height:13px;border-radius:50%;flex:0 0 auto}
+  .note{margin-top:14px;padding-top:12px;border-top:1px solid rgba(150,110,60,.28);font-size:12.5px;line-height:1.55;color:var(--muted)}
+  .note b{color:#4a3018}
+  .amber-key{width:14px;height:14px;transform:rotate(45deg);display:inline-block;background:var(--amber);box-shadow:0 0 8px rgba(240,169,43,.8)}
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+  #ringgroup circle{animation:fadein 1.4s ease both}
+  @keyframes nowp{0%,100%{opacity:.4;r:9}50%{opacity:1;r:13}}
+  .nowdot{animation:nowp 2.4s ease-in-out infinite}
+  .evt .lbl{transition:fill .2s}
+  .evt:hover .lbl{fill:#000}
+  .evt:hover .mk{filter:url(#amberglow)}
+  .lbl{font-size:10.5px;fill:var(--muted)}
+  .lbl.ms{font-size:11.5px;font-weight:700;fill:#4a3018}
+  .yr{font-weight:700;fill:#8a5a20}
+  @media (max-width:860px){aside.legend{flex-basis:100%}}
+</style>
+</head>
+<body>
+  <header class="page">
+    <h1>Age Rings</h1>
+    <p>Ava Chen's life read like a cut tree trunk. The pith at the very center is birth (age 0, 1990); each ring outward is one year lived; the bark at the rim is today (age 35, 2025). Events sit on the ring of the age they happened.</p>
+  </header>
+  <div class="wrap">
+    <div class="canvas">
+      <svg id="rings" viewBox="0 0 980 980" role="img"
+        aria-label="A tree-ring cross-section of Ava Chen's life. Concentric rings radiate from a central pith marking birth in 1990; each ring is one year of age out to the present at age 35. Events are placed on the ring matching the age they occurred, grouped into angular sectors by life track, with milestones as amber markers.">
+        <defs>
+          <radialGradient id="wood" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#f6e8ca"/><stop offset="60%" stop-color="#e7cd9c"/>
+            <stop offset="100%" stop-color="#cdad74"/>
+          </radialGradient>
+          <filter id="amberglow" x="-150%" y="-150%" width="400%" height="400%">
+            <feGaussianBlur stdDeviation="3.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <circle cx="490" cy="490" r="452" fill="#cdac72"/>
+        <g id="ringgroup"></g>
+        <g id="sectors"></g>
+        <g id="events"></g>
+        <g id="anchors"></g>
+      </svg>
+    </div>
+    <aside class="legend">
+      <h2>Tracks (sectors)</h2>
+      <div class="legrow"><span class="swatch" style="background:var(--career)"></span>Career &amp; School</div>
+      <div class="legrow"><span class="swatch" style="background:var(--home)"></span>Home &amp; Places</div>
+      <div class="legrow"><span class="swatch" style="background:var(--rel)"></span>Relationships</div>
+      <div class="legrow"><span class="swatch" style="background:var(--travel)"></span>Travel</div>
+      <div class="legrow"><span class="swatch" style="background:var(--health)"></span>Health &amp; Hobbies</div>
+      <div class="note">
+        Each <b>ring = one year of age</b>. Distance from the center is age. <span class="amber-key"></span> Amber markers are <b>milestones</b>. Darker, thicker rings are <b>eventful years</b>. Dashed markers are <b>~approximate</b> dates.
+      </div>
+    </aside>
+  </div>
+
+<script>
+(function(){
+  const NS="http://www.w3.org/2000/svg";
+  const $=id=>document.getElementById(id);
+  const el=(n,a,p)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;};
+  const text=(x,y,s,a,p)=>{const t=el("text",Object.assign({x,y},a),p);t.textContent=s;return t;};
+
+  const cx=490,cy=490,innerR=20,maxR=330,AGES=35;
+  const step=(maxR-innerR)/AGES;
+  const COL={career:"#c9781f",home:"#b0472b",rel:"#c23c69",travel:"#2f8a6d",health:"#7a5aa8"};
+  const ringR=age=>innerR+age*step+Math.sin(age*1.3)*1.8;
+  const eventful=new Set([0,18,22,25,28,29,30,32,33,34]);
+
+  // ---- rings ----
+  for(let age=AGES;age>=0;age--){
+    const r=ringR(age);
+    const big=eventful.has(age);
+    el("circle",{cx,cy,r:r.toFixed(2),fill:"none",
+      stroke:big?"#7a4d24":(age%2?"#c19a63":"#b38650"),
+      "stroke-width":big?3.4:(age%2?1.3:1.9),opacity:big?0.95:0.7},$("ringgroup"))
+      .style.animationDelay=(age*0.03)+"s";
+  }
+
+  // ---- tracks / sectors ----
+  const TRACKS={
+    career:{name:"CAREER",center:-90},
+    travel:{name:"TRAVEL",center:-18},
+    health:{name:"HEALTH",center:54},
+    rel:{name:"FAMILY",center:126},
+    home:{name:"HOME",center:198}
+  };
+  const events={
+    career:[{age:18,yr:2008,t:"Graduated high school",ms:true},{age:21,yr:2011,t:"First internship"},
+            {age:22,yr:2012,t:"B.S. Computer Science",ms:true},{age:25,yr:2015,t:"Senior Engineer"},
+            {age:28,yr:2018,t:"Tech Lead"},{age:31,yr:2021,t:"Founded Loomly"},{age:33,yr:2023,t:"Seed · $2M"}],
+    travel:[{age:23,yr:2013,t:"Backpacked SE Asia"},{age:26,yr:2016,t:"Marathon · Chicago",appx:true},
+            {age:28,yr:2018,t:"Japan 🌸"},{age:33,yr:2023,t:"Summited Rainier"}],
+    health:[{age:24,yr:2014,t:"Photography",appx:true},{age:31,yr:2021,t:"Pottery"},{age:34,yr:2024,t:"Learned to sail ⛵"}],
+    rel:[{age:25,yr:2015,t:"Met Sam"},{age:29,yr:2019,t:"Married Sam",ms:true},
+         {age:32,yr:2022,t:"Noah born",ms:true},{age:34,yr:2024,t:"Adopted Miso 🐶"}],
+    home:[{age:12,yr:2002,t:"Moved to Seattle"},{age:22,yr:2012,t:"San Francisco"},{age:30,yr:2020,t:"First home · Oakland",ms:true}]
+  };
+
+  const D2R=Math.PI/180;
+  Object.keys(TRACKS).forEach(key=>{
+    const tr=TRACKS[key], col=COL[key];
+    const evs=events[key].slice().sort((a,b)=>a.age-b.age);
+    const n=evs.length, halfW=26;
+    // track name at rim
+    const ca=tr.center*D2R;
+    const nameR=maxR+120;
+    const nx=cx+nameR*Math.cos(ca), ny=cy+nameR*Math.sin(ca);
+    text(nx,ny,tr.name,{"text-anchor":"middle","font-size":13,"font-weight":800,fill:col,"letter-spacing":"1.5px"},$("sectors"));
+
+    evs.forEach((e,i)=>{
+      const off=n>1?((i-(n-1)/2)/((n-1)/2))*halfW:0;
+      const a=(tr.center+off)*D2R;
+      const r=ringR(e.age);
+      const x=cx+r*Math.cos(a), y=cy+r*Math.sin(a);
+      const g=el("g",{class:"evt"},$("events"));
+      // leader out to label radius
+      const lr=maxR+16;
+      const lx=cx+lr*Math.cos(a), ly=cy+lr*Math.sin(a);
+      el("line",{x1:x,y1:y,x2:lx,y2:ly,stroke:col,"stroke-width":1,opacity:.5},g);
+      // marker
+      if(e.ms){
+        el("rect",{x:x-6,y:y-6,width:12,height:12,fill:"#f0a92b",stroke:"#7a4a10","stroke-width":1.4,
+          transform:`rotate(45 ${x} ${y})`,class:"mk"},g);
+      } else if(e.appx){
+        el("circle",{cx:x,cy:y,r:5,fill:"none",stroke:col,"stroke-width":2,"stroke-dasharray":"2.5 2.5",class:"mk"},g);
+      } else {
+        el("circle",{cx:x,cy:y,r:4.5,fill:col,stroke:"#4a3018","stroke-width":.8,class:"mk"},g);
+      }
+      // label
+      const right=Math.cos(a)>=-0.15;
+      const anchor= Math.abs(Math.cos(a))<0.25 ? "middle" : (right?"start":"end");
+      const tx=lx+(anchor==="middle"?0:(right?4:-4));
+      const ty=ly+(Math.sin(a)>=0?9:-2);
+      const t=text(tx,ty,"",{"text-anchor":anchor,class:"lbl"+(e.ms?" ms":"")},g);
+      const yr=el("tspan",{class:"yr"},t); yr.textContent="a"+e.age+" · "+(e.appx?"~":"")+e.yr+"  ";
+      const tt=el("tspan",{},t); tt.textContent=e.t;
+    });
+  });
+
+  // ---- center pith (birth, age 0) ----
+  el("circle",{cx,cy,r:innerR,fill:"#7a4a10",opacity:.25},$("anchors"));
+  el("rect",{x:cx-8,y:cy-8,width:16,height:16,fill:"#f0a92b",stroke:"#7a4a10","stroke-width":1.6,transform:`rotate(45 ${cx} ${cy})`,filter:"url(#amberglow)"},$("anchors"));
+  // center callout
+  const cax=cx-70, cay=cy+64;
+  el("line",{x1:cx,y1:cy,x2:cax+40,y2:cay-8,stroke:"#7a4a10","stroke-width":1,opacity:.6},$("anchors"));
+  text(cax,cay,"age 0 · 1990",{"text-anchor":"middle","font-size":12,"font-weight":800,fill:"#5a3812"},$("anchors"));
+  text(cax,cay+15,"born · Portland",{"text-anchor":"middle","font-size":10.5,fill:"#6b4d30"},$("anchors"));
+
+  // ---- outer "now" marker on the bark (age 35) at top ----
+  const na=-90*D2R, nr=ringR(35);
+  const nx=cx+nr*Math.cos(na), ny=cy+nr*Math.sin(na);
+  el("circle",{cx:nx,cy:ny,r:9,fill:"#3a2614",class:"nowdot"},$("anchors"));
+  el("circle",{cx:nx,cy:ny,r:4.5,fill:"#fff"},$("anchors"));
+  text(nx,ny-20,"BARK · age 35 · 2025",{"text-anchor":"middle","font-size":11.5,"font-weight":800,fill:"#3a2614","letter-spacing":".5px"},$("anchors"));
+  text(nx,ny-6,"the present",{"text-anchor":"middle","font-size":10,fill:"#6b4d30"},$("anchors"));
+})();
+</script>
+</body>
+</html>

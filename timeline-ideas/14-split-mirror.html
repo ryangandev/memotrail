@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MemoTrail · Split Mirror</title>
+<style>
+  :root {
+    --bg: #0f1420;
+    --panel: #161d2c;
+    --ink: #eef2fb;
+    --muted: #9aa6bd;
+    --hair: #29334a;
+
+    --personal: #22c3a6;   /* left side accent */
+    --personal-soft: rgba(34,195,166,0.14);
+    --pro: #6f7bff;        /* right side accent */
+    --pro-soft: rgba(111,123,255,0.16);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(900px 500px at 15% -5%, rgba(34,195,166,0.10), transparent 55%),
+      radial-gradient(900px 500px at 85% -5%, rgba(111,123,255,0.12), transparent 55%),
+      var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header.page { max-width: 1040px; margin: 0 auto; padding: 46px 24px 10px; text-align: center; }
+  .eyebrow {
+    display: inline-block; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted); font-weight: 700;
+  }
+  header.page h1 { font-size: clamp(28px,4.4vw,42px); margin: 12px 0 8px; letter-spacing: -0.02em; }
+  header.page p.desc { margin: 0 auto; color: var(--muted); max-width: 60ch; font-size: 15px; }
+
+  .legend {
+    display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;
+    margin: 20px 0 4px;
+  }
+  .legend .pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    border: 1px solid var(--hair); background: var(--panel);
+  }
+  .legend .pill .sw { width: 12px; height: 12px; border-radius: 4px; }
+  .legend .pill.left .sw { background: var(--personal); }
+  .legend .pill.right .sw { background: var(--pro); }
+  .legend .pill.left { color: var(--personal); }
+  .legend .pill.right { color: var(--pro); }
+  .legend .hint { font-size: 12px; color: var(--muted); align-self: center; }
+
+  .colheads {
+    max-width: 1040px; margin: 18px auto 0; padding: 0 24px;
+    display: grid; grid-template-columns: 1fr 120px 1fr;
+  }
+  .colheads .ch { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; }
+  .colheads .ch.l { text-align: right; color: var(--personal); }
+  .colheads .ch.r { text-align: left; color: var(--pro); }
+  .colheads .spacer {}
+
+  .mirror {
+    position: relative;
+    max-width: 1040px;
+    margin: 6px auto 100px;
+    padding: 20px 24px 0;
+  }
+  .axis {
+    position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-50%);
+    background: linear-gradient(to bottom, var(--personal), var(--pro));
+    opacity: 0.6;
+  }
+
+  .row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 120px 1fr;
+    align-items: center;
+    margin: 14px 0;
+  }
+  .slot { min-width: 0; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-radius: 14px;
+    padding: 13px 16px;
+    position: relative;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.55s ease, transform 0.55s ease;
+  }
+  .card.in { opacity: 1; transform: none; }
+
+  /* left cards align right, point right toward axis */
+  .slot.left .card { margin-left: auto; border-left: 3px solid var(--personal); text-align: right; }
+  .slot.right .card { margin-right: auto; border-right: 3px solid var(--pro); text-align: left; }
+
+  .card .yr { font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.03em; }
+  .slot.left .card .yr { color: var(--personal); }
+  .slot.right .card .yr { color: var(--pro); }
+  .card .approx { opacity: 0.85; }
+  .card h3 { margin: 3px 0 3px; font-size: 15.5px; letter-spacing: -0.01em; }
+  .card p { margin: 0 0 8px; font-size: 13px; color: var(--muted); }
+  .card .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .slot.left .card .tags { justify-content: flex-end; }
+  .card .tags span {
+    font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+  }
+  .slot.left .card .tags span { background: var(--personal-soft); color: var(--personal); }
+  .slot.right .card .tags span { background: var(--pro-soft); color: var(--pro); }
+
+  /* connector dot on axis */
+  .row .connector {
+    position: relative; display: flex; align-items: center; justify-content: center; height: 100%;
+  }
+  .row .connector .node {
+    width: 12px; height: 12px; border-radius: 50%;
+    border: 2px solid var(--bg);
+    z-index: 3;
+  }
+  .row.side-left .connector .node { background: var(--personal); box-shadow: 0 0 0 4px var(--personal-soft); }
+  .row.side-right .connector .node { background: var(--pro); box-shadow: 0 0 0 4px var(--pro-soft); }
+  /* line from node to card */
+  .row.side-left .connector::before,
+  .row.side-right .connector::before {
+    content: ""; position: absolute; top: 50%; height: 2px; transform: translateY(-50%); z-index: 1;
+  }
+  .row.side-left .connector::before { right: 50%; width: 40px; background: var(--personal); opacity: 0.5; }
+  .row.side-right .connector::before { left: 50%; width: 40px; background: var(--pro); opacity: 0.5; }
+
+  /* milestones enlarged */
+  .card.is-milestone { box-shadow: 0 12px 34px -18px rgba(0,0,0,0.7); }
+  .slot.left .card.is-milestone { border-left-width: 4px; background: linear-gradient(180deg, rgba(34,195,166,0.10), var(--panel)); }
+  .slot.right .card.is-milestone { border-right-width: 4px; background: linear-gradient(180deg, rgba(111,123,255,0.12), var(--panel)); }
+  .card.is-milestone h3 { font-size: 17px; }
+  .card .badge { font-size: 16px; }
+  .row.side-left .connector .node.big,
+  .row.side-right .connector .node.big {
+    width: 30px; height: 30px; display: grid; place-items: center; font-size: 15px;
+    border-radius: 50%;
+  }
+  .row.side-left .connector .node.big { background: radial-gradient(circle at 30% 25%, #eafff9, var(--personal)); }
+  .row.side-right .connector .node.big { background: radial-gradient(circle at 30% 25%, #eef0ff, var(--pro)); }
+
+  /* year markers on the axis */
+  .year-mark {
+    position: relative; display: flex; justify-content: center; margin: 16px 0; z-index: 4;
+  }
+  .year-mark span {
+    background: var(--bg);
+    border: 1px solid var(--hair);
+    color: var(--ink);
+    font-weight: 800; font-variant-numeric: tabular-nums;
+    font-size: 13px; letter-spacing: 0.04em;
+    padding: 5px 14px; border-radius: 999px;
+  }
+  .year-mark.now span {
+    background: linear-gradient(90deg, var(--personal), var(--pro));
+    color: #0c1018; border: none;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .year-mark.now .pulse {
+    width: 9px; height: 9px; border-radius: 50%; background: #0c1018;
+    box-shadow: 0 0 0 0 rgba(12,16,24,0.5); animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.5); }
+    70% { box-shadow: 0 0 0 10px rgba(255,255,255,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+  }
+
+  @media (max-width: 800px) {
+    .axis { left: 22px; }
+    .colheads { display: none; }
+    .row { grid-template-columns: 44px 1fr; }
+    .row .connector { order: -1; }
+    .slot.left { display: none; }
+    .row.side-left .slot.left { display: block; grid-column: 2; }
+    .row.side-left .slot.left .card { text-align: left; margin-left: 0; border-left: 3px solid var(--personal); border-right: none; }
+    .row.side-left .slot.left .card .tags { justify-content: flex-start; }
+    .row.side-right .slot.right { grid-column: 2; }
+    .row.side-left .connector::before { right: auto; left: 22px; width: 22px; }
+    .row.side-right .connector::before { left: 22px; width: 22px; }
+    .year-mark { justify-content: flex-start; padding-left: 6px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .card { transition: none; opacity: 1; transform: none; }
+    .year-mark.now .pulse { animation: none; }
+  }
+</style>
+</head>
+<body>
+  <header class="page">
+    <span class="eyebrow">◆ MemoTrail · 14</span>
+    <h1>Split Mirror · Personal &amp; Professional</h1>
+    <p class="desc">One life, two halves, read in parallel. A single time axis runs down the center - the personal life (family, home, travel, health) mirrors on the left, the working life on the right.</p>
+    <div class="legend">
+      <span class="pill left"><span class="sw"></span>Personal life</span>
+      <span class="pill right"><span class="sw"></span>Professional life</span>
+      <span class="hint">⭐ = milestone (enlarged) · ~ = approximate</span>
+    </div>
+  </header>
+
+  <div class="colheads" aria-hidden="true">
+    <div class="ch l">Personal ◀</div>
+    <div class="spacer"></div>
+    <div class="ch r">▶ Professional</div>
+  </div>
+
+  <main class="mirror" aria-label="Ava Chen personal and professional timeline">
+    <div class="axis" aria-hidden="true"></div>
+
+    <div class="year-mark"><span>1990</span></div>
+
+    <!-- 1990 Born (personal milestone) -->
+    <div class="row side-left">
+      <div class="slot left">
+        <article class="card is-milestone">
+          <span class="yr">1990 · ⭐</span>
+          <h3><span class="badge">👶</span> Born in Portland, Oregon</h3>
+          <p>The birth anchor - March 14, where it all begins.</p>
+          <div class="tags"><span>#family</span><span>Firsts</span></div>
+        </article>
+      </div>
+      <div class="connector"><span class="node big" aria-hidden="true">👶</span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <!-- 1990-2002 Childhood home (personal stage) -->
+    <div class="row side-left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr">1990 – 2002 · stage</span>
+          <h3>🏡 Childhood home, Portland</h3>
+          <p>Twelve formative years under one Oregon roof.</p>
+          <div class="tags"><span>#home</span></div>
+        </article>
+      </div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <div class="year-mark"><span>2002</span></div>
+
+    <!-- 2002 Seattle (personal) -->
+    <div class="row side-left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr">2002</span>
+          <h3>📦 Family moved to Seattle</h3>
+          <p>A new city closes the first chapter of home.</p>
+          <div class="tags"><span>#home</span><span>Big moves</span></div>
+        </article>
+      </div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <div class="year-mark"><span>2008</span></div>
+
+    <!-- 2008 Graduated HS (career milestone) -->
+    <div class="row side-right">
+      <div class="slot left"></div>
+      <div class="connector"><span class="node big" aria-hidden="true">🎓</span></div>
+      <div class="slot right">
+        <article class="card is-milestone">
+          <span class="yr">2008 · ⭐</span>
+          <h3><span class="badge">🎓</span> Graduated high school</h3>
+          <p>One chapter of learning closes; another begins.</p>
+          <div class="tags"><span>#career</span><span>Firsts</span></div>
+        </article>
+      </div>
+    </div>
+
+    <!-- 2008-2012 University (career stage) -->
+    <div class="row side-right">
+      <div class="slot left"></div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right">
+        <article class="card">
+          <span class="yr">2008 – 2012 · stage</span>
+          <h3>📚 University · Computer Science</h3>
+          <p>Four years that set the trajectory for everything after.</p>
+          <div class="tags"><span>#career</span></div>
+        </article>
+      </div>
+    </div>
+
+    <div class="year-mark"><span>2011</span></div>
+
+    <!-- 2011 internship (career) -->
+    <div class="row side-right">
+      <div class="slot left"></div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right">
+        <article class="card">
+          <span class="yr">2011</span>
+          <h3>💼 First internship at a startup</h3>
+          <p>First taste of shipping real software.</p>
+          <div class="tags"><span>#career</span><span>Firsts</span></div>
+        </article>
+      </div>
+    </div>
+
+    <div class="year-mark"><span>2012</span></div>
+
+    <!-- 2012 Graduated uni (career milestone) -->
+    <div class="row side-right">
+      <div class="slot left"></div>
+      <div class="connector"><span class="node big" aria-hidden="true">🎓</span></div>
+      <div class="slot right">
+        <article class="card is-milestone">
+          <span class="yr">2012 · ⭐</span>
+          <h3><span class="badge">🎓</span> Graduated university · B.S. CS</h3>
+          <p>Degree in hand, the working world opens.</p>
+          <div class="tags"><span>#career</span></div>
+        </article>
+      </div>
+    </div>
+
+    <!-- 2012 First job (career) -->
+    <div class="row side-right">
+      <div class="slot left"></div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right">
+        <article class="card">
+          <span class="yr">2012</span>
+          <h3>🧑‍💻 First job · Junior Developer</h3>
+          <p>The career officially begins.</p>
+          <div class="tags"><span>#career</span><span>Firsts</span></div>
+        </article>
+      </div>
+    </div>
+
+    <!-- 2012 Moved to SF (personal) -->
+    <div class="row side-left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr">2012</span>
+          <h3>🌉 Moved to San Francisco</h3>
+          <p>Chasing the work, the fog, the hills.</p>
+          <div class="tags"><span>#home</span><span>Big moves</span></div>
+        </article>
+      </div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <div class="year-mark"><span>2013</span></div>
+
+    <!-- 2013 backpacking (personal) -->
+    <div class="row side-left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr">2013</span>
+          <h3>🎒 Backpacked Southeast Asia</h3>
+          <p>Two months, six countries, one backpack.</p>
+          <div class="tags"><span>#travel</span><span>Adventures</span></div>
+        </article>
+      </div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <div class="year-mark"><span>2014</span></div>
+
+    <!-- ~2014 photography (personal) -->
+    <div class="row side-left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr"><span class="approx">~</span>2014 · approx</span>
+          <h3>📷 Started photography</h3>
+          <p>Around 2014 - a lens became a second way of seeing.</p>
+          <div class="tags"><span>#creative</span></div>
+        </article>
+      </div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <div class="year-mark"><span>2015</span></div>
+
+    <!-- 2015 Met Sam (personal) -->
+    <div class="row side-left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr">2015</span>
+          <h3>💫 Met Sam</h3>
+          <p>A chance introduction that would change everything.</p>
+          <div class="tags"><span>#family</span></div>
+        </article>
+      </div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <!-- 2015 Promoted (career) -->
+    <div class="row side-right">
+      <div class="slot left"></div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right">
+        <article class="card">
+          <span class="yr">2015</span>
+          <h3>🚀 Promoted to Senior Engineer</h3>
+          <p>Ownership grows; so does the impact.</p>
+          <div class="tags"><span>#career</span></div>
+        </article>
+      </div>
+    </div>
+
+    <div class="year-mark"><span>2016</span></div>
+
+    <!-- ~2016 marathon (personal) -->
+    <div class="row side-left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr"><span class="approx">~</span>2016 · approx</span>
+          <h3>🏃‍♀️ First marathon · Chicago</h3>
+          <p>26.2 miles, one finish line.</p>
+          <div class="tags"><span>#health</span><span>Firsts</span></div>
+        </article>
+      </div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <div class="year-mark"><span>2018</span></div>
+
+    <!-- 2018 Japan (personal) -->
+    <div class="row side-left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr">2018</span>
+          <h3>🌸 Trip to Japan · cherry blossoms</h3>
+          <p>Pink petals and slow trains through spring.</p>
+          <div class="tags"><span>#travel</span><span>Adventures</span></div>
+        </article>
+      </div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <!-- 2018 Tech Lead (career) -->
+    <div class="row side-right">
+      <div class="slot left"></div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right">
+        <article class="card">
+          <span class="yr">2018</span>
+          <h3>🧭 Became Tech Lead</h3>
+          <p>From writing code to steering the team.</p>
+          <div class="tags"><span>#career</span></div>
+        </article>
+      </div>
+    </div>
+
+    <div class="year-mark"><span>2019</span></div>
+
+    <!-- 2019 Married (personal milestone) -->
+    <div class="row side-left">
+      <div class="slot left">
+        <article class="card is-milestone">
+          <span class="yr">2019 · ⭐</span>
+          <h3><span class="badge">💍</span> Married Sam</h3>
+          <p>Two paths become one.</p>
+          <div class="tags"><span>#family</span></div>
+        </article>
+      </div>
+      <div class="connector"><span class="node big" aria-hidden="true">💍</span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <div class="year-mark"><span>2020</span></div>
+
+    <!-- 2020 Bought home (personal milestone) -->
+    <div class="row side-left">
+      <div class="slot left">
+        <article class="card is-milestone">
+          <span class="yr">2020 · ⭐</span>
+          <h3><span class="badge">🏠</span> Bought first home · Oakland</h3>
+          <p>Keys to a place that is finally theirs.</p>
+          <div class="tags"><span>#home</span><span>Big moves</span></div>
+        </article>
+      </div>
+      <div class="connector"><span class="node big" aria-hidden="true">🏠</span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <div class="year-mark"><span>2021</span></div>
+
+    <!-- 2021 pottery (personal) -->
+    <div class="row side-left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr">2021</span>
+          <h3>🏺 Learned pottery</h3>
+          <p>Hands in clay, mind at rest.</p>
+          <div class="tags"><span>#creative</span></div>
+        </article>
+      </div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <!-- 2021 Loomly (career stage) -->
+    <div class="row side-right">
+      <div class="slot left"></div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right">
+        <article class="card">
+          <span class="yr">2021 – present · stage</span>
+          <h3>🛠️ Founded "Loomly" · a design tool</h3>
+          <p>Left the desk to build something of her own.</p>
+          <div class="tags"><span>#career</span><span>Loomly</span></div>
+        </article>
+      </div>
+    </div>
+
+    <div class="year-mark"><span>2022</span></div>
+
+    <!-- 2022 Noah (personal milestone) -->
+    <div class="row side-left">
+      <div class="slot left">
+        <article class="card is-milestone">
+          <span class="yr">2022 · ⭐</span>
+          <h3><span class="badge">🍼</span> First child, Noah, born</h3>
+          <p>The house gets louder and warmer.</p>
+          <div class="tags"><span>#family</span><span>Firsts</span></div>
+        </article>
+      </div>
+      <div class="connector"><span class="node big" aria-hidden="true">🍼</span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <div class="year-mark"><span>2023</span></div>
+
+    <!-- 2023 Rainier (personal) -->
+    <div class="row side-left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr">2023</span>
+          <h3>🏔️ Summited Mount Rainier</h3>
+          <p>14,411 feet of grit and thin air.</p>
+          <div class="tags"><span>#travel</span><span>Adventures</span></div>
+        </article>
+      </div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <!-- 2023 seed (career) -->
+    <div class="row side-right">
+      <div class="slot left"></div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right">
+        <article class="card">
+          <span class="yr">2023</span>
+          <h3>💰 Raised seed funding · $2M</h3>
+          <p>Loomly gets fuel for the next climb.</p>
+          <div class="tags"><span>#career</span><span>Loomly</span></div>
+        </article>
+      </div>
+    </div>
+
+    <div class="year-mark"><span>2024</span></div>
+
+    <!-- 2024 dog (personal) -->
+    <div class="row side-left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr">2024</span>
+          <h3>🐕 Adopted a dog, Miso</h3>
+          <p>A wagging tail joins the family.</p>
+          <div class="tags"><span>#family</span></div>
+        </article>
+      </div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <!-- 2024 sail (personal) -->
+    <div class="row side-left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr">2024</span>
+          <h3>⛵ Learned to sail</h3>
+          <p>Reading the wind, one tack at a time.</p>
+          <div class="tags"><span>#health</span></div>
+        </article>
+      </div>
+      <div class="connector"><span class="node" aria-hidden="true"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <div class="year-mark now"><span><span class="pulse" aria-hidden="true"></span>Now · 2025 · age 35</span></div>
+
+  </main>
+
+  <script>
+    (function () {
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var cards = document.querySelectorAll('.card');
+      if (reduce || !('IntersectionObserver' in window)) {
+        cards.forEach(function (c) { c.classList.add('in'); });
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.15 });
+      cards.forEach(function (c) { io.observe(c); });
+    })();
+  </script>
+</body>
+</html>

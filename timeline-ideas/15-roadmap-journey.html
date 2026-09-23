@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Winding Roadmap · The journey of Ava Chen</title>
+<style>
+  :root{
+    --parch:#f6ead0; --parch2:#eddab0; --ink:#4a3a26; --muted:#8a7452;
+    --road:#d0a862; --roadedge:#9c7534; --lane:#fff6e0;
+    --home:#4f9e5f; --career:#3f7fb5; --rel:#c8608f; --travel:#e08a3c; --health:#8a6bbf;
+    --sign:#c99a5a; --signdark:#a2763a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    font-family:"Trebuchet MS","Segoe UI",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(900px 500px at 15% 12%, #fbf3df 0%, transparent 55%),
+      radial-gradient(900px 500px at 85% 88%, #f0e0bc 0%, transparent 55%),
+      repeating-linear-gradient(0deg, rgba(154,120,60,.05) 0 1px, transparent 1px 26px),
+      repeating-linear-gradient(90deg, rgba(154,120,60,.05) 0 1px, transparent 1px 26px),
+      linear-gradient(180deg,var(--parch),var(--parch2));
+    overflow-y:hidden; overflow-x:auto;
+  }
+  header.page{position:fixed; top:0; left:0; right:0; z-index:40; display:flex; gap:14px; align-items:baseline;
+    flex-wrap:wrap; padding:12px 20px;
+    background:linear-gradient(180deg,rgba(246,234,208,.96),rgba(246,234,208,.55) 70%,transparent)}
+  header.page h1{margin:0; font-size:18px; letter-spacing:.4px}
+  header.page h1 .em{color:var(--travel)}
+  header.page p{margin:0; font-size:12.5px; color:var(--muted)}
+
+  .scene{position:relative; margin-top:60px; height:648px}
+  svg.map{position:absolute; inset:0; display:block}
+  .terrain{position:absolute; font-size:30px; opacity:.5; pointer-events:none; user-select:none; filter:saturate(.85)}
+
+  .marker{position:absolute; opacity:0; transform:translateY(8px); animation:rise .55s ease forwards}
+  @keyframes rise{to{opacity:1; transform:none}}
+
+  /* big milestone signpost */
+  .signboard{position:absolute; width:176px; transform:translateX(-50%);
+    background:linear-gradient(180deg,#e6c489,#cf9f57); border:2px solid var(--signdark);
+    border-radius:10px; padding:8px 11px; color:#3c2d16;
+    box-shadow:0 6px 16px rgba(80,55,20,.28), inset 0 1px 0 rgba(255,255,255,.4)}
+  .signboard::before{content:""; position:absolute; left:14px; top:8px; width:7px; height:7px; border-radius:50%;
+    background:#7a5a28; box-shadow:0 0 0 2px rgba(0,0,0,.08)}
+  .signboard::after{content:""; position:absolute; right:14px; top:8px; width:7px; height:7px; border-radius:50%;
+    background:#7a5a28; box-shadow:0 0 0 2px rgba(0,0,0,.08)}
+  .signboard .yr{font-size:12px; font-weight:800; letter-spacing:.5px; text-align:center; margin-top:2px}
+  .signboard .ti{font-size:12px; font-weight:700; text-align:center; line-height:1.2; margin-top:3px}
+  .signboard .bd{font-size:10px; text-align:center; line-height:1.3; color:#5c4623; margin-top:4px}
+  .signboard .flag{position:absolute; top:-13px; left:50%; transform:translateX(-50%);
+    background:var(--travel); color:#fff; font-size:9px; font-weight:800; letter-spacing:1px;
+    padding:2px 8px; border-radius:10px; white-space:nowrap; box-shadow:0 3px 8px rgba(224,138,60,.5)}
+
+  /* small mile-marker */
+  .milecard{position:absolute; width:132px; transform:translateX(-50%);
+    background:rgba(255,251,240,.94); border:1.5px solid var(--roadedge); border-radius:8px;
+    padding:6px 8px; box-shadow:0 4px 10px rgba(80,55,20,.16)}
+  .milecard .yr{font-size:10px; font-weight:700; letter-spacing:.5px}
+  .milecard .yr .fz{color:var(--muted); font-weight:600}
+  .milecard .ti{font-size:11px; line-height:1.2; margin-top:1px}
+  .milecard .tr{display:inline-block; font-size:8px; letter-spacing:.8px; text-transform:uppercase;
+    color:#fff; border-radius:8px; padding:0 6px; margin-top:4px}
+
+  .startflag,.hereflag{position:absolute; transform:translate(-50%,-100%); text-align:center; white-space:nowrap}
+  .startflag .lab{background:var(--home); color:#fff; font-weight:800; font-size:11px; letter-spacing:.5px;
+    padding:3px 10px; border-radius:12px; box-shadow:0 4px 10px rgba(40,90,50,.35)}
+  .hereflag .pin{font-size:34px; animation:bob 1.6s ease-in-out infinite}
+  .hereflag .lab{display:block; background:var(--rel); color:#fff; font-weight:800; font-size:11px;
+    padding:3px 10px; border-radius:12px; box-shadow:0 4px 10px rgba(160,60,110,.35); margin-top:-4px}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+  .compass{position:fixed; top:70px; right:18px; z-index:42; width:88px; height:88px; opacity:.92;
+    filter:drop-shadow(0 4px 8px rgba(80,55,20,.25))}
+  .legend{position:fixed; left:18px; bottom:16px; z-index:42; background:rgba(255,251,240,.95);
+    border:1.5px solid var(--signdark); border-radius:10px; padding:9px 12px; font-size:11px;
+    box-shadow:0 6px 16px rgba(80,55,20,.22)}
+  .legend h4{margin:0 0 6px; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--muted)}
+  .legend .row{display:flex; align-items:center; gap:7px; margin:3px 0}
+  .legend .sw{width:20px; height:7px; border-radius:4px}
+  .legend .flagmark{font-size:12px}
+  .hint{position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:42; font-size:12px;
+    color:var(--muted); background:rgba(255,251,240,.85); padding:5px 14px; border-radius:20px;
+    box-shadow:0 4px 10px rgba(80,55,20,.18)}
+  @media (max-width:820px){ .legend{display:none} }
+</style>
+</head>
+<body>
+  <header class="page">
+    <h1>Winding <span class="em">Roadmap</span></h1>
+    <p>A life as a road trip: follow the trail from Start (1990) to You-Are-Here (2025). Signposts mark the milestones.</p>
+  </header>
+
+  <main class="scene" id="scene" aria-label="Winding roadmap of Ava Chen's life journey">
+    <svg class="map" id="svg" aria-hidden="true"></svg>
+  </main>
+
+  <svg class="compass" viewBox="0 0 100 100" aria-label="compass rose" role="img">
+    <circle cx="50" cy="50" r="46" fill="#fbf3df" stroke="#a2763a" stroke-width="2"/>
+    <circle cx="50" cy="50" r="38" fill="none" stroke="#c99a5a" stroke-width="1"/>
+    <polygon points="50,10 57,50 50,46 43,50" fill="#c8608f"/>
+    <polygon points="50,90 43,50 50,54 57,50" fill="#4a3a26"/>
+    <polygon points="10,50 50,43 46,50 50,57" fill="#8a7452"/>
+    <polygon points="90,50 50,57 54,50 50,43" fill="#8a7452"/>
+    <text x="50" y="24" text-anchor="middle" font-size="10" font-weight="700" fill="#4a3a26">N</text>
+    <circle cx="50" cy="50" r="3" fill="#4a3a26"/>
+  </svg>
+
+  <aside class="legend" aria-label="map legend">
+    <h4>Legend</h4>
+    <div class="row"><span class="flagmark">🚩</span> Milestone signpost</div>
+    <div class="row"><span class="flagmark">•</span> Mile-marker (event)</div>
+    <div class="row"><span class="sw" style="background:var(--home)"></span> Home stretch</div>
+    <div class="row"><span class="sw" style="background:var(--career)"></span> Career stretch</div>
+    <div class="row"><span class="sw" style="background:var(--health)"></span> Venture stretch</div>
+  </aside>
+
+  <div class="hint">🧭 &nbsp;scroll the trail&nbsp; →</div>
+
+<script>
+(function(){
+  var Y0=1990, YN=2025, YW=236, PADL=190, PADR=210;
+  var YEARS=YN-Y0, W=PADL+YEARS*YW+PADR, H=648;
+  var SVGNS="http://www.w3.org/2000/svg";
+  var COL={Home:"#4f9e5f",Career:"#3f7fb5",Relationships:"#c8608f",Travel:"#e08a3c",Health:"#8a6bbf"};
+
+  function xOf(y){return PADL+(y-Y0)*YW;}
+  function roadY(x){var t=x-PADL; return 330 + 92*Math.sin(t/920) + 30*Math.sin(x/300+1.1);}
+  function pathD(x0,x1){var d="",x;for(x=x0;x<=x1;x+=10){d+=(x===x0?"M":"L")+x.toFixed(1)+" "+roadY(x).toFixed(1)+" ";}
+    d+="L"+x1.toFixed(1)+" "+roadY(x1).toFixed(1);return d;}
+
+  var stages=[
+    {from:1990,to:2002,color:COL.Home,label:"Childhood · Portland"},
+    {from:2008,to:2012,color:COL.Career,label:"University · CS"},
+    {from:2021,to:2025,color:COL.Health,label:"Building Loomly"}
+  ];
+
+  // milestones = signposts ; events = mile markers
+  var signs=[
+    {yr:2008.0,year:"2008",ti:"Graduated high school",bd:"First chapter closes.",tr:"Career"},
+    {yr:2012.0,year:"2012",ti:"Graduated university",bd:"B.S. Computer Science.",tr:"Career"},
+    {yr:2019.0,year:"2019",ti:"Married Sam",bd:"Two roads become one.",tr:"Relationships"},
+    {yr:2020.0,year:"2020",ti:"Bought first home",bd:"Roots in Oakland.",tr:"Home"},
+    {yr:2022.0,year:"2022",ti:"First child, Noah",bd:"A new traveler joins.",tr:"Relationships"}
+  ];
+  var miles=[
+    {yr:2002,year:"2002",ti:"Moved to Seattle",tr:"Home"},
+    {yr:2011,year:"2011",ti:"First internship",tr:"Career"},
+    {yr:2012.5,year:"2012",ti:"Junior Developer",tr:"Career"},
+    {yr:2012.85,year:"2012",ti:"Moved to San Francisco",tr:"Home"},
+    {yr:2013.4,year:"2013",ti:"Backpacked SE Asia",tr:"Travel"},
+    {yr:2014.4,year:"~2014",fz:true,ti:"Started photography",tr:"Health"},
+    {yr:2015.2,year:"2015",ti:"Senior Engineer",tr:"Career"},
+    {yr:2015.7,year:"2015",ti:"Met Sam",tr:"Relationships"},
+    {yr:2016.4,year:"~2016",fz:true,ti:"First marathon, Chicago",tr:"Travel"},
+    {yr:2018.15,year:"2018",ti:"Became Tech Lead",tr:"Career"},
+    {yr:2018.7,year:"2018",ti:"Trip to Japan",tr:"Travel"},
+    {yr:2021.2,year:"2021",ti:"Learned pottery",tr:"Health"},
+    {yr:2023.2,year:"2023",ti:"Seed funding $2M",tr:"Career"},
+    {yr:2023.7,year:"2023",ti:"Summited Mt. Rainier",tr:"Travel"},
+    {yr:2024.3,year:"2024",ti:"Adopted dog, Miso",tr:"Relationships"},
+    {yr:2024.7,year:"2024",ti:"Learned to sail",tr:"Health"}
+  ];
+
+  var svg=document.getElementById("svg"), scene=document.getElementById("scene");
+  svg.setAttribute("viewBox","0 0 "+W+" "+H); svg.setAttribute("width",W); svg.setAttribute("height",H);
+  scene.style.width=W+"px";
+
+  // terrain decorations
+  [["🌲",320,120],["🏔️",1500,90],["🌲",2100,470],["🌊",2700,540],["🌲",3400,120],["🏜️",4200,110],
+   ["🌲",4800,500],["🏔️",5600,90],["🌲",6300,470],["🌲",7000,120],["⛰️",7700,480],["🌲",8200,130]]
+   .forEach(function(t){var s=document.createElement("div"); s.className="terrain";
+     s.style.left=t[1]+"px"; s.style.top=t[2]+"px"; s.textContent=t[0]; scene.appendChild(s);});
+
+  // road: edge (dark), surface (tan), dashed lane line
+  function stroke(d,color,wdt,cap,dash,op){
+    var p=document.createElementNS(SVGNS,"path"); p.setAttribute("d",d); p.setAttribute("fill","none");
+    p.setAttribute("stroke",color); p.setAttribute("stroke-width",wdt); p.setAttribute("stroke-linecap",cap||"round");
+    if(dash)p.setAttribute("stroke-dasharray",dash); if(op)p.setAttribute("opacity",op); svg.appendChild(p); return p;
+  }
+  var road=pathD(40,W-40);
+  stroke(road,"#9c7534",40);          // edge
+  stroke(road,"#d8b06e",30);          // surface
+  // colored stage stretches over surface
+  stages.forEach(function(s){
+    stroke(pathD(xOf(s.from),xOf(s.to)),s.color,30,"round",null,0.5);
+    var mid=(xOf(s.from)+xOf(s.to))/2;
+    var t=document.createElementNS(SVGNS,"text");
+    t.setAttribute("x",mid); t.setAttribute("y",roadY(mid)+4); t.setAttribute("text-anchor","middle");
+    t.setAttribute("fill","#fff"); t.setAttribute("font-size","11"); t.setAttribute("font-weight","700");
+    t.textContent=s.label; svg.appendChild(t);
+  });
+  stroke(road,"#fff6e0",3,"butt","2 16",0.9);  // dashed center lane
+
+  // helper to add post + dot
+  function post(x,ry,toY,color,dash){
+    var ln=document.createElementNS(SVGNS,"line");
+    ln.setAttribute("x1",x); ln.setAttribute("y1",ry); ln.setAttribute("x2",x); ln.setAttribute("y2",toY);
+    ln.setAttribute("stroke",color); ln.setAttribute("stroke-width","3"); if(dash)ln.setAttribute("stroke-dasharray",dash);
+    ln.setAttribute("opacity","0.85"); svg.appendChild(ln);
+  }
+  function dot(x,ry,color,r){
+    var c=document.createElementNS(SVGNS,"circle"); c.setAttribute("cx",x); c.setAttribute("cy",ry);
+    c.setAttribute("r",r); c.setAttribute("fill","#fffbf0"); c.setAttribute("stroke",color);
+    c.setAttribute("stroke-width","3"); svg.appendChild(c); return c;
+  }
+
+  // START flag (1990)
+  (function(){
+    var x=xOf(1990.05), ry=roadY(x);
+    post(x,ry,ry-40,"#4f9e5f");
+    dot(x,ry,"#4f9e5f",7);
+    var f=document.createElement("div"); f.className="startflag";
+    f.style.left=x+"px"; f.style.top=(ry-44)+"px";
+    var lab=document.createElement("div"); lab.className="lab"; lab.textContent="🚩 Start · 1990 · Born in Portland";
+    f.appendChild(lab); scene.appendChild(f);
+  })();
+
+  // signposts (milestones)
+  signs.forEach(function(s,i){
+    var x=xOf(s.yr), ry=roadY(x), above=(i%2===0);
+    var col=COL[s.tr]||"#a2763a";
+    var boardY=above?ry-150:ry+92;
+    var postEnd=above?ry-88:ry+88;
+    post(x,ry,postEnd,"#7a5a28");
+    dot(x,ry,col,7.5);
+    var b=document.createElement("div"); b.className="signboard marker";
+    b.style.left=Math.max(96,Math.min(W-96,x))+"px"; b.style.top=boardY+"px";
+    b.style.animationDelay=(i*70)+"ms";
+    var flag=document.createElement("div"); flag.className="flag"; flag.textContent="🚩 MILESTONE";
+    var yr=document.createElement("div"); yr.className="yr"; yr.textContent=s.year+" ⭐";
+    var ti=document.createElement("div"); ti.className="ti"; ti.textContent=s.ti;
+    var bd=document.createElement("div"); bd.className="bd"; bd.textContent=s.bd;
+    b.appendChild(flag); b.appendChild(yr); b.appendChild(ti); b.appendChild(bd);
+    scene.appendChild(b);
+  });
+
+  // mile markers (events)
+  miles.forEach(function(m,i){
+    var x=xOf(m.yr), ry=roadY(x), above=(i%2===0);
+    var col=COL[m.tr]||"#a2763a";
+    var cardY=above?ry-96:ry+30;
+    var postEnd=above?ry-30:ry+30;
+    post(x,ry,postEnd,col,m.fz?"3 4":null);
+    dot(x,ry,col,5);
+    var c=document.createElement("div"); c.className="milecard marker";
+    c.style.left=Math.max(72,Math.min(W-72,x))+"px"; c.style.top=cardY+"px";
+    c.style.animationDelay=(i*45)+"ms";
+    var yr=document.createElement("div"); yr.className="yr";
+    if(m.fz){var fz=document.createElement("span");fz.className="fz";fz.textContent=m.year+" (approx)";yr.appendChild(fz);}
+    else yr.textContent=m.year;
+    var ti=document.createElement("div"); ti.className="ti"; ti.textContent=m.ti;
+    var tr=document.createElement("span"); tr.className="tr"; tr.style.background=col; tr.textContent=m.tr;
+    c.appendChild(yr); c.appendChild(ti); c.appendChild(tr);
+    scene.appendChild(c);
+  });
+
+  // YOU ARE HERE (2025)
+  (function(){
+    var x=xOf(2025), ry=roadY(x);
+    dot(x,ry,"#c8608f",8);
+    var h=document.createElement("div"); h.className="hereflag";
+    h.style.left=x+"px"; h.style.top=(ry-8)+"px"; h.style.position="absolute"; h.style.transform="translate(-50%,-100%)";
+    var pin=document.createElement("div"); pin.className="pin"; pin.setAttribute("role","img");
+    pin.setAttribute("aria-label","You are here"); pin.textContent="📍";
+    var lab=document.createElement("div"); lab.className="lab"; lab.textContent="You are here · 2025 · age 35";
+    h.appendChild(pin); h.appendChild(lab); scene.appendChild(h);
+  })();
+})();
+</script>
+</body>
+</html>

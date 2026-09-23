@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Horizontal River · The life of Ava Chen</title>
+<style>
+  :root{
+    --paper:#eef6f7; --ink:#173b45; --muted:#4d6d73;
+    --blue:#3f8fbf; --teal:#2fa08a; --green:#5bb381; --gold:#e0a028;
+    --rel:#c86fa6; --card:rgba(255,255,255,.92);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 620px at 18% 8%, #e7f4ef 0%, transparent 60%),
+      radial-gradient(1000px 520px at 82% 92%, #e2eef7 0%, transparent 60%),
+      linear-gradient(180deg,#f2f8f9,#e6f0f2);
+    overflow-y:hidden; overflow-x:auto;
+    scroll-snap-type:x proximity;
+  }
+  header.page{
+    position:fixed; top:0; left:0; right:0; z-index:40;
+    display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+    padding:12px 20px;
+    background:linear-gradient(180deg,rgba(240,248,249,.96),rgba(240,248,249,.72) 70%,transparent);
+    backdrop-filter:blur(4px);
+  }
+  header.page h1{font-size:17px; margin:0; letter-spacing:.2px}
+  header.page h1 .drop{color:var(--blue)}
+  header.page p{margin:0; font-size:12.5px; color:var(--muted)}
+  .legend{margin-left:auto; display:flex; gap:12px; font-size:11.5px; color:var(--muted)}
+  .legend b{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; vertical-align:middle}
+
+  .scene{position:relative; margin-top:64px; height:660px; will-change:transform}
+  svg.river{position:absolute; inset:0; display:block}
+
+  .decade{position:absolute; top:0; bottom:0; width:1px; scroll-snap-align:center;
+    background:linear-gradient(180deg,transparent,rgba(63,143,191,.20),transparent)}
+  .decade span{position:absolute; top:6px; left:8px; font-size:34px; font-weight:800;
+    color:rgba(23,59,69,.06); letter-spacing:1px; white-space:nowrap}
+
+  .stop{position:absolute; width:194px; scroll-snap-align:none; opacity:0; transform:translateY(8px);
+    animation:rise .6s ease forwards}
+  @keyframes rise{to{opacity:1; transform:none}}
+  .card{
+    background:var(--card); border:1px solid rgba(47,160,138,.22);
+    border-radius:13px; padding:10px 12px; box-shadow:0 8px 22px rgba(23,59,69,.10);
+    backdrop-filter:blur(2px);
+  }
+  .card .yr{font-size:11px; font-weight:700; letter-spacing:.6px; color:var(--blue)}
+  .card .yr .fuzzy{color:var(--muted); font-weight:600}
+  .card h3{margin:2px 0 4px; font-size:13.5px; line-height:1.25}
+  .card p{margin:0; font-size:11.5px; line-height:1.4; color:var(--muted)}
+  .card .tags{margin-top:6px; display:flex; flex-wrap:wrap; gap:4px}
+  .card .tags i{font-style:normal; font-size:10px; color:#3a6b6f; background:rgba(47,160,138,.12);
+    padding:1px 6px; border-radius:20px}
+  .stop.milestone .card{
+    border-color:rgba(224,160,40,.55);
+    box-shadow:0 0 0 2px rgba(224,160,40,.18), 0 10px 26px rgba(224,160,40,.20);
+    background:linear-gradient(180deg,#fffdf5,#fff8e8);
+  }
+  .stop.milestone h3::after{content:" ⭐"; font-size:11px}
+  .track-chip{display:inline-block; font-size:9.5px; letter-spacing:.5px; text-transform:uppercase;
+    color:#fff; padding:1px 6px; border-radius:20px; margin-left:6px; vertical-align:middle}
+
+  .scrollhint{position:fixed; left:50%; top:80px; transform:translateX(-50%); z-index:35;
+    font-size:12px; color:var(--muted); background:rgba(255,255,255,.8); padding:5px 14px;
+    border-radius:20px; box-shadow:0 4px 12px rgba(23,59,69,.10); transition:opacity .4s}
+  .progress{position:fixed; left:50%; bottom:16px; transform:translateX(-50%); z-index:36;
+    display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.9);
+    padding:7px 14px; border-radius:22px; box-shadow:0 6px 18px rgba(23,59,69,.14); font-size:12px}
+  .progress .bar{width:220px; height:6px; border-radius:6px; background:rgba(63,143,191,.18); overflow:hidden}
+  .progress .fill{height:100%; width:0%;
+    background:linear-gradient(90deg,var(--blue),var(--teal),var(--green)); border-radius:6px}
+  .progress .read{font-weight:700; color:var(--ink); min-width:96px; text-align:right}
+  @media (max-width:820px){ .legend{display:none} }
+</style>
+</head>
+<body>
+  <header class="page">
+    <h1><span class="drop">≈</span> Horizontal River</h1>
+    <p>A life as a flowing stream: scroll from the spring of birth (1990) to the present sea (2025).</p>
+    <div class="legend">
+      <span><b style="background:var(--teal)"></b>Home</span>
+      <span><b style="background:var(--blue)"></b>Career</span>
+      <span><b style="background:var(--rel)"></b>Relationships</span>
+      <span><b style="background:var(--green)"></b>Travel</span>
+      <span><b style="background:var(--gold)"></b>Milestone</span>
+    </div>
+  </header>
+
+  <div class="scrollhint" id="hint">← &nbsp;scroll the river&nbsp; →</div>
+
+  <main class="scene" id="scene" aria-label="Horizontal river timeline of Ava Chen">
+    <svg class="river" id="svg" aria-hidden="true"></svg>
+  </main>
+
+  <div class="progress" aria-hidden="true">
+    <span>1990</span>
+    <div class="bar"><div class="fill" id="fill"></div></div>
+    <span>2025</span>
+    <span class="read" id="read">1990 · age 0</span>
+  </div>
+
+<script>
+(function(){
+  var YEAR0=1990, YEARN=2025, YEARW=232, PADL=160, PADR=190;
+  var YEARS=YEARN-YEAR0;
+  var W=PADL+YEARS*YEARW+PADR;
+  var H=660, cy=340, amp=66, period=1520;
+  var SVGNS="http://www.w3.org/2000/svg";
+  var COL={Home:"#2fa08a",Career:"#3f8fbf",Relationships:"#c86fa6",Travel:"#5bb381",Health:"#7a8bd0"};
+
+  function xOf(y){return PADL+(y-YEAR0)*YEARW;}
+  function riverY(x){return cy+amp*Math.sin((x/period)*Math.PI*2);}
+  function pathD(x0,x1){var d="",x;for(x=x0;x<=x1;x+=12){d+=(x===x0?"M":"L")+x.toFixed(1)+" "+riverY(x).toFixed(1)+" ";}
+    d+="L"+x1.toFixed(1)+" "+riverY(x1).toFixed(1);return d;}
+
+  var stages=[
+    {from:1990,to:2002,color:COL.Home,label:"Childhood home"},
+    {from:2008,to:2012,color:COL.Career,label:"University · CS"},
+    {from:2021,to:2025,color:COL.Career,label:"Founded Loomly"}
+  ];
+
+  var stops=[
+    {yr:1990.2,year:"1990",title:"Born in Portland, Oregon",track:"Home",ms:true,
+      body:"Ava arrives March 14 in Portland. The spring of the river.",tags:["#home","#family"]},
+    {yr:2002.0,year:"2002",title:"Family moved to Seattle",track:"Home",
+      body:"A new city, new schools, first big current.",tags:["#home","#big moves"]},
+    {yr:2008.0,year:"2008",title:"Graduated high school",track:"Career",ms:true,
+      body:"Diploma in hand, the stream widens toward university.",tags:["#career","#firsts"]},
+    {yr:2011.0,year:"2011",title:"First internship at a startup",track:"Career",
+      body:"An early taste of shipping real software.",tags:["#career"]},
+    {yr:2012.0,year:"2012",title:"Graduated university, B.S. CS",track:"Career",ms:true,
+      body:"Computer Science degree completed.",tags:["#career","#firsts"]},
+    {yr:2012.35,year:"2012",title:"First job: Junior Developer",track:"Career",
+      body:"Paychecks, pull requests, and a lot to learn.",tags:["#career"]},
+    {yr:2012.7,year:"2012",title:"Moved to San Francisco",track:"Home",
+      body:"Chasing the tech current down the coast.",tags:["#home","#big moves"]},
+    {yr:2013.0,year:"2013",title:"Backpacked Southeast Asia",track:"Travel",
+      body:"Three months, one backpack, endless night markets.",tags:["#travel","#adventures"]},
+    {yr:2014.2,year:"~2014",fuzzy:true,title:"Started photography",track:"Health",
+      body:"Around 2014, a camera became a constant companion.",tags:["#creative","#health"]},
+    {yr:2015.0,year:"2015",title:"Promoted to Senior Engineer",track:"Career",
+      body:"Trusted with bigger systems and mentees.",tags:["#career"]},
+    {yr:2015.5,year:"2015",title:"Met Sam",track:"Relationships",
+      body:"A chance meeting that changed the course.",tags:["#family"]},
+    {yr:2016.3,year:"~2016",fuzzy:true,title:"First marathon, Chicago",track:"Travel",
+      body:"Approximately 2016 - 26.2 miles, one finish line.",tags:["#health","#firsts"]},
+    {yr:2018.0,year:"2018",title:"Became Tech Lead",track:"Career",
+      body:"Leading a team and shaping direction.",tags:["#career"]},
+    {yr:2018.5,year:"2018",title:"Trip to Japan",track:"Travel",
+      body:"Cherry blossoms in full, unforgettable bloom.",tags:["#travel","#adventures"]},
+    {yr:2019.0,year:"2019",title:"Married Sam",track:"Relationships",ms:true,
+      body:"Two streams join into one.",tags:["#family","#firsts"]},
+    {yr:2020.0,year:"2020",title:"Bought first home, Oakland",track:"Home",ms:true,
+      body:"Roots planted on the east bay.",tags:["#home","#firsts","#big moves"]},
+    {yr:2021.2,year:"2021",title:"Learned pottery",track:"Health",
+      body:"Hands in clay, a slower kind of making.",tags:["#creative","#health"]},
+    {yr:2022.0,year:"2022",title:"First child, Noah, born",track:"Relationships",ms:true,
+      body:"The river gains a bright new tributary.",tags:["#family","#firsts"]},
+    {yr:2023.0,year:"2023",title:"Raised seed funding ($2M)",track:"Career",
+      body:"Loomly finds its first believers.",tags:["#career","#loomly"]},
+    {yr:2023.5,year:"2023",title:"Summited Mount Rainier",track:"Travel",
+      body:"14,411 feet above the valley floor.",tags:["#travel","#adventures"]},
+    {yr:2024.0,year:"2024",title:"Adopted a dog, Miso",track:"Relationships",
+      body:"A four-legged addition to the crew.",tags:["#family"]},
+    {yr:2024.5,year:"2024",title:"Learned to sail",track:"Health",
+      body:"Reading the wind on open water.",tags:["#health","#adventures"]},
+    {yr:2025.0,year:"2025",title:"Now - age 35",track:"Home",ms:true,
+      body:"The present shore. The story is still flowing.",tags:["#present"]}
+  ];
+
+  var svg=document.getElementById("svg"), scene=document.getElementById("scene");
+  svg.setAttribute("viewBox","0 0 "+W+" "+H);
+  svg.setAttribute("width",W); svg.setAttribute("height",H);
+  scene.style.width=W+"px";
+
+  // gradient defs
+  var defs=document.createElementNS(SVGNS,"defs");
+  defs.innerHTML='<linearGradient id="riverg" x1="0" y1="0" x2="1" y2="0">'+
+    '<stop offset="0" stop-color="#7cc0e0"/><stop offset="0.5" stop-color="#54b0b6"/>'+
+    '<stop offset="1" stop-color="#6cc294"/></linearGradient>'+
+    '<filter id="soft"><feGaussianBlur stdDeviation="6"/></filter>';
+  svg.appendChild(defs);
+
+  // watercolor under-glow
+  var glow=document.createElementNS(SVGNS,"path");
+  glow.setAttribute("d",pathD(40,W-40));
+  glow.setAttribute("fill","none"); glow.setAttribute("stroke","#bfe4e8");
+  glow.setAttribute("stroke-width","54"); glow.setAttribute("stroke-linecap","round");
+  glow.setAttribute("opacity","0.55"); glow.setAttribute("filter","url(#soft)");
+  svg.appendChild(glow);
+
+  // base river
+  var base=document.createElementNS(SVGNS,"path");
+  base.setAttribute("d",pathD(40,W-40));
+  base.setAttribute("fill","none"); base.setAttribute("stroke","url(#riverg)");
+  base.setAttribute("stroke-width","26"); base.setAttribute("stroke-linecap","round");
+  base.setAttribute("opacity","0.9");
+  svg.appendChild(base);
+
+  // stage segments (thicker colored)
+  stages.forEach(function(s){
+    var p=document.createElementNS(SVGNS,"path");
+    p.setAttribute("d",pathD(xOf(s.from),xOf(s.to)));
+    p.setAttribute("fill","none"); p.setAttribute("stroke",s.color);
+    p.setAttribute("stroke-width","40"); p.setAttribute("stroke-linecap","round");
+    p.setAttribute("opacity","0.32");
+    svg.appendChild(p);
+    var mid=(xOf(s.from)+xOf(s.to))/2;
+    var t=document.createElementNS(SVGNS,"text");
+    t.setAttribute("x",mid); t.setAttribute("y",riverY(mid)+4);
+    t.setAttribute("text-anchor","middle"); t.setAttribute("fill","#ffffff");
+    t.setAttribute("font-size","12"); t.setAttribute("font-weight","700");
+    t.setAttribute("opacity","0.92"); t.textContent=s.label;
+    svg.appendChild(t);
+  });
+
+  // decade markers
+  [1990,2000,2010,2020].forEach(function(dy){
+    var d=document.createElement("div"); d.className="decade";
+    d.style.left=xOf(dy)+"px";
+    var sp=document.createElement("span"); sp.textContent=(dy)+"s"; d.appendChild(sp);
+    scene.appendChild(d);
+  });
+
+  // connectors + dots (svg) and cards (html)
+  var side=1;
+  stops.forEach(function(s,i){
+    var x=xOf(s.yr), ry=riverY(x);
+    var above=(i%2===0);
+    var bandY=above?186:472;
+    var col=COL[s.track]||"#5b8f95";
+
+    // connector
+    var ln=document.createElementNS(SVGNS,"line");
+    ln.setAttribute("x1",x); ln.setAttribute("y1",ry);
+    ln.setAttribute("x2",x); ln.setAttribute("y2",bandY);
+    ln.setAttribute("stroke",col); ln.setAttribute("stroke-width","2");
+    ln.setAttribute("stroke-dasharray",s.fuzzy?"3 4":"none");
+    ln.setAttribute("opacity","0.6");
+    svg.appendChild(ln);
+
+    // dot
+    if(s.ms){
+      var halo=document.createElementNS(SVGNS,"circle");
+      halo.setAttribute("cx",x); halo.setAttribute("cy",ry); halo.setAttribute("r","14");
+      halo.setAttribute("fill","#e0a028"); halo.setAttribute("opacity","0.28");
+      svg.appendChild(halo);
+    }
+    var dot=document.createElementNS(SVGNS,"circle");
+    dot.setAttribute("cx",x); dot.setAttribute("cy",ry);
+    dot.setAttribute("r",s.ms?"8":"5.5");
+    dot.setAttribute("fill",s.ms?"#e0a028":"#fff");
+    dot.setAttribute("stroke",col); dot.setAttribute("stroke-width","2.5");
+    svg.appendChild(dot);
+
+    // card
+    var card=document.createElement("article");
+    card.className="stop"+(s.ms?" milestone":"");
+    card.style.left=Math.max(8,Math.min(W-202,x-97))+"px";
+    if(above){card.style.top="20px";} else {card.style.top="482px";}
+    card.style.animationDelay=(i*45)+"ms";
+
+    var inner=document.createElement("div"); inner.className="card";
+    var yr=document.createElement("div"); yr.className="yr";
+    if(s.fuzzy){var f=document.createElement("span");f.className="fuzzy";f.textContent=s.year+" (approx)";yr.appendChild(f);}
+    else{yr.textContent=s.year;}
+    var chip=document.createElement("span"); chip.className="track-chip";
+    chip.style.background=col; chip.textContent=s.track; yr.appendChild(chip);
+    var h=document.createElement("h3"); h.textContent=s.title;
+    var p=document.createElement("p"); p.textContent=s.body;
+    var tg=document.createElement("div"); tg.className="tags";
+    s.tags.forEach(function(t){var e=document.createElement("i");e.textContent=t;tg.appendChild(e);});
+    inner.appendChild(yr); inner.appendChild(h); inner.appendChild(p); inner.appendChild(tg);
+    card.appendChild(inner); scene.appendChild(card);
+  });
+
+  // progress + hint
+  var fill=document.getElementById("fill"), read=document.getElementById("read"), hint=document.getElementById("hint");
+  function upd(){
+    var max=document.scrollingElement.scrollWidth-document.scrollingElement.clientWidth;
+    var sl=document.scrollingElement.scrollLeft;
+    var p=max>0?sl/max:0;
+    fill.style.width=(p*100).toFixed(1)+"%";
+    var yr=Math.round(YEAR0+p*YEARS);
+    read.textContent=yr+" · age "+(yr-YEAR0);
+    if(sl>40){hint.style.opacity="0";}
+  }
+  window.addEventListener("scroll",upd,{passive:true});
+  window.addEventListener("resize",upd);
+  upd();
+})();
+</script>
+</body>
+</html>

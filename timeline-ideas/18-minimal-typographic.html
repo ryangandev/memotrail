@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MemoTrail · Minimal Index</title>
+<style>
+  :root {
+    --ink: #111111;
+    --grey-1: #6b6b6b;
+    --grey-2: #9a9a9a;
+    --hair: #e2e2e2;
+    --paper: #fcfcfc;
+    --accent: #b4402a; /* single restrained accent (oxblood) */
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Helvetica Neue", Helvetica, Arial, "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.4;
+  }
+
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 32px; }
+
+  header.page { padding: 96px 0 40px; }
+  .kicker {
+    font-size: 11px; letter-spacing: 0.42em; text-transform: uppercase; color: var(--grey-2);
+    margin-bottom: 26px;
+  }
+  header.page h1 {
+    font-size: clamp(40px, 8vw, 82px);
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    line-height: 0.98;
+    margin: 0 0 20px;
+  }
+  header.page h1 b { font-weight: 700; }
+  header.page .desc {
+    max-width: 52ch; color: var(--grey-1); font-size: 16px; font-weight: 300;
+    border-top: 1px solid var(--hair); padding-top: 20px;
+  }
+  header.page .desc .who { color: var(--ink); }
+
+  .legend {
+    display: flex; gap: 24px; margin-top: 22px; font-size: 12px; color: var(--grey-1);
+    letter-spacing: 0.02em;
+  }
+  .legend .glyph { color: var(--accent); font-weight: 700; }
+
+  .index { border-top: 2px solid var(--ink); }
+
+  .entry {
+    display: grid;
+    grid-template-columns: 168px 1fr;
+    gap: 32px;
+    padding: 26px 4px;
+    border-bottom: 1px solid var(--hair);
+    align-items: baseline;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .entry.in { opacity: 1; transform: none; }
+
+  .yr {
+    font-size: clamp(30px, 4.4vw, 46px);
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    line-height: 0.9;
+    white-space: nowrap;
+  }
+  .yr .range { font-size: 0.5em; display: block; color: var(--grey-2); letter-spacing: 0.02em; margin-top: 8px; font-weight: 400; }
+  .yr .approx { color: var(--accent); }
+
+  .detail { min-width: 0; }
+  .title {
+    font-size: 19px; font-weight: 400; letter-spacing: -0.01em; margin: 0 0 6px;
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .body { font-size: 14px; color: var(--grey-1); font-weight: 300; margin: 0; max-width: 56ch; }
+  .track {
+    display: inline-block; margin-top: 10px;
+    font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--grey-2);
+  }
+
+  /* milestone treatment: filled dot + heavier weight, accent */
+  .entry.milestone .title { font-weight: 700; }
+  .entry.milestone .title::before {
+    content: "";
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    transform: translateY(-2px);
+    flex: none;
+  }
+  .entry.milestone .yr { color: var(--accent); font-weight: 400; }
+
+  /* stage rows get a subtle range bracket */
+  .entry.stage .yr .range { color: var(--ink); }
+
+  footer.end {
+    padding: 60px 0 120px; color: var(--grey-2); font-size: 13px; letter-spacing: 0.02em;
+    display: flex; align-items: baseline; gap: 14px;
+  }
+  footer.end .now { color: var(--accent); font-weight: 700; letter-spacing: 0.1em; }
+
+  @media (max-width: 800px) {
+    .entry { grid-template-columns: 96px 1fr; gap: 18px; }
+    header.page { padding: 64px 0 30px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .entry { transition: none; opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="page">
+      <div class="kicker">MemoTrail · 18 · Minimal Index</div>
+      <h1>A life,<br /><b>typeset.</b></h1>
+      <p class="desc">An austere editorial index of a single life. Oversized years, hairline rules, and generous white space. No cards, no color - only a lone accent to mark what mattered most. <span class="who">Ava Chen, Portland, 1990 – 2025.</span></p>
+      <div class="legend">
+        <span><span class="glyph">●</span> milestone</span>
+        <span>2008 – 2012&nbsp;&nbsp;stage / span</span>
+        <span><span class="glyph">~</span>&nbsp;approximate</span>
+      </div>
+    </header>
+
+    <main class="index" aria-label="Ava Chen life index">
+
+      <div class="entry milestone">
+        <div class="yr">1990</div>
+        <div class="detail">
+          <p class="title">Born in Portland, Oregon</p>
+          <p class="body">The birth anchor - March 14, where the record begins.</p>
+          <span class="track">Relationships</span>
+        </div>
+      </div>
+
+      <div class="entry stage">
+        <div class="yr">1990<span class="range">– 2002</span></div>
+        <div class="detail">
+          <p class="title">Childhood home, Portland</p>
+          <p class="body">Twelve formative years under one Oregon roof.</p>
+          <span class="track">Home &amp; Places · stage</span>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="yr">2002</div>
+        <div class="detail">
+          <p class="title">Family moved to Seattle</p>
+          <p class="body">A new city closes the first chapter of home.</p>
+          <span class="track">Home &amp; Places</span>
+        </div>
+      </div>
+
+      <div class="entry milestone">
+        <div class="yr">2008</div>
+        <div class="detail">
+          <p class="title">Graduated high school</p>
+          <p class="body">One chapter of learning closes; another begins.</p>
+          <span class="track">Career</span>
+        </div>
+      </div>
+
+      <div class="entry stage">
+        <div class="yr">2008<span class="range">– 2012</span></div>
+        <div class="detail">
+          <p class="title">University, Computer Science</p>
+          <p class="body">Four years that set the trajectory for everything after.</p>
+          <span class="track">Career · stage</span>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="yr">2011</div>
+        <div class="detail">
+          <p class="title">First internship at a startup</p>
+          <p class="body">First taste of shipping real software.</p>
+          <span class="track">Career</span>
+        </div>
+      </div>
+
+      <div class="entry milestone">
+        <div class="yr">2012</div>
+        <div class="detail">
+          <p class="title">Graduated university, B.S. Computer Science</p>
+          <p class="body">Degree in hand, the working world opens.</p>
+          <span class="track">Career</span>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="yr">2012</div>
+        <div class="detail">
+          <p class="title">First job, Junior Developer</p>
+          <p class="body">The career officially begins.</p>
+          <span class="track">Career</span>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="yr">2012</div>
+        <div class="detail">
+          <p class="title">Moved to San Francisco</p>
+          <p class="body">Chasing the work, the fog, the hills.</p>
+          <span class="track">Home &amp; Places</span>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="yr">2013</div>
+        <div class="detail">
+          <p class="title">Backpacked Southeast Asia</p>
+          <p class="body">Two months, six countries, one backpack.</p>
+          <span class="track">Travel</span>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="yr"><span class="approx">~</span>2014</div>
+        <div class="detail">
+          <p class="title">Started photography</p>
+          <p class="body">Around 2014 - a lens became a second way of seeing.</p>
+          <span class="track">Health &amp; Hobbies · approximate</span>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="yr">2015</div>
+        <div class="detail">
+          <p class="title">Promoted to Senior Engineer</p>
+          <p class="body">Ownership grows; so does the impact.</p>
+          <span class="track">Career</span>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="yr">2015</div>
+        <div class="detail">
+          <p class="title">Met Sam</p>
+          <p class="body">A chance introduction that would change everything.</p>
+          <span class="track">Relationships</span>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="yr"><span class="approx">~</span>2016</div>
+        <div class="detail">
+          <p class="title">First marathon, Chicago</p>
+          <p class="body">Approximate date - 26.2 miles, one finish line.</p>
+          <span class="track">Health &amp; Hobbies · approximate</span>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="yr">2018</div>
+        <div class="detail">
+          <p class="title">Became Tech Lead</p>
+          <p class="body">From writing code to steering the team.</p>
+          <span class="track">Career</span>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="yr">2018</div>
+        <div class="detail">
+          <p class="title">Trip to Japan, cherry blossoms</p>
+          <p class="body">Pink petals and slow trains through spring.</p>
+          <span class="track">Travel</span>
+        </div>
+      </div>
+
+      <div class="entry milestone">
+        <div class="yr">2019</div>
+        <div class="detail">
+          <p class="title">Married Sam</p>
+          <p class="body">Two paths become one.</p>
+          <span class="track">Relationships</span>
+        </div>
+      </div>
+
+      <div class="entry milestone">
+        <div class="yr">2020</div>
+        <div class="detail">
+          <p class="title">Bought first home, Oakland</p>
+          <p class="body">Keys to a place that is finally theirs.</p>
+          <span class="track">Home &amp; Places</span>
+        </div>
+      </div>
+
+      <div class="entry stage">
+        <div class="yr">2021<span class="range">– now</span></div>
+        <div class="detail">
+          <p class="title">Founded "Loomly", a design tool</p>
+          <p class="body">Left the desk to build something of her own.</p>
+          <span class="track">Career · stage</span>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="yr">2021</div>
+        <div class="detail">
+          <p class="title">Learned pottery</p>
+          <p class="body">Hands in clay, mind at rest.</p>
+          <span class="track">Health &amp; Hobbies</span>
+        </div>
+      </div>
+
+      <div class="entry milestone">
+        <div class="yr">2022</div>
+        <div class="detail">
+          <p class="title">First child, Noah, born</p>
+          <p class="body">The house gets louder and warmer.</p>
+          <span class="track">Relationships</span>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="yr">2023</div>
+        <div class="detail">
+          <p class="title">Raised seed funding, $2M</p>
+          <p class="body">Loomly gets fuel for the next climb.</p>
+          <span class="track">Career</span>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="yr">2023</div>
+        <div class="detail">
+          <p class="title">Summited Mount Rainier</p>
+          <p class="body">14,411 feet of grit and thin air.</p>
+          <span class="track">Travel</span>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="yr">2024</div>
+        <div class="detail">
+          <p class="title">Adopted a dog, Miso</p>
+          <p class="body">A wagging tail joins the family.</p>
+          <span class="track">Relationships</span>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="yr">2024</div>
+        <div class="detail">
+          <p class="title">Learned to sail</p>
+          <p class="body">Reading the wind, one tack at a time.</p>
+          <span class="track">Health &amp; Hobbies</span>
+        </div>
+      </div>
+
+    </main>
+
+    <footer class="end">
+      <span class="now">NOW</span>
+      <span>2025 · age 35 · the index remains open</span>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var rows = document.querySelectorAll('.entry');
+      if (reduce || !('IntersectionObserver' in window)) {
+        rows.forEach(function (r) { r.classList.add('in'); });
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.2 });
+      rows.forEach(function (r) { io.observe(r); });
+    })();
+  </script>
+</body>
+</html>

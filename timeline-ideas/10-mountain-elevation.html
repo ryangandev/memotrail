@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MemoTrail · Elevation Profile</title>
+<style>
+  :root{
+    --ink:#20303a;
+    --muted:#5b7180;
+    --panel:#ffffff;
+    --line:#dce6ec;
+    --gold:#f2b807;
+    --career:#2563eb;--home:#0d9488;--rel:#e11d6f;--travel:#ea7a17;--health:#7c3aed;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);background:#eef4f8;line-height:1.5;padding:28px 18px 56px;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  header.page{margin-bottom:18px}
+  .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  h1{font-size:26px;margin:6px 0 4px;letter-spacing:-.01em}
+  .lede{color:var(--muted);font-size:14px;max-width:70ch}
+  .frame{
+    background:var(--panel);border:1px solid var(--line);border-radius:20px;overflow:hidden;
+    box-shadow:0 1px 2px rgba(20,40,60,.05),0 20px 50px rgba(20,60,90,.10);
+  }
+  svg{display:block;width:100%;height:auto}
+  .legend{display:flex;flex-wrap:wrap;gap:10px 18px;padding:14px 22px 18px;border-top:1px solid var(--line);background:#fbfdfe}
+  .legend span{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+  .legend i{width:10px;height:10px;border-radius:50%}
+  .legend .flag{width:0;height:0;border-left:7px solid var(--gold);border-top:5px solid transparent;border-bottom:5px solid transparent;border-radius:0}
+  /* svg text */
+  text{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .yr-axis{font-size:11px;fill:var(--muted)}
+  .lbl{font-size:11px;fill:var(--ink)}
+  .lbl.ms{font-weight:700}
+  .sub{font-size:9.5px;fill:var(--muted)}
+  .hint{font-size:11px;fill:var(--muted);letter-spacing:.08em}
+  .pin{transition:r .15s ease}
+  .evt{cursor:default}
+  .evt:hover .pin{r:6.5}
+  .evt:hover .halo{opacity:.35}
+  .halo{opacity:0;transition:opacity .15s ease}
+  .band-lbl{font-size:10px;fill:#ffffff;font-weight:600}
+  @keyframes draw{from{stroke-dashoffset:2600}to{stroke-dashoffset:0}}
+  #ridge{stroke-dasharray:2600;animation:draw 2.2s ease forwards}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <div class="kicker">MemoTrail · design 10</div>
+    <h1>Elevation Profile</h1>
+    <p class="lede">Ava Chen's life read as a mountain range, left (1990) to right (now). The terrain's height is her "altitude" - peaks at the big highs, dips through the hard transitions. Milestones fly flags; the sun sits over today.</p>
+  </header>
+
+  <div class="frame">
+    <svg id="chart" viewBox="0 0 1000 540" role="img" aria-label="Elevation-style life chart from 1990 to 2025 with events pinned to the terrain">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#cfe9fb"/>
+          <stop offset="0.55" stop-color="#e8f4fb"/>
+          <stop offset="1" stop-color="#fbfdff"/>
+        </linearGradient>
+        <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stop-color="#fff6cf"/>
+          <stop offset="0.5" stop-color="#ffdf6b"/>
+          <stop offset="1" stop-color="#ffcf3f"/>
+        </radialGradient>
+        <linearGradient id="ridgeFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#7fb4a6"/>
+          <stop offset="1" stop-color="#3c7d70"/>
+        </linearGradient>
+        <linearGradient id="midFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#a9cdcb"/>
+          <stop offset="1" stop-color="#7cb0ac"/>
+        </linearGradient>
+        <linearGradient id="backFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#cfe2e6"/>
+          <stop offset="1" stop-color="#b3d0d4"/>
+        </linearGradient>
+      </defs>
+
+      <!-- sky -->
+      <rect x="0" y="0" width="1000" height="430" fill="url(#sky)"/>
+      <!-- sun over 'now' -->
+      <circle cx="918" cy="86" r="46" fill="#fff3c4" opacity="0.5"/>
+      <circle cx="918" cy="86" r="27" fill="url(#sun)"/>
+      <text x="918" y="140" text-anchor="middle" class="hint" fill="#c8971a" font-weight="700">NOW · 2025</text>
+
+      <!-- decorative back ranges -->
+      <path fill="url(#backFill)" opacity="0.7" d="M60,430 L60,300 L150,250 L250,300 L360,235 L470,290 L560,240 L670,285 L780,225 L880,275 L970,230 L970,430 Z"/>
+      <path fill="url(#midFill)" opacity="0.8" d="M60,430 L60,340 L170,285 L280,335 L400,270 L520,320 L640,265 L760,315 L860,255 L970,300 L970,430 Z"/>
+
+      <!-- y-axis hint -->
+      <text x="20" y="72" class="hint">high</text>
+      <text x="20" y="418" class="hint">low</text>
+      <text x="16" y="250" class="hint" transform="rotate(-90 16 250)" text-anchor="middle">life altitude</text>
+      <line x1="52" y1="60" x2="52" y2="430" stroke="var(--line)" stroke-dasharray="3 5"/>
+
+      <!-- data terrain + markers injected here -->
+      <g id="terrain"></g>
+      <g id="bands"></g>
+      <g id="markers"></g>
+
+      <!-- x-axis baseline -->
+      <line x1="52" y1="430" x2="978" y2="430" stroke="#c4d3da"/>
+      <g id="xaxis"></g>
+    </svg>
+
+    <div class="legend">
+      <span><i style="background:var(--career)"></i>Career</span>
+      <span><i style="background:var(--home)"></i>Home</span>
+      <span><i style="background:var(--rel)"></i>Relationships</span>
+      <span><i style="background:var(--travel)"></i>Travel</span>
+      <span><i style="background:var(--health)"></i>Health &amp; hobbies</span>
+      <span><span class="flag"></span>&nbsp;milestone (flag)</span>
+      <span>Shaded bands = life stages (spans)</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const START=1990, END=2025;
+const L=52, R=978, TOP=60, BASE=430;
+const PW=R-L, PH=BASE-TOP;
+const x=yr=>L+(yr-START)/(END-START)*PW;
+const y=alt=>BASE-alt/100*PH;
+
+// terrain altitude per year (0..100)
+const ALT={1990:32,1991:34,1992:31,1993:36,1994:33,1995:38,1996:35,1997:40,1998:37,1999:42,
+2000:38,2001:45,2002:26,2003:34,2004:40,2005:45,2006:49,2007:53,2008:60,2009:47,2010:44,
+2011:55,2012:50,2013:71,2014:60,2015:69,2016:62,2017:53,2018:75,2019:85,2020:78,
+2021:87,2022:93,2023:97,2024:82,2025:92};
+function altAt(fx){ // fractional-year altitude via linear interp
+  const a=Math.floor(fx), b=Math.ceil(fx), t=fx-a;
+  return (ALT[a]??40)*(1-t)+(ALT[b]??ALT[a]??40)*t;
+}
+
+const COLORS={Career:'var(--career)',Home:'var(--home)',Relationships:'var(--rel)',Travel:'var(--travel)',Health:'var(--health)'};
+
+// events: yr (with optional fractional offset via xo), track, milestone, emoji, lift(label height above pin)
+const EV=[
+  {yr:1990,t:"Born, Portland",track:"Home",ms:1,emoji:"👶",lift:150,sub:"Mar 14 · birth anchor"},
+  {yr:2002,t:"Moved to Seattle",track:"Home",lift:72,sub:"age 12"},
+  {yr:2008,t:"Graduated high school",track:"Career",ms:1,emoji:"🎓",lift:118},
+  {yr:2011,t:"First internship",track:"Career",lift:58,sub:"a startup"},
+  {yr:2012,xo:-0.4,t:"University degree, B.S. CS",track:"Career",ms:1,emoji:"🎓",lift:150},
+  {yr:2012,xo:0.05,t:"First job: Junior Dev",track:"Career",lift:60},
+  {yr:2012,xo:0.5,t:"Moved to San Francisco",track:"Home",lift:92},
+  {yr:2013,t:"Backpacked SE Asia",track:"Travel",lift:120,sub:"3 months"},
+  {yr:2014,t:"Started photography",track:"Health",approx:1,lift:58,sub:"~2014"},
+  {yr:2015,xo:-0.3,t:"Senior Engineer",track:"Career",lift:72},
+  {yr:2015,xo:0.3,t:"Met Sam",track:"Relationships",lift:112},
+  {yr:2016,t:"First marathon, Chicago",track:"Travel",approx:1,lift:66,sub:"~2016"},
+  {yr:2018,xo:-0.3,t:"Became Tech Lead",track:"Career",lift:74},
+  {yr:2018,xo:0.35,t:"Japan, cherry blossoms",track:"Travel",lift:116},
+  {yr:2019,t:"Married Sam",track:"Relationships",ms:1,emoji:"💍",lift:150},
+  {yr:2020,t:"Bought first home, Oakland",track:"Home",ms:1,emoji:"🏡",lift:120},
+  {yr:2021,xo:0.25,t:"Learned pottery",track:"Health",lift:60},
+  {yr:2022,t:"Noah is born",track:"Relationships",ms:1,emoji:"🍼",lift:130},
+  {yr:2023,xo:-0.35,t:"Seed funding, $2M",track:"Career",lift:78},
+  {yr:2023,xo:0.35,t:"Summited Mt. Rainier",track:"Travel",ms:1,emoji:"🏔️",lift:150},
+  {yr:2024,xo:-0.3,t:"Adopted Miso",track:"Relationships",lift:66},
+  {yr:2024,xo:0.3,t:"Learned to sail",track:"Health",lift:104}
+];
+
+// stage bands
+const BANDS=[
+  {a:1990,b:2002,label:"Childhood · Portland",fill:"#0d9488"},
+  {a:2008,b:2012,label:"University",fill:"#2563eb"},
+  {a:2021,b:2025,label:"Founded Loomly (ongoing)",fill:"#7c3aed"}
+];
+
+const SVGNS="http://www.w3.org/2000/svg";
+function mk(tag,attrs,txt){const n=document.createElementNS(SVGNS,tag);for(const k in attrs)n.setAttribute(k,attrs[k]);if(txt!=null)n.textContent=txt;return n;}
+
+// ---- terrain ridge (data driven) ----
+let d="M "+x(START)+" "+y(ALT[START]);
+for(let yr=START+1;yr<=END;yr++) d+=" L "+x(yr)+" "+y(ALT[yr]);
+const fill=d+" L "+x(END)+" "+BASE+" L "+x(START)+" "+BASE+" Z";
+const terrain=document.getElementById('terrain');
+terrain.appendChild(mk('path',{d:fill,fill:'url(#ridgeFill)',opacity:'0.96'}));
+terrain.appendChild(mk('path',{id:'ridge',d:d,fill:'none',stroke:'#2c6e61','stroke-width':'2.5','stroke-linejoin':'round'}));
+
+// ---- stage bands near baseline ----
+const bandsG=document.getElementById('bands');
+BANDS.forEach((bd,i)=>{
+  const bx=x(bd.a), bw=x(bd.b)-x(bd.a), by=BASE-16-(i%2)*0;
+  const yy=BASE- ( [30,20,30][i] );
+  bandsG.appendChild(mk('rect',{x:bx,y:BASE-14,width:bw,height:12,rx:6,fill:bd.fill,opacity:'0.85'}));
+  bandsG.appendChild(mk('text',{x:bx+bw/2,y:BASE-4.5,'text-anchor':'middle',class:'band-lbl'},bd.label));
+});
+
+// ---- markers ----
+const mg=document.getElementById('markers');
+EV.forEach(e=>{
+  const fx=e.yr+(e.xo||0);
+  const px=x(fx), py=y(altAt(fx));
+  const col=COLORS[e.track];
+  const g=mk('g',{class:'evt'});
+  // leader line from pin up to label
+  const labelY=py-e.lift;
+  g.appendChild(mk('line',{x1:px,y1:py,x2:px,y2:labelY+ (e.ms?14:6),stroke:col,'stroke-width':e.ms?1.6:1,opacity:e.ms?0.9:0.55,'stroke-dasharray':e.ms?'':'2 3'}));
+  // halo
+  g.appendChild(mk('circle',{cx:px,cy:py,r:11,fill:col,class:'halo'}));
+
+  if(e.ms){
+    // flag pennant
+    g.appendChild(mk('rect',{x:px-0.9,y:labelY,width:1.8,height:py-labelY,fill:'#5b5140'}));
+    g.appendChild(mk('path',{d:`M ${px+1} ${labelY} L ${px+26} ${labelY+6} L ${px+1} ${labelY+12} Z`,fill:'var(--gold)',stroke:'#d99b06','stroke-width':'0.8'}));
+    g.appendChild(mk('text',{x:px+7,y:labelY+9.5,'font-size':'8'},e.emoji||"★"));
+    g.appendChild(mk('circle',{cx:px,cy:py,r:5,fill:col,stroke:'#fff','stroke-width':'2',class:'pin'}));
+    const tl=mk('text',{x:px,y:labelY-4,'text-anchor':'middle',class:'lbl ms'},e.t);
+    g.appendChild(tl);
+  }else{
+    g.appendChild(mk('circle',{cx:px,cy:py,r:4.2,fill:col,stroke:'#fff','stroke-width':'1.6',class:'pin'}));
+    const anchor = px>900?'end':(px<90?'start':'middle');
+    g.appendChild(mk('text',{x:px,y:labelY,'text-anchor':anchor,class:'lbl'},e.t));
+    if(e.sub) g.appendChild(mk('text',{x:px,y:labelY+11,'text-anchor':anchor,class:'sub'},e.sub));
+  }
+  // title tooltip
+  const ttl=mk('title',{}, e.t+" · "+e.yr+" · "+e.track+(e.ms?" · milestone":""));
+  g.appendChild(ttl);
+  mg.appendChild(g);
+});
+
+// ---- x axis ----
+const xa=document.getElementById('xaxis');
+for(let yr=1990;yr<=2025;yr+=5){
+  xa.appendChild(mk('line',{x1:x(yr),y1:BASE,x2:x(yr),y2:BASE+5,stroke:'#c4d3da'}));
+  xa.appendChild(mk('text',{x:x(yr),y:BASE+18,'text-anchor':'middle',class:'yr-axis'},yr));
+}
+</script>
+</body>
+</html>

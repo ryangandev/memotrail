@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MemoTrail · Scrapbook Wall</title>
+<style>
+  :root{
+    --paper:#fffdf6;
+    --ink:#3b3430;
+    --muted:#8a7f74;
+    --gold:#d9a441;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:#2e2a26;line-height:1.5;padding:0 0 60px;
+    background:
+      radial-gradient(circle at 20% 30%,rgba(255,255,255,.10) 0 2px,transparent 3px),
+      radial-gradient(circle at 70% 60%,rgba(0,0,0,.06) 0 2px,transparent 3px),
+      radial-gradient(circle at 45% 85%,rgba(255,255,255,.08) 0 2px,transparent 3px),
+      radial-gradient(circle at 88% 22%,rgba(0,0,0,.05) 0 2px,transparent 3px),
+      radial-gradient(1200px 700px at 50% -5%,#d9b384,#c39662 55%,#a97e4f 100%);
+    background-size:22px 22px,26px 26px,30px 30px,18px 18px,100% 100%;
+  }
+  .board{max-width:1120px;margin:0 auto;padding:20px}
+  header.page{
+    background:var(--paper);border-radius:6px;padding:16px 22px;margin:14px auto 26px;max-width:640px;
+    box-shadow:0 10px 24px rgba(60,40,20,.28);transform:rotate(-1deg);position:relative;
+    border:1px solid #efe6d4;
+  }
+  header.page::before{content:"";position:absolute;left:50%;top:-10px;transform:translateX(-50%) rotate(2deg);
+    width:120px;height:26px;background:rgba(226,200,120,.55);border:1px dashed rgba(140,110,40,.35);box-shadow:0 2px 4px rgba(0,0,0,.12)}
+  .kicker{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  h1{font-family:"Segoe Script","Bradley Hand","Snell Roundhand","Comic Sans MS",cursive;font-size:34px;margin:2px 0 4px;color:#4a3b2c;letter-spacing:.5px}
+  .lede{color:#6f6255;font-size:13.5px;margin:0}
+
+  .wall{display:flex;flex-wrap:wrap;justify-content:center;gap:30px 26px;align-items:flex-start}
+  .polaroid{
+    --rot:0deg;
+    background:linear-gradient(180deg,#fffef9,#fbf6ea);
+    padding:11px 11px 40px;width:206px;position:relative;border-radius:2px;
+    box-shadow:0 10px 20px rgba(50,30,10,.28),0 2px 4px rgba(50,30,10,.2);
+    transform:rotate(var(--rot));transition:transform .18s ease,box-shadow .18s ease,z-index 0s;
+    cursor:default;
+  }
+  .polaroid:hover{transform:rotate(0deg) scale(1.05) translateY(-4px);box-shadow:0 18px 34px rgba(50,30,10,.35);z-index:5}
+  .photo{aspect-ratio:1/1;border-radius:1px;display:grid;place-items:center;font-size:56px;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);position:relative;overflow:hidden}
+  .photo .tk{position:absolute;bottom:6px;right:8px;font-size:11px;background:rgba(0,0,0,.35);color:#fff;padding:1px 6px;border-radius:3px;font-family:ui-monospace,Menlo,monospace}
+  .cap{font-family:"Segoe Script","Bradley Hand","Snell Roundhand","Comic Sans MS",cursive;
+    text-align:center;margin-top:12px;font-size:17px;color:#3d352d;line-height:1.25}
+  .date{text-align:center;font-size:11px;color:var(--muted);margin-top:3px;letter-spacing:.03em}
+  .num{position:absolute;left:8px;bottom:10px;width:20px;height:20px;border-radius:50%;
+    background:#efe4cf;color:#7a6a50;font-size:11px;font-weight:700;display:grid;place-items:center;
+    box-shadow:inset 0 0 0 1px rgba(120,90,40,.25)}
+  .track{position:absolute;right:10px;bottom:13px;font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+
+  /* pushpin */
+  .pin{position:absolute;top:-11px;left:50%;transform:translateX(-50%);width:20px;height:20px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#fff,#e34b4b 55%,#a51f1f);
+    box-shadow:0 3px 5px rgba(0,0,0,.35);z-index:2}
+  .pin::after{content:"";position:absolute;left:50%;top:60%;transform:translateX(-50%);width:2px;height:8px;background:rgba(0,0,0,.25)}
+  /* tape variant */
+  .tape .pin{display:none}
+  .tape::before{content:"";position:absolute;top:-8px;left:18px;width:64px;height:22px;transform:rotate(-8deg);
+    background:rgba(232,214,150,.6);border-left:1px dashed rgba(150,120,50,.4);border-right:1px dashed rgba(150,120,50,.4);box-shadow:0 2px 3px rgba(0,0,0,.1)}
+  .tape::after{content:"";position:absolute;top:-8px;right:18px;width:64px;height:22px;transform:rotate(7deg);
+    background:rgba(232,214,150,.6);border-left:1px dashed rgba(150,120,50,.4);border-right:1px dashed rgba(150,120,50,.4);box-shadow:0 2px 3px rgba(0,0,0,.1)}
+
+  /* milestone gold frame + star sticker */
+  .ms{padding:12px 12px 42px;background:linear-gradient(180deg,#fffdf3,#fff6dd);box-shadow:0 12px 24px rgba(120,90,20,.35),0 0 0 3px var(--gold)}
+  .star{position:absolute;top:-12px;right:-10px;width:34px;height:34px;border-radius:50%;
+    background:radial-gradient(circle at 40% 35%,#ffe58a,#e0a010 60%,#b97f06);color:#5a3d02;
+    display:grid;place-items:center;font-size:17px;box-shadow:0 3px 8px rgba(0,0,0,.3);z-index:3;transform:rotate(12deg)}
+
+  footer.note{text-align:center;margin:34px auto 0;max-width:640px;background:var(--paper);border-radius:6px;
+    padding:12px 18px;transform:rotate(.6deg);box-shadow:0 8px 20px rgba(60,40,20,.24);font-size:12.5px;color:#6f6255}
+  footer.note b{color:#4a3b2c}
+  @keyframes drop{from{opacity:0;transform:translateY(-14px) rotate(0)}to{opacity:1}}
+  .polaroid{animation:drop .5s ease both}
+</style>
+</head>
+<body>
+  <div class="board">
+    <header class="page">
+      <div class="kicker">MemoTrail · design 17</div>
+      <h1>Ava's Life, Pinned Up</h1>
+      <p class="lede">A corkboard scrapbook - every moment a Polaroid, tacked up and slightly crooked. Follow the little numbers from <b>①&nbsp;birth</b> to <b>now</b>. Gold-framed shots are milestones.</p>
+    </header>
+    <div class="wall" id="wall" aria-label="Scrapbook wall of life moments in rough chronological order"></div>
+    <footer class="note">Corner to corner: <b>35 years</b>, <b>25 moments</b>, <b>6 milestones</b> - Portland → Seattle → San Francisco → Oakland.</footer>
+  </div>
+
+<script>
+const M=[
+  {n:1,date:"Mar 14, 1990",cap:"Hello, world.",emoji:"👶",g:"linear-gradient(135deg,#ffd6e7,#ffb3c9)",track:"Home",ms:1,style:"pin"},
+  {n:2,date:"2002",cap:"New city, age 12",emoji:"🏙️",g:"linear-gradient(135deg,#bcd6ff,#8fb4f0)",track:"Home",style:"tape"},
+  {n:3,date:"2008",cap:"Cap & gown",emoji:"🎓",g:"linear-gradient(135deg,#cfe8d0,#98cf9d)",track:"Career",ms:1,style:"pin"},
+  {n:4,date:"2011",cap:"First internship",emoji:"💻",g:"linear-gradient(135deg,#cfe3ff,#a5c4f2)",track:"Career",style:"pin"},
+  {n:5,date:"2012",cap:"B.S. Computer Science",emoji:"🎓",g:"linear-gradient(135deg,#d6ead6,#a0d3a5)",track:"Career",ms:1,style:"tape"},
+  {n:6,date:"2012",cap:"Hello, San Francisco",emoji:"🌉",g:"linear-gradient(135deg,#ffd9b0,#ffb877)",track:"Home",style:"pin"},
+  {n:7,date:"2013",cap:"One backpack, 3 months",emoji:"🎒",g:"linear-gradient(135deg,#ffe1a8,#ffc55e)",track:"Travel",style:"pin"},
+  {n:8,date:"~2014",cap:"Thrifted film camera",emoji:"📷",g:"linear-gradient(135deg,#e4d4ff,#c3a5f2)",track:"Health",style:"tape"},
+  {n:9,date:"2015",cap:"Rooftop birthday - Sam",emoji:"❤️",g:"linear-gradient(135deg,#ffcdd8,#ff9db0)",track:"Relationships",style:"pin"},
+  {n:10,date:"~2016",cap:"26.2 miles, Chicago",emoji:"🏃",g:"linear-gradient(135deg,#ffe0a3,#ffbf57)",track:"Travel",style:"pin"},
+  {n:11,date:"2018",cap:"Cherry blossoms, Kyoto",emoji:"🌸",g:"linear-gradient(135deg,#ffd6ea,#ffaecf)",track:"Travel",style:"tape"},
+  {n:12,date:"2019",cap:"We got married!",emoji:"💍",g:"linear-gradient(135deg,#fff0c7,#ffd97a)",track:"Relationships",ms:1,style:"pin"},
+  {n:13,date:"2020",cap:"Keys to Oakland",emoji:"🏡",g:"linear-gradient(135deg,#cdead2,#93cf9c)",track:"Home",ms:1,style:"tape"},
+  {n:14,date:"2021",cap:"Day one: Loomly",emoji:"🚀",g:"linear-gradient(135deg,#cfe0ff,#9db8f5)",track:"Career",style:"pin"},
+  {n:15,date:"2021",cap:"Wobbly little bowls",emoji:"🏺",g:"linear-gradient(135deg,#e6d5ff,#c2a3f0)",track:"Health",style:"pin"},
+  {n:16,date:"2022",cap:"Noah - our whole world",emoji:"🍼",g:"linear-gradient(135deg,#ffd3dd,#ff9fb2)",track:"Relationships",ms:1,style:"tape"},
+  {n:17,date:"2023",cap:"14,411 ft. Rainier",emoji:"🏔️",g:"linear-gradient(135deg,#d3e9ff,#a0c6f2)",track:"Travel",style:"pin"},
+  {n:18,date:"2024",cap:"Good dog, Miso",emoji:"🐕",g:"linear-gradient(135deg,#ffe6b8,#ffc978)",track:"Relationships",style:"pin"},
+  {n:19,date:"2024",cap:"Learned to sail",emoji:"⛵",g:"linear-gradient(135deg,#c9ecff,#8fd0f0)",track:"Health",style:"tape"},
+  {n:20,date:"2025",cap:"Age 35 · here, now",emoji:"✨",g:"linear-gradient(135deg,#fff3c4,#ffe08a)",track:"Now",ms:0,style:"pin",now:1}
+];
+const ROT=[-3,2,-2,3,-1.5,2.5,-2.5,1.5,-3,2,3,-2,1.5,-2.5,2.5,-1.5,3,-2,2,-1];
+const wall=document.getElementById('wall');
+M.forEach((m,i)=>{
+  const card=document.createElement('figure');
+  card.className='polaroid '+m.style+(m.ms?' ms':'');
+  card.style.setProperty('--rot',(ROT[i%ROT.length])+'deg');
+  card.style.animationDelay=(i*0.045)+'s';
+  card.style.marginTop=((i%3)*10)+'px';
+
+  const pin=document.createElement('span');pin.className='pin';card.appendChild(pin);
+  if(m.ms){const s=document.createElement('span');s.className='star';s.textContent='★';s.title='Milestone';card.appendChild(s);}
+
+  const photo=document.createElement('div');photo.className='photo';
+  photo.style.background=m.g;
+  photo.textContent=m.emoji;
+  const tk=document.createElement('span');tk.className='tk';tk.textContent=m.date;photo.appendChild(tk);
+  card.appendChild(photo);
+
+  const cap=document.createElement('figcaption');cap.className='cap';cap.textContent=m.cap;card.appendChild(cap);
+  const date=document.createElement('div');date.className='date';date.textContent=m.now?'the present':m.date;card.appendChild(date);
+
+  const num=document.createElement('span');num.className='num';num.textContent=m.n;num.title='Moment #'+m.n;card.appendChild(num);
+  const tr=document.createElement('span');tr.className='track';tr.textContent=m.track;card.appendChild(tr);
+
+  card.setAttribute('aria-label','#'+m.n+' '+m.cap+' ('+m.date+', '+m.track+(m.ms?', milestone':'')+')');
+  wall.appendChild(card);
+});
+</script>
+</body>
+</html>
