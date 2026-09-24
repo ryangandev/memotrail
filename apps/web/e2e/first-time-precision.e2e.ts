@@ -3,7 +3,11 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
-import { fillOccurrenceEnd, fillOccurrenceStart } from "./helpers/occurrence";
+import {
+  fillOccurrenceEnd,
+  fillOccurrenceStart,
+  setDateDescription,
+} from "./helpers/occurrence";
 
 test("Editing a First Time keeps its original date range", async ({
   page,
@@ -189,7 +193,7 @@ test("Editing a First Time keeps its original date range", async ({
         .selectOption(sample.precision);
       if (sample.start) await fillOccurrenceStart(dialog, sample.start);
       if (sample.end) await fillOccurrenceEnd(dialog, sample.end);
-      await dialog.getByLabel("Date description").fill(sample.label);
+      await setDateDescription(dialog, sample.label);
       await dialog.getByRole("button", { name: "Save changes" }).click();
       await expect(dialog).not.toBeVisible();
       const value = (

@@ -3,6 +3,7 @@ import captureComposerStyles from "@/components/capture-composer.module.css";
 import entryFormStyles from "@/components/entry-form.module.css";
 import entryListStyles from "@/components/entry-list.module.css";
 import { Button } from "@/components/button";
+import { notify } from "@/components/app-toast";
 
 import {
   type ChangeEvent,
@@ -225,11 +226,11 @@ export function CaptureComposer({
     setPhotoUploadProgress(null);
     setIsSyncing(false);
 
-    if (latestResult) {
-      setFeedback({
-        isError: latestResult.status === "retry",
-        message: latestResult.message,
-      });
+    if (latestResult?.status === "synced") {
+      setFeedback(idleFeedback);
+      notify.success(latestResult.message);
+    } else if (latestResult) {
+      setFeedback({ isError: true, message: latestResult.message });
     }
 
     if (didSyncEntry) {
@@ -614,12 +615,9 @@ export function CaptureComposer({
     setPhotos([]);
     setHasLocalDraft(false);
     setVoiceFeedback(null);
-    setFeedback({
-      isError: false,
-      message: navigator.onLine
-        ? "Saved on this device. Syncing…"
-        : "Saved on this device. Waiting for a connection.",
-    });
+    setFeedback(idleFeedback);
+    if (!navigator.onLine)
+      notify.info("Saved on this device. Waiting for a connection.");
     setIsSaving(false);
     await synchronizeQueue();
   }
@@ -898,10 +896,11 @@ function CapturePhoto({
       />
       <button
         aria-label={`Remove selected ${photo.file.name}`}
+        className={captureComposerStyles.removePhotoButton}
         onClick={onRemove}
         type="button"
       >
-        ×
+        <Icon name="close" size={16} />
       </button>
     </div>
   );

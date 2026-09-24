@@ -1,7 +1,19 @@
 .goalGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--mt-space-4);
+}
+
+@media (max-width: 1300px) {
+  .goalGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1050px) {
+  .goalGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .goalCover {
@@ -235,11 +247,6 @@
   grid-column: 1 / -1;
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
-}
-
-.successMessage {
-  color: var(--mt-color-accent);
-  background: var(--mt-color-accent-subtle);
 }
 
 @media (max-width: 780px) {

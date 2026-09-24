@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import { Button } from "@/components/button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -75,7 +76,6 @@ function TrackForm({
   const [order, setOrder] = useState(String(track?.sort_order ?? 0));
   const [hidden, setHidden] = useState(track?.is_hidden ?? false);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
   const input: TrackInput = {
     id: track?.id ?? null,
     revision: track?.revision ?? null,
@@ -91,13 +91,15 @@ function TrackForm({
         event.preventDefault();
         if (busy || !validTrackInput(input)) return;
         setBusy(true);
-        setMessage(null);
         try {
           const error = await saveTrack(input);
-          setMessage(error ?? "Track saved.");
+          if (error) notify.error(error);
+          else notify.success(track ? "Track saved." : "Track created.");
           if (!error) onSaved?.();
         } catch {
-          setMessage("Could not connect. Your edits are still here to retry.");
+          notify.error(
+            "Could not connect. Your edits are still here to retry.",
+          );
         } finally {
           setBusy(false);
         }
@@ -152,7 +154,6 @@ function TrackForm({
           {busy ? "Saving…" : track ? "Save track" : "Create track"}
         </Button>
       </fieldset>
-      {message && <p role="status">{message}</p>}
     </form>
   );
 }

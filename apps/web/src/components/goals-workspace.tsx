@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import { Dialog } from "@/components/dialog";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import {
@@ -489,6 +490,9 @@ function GoalEditor({
         return;
       }
       router.refresh();
+      notify.success(
+        saved.status === "created" ? "Goal created." : "Goal saved.",
+      );
       onClose();
     } catch {
       setResult(
@@ -520,6 +524,7 @@ function GoalEditor({
           current.filter((item) => item.id !== photo.id),
         );
         router.refresh();
+        notify.info("Photo moved to Trash.");
       } else {
         setResult(nextResult);
       }
@@ -552,6 +557,7 @@ function GoalEditor({
       if (nextResult.status === "trashed") {
         router.refresh();
         onClose();
+        notify.info("Goal moved to Trash.");
       } else {
         setResult(nextResult);
       }
@@ -813,7 +819,10 @@ function GoalEditor({
                   setCurrentRevision(nextResult.entry.revision);
                   setStatus("achieved");
                 }
-                setResult(nextResult);
+                if (nextResult.status === "achieved") {
+                  setResult(null);
+                  notify.success(nextResult.message);
+                } else setResult(nextResult);
                 router.refresh();
               }}
               onPendingChange={setIsPending}
@@ -822,10 +831,7 @@ function GoalEditor({
         </div>
 
         {result ? (
-          <p
-            className={`${common.formMessage} ${result.status === "achieved" ? styles.successMessage : ""}`}
-            role="status"
-          >
+          <p className={common.formMessage} role="status">
             {result.message}
           </p>
         ) : null}

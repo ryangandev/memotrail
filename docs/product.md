@@ -183,6 +183,8 @@ An explicit achievement action may atomically mark one Achieved and create a lin
 
 ### Places and People
 
+On Web, First Time, Home, and Vehicle cards prefer a photo, then a map when their Location has coordinates, then their original fallback; Place cards likewise show a map when their own coordinates exist.
+
 Places contain a name plus optional address context and notes.
 They are deliberately saved personal landmarks, remain available in the Places Focused View, and do not duplicate or organize Entries.
 Geoapify address search can fill a Place's address and coordinates without creating a Location or changing its personal name and notes.
@@ -218,6 +220,7 @@ A customizable Command Palette opens from the global search control or Command K
 New Entry opens from the top bar or Command J.
 Home, Vehicle, First Time, and Place results share one reusable card shell while preserving subtype-specific content and responsive layouts.
 Specialized editors share one unboxed photo field with consistent previews, progress, limits, and controls.
+On Web, selecting a photo thumbnail in an editor or capture draft opens a single-photo dialog without removing it; the separate X control removes the photo.
 Form labels mark required fields with `*` and leave optional fields unmarked.
 
 ## Privacy, deletion, and portability

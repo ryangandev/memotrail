@@ -72,8 +72,8 @@ test("Home keeps Location optional and never pairs edited addresses with old coo
               postalCode: null,
               country: "United States",
               countryCode: "us",
-              latitude: 39.9526,
-              longitude: -75.1652,
+              latitude: 39.95261234,
+              longitude: -75.16529876,
               timezone: "America/New_York",
               resultType: "building",
               confidence: 0.99,
@@ -101,6 +101,73 @@ test("Home keeps Location optional and never pairs edited addresses with old coo
         .single()
     ).data;
     expect(emptyRecord?.place_id).toBeNull();
+    await expect(
+      page
+        .getByRole("button", { name: /Home without coordinates/ })
+        .locator('[data-record-card-map="true"]'),
+    ).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Add Home" }).first().click();
+    const mappedHome = page.getByRole("dialog");
+    await mappedHome
+      .getByRole("textbox", { name: "Home name" })
+      .fill("Mapped Pine Home");
+    await mappedHome
+      .getByRole("combobox", { name: "Find a Location" })
+      .fill("Pine Street");
+    await mappedHome.getByRole("option", { name: /10 Pine Street/ }).click();
+    await mappedHome.getByRole("button", { name: "Add Home" }).click();
+    await expect(mappedHome).not.toBeVisible();
+    const mappedCard = page.getByRole("button", { name: /Mapped Pine Home/ });
+    const map = mappedCard.locator('[data-record-card-map="true"]');
+    await expect(map).toBeVisible();
+    await expect
+      .poll(() => map.evaluate((img: HTMLImageElement) => img.naturalWidth))
+      .toBeGreaterThan(0);
+    const cardMap = await page.request.get((await map.getAttribute("src"))!);
+    expect(cardMap.status()).toBe(200);
+    expect(await cardMap.text()).not.toContain("<text");
+    await mappedCard.screenshot({
+      path: "/private/tmp/memotrail-home-map-card-desktop.png",
+    });
+
+    await mappedCard.click();
+    const providerEdit = page.getByRole("dialog");
+    await providerEdit
+      .getByRole("combobox", { name: "Change Location" })
+      .fill("Pine Street");
+    await providerEdit.getByRole("option", { name: /10 Pine Street/ }).click();
+    await providerEdit.getByRole("button", { name: "Save changes" }).click();
+    await expect(providerEdit).not.toBeVisible();
+    await expect(mappedCard.locator('[data-record-card-map="true"]')).toBeVisible();
+
+    const mappedEntry = (
+      await admin
+        .from("entries")
+        .select("id,revision")
+        .eq("owner_id", owner)
+        .eq("title", "Mapped Pine Home")
+        .single()
+    ).data!;
+    await mappedCard.click();
+    const staleEdit = page.getByRole("dialog");
+    expect(
+      (
+        await admin
+          .from("entries")
+          .update({ revision: mappedEntry.revision + 1 })
+          .eq("id", mappedEntry.id)
+      ).error,
+    ).toBeNull();
+    await staleEdit.getByRole("textbox", { name: "Home name" }).fill("Stale edit");
+    await staleEdit.getByRole("button", { name: "Save changes" }).click();
+    await expect(staleEdit.locator("footer [role=alert]")).toContainText(
+      "changed on another device",
+    );
+    await staleEdit.screenshot({
+      path: "/private/tmp/memotrail-home-save-error.png",
+    });
+    await staleEdit.getByRole("button", { name: "Cancel" }).click();
 
     await page.getByRole("button", { name: "Add Home" }).first().click();
     const editor = page.getByRole("dialog");
@@ -138,6 +205,11 @@ test("Home keeps Location optional and never pairs edited addresses with old coo
       latitude: null,
       longitude: null,
     });
+    await expect(
+      page
+        .getByRole("button", { name: /Edited Pine Home/ })
+        .locator('[data-record-card-map="true"]'),
+    ).toHaveCount(0);
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }

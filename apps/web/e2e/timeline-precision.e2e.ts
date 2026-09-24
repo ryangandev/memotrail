@@ -3,7 +3,11 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
-import { fillOccurrenceEnd, fillOccurrenceStart } from "./helpers/occurrence";
+import {
+  fillOccurrenceEnd,
+  fillOccurrenceStart,
+  setDateDescription,
+} from "./helpers/occurrence";
 
 test("Timeline edits preserve full occurrence precision without fabricated dates", async ({
   page,
@@ -30,7 +34,8 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
   const owner = created.data.user!.id,
     id = randomUUID(),
     ongoingId = randomUUID(),
-    vehicleId = randomUUID();
+    vehicleId = randomUUID(),
+    firstTimeId = randomUUID();
   try {
     const cookies: { name: string; value: string }[] = [];
     const client = createServerClient(env.API_URL, env.ANON_KEY, {
@@ -112,6 +117,18 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
             occurred_timezone: "UTC",
             date_precision: "range",
           },
+          {
+            id: firstTimeId,
+            owner_id: owner,
+            title: "First summer visit",
+            body: "",
+            item_kind: "event",
+            item_subtype: "first_time",
+            occurred_start: "2026-07-15T12:00:00+00:00",
+            occurred_end: null,
+            occurred_timezone: "UTC",
+            date_precision: "day",
+          },
         ])
       ).error,
     ).toBeNull();
@@ -158,9 +175,20 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     const vehicleStage = page.getByRole("button", {
       name: /Centered vehicle/,
     });
+    const firstTimeMarker = page.getByRole("button", {
+      name: /First summer visit/,
+    });
     await expect(todayLine).toBeVisible();
     await expect(ongoingStage).toHaveAttribute("data-ongoing", "true");
     await expect(vehicleStage).toBeVisible();
+    await expect(firstTimeMarker).toBeVisible();
+    const firstTimeAlignment = await firstTimeMarker.evaluate((element) => {
+      const dot = element.querySelector("span")!.getBoundingClientRect();
+      const canvas = element.parentElement!.getBoundingClientRect();
+      const anchor = canvas.left + parseFloat(getComputedStyle(element).left);
+      return Math.abs(dot.left + dot.width / 2 - anchor);
+    });
+    expect(firstTimeAlignment).toBeLessThan(1);
     for (const stage of [ongoingStage, vehicleStage]) {
       const appearance = await stage.evaluate((element) => {
         const card = element.getBoundingClientRect();
@@ -485,7 +513,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
         .selectOption(sample.precision);
       if (sample.start) await fillOccurrenceStart(dialog, sample.start);
       if (sample.end) await fillOccurrenceEnd(dialog, sample.end);
-      await dialog.getByLabel("Date description").fill(sample.label);
+      await setDateDescription(dialog, sample.label);
       await dialog.getByRole("button", { name: "Save changes" }).click();
       await expect(dialog).not.toBeVisible();
       const value = (
@@ -663,6 +691,39 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       occurred_start: null,
       date_precision: "age",
     });
+    await page.goto("/first-times");
+    await page
+      .getByRole("button", { name: "Add First Time", exact: true })
+      .click();
+    const focusedFirstTime = page.getByRole("dialog", {
+      name: "Keep a beginning",
+    });
+    await focusedFirstTime
+      .getByRole("textbox", { name: "Title" })
+      .fill("First snow walk");
+    await focusedFirstTime
+      .getByRole("combobox", { name: "Date type" })
+      .selectOption("day");
+    await fillOccurrenceStart(focusedFirstTime, "2024-12-01");
+    await focusedFirstTime
+      .getByRole("button", { name: "Add First Time" })
+      .click();
+    await expect(focusedFirstTime).not.toBeVisible();
+    const savedFirstTime = await client
+      .from("entries")
+      .select("id")
+      .eq("title", "First snow walk")
+      .single();
+    expect(savedFirstTime.error).toBeNull();
+    const placement = await client
+      .from("timeline_items")
+      .select("entry_id")
+      .eq("entry_id", savedFirstTime.data!.id);
+    expect(placement.data).toEqual([]);
+    await page.goto("/timeline");
+    await expect(
+      page.getByRole("button", { name: /First snow walk/ }),
+    ).toBeVisible();
     expect(uiErrors).toEqual([]);
   } finally {
     await admin.auth.admin.deleteUser(owner);

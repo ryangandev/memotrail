@@ -212,7 +212,9 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
       .getByRole("button", { name: "Permanently delete confirmed items" })
       .click();
     await expect(
-      page.getByText(/33 confirmed items permanently deleted/),
+      page.locator("[data-sonner-toast]").filter({
+        hasText: /33 confirmed items permanently deleted/,
+      }),
     ).toBeVisible({ timeout: 45000 });
     const remaining = await client.rpc("prepare_empty_trash");
     expect(remaining.error).toBeNull();

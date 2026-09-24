@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import { Button } from "@/components/button";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import Link from "next/link";
@@ -101,6 +102,7 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
         setPage(0);
         setRefresh((v) => v + 1);
         router.refresh();
+        notify.success(linked ? "Item linked." : "Item unlinked.");
       }
     } catch {
       setMessage("Could not confirm the change. Refresh before retrying.");

@@ -168,6 +168,12 @@
   gap: var(--mt-space-4);
 }
 
+.toastPreviewActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mt-space-2);
+}
+
 .themePreview {
   display: grid;
   gap: var(--mt-space-3);

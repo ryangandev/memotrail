@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import { Dialog } from "@/components/dialog";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
@@ -20,6 +21,7 @@ import { EntryOrganizationEditor } from "@/components/entry-organization-editor"
 import { LocationPicker } from "@/components/location-picker";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { RecordCardMap } from "@/components/record-card-map";
 import {
   RecordCard,
   RecordCardBody,
@@ -195,8 +197,17 @@ function FirstTimeCard({
           {photos.length > 1 ? <small>{photos.length} photos</small> : null}
         </RecordCardVisual>
       ) : (
-        <RecordCardVisual className={styles.cardIndex}>
-          {String(index + 1).padStart(2, "0")}
+        <RecordCardVisual className={styles.coverPhoto}>
+          <RecordCardMap
+            eager={index < 4}
+            fallback={
+              <span className={styles.cardIndexFallback}>
+                {String(index + 1).padStart(2, "0")}
+              </span>
+            }
+            latitude={entry.location?.latitude}
+            longitude={entry.location?.longitude}
+          />
         </RecordCardVisual>
       )}
 
@@ -399,6 +410,11 @@ export function FirstTimeEditor({
       }
 
       router.refresh();
+      notify.success(
+        saved.status === "created"
+          ? "First Time created."
+          : "First Time saved.",
+      );
       onClose();
     } catch {
       setResult(
@@ -435,6 +451,7 @@ export function FirstTimeEditor({
           current.filter((item) => item.id !== photo.id),
         );
         router.refresh();
+        notify.info("Photo moved to Trash.");
       } else {
         setResult(nextResult);
       }
@@ -470,6 +487,7 @@ export function FirstTimeEditor({
       if (nextResult.status === "trashed") {
         router.refresh();
         onClose();
+        notify.info("First Time moved to Trash.");
       } else {
         setResult(nextResult);
       }

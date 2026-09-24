@@ -168,9 +168,7 @@ export function LocationMapWorkspace({
   const sorted = [
     ...new Map(
       [...selected]
-        .sort((a, b) =>
-          (b.occurredAt ?? "").localeCompare(a.occurredAt ?? ""),
-        )
+        .sort((a, b) => (b.occurredAt ?? "").localeCompare(a.occurredAt ?? ""))
         .map((item) => [item.id, item]),
     ).values(),
   ];
@@ -235,7 +233,8 @@ export function LocationMapWorkspace({
           />
         </label>
         <p role="status">
-          {filtered.length} Entry {filtered.length === 1 ? "Location" : "Locations"}
+          {filtered.length} Entry{" "}
+          {filtered.length === 1 ? "Location" : "Locations"}
         </p>
       </div>
 

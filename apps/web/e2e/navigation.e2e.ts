@@ -652,7 +652,11 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(quickCaptureForm).not.toContainText(
       "MemoTrail could not store this Entry",
     );
-    await expect(quickCaptureForm).toContainText("Saved to Inbox.");
+    await expect(
+      page
+        .locator("[data-sonner-toast]")
+        .filter({ hasText: "Saved to Inbox." }),
+    ).toBeVisible();
     await expect
       .poll(async () => {
         const result = await client

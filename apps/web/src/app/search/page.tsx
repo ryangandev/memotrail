@@ -188,11 +188,6 @@ export default async function SearchPage({
             )}
           </fieldset>
 
-          <p className={styles.dateGuidance}>
-            Date filters include overlapping recorded periods in each
-            item&apos;s time zone. Partial dates may overlap; unanchored dates
-            remain searchable without date filters.
-          </p>
           {filtersError ? (
             <p className={styles.filterNotice} role="status">
               {filtersError}

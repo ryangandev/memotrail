@@ -1,7 +1,13 @@
 .placeGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--mt-space-4);
+}
+
+@media (max-width: 1300px) {
+  .placeGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .mapMark {

@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import { Dialog } from "@/components/dialog";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { Button, IconButton } from "@/components/button";
@@ -39,7 +40,6 @@ export function OrganizationControl({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
   const [name, setName] = useState(item?.name ?? "");
   const [order, setOrder] = useState(String(item?.sort_order ?? 0));
   const [targetId, setTargetId] = useState("");
@@ -76,7 +76,10 @@ export function OrganizationControl({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy || !validOrganizationInput(input)) return;
-    await run(() => saveOrganization(input));
+    await run(
+      () => saveOrganization(input),
+      `${label} ${item ? "saved" : "created"}.`,
+    );
   }
 
   async function remove() {
@@ -100,10 +103,12 @@ export function OrganizationControl({
       variant: "danger",
     });
     if (!confirmed) return;
-    await run(() =>
-      kind === "collection"
-        ? trashCollection(input)
-        : deleteUnusedTag({ id: item.id, revision: item.revision }),
+    await run(
+      () =>
+        kind === "collection"
+          ? trashCollection(input)
+          : deleteUnusedTag({ id: item.id, revision: item.revision }),
+      kind === "collection" ? "Collection moved to Trash." : "Tag deleted.",
     );
   }
 
@@ -127,34 +132,35 @@ export function OrganizationControl({
       variant: "danger",
     });
     if (!confirmed) return;
-    await run(() =>
-      mergeTags({
-        source: { id: item.id, revision: item.revision },
-        target: { id: target.id, revision: target.revision },
-      }),
+    await run(
+      () =>
+        mergeTags({
+          source: { id: item.id, revision: item.revision },
+          target: { id: target.id, revision: target.revision },
+        }),
+      "Tags merged.",
     );
   }
 
-  async function run(action: () => Promise<string | null>) {
+  async function run(action: () => Promise<string | null>, success: string) {
     setBusy(true);
-    setMessage(null);
     try {
       const error = await action();
       if (error) {
-        setMessage(error);
+        notify.error(error);
         return;
       }
       setOpen(false);
       router.refresh();
+      notify.success(success);
     } catch {
-      setMessage("Could not connect. Your changes are still here to retry.");
+      notify.error("Could not connect. Your changes are still here to retry.");
     } finally {
       setBusy(false);
     }
   }
 
   function openEditor() {
-    setMessage(null);
     setTagPreview(null);
     setOpen(true);
   }
@@ -293,11 +299,6 @@ export function OrganizationControl({
                 <p className={styles.helper}>
                   This is your Bucket List Collection. Renaming it preserves
                   Goal milestone behavior.
-                </p>
-              ) : null}
-              {message ? (
-                <p className={styles.message} role="alert">
-                  {message}
                 </p>
               ) : null}
             </form>

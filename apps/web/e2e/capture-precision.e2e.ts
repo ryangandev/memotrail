@@ -3,10 +3,12 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
+import sharp from "sharp";
 import {
   fillOccurrenceEnd,
   fillOccurrenceStart,
   occurrenceStartField,
+  setDateDescription,
 } from "./helpers/occurrence";
 import { parseInboxDraft } from "../src/lib/data/inbox-draft";
 
@@ -66,6 +68,45 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       name: "Quick capture",
       exact: true,
     });
+    await capture.locator('input[type="file"]').setInputFiles({
+      name: "quick-preview.png",
+      mimeType: "image/png",
+      buffer: await sharp({
+        create: { width: 320, height: 240, channels: 3, background: "#426e83" },
+      })
+        .png()
+        .toBuffer(),
+    });
+    const removePhoto = capture.getByRole("button", {
+      name: "Remove selected quick-preview.png",
+    });
+    const removeIconOffset = await removePhoto.evaluate((button) => {
+      const icon = button.querySelector("svg")?.getBoundingClientRect();
+      const bounds = button.getBoundingClientRect();
+      return icon
+        ? Math.hypot(
+            icon.x + icon.width / 2 - (bounds.x + bounds.width / 2),
+            icon.y + icon.height / 2 - (bounds.y + bounds.height / 2),
+          )
+        : Infinity;
+    });
+    expect(removeIconOffset).toBeLessThan(0.5);
+    await capture
+      .getByRole("button", { name: "Preview selected quick-preview.png" })
+      .click();
+    const photoPreview = page.getByRole("dialog", {
+      name: "quick-preview.png",
+    });
+    await expect(photoPreview).toBeVisible();
+    await photoPreview
+      .getByRole("button", { name: "Close", exact: true })
+      .click();
+    await removePhoto.click();
+    await expect(
+      capture.getByRole("button", {
+        name: "Preview selected quick-preview.png",
+      }),
+    ).toHaveCount(0);
     await capture.getByRole("button", { name: "Date", exact: true }).click();
     await expect(capture.getByLabel("Date type")).toBeVisible({
       timeout: 5000,
@@ -134,9 +175,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
         .getByRole("combobox", { name: "Time zone", exact: true })
         .selectOption("Asia/Kathmandu");
       if (item.start) await fillOccurrenceStart(capture, item.start);
-      await capture
-        .getByLabel("Date description", { exact: true })
-        .fill(item.label);
+      await setDateDescription(capture, item.label);
       if (item.end) await fillOccurrenceEnd(capture, item.end);
       if (item.precision === "age") {
         await page.setViewportSize({ width: 390, height: 844 });

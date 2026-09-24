@@ -29,6 +29,21 @@ export async function fillOccurrenceEnd(scope: OccurrenceScope, value: string) {
   );
 }
 
+export async function setDateDescription(
+  scope: OccurrenceScope,
+  value: string,
+) {
+  const toggle = scope.getByRole("checkbox", { name: "Add date description" });
+  if (await toggle.count()) {
+    if (!value) {
+      if (await toggle.isChecked()) await toggle.uncheck();
+      return;
+    }
+    if (!(await toggle.isChecked())) await toggle.check();
+  }
+  await scope.getByRole("textbox", { name: "Date description" }).fill(value);
+}
+
 async function fillDateField(
   dateField: Locator,
   scope: OccurrenceScope,
