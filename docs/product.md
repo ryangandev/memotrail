@@ -58,6 +58,7 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - Rich formatting never replaces the Entry's clean plaintext body, so search, AI, export, and clients that do not render formatting still receive readable writing.
 - The composer keeps a recoverable local draft.
 - Offline captures remain visible and retryable until synchronization is confirmed.
+- An ordinary online save shows progress in the composer; its brief local queue stage does not open a Pending sync list.
 - Voice capture produces editable text and never retains the original audio.
 - Every new free-form Capture enters Inbox, even when AI suggestions are available.
 - AI may suggest title, Collections, tags, date, and photo-derived date or Location context.
