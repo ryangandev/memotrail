@@ -9,6 +9,11 @@ export const timelineIdeaLinks = [
     label: "03 Swimlane",
     shortLabel: "Swimlane",
   },
+  {
+    href: "/timeline/ideas/sticky-year",
+    label: "07 Sticky Year",
+    shortLabel: "Sticky Year",
+  },
 ] as const;
 
 export function timelineIdeaReturnPath(value: string | string[] | undefined) {
