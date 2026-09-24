@@ -24,6 +24,11 @@ export const timelineIdeaLinks = [
     label: "18 Minimal Index",
     shortLabel: "Minimal",
   },
+  {
+    href: "/timeline/ideas/precision-ruler",
+    label: "19 Precision Ruler",
+    shortLabel: "Ruler",
+  },
 ] as const;
 
 export function timelineIdeaReturnPath(value: string | string[] | undefined) {
