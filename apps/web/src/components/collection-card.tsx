@@ -1,31 +1,36 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Icon } from "@/components/icon";
-import { IconButton } from "@/components/button";
-import styles from "./collection-card-concept.module.css";
+import styles from "./collection-card.module.css";
 
-export function CollectionCardConcept({
+export function CollectionCard({
   entryCount,
   href,
+  headingLevel = "h2",
   inboxCount = 0,
+  manageAction,
   name,
-  onManage,
   updatedLabel,
 }: {
   entryCount: number;
   href: string;
+  headingLevel?: "h2" | "h4";
   inboxCount?: number;
+  manageAction?: ReactNode;
   name: string;
-  onManage?: () => void;
   updatedLabel?: string;
 }) {
+  const Heading = headingLevel;
   return (
-    <article className={styles.card} data-collection-card-concept>
+    <article className={styles.card} data-collection-card>
       <Link className={styles.link} href={href}>
         <span className={styles.topline}>
           <Icon name="archive" size={17} />
           <span>Collection</span>
         </span>
-        <h4 title={name}>{name}</h4>
+        <Heading className={styles.title} title={name}>
+          {name}
+        </Heading>
         <span className={styles.bottomline}>
           <span>
             {entryCount} {entryCount === 1 ? "Entry" : "Entries"}
@@ -37,16 +42,8 @@ export function CollectionCardConcept({
           {updatedLabel ?? "Ready for its first Entry"}
         </span>
       </Link>
-      {onManage ? (
-        <IconButton
-          className={styles.manage}
-          label={`Manage ${name}`}
-          onClick={onManage}
-          size="small"
-          variant="ghost"
-        >
-          <Icon name="more" size={17} />
-        </IconButton>
+      {manageAction ? (
+        <div className={styles.manage}>{manageAction}</div>
       ) : null}
     </article>
   );

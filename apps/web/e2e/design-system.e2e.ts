@@ -1,13 +1,13 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
 
-test("compact Collection proposal fits four cards across without changing the live page", async ({
+test("shared Collection card fits four cards across on desktop", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/design-system#collection-card-concept");
   const specimen = page.locator("#collection-card-concept");
-  const cards = specimen.locator("[data-collection-card-concept]");
+  const cards = specimen.locator("[data-collection-card]");
   await expect(cards).toHaveCount(8);
   await expect(cards.first()).toBeVisible();
   await expect(cards.nth(4)).toBeVisible();

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
-import { Button } from "@/components/button";
+import { Button, IconButton } from "@/components/button";
+import { CollectionCard } from "@/components/collection-card";
 import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { EntryPhotoField } from "@/components/entry-photo-field";
@@ -23,7 +24,6 @@ import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import type { EntryRichText } from "@/lib/data/rich-text";
 import styles from "./page.module.css";
 import { SharedPrimitivesGallery } from "./shared-primitives-gallery";
-import { CollectionCardConcept } from "./collection-card-concept";
 
 type TokenSet = {
   meta: { name: string; version: string };
@@ -555,7 +555,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="RecordCard is the shared interactive record surface used by Homes, Vehicles, and First Times. The compact Collection card below is a review proposal and has not replaced the Collections page."
+        description="RecordCard is the shared interactive record surface used by Homes, Vehicles, and First Times. Collections use the compact card shown below."
         id="containers"
         index="05"
         title="Containers and data display"
@@ -585,9 +585,9 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
         <Specimen
           description="Four cards fit in the 1080px Collections content width. Compare occupied, empty, Inbox, and long-title states. Management stays a separate action."
           id="collection-card-concept"
-          title="Collection card proposal"
+          title="Collection card"
         >
-          <div className={styles.collectionConceptGrid}>
+          <div className={styles.collectionCardGrid}>
             {[
               {
                 name: "Early years",
@@ -623,19 +623,29 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
               },
               { name: "To revisit", entryCount: 0 },
             ].map((collection) => (
-              <CollectionCardConcept
+              <CollectionCard
                 {...collection}
                 href="#collection-card-concept"
+                headingLevel="h4"
                 key={collection.name}
-                onManage={() =>
-                  notify.info(`Manage ${collection.name}: preview only.`)
+                manageAction={
+                  <IconButton
+                    label={`Manage ${collection.name}`}
+                    onClick={() =>
+                      notify.info(`Manage ${collection.name}: preview only.`)
+                    }
+                    size="small"
+                    variant="ghost"
+                  >
+                    <Icon name="more" size={17} />
+                  </IconButton>
                 }
               />
             ))}
           </div>
           <p className={styles.stateNote}>
-            This proposal is isolated to the Design System. The current
-            Collections page keeps its existing cards until review.
+            This shared card is also used on the Collections page. Management
+            remains a separate action.
           </p>
         </Specimen>
 

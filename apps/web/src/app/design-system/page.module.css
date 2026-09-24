@@ -458,7 +458,7 @@
   line-height: var(--mt-line-height-body);
 }
 
-.collectionConceptGrid {
+.collectionCardGrid {
   display: grid;
   max-width: 1080px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -495,7 +495,7 @@
 }
 
 @media (max-width: 900px) {
-  .collectionConceptGrid {
+  .collectionCardGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .themeGrid,
@@ -516,7 +516,7 @@
 }
 
 @media (max-width: 600px) {
-  .collectionConceptGrid {
+  .collectionCardGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .searchFieldDemo,
@@ -582,7 +582,7 @@
 }
 
 @media (max-width: 430px) {
-  .collectionConceptGrid {
+  .collectionCardGrid {
     grid-template-columns: 1fr;
   }
 }

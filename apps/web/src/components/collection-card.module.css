@@ -50,7 +50,7 @@
   text-transform: uppercase;
 }
 
-.card h4 {
+.title {
   display: -webkit-box;
   min-width: 0;
   margin: var(--mt-space-3) 0 0;
@@ -100,6 +100,12 @@
   position: absolute;
   top: var(--mt-space-2);
   right: var(--mt-space-2);
+}
+
+.manage > button {
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
 }
 
 @media (prefers-reduced-motion: reduce) {
