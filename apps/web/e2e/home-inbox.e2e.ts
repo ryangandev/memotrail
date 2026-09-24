@@ -181,6 +181,8 @@ test("Home previews the Inbox while Inbox remains a focused organization workspa
 
     await page.goto(`/inbox?entry=${newestID}`);
     const review = page.getByRole("dialog", { name: "Review Entry" });
+    await expect(review.getByRole("textbox", { name: "Title" })).toBeVisible();
+    await expect(review.getByRole("complementary", { name: "AI suggestions" })).toHaveCount(0);
     await expect(
       review.getByRole("button", { name: "Save changes" }),
     ).toHaveAttribute("data-variant", "secondary");
