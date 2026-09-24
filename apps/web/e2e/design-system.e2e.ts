@@ -1,6 +1,56 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
 
+test("compact Collection proposal fits four cards across without changing the live page", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/design-system#collection-card-concept");
+  const specimen = page.locator("#collection-card-concept");
+  const cards = specimen.locator("[data-collection-card-concept]");
+  await expect(cards).toHaveCount(8);
+  await expect(cards.first()).toBeVisible();
+  await expect(cards.nth(4)).toBeVisible();
+  const boxes = await Promise.all(
+    [0, 1, 2, 3, 4].map(async (index) => cards.nth(index).boundingBox()),
+  );
+  expect(boxes.every(Boolean)).toBe(true);
+  expect(boxes.slice(0, 4).map((box) => box!.y)).toEqual([
+    boxes[0]!.y,
+    boxes[0]!.y,
+    boxes[0]!.y,
+    boxes[0]!.y,
+  ]);
+  expect(boxes[4]!.y).toBeGreaterThan(boxes[0]!.y);
+  expect(boxes[0]!.height).toBeLessThan(170);
+  await cards
+    .first()
+    .getByRole("button", { name: "Manage Early years" })
+    .click();
+  await expect(page.locator("[data-sonner-toast]")).toContainText(
+    "Manage Early years: preview only.",
+  );
+  await page
+    .locator("[data-sonner-toast]")
+    .getByRole("button", { name: "Close toast" })
+    .click();
+  await expect(page.locator("[data-sonner-toast]")).toHaveCount(0);
+  await specimen.screenshot({
+    path: "/private/tmp/memotrail-collection-card-concept-desktop.png",
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(cards.first()).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await specimen.screenshot({
+    path: "/private/tmp/memotrail-collection-card-concept-mobile.png",
+  });
+});
+
 test("Toast uses the shared feedback surface without an inline message", async ({
   page,
 }) => {

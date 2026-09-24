@@ -7,6 +7,7 @@ Last reviewed: 2026-09-24.
 The Entry-centered Web information model is implemented on `codex/web-library-information-model` and its migration is live on the confirmed Supabase project.
 Authored Place records have also been removed from Web and the hosted schema; Entry-owned Locations and the Map remain.
 The obsolete Places Timeline track has been removed, with existing placements migrated to the general track.
+A compact Collection card proposal is available in the Web Design System for review; the Collections page still uses its current cards.
 Native iOS still uses the older Kind and subtype contract and needs a separate update before its write flows are compatible.
 Web production still needs deployment and acceptance of this branch; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 

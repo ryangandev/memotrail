@@ -23,6 +23,7 @@ import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import type { EntryRichText } from "@/lib/data/rich-text";
 import styles from "./page.module.css";
 import { SharedPrimitivesGallery } from "./shared-primitives-gallery";
+import { CollectionCardConcept } from "./collection-card-concept";
 
 type TokenSet = {
   meta: { name: string; version: string };
@@ -554,7 +555,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="RecordCard is the shared interactive record surface used by Homes, Vehicles, and First Times. Other card families remain route-specific."
+        description="RecordCard is the shared interactive record surface used by Homes, Vehicles, and First Times. The compact Collection card below is a review proposal and has not replaced the Collections page."
         id="containers"
         index="05"
         title="Containers and data display"
@@ -579,6 +580,63 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
             </RecordCard>
             <small role="status">{recordMessage}</small>
           </div>
+        </Specimen>
+
+        <Specimen
+          description="Four cards fit in the 1080px Collections content width. Compare occupied, empty, Inbox, and long-title states. Management stays a separate action."
+          id="collection-card-concept"
+          title="Collection card proposal"
+        >
+          <div className={styles.collectionConceptGrid}>
+            {[
+              {
+                name: "Early years",
+                entryCount: 12,
+                updatedLabel: "Latest Sep 18",
+              },
+              {
+                name: "Homes and neighborhoods",
+                entryCount: 7,
+                updatedLabel: "Latest Aug 30",
+              },
+              {
+                name: "First times",
+                entryCount: 19,
+                inboxCount: 2,
+                updatedLabel: "Latest Sep 22",
+              },
+              { name: "Family", entryCount: 8, updatedLabel: "Latest Sep 14" },
+              {
+                name: "Notes from my travels",
+                entryCount: 24,
+                updatedLabel: "Latest Sep 12",
+              },
+              {
+                name: "Things I learned",
+                entryCount: 5,
+                updatedLabel: "Latest Aug 08",
+              },
+              {
+                name: "Small good moments",
+                entryCount: 3,
+                updatedLabel: "Latest Sep 02",
+              },
+              { name: "To revisit", entryCount: 0 },
+            ].map((collection) => (
+              <CollectionCardConcept
+                {...collection}
+                href="#collection-card-concept"
+                key={collection.name}
+                onManage={() =>
+                  notify.info(`Manage ${collection.name}: preview only.`)
+                }
+              />
+            ))}
+          </div>
+          <p className={styles.stateNote}>
+            This proposal is isolated to the Design System. The current
+            Collections page keeps its existing cards until review.
+          </p>
         </Specimen>
 
         <Specimen
