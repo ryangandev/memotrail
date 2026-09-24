@@ -3,7 +3,12 @@ import { getFirstTimesWorkspace } from "@/lib/data/first-times";
 
 export const dynamic = "force-dynamic";
 
-export default async function FirstTimesPage() {
+export default async function FirstTimesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ entry?: string | string[] }>;
+}) {
+  const parameters = await searchParams;
   const workspace = await getFirstTimesWorkspace();
 
   if (!workspace) {
@@ -14,6 +19,9 @@ export default async function FirstTimesPage() {
     <FirstTimesWorkspace
       collectionOptions={workspace.collectionOptions}
       entries={workspace.entries}
+      initialEntryId={
+        typeof parameters.entry === "string" ? parameters.entry : null
+      }
       loadError={workspace.loadError}
       ownerId={workspace.viewer.id}
       tagOptions={workspace.tagOptions}

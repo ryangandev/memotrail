@@ -30,7 +30,7 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000117'
 select is(
   (select revision from public.review_wiki_item_with_photo_place(
     '98700000-0000-4000-8000-000000000001',1,
-    'Morning pages','Edited on iPhone.','writing','journal',
+    'Morning pages','Edited on iPhone.','entry','entry',
     null,'UTC','{}',array['Morning'],true,null,null,'unknown',null
   )),
   2,
@@ -39,7 +39,7 @@ select is(
 select is(
   (select item_kind || ':' || item_subtype || ':' || inbox_status
    from public.entries where id='98700000-0000-4000-8000-000000000001'),
-  'writing:journal:organized',
+  'entry:entry:organized',
   'The semantic Kind and subtype are saved atomically'
 );
 select is(
@@ -62,19 +62,19 @@ select is(
 select throws_ok(
   $$select * from public.review_wiki_item_with_photo_place(
     '98700000-0000-4000-8000-000000000001',2,
-    'Morning pages','Try to change Kind','event','memory',
+    'Morning pages','Try to change Kind','entry','first_time',
     null,'UTC','{}','{}',true,null,null,'unknown',null
   )$$,
   '22023',
-  'invalid_item_kind_transition',
-  'A plaintext client cannot mutate an established Kind'
+  'invalid_item_classification',
+  'A plaintext client cannot turn an Entry into a First Time'
 );
 
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000118',true);
 select is(
   (select count(*) from public.review_wiki_item_with_photo_place(
     '98700000-0000-4000-8000-000000000001',2,
-    'Foreign','No access','writing','journal',
+    'Foreign','No access','entry','entry',
     null,'UTC','{}','{}',true,null,null,'unknown',null
   )),
   0::bigint,

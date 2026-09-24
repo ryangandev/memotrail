@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { ConfirmationDialogProvider } from "@/components/confirmation-dialog";
+import { AppToaster } from "@/components/app-toast";
 import { WorkspaceBoundary } from "@/components/workspace-shell";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
@@ -52,6 +53,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
             {children}
           </WorkspaceBoundary>
         </ConfirmationDialogProvider>
+        <AppToaster />
       </body>
     </html>
   );

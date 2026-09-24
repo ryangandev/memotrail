@@ -290,6 +290,7 @@
   width: 126px;
   align-items: center;
   gap: 7px;
+  padding: 0;
   transform: translateX(-6px);
   overflow: hidden;
   background: transparent;
@@ -298,7 +299,9 @@
 }
 
 .eventItem[data-edge="end"] {
-  transform: translateX(-100%);
+  flex-direction: row-reverse;
+  transform: translateX(calc(-100% + 6px));
+  text-align: right;
 }
 
 .eventItem > span:last-child {
@@ -450,14 +453,6 @@
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-body);
   line-height: var(--mt-line-height-body);
-}
-
-.birthDateMessage {
-  padding: var(--mt-space-3);
-  border-radius: var(--mt-radius-small);
-  color: var(--mt-color-warm);
-  background: var(--mt-color-warm-subtle);
-  font-size: var(--mt-font-size-caption);
 }
 
 .birthDateActions {

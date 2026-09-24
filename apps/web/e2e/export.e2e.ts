@@ -152,7 +152,11 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
       ).status(),
     ).toBe(403);
     await page.getByRole("button", { name: "Prepare snapshot" }).click();
-    await expect(page.getByRole("status")).toContainText("Snapshot prepared");
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "Snapshot prepared",
+      }),
+    ).toBeVisible();
     const nativeList = await page.request.post("/api/export", {
       headers: nativeHeaders,
       data: { action: "list" },
@@ -241,7 +245,11 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
       });
     });
     await page.getByRole("button", { name: "Download ZIP" }).click();
-    await expect(page.getByRole("status")).toContainText("Complete ZIP saved");
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "Complete ZIP saved",
+      }),
+    ).toBeVisible();
     const sink = await page.evaluate(
       () =>
         (
@@ -298,9 +306,11 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
       .getByRole("button", { name: "Discard snapshot", exact: true })
       .click();
     await page.getByRole("button", { name: "Confirm discard" }).click();
-    await expect(page.getByRole("status")).toContainText(
-      "Temporary copy discarded",
-    );
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "Temporary copy discarded",
+      }),
+    ).toBeVisible();
     expect(
       (
         await page.request.post("/api/export", {

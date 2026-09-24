@@ -150,9 +150,11 @@ test("Settings is reachable from the sidebar and owns account controls", async (
     await main
       .getByRole("button", { name: "Save time zone", exact: true })
       .click();
-    await expect(main.getByRole("status")).toHaveText(
-      "Default time zone saved.",
-    );
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "Default time zone saved.",
+      }),
+    ).toBeVisible();
     await expect
       .poll(
         async () =>

@@ -54,7 +54,7 @@ export const historyFields: Record<string, string> = {
   collections: "Collections",
   tags: "Tags",
   people: "People links",
-  places: "Place links",
+  places: "Location links",
   timeline_items: "Timeline placement",
   home: "Home details",
   vehicle: "Vehicle details",

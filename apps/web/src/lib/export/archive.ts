@@ -272,7 +272,6 @@ export function createExportArchive(
           "vehicles",
           "goals",
           "locations",
-          "places",
           "people",
           "timeline_items",
         ].includes(name)

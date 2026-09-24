@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import { Dialog } from "@/components/dialog";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
@@ -20,6 +21,7 @@ import { EntryOrganizationEditor } from "@/components/entry-organization-editor"
 import { LocationPicker } from "@/components/location-picker";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { RecordCardMap } from "@/components/record-card-map";
 import {
   RecordCard,
   RecordCardBody,
@@ -203,8 +205,9 @@ function VehicleSection({
         <span>{label}</span>
       </header>
       <div className={styles.homeGrid}>
-        {vehicles.map((vehicle) => (
+        {vehicles.map((vehicle, index) => (
           <VehicleCard
+            eagerMap={index < 3}
             key={vehicle.id}
             onSelect={() => onSelect(vehicle)}
             vehicle={vehicle}
@@ -216,9 +219,11 @@ function VehicleSection({
 }
 
 function VehicleCard({
+  eagerMap,
   onSelect,
   vehicle,
 }: {
+  eagerMap: boolean;
   onSelect: () => void;
   vehicle: VehicleRecord;
 }) {
@@ -234,10 +239,17 @@ function VehicleCard({
         {cover?.imageUrl ? (
           <ProgressiveImage alt="" src={cover.imageUrl} />
         ) : (
-          <div className={styles.homeMark}>
-            <Icon name="car" size={24} />
-            <span>{vehicleFactsLabel(vehicle)}</span>
-          </div>
+          <RecordCardMap
+            eager={eagerMap}
+            fallback={
+              <div className={styles.homeMark}>
+                <Icon name="car" size={24} />
+                <span>{vehicleFactsLabel(vehicle)}</span>
+              </div>
+            }
+            latitude={vehicle.location?.latitude}
+            longitude={vehicle.location?.longitude}
+          />
         )}
         <span
           className={
@@ -478,6 +490,9 @@ export function VehicleEditor({
         return;
       }
 
+      notify.success(
+        saved.status === "created" ? "Vehicle created." : "Vehicle saved.",
+      );
       onClose();
     } catch {
       setResult(
@@ -511,6 +526,7 @@ export function VehicleEditor({
           current.filter((item) => item.id !== photo.id),
         );
         router.refresh();
+        notify.info("Photo moved to Trash.");
       } else {
         setResult(nextResult);
       }
@@ -543,6 +559,7 @@ export function VehicleEditor({
       if (nextResult.status === "trashed") {
         onTrashed(currentId);
         onClose();
+        notify.info("Vehicle moved to Trash.");
       } else {
         setResult(nextResult);
       }

@@ -102,10 +102,7 @@
   object-fit: cover;
 }
 
-.capturePhoto
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
+.capturePhoto > .removePhotoButton {
   position: absolute;
   top: 6px;
   right: 6px;
@@ -113,19 +110,15 @@
   width: 24px;
   height: 24px;
   place-items: center;
+  padding: 0;
   border: 1px solid color-mix(in srgb, white 40%, transparent);
   border-radius: 50%;
   color: white;
   background: color-mix(in srgb, black 64%, transparent);
-  font-size: var(--mt-font-size-body-large);
-  line-height: 1;
   cursor: pointer;
 }
 
-.capturePhoto
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):hover {
+.capturePhoto > .removePhotoButton:hover {
   background: color-mix(in srgb, black 78%, transparent);
 }
 

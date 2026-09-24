@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import { PageHeader } from "@/components/page-header";
 import { Button, ButtonLink } from "@/components/button";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
@@ -96,6 +97,7 @@ export function EntryHistoryView({
       else {
         setVersion(undefined);
         router.refresh();
+        notify.success("Version restored.");
       }
     } catch {
       setError(
@@ -127,6 +129,7 @@ export function EntryHistoryView({
       else {
         router.push("/library");
         router.refresh();
+        notify.info("Entry moved to Trash.");
       }
     } catch {
       setError(
@@ -152,8 +155,9 @@ export function EntryHistoryView({
       )}
       <div className={styles.itemActions}>
         {!history.current.deleted_at &&
-          ["writing", "event", "story"].includes(
-            String(history.current.item_kind),
+          history.current.item_kind === "entry" &&
+          ["entry", "source_capture"].includes(
+            String(history.current.item_subtype),
           ) && (
             <Button
               variant="secondary"
@@ -163,6 +167,20 @@ export function EntryHistoryView({
             >
               Edit {wikiItemKindLabel(history.current.item_kind)}
             </Button>
+          )}
+        {!history.current.deleted_at &&
+          history.current.item_kind === "entry" &&
+          history.current.item_subtype === "first_time" && (
+            <ButtonLink href={`/first-times?entry=${history.current.id}`}>
+              Edit First Time
+            </ButtonLink>
+          )}
+        {!history.current.deleted_at &&
+          history.current.item_kind === "entry" &&
+          ["moment", "period"].includes(history.current.item_subtype) && (
+            <ButtonLink href={`/timeline?entry=${history.current.id}`}>
+              Edit {history.current.item_subtype === "period" ? "Period" : "Moment"}
+            </ButtonLink>
           )}
         {detailMode && history.versions.length > 0 ? (
           <ButtonLink href={`/history?entry=${history.current.id}`}>
@@ -393,10 +411,13 @@ function CurrentItem({ value }: { value: HistorySnapshot }) {
         metadata={value.body ? value.metadata : undefined}
       />
       <dl className={styles.currentFacts}>
-        <div>
-          <dt>Type</dt>
-          <dd>{wikiItemIdentityLabel(value.item_kind, value.item_subtype)}</dd>
-        </div>
+        {value.item_kind !== "entry" ||
+        !["entry", "source_capture"].includes(value.item_subtype) ? (
+          <div>
+            <dt>Record</dt>
+            <dd>{wikiItemIdentityLabel(value.item_kind, value.item_subtype)}</dd>
+          </div>
+        ) : null}
         <div>
           <dt>Date</dt>
           <dd>{historyDateLabel(value)}</dd>
@@ -481,7 +502,7 @@ function GoalExtraction({
       <h3>Create a Goal from this item</h3>
       <p>
         This creates a separate Goal and links it back to this source. The
-        source keeps its Kind, writing, dates, photos, links, and history.
+        source keeps its writing, dates, photos, links, and history.
       </p>
       <fieldset disabled={busy || disabled}>
         <label>

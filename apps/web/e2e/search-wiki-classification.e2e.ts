@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 
-test("Search filters and labels Life Wiki Kinds and types", async ({
+test("Search filters Entries by record and descriptive tag", async ({
   context,
   page,
 }) => {
@@ -70,20 +70,43 @@ test("Search filters and labels Life Wiki Kinds and types", async ({
           {
             body: "I noticed how quiet the room felt.",
             inbox_status: "organized",
-            item_kind: "writing",
-            item_subtype: "reflection",
+            item_kind: "entry",
+            item_subtype: "entry",
             owner_id: ownerID,
             title: "Quiet reflection",
           },
           {
             body: "A very good day at the water.",
             inbox_status: "organized",
-            item_kind: "event",
-            item_subtype: "memory",
+            item_kind: "entry",
+            item_subtype: "entry",
             owner_id: ownerID,
             title: "Marina memory",
           },
         ])
+        .select("id,title")
+      ).error,
+    ).toBeNull();
+    const memory = await client
+      .from("entries")
+      .select("id")
+      .eq("owner_id", ownerID)
+      .eq("title", "Marina memory")
+      .single();
+    expect(memory.data?.id).toBeTruthy();
+    const tag = await client
+      .from("tags")
+      .insert({ name: "Memory", owner_id: ownerID })
+      .select("id")
+      .single();
+    expect(tag.data?.id).toBeTruthy();
+    expect(
+      (
+        await client.from("entry_tags").insert({
+          entry_id: memory.data!.id,
+          owner_id: ownerID,
+          tag_id: tag.data!.id,
+        })
       ).error,
     ).toBeNull();
     expect(
@@ -95,15 +118,6 @@ test("Search filters and labels Life Wiki Kinds and types", async ({
         })
       ).error,
     ).toBeNull();
-    expect(
-      (
-        await client.from("places").insert({
-          name: "Marina dock",
-          notes: "A calm place.",
-          owner_id: ownerID,
-        })
-      ).error,
-    ).toBeNull();
 
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
@@ -111,25 +125,24 @@ test("Search filters and labels Life Wiki Kinds and types", async ({
       page.locator("article:visible").filter({
         has: page.locator("a:visible", { hasText: title }),
       });
-    await page.goto("/search?type=memory");
-    await expect(page.getByLabel("Kind or type")).toHaveValue("memory");
+    await page.goto("/search?type=entry&tag=Memory");
+    await expect(page.getByLabel("Record")).toHaveValue("entry");
+    await expect(page.getByLabel("Tag")).toHaveValue("Memory");
     await expect(visibleResult("Marina memory")).toBeVisible();
     await expect(visibleResult("Marina memory")).toContainText(
-      "Event · Memory",
+      "Entry",
     );
     await expect(visibleResult("Quiet reflection")).toHaveCount(0);
 
     await page.goto("/search?q=marina&type=entity");
     await expect(visibleResult("Marina mentor")).toBeVisible();
-    await expect(visibleResult("Marina dock")).toHaveCount(0);
-    await page.getByLabel("Kind or type").selectOption("person");
+    await page.getByLabel("Record").selectOption("person");
     await page.getByRole("button", { name: "Search", exact: true }).click();
     await expect(page).toHaveURL(/type=person/);
     await expect(visibleResult("Marina mentor")).toBeVisible();
-    await expect(visibleResult("Marina dock")).toHaveCount(0);
 
     await page.waitForLoadState("networkidle");
-    await page.getByLabel("Kind or type").press("Tab");
+    await page.getByLabel("Record").press("Tab");
     await page.screenshot({
       caret: "initial",
       fullPage: true,

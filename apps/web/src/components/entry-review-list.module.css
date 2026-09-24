@@ -32,6 +32,14 @@
   margin-top: var(--mt-space-3);
 }
 
+.cardActions {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--mt-space-2);
+}
+
 .tags {
   display: flex;
   flex-wrap: wrap;
@@ -120,7 +128,8 @@
   width: 100%;
 }
 
-.reviewActions > div {
+.reviewSecondaryActions,
+.reviewSaveActions {
   display: flex;
   gap: var(--mt-space-2);
 }
@@ -132,6 +141,11 @@
 
   .entryCard footer {
     align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .cardActions {
+    width: 100%;
   }
 
   .reviewFieldRow {
@@ -144,8 +158,12 @@
     width: 100%;
   }
 
-  .reviewActions > div {
+  .reviewSaveActions {
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .reviewSecondaryActions {
+    justify-content: space-between;
   }
 }

@@ -46,7 +46,7 @@ describe("People contract", () => {
         id: "test",
         title: " ",
         body: "A meaningful walk",
-        item_kind: "writing",
+        item_kind: "entry",
         item_subtype: "note",
       }),
     ).toBe("A meaningful walk");

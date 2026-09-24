@@ -15,8 +15,7 @@ insert into public.entries(
   'I want to spend more time on the water.',
   '{"body_rich":{"version":1,"text":"I want to spend more time on the water.","document":{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"I want to spend more time on the water."}]}]}},"private_draft":"do not copy"}',
   'en',
-  'writing',
-  'idea',
+  'entry','entry',
   'organized'
 );
 
@@ -35,7 +34,7 @@ select is(
 select is(
   (select item_kind || ':' || item_subtype || ':' || revision
    from public.entries where id='98100000-0000-4000-8000-000000000001'),
-  'writing:idea:1',
+  'entry:entry:1',
   'The source keeps its Kind, subtype, and revision'
 );
 select is(

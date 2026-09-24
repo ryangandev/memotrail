@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import {
   occurrencePrecisions,
   occurrencePrecisionLabels,
@@ -35,6 +37,7 @@ export function OccurrenceEditor({
     (span || ["range", "approximate", "age"].includes(value.precision));
   const endMode = value.endMode ?? "date";
   const descriptionRequired = ["age", "approximate"].includes(value.precision);
+  const [showDescription, setShowDescription] = useState(Boolean(value.label));
   const startRequired =
     calendar && !["age", "approximate"].includes(value.precision);
   const precisionOptions =
@@ -45,11 +48,11 @@ export function OccurrenceEditor({
   const timezoneIsDefault = value.timezone === defaultTimezone;
   return (
     <fieldset
+      aria-label="Date"
       disabled={disabled}
       className={styles.occurrenceEditor}
       data-ui-field
     >
-      <legend>When it happened</legend>
       <div className={styles.fieldRow}>
         <label>
           <span>
@@ -158,24 +161,39 @@ export function OccurrenceEditor({
           ) : null}
         </div>
       )}
-      <label>
-        <span>
-          Date description
-          {descriptionRequired ? (
-            <span aria-hidden="true" className={styles.requiredMark}>
-              *
-            </span>
-          ) : null}
-        </span>
-        <input
-          aria-label="Date description"
-          maxLength={200}
-          placeholder={descriptionPlaceholder(value.precision)}
-          required={descriptionRequired}
-          value={value.label}
-          onChange={(e) => change({ label: e.target.value })}
-        />
-      </label>
+      {!descriptionRequired ? (
+        <label className={styles.presentToggle}>
+          <input
+            checked={showDescription || Boolean(value.label)}
+            onChange={(event) => {
+              setShowDescription(event.target.checked);
+              if (!event.target.checked) change({ label: "" });
+            }}
+            type="checkbox"
+          />
+          <span>Add date description</span>
+        </label>
+      ) : null}
+      {descriptionRequired || showDescription || value.label ? (
+        <label>
+          <span>
+            Date description
+            {descriptionRequired ? (
+              <span aria-hidden="true" className={styles.requiredMark}>
+                *
+              </span>
+            ) : null}
+          </span>
+          <input
+            aria-label="Date description"
+            maxLength={200}
+            placeholder={descriptionPlaceholder(value.precision)}
+            required={descriptionRequired}
+            value={value.label}
+            onChange={(e) => change({ label: e.target.value })}
+          />
+        </label>
+      ) : null}
       {precisionHelp ? <p>{precisionHelp}</p> : null}
     </fieldset>
   );

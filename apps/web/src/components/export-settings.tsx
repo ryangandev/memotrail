@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/button";
 import { useEffect, useRef, useState } from "react";
@@ -88,13 +89,13 @@ export function ExportSettings({
           controller.signal,
         );
         pendingCreate.current = null;
-        setMessage(
+        notify.success(
           "Snapshot prepared. Download it on either device within 24 hours.",
         );
       } else if (action === "discard") {
         await exportRequest({ action, id }, controller.signal);
         setDiscard(null);
-        setMessage(
+        notify.success(
           "Temporary copy discarded. Your records and downloaded files are unchanged.",
         );
       }
@@ -171,7 +172,7 @@ export function ExportSettings({
       if (sink) {
         await sink.close();
         sink = undefined;
-        setMessage(
+        notify.success(
           "Complete ZIP saved. Keep this private copy somewhere safe.",
         );
       } else {
@@ -185,7 +186,7 @@ export function ExportSettings({
         anchor.click();
         anchor.remove();
         window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-        setMessage(
+        notify.success(
           "Complete ZIP prepared. Check your browser downloads to finish saving it.",
         );
       }

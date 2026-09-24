@@ -3,10 +3,12 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
+import sharp from "sharp";
 import {
   fillOccurrenceEnd,
   fillOccurrenceStart,
   occurrenceStartField,
+  setDateDescription,
 } from "./helpers/occurrence";
 import { parseInboxDraft } from "../src/lib/data/inbox-draft";
 
@@ -66,6 +68,45 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       name: "Quick capture",
       exact: true,
     });
+    await capture.locator('input[type="file"]').setInputFiles({
+      name: "quick-preview.png",
+      mimeType: "image/png",
+      buffer: await sharp({
+        create: { width: 320, height: 240, channels: 3, background: "#426e83" },
+      })
+        .png()
+        .toBuffer(),
+    });
+    const removePhoto = capture.getByRole("button", {
+      name: "Remove selected quick-preview.png",
+    });
+    const removeIconOffset = await removePhoto.evaluate((button) => {
+      const icon = button.querySelector("svg")?.getBoundingClientRect();
+      const bounds = button.getBoundingClientRect();
+      return icon
+        ? Math.hypot(
+            icon.x + icon.width / 2 - (bounds.x + bounds.width / 2),
+            icon.y + icon.height / 2 - (bounds.y + bounds.height / 2),
+          )
+        : Infinity;
+    });
+    expect(removeIconOffset).toBeLessThan(0.5);
+    await capture
+      .getByRole("button", { name: "Preview selected quick-preview.png" })
+      .click();
+    const photoPreview = page.getByRole("dialog", {
+      name: "quick-preview.png",
+    });
+    await expect(photoPreview).toBeVisible();
+    await photoPreview
+      .getByRole("button", { name: "Close", exact: true })
+      .click();
+    await removePhoto.click();
+    await expect(
+      capture.getByRole("button", {
+        name: "Preview selected quick-preview.png",
+      }),
+    ).toHaveCount(0);
     await capture.getByRole("button", { name: "Date", exact: true }).click();
     await expect(capture.getByLabel("Date type")).toBeVisible({
       timeout: 5000,
@@ -134,9 +175,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
         .getByRole("combobox", { name: "Time zone", exact: true })
         .selectOption("Asia/Kathmandu");
       if (item.start) await fillOccurrenceStart(capture, item.start);
-      await capture
-        .getByLabel("Date description", { exact: true })
-        .fill(item.label);
+      await setDateDescription(capture, item.label);
       if (item.end) await fillOccurrenceEnd(capture, item.end);
       if (item.precision === "age") {
         await page.setViewportSize({ width: 390, height: 844 });
@@ -152,6 +191,32 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
           caret: "initial",
           path: "/private/tmp/memotrail-capture-precision-desktop.png",
         });
+      let delayedSync = false;
+      if (index === 0) {
+        await page.evaluate(() => {
+          sessionStorage.setItem("pending-sync-seen", "no");
+          new MutationObserver(() => {
+            if (
+              [...document.querySelectorAll("h2")].some(
+                (heading) => heading.textContent === "Pending sync",
+              )
+            ) {
+              sessionStorage.setItem("pending-sync-seen", "yes");
+            }
+          }).observe(document.body, { childList: true, subtree: true });
+        });
+        await page.route("**/*", async (route) => {
+          if (
+            !delayedSync &&
+            route.request().method() === "POST" &&
+            route.request().headers()["next-action"]
+          ) {
+            delayedSync = true;
+            await new Promise((resolve) => setTimeout(resolve, 750));
+          }
+          await route.continue();
+        });
+      }
       await capture
         .getByRole("button", { name: "Save to Inbox", exact: true })
         .click();
@@ -190,6 +255,15 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
             ).data?.length,
         )
         .toBe(1);
+      if (index === 0) {
+        expect(delayedSync).toBe(true);
+        expect(
+          await page.evaluate(() =>
+            sessionStorage.getItem("pending-sync-seen"),
+          ),
+        ).toBe("no");
+        await page.unroute("**/*");
+      }
       const saved = (
         await client
           .from("entries")
@@ -262,6 +336,66 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
     );
     expect(defaultEntry.occurred_end).toBeNull();
     expect(defaultEntry.occurred_label).toBeNull();
+
+    await page.getByRole("button", { name: "New entry" }).click();
+    const newCapture = page.getByRole("dialog", {
+      name: "What’s on your mind?",
+    });
+    await newCapture
+      .getByRole("textbox", { name: "Entry text" })
+      .fill("Capture from New");
+    await page.evaluate(() => {
+      sessionStorage.setItem("pending-sync-seen", "no");
+      new MutationObserver(() => {
+        if (
+          [...document.querySelectorAll("h2")].some(
+            (heading) => heading.textContent === "Pending sync",
+          )
+        ) {
+          sessionStorage.setItem("pending-sync-seen", "yes");
+        }
+      }).observe(document.body, { childList: true, subtree: true });
+    });
+    let delayedModalSync = false;
+    await page.route("**/*", async (route) => {
+      if (
+        !delayedModalSync &&
+        route.request().method() === "POST" &&
+        route.request().headers()["next-action"]
+      ) {
+        delayedModalSync = true;
+        await new Promise((resolve) => setTimeout(resolve, 750));
+      }
+      await route.continue();
+    });
+    await newCapture
+      .getByRole("button", { name: "Save to Inbox", exact: true })
+      .click();
+    await expect(
+      newCapture.getByRole("button", { name: "Saving…", exact: true }),
+    ).toBeDisabled();
+    await expect
+      .poll(
+        async () =>
+          (
+            await client
+              .from("entries")
+              .select("id")
+              .eq("body", "Capture from New")
+          ).data?.length,
+      )
+      .toBe(1);
+    expect(delayedModalSync).toBe(true);
+    expect(
+      await page.evaluate(() => sessionStorage.getItem("pending-sync-seen")),
+    ).toBe("no");
+    await page.unroute("**/*");
+    await expect(
+      newCapture.getByRole("button", { name: "Save to Inbox", exact: true }),
+    ).toBeEnabled();
+    await newCapture
+      .getByRole("button", { name: "Close quick capture" })
+      .click();
 
     // Old pending payloads retain their UUID/date and are not duplicated on replay.
     const legacyId = randomUUID();
