@@ -19,6 +19,11 @@ export const timelineIdeaLinks = [
     label: "08 Chapters",
     shortLabel: "Chapters",
   },
+  {
+    href: "/timeline/ideas/minimal-index",
+    label: "18 Minimal Index",
+    shortLabel: "Minimal",
+  },
 ] as const;
 
 export function timelineIdeaReturnPath(value: string | string[] | undefined) {
