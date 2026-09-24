@@ -11,7 +11,6 @@ insert into public.entries(id,owner_id,title,item_kind,item_subtype,date_precisi
  ('98000000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000001','Most recent home','entity','home','day','2026-01-06T12:00Z');
 insert into public.homes(entry_id,owner_id,move_in_reason) values('98000000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000001','Closer to work');
 insert into public.people(id,owner_id,name,notes) values('98000000-0000-4000-8000-000000000006','10000000-0000-0000-0000-000000000001','Evidence mentor','Explained electric arcs');
-insert into public.places(id,owner_id,name,notes) values('98000000-0000-4000-8000-000000000007','10000000-0000-0000-0000-000000000001','Evidence workshop','An electric arc workshop');
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
 select is(jsonb_array_length(public.archive_wiki_search_evidence(array['搬家前'])->'entries'),1,'Evidence excludes another owner');
@@ -20,7 +19,7 @@ select is(public.archive_wiki_search_evidence(array['First time skiing at age 17
 select ok(not (public.archive_wiki_search_evidence(array['搬家前'])->'entries'->0 ? 'attachments'),'Text evidence excludes media');
 select is(jsonb_array_length(public.archive_wiki_search_evidence(array['不断学习'])->'entries'),1,'Chinese query evidence');
 select is(jsonb_array_length(public.archive_wiki_search_evidence(array['electric arc'])->'people'),1,'Standalone People can be found');
-select is(jsonb_array_length(public.archive_wiki_search_evidence(array['electric arc'])->'places'),1,'Standalone Places can be found');
+select ok(not (public.archive_wiki_search_evidence(array['electric arc']) ? 'places'),'Authored Places are absent from AI evidence');
 select is(jsonb_array_length(public.archive_wiki_search_evidence(array['electric arc'],array['first_time'])->'people'),0,'Entry Type filters do not leak unrelated People');
 select is((public.archive_wiki_search_evidence('{}',array['writing'],'{}','{}',null,null,true,'newest','2026-01-19')->>'reference_window_applied')::boolean,true,'Precise last Home supplies a window');
 select is(public.archive_wiki_search_evidence('{}',array['writing'],'{}','{}',null,null,true,'newest','2026-01-19')->>'effective_date_to','2026-01-05','Before move uses prior calendar days');

@@ -25,8 +25,6 @@ insert into public.entry_tags(entry_id,tag_id,owner_id) values
 
 insert into public.people(id,owner_id,name,notes) values
   ('98300000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000111','Marina mentor','Helped at the marina.');
-insert into public.places(id,owner_id,name,notes) values
-  ('98300000-0000-4000-8000-000000000006','10000000-0000-0000-0000-000000000111','Marina dock','A favorite marina.');
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000111',true);
@@ -61,15 +59,9 @@ select is(
   1,
   'AI Entity evidence includes matching People'
 );
-select is(
-  jsonb_array_length(public.archive_wiki_search_evidence(array['marina'],array['entity'])->'places'),
-  1,
-  'AI Entity evidence includes matching Places'
-);
-select is(
-  jsonb_array_length(public.archive_wiki_search_evidence(array['marina'],array['person'])->'places'),
-  0,
-  'A Person subtype filter does not leak Place evidence'
+select ok(
+  not (public.archive_wiki_search_evidence(array['marina'],array['entity']) ? 'places'),
+  'AI evidence has no authored Place source'
 );
 
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000112',true);
