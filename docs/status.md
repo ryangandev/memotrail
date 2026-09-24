@@ -8,6 +8,7 @@ The Entry-centered Web information model is implemented on `codex/web-library-in
 Authored Place records have also been removed from Web and the hosted schema; Entry-owned Locations and the Map remain.
 The obsolete Places Timeline track has been removed, with existing placements migrated to the general track.
 The accepted compact Collection card is shared by the Web Design System and Collections overview.
+Inbox review now hides AI suggestions and places photos after tags; the Library browser excludes unreviewed captures until Save to Library.
 Native iOS still uses the older Kind and subtype contract and needs a separate update before its write flows are compatible.
 Web production still needs deployment and acceptance of this branch; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 
@@ -24,7 +25,7 @@ Use Git history for feature-level implementation and test evidence.
 | Web Collections and tags                                                             | Direct Library destinations and shared Entry organization editor implemented                                                                                                        |
 | Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI    | Implemented; Production AI configuration is not accepted                                                                                                                            |
 | Private media, Entry history, relationships, Trash, and complete export              | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                  |
-| Hosted Supabase contracts                                                            | `202609240003` is deployed to project `kaivkozeyuwzqrckmyqu`; the remote ledger and new-user trigger were verified                                                                            |
+| Hosted Supabase contracts                                                            | `202609240004` is deployed to project `kaivkozeyuwzqrckmyqu`; the remote ledger matches the repository                                                                                          |
 | Entry-centered information model                                                     | Web branch and hosted database use Entry, focused records, and intentional Timeline Moment or Period; native iOS and deployed Web still need cutover                                      |
 | Web design system                                                                    | Approved canonical components migrated across Web; component-owned CSS and token boundaries enforced; local regression passed; production browser acceptance pending                |
 | Backup and restore                                                                   | Not ready                                                                                                                                                                           |
@@ -45,7 +46,7 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 ### 2. Accept Web Location
 
-- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202609240003`; the linked migration ledger matches the repository. Home Location copy-on-write compares coordinates at the database's six-decimal storage precision.
+- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202609240004`; the linked migration ledger matches the repository. Home Location copy-on-write compares coordinates at the database's six-decimal storage precision.
 - Web now has optional Home Locations, address search that feeds Entry-owned Location snapshots on save, keyboard-accessible address suggestions, explicit photo GPS source identity, owner-scoped Geoapify quotas, and a clustered Map of current Entry coordinates with Kind and year filters.
 - Local Web and database validation for the current branch is listed above.
 - `localhost:3000` points to the linked cloud Supabase project. Its health endpoint returned 200, and an authenticated browser loaded Geoapify address suggestions, a selected coordinate preview, and the Map's raster tiles after migration; the test form was canceled without saving.
