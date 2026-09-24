@@ -320,14 +320,16 @@ export function EntryReviewDialog({
       footer={
         <div className={entryReviewListStyles.reviewActions}>
           <div className={entryReviewListStyles.reviewSecondaryActions}>
-            <Button
-              variant="secondary"
-              disabled={isPending || trashPending}
-              onClick={onClose}
-              type="button"
-            >
-              Cancel
-            </Button>
+            {organized || !onTrash ? (
+              <Button
+                variant="secondary"
+                disabled={isPending || trashPending}
+                onClick={onClose}
+                type="button"
+              >
+                Cancel
+              </Button>
+            ) : null}
             {!organized && onTrash ? (
               <Button
                 variant="ghost"

@@ -187,6 +187,9 @@ test("Home previews the Inbox while Inbox remains a focused organization workspa
     await expect(
       review.getByRole("button", { name: "Save to Library" }),
     ).toHaveAttribute("data-variant", "primary");
+    await expect(
+      review.getByRole("button", { name: "Cancel", exact: true }),
+    ).toHaveCount(0);
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(review).toBeVisible();
     expect(
