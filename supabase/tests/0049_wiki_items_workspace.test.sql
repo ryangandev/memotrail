@@ -9,7 +9,8 @@ insert into auth.users(id,email) values
 insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,inbox_status) values
   ('98200000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000109','Morning reflection','Learned to pause.','entry','entry','organized'),
   ('98200000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000109','Learn Spanish','Practice every day.','goal','goal','organized'),
-  ('98200000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000110','Foreign item','Hidden.','entry','entry','organized');
+  ('98200000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000110','Foreign item','Hidden.','entry','entry','organized'),
+  ('98200000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000109','Inbox-only thought','Only saved to Inbox so far.','entry','entry','unreviewed');
 insert into public.goals(entry_id,owner_id,horizon,status) values
   ('98200000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000109','long_term','active');
 insert into public.people(id,owner_id,name,relationship_label,notes) values
@@ -26,7 +27,12 @@ select is(
 select is(
   (select max(total_count) from public.wiki_items_workspace('',array[]::text[],array[]::text[],2,0)),
   3::bigint,
-  'Pagination reports the complete matching count'
+  'Pagination counts only organized Library items'
+);
+select is(
+  (select count(*) from public.wiki_items_workspace('Inbox-only',array[]::text[],array[]::text[],50,0)),
+  0::bigint,
+  'Library keyword search excludes unreviewed Inbox captures'
 );
 select is(
   (select count(*) from public.wiki_items_workspace('',array['entity'],array[]::text[],50,0)),

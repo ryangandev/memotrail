@@ -51,7 +51,7 @@ Pair it with the test file carrying the same feature name.
 - `entries.item_subtype` retains focused forms such as `first_time`, `moment`, `period`, `home`, and `vehicle`; descriptive writing and event labels are tags.
 - `entries.inbox_status` marks whether an Entry awaits Inbox review.
 - `timeline_items` is intentional Timeline placement. A date on an ordinary Entry does not create placement.
-- `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item. Person rows expose both the canonical Entry ID and their specialized record ID so clients can preserve identity while opening the correct editor.
+- `wiki_items_workspace` supplies one owner-scoped Library row per organized canonical Wiki Item, excluding unreviewed Inbox Entries before filtering and pagination. Person rows expose both the canonical Entry ID and their specialized record ID so clients can preserve identity while opening the correct editor.
 - Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace.
   Web routes typed records to focused editors and general items to `/items/[entry]`, where current content and primary actions precede an explicit history link.
   Native Library routes typed records to their focused editors and other canonical items to the shared History detail/edit boundary.

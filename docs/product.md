@@ -86,7 +86,8 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - A Location does not require a personal name; an Entry, Home, Vehicle, or First Time can carry its address or coordinates.
 - Inbox, Timeline, Home, Search, and Library are views or workflow states, not organization labels.
 - Library is the primary all-items entry point for the Life Wiki.
-  It presents Entries, Entities, and Goals, supports category and keyword filters, and opens focused records in their own views.
+  It presents organized Entries, Entities, and Goals, supports category and keyword filters, and opens focused records in their own views.
+  Unreviewed captures remain in Inbox and do not appear in Library or its item count until `Save to Library`.
 - Opening a general Wiki Item shows its current content and primary actions first.
   Version history is an explicit secondary action, while typed Entities continue to open their focused editors.
 - Current Wiki Item detail supports moving the item to Trash, where it remains restorable.
