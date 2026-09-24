@@ -35,6 +35,7 @@ Its marked account and Storage objects were confirmed removed without accessing 
 ### 1. Release and accept the Entry-centered Web flow
 
 - Deploy the Web branch against the migrated hosted project and verify Quick Capture, Inbox review, Library routing, First Time, Moment, Period, Home, Vehicle, and Goal in a browser.
+- The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
 - Keep native iOS writes out of this cutover until its older Kind and subtype calls are updated.
 - Local validation passed 61 database files with 1,552 assertions, 444 Web unit tests, type checking, lint, production build, and all 72 browser E2E tests.
 - A seeded pre-migration local exercise converted Journal, Story, and Trip to tags; Timeline point and span to Moment and Period; and preserved Inbox state and revision numbers.
