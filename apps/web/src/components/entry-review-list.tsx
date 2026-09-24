@@ -3,7 +3,7 @@ import { notify } from "@/components/app-toast";
 import entryReviewListStyles from "@/components/entry-review-list.module.css";
 import entryFormStyles from "@/components/entry-form.module.css";
 import { Dialog } from "@/components/dialog";
-import { Button, ButtonLink } from "@/components/button";
+import { Button } from "@/components/button";
 import type { PhotoPlaceDraft } from "@/lib/media/photo-place";
 
 import { useState, type FormEvent } from "react";
@@ -35,11 +35,8 @@ import {
   type InboxReviewInput,
 } from "@/lib/data/inbox-review";
 import {
-  initialReviewClassification,
-  reviewablePresetsForKind,
   wikiItemKindLabel,
   wikiItemSubtypeLabel,
-  type ReviewableWikiItemKind,
 } from "@/lib/data/wiki-item";
 
 export function EntryReviewList({
@@ -85,7 +82,7 @@ export function EntryReviewList({
             <footer>
               <div className={entryReviewListStyles.tags}>
                 <span>Needs review</span>
-                {entry.itemKind !== "capture" ? (
+                {entry.itemKind !== "entry" || entry.itemSubtype === "first_time" ? (
                   <>
                     <span>{wikiItemKindLabel(entry.itemKind)}</span>
                     <span>
@@ -163,13 +160,6 @@ export function EntryReviewDialog({
   const [bodyRich, setBodyRich] = useState(entry.bodyRich);
   const [collectionNames, setCollectionNames] = useState(entry.collectionNames);
   const [collectionInput, setCollectionInput] = useState("");
-  const initialClassification = initialReviewClassification(entry);
-  const [itemKind, setItemKind] = useState<ReviewableWikiItemKind>(
-    initialClassification.itemKind,
-  );
-  const [itemSubtype, setItemSubtype] = useState(
-    initialClassification.itemSubtype,
-  );
   const [location, setLocation] = useState<LocationSelection | null>(
     entry.location ?? null,
   );
@@ -194,8 +184,6 @@ export function EntryReviewDialog({
       bodyRich: bodyRich?.text === body ? bodyRich : null,
       collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       id: entry.id,
-      itemKind,
-      itemSubtype,
       revision: entry.revision,
       tagNames: namesIncludingDraft(tagNames, tagInput),
       title: title || null,
@@ -256,9 +244,7 @@ export function EntryReviewDialog({
       }}
       title={
         <>
-          {organized
-            ? `Edit ${wikiItemKindLabel(entry.itemKind)}`
-            : "Organize Capture"}
+          {organized ? "Edit Entry" : "Review Entry"}
         </>
       }
       titleId="review-heading"
@@ -267,13 +253,11 @@ export function EntryReviewDialog({
         <>
           {organized ? (
             <p>
-              This {wikiItemKindLabel(entry.itemKind).toLocaleLowerCase()} is
-              already part of your Life Wiki.
+              This Entry is already part of your Life Wiki.
             </p>
           ) : (
             <p>
-              Keep this as Writing, an Event, or a Story, or use a focused form
-              for a structured record.
+              Review what you captured, then save it to your Library.
             </p>
           )}
           <Link href={`/history?entry=${entry.id}`}>Version history</Link>
@@ -341,17 +325,6 @@ export function EntryReviewDialog({
                   end: "",
                 }));
               if (key === "title" && typeof value === "string") setTitle(value);
-              if (
-                key === "classification" &&
-                entry.itemKind === "capture" &&
-                value &&
-                typeof value === "object" &&
-                "itemKind" in value &&
-                "itemSubtype" in value
-              ) {
-                setItemKind(value.itemKind);
-                setItemSubtype(value.itemSubtype);
-              }
               if (key === "collections" && Array.isArray(value))
                 setCollectionNames((current) =>
                   mergeAISuggestionNames(current, value, 20),
@@ -366,9 +339,6 @@ export function EntryReviewDialog({
         <label>
           <span>
             Title
-            {itemKind === "event" && itemSubtype === "first_time" ? (
-              <span aria-hidden="true"> *</span>
-            ) : null}
           </span>
           <input
             aria-label="Title"
@@ -376,12 +346,7 @@ export function EntryReviewDialog({
             disabled={isPending}
             maxLength={entryTitleLimit}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder={
-              itemKind === "event" && itemSubtype === "first_time"
-                ? "Required for a First Time"
-                : "Add a title"
-            }
-            required={itemKind === "event" && itemSubtype === "first_time"}
+            placeholder="Add a title"
             value={title}
           />
         </label>
@@ -403,72 +368,6 @@ export function EntryReviewDialog({
           />
         </div>
 
-        <section
-          aria-labelledby="classification-heading"
-          className={entryReviewListStyles.classificationPanel}
-        >
-          <div className={entryReviewListStyles.classificationHeading}>
-            <strong id="classification-heading">
-              {entry.itemKind === "capture" ? "Organize as" : "Identity"}
-            </strong>
-            <span>
-              {entry.itemKind === "capture"
-                ? "Choose one durable home in your Life Wiki."
-                : "Kind stays fixed; only a compatible type can change."}
-            </span>
-          </div>
-          <div className={entryReviewListStyles.reviewFieldRow}>
-            <label>
-              <span>Kind</span>
-              <select
-                disabled={isPending || entry.itemKind !== "capture"}
-                onChange={(event) => {
-                  const nextKind = event.target.value as ReviewableWikiItemKind;
-                  setItemKind(nextKind);
-                  setItemSubtype(
-                    reviewablePresetsForKind(nextKind)[0]?.subtype ?? "note",
-                  );
-                }}
-                value={itemKind}
-              >
-                <option value="writing">Writing</option>
-                <option value="event">Event</option>
-                <option value="story">Story</option>
-              </select>
-            </label>
-            <label>
-              <span>Type</span>
-              <select
-                disabled={isPending}
-                onChange={(event) => setItemSubtype(event.target.value)}
-                value={itemSubtype}
-              >
-                {reviewablePresetsForKind(itemKind).map((preset) => (
-                  <option key={preset.subtype} value={preset.subtype}>
-                    {preset.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          {entry.itemKind === "capture" ? (
-            <div className={entryReviewListStyles.specializedHandoffs}>
-              <span>Or create a structured record</span>
-              <ButtonLink size="small" href={`/homes?source=${entry.id}`}>
-                <Icon name="home" size={15} />
-                Home
-              </ButtonLink>
-              <ButtonLink size="small" href={`/vehicles?source=${entry.id}`}>
-                <Icon name="car" size={15} />
-                Vehicle
-              </ButtonLink>
-              <ButtonLink size="small" href={`/goals?source=${entry.id}`}>
-                <Icon name="target" size={15} />
-                Goal
-              </ButtonLink>
-            </div>
-          ) : null}
-        </section>
         <EntryPhotoDates
           place={photoPlace}
           onPlaceChange={setPhotoPlace}

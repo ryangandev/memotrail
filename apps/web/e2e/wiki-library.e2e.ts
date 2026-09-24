@@ -70,16 +70,16 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
         {
           body: "The quiet helped me notice what mattered.",
           inbox_status: "organized",
-          item_kind: "writing",
-          item_subtype: "reflection",
+          item_kind: "entry",
+          item_subtype: "entry",
           owner_id: ownerID,
           title: "Morning reflection",
         },
         {
           body: "A first glimpse of the Pacific.",
           inbox_status: "organized",
-          item_kind: "event",
-          item_subtype: "memory",
+          item_kind: "entry",
+          item_subtype: "entry",
           owner_id: ownerID,
           title: "Ocean memory",
         },
@@ -123,8 +123,8 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto("/library");
-    await expect(page.getByRole("heading", { name: "Library" })).toBeVisible();
-    const kinds = page.getByRole("navigation", { name: "Life Wiki Kinds" });
+    await expect(page.getByRole("heading", { name: "Library", exact: true })).toBeVisible();
+    const kinds = page.getByRole("navigation", { name: "Library categories" });
     const allItemsKind = kinds.getByRole("link", { name: "All items" });
     await expect(allItemsKind).toHaveAttribute("aria-current", "page");
     await expect(
@@ -132,12 +132,12 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     ).toHaveCount(0);
     await expect(allItemsKind.locator("p")).toHaveCount(0);
     await expect(
-      kinds.getByText("Journal, reflection, or lesson."),
+      kinds.getByText("Everything you captured and kept."),
     ).toBeVisible();
     await expect
       .poll(async () => (await allItemsKind.boundingBox())?.height)
       .toBeLessThanOrEqual(100);
-    await expect(kinds.getByRole("link", { name: /Writing/ })).toBeVisible();
+    await expect(kinds.getByRole("link", { name: /Entries/ })).toBeVisible();
     await expect(kinds.getByRole("link", { name: /Entities/ })).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Focused views", exact: true }),
@@ -146,7 +146,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       page.getByRole("link", { name: /Version history/ }),
     ).toBeVisible();
     const reflectionLink = page.getByRole("link", {
-      name: /Writing Reflection Morning reflection/,
+      name: /Entry Morning reflection/,
     });
     await expect(reflectionLink).toBeVisible();
     await expect(reflectionLink).toHaveAttribute(
@@ -208,7 +208,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: /Writing Reflection Morning reflection/ }),
+      page.getByRole("link", { name: /Entry Morning reflection/ }),
     ).toHaveCount(0);
     const trashedReflection = await client
       .from("entries")

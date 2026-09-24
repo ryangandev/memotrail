@@ -52,8 +52,7 @@ values (
   'Learning journal',
   'Notes from language practice.',
   '10000000-0000-0000-0000-000000000001',
-  'writing',
-  'note',
+  'entry','entry',
   'organized'
 );
 
@@ -243,7 +242,7 @@ reset role;
 insert into public.entries (owner_id, title, body, item_kind, item_subtype, inbox_status)
 values (
   '10000000-0000-0000-0000-000000000013',
-  'Other private progress', '', 'writing', 'note', 'organized'
+  'Other private progress', '', 'entry','entry', 'organized'
 );
 
 set local role authenticated;
@@ -400,7 +399,7 @@ select is(
   (
     select body
     from public.entries
-    where title = 'Visit Iceland' and item_kind = 'event' and item_subtype = 'first_time'
+    where title = 'Visit Iceland' and item_kind = 'entry' and item_subtype = 'first_time'
   ),
   '',
   'The created First Time does not copy the Goal description'
@@ -410,9 +409,9 @@ select is(
   (
     select concat_ws('|', item_kind, item_subtype, inbox_status, date_precision, occurred_label)
     from public.entries
-    where title = 'Visit Iceland' and item_kind = 'event' and item_subtype = 'first_time'
+    where title = 'Visit Iceland' and item_kind = 'entry' and item_subtype = 'first_time'
   ),
-  'event|first_time|organized|day|First Iceland trip',
+  'entry|first_time|organized|day|First Iceland trip',
   'The created First Time preserves organized occurrence context'
 );
 

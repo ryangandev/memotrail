@@ -88,27 +88,14 @@ export function retrievalTerms(queries: string[]) {
 }
 
 const types = [
-  "capture",
-  "writing",
+  "entry",
   "entity",
-  "event",
-  "story",
   "goal",
-  "note",
-  "journal",
-  "reflection",
-  "lesson",
-  "idea",
   "person",
-  "place",
-  "memory",
   "first_time",
-  "milestone",
-  "trip",
-  "life_stage",
+  "period",
   "home",
   "vehicle",
-  "chapter",
 ];
 const acceptedManualTypes = new Set(types);
 export const searchPlanSchema = {

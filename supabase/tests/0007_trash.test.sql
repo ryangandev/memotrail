@@ -102,8 +102,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'First ski trip',
     'A First Time with private photos.',
-    'event',
-    'first_time',
+    'entry','first_time',
     'organized',
     '2026-08-01T12:00:00Z'
   ),
@@ -112,8 +111,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Photo parent',
     'An active First Time with one removed photo.',
-    'event',
-    'first_time',
+    'entry','first_time',
     'organized',
     null
   ),
@@ -122,8 +120,7 @@ values
     '10000000-0000-0000-0000-000000000006',
     'Other owner Trash',
     'Private.',
-    'writing',
-    'note',
+    'entry','entry',
     'organized',
     '2026-08-04T12:00:00Z'
   ),
@@ -132,8 +129,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     null,
     '  A body-only deleted thought.  ',
-    'capture',
-    'quick_capture',
+    'entry','entry',
     'unreviewed',
     '2026-07-30T12:00:00Z'
   );

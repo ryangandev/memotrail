@@ -6,10 +6,6 @@ import {
 import { validPhotoPlace, type PhotoPlaceDraft } from "@/lib/media/photo-place";
 import { validateOccurrence, type OccurrencePrecision } from "./occurrence";
 import { isEntryRichText, type EntryRichText } from "./rich-text";
-import {
-  validReviewableWikiItemPreset,
-  type ReviewableWikiItemKind,
-} from "./wiki-item";
 
 export type InboxReviewInput = {
   location: LocationSelection | null;
@@ -17,8 +13,6 @@ export type InboxReviewInput = {
   body: string;
   bodyRich?: EntryRichText | null;
   collectionNames: string[];
-  itemKind: ReviewableWikiItemKind;
-  itemSubtype: string;
   id: string;
   occurredAt: string | null;
   occurredEnd?: string | null;
@@ -104,20 +98,6 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
     return invalidReview("This Entry review is invalid.");
   }
 
-  if (!validReviewableWikiItemPreset(values.itemKind, values.itemSubtype)) {
-    return invalidReview("Choose a supported Wiki Item kind and type.");
-  }
-
-  if (
-    values.itemKind === "event" &&
-    values.itemSubtype === "first_time" &&
-    !title
-  ) {
-    return invalidReview(
-      "Add a title before marking an Entry as a First Time.",
-    );
-  }
-
   const occurrence = {
     occurredAt: values.occurredAt as string | null,
     occurredEnd: (values.occurredEnd ?? null) as string | null,
@@ -136,8 +116,6 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
       body,
       bodyRich,
       collectionNames,
-      itemKind: values.itemKind as ReviewableWikiItemKind,
-      itemSubtype: values.itemSubtype as string,
       id: values.id,
       location: (values.location ?? null) as LocationSelection | null,
       ...occurrence,

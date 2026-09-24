@@ -35,7 +35,7 @@ describe("First Times Timeline projection", () => {
     expect(track.items).toMatchObject([
       {
         id: "first-1",
-        itemKind: "event",
+        itemKind: "entry",
         itemSubtype: "first_time",
         kind: "event",
         trackId: "first-track",

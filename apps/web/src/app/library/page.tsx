@@ -28,7 +28,7 @@ type LibraryDestination = {
 const kindDestinations: Array<{
   detail?: string;
   icon: IconName;
-  kind: "entity" | "event" | "goal" | "story" | "writing" | null;
+  kind: "entry" | "entity" | "goal" | null;
   title: string;
 }> = [
   {
@@ -37,28 +37,16 @@ const kindDestinations: Array<{
     title: "All items",
   },
   {
-    detail: "Journal, reflection, or lesson.",
+    detail: "Everything you captured and kept.",
     icon: "bold" as const,
-    kind: "writing",
-    title: "Writing",
+    kind: "entry",
+    title: "Entries",
   },
   {
-    detail: "Memory, first time, or milestone.",
-    icon: "timeline" as const,
-    kind: "event",
-    title: "Events",
-  },
-  {
-    detail: "Person, place, home, or vehicle.",
+    detail: "People, homes, and vehicles.",
     icon: "archive" as const,
     kind: "entity",
     title: "Entities",
-  },
-  {
-    detail: "An authored life chapter.",
-    icon: "star" as const,
-    kind: "story",
-    title: "Stories",
   },
   {
     detail: "An intention you want to pursue.",
@@ -115,7 +103,7 @@ const focusedDestinations: LibraryDestination[] = [
 
 const organizationDestinations: LibraryDestination[] = [
   {
-    detail: "Curate items from different Kinds into meaningful groups.",
+    detail: "Curate records into meaningful groups.",
     href: "/collections",
     icon: "archive" as const,
     title: "Collections",
@@ -174,17 +162,16 @@ export default async function LibraryPage({
         eyebrow={<>Your Life Wiki</>}
         description={
           <>
-            One place for the writing, people, places, moments, stories, and
-            goals that make up your life.
+            One place for your Entries, people, places, and goals.
           </>
         }
       />
 
       <section aria-labelledby="kinds-heading">
         <div className={styles.sectionHeading}>
-          <h2 id="kinds-heading">Browse by Kind</h2>
+          <h2 id="kinds-heading">Browse library</h2>
         </div>
-        <nav className={styles.kindGrid} aria-label="Life Wiki Kinds">
+        <nav className={styles.kindGrid} aria-label="Library categories">
           {kindDestinations.map((destination) => (
             <Link
               aria-current={
@@ -224,15 +211,12 @@ export default async function LibraryPage({
             placeholder="Search titles, writing, people, or places"
           />
           <label>
-            <span>Kind</span>
+            <span>Category</span>
             <select defaultValue={itemKind ?? ""} name="kind">
-              <option value="">All kinds</option>
-              <option value="writing">Writing</option>
+              <option value="">All records</option>
+              <option value="entry">Entries</option>
               <option value="entity">Entities</option>
-              <option value="event">Events</option>
-              <option value="story">Stories</option>
               <option value="goal">Goals</option>
-              <option value="capture">Source captures</option>
             </select>
           </label>
           <Button variant="primary" type="submit">
@@ -245,7 +229,7 @@ export default async function LibraryPage({
         ) : workspace.items.length === 0 ? (
           <div className={styles.wikiEmpty}>
             <strong>No matching items</strong>
-            <p>Try another phrase or Kind, or capture something new.</p>
+            <p>Try another phrase or category, or capture something new.</p>
           </div>
         ) : (
           <div className={styles.wikiGrid}>
@@ -256,9 +240,12 @@ export default async function LibraryPage({
               >
                 <div className={styles.wikiBadges}>
                   <span>{wikiItemKindLabel(item.itemKind)}</span>
-                  <span>
-                    {wikiItemSubtypeLabel(item.itemKind, item.itemSubtype)}
-                  </span>
+                  {wikiItemSubtypeLabel(item.itemKind, item.itemSubtype) !==
+                  wikiItemKindLabel(item.itemKind) ? (
+                    <span>
+                      {wikiItemSubtypeLabel(item.itemKind, item.itemSubtype)}
+                    </span>
+                  ) : null}
                 </div>
                 <strong>{item.title}</strong>
                 {item.excerpt ? <p>{item.excerpt}</p> : null}
@@ -299,7 +286,7 @@ export default async function LibraryPage({
         <section aria-labelledby="organize-library-heading">
           <div className={styles.sectionHeading}>
             <h2 id="organize-library-heading">Organize</h2>
-            <span>Across every Kind</span>
+            <span>Across your library</span>
           </div>
           <DestinationGrid destinations={organizationDestinations} />
         </section>

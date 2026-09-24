@@ -25,7 +25,7 @@ values (
   '99000000-0000-4000-8000-000000000001',
   1,
   'classification_tagging',
-  '{"classification":{"itemKind":"writing","itemSubtype":"note"}}',
+  '{"tags":["Thought"]}',
   'proposed'
 );
 
@@ -35,29 +35,29 @@ select ok(
 );
 
 select is(
-  (select suggestions #>> '{classification,itemKind}' from public.ai_suggestions where id = '99000000-0000-4000-8000-000000000002'),
-  'writing',
-  'Canonical suggestion keeps item Kind'
+  (select suggestions #>> '{tags,0}' from public.ai_suggestions where id = '99000000-0000-4000-8000-000000000002'),
+  'Thought',
+  'Canonical suggestion keeps optional tags'
 );
 
 select is(
-  (select suggestions #>> '{classification,itemSubtype}' from public.ai_suggestions where id = '99000000-0000-4000-8000-000000000002'),
-  'note',
-  'Canonical suggestion keeps item type'
+  (select suggestions ? 'classification' from public.ai_suggestions where id = '99000000-0000-4000-8000-000000000002'),
+  false,
+  'Canonical suggestion does not prescribe an Entry type'
 );
 
 select throws_ok(
   $$update public.ai_suggestions set suggestions = '{"entryType":"standard"}' where id = '99000000-0000-4000-8000-000000000002'$$,
   '23514',
-  'new row for relation "ai_suggestions" violates check constraint "ai_suggestions_canonical_payload_check"',
+  'new row for relation "ai_suggestions" violates check constraint "ai_suggestions_entry_payload_check"',
   'Legacy suggestion payloads are rejected'
 );
 
 select throws_ok(
-  $$update public.ai_suggestions set suggestions = '{"classification":{"itemKind":"unknown","itemSubtype":"note"}}' where id = '99000000-0000-4000-8000-000000000002'$$,
+  $$update public.ai_suggestions set suggestions = '{"classification":{"itemKind":"entry","itemSubtype":"entry"}}' where id = '99000000-0000-4000-8000-000000000002'$$,
   '23514',
-  'new row for relation "ai_suggestions" violates check constraint "ai_suggestions_canonical_payload_check"',
-  'Unknown canonical item Kinds are rejected'
+  'new row for relation "ai_suggestions" violates check constraint "ai_suggestions_entry_payload_check"',
+  'AI classification payloads are rejected'
 );
 
 select * from finish();

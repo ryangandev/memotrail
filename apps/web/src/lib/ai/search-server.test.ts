@@ -130,7 +130,7 @@ it("broadens reference-only move retrieval without discarding the date boundary 
       output({
         ...plan,
         beforeLatestHome: true,
-        itemClassifications: ["writing"],
+        itemClassifications: ["entry"],
       }),
     )
     .mockResolvedValueOnce(
@@ -186,7 +186,7 @@ it("retains manual filters and explains an unavailable Home boundary", async () 
     ...input,
     parameters: {
       q: "Before my last move?",
-      type: "writing",
+      type: "entry",
       collection: "Thoughts",
       tag: "life",
       from: "2020-01-01",
@@ -196,7 +196,7 @@ it("retains manual filters and explains an unavailable Home boundary", async () 
   expect(rpc).toHaveBeenCalledWith(
     "archive_wiki_search_evidence",
     expect.objectContaining({
-      p_item_classifications: ["writing"],
+      p_item_classifications: ["entry"],
       p_collection_names: ["Thoughts"],
       p_tag_names: ["life"],
       p_date_from: "2020-01-01",

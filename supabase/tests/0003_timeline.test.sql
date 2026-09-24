@@ -124,7 +124,7 @@ select is(
     from public.entries
     where title = 'Lived in Philadelphia'
   ),
-  'event:life_stage',
+  'entry:period',
   'A stage is stored as a Life Stage Event'
 );
 
@@ -249,7 +249,7 @@ select is(
     from public.entries
     where title = 'Moved to California'
   ),
-  'event:other',
+  'entry:moment',
   'A direct Timeline event uses the canonical Event identity'
 );
 

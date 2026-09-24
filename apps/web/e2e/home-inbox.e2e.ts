@@ -72,8 +72,8 @@ test("Home previews the Inbox while Inbox remains a focused organization workspa
           created_at: createdAt,
           date_precision: "unknown",
           inbox_status: "unreviewed",
-          item_kind: "capture",
-          item_subtype: "quick_capture",
+          item_kind: "entry",
+          item_subtype: "entry",
           owner_id: owner,
           title: null,
         })),
@@ -138,7 +138,7 @@ test("Home previews the Inbox while Inbox remains a focused organization workspa
       .click();
     await expect(page).toHaveURL(`/inbox?entry=${newestID}`);
     await expect(
-      page.getByRole("dialog", { name: "Organize Capture" }),
+      page.getByRole("dialog", { name: "Review Entry" }),
     ).toBeVisible();
     await expect(
       page.getByRole("form", { name: "Quick capture", exact: true }),

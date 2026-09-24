@@ -1,49 +1,21 @@
 import { describe, expect, it } from "vitest";
 import {
-  initialReviewClassification,
-  reviewablePresetsForKind,
-  validReviewableWikiItemPreset,
   wikiEntryHref,
   wikiItemIdentityLabel,
   wikiItemSubtypeLabel,
 } from "./wiki-item";
 
-describe("Life Wiki item classification", () => {
-  it("defaults a raw Capture to a simple Writing note", () => {
-    expect(
-      initialReviewClassification({
-        itemKind: "capture",
-        itemSubtype: "quick_capture",
-      }),
-    ).toEqual({ itemKind: "writing", itemSubtype: "note" });
-  });
-
-  it("preserves a supported same-Kind preset", () => {
-    expect(
-      initialReviewClassification({
-        itemKind: "event",
-        itemSubtype: "memory",
-      }),
-    ).toEqual({ itemKind: "event", itemSubtype: "memory" });
-  });
-
-  it("keeps Entity and Goal presets out of the generic organizer", () => {
-    expect(validReviewableWikiItemPreset("entity", "vehicle")).toBe(false);
-    expect(validReviewableWikiItemPreset("goal", "goal")).toBe(false);
-    expect(
-      reviewablePresetsForKind("event").map((preset) => preset.subtype),
-    ).toEqual(["memory", "first_time", "milestone", "trip"]);
-  });
-
-  it("labels specialized and fallback subtypes", () => {
-    expect(wikiItemSubtypeLabel("event", "first_time")).toBe("First Time");
+describe("Entry identity and routing", () => {
+  it("shows a general Entry without a forced subtype label", () => {
+    expect(wikiItemSubtypeLabel("entry", "entry")).toBe("Entry");
+    expect(wikiItemIdentityLabel("entry", "entry")).toBe("Entry");
+    expect(wikiItemIdentityLabel("entry", "first_time")).toBe("First Time");
+    expect(wikiItemIdentityLabel("entry", "moment")).toBe("Moment");
+    expect(wikiItemIdentityLabel("entry", "period")).toBe("Period");
     expect(wikiItemSubtypeLabel("entity", "vehicle")).toBe("Vehicle");
-    expect(wikiItemSubtypeLabel("writing", "field_note")).toBe("Field Note");
-    expect(wikiItemIdentityLabel("event", "memory")).toBe("Event · Memory");
-    expect(wikiItemIdentityLabel("goal", "goal")).toBe("Goal");
   });
 
-  it("routes semantic items to their canonical editor", () => {
+  it("routes unreviewed Entries to Inbox and focused records to their views", () => {
     expect(
       wikiEntryHref({
         id: "1",
@@ -56,8 +28,8 @@ describe("Life Wiki item classification", () => {
       wikiEntryHref({
         id: "2",
         inboxStatus: "organized",
-        itemKind: "writing",
-        itemSubtype: "journal",
+        itemKind: "entry",
+        itemSubtype: "entry",
       }),
     ).toBe("/items/2");
     expect(
@@ -74,9 +46,33 @@ describe("Life Wiki item classification", () => {
       wikiEntryHref({
         id: "4",
         inboxStatus: "unreviewed",
-        itemKind: "capture",
-        itemSubtype: "quick_capture",
+        itemKind: "entry",
+        itemSubtype: "entry",
       }),
     ).toBe("/inbox?entry=4");
+    expect(
+      wikiEntryHref({
+        id: "5",
+        inboxStatus: "organized",
+        itemKind: "entry",
+        itemSubtype: "first_time",
+      }),
+    ).toBe("/first-times?entry=5");
+    expect(
+      wikiEntryHref({
+        id: "6",
+        inboxStatus: "organized",
+        itemKind: "entry",
+        itemSubtype: "moment",
+      }),
+    ).toBe("/timeline?entry=6");
+    expect(
+      wikiEntryHref({
+        id: "7",
+        inboxStatus: "organized",
+        itemKind: "entry",
+        itemSubtype: "period",
+      }),
+    ).toBe("/timeline?entry=7");
   });
 });

@@ -97,7 +97,7 @@ select is(
     from public.entries
     where title = 'First time seeing the ocean'
   ),
-  'event:first_time',
+  'entry:first_time',
   'Direct creation stores the specialized First Time Event identity'
 );
 
@@ -136,7 +136,7 @@ select is(
     select occurred_start
     from public.entries
     where title = 'First time skiing'
-      and item_kind = 'event' and item_subtype = 'first_time'
+      and item_kind = 'entry' and item_subtype = 'first_time'
   ),
   '2026-07-03T19:00:00Z'::timestamptz,
   'A First Time preserves its occurrence instant'
@@ -147,7 +147,7 @@ select is(
     select occurred_timezone
     from public.entries
     where title = 'First time skiing'
-      and item_kind = 'event' and item_subtype = 'first_time'
+      and item_kind = 'entry' and item_subtype = 'first_time'
   ),
   'America/Los_Angeles',
   'A First Time preserves its occurrence timezone'
@@ -275,13 +275,13 @@ select lives_ok(
         select id
         from public.entries
         where title = 'First time skiing'
-          and item_kind = 'event' and item_subtype = 'first_time'
+          and item_kind = 'entry' and item_subtype = 'first_time'
       ),
       (
         select revision
         from public.entries
         where title = 'First time skiing'
-          and item_kind = 'event' and item_subtype = 'first_time'
+          and item_kind = 'entry' and item_subtype = 'first_time'
       ),
       null
     )
@@ -574,7 +574,7 @@ insert into pg_temp.first_time_test_state (entry_id)
 select id
 from public.entries
 where title = 'First ski trip'
-  and item_kind = 'event' and item_subtype = 'first_time';
+  and item_kind = 'entry' and item_subtype = 'first_time';
 
 reset role;
 set local role authenticated;

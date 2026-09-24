@@ -46,10 +46,11 @@ Pair it with the test file carrying the same feature name.
 - Supabase Postgres is the canonical synchronized data store.
 - Row Level Security is the final owner-authorization boundary for exposed data.
 - Web cookies and native bearer sessions identify the same Supabase user.
-- `entries` is the physical canonical Wiki Item table.
-  Its historical SQL name does not make Entry a product-level Kind or identity boundary.
-- `entries.item_kind` owns the structural identity boundary: Capture, Writing, Entity, Event, Story, or Goal.
-- `entries.item_subtype` selects a compatible preset within that Kind.
+- `entries` is the canonical content table.
+- `entries.item_kind` distinguishes ordinary Entries, focused Entities, and Goals.
+- `entries.item_subtype` retains focused forms such as `first_time`, `moment`, `period`, `home`, and `vehicle`; descriptive writing and event labels are tags.
+- `entries.inbox_status` marks whether an Entry awaits Inbox review.
+- `timeline_items` is intentional Timeline placement. A date on an ordinary Entry does not create placement.
 - `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item. Person rows expose both the canonical Entry ID and their specialized record ID so clients can preserve identity while opening the correct editor.
 - Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace.
   Web routes typed records to focused editors and general items to `/items/[entry]`, where current content and primary actions precede an explicit history link.
@@ -68,14 +69,13 @@ Pair it with the test file carrying the same feature name.
   Homes may omit a Location entirely; `homes_workspace` keeps them visible with a left join, and manual address edits discard stale provider coordinates.
   `coordinate_source` distinguishes manual, Geoapify, and explicitly adopted photo GPS coordinates; `source_attachment_id` points to the adopted original photo while it exists.
 - `homes.place_id` and `entry_places.place_id` remain compatibility column names for one cross-client window, but their foreign keys target `locations`; new reads use the `entry_locations` view and Location vocabulary.
-- A raw Capture may be finalized as one durable item or may produce linked items through a provenance-preserving extraction.
-- Established durable items never change Kind through a generic selector; cross-Kind workflows create and link another item.
-- Dedicated Web extraction routes pass only the source Capture ID, reload the owner-scoped saved source on the server, and prefill the specialized form without placing personal content in the URL or client storage.
-- `capture_extraction_source` supplies the reusable raw-Capture handoff contract. Specialized extraction RPCs create the typed target, organize the preserved Capture as `capture:source_capture`, and record `derived` plus `derived_from` links in one transaction.
+- Quick Capture creates an unreviewed `entry:entry`; Web Inbox review saves that same Entry without a Kind selector.
+- First Time, Home, Vehicle, Goal, Moment, and Period creation starts in Timeline or a focused view.
+- Older source extraction RPCs remain available for existing provenance links, but Web Inbox does not offer focused-form handoffs.
+- `capture_extraction_source` and specialized extraction RPCs retain their owner-scoped source revision checks and link provenance when invoked directly.
 - Web Goal extraction uses a caller-generated target UUID for idempotency, preserves the source revision and identity, and records `derived` plus `derived_from` provenance links so both items remain discoverable.
-- `review_wiki_item_with_photo_place` is the plaintext-client semantic review boundary. iOS uses it to finalize a Capture or edit a same-Kind Writing, Event, or Story while preserving rich-text metadata the native editor does not author.
-- The iOS Inbox sends canonical Kind and subtype values. Its generic organizer exposes only Writing, Event, and Story; Entity and Goal creation must use their dedicated forms and extraction RPCs.
-- Native Inbox handoffs reuse the existing Home, Vehicle, and Goal editors with a `CaptureExtractionSource`. The same validated domain input drives either the normal save RPC or the matching extraction RPC, so specialized fields, source revision checks, organization, dates, and provenance stay aligned with Web.
+- `review_wiki_item_with_photo_place` is the plaintext review boundary. It now accepts `entry:entry` for Inbox review and preserves rich-text metadata that the native editor does not author.
+- The native iOS organizer still sends the older Kind and subtype values. Its interface and write path need a separate follow-up before it is compatible with the new hosted schema.
 - Web and iOS create a separately editable Goal with `extract_goal_from_item` when an established Wiki Item inspires a Goal. The caller-generated Goal ID makes lost-response retries idempotent, and History exposes both provenance directions.
 - `convert_entry_to_goal` remains only as an administrative recovery function. Authenticated and anonymous clients have no execute grant because established items must never change Kind through a conversion.
 - Specialized tables add typed facts without duplicating common writing, organization, dates, media, or history.
@@ -85,10 +85,9 @@ Pair it with the test file carrying the same feature name.
   Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while the compatibility RPC `review_entry_with_photo_place_rich` writes plaintext, formatting, organization, occurrence, and photo Location adoption in one revision.
   Older review RPCs preserve rich metadata they do not understand.
 - Collections, tags, People, and Wiki Item links are owner-scoped reusable relationships. Locations are Entry-owned snapshots; Places remain independent personal records.
-- Kind owns identity, subtype owns compatible specialized structure, Collections own curated cross-Kind groupings, tags own lightweight cross-Kind descriptors, and Timeline tracks own presentation only.
+- Focused forms own specialized structure, Collections own curated groupings, tags own descriptive labels, and Timeline tracks own presentation only.
 - Home and Vehicle are Entity subtypes whose occurrence range describes the user's relationship span.
-- Memory and First Time are Event subtypes.
-- Story or Chapter is explicit authored narrative and is never inferred from an Entity's date range.
+- First Time, Moment, and Period are focused Entry forms; Memory and Story are optional descriptive tags.
 - Web Entry editors reuse `components/entry-organization-editor.tsx`; their save RPC must atomically preserve Collection and tag memberships with the canonical Entry mutation.
 - Used tags merge atomically into another stable tag identity. Only unused tags can be deleted directly.
 - Tag management loads at most five linked Entry previews on demand through a server action, so the Tags page stays lightweight and never creates a per-tag data waterfall during its initial render.
@@ -96,8 +95,8 @@ Pair it with the test file carrying the same feature name.
 - Clients send the revision they read. A stale revision surfaces a conflict instead of silently merging or overwriting another device.
 - Important mutations snapshot prior state. Restoring history creates another revision rather than deleting subsequent history.
 - Older clients must preserve fields they cannot represent or reject the write safely.
-- AI organization payloads use `classification.itemKind` and `classification.itemSubtype`.
-  The database rejects the removed `entryType` payload shape so a stale client cannot silently reintroduce the legacy model.
+- AI organization payloads offer optional title, tags, Collections, and occurrence suggestions without structural classification.
+  The database rejects legacy `entryType` and `classification` payload keys.
 
 ## Date rules
 

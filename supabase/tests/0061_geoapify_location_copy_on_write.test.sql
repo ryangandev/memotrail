@@ -8,8 +8,8 @@ insert into auth.users(id,email) values
 insert into public.entries(
   id,owner_id,title,body,item_kind,item_subtype,inbox_status,date_precision
 ) values
-  ('99100000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000124','First memory','One','writing','note','organized','unknown'),
-  ('99100000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000124','Second memory','Two','writing','note','organized','unknown');
+  ('99100000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000124','First memory','One','entry','entry','organized','unknown'),
+  ('99100000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000124','Second memory','Two','entry','entry','organized','unknown');
 
 create function pg_temp.provider(provider_id text, formatted text, latitude numeric, longitude numeric)
 returns jsonb
@@ -35,7 +35,7 @@ as $$
     entry_id,expected_revision,
     (select title from public.entries where id=entry_id),
     (select body from public.entries where id=entry_id),
-    'writing','note',null,'UTC',array[]::text[],array[]::text[],false,
+    'entry','entry',null,'UTC',array[]::text[],array[]::text[],false,
     null,null,'unknown',null,location,null
   );
 $$;

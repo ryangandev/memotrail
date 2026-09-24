@@ -114,12 +114,12 @@ export default async function SearchPage({
             <legend>Refine results</legend>
 
             <label>
-              <span>Kind or type</span>
+              <span>Record</span>
               <select
                 defaultValue={request.itemClassifications[0] ?? ""}
                 name="type"
               >
-                <option value="">All Kinds and types</option>
+                <option value="">All records</option>
                 {wikiItemSearchGroups.map((group) => (
                   <optgroup key={group.label} label={group.label}>
                     {group.options.map((option) => (
@@ -386,7 +386,7 @@ function resultDateLabel(entry: SearchEntry) {
   };
   return (entry.itemKind === "entity" &&
     ["home", "vehicle"].includes(entry.itemSubtype)) ||
-    entry.itemSubtype === "life_stage"
+    entry.itemSubtype === "period"
     ? occurrenceSpanLabel(occurrence)
     : occurrenceLabel(occurrence);
 }

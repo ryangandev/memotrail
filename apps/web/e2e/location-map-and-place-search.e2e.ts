@@ -68,7 +68,7 @@ test("Map shows current Entry coordinates and Place search only fills its form",
             owner_id: owner,
             title: "A day at Pine Street",
             body: "An event",
-            item_kind: "event",
+            item_kind: "entry",
             item_subtype: "first_time",
             inbox_status: "organized",
             date_precision: "day",
@@ -79,8 +79,8 @@ test("Map shows current Entry coordinates and Place search only fills its form",
             owner_id: owner,
             title: "Pine Street journal",
             body: "A memory",
-            item_kind: "writing",
-            item_subtype: "note",
+            item_kind: "entry",
+            item_subtype: "entry",
             inbox_status: "organized",
             date_precision: "year",
             occurred_start: "2022-01-01T00:00:00Z",
@@ -90,8 +90,8 @@ test("Map shows current Entry coordinates and Place search only fills its form",
             owner_id: owner,
             title: "Deleted Pine Street note",
             body: "Hidden from map",
-            item_kind: "writing",
-            item_subtype: "note",
+            item_kind: "entry",
+            item_subtype: "entry",
             inbox_status: "organized",
             date_precision: "unknown",
             deleted_at: new Date().toISOString(),
@@ -176,9 +176,9 @@ test("Map shows current Entry coordinates and Place search only fills its form",
       path: "/private/tmp/memotrail-location-map-desktop.png",
     });
 
-    await page.getByLabel("Kind").selectOption("event");
+    await page.getByLabel("Category").selectOption("entry");
     await expect(
-      page.getByRole("status").filter({ hasText: "1 Entry Location" }),
+      page.getByRole("status").filter({ hasText: "2 Entry Locations" }),
     ).toBeVisible();
     await page.locator(".leaflet-marker-icon").click();
     await expect(
@@ -186,14 +186,14 @@ test("Map shows current Entry coordinates and Place search only fills its form",
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: /Pine Street journal/ }),
-    ).toHaveCount(0);
-    await page.getByLabel("From year").fill("2021");
+    ).toBeVisible();
+    await page.getByLabel("From year").fill("2023");
     await expect(
       page.getByRole("status").filter({ hasText: "0 Entry Locations" }),
     ).toBeVisible();
 
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.getByLabel("Kind").selectOption("all");
+    await page.getByLabel("Category").selectOption("all");
     await page.getByLabel("From year").fill("");
     await expect(page.locator(".leaflet-marker-icon")).toHaveCount(1);
     expect(
