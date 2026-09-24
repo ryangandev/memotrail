@@ -400,15 +400,6 @@ export function EntryReviewDialog({
           />
         </div>
 
-        <EntryPhotoDates
-          place={photoPlace}
-          onPlaceChange={setPhotoPlace}
-          entryId={entry.id}
-          disabled={isPending}
-          onUseDate={(date) =>
-            setOccurrence((current) => photoCalendarDateDraft(date, current))
-          }
-        />
         <OccurrenceEditor
           value={occurrence}
           onChange={setOccurrence}
@@ -439,6 +430,16 @@ export function EntryReviewDialog({
           input={tagInput}
           onInputChange={setTagInput}
           options={tagOptions}
+        />
+
+        <EntryPhotoDates
+          place={photoPlace}
+          onPlaceChange={setPhotoPlace}
+          entryId={entry.id}
+          disabled={isPending}
+          onUseDate={(date) =>
+            setOccurrence((current) => photoCalendarDateDraft(date, current))
+          }
         />
 
         {result ? (
