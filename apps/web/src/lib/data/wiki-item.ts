@@ -78,7 +78,7 @@ export function wikiEntryHref(item: {
   itemKind: WikiItemKind;
   itemSubtype: string;
   recordId?: string;
-  recordSource?: "entry" | "person" | "place";
+  recordSource?: "entry" | "person";
 }) {
   if (item.inboxStatus === "unreviewed") {
     return `/inbox?entry=${item.id}`;
@@ -90,14 +90,6 @@ export function wikiEntryHref(item: {
     item.recordId
   ) {
     return `/people?person=${item.recordId}`;
-  }
-  if (
-    item.itemKind === "entity" &&
-    item.itemSubtype === "place" &&
-    item.recordSource === "place" &&
-    item.recordId
-  ) {
-    return `/places?place=${item.recordId}`;
   }
   if (item.itemKind === "entity" && item.itemSubtype === "home") {
     return `/homes?entry=${item.id}`;

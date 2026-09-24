@@ -56,9 +56,9 @@ describe("Trash item input", () => {
         deletedAt,
         itemId,
         itemKind: "place",
-        revision: 4,
-      }),
-    ).toMatchObject({ success: true });
+        revision: 1,
+      }).success,
+    ).toBe(false);
   });
 
   it("accepts a revision-free attachment identity", () => {

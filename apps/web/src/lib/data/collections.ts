@@ -57,7 +57,7 @@ export type CollectionEntry = {
   occurredTimezone: string | null;
   revision: number;
   recordId: string;
-  recordSource: "entry" | "person" | "place";
+  recordSource: "entry" | "person";
   tagNames: string[];
   title: string | null;
   updatedAt: string;
@@ -107,7 +107,7 @@ type CollectionEntryRow = {
   occurred_timezone: string | null;
   revision: number;
   record_id: string;
-  record_source: "entry" | "person" | "place";
+  record_source: "entry" | "person";
   tag_names: string[];
   title: string | null;
   total_count: number | string;
@@ -314,7 +314,7 @@ function isCollectionEntryRow(value: unknown): value is CollectionEntryRow {
     nullableString(value.occurred_timezone) &&
     typeof value.revision === "number" &&
     typeof value.record_id === "string" &&
-    ["entry", "person", "place"].includes(String(value.record_source)) &&
+    ["entry", "person"].includes(String(value.record_source)) &&
     typeof value.created_at === "string" &&
     typeof value.updated_at === "string" &&
     stringArray(value.collection_names) &&

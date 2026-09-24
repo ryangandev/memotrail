@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
-test("Map shows current Entry coordinates and Place search only fills its form", async ({
+test("Map shows current Entry coordinates", async ({
   context,
   page,
 }) => {
@@ -15,7 +15,7 @@ test("Map shows current Entry coordinates and Place search only fills its form",
     }),
   );
   const admin = createClient(env.API_URL, env.SERVICE_ROLE_KEY);
-  const email = `map-place-${randomUUID()}@memotrail.local`;
+  const email = `map-location-${randomUUID()}@memotrail.local`;
   const created = await admin.auth.admin.createUser({
     email,
     email_confirm: true,
@@ -206,80 +206,6 @@ test("Map shows current Entry coordinates and Place search only fills its form",
       path: "/private/tmp/memotrail-location-map-mobile.png",
     });
 
-    await page.route("**/api/locations/search**", async (route) => {
-      await route.fulfill({
-        contentType: "application/json",
-        json: {
-          configured: true,
-          providerUnavailable: false,
-          provider: [
-            {
-              kind: "provider",
-              provider: "geoapify",
-              providerLocationId: "pine-cafe",
-              name: "20 Pine Street, Philadelphia, PA",
-              formattedAddress: "20 Pine Street, Philadelphia, PA",
-              address: "20 Pine Street",
-              city: "Philadelphia",
-              region: "Pennsylvania",
-              postalCode: null,
-              country: "United States",
-              countryCode: "us",
-              latitude: 39.9527,
-              longitude: -75.1653,
-              timezone: "America/New_York",
-              resultType: "building",
-              confidence: 0.99,
-              matchType: "full_match",
-              dataSource: "openstreetmap",
-            },
-          ],
-        },
-      });
-    });
-    await page.goto("/places");
-    await page.getByRole("button", { name: "Add Place" }).first().click();
-    const editor = page.getByRole("dialog");
-    await editor.getByRole("textbox", { name: "Name" }).fill("The corner café");
-    const addressSearch = editor.getByRole("combobox", {
-      name: "Find an address for this Place",
-    });
-    await addressSearch.fill("20 Pine");
-    await expect(
-      editor.getByRole("option", { name: /20 Pine Street/ }),
-    ).toBeVisible();
-    await addressSearch.press("ArrowDown");
-    await expect(addressSearch).toHaveAttribute("aria-activedescendant", /.+/);
-    await addressSearch.press("Enter");
-    await expect(
-      editor.getByRole("img", { name: /Map preview for The corner café/ }),
-    ).toBeVisible();
-    await editor.getByRole("button", { name: "Add Place" }).click();
-    await expect(editor).not.toBeVisible();
-    const place = (
-      await client
-        .from("places")
-        .select("name,address,city,latitude,longitude")
-        .eq("owner_id", owner)
-        .single()
-    ).data;
-    expect(place).toMatchObject({
-      name: "The corner café",
-      address: "20 Pine Street",
-      city: "Philadelphia",
-      latitude: 39.9527,
-      longitude: -75.1653,
-    });
-    await expect(
-      page
-        .getByRole("button", { name: /The corner café/ })
-        .locator('[data-record-card-map="true"]'),
-    ).toBeVisible();
-    const locations = await client
-      .from("locations")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", owner);
-    expect(locations.count).toBe(3);
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }

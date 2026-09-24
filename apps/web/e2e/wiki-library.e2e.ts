@@ -108,17 +108,6 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
         })
       ).error,
     ).toBeNull();
-    expect(
-      (
-        await client.from("places").insert({
-          city: "San Francisco",
-          country: "USA",
-          name: "Ocean Beach",
-          notes: "Morning walks.",
-          owner_id: ownerID,
-        })
-      ).error,
-    ).toBeNull();
 
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
@@ -143,6 +132,9 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       page.getByRole("heading", { name: "Focused views", exact: true }),
     ).toBeVisible();
     await expect(
+      page.getByRole("link", { name: "Places", exact: true }),
+    ).toHaveCount(0);
+    await expect(
       page.getByRole("link", { name: /Version history/ }),
     ).toBeVisible();
     const reflectionLink = page.getByRole("link", {
@@ -156,9 +148,6 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await expect(
       page.getByRole("link", { name: /Entity Person Avery/ }),
     ).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: /Entity Place Ocean Beach/ }),
-    ).toHaveCount(0);
     await expect(
       page.getByRole("main").getByText("3 items", { exact: true }),
     ).toBeVisible();
@@ -226,9 +215,6 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       page.getByRole("link", { name: /Entity Person Avery/ }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: /Entity Place Ocean Beach/ }),
-    ).toHaveCount(0);
-    await expect(
       page.getByRole("link", { name: /Writing Reflection Morning reflection/ }),
     ).toHaveCount(0);
 
@@ -238,9 +224,6 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await expect(
       page.getByRole("link", { name: /Entity Person Avery/ }),
     ).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: /Entity Place Ocean Beach/ }),
-    ).toHaveCount(0);
     await page.waitForLoadState("networkidle");
     await filters.locator('input[name="q"]').press("Tab");
 

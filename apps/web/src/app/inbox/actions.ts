@@ -235,7 +235,6 @@ export async function reviewInboxEntry(
   revalidatePath("/");
 
   revalidatePath("/inbox");
-  revalidatePath("/places");
   revalidatePath("/search");
   return intent === "done"
     ? {

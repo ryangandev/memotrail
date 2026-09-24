@@ -145,7 +145,7 @@ export function TrashWorkspace({
             title={<>Nothing in Trash</>}
             description={
               <>
-                Removed Entries, Places, People, and individual photos will
+                Removed Entries, People, and individual photos will
                 appear here. Legacy records remain recoverable too.
               </>
             }
@@ -302,11 +302,7 @@ function announceResult(result: TrashActionResult) {
   else notify.success(result.message);
 }
 
-function iconForKind(kind: TrashItem["kind"]): "map" | "photo" | "timeline" {
-  if (kind === "place") {
-    return "map";
-  }
-
+function iconForKind(kind: TrashItem["kind"]): "photo" | "timeline" {
   return kind === "attachment" ? "photo" : "timeline";
 }
 
@@ -315,10 +311,6 @@ function labelForItem(item: TrashItem) {
   if (item.kind === "person") return "Person";
   if (item.kind === "attachment") {
     return "Photo";
-  }
-
-  if (item.kind === "place") {
-    return "Place";
   }
 
   return item.wikiItemKind && item.wikiItemSubtype
@@ -351,10 +343,6 @@ function deletionDescription(item: TrashItem) {
     return "The Person and their version history will be removed.";
   if (item.kind === "attachment") {
     return "The private photo file and its attachment record will be removed.";
-  }
-
-  if (item.kind === "place") {
-    return "The Place and its version history will be removed.";
   }
 
   return "The Entry, private photos, relationships, specialized details, and version history will be removed.";

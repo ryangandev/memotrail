@@ -118,15 +118,6 @@ test("Search filters Entries by record and descriptive tag", async ({
         })
       ).error,
     ).toBeNull();
-    expect(
-      (
-        await client.from("places").insert({
-          name: "Marina dock",
-          notes: "A calm place.",
-          owner_id: ownerID,
-        })
-      ).error,
-    ).toBeNull();
 
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
@@ -145,12 +136,10 @@ test("Search filters Entries by record and descriptive tag", async ({
 
     await page.goto("/search?q=marina&type=entity");
     await expect(visibleResult("Marina mentor")).toBeVisible();
-    await expect(visibleResult("Marina dock")).toHaveCount(0);
     await page.getByLabel("Record").selectOption("person");
     await page.getByRole("button", { name: "Search", exact: true }).click();
     await expect(page).toHaveURL(/type=person/);
     await expect(visibleResult("Marina mentor")).toBeVisible();
-    await expect(visibleResult("Marina dock")).toHaveCount(0);
 
     await page.waitForLoadState("networkidle");
     await page.getByLabel("Record").press("Tab");

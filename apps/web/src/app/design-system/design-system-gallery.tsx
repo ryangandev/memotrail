@@ -554,7 +554,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="RecordCard is the shared interactive record surface used by Homes, Vehicles, Places, and First Times. Other card families remain route-specific."
+        description="RecordCard is the shared interactive record surface used by Homes, Vehicles, and First Times. Other card families remain route-specific."
         id="containers"
         index="05"
         title="Containers and data display"

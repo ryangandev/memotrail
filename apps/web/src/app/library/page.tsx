@@ -76,12 +76,6 @@ const focusedDestinations: LibraryDestination[] = [
     title: "Vehicles",
   },
   {
-    detail: "Keep the places that matter to you as personal records.",
-    href: "/places",
-    icon: "map" as const,
-    title: "Places",
-  },
-  {
     detail: "Explore the memories and events tied to coordinates on a map.",
     href: "/map",
     icon: "map" as const,
@@ -162,7 +156,7 @@ export default async function LibraryPage({
         eyebrow={<>Your Life Wiki</>}
         description={
           <>
-            One place for your Entries, people, places, and goals.
+            One place for your Entries, people, homes, and goals.
           </>
         }
       />
@@ -208,7 +202,7 @@ export default async function LibraryPage({
             label="Find in your Life Wiki"
             maxLength={200}
             name="q"
-            placeholder="Search titles, writing, people, or places"
+            placeholder="Search titles, writing, or people"
           />
           <label>
             <span>Category</span>
