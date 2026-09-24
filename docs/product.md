@@ -63,7 +63,8 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - AI may suggest title, Collections, tags, date, and photo-derived date or Location context.
 - Suggestions remain editable and require explicit adoption.
 - AI may propose a Collection but cannot create it without confirmation.
-- The Capture remains in Inbox until the user selects `Save to Library` or completes another explicit organization action.
+- The Capture remains in Inbox until the user selects `Save to Library`, completes another explicit organization action, or moves it to Trash.
+- An unwanted Capture can move directly from Inbox review to Trash before it is organized, with confirmation and the normal restore path.
 - Home owns the persistent Quick Capture surface and shows up to three recent captures waiting for organization. Inbox is the dedicated review workspace and relies on the global New Entry action for additional capture.
 - `Save to Library` marks organization complete but never prevents later editing.
 - Inbox review saves the same Entry without a Kind or subtype choice.

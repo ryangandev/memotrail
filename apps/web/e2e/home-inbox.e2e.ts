@@ -157,6 +157,57 @@ test("Home previews the Inbox while Inbox remains a focused organization workspa
       fullPage: true,
       path: "/private/tmp/memotrail-inbox-organize-only.png",
     });
+
+    const oldestCard = page
+      .locator("article")
+      .filter({ hasText: "Oldest thought" });
+    await oldestCard.getByRole("button", { name: "Move to Trash" }).click();
+    const confirmation = page.getByRole("dialog", {
+      name: /Move.*Trash/,
+    });
+    await expect(confirmation).toContainText("You can restore it later");
+    await confirmation.getByRole("button", { name: "Cancel" }).click();
+    await expect(oldestCard).toBeVisible();
+    await oldestCard.getByRole("button", { name: "Move to Trash" }).click();
+    await confirmation.getByRole("button", { name: "Move to Trash" }).click();
+    await expect(oldestCard).toHaveCount(0);
+    const deletedOldest = await client
+      .from("entries")
+      .select("deleted_at")
+      .eq("body", "Oldest thought")
+      .single();
+    expect(deletedOldest.error).toBeNull();
+    expect(deletedOldest.data!.deleted_at).not.toBeNull();
+
+    await page.goto(`/inbox?entry=${newestID}`);
+    const review = page.getByRole("dialog", { name: "Review Entry" });
+    await expect(
+      review.getByRole("button", { name: "Save changes" }),
+    ).toHaveAttribute("data-variant", "secondary");
+    await expect(
+      review.getByRole("button", { name: "Save to Library" }),
+    ).toHaveAttribute("data-variant", "primary");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(review).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page.screenshot({
+      animations: "disabled",
+      path: "/private/tmp/memotrail-inbox-review-mobile.png",
+    });
+    await review.getByRole("button", { name: "Move to Trash" }).click();
+    await confirmation.getByRole("button", { name: "Move to Trash" }).click();
+    await expect(review).toHaveCount(0);
+    const deletedNewest = await client
+      .from("entries")
+      .select("deleted_at")
+      .eq("id", newestID!)
+      .single();
+    expect(deletedNewest.error).toBeNull();
+    expect(deletedNewest.data!.deleted_at).not.toBeNull();
   } finally {
     await admin.auth.admin.deleteUser(owner);
   }

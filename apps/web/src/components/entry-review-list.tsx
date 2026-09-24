@@ -4,6 +4,7 @@ import entryReviewListStyles from "@/components/entry-review-list.module.css";
 import entryFormStyles from "@/components/entry-form.module.css";
 import { Dialog } from "@/components/dialog";
 import { Button } from "@/components/button";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import type { PhotoPlaceDraft } from "@/lib/media/photo-place";
 
 import { useState, type FormEvent } from "react";
@@ -13,6 +14,7 @@ import {
   reviewInboxEntry,
   type ReviewInboxEntryResult,
 } from "@/app/inbox/actions";
+import { trashWikiItem } from "@/app/history/actions";
 import { Icon } from "@/components/icon";
 import { EntryAISuggestionsPanel } from "@/components/entry-ai-suggestions";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
@@ -34,10 +36,7 @@ import {
   parseInboxReviewInput,
   type InboxReviewInput,
 } from "@/lib/data/inbox-review";
-import {
-  wikiItemKindLabel,
-  wikiItemSubtypeLabel,
-} from "@/lib/data/wiki-item";
+import { wikiItemKindLabel, wikiItemSubtypeLabel } from "@/lib/data/wiki-item";
 
 export function EntryReviewList({
   collectionOptions,
@@ -51,14 +50,51 @@ export function EntryReviewList({
   tagOptions: string[];
 }) {
   const router = useRouter();
+  const requestConfirmation = useConfirmationDialog();
   const [selectedEntry, setSelectedEntry] = useState<InboxEntry | null>(
     () => entries.find((entry) => entry.id === initialEntryID) ?? null,
   );
+  const [deletedEntryIDs, setDeletedEntryIDs] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [trashPendingID, setTrashPendingID] = useState<string | null>(null);
   // Reflect server-confirmed mutations immediately while router refresh is in
   // flight. Rapid reopening must never submit the previous revision again.
   const [savedReviews, setSavedReviews] = useState<
     Record<string, { entry: InboxEntry; done: boolean }>
   >({});
+
+  async function moveEntryToTrash(entry: InboxEntry) {
+    if (trashPendingID) return;
+    const confirmed = await requestConfirmation({
+      title: <>Move “{entryTitle(entry)}” to Trash?</>,
+      description: <>You can restore it later from Trash.</>,
+      confirmLabel: "Move to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
+
+    setTrashPendingID(entry.id);
+    try {
+      const message = await trashWikiItem(entry.id, entry.revision);
+      if (message) {
+        notify.error(message);
+        return;
+      }
+      setDeletedEntryIDs((current) => new Set(current).add(entry.id));
+      setSelectedEntry(null);
+      if (initialEntryID) router.replace("/inbox", { scroll: false });
+      router.refresh();
+      notify.info("Capture moved to Trash.");
+    } catch {
+      notify.error(
+        "Could not confirm the move to Trash. Refresh before trying again.",
+      );
+    } finally {
+      setTrashPendingID(null);
+    }
+  }
 
   return (
     <>
@@ -66,7 +102,7 @@ export function EntryReviewList({
         const saved = savedReviews[source.id];
         const latest =
           saved && saved.entry.revision >= source.revision ? saved : null;
-        if (latest?.done) return null;
+        if (latest?.done || deletedEntryIDs.has(source.id)) return null;
         const entry = latest?.entry ?? source;
         const excerpt = entryExcerpt(entry);
 
@@ -82,7 +118,8 @@ export function EntryReviewList({
             <footer>
               <div className={entryReviewListStyles.tags}>
                 <span>Needs review</span>
-                {entry.itemKind !== "entry" || entry.itemSubtype === "first_time" ? (
+                {entry.itemKind !== "entry" ||
+                entry.itemSubtype === "first_time" ? (
                   <>
                     <span>{wikiItemKindLabel(entry.itemKind)}</span>
                     <span>
@@ -102,14 +139,26 @@ export function EntryReviewList({
                   <span>+{entry.tagNames.length - 3}</span>
                 ) : null}
               </div>
-              <Button
-                variant="secondary"
-                onClick={() => setSelectedEntry(entry)}
-                type="button"
-              >
-                Organize
-                <Icon name="chevron" size={14} />
-              </Button>
+              <div className={entryReviewListStyles.cardActions}>
+                <Button
+                  variant="ghost"
+                  disabled={trashPendingID === entry.id}
+                  onClick={() => void moveEntryToTrash(entry)}
+                  type="button"
+                >
+                  <Icon name="trash" size={15} />
+                  Move to Trash
+                </Button>
+                <Button
+                  variant="secondary"
+                  disabled={trashPendingID === entry.id}
+                  onClick={() => setSelectedEntry(entry)}
+                  type="button"
+                >
+                  Organize
+                  <Icon name="chevron" size={14} />
+                </Button>
+              </div>
             </footer>
           </article>
         );
@@ -132,6 +181,8 @@ export function EntryReviewList({
             setSelectedEntry(null);
             if (initialEntryID) router.replace("/inbox", { scroll: false });
           }}
+          onTrash={() => void moveEntryToTrash(selectedEntry)}
+          trashPending={trashPendingID === selectedEntry.id}
           tagOptions={tagOptions}
         />
       ) : null}
@@ -144,15 +195,19 @@ export function EntryReviewDialog({
   entry,
   onClose,
   onSaved,
+  onTrash,
   tagOptions,
   organized = false,
+  trashPending = false,
 }: {
   collectionOptions: string[];
   entry: InboxEntry;
   onClose: () => void;
   onSaved: (entry: InboxEntry, done: boolean) => void;
+  onTrash?: () => void;
   tagOptions: string[];
   organized?: boolean;
+  trashPending?: boolean;
 }) {
   const router = useRouter();
   const [title, setTitle] = useState(entry.title ?? "");
@@ -242,23 +297,15 @@ export function EntryReviewDialog({
       onOpenChange={(nextOpen) => {
         if (!nextOpen) onClose();
       }}
-      title={
-        <>
-          {organized ? "Edit Entry" : "Review Entry"}
-        </>
-      }
+      title={<>{organized ? "Edit Entry" : "Review Entry"}</>}
       titleId="review-heading"
       eyebrow={<>{organized ? "Life Wiki editor" : "Inbox review"}</>}
       headerContent={
         <>
           {organized ? (
-            <p>
-              This Entry is already part of your Life Wiki.
-            </p>
+            <p>This Entry is already part of your Life Wiki.</p>
           ) : (
-            <p>
-              Review what you captured, then save it to your Library.
-            </p>
+            <p>Review what you captured, then save it to your Library.</p>
           )}
           <Link href={`/history?entry=${entry.id}`}>Version history</Link>
           <p>
@@ -268,23 +315,36 @@ export function EntryReviewDialog({
         </>
       }
       closeLabel={organized ? "Close item editor" : "Close Inbox review"}
-      busy={isPending}
+      busy={isPending || trashPending}
       size="wide"
       footer={
         <div className={entryReviewListStyles.reviewActions}>
-          <Button
-            variant="secondary"
-            disabled={isPending}
-            onClick={onClose}
-            type="button"
-          >
-            Cancel
-          </Button>
-          <div>
+          <div className={entryReviewListStyles.reviewSecondaryActions}>
+            <Button
+              variant="secondary"
+              disabled={isPending || trashPending}
+              onClick={onClose}
+              type="button"
+            >
+              Cancel
+            </Button>
+            {!organized && onTrash ? (
+              <Button
+                variant="ghost"
+                disabled={isPending || trashPending}
+                onClick={onTrash}
+                type="button"
+              >
+                <Icon name="trash" size={16} />
+                Move to Trash
+              </Button>
+            ) : null}
+          </div>
+          <div className={entryReviewListStyles.reviewSaveActions}>
             <Button
               form="entry-review-list-form"
-              variant="primary"
-              disabled={isPending}
+              variant={organized ? "primary" : "secondary"}
+              disabled={isPending || trashPending}
               type="submit"
             >
               Save changes
@@ -292,7 +352,7 @@ export function EntryReviewDialog({
             {!organized && (
               <Button
                 variant="primary"
-                disabled={isPending}
+                disabled={isPending || trashPending}
                 onClick={() => void submitReview("done")}
                 type="button"
               >
@@ -337,9 +397,7 @@ export function EntryReviewDialog({
           />
         )}
         <label>
-          <span>
-            Title
-          </span>
+          <span>Title</span>
           <input
             aria-label="Title"
             autoFocus
