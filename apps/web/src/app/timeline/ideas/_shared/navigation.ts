@@ -14,6 +14,11 @@ export const timelineIdeaLinks = [
     label: "07 Sticky Year",
     shortLabel: "Sticky Year",
   },
+  {
+    href: "/timeline/ideas/chapters",
+    label: "08 Chapters",
+    shortLabel: "Chapters",
+  },
 ] as const;
 
 export function timelineIdeaReturnPath(value: string | string[] | undefined) {
