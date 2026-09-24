@@ -5,6 +5,7 @@ Last reviewed: 2026-09-24.
 ## Current state
 
 The Entry-centered Web information model is implemented on `codex/web-library-information-model` and its migration is live on the confirmed Supabase project.
+Authored Place records have also been removed from Web and the hosted schema; Entry-owned Locations and the Map remain.
 Native iOS still uses the older Kind and subtype contract and needs a separate update before its write flows are compatible.
 Web production still needs deployment and acceptance of this branch; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 
@@ -13,7 +14,7 @@ Use Git history for feature-level implementation and test evidence.
 | Area                                                                                 | State                                                                                                                                                                               |
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Capture, Inbox, organization, dates, drafts, and offline queues                      | Implemented on Web and iOS                                                                                                                                                          |
-| Timeline, Home, First Times, Homes, Vehicles, Goals, People, Places, and Collections | Implemented on Web and iOS                                                                                                                                                          |
+| Timeline, Home, First Times, Homes, Vehicles, Goals, People, and Collections | Implemented on Web and iOS; the native Place surface is legacy and needs a separate update                                                                                         |
 | Location data layer                                                                  | Web Map, optional Home Location, photo GPS provenance, and provider quotas are implemented; personal browser acceptance remains.                                                     |
 | Habits                                                                               | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                                  |
 | Web navigation shell                                                                 | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                                   |
@@ -21,7 +22,7 @@ Use Git history for feature-level implementation and test evidence.
 | Web Collections and tags                                                             | Direct Library destinations and shared Entry organization editor implemented                                                                                                        |
 | Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI    | Implemented; Production AI configuration is not accepted                                                                                                                            |
 | Private media, Entry history, relationships, Trash, and complete export              | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                  |
-| Hosted Supabase contracts                                                            | `202609240001` is deployed to project `kaivkozeyuwzqrckmyqu`; remote ledger and public schema were verified                                                                            |
+| Hosted Supabase contracts                                                            | `202609240002` is deployed to project `kaivkozeyuwzqrckmyqu`; remote ledger and public schema were verified                                                                            |
 | Entry-centered information model                                                     | Web branch and hosted database use Entry, focused records, and intentional Timeline Moment or Period; native iOS and deployed Web still need cutover                                      |
 | Web design system                                                                    | Approved canonical components migrated across Web; component-owned CSS and token boundaries enforced; local regression passed; production browser acceptance pending                |
 | Backup and restore                                                                   | Not ready                                                                                                                                                                           |
@@ -37,16 +38,16 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - Deploy the Web branch against the migrated hosted project and verify Quick Capture, Inbox review, Library routing, First Time, Moment, Period, Home, Vehicle, and Goal in a browser.
 - The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
 - Keep native iOS writes out of this cutover until its older Kind and subtype calls are updated.
-- Local validation passed 61 database files with 1,552 assertions, 444 Web unit tests, type checking, lint, production build, and all 72 browser E2E tests.
+- The earlier Entry model passed 61 database files with 1,552 assertions, a production build, and all 72 browser E2E tests. The latest Place removal passed 59 database files with 1,497 assertions, 436 Web unit tests, type checking, lint, and six affected browser E2E tests; the full browser suite and production build were not rerun for this change.
 - A seeded pre-migration local exercise converted Journal, Story, and Trip to tags; Timeline point and span to Moment and Period; and preserved Inbox state and revision numbers.
 
 ### 2. Accept Web Location
 
-- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202609240001`; the linked migration ledger matches the repository. Home Location copy-on-write compares coordinates at the database's six-decimal storage precision.
-- Web now has optional Home Locations, address search that fills Places without creating Locations, keyboard-accessible address suggestions, explicit photo GPS source identity, owner-scoped Geoapify quotas, and a clustered Map of current Entry coordinates with Kind and year filters.
+- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202609240002`; the linked migration ledger matches the repository. Home Location copy-on-write compares coordinates at the database's six-decimal storage precision.
+- Web now has optional Home Locations, address search that feeds Entry-owned Location snapshots on save, keyboard-accessible address suggestions, explicit photo GPS source identity, owner-scoped Geoapify quotas, and a clustered Map of current Entry coordinates with Kind and year filters.
 - Local Web and database validation for the current branch is listed above.
 - `localhost:3000` points to the linked cloud Supabase project. Its health endpoint returned 200, and an authenticated browser loaded Geoapify address suggestions, a selected coordinate preview, and the Map's raster tiles after migration; the test form was canceled without saving.
-- Accept the revised UI with a personal `localhost:3000` record, including retrying a provider-backed Home Location save after the precision migration, Home removal/manual address edits, Entry map points, and Place address filling. No personal record was changed during the repair; map clustering is locally browser-tested but not yet personally accepted against hosted data.
+- Accept the revised UI with a personal `localhost:3000` record, including retrying a provider-backed Home Location save after the precision migration, Home removal/manual address edits, and Entry map points. Map clustering is locally browser-tested but not yet personally accepted against hosted data.
 - The accepted shared SearchField is now used across Web search surfaces, including Location, full Search, Library, Tags, related Items, organization pickers, and Command Palette.
 - The server-only Production `GEOAPIFY_API_KEY` is configured in Vercel. The local key and provider-backed `localhost:3000` browser flow are verified; Production browser acceptance remains pending.
 - Native iOS provider UI and its legacy custom Location fields remain deferred until Web acceptance.

@@ -35,7 +35,7 @@ Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/Me
 | Search, AI suggestions, or exploration                      | `app/search`, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`                                                        | `Features/Search`, `Features/AI`                                                      | AI, evidence, exploration, and search migrations and tests                       |
 | Photos, metadata, or export                                 | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                               | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, photo-history, cleanup, and export migrations and tests                   |
 | Timeline, Homes, Vehicles, Goals, or First Times            | matching `app` route, workspace component, and `lib/data` module                                                                    | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                            |
-| Collections, tags, People, Places, links, history, or Trash | matching `app` route and component, shared Entry organization editor, `lib/data` organization, relation, history, and Trash modules | matching directory under `Features`                                                   | organization, relationship, history, Trash, and Empty Trash migrations and tests |
+| Collections, tags, People, links, history, or Trash | matching `app` route and component, shared Entry organization editor, `lib/data` organization, relation, history, and Trash modules | matching directory under `Features`                                                   | organization, relationship, history, Trash, and Empty Trash migrations and tests |
 | Visual system                                               | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                        | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-tokens/tokens.json` and generator                               |
 
 For a database behavior, search migrations for the newest definition of the relevant RPC instead of assuming the first occurrence is current.
@@ -57,7 +57,7 @@ Pair it with the test file carrying the same feature name.
   Native Library routes typed records to their focused editors and other canonical items to the shared History detail/edit boundary.
 - `collection_wiki_items` composes the established paged Collection detail with canonical Kind, subtype, and specialized routing identity. Both clients use it so Collections remain organizational lenses rather than a second generic detail system.
 - `people.entry_id` is a required owner-scoped link to a canonical Entity Wiki Item. Triggers keep its name, notes, revision state, and Trash state synchronized.
-- `places` is an independent owner-scoped Focused View record with its own revision and Trash history. It has no canonical `entries` mirror and owns no links to other Focused View records.
+- The former authored `places` and `place_versions` tables and Place-only RPCs were removed by `202609240002_remove_authored_places.sql`.
 - `locations` stores private per-Entry address and coordinate snapshots with provider provenance, revision state, and soft deletion. It is not a Wiki Item or reusable catalog.
 - Location rows are immutable through the authenticated table API.
   `review_wiki_item_with_location_rich` atomically creates a Geoapify snapshot or keeps the current Entry's Location and replaces only its `primary` relationship.
@@ -84,7 +84,7 @@ Pair it with the test file carrying the same feature name.
   `components/entry-rich-text-content.tsx` safely renders validated formatting on note surfaces and falls back to canonical plaintext when rich metadata is absent, invalid, or stale.
   Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while the compatibility RPC `review_entry_with_photo_place_rich` writes plaintext, formatting, organization, occurrence, and photo Location adoption in one revision.
   Older review RPCs preserve rich metadata they do not understand.
-- Collections, tags, People, and Wiki Item links are owner-scoped reusable relationships. Locations are Entry-owned snapshots; Places remain independent personal records.
+- Collections, tags, People, and Wiki Item links are owner-scoped reusable relationships. Locations are Entry-owned snapshots.
 - Focused forms own specialized structure, Collections own curated groupings, tags own descriptive labels, and Timeline tracks own presentation only.
 - Home and Vehicle are Entity subtypes whose occurrence range describes the user's relationship span.
 - First Time, Moment, and Period are focused Entry forms; Memory and Story are optional descriptive tags.
@@ -145,7 +145,7 @@ Pair it with the test file carrying the same feature name.
 - Interrupted provider outcomes do not trigger automatic paid retries.
 - Suggestion and search outputs are schema-validated and remain separate from original writing until explicit user action.
 - Search answers cite exact stored evidence; provenance does not imply that the model's conclusion is true.
-- `search_wiki_items` accepts canonical Kind and subtype classifications and returns Kind, subtype, record source, and specialized routing identity in one owner-scoped result stream for Web and iOS. Linked Location fields contribute searchable context; independent Places remain in their Focused View.
+- `search_wiki_items` accepts canonical Kind and subtype classifications and returns Kind, subtype, record source, and specialized routing identity in one owner-scoped result stream for Web and iOS. Linked Location fields contribute searchable context.
 - The persistent Web Command Palette debounces input before calling the dynamic, private, no-store `app/api/search/quick` route. That route returns one bounded owner-scoped canonical result stream and leaves filtered or AI search on the full Search page.
 
 ## Deletion, export, and recovery rules
@@ -180,7 +180,7 @@ Pair it with the test file carrying the same feature name.
 - Page frame variants are semantic: `compact` is 880px for forms and focused reading, `standard` is 960px for lists and search, `wide` is 1080px for dashboards and card grids, and `canvas` is 1180px for dense spatial views.
 - New route pages choose the narrowest variant that fits their content; feature grids and visualizations own their internal breakpoints instead of redefining the outer page geometry.
 - Web photo surfaces reuse `components/progressive-image.tsx` for a reserved skeleton, decode fade-in, failure fallback, and reduced-motion behavior while private expiring media URLs continue to bypass the public Next image cache.
-- Home, Vehicle, First Time, Goal, Person, and Place result layouts reuse `components/record-card.tsx`; subtype modules own only their visual, metadata, and responsive content rules.
+- Home, Vehicle, First Time, Goal, and Person result layouts reuse `components/record-card.tsx`; subtype modules own only their visual, metadata, and responsive content rules.
   Noninteractive history, Collection, and Trash surfaces retain their distinct link or multi-action semantics instead of nesting actions inside a button card.
 - Specialized record editors reuse `components/entry-photo-field.tsx` for selected and existing previews, removal controls, limits, and upload progress.
 - Web domain editors own label-to-control spacing in their shared field wrapper; route forms reuse that wrapper and the spacing tokens instead of compensating field by field.
@@ -197,7 +197,6 @@ Pair it with the test file carrying the same feature name.
 - The Web Map reads current Entry-Location links through owner-scoped RLS and proxies Geoapify raster tiles through an authenticated route.
   Its 5,000-link bound is ordered newest first and explicitly disclosed in the UI; filters apply to loaded results.
 - Search, preview, and tile routes each consume an owner-scoped hourly database quota before contacting Geoapify.
-  Place address search reuses the shared autocomplete without persisting a Location.
 - iOS receives public backend configuration and the Web API base URL.
 - Shared behavior should be implemented and tested across Web, iOS, and Supabase in the same product slice.
 - Validation should cover the narrow unit or SQL contract first, then builds, then the closest real browser or native interaction.

@@ -79,9 +79,8 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - Collections are curated, browsable groupings of records.
 - Tags are lightweight descriptors for filtering and discovery.
 - People are reusable Entities linked to other Wiki Items, not alternate tags.
-- Places are independent, user-authored Mini Place records available in their own Focused View.
-- Places are not automatically created from Homes or Locations and do not link to other Focused View records.
-- Locations are private address and coordinate snapshots owned by individual Wiki Items, not Library items or reusable personal records.
+- Locations are private address and coordinate snapshots owned by individual Entries, not Library items or reusable personal records.
+- A Location does not require a personal name; an Entry, Home, Vehicle, or First Time can carry its address or coordinates.
 - Inbox, Timeline, Home, Search, and Library are views or workflow states, not organization labels.
 - Library is the primary all-items entry point for the Life Wiki.
   It presents Entries, Entities, and Goals, supports category and keyword filters, and opens focused records in their own views.
@@ -95,7 +94,6 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - A used tag must be merged into another tag or removed from its Entries before deletion, so organization is never silently lost.
 - Entries may link to other Entries and expose incoming backlinks without copying writing.
 - Reusable People are canonical Entity Wiki Items with typed detail records and may link to many other Wiki Items.
-- Places keep their own typed record and history but do not create duplicate canonical Wiki Items.
 - Important content, organization, relationship, specialized-field, and photo-membership changes remain recoverable through version history.
 - Restoring history creates a new revision and does not erase later history.
 
@@ -118,6 +116,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 Timeline shows deliberately created Moments and Periods, plus contextual focused-record spans, on customizable tracks.
 The first Timeline visit asks for a private birth date, uses it as the story's starting point, and keeps it editable in Settings.
 Default tracks cover Places, Education, Career, Homes, Vehicles, Relationships, Health, First Times, and Other Moments.
+The Places track is only a Timeline grouping and does not create a Place record.
 The user can create, order, rename, hide, and restore tracks without deleting content.
 Timeline's global Add moment flow asks what the user is recording before opening the matching focused editor.
 The record form determines its fields, while Track only determines presentation.
@@ -166,13 +165,10 @@ The Entry remains intact as the source.
 Bucket List items are Goals with a stable Collection role and Someday default.
 An explicit achievement action may atomically mark one Achieved and create a linked First Time using the best-known date without copying the Goal writing.
 
-### Places and People
+### Locations and People
 
-On Web, First Time, Home, and Vehicle cards prefer a photo, then a map when their Location has coordinates, then their original fallback; Place cards likewise show a map when their own coordinates exist.
+On Web, First Time, Home, and Vehicle cards prefer a photo, then a map when their Location has coordinates, then their original fallback.
 
-Places contain a name plus optional address context and notes.
-They are deliberately saved personal landmarks, remain available in the Places Focused View, and do not duplicate or organize Entries.
-Geoapify address search can fill a Place's address and coordinates without creating a Location or changing its personal name and notes.
 Locations store address context, optional provider provenance, and private coordinates for one Wiki Item at a time.
 The same physical address may appear in several Items, but each Item keeps an independent snapshot so later edits never change another Item.
 Locations have no user-authored name or notes, no Saved Location catalog, and no Library destination.
@@ -195,15 +191,15 @@ Web appearance is a per-browser choice between System, Light, and Dark; System r
 
 Mobile uses Home, Inbox, Timeline, and Library as its primary destinations.
 Library opens with the same all-items Life Wiki browser as Web, including debounced keyword search and Kind filters.
-Focused record destinations for Collections, First Times, Goals, Homes, Vehicles, Places, and People remain available below the all-items browser.
+Focused record destinations for Collections, First Times, Goals, Homes, Vehicles, and People remain available below the all-items browser.
 Settings is reached from the profile control.
 
 Desktop treats Library as a primary destination beside Home, Timeline, and Search.
 Its sidebar omits Inbox, keeps optional focused views separate from Collections, tags, Trash, and the single Settings entry point.
 The persistent top bar places an accent-tinted `New` control at the far left, with neutral Search followed by an icon-only Inbox control at the far right; Inbox shows a notification count only when captures are waiting.
-A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry, People, and Place results in place, supports keyboard navigation, and keeps full-page Search with filters and AI as an explicit destination.
+A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry and People results in place, supports keyboard navigation, and keeps full-page Search with filters and AI as an explicit destination.
 New Entry opens from the top bar or Command J.
-Home, Vehicle, First Time, and Place results share one reusable card shell while preserving subtype-specific content and responsive layouts.
+Home, Vehicle, and First Time results share one reusable card shell while preserving subtype-specific content and responsive layouts.
 Specialized editors share one unboxed photo field with consistent previews, progress, limits, and controls.
 On Web, selecting a photo thumbnail in an editor or capture draft opens a single-photo dialog without removing it; the separate X control removes the photo.
 Form labels mark required fields with `*` and leave optional fields unmarked.
