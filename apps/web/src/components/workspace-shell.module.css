@@ -121,6 +121,39 @@
   text-transform: uppercase;
 }
 
+.ideaNav {
+  display: grid;
+  gap: 2px;
+  margin-top: var(--mt-space-3);
+  padding-left: var(--mt-space-5);
+}
+
+.ideaNav .navLabel {
+  margin-bottom: var(--mt-space-1);
+}
+
+.ideaNav a {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  padding: var(--mt-space-1) var(--mt-space-3);
+  border-radius: var(--mt-radius-small);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+  text-decoration: none;
+}
+
+.ideaNav a:hover {
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-subtle);
+}
+
+.ideaNav a[aria-current="page"] {
+  color: var(--mt-color-accent);
+  background: var(--mt-color-accent-subtle);
+  font-weight: var(--mt-font-weight-semibold);
+}
+
 .sidebarFooter {
   display: grid;
   gap: 0;

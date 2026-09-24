@@ -100,10 +100,12 @@ export function TimelineWorkspace({
   defaultTimezone,
   firstTimes,
   homes,
+  initialCreate = false,
   initialEntryId = null,
   loadError,
   ownerId,
   referenceDate,
+  returnTo = null,
   tagOptions,
   tracks: serverTracks,
   vehicles,
@@ -114,16 +116,19 @@ export function TimelineWorkspace({
   defaultTimezone: string;
   firstTimes: FirstTimeEntry[];
   homes: HomeRecord[];
+  initialCreate?: boolean;
   initialEntryId?: string | null;
   loadError: string | null;
   ownerId: string;
   referenceDate: string;
+  returnTo?: string | null;
   tagOptions: string[];
   tracks: TimelineTrack[];
   vehicles: VehicleRecord[];
 }) {
   const router = useRouter();
   const [selection, setSelection] = useState<EditorSelection | null>(() => {
+    if (initialCreate) return { type: "chooser" };
     if (!initialEntryId) return null;
     const item = serverTracks
       .flatMap((track) => track.items)
@@ -210,7 +215,8 @@ export function TimelineWorkspace({
 
   function closeSelection() {
     setSelection(null);
-    if (initialEntryId) router.replace("/timeline", { scroll: false });
+    if (initialEntryId || initialCreate)
+      router.replace(returnTo ?? "/timeline", { scroll: false });
   }
 
   function startCreationForTrack(track: TimelineTrack) {
@@ -256,9 +262,7 @@ export function TimelineWorkspace({
       <PageHeader
         title={<>Timeline</>}
         eyebrow={<>Your life in context</>}
-        description={
-          <>See the chapters and moments that shape your life.</>
-        }
+        description={<>See the chapters and moments that shape your life.</>}
         actions={
           <>
             <Button
