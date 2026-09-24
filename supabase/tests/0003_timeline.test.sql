@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(33);
+select plan(34);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -57,8 +57,14 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
 
 select is(
+  (select count(*)::integer from public.timeline_tracks where system_key = 'places'),
+  0,
+  'The obsolete Places system track is absent'
+);
+
+select is(
   (select count(*)::integer from public.timeline_workspace_with_organization()),
-  9,
+  8,
   'Timeline workspace includes every visible default track when it is empty'
 );
 
@@ -67,7 +73,7 @@ select is(
     select count(distinct track_id)::integer
     from public.timeline_workspace_with_organization()
   ),
-  9,
+  8,
   'Every visible Timeline track is represented, including empty tracks'
 );
 
@@ -78,13 +84,13 @@ where owner_id = '10000000-0000-0000-0000-000000000001'
 
 select is(
   (select count(*)::integer from public.timeline_workspace_with_organization()),
-  8,
+  7,
   'Timeline workspace hides tracks marked hidden by default'
 );
 
 select is(
   (select count(*)::integer from public.timeline_workspace_with_organization(true)),
-  9,
+  8,
   'Timeline workspace can explicitly include hidden tracks'
 );
 
@@ -101,7 +107,7 @@ select lives_ok(
         select id
         from public.timeline_tracks
         where owner_id = '10000000-0000-0000-0000-000000000001'
-          and system_key = 'places'
+          and system_key = 'other_events'
       ),
       'stage',
       'Lived in Philadelphia',
@@ -167,7 +173,7 @@ select is(
     select count(*)::integer
     from public.timeline_workspace_with_organization()
     where title = 'Lived in Philadelphia'
-      and track_system_key = 'places'
+      and track_system_key = 'other_events'
   ),
   1,
   'The created stage appears in the Timeline workspace'
@@ -281,7 +287,7 @@ select is(
     $$
       select *
       from public.save_timeline_entry(
-        (select id from public.timeline_tracks where system_key = 'places'),
+        (select id from public.timeline_tracks where system_key = 'other_events'),
         'stage',
         'Invalid range',
         '',
@@ -304,7 +310,7 @@ select is(
     $$
       select *
       from public.save_timeline_entry(
-        (select id from public.timeline_tracks where system_key = 'places'),
+        (select id from public.timeline_tracks where system_key = 'other_events'),
         'stage',
         ' ',
         '',
@@ -327,7 +333,7 @@ select is(
     $$
       select *
       from public.save_timeline_entry(
-        (select id from public.timeline_tracks where system_key = 'places'),
+        (select id from public.timeline_tracks where system_key = 'other_events'),
         'stage',
         'Invalid timezone',
         '',
@@ -452,7 +458,7 @@ select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000002
 
 select is(
   (select count(*)::integer from public.timeline_workspace_with_organization()),
-  9,
+  8,
   'Another owner sees only their own empty default Timeline tracks'
 );
 
@@ -464,7 +470,7 @@ select is(
         select id
         from public.timeline_tracks
         where owner_id = '10000000-0000-0000-0000-000000000001'
-          and system_key = 'places'
+          and system_key = 'other_events'
       ),
       'stage',
       'Cross-owner write',

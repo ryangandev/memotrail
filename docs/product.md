@@ -115,8 +115,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 
 Timeline shows deliberately created Moments and Periods, plus contextual focused-record spans, on customizable tracks.
 The first Timeline visit asks for a private birth date, uses it as the story's starting point, and keeps it editable in Settings.
-Default tracks cover Places, Education, Career, Homes, Vehicles, Relationships, Health, First Times, and Other Moments.
-The Places track is only a Timeline grouping and does not create a Place record.
+Default tracks cover Education, Career, Homes, Vehicles, Relationships, Health, First Times, and Other Moments.
 The user can create, order, rename, hide, and restore tracks without deleting content.
 Timeline's global Add moment flow asks what the user is recording before opening the matching focused editor.
 The record form determines its fields, while Track only determines presentation.

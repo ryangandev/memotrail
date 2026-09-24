@@ -273,7 +273,7 @@ cross join lateral (
   select id
   from public.timeline_tracks
   where owner_id = '10000000-0000-0000-0000-000000000001'
-    and system_key = 'places'
+    and system_key = 'other_events'
   limit 1
 ) as timeline_tracks;
 
@@ -379,7 +379,7 @@ select is(
 );
 select is(
   (select current_stages -> 0 ->> 'track_name' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  'Places',
+  'Other Events',
   'Current stages retain their Timeline track'
 );
 select is(

@@ -81,8 +81,8 @@ select is(
     from public.timeline_tracks
     where owner_id = '10000000-0000-0000-0000-000000000001'
   ),
-  9,
-  'New users receive the nine confirmed default timeline tracks'
+  8,
+  'New users receive the eight default timeline tracks'
 );
 
 select is(

@@ -257,7 +257,7 @@ export function TimelineWorkspace({
         title={<>Timeline</>}
         eyebrow={<>Your life in context</>}
         description={
-          <>See the periods, places, and moments that shape your life.</>
+          <>See the chapters and moments that shape your life.</>
         }
         actions={
           <>
