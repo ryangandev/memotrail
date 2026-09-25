@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
-test("six Timeline ideas use current records and switch from the sidebar", async ({
+test("Timeline style setting changes the real Timeline without changing its records", async ({
   context,
   page,
 }) => {
@@ -21,7 +21,7 @@ test("six Timeline ideas use current records and switch from the sidebar", async
   const admin = createClient(local.API_URL, local.SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
   });
-  const email = `timeline-ideas-${randomUUID()}@memotrail.local`;
+  const email = `timeline-styles-${randomUUID()}@memotrail.local`;
   const created = await admin.auth.admin.createUser({
     email,
     email_confirm: true,
@@ -144,99 +144,155 @@ test("six Timeline ideas use current records and switch from the sidebar", async
       ).error,
     ).toBeNull();
 
-    const ideas = [
-      [
-        "01 Vertical Spine",
-        "The Vertical Spine",
-        "/timeline/ideas/vertical-spine",
-      ],
-      ["03 Swimlane", "Swimlane Timeline", "/timeline/ideas/swimlane"],
-      ["07 Sticky Year", "Sticky-Year Feed", "/timeline/ideas/sticky-year"],
-      ["08 Chapters", "A Life in Chapters", "/timeline/ideas/chapters"],
-      ["18 Minimal Index", "A Life, Typeset", "/timeline/ideas/minimal-index"],
-      [
-        "19 Precision Ruler",
-        "Precision Ruler",
-        "/timeline/ideas/precision-ruler",
-      ],
-    ] as const;
-    await page.goto(ideas[0][2]);
-    const sidebar = page.getByRole("complementary");
-    for (const [label, heading, href] of ideas) {
-      await sidebar.getByRole("link", { name: label, exact: true }).click();
-      await expect(page).toHaveURL(href);
-      await expect(
-        page.getByRole("heading", { name: heading, exact: true }),
-      ).toBeVisible();
-      await expect(page.getByText("First concert").first()).toBeVisible();
-      await expect(page.getByText("University years").first()).toBeVisible();
-      await expect(page.getByText("Started sketching").first()).toBeVisible();
-      if (href.endsWith("swimlane") || href.endsWith("precision-ruler")) {
-        await expect
-          .poll(() =>
-            page
-              .getByRole("region", {
-                name: href.endsWith("swimlane")
-                  ? "Timeline by track"
-                  : "Zoomable timeline ruler",
-              })
-              .evaluate((element) => element.scrollLeft),
-          )
-          .toBeGreaterThan(0);
-      }
-      if (process.env.MEMOTRAIL_CAPTURE_TIMELINE_IDEAS === "1") {
-        await page.screenshot({
-          caret: "initial",
-          path: `/tmp/memotrail-idea-${href.split("/").pop()}-desktop.png`,
-        });
-      }
+    async function expectStyleCookie(style: string) {
+      await expect
+        .poll(async () =>
+          decodeURIComponent(
+            (await context.cookies()).find(
+              (cookie) => cookie.name === "memotrail-timeline-style",
+            )?.value ?? "",
+          ),
+        )
+        .toBe(`${owner}:${style}`);
     }
-    await page.getByRole("slider", { name: "Zoom" }).press("ArrowRight");
-    await expect(page.getByText("1.25×")).toBeVisible();
 
-    await page.goto(ideas[0][2]);
-    await page
-      .getByRole("link", { name: /First concert/ })
-      .first()
-      .click();
-    await expect(page).toHaveURL(new RegExp(`/timeline\\?entry=${momentId}`));
+    await page.goto("/timeline");
+    await expect(
+      page.getByRole("region", { name: "Timeline by track" }).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: "Vertical timeline" }),
+    ).toHaveCount(0);
+
+    await page.goto("/settings");
+    await expect(page.getByRole("radio", { name: "Classic" })).toBeChecked();
+    if (process.env.MEMOTRAIL_CAPTURE_TIMELINE_STYLES === "1") {
+      await page.screenshot({
+        caret: "initial",
+        fullPage: true,
+        path: "/tmp/memotrail-timeline-setting-desktop.png",
+      });
+    }
+    await page.getByRole("radio", { name: "Vertical Spine" }).check();
+    await expect(
+      page.getByRole("radio", { name: "Vertical Spine" }),
+    ).toBeChecked();
+    await expectStyleCookie("vertical");
+    await page.goto("/timeline");
+    await expect(
+      page.getByRole("region", { name: "Vertical timeline" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /First concert/ }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /University years/ }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Without a calendar date" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Started sketching/ }),
+    ).toBeVisible();
+    await page.reload();
+    await expect(
+      page.getByRole("region", { name: "Vertical timeline" }),
+    ).toBeVisible();
+    if (process.env.MEMOTRAIL_CAPTURE_TIMELINE_STYLES === "1") {
+      await page.screenshot({
+        caret: "initial",
+        path: "/tmp/memotrail-timeline-vertical-desktop.png",
+      });
+    }
+    await page.getByRole("button", { name: /First concert/ }).click();
     await expect(
       page.getByRole("dialog", { name: "First concert" }),
     ).toBeVisible();
     await page.getByRole("button", { name: "Close Timeline editor" }).click();
-    await expect(page).toHaveURL(ideas[0][2]);
-
-    await page.getByRole("link", { name: "Add moment" }).click();
-    await expect(page).toHaveURL(
-      /\/timeline\?new=1&returnTo=%2Ftimeline%2Fideas%2Fvertical-spine/,
-    );
     await expect(
-      page.getByRole("dialog", { name: "What are you adding?" }),
+      page.getByRole("region", { name: "Vertical timeline" }),
     ).toBeVisible();
-    await page.getByRole("button", { name: "Add Moment" }).click();
-    await expect(page.getByRole("dialog")).toBeVisible();
+
+    await page.goto("/settings");
+    await page.getByRole("radio", { name: "Sticky Year" }).check();
+    await expectStyleCookie("sticky-year");
+    await page.goto("/timeline");
+    await expect(
+      page.getByRole("region", { name: "Timeline by year" }),
+    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "2008" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "2012" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Started sketching/ }),
+    ).toBeVisible();
+    if (process.env.MEMOTRAIL_CAPTURE_TIMELINE_STYLES === "1") {
+      await page.screenshot({
+        caret: "initial",
+        path: "/tmp/memotrail-timeline-sticky-year-desktop.png",
+      });
+    }
+    await page.getByRole("button", { name: /University years/ }).click();
+    await expect(
+      page.getByRole("dialog", { name: "University years" }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "Close Timeline editor" }).click();
-    await expect(page).toHaveURL(ideas[0][2]);
 
     await page.setViewportSize({ width: 390, height: 844 });
-    for (const [, heading, href] of ideas) {
-      await page.goto(href);
+    for (const [style, label] of [
+      ["sticky-year", "Sticky Year"],
+      ["vertical", "Vertical Spine"],
+    ] as const) {
+      await page.goto("/settings");
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth),
+      ).toBeLessThanOrEqual(391);
+      if (
+        style === "sticky-year" &&
+        process.env.MEMOTRAIL_CAPTURE_TIMELINE_STYLES === "1"
+      ) {
+        await page.screenshot({
+          caret: "initial",
+          fullPage: true,
+          path: "/tmp/memotrail-timeline-setting-mobile.png",
+        });
+      }
+      await page.getByRole("radio", { name: label }).check();
+      await expectStyleCookie(style);
+      await page.goto("/timeline");
       await expect(
-        page.getByRole("heading", { name: heading, exact: true }),
-      ).toBeVisible();
-      await expect(
-        page.getByRole("navigation", { name: "Timeline design ideas" }),
+        page.getByRole("region", {
+          name: style === "vertical" ? "Vertical timeline" : "Timeline by year",
+        }),
       ).toBeVisible();
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth),
       ).toBeLessThanOrEqual(391);
-      if (process.env.MEMOTRAIL_CAPTURE_TIMELINE_IDEAS === "1") {
+      if (process.env.MEMOTRAIL_CAPTURE_TIMELINE_STYLES === "1") {
         await page.screenshot({
           caret: "initial",
-          path: `/tmp/memotrail-idea-${href.split("/").pop()}-mobile.png`,
+          path: `/tmp/memotrail-timeline-${style}-mobile.png`,
         });
       }
     }
+
+    await page.goto("/settings");
+    await page.getByRole("radio", { name: "Classic" }).check();
+    await expectStyleCookie("classic");
+    await page.goto("/timeline");
+    await expect(
+      page.getByRole("region", { name: "Timeline by track" }).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: "Vertical timeline" }),
+    ).toHaveCount(0);
+    await page.getByRole("button", { name: "Add moment", exact: true }).click();
+    await expect(
+      page.getByRole("dialog", { name: "What are you adding?" }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { name: "Close entry type chooser" })
+      .click();
+    expect(errors).toEqual([]);
     expect(errors).toEqual([]);
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();

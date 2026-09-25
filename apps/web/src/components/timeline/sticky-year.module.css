@@ -2,7 +2,7 @@
   display: grid;
   max-width: 1100px;
   gap: var(--mt-space-10);
-  margin: 0 auto;
+  margin: var(--mt-space-8) auto 0;
 }
 
 .yearGroup {
@@ -47,6 +47,7 @@
 .card {
   display: grid;
   min-width: 0;
+  width: 100%;
   gap: var(--mt-space-3);
   padding: var(--mt-space-5);
   border: 1px solid var(--mt-color-border);
@@ -54,12 +55,18 @@
   color: var(--mt-color-ink);
   background: var(--mt-color-surface-raised);
   box-shadow: var(--mt-shadow-raised);
-  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--mt-motion-quick);
 }
 
-.card:hover,
-.card:focus-visible {
+.card:hover {
   border-color: var(--mt-color-accent);
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--mt-color-accent);
+  outline-offset: 3px;
 }
 
 .period {
@@ -82,6 +89,7 @@
 }
 
 .card strong {
+  overflow-wrap: anywhere;
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-title-small);
   font-weight: var(--mt-font-weight-medium);
@@ -95,6 +103,7 @@
   line-height: var(--mt-line-height-body);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
+  overflow-wrap: anywhere;
 }
 
 .cardBottom span {
@@ -128,5 +137,11 @@
 
   .cards {
     padding-top: var(--mt-space-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
   }
 }

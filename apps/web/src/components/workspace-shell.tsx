@@ -14,7 +14,6 @@ import { QuickCaptureDialog } from "@/components/quick-capture-dialog";
 import { SearchShortcutButton } from "@/components/search-shortcut-link";
 import { SyncStatus } from "@/components/sync-status";
 import { TimezoneSync } from "@/components/timezone-sync";
-import { timelineIdeaLinks } from "@/app/timeline/ideas/_shared/navigation";
 import type { Viewer } from "@/lib/data/inbox";
 
 export type WorkspaceDestination =
@@ -178,7 +177,6 @@ export function WorkspaceShell({
       <Sidebar
         activeDestination={activeDestination}
         inboxCount={inboxCount}
-        pathname={pathname}
         viewer={viewer}
       />
 
@@ -288,12 +286,10 @@ function destinationForPathname(pathname: string): WorkspaceDestination {
 function Sidebar({
   activeDestination,
   inboxCount,
-  pathname,
   viewer,
 }: {
   activeDestination: WorkspaceDestination;
   inboxCount?: number;
-  pathname: string;
   viewer: Viewer;
 }) {
   return (
@@ -310,27 +306,10 @@ function Sidebar({
       >
         <nav aria-label="Primary navigation">
           <NavGroup
-            activeDestination={
-              pathname.startsWith("/timeline/ideas/") ? null : activeDestination
-            }
+            activeDestination={activeDestination}
             inboxCount={inboxCount}
             items={primaryNavigation}
           />
-          {pathname.startsWith("/timeline") ? (
-            <div className={workspaceShellStyles.ideaNav}>
-              <p className={workspaceShellStyles.navLabel}>Timeline ideas</p>
-              {timelineIdeaLinks.map((idea) => (
-                <Link
-                  aria-current={pathname === idea.href ? "page" : undefined}
-                  href={idea.href}
-                  key={idea.href}
-                >
-                  {idea.label}
-                  <NavigationPendingIndicator label={idea.label} />
-                </Link>
-              ))}
-            </div>
-          ) : null}
           <div className={workspaceShellStyles.navDivider} role="separator" />
           <p className={workspaceShellStyles.navLabel}>Focused views</p>
           <NavGroup

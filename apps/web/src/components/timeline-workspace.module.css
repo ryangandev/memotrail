@@ -33,6 +33,10 @@
   line-height: var(--mt-line-height-body);
 }
 
+.message button {
+  margin-top: var(--mt-space-4);
+}
+
 .desktopTimeline {
   margin-top: var(--mt-space-8);
   overflow: hidden;

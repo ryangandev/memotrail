@@ -14,11 +14,16 @@
   transform: translateX(-50%);
 }
 
+.entryBlock {
+  position: relative;
+}
+
 .anchor {
   position: relative;
   z-index: 1;
   display: flex;
   width: max-content;
+  max-width: 100%;
   align-items: center;
   gap: var(--mt-space-2);
   margin: 0 auto var(--mt-space-8);
@@ -29,6 +34,7 @@
   background: var(--mt-color-surface-raised);
   font-size: var(--mt-font-size-caption);
   font-weight: var(--mt-font-weight-semibold);
+  box-shadow: var(--mt-shadow-raised);
 }
 
 .anchor:last-child {
@@ -39,6 +45,7 @@
 .anchorDot {
   width: 8px;
   height: 8px;
+  flex: none;
   border-radius: 50%;
   background: var(--mt-color-accent);
 }
@@ -66,6 +73,7 @@
 .card {
   display: grid;
   min-width: 0;
+  width: 100%;
   gap: var(--mt-space-2);
   padding: var(--mt-space-5);
   border: 1px solid var(--mt-color-border);
@@ -73,13 +81,18 @@
   color: var(--mt-color-ink);
   background: var(--mt-color-surface-raised);
   box-shadow: var(--mt-shadow-raised);
-  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
   transition: border-color var(--mt-motion-quick);
 }
 
-.card:hover,
-.card:focus-visible {
+.card:hover {
   border-color: var(--mt-color-accent);
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--mt-color-accent);
+  outline-offset: 3px;
 }
 
 .right .card {
@@ -104,6 +117,7 @@
 }
 
 .card strong {
+  overflow-wrap: anywhere;
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-title-small);
   font-weight: var(--mt-font-weight-medium);
@@ -117,6 +131,7 @@
   line-height: var(--mt-line-height-body);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
 }
 
 .cardFooter {
@@ -146,29 +161,14 @@
 }
 
 .undated p {
+  margin: var(--mt-space-2) 0 var(--mt-space-5);
   color: var(--mt-color-ink-muted);
 }
 
 .undatedList {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
   gap: var(--mt-space-3);
-}
-
-.undatedList a {
-  display: grid;
-  gap: var(--mt-space-2);
-  padding: var(--mt-space-4);
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface);
-  text-decoration: none;
-}
-
-.undatedList span,
-.undatedList small {
-  color: var(--mt-color-ink-muted);
 }
 
 @media (max-width: 720px) {

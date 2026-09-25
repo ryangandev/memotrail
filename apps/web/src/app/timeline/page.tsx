@@ -1,6 +1,10 @@
 import { TimelineWorkspace } from "@/components/timeline-workspace";
 import { getTimelineWorkspace } from "@/lib/data/timeline";
-import { timelineIdeaReturnPath } from "./ideas/_shared/navigation";
+import { cookies } from "next/headers";
+import {
+  storedTimelineStyle,
+  TIMELINE_STYLE_COOKIE_NAME,
+} from "@/lib/timeline-style";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +14,6 @@ export default async function TimelinePage({
   searchParams: Promise<{
     entry?: string | string[];
     new?: string | string[];
-    returnTo?: string | string[];
   }>;
 }) {
   const parameters = await searchParams;
@@ -19,6 +22,10 @@ export default async function TimelinePage({
   if (!workspace) {
     return null;
   }
+  const timelineStyle = storedTimelineStyle(
+    (await cookies()).get(TIMELINE_STYLE_COOKIE_NAME)?.value,
+    workspace.viewer.id,
+  );
 
   return (
     <TimelineWorkspace
@@ -35,8 +42,8 @@ export default async function TimelinePage({
       loadError={workspace.loadError}
       ownerId={workspace.viewer.id}
       referenceDate={new Date().toISOString()}
-      returnTo={timelineIdeaReturnPath(parameters.returnTo)}
       tagOptions={workspace.tagOptions}
+      timelineStyle={timelineStyle}
       tracks={workspace.tracks}
       vehicles={workspace.vehicles}
     />
