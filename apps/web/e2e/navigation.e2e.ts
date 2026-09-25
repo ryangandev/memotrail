@@ -247,7 +247,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     const homeTop = await homeLink.evaluate(
       (element) => element.getBoundingClientRect().top,
     );
-    expect(Math.round(homeTop - brandBottom)).toBe(20);
+    expect(Math.round(homeTop - brandBottom)).toBe(22);
     const scrollRegionRight = await scrollRegion.evaluate(
       (element) => element.getBoundingClientRect().right,
     );
@@ -282,6 +282,50 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       await capture.evaluate((element) => element.getBoundingClientRect().top),
     ).toBe(captureTop);
     await page.setViewportSize({ width: 1280, height: 720 });
+
+    await shell.getByRole("button", { name: "Collapse sidebar" }).click();
+    await expect(page.locator('[data-sidebar-collapsed="true"]')).toBeVisible();
+    await expect(shell).toHaveCSS("width", "80px");
+    await expect(page.locator("main")).toHaveCSS("margin-left", "80px");
+    await expect(homeLink).toBeInViewport();
+    await expect(homeCaptureHeading).toBeVisible();
+    await expect(
+      shell.getByRole("link", { name: "MemoTrail home" }),
+    ).toBeVisible();
+    const collapsedLibrary = primaryNavigation.getByRole("link", {
+      name: "Library",
+      exact: true,
+    });
+    await expect(collapsedLibrary).toBeVisible();
+    await page.screenshot({
+      caret: "initial",
+      path: "/private/tmp/memotrail-sidebar-collapsed.png",
+    });
+    await collapsedLibrary.click();
+    await expect(page).toHaveURL(/\/library$/);
+    await page.reload();
+    await expect(shell).toHaveCSS("width", "80px");
+    await primaryNavigation
+      .getByRole("link", { name: "Home", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/$/);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(shell).toBeHidden();
+    await expect(page.locator("main")).toHaveCSS("margin-left", "0px");
+    await expect(
+      page.getByRole("navigation", { name: "Mobile navigation" }),
+    ).toBeVisible();
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await shell.getByRole("button", { name: "Expand sidebar" }).click();
+    await expect(shell).toHaveCSS("width", "244px");
+    await expect(page.locator("main")).toHaveCSS("margin-left", "244px");
+    await page.screenshot({
+      caret: "initial",
+      path: "/private/tmp/memotrail-sidebar-expanded.png",
+    });
+    await shell.evaluate((element) => {
+      element.setAttribute("data-shell-instance", "kept");
+    });
 
     await page.keyboard.press("Meta+k");
     const commandPalette = page.getByRole("dialog", {

@@ -15,6 +15,7 @@ import { SearchShortcutButton } from "@/components/search-shortcut-link";
 import { SyncStatus } from "@/components/sync-status";
 import { TimezoneSync } from "@/components/timezone-sync";
 import type { Viewer } from "@/lib/data/inbox";
+import { SIDEBAR_COOKIE_NAME } from "@/lib/sidebar-preference";
 
 export type WorkspaceDestination =
   | "collections"
@@ -115,11 +116,13 @@ export function WorkspaceBoundary({
   children,
   configured,
   inboxCount,
+  initialSidebarCollapsed,
   viewer,
 }: {
   children: ReactNode;
   configured: boolean;
   inboxCount?: number;
+  initialSidebarCollapsed: boolean;
   viewer: Viewer | null;
 }) {
   const pathname = usePathname();
@@ -137,7 +140,11 @@ export function WorkspaceBoundary({
   }
 
   return (
-    <WorkspaceShell inboxCount={inboxCount} viewer={viewer}>
+    <WorkspaceShell
+      inboxCount={inboxCount}
+      initialSidebarCollapsed={initialSidebarCollapsed}
+      viewer={viewer}
+    >
       {children}
     </WorkspaceShell>
   );
@@ -146,15 +153,20 @@ export function WorkspaceBoundary({
 export function WorkspaceShell({
   children,
   inboxCount,
+  initialSidebarCollapsed,
   viewer,
 }: {
   children: ReactNode;
   inboxCount?: number;
+  initialSidebarCollapsed: boolean;
   viewer: Viewer;
 }) {
   const activeDestination = destinationForPathname(usePathname());
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    initialSidebarCollapsed,
+  );
   const closeCommandPalette = useCallback(
     () => setCommandPaletteOpen(false),
     [],
@@ -169,13 +181,24 @@ export function WorkspaceShell({
     setQuickCaptureOpen(true);
   }, []);
 
+  function toggleSidebar() {
+    const next = !sidebarCollapsed;
+    setSidebarCollapsed(next);
+    document.cookie = `${SIDEBAR_COOKIE_NAME}=${next ? "collapsed" : "expanded"}; Path=/; Max-Age=31536000; SameSite=Lax`;
+  }
+
   return (
-    <div className={workspaceShellStyles.appShell}>
+    <div
+      className={workspaceShellStyles.appShell}
+      data-sidebar-collapsed={sidebarCollapsed}
+    >
       <TimezoneSync />
       <CommandPalette onClose={closeCommandPalette} open={commandPaletteOpen} />
       <Sidebar
         activeDestination={activeDestination}
+        collapsed={sidebarCollapsed}
         inboxCount={inboxCount}
+        onToggle={toggleSidebar}
         viewer={viewer}
       />
 
@@ -284,19 +307,39 @@ function destinationForPathname(pathname: string): WorkspaceDestination {
 
 function Sidebar({
   activeDestination,
+  collapsed,
   inboxCount,
+  onToggle,
   viewer,
 }: {
   activeDestination: WorkspaceDestination;
+  collapsed: boolean;
   inboxCount?: number;
+  onToggle: () => void;
   viewer: Viewer;
 }) {
   return (
     <aside className={workspaceShellStyles.sidebar}>
-      <Link className={workspaceShellStyles.brand} href="/">
-        <BrandMark className={workspaceShellStyles.brandMark} />
-        <span>MemoTrail</span>
-      </Link>
+      <div className={workspaceShellStyles.sidebarHeader}>
+        <Link
+          aria-label={collapsed ? "MemoTrail home" : undefined}
+          className={workspaceShellStyles.brand}
+          href="/"
+          title={collapsed ? "MemoTrail home" : undefined}
+        >
+          <BrandMark className={workspaceShellStyles.brandMark} />
+          <span className={workspaceShellStyles.brandName}>MemoTrail</span>
+        </Link>
+        <button
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className={workspaceShellStyles.sidebarToggle}
+          onClick={onToggle}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          type="button"
+        >
+          <Icon name="chevron" size={18} />
+        </button>
+      </div>
 
       <div
         aria-label="Sidebar navigation"
@@ -306,6 +349,7 @@ function Sidebar({
         <nav aria-label="Primary navigation">
           <NavGroup
             activeDestination={activeDestination}
+            collapsed={collapsed}
             inboxCount={inboxCount}
             items={primaryNavigation}
           />
@@ -313,12 +357,14 @@ function Sidebar({
           <p className={workspaceShellStyles.navLabel}>Focused views</p>
           <NavGroup
             activeDestination={activeDestination}
+            collapsed={collapsed}
             items={recordNavigation}
           />
           <div className={workspaceShellStyles.navDivider} role="separator" />
           <p className={workspaceShellStyles.navLabel}>Organize</p>
           <NavGroup
             activeDestination={activeDestination}
+            collapsed={collapsed}
             items={organizationNavigation}
           />
         </nav>
@@ -332,6 +378,7 @@ function Sidebar({
           >
             <NavigationControl
               active={activeDestination === "settings"}
+              collapsed={collapsed}
               item={settingsNavigation}
             />
           </nav>
@@ -343,10 +390,12 @@ function Sidebar({
 
 function NavGroup({
   activeDestination,
+  collapsed,
   inboxCount,
   items,
 }: {
   activeDestination: WorkspaceDestination;
+  collapsed: boolean;
   inboxCount?: number;
   items: NavigationItem[];
 }) {
@@ -355,6 +404,7 @@ function NavGroup({
       {items.map((item) => (
         <NavigationControl
           active={item.destination === activeDestination}
+          collapsed={collapsed}
           inboxCount={item.destination === "inbox" ? inboxCount : undefined}
           item={item}
           key={item.destination}
@@ -366,11 +416,13 @@ function NavGroup({
 
 function NavigationControl({
   active,
+  collapsed = false,
   inboxCount,
   item,
   mobile = false,
 }: {
   active: boolean;
+  collapsed?: boolean;
   inboxCount?: number;
   item: NavigationItem;
   mobile?: boolean;
@@ -378,7 +430,7 @@ function NavigationControl({
   const content = (
     <>
       <Icon name={item.icon} size={mobile ? 20 : 18} />
-      <span>
+      <span className={workspaceShellStyles.navItemLabel}>
         {mobile && item.label === "First Times" ? "Firsts" : item.label}
       </span>
       {!mobile && inboxCount ? <small>{inboxCount}</small> : null}
@@ -394,8 +446,10 @@ function NavigationControl({
     return (
       <Link
         aria-current={active ? "page" : undefined}
+        aria-label={collapsed ? item.label : undefined}
         className={className}
         href={item.href}
+        title={collapsed ? item.label : undefined}
       >
         {content}
         <NavigationPendingIndicator label={item.label} />

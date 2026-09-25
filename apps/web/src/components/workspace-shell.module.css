@@ -32,6 +32,43 @@
   padding: 0 var(--mt-space-2);
 }
 
+.sidebarHeader {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mt-space-1);
+}
+
+.sidebarToggle {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--mt-radius-medium);
+  color: var(--mt-color-ink-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.sidebarToggle svg {
+  transform: rotate(180deg);
+}
+
+.sidebarToggle:hover,
+.sidebarToggle:focus-visible {
+  outline: none;
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-subtle);
+}
+
+.sidebarToggle:focus-visible {
+  box-shadow: 0 0 0 2px var(--mt-color-accent);
+}
+
 .brandMark {
   width: 29px;
   height: 29px;
@@ -85,7 +122,7 @@
   background: var(--mt-color-surface-subtle);
 }
 
-.navGroup a span {
+.navGroup a .navItemLabel {
   flex: 1;
 }
 
@@ -197,6 +234,56 @@
   height: 2px;
   overflow: hidden;
   background: var(--mt-color-accent-subtle);
+}
+
+.appShell[data-sidebar-collapsed="true"] .sidebar {
+  width: 80px;
+  padding-inline: var(--mt-space-2);
+}
+
+.appShell[data-sidebar-collapsed="true"] .brand {
+  padding-inline: 2px;
+}
+
+.appShell[data-sidebar-collapsed="true"] .brandMark {
+  width: 25px;
+  height: 25px;
+}
+
+.appShell[data-sidebar-collapsed="true"] .brandName,
+.appShell[data-sidebar-collapsed="true"] .navItemLabel,
+.appShell[data-sidebar-collapsed="true"] .navLabel,
+.appShell[data-sidebar-collapsed="true"] .archiveNote {
+  display: none;
+}
+
+.appShell[data-sidebar-collapsed="true"] .sidebarToggle svg {
+  transform: none;
+}
+
+.appShell[data-sidebar-collapsed="true"] .sidebarScrollRegion {
+  margin-right: calc(var(--mt-space-2) * -1);
+  margin-top: var(--mt-space-4);
+  padding-right: var(--mt-space-2);
+}
+
+.appShell[data-sidebar-collapsed="true"] .navGroup a {
+  height: 38px;
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.appShell[data-sidebar-collapsed="true"] .navDivider {
+  margin-inline: var(--mt-space-3);
+  margin-block: var(--mt-space-3);
+}
+
+.appShell[data-sidebar-collapsed="true"] .workspace {
+  margin-left: 80px;
+}
+
+.appShell[data-sidebar-collapsed="true"] .navigationProgress {
+  left: 80px;
 }
 
 .navigationProgress::after {
@@ -392,8 +479,16 @@
     margin-left: 0;
   }
 
+  .appShell[data-sidebar-collapsed="true"] .workspace {
+    margin-left: 0;
+  }
+
   .navigationProgress {
     top: 57px;
+    left: 0;
+  }
+
+  .appShell[data-sidebar-collapsed="true"] .navigationProgress {
     left: 0;
   }
 
