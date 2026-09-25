@@ -9,6 +9,7 @@ Authored Place records have also been removed from Web and the hosted schema; En
 The obsolete Places Timeline track has been removed, with existing placements migrated to the general track.
 The accepted compact Collection card is shared by the Web Design System and Collections overview.
 The Web Map and Location previews now follow light, dark, and System appearance; a local provider-backed dark map loaded successfully.
+The Map also offers filtered shortcuts to the user's most recorded cities when records span more than one city.
 Inbox review now hides AI suggestions and places photos after tags; the Library browser excludes unreviewed captures until Save to Library.
 Native iOS still uses the older Kind and subtype contract and needs a separate update before its write flows are compatible.
 Web production still needs deployment and acceptance of this branch; live configuration, native interactions, CI, and recovery evidence remain incomplete.

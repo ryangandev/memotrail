@@ -267,6 +267,96 @@ test("Map shows current Entry coordinates", async ({
       path: "/private/tmp/memotrail-location-map-mobile.png",
     });
 
+    const westEntryId = randomUUID();
+    const westLocationId = randomUUID();
+    expect(
+      (
+        await client.from("entries").insert({
+          id: westEntryId,
+          owner_id: owner,
+          title: "Walk by the bay",
+          body: "A San Francisco memory",
+          item_kind: "entry",
+          item_subtype: "entry",
+          inbox_status: "organized",
+          date_precision: "year",
+          occurred_start: "2024-01-01T00:00:00Z",
+        })
+      ).error,
+    ).toBeNull();
+    expect(
+      (
+        await client.from("locations").insert({
+          id: westLocationId,
+          owner_id: owner,
+          bound_entry_id: westEntryId,
+          name: "San Francisco Bay",
+          formatted_address: "San Francisco, California",
+          city: "San Francisco",
+          region: "California",
+          country: "United States",
+          latitude: 37.7749,
+          longitude: -122.4194,
+        })
+      ).error,
+    ).toBeNull();
+    expect(
+      (
+        await client.from("entry_places").insert({
+          owner_id: owner,
+          entry_id: westEntryId,
+          place_id: westLocationId,
+          relationship: "primary",
+        })
+      ).error,
+    ).toBeNull();
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Your areas" })).toBeVisible();
+    const eastArea = page.getByRole("button", {
+      name: "Zoom to Philadelphia, 2 Entries",
+    });
+    const westArea = page.getByRole("button", {
+      name: "Zoom to San Francisco, California, 1 Entry",
+    });
+    await expect(eastArea).toBeVisible();
+    await expect(westArea).toBeVisible();
+    await expect(page.locator(".leaflet-marker-icon")).toHaveCount(2);
+    await eastArea.click();
+    await expect(page.locator(".leaflet-marker-icon")).toHaveCount(1);
+    await expect(page.locator(".leaflet-marker-icon")).toHaveAttribute(
+      "title",
+      "2 Entry locations in this area",
+    );
+    await westArea.click();
+    await expect(page.locator(".leaflet-marker-icon")).toHaveCount(1);
+    await expect(page.locator(".leaflet-marker-icon")).toHaveAttribute(
+      "title",
+      "Walk by the bay",
+    );
+    await page.getByRole("button", { name: "View all" }).click();
+    await expect(page.locator(".leaflet-marker-icon")).toHaveCount(2);
+    await page.getByLabel("From year").fill("2023");
+    await expect(page.getByRole("heading", { name: "Your areas" })).toHaveCount(0);
+    await expect(page.getByRole("status").filter({ hasText: "1 Entry Location" })).toBeVisible();
+    await page.getByLabel("From year").fill("");
+    await expect(page.locator(".leaflet-marker-icon")).toHaveCount(2);
+    await page.screenshot({
+      animations: "disabled",
+      path: "/private/tmp/memotrail-location-map-areas-desktop.png",
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth + 1,
+      ),
+    ).toBe(true);
+    await page.screenshot({
+      animations: "disabled",
+      path: "/private/tmp/memotrail-location-map-areas-mobile.png",
+    });
+
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }

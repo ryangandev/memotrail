@@ -32,6 +32,70 @@
   font-size: var(--mt-font-size-caption);
 }
 
+.areas {
+  display: grid;
+  gap: var(--mt-space-2);
+  margin: 0 0 var(--mt-space-4);
+}
+
+.areasHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.areas h2 {
+  margin: 0;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.areaActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mt-space-2);
+}
+
+.areaButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mt-space-2);
+  min-height: 36px;
+  padding: var(--mt-space-1) var(--mt-space-3);
+  border: 1px solid var(--mt-color-border);
+  border-radius: 999px;
+  background: var(--mt-color-surface-raised);
+  color: var(--mt-color-ink);
+  font: inherit;
+  font-size: var(--mt-font-size-caption);
+  cursor: pointer;
+}
+
+.areaButton:hover,
+.areaButton:focus-visible,
+.allAreasButton:hover,
+.allAreasButton:focus-visible {
+  border-color: var(--mt-color-accent);
+  background: var(--mt-color-accent-subtle);
+}
+
+.areaButton small {
+  color: var(--mt-color-ink-muted);
+  font-size: inherit;
+}
+
+.allAreasButton {
+  padding: var(--mt-space-1) var(--mt-space-2);
+  border: 0;
+  border-radius: var(--mt-radius-small);
+  background: transparent;
+  color: var(--mt-color-ink-muted);
+  font: inherit;
+  font-size: var(--mt-font-size-caption);
+  cursor: pointer;
+}
+
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 290px;
