@@ -53,6 +53,15 @@ test("Map shows current Entry coordinates", async ({
         sameSite: "Lax",
       })),
     );
+    await context.addCookies([
+      {
+        name: "memotrail-theme",
+        value: "dark",
+        domain: "127.0.0.1",
+        path: "/",
+        sameSite: "Lax",
+      },
+    ]);
 
     const eventId = randomUUID();
     const writingId = randomUUID();
@@ -157,8 +166,60 @@ test("Map shows current Entry coordinates", async ({
         .getByRole("button", { name: /A day at Pine Street/ })
         .locator('[data-record-card-map="true"]'),
     ).toBeVisible();
+    await expect(
+      page
+        .getByRole("button", { name: /A day at Pine Street/ })
+        .locator('[data-record-card-map="true"]'),
+    ).toHaveAttribute("src", /theme=dark/);
 
+    const darkTile = process.env.MEMOTRAIL_E2E_LIVE_GEOAPIFY === "1"
+      ? page.waitForResponse((response) =>
+          response.url().includes("/api/locations/tiles/") &&
+          response.url().includes("theme=dark") &&
+          response.status() === 200,
+        )
+      : null;
     await page.goto("/map");
+    await expect(
+      page.getByRole("region", { name: "Interactive map of your Entry Locations" }),
+    ).toHaveAttribute("data-map-theme", "dark");
+    if (darkTile) {
+      await darkTile;
+      await page.waitForFunction(() => {
+        const tiles = [...document.querySelectorAll(".leaflet-tile")];
+        return (
+          tiles.length >= 4 &&
+          tiles.every((tile) => tile.classList.contains("leaflet-tile-loaded"))
+        );
+      });
+      await page.waitForLoadState("networkidle");
+      await expect(
+        page.getByText("Some map tiles are unavailable right now."),
+      ).toHaveCount(0);
+      await page.screenshot({
+        animations: "disabled",
+        path: "/private/tmp/memotrail-location-map-dark.png",
+      });
+    }
+    const lightTile = process.env.MEMOTRAIL_E2E_LIVE_GEOAPIFY === "1"
+      ? page.waitForResponse((response) =>
+          response.url().includes("/api/locations/tiles/") &&
+          response.url().includes("theme=light") &&
+          response.status() === 200,
+        )
+      : null;
+    await page.evaluate(() =>
+      document.documentElement.setAttribute("data-theme", "light"),
+    );
+    await expect(
+      page.getByRole("region", { name: "Interactive map of your Entry Locations" }),
+    ).toHaveAttribute("data-map-theme", "light");
+    if (lightTile) await lightTile;
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.evaluate(() => document.documentElement.removeAttribute("data-theme"));
+    await expect(
+      page.getByRole("region", { name: "Interactive map of your Entry Locations" }),
+    ).toHaveAttribute("data-map-theme", "dark");
     await expect(
       page.getByRole("status").filter({ hasText: "2 Entry Locations" }),
     ).toBeVisible();

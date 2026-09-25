@@ -196,6 +196,7 @@ Pair it with the test file carrying the same feature name.
   The proxy sends only the requested search text or coordinates to Geoapify, not the signed-in user's identity.
 - The Web Map reads current Entry-Location links through owner-scoped RLS and proxies Geoapify raster tiles through an authenticated route.
   Its 5,000-link bound is ordered newest first and explicitly disclosed in the UI; filters apply to loaded results.
+- Interactive tiles and static Location previews accept only light or dark theme parameters; authenticated routes choose allowlisted Geoapify styles while keeping the provider key server-side.
 - Search, preview, and tile routes each consume an owner-scoped hourly database quota before contacting Geoapify.
 - iOS receives public backend configuration and the Web API base URL.
 - Shared behavior should be implemented and tested across Web, iOS, and Supabase in the same product slice.

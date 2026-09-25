@@ -53,6 +53,21 @@
   height: 580px;
 }
 
+.mapWrap :global(.leaflet-container) {
+  background: var(--mt-color-surface-subtle);
+}
+
+.mapWrap :global(.leaflet-bar) {
+  border-color: var(--mt-color-border);
+}
+
+.mapWrap :global(.leaflet-bar a),
+.mapWrap :global(.leaflet-bar a:hover) {
+  border-bottom-color: var(--mt-color-border);
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-raised);
+}
+
 .mapNotice {
   position: absolute;
   z-index: 500;
@@ -75,8 +90,8 @@
   bottom: 0;
   margin: 0;
   padding: 3px 7px;
-  background: rgb(255 255 255 / 0.9);
-  color: #343a35;
+  background: var(--mt-color-surface-raised);
+  color: var(--mt-color-ink-muted);
   font-size: 10px;
 }
 

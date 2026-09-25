@@ -179,6 +179,7 @@ Replaced Location snapshots remain private history for their owning Item, while 
 Editors show a formatted address and map preview when coordinates exist; a photo's GPS position may be saved without an inferred address.
 Homes may be saved without a Location; manually editing an address clears any provider-backed coordinate preview until another address is selected.
 The Web Map clusters current Entry coordinates, filters by Kind and year, and opens the Entries associated with a selected point without turning Location into a named Place.
+The Map and Location previews follow the effective Web appearance, including System mode and changes while a map is open.
 Photo GPS Locations retain their source photo identity as provenance after explicit adoption.
 People contain a name plus optional relationship label and notes.
 People remain reusable across Entries.

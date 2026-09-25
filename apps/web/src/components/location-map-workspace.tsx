@@ -6,6 +6,7 @@ import type * as Leaflet from "leaflet";
 import { PageFrame } from "@/components/page-frame";
 import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/icon";
+import { useEffectiveTheme } from "@/components/use-effective-theme";
 import type { LocationMapItem } from "@/lib/data/location-map";
 import styles from "./location-map-workspace.module.css";
 
@@ -37,6 +38,7 @@ export function LocationMapWorkspace({
   const [toYear, setToYear] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[] | null>(null);
   const [tileError, setTileError] = useState(false);
+  const theme = useEffectiveTheme();
 
   const filtered = useMemo(
     () =>
@@ -69,15 +71,6 @@ export function LocationMapWorkspace({
         attributionControl: false,
       });
       mapRef.current = map;
-      if (mapConfigured) {
-        L.tileLayer("/api/locations/tiles/{z}/{x}/{y}", {
-          maxZoom: 19,
-          minZoom: 2,
-          tileSize: 256,
-        })
-          .on("tileerror", () => setTileError(true))
-          .addTo(map);
-      }
       setReady(true);
     }
     void initialize();
@@ -86,7 +79,26 @@ export function LocationMapWorkspace({
       map?.remove();
       mapRef.current = null;
     };
-  }, [mapConfigured]);
+  }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const L = leafletRef.current;
+    if (!ready || !mapConfigured || !theme || !map || !L) return;
+
+    setTileError(false);
+    const onTileError = () => setTileError(true);
+    const tiles = L.tileLayer(
+      `/api/locations/tiles/{z}/{x}/{y}?theme=${theme}`,
+      { maxZoom: 19, minZoom: 2, tileSize: 256 },
+    )
+      .on("tileerror", onTileError)
+      .addTo(map);
+    return () => {
+      tiles.off("tileerror", onTileError);
+      tiles.remove();
+    };
+  }, [mapConfigured, ready, theme]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -251,6 +263,7 @@ export function LocationMapWorkspace({
           <div
             aria-label="Interactive map of your Entry Locations"
             className={styles.map}
+            data-map-theme={theme ?? undefined}
             ref={elementRef}
             role="region"
           />
@@ -274,6 +287,14 @@ export function LocationMapWorkspace({
               target="_blank"
             >
               © OpenStreetMap contributors
+            </a>
+            {" · "}
+            <a
+              href="https://openmaptiles.org/"
+              rel="noreferrer"
+              target="_blank"
+            >
+              © OpenMapTiles
             </a>
             {" · "}
             <a

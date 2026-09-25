@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import Image from "next/image";
+import { useEffectiveTheme } from "@/components/use-effective-theme";
 
 export function RecordCardMap({
   eager = false,
@@ -15,7 +16,9 @@ export function RecordCardMap({
   longitude: number | null | undefined;
 }) {
   const [failedSource, setFailedSource] = useState<string | null>(null);
+  const theme = useEffectiveTheme();
   const source =
+    theme &&
     typeof latitude === "number" &&
     Number.isFinite(latitude) &&
     latitude >= -90 &&
@@ -24,7 +27,7 @@ export function RecordCardMap({
     Number.isFinite(longitude) &&
     longitude >= -180 &&
     longitude <= 180
-      ? `/api/locations/map?lat=${latitude}&lon=${longitude}&card=1`
+      ? `/api/locations/map?lat=${latitude}&lon=${longitude}&card=1&theme=${theme}`
       : null;
 
   if (!source || failedSource === source) return <>{fallback}</>;

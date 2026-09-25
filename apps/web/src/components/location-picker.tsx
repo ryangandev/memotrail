@@ -4,6 +4,7 @@ import Image from "next/image";
 import { AddressSearch } from "@/components/address-search";
 import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
+import { useEffectiveTheme } from "@/components/use-effective-theme";
 import {
   locationDisplayLabel,
   type LocationSelection,
@@ -66,18 +67,21 @@ function SelectedLocation({
   const latitude = location.latitude;
   const longitude = location.longitude;
   const hasCoordinates = latitude !== null && longitude !== null;
+  const theme = useEffectiveTheme();
   return (
     <div className={styles.selected}>
-      {hasCoordinates ? (
+      {hasCoordinates && theme ? (
         <Image
           alt={`Map showing ${label}`}
           className={styles.map}
           height={280}
           loading="lazy"
-          src={`/api/locations/map?lat=${latitude}&lon=${longitude}`}
+          src={`/api/locations/map?lat=${latitude}&lon=${longitude}&theme=${theme}`}
           width={720}
           unoptimized
         />
+      ) : hasCoordinates ? (
+        <div aria-hidden="true" className={styles.mapUnavailable} />
       ) : (
         <div className={styles.mapUnavailable}>
           <Icon name="map" size={24} />
