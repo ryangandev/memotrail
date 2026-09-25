@@ -13,8 +13,7 @@ insert into public.entries(
   '10000000-0000-0000-0000-000000000093',
   'An idea',
   E'  Original\nwriting  ',
-  'writing',
-  'idea',
+  'entry','entry',
   'unreviewed',
   'age',
   '17岁',
@@ -40,7 +39,7 @@ select is(
 select is(
   (select item_kind || ':' || item_subtype || ':' || revision
    from public.entries where id='20000000-0000-0000-0000-000000000093'),
-  'writing:idea:1',
+  'entry:entry:1',
   'The source keeps its writing identity and revision'
 );
 select is(

@@ -28,8 +28,8 @@ const row = {
   related_entries: [
     {
       body: "A useful sailing lesson.",
-      item_kind: "writing",
-      item_subtype: "lesson",
+      item_kind: "entry",
+      item_subtype: "entry",
       id: "40000000-0000-4000-8000-000000000002",
       occurred_label: null,
       occurred_start: "2026-08-01T12:00:00Z",
@@ -71,8 +71,8 @@ describe("Goal records", () => {
       horizon: "long_term",
       relatedEntries: [
         {
-          itemKind: "writing",
-          itemSubtype: "lesson",
+          itemKind: "entry",
+          itemSubtype: "entry",
           relationship: "related",
         },
       ],
@@ -107,8 +107,8 @@ describe("Goal records", () => {
     expect(
       parseGoalLinkOptions([
         {
-          item_kind: "writing",
-          item_subtype: "reflection",
+          item_kind: "entry",
+          item_subtype: "entry",
           body: null,
           id: "40000000-0000-4000-8000-000000000002",
           title: "An earlier reflection",
@@ -118,8 +118,8 @@ describe("Goal records", () => {
     ).toEqual([
       {
         id: "40000000-0000-4000-8000-000000000002",
-        itemKind: "writing",
-        itemSubtype: "reflection",
+        itemKind: "entry",
+        itemSubtype: "entry",
         title: "An earlier reflection",
         updatedAt: "2026-09-03T10:00:00Z",
       },

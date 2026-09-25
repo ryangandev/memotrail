@@ -19,7 +19,7 @@ const entry = {
   created_at: "2025-09-03T17:00:00Z",
   date_precision: "day",
   entry_id: "87000000-0000-0000-0000-000000000001",
-  item_kind: "event",
+  item_kind: "entry",
   item_subtype: "first_time",
   inbox_status: "organized",
   occurred_end: null,

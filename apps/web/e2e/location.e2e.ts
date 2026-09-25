@@ -69,8 +69,8 @@ test("repeating an address creates independent Entry and Home Locations", async 
             owner_id: owner,
             title: "The day on Pine Street",
             body: "First memory",
-            item_kind: "writing",
-            item_subtype: "note",
+            item_kind: "entry",
+            item_subtype: "entry",
             inbox_status: "organized",
             date_precision: "unknown",
           },
@@ -79,8 +79,8 @@ test("repeating an address creates independent Entry and Home Locations", async 
             owner_id: owner,
             title: "Another Pine Street memory",
             body: "Second memory",
-            item_kind: "writing",
-            item_subtype: "note",
+            item_kind: "entry",
+            item_subtype: "entry",
             inbox_status: "organized",
             date_precision: "unknown",
           },
@@ -122,7 +122,7 @@ test("repeating an address creates independent Entry and Home Locations", async 
 
     await page.goto(`/history?entry=${firstEntryId}`);
     await page
-      .getByRole("button", { name: "Edit Writing", exact: true })
+      .getByRole("button", { name: "Edit Entry", exact: true })
       .click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByPlaceholder("Search for an address")).toHaveCSS(
@@ -189,7 +189,7 @@ test("repeating an address creates independent Entry and Home Locations", async 
 
     await page.goto(`/history?entry=${secondEntryId}`);
     await page
-      .getByRole("button", { name: "Edit Writing", exact: true })
+      .getByRole("button", { name: "Edit Entry", exact: true })
       .click();
     const secondDialog = page.getByRole("dialog");
     await secondDialog

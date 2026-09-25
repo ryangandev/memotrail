@@ -7,10 +7,10 @@ import { Icon } from "@/components/icon";
 import { EntryRichTextContent } from "@/components/entry-rich-text-content";
 import { OrganizationControl } from "@/components/organization-control";
 import { PageFrame } from "@/components/page-frame";
+import { CollectionCard } from "@/components/collection-card";
 import { ProgressiveImage } from "@/components/progressive-image";
 import type {
   CollectionEntry,
-  CollectionSummary,
   CollectionsWorkspace as CollectionsWorkspaceData,
 } from "@/lib/data/collections";
 import {
@@ -118,70 +118,36 @@ function CollectionOverview({
       </div>
 
       <section className={styles.collectionGrid} aria-label="Collections">
-        {workspace.collections.map((collection, index) => (
-          <CollectionCard
-            collection={collection}
-            index={index + 1}
-            key={collection.id}
-            organizationItem={workspace.organizationItems.find(
-              (item) => item.id === collection.id,
-            )}
-            organizationItems={workspace.organizationItems}
-          />
-        ))}
+        {workspace.collections.map((collection) => {
+          const organizationItem = workspace.organizationItems.find(
+            (item) => item.id === collection.id,
+          );
+          return (
+            <CollectionCard
+              entryCount={collection.entryCount}
+              href={`/collections/${collection.id}`}
+              inboxCount={collection.unreviewedCount}
+              key={collection.id}
+              manageAction={
+                organizationItem ? (
+                  <OrganizationControl
+                    item={organizationItem}
+                    items={workspace.organizationItems}
+                    kind="collection"
+                  />
+                ) : null
+              }
+              name={collection.name}
+              updatedLabel={
+                collection.latestEntryAt
+                  ? `Latest ${shortDate(collection.latestEntryAt)}`
+                  : undefined
+              }
+            />
+          );
+        })}
       </section>
     </>
-  );
-}
-
-function CollectionCard({
-  collection,
-  index,
-  organizationItem,
-  organizationItems,
-}: {
-  collection: CollectionSummary;
-  index: number;
-  organizationItem:
-    CollectionsWorkspaceData["organizationItems"][number] | undefined;
-  organizationItems: CollectionsWorkspaceData["organizationItems"];
-}) {
-  return (
-    <article className={styles.collectionCard}>
-      <Link className={styles.cardLink} href={`/collections/${collection.id}`}>
-        <div className={styles.cardTopline}>
-          <span>{String(index).padStart(2, "0")}</span>
-          <Icon name="archive" size={20} />
-        </div>
-        <h2>{collection.name}</h2>
-        <p>
-          {collection.entryCount === 0
-            ? "Ready for its first Entry."
-            : `${countLabel(collection.entryCount, "Entry")} filed here.`}
-        </p>
-        <footer>
-          <span>
-            {collection.latestEntryAt
-              ? `Latest ${shortDate(collection.latestEntryAt)}`
-              : "Empty Collection"}
-          </span>
-          {collection.unreviewedCount ? (
-            <strong>{collection.unreviewedCount} in Inbox</strong>
-          ) : (
-            <Icon name="chevron" size={16} />
-          )}
-        </footer>
-      </Link>
-      {organizationItem ? (
-        <div className={styles.cardControl}>
-          <OrganizationControl
-            item={organizationItem}
-            items={organizationItems}
-            kind="collection"
-          />
-        </div>
-      ) : null}
-    </article>
   );
 }
 

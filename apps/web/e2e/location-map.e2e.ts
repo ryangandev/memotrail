@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
-test("Map shows current Entry coordinates and Place search only fills its form", async ({
+test("Map shows current Entry coordinates", async ({
   context,
   page,
 }) => {
@@ -15,7 +15,7 @@ test("Map shows current Entry coordinates and Place search only fills its form",
     }),
   );
   const admin = createClient(env.API_URL, env.SERVICE_ROLE_KEY);
-  const email = `map-place-${randomUUID()}@memotrail.local`;
+  const email = `map-location-${randomUUID()}@memotrail.local`;
   const created = await admin.auth.admin.createUser({
     email,
     email_confirm: true,
@@ -68,7 +68,7 @@ test("Map shows current Entry coordinates and Place search only fills its form",
             owner_id: owner,
             title: "A day at Pine Street",
             body: "An event",
-            item_kind: "event",
+            item_kind: "entry",
             item_subtype: "first_time",
             inbox_status: "organized",
             date_precision: "day",
@@ -79,8 +79,8 @@ test("Map shows current Entry coordinates and Place search only fills its form",
             owner_id: owner,
             title: "Pine Street journal",
             body: "A memory",
-            item_kind: "writing",
-            item_subtype: "note",
+            item_kind: "entry",
+            item_subtype: "entry",
             inbox_status: "organized",
             date_precision: "year",
             occurred_start: "2022-01-01T00:00:00Z",
@@ -90,8 +90,8 @@ test("Map shows current Entry coordinates and Place search only fills its form",
             owner_id: owner,
             title: "Deleted Pine Street note",
             body: "Hidden from map",
-            item_kind: "writing",
-            item_subtype: "note",
+            item_kind: "entry",
+            item_subtype: "entry",
             inbox_status: "organized",
             date_precision: "unknown",
             deleted_at: new Date().toISOString(),
@@ -151,6 +151,13 @@ test("Map shows current Entry coordinates and Place search only fills its form",
       ).error,
     ).toBeNull();
 
+    await page.goto("/first-times");
+    await expect(
+      page
+        .getByRole("button", { name: /A day at Pine Street/ })
+        .locator('[data-record-card-map="true"]'),
+    ).toBeVisible();
+
     await page.goto("/map");
     await expect(
       page.getByRole("status").filter({ hasText: "2 Entry Locations" }),
@@ -169,9 +176,9 @@ test("Map shows current Entry coordinates and Place search only fills its form",
       path: "/private/tmp/memotrail-location-map-desktop.png",
     });
 
-    await page.getByLabel("Kind").selectOption("event");
+    await page.getByLabel("Category").selectOption("entry");
     await expect(
-      page.getByRole("status").filter({ hasText: "1 Entry Location" }),
+      page.getByRole("status").filter({ hasText: "2 Entry Locations" }),
     ).toBeVisible();
     await page.locator(".leaflet-marker-icon").click();
     await expect(
@@ -179,14 +186,14 @@ test("Map shows current Entry coordinates and Place search only fills its form",
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: /Pine Street journal/ }),
-    ).toHaveCount(0);
-    await page.getByLabel("From year").fill("2021");
+    ).toBeVisible();
+    await page.getByLabel("From year").fill("2023");
     await expect(
       page.getByRole("status").filter({ hasText: "0 Entry Locations" }),
     ).toBeVisible();
 
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.getByLabel("Kind").selectOption("all");
+    await page.getByLabel("Category").selectOption("all");
     await page.getByLabel("From year").fill("");
     await expect(page.locator(".leaflet-marker-icon")).toHaveCount(1);
     expect(
@@ -199,73 +206,6 @@ test("Map shows current Entry coordinates and Place search only fills its form",
       path: "/private/tmp/memotrail-location-map-mobile.png",
     });
 
-    await page.route("**/api/locations/search**", async (route) => {
-      await route.fulfill({
-        contentType: "application/json",
-        json: {
-          configured: true,
-          providerUnavailable: false,
-          provider: [
-            {
-              kind: "provider",
-              provider: "geoapify",
-              providerLocationId: "pine-cafe",
-              name: "20 Pine Street, Philadelphia, PA",
-              formattedAddress: "20 Pine Street, Philadelphia, PA",
-              address: "20 Pine Street",
-              city: "Philadelphia",
-              region: "Pennsylvania",
-              postalCode: null,
-              country: "United States",
-              countryCode: "us",
-              latitude: 39.9527,
-              longitude: -75.1653,
-              timezone: "America/New_York",
-              resultType: "building",
-              confidence: 0.99,
-              matchType: "full_match",
-              dataSource: "openstreetmap",
-            },
-          ],
-        },
-      });
-    });
-    await page.goto("/places");
-    await page.getByRole("button", { name: "Add Place" }).first().click();
-    const editor = page.getByRole("dialog");
-    await editor.getByRole("textbox", { name: "Name" }).fill("The corner café");
-    const addressSearch = editor.getByRole("combobox", {
-      name: "Find an address for this Place",
-    });
-    await addressSearch.fill("20 Pine");
-    await expect(editor.getByRole("option", { name: /20 Pine Street/ })).toBeVisible();
-    await addressSearch.press("ArrowDown");
-    await expect(addressSearch).toHaveAttribute("aria-activedescendant", /.+/);
-    await addressSearch.press("Enter");
-    await expect(
-      editor.getByRole("img", { name: /Map preview for The corner café/ }),
-    ).toBeVisible();
-    await editor.getByRole("button", { name: "Add Place" }).click();
-    await expect(editor).not.toBeVisible();
-    const place = (
-      await client
-        .from("places")
-        .select("name,address,city,latitude,longitude")
-        .eq("owner_id", owner)
-        .single()
-    ).data;
-    expect(place).toMatchObject({
-      name: "The corner café",
-      address: "20 Pine Street",
-      city: "Philadelphia",
-      latitude: 39.9527,
-      longitude: -75.1653,
-    });
-    const locations = await client
-      .from("locations")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", owner);
-    expect(locations.count).toBe(3);
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }

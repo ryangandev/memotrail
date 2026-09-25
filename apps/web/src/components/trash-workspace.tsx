@@ -3,6 +3,7 @@ import { Dialog } from "@/components/dialog";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/button";
+import { notify } from "@/components/app-toast";
 
 import Link from "next/link";
 import { useState } from "react";
@@ -37,7 +38,6 @@ export function TrashWorkspace({
   const router = useRouter();
   const [confirmation, setConfirmation] = useState<TrashItem | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
-  const [result, setResult] = useState<TrashActionResult | null>(null);
   const [batchBusy, setBatchBusy] = useState(false);
   const firstItemNumber = (workspace.page - 1) * TRASH_PAGE_SIZE + 1;
   const lastItemNumber = Math.min(
@@ -48,7 +48,6 @@ export function TrashWorkspace({
 
   async function runAction(item: TrashItem, action: "delete" | "restore") {
     setPending({ action, itemId: item.id });
-    setResult(null);
 
     try {
       const input = {
@@ -61,7 +60,7 @@ export function TrashWorkspace({
         action === "restore"
           ? await restoreTrashItem(input)
           : await deleteTrashItemForever(input);
-      setResult(nextResult);
+      announceResult(nextResult);
 
       if (nextResult.status !== "error") {
         setConfirmation(null);
@@ -73,10 +72,9 @@ export function TrashWorkspace({
         }
       }
     } catch {
-      setResult({
-        message: "MemoTrail could not reach the server. Try again when online.",
-        status: "error",
-      });
+      notify.error(
+        "MemoTrail could not reach the server. Try again when online.",
+      );
     } finally {
       setPending(null);
     }
@@ -120,26 +118,13 @@ export function TrashWorkspace({
           <EmptyTrashControl
             disabled={Boolean(pending) || Boolean(confirmation)}
             onBusy={setBatchBusy}
-            onResult={setResult}
+            onResult={announceResult}
             onFinish={() => {
               if (workspace.page > 1) router.push("/trash");
               else router.refresh();
             }}
           />
         </div>
-      ) : null}
-
-      {result ? (
-        <p
-          aria-live="polite"
-          className={
-            result.status === "error"
-              ? styles.errorMessage
-              : styles.successMessage
-          }
-        >
-          {result.message}
-        </p>
       ) : null}
 
       {workspace.loadError ? (
@@ -160,7 +145,7 @@ export function TrashWorkspace({
             title={<>Nothing in Trash</>}
             description={
               <>
-                Removed Entries, Places, People, and individual photos will
+                Removed Entries, People, and individual photos will
                 appear here. Legacy records remain recoverable too.
               </>
             }
@@ -237,7 +222,6 @@ export function TrashWorkspace({
                       variant="danger"
                       disabled={Boolean(pending) || batchBusy}
                       onClick={() => {
-                        setResult(null);
                         setConfirmation(item);
                       }}
                       type="button"
@@ -307,24 +291,18 @@ export function TrashWorkspace({
               </Button>
             </>
           }
-        >
-          {" "}
-          {result?.status === "error" ? (
-            <p className={styles.dialogError} aria-live="polite">
-              {result.message}
-            </p>
-          ) : null}
-        </Dialog>
+        />
       ) : null}
     </PageFrame>
   );
 }
 
-function iconForKind(kind: TrashItem["kind"]): "map" | "photo" | "timeline" {
-  if (kind === "place") {
-    return "map";
-  }
+function announceResult(result: TrashActionResult) {
+  if (result.status === "error") notify.error(result.message);
+  else notify.success(result.message);
+}
 
+function iconForKind(kind: TrashItem["kind"]): "photo" | "timeline" {
   return kind === "attachment" ? "photo" : "timeline";
 }
 
@@ -333,10 +311,6 @@ function labelForItem(item: TrashItem) {
   if (item.kind === "person") return "Person";
   if (item.kind === "attachment") {
     return "Photo";
-  }
-
-  if (item.kind === "place") {
-    return "Place";
   }
 
   return item.wikiItemKind && item.wikiItemSubtype
@@ -369,10 +343,6 @@ function deletionDescription(item: TrashItem) {
     return "The Person and their version history will be removed.";
   if (item.kind === "attachment") {
     return "The private photo file and its attachment record will be removed.";
-  }
-
-  if (item.kind === "place") {
-    return "The Place and its version history will be removed.";
   }
 
   return "The Entry, private photos, relationships, specialized details, and version history will be removed.";

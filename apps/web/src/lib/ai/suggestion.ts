@@ -1,10 +1,6 @@
 import { parseOrganizationNames } from "../data/inbox-review";
 export type EntryAISuggestions = {
   title: string | null;
-  classification: {
-    itemKind: "event" | "writing";
-    itemSubtype: "first_time" | "note";
-  } | null;
   collections: string[];
   tags: string[];
   dateText: string | null;
@@ -36,17 +32,6 @@ export function parseEntryAISuggestions(
       (typeof v.title !== "string" ||
         !v.title.trim() ||
         v.title.length > 200)) ||
-    (v.classification !== null &&
-      (!v.classification ||
-        typeof v.classification !== "object" ||
-        !("itemKind" in v.classification) ||
-        !("itemSubtype" in v.classification) ||
-        !(
-          (v.classification.itemKind === "writing" &&
-            v.classification.itemSubtype === "note") ||
-          (v.classification.itemKind === "event" &&
-            v.classification.itemSubtype === "first_time")
-        ))) ||
     (v.dateText !== null &&
       (typeof v.dateText !== "string" || v.dateText.length > 200)) ||
     typeof v.rationale !== "string" ||
@@ -59,7 +44,6 @@ export function parseEntryAISuggestions(
     return null;
   return {
     title: v.title === null ? null : (v.title as string).trim(),
-    classification: v.classification as EntryAISuggestions["classification"],
     collections,
     tags,
     dateText: v.dateText as string | null,

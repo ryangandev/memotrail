@@ -14,8 +14,7 @@ insert into public.entries(
     '10000000-0000-0000-0000-000000000115',
     'Learn to sail',
     'A wish I want to make concrete.',
-    'capture',
-    'quick_capture',
+    'entry','entry',
     'unreviewed',
     'unknown'
   ),
@@ -24,8 +23,7 @@ insert into public.entries(
     '10000000-0000-0000-0000-000000000115',
     'Why the ocean matters',
     'A related note.',
-    'writing',
-    'note',
+    'entry','entry',
     'organized',
     'unknown'
   );
@@ -45,7 +43,7 @@ select ok(
 select is(
   (select item_kind || ':' || item_subtype || ':' || inbox_status
    from public.entries where id='98600000-0000-4000-8000-000000000001'),
-  'capture:source_capture:organized',
+  'entry:source_capture:organized',
   'The original Capture is preserved as provenance'
 );
 select is(

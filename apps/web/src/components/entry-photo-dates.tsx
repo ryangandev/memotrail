@@ -115,7 +115,7 @@ export function EntryPhotoDates({
                         onClick={() => {
                           onUseDate(info.calendarDate!);
                           setNotice(
-                            "Calendar date added to the draft. Review it below, then Save changes or Done.",
+                            "Calendar date added to the draft. Review the date, then save your changes.",
                           );
                         }}
                       >

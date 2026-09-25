@@ -11,13 +11,10 @@ import styles from "./location-map-workspace.module.css";
 
 type MapKind = "all" | LocationMapItem["kind"];
 const kinds: { label: string; value: MapKind }[] = [
-  { label: "All kinds", value: "all" },
-  { label: "Events", value: "event" },
-  { label: "Writing", value: "writing" },
+  { label: "All records", value: "all" },
+  { label: "Entries", value: "entry" },
   { label: "Entities", value: "entity" },
-  { label: "Stories", value: "story" },
   { label: "Goals", value: "goal" },
-  { label: "Captures", value: "capture" },
 ];
 
 export function LocationMapWorkspace({
@@ -168,9 +165,7 @@ export function LocationMapWorkspace({
   const sorted = [
     ...new Map(
       [...selected]
-        .sort((a, b) =>
-          (b.occurredAt ?? "").localeCompare(a.occurredAt ?? ""),
-        )
+        .sort((a, b) => (b.occurredAt ?? "").localeCompare(a.occurredAt ?? ""))
         .map((item) => [item.id, item]),
     ).values(),
   ];
@@ -189,7 +184,7 @@ export function LocationMapWorkspace({
       />
       <div className={styles.filters} aria-label="Map filters">
         <label>
-          <span>Kind</span>
+          <span>Category</span>
           <select
             value={kind}
             onChange={(event) => {
@@ -235,7 +230,8 @@ export function LocationMapWorkspace({
           />
         </label>
         <p role="status">
-          {filtered.length} Entry {filtered.length === 1 ? "Location" : "Locations"}
+          {filtered.length} Entry{" "}
+          {filtered.length === 1 ? "Location" : "Locations"}
         </p>
       </div>
 

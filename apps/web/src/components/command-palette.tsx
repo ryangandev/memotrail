@@ -359,8 +359,7 @@ function filterCommands(query: string) {
   });
 }
 
-function quickResultIcon(kind: "entry" | "person" | "place"): IconName {
-  if (kind === "place") return "map";
+function quickResultIcon(kind: "entry" | "person"): IconName {
   if (kind === "person") return "archive";
   return "timeline";
 }

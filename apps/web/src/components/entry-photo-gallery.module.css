@@ -29,7 +29,12 @@
 }
 .panel
   button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+    :where(
+      [data-ui-button],
+      [data-ui-empty-state],
+      [data-record-card],
+      [data-photo-preview-trigger]
+    )
   ) {
   color: var(--mt-color-ink);
   background: var(--mt-color-surface);
@@ -43,14 +48,24 @@
 }
 .panel
   button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+    :where(
+      [data-ui-button],
+      [data-ui-empty-state],
+      [data-record-card],
+      [data-photo-preview-trigger]
+    )
   ):disabled {
   opacity: 0.5;
   cursor: default;
 }
 .panel
   button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
+    :where(
+      [data-ui-button],
+      [data-ui-empty-state],
+      [data-record-card],
+      [data-photo-preview-trigger]
+    )
   ):focus-visible {
   outline: 2px solid var(--mt-color-accent);
   outline-offset: 2px;

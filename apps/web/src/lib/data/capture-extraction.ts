@@ -34,8 +34,9 @@ function isSourceRow(value: unknown): value is Parameters<
     typeof row.id === "string" &&
     typeof row.body === "string" &&
     typeof row.created_at === "string" &&
-    row.item_kind === "capture" &&
-    row.item_subtype === "quick_capture" &&
+    row.item_kind === "entry" &&
+    row.item_subtype === "entry" &&
+    row.inbox_status === "unreviewed" &&
     typeof row.revision === "number" &&
     Array.isArray(row.collection_names) &&
     row.collection_names.every((name) => typeof name === "string") &&

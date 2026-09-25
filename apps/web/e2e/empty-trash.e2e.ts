@@ -73,7 +73,7 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
         )
       ).error,
     ).toBeNull();
-    for (const table of ["people", "places", "collections"] as const) {
+    for (const table of ["people", "collections"] as const) {
       expect(
         (
           await client.from(table).insert({
@@ -156,14 +156,14 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     const open = page.getByRole("button", { name: "Empty Trash", exact: true });
     const dialog = page.getByRole("dialog");
     await open.click();
-    await expect(dialog).toContainText("Empty 34 items from Trash?");
+    await expect(dialog).toContainText("Empty 33 items from Trash?");
     await page.screenshot({
       caret: "initial",
       animations: "disabled",
       path: "/private/tmp/memotrail-empty-trash-desktop.png",
     });
     await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
-    expect((await client.rpc("prepare_empty_trash")).data).toHaveLength(34);
+    expect((await client.rpc("prepare_empty_trash")).data).toHaveLength(33);
     await open.click();
     await expect(dialog).toBeVisible();
     // A second device restores the first confirmed target. The batch must stop,
@@ -180,13 +180,13 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
       .getByRole("button", { name: "Permanently delete confirmed items" })
       .click();
     await expect(
-      page.getByText(/0 of 34 items confirmed deleted/),
+      page.getByText(/0 of 33 items confirmed deleted/),
     ).toBeVisible();
-    expect((await client.rpc("prepare_empty_trash")).data).toHaveLength(33);
+    expect((await client.rpc("prepare_empty_trash")).data).toHaveLength(32);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await open.click();
-    await expect(dialog).toContainText("Empty 33 items from Trash?");
+    await expect(dialog).toContainText("Empty 32 items from Trash?");
     await page.screenshot({
       caret: "initial",
       animations: "disabled",
@@ -212,7 +212,9 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
       .getByRole("button", { name: "Permanently delete confirmed items" })
       .click();
     await expect(
-      page.getByText(/33 confirmed items permanently deleted/),
+      page.locator("[data-sonner-toast]").filter({
+        hasText: /32 confirmed items permanently deleted/,
+      }),
     ).toBeVisible({ timeout: 45000 });
     const remaining = await client.rpc("prepare_empty_trash");
     expect(remaining.error).toBeNull();
@@ -246,7 +248,7 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     expect(
       (await admin.storage.from("entry-media").download(photoPath)).error,
     ).not.toBeNull();
-    for (const table of ["people", "places", "collections"] as const) {
+    for (const table of ["people", "collections"] as const) {
       expect((await client.from(table).select("id")).data).toEqual([]);
     }
   } finally {

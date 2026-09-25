@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import { Dialog } from "@/components/dialog";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
@@ -20,6 +21,7 @@ import { EntryOrganizationEditor } from "@/components/entry-organization-editor"
 import { LocationPicker } from "@/components/location-picker";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { RecordCardMap } from "@/components/record-card-map";
 import {
   RecordCard,
   RecordCardBody,
@@ -54,17 +56,24 @@ import type { LocationSelection } from "@/lib/locations/location";
 export function FirstTimesWorkspace({
   collectionOptions,
   entries,
+  initialEntryId = null,
   loadError,
   ownerId,
   tagOptions,
 }: {
   collectionOptions: string[];
   entries: FirstTimeEntry[];
+  initialEntryId?: string | null;
   loadError: string | null;
   ownerId: string;
   tagOptions: string[];
 }) {
-  const [selectedEntry, setSelectedEntry] = useState<FirstTimeEntry | null>();
+  const router = useRouter();
+  const [selectedEntry, setSelectedEntry] = useState<
+    FirstTimeEntry | null | undefined
+  >(() =>
+    initialEntryId ? entries.find((item) => item.id === initialEntryId) : undefined,
+  );
   const [confirmedEntries, setConfirmedEntries] = useState<
     Record<string, FirstTimeEntry>
   >({});
@@ -149,7 +158,10 @@ export function FirstTimesWorkspace({
           collectionOptions={collectionOptions}
           entry={selectedEntry}
           key={selectedEntry?.id ?? "new-first-time"}
-          onClose={() => setSelectedEntry(undefined)}
+          onClose={() => {
+            setSelectedEntry(undefined);
+            if (initialEntryId) router.replace("/first-times", { scroll: false });
+          }}
           onSaved={(entry) =>
             setConfirmedEntries((current) => ({
               ...current,
@@ -195,8 +207,17 @@ function FirstTimeCard({
           {photos.length > 1 ? <small>{photos.length} photos</small> : null}
         </RecordCardVisual>
       ) : (
-        <RecordCardVisual className={styles.cardIndex}>
-          {String(index + 1).padStart(2, "0")}
+        <RecordCardVisual className={styles.coverPhoto}>
+          <RecordCardMap
+            eager={index < 4}
+            fallback={
+              <span className={styles.cardIndexFallback}>
+                {String(index + 1).padStart(2, "0")}
+              </span>
+            }
+            latitude={entry.location?.latitude}
+            longitude={entry.location?.longitude}
+          />
         </RecordCardVisual>
       )}
 
@@ -399,6 +420,11 @@ export function FirstTimeEditor({
       }
 
       router.refresh();
+      notify.success(
+        saved.status === "created"
+          ? "First Time created."
+          : "First Time saved.",
+      );
       onClose();
     } catch {
       setResult(
@@ -435,6 +461,7 @@ export function FirstTimeEditor({
           current.filter((item) => item.id !== photo.id),
         );
         router.refresh();
+        notify.info("Photo moved to Trash.");
       } else {
         setResult(nextResult);
       }
@@ -470,6 +497,7 @@ export function FirstTimeEditor({
       if (nextResult.status === "trashed") {
         router.refresh();
         onClose();
+        notify.info("First Time moved to Trash.");
       } else {
         setResult(nextResult);
       }

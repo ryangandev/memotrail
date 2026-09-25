@@ -114,12 +114,12 @@ export default async function SearchPage({
             <legend>Refine results</legend>
 
             <label>
-              <span>Kind or type</span>
+              <span>Record</span>
               <select
                 defaultValue={request.itemClassifications[0] ?? ""}
                 name="type"
               >
-                <option value="">All Kinds and types</option>
+                <option value="">All records</option>
                 {wikiItemSearchGroups.map((group) => (
                   <optgroup key={group.label} label={group.label}>
                     {group.options.map((option) => (
@@ -188,11 +188,6 @@ export default async function SearchPage({
             )}
           </fieldset>
 
-          <p className={styles.dateGuidance}>
-            Date filters include overlapping recorded periods in each
-            item&apos;s time zone. Partial dates may overlap; unanchored dates
-            remain searchable without date filters.
-          </p>
           {filtersError ? (
             <p className={styles.filterNotice} role="status">
               {filtersError}
@@ -391,7 +386,7 @@ function resultDateLabel(entry: SearchEntry) {
   };
   return (entry.itemKind === "entity" &&
     ["home", "vehicle"].includes(entry.itemSubtype)) ||
-    entry.itemSubtype === "life_stage"
+    entry.itemSubtype === "period"
     ? occurrenceSpanLabel(occurrence)
     : occurrenceLabel(occurrence);
 }

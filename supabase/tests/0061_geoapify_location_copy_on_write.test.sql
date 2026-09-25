@@ -8,8 +8,8 @@ insert into auth.users(id,email) values
 insert into public.entries(
   id,owner_id,title,body,item_kind,item_subtype,inbox_status,date_precision
 ) values
-  ('99100000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000124','First memory','One','writing','note','organized','unknown'),
-  ('99100000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000124','Second memory','Two','writing','note','organized','unknown');
+  ('99100000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000124','First memory','One','entry','entry','organized','unknown'),
+  ('99100000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000124','Second memory','Two','entry','entry','organized','unknown');
 
 create function pg_temp.provider(provider_id text, formatted text, latitude numeric, longitude numeric)
 returns jsonb
@@ -35,7 +35,7 @@ as $$
     entry_id,expected_revision,
     (select title from public.entries where id=entry_id),
     (select body from public.entries where id=entry_id),
-    'writing','note',null,'UTC',array[]::text[],array[]::text[],false,
+    'entry','entry',null,'UTC',array[]::text[],array[]::text[],false,
     null,null,'unknown',null,location,null
   );
 $$;
@@ -155,6 +155,76 @@ select is(
   ),
   '20 Pine Street, Philadelphia, PA 19107, USA',
   'The generic editor loads the current Entry-owned snapshot'
+);
+
+create function pg_temp.save_precision_home(entry_id uuid, expected_revision integer)
+returns jsonb
+language sql
+as $$
+  select public.save_home_entry_with_geoapify(
+    jsonb_build_object(
+      'title', 'High-precision Home',
+      'body', '',
+      'datePrecision', 'unknown',
+      'occurredTimezone', 'UTC',
+      'placeName', '10 Pine Street, Philadelphia, PA 19107, USA',
+      'address', '10 Pine Street',
+      'city', 'Philadelphia',
+      'region', 'Pennsylvania',
+      'country', 'United States',
+      'latitude', 39.95261234,
+      'longitude', -75.16529876,
+      'collectionNames', jsonb_build_array(),
+      'tagNames', jsonb_build_array(),
+      'id', entry_id,
+      'revision', expected_revision
+    ),
+    null,
+    pg_temp.provider(
+      'geoapify-high-precision-home',
+      '10 Pine Street, Philadelphia, PA 19107, USA',
+      39.95261234, -75.16529876
+    )
+  );
+$$;
+
+create temporary table precision_home as
+select pg_temp.save_precision_home(null, null) as saved;
+set constraints all immediate;
+
+select is(
+  (select count(*) from public.locations where provider_location_id='geoapify-high-precision-home'),
+  1::bigint,
+  'A high-precision Home provider result creates only one Location snapshot'
+);
+select is(
+  (select latitude from public.locations where provider_location_id='geoapify-high-precision-home'),
+  39.952612::numeric,
+  'A Home snapshot stores the rounded latitude without changing provider input'
+);
+select is(
+  (
+    select location.bound_entry_id
+    from public.locations as location
+    where location.provider_location_id='geoapify-high-precision-home'
+  ),
+  (select (saved->>'entry_id')::uuid from precision_home),
+  'The high-precision provider snapshot belongs to its Home'
+);
+
+set constraints all deferred;
+select ok(
+  pg_temp.save_precision_home(
+    (select (saved->>'entry_id')::uuid from precision_home),
+    (select (saved->>'revision')::integer from precision_home)
+  ) is not null,
+  'An existing Home can save a high-precision provider Location again'
+);
+set constraints all immediate;
+select is(
+  (select count(*) from public.locations where provider_location_id='geoapify-high-precision-home' and bound_entry_id is not null),
+  2::bigint,
+  'Resaving keeps both provider snapshots owned by the Home'
 );
 
 reset role;

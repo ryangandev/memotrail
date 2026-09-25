@@ -14,7 +14,7 @@ function source(
     kind: "event",
     occurredEnd: null,
     occurredStart: "2020-01-01T12:00:00.000Z",
-    trackId: "places",
+    trackId: "other_events",
     ...overrides,
   };
 }
@@ -105,7 +105,7 @@ describe("createTimelineLayout", () => {
     );
 
     expect(layout.positions.map((item) => item.lane)).toEqual([0, 1]);
-    expect(layout.laneCountByTrack.places).toBe(2);
+    expect(layout.laneCountByTrack.other_events).toBe(2);
   });
 
   it("reuses a lane for periods that no longer overlap", () => {
@@ -127,7 +127,7 @@ describe("createTimelineLayout", () => {
     );
 
     expect(layout.positions.map((item) => item.lane)).toEqual([0, 0]);
-    expect(layout.laneCountByTrack.places).toBe(1);
+    expect(layout.laneCountByTrack.other_events).toBe(1);
   });
 
   it("reuses a lane for short non-overlapping stages on a life-long Timeline", () => {
@@ -172,7 +172,7 @@ describe("createTimelineLayout", () => {
     );
 
     expect(layout.positions.map((item) => item.lane)).toEqual([0, 1]);
-    expect(layout.laneCountByTrack.places).toBe(2);
+    expect(layout.laneCountByTrack.other_events).toBe(2);
   });
 
   it("aligns short ongoing stage labels to their shared present endpoint", () => {

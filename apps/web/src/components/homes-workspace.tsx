@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import { Dialog } from "@/components/dialog";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
@@ -19,6 +20,7 @@ import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { RecordCardMap } from "@/components/record-card-map";
 import {
   RecordCard,
   RecordCardBody,
@@ -204,8 +206,13 @@ function HomeSection({
         <span>{label}</span>
       </header>
       <div className={styles.homeGrid}>
-        {homes.map((home) => (
-          <HomeCard home={home} key={home.id} onSelect={() => onSelect(home)} />
+        {homes.map((home, index) => (
+          <HomeCard
+            eagerMap={index < 3}
+            home={home}
+            key={home.id}
+            onSelect={() => onSelect(home)}
+          />
         ))}
       </div>
     </section>
@@ -213,9 +220,11 @@ function HomeSection({
 }
 
 function HomeCard({
+  eagerMap,
   home,
   onSelect,
 }: {
+  eagerMap: boolean;
   home: HomeRecord;
   onSelect: () => void;
 }) {
@@ -231,10 +240,19 @@ function HomeCard({
         {cover?.imageUrl ? (
           <ProgressiveImage alt="" src={cover.imageUrl} />
         ) : (
-          <div className={styles.homeMark}>
-            <Icon name="home" size={24} />
-            <span>{home.city ?? home.country ?? "A place in your trail"}</span>
-          </div>
+          <RecordCardMap
+            eager={eagerMap}
+            fallback={
+              <div className={styles.homeMark}>
+                <Icon name="home" size={24} />
+                <span>
+                  {home.city ?? home.country ?? "A place in your trail"}
+                </span>
+              </div>
+            }
+            latitude={home.latitude}
+            longitude={home.longitude}
+          />
         )}
         <span
           className={home.occurredEnd ? styles.pastBadge : styles.currentBadge}
@@ -502,6 +520,9 @@ export function HomeEditor({
         return;
       }
 
+      notify.success(
+        saved.status === "created" ? "Home created." : "Home saved.",
+      );
       onClose();
     } catch {
       setResult(
@@ -534,6 +555,7 @@ export function HomeEditor({
           current.filter((item) => item.id !== photo.id),
         );
         router.refresh();
+        notify.info("Photo moved to Trash.");
       } else {
         setResult(nextResult);
       }
@@ -569,6 +591,7 @@ export function HomeEditor({
       if (nextResult.status === "trashed") {
         onTrashed(currentId);
         onClose();
+        notify.info("Home moved to Trash.");
       } else {
         setResult(nextResult);
       }
@@ -600,7 +623,17 @@ export function HomeEditor({
       busy={isPending}
       size="wide"
       footer={
-        <div className={styles.dialogFooter}>
+        <div
+          className={`${styles.dialogFooter} ${result ? styles.dialogFooterWithMessage : ""}`}
+        >
+          {result ? (
+            <p
+              className={`${styles.formMessage} ${styles.footerMessage}`}
+              role="alert"
+            >
+              {result.message}
+            </p>
+          ) : null}
           <div>
             {currentId ? (
               <Button
@@ -817,12 +850,6 @@ export function HomeEditor({
             recordLabel="Home"
           />
         </div>
-
-        {result ? (
-          <p className={styles.formMessage} role="alert">
-            {result.message}
-          </p>
-        ) : null}
       </form>
     </Dialog>
   );

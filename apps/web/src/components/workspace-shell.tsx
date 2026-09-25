@@ -24,7 +24,6 @@ export type WorkspaceDestination =
   | "library"
   | "map"
   | "goals"
-  | "places"
   | "people"
   | "search"
   | "settings"
@@ -61,7 +60,6 @@ const primaryNavigation: NavigationItem[] = [
 
 const recordNavigation: NavigationItem[] = [
   { destination: "people", href: "/people", icon: "person", label: "People" },
-  { destination: "places", href: "/places", icon: "map", label: "Places" },
   { destination: "homes", href: "/homes", icon: "home", label: "Homes" },
   {
     destination: "vehicles",
@@ -275,7 +273,6 @@ function destinationForPathname(pathname: string): WorkspaceDestination {
   if (pathname.startsWith("/goals")) return "goals";
   if (pathname.startsWith("/homes")) return "homes";
   if (pathname.startsWith("/map")) return "map";
-  if (pathname.startsWith("/places")) return "places";
   if (pathname.startsWith("/people")) return "people";
   if (pathname.startsWith("/vehicles")) return "vehicles";
   if (pathname.startsWith("/first-times")) return "first-times";
@@ -439,7 +436,6 @@ function isNavigationActive(
         "first-times",
         "goals",
         "homes",
-        "places",
         "people",
         "tags",
         "trash",

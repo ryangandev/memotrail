@@ -10,8 +10,8 @@ const item = {
   excerpt: "A reflection",
   inbox_status: "organized",
   item_id: "40000000-0000-4000-8000-000000000001",
-  item_kind: "writing",
-  item_subtype: "reflection",
+  item_kind: "entry",
+  item_subtype: "entry",
   occurred_end: null,
   occurred_start: null,
   record_source: "entry",
@@ -24,8 +24,8 @@ describe("Life Wiki workspace data", () => {
   it("parses a unified item row", () => {
     expect(parseWikiItemRows([item])).toEqual([
       expect.objectContaining({
-        itemKind: "writing",
-        itemSubtype: "reflection",
+        itemKind: "entry",
+        itemSubtype: "entry",
         recordId: item.item_id,
         recordSource: "entry",
         totalCount: 3,
@@ -37,7 +37,7 @@ describe("Life Wiki workspace data", () => {
     expect(
       parseWikiItemRows([{ ...item, canonical_item_id: null }]),
     ).toBeNull();
-    expect(parseWikiItemRows([{ ...item, item_kind: "entry" }])).toBeNull();
+    expect(parseWikiItemRows([{ ...item, item_kind: "writing" }])).toBeNull();
     expect(parseWikiItemRows([{ ...item, total_count: "many" }])).toBeNull();
   });
 

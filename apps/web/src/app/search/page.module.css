@@ -10,11 +10,6 @@
 
 .searchSurface {
   margin-top: var(--mt-space-10);
-  padding: var(--mt-space-5);
-  border: 1px solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface-raised);
-  box-shadow: var(--mt-shadow-raised);
 }
 
 .queryRow {
@@ -42,7 +37,7 @@
 
 .filters {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) repeat(2, 145px) auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--mt-space-3);
   min-width: 0;
   margin: var(--mt-space-5) 0 0;
@@ -64,6 +59,10 @@
 .filters label {
   display: grid;
   gap: 6px;
+  min-width: 0;
+}
+
+.filters > * {
   min-width: 0;
 }
 
@@ -121,13 +120,6 @@
   margin-top: var(--mt-space-3);
   color: var(--mt-color-warm);
   font-size: var(--mt-font-size-caption);
-}
-
-.dateGuidance {
-  margin-top: var(--mt-space-3);
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
-  line-height: var(--mt-line-height-body);
 }
 
 .message {
@@ -366,7 +358,7 @@
 
 @media (max-width: 1100px) {
   .filters {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .clearFilters,
@@ -379,7 +371,14 @@
 @media (max-width: 720px) {
   .searchSurface {
     margin-top: var(--mt-space-6);
-    padding: var(--mt-space-4);
+  }
+
+  .queryRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .queryRow > :first-child {
+    grid-column: 1 / -1;
   }
 
   .searchScope {
@@ -389,7 +388,6 @@
   }
 
   .filters {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     padding-top: var(--mt-space-4);
   }
 
@@ -404,10 +402,6 @@
 }
 
 @media (max-width: 430px) {
-  .queryRow {
-    grid-template-columns: 1fr;
-  }
-
   .filters {
     grid-template-columns: 1fr;
   }

@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { expect, test, type Locator } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+import sharp from "sharp";
 
 test("specialized forms share photo fields and required-label conventions", async ({
   context,
@@ -76,6 +77,31 @@ test("specialized forms share photo fields and required-label conventions", asyn
       caret: "initial",
       path: "/private/tmp/memotrail-goal-photo-field.png",
     });
+    await goalPhotos.locator('input[type="file"]').setInputFiles({
+      name: "goal-preview.png",
+      mimeType: "image/png",
+      buffer: await sharp({
+        create: { width: 320, height: 240, channels: 3, background: "#426e83" },
+      })
+        .png()
+        .toBuffer(),
+    });
+    await goalPhotos
+      .getByRole("button", { name: "Preview selected goal-preview.png" })
+      .click();
+    const preview = page.getByRole("dialog", { name: "goal-preview.png" });
+    await expect(preview).toBeVisible();
+    await preview.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(preview).not.toBeVisible();
+    await expect(goalDialog).toBeVisible();
+    await goalPhotos
+      .getByRole("button", { name: "Remove selected goal-preview.png" })
+      .click();
+    await expect(
+      goalPhotos.getByRole("button", {
+        name: "Preview selected goal-preview.png",
+      }),
+    ).toHaveCount(0);
     for (const [legendText, kind] of [
       ["Collections", "Collection"],
       ["Tags", "tag"],

@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import { PageHeader } from "@/components/page-header";
 
 import { useState } from "react";
@@ -42,7 +43,6 @@ export function AISettings({
 }: AISettingsProps) {
   const [workspace, setWorkspace] = useState(initial);
   const [busyControl, setBusyControl] = useState<SimpleAIControl | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
   const preferences = workspace.preferences;
   const monthlyLimitReached =
     preferences.monthly_budget_micros === 0 ||
@@ -61,20 +61,19 @@ export function AISettings({
     );
     setWorkspace({ ...workspace, preferences: nextPreferences });
     setBusyControl(control);
-    setMessage(null);
 
     try {
       const result = await saveAISettings(nextPreferences);
       if (result.error || !result.data) {
         setWorkspace(previous);
-        setMessage(result.error ?? "Could not save AI preferences.");
+        notify.error(result.error ?? "Could not save AI preferences.");
         return;
       }
       setWorkspace(result.data as AIWorkspace);
-      setMessage(savedMessage(control, checked));
+      notify.success(savedMessage(control, checked));
     } catch {
       setWorkspace(previous);
-      setMessage("Could not save AI preferences. Try again.");
+      notify.error("Could not save AI preferences. Try again.");
     } finally {
       setBusyControl(null);
     }
@@ -137,9 +136,7 @@ export function AISettings({
         ) : null}
 
         <p className={styles.saveStatus} role="status">
-          {busyControl
-            ? "Saving..."
-            : (message ?? "Changes save automatically.")}
+          {busyControl ? "Saving..." : "Changes save automatically."}
         </p>
       </section>
 

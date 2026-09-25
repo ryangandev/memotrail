@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
-test("Inbox Capture creates a linked Goal through the specialized form", async ({
+test("Inbox saves an Entry while Goal uses its focused form", async ({
   context,
   page,
 }) => {
@@ -73,8 +73,8 @@ test("Inbox Capture creates a linked Goal through the specialized form", async (
           owner_id: ownerID,
           title: "Learn to sail",
           body: "A wish I want to make concrete.",
-          item_kind: "capture",
-          item_subtype: "quick_capture",
+          item_kind: "entry",
+          item_subtype: "entry",
           inbox_status: "unreviewed",
           date_precision: "unknown",
         })
@@ -86,42 +86,21 @@ test("Inbox Capture creates a linked Goal through the specialized form", async (
       has: page.getByRole("heading", { name: "Learn to sail" }),
     });
     await card.getByRole("button", { name: "Organize", exact: true }).click();
-    await page
-      .getByRole("dialog", { name: "Organize Capture" })
-      .getByRole("link", { name: "Goal", exact: true })
-      .click();
+    const review = page.getByRole("dialog", { name: "Review Entry" });
+    await expect(review.getByRole("link", { name: "Goal" })).toHaveCount(0);
+    await review.getByRole("button", { name: "Save to Library" }).click();
+    await expect(review).not.toBeVisible();
 
-    await expect(page).toHaveURL(new RegExp(`/goals\\?source=${captureID}$`));
-    const editor = page.getByRole("dialog", {
-      name: "Create a Goal from this Capture",
-    });
-    await expect(
-      editor.getByText("Starting from an Inbox Capture"),
-    ).toBeVisible();
-    await expect(editor.getByLabel("Title", { exact: true })).toHaveValue(
-      "Learn to sail",
-    );
-    await expect(
-      editor.getByRole("textbox", { name: /Reflection/ }),
-    ).toHaveValue("A wish I want to make concrete.");
-    await editor
-      .getByRole("combobox", { name: "Horizon" })
-      .selectOption("long_term");
-    await editor
-      .getByRole("combobox", { name: "Reflective state" })
-      .selectOption("active");
+    await page.goto("/goals");
+    await page.getByRole("button", { name: "Add Goal" }).click();
+    const editor = page.getByRole("dialog");
+    await editor.getByLabel("Title", { exact: true }).fill("Learn to sail");
+    await editor.getByRole("combobox", { name: "Horizon" }).selectOption("long_term");
+    await editor.getByRole("combobox", { name: "Reflective state" }).selectOption("active");
     await editor.getByLabel(/Target date/).fill("2028-06-01");
-    await page.screenshot({
-      caret: "initial",
-      path: "/private/tmp/memotrail-capture-goal-handoff.png",
-      fullPage: true,
-    });
     await editor.getByRole("button", { name: "Add Goal", exact: true }).click();
     await expect(editor).not.toBeVisible();
-    await expect(page).toHaveURL(/\/goals$/);
-    await expect(
-      page.getByRole("button", { name: /Learn to sail/ }),
-    ).toBeVisible();
+    await expect(page.getByRole("button", { name: /Learn to sail/ })).toBeVisible();
 
     const source = await client
       .from("entries")
@@ -129,8 +108,8 @@ test("Inbox Capture creates a linked Goal through the specialized form", async (
       .eq("id", captureID)
       .single();
     expect(source.data).toEqual({
-      item_kind: "capture",
-      item_subtype: "source_capture",
+      item_kind: "entry",
+      item_subtype: "entry",
       inbox_status: "organized",
     });
     const goal = await client
@@ -158,7 +137,7 @@ test("Inbox Capture creates a linked Goal through the specialized form", async (
       .select("source_entry_id,target_entry_id,relationship")
       .eq("owner_id", ownerID)
       .in("relationship", ["derived", "derived_from"]);
-    expect(provenance.data).toHaveLength(2);
+    expect(provenance.data).toHaveLength(0);
     expect(uiErrors).toEqual([]);
   } finally {
     await admin.auth.admin.deleteUser(ownerID);

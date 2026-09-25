@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
-import { Button } from "@/components/button";
+import { Button, IconButton } from "@/components/button";
+import { CollectionCard } from "@/components/collection-card";
 import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { EntryPhotoField } from "@/components/entry-photo-field";
@@ -18,6 +19,7 @@ import {
 } from "@/components/record-card";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { SearchField } from "@/components/search-field";
+import { notify } from "@/components/app-toast";
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import type { EntryRichText } from "@/lib/data/rich-text";
 import styles from "./page.module.css";
@@ -131,7 +133,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
     start: "2026-09-17",
     end: "",
     endMode: "date",
-    label: "A clear September afternoon",
+    label: "",
     timezone: "America/Los_Angeles",
   });
   const [recordMessage, setRecordMessage] = useState(
@@ -553,7 +555,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="RecordCard is the shared interactive record surface used by Homes, Vehicles, Places, and First Times. Other card families remain route-specific."
+        description="RecordCard is the shared interactive record surface used by Homes, Vehicles, and First Times. Collections use the compact card shown below."
         id="containers"
         index="05"
         title="Containers and data display"
@@ -581,6 +583,73 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
         </Specimen>
 
         <Specimen
+          description="Four cards fit in the 1080px Collections content width. Compare occupied, empty, Inbox, and long-title states. Management stays a separate action."
+          id="collection-card-concept"
+          title="Collection card"
+        >
+          <div className={styles.collectionCardGrid}>
+            {[
+              {
+                name: "Early years",
+                entryCount: 12,
+                updatedLabel: "Latest Sep 18",
+              },
+              {
+                name: "Homes and neighborhoods",
+                entryCount: 7,
+                updatedLabel: "Latest Aug 30",
+              },
+              {
+                name: "First times",
+                entryCount: 19,
+                inboxCount: 2,
+                updatedLabel: "Latest Sep 22",
+              },
+              { name: "Family", entryCount: 8, updatedLabel: "Latest Sep 14" },
+              {
+                name: "Notes from my travels",
+                entryCount: 24,
+                updatedLabel: "Latest Sep 12",
+              },
+              {
+                name: "Things I learned",
+                entryCount: 5,
+                updatedLabel: "Latest Aug 08",
+              },
+              {
+                name: "Small good moments",
+                entryCount: 3,
+                updatedLabel: "Latest Sep 02",
+              },
+              { name: "To revisit", entryCount: 0 },
+            ].map((collection) => (
+              <CollectionCard
+                {...collection}
+                href="#collection-card-concept"
+                headingLevel="h4"
+                key={collection.name}
+                manageAction={
+                  <IconButton
+                    label={`Manage ${collection.name}`}
+                    onClick={() =>
+                      notify.info(`Manage ${collection.name}: preview only.`)
+                    }
+                    size="small"
+                    variant="ghost"
+                  >
+                    <Icon name="more" size={17} />
+                  </IconButton>
+                }
+              />
+            ))}
+          </div>
+          <p className={styles.stateNote}>
+            This shared card is also used on the Collections page. Management
+            remains a separate action.
+          </p>
+        </Specimen>
+
+        <Specimen
           api="body · richText or metadata · className"
           title="EntryRichTextContent"
         >
@@ -592,12 +661,34 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="Reviewed media feedback. The shared EmptyState is demonstrated above."
+        description="Transient action feedback and reviewed media states. The shared EmptyState is demonstrated above."
         id="feedback"
         index="06"
         title="Feedback and media states"
       >
         <div className={styles.feedbackGrid}>
+          <Specimen
+            api="notify.success · notify.error · notify.info"
+            title="Toast"
+          >
+            <div className={styles.toastPreviewActions}>
+              <Button onClick={() => notify.success("Changes saved.")}>
+                Show success
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => notify.info("Moved to Trash.")}
+              >
+                Show info
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => notify.error("Could not save. Try again.")}
+              >
+                Show error
+              </Button>
+            </div>
+          </Specimen>
           <Specimen api="completed · total" title="PhotoUploadProgress">
             <PhotoUploadProgress progress={{ completed: 3, total: 5 }} />
           </Specimen>

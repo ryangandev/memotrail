@@ -3,7 +3,11 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
-import { fillOccurrenceEnd, fillOccurrenceStart } from "./helpers/occurrence";
+import {
+  fillOccurrenceEnd,
+  fillOccurrenceStart,
+  setDateDescription,
+} from "./helpers/occurrence";
 
 test("Editing a First Time keeps its original date range", async ({
   page,
@@ -66,7 +70,8 @@ test("Editing a First Time keeps its original date range", async ({
           owner_id: owner,
           title: "First trip to Japan",
           body: "Original travel memory",
-          item_kind: "event",
+          inbox_status: "organized",
+          item_kind: "entry",
           item_subtype: "first_time",
           occurred_start: start,
           occurred_end: end,
@@ -75,8 +80,9 @@ test("Editing a First Time keeps its original date range", async ({
         })
       ).error,
     ).toBeNull();
-    await page.goto("/first-times");
-    await page.getByRole("button", { name: /First trip to Japan/ }).click();
+    await page.goto("/library");
+    await page.getByRole("link", { name: /First trip to Japan/ }).click();
+    await expect(page).toHaveURL(`/first-times?entry=${id}`);
     const dialog = page.getByRole("dialog");
     await expect(
       dialog.getByText("Add this item to a larger story or chapter."),
@@ -112,6 +118,7 @@ test("Editing a First Time keeps its original date range", async ({
     await page.emulateMedia({ colorScheme: "light" });
     await dialog.getByRole("button", { name: "Save changes" }).click();
     await expect(dialog).not.toBeVisible();
+    await expect(page).toHaveURL(/\/first-times$/);
     await expect
       .poll(
         async () =>
@@ -189,7 +196,7 @@ test("Editing a First Time keeps its original date range", async ({
         .selectOption(sample.precision);
       if (sample.start) await fillOccurrenceStart(dialog, sample.start);
       if (sample.end) await fillOccurrenceEnd(dialog, sample.end);
-      await dialog.getByLabel("Date description").fill(sample.label);
+      await setDateDescription(dialog, sample.label);
       await dialog.getByRole("button", { name: "Save changes" }).click();
       await expect(dialog).not.toBeVisible();
       const value = (

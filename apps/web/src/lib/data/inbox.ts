@@ -244,11 +244,11 @@ export function entryFromRow(
     collectionNames,
     createdAt: row.created_at,
     id: row.id,
-    itemKind: isWikiItemKind(row.item_kind) ? row.item_kind : "capture",
+    itemKind: isWikiItemKind(row.item_kind) ? row.item_kind : "entry",
     itemSubtype:
       typeof row.item_subtype === "string" && row.item_subtype
         ? row.item_subtype
-        : "quick_capture",
+        : "entry",
     location,
     occurredAt: row.occurred_start,
     occurredEnd: row.occurred_end,

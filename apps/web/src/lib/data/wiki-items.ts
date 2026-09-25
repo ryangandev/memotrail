@@ -14,7 +14,7 @@ export type WikiItemSummary = {
   occurredEnd: string | null;
   occurredStart: string | null;
   recordId: string;
-  recordSource: "entry" | "person" | "place";
+  recordSource: "entry" | "person";
   title: string;
   totalCount: number;
   updatedAt: string;
@@ -29,7 +29,7 @@ type WikiItemRow = {
   item_subtype: string;
   occurred_end: string | null;
   occurred_start: string | null;
-  record_source: "entry" | "person" | "place";
+  record_source: "entry" | "person";
   title: string;
   total_count: number | string;
   updated_at: string;
@@ -99,7 +99,7 @@ function isWikiItemRow(value: unknown): value is WikiItemRow {
   return (
     typeof row.canonical_item_id === "string" &&
     typeof row.item_id === "string" &&
-    ["entry", "person", "place"].includes(String(row.record_source)) &&
+    ["entry", "person"].includes(String(row.record_source)) &&
     isWikiItemKind(row.item_kind) &&
     typeof row.item_subtype === "string" &&
     typeof row.title === "string" &&

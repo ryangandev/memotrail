@@ -19,7 +19,7 @@ $$;
 create function pg_temp.review(proposal jsonb, rev integer default null, done boolean default false) returns bigint language sql as $$
  select count(*) from public.review_wiki_item_with_photo_place(
  '93000000-0000-4000-8000-000000000001',coalesce(rev,(select revision from public.entries where id='93000000-0000-4000-8000-000000000001'),1),
- 'Photo memory','My edited words','writing','note',null,'UTC','{}','{}',done,null,null,'unknown',proposal);
+ 'Photo memory','My edited words','entry','entry',null,'UTC','{}','{}',done,null,null,'unknown',proposal);
 $$;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000093',true);

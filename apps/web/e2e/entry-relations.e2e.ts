@@ -63,8 +63,8 @@ test("Ordinary Entries link, navigate backlinks, unlink, and restore relationshi
             title: "Why I keep learning",
             body: "My original words",
             inbox_status: "organized",
-            item_kind: "writing",
-            item_subtype: "note",
+            item_kind: "entry",
+            item_subtype: "entry",
             date_precision: "unknown",
           },
           {
@@ -73,8 +73,8 @@ test("Ordinary Entries link, navigate backlinks, unlink, and restore relationshi
             title: "How teeth move",
             body: "牙套的学习笔记",
             inbox_status: "organized",
-            item_kind: "writing",
-            item_subtype: "note",
+            item_kind: "entry",
+            item_subtype: "entry",
             date_precision: "unknown",
           },
         ])
@@ -191,7 +191,7 @@ test("Ordinary Entries link, navigate backlinks, unlink, and restore relationshi
       .getByRole("button", { name: "Refresh links", exact: true })
       .click();
     await expect(
-      panel.getByText("Writing · Note · In Trash", { exact: true }),
+      panel.getByText("Entry · In Trash", { exact: true }),
     ).toBeVisible();
     // An intervening writing edit cannot be overwritten by a stale relationship request.
     expect(

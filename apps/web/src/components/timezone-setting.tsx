@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import settingsFieldsStyles from "@/components/settings-fields.module.css";
 import { Button } from "@/components/button";
 
@@ -14,23 +15,24 @@ export function TimezoneSetting({
   const [timezone, setTimezone] = useState(initialTimezone);
   const [savedTimezone, setSavedTimezone] = useState(initialTimezone);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy || timezone === savedTimezone) return;
 
     setBusy(true);
-    setMessage(null);
 
     try {
       const result = await saveProfileTimezone(timezone);
-      setMessage(result.message);
+      if (result.status === "saved") notify.success(result.message);
+      else notify.error(result.message);
       if (result.status === "saved" && result.timezone) {
         setSavedTimezone(result.timezone);
       }
     } catch {
-      setMessage("MemoTrail could not save your default time zone. Try again.");
+      notify.error(
+        "MemoTrail could not save your default time zone. Try again.",
+      );
     } finally {
       setBusy(false);
     }
@@ -62,7 +64,6 @@ export function TimezoneSetting({
         >
           {busy ? "Saving..." : "Save time zone"}
         </Button>
-        {message ? <span role="status">{message}</span> : null}
       </div>
     </form>
   );
