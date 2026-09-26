@@ -25,37 +25,6 @@ type LibraryDestination = {
   title: string;
 };
 
-const kindDestinations: Array<{
-  detail?: string;
-  icon: IconName;
-  kind: "entry" | "entity" | "goal" | null;
-  title: string;
-}> = [
-  {
-    icon: "archive" as const,
-    kind: null,
-    title: "All items",
-  },
-  {
-    detail: "Everything you captured and kept.",
-    icon: "bold" as const,
-    kind: "entry",
-    title: "Entries",
-  },
-  {
-    detail: "People, homes, and vehicles.",
-    icon: "archive" as const,
-    kind: "entity",
-    title: "Entities",
-  },
-  {
-    detail: "An intention you want to pursue.",
-    icon: "target" as const,
-    kind: "goal",
-    title: "Goals",
-  },
-];
-
 const focusedDestinations: LibraryDestination[] = [
   {
     detail: "Connect the people who shaped your life.",
@@ -161,36 +130,14 @@ export default async function LibraryPage({
         }
       />
 
-      <section aria-labelledby="kinds-heading">
-        <div className={styles.sectionHeading}>
-          <h2 id="kinds-heading">Browse library</h2>
-        </div>
-        <nav className={styles.kindGrid} aria-label="Library categories">
-          {kindDestinations.map((destination) => (
-            <Link
-              aria-current={
-                destination.kind === itemKind ||
-                (!destination.kind && !itemKind)
-                  ? "page"
-                  : undefined
-              }
-              href={libraryPageHref(query, destination.kind, 1)}
-              key={destination.title}
-            >
-              <span>
-                <Icon name={destination.icon} size={18} />
-              </span>
-              <strong>{destination.title}</strong>
-              {destination.detail ? <p>{destination.detail}</p> : null}
-            </Link>
-          ))}
-        </nav>
-      </section>
-
       <section aria-labelledby="all-items-heading">
         <div className={styles.sectionHeading}>
           <h2 id="all-items-heading">
-            {itemKind ? wikiItemKindLabel(itemKind) : "All items"}
+            {itemKind === "entity"
+              ? "People, homes & vehicles"
+              : itemKind
+                ? wikiItemKindLabel(itemKind)
+                : "All items"}
           </h2>
           <span>
             {totalCount} {totalCount === 1 ? "item" : "items"}
@@ -205,11 +152,11 @@ export default async function LibraryPage({
             placeholder="Search titles, writing, or people"
           />
           <label>
-            <span>Category</span>
+            <span>Show</span>
             <select defaultValue={itemKind ?? ""} name="kind">
               <option value="">All records</option>
               <option value="entry">Entries</option>
-              <option value="entity">Entities</option>
+              <option value="entity">People, homes & vehicles</option>
               <option value="goal">Goals</option>
             </select>
           </label>
