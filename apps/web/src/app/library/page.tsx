@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Icon, type IconName } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import { SearchField } from "@/components/search-field";
+import { SelectField } from "@/components/select-field";
 import {
   isWikiItemKind,
   wikiItemKindLabel,
@@ -151,15 +152,12 @@ export default async function LibraryPage({
             name="q"
             placeholder="Search titles, writing, or people"
           />
-          <label>
-            <span>Show</span>
-            <select defaultValue={itemKind ?? ""} name="kind">
+          <SelectField defaultValue={itemKind ?? ""} label="Show" name="kind">
               <option value="">All records</option>
               <option value="entry">Entries</option>
               <option value="entity">People, homes & vehicles</option>
               <option value="goal">Goals</option>
-            </select>
-          </label>
+          </SelectField>
           <Button variant="primary" type="submit">
             Apply
           </Button>

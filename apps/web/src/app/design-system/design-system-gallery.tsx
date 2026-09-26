@@ -19,6 +19,7 @@ import {
 } from "@/components/record-card";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { SearchField } from "@/components/search-field";
+import { SelectField } from "@/components/select-field";
 import { notify } from "@/components/app-toast";
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import type { EntryRichText } from "@/lib/data/rich-text";
@@ -335,7 +336,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="SearchField and the current production date, rich-text, occurrence, and organization editors are reusable. Other plain text inputs, selects, textareas, labels, and validation messages are still route-level patterns."
+        description="SearchField, SelectField, and the current production date, rich-text, occurrence, and organization editors are reusable. Other plain text inputs, textareas, labels, and validation messages are still route-level patterns."
         id="forms"
         index="04"
         title="Forms"
@@ -382,6 +383,22 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
           <p className={styles.stateNote} role="status">
             {searchMessage}
           </p>
+        </Specimen>
+        <Specimen
+          api="label · size: small | medium | large · disabled · native select props"
+          description="A labeled native select with the same surface and focus treatment as SearchField."
+          title="SelectField"
+        >
+          <div className={styles.formGrid}>
+            <SelectField defaultValue="all" label="Show records">
+              <option value="all">All records</option>
+              <option value="entries">Entries</option>
+              <option value="entities">People, homes & vehicles</option>
+            </SelectField>
+            <SelectField disabled label="Unavailable filter" size="small">
+              <option>Unavailable</option>
+            </SelectField>
+          </div>
         </Specimen>
         <Specimen
           api="size: small | medium | large · granularity: day | month | year · editable · includeTime · disabled"

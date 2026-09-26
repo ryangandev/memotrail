@@ -24,45 +24,10 @@
 
 .wikiFilters {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(170px, 0.28fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 0.34fr) auto;
   align-items: end;
   gap: var(--mt-space-3);
   margin-bottom: var(--mt-space-5);
-}
-
-.wikiFilters > label {
-  display: grid;
-  gap: var(--mt-space-2);
-}
-
-.wikiFilters > label > span {
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.wikiFilters select {
-  height: 44px;
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface-raised);
-  font: inherit;
-}
-
-.wikiFilters select {
-  width: 100%;
-  padding: 0 var(--mt-space-3);
-}
-
-.wikiFilters select {
-  padding-right: var(--mt-space-8);
-}
-
-.wikiFilters select:focus {
-  outline: 0;
-  border-color: var(--mt-color-accent);
-  box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
 }
 
 .wikiGrid {
