@@ -24,6 +24,8 @@ export const iconNames = [
   "refresh",
   "search",
   "settings",
+  "sidebarClosed",
+  "sidebarOpen",
   "sparkle",
   "star",
   "stop",
@@ -188,6 +190,21 @@ const paths: Record<IconName, React.ReactNode> = {
     <>
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" />
+    </>
+  ),
+  sidebarClosed: (
+    <>
+      <rect height="17" rx="2" width="18" x="3" y="3.5" />
+      <path d="M9 3.5v17" />
+      <circle cx="6" cy="8" fill="currentColor" r="0.8" stroke="none" />
+      <circle cx="6" cy="12" fill="currentColor" r="0.8" stroke="none" />
+      <circle cx="6" cy="16" fill="currentColor" r="0.8" stroke="none" />
+    </>
+  ),
+  sidebarOpen: (
+    <>
+      <rect height="17" rx="2" width="18" x="3" y="3.5" />
+      <path d="M9 3.5v17" />
     </>
   ),
   sparkle: (

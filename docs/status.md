@@ -10,7 +10,7 @@ The obsolete Places Timeline track has been removed, with existing placements mi
 The accepted compact Collection card is shared by the Web Design System and Collections overview.
 The Web Map and Location previews now follow light, dark, and System appearance; a local provider-backed dark map loaded successfully.
 The Map also offers filtered shortcuts to the user's most recorded cities when records span more than one city.
-The desktop sidebar has a persistent icon-rail option with its toggle beside the brand.
+The desktop sidebar has a compact icon rail, panel control, and animated width change; its browser preference persists across reloads.
 Inbox review now hides AI suggestions and places photos after tags; the Library browser excludes unreviewed captures until Save to Library.
 Native iOS still uses the older Kind and subtype contract and needs a separate update before its write flows are compatible.
 Web production still needs deployment and acceptance of this branch; live configuration, native interactions, CI, and recovery evidence remain incomplete.

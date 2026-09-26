@@ -322,10 +322,10 @@ function Sidebar({
     <aside className={workspaceShellStyles.sidebar}>
       <div className={workspaceShellStyles.sidebarHeader}>
         <Link
-          aria-label={collapsed ? "MemoTrail home" : undefined}
+          aria-hidden={collapsed}
           className={workspaceShellStyles.brand}
           href="/"
-          title={collapsed ? "MemoTrail home" : undefined}
+          tabIndex={collapsed ? -1 : undefined}
         >
           <BrandMark className={workspaceShellStyles.brandMark} />
           <span className={workspaceShellStyles.brandName}>MemoTrail</span>
@@ -337,7 +337,7 @@ function Sidebar({
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           type="button"
         >
-          <Icon name="chevron" size={18} />
+          <Icon name={collapsed ? "sidebarClosed" : "sidebarOpen"} size={18} />
         </button>
       </div>
 
@@ -354,14 +354,18 @@ function Sidebar({
             items={primaryNavigation}
           />
           <div className={workspaceShellStyles.navDivider} role="separator" />
-          <p className={workspaceShellStyles.navLabel}>Focused views</p>
+          <p aria-hidden={collapsed} className={workspaceShellStyles.navLabel}>
+            Focused views
+          </p>
           <NavGroup
             activeDestination={activeDestination}
             collapsed={collapsed}
             items={recordNavigation}
           />
           <div className={workspaceShellStyles.navDivider} role="separator" />
-          <p className={workspaceShellStyles.navLabel}>Organize</p>
+          <p aria-hidden={collapsed} className={workspaceShellStyles.navLabel}>
+            Organize
+          </p>
           <NavGroup
             activeDestination={activeDestination}
             collapsed={collapsed}
