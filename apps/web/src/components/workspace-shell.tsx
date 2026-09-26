@@ -8,7 +8,6 @@ import { useCallback, useState, type ReactNode } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { BrandMark } from "@/components/brand-mark";
 import { CommandPalette } from "@/components/command-palette";
-import { DismissibleSyncNote } from "@/components/dismissible-sync-note";
 import { Icon, type IconName } from "@/components/icon";
 import { QuickCaptureDialog } from "@/components/quick-capture-dialog";
 import { SearchShortcutButton } from "@/components/search-shortcut-link";
@@ -199,7 +198,6 @@ export function WorkspaceShell({
         collapsed={sidebarCollapsed}
         inboxCount={inboxCount}
         onToggle={toggleSidebar}
-        viewer={viewer}
       />
 
       <main className={workspaceShellStyles.workspace}>
@@ -310,13 +308,11 @@ function Sidebar({
   collapsed,
   inboxCount,
   onToggle,
-  viewer,
 }: {
   activeDestination: WorkspaceDestination;
   collapsed: boolean;
   inboxCount?: number;
   onToggle: () => void;
-  viewer: Viewer;
 }) {
   return (
     <aside className={workspaceShellStyles.sidebar}>
@@ -374,7 +370,6 @@ function Sidebar({
         </nav>
 
         <div className={workspaceShellStyles.sidebarFooter}>
-          <DismissibleSyncNote ownerId={viewer.id} />
           <div className={workspaceShellStyles.navDivider} role="separator" />
           <nav
             className={workspaceShellStyles.navGroup}

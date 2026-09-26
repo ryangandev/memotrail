@@ -208,53 +208,6 @@
   gap: 0;
 }
 
-.sidebarFooter .archiveNote {
-  margin-top: var(--mt-space-5);
-}
-
-.archiveNote {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: var(--mt-space-3);
-  padding: var(--mt-space-3) 38px var(--mt-space-3) var(--mt-space-3);
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-warm);
-  background: var(--mt-color-warm-subtle);
-}
-
-.archiveNote div {
-  display: grid;
-  min-width: 0;
-  gap: 2px;
-}
-
-.archiveNote strong {
-  color: var(--mt-color-ink);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.archiveNote span {
-  color: var(--mt-color-ink-muted);
-  font-size: 10px;
-}
-
-.sidebarFooter strong {
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.sidebarFooter small {
-  overflow: hidden;
-  margin-top: 1px;
-  color: var(--mt-color-ink-faint);
-  font-size: 10px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .avatarButton {
   display: grid;
   width: 30px;
@@ -301,10 +254,6 @@
 .appShell[data-sidebar-collapsed="true"] .navLabel {
   max-height: 0;
   margin-bottom: 0;
-}
-
-.appShell[data-sidebar-collapsed="true"] .archiveNote {
-  display: none;
 }
 
 .appShell[data-sidebar-collapsed="true"] .sidebarToggle {

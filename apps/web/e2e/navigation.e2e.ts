@@ -209,12 +209,9 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
         .getByRole("navigation", { name: "Settings navigation" })
         .getByRole("link", { name: "Settings", exact: true }),
     ).toHaveCount(1);
-    const syncNote = shell.getByRole("note", { name: "Private cloud sync" });
-    await expect(syncNote).toBeVisible();
-    await syncNote
-      .getByRole("button", { name: "Dismiss private cloud sync" })
-      .click();
-    await expect(syncNote).not.toBeVisible();
+    await expect(
+      shell.getByRole("note", { name: "Private cloud sync" }),
+    ).toHaveCount(0);
     await page.reload();
     await expect(
       shell.getByRole("note", { name: "Private cloud sync" }),
