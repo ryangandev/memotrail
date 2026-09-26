@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react";
 import { savePreferredName } from "@/app/settings/actions";
 import { notify } from "@/components/app-toast";
 import { Button } from "@/components/button";
+import { TextField } from "@/components/text-field";
 import styles from "./settings-fields.module.css";
 
 export function PreferredNameSetting({
@@ -45,17 +46,14 @@ export function PreferredNameSetting({
         <strong>What should we call you?</strong>
         <p>Used in your Home greeting. Leave blank to use your Google name.</p>
       </div>
-      <label>
-        <span>Preferred name</span>
-        <input
-          autoComplete="nickname"
-          disabled={busy}
-          maxLength={80}
-          onChange={(event) => setName(event.target.value)}
-          type="text"
-          value={name}
-        />
-      </label>
+      <TextField
+        autoComplete="nickname"
+        disabled={busy}
+        label="Preferred name"
+        maxLength={80}
+        onChange={(event) => setName(event.target.value)}
+        value={name}
+      />
       <div className={styles.preferredNameControls}>
         <Button disabled={busy || name === savedName} type="submit">
           {busy ? "Saving..." : "Save name"}

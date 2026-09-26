@@ -81,6 +81,13 @@ test("Settings is reachable from the sidebar and owns account controls", async (
       name: "Preferred name",
     });
     await expect(preferredName).toHaveValue(displayName);
+    for (const field of [
+      preferredName,
+      main.getByRole("textbox", { name: "Birth date" }),
+      main.getByRole("combobox", { name: "Default time zone" }),
+    ]) {
+      await expect(field).toHaveCSS("font-size", "13px");
+    }
     await page.screenshot({
       animations: "disabled",
       caret: "initial",

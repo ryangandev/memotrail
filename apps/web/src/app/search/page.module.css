@@ -84,7 +84,7 @@
   outline: 0;
   color: var(--mt-color-ink);
   background: var(--mt-color-surface);
-  font-size: var(--mt-font-size-caption);
+  font-size: var(--mt-font-size-label);
 }
 
 .filters select:focus {
