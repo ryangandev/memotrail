@@ -8,7 +8,6 @@ import {
 import Link from "next/link";
 import { EntryRichTextContent } from "@/components/entry-rich-text-content";
 import { Icon } from "@/components/icon";
-import { AISearchForm } from "@/components/ai-search-form";
 import { PageFrame } from "@/components/page-frame";
 import { DatePickerField } from "@/components/date-picker-field";
 import { SearchField } from "@/components/search-field";
@@ -68,19 +67,7 @@ export default async function SearchPage({
         }
       />
 
-      <AISearchForm
-        key={JSON.stringify(request)}
-        keywordResults={
-          <>
-            <SearchResults
-              entries={entries}
-              loadError={loadError}
-              request={request}
-              totalCount={totalCount}
-            />
-          </>
-        }
-      >
+      <form action="/search" method="get">
         <section className={styles.searchSurface} aria-label="Entry search">
           <div className={styles.queryRow}>
             <SearchField
@@ -96,9 +83,6 @@ export default async function SearchPage({
             />
             <Button variant="primary" type="submit">
               Search
-            </Button>
-            <Button variant="primary" name="mode" value="ai" type="submit">
-              Ask AI
             </Button>
           </div>
 
@@ -194,7 +178,13 @@ export default async function SearchPage({
             </p>
           ) : null}
         </section>
-      </AISearchForm>
+      </form>
+      <SearchResults
+        entries={entries}
+        loadError={loadError}
+        request={request}
+        totalCount={totalCount}
+      />
     </PageFrame>
   );
 }

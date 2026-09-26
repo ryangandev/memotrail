@@ -112,7 +112,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - `Explore with AI` creates a separate conversation attached to its source Entry.
 - `Save as Entry` creates an editable, independent Inbox Entry with a bidirectional source link.
 - AI defaults off, and manual capture, organization, browsing, and keyword search continue without it.
-- Web offers one master permission, one optional organizing-suggestions control, and separate photo understanding consent. AI Search and Explore run only after an explicit user action.
+- Web offers one master permission, one optional organizing-suggestions control, and separate photo understanding consent. Search currently shows keyword retrieval without an Ask AI action; Explore runs only after an explicit user action.
 - Photo understanding requires separate consent from text features.
 
 ## Timeline and Home
