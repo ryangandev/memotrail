@@ -1,6 +1,5 @@
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
-import { ButtonLink } from "@/components/button";
 import Link from "next/link";
 import { CaptureComposer } from "@/components/capture-composer";
 import { Icon } from "@/components/icon";
@@ -48,14 +47,6 @@ function HomeContent({ workspace }: { workspace: HomeWorkspace }) {
         eyebrow={<>{todayLabel(now, workspace.timezone)}</>}
         description={
           <>A calm view of what is active, recent, and waiting for you.</>
-        }
-        actions={
-          <>
-            <ButtonLink href="/search">
-              <Icon name="search" size={17} />
-              <span>Search your trail</span>
-            </ButtonLink>
-          </>
         }
       />
 
