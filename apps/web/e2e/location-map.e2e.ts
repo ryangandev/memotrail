@@ -257,11 +257,13 @@ test("Map shows current Entry coordinates", async ({
     await page.getByLabel("Category").selectOption("all");
     await page.getByLabel("From year").fill("");
     await expect(page.locator(".leaflet-marker-icon")).toHaveCount(1);
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= window.innerWidth + 1,
-      ),
-    ).toBe(true);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth + 1,
+        ),
+      )
+      .toBe(true);
     await page.screenshot({
       animations: "disabled",
       path: "/private/tmp/memotrail-location-map-mobile.png",
@@ -347,11 +349,13 @@ test("Map shows current Entry coordinates", async ({
       path: "/private/tmp/memotrail-location-map-areas-desktop.png",
     });
     await page.setViewportSize({ width: 390, height: 844 });
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= window.innerWidth + 1,
-      ),
-    ).toBe(true);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth + 1,
+        ),
+      )
+      .toBe(true);
     await page.screenshot({
       animations: "disabled",
       path: "/private/tmp/memotrail-location-map-areas-mobile.png",
