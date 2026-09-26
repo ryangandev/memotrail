@@ -20,6 +20,7 @@ import {
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { SearchField } from "@/components/search-field";
 import { SelectField } from "@/components/select-field";
+import { TextField } from "@/components/text-field";
 import { notify } from "@/components/app-toast";
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import type { EntryRichText } from "@/lib/data/rich-text";
@@ -336,11 +337,28 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="SearchField, SelectField, and the current production date, rich-text, occurrence, and organization editors are reusable. Other plain text inputs, textareas, labels, and validation messages are still route-level patterns."
+        description="TextField, SearchField, SelectField, and the current production date, rich-text, occurrence, and organization editors are reusable. TextField is a proposed replacement for route-level plain text inputs; other textareas, labels, and validation messages are still route-level patterns."
         id="forms"
         index="04"
         title="Forms"
       >
+        <Specimen
+          api="label · size: small | medium | large · disabled · native text input props"
+          description="Proposed plain text input for review. Its font, height, border, and focus surface match SearchField and SelectField. The Settings page still uses its existing field."
+          id="text-field"
+          title="TextField"
+        >
+          <div className={styles.formGrid}>
+            <TextField defaultValue="Alex Morgan" label="Preferred name" />
+            <TextField label="Empty text field" placeholder="Add a name" />
+            <TextField
+              disabled
+              label="Disabled text field"
+              placeholder="Unavailable"
+              size="small"
+            />
+          </div>
+        </Specimen>
         <Specimen
           api="label · hideLabel · size: small | medium | large · disabled · native input props"
           description="One focus surface for the icon and text. The search action stays composable, so each feature can choose its own submit behavior."

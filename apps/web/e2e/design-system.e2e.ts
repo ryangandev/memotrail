@@ -208,6 +208,64 @@ test("SearchField has one focus surface and composes with a Search action", asyn
   ).toBeDisabled();
 });
 
+test("TextField previews the shared form typography and focus surface", async ({
+  page,
+}) => {
+  await page.goto("/design-system#text-field");
+  const specimen = page.locator("#text-field");
+  const input = specimen.getByRole("textbox", { name: "Preferred name" });
+  const search = page
+    .locator("#search-field")
+    .getByRole("searchbox", { name: "Search Locations" });
+  const select = page
+    .locator("article")
+    .filter({
+      has: page.getByRole("heading", { name: "SelectField", exact: true }),
+    })
+    .getByLabel("Show records");
+
+  await expect(input).toHaveValue("Alex Morgan");
+  await specimen.screenshot({
+    caret: "initial",
+    path: "/private/tmp/memotrail-text-field-proposal-light.png",
+  });
+  const typography = await Promise.all(
+    [input, search, select].map((field) =>
+      field.evaluate((element) => {
+        const style = getComputedStyle(element);
+        return {
+          family: style.fontFamily,
+          size: style.fontSize,
+          weight: style.fontWeight,
+        };
+      }),
+    ),
+  );
+  expect(typography[0]).toEqual(typography[1]);
+  expect(typography[0]).toEqual(typography[2]);
+  await input.focus();
+  await expect(input).toHaveCSS("outline-style", "none");
+  await expect(input.locator("..")).toHaveCSS("border-top-width", "1px");
+  await input.fill("Alex");
+  await expect(input).toHaveValue("Alex");
+  await expect(
+    specimen.getByRole("textbox", { name: "Disabled text field" }),
+  ).toBeDisabled();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByLabel("Gallery theme").selectOption("dark");
+  await expect(specimen).toBeVisible();
+  await specimen.screenshot({
+    caret: "initial",
+    path: "/private/tmp/memotrail-text-field-proposal-dark-mobile.png",
+  });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
+
 test("SearchField fits both themes at desktop and mobile widths", async ({
   page,
 }) => {
