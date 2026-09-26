@@ -196,7 +196,7 @@ Web appearance is a per-browser choice between System, Light, and Dark; System r
 
 Mobile uses Home, Inbox, Timeline, and Library as its primary destinations.
 Library opens with the same all-items Life Wiki browser as Web, including debounced keyword search and Kind filters.
-Focused record destinations for Collections, First Times, Goals, Homes, Vehicles, and People remain available below the all-items browser.
+Focused record destinations and archive tools remain available in a compact, initially closed "More views and tools" section below the all-items browser, including on mobile.
 Settings is reached from the profile control.
 
 Desktop treats Library as a primary destination beside Home, Timeline, and Search.

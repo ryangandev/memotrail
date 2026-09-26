@@ -137,8 +137,9 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       page.getByRole("heading", { name: "People, homes & vehicles" }),
     ).toBeVisible();
     await page.goto("/library");
+    await page.getByText("More views and tools", { exact: true }).click();
     await expect(
-      page.getByRole("heading", { name: "Focused views", exact: true }),
+      page.getByRole("navigation", { name: "Focused views" }),
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Places", exact: true }),
