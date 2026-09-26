@@ -266,6 +266,56 @@ test("TextField previews the shared form typography and focus surface", async ({
   ).toBe(true);
 });
 
+test("DatePickerField uses the shared form typography", async ({ page }) => {
+  await page.goto("/design-system#forms");
+  const specimen = page.locator("article").filter({
+    has: page.getByRole("heading", { name: "DatePickerField", exact: true }),
+  });
+  const dateInput = specimen.getByRole("textbox", { name: "Filled date" });
+  const textInput = page
+    .locator("#text-field")
+    .getByRole("textbox", { name: "Preferred name" });
+  const textFont = await textInput.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { family: style.fontFamily, size: style.fontSize };
+  });
+  const dateFont = await dateInput.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { family: style.fontFamily, size: style.fontSize };
+  });
+  expect(dateFont).toEqual(textFont);
+  await expect(
+    specimen.getByRole("button", { name: "Choose exact date and time time" }),
+  ).toHaveCSS("font-size", textFont.size);
+
+  await specimen.getByRole("button", { name: "Choose filled date" }).click();
+  const calendar = page.locator(
+    '[data-scope="date-picker"][data-part="content"][data-state="open"]',
+  );
+  await expect(calendar).toBeVisible();
+  await expect(calendar.locator("th").first()).toHaveCSS("font-size", "12px");
+  await expect(calendar.locator("[class*=calendarCellTrigger]").first()).toHaveCSS(
+    "font-size",
+    textFont.size,
+  );
+  await page.keyboard.press("Escape");
+  await specimen
+    .getByRole("button", { name: "Choose exact date and time time" })
+    .click();
+  const timePicker = page.locator(
+    '[data-scope="popover"][data-part="content"][data-state="open"]',
+  );
+  await expect(timePicker).toBeVisible();
+  await expect(timePicker.getByRole("combobox", { name: "Hour" })).toHaveCSS(
+    "font-size",
+    textFont.size,
+  );
+  await expect(timePicker.getByText("Hour", { exact: true })).toHaveCSS(
+    "font-size",
+    "12px",
+  );
+});
+
 test("SearchField fits both themes at desktop and mobile widths", async ({
   page,
 }) => {

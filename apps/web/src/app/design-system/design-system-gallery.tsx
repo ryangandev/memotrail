@@ -420,6 +420,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
         </Specimen>
         <Specimen
           api="size: small | medium | large · granularity: day | month | year · editable · includeTime · disabled"
+          description="Date values, time controls, and calendar text use the shared form typography."
           title="DatePickerField"
         >
           <div className={styles.formGrid}>
