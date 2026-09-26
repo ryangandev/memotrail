@@ -77,6 +77,60 @@ test("Settings is reachable from the sidebar and owns account controls", async (
       page.getByRole("link", { name: /AI assistance/ }),
     ).toHaveAttribute("href", "/settings/ai");
 
+    const preferredName = main.getByRole("textbox", {
+      name: "Preferred name",
+    });
+    await expect(preferredName).toHaveValue(displayName);
+    await page.screenshot({
+      animations: "disabled",
+      caret: "initial",
+      path: "/private/tmp/memotrail-settings-preferred-name-desktop.png",
+    });
+    await preferredName.fill("River");
+    await main.getByRole("button", { name: "Save name" }).click();
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "Preferred name saved.",
+      }),
+    ).toBeVisible();
+    await expect
+      .poll(
+        async () =>
+          (
+            await client
+              .from("profiles")
+              .select("display_name")
+              .eq("user_id", owner)
+              .single()
+          ).data?.display_name,
+      )
+      .toBe("River");
+    await page.goto("/");
+    await expect(page.getByRole("main").locator("h1")).toContainText("River.");
+    await page.goto("/settings");
+    await expect(main.getByText("River", { exact: true })).toBeVisible();
+    await preferredName.fill("");
+    await expect(preferredName).toHaveValue("");
+    await expect(main.getByRole("button", { name: "Save name" })).toBeEnabled();
+    await main.getByRole("button", { name: "Save name" }).click();
+    await expect
+      .poll(
+        async () =>
+          (
+            await client
+              .from("profiles")
+              .select("display_name")
+              .eq("user_id", owner)
+              .single()
+          ).data?.display_name,
+      )
+      .toBeNull();
+    await page.goto("/");
+    await expect(page.getByRole("main").locator("h1")).toContainText(
+      "Settings.",
+    );
+    await page.goto("/settings");
+
     const appearance = main.getByRole("group", { name: "Appearance mode" });
     const systemTheme = appearance.getByRole("radio", { name: "System" });
     const lightTheme = appearance.getByRole("radio", { name: "Light" });
@@ -178,10 +232,10 @@ test("Settings is reachable from the sidebar and owns account controls", async (
     await expect(
       page.getByRole("link", { name: `Open settings for ${displayName}` }),
     ).toHaveAttribute("aria-current", "page");
+    await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
       caret: "initial",
       animations: "disabled",
-      fullPage: true,
       path: "/private/tmp/memotrail-settings-mobile.png",
     });
 

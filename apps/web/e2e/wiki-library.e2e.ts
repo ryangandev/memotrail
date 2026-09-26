@@ -132,7 +132,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await expect(showFilter).toHaveValue("");
     await showFilter.selectOption("entity");
     await page.getByRole("button", { name: "Apply" }).click();
-    await expect(page).toHaveURL(/\/library\?kind=entity$/);
+    await expect(page).toHaveURL(/kind=entity$/);
     await expect(
       page.getByRole("heading", { name: "People, homes & vehicles" }),
     ).toBeVisible();

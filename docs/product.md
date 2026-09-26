@@ -198,6 +198,7 @@ Mobile uses Home, Inbox, Timeline, and Library as its primary destinations.
 Library opens with the same all-items Life Wiki browser as Web, including debounced keyword search and Kind filters.
 Focused record destinations and archive tools remain available in a compact, initially closed "More views and tools" section below the all-items browser, including on mobile.
 Settings is reached from the profile control.
+Settings lets the user choose a preferred name for Home greetings, or clear it to use the Google account name.
 
 Desktop treats Library as a primary destination beside Home, Timeline, and Search.
 Its sidebar omits Inbox, keeps optional focused views separate from Collections, tags, Trash, and the single Settings entry point.

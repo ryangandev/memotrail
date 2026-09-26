@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
-import { parseBirthDate, parseProfileTimezone } from "@/lib/data/profile-input";
+import {
+  parseBirthDate,
+  parsePreferredName,
+  parseProfileTimezone,
+} from "@/lib/data/profile-input";
 import {
   storedThemePreference,
   THEME_COOKIE_NAME,
@@ -21,6 +25,53 @@ export type TimezoneActionResult = {
   status: "error" | "saved";
   timezone?: string;
 };
+
+export type PreferredNameActionResult = {
+  message: string;
+  preferredName?: string | null;
+  status: "error" | "saved";
+};
+
+export async function savePreferredName(
+  value: string,
+): Promise<PreferredNameActionResult> {
+  const parsed = parsePreferredName(value);
+  if (!parsed.success) {
+    return { message: parsed.message, status: "error" };
+  }
+
+  const context = await getAuthenticatedContext();
+  if (!context) {
+    return {
+      message: "Your session expired. Sign in again before saving.",
+      status: "error",
+    };
+  }
+
+  const { data, error } = await context.client
+    .from("profiles")
+    .update({ display_name: parsed.preferredName })
+    .eq("user_id", context.userId)
+    .select("display_name")
+    .single();
+
+  if (error || data?.display_name !== parsed.preferredName) {
+    return {
+      message: "MemoTrail could not save your preferred name. Try again.",
+      status: "error",
+    };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/settings");
+  return {
+    message: parsed.preferredName
+      ? "Preferred name saved."
+      : "Preferred name cleared.",
+    preferredName: parsed.preferredName,
+    status: "saved",
+  };
+}
 
 export async function saveThemePreference(
   value: ThemePreference,
