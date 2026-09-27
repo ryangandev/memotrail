@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MemoTrail · Timeline Design Explorations</title>
+    <style>
+      :root {
+        --bg: #0f1115;
+        --panel: #171a21;
+        --panel-2: #1e222b;
+        --border: #2a2f3a;
+        --text: #e8ebf1;
+        --muted: #9aa3b2;
+        --accent: #7c9cff;
+        --accent-2: #67e8c3;
+        --radius: 16px;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: radial-gradient(
+            1200px 600px at 80% -10%,
+            rgba(124, 156, 255, 0.14),
+            transparent 60%
+          ),
+          radial-gradient(
+            900px 500px at 0% 0%,
+            rgba(103, 232, 195, 0.1),
+            transparent 55%
+          ),
+          var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+      header.page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 56px 24px 20px;
+      }
+      .eyebrow {
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        font-size: 12px;
+        color: var(--accent-2);
+        font-weight: 700;
+        margin: 0 0 12px;
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(28px, 4vw, 44px);
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+      }
+      .lede {
+        margin: 0;
+        max-width: 720px;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .toolbar {
+        max-width: 1200px;
+        margin: 22px auto 0;
+        padding: 0 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+      .filter {
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--muted);
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .filter:hover {
+        color: var(--text);
+        border-color: var(--accent);
+      }
+      .filter[aria-pressed="true"] {
+        background: var(--accent);
+        color: #0b0d12;
+        border-color: var(--accent);
+      }
+      main {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 28px 24px 80px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 22px;
+      }
+      .card {
+        background: linear-gradient(180deg, var(--panel), var(--panel-2));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        box-shadow: var(--shadow);
+        transition: transform 0.18s ease, border-color 0.18s ease;
+      }
+      .card:hover {
+        transform: translateY(-4px);
+        border-color: var(--accent);
+      }
+      .thumb {
+        position: relative;
+        height: 210px;
+        overflow: hidden;
+        background: #fff;
+        border-bottom: 1px solid var(--border);
+      }
+      .thumb iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1280px;
+        height: 800px;
+        border: 0;
+        transform: scale(0.32);
+        transform-origin: top left;
+        pointer-events: none;
+      }
+      .thumb .num {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 2;
+        background: rgba(10, 12, 18, 0.82);
+        color: #fff;
+        font-weight: 700;
+        font-size: 12px;
+        padding: 5px 9px;
+        border-radius: 8px;
+        letter-spacing: 0.04em;
+      }
+      .thumb .open {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        z-index: 2;
+        background: rgba(10, 12, 18, 0.82);
+        color: #fff;
+        font-size: 11px;
+        padding: 5px 9px;
+        border-radius: 8px;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+      }
+      .card:hover .open {
+        opacity: 1;
+      }
+      .meta {
+        padding: 14px 16px 16px;
+      }
+      .meta h3 {
+        margin: 0 0 6px;
+        font-size: 15px;
+        letter-spacing: -0.01em;
+      }
+      .meta p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .chip {
+        display: inline-block;
+        margin-top: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--accent-2);
+        border: 1px solid rgba(103, 232, 195, 0.3);
+        padding: 3px 8px;
+        border-radius: 999px;
+      }
+      footer {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px 60px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      code {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        padding: 1px 6px;
+        border-radius: 6px;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="page">
+      <p class="eyebrow">MemoTrail · Design Exploration</p>
+      <h1>Timeline concepts - 20 directions</h1>
+      <p class="lede">
+        Twenty distinct ways to visualize a life from birth to the present, with
+        events, stages, and milestones across tracks. Every concept uses the same
+        sample life (Ava Chen, 1990&ndash;2025) so they compare fairly. Click any
+        card to open the full design.
+      </p>
+    </header>
+
+    <div class="toolbar" id="filters" role="group" aria-label="Filter by category">
+      <button class="filter" data-cat="all" aria-pressed="true">All 20</button>
+      <button class="filter" data-cat="Vertical &amp; Feed" aria-pressed="false">
+        Vertical &amp; Feed
+      </button>
+      <button class="filter" data-cat="Horizontal &amp; Tracks" aria-pressed="false">
+        Horizontal &amp; Tracks
+      </button>
+      <button class="filter" data-cat="Creative Metaphor" aria-pressed="false">
+        Creative Metaphor
+      </button>
+      <button class="filter" data-cat="Data &amp; Playful" aria-pressed="false">
+        Data &amp; Playful
+      </button>
+    </div>
+
+    <main>
+      <div class="grid" id="grid"></div>
+    </main>
+
+    <footer>
+      <p>
+        These are throwaway prototypes for picking a direction - they
+        intentionally ignore the app's current styling. Files live in
+        <code>timeline-ideas/</code>. Open any file directly in a browser, or start
+        from this gallery.
+      </p>
+    </footer>
+
+    <script>
+      const designs = [
+        {
+          n: "01",
+          file: "01-vertical-spine.html",
+          title: "Vertical Spine",
+          cat: "Vertical & Feed",
+          desc: "Classic center line, birth to a pulsing “Now”, cards alternating left/right with milestone nodes.",
+        },
+        {
+          n: "02",
+          file: "02-horizontal-river.html",
+          title: "Horizontal River",
+          cat: "Horizontal & Tracks",
+          desc: "A winding river you scroll left→right; events pinned along the banks, stages as thicker currents.",
+        },
+        {
+          n: "03",
+          file: "03-swimlane-gantt.html",
+          title: "Swimlane Gantt",
+          cat: "Horizontal & Tracks",
+          desc: "One lane per track with a year/age axis; stages as bars, events as dots. The data-dense option.",
+        },
+        {
+          n: "04",
+          file: "04-spiral-of-life.html",
+          title: "Spiral of Life",
+          cat: "Creative Metaphor",
+          desc: "An unwinding spiral from birth at the center to the present at the outer edge.",
+        },
+        {
+          n: "05",
+          file: "05-metro-map.html",
+          title: "Metro Map",
+          cat: "Creative Metaphor",
+          desc: "Tracks as subway lines, milestones as interchange stations, a “you are here” terminus.",
+        },
+        {
+          n: "06",
+          file: "06-year-heatmap.html",
+          title: "Years Heatmap",
+          cat: "Data & Playful",
+          desc: "A grid of years shaded by how eventful each was; click a year to see its moments.",
+        },
+        {
+          n: "07",
+          file: "07-sticky-year-feed.html",
+          title: "Sticky-Year Feed",
+          cat: "Vertical & Feed",
+          desc: "A modern social feed with a large sticky year that updates as you scroll.",
+        },
+        {
+          n: "08",
+          file: "08-chapters-book.html",
+          title: "Chapters (Book)",
+          cat: "Vertical & Feed",
+          desc: "Life as a book of eras with drop-caps and collapsible chapters. Editorial and warm.",
+        },
+        {
+          n: "09",
+          file: "09-constellation.html",
+          title: "Constellation",
+          cat: "Creative Metaphor",
+          desc: "A night sky where each track is a named constellation and milestones burn brightest.",
+        },
+        {
+          n: "10",
+          file: "10-mountain-elevation.html",
+          title: "Elevation Profile",
+          cat: "Data & Playful",
+          desc: "A mountain range read left→right; peaks are highs, valleys are hard years.",
+        },
+        {
+          n: "11",
+          file: "11-tree-of-life.html",
+          title: "Tree of Life",
+          cat: "Creative Metaphor",
+          desc: "A growing tree: trunk is the life spine, branches are tracks, fruit are events.",
+        },
+        {
+          n: "12",
+          file: "12-filmstrip-reel.html",
+          title: "Filmstrip Reel",
+          cat: "Horizontal & Tracks",
+          desc: "A cinematic film reel of moments with sprocket holes and “key scene” milestone frames.",
+        },
+        {
+          n: "13",
+          file: "13-age-rings.html",
+          title: "Age Rings",
+          cat: "Creative Metaphor",
+          desc: "Tree-ring cross-section: each concentric ring is a year of age, events dotted on their ring.",
+        },
+        {
+          n: "14",
+          file: "14-split-mirror.html",
+          title: "Split Mirror",
+          cat: "Vertical & Feed",
+          desc: "Personal life on the left, professional on the right, mirrored across one time axis.",
+        },
+        {
+          n: "15",
+          file: "15-roadmap-journey.html",
+          title: "Winding Roadmap",
+          cat: "Horizontal & Tracks",
+          desc: "A meandering road with milestone signposts and a “you are here” marker at the present.",
+        },
+        {
+          n: "16",
+          file: "16-life-dashboard.html",
+          title: "Life Dashboard",
+          cat: "Data & Playful",
+          desc: "A “life in numbers” analytics view: KPI tiles, per-decade bars, events by track.",
+        },
+        {
+          n: "17",
+          file: "17-scrapbook-polaroid.html",
+          title: "Scrapbook Wall",
+          cat: "Data & Playful",
+          desc: "Scattered Polaroids on a corkboard, taped and rotated, strung together in order.",
+        },
+        {
+          n: "18",
+          file: "18-minimal-typographic.html",
+          title: "Minimal Type",
+          cat: "Vertical & Feed",
+          desc: "Ultra-minimal editorial index: oversized years, hairline rules, lots of whitespace.",
+        },
+        {
+          n: "19",
+          file: "19-ruler-zoom.html",
+          title: "Precision Ruler",
+          cat: "Horizontal & Tracks",
+          desc: "A measuring-ruler axis with year/quarter ticks, zoom controls, and a scrubbable playhead.",
+        },
+        {
+          n: "20",
+          file: "20-radial-now.html",
+          title: "Radial “Now” Gauge",
+          cat: "Data & Playful",
+          desc: "A life-progress ring centered on today, with events placed around the arc by age.",
+        },
+      ];
+
+      const grid = document.getElementById("grid");
+      function render(cat) {
+        grid.innerHTML = "";
+        designs
+          .filter((d) => cat === "all" || d.cat === cat)
+          .forEach((d) => {
+            const a = document.createElement("a");
+            a.className = "card";
+            a.href = d.file;
+            a.target = "_blank";
+            a.rel = "noopener";
+            a.innerHTML =
+              '<div class="thumb"><span class="num">' +
+              d.n +
+              '</span><span class="open">Open ↗</span>' +
+              '<iframe loading="lazy" title="' +
+              d.title +
+              ' preview" src="' +
+              d.file +
+              '"></iframe></div>' +
+              '<div class="meta"><h3>' +
+              d.title +
+              "</h3><p>" +
+              d.desc +
+              '</p><span class="chip">' +
+              d.cat +
+              "</span></div>";
+            grid.appendChild(a);
+          });
+      }
+
+      const filters = document.getElementById("filters");
+      filters.addEventListener("click", (e) => {
+        const btn = e.target.closest(".filter");
+        if (!btn) return;
+        [...filters.querySelectorAll(".filter")].forEach((b) =>
+          b.setAttribute("aria-pressed", String(b === btn)),
+        );
+        render(btn.dataset.cat);
+      });
+
+      render("all");
+    </script>
+  </body>
+</html>

@@ -1,4 +1,5 @@
-.birthDateCard {
+.birthDateCard,
+.preferredNameCard {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(230px, 300px);
   align-items: end;
@@ -10,24 +11,28 @@
   background: var(--mt-color-surface-raised);
 }
 
-.birthDateCard > div:first-child {
+.birthDateCard > div:first-child,
+.preferredNameCard > div:first-child {
   align-self: center;
 }
 
-.birthDateCard strong {
+.birthDateCard strong,
+.preferredNameCard strong {
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-title-small);
   font-weight: var(--mt-font-weight-medium);
 }
 
-.birthDateCard p {
+.birthDateCard p,
+.preferredNameCard p {
   margin-top: var(--mt-space-1);
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
   line-height: var(--mt-line-height-body);
 }
 
-.birthDateControls {
+.birthDateControls,
+.preferredNameControls {
   grid-column: 1 / -1;
   display: flex;
   min-height: 40px;
@@ -89,7 +94,9 @@
   outline: 0;
   color: var(--mt-color-ink);
   background-color: var(--mt-color-surface);
-  font: inherit;
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-regular);
 }
 
 .timezoneCard select:focus {
@@ -201,11 +208,13 @@
 
 @media (max-width: 720px) {
   .birthDateCard,
+  .preferredNameCard,
   .timezoneCard {
     grid-template-columns: 1fr;
   }
 
   .birthDateControls,
+  .preferredNameControls,
   .timezoneControls {
     grid-column: auto;
     align-items: flex-start;

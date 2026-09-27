@@ -17,7 +17,24 @@ export type StoredProfileTimezone = {
   timezone: string;
 };
 
+export type PreferredNameResult =
+  | { preferredName: string | null; success: true }
+  | { message: string; success: false };
+
 const earliestBirthDate = "1800-01-01";
+
+export function parsePreferredName(value: string): PreferredNameResult {
+  if (/[\u0000-\u001f\u007f]/.test(value)) {
+    return { message: "Use a single line for your name.", success: false };
+  }
+
+  const preferredName = value.trim().replace(/ {2,}/g, " ");
+  if (preferredName.length > 80) {
+    return { message: "Keep your name under 80 characters.", success: false };
+  }
+
+  return { preferredName: preferredName || null, success: true };
+}
 
 export function parseBirthDate(
   value: string,

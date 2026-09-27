@@ -2,7 +2,7 @@ import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { locationProviderQuota } from "@/lib/locations/provider-quota";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ z: string; x: string; y: string }> },
 ) {
   const context = await getAuthenticatedContext();
@@ -23,6 +23,10 @@ export async function GET(
   )
     return new Response(null, { status: 400 });
 
+  const theme = new URL(request.url).searchParams.get("theme");
+  if (theme !== null && theme !== "light" && theme !== "dark")
+    return new Response(null, { status: 400 });
+
   const apiKey = process.env.GEOAPIFY_API_KEY?.trim();
   if (!apiKey) return new Response(null, { status: 503 });
   const quota = await locationProviderQuota(context, "tiles");
@@ -31,7 +35,7 @@ export async function GET(
   }
 
   const upstream = new URL(
-    `https://maps.geoapify.com/v1/tile/osm-bright/${zoom}/${x}/${y}.png`,
+    `https://maps.geoapify.com/v1/tile/${theme === "dark" ? "dark-matter-brown" : "osm-bright"}/${zoom}/${x}/${y}.png`,
   );
   upstream.searchParams.set("apiKey", apiKey);
   try {

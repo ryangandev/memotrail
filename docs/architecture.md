@@ -113,6 +113,7 @@ Pair it with the test file carrying the same feature name.
 - Timeline creation routes by Entry type, not track name. Generic moments use the Timeline editor; Home, Vehicle, and First Time creation and editing reuse the exported Records editors in a lazy-loaded Timeline modal. System track shortcuts select the corresponding specialized type, while ordinary tracks preselect the generic editor's placement.
 - Timeline server data loads specialized records, Collection, and tag choices needed by those editors in parallel, so opening a known specialized Entry does not require a route transition or client-side data waterfall.
 - Web Timeline projects dated First Times without an explicit Timeline placement onto the visible First Times system track. Already placed records remain on their chosen track, and unanchored records remain in the First Times archive only.
+- Web Timeline style selection lives in Settings as an owner-scoped browser cookie. The existing track view remains the default; Vertical Spine and Sticky Year are presentation components under `apps/web/src/components/timeline` that share the Timeline workspace data and editor callbacks. The original 20 HTML design studies remain under `timeline-ideas/`.
 - Web occurrence and profile date forms use `components/date-picker-field.tsx`; domain editors map their precision into its generic granularity, time, editability, and size props instead of duplicating picker UI.
 
 ## Offline rules
@@ -196,6 +197,7 @@ Pair it with the test file carrying the same feature name.
   The proxy sends only the requested search text or coordinates to Geoapify, not the signed-in user's identity.
 - The Web Map reads current Entry-Location links through owner-scoped RLS and proxies Geoapify raster tiles through an authenticated route.
   Its 5,000-link bound is ordered newest first and explicitly disclosed in the UI; filters apply to loaded results.
+- Interactive tiles and static Location previews accept only light or dark theme parameters; authenticated routes choose allowlisted Geoapify styles while keeping the provider key server-side.
 - Search, preview, and tile routes each consume an owner-scoped hourly database quota before contacting Geoapify.
 - iOS receives public backend configuration and the Web API base URL.
 - Shared behavior should be implemented and tested across Web, iOS, and Supabase in the same product slice.

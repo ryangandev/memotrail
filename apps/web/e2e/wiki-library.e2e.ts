@@ -125,23 +125,21 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto("/library");
     await expect(page.getByRole("heading", { name: "Library", exact: true })).toBeVisible();
-    const kinds = page.getByRole("navigation", { name: "Library categories" });
-    const allItemsKind = kinds.getByRole("link", { name: "All items" });
-    await expect(allItemsKind).toHaveAttribute("aria-current", "page");
     await expect(
-      page.getByText("What each item is", { exact: true }),
+      page.getByRole("navigation", { name: "Library categories" }),
     ).toHaveCount(0);
-    await expect(allItemsKind.locator("p")).toHaveCount(0);
+    const showFilter = page.getByRole("combobox", { name: "Show" });
+    await expect(showFilter).toHaveValue("");
+    await showFilter.selectOption("entity");
+    await page.getByRole("button", { name: "Apply" }).click();
+    await expect(page).toHaveURL(/kind=entity$/);
     await expect(
-      kinds.getByText("Everything you captured and kept."),
+      page.getByRole("heading", { name: "People, homes & vehicles" }),
     ).toBeVisible();
-    await expect
-      .poll(async () => (await allItemsKind.boundingBox())?.height)
-      .toBeLessThanOrEqual(100);
-    await expect(kinds.getByRole("link", { name: /Entries/ })).toBeVisible();
-    await expect(kinds.getByRole("link", { name: /Entities/ })).toBeVisible();
+    await page.goto("/library");
+    await page.getByText("More views and tools", { exact: true }).click();
     await expect(
-      page.getByRole("heading", { name: "Focused views", exact: true }),
+      page.getByRole("navigation", { name: "Focused views" }),
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Places", exact: true }),

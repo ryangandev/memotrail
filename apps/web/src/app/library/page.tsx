@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Icon, type IconName } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import { SearchField } from "@/components/search-field";
+import { SelectField } from "@/components/select-field";
 import {
   isWikiItemKind,
   wikiItemKindLabel,
@@ -19,76 +20,38 @@ import styles from "./page.module.css";
 export const dynamic = "force-dynamic";
 
 type LibraryDestination = {
-  detail: string;
   href: string;
   icon: IconName;
   title: string;
 };
 
-const kindDestinations: Array<{
-  detail?: string;
-  icon: IconName;
-  kind: "entry" | "entity" | "goal" | null;
-  title: string;
-}> = [
-  {
-    icon: "archive" as const,
-    kind: null,
-    title: "All items",
-  },
-  {
-    detail: "Everything you captured and kept.",
-    icon: "bold" as const,
-    kind: "entry",
-    title: "Entries",
-  },
-  {
-    detail: "People, homes, and vehicles.",
-    icon: "archive" as const,
-    kind: "entity",
-    title: "Entities",
-  },
-  {
-    detail: "An intention you want to pursue.",
-    icon: "target" as const,
-    kind: "goal",
-    title: "Goals",
-  },
-];
-
 const focusedDestinations: LibraryDestination[] = [
   {
-    detail: "Connect the people who shaped your life.",
     href: "/people",
     icon: "person" as const,
     title: "People",
   },
   {
-    detail: "Remember every place you called home and when it was yours.",
     href: "/homes",
     icon: "home" as const,
     title: "Homes",
   },
   {
-    detail: "Remember every vehicle and the time it was part of your life.",
     href: "/vehicles",
     icon: "car" as const,
     title: "Vehicles",
   },
   {
-    detail: "Explore the memories and events tied to coordinates on a map.",
     href: "/map",
     icon: "map" as const,
     title: "Map",
   },
   {
-    detail: "Revisit the experiences you tried, saw, or learned first.",
     href: "/first-times",
     icon: "star" as const,
     title: "First Times",
   },
   {
-    detail: "Keep active plans, distant hopes, and someday ideas close.",
     href: "/goals",
     icon: "target" as const,
     title: "Goals",
@@ -97,13 +60,11 @@ const focusedDestinations: LibraryDestination[] = [
 
 const organizationDestinations: LibraryDestination[] = [
   {
-    detail: "Curate records into meaningful groups.",
     href: "/collections",
     icon: "archive" as const,
     title: "Collections",
   },
   {
-    detail: "Use lightweight descriptors to reconnect related items.",
     href: "/tags",
     icon: "tag" as const,
     title: "Tags",
@@ -112,19 +73,16 @@ const organizationDestinations: LibraryDestination[] = [
 
 const archiveDestinations: LibraryDestination[] = [
   {
-    detail: "Inspect earlier versions and restore one without losing today.",
     href: "/history",
     icon: "clock" as const,
     title: "Version history",
   },
   {
-    detail: "Restore removed items or permanently clear them.",
     href: "/trash",
     icon: "trash" as const,
     title: "Trash",
   },
   {
-    detail: "Keep a portable copy with history and original photos.",
     href: "/settings/export",
     icon: "archive" as const,
     title: "Export archive",
@@ -161,36 +119,14 @@ export default async function LibraryPage({
         }
       />
 
-      <section aria-labelledby="kinds-heading">
-        <div className={styles.sectionHeading}>
-          <h2 id="kinds-heading">Browse library</h2>
-        </div>
-        <nav className={styles.kindGrid} aria-label="Library categories">
-          {kindDestinations.map((destination) => (
-            <Link
-              aria-current={
-                destination.kind === itemKind ||
-                (!destination.kind && !itemKind)
-                  ? "page"
-                  : undefined
-              }
-              href={libraryPageHref(query, destination.kind, 1)}
-              key={destination.title}
-            >
-              <span>
-                <Icon name={destination.icon} size={18} />
-              </span>
-              <strong>{destination.title}</strong>
-              {destination.detail ? <p>{destination.detail}</p> : null}
-            </Link>
-          ))}
-        </nav>
-      </section>
-
       <section aria-labelledby="all-items-heading">
         <div className={styles.sectionHeading}>
           <h2 id="all-items-heading">
-            {itemKind ? wikiItemKindLabel(itemKind) : "All items"}
+            {itemKind === "entity"
+              ? "People, homes & vehicles"
+              : itemKind
+                ? wikiItemKindLabel(itemKind)
+                : "All items"}
           </h2>
           <span>
             {totalCount} {totalCount === 1 ? "item" : "items"}
@@ -204,15 +140,12 @@ export default async function LibraryPage({
             name="q"
             placeholder="Search titles, writing, or people"
           />
-          <label>
-            <span>Category</span>
-            <select defaultValue={itemKind ?? ""} name="kind">
+          <SelectField defaultValue={itemKind ?? ""} label="Show" name="kind">
               <option value="">All records</option>
               <option value="entry">Entries</option>
-              <option value="entity">Entities</option>
+              <option value="entity">People, homes & vehicles</option>
               <option value="goal">Goals</option>
-            </select>
-          </label>
+          </SelectField>
           <Button variant="primary" type="submit">
             Apply
           </Button>
@@ -268,55 +201,44 @@ export default async function LibraryPage({
         </nav>
       </section>
 
-      <section aria-labelledby="focused-library-heading">
-        <div className={styles.sectionHeading}>
-          <h2 id="focused-library-heading">Focused views</h2>
-          <span>Structured parts of your life</span>
+      <details className={styles.libraryMore}>
+        <summary>More views and tools</summary>
+        <div className={styles.libraryMoreGroups}>
+          <DestinationLinks
+            destinations={focusedDestinations}
+            label="Focused views"
+          />
+          <DestinationLinks
+            destinations={organizationDestinations}
+            label="Organize"
+          />
+          <DestinationLinks
+            destinations={archiveDestinations}
+            label="Archive tools"
+          />
         </div>
-        <DestinationGrid destinations={focusedDestinations} />
-      </section>
-
-      <div className={styles.libraryUtilities}>
-        <section aria-labelledby="organize-library-heading">
-          <div className={styles.sectionHeading}>
-            <h2 id="organize-library-heading">Organize</h2>
-            <span>Across your library</span>
-          </div>
-          <DestinationGrid destinations={organizationDestinations} />
-        </section>
-
-        <section aria-labelledby="archive-library-heading">
-          <div className={styles.sectionHeading}>
-            <h2 id="archive-library-heading">Archive tools</h2>
-            <span>History, recovery, and export</span>
-          </div>
-          <DestinationGrid destinations={archiveDestinations} />
-        </section>
-      </div>
+      </details>
     </PageFrame>
   );
 }
 
-function DestinationGrid({
+function DestinationLinks({
   destinations,
+  label,
 }: {
   destinations: LibraryDestination[];
+  label: string;
 }) {
   return (
-    <div className={styles.destinationGrid}>
+    <nav aria-label={label} className={styles.destinationLinks}>
+      <h2>{label}</h2>
       {destinations.map((destination) => (
         <Link href={destination.href} key={destination.href}>
-          <span>
-            <Icon name={destination.icon} size={19} />
-          </span>
-          <div>
-            <strong>{destination.title}</strong>
-            <p>{destination.detail}</p>
-          </div>
-          <Icon name="chevron" size={14} />
+          <Icon name={destination.icon} size={17} />
+          <span>{destination.title}</span>
         </Link>
       ))}
-    </div>
+    </nav>
   );
 }
 

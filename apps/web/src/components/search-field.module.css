@@ -68,8 +68,9 @@
   background: transparent;
   box-shadow: none;
   appearance: none;
-  font: inherit;
+  font-family: var(--mt-font-family-sans);
   font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-regular);
 }
 
 .control input::placeholder {

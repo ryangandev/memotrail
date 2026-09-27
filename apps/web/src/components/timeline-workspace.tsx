@@ -26,6 +26,8 @@ import { Icon } from "@/components/icon";
 import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { PageFrame } from "@/components/page-frame";
+import { StickyYear } from "@/components/timeline/sticky-year";
+import { VerticalSpine } from "@/components/timeline/vertical-spine";
 import type { FirstTimeEntry } from "@/lib/data/first-times";
 import type { HomeRecord } from "@/lib/data/home-record";
 import type { TimelineEntry, TimelineTrack } from "@/lib/data/timeline";
@@ -38,12 +40,16 @@ import {
   type TimelineKind,
 } from "@/lib/data/timeline-input";
 import { createTimelineLayout } from "@/lib/data/timeline-layout";
+import {
+  createTimelineDisplayModel,
+  timelineEntryDateLabel,
+} from "@/lib/data/timeline-presentation";
+import type { TimelineStyle } from "@/lib/timeline-style";
 import styles from "@/components/timeline-workspace.module.css";
 
 import { OccurrenceEditor } from "@/components/occurrence-editor";
 import {
   occurrenceDraft,
-  occurrenceLabel,
   resolveOccurrenceDraft,
   type Occurrence,
 } from "@/lib/data/occurrence";
@@ -100,11 +106,13 @@ export function TimelineWorkspace({
   defaultTimezone,
   firstTimes,
   homes,
+  initialCreate = false,
   initialEntryId = null,
   loadError,
   ownerId,
   referenceDate,
   tagOptions,
+  timelineStyle,
   tracks: serverTracks,
   vehicles,
 }: {
@@ -114,16 +122,19 @@ export function TimelineWorkspace({
   defaultTimezone: string;
   firstTimes: FirstTimeEntry[];
   homes: HomeRecord[];
+  initialCreate?: boolean;
   initialEntryId?: string | null;
   loadError: string | null;
   ownerId: string;
   referenceDate: string;
   tagOptions: string[];
+  timelineStyle: TimelineStyle;
   tracks: TimelineTrack[];
   vehicles: VehicleRecord[];
 }) {
   const router = useRouter();
   const [selection, setSelection] = useState<EditorSelection | null>(() => {
+    if (initialCreate) return { type: "chooser" };
     if (!initialEntryId) return null;
     const item = serverTracks
       .flatMap((track) => track.items)
@@ -179,6 +190,10 @@ export function TimelineWorkspace({
     [serverTracks, confirmed],
   );
   const items = useMemo(() => tracks.flatMap((track) => track.items), [tracks]);
+  const displayModel = useMemo(
+    () => createTimelineDisplayModel(tracks),
+    [tracks],
+  );
   const layout = useMemo(
     () => createTimelineLayout(items, new Date(referenceDate), birthDate),
     [birthDate, items, referenceDate],
@@ -210,7 +225,8 @@ export function TimelineWorkspace({
 
   function closeSelection() {
     setSelection(null);
-    if (initialEntryId) router.replace("/timeline", { scroll: false });
+    if (initialEntryId || initialCreate)
+      router.replace("/timeline", { scroll: false });
   }
 
   function startCreationForTrack(track: TimelineTrack) {
@@ -251,14 +267,30 @@ export function TimelineWorkspace({
     setSelection({ type: "timeline", entry, initialTrackId: null });
   }
 
+  function renderAlternativeTimeline() {
+    if (items.length === 0) {
+      return (
+        <TimelineEmptyState onAdd={() => setSelection({ type: "chooser" })} />
+      );
+    }
+    return timelineStyle === "vertical" ? (
+      <VerticalSpine
+        birthDate={birthDate}
+        model={displayModel}
+        onSelect={openEntry}
+        referenceDate={referenceDate}
+      />
+    ) : (
+      <StickyYear model={displayModel} onSelect={openEntry} />
+    );
+  }
+
   return (
     <PageFrame variant="canvas">
       <PageHeader
         title={<>Timeline</>}
         eyebrow={<>Your life in context</>}
-        description={
-          <>See the chapters and moments that shape your life.</>
-        }
+        description={<>See the chapters and moments that shape your life.</>}
         actions={
           <>
             <Button
@@ -320,7 +352,11 @@ export function TimelineWorkspace({
         </div>
       ) : null}
 
-      {!loadError && tracks.length > 0 ? (
+      {!loadError && tracks.length > 0 && timelineStyle !== "classic"
+        ? renderAlternativeTimeline()
+        : null}
+
+      {!loadError && tracks.length > 0 && timelineStyle === "classic" ? (
         <>
           <section
             className={styles.desktopTimeline}
@@ -350,7 +386,7 @@ export function TimelineWorkspace({
                         .filter((item) => !item.occurredStart)
                         .map((entry) => {
                           const label =
-                            entry.title + ", " + entryDateLabel(entry);
+                            entry.title + ", " + timelineEntryDateLabel(entry);
                           return (
                             <button
                               key={entry.id}
@@ -436,7 +472,7 @@ export function TimelineWorkspace({
                           />
                           <span>
                             <strong>{entry.title}</strong>
-                            <small>{entryDateLabel(entry)}</small>
+                            <small>{timelineEntryDateLabel(entry)}</small>
                           </span>
                           <Icon name="chevron" size={15} />
                         </>
@@ -556,6 +592,21 @@ function EditorLoading() {
       <div className={styles.editorLoading} role="status">
         <span />
         <strong>Opening editor</strong>
+      </div>
+    </div>
+  );
+}
+
+function TimelineEmptyState({ onAdd }: { onAdd: () => void }) {
+  return (
+    <div className={styles.message}>
+      <Icon name="timeline" size={22} />
+      <div>
+        <strong>Your Timeline is ready</strong>
+        <p>Add a moment or period to begin your story.</p>
+        <Button onClick={onAdd} type="button" variant="secondary">
+          Add moment
+        </Button>
       </div>
     </div>
   );
@@ -788,7 +839,7 @@ function TrackRow({
           );
 
           const sharedProps = {
-            "aria-label": `${entry.title}, ${entryDateLabel(entry)}`,
+            "aria-label": `${entry.title}, ${timelineEntryDateLabel(entry)}`,
             className:
               entry.kind === "stage" ? styles.stageItem : styles.eventItem,
             "data-edge":
@@ -800,7 +851,7 @@ function TrackRow({
                 ? "true"
                 : undefined,
             style: itemStyle,
-            title: `${entry.title} · ${entryDateLabel(entry)}`,
+            title: `${entry.title} · ${timelineEntryDateLabel(entry)}`,
           };
           return (
             <button
@@ -1190,17 +1241,6 @@ function namesIncludingDraft(names: string[], draft: string) {
   const name = draft.trim();
   return name ? [...names, name] : names;
 }
-function entryDateLabel(entry: TimelineEntry) {
-  const label = occurrenceLabel(entryOccurrence(entry));
-  return entry.kind === "stage" &&
-    entry.occurredStart &&
-    !entry.occurredEnd &&
-    !entry.occurredLabel &&
-    entry.datePrecision !== "range"
-    ? label + " onward"
-    : label;
-}
-
 function rangeLabel(start: string, end: string) {
   return `${new Date(start).getUTCFullYear()} to ${new Date(end).getUTCFullYear()}`;
 }

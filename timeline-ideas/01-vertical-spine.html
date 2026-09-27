@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MemoTrail · Vertical Spine</title>
+<style>
+  :root {
+    --accent: #6d5efc;
+    --accent-soft: #eae7ff;
+    --accent-ring: rgba(109, 94, 252, 0.28);
+    --ink: #1b1b2b;
+    --muted: #6a6a80;
+    --hair: #e7e7ef;
+    --card: #ffffff;
+    --bg: #f6f6fb;
+    --shadow: 0 10px 30px -14px rgba(28, 24, 64, 0.35);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(1200px 600px at 80% -10%, #efeaff 0%, transparent 60%),
+      radial-gradient(900px 500px at -10% 20%, #eafff7 0%, transparent 55%),
+      var(--bg);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  header.page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 24px 8px;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+    background: var(--accent-soft);
+    padding: 6px 12px;
+    border-radius: 999px;
+  }
+  header.page h1 {
+    font-size: clamp(28px, 4vw, 40px);
+    margin: 16px 0 6px;
+    letter-spacing: -0.02em;
+  }
+  header.page p.desc {
+    margin: 0;
+    color: var(--muted);
+    max-width: 60ch;
+    font-size: 15px;
+  }
+  .who {
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .who strong { color: var(--ink); }
+
+  .timeline {
+    position: relative;
+    max-width: 960px;
+    margin: 32px auto 96px;
+    padding: 24px 24px 0;
+  }
+  /* The central spine */
+  .spine {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    transform: translateX(-50%);
+    background: linear-gradient(to bottom, var(--accent), #b9b0ff 85%, transparent);
+    border-radius: 4px;
+  }
+
+  .row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 64px 1fr;
+    align-items: center;
+    margin: 26px 0;
+  }
+  .row .slot { min-width: 0; }
+  .row.left .slot.right { visibility: hidden; }
+  .row.right .slot.left { visibility: hidden; }
+
+  /* node column */
+  .node-col {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+  .dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid var(--accent);
+    box-shadow: 0 0 0 5px #fff;
+    z-index: 2;
+  }
+  .milestone-node {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 19px;
+    background: radial-gradient(circle at 30% 25%, #fff, var(--accent-soft));
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 0 6px #fff, 0 0 0 12px var(--accent-ring);
+    z-index: 3;
+  }
+
+  /* tick connector */
+  .tick {
+    position: absolute;
+    top: 50%;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0.45;
+    z-index: 1;
+  }
+  .row.left .tick { right: 50%; width: 40px; transform: translateY(-50%); }
+  .row.right .tick { left: 50%; width: 40px; transform: translateY(-50%); }
+
+  /* cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--hair);
+    border-radius: 16px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+    position: relative;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .card.in { opacity: 1; transform: none; }
+  .row.left .card { margin-left: auto; }
+  .card.is-milestone {
+    border-color: var(--accent);
+    box-shadow: var(--shadow), 0 0 0 1px var(--accent-ring);
+    background: linear-gradient(180deg, #fbfaff, #fff);
+  }
+  .card .yr {
+    display: inline-block;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .card h3 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+  }
+  .card .approx { color: var(--muted); font-weight: 700; }
+  .card p.body {
+    margin: 0 0 10px;
+    font-size: 13.5px;
+    color: var(--muted);
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+  .chip.track {
+    color: #3a3a55;
+    background: #f0f0f6;
+  }
+
+  /* stage pill along the spine */
+  .stage-row {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    margin: 18px 0;
+    z-index: 2;
+  }
+  .stage {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: linear-gradient(180deg, var(--accent), #8a7dff);
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 999px;
+    box-shadow: 0 12px 24px -12px var(--accent-ring), 0 0 0 6px #fff;
+    text-align: center;
+    opacity: 0;
+    transform: scale(0.94);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .stage.in { opacity: 1; transform: none; }
+  .stage .label { font-weight: 700; font-size: 14px; }
+  .stage .span { font-size: 11.5px; opacity: 0.85; font-variant-numeric: tabular-nums; }
+
+  /* birth + now anchors */
+  .anchor-row { display: flex; justify-content: center; margin: 8px 0 30px; }
+  .anchor {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border: 1px solid var(--hair);
+    padding: 10px 18px;
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+    font-weight: 700;
+    z-index: 3;
+  }
+  .anchor .badge { font-size: 20px; }
+  .now {
+    background: linear-gradient(180deg, #101024, #24243f);
+    color: #fff;
+    border: none;
+    position: relative;
+  }
+  .now .pulse {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #6fe6b0;
+    box-shadow: 0 0 0 0 rgba(111, 230, 176, 0.7);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(111, 230, 176, 0.6); }
+    70% { box-shadow: 0 0 0 12px rgba(111, 230, 176, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(111, 230, 176, 0); }
+  }
+
+  @media (max-width: 800px) {
+    .spine { left: 26px; }
+    .row { grid-template-columns: 52px 1fr; }
+    .row .node-col { order: -1; }
+    .row.left .slot.right, .row.right .slot.left { display: none; }
+    .row.left .slot.left, .row.right .slot.right { grid-column: 2; }
+    .row.left .card, .row.right .card { margin-left: 0; }
+    .row.left .tick, .row.right .tick { left: 26px; right: auto; width: 26px; }
+    .stage-row, .anchor-row { justify-content: flex-start; padding-left: 4px; }
+    .stage { align-items: flex-start; text-align: left; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card, .stage { transition: none; opacity: 1; transform: none; }
+    .now .pulse { animation: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+  <header class="page">
+    <span class="eyebrow">◆ MemoTrail · 01</span>
+    <h1>The Vertical Spine</h1>
+    <p class="desc">A single central line from birth to now. Events alternate left and right on short ticks; milestones swell into glowing nodes and life stages become pills along the spine.</p>
+    <p class="who">A life in review · <strong>Ava Chen</strong> · born Portland, Oregon · 1990 – 2025 (age 35)</p>
+  </header>
+
+  <main class="timeline" aria-label="Ava Chen life timeline">
+    <div class="spine" aria-hidden="true"></div>
+
+    <!-- BIRTH ANCHOR -->
+    <div class="anchor-row">
+      <div class="anchor" title="Birth anchor">
+        <span class="badge">⭐</span>
+        <span>Born · 1990 · Portland, Oregon</span>
+      </div>
+    </div>
+
+    <!-- Childhood home stage -->
+    <div class="stage-row">
+      <div class="stage" title="Childhood home stage">
+        <span class="label">🏡 Childhood home · Portland</span>
+        <span class="span">1990 – 2002</span>
+      </div>
+    </div>
+
+    <!-- 2002 move to Seattle (right) -->
+    <div class="row right">
+      <div class="slot left"></div>
+      <div class="node-col"><span class="tick"></span><span class="dot"></span></div>
+      <div class="slot right">
+        <article class="card">
+          <span class="yr">2002</span>
+          <h3>Family moved to Seattle</h3>
+          <p class="body">A new city, a new school, a bigger sky.</p>
+          <div class="chips"><span class="chip track">Home</span><span class="chip">#home</span><span class="chip">Big moves</span></div>
+        </article>
+      </div>
+    </div>
+
+    <!-- 2008 grad HS milestone (left) -->
+    <div class="row left">
+      <div class="slot left">
+        <article class="card is-milestone">
+          <span class="yr">2008 · ⭐ Milestone</span>
+          <h3>Graduated high school</h3>
+          <p class="body">Diploma in hand, first big chapter closes.</p>
+          <div class="chips"><span class="chip track">Career</span><span class="chip">#career</span><span class="chip">Firsts</span></div>
+        </article>
+      </div>
+      <div class="node-col"><span class="tick"></span><span class="milestone-node">🎓</span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <!-- University stage -->
+    <div class="stage-row">
+      <div class="stage" title="University stage">
+        <span class="label">🎓 University · Computer Science</span>
+        <span class="span">2008 – 2012</span>
+      </div>
+    </div>
+
+    <!-- 2011 internship (right) -->
+    <div class="row right">
+      <div class="slot left"></div>
+      <div class="node-col"><span class="tick"></span><span class="dot"></span></div>
+      <div class="slot right">
+        <article class="card">
+          <span class="yr">2011</span>
+          <h3>First internship at a startup</h3>
+          <p class="body">First taste of shipping real software.</p>
+          <div class="chips"><span class="chip track">Career</span><span class="chip">#career</span><span class="chip">Firsts</span></div>
+        </article>
+      </div>
+    </div>
+
+    <!-- 2012 grad uni milestone (left) -->
+    <div class="row left">
+      <div class="slot left">
+        <article class="card is-milestone">
+          <span class="yr">2012 · ⭐ Milestone</span>
+          <h3>Graduated university · B.S. Computer Science</h3>
+          <p class="body">Four years, one degree, endless possibility.</p>
+          <div class="chips"><span class="chip track">Career</span><span class="chip">#career</span></div>
+        </article>
+      </div>
+      <div class="node-col"><span class="tick"></span><span class="milestone-node">🎓</span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <!-- 2012 first job (right) -->
+    <div class="row right">
+      <div class="slot left"></div>
+      <div class="node-col"><span class="tick"></span><span class="dot"></span></div>
+      <div class="slot right">
+        <article class="card">
+          <span class="yr">2012</span>
+          <h3>First job · Junior Developer</h3>
+          <p class="body">The career officially begins.</p>
+          <div class="chips"><span class="chip track">Career</span><span class="chip">#career</span><span class="chip">Firsts</span></div>
+        </article>
+      </div>
+    </div>
+
+    <!-- 2012 moved to SF (left) -->
+    <div class="row left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr">2012</span>
+          <h3>Moved to San Francisco</h3>
+          <p class="body">Chasing the work, the fog, the hills.</p>
+          <div class="chips"><span class="chip track">Home</span><span class="chip">#home</span><span class="chip">Big moves</span></div>
+        </article>
+      </div>
+      <div class="node-col"><span class="tick"></span><span class="dot"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <!-- 2013 backpacking (right) -->
+    <div class="row right">
+      <div class="slot left"></div>
+      <div class="node-col"><span class="tick"></span><span class="dot"></span></div>
+      <div class="slot right">
+        <article class="card">
+          <span class="yr">2013</span>
+          <h3>Backpacked Southeast Asia</h3>
+          <p class="body">Two months, six countries, one backpack.</p>
+          <div class="chips"><span class="chip track">Travel</span><span class="chip">#travel</span><span class="chip">Adventures</span></div>
+        </article>
+      </div>
+    </div>
+
+    <!-- ~2014 photography (left) -->
+    <div class="row left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr"><span class="approx">~</span>2014</span>
+          <h3>Started photography</h3>
+          <p class="body">Around 2014 - a lens became a second way of seeing.</p>
+          <div class="chips"><span class="chip track">Hobbies</span><span class="chip">#creative</span></div>
+        </article>
+      </div>
+      <div class="node-col"><span class="tick"></span><span class="dot"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <!-- 2015 promoted (right) -->
+    <div class="row right">
+      <div class="slot left"></div>
+      <div class="node-col"><span class="tick"></span><span class="dot"></span></div>
+      <div class="slot right">
+        <article class="card">
+          <span class="yr">2015</span>
+          <h3>Promoted to Senior Engineer</h3>
+          <p class="body">Ownership grows; so does the impact.</p>
+          <div class="chips"><span class="chip track">Career</span><span class="chip">#career</span></div>
+        </article>
+      </div>
+    </div>
+
+    <!-- 2015 met Sam (left) -->
+    <div class="row left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr">2015</span>
+          <h3>Met Sam</h3>
+          <p class="body">A chance introduction that would change everything.</p>
+          <div class="chips"><span class="chip track">Relationships</span><span class="chip">#family</span></div>
+        </article>
+      </div>
+      <div class="node-col"><span class="tick"></span><span class="dot"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <!-- ~2016 marathon (right) -->
+    <div class="row right">
+      <div class="slot left"></div>
+      <div class="node-col"><span class="tick"></span><span class="dot"></span></div>
+      <div class="slot right">
+        <article class="card">
+          <span class="yr"><span class="approx">~</span>2016</span>
+          <h3>First marathon · Chicago</h3>
+          <p class="body">Approximate date - 26.2 miles, one finish line.</p>
+          <div class="chips"><span class="chip track">Health</span><span class="chip">#health</span><span class="chip">Firsts</span></div>
+        </article>
+      </div>
+    </div>
+
+    <!-- 2018 tech lead (left) -->
+    <div class="row left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr">2018</span>
+          <h3>Became Tech Lead</h3>
+          <p class="body">From writing code to steering the team.</p>
+          <div class="chips"><span class="chip track">Career</span><span class="chip">#career</span></div>
+        </article>
+      </div>
+      <div class="node-col"><span class="tick"></span><span class="dot"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <!-- 2018 Japan (right) -->
+    <div class="row right">
+      <div class="slot left"></div>
+      <div class="node-col"><span class="tick"></span><span class="dot"></span></div>
+      <div class="slot right">
+        <article class="card">
+          <span class="yr">2018</span>
+          <h3>Trip to Japan · cherry blossoms</h3>
+          <p class="body">Pink petals and slow trains through spring.</p>
+          <div class="chips"><span class="chip track">Travel</span><span class="chip">#travel</span><span class="chip">Adventures</span></div>
+        </article>
+      </div>
+    </div>
+
+    <!-- 2019 married milestone (left) -->
+    <div class="row left">
+      <div class="slot left">
+        <article class="card is-milestone">
+          <span class="yr">2019 · ⭐ Milestone</span>
+          <h3>Married Sam</h3>
+          <p class="body">Two paths become one.</p>
+          <div class="chips"><span class="chip track">Relationships</span><span class="chip">#family</span></div>
+        </article>
+      </div>
+      <div class="node-col"><span class="tick"></span><span class="milestone-node">💍</span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <!-- 2020 bought home milestone (right) -->
+    <div class="row right">
+      <div class="slot left"></div>
+      <div class="node-col"><span class="tick"></span><span class="milestone-node">🏠</span></div>
+      <div class="slot right">
+        <article class="card is-milestone">
+          <span class="yr">2020 · ⭐ Milestone</span>
+          <h3>Bought first home · Oakland</h3>
+          <p class="body">Keys to a place that is finally theirs.</p>
+          <div class="chips"><span class="chip track">Home</span><span class="chip">#home</span><span class="chip">Big moves</span></div>
+        </article>
+      </div>
+    </div>
+
+    <!-- 2021 pottery (left) -->
+    <div class="row left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr">2021</span>
+          <h3>Learned pottery</h3>
+          <p class="body">Hands in clay, mind at rest.</p>
+          <div class="chips"><span class="chip track">Hobbies</span><span class="chip">#creative</span></div>
+        </article>
+      </div>
+      <div class="node-col"><span class="tick"></span><span class="dot"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <!-- Loomly stage -->
+    <div class="stage-row">
+      <div class="stage" title="Founded Loomly stage">
+        <span class="label">🚀 Founded "Loomly" · a design tool</span>
+        <span class="span">2021 – present</span>
+      </div>
+    </div>
+
+    <!-- 2022 Noah milestone (right) -->
+    <div class="row right">
+      <div class="slot left"></div>
+      <div class="node-col"><span class="tick"></span><span class="milestone-node">👶</span></div>
+      <div class="slot right">
+        <article class="card is-milestone">
+          <span class="yr">2022 · ⭐ Milestone</span>
+          <h3>First child, Noah, born</h3>
+          <p class="body">The house gets louder and warmer.</p>
+          <div class="chips"><span class="chip track">Family</span><span class="chip">#family</span><span class="chip">Firsts</span></div>
+        </article>
+      </div>
+    </div>
+
+    <!-- 2023 seed (left) -->
+    <div class="row left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr">2023</span>
+          <h3>Raised seed funding · $2M</h3>
+          <p class="body">Loomly gets fuel for the next climb.</p>
+          <div class="chips"><span class="chip track">Career</span><span class="chip">#career</span><span class="chip">Loomly</span></div>
+        </article>
+      </div>
+      <div class="node-col"><span class="tick"></span><span class="dot"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <!-- 2023 Rainier (right) -->
+    <div class="row right">
+      <div class="slot left"></div>
+      <div class="node-col"><span class="tick"></span><span class="dot"></span></div>
+      <div class="slot right">
+        <article class="card">
+          <span class="yr">2023</span>
+          <h3>Summited Mount Rainier</h3>
+          <p class="body">14,411 feet of grit and thin air.</p>
+          <div class="chips"><span class="chip track">Travel</span><span class="chip">#travel</span><span class="chip">Adventures</span></div>
+        </article>
+      </div>
+    </div>
+
+    <!-- 2024 dog (left) -->
+    <div class="row left">
+      <div class="slot left">
+        <article class="card">
+          <span class="yr">2024</span>
+          <h3>Adopted a dog, Miso</h3>
+          <p class="body">A wagging tail joins the family.</p>
+          <div class="chips"><span class="chip track">Family</span><span class="chip">#family</span></div>
+        </article>
+      </div>
+      <div class="node-col"><span class="tick"></span><span class="dot"></span></div>
+      <div class="slot right"></div>
+    </div>
+
+    <!-- 2024 sail (right) -->
+    <div class="row right">
+      <div class="slot left"></div>
+      <div class="node-col"><span class="tick"></span><span class="dot"></span></div>
+      <div class="slot right">
+        <article class="card">
+          <span class="yr">2024</span>
+          <h3>Learned to sail</h3>
+          <p class="body">Reading the wind, one tack at a time.</p>
+          <div class="chips"><span class="chip track">Hobbies</span><span class="chip">#health</span></div>
+        </article>
+      </div>
+    </div>
+
+    <!-- NOW ANCHOR -->
+    <div class="anchor-row">
+      <div class="anchor now" title="Present moment">
+        <span class="pulse" aria-hidden="true"></span>
+        <span>Now · 2025 · age 35</span>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var targets = document.querySelectorAll('.card, .stage');
+      if (reduce || !('IntersectionObserver' in window)) {
+        targets.forEach(function (el) { el.classList.add('in'); });
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) {
+            e.target.classList.add('in');
+            io.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
+      targets.forEach(function (el) { io.observe(el); });
+    })();
+  </script>
+  <script src="shared/nav.js" defer></script>
+</body>
+</html>

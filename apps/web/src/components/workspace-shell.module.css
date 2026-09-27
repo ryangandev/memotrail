@@ -1,4 +1,6 @@
 .appShell {
+  --sidebar-motion: 240ms cubic-bezier(0.22, 1, 0.36, 1);
+
   min-height: 100dvh;
   background: var(--mt-color-canvas);
 }
@@ -13,6 +15,10 @@
   padding: var(--mt-space-6) var(--mt-space-4) var(--mt-space-4);
   border-right: 1px solid var(--mt-color-border);
   background: var(--mt-color-surface);
+  transition:
+    width var(--sidebar-motion),
+    padding-left var(--sidebar-motion),
+    padding-right var(--sidebar-motion);
 }
 
 .brand,
@@ -30,6 +36,48 @@
 
 .brand {
   padding: 0 var(--mt-space-2);
+  white-space: nowrap;
+  transition: opacity 100ms ease;
+}
+
+.sidebarHeader {
+  position: relative;
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  overflow: hidden;
+}
+
+.sidebarToggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--mt-radius-medium);
+  color: var(--mt-color-ink-muted);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    right var(--sidebar-motion),
+    color var(--mt-motion-quick),
+    background var(--mt-motion-quick);
+}
+
+.sidebarToggle:hover,
+.sidebarToggle:focus-visible {
+  outline: none;
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-subtle);
+}
+
+.sidebarToggle:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--mt-color-accent);
 }
 
 .brandMark {
@@ -40,6 +88,7 @@
 
 .sidebarScrollRegion {
   display: flex;
+  min-width: 0;
   min-height: 0;
   flex: 1;
   flex-direction: column;
@@ -54,16 +103,26 @@
     )
     transparent;
   scrollbar-width: thin;
+  transition:
+    margin-right var(--sidebar-motion),
+    margin-top var(--sidebar-motion),
+    padding-right var(--sidebar-motion);
+}
+
+.sidebarScrollRegion > nav {
+  min-width: 0;
 }
 
 .navGroup {
   display: grid;
+  min-width: 0;
   gap: 3px;
 }
 
 .navGroup a {
   display: flex;
   width: 100%;
+  min-width: 0;
   height: 42px;
   align-items: center;
   gap: var(--mt-space-3);
@@ -77,7 +136,14 @@
   text-decoration: none;
   transition:
     color var(--mt-motion-quick),
-    background var(--mt-motion-quick);
+    background var(--mt-motion-quick),
+    width var(--sidebar-motion),
+    height var(--sidebar-motion),
+    padding-left var(--sidebar-motion);
+}
+
+.navGroup a > svg {
+  flex: none;
 }
 
 .navGroup a:hover {
@@ -85,8 +151,17 @@
   background: var(--mt-color-surface-subtle);
 }
 
-.navGroup a span {
+.navGroup a:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--mt-color-accent);
+}
+
+.navGroup a .navItemLabel {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: opacity 100ms ease;
 }
 
 .navGroup a small {
@@ -110,67 +185,27 @@
   height: 1px;
   margin: var(--mt-space-5) var(--mt-space-3);
   background: var(--mt-color-border);
+  transition: margin-block var(--sidebar-motion);
 }
 
 .navLabel {
+  max-height: 16px;
   margin: 0 var(--mt-space-3) var(--mt-space-2);
+  overflow: hidden;
   color: var(--mt-color-ink-faint);
   font-size: 10px;
   font-weight: var(--mt-font-weight-semibold);
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  transition:
+    max-height var(--sidebar-motion),
+    margin-bottom var(--sidebar-motion),
+    opacity 100ms ease;
 }
 
 .sidebarFooter {
   display: grid;
   gap: 0;
-}
-
-.sidebarFooter .archiveNote {
-  margin-top: var(--mt-space-5);
-}
-
-.archiveNote {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: var(--mt-space-3);
-  padding: var(--mt-space-3) 38px var(--mt-space-3) var(--mt-space-3);
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-warm);
-  background: var(--mt-color-warm-subtle);
-}
-
-.archiveNote div {
-  display: grid;
-  min-width: 0;
-  gap: 2px;
-}
-
-.archiveNote strong {
-  color: var(--mt-color-ink);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.archiveNote span {
-  color: var(--mt-color-ink-muted);
-  font-size: 10px;
-}
-
-.sidebarFooter strong {
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.sidebarFooter small {
-  overflow: hidden;
-  margin-top: 1px;
-  color: var(--mt-color-ink-faint);
-  font-size: 10px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .avatarButton {
@@ -188,6 +223,7 @@
 .workspace {
   min-height: 100dvh;
   margin-left: 244px;
+  transition: margin-left var(--sidebar-motion);
 }
 
 .navigationProgress {
@@ -197,6 +233,59 @@
   height: 2px;
   overflow: hidden;
   background: var(--mt-color-accent-subtle);
+  transition: left var(--sidebar-motion);
+}
+
+.appShell[data-sidebar-collapsed="true"] .sidebar {
+  width: 72px;
+  padding-inline: var(--mt-space-2);
+}
+
+.appShell[data-sidebar-collapsed="true"] .brand {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.appShell[data-sidebar-collapsed="true"] .navItemLabel,
+.appShell[data-sidebar-collapsed="true"] .navLabel {
+  opacity: 0;
+}
+
+.appShell[data-sidebar-collapsed="true"] .navLabel {
+  max-height: 0;
+  margin-bottom: 0;
+}
+
+.appShell[data-sidebar-collapsed="true"] .sidebarToggle {
+  right: 10px;
+}
+
+.appShell[data-sidebar-collapsed="true"] .sidebarScrollRegion {
+  margin-right: 0;
+  margin-top: var(--mt-space-4);
+  padding-right: 0;
+}
+
+.appShell[data-sidebar-collapsed="true"] .navGroup a {
+  width: 40px;
+  height: 40px;
+  margin-inline: auto;
+  padding-left: 11px;
+  padding-right: 0;
+  gap: 0;
+}
+
+.appShell[data-sidebar-collapsed="true"] .navDivider {
+  margin-inline: var(--mt-space-3);
+  margin-block: var(--mt-space-3);
+}
+
+.appShell[data-sidebar-collapsed="true"] .workspace {
+  margin-left: 72px;
+}
+
+.appShell[data-sidebar-collapsed="true"] .navigationProgress {
+  left: 72px;
 }
 
 .navigationProgress::after {
@@ -392,8 +481,16 @@
     margin-left: 0;
   }
 
+  .appShell[data-sidebar-collapsed="true"] .workspace {
+    margin-left: 0;
+  }
+
   .navigationProgress {
     top: 57px;
+    left: 0;
+  }
+
+  .appShell[data-sidebar-collapsed="true"] .navigationProgress {
     left: 0;
   }
 
@@ -505,6 +602,18 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .brand,
+  .sidebarToggle,
+  .sidebarScrollRegion,
+  .navGroup a .navItemLabel,
+  .navDivider,
+  .navLabel,
+  .workspace,
+  .navigationProgress {
+    transition: none;
+  }
+
   .topActionButton {
     transition: none;
   }
