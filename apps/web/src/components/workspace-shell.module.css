@@ -321,6 +321,41 @@
   gap: var(--mt-space-3);
 }
 
+.historyControls {
+  display: flex;
+  align-items: center;
+  gap: var(--mt-space-1);
+}
+
+.historyButton {
+  display: grid;
+  width: 34px;
+  height: 38px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--mt-radius-small);
+  color: var(--mt-color-ink-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.historyButton:hover:not(:disabled) {
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface);
+}
+
+.historyButton:focus-visible {
+  outline: 2px solid var(--mt-color-accent);
+  outline-offset: 2px;
+}
+
+.historyButton:disabled {
+  color: var(--mt-color-ink-faint);
+  opacity: 0.45;
+  cursor: default;
+}
+
 .mobileBrand,
 .avatarButton {
   display: none;
@@ -548,6 +583,7 @@
 
   .topLeading {
     min-width: 0;
+    gap: var(--mt-space-2);
   }
 
   .inboxTopAction {
@@ -720,6 +756,12 @@
 @media (max-width: 390px) {
   .topBar {
     padding-inline: var(--mt-space-3);
+  }
+}
+
+@media (max-width: 480px) {
+  .mobileBrand span {
+    display: none;
   }
 }
 

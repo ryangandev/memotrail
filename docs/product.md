@@ -92,7 +92,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
   Library avoids duplicating the sidebar's focused and organizing destinations; the global Version history index has a link below Library results.
 - Opening a general Wiki Item shows its current content and primary actions first.
   Version history is an explicit secondary action, while focused records open their own read-only detail pages.
-  Edit changes the fields on that detail page into an inline form; Add remains a modal creation flow.
+  A pencil-and-Edit action changes the fields on that detail page into an inline form; Add remains a modal creation flow.
 - Current Wiki Item detail supports moving the item to Trash, where it remains restorable.
 - Collections and tags are created and managed from separate Library destinations without a second in-page switcher, and remain available in every compatible Wiki Item editor.
 - Collection and tag management opens in viewport-level dialogs. The Tags Library uses compact usage-count badges that open tag management, recent linked Entries, and a path to the complete filtered result set.
@@ -209,7 +209,8 @@ Desktop treats Library as a primary destination beside Dashboard, Timeline, and 
 Its sidebar omits Inbox, keeps optional focused views separate from Collections, tags, Trash, and the single Settings entry point.
 The desktop sidebar can collapse to a compact icon rail from the panel control beside the brand; the control centers in the rail when the brand hides, the width change animates, and the choice persists in this browser without changing mobile navigation.
 The collapsed rail uses square navigation targets and keeps keyboard focus indicators inside the controls.
-The persistent top bar places an accent-tinted `New` control at the far left, with neutral Search followed by an icon-only Inbox control at the far right; Inbox shows a notification count only when captures are waiting.
+The persistent top bar places Back and Forward history controls immediately before the accent-tinted `New` control; unavailable directions are disabled.
+Neutral Search and an icon-only Inbox control sit at the far right; Inbox shows a notification count only when captures are waiting.
 A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry and People results in place, supports keyboard navigation, and opens Library for full search with filters.
 New Entry opens from the top bar or Command J.
 Home, Vehicle, and First Time results share one reusable card shell while preserving subtype-specific content and responsive layouts.

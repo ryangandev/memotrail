@@ -135,7 +135,13 @@ test("Home keeps Location optional and never pairs edited addresses with old coo
     await expect(
       page.getByRole("heading", { name: "Mapped Pine Home" }),
     ).toBeVisible();
-    await page.getByRole("button", { name: "Edit Home" }).click();
+    await expect(page.getByRole("link", { name: "Back to homes" })).toHaveCount(
+      0,
+    );
+    const editHome = page.getByRole("button", { name: "Edit Home" });
+    await expect(editHome).toHaveText("Edit");
+    await expect(editHome.locator("svg")).toHaveCount(1);
+    await editHome.click();
     const providerEdit = page.getByRole("main");
     await providerEdit
       .getByRole("combobox", { name: "Change Location" })

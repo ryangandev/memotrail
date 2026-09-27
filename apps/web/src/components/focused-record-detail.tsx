@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, ButtonLink } from "@/components/button";
+import { ButtonLink } from "@/components/button";
+import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import { PageHeader } from "@/components/page-header";
 import { ProgressiveImage } from "@/components/progressive-image";
@@ -96,9 +97,6 @@ export function FocusedRecordDetail(props: Props) {
 
   return (
     <PageFrame variant="compact" className={styles.frame}>
-      <ButtonLink href={back} variant="secondary">
-        Back to {back.slice(1).replace("-", " ")}
-      </ButtonLink>
       {editing ? (
         props.kind === "home" ? (
           <HomeEditor
@@ -147,13 +145,15 @@ export function FocusedRecordDetail(props: Props) {
                 : (record as HomeRecord).title
             }
             actions={
-              <Button
+              <button
+                aria-label={`Edit ${label}`}
+                className={styles.editAction}
                 type="button"
-                variant="primary"
                 onClick={() => setEditing(true)}
               >
-                Edit {label}
-              </Button>
+                <Icon name="edit" size={18} />
+                <span>Edit</span>
+              </button>
             }
           />
           <RecordContent kind={props.kind} record={record} />

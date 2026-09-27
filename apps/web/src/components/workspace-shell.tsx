@@ -3,7 +3,13 @@ import workspaceShellStyles from "@/components/workspace-shell.module.css";
 
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { AuthGate } from "@/components/auth-gate";
 import { BrandMark } from "@/components/brand-mark";
@@ -13,6 +19,7 @@ import { QuickCaptureDialog } from "@/components/quick-capture-dialog";
 import { SearchShortcutButton } from "@/components/search-shortcut-link";
 import { SyncStatus } from "@/components/sync-status";
 import { TimezoneSync } from "@/components/timezone-sync";
+import { WorkspaceHistoryControls } from "@/components/workspace-history-controls";
 import type { Viewer } from "@/lib/data/inbox";
 import { SIDEBAR_COOKIE_NAME } from "@/lib/sidebar-preference";
 
@@ -136,7 +143,12 @@ const mobileMoreGroups: { label: string; items: NavigationItem[] }[] = [
         label: "Version history",
       },
       organizationNavigation[2],
-      { destination: "settings", href: "/settings", icon: "settings", label: "Settings" },
+      {
+        destination: "settings",
+        href: "/settings",
+        icon: "settings",
+        label: "Settings",
+      },
     ],
   },
 ];
@@ -263,6 +275,7 @@ export function WorkspaceShell({
               <BrandMark className={workspaceShellStyles.brandMark} />
               <span>MemoTrail</span>
             </Link>
+            <WorkspaceHistoryControls />
             <QuickCaptureDialog
               idPrefix="topbar-capture"
               onClose={closeQuickCapture}
@@ -330,7 +343,9 @@ export function WorkspaceShell({
           aria-expanded={mobileMoreOpen}
           aria-label="More destinations"
           className={
-            !mobileNavigation.some((item) => item.destination === activeDestination)
+            !mobileNavigation.some(
+              (item) => item.destination === activeDestination,
+            )
               ? workspaceShellStyles.mobileActive
               : undefined
           }
@@ -367,13 +382,18 @@ export function WorkspaceShell({
               </button>
             </div>
             {mobileMoreGroups.map((group) => (
-              <div className={workspaceShellStyles.mobileMoreGroup} key={group.label}>
+              <div
+                className={workspaceShellStyles.mobileMoreGroup}
+                key={group.label}
+              >
                 <h3>{group.label}</h3>
                 <div className={workspaceShellStyles.mobileMoreLinks}>
                   {group.items.map((item) => (
                     <Link
                       aria-current={
-                        item.destination === activeDestination ? "page" : undefined
+                        item.destination === activeDestination
+                          ? "page"
+                          : undefined
                       }
                       href={item.href ?? "/"}
                       key={item.href}
@@ -544,7 +564,9 @@ function NavigationControl({
       <span className={workspaceShellStyles.navItemLabel}>
         {mobile && item.label === "First Times" ? "Firsts" : item.label}
       </span>
-      {inboxCount ? <small aria-hidden={mobile || undefined}>{inboxCount}</small> : null}
+      {inboxCount ? (
+        <small aria-hidden={mobile || undefined}>{inboxCount}</small>
+      ) : null}
     </>
   );
   const className = active

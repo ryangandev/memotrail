@@ -132,6 +132,26 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(
       primaryNavigation.getByRole("link", { name: "Library", exact: true }),
     ).toBeVisible();
+    const goBack = page.getByRole("button", { name: "Go back" });
+    const goForward = page.getByRole("button", { name: "Go forward" });
+    await expect(goBack).toBeDisabled();
+    await expect(goForward).toBeDisabled();
+    await primaryNavigation
+      .getByRole("link", { name: "Library", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/library$/);
+    await expect(goBack).toBeEnabled();
+    await expect(goForward).toBeDisabled();
+    await goBack.click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(goForward).toBeEnabled();
+    await goForward.click();
+    await expect(page).toHaveURL(/\/library$/);
+    await primaryNavigation
+      .getByRole("link", { name: "Dashboard", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(goForward).toBeDisabled();
     await expect(
       primaryNavigation.getByRole("link", { name: "Inbox", exact: true }),
     ).toHaveCount(0);
