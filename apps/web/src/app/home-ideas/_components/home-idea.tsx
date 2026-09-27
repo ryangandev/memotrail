@@ -95,13 +95,11 @@ export function HomeIdea({
 
 function Section({
   title,
-  detail,
   href,
   action,
   children,
 }: {
   title: string;
-  detail?: string;
   href: string;
   action: string;
   children: ReactNode;
@@ -111,7 +109,6 @@ function Section({
       <header className={styles.sectionHeading}>
         <div>
           <h2>{title}</h2>
-          {detail ? <p>{detail}</p> : null}
         </div>
         <Link href={href}>
           {action}
@@ -236,17 +233,8 @@ function Chapters({ stages }: { stages: HomeStage[] }) {
 }
 
 function Memory({ memory }: { memory: HomeResurfacedMemory | null }) {
-  const detail =
-    memory?.resurfacingKind === "on_this_day" && memory.yearsAgo
-      ? `On this day, ${memory.yearsAgo} ${memory.yearsAgo === 1 ? "year" : "years"} ago`
-      : "A quiet note from your archive";
   return (
-    <Section
-      title="A memory for today"
-      detail={memory ? detail : undefined}
-      href="/library"
-      action="Library"
-    >
+    <Section title="A memory for today" href="/library" action="Library">
       {memory ? (
         <EntryCard entry={memory} memory />
       ) : (
