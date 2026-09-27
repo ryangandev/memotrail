@@ -143,7 +143,10 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(goBack).toBeEnabled();
     await expect(goForward).toBeDisabled();
     await goBack.hover();
-    await expect(goBack).toHaveCSS("transition-property", "background-color");
+    await expect(goBack).toHaveCSS(
+      "transition-property",
+      "color, background-color",
+    );
     await expect(goBack.locator("svg")).toHaveCSS("transform", "none");
     await goBack.click();
     await expect(page).toHaveURL(/\/$/);

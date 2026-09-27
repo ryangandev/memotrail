@@ -334,7 +334,9 @@
   color: var(--mt-color-ink-muted);
   background: transparent;
   cursor: pointer;
-  transition: background-color var(--mt-motion-quick);
+  transition:
+    color var(--mt-motion-quick),
+    background-color var(--mt-motion-quick);
 }
 
 .historyButton:hover:not(:disabled) {
