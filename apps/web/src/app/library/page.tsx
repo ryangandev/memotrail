@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/page-header";
+import { Badge } from "@/components/badge";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Icon } from "@/components/icon";
@@ -112,12 +113,14 @@ function LibraryBrowse({
             <li key={`${item.recordSource}:${item.id}`}>
               <Link href={wikiItemHref(item)}>
                 <div className={styles.wikiBadges}>
-                  <span>{wikiItemKindLabel(item.itemKind)}</span>
+                  <Badge size="micro" uppercase>
+                    {wikiItemKindLabel(item.itemKind)}
+                  </Badge>
                   {wikiItemSubtypeLabel(item.itemKind, item.itemSubtype) !==
                   wikiItemKindLabel(item.itemKind) ? (
-                    <span>
+                    <Badge size="micro" tone="neutral" uppercase>
                       {wikiItemSubtypeLabel(item.itemKind, item.itemSubtype)}
-                    </span>
+                    </Badge>
                   ) : null}
                 </div>
                 <small>{wikiItemDateLabel(item)}</small>

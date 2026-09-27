@@ -5,6 +5,7 @@ import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { FocusedViewLayout } from "@/components/focused-view-layout";
 import { Button } from "@/components/button";
+import { Badge } from "@/components/badge";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -254,13 +255,23 @@ function HomeCard({
             longitude={home.longitude}
           />
         )}
-        <span
+        <Badge
           className={home.occurredEnd ? styles.pastBadge : styles.currentBadge}
+          size="micro"
+          tone={home.occurredEnd ? "glassNeutral" : "glassAccent"}
+          uppercase
         >
           {home.occurredEnd ? "Earlier" : "Current"}
-        </span>
+        </Badge>
         {home.attachments.length > 1 ? (
-          <small>{home.attachments.length} photos</small>
+          <Badge
+            className={styles.photoBadge}
+            size="micro"
+            tone="inverse"
+            uppercase
+          >
+            {home.attachments.length} photos
+          </Badge>
         ) : null}
       </RecordCardVisual>
 
@@ -280,10 +291,22 @@ function HomeCard({
         <footer>
           <div>
             {home.collectionNames.slice(0, 2).map((name) => (
-              <span key={`collection:${name.toLocaleLowerCase()}`}>{name}</span>
+              <Badge
+                key={`collection:${name.toLocaleLowerCase()}`}
+                size="micro"
+                tone="neutral"
+              >
+                {name}
+              </Badge>
             ))}
             {home.tagNames.slice(0, 2).map((name) => (
-              <span key={`tag:${name.toLocaleLowerCase()}`}>#{name}</span>
+              <Badge
+                key={`tag:${name.toLocaleLowerCase()}`}
+                size="micro"
+                tone="neutral"
+              >
+                #{name}
+              </Badge>
             ))}
           </div>
           <Icon name="chevron" size={15} />

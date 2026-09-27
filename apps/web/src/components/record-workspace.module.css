@@ -87,15 +87,8 @@
 
 .currentBadge,
 .pastBadge,
-.homeVisual > small {
+.photoBadge {
   position: absolute;
-  padding: 5px 9px;
-  border-radius: var(--mt-radius-pill);
-  font-size: 9px;
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  backdrop-filter: blur(8px);
 }
 
 .currentBadge,
@@ -104,29 +97,9 @@
   left: var(--mt-space-3);
 }
 
-.currentBadge {
-  color: var(--mt-color-accent);
-  background: color-mix(
-    in srgb,
-    var(--mt-color-surface-raised) 88%,
-    transparent
-  );
-}
-
-.pastBadge {
-  color: var(--mt-color-ink-muted);
-  background: color-mix(
-    in srgb,
-    var(--mt-color-surface-raised) 84%,
-    transparent
-  );
-}
-
-.homeVisual > small {
+.photoBadge {
   right: var(--mt-space-3);
   bottom: var(--mt-space-3);
-  color: white;
-  background: rgb(24 24 20 / 0.72);
 }
 
 .cardDates {
@@ -190,14 +163,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-}
-
-.cardBody footer span {
-  padding: 3px 7px;
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-subtle);
-  font-size: 9px;
 }
 
 .formGrid {

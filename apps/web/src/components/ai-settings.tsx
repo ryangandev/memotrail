@@ -7,6 +7,7 @@ import { saveAISettings } from "@/app/settings/ai/actions";
 import styles from "@/components/ai-settings.module.css";
 import { Icon, type IconName } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
+import { Badge } from "@/components/badge";
 import {
   simpleAIControlChecked,
   updateSimpleAIPreferences,
@@ -110,12 +111,13 @@ export function AISettings({
               exploring an Entry.
             </p>
           </div>
-          <span
+          <Badge
             className={styles.availability}
-            data-available={configured && !monthlyLimitReached}
+            tone={configured && !monthlyLimitReached ? "accent" : "neutral"}
+            uppercase
           >
             {availability}
-          </span>
+          </Badge>
         </div>
 
         <PreferenceSwitch
@@ -170,7 +172,9 @@ export function AISettings({
                 keyword search never requires AI.
               </p>
             </div>
-            <span className={styles.onDemandBadge}>When you ask</span>
+            <Badge className={styles.onDemandBadge} tone="neutral" uppercase>
+              When you ask
+            </Badge>
           </div>
 
           <FeaturePreference
@@ -222,11 +226,11 @@ export function AISettings({
                 month
               </span>
             </p>
-            <span data-limit-reached={monthlyLimitReached}>
+            <Badge tone={monthlyLimitReached ? "warm" : "neutral"} uppercase>
               {monthlyLimitReached
                 ? "Monthly limit reached"
                 : "Within monthly limit"}
-            </span>
+            </Badge>
           </div>
 
           {recentActivity.length ? (

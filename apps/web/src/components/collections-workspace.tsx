@@ -4,6 +4,7 @@ import { ButtonLink } from "@/components/button";
 import Link from "next/link";
 import styles from "@/components/collections-workspace.module.css";
 import { Icon } from "@/components/icon";
+import { Badge } from "@/components/badge";
 import { EntryRichTextContent } from "@/components/entry-rich-text-content";
 import { OrganizationControl } from "@/components/organization-control";
 import { PageFrame } from "@/components/page-frame";
@@ -266,10 +267,12 @@ function CollectionEntryCard({ entry }: { entry: CollectionEntry }) {
       <div className={styles.entryContent}>
         <header>
           <div className={styles.entryMeta}>
-            <span>
+            <Badge tone="neutral">
               {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
-            </span>
-            {entry.inboxStatus === "unreviewed" ? <span>In Inbox</span> : null}
+            </Badge>
+            {entry.inboxStatus === "unreviewed" ? (
+              <Badge tone="warm">In Inbox</Badge>
+            ) : null}
             <time dateTime={entry.occurredStart ?? entry.updatedAt}>
               {entryDateLabel(entry)}
             </time>

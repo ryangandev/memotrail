@@ -196,17 +196,6 @@
   text-overflow: ellipsis;
 }
 
-.entryMeta .typeBadge {
-  flex: none;
-  padding: 2px var(--mt-space-2);
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-pill);
-  background: var(--mt-color-surface);
-  color: var(--mt-color-ink-muted);
-  font-size: 11px;
-  line-height: 16px;
-}
-
 .entryCard h3 {
   overflow: hidden;
   white-space: nowrap;
@@ -286,14 +275,6 @@
   flex-wrap: wrap;
   gap: var(--mt-space-1);
   margin-top: var(--mt-space-3);
-}
-
-.collectionChip {
-  padding: 2px var(--mt-space-2);
-  border-radius: var(--mt-radius-pill);
-  background: var(--mt-color-accent-subtle);
-  color: var(--mt-color-accent);
-  font-size: 10px;
 }
 
 .empty {

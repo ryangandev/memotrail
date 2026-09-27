@@ -10,6 +10,7 @@ import {
 import { EmptyState } from "@/components/empty-state";
 import { FocusedViewLayout } from "@/components/focused-view-layout";
 import { Button } from "@/components/button";
+import { Badge } from "@/components/badge";
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -267,16 +268,33 @@ function GoalCard({
         <RecordCardVisual className={styles.goalCover}>
           <ProgressiveImage alt="" src={cover.imageUrl} />
           {goal.attachments.length > 1 ? (
-            <span className={styles.photoCount}>
+            <Badge
+              className={styles.photoCount}
+              size="micro"
+              tone="inverse"
+              uppercase
+            >
               {goal.attachments.length} photos
-            </span>
+            </Badge>
           ) : null}
         </RecordCardVisual>
       ) : null}
       <RecordCardBody className={styles.goalCardBody}>
         <div className={styles.goalMeta}>
-          <span data-status={goal.status}>{goalStatusLabels[goal.status]}</span>
-          <span>{goalHorizonLabels[goal.horizon]}</span>
+          <Badge
+            size="micro"
+            tone={
+              goal.status === "active" || goal.status === "achieved"
+                ? "accent"
+                : "neutral"
+            }
+            uppercase
+          >
+            {goalStatusLabels[goal.status]}
+          </Badge>
+          <Badge size="micro" tone="neutral" uppercase>
+            {goalHorizonLabels[goal.horizon]}
+          </Badge>
         </div>
         <h3>{goal.title}</h3>
         <p className={styles.target}>{goalTargetLabel(goal)}</p>
@@ -300,12 +318,22 @@ function GoalCard({
               .filter((name) => name.toLocaleLowerCase() !== "bucket list")
               .slice(0, 2)
               .map((name) => (
-                <span key={`collection:${name.toLocaleLowerCase()}`}>
+                <Badge
+                  key={`collection:${name.toLocaleLowerCase()}`}
+                  size="micro"
+                  tone="neutral"
+                >
                   {name}
-                </span>
+                </Badge>
               ))}
             {goal.tagNames.slice(0, 2).map((name) => (
-              <span key={`tag:${name.toLocaleLowerCase()}`}>#{name}</span>
+              <Badge
+                key={`tag:${name.toLocaleLowerCase()}`}
+                size="micro"
+                tone="neutral"
+              >
+                #{name}
+              </Badge>
             ))}
           </div>
           <Icon name="chevron" size={15} />

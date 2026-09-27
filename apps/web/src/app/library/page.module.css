@@ -93,22 +93,6 @@
   gap: var(--mt-space-2);
 }
 
-.wikiBadges span {
-  padding: 3px var(--mt-space-2);
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-accent);
-  background: var(--mt-color-accent-subtle);
-  font-size: 9px;
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.wikiBadges span + span {
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-subtle);
-}
-
 .wikiEmpty {
   padding: var(--mt-space-8);
   border: 1px dashed var(--mt-color-border-strong);

@@ -5,6 +5,7 @@ import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { FocusedViewLayout } from "@/components/focused-view-layout";
 import { Button } from "@/components/button";
+import { Badge } from "@/components/badge";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -207,7 +208,16 @@ function FirstTimeCard({
               Private photo
             </span>
           )}
-          {photos.length > 1 ? <small>{photos.length} photos</small> : null}
+          {photos.length > 1 ? (
+            <Badge
+              className={styles.photoBadge}
+              size="micro"
+              tone="inverse"
+              uppercase
+            >
+              {photos.length} photos
+            </Badge>
+          ) : null}
         </RecordCardVisual>
       ) : (
         <RecordCardVisual className={styles.coverPhoto}>
@@ -238,12 +248,28 @@ function FirstTimeCard({
         {entry.body ? <p>{truncate(entry.body, 180)}</p> : null}
         <footer>
           <div>
-            {entry.inboxStatus === "unreviewed" ? <span>In Inbox</span> : null}
+            {entry.inboxStatus === "unreviewed" ? (
+              <Badge size="micro" tone="warm">
+                In Inbox
+              </Badge>
+            ) : null}
             {entry.collectionNames.slice(0, 2).map((name) => (
-              <span key={`collection:${name.toLocaleLowerCase()}`}>{name}</span>
+              <Badge
+                key={`collection:${name.toLocaleLowerCase()}`}
+                size="micro"
+                tone="neutral"
+              >
+                {name}
+              </Badge>
             ))}
             {entry.tagNames.slice(0, 2).map((name) => (
-              <span key={`tag:${name.toLocaleLowerCase()}`}>#{name}</span>
+              <Badge
+                key={`tag:${name.toLocaleLowerCase()}`}
+                size="micro"
+                tone="neutral"
+              >
+                #{name}
+              </Badge>
             ))}
           </div>
           <Icon name="chevron" size={15} />

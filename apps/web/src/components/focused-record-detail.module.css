@@ -93,11 +93,6 @@
   flex-wrap: wrap;
   gap: var(--mt-space-2);
 }
-.chips span {
-  border-radius: var(--mt-radius-pill);
-  background: var(--mt-color-surface);
-  padding: var(--mt-space-1) var(--mt-space-3);
-}
 .section li {
   margin-bottom: var(--mt-space-2);
 }

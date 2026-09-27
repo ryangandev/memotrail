@@ -1,4 +1,5 @@
 import { Button } from "@/components/button";
+import { Badge } from "@/components/badge";
 import {
   occurrenceLabel,
   occurrenceSpanLabel,
@@ -68,7 +69,7 @@ export function LibrarySearch({
           </div>
 
           <div className={styles.searchScope}>
-            <span>Keyword search</span>
+            <Badge size="medium">Keyword search</Badge>
             <p>
               Titles, notes, local dates, Collections, tags, and structured
               details
@@ -253,10 +254,12 @@ function SearchResultCard({ entry }: { entry: SearchEntry }) {
     <article className={styles.resultCard}>
       <header>
         <div className={styles.resultMeta}>
-          <span>
+          <Badge tone="neutral">
             {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
-          </span>
-          {entry.inboxStatus === "unreviewed" ? <span>In Inbox</span> : null}
+          </Badge>
+          {entry.inboxStatus === "unreviewed" ? (
+            <Badge tone="warm">In Inbox</Badge>
+          ) : null}
           <time dateTime={entry.occurredAt ?? undefined}>
             {resultDateLabel(entry)}
           </time>
@@ -290,10 +293,17 @@ function SearchResultCard({ entry }: { entry: SearchEntry }) {
       {entry.collectionNames.length || entry.tagNames.length ? (
         <div className={styles.organization} aria-label="Item organization">
           {entry.collectionNames.map((name) => (
-            <span key={`collection:${name.toLocaleLowerCase()}`}>{name}</span>
+            <Badge
+              key={`collection:${name.toLocaleLowerCase()}`}
+              tone="neutral"
+            >
+              {name}
+            </Badge>
           ))}
           {entry.tagNames.map((name) => (
-            <span key={`tag:${name.toLocaleLowerCase()}`}>#{name}</span>
+            <Badge key={`tag:${name.toLocaleLowerCase()}`} tone="neutral">
+              #{name}
+            </Badge>
           ))}
         </div>
       ) : null}

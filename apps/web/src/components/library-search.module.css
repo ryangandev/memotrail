@@ -27,14 +27,6 @@
   font-size: var(--mt-font-size-caption);
 }
 
-.searchScope span {
-  padding: 3px var(--mt-space-2);
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-accent);
-  background: var(--mt-color-accent-subtle);
-  font-weight: var(--mt-font-weight-medium);
-}
-
 .clearSearch {
   margin-left: auto;
   color: var(--mt-color-accent);
@@ -210,19 +202,6 @@
   gap: 6px;
 }
 
-.resultMeta span {
-  padding: 3px var(--mt-space-2);
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-subtle);
-  font-size: 10px;
-}
-
-.resultMeta span:nth-child(2) {
-  color: var(--mt-color-warm);
-  background: var(--mt-color-warm-subtle);
-}
-
 .resultMeta time {
   margin-left: auto;
   color: var(--mt-color-ink-faint);
@@ -274,14 +253,6 @@
   flex-wrap: wrap;
   gap: 6px;
   margin-top: var(--mt-space-4);
-}
-
-.organization span {
-  padding: 3px var(--mt-space-2);
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-subtle);
-  font-size: 10px;
 }
 
 .resultCard footer {

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ButtonLink } from "@/components/button";
+import { Badge } from "@/components/badge";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import { PageHeader } from "@/components/page-header";
@@ -314,10 +315,14 @@ function RecordContent({
           <h2>Organize</h2>
           <div className={styles.chips}>
             {collections.map((name) => (
-              <span key={`collection:${name}`}>{name}</span>
+              <Badge key={`collection:${name}`} tone="neutral">
+                {name}
+              </Badge>
             ))}
             {tags.map((name) => (
-              <span key={`tag:${name}`}>#{name}</span>
+              <Badge key={`tag:${name}`} tone="neutral">
+                #{name}
+              </Badge>
             ))}
           </div>
         </section>

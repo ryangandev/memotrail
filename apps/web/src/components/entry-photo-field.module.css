@@ -90,11 +90,6 @@
   z-index: 2;
   bottom: 6px;
   left: 6px;
-  padding: 3px 6px;
-  border-radius: var(--mt-radius-pill);
-  color: white;
-  background: var(--mt-color-accent);
-  font-size: 9px;
 }
 
 .picker {

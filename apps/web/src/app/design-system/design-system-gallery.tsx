@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
+import { Badge } from "@/components/badge";
 import { Button, IconButton } from "@/components/button";
 import { CollectionCard } from "@/components/collection-card";
 import { DatePickerField } from "@/components/date-picker-field";
@@ -21,7 +22,6 @@ import { RichTextEditor } from "@/components/rich-text-editor";
 import { SearchField } from "@/components/search-field";
 import { SelectField } from "@/components/select-field";
 import { TextField } from "@/components/text-field";
-import { TagChip } from "@/components/tag-chip";
 import { notify } from "@/components/app-toast";
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import type { EntryRichText } from "@/lib/data/rich-text";
@@ -502,13 +502,41 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
         </Specimen>
 
         <Specimen
-          title="TagChip"
-          api="name · noninteractive · truncates to available width"
+          title="Badge"
+          api="micro | small | medium · semantic and photo tones · uppercase · one line · tags use # text"
         >
-          <div className={styles.tagChipExamples}>
-            <TagChip name="learning" />
-            <TagChip name="旅行" />
-            <TagChip name="A long tag name that stays within the available width" />
+          <div className={styles.badgeExamples}>
+            <Badge size="micro" uppercase>
+              Entry
+            </Badge>
+            <Badge size="small" tone="neutral" uppercase>
+              Home
+            </Badge>
+            <Badge size="medium">Keyword search</Badge>
+            <Badge size="small" tone="warm">
+              In Inbox
+            </Badge>
+            <Badge size="small" tone="outline">
+              Vehicle
+            </Badge>
+            <Badge size="small" tone="inverse">
+              3 photos
+            </Badge>
+            <Badge title="A long label that stays on one line">
+              A long label that stays on one line
+            </Badge>
+            <Badge size="medium" title="#learning">
+              #learning
+            </Badge>
+            <Badge size="medium" title="#旅行">
+              #旅行
+            </Badge>
+            <Badge
+              size="medium"
+              title="#A long tag name that stays within the available width"
+            >
+              #A long tag name that stays within the available width
+            </Badge>
           </div>
         </Specimen>
 

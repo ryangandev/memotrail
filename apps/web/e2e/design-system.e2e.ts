@@ -1,6 +1,30 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
 
+test("shared badges keep long labels on one line across sizes", async ({
+  page,
+}) => {
+  await page.goto("/design-system");
+  const longBadge = page.getByTitle("A long label that stays on one line");
+  await expect(longBadge).toHaveAttribute("data-ui-badge", "true");
+  await longBadge.evaluate((element) => {
+    (element as HTMLElement).style.width = "90px";
+  });
+  const geometry = await longBadge.evaluate((element) => ({
+    height: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+    width: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  expect(geometry.scrollWidth).toBeGreaterThan(geometry.width);
+  expect(geometry.scrollHeight).toBe(geometry.height);
+  await expect(longBadge).toHaveCSS("white-space", "nowrap");
+  await expect(page.getByTitle("#learning")).toHaveAttribute(
+    "data-ui-badge",
+    "true",
+  );
+});
+
 test("shared Collection card fits four cards across on desktop", async ({
   page,
 }) => {
