@@ -326,13 +326,22 @@ function EntryCard({
             </>
           )}
         </header>
-        <h3>{entry.title || truncate(entry.body, 72) || "Untitled Entry"}</h3>
+        <h3>
+          {!memory && entry.collectionNames.length ? (
+            <>
+              <span className={styles.collectionPrefix}>
+                {entry.collectionNames.map((name) => `[${name}]`).join(" ")}
+              </span>{" "}
+            </>
+          ) : null}
+          {entry.title || truncate(entry.body, 72) || "Untitled Entry"}
+        </h3>
         {entry.body.trim() ? (
           <p>{truncate(entry.body.trim(), memory ? 260 : 170)}</p>
         ) : null}
-        {entry.collectionNames.length || entry.tagNames.length ? (
+        {(memory && entry.collectionNames.length) || entry.tagNames.length ? (
           <footer className={styles.tags}>
-            {entry.collectionNames.slice(0, 2).map((name) => (
+            {(memory ? entry.collectionNames.slice(0, 2) : []).map((name) => (
               <span key={`collection:${name}`}>{name}</span>
             ))}
             {entry.tagNames.slice(0, 3).map((name) => (
