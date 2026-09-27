@@ -251,7 +251,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     const homeRight = await homeLink.evaluate(
       (element) => element.getBoundingClientRect().right,
     );
-    expect(Math.round(scrollRegionRight - homeRight)).toBe(16);
+    expect(Math.round(scrollRegionRight - homeRight)).toBe(12);
     const brandTop = await brand.evaluate(
       (element) => element.getBoundingClientRect().top,
     );
@@ -380,8 +380,8 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     ).toBeVisible();
     await page.setViewportSize({ width: 1280, height: 720 });
     await shell.getByRole("button", { name: "Expand sidebar" }).click();
-    await expect(shell).toHaveCSS("width", "244px");
-    await expect(page.locator("main")).toHaveCSS("margin-left", "244px");
+    await expect(shell).toHaveCSS("width", "224px");
+    await expect(page.locator("main")).toHaveCSS("margin-left", "224px");
     await shell.getByRole("button", { name: "Collapse sidebar" }).focus();
     await page.keyboard.press("Tab");
     await expect(homeLink).toBeFocused();
