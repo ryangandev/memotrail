@@ -37,7 +37,7 @@
 }
 
 .brand {
-  padding: 0 var(--mt-space-2);
+  padding: 0 var(--mt-space-3);
   white-space: nowrap;
   transition: opacity 100ms ease;
 }
@@ -128,7 +128,7 @@
   height: 42px;
   align-items: center;
   gap: var(--mt-space-3);
-  padding: 0 var(--mt-space-2);
+  padding: 0 var(--mt-space-3);
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-ink-muted);
   background: transparent;
