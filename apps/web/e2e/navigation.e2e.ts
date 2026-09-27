@@ -292,8 +292,8 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     ).toBe(true);
     await shell.getByRole("button", { name: "Collapse sidebar" }).click();
     await expect(page.locator('[data-sidebar-collapsed="true"]')).toBeVisible();
-    await expect(shell).toHaveCSS("width", "72px");
-    await expect(page.locator("main")).toHaveCSS("margin-left", "72px");
+    await expect(shell).toHaveCSS("width", "64px");
+    await expect(page.locator("main")).toHaveCSS("margin-left", "64px");
     await expect(homeLink).toBeInViewport();
     const [collapsedRailBox, activeHomeBox] = await Promise.all([
       shell.boundingBox(),
@@ -367,7 +367,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await collapsedLibrary.click();
     await expect(page).toHaveURL(/\/library$/);
     await page.reload();
-    await expect(shell).toHaveCSS("width", "72px");
+    await expect(shell).toHaveCSS("width", "64px");
     await primaryNavigation
       .getByRole("link", { name: "Home", exact: true })
       .click();

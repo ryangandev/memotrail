@@ -1,5 +1,6 @@
 .appShell {
   --sidebar-motion: 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  --sidebar-compact-width: 64px;
 
   min-height: 100dvh;
   background: var(--mt-color-canvas);
@@ -237,7 +238,7 @@
 }
 
 .appShell[data-sidebar-collapsed="true"] .sidebar {
-  width: 72px;
+  width: var(--sidebar-compact-width);
   padding-inline: var(--mt-space-2);
 }
 
@@ -257,7 +258,7 @@
 }
 
 .appShell[data-sidebar-collapsed="true"] .sidebarToggle {
-  right: 10px;
+  right: 6px;
 }
 
 .appShell[data-sidebar-collapsed="true"] .sidebarScrollRegion {
@@ -281,11 +282,11 @@
 }
 
 .appShell[data-sidebar-collapsed="true"] .workspace {
-  margin-left: 72px;
+  margin-left: var(--sidebar-compact-width);
 }
 
 .appShell[data-sidebar-collapsed="true"] .navigationProgress {
-  left: 72px;
+  left: var(--sidebar-compact-width);
 }
 
 .navigationProgress::after {
