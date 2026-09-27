@@ -308,10 +308,23 @@ function EntryCard({
       ) : null}
       <article>
         <header className={styles.entryMeta}>
-          <span>
-            {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
-          </span>
-          <span>{occurrenceLabel(entryOccurrence(entry))}</span>
+          {memory ? (
+            <>
+              <span>
+                {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
+              </span>
+              <span>{occurrenceLabel(entryOccurrence(entry))}</span>
+            </>
+          ) : (
+            <>
+              <span className={styles.entryDate}>
+                {occurrenceLabel(entryOccurrence(entry))}
+              </span>
+              <span className={styles.typeBadge}>
+                {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
+              </span>
+            </>
+          )}
         </header>
         <h3>{entry.title || truncate(entry.body, 72) || "Untitled Entry"}</h3>
         {entry.body.trim() ? (

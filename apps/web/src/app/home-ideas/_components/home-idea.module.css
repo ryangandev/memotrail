@@ -171,7 +171,7 @@
   display: grid;
   min-width: 0;
   grid-row: 1;
-  grid-template-rows: 16px 32px 21px 20px;
+  grid-template-rows: 22px 32px 21px 20px;
   gap: 6px;
 }
 
@@ -181,10 +181,23 @@
   flex-wrap: nowrap;
   overflow: hidden;
   white-space: nowrap;
+  align-items: center;
 }
-.entryCard .entryMeta > span:last-child {
+.entryDate {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.entryMeta .typeBadge {
+  flex: none;
+  padding: 2px var(--mt-space-2);
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-pill);
+  background: var(--mt-color-surface);
+  color: var(--mt-color-ink-muted);
+  font-size: 11px;
+  line-height: 16px;
 }
 
 .entryCard h3 {
