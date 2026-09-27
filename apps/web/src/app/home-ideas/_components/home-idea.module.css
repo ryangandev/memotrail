@@ -222,12 +222,6 @@
   flex-wrap: nowrap;
   overflow: hidden;
 }
-.entryCard .tags span {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
 
 .entryMeta {
   display: flex;
@@ -292,7 +286,7 @@
   margin-top: var(--mt-space-3);
 }
 
-.tags span {
+.collectionChip {
   padding: 2px var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
   background: var(--mt-color-accent-subtle);

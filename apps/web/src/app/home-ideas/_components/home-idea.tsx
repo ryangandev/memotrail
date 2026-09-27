@@ -5,6 +5,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import { PageHeader } from "@/components/page-header";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { TagChip } from "@/components/tag-chip";
 import type {
   HomeEntry,
   HomeResurfacedMemory,
@@ -342,10 +343,15 @@ function EntryCard({
         {(memory && entry.collectionNames.length) || entry.tagNames.length ? (
           <footer className={styles.tags}>
             {(memory ? entry.collectionNames.slice(0, 2) : []).map((name) => (
-              <span key={`collection:${name}`}>{name}</span>
+              <span
+                className={styles.collectionChip}
+                key={`collection:${name}`}
+              >
+                {name}
+              </span>
             ))}
             {entry.tagNames.slice(0, 3).map((name) => (
-              <span key={`tag:${name}`}>#{name}</span>
+              <TagChip key={`tag:${name}`} name={name} />
             ))}
           </footer>
         ) : null}

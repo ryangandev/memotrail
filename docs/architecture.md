@@ -174,6 +174,7 @@ Pair it with the test file carrying the same feature name.
   Native Quick Capture keeps its photo-picker cancellation and full-screen mobile behavior, PhotoViewer keeps native top-layer media geometry, and Command Palette keeps its combobox/listbox interaction model.
 - Reusable components do not import `app/**.module.css`; Web lint enforces this boundary along with valid token references.
   Feature modules own composition, and `editor-fields.module.css` shares native field spacing and states while excluding the reviewed composites' internals.
+- Noninteractive tag labels reuse `components/tag-chip.tsx`, which owns vertical centering, pill styling, and single-line truncation and is demonstrated in the Design System gallery.
 - DatePickerField and OccurrenceEditor own `components/date-fields.module.css`; named date fields preserve native form validation and GET serialization without importing route styling.
 - Inside a modal, date/time fields inherit its overlay container or accept an explicit `portalContainer` so their popovers stay inside its accessibility and theme boundary.
   Unnamed domain date fields retain the editor's contextual submit validation rather than introducing native custom-validity interception.
