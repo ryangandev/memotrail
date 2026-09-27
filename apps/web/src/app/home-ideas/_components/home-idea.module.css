@@ -325,7 +325,7 @@
 .stat {
   display: flex;
   flex: 1 0 auto;
-  align-items: baseline;
+  align-items: center;
   justify-content: center;
   gap: var(--mt-space-2);
   padding: var(--mt-space-4);
