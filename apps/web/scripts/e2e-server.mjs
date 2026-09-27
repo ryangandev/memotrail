@@ -1,4 +1,5 @@
 import { execFileSync, spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 const local = JSON.parse(
   execFileSync("supabase", ["status", "-o", "json"], {
@@ -29,10 +30,9 @@ const production = process.env.MEMOTRAIL_E2E_PRODUCTION === "1";
 if (production)
   execFileSync("pnpm", ["exec", "next", "build"], { env, stdio: "inherit" });
 const server = spawn(
-  "pnpm",
+  process.execPath,
   [
-    "exec",
-    "next",
+    fileURLToPath(import.meta.resolve("next/dist/bin/next")),
     production ? "start" : "dev",
     "--hostname",
     "127.0.0.1",
