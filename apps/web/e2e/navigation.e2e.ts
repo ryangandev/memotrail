@@ -261,7 +261,10 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     const scrollRegion = page.getByRole("region", {
       name: "Sidebar navigation",
     });
-    const brand = shell.getByRole("link", { name: "MemoTrail", exact: true });
+    const brand = shell.getByRole("link", {
+      name: "MemoTrail dashboard",
+      exact: true,
+    });
     const homeLink = shell
       .getByRole("navigation", { name: "Primary navigation" })
       .getByRole("link", { name: "Dashboard", exact: true });
@@ -340,9 +343,23 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
         ((activeHomeBox?.x ?? 0) + (activeHomeBox?.width ?? 0)),
     ).toBeGreaterThanOrEqual(7);
     await expect(homeCaptureHeading).toBeVisible();
+    const collapsedBrand = shell.getByRole("link", {
+      name: "MemoTrail dashboard",
+    });
+    await expect(collapsedBrand).toBeVisible();
     await expect(
-      shell.getByRole("link", { name: "MemoTrail dashboard" }),
-    ).toHaveCount(0);
+      collapsedBrand.getByText("MemoTrail", { exact: true }),
+    ).toBeHidden();
+    const logoBox = await collapsedBrand.locator("svg").boundingBox();
+    expect(logoBox?.width).toBe(29);
+    expect(logoBox?.height).toBe(29);
+    expect(
+      Math.abs(
+        (logoBox?.x ?? 0) +
+          (logoBox?.width ?? 0) / 2 -
+          ((activeHomeBox?.x ?? 0) + (activeHomeBox?.width ?? 0) / 2),
+      ),
+    ).toBeLessThanOrEqual(1);
     const expandSidebar = page.getByRole("button", {
       name: "Expand sidebar",
     });

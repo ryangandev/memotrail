@@ -459,10 +459,9 @@ function Sidebar({
     <aside className={workspaceShellStyles.sidebar}>
       <div className={workspaceShellStyles.sidebarHeader}>
         <Link
-          aria-hidden={collapsed}
+          aria-label="MemoTrail dashboard"
           className={workspaceShellStyles.brand}
           href="/"
-          tabIndex={collapsed ? -1 : undefined}
         >
           <BrandMark className={workspaceShellStyles.brandMark} />
           <span className={workspaceShellStyles.brandName}>MemoTrail</span>

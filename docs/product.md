@@ -208,7 +208,7 @@ Settings lets the user choose a preferred name for Dashboard greetings, or clear
 Desktop treats Library as a primary destination beside Dashboard, Timeline, and Map; Search is part of Library.
 Its sidebar omits Inbox, keeps optional focused views separate from Collections, tags, Trash, and the single Settings entry point.
 The desktop sidebar can collapse to a compact icon rail from the top-bar panel control; the width change animates, and the choice persists in this browser without changing mobile navigation.
-The collapsed rail uses square navigation targets and keeps keyboard focus indicators inside the controls.
+The collapsed rail shows the MemoTrail logo without its wordmark above square navigation targets and keeps keyboard focus indicators inside the controls.
 The persistent top bar places Back and Forward history controls, then the desktop sidebar panel control, before the accent-tinted `New` control; unavailable history directions are disabled.
 Neutral Search and an icon-only Inbox control sit at the far right; Inbox shows a notification count only when captures are waiting.
 A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry and People results in place, supports keyboard navigation, and opens Library for full search with filters.
