@@ -371,8 +371,10 @@
 }
 
 .historyButton:focus-visible {
-  outline: 2px solid var(--mt-color-accent);
-  outline-offset: 2px;
+  outline: none;
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-subtle);
+  box-shadow: inset 0 0 0 2px var(--mt-color-accent);
 }
 
 .historyButton:disabled {

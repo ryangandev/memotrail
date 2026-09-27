@@ -236,9 +236,29 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       "color, background-color",
     );
     await expect(goBack.locator("svg")).toHaveCSS("transform", "none");
+    await goBack.focus();
+    await page.keyboard.press("Tab");
+    const panelControl = page.getByRole("button", { name: "Collapse sidebar" });
+    await expect(panelControl).toBeFocused();
+    await expect(panelControl).toHaveCSS("border-radius", "8px");
+    const panelFocusShadow = await panelControl.evaluate(
+      (element) => getComputedStyle(element).boxShadow,
+    );
+    await page.keyboard.press("Shift+Tab");
+    await expect(goBack).toBeFocused();
+    await expect(goBack).toHaveCSS("outline-style", "none");
+    await expect(goBack).toHaveCSS("box-shadow", panelFocusShadow);
+    await goBack.screenshot({
+      path: "/private/tmp/memotrail-history-focus.png",
+    });
     await goBack.click();
     await expect(page).toHaveURL(/\/$/);
     await expect(goForward).toBeEnabled();
+    await goBack.focus();
+    await page.keyboard.press("Tab");
+    await expect(goForward).toBeFocused();
+    await expect(goForward).toHaveCSS("outline-style", "none");
+    await expect(goForward).toHaveCSS("box-shadow", panelFocusShadow);
     await goForward.click();
     await expect(page).toHaveURL(/\/library$/);
     await primaryNavigation
