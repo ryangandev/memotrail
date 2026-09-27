@@ -69,8 +69,8 @@ export function HomeIdea({
   const recent = snapshot ? <Recent entries={snapshot.recentEntries} /> : null;
   const content = (
     <div className={styles.ribbon}>
-      {snapshot ? <Stats snapshot={snapshot} ribbon /> : null}
       {greeting}
+      {snapshot ? <Stats snapshot={snapshot} /> : null}
       <div className={styles.ribbonColumns}>
         <div className={styles.stack}>
           {capture}
@@ -177,69 +177,32 @@ function Inbox({ workspace }: { workspace: HomeWorkspace }) {
   );
 }
 
-function Stats({
-  snapshot,
-  ribbon = false,
-}: {
-  snapshot: HomeSnapshot;
-  ribbon?: boolean;
-}) {
-  const items: {
-    value: number;
-    label: string;
-    detail?: string;
-    href: string;
-    icon: IconName;
-  }[] = [
+function Stats({ snapshot }: { snapshot: HomeSnapshot }) {
+  const items = [
     {
       value: snapshot.currentStageCount,
       label: "Life in progress",
-      detail: "current chapters",
       href: "/timeline",
-      icon: "timeline",
+    },
+    { value: snapshot.entryCount, label: "Entries kept", href: "/library" },
+    {
+      value: snapshot.firstTimeCount,
+      label: "First Times",
+      href: "/first-times",
     },
     {
-      value: snapshot.entryCount,
-      label: "Entries kept",
-      detail: `${snapshot.firstTimeCount} First Times · ${snapshot.collectionCount} Collections`,
-      href: "/library",
-      icon: "archive",
+      value: snapshot.collectionCount,
+      label: "Collections",
+      href: "/collections",
     },
+    { value: snapshot.inboxCount, label: "To organize", href: "/inbox" },
   ];
-  if (ribbon)
-    items.push(
-      {
-        value: snapshot.firstTimeCount,
-        label: "First Times",
-        href: "/first-times",
-        icon: "star",
-      },
-      {
-        value: snapshot.collectionCount,
-        label: "Collections",
-        href: "/collections",
-        icon: "archive",
-      },
-      {
-        value: snapshot.inboxCount,
-        label: "To organize",
-        href: "/inbox",
-        icon: "inbox",
-      },
-    );
   return (
-    <nav
-      className={ribbon ? styles.metrics : styles.stats}
-      aria-label="Your archive at a glance"
-    >
+    <nav className={styles.metrics} aria-label="Your archive at a glance">
       {items.map((item) => (
         <Link href={item.href} key={item.label} className={styles.stat}>
-          <Icon name={item.icon} size={18} />
-          <div>
-            <strong>{item.value}</strong>
-            <span>{item.label}</span>
-            {!ribbon && item.detail ? <small>{item.detail}</small> : null}
-          </div>
+          <strong>{item.value}</strong>
+          <span>{item.label}</span>
         </Link>
       ))}
     </nav>
