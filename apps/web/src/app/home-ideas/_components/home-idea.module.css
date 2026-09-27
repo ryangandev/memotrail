@@ -145,7 +145,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: center;
-  padding: var(--mt-space-5) 0;
+  padding: var(--mt-space-3) 0;
   overflow: hidden;
   border-bottom: 1px solid var(--mt-color-border);
 }
