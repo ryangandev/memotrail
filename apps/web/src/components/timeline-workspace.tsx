@@ -100,6 +100,7 @@ export function TimelineWorkspace({
   defaultTimezone,
   firstTimes,
   homes,
+  initialEntryId = null,
   loadError,
   ownerId,
   referenceDate,
@@ -113,6 +114,7 @@ export function TimelineWorkspace({
   defaultTimezone: string;
   firstTimes: FirstTimeEntry[];
   homes: HomeRecord[];
+  initialEntryId?: string | null;
   loadError: string | null;
   ownerId: string;
   referenceDate: string;
@@ -121,7 +123,26 @@ export function TimelineWorkspace({
   vehicles: VehicleRecord[];
 }) {
   const router = useRouter();
-  const [selection, setSelection] = useState<EditorSelection | null>(null);
+  const [selection, setSelection] = useState<EditorSelection | null>(() => {
+    if (!initialEntryId) return null;
+    const item = serverTracks
+      .flatMap((track) => track.items)
+      .find((entry) => entry.id === initialEntryId);
+    if (!item) return null;
+    if (item.itemKind === "entity" && item.itemSubtype === "home") {
+      const home = homes.find((entry) => entry.id === initialEntryId);
+      return home ? { type: "home", entry: home } : null;
+    }
+    if (item.itemKind === "entity" && item.itemSubtype === "vehicle") {
+      const vehicle = vehicles.find((entry) => entry.id === initialEntryId);
+      return vehicle ? { type: "vehicle", entry: vehicle } : null;
+    }
+    if (item.itemKind === "entry" && item.itemSubtype === "first_time") {
+      const firstTime = firstTimes.find((entry) => entry.id === initialEntryId);
+      return firstTime ? { type: "first-time", entry: firstTime } : null;
+    }
+    return { type: "timeline", entry: item, initialTrackId: null };
+  });
   const [birthDate, setBirthDate] = useState(serverBirthDate);
   const [showBirthDatePrompt, setShowBirthDatePrompt] = useState(
     birthDateAvailable && serverBirthDate === null && loadError === null,
@@ -187,6 +208,11 @@ export function TimelineWorkspace({
     setSelection({ type: "timeline", entry: null, initialTrackId });
   }
 
+  function closeSelection() {
+    setSelection(null);
+    if (initialEntryId) router.replace("/timeline", { scroll: false });
+  }
+
   function startCreationForTrack(track: TimelineTrack) {
     if (track.systemKey === "homes") {
       startCreation("home", track.id);
@@ -216,7 +242,7 @@ export function TimelineWorkspace({
       else router.push(`/vehicles?entry=${entry.id}`);
       return;
     }
-    if (entry.itemKind === "event" && entry.itemSubtype === "first_time") {
+    if (entry.itemKind === "entry" && entry.itemSubtype === "first_time") {
       const firstTime = firstTimes.find((item) => item.id === entry.id);
       if (firstTime) setSelection({ type: "first-time", entry: firstTime });
       else router.push("/first-times");
@@ -231,7 +257,7 @@ export function TimelineWorkspace({
         title={<>Timeline</>}
         eyebrow={<>Your life in context</>}
         description={
-          <>See the chapters, places, and moments that overlap your story.</>
+          <>See the chapters and moments that shape your life.</>
         }
         actions={
           <>
@@ -436,7 +462,7 @@ export function TimelineWorkspace({
 
       {selection?.type === "chooser" ? (
         <MomentTypeChooser
-          onClose={() => setSelection(null)}
+          onClose={closeSelection}
           onSelect={(type) =>
             startCreation(
               type,
@@ -463,7 +489,7 @@ export function TimelineWorkspace({
           defaultTimezone={defaultTimezone}
           initialTrackId={selection.initialTrackId}
           key={selection.entry?.id ?? `new:${selection.initialTrackId}`}
-          onClose={() => setSelection(null)}
+          onClose={closeSelection}
           tracks={tracks}
           tagOptions={tagOptions}
         />
@@ -475,7 +501,7 @@ export function TimelineWorkspace({
           defaultTimezone={defaultTimezone}
           home={selection.entry}
           key={selection.entry?.id ?? "new-home-from-timeline"}
-          onClose={() => setSelection(null)}
+          onClose={closeSelection}
           onSaved={() => undefined}
           onTrashed={() => undefined}
           ownerId={ownerId}
@@ -488,7 +514,7 @@ export function TimelineWorkspace({
           collectionOptions={collectionOptions}
           defaultTimezone={defaultTimezone}
           key={selection.entry?.id ?? "new-vehicle-from-timeline"}
-          onClose={() => setSelection(null)}
+          onClose={closeSelection}
           onSaved={() => undefined}
           onTrashed={() => undefined}
           ownerId={ownerId}
@@ -503,7 +529,7 @@ export function TimelineWorkspace({
           defaultTimezone={defaultTimezone}
           entry={selection.entry}
           key={selection.entry?.id ?? "new-first-time-from-timeline"}
-          onClose={() => setSelection(null)}
+          onClose={closeSelection}
           onSaved={() => undefined}
           ownerId={ownerId}
           tagOptions={tagOptions}
@@ -840,7 +866,7 @@ function TimelineEditor({
     ),
   );
   const [isPending, setIsPending] = useState(false);
-  const [kind, setKind] = useState<TimelineKind>(entry?.kind ?? "stage");
+  const [kind, setKind] = useState<TimelineKind>(entry?.kind ?? "event");
   const [result, setResult] = useState<TimelineActionResult | null>(null);
   const [tagInput, setTagInput] = useState("");
   const [tagNames, setTagNames] = useState(entry?.tagNames ?? []);
@@ -910,8 +936,8 @@ function TimelineEditor({
             ...parsed.data,
             id: nextResult.entryId,
             revision: nextResult.revision,
-            itemKind: "event",
-            itemSubtype: kind === "stage" ? "life_stage" : "other",
+            itemKind: "entry",
+            itemSubtype: parsed.data.kind === "stage" ? "period" : "moment",
             updatedAt: entry?.updatedAt ?? "",
           });
         router.refresh();
@@ -1026,7 +1052,7 @@ function TimelineEditor({
         onSubmit={handleSubmit}
       >
         <fieldset className={styles.kindPicker}>
-          <legend>Moment type</legend>
+          <legend>Timeline shape</legend>
           <div>
             <button
               aria-pressed={kind === "stage"}
@@ -1035,7 +1061,7 @@ function TimelineEditor({
               type="button"
             >
               <Icon name="timeline" size={17} />
-              Stage
+              Period
             </button>
             <button
               aria-pressed={kind === "event"}
@@ -1044,12 +1070,12 @@ function TimelineEditor({
               type="button"
             >
               <Icon name="star" size={17} />
-              Event
+              Moment
             </button>
           </div>
           <p>
             {kind === "stage"
-              ? "A chapter that spans time and may still be ongoing."
+              ? "A meaningful period that spans time and may still be ongoing."
               : "A meaningful moment on one date."}
           </p>
         </fieldset>
@@ -1113,7 +1139,7 @@ function TimelineEditor({
               aria-label="Notes"
               maxLength={timelineBodyLimit}
               onChange={(event) => setBody(event.target.value)}
-              placeholder="What made this chapter or moment meaningful?"
+              placeholder="What made this period or moment meaningful?"
               rows={5}
               value={body}
             />

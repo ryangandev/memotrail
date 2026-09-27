@@ -81,8 +81,8 @@ select is(
     from public.timeline_tracks
     where owner_id = '10000000-0000-0000-0000-000000000001'
   ),
-  9,
-  'New users receive the nine confirmed default timeline tracks'
+  8,
+  'New users receive the eight default timeline tracks'
 );
 
 select is(
@@ -168,8 +168,7 @@ select lives_ok(
       2,
       'First time skiing',
       'A cold and brilliant day.',
-      'event',
-      'first_time',
+      'entry','entry',
       '2026-07-03T18:30:00Z',
       'America/Los_Angeles',
       array['Travel', 'Learning', 'travel'],
@@ -200,7 +199,7 @@ select is(
     from public.entries
     where id = '40000000-0000-0000-0000-000000000002'
   ),
-  'event:first_time',
+  'entry:entry',
   'Atomic review updates the canonical Wiki Item identity'
 );
 
@@ -242,8 +241,7 @@ select is(
       2,
       'Stale overwrite',
       '',
-      'event',
-      'first_time',
+      'entry','entry',
       '2026-07-03T18:30:00Z',
       'UTC',
       array['Wrong Collection'],
@@ -277,8 +275,7 @@ select is(
       3,
       'First time skiing',
       'A cold and brilliant day.',
-      'event',
-      'first_time',
+      'entry','entry',
       '2026-07-03T18:30:00Z',
       'America/Los_Angeles',
       array['Travel', 'Learning'],
@@ -359,8 +356,7 @@ select is(
       1,
       'Changed by another user',
       '',
-      'writing',
-      'reflection',
+      'entry','entry',
       '2026-07-03T18:30:00Z',
       'UTC',
       '{}'::text[],

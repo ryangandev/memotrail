@@ -51,7 +51,7 @@ describe("AI search trust boundary", () => {
     })!.request;
     expect(
       evidenceParameters(
-        parseSearchPlan({ ...plan, itemClassifications: ["writing"] })!,
+        parseSearchPlan({ ...plan, itemClassifications: ["entry"] })!,
         request,
         "2026-09-12",
       ).p_item_classifications,
@@ -164,7 +164,7 @@ describe("AI search trust boundary", () => {
     const request = parseAISearchInput({
       parameters: {
         q: "skiing",
-        type: "writing",
+          type: "entry",
         collection: "Travel",
         tag: "winter",
         from: "2017-01-01",
@@ -183,7 +183,7 @@ describe("AI search trust boundary", () => {
         "2026-09-12",
       ),
     ).toMatchObject({
-      p_item_classifications: ["writing"],
+      p_item_classifications: ["entry"],
       p_collection_names: ["Travel"],
       p_tag_names: ["winter"],
       p_date_from: "2017-01-01",

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
-import { Button } from "@/components/button";
+import { Button, IconButton } from "@/components/button";
+import { CollectionCard } from "@/components/collection-card";
 import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { EntryPhotoField } from "@/components/entry-photo-field";
@@ -18,6 +19,8 @@ import {
 } from "@/components/record-card";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { SearchField } from "@/components/search-field";
+import { SelectField } from "@/components/select-field";
+import { TextField } from "@/components/text-field";
 import { notify } from "@/components/app-toast";
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import type { EntryRichText } from "@/lib/data/rich-text";
@@ -334,11 +337,28 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="SearchField and the current production date, rich-text, occurrence, and organization editors are reusable. Other plain text inputs, selects, textareas, labels, and validation messages are still route-level patterns."
+        description="TextField, SearchField, SelectField, and the current production date, rich-text, occurrence, and organization editors are reusable. TextField is a proposed replacement for route-level plain text inputs; other textareas, labels, and validation messages are still route-level patterns."
         id="forms"
         index="04"
         title="Forms"
       >
+        <Specimen
+          api="label · size: small | medium | large · disabled · native text input props"
+          description="Proposed plain text input for review. Its font, height, border, and focus surface match SearchField and SelectField. The Settings page still uses its existing field."
+          id="text-field"
+          title="TextField"
+        >
+          <div className={styles.formGrid}>
+            <TextField defaultValue="Alex Morgan" label="Preferred name" />
+            <TextField label="Empty text field" placeholder="Add a name" />
+            <TextField
+              disabled
+              label="Disabled text field"
+              placeholder="Unavailable"
+              size="small"
+            />
+          </div>
+        </Specimen>
         <Specimen
           api="label · hideLabel · size: small | medium | large · disabled · native input props"
           description="One focus surface for the icon and text. The search action stays composable, so each feature can choose its own submit behavior."
@@ -383,7 +403,24 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
           </p>
         </Specimen>
         <Specimen
+          api="label · size: small | medium | large · disabled · native select props"
+          description="A labeled native select with the same surface and focus treatment as SearchField."
+          title="SelectField"
+        >
+          <div className={styles.formGrid}>
+            <SelectField defaultValue="all" label="Show records">
+              <option value="all">All records</option>
+              <option value="entries">Entries</option>
+              <option value="entities">People, homes & vehicles</option>
+            </SelectField>
+            <SelectField disabled label="Unavailable filter" size="small">
+              <option>Unavailable</option>
+            </SelectField>
+          </div>
+        </Specimen>
+        <Specimen
           api="size: small | medium | large · granularity: day | month | year · editable · includeTime · disabled"
+          description="Date values, time controls, and calendar text use the shared form typography."
           title="DatePickerField"
         >
           <div className={styles.formGrid}>
@@ -554,7 +591,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="RecordCard is the shared interactive record surface used by Homes, Vehicles, Places, and First Times. Other card families remain route-specific."
+        description="RecordCard is the shared interactive record surface used by Homes, Vehicles, and First Times. Collections use the compact card shown below."
         id="containers"
         index="05"
         title="Containers and data display"
@@ -579,6 +616,73 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
             </RecordCard>
             <small role="status">{recordMessage}</small>
           </div>
+        </Specimen>
+
+        <Specimen
+          description="Four cards fit in the 1080px Collections content width. Compare occupied, empty, Inbox, and long-title states. Management stays a separate action."
+          id="collection-card-concept"
+          title="Collection card"
+        >
+          <div className={styles.collectionCardGrid}>
+            {[
+              {
+                name: "Early years",
+                entryCount: 12,
+                updatedLabel: "Latest Sep 18",
+              },
+              {
+                name: "Homes and neighborhoods",
+                entryCount: 7,
+                updatedLabel: "Latest Aug 30",
+              },
+              {
+                name: "First times",
+                entryCount: 19,
+                inboxCount: 2,
+                updatedLabel: "Latest Sep 22",
+              },
+              { name: "Family", entryCount: 8, updatedLabel: "Latest Sep 14" },
+              {
+                name: "Notes from my travels",
+                entryCount: 24,
+                updatedLabel: "Latest Sep 12",
+              },
+              {
+                name: "Things I learned",
+                entryCount: 5,
+                updatedLabel: "Latest Aug 08",
+              },
+              {
+                name: "Small good moments",
+                entryCount: 3,
+                updatedLabel: "Latest Sep 02",
+              },
+              { name: "To revisit", entryCount: 0 },
+            ].map((collection) => (
+              <CollectionCard
+                {...collection}
+                href="#collection-card-concept"
+                headingLevel="h4"
+                key={collection.name}
+                manageAction={
+                  <IconButton
+                    label={`Manage ${collection.name}`}
+                    onClick={() =>
+                      notify.info(`Manage ${collection.name}: preview only.`)
+                    }
+                    size="small"
+                    variant="ghost"
+                  >
+                    <Icon name="more" size={17} />
+                  </IconButton>
+                }
+              />
+            ))}
+          </div>
+          <p className={styles.stateNote}>
+            This shared card is also used on the Collections page. Management
+            remains a separate action.
+          </p>
         </Specimen>
 
         <Specimen

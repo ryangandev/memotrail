@@ -16,7 +16,7 @@ export type SearchPlan = {
 export type SearchSource = {
   id: string;
   recordID: string;
-  kind: "entry" | "person" | "place";
+  kind: "entry" | "person";
   title: string;
   text: string;
   href: string | null;
@@ -88,27 +88,14 @@ export function retrievalTerms(queries: string[]) {
 }
 
 const types = [
-  "capture",
-  "writing",
+  "entry",
   "entity",
-  "event",
-  "story",
   "goal",
-  "note",
-  "journal",
-  "reflection",
-  "lesson",
-  "idea",
   "person",
-  "place",
-  "memory",
   "first_time",
-  "milestone",
-  "trip",
-  "life_stage",
+  "period",
   "home",
   "vehicle",
-  "chapter",
 ];
 const acceptedManualTypes = new Set(types);
 export const searchPlanSchema = {
@@ -379,12 +366,7 @@ export function buildSearchSources(raw: unknown, queries: string[]) {
       kind,
       title,
       text,
-      href:
-        kind === "entry"
-          ? `/items/${row.id}`
-          : kind === "place"
-            ? `/places?place=${row.id}`
-            : null,
+      href: kind === "entry" ? `/items/${row.id}` : null,
       truncated: body.length > 1800 || facts.length > 1800,
     });
   };
@@ -392,7 +374,6 @@ export function buildSearchSources(raw: unknown, queries: string[]) {
   if (evidence.latest_home_reference)
     add(object(evidence.latest_home_reference), "entry");
   rows(evidence.people).forEach((r) => add(r, "person"));
-  rows(evidence.places).forEach((r) => add(r, "place"));
   if (evidence.query_truncated || Number(evidence.candidate_count) > 36)
     notices.push(
       "This answer uses a bounded selection of matches, not the complete archive. Narrow the question to improve coverage.",
@@ -401,13 +382,8 @@ export function buildSearchSources(raw: unknown, queries: string[]) {
     notices.push(
       "The latest Home has an uncertain date. A precise before-move boundary could not be applied.",
     );
-  if (
-    rows(evidence.people).length === 25 ||
-    rows(evidence.places).length === 25
-  )
-    notices.push(
-      "People and Places evidence may be limited to 25 matches each.",
-    );
+  if (rows(evidence.people).length === 25)
+    notices.push("People evidence may be limited to 25 matches.");
   if (sources.some((s) => s.truncated))
     notices.push(
       "Long sources use excerpts. Open the original record for full context.",

@@ -109,6 +109,7 @@ export function CaptureComposer({
   const [isPhotoStateReady, setIsPhotoStateReady] = useState(false);
   const [isPhotoStorageAvailable, setIsPhotoStorageAvailable] = useState(true);
   const [pendingEntries, setPendingEntries] = useState<QueuedInboxEntry[]>([]);
+  const [showPendingEntries, setShowPendingEntries] = useState(false);
   const [isVoiceSupported, setIsVoiceSupported] = useState<boolean | null>(
     null,
   );
@@ -225,6 +226,7 @@ export function CaptureComposer({
     syncInFlightRef.current = false;
     setPhotoUploadProgress(null);
     setIsSyncing(false);
+    setShowPendingEntries(pendingEntriesRef.current.length > 0);
 
     if (latestResult?.status === "synced") {
       setFeedback(idleFeedback);
@@ -267,6 +269,7 @@ export function CaptureComposer({
       occurrenceRef.current = savedOccurrence;
       setHasLocalDraft(Boolean(draft));
       replacePendingEntries(queue);
+      setShowPendingEntries(queue.length > 0);
       setIsLocalStateReady(true);
 
       if (queue.length > 0 && navigator.onLine) {
@@ -616,8 +619,10 @@ export function CaptureComposer({
     setHasLocalDraft(false);
     setVoiceFeedback(null);
     setFeedback(idleFeedback);
-    if (!navigator.onLine)
+    if (!navigator.onLine) {
+      setShowPendingEntries(true);
       notify.info("Saved on this device. Waiting for a connection.");
+    }
     setIsSaving(false);
     await synchronizeQueue();
   }
@@ -823,14 +828,14 @@ export function CaptureComposer({
               }
               type="submit"
             >
-              {isSaving ? "Saving…" : "Save to Inbox"}
+              {isSaving || isSyncing ? "Saving…" : "Save to Inbox"}
               <Icon name="chevron" size={16} />
             </Button>
           </div>
         </div>
       </form>
 
-      {pendingEntries.length > 0 ? (
+      {showPendingEntries && pendingEntries.length > 0 ? (
         <section
           className={captureComposerStyles.pendingSection}
           aria-labelledby={`${idPrefix}-pending-heading`}

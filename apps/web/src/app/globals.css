@@ -25,12 +25,18 @@ h3 {
   margin: 0;
 }
 
-button,
+button {
+  color: inherit;
+  font: inherit;
+}
+
 input,
 select,
 textarea {
   color: inherit;
-  font: inherit;
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-regular);
 }
 
 select:not([multiple]) {

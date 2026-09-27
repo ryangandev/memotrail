@@ -23,7 +23,7 @@ export function includeUnplacedFirstTimes(
       collectionNames: entry.collectionNames,
       datePrecision: entry.datePrecision,
       id: entry.id,
-      itemKind: "event",
+      itemKind: "entry",
       itemSubtype: "first_time",
       kind: "event",
       occurredEnd: entry.occurredEnd,

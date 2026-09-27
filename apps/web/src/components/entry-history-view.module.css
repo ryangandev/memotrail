@@ -85,7 +85,9 @@
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-medium);
   padding: var(--mt-space-3);
-  font: inherit;
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-regular);
 }
 .workspace label:not(:where([data-ui-field] *)) {
   display: grid;

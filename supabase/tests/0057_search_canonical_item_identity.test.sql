@@ -7,8 +7,6 @@ insert into auth.users(id,email) values
 
 insert into public.people(id,owner_id,name,notes) values
   ('98900000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000121','Marina','Met at the harbor');
-insert into public.places(id,owner_id,name,address) values
-  ('98900000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000121','Harbor','Pier 7');
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000121',true);
@@ -23,15 +21,9 @@ select is(
 );
 
 select is(
-  (select count(*) from public.search_wiki_items('Pier 7')),
-  0::bigint,
-  'Canonical search does not duplicate an independent Place as a Wiki Item'
-);
-
-select is(
   (select count(*) from public.search_wiki_items('',array['entity'])),
   1::bigint,
-  'Entity Kind filtering returns canonical People without standalone Places'
+  'Entity Kind filtering returns canonical People'
 );
 
 reset role;

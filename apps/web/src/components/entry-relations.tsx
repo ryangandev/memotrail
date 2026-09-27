@@ -113,7 +113,7 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
     <section className={styles.panel} aria-label="Related Items">
       <h3>Related Items</h3>
       <p>
-        Connect existing writing without copying it. Link changes save
+        Connect existing Entries without copying them. Link changes save
         immediately and stay in this Item&apos;s history.
       </p>
       <div className={styles.controls} aria-label="Relationship views">

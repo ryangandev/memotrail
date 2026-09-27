@@ -42,7 +42,7 @@ export type SearchEntry = {
   occurredLabel: string | null;
   occurredTimezone: string | null;
   recordId: string;
-  recordSource: "entry" | "person" | "place";
+  recordSource: "entry" | "person";
   tagNames: string[];
   title: string | null;
   updatedAt: string;
@@ -74,7 +74,7 @@ type SearchRow = {
   date_precision: OccurrencePrecision;
   occurred_timezone: string | null;
   record_id: string;
-  record_source: "entry" | "person" | "place";
+  record_source: "entry" | "person";
   tag_names: string[] | null;
   title: string | null;
   total_count: number | string;
@@ -89,7 +89,7 @@ type ItemIdentity = {
   itemKind: WikiItemKind;
   itemSubtype: string;
   recordId: string;
-  recordSource: "entry" | "person" | "place";
+  recordSource: "entry" | "person";
 };
 
 export async function getSearchWorkspace(
@@ -382,7 +382,7 @@ function isSearchRow(value: unknown): value is SearchRow {
     nullableString(value.occurred_start) &&
     nullableString(value.occurred_end) &&
     typeof value.record_id === "string" &&
-    ["entry", "person", "place"].includes(String(value.record_source)) &&
+    ["entry", "person"].includes(String(value.record_source)) &&
     occurrencePrecisions.includes(
       value.date_precision as OccurrencePrecision,
     ) &&

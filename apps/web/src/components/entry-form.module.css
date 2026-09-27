@@ -34,7 +34,9 @@
   outline: 0;
   color: var(--mt-color-ink);
   background: var(--mt-color-surface);
-  font: inherit;
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-regular);
 }
 
 .reviewForm input:not(:where([data-ui-field] *)),

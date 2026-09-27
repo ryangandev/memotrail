@@ -79,7 +79,7 @@ test("Unified AI search uses bilingual source evidence, explicit requests, and n
             owner_id: ownerID,
             title: "雪山日记",
             body: original,
-            item_kind: "event",
+            item_kind: "entry",
             item_subtype: "first_time",
             date_precision: "day",
             occurred_start: "2017-07-08T12:00:00Z",
@@ -90,8 +90,8 @@ test("Unified AI search uses bilingual source evidence, explicit requests, and n
             owner_id: ownerID,
             title: "电弧的原理",
             body: "今天学了电打火机使用电弧产生热量点燃蜡烛。",
-            item_kind: "writing",
-            item_subtype: "note",
+            item_kind: "entry",
+            item_subtype: "entry",
             date_precision: "day",
             occurred_start: "2026-01-07T12:00:00Z",
             occurred_timezone: "UTC",
@@ -140,15 +140,22 @@ test("Unified AI search uses bilingual source evidence, explicit requests, and n
       ).status(),
     ).toBe(403);
     await page.goto("/search");
+    await expect(
+      page.getByRole("button", { name: "Ask AI", exact: true }),
+    ).toHaveCount(0);
     await page
       .getByRole("searchbox", { name: "Search your Life Wiki" })
       .fill(request.parameters.q);
-    await page.getByRole("button", { name: "Ask AI", exact: true }).click();
-    await expect(
-      page.getByRole("alert").filter({
-        hasText: live ? "Enable this AI feature" : "not configured",
-      }),
-    ).toBeVisible({ timeout: 15000 });
+    await page.getByRole("button", { name: "Search", exact: true }).click();
+    await expect(page).toHaveURL(/\/search\?q=/);
+    const denied = await page.request.post("/api/ai/search", {
+      headers,
+      data: request,
+    });
+    expect(denied.ok()).toBe(false);
+    expect(await denied.text()).toContain(
+      live ? "Enable this AI feature" : "not configured",
+    );
     expect((await client.rpc("ai_workspace")).data.recent_usage).toHaveLength(
       0,
     );
@@ -167,100 +174,16 @@ test("Unified AI search uses bilingual source evidence, explicit requests, and n
           })
         ).error,
       ).toBeNull();
-    } else {
-      // Deterministic UI contract coverage without contacting a provider in normal CI.
-      await page.route("**/api/ai/search", async (route) => {
-        expect(route.request().postDataJSON().parameters.q).toEqual([
-          request.parameters.q,
-        ]);
-        await route.fulfill({
-          json: {
-            question: request.parameters.q,
-            findings: [
-              {
-                text: "Your earliest retrieved skiing record is July 8, 2017.",
-                citations: [
-                  { sourceID: "S1", quote: original },
-                  {
-                    sourceID: "S1",
-                    quote: 'Recorded facts:\n{"date_precision":"day"}',
-                  },
-                ],
-              },
-            ],
-            sources: [
-              {
-                id: "S1",
-                recordID: entryID,
-                kind: "entry",
-                title: "雪山日记",
-                text: original,
-                href: `/items/${entryID}`,
-                truncated: false,
-              },
-            ],
-            notices: [],
-            insufficientEvidence: false,
-            queries: ["skiing", "滑雪"],
-          },
-        });
+      const completedSearch = await page.request.post("/api/ai/search", {
+        headers,
+        data: request,
+        timeout: 65000,
       });
+      const searchData = await completedSearch.json();
+      expect(completedSearch.status(), JSON.stringify(searchData)).toBe(200);
+      expect(searchData.sources?.length, JSON.stringify(searchData)).toBeGreaterThan(0);
+      expect(JSON.stringify(searchData)).toContain("2017");
     }
-    const searchResponse = page.waitForResponse(
-      (response) =>
-        response.url().endsWith("/api/ai/search") &&
-        response.request().method() === "POST",
-    );
-    await page.getByRole("button", { name: "Ask AI", exact: true }).click();
-    const completedSearch = await searchResponse;
-    const searchData = await completedSearch.json();
-    expect(completedSearch.status(), JSON.stringify(searchData)).toBe(200);
-    expect(
-      searchData.sources?.length,
-      JSON.stringify(searchData),
-    ).toBeGreaterThan(0);
-    const answer = page.getByRole("region", { name: "AI search answer" });
-    await expect(answer).toBeVisible({ timeout: 65000 });
-    await expect(answer).toContainText("2017");
-    if (!live) {
-      const facts = answer.locator("details").filter({
-        has: page.locator("summary", { hasText: /^Recorded facts$/ }),
-      });
-      await expect(facts.locator("blockquote")).not.toBeVisible();
-      await facts.locator("summary").click();
-      await expect(facts.locator("blockquote")).toBeVisible();
-      await facts.locator("summary").click();
-    }
-    expect(
-      (await answer.locator("blockquote").allTextContents()).join(" "),
-    ).toContain("滑雪");
-    const sourceLink = answer
-      .getByRole("link", { name: "雪山日记", exact: true })
-      .first();
-    await expect(sourceLink).toHaveAttribute("href", `/items/${entryID}`);
-    await page.evaluate(() => window.scrollTo(0, 0));
-    await page.screenshot({
-      path: "/private/tmp/memotrail-ai-search-desktop.png",
-      fullPage: true,
-      caret: "initial",
-    });
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.emulateMedia({ colorScheme: "dark" });
-    await page.evaluate(() => window.scrollTo(0, 0));
-    await page.screenshot({
-      path: "/private/tmp/memotrail-ai-search-mobile.png",
-      fullPage: true,
-      caret: "initial",
-    });
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
-      ),
-    ).toBe(true);
-    await sourceLink.click();
-    await expect(
-      page.getByRole("article", { name: "Current item" }),
-    ).toContainText(original);
     if (live) {
       const learning = await page.request.post("/api/ai/search", {
         headers,

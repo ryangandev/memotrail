@@ -96,8 +96,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Newest home thought',
     'A recent Inbox thought.',
-    'capture',
-    'quick_capture',
+    'entry','entry',
     'unreviewed',
     '2026-09-03T16:00:00Z',
     null,
@@ -111,8 +110,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'First long drive',
     'A First Time.',
-    'event',
-    'first_time',
+    'entry','first_time',
     'organized',
     '2026-09-02T18:00:00Z',
     null,
@@ -126,8 +124,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Current California chapter',
     'A current stage.',
-    'event',
-    'life_stage',
+    'entry','period',
     'organized',
     '2025-01-01T08:00:00Z',
     null,
@@ -141,8 +138,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Past chapter',
     'An ended stage.',
-    'event',
-    'life_stage',
+    'entry','period',
     'organized',
     '2020-01-01T08:00:00Z',
     '2021-01-01T08:00:00Z',
@@ -156,8 +152,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Future chapter',
     'A stage that has not started.',
-    'event',
-    'life_stage',
+    'entry','period',
     'organized',
     '2027-01-01T08:00:00Z',
     null,
@@ -171,8 +166,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Removed thought',
     'This must stay out of Home.',
-    'capture',
-    'quick_capture',
+    'entry','entry',
     'unreviewed',
     '2026-09-03T17:00:00Z',
     null,
@@ -186,8 +180,7 @@ values
     '10000000-0000-0000-0000-000000000007',
     'Other owner thought',
     'This must remain private.',
-    'capture',
-    'quick_capture',
+    'entry','entry',
     'unreviewed',
     '2026-09-03T19:00:00Z',
     null,
@@ -280,7 +273,7 @@ cross join lateral (
   select id
   from public.timeline_tracks
   where owner_id = '10000000-0000-0000-0000-000000000001'
-    and system_key = 'places'
+    and system_key = 'other_events'
   limit 1
 ) as timeline_tracks;
 
@@ -386,7 +379,7 @@ select is(
 );
 select is(
   (select current_stages -> 0 ->> 'track_name' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  'Places',
+  'Other Events',
   'Current stages retain their Timeline track'
 );
 select is(

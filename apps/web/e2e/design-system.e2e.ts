@@ -1,6 +1,56 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
 
+test("shared Collection card fits four cards across on desktop", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/design-system#collection-card-concept");
+  const specimen = page.locator("#collection-card-concept");
+  const cards = specimen.locator("[data-collection-card]");
+  await expect(cards).toHaveCount(8);
+  await expect(cards.first()).toBeVisible();
+  await expect(cards.nth(4)).toBeVisible();
+  const boxes = await Promise.all(
+    [0, 1, 2, 3, 4].map(async (index) => cards.nth(index).boundingBox()),
+  );
+  expect(boxes.every(Boolean)).toBe(true);
+  expect(boxes.slice(0, 4).map((box) => box!.y)).toEqual([
+    boxes[0]!.y,
+    boxes[0]!.y,
+    boxes[0]!.y,
+    boxes[0]!.y,
+  ]);
+  expect(boxes[4]!.y).toBeGreaterThan(boxes[0]!.y);
+  expect(boxes[0]!.height).toBeLessThan(170);
+  await cards
+    .first()
+    .getByRole("button", { name: "Manage Early years" })
+    .click();
+  await expect(page.locator("[data-sonner-toast]")).toContainText(
+    "Manage Early years: preview only.",
+  );
+  await page
+    .locator("[data-sonner-toast]")
+    .getByRole("button", { name: "Close toast" })
+    .click();
+  await expect(page.locator("[data-sonner-toast]")).toHaveCount(0);
+  await specimen.screenshot({
+    path: "/private/tmp/memotrail-collection-card-concept-desktop.png",
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(cards.first()).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await specimen.screenshot({
+    path: "/private/tmp/memotrail-collection-card-concept-mobile.png",
+  });
+});
+
 test("Toast uses the shared feedback surface without an inline message", async ({
   page,
 }) => {
@@ -156,6 +206,114 @@ test("SearchField has one focus surface and composes with a Search action", asyn
   await expect(
     specimen.getByRole("searchbox", { name: "Disabled search" }),
   ).toBeDisabled();
+});
+
+test("TextField previews the shared form typography and focus surface", async ({
+  page,
+}) => {
+  await page.goto("/design-system#text-field");
+  const specimen = page.locator("#text-field");
+  const input = specimen.getByRole("textbox", { name: "Preferred name" });
+  const search = page
+    .locator("#search-field")
+    .getByRole("searchbox", { name: "Search Locations" });
+  const select = page
+    .locator("article")
+    .filter({
+      has: page.getByRole("heading", { name: "SelectField", exact: true }),
+    })
+    .getByLabel("Show records");
+
+  await expect(input).toHaveValue("Alex Morgan");
+  await specimen.screenshot({
+    caret: "initial",
+    path: "/private/tmp/memotrail-text-field-proposal-light.png",
+  });
+  const typography = await Promise.all(
+    [input, search, select].map((field) =>
+      field.evaluate((element) => {
+        const style = getComputedStyle(element);
+        return {
+          family: style.fontFamily,
+          size: style.fontSize,
+          weight: style.fontWeight,
+        };
+      }),
+    ),
+  );
+  expect(typography[0]).toEqual(typography[1]);
+  expect(typography[0]).toEqual(typography[2]);
+  await input.focus();
+  await expect(input).toHaveCSS("outline-style", "none");
+  await expect(input.locator("..")).toHaveCSS("border-top-width", "1px");
+  await input.fill("Alex");
+  await expect(input).toHaveValue("Alex");
+  await expect(
+    specimen.getByRole("textbox", { name: "Disabled text field" }),
+  ).toBeDisabled();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByLabel("Gallery theme").selectOption("dark");
+  await expect(specimen).toBeVisible();
+  await specimen.screenshot({
+    caret: "initial",
+    path: "/private/tmp/memotrail-text-field-proposal-dark-mobile.png",
+  });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
+
+test("DatePickerField uses the shared form typography", async ({ page }) => {
+  await page.goto("/design-system#forms");
+  const specimen = page.locator("article").filter({
+    has: page.getByRole("heading", { name: "DatePickerField", exact: true }),
+  });
+  const dateInput = specimen.getByRole("textbox", { name: "Filled date" });
+  const textInput = page
+    .locator("#text-field")
+    .getByRole("textbox", { name: "Preferred name" });
+  const textFont = await textInput.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { family: style.fontFamily, size: style.fontSize };
+  });
+  const dateFont = await dateInput.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { family: style.fontFamily, size: style.fontSize };
+  });
+  expect(dateFont).toEqual(textFont);
+  await expect(
+    specimen.getByRole("button", { name: "Choose exact date and time time" }),
+  ).toHaveCSS("font-size", textFont.size);
+
+  await specimen.getByRole("button", { name: "Choose filled date" }).click();
+  const calendar = page.locator(
+    '[data-scope="date-picker"][data-part="content"][data-state="open"]',
+  );
+  await expect(calendar).toBeVisible();
+  await expect(calendar.locator("th").first()).toHaveCSS("font-size", "12px");
+  await expect(calendar.locator("[class*=calendarCellTrigger]").first()).toHaveCSS(
+    "font-size",
+    textFont.size,
+  );
+  await page.keyboard.press("Escape");
+  await specimen
+    .getByRole("button", { name: "Choose exact date and time time" })
+    .click();
+  const timePicker = page.locator(
+    '[data-scope="popover"][data-part="content"][data-state="open"]',
+  );
+  await expect(timePicker).toBeVisible();
+  await expect(timePicker.getByRole("combobox", { name: "Hour" })).toHaveCSS(
+    "font-size",
+    textFont.size,
+  );
+  await expect(timePicker.getByText("Hour", { exact: true })).toHaveCSS(
+    "font-size",
+    "12px",
+  );
 });
 
 test("SearchField fits both themes at desktop and mobile widths", async ({

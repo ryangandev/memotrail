@@ -86,8 +86,9 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
             owner_id: owner,
             title: "First trip to Japan",
             body: "Original travel memory",
-            item_kind: "event",
-            item_subtype: "life_stage",
+            inbox_status: "organized",
+            item_kind: "entry",
+            item_subtype: "period",
             occurred_start: start,
             occurred_end: end,
             occurred_timezone: "UTC",
@@ -98,8 +99,9 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
             owner_id: owner,
             title: "Current role",
             body: "",
-            item_kind: "event",
-            item_subtype: "life_stage",
+            item_kind: "entry",
+            item_subtype: "period",
+            inbox_status: "organized",
             occurred_start: "2026-04-13T12:00:00+00:00",
             occurred_end: null,
             occurred_timezone: "UTC",
@@ -112,6 +114,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
             body: "",
             item_kind: "entity",
             item_subtype: "vehicle",
+            inbox_status: "organized",
             occurred_start: "2024-01-01T12:00:00+00:00",
             occurred_end: "2025-01-01T12:00:00+00:00",
             occurred_timezone: "UTC",
@@ -122,8 +125,9 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
             owner_id: owner,
             title: "First summer visit",
             body: "",
-            item_kind: "event",
+            item_kind: "entry",
             item_subtype: "first_time",
+            inbox_status: "organized",
             occurred_start: "2026-07-15T12:00:00+00:00",
             occurred_end: null,
             occurred_timezone: "UTC",
@@ -167,7 +171,12 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
         ])
       ).error,
     ).toBeNull();
-    await page.goto("/timeline");
+    await page.goto("/library");
+    await page.getByRole("link", { name: /First trip to Japan/ }).click();
+    await expect(page).toHaveURL(`/timeline?entry=${id}`);
+    await expect(page.getByRole("dialog", { name: "First trip to Japan" })).toBeVisible();
+    await page.getByRole("button", { name: "Close Timeline editor" }).click();
+    await expect(page).toHaveURL(/\/timeline$/);
     const timelineViewport = page.getByTestId("timeline-viewport");
     await expect(timelineViewport).toBeVisible();
     const todayLine = page.getByTestId("timeline-today");
@@ -538,6 +547,7 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     await typeChooser
       .getByRole("button", { name: "Add Moment", exact: true })
       .click();
+    await dialog.getByRole("button", { name: "Period", exact: true }).click();
     await expect(dialog.getByText("Optional", { exact: true })).toHaveCount(0);
     await dialog.getByLabel("Date type").selectOption("exact");
     const exactStartDate = dialog.getByRole("textbox", {
@@ -643,13 +653,13 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
       .getByRole("button", { name: "Add Moment", exact: true })
       .click();
     await expect(dialog.getByLabel("Date type")).toHaveValue("unknown");
-    await dialog.getByRole("button", { name: "Event", exact: true }).click();
+    await dialog.getByRole("button", { name: "Moment", exact: true }).click();
     await expect(
       dialog
         .getByRole("combobox", { name: "Date type", exact: true })
         .locator('option[value="range"]'),
     ).toHaveCount(0);
-    await dialog.getByRole("button", { name: "Stage", exact: true }).click();
+    await dialog.getByRole("button", { name: "Period", exact: true }).click();
     await dialog.getByLabel("Date type").selectOption("range");
     await expect(
       dialog.getByRole("checkbox", { name: "Present", exact: true }),

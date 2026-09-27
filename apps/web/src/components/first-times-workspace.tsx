@@ -56,17 +56,24 @@ import type { LocationSelection } from "@/lib/locations/location";
 export function FirstTimesWorkspace({
   collectionOptions,
   entries,
+  initialEntryId = null,
   loadError,
   ownerId,
   tagOptions,
 }: {
   collectionOptions: string[];
   entries: FirstTimeEntry[];
+  initialEntryId?: string | null;
   loadError: string | null;
   ownerId: string;
   tagOptions: string[];
 }) {
-  const [selectedEntry, setSelectedEntry] = useState<FirstTimeEntry | null>();
+  const router = useRouter();
+  const [selectedEntry, setSelectedEntry] = useState<
+    FirstTimeEntry | null | undefined
+  >(() =>
+    initialEntryId ? entries.find((item) => item.id === initialEntryId) : undefined,
+  );
   const [confirmedEntries, setConfirmedEntries] = useState<
     Record<string, FirstTimeEntry>
   >({});
@@ -151,7 +158,10 @@ export function FirstTimesWorkspace({
           collectionOptions={collectionOptions}
           entry={selectedEntry}
           key={selectedEntry?.id ?? "new-first-time"}
-          onClose={() => setSelectedEntry(undefined)}
+          onClose={() => {
+            setSelectedEntry(undefined);
+            if (initialEntryId) router.replace("/first-times", { scroll: false });
+          }}
           onSaved={(entry) =>
             setConfirmedEntries((current) => ({
               ...current,

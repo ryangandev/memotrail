@@ -1,27 +1,35 @@
 # MemoTrail Status
 
-Last reviewed: 2026-09-22.
+Last reviewed: 2026-09-26.
 
 ## Current state
 
-MemoTrail's confirmed core scope is implemented across Web, native iOS, and shared Supabase contracts.
-The product is not yet fully accepted for production because live configuration, real native and browser interactions, CI, and recovery evidence remain incomplete.
+The Entry-centered Web information model is implemented on `codex/web-library-information-model` and its migration is live on the confirmed Supabase project.
+Authored Place records have also been removed from Web and the hosted schema; Entry-owned Locations and the Map remain.
+The obsolete Places Timeline track has been removed, with existing placements migrated to the general track.
+The accepted compact Collection card is shared by the Web Design System and Collections overview.
+The Web Map and Location previews now follow light, dark, and System appearance; a local provider-backed dark map loaded successfully.
+The Map also offers filtered shortcuts to the user's most recorded cities when records span more than one city.
+The desktop sidebar has a compact icon rail, panel control, and animated width change; its browser preference persists across reloads.
+Inbox review now hides AI suggestions and places photos after tags; the Library browser excludes unreviewed captures until Save to Library.
+Native iOS still uses the older Kind and subtype contract and needs a separate update before its write flows are compatible.
+Web production still needs deployment and acceptance of this branch; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 
 Use Git history for feature-level implementation and test evidence.
 
 | Area                                                                                 | State                                                                                                                                                                               |
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Capture, Inbox, organization, dates, drafts, and offline queues                      | Implemented on Web and iOS                                                                                                                                                          |
-| Timeline, Home, First Times, Homes, Vehicles, Goals, People, Places, and Collections | Implemented on Web and iOS                                                                                                                                                          |
-| Location data layer                                                                  | Hosted through `202609210001`. Web Map, optional Home Location, photo GPS provenance, and provider quotas are implemented; personal browser acceptance remains.                     |
+| Timeline, Home, First Times, Homes, Vehicles, Goals, People, and Collections | Implemented on Web and iOS; the native Place surface is legacy and needs a separate update                                                                                         |
+| Location data layer                                                                  | Web Map, optional Home Location, photo GPS provenance, and provider quotas are implemented; personal browser acceptance remains.                                                     |
 | Habits                                                                               | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                                  |
 | Web navigation shell                                                                 | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                                   |
-| Web Settings                                                                         | Account, dates, timezone, appearance, simplified AI, and account controls implemented                                                                                               |
+| Web Settings                                                                         | Account, preferred name, dates, timezone, appearance, simplified AI, and account controls implemented                                                                               |
 | Web Collections and tags                                                             | Direct Library destinations and shared Entry organization editor implemented                                                                                                        |
-| Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI    | Implemented; Production AI configuration is not accepted                                                                                                                            |
+| Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI    | Keyword search is visible; Ask AI is temporarily absent from Search. Production AI configuration is not accepted.                                                                   |
 | Private media, Entry history, relationships, Trash, and complete export              | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                  |
-| Hosted Supabase contracts                                                            | Deployed to the confirmed MemoTrail project                                                                                                                                         |
-| Capture First Life Wiki information model                                            | Canonical database model is live on the confirmed hosted project; Web navigation, Library, Inbox organization, Search, Collections, and history use Kind-aware identity and routing |
+| Hosted Supabase contracts                                                            | `202609240004` is deployed to project `kaivkozeyuwzqrckmyqu`; the remote ledger matches the repository                                                                                          |
+| Entry-centered information model                                                     | Web branch and hosted database use Entry, focused records, and intentional Timeline Moment or Period; native iOS and deployed Web still need cutover                                      |
 | Web design system                                                                    | Approved canonical components migrated across Web; component-owned CSS and token boundaries enforced; local regression passed; production browser acceptance pending                |
 | Backup and restore                                                                   | Not ready                                                                                                                                                                           |
 | Current GitHub CI                                                                    | Blocked before jobs start by account billing or spending limits                                                                                                                     |
@@ -31,31 +39,38 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 ## Next work
 
-### 1. Accept Web Location
+### 1. Release and accept the Entry-centered Web flow
 
-- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202609210001`; the linked migration ledger matches the repository. The latest migration makes Home Location copy-on-write compare coordinates at the database's six-decimal storage precision, fixing provider-backed saves without rewriting existing records.
-- Web now has optional Home Locations, address search that fills Places without creating Locations, keyboard-accessible address suggestions, explicit photo GPS source identity, owner-scoped Geoapify quotas, and a clustered Map of current Entry coordinates with Kind and year filters.
-- Local database validation passes 61 files and 1,552 assertions. Web type checking, lint, production build, and 448 unit tests pass. The latest complete 70-test browser run passed 69 tests; an unrelated People loading failure in Library search passed on isolated rerun. High-precision Home create/edit and visible save-error regression paths pass in an isolated browser test.
+- Deploy the Web branch against the migrated hosted project and verify Quick Capture, Inbox review, Library routing, First Time, Moment, Period, Home, Vehicle, and Goal in a browser.
+- The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
+- Keep native iOS writes out of this cutover until its older Kind and subtype calls are updated.
+- The earlier Entry model passed 61 database files with 1,552 assertions, a production build, and all 72 browser E2E tests. The latest Place removal passed 59 database files with 1,497 assertions, 436 Web unit tests, type checking, lint, and six affected browser E2E tests; the full browser suite and production build were not rerun for this change.
+- A seeded pre-migration local exercise converted Journal, Story, and Trip to tags; Timeline point and span to Moment and Period; and preserved Inbox state and revision numbers.
+
+### 2. Accept Web Location
+
+- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202609240004`; the linked migration ledger matches the repository. Home Location copy-on-write compares coordinates at the database's six-decimal storage precision.
+- Web now has optional Home Locations, address search that feeds Entry-owned Location snapshots on save, keyboard-accessible address suggestions, explicit photo GPS source identity, owner-scoped Geoapify quotas, and a clustered Map of current Entry coordinates with Kind and year filters.
+- Local Web and database validation for the current branch is listed above.
 - `localhost:3000` points to the linked cloud Supabase project. Its health endpoint returned 200, and an authenticated browser loaded Geoapify address suggestions, a selected coordinate preview, and the Map's raster tiles after migration; the test form was canceled without saving.
-- Accept the revised UI with a personal `localhost:3000` record, including retrying a provider-backed Home Location save after the precision migration, Home removal/manual address edits, Entry map points, and Place address filling. No personal record was changed during the repair; map clustering is locally browser-tested but not yet personally accepted against hosted data.
+- Accept the revised UI with a personal `localhost:3000` record, including retrying a provider-backed Home Location save after the precision migration, Home removal/manual address edits, and Entry map points. Map clustering is locally browser-tested but not yet personally accepted against hosted data.
 - The accepted shared SearchField is now used across Web search surfaces, including Location, full Search, Library, Tags, related Items, organization pickers, and Command Palette.
 - The server-only Production `GEOAPIFY_API_KEY` is configured in Vercel. The local key and provider-backed `localhost:3000` browser flow are verified; Production browser acceptance remains pending.
 - Native iOS provider UI and its legacy custom Location fields remain deferred until Web acceptance.
 
-### 2. Accept native Life Wiki UI
+### 3. Update and accept native Life Wiki UI
 
-- The hosted cutover retained 15 curated Wiki Items, 16 versions, 6 attachments and Storage objects, and 8 Timeline placements without legacy `entry_type`, `entryType`, or Habit schema.
-- Web Library and organization flows pass real local browser tests against the canonical database contract.
-- Native source changes pass Swift parser checks, but a full simulator build and UI acceptance remain blocked until the local Xcode license is accepted.
+- Native iOS source was intentionally untouched during the Web redesign. Its Inbox and related write flows still send removed Writing, Event, Story, and Capture identities.
+- A full simulator build and UI acceptance remain blocked until the local Xcode license is accepted.
 
-### 3. Accept Production AI
+### 4. Accept Production AI
 
 - Set the Production Vercel values for `AI_PROVIDER`, server-only `AI_API_KEY`, `AI_CHAT_MODEL`, and `AI_TOTAL_BUDGET_USD`.
 - Confirm the existing server-only `SUPABASE_SECRET_KEY` remains present.
 - Redeploy and run `MEMOTRAIL_VERIFY_HOSTED_AI=1 node apps/web/scripts/verify-hosted-ai.mjs` with synthetic data.
 - The last authenticated check returned HTTP 503 `provider_unavailable`; a valid local key does not configure Production.
 
-### 4. Complete real interaction acceptance
+### 5. Complete real interaction acceptance
 
 - Verify an actual production browser export download.
 - Verify native Save and share for a production export.
@@ -64,14 +79,14 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 The latest automated native UI attempt was blocked by the locked development Mac.
 
-### 5. Establish recovery
+### 6. Establish recovery
 
 - Choose separately protected destinations for database backups and original Storage objects.
 - Decide whether to enable point-in-time recovery; the latest inventory showed PITR disabled and no listed restore point.
 - Complete and inspect a full restore in a non-production project.
 - Audit abandoned unregistered uploads before approving automatic retention cleanup.
 
-### 6. Restore current CI evidence
+### 7. Restore current CI evidence
 
 - Resolve the GitHub account billing or spending-limit issue.
 - Rerun all Web, iOS, and database jobs for current `main` and confirm they actually execute.

@@ -6,12 +6,12 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000095','rich-entry-owner@memotrail.local'),
   ('10000000-0000-0000-0000-000000000096','rich-entry-other@memotrail.local');
 insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,inbox_status,date_precision,occurred_timezone,metadata) values
-  ('96000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000095','Rich Entry','Original words','writing','note','organized','unknown','UTC',
+  ('96000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000095','Rich Entry','Original words','entry','entry','organized','unknown','UTC',
    '{"body_rich":{"version":1,"text":"Original words","document":{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Original words","marks":[{"type":"bold"}]}]}]}}}');
 
 create function pg_temp.rich_review(rev integer, body text, rich jsonb) returns bigint language sql as $$
   select count(*) from public.review_wiki_item_with_photo_place_rich(
-    '96000000-0000-4000-8000-000000000001',rev,'Rich Entry',body,'writing','note',
+    '96000000-0000-4000-8000-000000000001',rev,'Rich Entry',body,'entry','entry',
     null,'UTC','{}','{}',false,null,null,'unknown',null,rich
   );
 $$;
@@ -21,7 +21,7 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000095'
 
 select is(
   (select count(*) from public.review_wiki_item_with_photo_place(
-    '96000000-0000-4000-8000-000000000001',1,'Renamed by plaintext client','Original words','writing','note',
+    '96000000-0000-4000-8000-000000000001',1,'Renamed by plaintext client','Original words','entry','entry',
     null,'UTC','{}','{}',false,null,null,'unknown',null
   )),
   1::bigint,

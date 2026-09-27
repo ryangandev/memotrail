@@ -10,6 +10,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { BirthDateSetting } from "@/components/birth-date-setting";
 import { TimezoneSetting } from "@/components/timezone-setting";
 import { PageFrame } from "@/components/page-frame";
+import { PreferredNameSetting } from "@/components/preferred-name-setting";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
   storedBirthDate,
@@ -60,6 +61,11 @@ export default async function SettingsPage() {
   const profileTimezone = storedProfileTimezone(
     profile.error ? null : profile.data,
   );
+  const preferredName =
+    !profile.error && typeof profile.data?.display_name === "string"
+      ? profile.data.display_name.trim() || null
+      : null;
+  const accountName = preferredName ?? viewer.name;
   const themePreference = storedThemePreference(
     (await cookies()).get(THEME_COOKIE_NAME)?.value,
   );
@@ -84,9 +90,11 @@ export default async function SettingsPage() {
         </div>
 
         <div className={pageStyles.accountCard}>
-          <span className={pageStyles.accountAvatar}>{viewer.initial}</span>
+          <span className={pageStyles.accountAvatar}>
+            {accountName.charAt(0).toUpperCase()}
+          </span>
           <div className={pageStyles.accountIdentity}>
-            <strong>{viewer.name}</strong>
+            <strong>{accountName}</strong>
             <span>{viewer.email}</span>
             <small>Google Sign-In</small>
           </div>
@@ -96,6 +104,10 @@ export default async function SettingsPage() {
             </Button>
           </form>
         </div>
+
+        {!profile.error ? (
+          <PreferredNameSetting initialName={preferredName} />
+        ) : null}
 
         {birthDate.available ? (
           <BirthDateSetting

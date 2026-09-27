@@ -3,7 +3,8 @@ import { notify } from "@/components/app-toast";
 import entryReviewListStyles from "@/components/entry-review-list.module.css";
 import entryFormStyles from "@/components/entry-form.module.css";
 import { Dialog } from "@/components/dialog";
-import { Button, ButtonLink } from "@/components/button";
+import { Button } from "@/components/button";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import type { PhotoPlaceDraft } from "@/lib/media/photo-place";
 
 import { useState, type FormEvent } from "react";
@@ -13,8 +14,8 @@ import {
   reviewInboxEntry,
   type ReviewInboxEntryResult,
 } from "@/app/inbox/actions";
+import { trashWikiItem } from "@/app/history/actions";
 import { Icon } from "@/components/icon";
-import { EntryAISuggestionsPanel } from "@/components/entry-ai-suggestions";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { OccurrenceEditor } from "@/components/occurrence-editor";
 import { EntryPhotoDates } from "@/components/entry-photo-dates";
@@ -27,20 +28,13 @@ import {
   occurrenceLabel,
   resolveOccurrenceDraft,
 } from "@/lib/data/occurrence";
-import { mergeAISuggestionNames } from "@/lib/ai/suggestion";
 import type { InboxEntry } from "@/lib/data/inbox";
 import { entryBodyLimit, entryTitleLimit } from "@/lib/data/inbox-input";
 import {
   parseInboxReviewInput,
   type InboxReviewInput,
 } from "@/lib/data/inbox-review";
-import {
-  initialReviewClassification,
-  reviewablePresetsForKind,
-  wikiItemKindLabel,
-  wikiItemSubtypeLabel,
-  type ReviewableWikiItemKind,
-} from "@/lib/data/wiki-item";
+import { wikiItemKindLabel, wikiItemSubtypeLabel } from "@/lib/data/wiki-item";
 
 export function EntryReviewList({
   collectionOptions,
@@ -54,14 +48,51 @@ export function EntryReviewList({
   tagOptions: string[];
 }) {
   const router = useRouter();
+  const requestConfirmation = useConfirmationDialog();
   const [selectedEntry, setSelectedEntry] = useState<InboxEntry | null>(
     () => entries.find((entry) => entry.id === initialEntryID) ?? null,
   );
+  const [deletedEntryIDs, setDeletedEntryIDs] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [trashPendingID, setTrashPendingID] = useState<string | null>(null);
   // Reflect server-confirmed mutations immediately while router refresh is in
   // flight. Rapid reopening must never submit the previous revision again.
   const [savedReviews, setSavedReviews] = useState<
     Record<string, { entry: InboxEntry; done: boolean }>
   >({});
+
+  async function moveEntryToTrash(entry: InboxEntry) {
+    if (trashPendingID) return;
+    const confirmed = await requestConfirmation({
+      title: <>Move “{entryTitle(entry)}” to Trash?</>,
+      description: <>You can restore it later from Trash.</>,
+      confirmLabel: "Move to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
+
+    setTrashPendingID(entry.id);
+    try {
+      const message = await trashWikiItem(entry.id, entry.revision);
+      if (message) {
+        notify.error(message);
+        return;
+      }
+      setDeletedEntryIDs((current) => new Set(current).add(entry.id));
+      setSelectedEntry(null);
+      if (initialEntryID) router.replace("/inbox", { scroll: false });
+      router.refresh();
+      notify.info("Capture moved to Trash.");
+    } catch {
+      notify.error(
+        "Could not confirm the move to Trash. Refresh before trying again.",
+      );
+    } finally {
+      setTrashPendingID(null);
+    }
+  }
 
   return (
     <>
@@ -69,7 +100,7 @@ export function EntryReviewList({
         const saved = savedReviews[source.id];
         const latest =
           saved && saved.entry.revision >= source.revision ? saved : null;
-        if (latest?.done) return null;
+        if (latest?.done || deletedEntryIDs.has(source.id)) return null;
         const entry = latest?.entry ?? source;
         const excerpt = entryExcerpt(entry);
 
@@ -85,7 +116,8 @@ export function EntryReviewList({
             <footer>
               <div className={entryReviewListStyles.tags}>
                 <span>Needs review</span>
-                {entry.itemKind !== "capture" ? (
+                {entry.itemKind !== "entry" ||
+                entry.itemSubtype === "first_time" ? (
                   <>
                     <span>{wikiItemKindLabel(entry.itemKind)}</span>
                     <span>
@@ -105,14 +137,26 @@ export function EntryReviewList({
                   <span>+{entry.tagNames.length - 3}</span>
                 ) : null}
               </div>
-              <Button
-                variant="secondary"
-                onClick={() => setSelectedEntry(entry)}
-                type="button"
-              >
-                Organize
-                <Icon name="chevron" size={14} />
-              </Button>
+              <div className={entryReviewListStyles.cardActions}>
+                <Button
+                  variant="ghost"
+                  disabled={trashPendingID === entry.id}
+                  onClick={() => void moveEntryToTrash(entry)}
+                  type="button"
+                >
+                  <Icon name="trash" size={15} />
+                  Move to Trash
+                </Button>
+                <Button
+                  variant="secondary"
+                  disabled={trashPendingID === entry.id}
+                  onClick={() => setSelectedEntry(entry)}
+                  type="button"
+                >
+                  Organize
+                  <Icon name="chevron" size={14} />
+                </Button>
+              </div>
             </footer>
           </article>
         );
@@ -135,6 +179,8 @@ export function EntryReviewList({
             setSelectedEntry(null);
             if (initialEntryID) router.replace("/inbox", { scroll: false });
           }}
+          onTrash={() => void moveEntryToTrash(selectedEntry)}
+          trashPending={trashPendingID === selectedEntry.id}
           tagOptions={tagOptions}
         />
       ) : null}
@@ -147,15 +193,19 @@ export function EntryReviewDialog({
   entry,
   onClose,
   onSaved,
+  onTrash,
   tagOptions,
   organized = false,
+  trashPending = false,
 }: {
   collectionOptions: string[];
   entry: InboxEntry;
   onClose: () => void;
   onSaved: (entry: InboxEntry, done: boolean) => void;
+  onTrash?: () => void;
   tagOptions: string[];
   organized?: boolean;
+  trashPending?: boolean;
 }) {
   const router = useRouter();
   const [title, setTitle] = useState(entry.title ?? "");
@@ -163,13 +213,6 @@ export function EntryReviewDialog({
   const [bodyRich, setBodyRich] = useState(entry.bodyRich);
   const [collectionNames, setCollectionNames] = useState(entry.collectionNames);
   const [collectionInput, setCollectionInput] = useState("");
-  const initialClassification = initialReviewClassification(entry);
-  const [itemKind, setItemKind] = useState<ReviewableWikiItemKind>(
-    initialClassification.itemKind,
-  );
-  const [itemSubtype, setItemSubtype] = useState(
-    initialClassification.itemSubtype,
-  );
   const [location, setLocation] = useState<LocationSelection | null>(
     entry.location ?? null,
   );
@@ -194,8 +237,6 @@ export function EntryReviewDialog({
       bodyRich: bodyRich?.text === body ? bodyRich : null,
       collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       id: entry.id,
-      itemKind,
-      itemSubtype,
       revision: entry.revision,
       tagNames: namesIncludingDraft(tagNames, tagInput),
       title: title || null,
@@ -254,27 +295,15 @@ export function EntryReviewDialog({
       onOpenChange={(nextOpen) => {
         if (!nextOpen) onClose();
       }}
-      title={
-        <>
-          {organized
-            ? `Edit ${wikiItemKindLabel(entry.itemKind)}`
-            : "Organize Capture"}
-        </>
-      }
+      title={<>{organized ? "Edit Entry" : "Review Entry"}</>}
       titleId="review-heading"
       eyebrow={<>{organized ? "Life Wiki editor" : "Inbox review"}</>}
       headerContent={
         <>
           {organized ? (
-            <p>
-              This {wikiItemKindLabel(entry.itemKind).toLocaleLowerCase()} is
-              already part of your Life Wiki.
-            </p>
+            <p>This Entry is already part of your Life Wiki.</p>
           ) : (
-            <p>
-              Keep this as Writing, an Event, or a Story, or use a focused form
-              for a structured record.
-            </p>
+            <p>Review what you captured, then save it to your Library.</p>
           )}
           <Link href={`/history?entry=${entry.id}`}>Version history</Link>
           <p>
@@ -284,23 +313,38 @@ export function EntryReviewDialog({
         </>
       }
       closeLabel={organized ? "Close item editor" : "Close Inbox review"}
-      busy={isPending}
+      busy={isPending || trashPending}
       size="wide"
       footer={
         <div className={entryReviewListStyles.reviewActions}>
-          <Button
-            variant="secondary"
-            disabled={isPending}
-            onClick={onClose}
-            type="button"
-          >
-            Cancel
-          </Button>
-          <div>
+          <div className={entryReviewListStyles.reviewSecondaryActions}>
+            {organized || !onTrash ? (
+              <Button
+                variant="secondary"
+                disabled={isPending || trashPending}
+                onClick={onClose}
+                type="button"
+              >
+                Cancel
+              </Button>
+            ) : null}
+            {!organized && onTrash ? (
+              <Button
+                variant="ghost"
+                disabled={isPending || trashPending}
+                onClick={onTrash}
+                type="button"
+              >
+                <Icon name="trash" size={16} />
+                Move to Trash
+              </Button>
+            ) : null}
+          </div>
+          <div className={entryReviewListStyles.reviewSaveActions}>
             <Button
               form="entry-review-list-form"
-              variant="primary"
-              disabled={isPending}
+              variant={organized ? "primary" : "secondary"}
+              disabled={isPending || trashPending}
               type="submit"
             >
               Save changes
@@ -308,7 +352,7 @@ export function EntryReviewDialog({
             {!organized && (
               <Button
                 variant="primary"
-                disabled={isPending}
+                disabled={isPending || trashPending}
                 onClick={() => void submitReview("done")}
                 type="button"
               >
@@ -326,62 +370,15 @@ export function EntryReviewDialog({
         className={entryFormStyles.reviewForm}
         onSubmit={handleSubmit}
       >
-        {!organized && (
-          <EntryAISuggestionsPanel
-            entryID={entry.id}
-            revision={entry.revision}
-            disabled={isPending}
-            onApply={(key, value) => {
-              if (key === "dateText" && typeof value === "string")
-                setOccurrence((current) => ({
-                  ...current,
-                  precision: "approximate",
-                  label: value,
-                  start: "",
-                  end: "",
-                }));
-              if (key === "title" && typeof value === "string") setTitle(value);
-              if (
-                key === "classification" &&
-                entry.itemKind === "capture" &&
-                value &&
-                typeof value === "object" &&
-                "itemKind" in value &&
-                "itemSubtype" in value
-              ) {
-                setItemKind(value.itemKind);
-                setItemSubtype(value.itemSubtype);
-              }
-              if (key === "collections" && Array.isArray(value))
-                setCollectionNames((current) =>
-                  mergeAISuggestionNames(current, value, 20),
-                );
-              if (key === "tags" && Array.isArray(value))
-                setTagNames((current) =>
-                  mergeAISuggestionNames(current, value, 50),
-                );
-            }}
-          />
-        )}
         <label>
-          <span>
-            Title
-            {itemKind === "event" && itemSubtype === "first_time" ? (
-              <span aria-hidden="true"> *</span>
-            ) : null}
-          </span>
+          <span>Title</span>
           <input
             aria-label="Title"
             autoFocus
             disabled={isPending}
             maxLength={entryTitleLimit}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder={
-              itemKind === "event" && itemSubtype === "first_time"
-                ? "Required for a First Time"
-                : "Add a title"
-            }
-            required={itemKind === "event" && itemSubtype === "first_time"}
+            placeholder="Add a title"
             value={title}
           />
         </label>
@@ -403,81 +400,6 @@ export function EntryReviewDialog({
           />
         </div>
 
-        <section
-          aria-labelledby="classification-heading"
-          className={entryReviewListStyles.classificationPanel}
-        >
-          <div className={entryReviewListStyles.classificationHeading}>
-            <strong id="classification-heading">
-              {entry.itemKind === "capture" ? "Organize as" : "Identity"}
-            </strong>
-            <span>
-              {entry.itemKind === "capture"
-                ? "Choose one durable home in your Life Wiki."
-                : "Kind stays fixed; only a compatible type can change."}
-            </span>
-          </div>
-          <div className={entryReviewListStyles.reviewFieldRow}>
-            <label>
-              <span>Kind</span>
-              <select
-                disabled={isPending || entry.itemKind !== "capture"}
-                onChange={(event) => {
-                  const nextKind = event.target.value as ReviewableWikiItemKind;
-                  setItemKind(nextKind);
-                  setItemSubtype(
-                    reviewablePresetsForKind(nextKind)[0]?.subtype ?? "note",
-                  );
-                }}
-                value={itemKind}
-              >
-                <option value="writing">Writing</option>
-                <option value="event">Event</option>
-                <option value="story">Story</option>
-              </select>
-            </label>
-            <label>
-              <span>Type</span>
-              <select
-                disabled={isPending}
-                onChange={(event) => setItemSubtype(event.target.value)}
-                value={itemSubtype}
-              >
-                {reviewablePresetsForKind(itemKind).map((preset) => (
-                  <option key={preset.subtype} value={preset.subtype}>
-                    {preset.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          {entry.itemKind === "capture" ? (
-            <div className={entryReviewListStyles.specializedHandoffs}>
-              <span>Or create a structured record</span>
-              <ButtonLink size="small" href={`/homes?source=${entry.id}`}>
-                <Icon name="home" size={15} />
-                Home
-              </ButtonLink>
-              <ButtonLink size="small" href={`/vehicles?source=${entry.id}`}>
-                <Icon name="car" size={15} />
-                Vehicle
-              </ButtonLink>
-              <ButtonLink size="small" href={`/goals?source=${entry.id}`}>
-                <Icon name="target" size={15} />
-                Goal
-              </ButtonLink>
-            </div>
-          ) : null}
-        </section>
-        <EntryPhotoDates
-          place={photoPlace}
-          onPlaceChange={setPhotoPlace}
-          entryId={entry.id}
-          disabled={isPending}
-          onUseDate={(date) =>
-            setOccurrence((current) => photoCalendarDateDraft(date, current))
-          }
-        />
         <OccurrenceEditor
           value={occurrence}
           onChange={setOccurrence}
@@ -508,6 +430,16 @@ export function EntryReviewDialog({
           input={tagInput}
           onInputChange={setTagInput}
           options={tagOptions}
+        />
+
+        <EntryPhotoDates
+          place={photoPlace}
+          onPlaceChange={setPhotoPlace}
+          entryId={entry.id}
+          disabled={isPending}
+          onUseDate={(date) =>
+            setOccurrence((current) => photoCalendarDateDraft(date, current))
+          }
         />
 
         {result ? (
