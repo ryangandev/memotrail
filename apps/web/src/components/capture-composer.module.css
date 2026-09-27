@@ -19,6 +19,30 @@
   box-shadow: none;
 }
 
+.embeddedCaptureCard {
+  container-type: inline-size;
+  margin-top: 0;
+}
+
+@container (max-width: 440px) {
+  .embeddedCaptureCard .captureActions {
+    flex-wrap: wrap;
+    gap: var(--mt-space-2);
+  }
+
+  .embeddedCaptureCard .quietButton {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+    font-size: 0;
+  }
+
+  .embeddedCaptureCard .captureStatus,
+  .embeddedCaptureCard .captureError {
+    max-width: 160px;
+  }
+}
+
 .dialogCaptureCard .captureIntro {
   min-height: 0;
 }
@@ -284,6 +308,10 @@
     --capture-inline-padding: var(--mt-space-5);
 
     margin-top: var(--mt-space-6);
+  }
+
+  .embeddedCaptureCard {
+    margin-top: 0;
   }
 
   .dialogCaptureCard {

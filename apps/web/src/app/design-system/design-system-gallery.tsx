@@ -21,6 +21,7 @@ import { RichTextEditor } from "@/components/rich-text-editor";
 import { SearchField } from "@/components/search-field";
 import { SelectField } from "@/components/select-field";
 import { TextField } from "@/components/text-field";
+import { TagChip } from "@/components/tag-chip";
 import { notify } from "@/components/app-toast";
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import type { EntryRichText } from "@/lib/data/rich-text";
@@ -497,6 +498,17 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
               text="This editor is disabled."
               variant="form"
             />
+          </div>
+        </Specimen>
+
+        <Specimen
+          title="TagChip"
+          api="name · noninteractive · truncates to available width"
+        >
+          <div className={styles.tagChipExamples}>
+            <TagChip name="learning" />
+            <TagChip name="旅行" />
+            <TagChip name="A long tag name that stays within the available width" />
           </div>
         </Specimen>
 

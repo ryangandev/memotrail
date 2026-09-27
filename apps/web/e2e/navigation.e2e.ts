@@ -224,7 +224,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
         return [style.marginTop, style.marginBottom];
       }),
     );
-    expect(dividerMargins[2]).toEqual(dividerMargins[0]);
+    expect(dividerMargins.at(-1)).toEqual(dividerMargins[0]);
     await shell.evaluate((element) => {
       element.setAttribute("data-shell-instance", "kept");
     });
@@ -285,8 +285,8 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
 
     expect(
       await shell.evaluate((element) =>
-        getComputedStyle(element).transitionDuration
-          .split(", ")
+        getComputedStyle(element)
+          .transitionDuration.split(", ")
           .some((duration) => Number.parseFloat(duration) > 0),
       ),
     ).toBe(true);
@@ -300,7 +300,8 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       homeLink.boundingBox(),
     ]);
     expect(
-      (collapsedRailBox?.x ?? 0) + (collapsedRailBox?.width ?? 0) -
+      (collapsedRailBox?.x ?? 0) +
+        (collapsedRailBox?.width ?? 0) -
         ((activeHomeBox?.x ?? 0) + (activeHomeBox?.width ?? 0)),
     ).toBeGreaterThanOrEqual(7);
     await expect(homeCaptureHeading).toBeVisible();
@@ -319,7 +320,8 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     ]);
     expect(
       Math.abs(
-        (railBox?.x ?? 0) + (railBox?.width ?? 0) / 2 -
+        (railBox?.x ?? 0) +
+          (railBox?.width ?? 0) / 2 -
           ((toggleBox?.x ?? 0) + (toggleBox?.width ?? 0) / 2),
       ),
     ).toBeLessThanOrEqual(1);

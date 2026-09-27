@@ -128,14 +128,15 @@ The Homes, Vehicles, and First Times track shortcuts open their specialized edit
 Opening an existing Home, Vehicle, or First Time from Timeline keeps the user on Timeline and uses the same specialized editor as its Records page.
 Unanchored Age, Approximate, and Unknown moments remain visible without a fabricated calendar position.
 
-Home is ordered around:
+Web Home is ordered around:
 
-1. Search.
-2. Quick Capture.
-3. A compact preview of captures ready to organize.
-4. Current life stages.
-5. A quiet resurfaced memory.
-6. Recent Entries.
+1. A personal greeting and compact archive counts linking to their destinations.
+2. Quick Capture alongside up to three captures ready to organize.
+3. A quiet resurfaced memory alongside current life chapters.
+4. Full-width Recent Entries with single-line titles and summaries, Collection prefixes, and optional tags.
+
+Narrow screens stack these sections in the same reading order.
+Search stays available in the shared workspace header.
 
 Resurfacing uses organized, active, dated Entries only.
 It prefers the nearest prior On This Day match and otherwise uses a stable daily rotation of older Entries.
