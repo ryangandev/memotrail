@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { CaptureComposer } from "@/components/capture-composer";
 import { Icon, type IconName } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
+import { PageHeader } from "@/components/page-header";
 import { ProgressiveImage } from "@/components/progressive-image";
 import type {
   HomeEntry,
@@ -36,20 +37,20 @@ export function HomeIdea({
     (snapshot?.profileDisplayName || viewer.name).trim().split(/\s+/)[0] ||
     "there";
   const greeting = (
-    <header className={styles.greeting}>
-      <p className={styles.eyebrow}>
-        {new Intl.DateTimeFormat("en-US", {
-          weekday: "long",
-          month: "long",
-          day: "numeric",
-          timeZone: timezone,
-        }).format(now)}
-      </p>
-      <h1>
-        {greetingInTimezone(now, timezone)}, {name}.
-      </h1>
-      <p>A calm view of what is active, recent, and waiting for you.</p>
-    </header>
+    <PageHeader
+      eyebrow={new Intl.DateTimeFormat("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        timeZone: timezone,
+      }).format(now)}
+      title={
+        <>
+          {greetingInTimezone(now, timezone)}, {name}.
+        </>
+      }
+      description="A calm view of what is active, recent, and waiting for you."
+    />
   );
   const capture = (
     <CaptureComposer
