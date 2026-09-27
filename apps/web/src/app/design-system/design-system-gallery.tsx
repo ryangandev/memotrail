@@ -27,6 +27,7 @@ import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import type { EntryRichText } from "@/lib/data/rich-text";
 import styles from "./page.module.css";
 import { SharedPrimitivesGallery } from "./shared-primitives-gallery";
+import { BrandMotionStudies } from "./brand-motion-studies";
 
 type TokenSet = {
   meta: { name: string; version: string };
@@ -294,13 +295,20 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
         index="02"
         title="Identity and icons"
       >
-        <div className={styles.identityRow}>
+        <div className={styles.identityRow} data-brand-identity>
           <BrandMark className={styles.brandMark} />
           <div>
             <strong>BrandMark</strong>
             <p>Inline SVG used by authentication and workspace navigation.</p>
           </div>
         </div>
+        <Specimen
+          description="Three interactive directions for the sidebar logo. Toggle a preview or compare all three together."
+          id="brand-motion"
+          title="Brand motion studies"
+        >
+          <BrandMotionStudies />
+        </Specimen>
         <div className={styles.iconGrid}>
           {iconNames.map((name) => (
             <div key={name}>
