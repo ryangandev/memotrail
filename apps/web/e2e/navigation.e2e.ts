@@ -217,7 +217,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       shell.getByRole("note", { name: "Private cloud sync" }),
     ).toHaveCount(0);
     const sidebarDividers = shell.getByRole("separator");
-    await expect(sidebarDividers).toHaveCount(4);
+    await expect(sidebarDividers).toHaveCount(3);
     const dividerMargins = await sidebarDividers.evaluateAll((elements) =>
       elements.map((element) => {
         const style = getComputedStyle(element);

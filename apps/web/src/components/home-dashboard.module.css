@@ -15,7 +15,7 @@
   text-transform: uppercase;
 }
 
-.ribbon {
+.dashboard {
   display: flex;
   container-type: inline-size;
   min-width: 0;
@@ -265,15 +265,9 @@
   background: var(--mt-color-surface);
 }
 
-.memoryCard.withPhoto {
-  display: grid;
-  grid-template-columns: minmax(100px, 0.7fr) minmax(0, 1fr);
-}
-
 .memoryPhoto {
   width: 100%;
-  min-height: 220px;
-  height: 100%;
+  height: 230px;
 }
 
 .memoryCard article {
@@ -297,31 +291,7 @@
 
 .empty {
   display: flex;
-  align-items: flex-start;
-  gap: var(--mt-space-3);
-  padding: var(--mt-space-5);
-  border: 1px dashed var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-ink-muted);
-}
-
-.empty > svg {
-  flex: none;
-  margin-top: 2px;
-  color: var(--mt-color-accent);
-}
-
-.empty h3 {
-  margin-bottom: var(--mt-space-1);
-  color: var(--mt-color-ink);
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-body-large);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.empty p {
-  font-size: var(--mt-font-size-caption);
-  line-height: var(--mt-line-height-body);
+  min-width: 0;
 }
 
 .metrics {
@@ -386,7 +356,7 @@
   }
 }
 
-.ribbonColumns {
+.columns {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   grid-template-areas: "capture inbox" "memories chapters" "recent recent";
@@ -440,29 +410,22 @@
   overflow-y: auto;
 }
 
-.ribbon .memoryCard.withPhoto {
-  display: block;
-}
-.ribbon .memoryPhoto {
-  height: 230px;
-}
 .loadError {
   padding: var(--mt-space-4);
-  margin-bottom: var(--mt-space-6);
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-warm);
   background: var(--mt-color-warm-subtle);
 }
 
 @media (max-width: 1100px) {
-  .ribbonColumns {
+  .columns {
     grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
     gap: var(--mt-space-5);
   }
 }
 
 @media (max-width: 900px) {
-  .ribbonColumns {
+  .columns {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: "capture" "inbox" "memories" "chapters" "recent";
   }
@@ -476,13 +439,6 @@
 }
 
 @media (max-width: 720px) {
-  .memoryCard.withPhoto {
-    display: block;
-  }
-  .memoryPhoto {
-    height: 180px;
-    min-height: 0;
-  }
   .stat {
     padding: var(--mt-space-3);
   }

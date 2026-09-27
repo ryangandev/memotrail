@@ -12,8 +12,8 @@ The Web Map and Location previews now follow light, dark, and System appearance;
 The Map also offers filtered shortcuts to the user's most recorded cities when records span more than one city.
 The desktop sidebar has a compact icon rail, panel control, and animated width change; its browser preference persists across reloads.
 Inbox review now hides AI suggestions and places photos after tags; the Library browser excludes unreviewed captures until Save to Library.
-Data Ribbon (18) is the remaining development-only Home preview, using the signed-in user's Home data and capture flow.
-The other four integrated previews are removed; Data Ribbon will be refined before migration, and the existing Home remains the default.
+The accepted Data Ribbon layout now replaces Web Home locally, using the signed-in user's data and the shared capture, page, image, empty-state, and tag components.
+The development preview routes and all 20 static Home mockups have been removed; this Home migration is not yet pushed or deployed.
 Native iOS still uses the older Kind and subtype contract and needs a separate update before its write flows are compatible.
 The merged Web release still needs Production deployment verification and browser acceptance; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 

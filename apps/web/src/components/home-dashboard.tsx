@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { EmptyState } from "@/components/empty-state";
 import { CaptureComposer } from "@/components/capture-composer";
 import { Icon, type IconName } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
@@ -22,16 +23,9 @@ import {
   type Occurrence,
 } from "@/lib/data/occurrence";
 import { wikiEntryHref, wikiItemIdentityLabel } from "@/lib/data/wiki-item";
-import { type HomeIdeaSlug } from "@/lib/home-ideas";
-import styles from "./home-idea.module.css";
+import styles from "./home-dashboard.module.css";
 
-export function HomeIdea({
-  concept,
-  workspace,
-}: {
-  concept: HomeIdeaSlug;
-  workspace: HomeWorkspace;
-}) {
+export function HomeDashboard({ workspace }: { workspace: HomeWorkspace }) {
   const { snapshot, viewer, timezone } = workspace;
   const now = new Date();
   const name =
@@ -54,11 +48,7 @@ export function HomeIdea({
     />
   );
   const capture = (
-    <CaptureComposer
-      embedded
-      ownerId={viewer.id}
-      idPrefix="home-idea-capture"
-    />
+    <CaptureComposer embedded ownerId={viewer.id} idPrefix="capture" />
   );
   const inbox = <Inbox workspace={workspace} />;
   const chapters = snapshot ? (
@@ -69,26 +59,31 @@ export function HomeIdea({
   ) : null;
   const recent = snapshot ? <Recent entries={snapshot.recentEntries} /> : null;
   const content = (
-    <div className={styles.ribbon}>
+    <div className={styles.dashboard}>
       {greeting}
       {snapshot ? <Stats snapshot={snapshot} /> : null}
-      <div className={styles.ribbonColumns}>
-        <div className={styles.capturePanel}>{capture}</div>
-        <div className={styles.inboxPanel}>{inbox}</div>
-        <div className={styles.memoryColumn}>{memory}</div>
-        <div className={styles.chaptersColumn}>{chapters}</div>
-        <div className={styles.recentRow}>{recent}</div>
-      </div>
+      {workspace.loadError || !snapshot ? (
+        <>
+          <div className={styles.loadError} role="alert">
+            <strong>Home is taking a moment</strong>
+            <p>{workspace.loadError || "Refresh to try again."}</p>
+          </div>
+          {capture}
+        </>
+      ) : (
+        <div className={styles.columns}>
+          <div className={styles.capturePanel}>{capture}</div>
+          <div className={styles.inboxPanel}>{inbox}</div>
+          <div className={styles.memoryColumn}>{memory}</div>
+          <div className={styles.chaptersColumn}>{chapters}</div>
+          <div className={styles.recentRow}>{recent}</div>
+        </div>
+      )}
     </div>
   );
 
   return (
-    <PageFrame variant="wide" className={styles.page} data-home-idea={concept}>
-      {workspace.loadError ? (
-        <p className={styles.loadError} role="alert">
-          {workspace.loadError}
-        </p>
-      ) : null}
+    <PageFrame variant="wide" className={styles.page}>
       {content}
     </PageFrame>
   );
@@ -371,11 +366,12 @@ function Empty({
 }) {
   return (
     <div className={styles.empty}>
-      <Icon name={icon} size={20} />
-      <div>
-        <h3>{title}</h3>
-        <p>{text}</p>
-      </div>
+      <EmptyState
+        headingLevel={3}
+        icon={<Icon name={icon} size={20} />}
+        title={title}
+        description={text}
+      />
     </div>
   );
 }

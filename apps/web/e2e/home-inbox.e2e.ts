@@ -101,7 +101,7 @@ test("Home previews the Inbox while Inbox remains a focused organization workspa
     });
     await expect(inboxShortcut).toBeVisible();
     await expect(inboxShortcut).toContainText("4");
-    await expect(ready).toContainText("4 captures");
+    await expect(ready).toContainText("Inbox · 4");
     await expect(ready.getByRole("link", { name: /Organize/ })).toHaveCount(3);
     await expect(
       ready.getByText("Newest thought", { exact: true }),
@@ -114,7 +114,7 @@ test("Home previews the Inbox while Inbox remains a focused organization workspa
     ).toHaveCount(0);
     await expect(
       page.getByRole("link", {
-        name: /0 Entries kept 0 First Times/,
+        name: "0 Entries kept",
       }),
     ).toBeVisible();
     await expect(

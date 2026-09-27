@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 
-test("Home ideas use the signed-in archive and support capture, navigation, and narrow screens", async ({
+test("Home uses the signed-in archive and support capture, navigation, and narrow screens", async ({
   context,
   page,
 }) => {
@@ -20,16 +20,15 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
     auth: { persistSession: false },
   });
   const owners: string[] = [];
-  const concepts = [["data-ribbon", "18 Data Ribbon"]];
   try {
-    await page.goto("/home-ideas/data-ribbon");
+    await page.goto("/");
     await expect(
       page.getByRole("button", { name: "Continue with Google" }),
     ).toBeVisible();
     await expect(
       page.getByRole("form", { name: "Quick capture", exact: true }),
     ).toHaveCount(0);
-    const email = `home-ideas-${randomUUID()}@memotrail.local`;
+    const email = `home-dashboard-${randomUUID()}@memotrail.local`;
     const created = await admin.auth.admin.createUser({
       email,
       email_confirm: true,
@@ -38,7 +37,7 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
     const owner = created.data.user!.id;
     owners.push(owner);
     const outsider = await admin.auth.admin.createUser({
-      email: `home-ideas-other-${randomUUID()}@memotrail.local`,
+      email: `home-dashboard-other-${randomUUID()}@memotrail.local`,
       email_confirm: true,
     });
     expect(outsider.error).toBeNull();
@@ -125,15 +124,15 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
       (entry) => entry.owner_id === owner && !entry.title,
     )!.id;
 
-    for (const [slug, label] of concepts) {
+    {
       await page.setViewportSize({ width: 1440, height: 1000 });
-      await page.goto(`/home-ideas/${slug}`);
+      await page.goto("/");
       const nav = page.getByRole("navigation", {
         name: "Primary navigation",
         exact: true,
       });
       await expect(
-        nav.getByRole("link", { name: label, exact: true }),
+        nav.getByRole("link", { name: "Home", exact: true }),
       ).toHaveAttribute("aria-current", "page");
       await expect(page.getByRole("heading", { level: 1 })).toContainText(
         "Preview",
@@ -152,7 +151,7 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
         page.getByRole("textbox", { name: "Entry text", exact: true }),
       ).toBeEnabled();
       await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0);
-      await expect(nav.locator('a[href^="/home-ideas/"]')).toHaveCount(1);
+      await expect(nav.locator('a[href^="/home-ideas/"]')).toHaveCount(0);
       await expect(
         page.getByRole("navigation", { name: "Home design previews" }),
       ).toHaveCount(0);
@@ -239,7 +238,7 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
       }
       await page.setViewportSize({ width: 1440, height: 1000 });
       await page.screenshot({
-        path: `/tmp/memotrail-home-ideas-${slug}-desktop.png`,
+        path: `/tmp/memotrail-home-dashboard-desktop.png`,
         animations: "disabled",
       });
       for (const width of [834, 390]) {
@@ -269,7 +268,7 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
         expect(box!.x + box!.width).toBeLessThanOrEqual(width);
         if (width === 390)
           await page.screenshot({
-            path: `/tmp/memotrail-home-ideas-${slug}-mobile.png`,
+            path: `/tmp/memotrail-home-dashboard-mobile.png`,
             animations: "disabled",
           });
       }
@@ -278,12 +277,12 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page
       .getByRole("navigation", { name: "Primary navigation", exact: true })
-      .getByRole("link", { name: "18 Data Ribbon", exact: true })
+      .getByRole("link", { name: "Home", exact: true })
       .click();
-    await expect(page).toHaveURL("/home-ideas/data-ribbon");
+    await expect(page).toHaveURL("/");
     await page
       .getByRole("textbox", { name: "Entry text", exact: true })
-      .fill("Captured from Home ideas");
+      .fill("Captured from Home");
     await page
       .getByRole("button", { name: "Save to Inbox", exact: true })
       .click();
@@ -295,15 +294,15 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
     ).toBeVisible();
     await expect(
       page.getByRole("region", { name: "Ready to organize", exact: true }),
-    ).toContainText("Captured from Home ideas");
+    ).toContainText("Captured from Home");
     await expect(
       page.getByRole("region", { name: "Recent Entries", exact: true }),
-    ).not.toContainText("Captured from Home ideas");
+    ).not.toContainText("Captured from Home");
     const captured = await client
       .from("entries")
       .select("inbox_status")
       .eq("owner_id", owner)
-      .eq("body", "Captured from Home ideas")
+      .eq("body", "Captured from Home")
       .single();
     expect(captured.error).toBeNull();
     expect(captured.data!.inbox_status).toBe("unreviewed");
@@ -318,7 +317,7 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
     await expect(
       page.getByRole("dialog", { name: "Review Entry" }),
     ).toBeVisible();
-    await page.goto("/home-ideas/data-ribbon");
+    await page.goto("/");
     await page
       .getByRole("region", { name: "Recent Entries", exact: true })
       .getByRole("link")
@@ -329,6 +328,7 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
       page.getByRole("heading", { name: "A kept memory", exact: true }),
     ).toBeVisible();
     for (const removed of [
+      "data-ribbon",
       "split-focus",
       "ledger-column",
       "context-rail",
