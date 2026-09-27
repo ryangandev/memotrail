@@ -1,7 +1,7 @@
 import { PageHeader } from "@/components/page-header";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Icon, type IconName } from "@/components/icon";
+import { Icon } from "@/components/icon";
 import { LibrarySearch } from "@/components/library-search";
 import { PageFrame } from "@/components/page-frame";
 import { getSearchWorkspace } from "@/lib/data/search";
@@ -19,76 +19,6 @@ import {
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
-
-type LibraryDestination = {
-  href: string;
-  icon: IconName;
-  title: string;
-};
-
-const focusedDestinations: LibraryDestination[] = [
-  {
-    href: "/people",
-    icon: "person" as const,
-    title: "People",
-  },
-  {
-    href: "/homes",
-    icon: "home" as const,
-    title: "Homes",
-  },
-  {
-    href: "/vehicles",
-    icon: "car" as const,
-    title: "Vehicles",
-  },
-  {
-    href: "/map",
-    icon: "map" as const,
-    title: "Map",
-  },
-  {
-    href: "/first-times",
-    icon: "star" as const,
-    title: "First Times",
-  },
-  {
-    href: "/goals",
-    icon: "target" as const,
-    title: "Goals",
-  },
-];
-
-const organizationDestinations: LibraryDestination[] = [
-  {
-    href: "/collections",
-    icon: "archive" as const,
-    title: "Collections",
-  },
-  {
-    href: "/tags",
-    icon: "tag" as const,
-    title: "Tags",
-  },
-];
-
-const archiveDestinations: LibraryDestination[] = [
-  {
-    href: "/history",
-    icon: "clock" as const,
-    title: "Version history",
-  },
-  {
-    href: "/trash",
-    icon: "trash" as const,
-    title: "Trash",
-  },
-  {
-    href: "/settings/export",
-    icon: "archive" as const,
-    title: "Export archive",
-  },
-];
 
 export default async function LibraryPage({
   searchParams,
@@ -140,23 +70,13 @@ export default async function LibraryPage({
         workspace={searchWorkspace}
       />
 
-      <details className={styles.libraryMore}>
-        <summary>More views and tools</summary>
-        <div className={styles.libraryMoreGroups}>
-          <DestinationLinks
-            destinations={focusedDestinations}
-            label="Focused views"
-          />
-          <DestinationLinks
-            destinations={organizationDestinations}
-            label="Organize"
-          />
-          <DestinationLinks
-            destinations={archiveDestinations}
-            label="Archive tools"
-          />
-        </div>
-      </details>
+      <footer className={styles.libraryFooter}>
+        <Link href="/history">
+          <Icon name="clock" size={16} />
+          <span>Version history</span>
+          <Icon name="chevron" size={14} />
+        </Link>
+      </footer>
     </PageFrame>
   );
 }
@@ -227,26 +147,6 @@ function LibraryBrowse({
         </nav>
       ) : null}
     </section>
-  );
-}
-
-function DestinationLinks({
-  destinations,
-  label,
-}: {
-  destinations: LibraryDestination[];
-  label: string;
-}) {
-  return (
-    <nav aria-label={label} className={styles.destinationLinks}>
-      <h2>{label}</h2>
-      {destinations.map((destination) => (
-        <Link href={destination.href} key={destination.href}>
-          <Icon name={destination.icon} size={17} />
-          <span>{destination.title}</span>
-        </Link>
-      ))}
-    </nav>
   );
 }
 

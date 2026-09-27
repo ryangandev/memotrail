@@ -89,6 +89,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
   Its default browser presents organized Entries, Entities, and Goals as paginated rows and opens focused records in their own views.
   Unreviewed captures remain in Inbox and do not appear in the default Library browser or its item count until `Save to Library`.
   Library search also finds Inbox captures, labels them clearly, and supports record, date, Collection, and tag filters with match context.
+  Library avoids duplicating the sidebar's focused and organizing destinations; the global Version history index has a link below Library results.
 - Opening a general Wiki Item shows its current content and primary actions first.
   Version history is an explicit secondary action, while typed Entities continue to open their focused editors.
 - Current Wiki Item detail supports moving the item to Trash, where it remains restorable.

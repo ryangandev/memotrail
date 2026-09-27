@@ -148,21 +148,30 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await page.getByText("Filters", { exact: true }).click();
     const showFilter = page.getByRole("combobox", { name: "Record" });
     await expect(showFilter).toHaveValue("");
+    for (const name of [
+      "People",
+      "Homes",
+      "Vehicles",
+      "First Times",
+      "Goals",
+    ]) {
+      await expect(showFilter.getByRole("option", { name })).toHaveCount(1);
+    }
+    await expect(
+      page.getByRole("combobox", { name: "Collection" }),
+    ).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "Tag" })).toBeVisible();
     await showFilter.selectOption("entity");
     await page.getByRole("button", { name: "Search", exact: true }).click();
     await expect(page).toHaveURL(/type=entity/);
     await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
     await page.goto("/library");
-    await page.getByText("More views and tools", { exact: true }).click();
     await expect(
-      page.getByRole("navigation", { name: "Focused views" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: "Places", exact: true }),
+      page.getByText("More views and tools", { exact: true }),
     ).toHaveCount(0);
     await expect(
-      page.getByRole("link", { name: /Version history/ }),
-    ).toBeVisible();
+      page.getByRole("link", { name: "Version history", exact: true }),
+    ).toHaveAttribute("href", "/history");
     const reflectionLink = page.getByRole("link", {
       name: /Entry.*Morning reflection/,
     });
