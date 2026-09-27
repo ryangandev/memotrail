@@ -20,15 +20,9 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
     auth: { persistSession: false },
   });
   const owners: string[] = [];
-  const concepts = [
-    ["split-focus", "03 Split Focus"],
-    ["ledger-column", "01 Ledger Column"],
-    ["context-rail", "10 Context Rail"],
-    ["command-center", "07 Command Center"],
-    ["data-ribbon", "18 Data Ribbon"],
-  ];
+  const concepts = [["data-ribbon", "18 Data Ribbon"]];
   try {
-    await page.goto("/home-ideas/split-focus");
+    await page.goto("/home-ideas/data-ribbon");
     await expect(
       page.getByRole("button", { name: "Continue with Google" }),
     ).toBeVisible();
@@ -181,9 +175,9 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page
       .getByRole("navigation", { name: "Primary navigation", exact: true })
-      .getByRole("link", { name: "03 Split Focus", exact: true })
+      .getByRole("link", { name: "18 Data Ribbon", exact: true })
       .click();
-    await expect(page).toHaveURL("/home-ideas/split-focus");
+    await expect(page).toHaveURL("/home-ideas/data-ribbon");
     await page
       .getByRole("textbox", { name: "Entry text", exact: true })
       .fill("Captured from Home ideas");
@@ -221,7 +215,7 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
     await expect(
       page.getByRole("dialog", { name: "Review Entry" }),
     ).toBeVisible();
-    await page.goto("/home-ideas/ledger-column");
+    await page.goto("/home-ideas/data-ribbon");
     await page
       .getByRole("region", { name: "Recent Entries", exact: true })
       .getByRole("link")
@@ -231,16 +225,18 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
     await expect(
       page.getByRole("heading", { name: "A kept memory", exact: true }),
     ).toBeVisible();
-    await page.goto("/home-ideas/command-center");
-    const search = page.getByRole("search", { name: "Search your archive" });
-    await search.getByRole("searchbox").fill("afternoon");
-    await search.getByRole("button", { name: "Search", exact: true }).click();
-    await expect(page).toHaveURL(/\/search\?q=afternoon/);
-    await expect(
-      page.getByRole("link").filter({ hasText: "A kept memory" }),
-    ).toBeVisible();
-    await page.goto("/home-ideas/does-not-exist");
-    await expect(page.getByText("This page could not be found.")).toBeVisible();
+    for (const removed of [
+      "split-focus",
+      "ledger-column",
+      "context-rail",
+      "command-center",
+      "does-not-exist",
+    ]) {
+      await page.goto(`/home-ideas/${removed}`);
+      await expect(
+        page.getByText("This page could not be found."),
+      ).toBeVisible();
+    }
   } finally {
     for (const owner of owners) await admin.auth.admin.deleteUser(owner);
   }

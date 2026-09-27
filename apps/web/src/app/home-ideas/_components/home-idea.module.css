@@ -18,8 +18,7 @@
   color: var(--mt-color-ink-muted);
 }
 
-.switcher a,
-.quickLinks a {
+.switcher a {
   display: inline-flex;
   align-items: center;
   gap: var(--mt-space-2);
@@ -74,7 +73,6 @@
 }
 
 .stack,
-.command,
 .ribbon {
   display: flex;
   min-width: 0;
@@ -82,31 +80,7 @@
   gap: var(--mt-space-8);
 }
 
-.split {
-  display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-  align-items: start;
-  gap: var(--mt-space-8);
-}
-
-.captureRail {
-  position: sticky;
-  top: 89px;
-}
-
-.captureRail .greeting h1 {
-  font-size: var(--mt-font-size-title);
-}
-
-.ledger {
-  display: flex;
-  max-width: 720px;
-  flex-direction: column;
-  gap: var(--mt-space-10);
-  margin: 0 auto;
-}
-
-.ledger > .section {
+.section {
   padding-top: var(--mt-space-8);
   border-top: 1px solid var(--mt-color-border);
 }
@@ -291,12 +265,6 @@
   font-size: var(--mt-font-size-caption);
 }
 
-.ledger .chapter {
-  padding-inline: 0;
-  border: 0;
-  background: transparent;
-}
-
 .recent {
   display: grid;
 }
@@ -442,103 +410,6 @@
   line-height: var(--mt-line-height-body);
 }
 
-.context {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.48fr);
-  grid-template-areas: "greeting stats" "capture inbox" "recent chapters" "recent memory";
-  align-items: start;
-  gap: var(--mt-space-8);
-}
-
-.context > div {
-  min-width: 0;
-}
-.contextGreeting {
-  grid-area: greeting;
-}
-.contextCapture {
-  grid-area: capture;
-}
-.contextRecent {
-  grid-area: recent;
-}
-.contextStats {
-  grid-area: stats;
-}
-.contextInbox {
-  grid-area: inbox;
-}
-.contextChapters {
-  grid-area: chapters;
-}
-.contextMemory {
-  grid-area: memory;
-}
-.contextStats .stats {
-  grid-template-columns: 1fr;
-}
-.contextStats .stat {
-  padding: var(--mt-space-3) var(--mt-space-4);
-}
-.contextStats .stat strong {
-  font-size: var(--mt-font-size-title-small);
-}
-.contextStats .stat small {
-  display: none;
-}
-.context .memoryCard.withPhoto {
-  display: block;
-}
-.context .memoryPhoto {
-  height: 150px;
-  min-height: 0;
-}
-.context .entryCard {
-  margin-bottom: var(--mt-space-4);
-  padding: var(--mt-space-5);
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface);
-}
-
-.commandHero {
-  max-width: 760px;
-  width: 100%;
-  align-self: center;
-  text-align: center;
-}
-
-.commandHero .search {
-  margin-top: var(--mt-space-8);
-  text-align: left;
-}
-.quickLinks {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: var(--mt-space-2);
-  margin-top: var(--mt-space-4);
-  font-size: var(--mt-font-size-caption);
-}
-.commandColumns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: start;
-  gap: var(--mt-space-6);
-}
-.panel {
-  padding: var(--mt-space-6);
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface);
-}
-.command .memoryCard.withPhoto {
-  display: block;
-}
-.command .memoryPhoto {
-  height: 220px;
-}
-
 .metrics {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -585,16 +456,6 @@
 }
 
 @media (max-width: 1100px) {
-  .split {
-    grid-template-columns: 1fr;
-  }
-  .captureRail {
-    position: static;
-  }
-  .context {
-    grid-template-columns: minmax(0, 1fr) 250px;
-    gap: var(--mt-space-5);
-  }
   .metrics .stat > svg {
     display: none;
   }
@@ -605,14 +466,6 @@
 }
 
 @media (max-width: 900px) {
-  .context {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "greeting" "capture" "inbox" "recent" "stats" "chapters" "memory";
-  }
-  .contextStats .stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .commandColumns,
   .ribbonColumns {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -659,9 +512,6 @@
   .ribbon .greeting {
     order: -1;
   }
-  .panel {
-    padding: var(--mt-space-4);
-  }
   .entryCard.withPhoto {
     grid-template-columns: minmax(0, 1fr) 64px;
     gap: var(--mt-space-3);
@@ -672,11 +522,5 @@
   }
   .entryCard h3 {
     font-size: var(--mt-font-size-body-large);
-  }
-}
-
-@media (max-height: 850px) {
-  .captureRail {
-    position: static;
   }
 }

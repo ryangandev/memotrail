@@ -1,11 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Button } from "@/components/button";
 import { CaptureComposer } from "@/components/capture-composer";
 import { Icon, type IconName } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import { ProgressiveImage } from "@/components/progressive-image";
-import { SearchField } from "@/components/search-field";
 import type {
   HomeEntry,
   HomeResurfacedMemory,
@@ -61,7 +59,6 @@ export function HomeIdea({
     />
   );
   const inbox = <Inbox workspace={workspace} />;
-  const stats = snapshot ? <Stats snapshot={snapshot} /> : null;
   const chapters = snapshot ? (
     <Chapters stages={snapshot.currentStages} />
   ) : null;
@@ -69,113 +66,23 @@ export function HomeIdea({
     <Memory memory={workspace.resurfacedMemory} />
   ) : null;
   const recent = snapshot ? <Recent entries={snapshot.recentEntries} /> : null;
-  let content: ReactNode;
-
-  switch (concept) {
-    case "split-focus":
-      content = (
-        <div className={styles.split}>
-          <div className={`${styles.stack} ${styles.captureRail}`}>
-            {greeting}
-            {capture}
-            <ArchiveSearch />
-            {inbox}
-          </div>
-          <div className={styles.stack}>
-            {stats}
-            {chapters}
-            {memory}
-            {recent}
-          </div>
-        </div>
-      );
-      break;
-    case "ledger-column":
-      content = (
-        <div className={styles.ledger}>
-          {greeting}
+  const content = (
+    <div className={styles.ribbon}>
+      {snapshot ? <Stats snapshot={snapshot} ribbon /> : null}
+      {greeting}
+      <div className={styles.ribbonColumns}>
+        <div className={styles.stack}>
           {capture}
           {inbox}
-          {stats}
-          {chapters}
-          {memory}
           {recent}
         </div>
-      );
-      break;
-    case "context-rail":
-      content = (
-        <div className={styles.context}>
-          <div className={styles.contextGreeting}>{greeting}</div>
-          <div className={styles.contextCapture}>{capture}</div>
-          <div className={styles.contextRecent}>{recent}</div>
-          <div className={styles.contextStats}>{stats}</div>
-          <div className={styles.contextInbox}>{inbox}</div>
-          <div className={styles.contextChapters}>{chapters}</div>
-          <div className={styles.contextMemory}>{memory}</div>
+        <div className={styles.stack}>
+          {memory}
+          {chapters}
         </div>
-      );
-      break;
-    case "command-center":
-      content = (
-        <div className={styles.command}>
-          <div className={styles.commandHero}>
-            {greeting}
-            <ArchiveSearch large />
-            <nav
-              className={styles.quickLinks}
-              aria-label="Explore your archive"
-            >
-              {(
-                [
-                  ["/timeline", "timeline", "Timeline"],
-                  ["/library", "archive", "Library"],
-                  ["/people", "person", "People"],
-                  ["/map", "map", "Map"],
-                  ["/first-times", "star", "First Times"],
-                ] as const
-              ).map(([href, icon, label]) => (
-                <Link href={href} key={href}>
-                  <Icon name={icon} size={16} />
-                  {label}
-                </Link>
-              ))}
-            </nav>
-          </div>
-          {capture}
-          <div className={styles.commandColumns}>
-            <div className={styles.panel}>{inbox}</div>
-            <div className={styles.panel}>{recent}</div>
-          </div>
-          <div className={styles.commandColumns}>
-            {memory}
-            <div className={styles.stack}>
-              {stats}
-              {chapters}
-            </div>
-          </div>
-        </div>
-      );
-      break;
-    case "data-ribbon":
-      content = (
-        <div className={styles.ribbon}>
-          {snapshot ? <Stats snapshot={snapshot} ribbon /> : null}
-          {greeting}
-          <div className={styles.ribbonColumns}>
-            <div className={styles.stack}>
-              {capture}
-              {inbox}
-              {recent}
-            </div>
-            <div className={styles.stack}>
-              {memory}
-              {chapters}
-            </div>
-          </div>
-        </div>
-      );
-  }
+      </div>
+    </div>
+  );
 
   return (
     <PageFrame variant="wide" className={styles.page} data-home-idea={concept}>
@@ -199,33 +106,6 @@ export function HomeIdea({
       ) : null}
       {content}
     </PageFrame>
-  );
-}
-
-function ArchiveSearch({ large = false }: { large?: boolean }) {
-  return (
-    <form
-      action="/search"
-      role="search"
-      aria-label="Search your archive"
-      className={styles.search}
-    >
-      <SearchField
-        label="Search your archive"
-        hideLabel
-        name="q"
-        placeholder="Search your trail…"
-        size={large ? "large" : "medium"}
-        maxLength={200}
-      />
-      <Button
-        type="submit"
-        variant="secondary"
-        size={large ? "medium" : "small"}
-      >
-        Search
-      </Button>
-    </form>
   );
 }
 
