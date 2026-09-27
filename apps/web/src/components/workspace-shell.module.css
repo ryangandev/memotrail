@@ -339,7 +339,7 @@
 
 .historyButton:hover:not(:disabled) {
   color: var(--mt-color-ink);
-  background: var(--mt-color-surface);
+  background: var(--mt-color-surface-subtle);
 }
 
 .historyButton:focus-visible {
