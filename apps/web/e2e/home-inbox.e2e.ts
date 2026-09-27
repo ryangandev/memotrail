@@ -182,9 +182,13 @@ test("Home previews the Inbox while Inbox remains a focused organization workspa
     await page.goto(`/inbox?entry=${newestID}`);
     const review = page.getByRole("dialog", { name: "Review Entry" });
     await expect(review.getByRole("textbox", { name: "Title" })).toBeVisible();
-    await expect(review.getByRole("complementary", { name: "AI suggestions" })).toHaveCount(0);
+    await expect(
+      review.getByRole("complementary", { name: "AI suggestions" }),
+    ).toHaveCount(0);
     const tags = review.locator('fieldset[data-kind="tag"]');
-    const photos = review.getByRole("region", { name: "Photo date suggestions" });
+    const photos = review.getByRole("region", {
+      name: "Photo date suggestions",
+    });
     await expect(tags).toBeVisible();
     await expect(photos).toBeVisible();
     expect(
@@ -192,7 +196,7 @@ test("Home previews the Inbox while Inbox remains a focused organization workspa
         (element, photoElement) =>
           Boolean(
             element.compareDocumentPosition(photoElement as Node) &
-              Node.DOCUMENT_POSITION_FOLLOWING,
+            Node.DOCUMENT_POSITION_FOLLOWING,
           ),
         await photos.elementHandle(),
       ),
@@ -208,11 +212,11 @@ test("Home previews the Inbox while Inbox remains a focused organization workspa
     ).toHaveCount(0);
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(review).toBeVisible();
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
-      ),
-    ).toBe(true);
+    await expect
+      .poll(() =>
+        page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+      )
+      .toBe(true);
     await page.screenshot({
       animations: "disabled",
       path: "/private/tmp/memotrail-inbox-review-mobile.png",

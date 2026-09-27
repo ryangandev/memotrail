@@ -166,6 +166,7 @@ Pair it with the test file carrying the same feature name.
 - Generated Web CSS and Swift values are never edited directly.
 - Token changes run `pnpm tokens:generate` and `pnpm tokens:check`.
 - The development-only `/design-system` route renders production Web components and current generated tokens for review; it is unavailable in Production.
+- Development-only `/home-ideas/[concept]` routes compose alternative Home layouts from `getHomeWorkspace` and the shared `CaptureComposer`; the sidebar and compact preview switcher share `lib/home-ideas.ts`.
 - Button, Dialog, PageHeader, EmptyState, and the previously reviewed gallery components are approved migration targets.
 - Production actions use Button, IconButton, or ButtonLink without changing submit or navigation semantics; composite internals and navigation controls retain their distinct roles.
 - Dialog owns generic editor and confirmation shells, scroll containment, focus trapping/restoration, busy dismissal, and nested overlay containers.

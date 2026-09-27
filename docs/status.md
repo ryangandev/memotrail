@@ -12,6 +12,8 @@ The Web Map and Location previews now follow light, dark, and System appearance;
 The Map also offers filtered shortcuts to the user's most recorded cities when records span more than one city.
 The desktop sidebar has a compact icon rail, panel control, and animated width change; its browser preference persists across reloads.
 Inbox review now hides AI suggestions and places photos after tags; the Library browser excludes unreviewed captures until Save to Library.
+Five development-only Home ideas are available from the sidebar on `codex/home-redesign-ideas`, using the signed-in user's Home data and capture flow.
+Split Focus, Ledger Column, Context Rail, Command Center, and Data Ribbon await personal review and a final layout decision; the existing Home remains the default.
 Native iOS still uses the older Kind and subtype contract and needs a separate update before its write flows are compatible.
 The merged Web release still needs Production deployment verification and browser acceptance; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 

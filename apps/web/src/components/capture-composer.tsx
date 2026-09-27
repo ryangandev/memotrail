@@ -83,11 +83,13 @@ export type NativePhotoPickerState = "canceled" | "opened" | "selected";
 const idleFeedback: CaptureFeedback = { isError: false, message: "" };
 
 export function CaptureComposer({
+  embedded = false,
   idPrefix = "capture",
   onNativePhotoPickerChange,
   ownerId,
   variant = "page",
 }: {
+  embedded?: boolean;
   idPrefix?: string;
   onNativePhotoPickerChange?: (state: NativePhotoPickerState) => void;
   ownerId: string;
@@ -636,7 +638,7 @@ export function CaptureComposer({
   return (
     <>
       <form
-        className={`${captureComposerStyles.captureCard} ${variant === "dialog" ? captureComposerStyles.dialogCaptureCard : ""}`}
+        className={`${captureComposerStyles.captureCard} ${variant === "dialog" ? captureComposerStyles.dialogCaptureCard : ""} ${embedded ? captureComposerStyles.embeddedCaptureCard : ""}`}
         aria-label="Quick capture"
         onSubmit={handleSubmit}
       >

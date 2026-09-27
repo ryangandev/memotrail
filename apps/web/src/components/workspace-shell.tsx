@@ -15,10 +15,12 @@ import { SyncStatus } from "@/components/sync-status";
 import { TimezoneSync } from "@/components/timezone-sync";
 import type { Viewer } from "@/lib/data/inbox";
 import { SIDEBAR_COOKIE_NAME } from "@/lib/sidebar-preference";
+import { homeIdeas } from "@/lib/home-ideas";
 
 export type WorkspaceDestination =
   | "collections"
   | "home"
+  | "home-ideas"
   | "homes"
   | "inbox"
   | "library"
@@ -288,6 +290,7 @@ export function WorkspaceShell({
 
 function destinationForPathname(pathname: string): WorkspaceDestination {
   if (pathname === "/") return "home";
+  if (pathname.startsWith("/home-ideas")) return "home-ideas";
   if (pathname.startsWith("/search")) return "search";
   if (pathname.startsWith("/settings")) return "settings";
   if (pathname.startsWith("/inbox")) return "inbox";
@@ -315,6 +318,7 @@ function Sidebar({
   inboxCount?: number;
   onToggle: () => void;
 }) {
+  const pathname = usePathname();
   return (
     <aside className={workspaceShellStyles.sidebar}>
       <div className={workspaceShellStyles.sidebarHeader}>
@@ -350,6 +354,49 @@ function Sidebar({
             inboxCount={inboxCount}
             items={primaryNavigation}
           />
+          {process.env.NODE_ENV !== "production" ? (
+            <>
+              <div
+                className={workspaceShellStyles.navDivider}
+                role="separator"
+              />
+              <p
+                aria-hidden={collapsed}
+                className={workspaceShellStyles.navLabel}
+              >
+                Home ideas
+              </p>
+              <div className={workspaceShellStyles.navGroup}>
+                {homeIdeas.map((idea) => {
+                  const href = `/home-ideas/${idea.slug}`;
+                  const active = pathname === href;
+                  return (
+                    <Link
+                      aria-current={active ? "page" : undefined}
+                      aria-label={
+                        collapsed ? `${idea.number} ${idea.name}` : undefined
+                      }
+                      className={
+                        active ? workspaceShellStyles.activeNavItem : undefined
+                      }
+                      href={href}
+                      key={idea.slug}
+                      prefetch={false}
+                      title={
+                        collapsed ? `${idea.number} ${idea.name}` : undefined
+                      }
+                    >
+                      <Icon name="home" size={18} />
+                      <span className={workspaceShellStyles.navItemLabel}>
+                        {idea.number} {idea.name}
+                      </span>
+                      <NavigationPendingIndicator label={idea.name} />
+                    </Link>
+                  );
+                })}
+              </div>
+            </>
+          ) : null}
           <div className={workspaceShellStyles.navDivider} role="separator" />
           <p aria-hidden={collapsed} className={workspaceShellStyles.navLabel}>
             Focused views
@@ -484,6 +531,7 @@ function isNavigationActive(
 ) {
   return (
     item.destination === activeDestination ||
+    (item.destination === "home" && activeDestination === "home-ideas") ||
     (item.destination === "library" &&
       [
         "collections",
