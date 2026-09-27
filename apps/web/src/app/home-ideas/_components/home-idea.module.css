@@ -335,6 +335,12 @@
   white-space: nowrap;
 }
 
+.stat > svg {
+  flex: none;
+  align-self: center;
+  color: var(--mt-color-accent);
+}
+
 .stat:last-child {
   border-right: 0;
 }

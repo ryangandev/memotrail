@@ -176,24 +176,38 @@ function Stats({ snapshot }: { snapshot: HomeSnapshot }) {
       value: snapshot.currentStageCount,
       label: "Life in progress",
       href: "/timeline",
+      icon: "timeline",
     },
-    { value: snapshot.entryCount, label: "Entries kept", href: "/library" },
+    {
+      value: snapshot.entryCount,
+      label: "Entries kept",
+      href: "/library",
+      icon: "archive",
+    },
     {
       value: snapshot.firstTimeCount,
       label: "First Times",
       href: "/first-times",
+      icon: "star",
     },
     {
       value: snapshot.collectionCount,
       label: "Collections",
       href: "/collections",
+      icon: "bulletList",
     },
-    { value: snapshot.inboxCount, label: "To organize", href: "/inbox" },
-  ];
+    {
+      value: snapshot.inboxCount,
+      label: "To organize",
+      href: "/inbox",
+      icon: "inbox",
+    },
+  ] as const;
   return (
     <nav className={styles.metrics} aria-label="Your archive at a glance">
       {items.map((item) => (
         <Link href={item.href} key={item.label} className={styles.stat}>
+          <Icon name={item.icon} size={16} />
           <strong>{item.value}</strong>
           <span>{item.label}</span>
         </Link>
