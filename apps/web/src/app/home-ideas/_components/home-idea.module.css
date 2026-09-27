@@ -24,31 +24,6 @@
 }
 
 .section {
-  padding-top: var(--mt-space-8);
-  border-top: 1px solid var(--mt-color-border);
-}
-
-.ledger .sectionHeading h2 {
-  font-family: var(--mt-font-family-sans);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.search {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: var(--mt-space-2);
-}
-
-.search > :first-child {
-  min-width: 0;
-  flex: 1;
-}
-
-.section {
   min-width: 0;
 }
 
@@ -344,9 +319,57 @@
 .ribbonColumns {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  grid-template-areas: "capture inbox" "memories chapters";
   gap: var(--mt-space-8);
   align-items: start;
 }
+
+.capturePanel {
+  grid-area: capture;
+  min-width: 0;
+}
+.memoryColumn {
+  grid-area: memories;
+}
+.chaptersColumn {
+  grid-area: chapters;
+  min-width: 0;
+}
+
+.inboxPanel {
+  grid-area: inbox;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  align-self: stretch;
+  /* Capture owns the row height, even when Inbox titles are long. */
+  contain: size;
+  padding: var(--mt-space-5);
+  border: 1px solid var(--mt-color-border);
+  border-radius: var(--mt-radius-large);
+  background: var(--mt-color-surface);
+}
+
+.inboxPanel > .section {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.inboxPanel .sectionHeading {
+  flex: none;
+}
+.inboxPanel .inboxList {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  align-content: start;
+}
+.inboxPanel .empty {
+  overflow-y: auto;
+}
+
 .ribbon .memoryCard.withPhoto {
   display: block;
 }
@@ -371,6 +394,14 @@
 @media (max-width: 900px) {
   .ribbonColumns {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "capture" "inbox" "memories" "chapters";
+  }
+  .inboxPanel {
+    contain: none;
+  }
+  .inboxPanel .inboxList,
+  .inboxPanel .empty {
+    overflow-y: visible;
   }
 }
 

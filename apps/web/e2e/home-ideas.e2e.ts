@@ -143,6 +143,62 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
         page.getByRole("textbox", { name: "Entry text", exact: true }),
       ).toBeEnabled();
       await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0);
+      await expect(nav.locator('a[href^="/home-ideas/"]')).toHaveCount(1);
+      await expect(
+        page.getByRole("navigation", { name: "Home design previews" }),
+      ).toHaveCount(0);
+      const hero = page.locator("[data-ui-page-header]:visible");
+      const metrics = page.getByRole("navigation", {
+        name: "Your archive at a glance",
+      });
+      const capture = page.getByRole("form", {
+        name: "Quick capture",
+        exact: true,
+      });
+      const inboxPanel = page
+        .getByRole("region", { name: "Ready to organize", exact: true })
+        .locator("..");
+      for (const width of [1440, 989]) {
+        await page.setViewportSize({ width, height: 1000 });
+        await expect
+          .poll(async () => {
+            const [left, right] = await Promise.all([
+              capture.boundingBox(),
+              inboxPanel.boundingBox(),
+            ]);
+            return (
+              Math.abs(left!.height - right!.height) +
+              Math.abs(left!.y - right!.y)
+            );
+          })
+          .toBeLessThan(2);
+        const [heroBox, metricsBox, captureBox, inboxBox] = await Promise.all([
+          hero.boundingBox(),
+          metrics.boundingBox(),
+          capture.boundingBox(),
+          inboxPanel.boundingBox(),
+        ]);
+        expect(metricsBox!.y).toBeGreaterThanOrEqual(
+          heroBox!.y + heroBox!.height,
+        );
+        expect(inboxBox!.x).toBeGreaterThan(captureBox!.x);
+        expect(
+          await metrics.getByRole("link").evaluateAll((links) =>
+            links.every((link) => {
+              const value = link
+                .querySelector("strong")!
+                .getBoundingClientRect();
+              const label = link.querySelector("span")!.getBoundingClientRect();
+              return (
+                label.left >= value.right &&
+                label.top < value.bottom &&
+                label.bottom > value.top
+              );
+            }),
+          ),
+        ).toBe(true);
+      }
+      await page.setViewportSize({ width: 1440, height: 1000 });
       await page.screenshot({
         path: `/tmp/memotrail-home-ideas-${slug}-desktop.png`,
         animations: "disabled",
@@ -156,6 +212,14 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
             ),
           )
           .toBe(true);
+        const [captureBox, inboxBox] = await Promise.all([
+          capture.boundingBox(),
+          inboxPanel.boundingBox(),
+        ]);
+        expect(inboxBox!.y).toBeGreaterThanOrEqual(
+          captureBox!.y + captureBox!.height,
+        );
+        expect(Math.abs(inboxBox!.x - captureBox!.x)).toBeLessThan(1);
         const save = page.getByRole("button", {
           name: "Save to Inbox",
           exact: true,

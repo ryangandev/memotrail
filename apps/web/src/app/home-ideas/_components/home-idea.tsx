@@ -72,15 +72,13 @@ export function HomeIdea({
       {greeting}
       {snapshot ? <Stats snapshot={snapshot} /> : null}
       <div className={styles.ribbonColumns}>
-        <div className={styles.stack}>
-          {capture}
-          {inbox}
+        <div className={styles.capturePanel}>{capture}</div>
+        <div className={styles.inboxPanel}>{inbox}</div>
+        <div className={`${styles.stack} ${styles.memoryColumn}`}>
+          {memory}
           {recent}
         </div>
-        <div className={styles.stack}>
-          {memory}
-          {chapters}
-        </div>
+        <div className={styles.chaptersColumn}>{chapters}</div>
       </div>
     </div>
   );
