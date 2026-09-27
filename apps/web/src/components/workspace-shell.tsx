@@ -41,7 +41,7 @@ type NavigationItem = {
 };
 
 const primaryNavigation: NavigationItem[] = [
-  { destination: "home", href: "/", icon: "home", label: "Home" },
+  { destination: "home", href: "/", icon: "dashboard", label: "Home" },
   {
     destination: "timeline",
     href: "/timeline",
@@ -88,7 +88,7 @@ const organizationNavigation: NavigationItem[] = [
 ];
 
 const mobileNavigation: NavigationItem[] = [
-  { destination: "home", href: "/", icon: "home", label: "Home" },
+  { destination: "home", href: "/", icon: "dashboard", label: "Home" },
   { destination: "inbox", href: "/inbox", icon: "inbox", label: "Inbox" },
   {
     destination: "timeline",

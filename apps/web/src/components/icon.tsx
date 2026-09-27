@@ -10,6 +10,7 @@ export const iconNames = [
   "clock",
   "code",
   "codeBlock",
+  "dashboard",
   "inbox",
   "home",
   "italic",
@@ -113,6 +114,14 @@ const paths: Record<IconName, React.ReactNode> = {
     <>
       <rect height="18" rx="2" width="20" x="2" y="3" />
       <path d="m9 8-4 4 4 4M15 8l4 4-4 4" />
+    </>
+  ),
+  dashboard: (
+    <>
+      <rect height="7" rx="1" width="7" x="3" y="3" />
+      <rect height="7" rx="1" width="7" x="14" y="3" />
+      <rect height="7" rx="1" width="7" x="3" y="14" />
+      <rect height="7" rx="1" width="7" x="14" y="14" />
     </>
   ),
   inbox: (
