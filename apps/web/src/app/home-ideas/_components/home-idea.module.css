@@ -143,7 +143,7 @@
 .entryCard {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  height: 180px;
+  height: 160px;
   align-items: center;
   padding: var(--mt-space-5) 0;
   overflow: hidden;
@@ -171,7 +171,7 @@
   display: grid;
   min-width: 0;
   grid-row: 1;
-  grid-template-rows: 16px 32px 42px 20px;
+  grid-template-rows: 16px 32px 21px 20px;
   gap: 6px;
 }
 
@@ -195,9 +195,12 @@
 }
 
 .recent .entryCard p {
+  display: block;
   grid-row: 3;
   margin: 0;
-  -webkit-line-clamp: 2;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .entryCard .tags {
