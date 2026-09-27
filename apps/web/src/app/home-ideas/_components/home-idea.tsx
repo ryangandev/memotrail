@@ -20,7 +20,7 @@ import {
   type Occurrence,
 } from "@/lib/data/occurrence";
 import { wikiEntryHref, wikiItemIdentityLabel } from "@/lib/data/wiki-item";
-import { homeIdeas, type HomeIdeaSlug } from "@/lib/home-ideas";
+import { type HomeIdeaSlug } from "@/lib/home-ideas";
 import styles from "./home-idea.module.css";
 
 export function HomeIdea({
@@ -86,19 +86,6 @@ export function HomeIdea({
 
   return (
     <PageFrame variant="wide" className={styles.page} data-home-idea={concept}>
-      <nav className={styles.switcher} aria-label="Home design previews">
-        <span>Home ideas</span>
-        {homeIdeas.map((idea) => (
-          <Link
-            href={`/home-ideas/${idea.slug}`}
-            prefetch={false}
-            aria-current={idea.slug === concept ? "page" : undefined}
-            key={idea.slug}
-          >
-            <span>{idea.number}</span> {idea.name}
-          </Link>
-        ))}
-      </nav>
       {workspace.loadError ? (
         <p className={styles.loadError} role="alert">
           {workspace.loadError}
