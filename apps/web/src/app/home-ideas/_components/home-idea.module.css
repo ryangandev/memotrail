@@ -15,7 +15,6 @@
   text-transform: uppercase;
 }
 
-.stack,
 .ribbon {
   display: flex;
   min-width: 0;
@@ -319,7 +318,7 @@
 .ribbonColumns {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  grid-template-areas: "capture inbox" "memories chapters";
+  grid-template-areas: "capture inbox" "memories chapters" "recent .";
   gap: var(--mt-space-8);
   align-items: start;
 }
@@ -394,7 +393,7 @@
 @media (max-width: 900px) {
   .ribbonColumns {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "capture" "inbox" "memories" "chapters";
+    grid-template-areas: "capture" "inbox" "memories" "chapters" "recent";
   }
   .inboxPanel {
     contain: none;
@@ -426,5 +425,48 @@
   }
   .entryCard h3 {
     font-size: var(--mt-font-size-body-large);
+  }
+}
+
+.recentRow {
+  grid-area: recent;
+  min-width: 0;
+}
+
+@media (min-width: 901px) {
+  .memoryColumn,
+  .chaptersColumn {
+    display: flex;
+    min-width: 0;
+    align-self: stretch;
+  }
+  .memoryColumn > .section,
+  .chaptersColumn > .section {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+  .memoryColumn .sectionHeading,
+  .chaptersColumn .sectionHeading {
+    flex: none;
+  }
+  .chaptersColumn .chapters {
+    flex: 1;
+    grid-auto-rows: minmax(min-content, 1fr);
+  }
+  .memoryColumn .empty,
+  .chaptersColumn .empty {
+    flex: 1;
+  }
+  .memoryColumn .memoryCard {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+  .memoryColumn .memoryPhoto {
+    flex: none;
+  }
+  .memoryColumn .memoryCard article {
+    flex: 1;
   }
 }
