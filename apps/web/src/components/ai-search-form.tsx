@@ -64,7 +64,7 @@ export function AISearchForm({
   return (
     <>
       <form
-        action="/search"
+        action="/library"
         method="get"
         onSubmit={submit}
         onChange={() => {

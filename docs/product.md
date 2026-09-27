@@ -84,10 +84,11 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - People are reusable Entities linked to other Wiki Items, not alternate tags.
 - Locations are private address and coordinate snapshots owned by individual Entries, not Library items or reusable personal records.
 - A Location does not require a personal name; an Entry, Home, Vehicle, or First Time can carry its address or coordinates.
-- Inbox, Timeline, Home, Search, and Library are views or workflow states, not organization labels.
+- Inbox, Timeline, Home, and Library are views or workflow states, not organization labels.
 - Library is the primary all-items entry point for the Life Wiki.
-  It presents organized Entries, Entities, and Goals, supports category and keyword filters, and opens focused records in their own views.
-  Unreviewed captures remain in Inbox and do not appear in Library or its item count until `Save to Library`.
+  Its default browser presents organized Entries, Entities, and Goals and opens focused records in their own views.
+  Unreviewed captures remain in Inbox and do not appear in the default Library browser or its item count until `Save to Library`.
+  Library search also finds Inbox captures, labels them clearly, and supports record, date, Collection, and tag filters with match context.
 - Opening a general Wiki Item shows its current content and primary actions first.
   Version history is an explicit secondary action, while typed Entities continue to open their focused editors.
 - Current Wiki Item detail supports moving the item to Trash, where it remains restorable.
@@ -112,7 +113,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - `Explore with AI` creates a separate conversation attached to its source Entry.
 - `Save as Entry` creates an editable, independent Inbox Entry with a bidirectional source link.
 - AI defaults off, and manual capture, organization, browsing, and keyword search continue without it.
-- Web offers one master permission, one optional organizing-suggestions control, and separate photo understanding consent. Search currently shows keyword retrieval without an Ask AI action; Explore runs only after an explicit user action.
+- Web offers one master permission, one optional organizing-suggestions control, and separate photo understanding consent. Library search currently shows keyword retrieval without an Ask AI action; Explore runs only after an explicit user action.
 - Photo understanding requires separate consent from text features.
 
 ## Timeline and Home
@@ -202,12 +203,12 @@ Focused record destinations and archive tools remain available in a compact, ini
 Settings is reached from the profile control.
 Settings lets the user choose a preferred name for Home greetings, or clear it to use the Google account name.
 
-Desktop treats Library as a primary destination beside Home, Timeline, and Search.
+Desktop treats Library as a primary destination beside Home, Timeline, and Map; Search is part of Library.
 Its sidebar omits Inbox, keeps optional focused views separate from Collections, tags, Trash, and the single Settings entry point.
 The desktop sidebar can collapse to a compact icon rail from the panel control beside the brand; the control centers in the rail when the brand hides, the width change animates, and the choice persists in this browser without changing mobile navigation.
 The collapsed rail uses square navigation targets and keeps keyboard focus indicators inside the controls.
 The persistent top bar places an accent-tinted `New` control at the far left, with neutral Search followed by an icon-only Inbox control at the far right; Inbox shows a notification count only when captures are waiting.
-A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry and People results in place, supports keyboard navigation, and keeps full-page Search with filters and AI as an explicit destination.
+A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry and People results in place, supports keyboard navigation, and opens Library for full search with filters.
 New Entry opens from the top bar or Command J.
 Home, Vehicle, and First Time results share one reusable card shell while preserving subtype-specific content and responsive layouts.
 Specialized editors share one unboxed photo field with consistent previews, progress, limits, and controls.

@@ -359,7 +359,7 @@ function TagEntryList({
   name: string;
   preview: TagEntryPreviewResult | null;
 }) {
-  const allEntriesHref = `/search?tag=${encodeURIComponent(name)}`;
+  const allEntriesHref = `/library?tag=${encodeURIComponent(name)}`;
 
   return (
     <section

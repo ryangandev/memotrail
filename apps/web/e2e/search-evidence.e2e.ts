@@ -123,8 +123,9 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
     await commandPalette
       .getByRole("button", { name: /Search all for “electric”/ })
       .click();
-    await expect(page).toHaveURL(/\/search\?q=electric$/);
+    await expect(page).toHaveURL(/\/library\?q=electric$/);
     const searchSurface = page.getByRole("region", { name: "Entry search" });
+    await searchSurface.getByText("Filters", { exact: true }).click();
     await expect(searchSurface).not.toContainText("Date filters include");
     await expect(searchSurface).toHaveCSS(
       "background-color",
@@ -139,11 +140,9 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
       expect(to).not.toBeNull();
       expect(from!.x + from!.width).toBeLessThanOrEqual(width);
       expect(to!.x + to!.width).toBeLessThanOrEqual(width);
-      expect(
-        await page.evaluate(
-          () => document.documentElement.scrollWidth <= innerWidth,
-        ),
-      ).toBe(true);
+      await expect
+        .poll(() => page.evaluate(() => document.documentElement.scrollWidth))
+        .toBeLessThanOrEqual(width);
       if (width === 1500 || width === 390) {
         await searchSurface.screenshot({
           animations: "disabled",
@@ -177,6 +176,7 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
       caret: "initial",
     });
     await page.goto("/search?q=" + encodeURIComponent("电弧"));
+    await expect(page).toHaveURL(/\/library\?q=/);
     await expect(
       page.getByRole("heading", { name: "How an electric lighter works" }),
     ).toBeVisible();

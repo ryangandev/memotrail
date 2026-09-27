@@ -302,7 +302,7 @@ function CollectionEntryCard({ entry }: { entry: CollectionEntry }) {
           <div className={styles.organization} aria-label="Entry organization">
             {entry.collectionNames.map((name) => (
               <Link
-                href={`/search?collection=${encodeURIComponent(name)}`}
+                href={`/library?collection=${encodeURIComponent(name)}`}
                 key={`collection:${name.toLocaleLowerCase()}`}
               >
                 <Icon name="archive" size={12} />
@@ -311,7 +311,7 @@ function CollectionEntryCard({ entry }: { entry: CollectionEntry }) {
             ))}
             {entry.tagNames.map((name) => (
               <Link
-                href={`/search?tag=${encodeURIComponent(name)}`}
+                href={`/library?tag=${encodeURIComponent(name)}`}
                 key={`tag:${name.toLocaleLowerCase()}`}
               >
                 #{name}

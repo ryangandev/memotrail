@@ -56,17 +56,17 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       })),
     );
 
-    let searchNavigationStarted = false;
+    let mapNavigationStarted = false;
 
-    await page.route("**/search*", async (route) => {
+    await page.route("**/map*", async (route) => {
       const headers = route.request().headers();
       const isRscRequest =
         headers.rsc === "1" ||
         new URL(route.request().url()).searchParams.has("_rsc");
 
-      if (isRscRequest && !searchNavigationStarted) {
+      if (isRscRequest && !mapNavigationStarted) {
         await route.fulfill({
-          body: "Search prefetch intentionally unavailable during this test.",
+          body: "Map prefetch intentionally unavailable during this test.",
           contentType: "text/plain",
           status: 503,
         });
@@ -423,23 +423,23 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.keyboard.press("Escape");
     await expect(commandPalette).not.toBeVisible();
 
-    searchNavigationStarted = true;
+    mapNavigationStarted = true;
     await page
       .getByRole("navigation", { name: "Primary navigation" })
-      .getByRole("link", { name: "Search", exact: true })
+      .getByRole("link", { name: "Map", exact: true })
       .click({ noWaitAfter: true });
 
-    await expect(
-      page.getByRole("status", { name: "Opening Search" }),
-    ).toBeVisible({ timeout: 500 });
+    await expect(page.getByRole("status", { name: "Opening Map" })).toBeVisible(
+      { timeout: 500 },
+    );
     await page.screenshot({
       caret: "initial",
       path: "/private/tmp/memotrail-navigation-loading.png",
     });
     await expect(shell).toHaveAttribute("data-shell-instance", "kept");
-    await expect(page).toHaveURL(/\/search$/);
+    await expect(page).toHaveURL(/\/map$/);
     await expect(
-      page.getByRole("heading", { name: "Search your trail", exact: true }),
+      page.getByRole("heading", { name: "Map", exact: true }),
     ).toBeVisible();
 
     await page.getByRole("link", { name: "Open Inbox", exact: true }).click();

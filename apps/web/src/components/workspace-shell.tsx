@@ -25,7 +25,6 @@ export type WorkspaceDestination =
   | "map"
   | "goals"
   | "people"
-  | "search"
   | "settings"
   | "tags"
   | "timeline"
@@ -55,7 +54,6 @@ const primaryNavigation: NavigationItem[] = [
     label: "Library",
   },
   { destination: "map", href: "/map", icon: "map", label: "Map" },
-  { destination: "search", href: "/search", icon: "search", label: "Search" },
 ];
 
 const recordNavigation: NavigationItem[] = [
@@ -288,7 +286,7 @@ export function WorkspaceShell({
 
 function destinationForPathname(pathname: string): WorkspaceDestination {
   if (pathname === "/") return "home";
-  if (pathname.startsWith("/search")) return "search";
+  if (pathname.startsWith("/search")) return "library";
   if (pathname.startsWith("/settings")) return "settings";
   if (pathname.startsWith("/inbox")) return "inbox";
   if (pathname.startsWith("/timeline")) return "timeline";

@@ -116,7 +116,7 @@ export function parseSearchRequest(
   };
 }
 
-export function searchPageHref(request: SearchRequest, page: number) {
+export function librarySearchHref(request: SearchRequest, page: number) {
   const parameters = new URLSearchParams();
 
   if (request.query) {
@@ -148,7 +148,7 @@ export function searchPageHref(request: SearchRequest, page: number) {
   }
 
   const queryString = parameters.toString();
-  return queryString ? `/search?${queryString}` : "/search";
+  return queryString ? `/library?${queryString}` : "/library";
 }
 
 function firstValue(value: string | string[] | undefined) {
