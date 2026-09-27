@@ -355,22 +355,20 @@
   }
 
   .homeCard {
-    grid-template-columns: 98px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .homeVisual {
-    width: 98px;
-    min-height: 205px;
+    width: 100%;
+    height: 148px;
+    min-height: 148px;
+    border-right: 0;
+    border-bottom: 1px solid var(--mt-color-border);
   }
 
   .homeMark {
     justify-content: center;
     padding: var(--mt-space-3);
-  }
-
-  .homeMark span,
-  .homeVisual > small {
-    display: none;
   }
 
   .currentBadge,
@@ -380,7 +378,7 @@
   }
 
   .memory {
-    -webkit-line-clamp: 1;
+    -webkit-line-clamp: 2;
   }
 
   .cardBody footer span:nth-child(n + 3) {
