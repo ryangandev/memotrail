@@ -40,8 +40,14 @@
   width: 100%;
   min-width: 0;
   padding: 0 var(--mt-space-2);
+  border-radius: var(--mt-radius-small);
   white-space: nowrap;
   transition: padding-left var(--sidebar-motion);
+}
+
+.brand:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--mt-color-accent);
 }
 
 .brandName {

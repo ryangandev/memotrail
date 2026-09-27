@@ -203,6 +203,17 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       has: page.getByRole("navigation", { name: "Primary navigation" }),
     });
     await expect(shell).toBeVisible();
+    const keyboardBrand = shell.getByRole("link", {
+      name: "MemoTrail dashboard",
+    });
+    await page.keyboard.press("Tab");
+    await expect(keyboardBrand).toBeFocused();
+    await page.screenshot({
+      clip: { x: 0, y: 0, width: 240, height: 110 },
+      path: "/private/tmp/memotrail-brand-focus.png",
+    });
+    await expect(keyboardBrand).toHaveCSS("outline-style", "none");
+    await expect(keyboardBrand).toHaveCSS("box-shadow", /inset/);
     const primaryNavigation = shell.getByRole("navigation", {
       name: "Primary navigation",
     });
@@ -434,6 +445,11 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       name: "MemoTrail dashboard",
     });
     await expect(collapsedBrand).toBeVisible();
+    await homeLink.focus();
+    await page.keyboard.press("Shift+Tab");
+    await expect(collapsedBrand).toBeFocused();
+    await expect(collapsedBrand).toHaveCSS("outline-style", "none");
+    await expect(collapsedBrand).toHaveCSS("box-shadow", /inset/);
     await expect(
       collapsedBrand.getByText("MemoTrail", { exact: true }),
     ).toBeHidden();
