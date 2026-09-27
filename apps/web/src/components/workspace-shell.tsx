@@ -160,7 +160,8 @@ export function WorkspaceShell({
   initialSidebarCollapsed: boolean;
   viewer: Viewer;
 }) {
-  const activeDestination = destinationForPathname(usePathname());
+  const pathname = usePathname();
+  const activeDestination = destinationForPathname(pathname);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(

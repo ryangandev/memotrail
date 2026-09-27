@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MemoTrail · Radial Now</title>
+<style>
+  :root{
+    --bg:#f7f8fc;
+    --ink:#1c2033;
+    --muted:#6b7186;
+    --faint:#e7e8f4;
+    --track:#eceef8;
+    --accent:#4f46e5;
+    --accent2:#7c76f0;
+    --accent-soft:#eef0ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(900px 700px at 50% 42%,#ffffff 0%,var(--bg) 70%);
+    color:var(--ink);line-height:1.5;padding:28px 18px 48px;min-height:100vh;
+  }
+  .wrap{max-width:860px;margin:0 auto;text-align:center}
+  header.page{margin-bottom:6px}
+  .kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  h1{font-size:26px;margin:6px 0 4px;letter-spacing:-.01em}
+  .lede{color:var(--muted);font-size:14px;max-width:60ch;margin:0 auto 6px}
+  .stage{position:relative;margin:6px auto 0;max-width:700px}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  text{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .evt-lbl{font-size:11px;fill:var(--ink)}
+  .evt-lbl.ms{font-weight:700;fill:var(--accent)}
+  .evt-yr{font-size:9px;fill:var(--muted)}
+  .age-tick{font-size:9px;fill:#aeb2c6}
+  .evt-dot{cursor:default;transition:r .15s ease}
+  .evt-g:hover .evt-dot{r:7}
+  .lead{stroke:#c7cadd;stroke-width:1}
+  .lead.ms{stroke:var(--accent2);stroke-width:1.4}
+  .legend{display:inline-flex;flex-wrap:wrap;gap:10px 20px;justify-content:center;margin-top:6px;font-size:12px;color:var(--muted)}
+  .legend span{display:flex;align-items:center;gap:7px}
+  .legend .d{width:10px;height:10px;border-radius:50%}
+  .legend .d.ms{width:14px;height:14px;box-shadow:0 0 0 3px var(--accent-soft)}
+  .legend .d.reg{border:2px solid var(--accent);background:#fff}
+  .legend .bar{width:22px;height:8px;border-radius:4px}
+  @keyframes sweepin{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
+  #fill{animation:sweepin 1.6s cubic-bezier(.3,.7,.2,1) forwards}
+  @keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+  .evt-g{animation:pop .4s ease both;transform-box:fill-box;transform-origin:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <div class="kicker">MemoTrail · design 20</div>
+    <h1>Radial Now</h1>
+    <p class="lede">Ava Chen's life as a progress ring. The sweep climbs the left to <strong>now</strong> at the top; every moment sits at the age it happened. The faint arc down the right is the years still ahead.</p>
+  </header>
+
+  <div class="stage">
+    <svg id="ring" viewBox="0 0 700 620" role="img" aria-label="Radial life gauge: age 35 of an assumed 90-year lifespan, with life events placed by age">
+      <defs>
+        <linearGradient id="grad" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0" stop-color="#7c76f0"/>
+          <stop offset="1" stop-color="#4f46e5"/>
+        </linearGradient>
+      </defs>
+      <g id="ticks"></g>
+      <path id="track"></path>
+      <path id="future"></path>
+      <path id="fill"></path>
+      <g id="events"></g>
+      <g id="now"></g>
+      <g id="center"></g>
+    </svg>
+  </div>
+
+  <div class="legend">
+    <span><i class="d ms" style="background:var(--accent)"></i>Milestone</span>
+    <span><i class="d reg"></i>Moment</span>
+    <span><i class="bar" style="background:linear-gradient(90deg,var(--accent2),var(--accent))"></i>Life so far · 35 yrs</span>
+    <span><i class="bar" style="background:var(--faint)"></i>Years ahead</span>
+  </div>
+</div>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+const cx=350, cy=330, R=232;
+const LIFESPAN=90, AGE=35;
+const SWEEP=300;                       // total degrees of the gauge
+const A_START=-(AGE/LIFESPAN)*SWEEP;   // so that age 35 lands at 0deg (top)
+const ageToAngle=a=>A_START+(a/LIFESPAN)*SWEEP;
+
+function polar(r,deg){const rad=deg*Math.PI/180;return{x:cx+r*Math.sin(rad),y:cy-r*Math.cos(rad)};}
+function arc(r,a0,a1){const p0=polar(r,a0),p1=polar(r,a1);const large=Math.abs(a1-a0)>180?1:0;const sweep=a1>a0?1:0;return `M ${p0.x.toFixed(2)} ${p0.y.toFixed(2)} A ${r} ${r} 0 ${large} ${sweep} ${p1.x.toFixed(2)} ${p1.y.toFixed(2)}`;}
+function mk(tag,attrs,txt){const n=document.createElementNS(NS,tag);for(const k in attrs)n.setAttribute(k,attrs[k]);if(txt!=null)n.textContent=txt;return n;}
+
+// ---- arcs ----
+const aEnd=ageToAngle(LIFESPAN), aNow=ageToAngle(AGE);
+document.getElementById('track').setAttribute('d',arc(R,A_START,aEnd));
+document.getElementById('track').setAttribute('class','');
+Object.assign(document.getElementById('track').style,{});
+document.getElementById('track').setAttribute('fill','none');
+document.getElementById('track').setAttribute('stroke','var(--track)');
+document.getElementById('track').setAttribute('stroke-width','16');
+document.getElementById('track').setAttribute('stroke-linecap','round');
+
+const fut=document.getElementById('future');
+fut.setAttribute('d',arc(R+20,aNow,aEnd));
+fut.setAttribute('fill','none');fut.setAttribute('stroke','var(--faint)');
+fut.setAttribute('stroke-width','3');fut.setAttribute('stroke-dasharray','2 7');fut.setAttribute('stroke-linecap','round');
+
+const fill=document.getElementById('fill');
+fill.setAttribute('d',arc(R,A_START,aNow));
+fill.setAttribute('fill','none');fill.setAttribute('stroke','url(#grad)');
+fill.setAttribute('stroke-width','16');fill.setAttribute('stroke-linecap','round');
+// animate sweep
+const fillLen=(Math.abs(aNow-A_START)/360)*2*Math.PI*R;
+fill.style.setProperty('--len',fillLen.toFixed(1));
+fill.setAttribute('stroke-dasharray',fillLen.toFixed(1)+' '+ (2*Math.PI*R).toFixed(1));
+
+// ---- age ticks (subtle scale) ----
+const ticks=document.getElementById('ticks');
+for(let a=0;a<=90;a+=10){
+  const ang=ageToAngle(a);
+  const inner=polar(R-14,ang), outer=polar(R-6,ang);
+  ticks.appendChild(mk('line',{x1:inner.x,y1:inner.y,x2:outer.x,y2:outer.y,stroke:a<=AGE?'#b9bce0':'#e2e3ef','stroke-width':a%30===0?1.4:1}));
+  if(a%10===0){const t=polar(R-26,ang);ticks.appendChild(mk('text',{x:t.x,y:t.y+3,'text-anchor':'middle',class:'age-tick'},a));}
+}
+
+// ---- events ----
+const EV=[
+  {yr:1990,age:0,t:"Born, Portland",track:"Home",ms:1},
+  {yr:2002,age:12,t:"Moved to Seattle",track:"Home"},
+  {yr:2008,age:18,t:"Graduated high school",track:"Career",ms:1},
+  {yr:2011,age:21,t:"First internship",track:"Career"},
+  {yr:2012,age:22,t:"University degree",track:"Career",ms:1},
+  {yr:2012,age:22,t:"First job: Junior Dev",track:"Career"},
+  {yr:2012,age:22,t:"Moved to San Francisco",track:"Home"},
+  {yr:2013,age:23,t:"Backpacked SE Asia",track:"Travel"},
+  {yr:2014,age:24,t:"Started photography",track:"Health"},
+  {yr:2015,age:25,t:"Senior Engineer",track:"Career"},
+  {yr:2015,age:25,t:"Met Sam",track:"Relationships"},
+  {yr:2016,age:26,t:"First marathon",track:"Travel"},
+  {yr:2018,age:28,t:"Became Tech Lead",track:"Career"},
+  {yr:2018,age:28,t:"Trip to Japan",track:"Travel"},
+  {yr:2019,age:29,t:"Married Sam",track:"Relationships",ms:1},
+  {yr:2020,age:30,t:"First home, Oakland",track:"Home",ms:1},
+  {yr:2021,age:31,t:"Founded Loomly",track:"Career"},
+  {yr:2021,age:31,t:"Learned pottery",track:"Health"},
+  {yr:2022,age:32,t:"Noah is born",track:"Relationships",ms:1},
+  {yr:2023,age:33,t:"Seed funding",track:"Career"},
+  {yr:2023,age:33,t:"Summited Rainier",track:"Travel"},
+  {yr:2024,age:34,t:"Adopted Miso",track:"Relationships"},
+  {yr:2024,age:34,t:"Learned to sail",track:"Health"}
+];
+// spread same-age events with small angular offsets
+const byAge={};EV.forEach(e=>{(byAge[e.age]=byAge[e.age]||[]).push(e);});
+Object.values(byAge).forEach(list=>{
+  const n=list.length;
+  list.forEach((e,i)=>{ e.off = n===1?0:(i-(n-1)/2)*3.0; });
+});
+
+const eventsG=document.getElementById('events');
+let flip=0;
+EV.forEach(e=>{
+  const ang=ageToAngle(e.age)+e.off;
+  const p=polar(R,ang);
+  const g=mk('g',{class:'evt-g'});
+  // leader line + label at staggered radius
+  const rLabel = R + (flip%2?52:30);
+  const lp=polar(rLabel-8,ang);
+  g.appendChild(mk('line',{x1:polar(R+9,ang).x,y1:polar(R+9,ang).y,x2:lp.x,y2:lp.y,class:'lead'+(e.ms?' ms':'')}));
+  // dot
+  if(e.ms){
+    g.appendChild(mk('circle',{cx:p.x,cy:p.y,r:8.5,fill:'var(--accent)',stroke:'#fff','stroke-width':2.5,class:'evt-dot'}));
+    g.appendChild(mk('circle',{cx:p.x,cy:p.y,r:13,fill:'none',stroke:'var(--accent)','stroke-width':1,opacity:.35}));
+  }else{
+    g.appendChild(mk('circle',{cx:p.x,cy:p.y,r:4.6,fill:'#fff',stroke:'var(--accent)','stroke-width':2,class:'evt-dot'}));
+  }
+  // label
+  const lab=polar(rLabel,ang);
+  const anchor = lab.x < cx-8 ? 'end' : (lab.x > cx+8 ? 'start':'middle');
+  const tl=mk('text',{x:lab.x,y:lab.y,'text-anchor':anchor,class:'evt-lbl'+(e.ms?' ms':'')}, (e.ms?'★ ':'')+e.t);
+  const ty=mk('text',{x:lab.x,y:lab.y+11,'text-anchor':anchor,class:'evt-yr'}, "age "+e.age+" · "+e.yr);
+  g.appendChild(tl);g.appendChild(ty);
+  g.appendChild(mk('title',{}, e.t+" - age "+e.age+" ("+e.yr+"), "+e.track+(e.ms?", milestone":"")));
+  eventsG.appendChild(g);
+  flip++;
+});
+
+// ---- NOW marker at top ----
+const nowG=document.getElementById('now');
+const np=polar(R,aNow);
+nowG.appendChild(mk('line',{x1:cx,y1:cy-70,x2:np.x,y2:np.y,stroke:'var(--accent)','stroke-width':1.4,'stroke-dasharray':'3 4',opacity:.55}));
+nowG.appendChild(mk('circle',{cx:np.x,cy:np.y,r:9,fill:'var(--accent)',stroke:'#fff','stroke-width':3}));
+nowG.appendChild(mk('circle',{cx:np.x,cy:np.y,r:16,fill:'none',stroke:'var(--accent)','stroke-width':1.4,opacity:.4}));
+nowG.appendChild(mk('text',{x:np.x,y:np.y-26,'text-anchor':'middle','font-size':13,'font-weight':800,fill:'var(--accent)'},'NOW'));
+nowG.appendChild(mk('text',{x:np.x,y:np.y-13,'text-anchor':'middle','font-size':10,fill:'var(--muted)'},'2025'));
+
+// ---- center readout ----
+const c=document.getElementById('center');
+c.appendChild(mk('text',{x:cx,y:cy-6,'text-anchor':'middle','font-size':92,'font-weight':800,fill:'var(--ink)','letter-spacing':'-2'},'35'));
+c.appendChild(mk('text',{x:cx,y:cy+26,'text-anchor':'middle','font-size':15,'font-weight':600,fill:'var(--accent)'},'age 35 · 2025'));
+c.appendChild(mk('text',{x:cx,y:cy+46,'text-anchor':'middle','font-size':11.5,fill:'var(--muted)'},'years lived · 39% of a 90-yr life'));
+c.appendChild(mk('text',{x:cx,y:cy+82,'text-anchor':'middle','font-size':11,fill:'#aeb2c6'},'25 moments · 6 milestones'));
+</script>
+  <script src="shared/nav.js" defer></script>
+</body>
+</html>

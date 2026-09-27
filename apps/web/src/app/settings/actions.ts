@@ -13,6 +13,12 @@ import {
   THEME_COOKIE_NAME,
   type ThemePreference,
 } from "@/lib/theme";
+import {
+  parseTimelineStyle,
+  TIMELINE_STYLE_COOKIE_NAME,
+  timelineStyleCookieValue,
+  type TimelineStyle,
+} from "@/lib/timeline-style";
 
 export type BirthDateActionResult = {
   birthDate?: string | null;
@@ -25,6 +31,39 @@ export type TimezoneActionResult = {
   status: "error" | "saved";
   timezone?: string;
 };
+
+export type TimelineStyleActionResult =
+  | { status: "saved"; style: TimelineStyle }
+  | { status: "error"; message: string };
+
+export async function saveTimelineStyle(
+  value: string,
+): Promise<TimelineStyleActionResult> {
+  const style = parseTimelineStyle(value);
+  if (!style) {
+    return { status: "error", message: "Choose a valid Timeline style." };
+  }
+  const context = await getAuthenticatedContext();
+  if (!context) {
+    return {
+      status: "error",
+      message: "Your session expired. Sign in again before saving.",
+    };
+  }
+  (await cookies()).set(
+    TIMELINE_STYLE_COOKIE_NAME,
+    timelineStyleCookieValue(context.userId, style),
+    {
+      httpOnly: true,
+      maxAge: 60 * 60 * 24 * 365,
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    },
+  );
+  revalidatePath("/timeline");
+  return { status: "saved", style };
+}
 
 export type PreferredNameActionResult = {
   message: string;

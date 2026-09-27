@@ -6,6 +6,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { signOut } from "@/app/auth/actions";
 import { AppearanceSetting } from "@/components/appearance-setting";
+import { TimelineStyleSetting } from "@/components/timeline/timeline-style-setting";
 import { Icon, type IconName } from "@/components/icon";
 import { BirthDateSetting } from "@/components/birth-date-setting";
 import { TimezoneSetting } from "@/components/timezone-setting";
@@ -17,6 +18,10 @@ import {
   storedProfileTimezone,
 } from "@/lib/data/profile-input";
 import { storedThemePreference, THEME_COOKIE_NAME } from "@/lib/theme";
+import {
+  storedTimelineStyle,
+  TIMELINE_STYLE_COOKIE_NAME,
+} from "@/lib/timeline-style";
 
 export const dynamic = "force-dynamic";
 
@@ -61,13 +66,18 @@ export default async function SettingsPage() {
   const profileTimezone = storedProfileTimezone(
     profile.error ? null : profile.data,
   );
+  const cookieStore = await cookies();
   const preferredName =
     !profile.error && typeof profile.data?.display_name === "string"
       ? profile.data.display_name.trim() || null
       : null;
   const accountName = preferredName ?? viewer.name;
   const themePreference = storedThemePreference(
-    (await cookies()).get(THEME_COOKIE_NAME)?.value,
+    cookieStore.get(THEME_COOKIE_NAME)?.value,
+  );
+  const timelineStyle = storedTimelineStyle(
+    cookieStore.get(TIMELINE_STYLE_COOKIE_NAME)?.value,
+    viewer.id,
   );
 
   return (
@@ -131,6 +141,7 @@ export default async function SettingsPage() {
 
         <div className={pageStyles.preferenceList}>
           <AppearanceSetting initialPreference={themePreference} />
+          <TimelineStyleSetting initialStyle={timelineStyle} />
 
           {preferences.map((preference) => (
             <Link href={preference.href} key={preference.href}>

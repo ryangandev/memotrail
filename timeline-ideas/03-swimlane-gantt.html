@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Swimlane Gantt · The life of Ava Chen</title>
+<style>
+  :root{
+    --bg:#f6f8fb; --panel:#ffffff; --ink:#1c2733; --muted:#69788a; --line:#e4e9f0;
+    --career:#3b82c4; --home:#12a594; --rel:#d1568f; --travel:#3fa971; --health:#8163d6;
+    --now:#e0483d;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--ink)}
+  header.page{padding:16px 22px 10px; border-bottom:1px solid var(--line); background:var(--panel)}
+  header.page h1{margin:0; font-size:18px}
+  header.page p{margin:4px 0 0; font-size:12.5px; color:var(--muted)}
+  .meta{margin-top:8px; display:flex; gap:16px; flex-wrap:wrap; font-size:11.5px; color:var(--muted)}
+  .meta .k{display:flex; align-items:center; gap:6px}
+  .sw{width:16px; height:9px; border-radius:3px; display:inline-block}
+  .dot-legend{width:9px;height:9px;border-radius:50%;border:2px solid #999;display:inline-block}
+  .star-legend{color:#e0a028}
+
+  .board{overflow:auto; max-height:calc(100vh - 96px); background:var(--bg)}
+  .track{position:relative}
+  .axis{position:sticky; top:0; z-index:6; display:flex; background:var(--panel); border-bottom:2px solid var(--line)}
+  .corner{position:sticky; left:0; z-index:7; flex:0 0 auto; background:var(--panel);
+    border-right:2px solid var(--line); display:flex; align-items:flex-end; padding:6px 12px 8px; font-size:11px;
+    color:var(--muted); font-weight:600}
+  .ticks{position:relative; height:52px}
+  .tick{position:absolute; top:0; bottom:0; border-left:1px solid var(--line)}
+  .tick.major{border-left:1px solid #cfd8e3}
+  .tick .yr{position:absolute; top:6px; left:4px; font-size:11px; font-weight:700; color:#39485a; white-space:nowrap}
+  .tick .age{position:absolute; top:24px; left:4px; font-size:10px; color:var(--muted); white-space:nowrap}
+
+  .lane{display:flex; border-bottom:1px solid var(--line); background:var(--panel)}
+  .lane:nth-child(even){background:#fbfcfe}
+  .lane-label{position:sticky; left:0; z-index:5; flex:0 0 auto; border-right:2px solid var(--line);
+    display:flex; align-items:center; gap:9px; padding:0 12px; background:inherit}
+  .lane-label .barcol{width:5px; height:34px; border-radius:4px}
+  .lane-label .txt b{display:block; font-size:13px}
+  .lane-label .txt span{display:block; font-size:10.5px; color:var(--muted)}
+  .lane-plot{position:relative}
+
+  .grid-v{position:absolute; top:0; bottom:0; border-left:1px dashed #eef1f6}
+  .bar{position:absolute; height:24px; border-radius:7px; display:flex; align-items:center;
+    padding:0 9px; color:#fff; font-size:11px; font-weight:600; white-space:nowrap; overflow:hidden;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.25); cursor:default;
+    transition:transform .12s, filter .12s}
+  .bar:hover{filter:brightness(1.06); transform:translateY(-1px); z-index:4}
+  .evt{position:absolute; width:13px; height:13px; border-radius:50%; background:#fff;
+    border:3px solid #888; cursor:default; transition:transform .12s}
+  .evt:hover{transform:scale(1.35); z-index:4}
+  .evt.ms{width:15px; height:15px; border-width:3px; background:#e0a028; border-color:#fff;
+    box-shadow:0 0 0 2px #e0a028, 0 0 10px rgba(224,160,40,.5)}
+  .evt.approx{border-style:dashed}
+  .evt-lbl{position:absolute; font-size:10px; color:#41505f; white-space:nowrap; max-width:130px;
+    overflow:hidden; text-overflow:ellipsis; pointer-events:none}
+  .evt-lbl.ms{font-weight:700; color:#8a5a05}
+
+  .nowline{position:absolute; top:0; width:0; border-left:2px dashed var(--now); z-index:8; pointer-events:none}
+  .nowtag{position:absolute; z-index:9; transform:translateX(-50%); top:2px; background:var(--now); color:#fff;
+    font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; pointer-events:none}
+
+  #tip{position:fixed; z-index:50; max-width:250px; background:#0f1a26; color:#e8eef5; padding:9px 11px;
+    border-radius:9px; font-size:12px; line-height:1.4; box-shadow:0 10px 30px rgba(0,0,0,.28);
+    opacity:0; transform:translateY(4px); transition:opacity .12s, transform .12s; pointer-events:none}
+  #tip.on{opacity:1; transform:none}
+  #tip b{display:block; font-size:12.5px; margin-bottom:3px}
+  #tip .t-meta{color:#9fb3c8; font-size:10.5px; margin-bottom:5px}
+  #tip .t-tags i{font-style:normal; font-size:10px; background:rgba(255,255,255,.12); color:#cfe0f0;
+    padding:1px 6px; border-radius:10px; margin-right:4px; display:inline-block; margin-top:3px}
+</style>
+</head>
+<body>
+  <header class="page">
+    <h1>Swimlane Gantt</h1>
+    <p>Every track of a life on its own lane, plotted against a shared year and age axis. Bars are spans, dots are moments. Hover anything for detail.</p>
+    <div class="meta">
+      <span class="k"><i class="sw" style="background:var(--career)"></i>Career</span>
+      <span class="k"><i class="sw" style="background:var(--home)"></i>Home &amp; Places</span>
+      <span class="k"><i class="sw" style="background:var(--rel)"></i>Relationships</span>
+      <span class="k"><i class="sw" style="background:var(--travel)"></i>Travel</span>
+      <span class="k"><i class="sw" style="background:var(--health)"></i>Health</span>
+      <span class="k"><i class="dot-legend"></i>event</span>
+      <span class="k"><span class="star-legend">★</span>milestone</span>
+      <span class="k"><i class="dot-legend" style="border-style:dashed"></i>approximate</span>
+    </div>
+  </header>
+
+  <div class="board" id="board">
+    <div class="track" id="trk">
+      <div class="axis">
+        <div class="corner" id="corner">Year<br>Age</div>
+        <div class="ticks" id="ticks"></div>
+      </div>
+      <div class="lanes" id="lanes"></div>
+    </div>
+  </div>
+
+  <div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  var YEAR0=1990, YEARN=2025, YEARW=40, LABELW=176, LANEH=92, PADR=44;
+  var YEARS=YEARN-YEAR0;
+  var plotW=YEARS*YEARW+PADR;
+  function xOf(y){return (y-YEAR0)*YEARW;}
+
+  var C={career:"#3b82c4",home:"#12a594",rel:"#d1568f",travel:"#3fa971",health:"#8163d6"};
+
+  var lanes=[
+    {key:"career", name:"Career", sub:"work & education", color:C.career,
+      bars:[
+        {from:2008,to:2012,label:"University · Computer Science",body:"B.S. Computer Science, four formative years.",tags:["#career"]},
+        {from:2021,to:2025,label:"Founded “Loomly”",body:"Building a design tool, 2021 to present.",tags:["#career","#loomly"]}
+      ],
+      evts:[
+        {y:2008,title:"Graduated high school",ms:true,body:"Diploma in hand.",tags:["#career","#firsts"]},
+        {y:2011,title:"First internship",body:"First internship at a startup.",tags:["#career"]},
+        {y:2012,title:"Graduated university",ms:true,body:"B.S. Computer Science.",tags:["#career","#firsts"]},
+        {y:2012.4,title:"Junior Developer",body:"First job out of school.",tags:["#career"]},
+        {y:2015,title:"Senior Engineer",body:"Promoted to Senior Engineer.",tags:["#career"]},
+        {y:2018,title:"Tech Lead",body:"Became Tech Lead of the team.",tags:["#career"]},
+        {y:2023,title:"Seed funding ($2M)",body:"Raised a $2M seed round for Loomly.",tags:["#career","#loomly"]}
+      ]},
+    {key:"home", name:"Home & Places", sub:"where life happened", color:C.home,
+      bars:[
+        {from:1990,to:2002,label:"Childhood home · Portland, OR",body:"Grew up in Portland, Oregon.",tags:["#home"]}
+      ],
+      evts:[
+        {y:1990,title:"Born in Portland, OR",ms:true,body:"Born March 14, 1990.",tags:["#home","#family"]},
+        {y:2002,title:"Moved to Seattle",body:"Family relocated to Seattle.",tags:["#home","#big moves"]},
+        {y:2012,title:"Moved to San Francisco",body:"Chased the tech scene south.",tags:["#home","#big moves"]},
+        {y:2020,title:"Bought first home, Oakland",ms:true,body:"First home purchase in Oakland.",tags:["#home","#firsts","#big moves"]}
+      ]},
+    {key:"rel", name:"Relationships", sub:"family & bonds", color:C.rel,
+      bars:[],
+      evts:[
+        {y:2015,title:"Met Sam",body:"A chance meeting that mattered.",tags:["#family"]},
+        {y:2019,title:"Married Sam",ms:true,body:"Wedding day.",tags:["#family","#firsts"]},
+        {y:2022,title:"Noah born",ms:true,body:"First child, Noah.",tags:["#family","#firsts"]},
+        {y:2024,title:"Adopted dog, Miso",body:"A new four-legged family member.",tags:["#family"]}
+      ]},
+    {key:"travel", name:"Travel", sub:"adventures out", color:C.travel,
+      bars:[],
+      evts:[
+        {y:2013,title:"Backpacked SE Asia",body:"Three months across Southeast Asia.",tags:["#travel","#adventures"]},
+        {y:2016,title:"First marathon, Chicago",approx:true,body:"Around 2016, ran 26.2 miles.",tags:["#health","#firsts"]},
+        {y:2018,title:"Trip to Japan",body:"Cherry blossom season.",tags:["#travel","#adventures"]},
+        {y:2023,title:"Summited Mt. Rainier",body:"Reached 14,411 feet.",tags:["#travel","#adventures"]}
+      ]},
+    {key:"health", name:"Health & Hobbies", sub:"body & craft", color:C.health,
+      bars:[],
+      evts:[
+        {y:2014,title:"Started photography",approx:true,body:"Around 2014, picked up a camera.",tags:["#creative","#health"]},
+        {y:2021,title:"Learned pottery",body:"Hands in clay.",tags:["#creative","#health"]},
+        {y:2024,title:"Learned to sail",body:"Reading the wind on open water.",tags:["#health","#adventures"]}
+      ]}
+  ];
+
+  document.getElementById("corner").style.flexBasis=LABELW+"px";
+  document.getElementById("corner").style.width=LABELW+"px";
+
+  // axis ticks
+  var ticks=document.getElementById("ticks");
+  ticks.style.width=plotW+"px";
+  for(var y=YEAR0;y<=YEARN;y++){
+    var t=document.createElement("div"); t.className="tick"+((y-YEAR0)%5===0?" major":"");
+    t.style.left=xOf(y)+"px";
+    if((y-YEAR0)%5===0 || y===YEARN){
+      var yr=document.createElement("div"); yr.className="yr"; yr.textContent=y; t.appendChild(yr);
+      var ag=document.createElement("div"); ag.className="age"; ag.textContent="age "+(y-YEAR0); t.appendChild(ag);
+    }
+    ticks.appendChild(t);
+  }
+
+  var lanesEl=document.getElementById("lanes");
+  var tip=document.getElementById("tip");
+  function showTip(e,html){ tip.innerHTML=html; tip.classList.add("on"); moveTip(e); }
+  function moveTip(e){
+    var x=e.clientX+14, yy=e.clientY+14;
+    if(x+260>window.innerWidth) x=e.clientX-264;
+    if(yy+120>window.innerHeight) yy=e.clientY-120;
+    tip.style.left=x+"px"; tip.style.top=yy+"px";
+  }
+  function hideTip(){ tip.classList.remove("on"); }
+
+  function tipHTML(o,laneName){
+    var tags=(o.tags||[]).map(function(t){return "<i>"+t+"</i>";}).join("");
+    var flag=o.ms?" ★ milestone":(o.approx?" · approximate":"");
+    var when=o.from?(o.from+"–"+(o.to===YEARN?"present":o.to)):(o.approx?"~"+Math.round(o.y):Math.round(o.y));
+    return "<b>"+o.title2+"</b><div class='t-meta'>"+laneName+" · "+when+flag+"</div>"+
+      "<div>"+o.body+"</div>"+(tags?"<div class='t-tags'>"+tags+"</div>":"");
+  }
+
+  lanes.forEach(function(ln){
+    var lane=document.createElement("div"); lane.className="lane"; lane.style.height=LANEH+"px";
+    var label=document.createElement("div"); label.className="lane-label";
+    label.style.flexBasis=LABELW+"px"; label.style.width=LABELW+"px";
+    var bc=document.createElement("div"); bc.className="barcol"; bc.style.background=ln.color;
+    var txt=document.createElement("div"); txt.className="txt";
+    var b=document.createElement("b"); b.textContent=ln.name;
+    var sp=document.createElement("span"); sp.textContent=ln.sub;
+    txt.appendChild(b); txt.appendChild(sp);
+    label.appendChild(bc); label.appendChild(txt);
+
+    var plot=document.createElement("div"); plot.className="lane-plot"; plot.style.width=plotW+"px";
+
+    // gridlines every 5 years
+    for(var gy=YEAR0;gy<=YEARN;gy+=5){
+      var gv=document.createElement("div"); gv.className="grid-v"; gv.style.left=xOf(gy)+"px";
+      plot.appendChild(gv);
+    }
+
+    // bars
+    ln.bars.forEach(function(bar){
+      var el=document.createElement("div"); el.className="bar";
+      el.style.left=xOf(bar.from)+"px";
+      el.style.width=(xOf(bar.to)-xOf(bar.from))+"px";
+      el.style.top=(LANEH/2-12)+"px";
+      el.style.background="linear-gradient(180deg,"+ln.color+","+shade(ln.color,-12)+")";
+      el.textContent=bar.label;
+      var data={title2:bar.label,body:bar.body,tags:bar.tags,from:bar.from,to:bar.to};
+      wire(el,data,ln.name);
+      plot.appendChild(el);
+    });
+
+    // events, alternate label up/down
+    var sorted=ln.evts.slice().sort(function(a,b){return a.y-b.y;});
+    sorted.forEach(function(ev,i){
+      var x=xOf(ev.y);
+      var dot=document.createElement("div"); dot.className="evt"+(ev.ms?" ms":"")+(ev.approx?" approx":"");
+      if(!ev.ms) dot.style.borderColor=ln.color;
+      dot.style.left=(x-7)+"px"; dot.style.top=(LANEH/2-7)+"px";
+      dot.setAttribute("tabindex","0");
+      dot.setAttribute("aria-label",ev.title+" - "+ln.name);
+      var lbl=document.createElement("div"); lbl.className="evt-lbl"+(ev.ms?" ms":"");
+      lbl.textContent=(ev.ms?"★ ":"")+ev.title;
+      var up=(i%2===0);
+      lbl.style.left=(x+9)+"px";
+      lbl.style.top=up?(LANEH/2-24)+"px":(LANEH/2+11)+"px";
+      var data={title2:ev.title,body:ev.body,tags:ev.tags,y:ev.y,ms:ev.ms,approx:ev.approx};
+      wire(dot,data,ln.name);
+      plot.appendChild(lbl); plot.appendChild(dot);
+    });
+
+    lane.appendChild(label); lane.appendChild(plot);
+    lanesEl.appendChild(lane);
+  });
+
+  function wire(el,data,laneName){
+    el.addEventListener("mouseenter",function(e){showTip(e,tipHTML(data,laneName));});
+    el.addEventListener("mousemove",moveTip);
+    el.addEventListener("mouseleave",hideTip);
+    el.addEventListener("focus",function(e){var r=el.getBoundingClientRect();showTip({clientX:r.left,clientY:r.bottom},tipHTML(data,laneName));});
+    el.addEventListener("blur",hideTip);
+  }
+
+  // Now line over lanes area
+  var lanesBox=lanesEl;
+  var now=document.createElement("div"); now.className="nowline";
+  now.style.left=(LABELW+xOf(YEARN))+"px";
+  now.style.height=(lanes.length*LANEH)+"px";
+  lanesBox.style.position="relative";
+  lanesBox.appendChild(now);
+  var tag=document.createElement("div"); tag.className="nowtag";
+  tag.style.left=(LABELW+xOf(YEARN))+"px"; tag.textContent="Now · 2025";
+  lanesBox.appendChild(tag);
+
+  function shade(hex,amt){
+    var n=parseInt(hex.slice(1),16);
+    var r=Math.max(0,Math.min(255,(n>>16)+amt));
+    var g=Math.max(0,Math.min(255,((n>>8)&255)+amt));
+    var b=Math.max(0,Math.min(255,(n&255)+amt));
+    return "rgb("+r+","+g+","+b+")";
+  }
+})();
+</script>
+  <script src="shared/nav.js" defer></script>
+</body>
+</html>

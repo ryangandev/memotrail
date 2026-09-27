@@ -118,6 +118,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 ## Timeline and Home
 
 Timeline shows deliberately created Moments and Periods, plus contextual focused-record spans, on customizable tracks.
+Web Timeline opens in the existing track view by default and offers Vertical Spine and Sticky Year styles through Settings; the chosen style is remembered for the signed-in account in that browser.
 The first Timeline visit asks for a private birth date, uses it as the story's starting point, and keeps it editable in Settings.
 Default tracks cover Education, Career, Homes, Vehicles, Relationships, Health, First Times, and Other Moments.
 The user can create, order, rename, hide, and restore tracks without deleting content.
