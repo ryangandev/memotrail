@@ -261,7 +261,6 @@ export function WorkspaceShell({
         activeDestination={activeDestination}
         collapsed={sidebarCollapsed}
         inboxCount={inboxCount}
-        onToggle={toggleSidebar}
       />
 
       <main className={workspaceShellStyles.workspace}>
@@ -276,6 +275,20 @@ export function WorkspaceShell({
               <span>MemoTrail</span>
             </Link>
             <WorkspaceHistoryControls />
+            <button
+              aria-label={
+                sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+              }
+              className={workspaceShellStyles.sidebarToggle}
+              onClick={toggleSidebar}
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              type="button"
+            >
+              <Icon
+                name={sidebarCollapsed ? "sidebarClosed" : "sidebarOpen"}
+                size={18}
+              />
+            </button>
             <QuickCaptureDialog
               idPrefix="topbar-capture"
               onClose={closeQuickCapture}
@@ -437,12 +450,10 @@ function Sidebar({
   activeDestination,
   collapsed,
   inboxCount,
-  onToggle,
 }: {
   activeDestination: WorkspaceDestination;
   collapsed: boolean;
   inboxCount?: number;
-  onToggle: () => void;
 }) {
   return (
     <aside className={workspaceShellStyles.sidebar}>
@@ -456,15 +467,6 @@ function Sidebar({
           <BrandMark className={workspaceShellStyles.brandMark} />
           <span className={workspaceShellStyles.brandName}>MemoTrail</span>
         </Link>
-        <button
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className={workspaceShellStyles.sidebarToggle}
-          onClick={onToggle}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          type="button"
-        >
-          <Icon name={collapsed ? "sidebarClosed" : "sidebarOpen"} size={18} />
-        </button>
       </div>
 
       <div

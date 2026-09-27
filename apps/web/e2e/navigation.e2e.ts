@@ -322,7 +322,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
           .some((duration) => Number.parseFloat(duration) > 0),
       ),
     ).toBe(true);
-    await shell.getByRole("button", { name: "Collapse sidebar" }).click();
+    await page.getByRole("button", { name: "Collapse sidebar" }).click();
     await expect(page.locator('[data-sidebar-collapsed="true"]')).toBeVisible();
     await expect(shell).toHaveCSS("width", "64px");
     await expect(page.locator("main")).toHaveCSS("margin-left", "64px");
@@ -340,23 +340,28 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(
       shell.getByRole("link", { name: "MemoTrail dashboard" }),
     ).toHaveCount(0);
-    const expandSidebar = shell.getByRole("button", {
+    const expandSidebar = page.getByRole("button", {
       name: "Expand sidebar",
     });
     await expect(expandSidebar.locator("svg circle")).toHaveCount(3);
     await expect(expandSidebar.locator("svg")).toHaveAttribute("width", "18");
     await expect(expandSidebar.locator("svg")).toHaveAttribute("height", "18");
-    const [railBox, toggleBox] = await Promise.all([
-      shell.boundingBox(),
+    const [forwardBox, toggleBox, newBox] = await Promise.all([
+      goForward.boundingBox(),
       expandSidebar.boundingBox(),
+      newEntryShortcut.boundingBox(),
     ]);
-    expect(
-      Math.abs(
-        (railBox?.x ?? 0) +
-          (railBox?.width ?? 0) / 2 -
-          ((toggleBox?.x ?? 0) + (toggleBox?.width ?? 0) / 2),
-      ),
-    ).toBeLessThanOrEqual(1);
+    expect(toggleBox?.width).toBe(36);
+    expect(toggleBox?.height).toBe(36);
+    expect(toggleBox?.x).toBeGreaterThan(
+      (forwardBox?.x ?? 0) + (forwardBox?.width ?? 0),
+    );
+    expect((toggleBox?.x ?? 0) + (toggleBox?.width ?? 0)).toBeLessThan(
+      newBox?.x ?? 0,
+    );
+    await expect(
+      shell.getByRole("button", { name: "Expand sidebar" }),
+    ).toHaveCount(0);
     const collapsedLibrary = primaryNavigation.getByRole("link", {
       name: "Library",
       exact: true,
@@ -375,6 +380,8 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.mouse.move(800, 100);
     await expandSidebar.focus();
     await page.keyboard.press("Tab");
+    await expect(newEntryShortcut).toBeFocused();
+    await homeLink.focus();
     await expect(homeLink).toBeFocused();
     await expect(homeLink).toHaveCSS("outline-style", "none");
     await expect(homeLink).toHaveCSS("box-shadow", /inset/);
@@ -406,6 +413,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(page).toHaveURL(/\/$/);
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(shell).toBeHidden();
+    await expect(expandSidebar).toBeHidden();
     await expect(page.locator("main")).toHaveCSS("margin-left", "0px");
     await expect(
       page.getByRole("navigation", { name: "Mobile navigation" }),
@@ -447,11 +455,13 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(moreButton).toBeFocused();
     await mobileNavigation.getByRole("link", { name: "Dashboard" }).click();
     await page.setViewportSize({ width: 1280, height: 720 });
-    await shell.getByRole("button", { name: "Expand sidebar" }).click();
+    await page.getByRole("button", { name: "Expand sidebar" }).click();
     await expect(shell).toHaveCSS("width", "224px");
     await expect(page.locator("main")).toHaveCSS("margin-left", "224px");
-    await shell.getByRole("button", { name: "Collapse sidebar" }).focus();
+    await page.getByRole("button", { name: "Collapse sidebar" }).focus();
     await page.keyboard.press("Tab");
+    await expect(newEntryShortcut).toBeFocused();
+    await homeLink.focus();
     await expect(homeLink).toBeFocused();
     await expect(homeLink).toHaveCSS("outline-style", "none");
     await expect(homeLink).toHaveCSS("box-shadow", /inset/);

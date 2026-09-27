@@ -51,9 +51,6 @@
 }
 
 .sidebarToggle {
-  position: absolute;
-  top: 0;
-  right: 0;
   display: grid;
   width: 36px;
   height: 36px;
@@ -66,7 +63,6 @@
   background: transparent;
   cursor: pointer;
   transition:
-    right var(--sidebar-motion),
     color var(--mt-motion-quick),
     background var(--mt-motion-quick);
 }
@@ -258,13 +254,13 @@
   margin-bottom: 0;
 }
 
-.appShell[data-sidebar-collapsed="true"] .sidebarToggle {
-  right: 6px;
+.appShell[data-sidebar-collapsed="true"] .sidebarHeader {
+  display: none;
 }
 
 .appShell[data-sidebar-collapsed="true"] .sidebarScrollRegion {
   margin-right: 0;
-  margin-top: var(--mt-space-4);
+  margin-top: 0;
   padding-right: 0;
 }
 
@@ -508,6 +504,10 @@
   }
 
   .sidebar {
+    display: none;
+  }
+
+  .sidebarToggle {
     display: none;
   }
 
