@@ -2,8 +2,6 @@ packages:
   - apps/web
   - packages/*
 
-confirmModulesPurge: false
-
-onlyBuiltDependencies:
-  - sharp
-  - unrs-resolver
+allowBuilds:
+  sharp: true
+  unrs-resolver: true
