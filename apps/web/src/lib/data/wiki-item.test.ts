@@ -23,7 +23,7 @@ describe("Entry identity and routing", () => {
         itemKind: "entity",
         itemSubtype: "vehicle",
       }),
-    ).toBe("/vehicles?entry=1");
+    ).toBe("/vehicles/1");
     expect(
       wikiEntryHref({
         id: "2",
@@ -41,7 +41,7 @@ describe("Entry identity and routing", () => {
         recordId: "30",
         recordSource: "person",
       }),
-    ).toBe("/people?person=30");
+    ).toBe("/people/30");
     expect(
       wikiEntryHref({
         id: "4",
@@ -57,7 +57,7 @@ describe("Entry identity and routing", () => {
         itemKind: "entry",
         itemSubtype: "first_time",
       }),
-    ).toBe("/first-times?entry=5");
+    ).toBe("/first-times/5");
     expect(
       wikiEntryHref({
         id: "6",

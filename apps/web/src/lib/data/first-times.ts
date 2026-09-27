@@ -72,7 +72,9 @@ type FirstTimeRow = {
 
 type NameRow = { name: string };
 
-export async function getFirstTimesWorkspace(): Promise<FirstTimesWorkspace | null> {
+export async function getFirstTimesWorkspace(
+  targetId?: string,
+): Promise<FirstTimesWorkspace | null> {
   const context = await getAuthenticatedContext();
 
   if (!context) {
@@ -107,22 +109,39 @@ export async function getFirstTimesWorkspace(): Promise<FirstTimesWorkspace | nu
     return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
   }
 
+  if (targetId && !rows.some((row) => row.entry_id === targetId)) {
+    for (let offset = 1000; rows.length >= offset; offset += 1000) {
+      const page = await context.client
+        .rpc("first_times_workspace_with_occurrence")
+        .range(offset, offset + 999);
+      const more = page.error ? null : parseFirstTimeRows(page.data);
+      if (!more)
+        return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+      rows.push(...more);
+      if (more.length < 1000 || more.some((row) => row.entry_id === targetId))
+        break;
+    }
+  }
+  const visibleRows = targetId
+    ? rows.filter((row) => row.entry_id === targetId)
+    : rows;
+
   const locations = await getPrimaryEntryLocations(
     context,
-    rows.map((row) => row.entry_id),
+    visibleRows.map((row) => row.entry_id),
   );
   if (!locations) {
     return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
   }
 
-  const attachments = rows.flatMap((row) => row.attachments);
+  const attachments = visibleRows.flatMap((row) => row.attachments);
   const signedUrls = await signedImageUrls(context.client, attachments);
 
   return {
     collectionOptions: collections.error
       ? []
       : (collections.data ?? []).map((item) => item.name),
-    entries: rows.map((row) => ({
+    entries: visibleRows.map((row) => ({
       attachments: row.attachments.map((attachment) => ({
         ...attachment,
         imageUrl: signedUrls.get(attachment.objectPath) ?? null,

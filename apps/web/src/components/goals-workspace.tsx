@@ -1,6 +1,6 @@
 "use client";
 import { notify } from "@/components/app-toast";
-import { Dialog } from "@/components/dialog";
+import { FocusedEditorSurface } from "@/components/focused-editor-surface";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import {
   RecordCard,
@@ -190,7 +190,7 @@ export function GoalsWorkspace({
                 detail={section.detail}
                 goals={sectionGoals}
                 key={section.title}
-                onSelect={setSelectedGoal}
+                onSelect={(goal) => router.push(`/goals/${goal.id}`)}
                 title={section.title}
               />
             ) : null;
@@ -315,12 +315,14 @@ function GoalCard({
   );
 }
 
-function GoalEditor({
+export function GoalEditor({
   collectionOptions,
   goal,
   linkOptions,
   onClose,
+  onTrashed,
   ownerId,
+  presentation = "dialog",
   sourceCapture = null,
   tagOptions,
 }: {
@@ -328,7 +330,9 @@ function GoalEditor({
   goal: GoalRecord | null;
   linkOptions: GoalLinkOption[];
   onClose: () => void;
+  onTrashed?: () => void;
   ownerId: string;
+  presentation?: "dialog" | "page";
   sourceCapture?: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
@@ -555,6 +559,7 @@ function GoalEditor({
         revision: currentRevision,
       });
       if (nextResult.status === "trashed") {
+        onTrashed?.();
         router.refresh();
         onClose();
         notify.info("Goal moved to Trash.");
@@ -569,11 +574,9 @@ function GoalEditor({
   }
 
   return (
-    <Dialog
-      open
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) onClose();
-      }}
+    <FocusedEditorSurface
+      onClose={onClose}
+      presentation={presentation}
       title={
         <>
           {currentId
@@ -587,7 +590,6 @@ function GoalEditor({
       eyebrow={<>{currentId ? "Edit Goal" : "New Goal"}</>}
       closeLabel="Close Goal editor"
       busy={isPending}
-      size="wide"
       footer={
         <div className={common.dialogFooter}>
           <div>
@@ -836,7 +838,7 @@ function GoalEditor({
           </p>
         ) : null}
       </form>
-    </Dialog>
+    </FocusedEditorSurface>
   );
 }
 

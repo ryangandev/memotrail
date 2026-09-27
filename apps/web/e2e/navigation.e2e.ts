@@ -122,7 +122,9 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       .evaluate((element) => element.getBoundingClientRect().top);
     expect(Math.round(homeActionsTop - homeToolbarBottom)).toBe(20);
 
-    const shell = page.getByRole("complementary");
+    const shell = page.getByRole("complementary").filter({
+      has: page.getByRole("navigation", { name: "Primary navigation" }),
+    });
     await expect(shell).toBeVisible();
     const primaryNavigation = shell.getByRole("navigation", {
       name: "Primary navigation",
@@ -407,7 +409,9 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(moreDestinations).toBeVisible();
     await moreDestinations.getByRole("link", { name: "Map" }).click();
     await expect(page).toHaveURL(/\/map$/);
-    await expect(page.getByRole("heading", { name: "Map", exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Map", exact: true }),
+    ).toBeVisible();
     await expect(moreDestinations).toBeHidden();
     await moreButton.click();
     await expect(moreDestinations).toBeVisible();

@@ -82,14 +82,9 @@ test("Canonical keyword search finds People", async ({ page, context }) => {
     await page
       .getByRole("link", { name: "Learning 学习 partner", exact: true })
       .click();
-    await expect(page).toHaveURL(new RegExp(`/people\\?person=${person}$`));
-    await expect(
-      page.getByRole("dialog").getByRole("textbox", { name: /^Notes/ }),
-    ).toHaveValue("A standalone Person");
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { name: "Close Person editor", exact: true })
-      .click();
+    await expect(page).toHaveURL(new RegExp(`/people/${person}$`));
+    await expect(page.getByRole("main")).toContainText("A standalone Person");
+    await expect(page.getByRole("textbox", { name: /^Notes/ })).toHaveCount(0);
     await page.goto("/search?q=" + encodeURIComponent("Paged Person"));
     const results = page.getByRole("region", { name: "Results", exact: true });
     await expect(results).toContainText("105 items");
@@ -178,10 +173,10 @@ test("Canonical keyword search finds People", async ({ page, context }) => {
           .eq("id", person)
       ).error,
     ).toBeNull();
-    await page.goto(`/people?person=${person}`);
-    await expect(page.getByRole("main").getByRole("alert")).toContainText(
-      "unavailable or in Trash",
-    );
+    await page.goto(`/people/${person}`);
+    await expect(
+      page.getByRole("heading", { name: "Person unavailable" }),
+    ).toBeVisible();
     await page.goto("/search?q=" + encodeURIComponent("学习"));
     await expect(
       page.getByRole("link", { name: "Learning 学习 partner", exact: true }),

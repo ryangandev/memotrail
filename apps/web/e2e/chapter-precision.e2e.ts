@@ -114,16 +114,19 @@ for (const kind of ["home", "vehicle"] as const) {
       const saved = await client.rpc(config.rpc, config.args);
       expect(saved.error).toBeNull();
       const id = saved.data[0].entry_id;
-      await page.goto(config.path + "?entry=" + id);
-      const dialog = page.getByRole("dialog");
-      await expect(dialog).toBeVisible({ timeout: 15_000 });
+      await page.goto(config.path + "/" + id);
+      const editLabel = kind === "home" ? "Edit Home" : "Edit Vehicle";
+      await page.getByRole("button", { name: editLabel }).click();
+      let dialog = page.getByRole("main");
       await expect(
         dialog.getByRole("combobox", { name: "Date type", exact: true }),
       ).toHaveValue("exact");
       await dialog
         .getByRole("button", { name: "Save changes", exact: true })
         .click();
-      await expect(dialog).not.toBeVisible();
+      await expect(
+        dialog.getByRole("button", { name: "Save changes" }),
+      ).not.toBeVisible();
       const entry = (
         await client
           .from("entries")
@@ -142,7 +145,7 @@ for (const kind of ["home", "vehicle"] as const) {
         ["approximate", "", "", "During college"],
         ["unknown", "", "", ""],
       ]) {
-        await page.getByRole("button", { name: /Precision chapter/ }).click();
+        await page.getByRole("button", { name: editLabel }).click();
         await dialog
           .getByRole("combobox", { name: "Date type", exact: true })
           .selectOption(precision);
@@ -168,9 +171,21 @@ for (const kind of ["home", "vehicle"] as const) {
           .getByRole("button", { name: "Save changes", exact: true })
           .click();
         await expect(
-          dialog,
+          dialog.getByRole("button", { name: "Save changes" }),
           `${kind} editor should close after saving ${precision} precision`,
         ).not.toBeVisible({ timeout: 15_000 });
+        await expect
+          .poll(
+            async () =>
+              (
+                await client
+                  .from("entries")
+                  .select("date_precision")
+                  .eq("id", id)
+                  .single()
+              ).data?.date_precision,
+          )
+          .toBe(precision);
         const persisted = await client
           .from("entries")
           .select(
@@ -185,11 +200,12 @@ for (const kind of ["home", "vehicle"] as const) {
         expect(persisted.data?.occurred_end === null).toBe(!end);
         expect(persisted.data?.occurred_label).toBe(label || null);
       }
+      await page.goto(config.path);
       await expect(
         page.getByText("Duration unavailable", { exact: true }),
       ).toBeVisible();
-      await page.reload();
-      await page.getByRole("button", { name: /Precision chapter/ }).click();
+      await page.goto(config.path + "/" + id);
+      await page.getByRole("button", { name: editLabel }).click();
       await expect(
         dialog.getByRole("combobox", { name: "Date type", exact: true }),
       ).toHaveValue("unknown");
@@ -205,13 +221,15 @@ for (const kind of ["home", "vehicle"] as const) {
         path: `/private/tmp/memotrail-${kind}-chapter-mobile.png`,
         fullPage: true,
       });
-      await dialog.getByRole("button", { name: /Close/ }).click();
+      await dialog.getByRole("button", { name: "Cancel" }).click();
+      await page.goto(config.path);
       await page
         .getByRole("button", {
           name: kind === "home" ? "Add Home" : "Add Vehicle",
           exact: true,
         })
         .click();
+      dialog = page.getByRole("dialog");
       await expect(
         dialog.getByRole("combobox", { name: "Date type", exact: true }),
       ).toHaveValue("unknown");
@@ -243,6 +261,8 @@ for (const kind of ["home", "vehicle"] as const) {
         occurred_start: null,
       });
       await page.getByRole("button", { name: /Precision chapter/ }).click();
+      await page.getByRole("button", { name: editLabel }).click();
+      dialog = page.getByRole("main");
       const current = await client
         .from("entries")
         .select("revision")

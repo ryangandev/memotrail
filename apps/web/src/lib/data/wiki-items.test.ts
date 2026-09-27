@@ -50,7 +50,7 @@ describe("Life Wiki workspace data", () => {
         itemKind: "entity",
         itemSubtype: "vehicle",
       }),
-    ).toBe(`/vehicles?entry=${parsed.id}`);
+    ).toBe(`/vehicles/${parsed.id}`);
     expect(
       wikiItemHref({
         ...parsed,
@@ -59,7 +59,7 @@ describe("Life Wiki workspace data", () => {
         recordId: "40000000-0000-4000-8000-000000000002",
         recordSource: "person",
       }),
-    ).toBe("/people?person=40000000-0000-4000-8000-000000000002");
+    ).toBe("/people/40000000-0000-4000-8000-000000000002");
   });
 
   it("bounds pagination", () => {

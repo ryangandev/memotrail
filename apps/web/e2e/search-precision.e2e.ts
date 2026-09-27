@@ -127,7 +127,8 @@ test("Search date filters include overlapping periods without inventing date pre
         )
       ).error,
     ).toBeNull();
-    await page.goto("/search");
+    await page.goto("/library");
+    await page.getByText("Filters", { exact: true }).click();
     await page
       .getByRole("textbox", { name: "From", exact: true })
       .fill("2017-02-31");
@@ -201,13 +202,13 @@ test("Search date filters include overlapping periods without inventing date pre
       path: "/private/tmp/memotrail-search-precision-mobile.png",
       fullPage: true,
     });
-    await page.goto("/search?q=2017-01-01");
+    await page.goto("/library?q=2017-01-01");
     await expect(card("Year-only memory")).toHaveCount(0);
-    await page.goto("/search?q=2017-07-01");
+    await page.goto("/library?q=2017-07-01");
     await expect(card("Month-only memory")).toHaveCount(0);
-    await page.goto("/search?q=2019-02-03");
+    await page.goto("/library?q=2019-02-03");
     await expect(card("Long period memory")).toBeVisible();
-    await page.goto("/search?q=Unknown%20memory");
+    await page.goto("/library?q=Unknown%20memory");
     await expect(card("Unknown memory").locator("time")).toHaveText(
       "Date unknown",
     );

@@ -1,6 +1,6 @@
 "use client";
 import { notify } from "@/components/app-toast";
-import { Dialog } from "@/components/dialog";
+import { FocusedEditorSurface } from "@/components/focused-editor-surface";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { FocusedViewLayout } from "@/components/focused-view-layout";
@@ -159,7 +159,7 @@ export function VehiclesWorkspace({
       {!loadError && orderedVehicles.length > 0 ? (
         <VehicleSection
           label="Current first, followed by earlier vehicles"
-          onSelect={setSelectedVehicle}
+          onSelect={(vehicle) => router.push(`/vehicles/${vehicle.id}`)}
           title="Vehicle archive"
           vehicles={orderedVehicles}
         />
@@ -305,6 +305,7 @@ export function VehicleEditor({
   onSaved,
   onTrashed,
   ownerId,
+  presentation = "dialog",
   sourceCapture = null,
   tagOptions,
   vehicle,
@@ -315,6 +316,7 @@ export function VehicleEditor({
   onSaved: (record: VehicleRecord) => void;
   onTrashed: (id: string) => void;
   ownerId: string;
+  presentation?: "dialog" | "page";
   sourceCapture?: CaptureExtractionSource | null;
   tagOptions: string[];
   vehicle: VehicleRecord | null;
@@ -571,11 +573,9 @@ export function VehicleEditor({
   }
 
   return (
-    <Dialog
-      open
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) onClose();
-      }}
+    <FocusedEditorSurface
+      onClose={onClose}
+      presentation={presentation}
       title={
         <>
           {currentId
@@ -589,7 +589,6 @@ export function VehicleEditor({
       eyebrow={<>{currentId ? "Edit Vehicle" : "New Vehicle"}</>}
       closeLabel="Close Vehicle editor"
       busy={isPending}
-      size="wide"
       footer={
         <div className={styles.dialogFooter}>
           <div>
@@ -778,7 +777,7 @@ export function VehicleEditor({
           </p>
         ) : null}
       </form>
-    </Dialog>
+    </FocusedEditorSurface>
   );
 }
 

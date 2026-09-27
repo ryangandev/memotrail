@@ -171,8 +171,8 @@ export function EntryHistoryView({
         {!history.current.deleted_at &&
           history.current.item_kind === "entry" &&
           history.current.item_subtype === "first_time" && (
-            <ButtonLink href={`/first-times?entry=${history.current.id}`}>
-              Edit First Time
+            <ButtonLink href={`/first-times/${history.current.id}`}>
+              Open First Time
             </ButtonLink>
           )}
         {!history.current.deleted_at &&
@@ -217,7 +217,7 @@ export function EntryHistoryView({
           )}
         {!history.current.deleted_at &&
           history.current.item_kind === "goal" && (
-            <ButtonLink href={`/goals?entry=${history.current.id}`}>
+            <ButtonLink href={`/goals/${history.current.id}`}>
               Open Goal
             </ButtonLink>
           )}
@@ -490,7 +490,7 @@ function GoalExtraction({
           if (result.error) setError(result.error);
           else if (result.goalId) {
             setOpen(false);
-            router.push(`/goals?entry=${result.goalId}`);
+            router.push(`/goals/${result.goalId}`);
           }
         } catch {
           setError(

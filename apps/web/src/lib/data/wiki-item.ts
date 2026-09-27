@@ -89,19 +89,19 @@ export function wikiEntryHref(item: {
     item.recordSource === "person" &&
     item.recordId
   ) {
-    return `/people?person=${item.recordId}`;
+    return `/people/${item.recordId}`;
   }
   if (item.itemKind === "entity" && item.itemSubtype === "home") {
-    return `/homes?entry=${item.id}`;
+    return `/homes/${item.id}`;
   }
   if (item.itemKind === "entity" && item.itemSubtype === "vehicle") {
-    return `/vehicles?entry=${item.id}`;
+    return `/vehicles/${item.id}`;
   }
   if (item.itemKind === "goal") {
-    return `/goals?entry=${item.id}`;
+    return `/goals/${item.id}`;
   }
   if (item.itemKind === "entry" && item.itemSubtype === "first_time") {
-    return `/first-times?entry=${item.id}`;
+    return `/first-times/${item.id}`;
   }
   if (
     item.itemKind === "entry" &&

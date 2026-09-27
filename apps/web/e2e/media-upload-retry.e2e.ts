@@ -147,7 +147,7 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
         let dropped = false;
         await page.route(
           interrupted !== "upload"
-            ? `**${config.path}`
+            ? `**${config.path}/*`
             : "**/storage/v1/object/entry-media/**",
           async (route) => {
             const request = route.request();
@@ -167,7 +167,15 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
         await page
           .getByRole("button", { name: /Upload retry fixture/ })
           .click();
-        const dialog = page.getByRole("dialog");
+        await expect(page).toHaveURL(`${config.path}/${entry}`);
+        const label = {
+          first_time: "First Time",
+          home: "Home",
+          vehicle: "Vehicle",
+          goal: "Goal",
+        }[kind];
+        await page.getByRole("button", { name: `Edit ${label}` }).click();
+        const dialog = page.getByRole("main");
         const selection = [
           {
             name: previewCase ? "retry.heic" : "retry.png",
@@ -252,15 +260,21 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
             return;
           }
         }
-        await expect(dialog).not.toBeVisible();
-        const photos = await client
-          .from("attachments")
-          .select("id,object_path")
-          .eq("entry_id", entry)
-          .eq("variant", "original")
-          .is("deleted_at", null);
+        await expect(
+          dialog.getByRole("button", { name: "Save changes", exact: true }),
+        ).not.toBeVisible();
+        const registeredPhotos = () =>
+          client
+            .from("attachments")
+            .select("id,object_path")
+            .eq("entry_id", entry)
+            .eq("variant", "original")
+            .is("deleted_at", null);
+        await expect
+          .poll(async () => (await registeredPhotos()).data?.length)
+          .toBe(selection.length);
+        const photos = await registeredPhotos();
         expect(photos.error).toBeNull();
-        expect(photos.data).toHaveLength(selection.length);
         for (const photo of photos.data!) {
           const original = await client.storage
             .from("entry-media")

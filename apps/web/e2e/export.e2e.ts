@@ -138,7 +138,7 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
         configurable: true,
       });
     });
-    await page.goto("/library");
+    await page.goto("/settings");
     await page.getByRole("link", { name: /Export archive/ }).click();
     await expect(
       page.getByRole("heading", { name: "Export archive" }),
@@ -200,7 +200,9 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
         maxBuffer: 10 * 1024 * 1024,
       });
     const manifest = JSON.parse(read("manifest.json").toString());
-    expect(Object.keys(manifest.datasets)).toHaveLength(27);
+    expect(Object.keys(manifest.datasets).sort()).toEqual(
+      Object.keys(snapshot.datasets).sort(),
+    );
     for (const [name, value] of Object.entries(snapshot.datasets))
       expect(JSON.parse(read(`data/${name}.json`).toString())).toHaveLength(
         value as number,

@@ -123,8 +123,9 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
       const saved = await client.rpc("save_goal_entry", goalParameters);
       expect(saved.error).toBeNull();
       const id = saved.data[0].entry_id;
-      await page.goto("/goals?entry=" + id);
-      const dialog = page.getByRole("dialog");
+      await page.goto("/goals/" + id);
+      await page.getByRole("button", { name: "Edit Goal" }).click();
+      const dialog = page.getByRole("main");
       await dialog
         .getByRole("combobox", { name: "Date type", exact: true })
         .selectOption(value.precision);

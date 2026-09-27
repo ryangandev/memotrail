@@ -91,7 +91,8 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
   Library search also finds Inbox captures, labels them clearly, and supports record, date, Collection, and tag filters with match context.
   Library avoids duplicating the sidebar's focused and organizing destinations; the global Version history index has a link below Library results.
 - Opening a general Wiki Item shows its current content and primary actions first.
-  Version history is an explicit secondary action, while typed Entities continue to open their focused editors.
+  Version history is an explicit secondary action, while focused records open their own read-only detail pages.
+  Edit changes the fields on that detail page into an inline form; Add remains a modal creation flow.
 - Current Wiki Item detail supports moving the item to Trash, where it remains restorable.
 - Collections and tags are created and managed from separate Library destinations without a second in-page switcher, and remain available in every compatible Wiki Item editor.
 - Collection and tag management opens in viewport-level dialogs. The Tags Library uses compact usage-count badges that open tag management, recent linked Entries, and a path to the complete filtered result set.
@@ -127,7 +128,7 @@ The user can create, order, rename, hide, and restore tracks without deleting co
 Timeline's global Add moment flow asks what the user is recording before opening the matching focused editor.
 The record form determines its fields, while Track only determines presentation.
 The Homes, Vehicles, and First Times track shortcuts open their specialized editors directly; other track shortcuts open the generic Moment editor with that track preselected.
-Opening an existing Home, Vehicle, or First Time from Timeline keeps the user on Timeline and uses the same specialized editor as its Records page.
+Opening an existing Home, Vehicle, or First Time from Timeline navigates to its read-only focused detail page.
 Unanchored Age, Approximate, and Unknown moments remain visible without a fabricated calendar position.
 
 Web Dashboard is ordered around:

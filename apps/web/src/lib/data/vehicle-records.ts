@@ -20,7 +20,9 @@ export type VehiclesWorkspace = {
 
 type NameRow = { name: string };
 
-export async function getVehiclesWorkspace(): Promise<VehiclesWorkspace | null> {
+export async function getVehiclesWorkspace(
+  targetId?: string,
+): Promise<VehiclesWorkspace | null> {
   const context = await getAuthenticatedContext();
   if (!context) return null;
 
@@ -51,15 +53,33 @@ export async function getVehiclesWorkspace(): Promise<VehiclesWorkspace | null> 
     return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
   }
 
+  if (targetId && !rows.some((record) => record.id === targetId)) {
+    for (let offset = 100; rows.length >= offset; offset += 100) {
+      const page = await context.client.rpc("vehicles_workspace", {
+        p_limit: 100,
+        p_offset: offset,
+      });
+      const more = page.error ? null : parseVehicleRows(page.data);
+      if (!more)
+        return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+      rows.push(...more);
+      if (more.length < 100 || more.some((record) => record.id === targetId))
+        break;
+    }
+  }
+  const visibleRows = targetId
+    ? rows.filter((record) => record.id === targetId)
+    : rows;
+
   const locations = await getPrimaryEntryLocations(
     context,
-    rows.map((row) => row.id),
+    visibleRows.map((row) => row.id),
   );
   if (!locations) {
     return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
   }
 
-  const attachments = rows.flatMap((vehicle) => vehicle.attachments);
+  const attachments = visibleRows.flatMap((vehicle) => vehicle.attachments);
   const signedUrls = await signedImageUrls(context.client, attachments);
 
   return {
@@ -69,7 +89,7 @@ export async function getVehiclesWorkspace(): Promise<VehiclesWorkspace | null> 
     inboxCount: inbox.error ? undefined : (inbox.count ?? 0),
     loadError: null,
     tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
-    vehicles: rows.map((vehicle) => ({
+    vehicles: visibleRows.map((vehicle) => ({
       ...vehicle,
       location: locations.get(vehicle.id) ?? null,
       attachments: vehicle.attachments.map((attachment) => ({

@@ -144,12 +144,34 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
       await page
         .getByRole("button", { name: /Archived membership fixture/ })
         .click();
-      const dialog = page.getByRole("dialog");
+      await expect(page).toHaveURL(`${config.path}/${id}`);
+      const label = {
+        first_time: "First Time",
+        home: "Home",
+        vehicle: "Vehicle",
+        goal: "Goal",
+      }[kind];
+      await page.getByRole("button", { name: `Edit ${label}` }).click();
+      const dialog = page.getByRole("main");
       await expect(dialog).not.toContainText("Recoverable memories");
       await dialog
         .getByRole("button", { name: "Save changes", exact: true })
         .click();
-      await expect(dialog).not.toBeVisible();
+      await expect(
+        dialog.getByRole("button", { name: "Save changes" }),
+      ).not.toBeVisible();
+      await expect
+        .poll(
+          async () =>
+            (
+              await client
+                .from("entries")
+                .select("revision")
+                .eq("id", id)
+                .single()
+            ).data?.revision,
+        )
+        .toBeGreaterThan(saved.data[0].revision);
       expect(
         (
           await client
@@ -168,16 +190,22 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
         ).data,
       ).toHaveLength(1);
       // The same authenticated RPC is the native client's mutation boundary.
-      const revision = (
-        await client.from("entries").select("revision").eq("id", id).single()
-      ).data!.revision;
-      const native = await client.rpc(config.rpc, {
-        ...config.args,
-        p_entry_id: id,
-        p_expected_revision: revision,
-        p_collection_names: [],
-      });
+      let native;
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        const revision = (
+          await client.from("entries").select("revision").eq("id", id).single()
+        ).data!.revision;
+        native = await client.rpc(config.rpc, {
+          ...config.args,
+          p_entry_id: id,
+          p_expected_revision: revision,
+          p_collection_names: [],
+        });
+        if (native.error || native.data?.length) break;
+      }
+      if (!native) throw new Error("Native mutation was not attempted.");
       expect(native.error).toBeNull();
+      expect(native.data).toHaveLength(1);
       const memberships = (
         await client
           .from("entry_collections")

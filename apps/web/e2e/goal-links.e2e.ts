@@ -99,14 +99,17 @@ test("Goal edits retain links to Entries in Trash until they are restored", asyn
           .eq("id", hiddenID)
       ).error,
     ).toBeNull();
-    await page.goto("/goals?entry=" + id);
-    const dialog = page.getByRole("dialog");
+    await page.goto("/goals/" + id);
+    await page.getByRole("button", { name: "Edit Goal" }).click();
+    const dialog = page.getByRole("main");
     await expect(dialog).not.toContainText("Hidden progress note");
     await expect(dialog).toContainText("Visible progress note");
     await dialog
       .getByRole("button", { name: "Save changes", exact: true })
       .click();
-    await expect(dialog).not.toBeVisible();
+    await expect(
+      dialog.getByRole("button", { name: "Save changes" }),
+    ).not.toBeVisible();
     expect(
       (
         await client
@@ -143,7 +146,8 @@ test("Goal edits retain links to Entries in Trash until they are restored", asyn
     await expect(
       page.getByText("Hidden progress note", { exact: true }),
     ).not.toBeVisible();
-    await page.goto("/goals?entry=" + id);
+    await page.goto("/goals/" + id);
+    await page.getByRole("button", { name: "Edit Goal" }).click();
     await expect(
       dialog.getByRole("button", {
         name: "Remove related Item Hidden progress note",
@@ -156,25 +160,30 @@ test("Goal edits retain links to Entries in Trash until they are restored", asyn
         exact: true,
       }),
     ).not.toBeVisible();
-    await dialog
-      .getByRole("button", {
-        name: "Remove related Item Hidden progress note",
-        exact: true,
-      })
-      .click();
+    const removeHidden = dialog.getByRole("button", {
+      name: "Remove related Item Hidden progress note",
+      exact: true,
+    });
+    await removeHidden.click();
+    await expect(removeHidden).not.toBeVisible();
     await dialog
       .getByRole("button", { name: "Save changes", exact: true })
       .click();
-    await expect(dialog).not.toBeVisible();
-    expect(
-      (
-        await client
-          .from("entry_links")
-          .select("target_entry_id")
-          .eq("source_entry_id", id)
-          .eq("relationship", "related")
-      ).data,
-    ).toHaveLength(0);
+    await expect(
+      dialog.getByRole("button", { name: "Save changes" }),
+    ).not.toBeVisible();
+    await expect
+      .poll(
+        async () =>
+          (
+            await client
+              .from("entry_links")
+              .select("target_entry_id")
+              .eq("source_entry_id", id)
+              .eq("relationship", "related")
+          ).data?.length,
+      )
+      .toBe(0);
     expect(uiErrors).toEqual([]);
   } finally {
     await admin.auth.admin.deleteUser(owner);
