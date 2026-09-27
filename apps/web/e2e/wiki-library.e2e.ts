@@ -136,6 +136,21 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await expect(
       page.getByRole("navigation", { name: "Mobile navigation" }),
     ).toBeVisible();
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const field = document.querySelector("#trail-search")?.parentElement;
+          const button = document.querySelector(
+            'form[action="/library"] button[type="submit"]',
+          );
+          if (!field || !button) return Number.POSITIVE_INFINITY;
+          return Math.abs(
+            field.getBoundingClientRect().width -
+              button.getBoundingClientRect().width,
+          );
+        }),
+      )
+      .toBeLessThanOrEqual(1);
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
