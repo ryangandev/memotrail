@@ -89,7 +89,9 @@ export async function getLocationMapWorkspace() {
         .returns<EntryRow[]>(),
       context.client
         .from("locations")
-        .select("id,latitude,longitude,formatted_address,name,city,region,country")
+        .select(
+          "id,latitude,longitude,formatted_address,name,city,region,country",
+        )
         .eq("owner_id", context.userId)
         .is("deleted_at", null)
         .in("id", locationIds)

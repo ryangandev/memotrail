@@ -95,12 +95,18 @@ test("Inbox saves an Entry while Goal uses its focused form", async ({
     await page.getByRole("button", { name: "Add Goal" }).click();
     const editor = page.getByRole("dialog");
     await editor.getByLabel("Title", { exact: true }).fill("Learn to sail");
-    await editor.getByRole("combobox", { name: "Horizon" }).selectOption("long_term");
-    await editor.getByRole("combobox", { name: "Reflective state" }).selectOption("active");
+    await editor
+      .getByRole("combobox", { name: "Horizon" })
+      .selectOption("long_term");
+    await editor
+      .getByRole("combobox", { name: "Reflective state" })
+      .selectOption("active");
     await editor.getByLabel(/Target date/).fill("2028-06-01");
     await editor.getByRole("button", { name: "Add Goal", exact: true }).click();
     await expect(editor).not.toBeVisible();
-    await expect(page.getByRole("button", { name: /Learn to sail/ })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Learn to sail/ }),
+    ).toBeVisible();
 
     const source = await client
       .from("entries")

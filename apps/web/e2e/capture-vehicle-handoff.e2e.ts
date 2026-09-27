@@ -94,14 +94,20 @@ test("Inbox saves an Entry while Vehicle uses its focused form", async ({
     await page.goto("/vehicles");
     await page.getByRole("button", { name: "Add Vehicle" }).click();
     const editor = page.getByRole("dialog");
-    await editor.getByLabel("Name or nickname", { exact: true }).fill("My first EV");
+    await editor
+      .getByLabel("Name or nickname", { exact: true })
+      .fill("My first EV");
     await editor.getByRole("textbox", { name: /Make/ }).fill("Toyota");
     await editor.getByRole("textbox", { name: /Model/ }).fill("RAV4");
     await editor.getByRole("spinbutton", { name: /Model year/ }).fill("2025");
     await editor.getByRole("textbox", { name: /Color/ }).fill("White Pearl");
-    await editor.getByRole("button", { name: "Add Vehicle", exact: true }).click();
+    await editor
+      .getByRole("button", { name: "Add Vehicle", exact: true })
+      .click();
     await expect(editor).not.toBeVisible();
-    await expect(page.getByRole("button", { name: /My first EV/ })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /My first EV/ }),
+    ).toBeVisible();
 
     const source = await client
       .from("entries")

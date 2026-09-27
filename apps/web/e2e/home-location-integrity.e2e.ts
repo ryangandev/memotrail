@@ -139,7 +139,9 @@ test("Home keeps Location optional and never pairs edited addresses with old coo
     await providerEdit.getByRole("option", { name: /10 Pine Street/ }).click();
     await providerEdit.getByRole("button", { name: "Save changes" }).click();
     await expect(providerEdit).not.toBeVisible();
-    await expect(mappedCard.locator('[data-record-card-map="true"]')).toBeVisible();
+    await expect(
+      mappedCard.locator('[data-record-card-map="true"]'),
+    ).toBeVisible();
 
     const mappedEntry = (
       await admin
@@ -159,7 +161,9 @@ test("Home keeps Location optional and never pairs edited addresses with old coo
           .eq("id", mappedEntry.id)
       ).error,
     ).toBeNull();
-    await staleEdit.getByRole("textbox", { name: "Home name" }).fill("Stale edit");
+    await staleEdit
+      .getByRole("textbox", { name: "Home name" })
+      .fill("Stale edit");
     await staleEdit.getByRole("button", { name: "Save changes" }).click();
     await expect(staleEdit.locator("footer [role=alert]")).toContainText(
       "changed on another device",

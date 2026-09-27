@@ -181,7 +181,10 @@ test("Unified AI search uses bilingual source evidence, explicit requests, and n
       });
       const searchData = await completedSearch.json();
       expect(completedSearch.status(), JSON.stringify(searchData)).toBe(200);
-      expect(searchData.sources?.length, JSON.stringify(searchData)).toBeGreaterThan(0);
+      expect(
+        searchData.sources?.length,
+        JSON.stringify(searchData),
+      ).toBeGreaterThan(0);
       expect(JSON.stringify(searchData)).toContain("2017");
     }
     if (live) {

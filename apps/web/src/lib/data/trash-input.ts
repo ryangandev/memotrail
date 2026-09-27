@@ -1,7 +1,6 @@
 export const TRASH_PAGE_SIZE = 25;
 
-export type TrashItemKind =
-  "attachment" | "entry" | "person" | "collection";
+export type TrashItemKind = "attachment" | "entry" | "person" | "collection";
 
 export type TrashItemInput = {
   deletedAt: string;

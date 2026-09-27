@@ -4,10 +4,7 @@ import { expect, test } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
-test("Map shows current Entry coordinates", async ({
-  context,
-  page,
-}) => {
+test("Map shows current Entry coordinates", async ({ context, page }) => {
   const env = JSON.parse(
     execFileSync("supabase", ["status", "-o", "json"], {
       encoding: "utf8",
@@ -172,16 +169,20 @@ test("Map shows current Entry coordinates", async ({
         .locator('[data-record-card-map="true"]'),
     ).toHaveAttribute("src", /theme=dark/);
 
-    const darkTile = process.env.MEMOTRAIL_E2E_LIVE_GEOAPIFY === "1"
-      ? page.waitForResponse((response) =>
-          response.url().includes("/api/locations/tiles/") &&
-          response.url().includes("theme=dark") &&
-          response.status() === 200,
-        )
-      : null;
+    const darkTile =
+      process.env.MEMOTRAIL_E2E_LIVE_GEOAPIFY === "1"
+        ? page.waitForResponse(
+            (response) =>
+              response.url().includes("/api/locations/tiles/") &&
+              response.url().includes("theme=dark") &&
+              response.status() === 200,
+          )
+        : null;
     await page.goto("/map");
     await expect(
-      page.getByRole("region", { name: "Interactive map of your Entry Locations" }),
+      page.getByRole("region", {
+        name: "Interactive map of your Entry Locations",
+      }),
     ).toHaveAttribute("data-map-theme", "dark");
     if (darkTile) {
       await darkTile;
@@ -201,24 +202,32 @@ test("Map shows current Entry coordinates", async ({
         path: "/private/tmp/memotrail-location-map-dark.png",
       });
     }
-    const lightTile = process.env.MEMOTRAIL_E2E_LIVE_GEOAPIFY === "1"
-      ? page.waitForResponse((response) =>
-          response.url().includes("/api/locations/tiles/") &&
-          response.url().includes("theme=light") &&
-          response.status() === 200,
-        )
-      : null;
+    const lightTile =
+      process.env.MEMOTRAIL_E2E_LIVE_GEOAPIFY === "1"
+        ? page.waitForResponse(
+            (response) =>
+              response.url().includes("/api/locations/tiles/") &&
+              response.url().includes("theme=light") &&
+              response.status() === 200,
+          )
+        : null;
     await page.evaluate(() =>
       document.documentElement.setAttribute("data-theme", "light"),
     );
     await expect(
-      page.getByRole("region", { name: "Interactive map of your Entry Locations" }),
+      page.getByRole("region", {
+        name: "Interactive map of your Entry Locations",
+      }),
     ).toHaveAttribute("data-map-theme", "light");
     if (lightTile) await lightTile;
     await page.emulateMedia({ colorScheme: "dark" });
-    await page.evaluate(() => document.documentElement.removeAttribute("data-theme"));
+    await page.evaluate(() =>
+      document.documentElement.removeAttribute("data-theme"),
+    );
     await expect(
-      page.getByRole("region", { name: "Interactive map of your Entry Locations" }),
+      page.getByRole("region", {
+        name: "Interactive map of your Entry Locations",
+      }),
     ).toHaveAttribute("data-map-theme", "dark");
     await expect(
       page.getByRole("status").filter({ hasText: "2 Entry Locations" }),
@@ -315,7 +324,9 @@ test("Map shows current Entry coordinates", async ({
 
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.reload();
-    await expect(page.getByRole("heading", { name: "Your areas" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Your areas" }),
+    ).toBeVisible();
     const eastArea = page.getByRole("button", {
       name: "Zoom to Philadelphia, 2 Entries",
     });
@@ -340,8 +351,12 @@ test("Map shows current Entry coordinates", async ({
     await page.getByRole("button", { name: "View all" }).click();
     await expect(page.locator(".leaflet-marker-icon")).toHaveCount(2);
     await page.getByLabel("From year").fill("2023");
-    await expect(page.getByRole("heading", { name: "Your areas" })).toHaveCount(0);
-    await expect(page.getByRole("status").filter({ hasText: "1 Entry Location" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Your areas" })).toHaveCount(
+      0,
+    );
+    await expect(
+      page.getByRole("status").filter({ hasText: "1 Entry Location" }),
+    ).toBeVisible();
     await page.getByLabel("From year").fill("");
     await expect(page.locator(".leaflet-marker-icon")).toHaveCount(2);
     await page.screenshot({
@@ -360,7 +375,6 @@ test("Map shows current Entry coordinates", async ({
       animations: "disabled",
       path: "/private/tmp/memotrail-location-map-areas-mobile.png",
     });
-
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }

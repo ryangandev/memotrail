@@ -174,7 +174,9 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     await page.goto("/library");
     await page.getByRole("link", { name: /First trip to Japan/ }).click();
     await expect(page).toHaveURL(`/timeline?entry=${id}`);
-    await expect(page.getByRole("dialog", { name: "First trip to Japan" })).toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: "First trip to Japan" }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "Close Timeline editor" }).click();
     await expect(page).toHaveURL(/\/timeline$/);
     const timelineViewport = page.getByTestId("timeline-viewport");

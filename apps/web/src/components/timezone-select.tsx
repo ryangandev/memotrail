@@ -51,9 +51,7 @@ export function TimezoneSelect({
     >
       {!currentTimezoneIsListed ? (
         <optgroup label="Current time zone">
-          <option value={value}>
-            {optionLabel(value)}
-          </option>
+          <option value={value}>{optionLabel(value)}</option>
         </optgroup>
       ) : null}
       <optgroup label="Common time zones">

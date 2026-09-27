@@ -164,7 +164,7 @@ describe("AI search trust boundary", () => {
     const request = parseAISearchInput({
       parameters: {
         q: "skiing",
-          type: "entry",
+        type: "entry",
         collection: "Travel",
         tag: "winter",
         from: "2017-01-01",

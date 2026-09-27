@@ -179,7 +179,8 @@ export function EntryHistoryView({
           history.current.item_kind === "entry" &&
           ["moment", "period"].includes(history.current.item_subtype) && (
             <ButtonLink href={`/timeline?entry=${history.current.id}`}>
-              Edit {history.current.item_subtype === "period" ? "Period" : "Moment"}
+              Edit{" "}
+              {history.current.item_subtype === "period" ? "Period" : "Moment"}
             </ButtonLink>
           )}
         {detailMode && history.versions.length > 0 ? (
@@ -415,7 +416,9 @@ function CurrentItem({ value }: { value: HistorySnapshot }) {
         !["entry", "source_capture"].includes(value.item_subtype) ? (
           <div>
             <dt>Record</dt>
-            <dd>{wikiItemIdentityLabel(value.item_kind, value.item_subtype)}</dd>
+            <dd>
+              {wikiItemIdentityLabel(value.item_kind, value.item_subtype)}
+            </dd>
           </div>
         ) : null}
         <div>

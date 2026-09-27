@@ -4,10 +4,7 @@ import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 
-test("Canonical keyword search finds People", async ({
-  page,
-  context,
-}) => {
+test("Canonical keyword search finds People", async ({ page, context }) => {
   const env = JSON.parse(
     execFileSync("supabase", ["status", "-o", "json"], {
       encoding: "utf8",

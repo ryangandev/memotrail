@@ -145,8 +145,8 @@ export function TrashWorkspace({
             title={<>Nothing in Trash</>}
             description={
               <>
-                Removed Entries, People, and individual photos will
-                appear here. Legacy records remain recoverable too.
+                Removed Entries, People, and individual photos will appear here.
+                Legacy records remain recoverable too.
               </>
             }
             icon={

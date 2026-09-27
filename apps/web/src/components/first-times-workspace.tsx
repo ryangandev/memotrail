@@ -72,7 +72,9 @@ export function FirstTimesWorkspace({
   const [selectedEntry, setSelectedEntry] = useState<
     FirstTimeEntry | null | undefined
   >(() =>
-    initialEntryId ? entries.find((item) => item.id === initialEntryId) : undefined,
+    initialEntryId
+      ? entries.find((item) => item.id === initialEntryId)
+      : undefined,
   );
   const [confirmedEntries, setConfirmedEntries] = useState<
     Record<string, FirstTimeEntry>
@@ -160,7 +162,8 @@ export function FirstTimesWorkspace({
           key={selectedEntry?.id ?? "new-first-time"}
           onClose={() => {
             setSelectedEntry(undefined);
-            if (initialEntryId) router.replace("/first-times", { scroll: false });
+            if (initialEntryId)
+              router.replace("/first-times", { scroll: false });
           }}
           onSaved={(entry) =>
             setConfirmedEntries((current) => ({

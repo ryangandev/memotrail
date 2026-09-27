@@ -294,10 +294,9 @@ test("DatePickerField uses the shared form typography", async ({ page }) => {
   );
   await expect(calendar).toBeVisible();
   await expect(calendar.locator("th").first()).toHaveCSS("font-size", "12px");
-  await expect(calendar.locator("[class*=calendarCellTrigger]").first()).toHaveCSS(
-    "font-size",
-    textFont.size,
-  );
+  await expect(
+    calendar.locator("[class*=calendarCellTrigger]").first(),
+  ).toHaveCSS("font-size", textFont.size);
   await page.keyboard.press("Escape");
   await specimen
     .getByRole("button", { name: "Choose exact date and time time" })
