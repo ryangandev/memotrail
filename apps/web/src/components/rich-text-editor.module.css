@@ -275,8 +275,9 @@
   outline: none;
   color: var(--mt-color-ink);
   background: var(--mt-color-surface);
-  font: inherit;
-  font-size: var(--mt-font-size-caption);
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-regular);
 }
 
 .linkEditor input:focus {

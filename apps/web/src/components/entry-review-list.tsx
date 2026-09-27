@@ -16,7 +16,6 @@ import {
 } from "@/app/inbox/actions";
 import { trashWikiItem } from "@/app/history/actions";
 import { Icon } from "@/components/icon";
-import { EntryAISuggestionsPanel } from "@/components/entry-ai-suggestions";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { OccurrenceEditor } from "@/components/occurrence-editor";
 import { EntryPhotoDates } from "@/components/entry-photo-dates";
@@ -29,7 +28,6 @@ import {
   occurrenceLabel,
   resolveOccurrenceDraft,
 } from "@/lib/data/occurrence";
-import { mergeAISuggestionNames } from "@/lib/ai/suggestion";
 import type { InboxEntry } from "@/lib/data/inbox";
 import { entryBodyLimit, entryTitleLimit } from "@/lib/data/inbox-input";
 import {
@@ -372,32 +370,6 @@ export function EntryReviewDialog({
         className={entryFormStyles.reviewForm}
         onSubmit={handleSubmit}
       >
-        {!organized && (
-          <EntryAISuggestionsPanel
-            entryID={entry.id}
-            revision={entry.revision}
-            disabled={isPending}
-            onApply={(key, value) => {
-              if (key === "dateText" && typeof value === "string")
-                setOccurrence((current) => ({
-                  ...current,
-                  precision: "approximate",
-                  label: value,
-                  start: "",
-                  end: "",
-                }));
-              if (key === "title" && typeof value === "string") setTitle(value);
-              if (key === "collections" && Array.isArray(value))
-                setCollectionNames((current) =>
-                  mergeAISuggestionNames(current, value, 20),
-                );
-              if (key === "tags" && Array.isArray(value))
-                setTagNames((current) =>
-                  mergeAISuggestionNames(current, value, 50),
-                );
-            }}
-          />
-        )}
         <label>
           <span>Title</span>
           <input
@@ -428,15 +400,6 @@ export function EntryReviewDialog({
           />
         </div>
 
-        <EntryPhotoDates
-          place={photoPlace}
-          onPlaceChange={setPhotoPlace}
-          entryId={entry.id}
-          disabled={isPending}
-          onUseDate={(date) =>
-            setOccurrence((current) => photoCalendarDateDraft(date, current))
-          }
-        />
         <OccurrenceEditor
           value={occurrence}
           onChange={setOccurrence}
@@ -467,6 +430,16 @@ export function EntryReviewDialog({
           input={tagInput}
           onInputChange={setTagInput}
           options={tagOptions}
+        />
+
+        <EntryPhotoDates
+          place={photoPlace}
+          onPlaceChange={setPhotoPlace}
+          entryId={entry.id}
+          disabled={isPending}
+          onUseDate={(date) =>
+            setOccurrence((current) => photoCalendarDateDraft(date, current))
+          }
         />
 
         {result ? (

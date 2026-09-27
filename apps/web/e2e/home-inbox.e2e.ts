@@ -181,6 +181,22 @@ test("Home previews the Inbox while Inbox remains a focused organization workspa
 
     await page.goto(`/inbox?entry=${newestID}`);
     const review = page.getByRole("dialog", { name: "Review Entry" });
+    await expect(review.getByRole("textbox", { name: "Title" })).toBeVisible();
+    await expect(review.getByRole("complementary", { name: "AI suggestions" })).toHaveCount(0);
+    const tags = review.locator('fieldset[data-kind="tag"]');
+    const photos = review.getByRole("region", { name: "Photo date suggestions" });
+    await expect(tags).toBeVisible();
+    await expect(photos).toBeVisible();
+    expect(
+      await tags.evaluate(
+        (element, photoElement) =>
+          Boolean(
+            element.compareDocumentPosition(photoElement as Node) &
+              Node.DOCUMENT_POSITION_FOLLOWING,
+          ),
+        await photos.elementHandle(),
+      ),
+    ).toBe(true);
     await expect(
       review.getByRole("button", { name: "Save changes" }),
     ).toHaveAttribute("data-variant", "secondary");

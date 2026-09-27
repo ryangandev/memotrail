@@ -83,13 +83,25 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
           owner_id: ownerID,
           title: "Ocean memory",
         },
+        {
+          body: "Only saved to Inbox so far.",
+          inbox_status: "unreviewed",
+          item_kind: "entry",
+          item_subtype: "entry",
+          owner_id: ownerID,
+          title: "Inbox-only thought",
+        },
       ])
       .select("id,title");
     expect(inserted.error).toBeNull();
     const reflectionID = inserted.data?.find(
       (entry) => entry.title === "Morning reflection",
     )?.id;
+    const inboxOnlyID = inserted.data?.find(
+      (entry) => entry.title === "Inbox-only thought",
+    )?.id;
     expect(reflectionID).toBeTruthy();
+    expect(inboxOnlyID).toBeTruthy();
     expect(
       (
         await client
@@ -113,23 +125,21 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto("/library");
     await expect(page.getByRole("heading", { name: "Library", exact: true })).toBeVisible();
-    const kinds = page.getByRole("navigation", { name: "Library categories" });
-    const allItemsKind = kinds.getByRole("link", { name: "All items" });
-    await expect(allItemsKind).toHaveAttribute("aria-current", "page");
     await expect(
-      page.getByText("What each item is", { exact: true }),
+      page.getByRole("navigation", { name: "Library categories" }),
     ).toHaveCount(0);
-    await expect(allItemsKind.locator("p")).toHaveCount(0);
+    const showFilter = page.getByRole("combobox", { name: "Show" });
+    await expect(showFilter).toHaveValue("");
+    await showFilter.selectOption("entity");
+    await page.getByRole("button", { name: "Apply" }).click();
+    await expect(page).toHaveURL(/kind=entity$/);
     await expect(
-      kinds.getByText("Everything you captured and kept."),
+      page.getByRole("heading", { name: "People, homes & vehicles" }),
     ).toBeVisible();
-    await expect
-      .poll(async () => (await allItemsKind.boundingBox())?.height)
-      .toBeLessThanOrEqual(100);
-    await expect(kinds.getByRole("link", { name: /Entries/ })).toBeVisible();
-    await expect(kinds.getByRole("link", { name: /Entities/ })).toBeVisible();
+    await page.goto("/library");
+    await page.getByText("More views and tools", { exact: true }).click();
     await expect(
-      page.getByRole("heading", { name: "Focused views", exact: true }),
+      page.getByRole("navigation", { name: "Focused views" }),
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Places", exact: true }),
@@ -146,10 +156,30 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       `/items/${reflectionID}`,
     );
     await expect(
+      page.getByRole("link", { name: /Entry Inbox-only thought/ }),
+    ).toHaveCount(0);
+    await expect(
       page.getByRole("link", { name: /Entity Person Avery/ }),
     ).toBeVisible();
     await expect(
       page.getByRole("main").getByText("3 items", { exact: true }),
+    ).toBeVisible();
+
+    await page.goto("/library?q=Inbox-only");
+    await expect(
+      page.getByRole("main").getByText("0 items", { exact: true }),
+    ).toBeVisible();
+    await page.goto(`/inbox?entry=${inboxOnlyID}`);
+    const inboxReview = page.getByRole("dialog", { name: "Review Entry" });
+    await expect(inboxReview).toBeVisible();
+    await inboxReview.getByRole("button", { name: "Save to Library" }).click();
+    await expect(inboxReview).toHaveCount(0);
+    await page.goto("/library");
+    await expect(
+      page.getByRole("link", { name: /Entry Inbox-only thought/ }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("main").getByText("4 items", { exact: true }),
     ).toBeVisible();
 
     await reflectionLink.click();

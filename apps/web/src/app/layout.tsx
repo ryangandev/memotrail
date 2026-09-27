@@ -7,6 +7,10 @@ import { WorkspaceBoundary } from "@/components/workspace-shell";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import {
+  SIDEBAR_COOKIE_NAME,
+  sidebarIsCollapsed,
+} from "@/lib/sidebar-preference";
+import {
   explicitTheme,
   storedThemePreference,
   THEME_COOKIE_NAME,
@@ -48,6 +52,9 @@ export default async function RootLayout({ children }: RootLayoutProps) {
           <WorkspaceBoundary
             configured={configured}
             inboxCount={inbox?.error ? undefined : (inbox?.count ?? undefined)}
+            initialSidebarCollapsed={sidebarIsCollapsed(
+              cookieStore.get(SIDEBAR_COOKIE_NAME)?.value,
+            )}
             viewer={context?.viewer ?? null}
           >
             {children}

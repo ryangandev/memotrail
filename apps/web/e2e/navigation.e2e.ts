@@ -209,12 +209,9 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
         .getByRole("navigation", { name: "Settings navigation" })
         .getByRole("link", { name: "Settings", exact: true }),
     ).toHaveCount(1);
-    const syncNote = shell.getByRole("note", { name: "Private cloud sync" });
-    await expect(syncNote).toBeVisible();
-    await syncNote
-      .getByRole("button", { name: "Dismiss private cloud sync" })
-      .click();
-    await expect(syncNote).not.toBeVisible();
+    await expect(
+      shell.getByRole("note", { name: "Private cloud sync" }),
+    ).toHaveCount(0);
     await page.reload();
     await expect(
       shell.getByRole("note", { name: "Private cloud sync" }),
@@ -247,7 +244,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     const homeTop = await homeLink.evaluate(
       (element) => element.getBoundingClientRect().top,
     );
-    expect(Math.round(homeTop - brandBottom)).toBe(20);
+    expect(Math.round(homeTop - brandBottom)).toBe(24);
     const scrollRegionRight = await scrollRegion.evaluate(
       (element) => element.getBoundingClientRect().right,
     );
@@ -282,6 +279,123 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       await capture.evaluate((element) => element.getBoundingClientRect().top),
     ).toBe(captureTop);
     await page.setViewportSize({ width: 1280, height: 720 });
+    await scrollRegion.evaluate((element) => {
+      element.scrollTop = 0;
+    });
+
+    expect(
+      await shell.evaluate((element) =>
+        getComputedStyle(element).transitionDuration
+          .split(", ")
+          .some((duration) => Number.parseFloat(duration) > 0),
+      ),
+    ).toBe(true);
+    await shell.getByRole("button", { name: "Collapse sidebar" }).click();
+    await expect(page.locator('[data-sidebar-collapsed="true"]')).toBeVisible();
+    await expect(shell).toHaveCSS("width", "72px");
+    await expect(page.locator("main")).toHaveCSS("margin-left", "72px");
+    await expect(homeLink).toBeInViewport();
+    const [collapsedRailBox, activeHomeBox] = await Promise.all([
+      shell.boundingBox(),
+      homeLink.boundingBox(),
+    ]);
+    expect(
+      (collapsedRailBox?.x ?? 0) + (collapsedRailBox?.width ?? 0) -
+        ((activeHomeBox?.x ?? 0) + (activeHomeBox?.width ?? 0)),
+    ).toBeGreaterThanOrEqual(7);
+    await expect(homeCaptureHeading).toBeVisible();
+    await expect(
+      shell.getByRole("link", { name: "MemoTrail home" }),
+    ).toHaveCount(0);
+    const expandSidebar = shell.getByRole("button", {
+      name: "Expand sidebar",
+    });
+    await expect(expandSidebar.locator("svg circle")).toHaveCount(3);
+    await expect(expandSidebar.locator("svg")).toHaveAttribute("width", "18");
+    await expect(expandSidebar.locator("svg")).toHaveAttribute("height", "18");
+    const [railBox, toggleBox] = await Promise.all([
+      shell.boundingBox(),
+      expandSidebar.boundingBox(),
+    ]);
+    expect(
+      Math.abs(
+        (railBox?.x ?? 0) + (railBox?.width ?? 0) / 2 -
+          ((toggleBox?.x ?? 0) + (toggleBox?.width ?? 0) / 2),
+      ),
+    ).toBeLessThanOrEqual(1);
+    const collapsedLibrary = primaryNavigation.getByRole("link", {
+      name: "Library",
+      exact: true,
+    });
+    await expect(collapsedLibrary).toBeVisible();
+    await expect(homeLink).toHaveCSS("width", "40px");
+    await expect(homeLink).toHaveCSS("height", "40px");
+    await collapsedLibrary.hover();
+    await expect(collapsedLibrary).toHaveCSS("width", "40px");
+    await expect(collapsedLibrary).toHaveCSS("height", "40px");
+    await page.screenshot({
+      animations: "disabled",
+      caret: "initial",
+      path: "/private/tmp/memotrail-sidebar-collapsed.png",
+    });
+    await page.mouse.move(800, 100);
+    await expandSidebar.focus();
+    await page.keyboard.press("Tab");
+    await expect(homeLink).toBeFocused();
+    await expect(homeLink).toHaveCSS("outline-style", "none");
+    await expect(homeLink).toHaveCSS("box-shadow", /inset/);
+    await page.screenshot({
+      animations: "disabled",
+      caret: "initial",
+      path: "/private/tmp/memotrail-sidebar-focus-collapsed.png",
+    });
+    const previousTheme = await page.locator("html").getAttribute("data-theme");
+    await page.evaluate(() =>
+      document.documentElement.setAttribute("data-theme", "dark"),
+    );
+    await page.screenshot({
+      animations: "disabled",
+      caret: "initial",
+      path: "/private/tmp/memotrail-sidebar-collapsed-dark.png",
+    });
+    await page.evaluate((theme) => {
+      if (theme) document.documentElement.setAttribute("data-theme", theme);
+      else document.documentElement.removeAttribute("data-theme");
+    }, previousTheme);
+    await collapsedLibrary.click();
+    await expect(page).toHaveURL(/\/library$/);
+    await page.reload();
+    await expect(shell).toHaveCSS("width", "72px");
+    await primaryNavigation
+      .getByRole("link", { name: "Home", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/$/);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(shell).toBeHidden();
+    await expect(page.locator("main")).toHaveCSS("margin-left", "0px");
+    await expect(
+      page.getByRole("navigation", { name: "Mobile navigation" }),
+    ).toBeVisible();
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await shell.getByRole("button", { name: "Expand sidebar" }).click();
+    await expect(shell).toHaveCSS("width", "244px");
+    await expect(page.locator("main")).toHaveCSS("margin-left", "244px");
+    await shell.getByRole("button", { name: "Collapse sidebar" }).focus();
+    await page.keyboard.press("Tab");
+    await expect(homeLink).toBeFocused();
+    await expect(homeLink).toHaveCSS("outline-style", "none");
+    await expect(homeLink).toHaveCSS("box-shadow", /inset/);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(shell).toHaveCSS("transition-duration", "0s");
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.screenshot({
+      animations: "disabled",
+      caret: "initial",
+      path: "/private/tmp/memotrail-sidebar-expanded.png",
+    });
+    await shell.evaluate((element) => {
+      element.setAttribute("data-shell-instance", "kept");
+    });
 
     await page.keyboard.press("Meta+k");
     const commandPalette = page.getByRole("dialog", {

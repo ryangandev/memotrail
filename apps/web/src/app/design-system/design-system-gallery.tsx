@@ -19,6 +19,8 @@ import {
 } from "@/components/record-card";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { SearchField } from "@/components/search-field";
+import { SelectField } from "@/components/select-field";
+import { TextField } from "@/components/text-field";
 import { notify } from "@/components/app-toast";
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import type { EntryRichText } from "@/lib/data/rich-text";
@@ -335,11 +337,28 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="SearchField and the current production date, rich-text, occurrence, and organization editors are reusable. Other plain text inputs, selects, textareas, labels, and validation messages are still route-level patterns."
+        description="TextField, SearchField, SelectField, and the current production date, rich-text, occurrence, and organization editors are reusable. TextField is a proposed replacement for route-level plain text inputs; other textareas, labels, and validation messages are still route-level patterns."
         id="forms"
         index="04"
         title="Forms"
       >
+        <Specimen
+          api="label · size: small | medium | large · disabled · native text input props"
+          description="Proposed plain text input for review. Its font, height, border, and focus surface match SearchField and SelectField. The Settings page still uses its existing field."
+          id="text-field"
+          title="TextField"
+        >
+          <div className={styles.formGrid}>
+            <TextField defaultValue="Alex Morgan" label="Preferred name" />
+            <TextField label="Empty text field" placeholder="Add a name" />
+            <TextField
+              disabled
+              label="Disabled text field"
+              placeholder="Unavailable"
+              size="small"
+            />
+          </div>
+        </Specimen>
         <Specimen
           api="label · hideLabel · size: small | medium | large · disabled · native input props"
           description="One focus surface for the icon and text. The search action stays composable, so each feature can choose its own submit behavior."
@@ -384,7 +403,24 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
           </p>
         </Specimen>
         <Specimen
+          api="label · size: small | medium | large · disabled · native select props"
+          description="A labeled native select with the same surface and focus treatment as SearchField."
+          title="SelectField"
+        >
+          <div className={styles.formGrid}>
+            <SelectField defaultValue="all" label="Show records">
+              <option value="all">All records</option>
+              <option value="entries">Entries</option>
+              <option value="entities">People, homes & vehicles</option>
+            </SelectField>
+            <SelectField disabled label="Unavailable filter" size="small">
+              <option>Unavailable</option>
+            </SelectField>
+          </div>
+        </Specimen>
+        <Specimen
           api="size: small | medium | large · granularity: day | month | year · editable · includeTime · disabled"
+          description="Date values, time controls, and calendar text use the shared form typography."
           title="DatePickerField"
         >
           <div className={styles.formGrid}>

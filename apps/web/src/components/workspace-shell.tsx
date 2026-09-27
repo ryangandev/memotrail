@@ -8,13 +8,13 @@ import { useCallback, useState, type ReactNode } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { BrandMark } from "@/components/brand-mark";
 import { CommandPalette } from "@/components/command-palette";
-import { DismissibleSyncNote } from "@/components/dismissible-sync-note";
 import { Icon, type IconName } from "@/components/icon";
 import { QuickCaptureDialog } from "@/components/quick-capture-dialog";
 import { SearchShortcutButton } from "@/components/search-shortcut-link";
 import { SyncStatus } from "@/components/sync-status";
 import { TimezoneSync } from "@/components/timezone-sync";
 import type { Viewer } from "@/lib/data/inbox";
+import { SIDEBAR_COOKIE_NAME } from "@/lib/sidebar-preference";
 
 export type WorkspaceDestination =
   | "collections"
@@ -115,11 +115,13 @@ export function WorkspaceBoundary({
   children,
   configured,
   inboxCount,
+  initialSidebarCollapsed,
   viewer,
 }: {
   children: ReactNode;
   configured: boolean;
   inboxCount?: number;
+  initialSidebarCollapsed: boolean;
   viewer: Viewer | null;
 }) {
   const pathname = usePathname();
@@ -137,7 +139,11 @@ export function WorkspaceBoundary({
   }
 
   return (
-    <WorkspaceShell inboxCount={inboxCount} viewer={viewer}>
+    <WorkspaceShell
+      inboxCount={inboxCount}
+      initialSidebarCollapsed={initialSidebarCollapsed}
+      viewer={viewer}
+    >
       {children}
     </WorkspaceShell>
   );
@@ -146,16 +152,21 @@ export function WorkspaceBoundary({
 export function WorkspaceShell({
   children,
   inboxCount,
+  initialSidebarCollapsed,
   viewer,
 }: {
   children: ReactNode;
   inboxCount?: number;
+  initialSidebarCollapsed: boolean;
   viewer: Viewer;
 }) {
   const pathname = usePathname();
   const activeDestination = destinationForPathname(pathname);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    initialSidebarCollapsed,
+  );
   const closeCommandPalette = useCallback(
     () => setCommandPaletteOpen(false),
     [],
@@ -170,14 +181,24 @@ export function WorkspaceShell({
     setQuickCaptureOpen(true);
   }, []);
 
+  function toggleSidebar() {
+    const next = !sidebarCollapsed;
+    setSidebarCollapsed(next);
+    document.cookie = `${SIDEBAR_COOKIE_NAME}=${next ? "collapsed" : "expanded"}; Path=/; Max-Age=31536000; SameSite=Lax`;
+  }
+
   return (
-    <div className={workspaceShellStyles.appShell}>
+    <div
+      className={workspaceShellStyles.appShell}
+      data-sidebar-collapsed={sidebarCollapsed}
+    >
       <TimezoneSync />
       <CommandPalette onClose={closeCommandPalette} open={commandPaletteOpen} />
       <Sidebar
         activeDestination={activeDestination}
+        collapsed={sidebarCollapsed}
         inboxCount={inboxCount}
-        viewer={viewer}
+        onToggle={toggleSidebar}
       />
 
       <main className={workspaceShellStyles.workspace}>
@@ -285,19 +306,37 @@ function destinationForPathname(pathname: string): WorkspaceDestination {
 
 function Sidebar({
   activeDestination,
+  collapsed,
   inboxCount,
-  viewer,
+  onToggle,
 }: {
   activeDestination: WorkspaceDestination;
+  collapsed: boolean;
   inboxCount?: number;
-  viewer: Viewer;
+  onToggle: () => void;
 }) {
   return (
     <aside className={workspaceShellStyles.sidebar}>
-      <Link className={workspaceShellStyles.brand} href="/">
-        <BrandMark className={workspaceShellStyles.brandMark} />
-        <span>MemoTrail</span>
-      </Link>
+      <div className={workspaceShellStyles.sidebarHeader}>
+        <Link
+          aria-hidden={collapsed}
+          className={workspaceShellStyles.brand}
+          href="/"
+          tabIndex={collapsed ? -1 : undefined}
+        >
+          <BrandMark className={workspaceShellStyles.brandMark} />
+          <span className={workspaceShellStyles.brandName}>MemoTrail</span>
+        </Link>
+        <button
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className={workspaceShellStyles.sidebarToggle}
+          onClick={onToggle}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          type="button"
+        >
+          <Icon name={collapsed ? "sidebarClosed" : "sidebarOpen"} size={18} />
+        </button>
+      </div>
 
       <div
         aria-label="Sidebar navigation"
@@ -307,25 +346,31 @@ function Sidebar({
         <nav aria-label="Primary navigation">
           <NavGroup
             activeDestination={activeDestination}
+            collapsed={collapsed}
             inboxCount={inboxCount}
             items={primaryNavigation}
           />
           <div className={workspaceShellStyles.navDivider} role="separator" />
-          <p className={workspaceShellStyles.navLabel}>Focused views</p>
+          <p aria-hidden={collapsed} className={workspaceShellStyles.navLabel}>
+            Focused views
+          </p>
           <NavGroup
             activeDestination={activeDestination}
+            collapsed={collapsed}
             items={recordNavigation}
           />
           <div className={workspaceShellStyles.navDivider} role="separator" />
-          <p className={workspaceShellStyles.navLabel}>Organize</p>
+          <p aria-hidden={collapsed} className={workspaceShellStyles.navLabel}>
+            Organize
+          </p>
           <NavGroup
             activeDestination={activeDestination}
+            collapsed={collapsed}
             items={organizationNavigation}
           />
         </nav>
 
         <div className={workspaceShellStyles.sidebarFooter}>
-          <DismissibleSyncNote ownerId={viewer.id} />
           <div className={workspaceShellStyles.navDivider} role="separator" />
           <nav
             className={workspaceShellStyles.navGroup}
@@ -333,6 +378,7 @@ function Sidebar({
           >
             <NavigationControl
               active={activeDestination === "settings"}
+              collapsed={collapsed}
               item={settingsNavigation}
             />
           </nav>
@@ -344,10 +390,12 @@ function Sidebar({
 
 function NavGroup({
   activeDestination,
+  collapsed,
   inboxCount,
   items,
 }: {
-  activeDestination: WorkspaceDestination | null;
+  activeDestination: WorkspaceDestination;
+  collapsed: boolean;
   inboxCount?: number;
   items: NavigationItem[];
 }) {
@@ -356,6 +404,7 @@ function NavGroup({
       {items.map((item) => (
         <NavigationControl
           active={item.destination === activeDestination}
+          collapsed={collapsed}
           inboxCount={item.destination === "inbox" ? inboxCount : undefined}
           item={item}
           key={item.destination}
@@ -367,11 +416,13 @@ function NavGroup({
 
 function NavigationControl({
   active,
+  collapsed = false,
   inboxCount,
   item,
   mobile = false,
 }: {
   active: boolean;
+  collapsed?: boolean;
   inboxCount?: number;
   item: NavigationItem;
   mobile?: boolean;
@@ -379,7 +430,7 @@ function NavigationControl({
   const content = (
     <>
       <Icon name={item.icon} size={mobile ? 20 : 18} />
-      <span>
+      <span className={workspaceShellStyles.navItemLabel}>
         {mobile && item.label === "First Times" ? "Firsts" : item.label}
       </span>
       {!mobile && inboxCount ? <small>{inboxCount}</small> : null}
@@ -395,8 +446,10 @@ function NavigationControl({
     return (
       <Link
         aria-current={active ? "page" : undefined}
+        aria-label={collapsed ? item.label : undefined}
         className={className}
         href={item.href}
+        title={collapsed ? item.label : undefined}
       >
         {content}
         <NavigationPendingIndicator label={item.label} />

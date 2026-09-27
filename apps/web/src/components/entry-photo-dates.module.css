@@ -81,7 +81,9 @@
   color: var(--mt-color-ink);
   border-radius: var(--mt-radius-small);
   padding: var(--mt-space-2);
-  font: inherit;
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-regular);
 }
 @media (max-width: 480px) {
   .photo {

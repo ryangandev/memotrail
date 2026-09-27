@@ -61,6 +61,7 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - An ordinary online save shows progress in the composer; its brief local queue stage does not open a Pending sync list.
 - Voice capture produces editable text and never retains the original audio.
 - Every new free-form Capture enters Inbox, even when AI suggestions are available.
+- Inbox review keeps AI suggestions hidden for now; people organize the Entry manually.
 - AI may suggest title, Collections, tags, date, and photo-derived date or Location context.
 - Suggestions remain editable and require explicit adoption.
 - AI may propose a Collection but cannot create it without confirmation.
@@ -85,7 +86,8 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - A Location does not require a personal name; an Entry, Home, Vehicle, or First Time can carry its address or coordinates.
 - Inbox, Timeline, Home, Search, and Library are views or workflow states, not organization labels.
 - Library is the primary all-items entry point for the Life Wiki.
-  It presents Entries, Entities, and Goals, supports category and keyword filters, and opens focused records in their own views.
+  It presents organized Entries, Entities, and Goals, supports category and keyword filters, and opens focused records in their own views.
+  Unreviewed captures remain in Inbox and do not appear in Library or its item count until `Save to Library`.
 - Opening a general Wiki Item shows its current content and primary actions first.
   Version history is an explicit secondary action, while typed Entities continue to open their focused editors.
 - Current Wiki Item detail supports moving the item to Trash, where it remains restorable.
@@ -110,7 +112,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - `Explore with AI` creates a separate conversation attached to its source Entry.
 - `Save as Entry` creates an editable, independent Inbox Entry with a bidirectional source link.
 - AI defaults off, and manual capture, organization, browsing, and keyword search continue without it.
-- Web offers one master permission, one optional organizing-suggestions control, and separate photo understanding consent. AI Search and Explore run only after an explicit user action.
+- Web offers one master permission, one optional organizing-suggestions control, and separate photo understanding consent. Search currently shows keyword retrieval without an Ask AI action; Explore runs only after an explicit user action.
 - Photo understanding requires separate consent from text features.
 
 ## Timeline and Home
@@ -178,6 +180,8 @@ Replaced Location snapshots remain private history for their owning Item, while 
 Editors show a formatted address and map preview when coordinates exist; a photo's GPS position may be saved without an inferred address.
 Homes may be saved without a Location; manually editing an address clears any provider-backed coordinate preview until another address is selected.
 The Web Map clusters current Entry coordinates, filters by Kind and year, and opens the Entries associated with a selected point without turning Location into a named Place.
+When records span several cities, the Web Map offers shortcuts to the most recorded areas within the current filters and a way to return to the full map.
+The Map and Location previews follow the effective Web appearance, including System mode and changes while a map is open.
 Photo GPS Locations retain their source photo identity as provenance after explicit adoption.
 People contain a name plus optional relationship label and notes.
 People remain reusable across Entries.
@@ -193,11 +197,14 @@ Web appearance is a per-browser choice between System, Light, and Dark; System r
 
 Mobile uses Home, Inbox, Timeline, and Library as its primary destinations.
 Library opens with the same all-items Life Wiki browser as Web, including debounced keyword search and Kind filters.
-Focused record destinations for Collections, First Times, Goals, Homes, Vehicles, and People remain available below the all-items browser.
+Focused record destinations and archive tools remain available in a compact, initially closed "More views and tools" section below the all-items browser, including on mobile.
 Settings is reached from the profile control.
+Settings lets the user choose a preferred name for Home greetings, or clear it to use the Google account name.
 
 Desktop treats Library as a primary destination beside Home, Timeline, and Search.
 Its sidebar omits Inbox, keeps optional focused views separate from Collections, tags, Trash, and the single Settings entry point.
+The desktop sidebar can collapse to a compact icon rail from the panel control beside the brand; the control centers in the rail when the brand hides, the width change animates, and the choice persists in this browser without changing mobile navigation.
+The collapsed rail uses square navigation targets and keeps keyboard focus indicators inside the controls.
 The persistent top bar places an accent-tinted `New` control at the far left, with neutral Search followed by an icon-only Inbox control at the far right; Inbox shows a notification count only when captures are waiting.
 A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry and People results in place, supports keyboard navigation, and keeps full-page Search with filters and AI as an explicit destination.
 New Entry opens from the top bar or Command J.
