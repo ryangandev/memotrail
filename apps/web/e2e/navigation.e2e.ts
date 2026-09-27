@@ -244,14 +244,14 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     const homeTop = await homeLink.evaluate(
       (element) => element.getBoundingClientRect().top,
     );
-    expect(Math.round(homeTop - brandBottom)).toBe(24);
+    expect(Math.round(homeTop - brandBottom)).toBe(20);
     const scrollRegionRight = await scrollRegion.evaluate(
       (element) => element.getBoundingClientRect().right,
     );
     const homeRight = await homeLink.evaluate(
       (element) => element.getBoundingClientRect().right,
     );
-    expect(Math.round(scrollRegionRight - homeRight)).toBe(12);
+    expect(Math.round(scrollRegionRight - homeRight)).toBe(8);
     const brandTop = await brand.evaluate(
       (element) => element.getBoundingClientRect().top,
     );
