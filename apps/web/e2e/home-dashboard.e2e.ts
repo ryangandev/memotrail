@@ -235,6 +235,26 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
             }),
           ),
         ).toBe(true);
+        const metricRows = await metrics
+          .getByRole("link")
+          .evaluateAll((links) =>
+            links.map((link) => Math.round(link.getBoundingClientRect().top)),
+          );
+        expect(metricRows.slice(0, 3)).toEqual([
+          metricRows[0],
+          metricRows[0],
+          metricRows[0],
+        ]);
+        if (width === 1440) {
+          expect(metricRows[4]).toBe(metricRows[0]);
+        } else {
+          expect(metricRows[3]).toBeGreaterThan(metricRows[0]);
+          expect(metricRows[4]).toBe(metricRows[3]);
+          await page.screenshot({
+            path: "/tmp/memotrail-home-dashboard-medium.png",
+            animations: "disabled",
+          });
+        }
       }
       await page.setViewportSize({ width: 1440, height: 1000 });
       await page.screenshot({
