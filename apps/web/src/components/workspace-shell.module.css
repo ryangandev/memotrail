@@ -338,11 +338,26 @@
   color: var(--mt-color-ink-muted);
   background: transparent;
   cursor: pointer;
+  transition:
+    color var(--mt-motion-quick),
+    background-color var(--mt-motion-quick);
+}
+
+.historyButton svg {
+  transition: transform var(--mt-motion-quick);
 }
 
 .historyButton:hover:not(:disabled) {
   color: var(--mt-color-ink);
   background: var(--mt-color-surface);
+}
+
+.historyButton:first-child:hover:not(:disabled) svg {
+  transform: translateX(-2px);
+}
+
+.historyButton:last-child:hover:not(:disabled) svg {
+  transform: translateX(2px);
 }
 
 .historyButton:focus-visible {
@@ -766,6 +781,16 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .historyButton,
+  .historyButton svg {
+    transition-duration: 0s;
+  }
+
+  .historyButton:first-child:hover:not(:disabled) svg,
+  .historyButton:last-child:hover:not(:disabled) svg {
+    transform: none;
+  }
+
   .sidebar,
   .brand,
   .sidebarToggle,

@@ -139,7 +139,7 @@ export function WorkspaceHistoryControls() {
         onClick={() => history.back()}
         type="button"
       >
-        <Icon name="arrowLeft" size={20} />
+        <Icon name="arrowLeft" size={18} />
       </button>
       <button
         aria-label="Go forward"
@@ -148,7 +148,7 @@ export function WorkspaceHistoryControls() {
         onClick={() => history.forward()}
         type="button"
       >
-        <Icon name="arrowRight" size={20} />
+        <Icon name="arrowRight" size={18} />
       </button>
     </nav>
   );
