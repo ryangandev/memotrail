@@ -240,6 +240,20 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
           .evaluateAll((links) =>
             links.map((link) => Math.round(link.getBoundingClientRect().top)),
           );
+        const metricLayout = await metrics.evaluate((element) => {
+          const [first, second] = Array.from(element.querySelectorAll("a"));
+          return {
+            borderRadius: getComputedStyle(element).borderRadius,
+            cellBorderRadius: getComputedStyle(first).borderRadius,
+            firstCellRight: first.getBoundingClientRect().right,
+            secondCellLeft: second.getBoundingClientRect().left,
+          };
+        });
+        expect(metricLayout.borderRadius).not.toBe("0px");
+        expect(metricLayout.cellBorderRadius).toBe("0px");
+        expect(
+          Math.abs(metricLayout.firstCellRight - metricLayout.secondCellLeft),
+        ).toBeLessThan(1);
         expect(metricRows.slice(0, 3)).toEqual([
           metricRows[0],
           metricRows[0],
