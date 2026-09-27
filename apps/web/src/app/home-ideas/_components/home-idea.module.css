@@ -141,22 +141,21 @@
 }
 
 .entryCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  height: 180px;
+  align-items: center;
   padding: var(--mt-space-5) 0;
+  overflow: hidden;
   border-bottom: 1px solid var(--mt-color-border);
 }
 
-.entryCard:first-child {
-  padding-top: 0;
-}
-
 .entryCard:last-child {
-  border-bottom: 0;
+  border-bottom-color: transparent;
 }
 
 .entryCard.withPhoto {
-  display: grid;
   grid-template-columns: minmax(0, 1fr) 84px;
-  align-items: center;
   gap: var(--mt-space-4);
 }
 
@@ -169,7 +168,49 @@
 }
 
 .entryCard article {
+  display: grid;
+  min-width: 0;
   grid-row: 1;
+  grid-template-rows: 16px 32px 42px 20px;
+  gap: 6px;
+}
+
+.entryCard .entryMeta {
+  min-width: 0;
+  margin: 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.entryCard .entryMeta > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entryCard h3 {
+  grid-row: 2;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.recent .entryCard p {
+  grid-row: 3;
+  margin: 0;
+  -webkit-line-clamp: 2;
+}
+
+.entryCard .tags {
+  grid-row: 4;
+  margin: 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.entryCard .tags span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .entryMeta {
@@ -312,7 +353,7 @@
 .ribbonColumns {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  grid-template-areas: "capture inbox" "memories chapters" "recent .";
+  grid-template-areas: "capture inbox" "memories chapters" "recent recent";
   gap: var(--mt-space-8);
   align-items: start;
 }

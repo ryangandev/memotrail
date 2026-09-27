@@ -89,6 +89,15 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
         },
         {
           owner_id: owner,
+          title: "A longer kept entry ".repeat(6),
+          body: "Long content that must not expand the recent row. ".repeat(30),
+          inbox_status: "organized",
+          item_kind: "entry",
+          item_subtype: "entry",
+          date_precision: "unknown",
+        },
+        {
+          owner_id: owner,
           title: null,
           body: "Waiting for a little context",
           inbox_status: "unreviewed",
@@ -182,6 +191,36 @@ test("Home ideas use the signed-in archive and support capture, navigation, and 
           heroBox!.y + heroBox!.height,
         );
         expect(inboxBox!.x).toBeGreaterThan(captureBox!.x);
+        const [memoryBox, chaptersBox, recentBox] = await Promise.all([
+          page
+            .getByRole("region", { name: "A memory for today", exact: true })
+            .boundingBox(),
+          page
+            .getByRole("region", { name: "Current chapters", exact: true })
+            .boundingBox(),
+          page
+            .getByRole("region", { name: "Recent Entries", exact: true })
+            .boundingBox(),
+        ]);
+        expect(Math.abs(memoryBox!.height - chaptersBox!.height)).toBeLessThan(
+          1,
+        );
+        expect(Math.abs(memoryBox!.y - chaptersBox!.y)).toBeLessThan(1);
+        expect(Math.abs(recentBox!.width - metricsBox!.width)).toBeLessThan(1);
+        expect(recentBox!.y).toBeGreaterThanOrEqual(
+          memoryBox!.y + memoryBox!.height,
+        );
+        const rowHeights = await page
+          .getByRole("region", { name: "Recent Entries", exact: true })
+          .locator("a:has(article)")
+          .evaluateAll((rows) =>
+            rows.map((row) => row.getBoundingClientRect().height),
+          );
+        expect(rowHeights.length).toBeGreaterThan(1);
+        expect(Math.max(...rowHeights) - Math.min(...rowHeights)).toBeLessThan(
+          1,
+        );
+
         expect(
           await metrics.getByRole("link").evaluateAll((links) =>
             links.every((link) => {
