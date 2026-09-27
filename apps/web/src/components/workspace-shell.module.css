@@ -75,7 +75,7 @@
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: var(--mt-radius-medium);
+  border-radius: var(--mt-radius-small);
   color: var(--mt-color-ink-muted);
   background: transparent;
   cursor: pointer;
