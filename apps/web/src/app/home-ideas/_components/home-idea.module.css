@@ -17,6 +17,7 @@
 
 .ribbon {
   display: flex;
+  container-type: inline-size;
   min-width: 0;
   flex-direction: column;
   gap: var(--mt-space-8);
@@ -324,8 +325,8 @@
 }
 
 .metrics {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   overflow: hidden;
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
@@ -334,7 +335,7 @@
 
 .stat {
   display: flex;
-  flex: 1 0 auto;
+  min-width: 0;
   align-items: center;
   justify-content: center;
   gap: var(--mt-space-2);
@@ -364,6 +365,25 @@
 
 .stat span {
   font-size: var(--mt-font-size-caption);
+}
+
+@container (max-width: 850px) {
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .stat:nth-child(even) {
+    border-right: 0;
+  }
+  .stat:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@container (max-width: 360px) {
+  .metrics .stat {
+    gap: var(--mt-space-1);
+    padding-inline: var(--mt-space-1);
+  }
 }
 
 .ribbonColumns {
