@@ -164,7 +164,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       page.getByRole("link", { name: /Version history/ }),
     ).toBeVisible();
     const reflectionLink = page.getByRole("link", {
-      name: /Entry Morning reflection/,
+      name: /Entry.*Morning reflection/,
     });
     await expect(reflectionLink).toBeVisible();
     await expect(reflectionLink).toHaveAttribute(
@@ -172,10 +172,10 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       `/items/${reflectionID}`,
     );
     await expect(
-      page.getByRole("link", { name: /Entry Inbox-only thought/ }),
+      page.getByRole("link", { name: /Entry.*Inbox-only thought/ }),
     ).toHaveCount(0);
     await expect(
-      page.getByRole("link", { name: /Entity Person Avery/ }),
+      page.getByRole("link", { name: /Entity.*Person.*Avery/ }),
     ).toBeVisible();
     await expect(
       page.getByRole("main").getByText("3 items", { exact: true }),
@@ -193,7 +193,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await expect(inboxReview).toHaveCount(0);
     await page.goto("/library");
     await expect(
-      page.getByRole("link", { name: /Entry Inbox-only thought/ }),
+      page.getByRole("link", { name: /Entry.*Inbox-only thought/ }),
     ).toBeVisible();
     await expect(
       page.getByRole("main").getByText("4 items", { exact: true }),
@@ -244,7 +244,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: /Entry Morning reflection/ }),
+      page.getByRole("link", { name: /Entry.*Morning reflection/ }),
     ).toHaveCount(0);
     const trashedReflection = await client
       .from("entries")
@@ -292,6 +292,49 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
         () => document.documentElement.scrollWidth <= window.innerWidth,
       ),
     ).toBe(true);
+
+    const pageRows = Array.from({ length: 13 }, (_, index) => ({
+      body: `A saved page item ${index + 1}.`,
+      inbox_status: "organized" as const,
+      item_kind: "entry" as const,
+      item_subtype: "entry",
+      owner_id: ownerID,
+      title: `Pagination item ${index + 1}`,
+    }));
+    expect((await client.from("entries").insert(pageRows)).error).toBeNull();
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto("/library");
+    const list = page.getByRole("list", { name: "Library items" });
+    const pages = page.getByRole("navigation", { name: "Life Wiki pages" });
+    await expect(list.getByRole("listitem")).toHaveCount(12);
+    await expect(pages).toContainText("Page 1 of 2");
+    await pages.getByRole("link", { name: "Next" }).click();
+    await expect(page).toHaveURL(/\/library\?page=2$/);
+    await expect(list.getByRole("listitem")).toHaveCount(4);
+    await expect(pages).toContainText("Page 2 of 2");
+    await pages.getByRole("link", { name: "Previous" }).click();
+    await expect(page).toHaveURL(/\/library$/);
+    await expect(list.getByRole("listitem")).toHaveCount(12);
+    await page.screenshot({
+      animations: "disabled",
+      caret: "initial",
+      path: "/private/tmp/memotrail-library-rows-desktop.png",
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth,
+        ),
+      )
+      .toBe(true);
+    await page.screenshot({
+      animations: "disabled",
+      caret: "initial",
+      path: "/private/tmp/memotrail-library-rows-mobile.png",
+    });
+    await page.goto("/library?page=3");
+    await expect(page).toHaveURL(/\/library$/);
     expect(errors).toEqual([]);
   } finally {
     await admin.auth.admin.deleteUser(ownerID);

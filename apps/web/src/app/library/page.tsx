@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/page-header";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Icon, type IconName } from "@/components/icon";
 import { LibrarySearch } from "@/components/library-search";
 import { PageFrame } from "@/components/page-frame";
@@ -13,6 +14,7 @@ import {
   getWikiItemsWorkspace,
   wikiItemHref,
   wikiItemsPage,
+  wikiItemsPageSize,
 } from "@/lib/data/wiki-items";
 import styles from "./page.module.css";
 
@@ -107,6 +109,14 @@ export default async function LibraryPage({
   ]);
   if (!searchWorkspace || (!parsed.request.hasCriteria && !browseWorkspace))
     return null;
+  if (
+    browseWorkspace &&
+    !browseWorkspace.error &&
+    page > 1 &&
+    browseWorkspace.items.length === 0
+  ) {
+    redirect("/library");
+  }
 
   return (
     <PageFrame className={styles.content} variant="standard">
@@ -159,6 +169,7 @@ function LibraryBrowse({
   workspace: NonNullable<Awaited<ReturnType<typeof getWikiItemsWorkspace>>>;
 }) {
   const totalCount = workspace.items[0]?.totalCount ?? 0;
+  const pageCount = Math.max(1, Math.ceil(totalCount / wikiItemsPageSize));
 
   return (
     <section aria-labelledby="all-items-heading">
@@ -176,42 +187,45 @@ function LibraryBrowse({
           <p>Try another phrase or category, or capture something new.</p>
         </div>
       ) : (
-        <div className={styles.wikiGrid}>
+        <ul aria-label="Library items" className={styles.wikiList}>
           {workspace.items.map((item) => (
-            <Link
-              href={wikiItemHref(item)}
-              key={`${item.recordSource}:${item.id}`}
-            >
-              <div className={styles.wikiBadges}>
-                <span>{wikiItemKindLabel(item.itemKind)}</span>
-                {wikiItemSubtypeLabel(item.itemKind, item.itemSubtype) !==
-                wikiItemKindLabel(item.itemKind) ? (
-                  <span>
-                    {wikiItemSubtypeLabel(item.itemKind, item.itemSubtype)}
-                  </span>
-                ) : null}
-              </div>
-              <strong>{item.title}</strong>
-              {item.excerpt ? <p>{item.excerpt}</p> : null}
-              <small>{wikiItemDateLabel(item)}</small>
-            </Link>
+            <li key={`${item.recordSource}:${item.id}`}>
+              <Link href={wikiItemHref(item)}>
+                <div className={styles.wikiBadges}>
+                  <span>{wikiItemKindLabel(item.itemKind)}</span>
+                  {wikiItemSubtypeLabel(item.itemKind, item.itemSubtype) !==
+                  wikiItemKindLabel(item.itemKind) ? (
+                    <span>
+                      {wikiItemSubtypeLabel(item.itemKind, item.itemSubtype)}
+                    </span>
+                  ) : null}
+                </div>
+                <small>{wikiItemDateLabel(item)}</small>
+                <strong>{item.title}</strong>
+                {item.excerpt ? <p>{item.excerpt}</p> : null}
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
 
-      <nav className={styles.pagination} aria-label="Life Wiki pages">
-        {page > 1 ? (
-          <Link href={libraryPageHref(page - 1)}>Newer items</Link>
-        ) : (
-          <span />
-        )}
-        <span>Page {page}</span>
-        {totalCount > page * 36 ? (
-          <Link href={libraryPageHref(page + 1)}>Older items</Link>
-        ) : (
-          <span />
-        )}
-      </nav>
+      {pageCount > 1 ? (
+        <nav className={styles.pagination} aria-label="Life Wiki pages">
+          {page > 1 ? (
+            <Link href={libraryPageHref(page - 1)}>Previous</Link>
+          ) : (
+            <span />
+          )}
+          <span>
+            Page {page} of {pageCount}
+          </span>
+          {page < pageCount ? (
+            <Link href={libraryPageHref(page + 1)}>Next</Link>
+          ) : (
+            <span />
+          )}
+        </nav>
+      ) : null}
     </section>
   );
 }

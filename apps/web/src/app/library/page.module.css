@@ -22,37 +22,44 @@
   font-size: var(--mt-font-size-caption);
 }
 
-.wikiGrid {
+.wikiList {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--mt-space-3);
+  margin: 0;
+  padding: 0;
+  border-block: 1px solid var(--mt-color-border);
+  list-style: none;
 }
 
-.wikiGrid > a {
+.wikiList li + li {
+  border-top: 1px solid var(--mt-color-border);
+}
+
+.wikiList a {
   display: grid;
   min-width: 0;
-  min-height: 164px;
-  align-content: start;
-  gap: var(--mt-space-2);
-  padding: var(--mt-space-5);
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--mt-space-1) var(--mt-space-4);
+  padding: var(--mt-space-4) var(--mt-space-3);
+  border-radius: var(--mt-radius-medium);
   color: var(--mt-color-ink);
-  background: var(--mt-color-surface-raised);
   text-decoration: none;
   transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    transform 160ms ease;
+    color var(--mt-motion-quick),
+    background var(--mt-motion-quick);
 }
 
-.wikiGrid > a:hover {
-  border-color: var(--mt-color-border-strong);
-  box-shadow: var(--mt-shadow-raised);
-  transform: translateY(-1px);
+.wikiList a:hover {
+  background: var(--mt-color-surface-raised);
 }
 
-.wikiGrid strong {
+.wikiList a:focus-visible {
+  outline: 2px solid var(--mt-color-accent);
+  outline-offset: -2px;
+}
+
+.wikiList strong {
+  grid-column: 1 / -1;
   overflow: hidden;
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-title-small);
@@ -61,25 +68,27 @@
   white-space: nowrap;
 }
 
-.wikiGrid p {
+.wikiList p {
   display: -webkit-box;
+  grid-column: 1 / -1;
   overflow: hidden;
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
   line-height: var(--mt-line-height-body);
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
 }
 
-.wikiGrid small {
-  align-self: end;
-  margin-top: auto;
+.wikiList small {
+  justify-self: end;
   color: var(--mt-color-ink-faint);
-  font-size: 10px;
+  font-size: var(--mt-font-size-caption);
+  white-space: nowrap;
 }
 
 .wikiBadges {
   display: flex;
+  min-width: 0;
   flex-wrap: wrap;
   gap: var(--mt-space-2);
 }
@@ -193,10 +202,6 @@
 }
 
 @media (max-width: 720px) {
-  .wikiGrid {
-    grid-template-columns: 1fr;
-  }
-
   .libraryMoreGroups {
     grid-template-columns: 1fr;
   }
