@@ -134,9 +134,10 @@ function Inbox({ workspace }: { workspace: HomeWorkspace }) {
               entry.title?.trim() ||
               entry.body.trim().split(/\r?\n/)[0] ||
               "Untitled capture";
+            const hasBody = Boolean(entry.title?.trim() && entry.body.trim());
             return (
               <Link
-                className={styles.inboxItem}
+                className={`${styles.inboxItem} ${hasBody ? styles.inboxItemWithBody : ""}`}
                 href={`/inbox?entry=${entry.id}`}
                 aria-label={`Organize ${truncate(title, 90)}`}
                 key={entry.id}
@@ -145,10 +146,8 @@ function Inbox({ workspace }: { workspace: HomeWorkspace }) {
                   {dateLabel(entry.createdAt, workspace.timezone, false)}
                 </time>
                 <div>
-                  <strong>{truncate(title, 90)}</strong>
-                  {entry.title?.trim() && entry.body.trim() ? (
-                    <p>{truncate(entry.body, 120)}</p>
-                  ) : null}
+                  <strong>{title}</strong>
+                  {hasBody ? <p>{entry.body.trim()}</p> : null}
                 </div>
                 <Icon name="chevron" size={14} />
               </Link>
