@@ -248,8 +248,8 @@
   pointer-events: none;
 }
 
-.appShell[data-sidebar-collapsed="true"] .navItemLabel,
-.appShell[data-sidebar-collapsed="true"] .navLabel {
+.appShell[data-sidebar-collapsed="true"] .sidebar .navItemLabel,
+.appShell[data-sidebar-collapsed="true"] .sidebar .navLabel {
   opacity: 0;
 }
 

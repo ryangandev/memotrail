@@ -385,6 +385,13 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(
       page.getByRole("navigation", { name: "Mobile navigation" }),
     ).toBeVisible();
+    for (const label of ["Dashboard", "Inbox", "Timeline", "Library"]) {
+      await expect(
+        page
+          .getByRole("navigation", { name: "Mobile navigation" })
+          .getByText(label),
+      ).toHaveCSS("opacity", "1");
+    }
     await page.setViewportSize({ width: 320, height: 700 });
     const mobileNavigation = page.getByRole("navigation", {
       name: "Mobile navigation",
