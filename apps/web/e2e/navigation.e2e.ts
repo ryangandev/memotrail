@@ -1,8 +1,85 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+
+type SidebarMotionFrame = {
+  logoCenter: number;
+  navigationCenter: number;
+  sidebarWidth: number;
+};
+
+async function toggleSidebarAndMeasureMotion(toggle: Locator) {
+  await toggle.evaluate((button) => {
+    const motionWindow = window as typeof window & {
+      sidebarMotionFrames?: Promise<SidebarMotionFrame[]>;
+    };
+    motionWindow.sidebarMotionFrames = new Promise((resolve) => {
+      button.addEventListener(
+        "click",
+        () => {
+          const sidebar = document.querySelector("aside")!;
+          const logo = sidebar.querySelector(
+            'a[aria-label="MemoTrail dashboard"] svg',
+          )!;
+          const navigationIcon = sidebar.querySelector(
+            'nav[aria-label="Primary navigation"] a svg',
+          )!;
+          const frames: SidebarMotionFrame[] = [];
+          const started = performance.now();
+          const sample = () => {
+            const logoBox = logo.getBoundingClientRect();
+            const navigationBox = navigationIcon.getBoundingClientRect();
+            frames.push({
+              logoCenter: logoBox.x + logoBox.width / 2,
+              navigationCenter: navigationBox.x + navigationBox.width / 2,
+              sidebarWidth: sidebar.getBoundingClientRect().width,
+            });
+            if (performance.now() - started < 320) {
+              requestAnimationFrame(sample);
+            } else {
+              resolve(frames);
+            }
+          };
+          sample();
+        },
+        { once: true, capture: true },
+      );
+    });
+  });
+  await toggle.click();
+  const frames = await toggle.page().evaluate(() => {
+    const motionWindow = window as typeof window & {
+      sidebarMotionFrames?: Promise<SidebarMotionFrame[]>;
+    };
+    return motionWindow.sidebarMotionFrames!;
+  });
+  const first = frames[0];
+  const last = frames.at(-1)!;
+  expect(
+    frames.some(
+      (frame) =>
+        frame.sidebarWidth > Math.min(first.sidebarWidth, last.sidebarWidth) &&
+        frame.sidebarWidth < Math.max(first.sidebarWidth, last.sidebarWidth),
+    ),
+    "the measurement includes frames during the width transition",
+  ).toBe(true);
+  for (const key of ["logoCenter", "navigationCenter"] as const) {
+    const lowerBound = Math.min(first[key], last[key]) - 1;
+    const upperBound = Math.max(first[key], last[key]) + 1;
+    for (const frame of frames) {
+      expect(
+        frame[key],
+        `${key} stays between its resting positions`,
+      ).toBeGreaterThanOrEqual(lowerBound);
+      expect(
+        frame[key],
+        `${key} stays between its resting positions`,
+      ).toBeLessThanOrEqual(upperBound);
+    }
+  }
+}
 
 test("primary navigation keeps the app shell visible while fresh data loads", async ({
   context,
@@ -328,7 +405,17 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
           .some((duration) => Number.parseFloat(duration) > 0),
       ),
     ).toBe(true);
-    await page.getByRole("button", { name: "Collapse sidebar" }).click();
+    for (let repetition = 0; repetition < 2; repetition++) {
+      await toggleSidebarAndMeasureMotion(
+        page.getByRole("button", { name: "Collapse sidebar" }),
+      );
+      await toggleSidebarAndMeasureMotion(
+        page.getByRole("button", { name: "Expand sidebar" }),
+      );
+    }
+    await toggleSidebarAndMeasureMotion(
+      page.getByRole("button", { name: "Collapse sidebar" }),
+    );
     await expect(page.locator('[data-sidebar-collapsed="true"]')).toBeVisible();
     await expect(shell).toHaveCSS("width", "64px");
     await expect(page.locator("main")).toHaveCSS("margin-left", "64px");
@@ -475,7 +562,9 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(moreButton).toBeFocused();
     await mobileNavigation.getByRole("link", { name: "Dashboard" }).click();
     await page.setViewportSize({ width: 1280, height: 720 });
-    await page.getByRole("button", { name: "Expand sidebar" }).click();
+    await toggleSidebarAndMeasureMotion(
+      page.getByRole("button", { name: "Expand sidebar" }),
+    );
     await expect(shell).toHaveCSS("width", "224px");
     await expect(page.locator("main")).toHaveCSS("margin-left", "224px");
     await page.getByRole("button", { name: "Collapse sidebar" }).focus();

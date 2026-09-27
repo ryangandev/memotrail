@@ -37,9 +37,20 @@
 }
 
 .brand {
+  width: 100%;
+  min-width: 0;
   padding: 0 var(--mt-space-2);
   white-space: nowrap;
-  transition: opacity 100ms ease;
+  transition: padding-left var(--sidebar-motion);
+}
+
+.brandName {
+  flex: none;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 100ms ease,
+    visibility 0s;
 }
 
 .sidebarHeader {
@@ -124,6 +135,8 @@
   height: 42px;
   align-items: center;
   gap: var(--mt-space-3);
+  margin-left: 0;
+  overflow: hidden;
   padding: 0 var(--mt-space-3);
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-ink-muted);
@@ -137,7 +150,9 @@
     background var(--mt-motion-quick),
     width var(--sidebar-motion),
     height var(--sidebar-motion),
-    padding-left var(--sidebar-motion);
+    margin-left var(--sidebar-motion),
+    padding-left var(--sidebar-motion),
+    gap var(--sidebar-motion);
 }
 
 .navGroup a > svg {
@@ -240,16 +255,15 @@
 }
 
 .appShell[data-sidebar-collapsed="true"] .brand {
-  width: 40px;
-  height: 36px;
-  justify-content: center;
-  margin-inline: auto;
-  padding: 0;
-  gap: 0;
+  padding-left: calc(
+    (var(--sidebar-compact-width) - 1px - 2 * var(--mt-space-2) - 29px) / 2
+  );
 }
 
 .appShell[data-sidebar-collapsed="true"] .brandName {
-  display: none;
+  opacity: 0;
+  visibility: hidden;
+  transition-delay: 0s, 100ms;
 }
 
 .appShell[data-sidebar-collapsed="true"] .sidebar .navItemLabel,
@@ -271,7 +285,9 @@
 .appShell[data-sidebar-collapsed="true"] .navGroup a {
   width: 40px;
   height: 40px;
-  margin-inline: auto;
+  margin-left: calc(
+    (var(--sidebar-compact-width) - 1px - 2 * var(--mt-space-2) - 40px) / 2
+  );
   padding-left: 11px;
   padding-right: 0;
   gap: 0;
@@ -779,6 +795,7 @@
 
   .sidebar,
   .brand,
+  .brandName,
   .sidebarToggle,
   .sidebarScrollRegion,
   .navGroup a .navItemLabel,
