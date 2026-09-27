@@ -142,6 +142,9 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(page).toHaveURL(/\/library$/);
     await expect(goBack).toBeEnabled();
     await expect(goForward).toBeDisabled();
+    await goBack.hover();
+    await expect(goBack).toHaveCSS("transition-property", "background-color");
+    await expect(goBack.locator("svg")).toHaveCSS("transform", "none");
     await goBack.click();
     await expect(page).toHaveURL(/\/$/);
     await expect(goForward).toBeEnabled();
@@ -433,6 +436,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       page.getByRole("heading", { name: "Map", exact: true }),
     ).toBeVisible();
     await expect(moreDestinations).toBeHidden();
+    await page.waitForLoadState("networkidle");
     await moreButton.click();
     await expect(moreDestinations).toBeVisible();
     await expect(
@@ -859,6 +863,34 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
         },
         error: null,
       });
+
+    await quickCapture
+      .getByRole("button", { name: "Close quick capture", exact: true })
+      .click();
+    await primaryNavigation
+      .getByRole("link", { name: "Library", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/library$/);
+    await page.getByRole("link", { name: "Version history" }).click();
+    await expect(page).toHaveURL(/\/history$/);
+    await expect(goForward).toBeDisabled();
+    await goBack.click();
+    await expect(page).toHaveURL(/\/library$/);
+    await expect(goForward).toBeEnabled();
+    await goForward.click();
+    await expect(page).toHaveURL(/\/history$/);
+    await goBack.click();
+    await expect(page).toHaveURL(/\/library$/);
+    await page.goto("/history");
+    await expect(page).toHaveURL(/\/history$/);
+    await expect(goBack).toBeEnabled();
+    await goBack.click();
+    await expect(page).toHaveURL(/\/library$/);
+    await expect(goForward).toBeEnabled();
+    await goForward.click();
+    await expect(page).toHaveURL(/\/history$/);
+    await page.goBack();
+    await expect(page).toHaveURL(/\/library$/);
   } finally {
     await page.close();
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();

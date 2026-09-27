@@ -9,8 +9,22 @@ const storageKey = "memotrail-page-history-v1";
 const listeners = new Set<() => void>();
 
 type HistoryStack = { ids: string[]; index: number };
+type NavigationHistory = {
+  canGoBack: boolean;
+  canGoForward: boolean;
+};
 let stack: HistoryStack | null = null;
 let uninstall: (() => void) | null = null;
+
+function browserHistory(): NavigationHistory | null {
+  const navigation = (window as Window & { navigation?: NavigationHistory })
+    .navigation;
+  return navigation &&
+    typeof navigation.canGoBack === "boolean" &&
+    typeof navigation.canGoForward === "boolean"
+    ? navigation
+    : null;
+}
 
 function readId(state: unknown): string | null {
   if (!state || typeof state !== "object") return null;
@@ -121,6 +135,12 @@ function subscribe(listener: () => void) {
 }
 
 function snapshot() {
+  const nativeHistory = browserHistory();
+  if (nativeHistory) {
+    return (
+      (nativeHistory.canGoBack ? 1 : 0) | (nativeHistory.canGoForward ? 2 : 0)
+    );
+  }
   if (!stack) return 0;
   return (
     (stack.index > 0 ? 1 : 0) | (stack.index < stack.ids.length - 1 ? 2 : 0)
