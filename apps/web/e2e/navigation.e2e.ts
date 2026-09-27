@@ -385,6 +385,32 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(
       page.getByRole("navigation", { name: "Mobile navigation" }),
     ).toBeVisible();
+    await page.setViewportSize({ width: 320, height: 700 });
+    const mobileNavigation = page.getByRole("navigation", {
+      name: "Mobile navigation",
+    });
+    await expect(mobileNavigation.locator(":scope > *")).toHaveCount(5);
+    const moreButton = mobileNavigation.getByRole("button", {
+      name: "More destinations",
+    });
+    await moreButton.click();
+    const moreDestinations = page.getByRole("navigation", {
+      name: "More destinations",
+    });
+    await expect(moreDestinations).toBeVisible();
+    await moreDestinations.getByRole("link", { name: "Map" }).click();
+    await expect(page).toHaveURL(/\/map$/);
+    await expect(page.getByRole("heading", { name: "Map", exact: true })).toBeVisible();
+    await expect(moreDestinations).toBeHidden();
+    await moreButton.click();
+    await expect(moreDestinations).toBeVisible();
+    await expect(
+      moreDestinations.getByRole("link", { name: "Map" }),
+    ).toHaveAttribute("aria-current", "page");
+    await page.keyboard.press("Escape");
+    await expect(moreDestinations).toBeHidden();
+    await expect(moreButton).toBeFocused();
+    await mobileNavigation.getByRole("link", { name: "Dashboard" }).click();
     await page.setViewportSize({ width: 1280, height: 720 });
     await shell.getByRole("button", { name: "Expand sidebar" }).click();
     await expect(shell).toHaveCSS("width", "224px");

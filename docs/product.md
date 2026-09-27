@@ -198,10 +198,10 @@ Soft Ledger is the visual direction: minimal, archival, modern, calm, and approa
 Both clients support light and dark appearance, share semantic design intent, and still follow native platform conventions where identical interaction would reduce usability.
 Web appearance is a per-browser choice between System, Light, and Dark; System remains the default and follows operating-system changes.
 
-Mobile uses Dashboard, Inbox, Timeline, and Library as its primary destinations.
+Mobile uses Dashboard, Inbox, Timeline, Library, and More in its bottom navigation.
 Library opens with the same all-items Life Wiki browser as Web, including debounced keyword search and Kind filters.
-Focused record destinations and archive tools remain available in a compact, initially closed "More views and tools" section below the all-items browser, including on mobile.
-Settings is reached from the profile control.
+More opens a compact menu for Map, focused record views, Collections, tags, archive tools, and Settings.
+Settings is also reached from the profile control.
 Settings lets the user choose a preferred name for Dashboard greetings, or clear it to use the Google account name.
 
 Desktop treats Library as a primary destination beside Dashboard, Timeline, and Map; Search is part of Library.
