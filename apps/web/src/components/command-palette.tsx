@@ -25,9 +25,9 @@ const commands: Command[] = [
   {
     description: "Return to your recent story",
     href: "/",
-    icon: "home",
-    keywords: "recent story",
-    label: "Home",
+    icon: "dashboard",
+    keywords: "home recent story",
+    label: "Dashboard",
   },
   {
     description: "Review newly captured Entries",

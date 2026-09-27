@@ -132,7 +132,7 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
         exact: true,
       });
       await expect(
-        nav.getByRole("link", { name: "Home", exact: true }),
+        nav.getByRole("link", { name: "Dashboard", exact: true }),
       ).toHaveAttribute("aria-current", "page");
       await expect(page.getByRole("heading", { level: 1 })).toContainText(
         "Preview",
@@ -277,7 +277,7 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page
       .getByRole("navigation", { name: "Primary navigation", exact: true })
-      .getByRole("link", { name: "Home", exact: true })
+      .getByRole("link", { name: "Dashboard", exact: true })
       .click();
     await expect(page).toHaveURL("/");
     await page

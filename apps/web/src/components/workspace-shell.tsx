@@ -40,7 +40,7 @@ type NavigationItem = {
 };
 
 const primaryNavigation: NavigationItem[] = [
-  { destination: "home", href: "/", icon: "dashboard", label: "Home" },
+  { destination: "home", href: "/", icon: "dashboard", label: "Dashboard" },
   {
     destination: "timeline",
     href: "/timeline",
@@ -86,7 +86,7 @@ const organizationNavigation: NavigationItem[] = [
 ];
 
 const mobileNavigation: NavigationItem[] = [
-  { destination: "home", href: "/", icon: "dashboard", label: "Home" },
+  { destination: "home", href: "/", icon: "dashboard", label: "Dashboard" },
   { destination: "inbox", href: "/inbox", icon: "inbox", label: "Inbox" },
   {
     destination: "timeline",
@@ -205,7 +205,7 @@ export function WorkspaceShell({
             <Link
               className={workspaceShellStyles.mobileBrand}
               href="/"
-              aria-label="MemoTrail home"
+              aria-label="MemoTrail dashboard"
             >
               <BrandMark className={workspaceShellStyles.brandMark} />
               <span>MemoTrail</span>

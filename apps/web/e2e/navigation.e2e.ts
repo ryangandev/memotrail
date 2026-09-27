@@ -236,7 +236,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     const brand = shell.getByRole("link", { name: "MemoTrail", exact: true });
     const homeLink = shell
       .getByRole("navigation", { name: "Primary navigation" })
-      .getByRole("link", { name: "Home", exact: true });
+      .getByRole("link", { name: "Dashboard", exact: true });
     const capture = newEntryShortcut;
     const brandBottom = await brand.evaluate(
       (element) => element.getBoundingClientRect().bottom,
@@ -306,7 +306,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     ).toBeGreaterThanOrEqual(7);
     await expect(homeCaptureHeading).toBeVisible();
     await expect(
-      shell.getByRole("link", { name: "MemoTrail home" }),
+      shell.getByRole("link", { name: "MemoTrail dashboard" }),
     ).toHaveCount(0);
     const expandSidebar = shell.getByRole("button", {
       name: "Expand sidebar",
@@ -369,7 +369,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.reload();
     await expect(shell).toHaveCSS("width", "64px");
     await primaryNavigation
-      .getByRole("link", { name: "Home", exact: true })
+      .getByRole("link", { name: "Dashboard", exact: true })
       .click();
     await expect(page).toHaveURL(/\/$/);
     await page.setViewportSize({ width: 390, height: 844 });
