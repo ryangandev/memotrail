@@ -306,6 +306,17 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
             animations: "disabled",
           });
       }
+      await page.setViewportSize({ width: 320, height: 700 });
+      const formattingToolbar = page.getByRole("toolbar", {
+        name: "Text formatting",
+      });
+      await expect
+        .poll(() =>
+          formattingToolbar.evaluate((element) =>
+            Math.round(element.scrollWidth - element.clientWidth),
+          ),
+        )
+        .toBeLessThanOrEqual(1);
     }
 
     await page.setViewportSize({ width: 1440, height: 1000 });

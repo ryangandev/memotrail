@@ -309,6 +309,13 @@
   }
 }
 
+@media (max-width: 480px) {
+  .toolbar {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .toolbarButton {
     transition: none;
