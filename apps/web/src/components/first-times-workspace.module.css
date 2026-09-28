@@ -55,16 +55,10 @@
   font-size: var(--mt-font-size-caption);
 }
 
-.coverPhoto small {
+.photoBadge {
   position: absolute;
   right: var(--mt-space-3);
   bottom: var(--mt-space-3);
-  padding: 5px 9px;
-  border-radius: var(--mt-radius-pill);
-  color: white;
-  background: rgb(24 24 20 / 0.72);
-  font-size: 10px;
-  backdrop-filter: blur(8px);
 }
 
 .cardIndexFallback {
@@ -134,14 +128,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-}
-
-.cardBody footer span {
-  padding: 3px 7px;
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-subtle);
-  font-size: 9px;
 }
 
 .formGrid {
@@ -224,12 +210,15 @@
   }
 
   .firstCard {
-    grid-template-columns: 90px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .coverPhoto {
-    width: 90px;
-    min-height: 146px;
+    width: 100%;
+    height: 148px;
+    min-height: 148px;
+    border-right: 0;
+    border-bottom: 1px solid var(--mt-color-border);
   }
 
   .cardBody footer span:nth-child(n + 3) {

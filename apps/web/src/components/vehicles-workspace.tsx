@@ -1,10 +1,11 @@
 "use client";
 import { notify } from "@/components/app-toast";
-import { Dialog } from "@/components/dialog";
+import { FocusedEditorSurface } from "@/components/focused-editor-surface";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { FocusedViewLayout } from "@/components/focused-view-layout";
 import { Button } from "@/components/button";
+import { Badge } from "@/components/badge";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -159,7 +160,7 @@ export function VehiclesWorkspace({
       {!loadError && orderedVehicles.length > 0 ? (
         <VehicleSection
           label="Current first, followed by earlier vehicles"
-          onSelect={setSelectedVehicle}
+          onSelect={(vehicle) => router.push(`/vehicles/${vehicle.id}`)}
           title="Vehicle archive"
           vehicles={orderedVehicles}
         />
@@ -251,15 +252,25 @@ function VehicleCard({
             longitude={vehicle.location?.longitude}
           />
         )}
-        <span
+        <Badge
           className={
             vehicle.occurredEnd ? styles.pastBadge : styles.currentBadge
           }
+          size="micro"
+          tone={vehicle.occurredEnd ? "glassNeutral" : "glassAccent"}
+          uppercase
         >
           {vehicle.occurredEnd ? "Earlier" : "Current"}
-        </span>
+        </Badge>
         {vehicle.attachments.length > 1 ? (
-          <small>{vehicle.attachments.length} photos</small>
+          <Badge
+            className={styles.photoBadge}
+            size="micro"
+            tone="inverse"
+            uppercase
+          >
+            {vehicle.attachments.length} photos
+          </Badge>
         ) : null}
       </RecordCardVisual>
 
@@ -285,10 +296,22 @@ function VehicleCard({
         <footer>
           <div>
             {vehicle.collectionNames.slice(0, 2).map((name) => (
-              <span key={`collection:${name.toLocaleLowerCase()}`}>{name}</span>
+              <Badge
+                key={`collection:${name.toLocaleLowerCase()}`}
+                size="micro"
+                tone="neutral"
+              >
+                {name}
+              </Badge>
             ))}
             {vehicle.tagNames.slice(0, 2).map((name) => (
-              <span key={`tag:${name.toLocaleLowerCase()}`}>#{name}</span>
+              <Badge
+                key={`tag:${name.toLocaleLowerCase()}`}
+                size="micro"
+                tone="neutral"
+              >
+                #{name}
+              </Badge>
             ))}
           </div>
           <Icon name="chevron" size={15} />
@@ -305,6 +328,7 @@ export function VehicleEditor({
   onSaved,
   onTrashed,
   ownerId,
+  presentation = "dialog",
   sourceCapture = null,
   tagOptions,
   vehicle,
@@ -315,6 +339,7 @@ export function VehicleEditor({
   onSaved: (record: VehicleRecord) => void;
   onTrashed: (id: string) => void;
   ownerId: string;
+  presentation?: "dialog" | "page";
   sourceCapture?: CaptureExtractionSource | null;
   tagOptions: string[];
   vehicle: VehicleRecord | null;
@@ -571,11 +596,9 @@ export function VehicleEditor({
   }
 
   return (
-    <Dialog
-      open
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) onClose();
-      }}
+    <FocusedEditorSurface
+      onClose={onClose}
+      presentation={presentation}
       title={
         <>
           {currentId
@@ -589,7 +612,6 @@ export function VehicleEditor({
       eyebrow={<>{currentId ? "Edit Vehicle" : "New Vehicle"}</>}
       closeLabel="Close Vehicle editor"
       busy={isPending}
-      size="wide"
       footer={
         <div className={styles.dialogFooter}>
           <div>
@@ -778,7 +800,7 @@ export function VehicleEditor({
           </p>
         ) : null}
       </form>
-    </Dialog>
+    </FocusedEditorSurface>
   );
 }
 

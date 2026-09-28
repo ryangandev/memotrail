@@ -147,7 +147,7 @@ test("Unified AI search uses bilingual source evidence, explicit requests, and n
       .getByRole("searchbox", { name: "Search your Life Wiki" })
       .fill(request.parameters.q);
     await page.getByRole("button", { name: "Search", exact: true }).click();
-    await expect(page).toHaveURL(/\/search\?q=/);
+    await expect(page).toHaveURL(/\/library\?q=/);
     const denied = await page.request.post("/api/ai/search", {
       headers,
       data: request,
@@ -181,7 +181,10 @@ test("Unified AI search uses bilingual source evidence, explicit requests, and n
       });
       const searchData = await completedSearch.json();
       expect(completedSearch.status(), JSON.stringify(searchData)).toBe(200);
-      expect(searchData.sources?.length, JSON.stringify(searchData)).toBeGreaterThan(0);
+      expect(
+        searchData.sources?.length,
+        JSON.stringify(searchData),
+      ).toBeGreaterThan(0);
       expect(JSON.stringify(searchData)).toContain("2017");
     }
     if (live) {

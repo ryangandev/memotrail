@@ -16,6 +16,7 @@ import {
 } from "@/app/inbox/actions";
 import { trashWikiItem } from "@/app/history/actions";
 import { Icon } from "@/components/icon";
+import { Badge } from "@/components/badge";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { OccurrenceEditor } from "@/components/occurrence-editor";
 import { EntryPhotoDates } from "@/components/entry-photo-dates";
@@ -115,26 +116,33 @@ export function EntryReviewList({
             {excerpt ? <p>{excerpt}</p> : null}
             <footer>
               <div className={entryReviewListStyles.tags}>
-                <span>Needs review</span>
+                <Badge tone="warm">Needs review</Badge>
                 {entry.itemKind !== "entry" ||
                 entry.itemSubtype === "first_time" ? (
                   <>
-                    <span>{wikiItemKindLabel(entry.itemKind)}</span>
-                    <span>
+                    <Badge tone="neutral">
+                      {wikiItemKindLabel(entry.itemKind)}
+                    </Badge>
+                    <Badge tone="neutral">
                       {wikiItemSubtypeLabel(entry.itemKind, entry.itemSubtype)}
-                    </span>
+                    </Badge>
                   </>
                 ) : null}
                 {entry.collectionNames.map((name) => (
-                  <span key={`collection:${name.toLocaleLowerCase()}`}>
+                  <Badge
+                    key={`collection:${name.toLocaleLowerCase()}`}
+                    tone="neutral"
+                  >
                     {name}
-                  </span>
+                  </Badge>
                 ))}
                 {entry.tagNames.slice(0, 3).map((name) => (
-                  <span key={`tag:${name.toLocaleLowerCase()}`}>#{name}</span>
+                  <Badge key={`tag:${name.toLocaleLowerCase()}`} tone="neutral">
+                    #{name}
+                  </Badge>
                 ))}
                 {entry.tagNames.length > 3 ? (
-                  <span>+{entry.tagNames.length - 3}</span>
+                  <Badge tone="neutral">+{entry.tagNames.length - 3}</Badge>
                 ) : null}
               </div>
               <div className={entryReviewListStyles.cardActions}>

@@ -104,20 +104,28 @@ test("People saves, links, protects, edits, trashes, and restores on desktop and
       fullPage: true,
     });
     await card.click();
+    await expect(page).toHaveURL(/\/people\/[0-9a-f-]+$/);
+    await expect(page.getByRole("heading", { name: "Alex" })).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Name" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Edit Person" }).click();
+    const editor = page.getByRole("main");
     await expect(
-      dialog.getByRole("button", { name: "Move to Trash" }),
+      editor.getByRole("button", { name: "Move to Trash" }),
     ).toBeDisabled();
-    await dialog.getByText("A walk with Alex", { exact: true }).click();
+    await editor.getByText("A walk with Alex", { exact: true }).click();
     await expect(
-      dialog.getByText("We talked about learning and life."),
+      editor.getByText("We talked about learning and life."),
     ).toBeVisible();
-    await dialog
+    await editor
       .getByRole("button", { name: "Unlink A walk with Alex" })
       .click();
-    await dialog.getByRole("button", { name: "Save changes" }).click();
-    await expect(dialog).not.toBeVisible();
+    await editor.getByRole("button", { name: "Save changes" }).click();
+    await expect(
+      editor.getByRole("button", { name: "Save changes" }),
+    ).not.toBeVisible();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
+    await page.goto("/people");
     await expect(card).toContainText("0 connected Items");
     await page.screenshot({
       caret: "initial",
@@ -131,13 +139,13 @@ test("People saves, links, protects, edits, trashes, and restores on desktop and
       ),
     ).toBe(true);
     await card.click();
-    await dialog.getByRole("button", { name: "Move to Trash" }).click();
+    await page.getByRole("button", { name: "Edit Person" }).click();
+    await editor.getByRole("button", { name: "Move to Trash" }).click();
     await page
       .getByRole("dialog", { name: "Move “Alex” to Trash?", exact: true })
       .getByRole("button", { name: "Move to Trash", exact: true })
       .click();
-    await expect(dialog).not.toBeVisible();
-    await expect(card).not.toBeVisible();
+    await expect(page).toHaveURL(/\/people$/);
     await expect(
       page.locator("[data-sonner-toast]").filter({
         hasText: "Person moved to Trash.",

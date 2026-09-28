@@ -3,7 +3,7 @@ import "server-only";
 import { getAuthenticatedContext } from "./inbox";
 import { isWikiItemKind, wikiEntryHref, type WikiItemKind } from "./wiki-item";
 
-export const wikiItemsPageSize = 36;
+export const wikiItemsPageSize = 12;
 
 export type WikiItemSummary = {
   excerpt: string;

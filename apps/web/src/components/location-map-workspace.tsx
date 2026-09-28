@@ -85,8 +85,7 @@ export function LocationMapWorkspace({
         entryCount: new Set(area.items.map((item) => item.id)).size,
       }))
       .sort(
-        (a, b) =>
-          b.entryCount - a.entryCount || a.label.localeCompare(b.label),
+        (a, b) => b.entryCount - a.entryCount || a.label.localeCompare(b.label),
       )
       .slice(0, 4);
   }, [filtered]);

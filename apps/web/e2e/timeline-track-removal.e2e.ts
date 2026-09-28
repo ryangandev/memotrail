@@ -54,7 +54,9 @@ test("new accounts do not show the obsolete Places track", async ({
     );
 
     await page.goto("/timeline/tracks");
-    await expect(page.getByRole("form", { name: "Edit Places" })).toHaveCount(0);
+    await expect(page.getByRole("form", { name: "Edit Places" })).toHaveCount(
+      0,
+    );
     await expect(
       page.getByRole("form", { name: "Edit Other Events" }),
     ).toBeVisible();

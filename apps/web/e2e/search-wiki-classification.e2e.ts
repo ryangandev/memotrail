@@ -66,25 +66,27 @@ test("Search filters Entries by record and descriptive tag", async ({
 
     expect(
       (
-        await client.from("entries").insert([
-          {
-            body: "I noticed how quiet the room felt.",
-            inbox_status: "organized",
-            item_kind: "entry",
-            item_subtype: "entry",
-            owner_id: ownerID,
-            title: "Quiet reflection",
-          },
-          {
-            body: "A very good day at the water.",
-            inbox_status: "organized",
-            item_kind: "entry",
-            item_subtype: "entry",
-            owner_id: ownerID,
-            title: "Marina memory",
-          },
-        ])
-        .select("id,title")
+        await client
+          .from("entries")
+          .insert([
+            {
+              body: "I noticed how quiet the room felt.",
+              inbox_status: "organized",
+              item_kind: "entry",
+              item_subtype: "entry",
+              owner_id: ownerID,
+              title: "Quiet reflection",
+            },
+            {
+              body: "A very good day at the water.",
+              inbox_status: "organized",
+              item_kind: "entry",
+              item_subtype: "entry",
+              owner_id: ownerID,
+              title: "Marina memory",
+            },
+          ])
+          .select("id,title")
       ).error,
     ).toBeNull();
     const memory = await client
@@ -129,9 +131,7 @@ test("Search filters Entries by record and descriptive tag", async ({
     await expect(page.getByLabel("Record")).toHaveValue("entry");
     await expect(page.getByLabel("Tag")).toHaveValue("Memory");
     await expect(visibleResult("Marina memory")).toBeVisible();
-    await expect(visibleResult("Marina memory")).toContainText(
-      "Entry",
-    );
+    await expect(visibleResult("Marina memory")).toContainText("Entry");
     await expect(visibleResult("Quiet reflection")).toHaveCount(0);
 
     await page.goto("/search?q=marina&type=entity");

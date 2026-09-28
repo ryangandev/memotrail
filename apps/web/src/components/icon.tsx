@@ -1,5 +1,7 @@
 export const iconNames = [
   "archive",
+  "arrowLeft",
+  "arrowRight",
   "bold",
   "bulletList",
   "calendar",
@@ -10,6 +12,8 @@ export const iconNames = [
   "clock",
   "code",
   "codeBlock",
+  "dashboard",
+  "edit",
   "inbox",
   "home",
   "italic",
@@ -73,6 +77,8 @@ const paths: Record<IconName, React.ReactNode> = {
       <path d="M3 4.5h18v4H3zM9 13h6" />
     </>
   ),
+  arrowLeft: <path d="M20 12H4m0 0 7-7m-7 7 7 7" />,
+  arrowRight: <path d="M4 12h16m0 0-7-7m7 7-7 7" />,
   bold: (
     <>
       <path d="M7 4h6a4 4 0 0 1 0 8H7V4Z" />
@@ -113,6 +119,20 @@ const paths: Record<IconName, React.ReactNode> = {
     <>
       <rect height="18" rx="2" width="20" x="2" y="3" />
       <path d="m9 8-4 4 4 4M15 8l4 4-4 4" />
+    </>
+  ),
+  dashboard: (
+    <>
+      <rect height="7" rx="1" width="7" x="3" y="3" />
+      <rect height="7" rx="1" width="7" x="14" y="3" />
+      <rect height="7" rx="1" width="7" x="3" y="14" />
+      <rect height="7" rx="1" width="7" x="14" y="14" />
+    </>
+  ),
+  edit: (
+    <>
+      <path d="M20 12.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7" />
+      <path d="m10 14 1.8-4.4L18.7 2.7a2.1 2.1 0 0 1 3 3l-6.9 6.9L10 14Z" />
     </>
   ),
   inbox: (

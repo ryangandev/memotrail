@@ -126,15 +126,6 @@
   gap: var(--mt-space-2);
 }
 
-.itemMeta span {
-  padding: 3px var(--mt-space-2);
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-warm);
-  background: var(--mt-color-warm-subtle);
-  font-size: 10px;
-  font-weight: var(--mt-font-weight-medium);
-}
-
 .itemMeta time {
   color: var(--mt-color-ink-faint);
   font-size: 10px;

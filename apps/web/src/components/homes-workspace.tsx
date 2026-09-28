@@ -1,10 +1,11 @@
 "use client";
 import { notify } from "@/components/app-toast";
-import { Dialog } from "@/components/dialog";
+import { FocusedEditorSurface } from "@/components/focused-editor-surface";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { FocusedViewLayout } from "@/components/focused-view-layout";
 import { Button } from "@/components/button";
+import { Badge } from "@/components/badge";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -152,7 +153,7 @@ export function HomesWorkspace({
         <HomeSection
           homes={currentHomes}
           label="Where life is happening now"
-          onSelect={setSelectedHome}
+          onSelect={(home) => router.push(`/homes/${home.id}`)}
           title="Current"
         />
       ) : null}
@@ -161,7 +162,7 @@ export function HomesWorkspace({
         <HomeSection
           homes={earlierHomes}
           label="Places you lived before"
-          onSelect={setSelectedHome}
+          onSelect={(home) => router.push(`/homes/${home.id}`)}
           title="Earlier homes"
         />
       ) : null}
@@ -254,13 +255,23 @@ function HomeCard({
             longitude={home.longitude}
           />
         )}
-        <span
+        <Badge
           className={home.occurredEnd ? styles.pastBadge : styles.currentBadge}
+          size="micro"
+          tone={home.occurredEnd ? "glassNeutral" : "glassAccent"}
+          uppercase
         >
           {home.occurredEnd ? "Earlier" : "Current"}
-        </span>
+        </Badge>
         {home.attachments.length > 1 ? (
-          <small>{home.attachments.length} photos</small>
+          <Badge
+            className={styles.photoBadge}
+            size="micro"
+            tone="inverse"
+            uppercase
+          >
+            {home.attachments.length} photos
+          </Badge>
         ) : null}
       </RecordCardVisual>
 
@@ -280,10 +291,22 @@ function HomeCard({
         <footer>
           <div>
             {home.collectionNames.slice(0, 2).map((name) => (
-              <span key={`collection:${name.toLocaleLowerCase()}`}>{name}</span>
+              <Badge
+                key={`collection:${name.toLocaleLowerCase()}`}
+                size="micro"
+                tone="neutral"
+              >
+                {name}
+              </Badge>
             ))}
             {home.tagNames.slice(0, 2).map((name) => (
-              <span key={`tag:${name.toLocaleLowerCase()}`}>#{name}</span>
+              <Badge
+                key={`tag:${name.toLocaleLowerCase()}`}
+                size="micro"
+                tone="neutral"
+              >
+                #{name}
+              </Badge>
             ))}
           </div>
           <Icon name="chevron" size={15} />
@@ -301,6 +324,7 @@ export function HomeEditor({
   onSaved,
   onTrashed,
   ownerId,
+  presentation = "dialog",
   sourceCapture = null,
   tagOptions,
 }: {
@@ -311,6 +335,7 @@ export function HomeEditor({
   onSaved: (record: HomeRecord) => void;
   onTrashed: (id: string) => void;
   ownerId: string;
+  presentation?: "dialog" | "page";
   sourceCapture?: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
@@ -603,11 +628,9 @@ export function HomeEditor({
   }
 
   return (
-    <Dialog
-      open
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) onClose();
-      }}
+    <FocusedEditorSurface
+      onClose={onClose}
+      presentation={presentation}
       title={
         <>
           {currentId
@@ -621,7 +644,6 @@ export function HomeEditor({
       eyebrow={<>{currentId ? "Edit Home" : "New Home"}</>}
       closeLabel="Close Home editor"
       busy={isPending}
-      size="wide"
       footer={
         <div
           className={`${styles.dialogFooter} ${result ? styles.dialogFooterWithMessage : ""}`}
@@ -851,7 +873,7 @@ export function HomeEditor({
           />
         </div>
       </form>
-    </Dialog>
+    </FocusedEditorSurface>
   );
 }
 

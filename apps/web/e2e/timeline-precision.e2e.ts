@@ -174,7 +174,9 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     await page.goto("/library");
     await page.getByRole("link", { name: /First trip to Japan/ }).click();
     await expect(page).toHaveURL(`/timeline?entry=${id}`);
-    await expect(page.getByRole("dialog", { name: "First trip to Japan" })).toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: "First trip to Japan" }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "Close Timeline editor" }).click();
     await expect(page).toHaveURL(/\/timeline$/);
     const timelineViewport = page.getByTestId("timeline-viewport");
@@ -284,12 +286,11 @@ test("Timeline edits preserve full occurrence precision without fabricated dates
     });
     await expect(createdVehicleCard).toBeVisible();
     await createdVehicleCard.click();
+    await expect(page).toHaveURL(/\/vehicles\/[0-9a-f-]+$/);
     await expect(
-      page.getByRole("dialog", { name: "Timeline-created vehicle" }),
+      page.getByRole("heading", { name: "Timeline-created vehicle" }),
     ).toBeVisible();
-    await page
-      .getByRole("button", { name: "Close Vehicle editor", exact: true })
-      .click();
+    await page.goto("/timeline");
     await page
       .getByRole("button", { name: "Add a moment to Vehicles", exact: true })
       .click();

@@ -154,9 +154,7 @@ test("Organized Entries stay editable without returning to Inbox", async ({
       (await client.from("entries").select("body").eq("id", id).single()).data!
         .body,
     ).toBe("Original words");
-    await page
-      .getByRole("button", { name: "Edit Entry", exact: true })
-      .click();
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await expect(noteEditor.locator("strong")).toHaveText("Original words");

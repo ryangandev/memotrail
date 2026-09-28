@@ -95,12 +95,18 @@ test("Inbox saves an Entry while Home uses its focused form", async ({
 
     await page.goto("/homes");
     await page.getByRole("button", { name: "Add Home" }).click();
-    const editor = page.getByRole("dialog", { name: "Keep a Home in your Life Wiki" });
-    await editor.getByLabel("Home name", { exact: true }).fill("Moved near the lake");
+    const editor = page.getByRole("dialog", {
+      name: "Keep a Home in your Life Wiki",
+    });
+    await editor
+      .getByLabel("Home name", { exact: true })
+      .fill("Moved near the lake");
     await editor.getByLabel("City", { exact: true }).fill("Oakland");
     await editor.getByRole("button", { name: "Add Home", exact: true }).click();
     await expect(editor).not.toBeVisible();
-    await expect(page.getByRole("button", { name: /Moved near the lake/ })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Moved near the lake/ }),
+    ).toBeVisible();
 
     const source = await client
       .from("entries")

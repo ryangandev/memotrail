@@ -67,7 +67,7 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - AI may propose a Collection but cannot create it without confirmation.
 - The Capture remains in Inbox until the user selects `Save to Library`, completes another explicit organization action, or moves it to Trash.
 - An unwanted Capture can move directly from Inbox review to Trash before it is organized, with confirmation and the normal restore path.
-- Home owns the persistent Quick Capture surface and shows up to three recent captures waiting for organization. Inbox is the dedicated review workspace and relies on the global New Entry action for additional capture.
+- Dashboard owns the persistent Quick Capture surface and shows up to three recent captures waiting for organization. Inbox is the dedicated review workspace and relies on the global New Entry action for additional capture.
 - `Save to Library` marks organization complete but never prevents later editing.
 - Inbox review saves the same Entry without a Kind or subtype choice.
 - Focused forms are reached from Timeline or their focused views rather than the Quick Capture chooser.
@@ -84,12 +84,15 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - People are reusable Entities linked to other Wiki Items, not alternate tags.
 - Locations are private address and coordinate snapshots owned by individual Entries, not Library items or reusable personal records.
 - A Location does not require a personal name; an Entry, Home, Vehicle, or First Time can carry its address or coordinates.
-- Inbox, Timeline, Home, Search, and Library are views or workflow states, not organization labels.
+- Inbox, Timeline, Dashboard, and Library are views or workflow states, not organization labels.
 - Library is the primary all-items entry point for the Life Wiki.
-  It presents organized Entries, Entities, and Goals, supports category and keyword filters, and opens focused records in their own views.
-  Unreviewed captures remain in Inbox and do not appear in Library or its item count until `Save to Library`.
+  Its default browser presents organized Entries, Entities, and Goals as paginated rows and opens focused records in their own views.
+  Unreviewed captures remain in Inbox and do not appear in the default Library browser or its item count until `Save to Library`.
+  Library search also finds Inbox captures, labels them clearly, and supports record, date, Collection, and tag filters with match context.
+  Library avoids duplicating the sidebar's focused and organizing destinations; the global Version history index has a link below Library results.
 - Opening a general Wiki Item shows its current content and primary actions first.
-  Version history is an explicit secondary action, while typed Entities continue to open their focused editors.
+  Version history is an explicit secondary action, while focused records open their own read-only detail pages.
+  A pencil-and-Edit action changes the fields on that detail page into an inline form; Add remains a modal creation flow.
 - Current Wiki Item detail supports moving the item to Trash, where it remains restorable.
 - Collections and tags are created and managed from separate Library destinations without a second in-page switcher, and remain available in every compatible Wiki Item editor.
 - Collection and tag management opens in viewport-level dialogs. The Tags Library uses compact usage-count badges that open tag management, recent linked Entries, and a path to the complete filtered result set.
@@ -112,10 +115,10 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - `Explore with AI` creates a separate conversation attached to its source Entry.
 - `Save as Entry` creates an editable, independent Inbox Entry with a bidirectional source link.
 - AI defaults off, and manual capture, organization, browsing, and keyword search continue without it.
-- Web offers one master permission, one optional organizing-suggestions control, and separate photo understanding consent. Search currently shows keyword retrieval without an Ask AI action; Explore runs only after an explicit user action.
+- Web offers one master permission, one optional organizing-suggestions control, and separate photo understanding consent. Library search currently shows keyword retrieval without an Ask AI action; Explore runs only after an explicit user action.
 - Photo understanding requires separate consent from text features.
 
-## Timeline and Home
+## Timeline and Dashboard
 
 Timeline shows deliberately created Moments and Periods, plus contextual focused-record spans, on customizable tracks.
 Web Timeline opens in the existing track view by default and offers Vertical Spine and Sticky Year styles through Settings; the chosen style is remembered for the signed-in account in that browser.
@@ -125,10 +128,10 @@ The user can create, order, rename, hide, and restore tracks without deleting co
 Timeline's global Add moment flow asks what the user is recording before opening the matching focused editor.
 The record form determines its fields, while Track only determines presentation.
 The Homes, Vehicles, and First Times track shortcuts open their specialized editors directly; other track shortcuts open the generic Moment editor with that track preselected.
-Opening an existing Home, Vehicle, or First Time from Timeline keeps the user on Timeline and uses the same specialized editor as its Records page.
+Opening an existing Home, Vehicle, or First Time from Timeline navigates to its read-only focused detail page.
 Unanchored Age, Approximate, and Unknown moments remain visible without a fabricated calendar position.
 
-Web Home is ordered around:
+Web Dashboard is ordered around:
 
 1. A personal greeting and compact archive counts linking to their destinations.
 2. Quick Capture alongside up to three captures ready to organize.
@@ -196,18 +199,20 @@ Soft Ledger is the visual direction: minimal, archival, modern, calm, and approa
 Both clients support light and dark appearance, share semantic design intent, and still follow native platform conventions where identical interaction would reduce usability.
 Web appearance is a per-browser choice between System, Light, and Dark; System remains the default and follows operating-system changes.
 
-Mobile uses Home, Inbox, Timeline, and Library as its primary destinations.
+Mobile uses Dashboard, Inbox, Timeline, Library, and More in its bottom navigation.
 Library opens with the same all-items Life Wiki browser as Web, including debounced keyword search and Kind filters.
-Focused record destinations and archive tools remain available in a compact, initially closed "More views and tools" section below the all-items browser, including on mobile.
-Settings is reached from the profile control.
-Settings lets the user choose a preferred name for Home greetings, or clear it to use the Google account name.
+More opens a compact menu for Map, focused record views, Collections, tags, archive tools, and Settings.
+Settings is also reached from the profile control.
+Settings lets the user choose a preferred name for Dashboard greetings, or clear it to use the Google account name.
 
-Desktop treats Library as a primary destination beside Home, Timeline, and Search.
+Desktop treats Library as a primary destination beside Dashboard, Timeline, and Map; Search is part of Library.
 Its sidebar omits Inbox, keeps optional focused views separate from Collections, tags, Trash, and the single Settings entry point.
-The desktop sidebar can collapse to a compact icon rail from the panel control beside the brand; the control centers in the rail when the brand hides, the width change animates, and the choice persists in this browser without changing mobile navigation.
-The collapsed rail uses square navigation targets and keeps keyboard focus indicators inside the controls.
-The persistent top bar places an accent-tinted `New` control at the far left, with neutral Search followed by an icon-only Inbox control at the far right; Inbox shows a notification count only when captures are waiting.
-A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry and People results in place, supports keyboard navigation, and keeps full-page Search with filters and AI as an explicit destination.
+The desktop sidebar can collapse to a compact icon rail from the top-bar panel control; the width change animates, and the choice persists in this browser without changing mobile navigation.
+The collapsed rail shows the MemoTrail logo without its wordmark above square navigation targets and keeps keyboard focus indicators inside the controls.
+On collapse, the logo's outer ring and accent rotate 90 degrees together while the inner ring turns in the opposite direction over 320ms; expanding reverses the rotation, and reduced motion keeps the mark still.
+The persistent top bar places Back and Forward history controls, then the desktop sidebar panel control, before the accent-tinted `New` control; unavailable history directions are disabled.
+Neutral Search and an icon-only Inbox control sit at the far right; Inbox shows a notification count only when captures are waiting.
+A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry and People results in place, supports keyboard navigation, and opens Library for full search with filters.
 New Entry opens from the top bar or Command J.
 Home, Vehicle, and First Time results share one reusable card shell while preserving subtype-specific content and responsive layouts.
 Specialized editors share one unboxed photo field with consistent previews, progress, limits, and controls.

@@ -1,6 +1,7 @@
 import { HomesWorkspace } from "@/components/homes-workspace";
 import { getCaptureExtractionSource } from "@/lib/data/capture-extraction";
 import { getHomesWorkspace } from "@/lib/data/home-records";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,8 @@ export default async function HomesPage({
   const params = await searchParams;
   const requestedEntry = params.entry;
   const requestedSource = params.source;
+  if (typeof requestedEntry === "string" && !requestedSource)
+    redirect(`/homes/${requestedEntry}`);
   const [workspace, sourceCapture] = await Promise.all([
     getHomesWorkspace(),
     getCaptureExtractionSource(

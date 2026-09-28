@@ -6,7 +6,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import { PageHeader } from "@/components/page-header";
 import { ProgressiveImage } from "@/components/progressive-image";
-import { TagChip } from "@/components/tag-chip";
+import { Badge } from "@/components/badge";
 import type {
   HomeEntry,
   HomeResurfacedMemory,
@@ -134,9 +134,10 @@ function Inbox({ workspace }: { workspace: HomeWorkspace }) {
               entry.title?.trim() ||
               entry.body.trim().split(/\r?\n/)[0] ||
               "Untitled capture";
+            const hasBody = Boolean(entry.title?.trim() && entry.body.trim());
             return (
               <Link
-                className={styles.inboxItem}
+                className={`${styles.inboxItem} ${hasBody ? styles.inboxItemWithBody : ""}`}
                 href={`/inbox?entry=${entry.id}`}
                 aria-label={`Organize ${truncate(title, 90)}`}
                 key={entry.id}
@@ -145,10 +146,8 @@ function Inbox({ workspace }: { workspace: HomeWorkspace }) {
                   {dateLabel(entry.createdAt, workspace.timezone, false)}
                 </time>
                 <div>
-                  <strong>{truncate(title, 90)}</strong>
-                  {entry.title?.trim() && entry.body.trim() ? (
-                    <p>{truncate(entry.body, 120)}</p>
-                  ) : null}
+                  <strong>{title}</strong>
+                  {hasBody ? <p>{entry.body.trim()}</p> : null}
                 </div>
                 <Icon name="chevron" size={14} />
               </Link>
@@ -316,9 +315,9 @@ function EntryCard({
               <span className={styles.entryDate}>
                 {occurrenceLabel(entryOccurrence(entry))}
               </span>
-              <span className={styles.typeBadge}>
+              <Badge size="small" tone="outline">
                 {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
-              </span>
+              </Badge>
             </>
           )}
         </header>
@@ -338,15 +337,14 @@ function EntryCard({
         {(memory && entry.collectionNames.length) || entry.tagNames.length ? (
           <footer className={styles.tags}>
             {(memory ? entry.collectionNames.slice(0, 2) : []).map((name) => (
-              <span
-                className={styles.collectionChip}
-                key={`collection:${name}`}
-              >
+              <Badge key={`collection:${name}`} size="small">
                 {name}
-              </span>
+              </Badge>
             ))}
             {entry.tagNames.slice(0, 3).map((name) => (
-              <TagChip key={`tag:${name}`} name={name} />
+              <Badge key={`tag:${name}`} size="medium" title={`#${name}`}>
+                #{name}
+              </Badge>
             ))}
           </footer>
         ) : null}

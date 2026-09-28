@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Icon } from "@/components/icon";
+import { Badge } from "@/components/badge";
 import { PhotoPreviewDialog } from "@/components/photo-preview-dialog";
 import { PhotoUploadProgress } from "@/components/photo-upload-progress";
 import { ProgressiveImage } from "@/components/progressive-image";
@@ -85,7 +86,13 @@ export function EntryPhotoField<Photo extends ExistingPhoto>({
               key={`${file.name}:${file.size}:${file.lastModified}:${index}`}
             >
               <SelectedPhotoPreview alt={`Selected ${file.name}`} file={file} />
-              <span className={styles.pendingBadge}>New</span>
+              <Badge
+                className={styles.pendingBadge}
+                size="micro"
+                tone="solidAccent"
+              >
+                New
+              </Badge>
               {index === 0 &&
               progress &&
               progress.total > 0 &&

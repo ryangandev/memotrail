@@ -50,6 +50,7 @@
 .frame[data-image-status="failed"] .skeleton {
   opacity: 0;
   pointer-events: none;
+  animation: none;
 }
 
 .fallback {

@@ -19,7 +19,9 @@ export type HomesWorkspace = {
 
 type NameRow = { name: string };
 
-export async function getHomesWorkspace(): Promise<HomesWorkspace | null> {
+export async function getHomesWorkspace(
+  targetId?: string,
+): Promise<HomesWorkspace | null> {
   const context = await getAuthenticatedContext();
 
   if (!context) {
@@ -54,14 +56,32 @@ export async function getHomesWorkspace(): Promise<HomesWorkspace | null> {
     return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
   }
 
-  const attachments = rows.flatMap((home) => home.attachments);
+  if (targetId && !rows.some((record) => record.id === targetId)) {
+    for (let offset = 100; rows.length >= offset; offset += 100) {
+      const page = await context.client.rpc("homes_workspace", {
+        p_limit: 100,
+        p_offset: offset,
+      });
+      const more = page.error ? null : parseHomeRows(page.data);
+      if (!more)
+        return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+      rows.push(...more);
+      if (more.length < 100 || more.some((record) => record.id === targetId))
+        break;
+    }
+  }
+  const visibleRows = targetId
+    ? rows.filter((record) => record.id === targetId)
+    : rows;
+
+  const attachments = visibleRows.flatMap((home) => home.attachments);
   const signedUrls = await signedImageUrls(context.client, attachments);
 
   return {
     collectionOptions: collections.error
       ? []
       : (collections.data ?? []).map((item) => item.name),
-    homes: rows.map((home) => ({
+    homes: visibleRows.map((home) => ({
       ...home,
       attachments: home.attachments.map((attachment) => ({
         ...attachment,

@@ -171,15 +171,16 @@ export function EntryHistoryView({
         {!history.current.deleted_at &&
           history.current.item_kind === "entry" &&
           history.current.item_subtype === "first_time" && (
-            <ButtonLink href={`/first-times?entry=${history.current.id}`}>
-              Edit First Time
+            <ButtonLink href={`/first-times/${history.current.id}`}>
+              Open First Time
             </ButtonLink>
           )}
         {!history.current.deleted_at &&
           history.current.item_kind === "entry" &&
           ["moment", "period"].includes(history.current.item_subtype) && (
             <ButtonLink href={`/timeline?entry=${history.current.id}`}>
-              Edit {history.current.item_subtype === "period" ? "Period" : "Moment"}
+              Edit{" "}
+              {history.current.item_subtype === "period" ? "Period" : "Moment"}
             </ButtonLink>
           )}
         {detailMode && history.versions.length > 0 ? (
@@ -216,7 +217,7 @@ export function EntryHistoryView({
           )}
         {!history.current.deleted_at &&
           history.current.item_kind === "goal" && (
-            <ButtonLink href={`/goals?entry=${history.current.id}`}>
+            <ButtonLink href={`/goals/${history.current.id}`}>
               Open Goal
             </ButtonLink>
           )}
@@ -415,7 +416,9 @@ function CurrentItem({ value }: { value: HistorySnapshot }) {
         !["entry", "source_capture"].includes(value.item_subtype) ? (
           <div>
             <dt>Record</dt>
-            <dd>{wikiItemIdentityLabel(value.item_kind, value.item_subtype)}</dd>
+            <dd>
+              {wikiItemIdentityLabel(value.item_kind, value.item_subtype)}
+            </dd>
           </div>
         ) : null}
         <div>
@@ -487,7 +490,7 @@ function GoalExtraction({
           if (result.error) setError(result.error);
           else if (result.goalId) {
             setOpen(false);
-            router.push(`/goals?entry=${result.goalId}`);
+            router.push(`/goals/${result.goalId}`);
           }
         } catch {
           setError(

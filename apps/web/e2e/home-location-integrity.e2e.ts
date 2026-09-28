@@ -132,14 +132,29 @@ test("Home keeps Location optional and never pairs edited addresses with old coo
     });
 
     await mappedCard.click();
-    const providerEdit = page.getByRole("dialog");
+    await expect(
+      page.getByRole("heading", { name: "Mapped Pine Home" }),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: "Back to homes" })).toHaveCount(
+      0,
+    );
+    const editHome = page.getByRole("button", { name: "Edit Home" });
+    await expect(editHome).toHaveText("Edit");
+    await expect(editHome.locator("svg")).toHaveCount(1);
+    await editHome.click();
+    const providerEdit = page.getByRole("main");
     await providerEdit
       .getByRole("combobox", { name: "Change Location" })
       .fill("Pine Street");
     await providerEdit.getByRole("option", { name: /10 Pine Street/ }).click();
     await providerEdit.getByRole("button", { name: "Save changes" }).click();
-    await expect(providerEdit).not.toBeVisible();
-    await expect(mappedCard.locator('[data-record-card-map="true"]')).toBeVisible();
+    await expect(
+      providerEdit.getByRole("button", { name: "Save changes" }),
+    ).not.toBeVisible();
+    await page.goto("/homes");
+    await expect(
+      mappedCard.locator('[data-record-card-map="true"]'),
+    ).toBeVisible();
 
     const mappedEntry = (
       await admin
@@ -150,7 +165,8 @@ test("Home keeps Location optional and never pairs edited addresses with old coo
         .single()
     ).data!;
     await mappedCard.click();
-    const staleEdit = page.getByRole("dialog");
+    await page.getByRole("button", { name: "Edit Home" }).click();
+    const staleEdit = page.getByRole("main");
     expect(
       (
         await admin
@@ -159,7 +175,9 @@ test("Home keeps Location optional and never pairs edited addresses with old coo
           .eq("id", mappedEntry.id)
       ).error,
     ).toBeNull();
-    await staleEdit.getByRole("textbox", { name: "Home name" }).fill("Stale edit");
+    await staleEdit
+      .getByRole("textbox", { name: "Home name" })
+      .fill("Stale edit");
     await staleEdit.getByRole("button", { name: "Save changes" }).click();
     await expect(staleEdit.locator("footer [role=alert]")).toContainText(
       "changed on another device",
@@ -168,6 +186,7 @@ test("Home keeps Location optional and never pairs edited addresses with old coo
       path: "/private/tmp/memotrail-home-save-error.png",
     });
     await staleEdit.getByRole("button", { name: "Cancel" }).click();
+    await page.goto("/homes");
 
     await page.getByRole("button", { name: "Add Home" }).first().click();
     const editor = page.getByRole("dialog");

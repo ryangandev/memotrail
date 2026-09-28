@@ -1,6 +1,109 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
 
+test("selected brand motion previews both panel directions and respects reduced motion", async ({
+  page,
+}) => {
+  const hydrationWarnings: string[] = [];
+  page.on("console", (message) => {
+    if (/hydration|hydrated/i.test(message.text())) {
+      hydrationWarnings.push(message.text());
+    }
+  });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/design-system#brand-motion");
+  const specimen = page.locator("#brand-motion");
+  const studies = specimen.locator("[data-brand-motion-study]");
+  await expect(studies).toHaveCount(1);
+  const counter = specimen.locator('[data-brand-motion-study="counter"]');
+  await expect(
+    counter.getByRole("heading", { name: "Counter rotation" }),
+  ).toBeVisible();
+  await specimen.screenshot({
+    caret: "initial",
+    path: "/private/tmp/memotrail-brand-motion-expanded.png",
+  });
+  await counter
+    .getByRole("button", { name: "Collapse Counter rotation preview" })
+    .click();
+  for (const part of ["outer-ring", "accent", "inner-ring"]) {
+    for (const ring of await counter
+      .locator(`[data-brand-part="${part}"]`)
+      .all()) {
+      await expect(ring).toHaveCSS(
+        "transform",
+        part === "inner-ring"
+          ? "matrix(0, -1, 1, 0, 0, 0)"
+          : "matrix(0, 1, -1, 0, 0, 0)",
+      );
+    }
+  }
+  await expect(counter).toHaveAttribute("data-collapsed", "true");
+  const staticBrand = page.locator("[data-brand-identity] svg");
+  for (const part of await staticBrand.locator("path").all()) {
+    await expect(part).toHaveCSS("transform", "none");
+  }
+  await specimen.screenshot({
+    caret: "initial",
+    path: "/private/tmp/memotrail-brand-motion-collapsed.png",
+    animations: "disabled",
+  });
+  await counter
+    .getByRole("button", { name: "Expand Counter rotation preview" })
+    .click();
+  for (const part of await counter.locator("path").all()) {
+    await expect(part).toHaveCSS("transform", "none");
+  }
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
+  await counter
+    .getByRole("button", { name: "Collapse Counter rotation preview" })
+    .click();
+  for (const part of await counter.locator("path").all()) {
+    await expect(part).toHaveCSS("transition-duration", "0s");
+    await expect(part).toHaveCSS("transform", "none");
+  }
+  await expect(
+    specimen.getByText("Reduced motion is on.", { exact: false }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await specimen.screenshot({
+    caret: "initial",
+    path: "/private/tmp/memotrail-brand-motion-mobile.png",
+  });
+  expect(hydrationWarnings).toEqual([]);
+});
+
+test("shared badges keep long labels on one line across sizes", async ({
+  page,
+}) => {
+  await page.goto("/design-system");
+  const longBadge = page.getByTitle("A long label that stays on one line");
+  await expect(longBadge).toHaveAttribute("data-ui-badge", "true");
+  await expect(longBadge).toBeVisible();
+  await expect(longBadge).toHaveCSS("white-space", "nowrap");
+  await longBadge.evaluate((element) => {
+    (element as HTMLElement).style.width = "90px";
+  });
+  const geometry = await longBadge.evaluate((element) => ({
+    height: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+    width: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  expect(geometry.scrollWidth).toBeGreaterThan(geometry.width);
+  expect(geometry.scrollHeight).toBe(geometry.height);
+  await expect(longBadge).toHaveCSS("white-space", "nowrap");
+  await expect(page.getByTitle("#learning")).toHaveAttribute(
+    "data-ui-badge",
+    "true",
+  );
+});
+
 test("shared Collection card fits four cards across on desktop", async ({
   page,
 }) => {
@@ -294,10 +397,9 @@ test("DatePickerField uses the shared form typography", async ({ page }) => {
   );
   await expect(calendar).toBeVisible();
   await expect(calendar.locator("th").first()).toHaveCSS("font-size", "12px");
-  await expect(calendar.locator("[class*=calendarCellTrigger]").first()).toHaveCSS(
-    "font-size",
-    textFont.size,
-  );
+  await expect(
+    calendar.locator("[class*=calendarCellTrigger]").first(),
+  ).toHaveCSS("font-size", textFont.size);
   await page.keyboard.press("Escape");
   await specimen
     .getByRole("button", { name: "Choose exact date and time time" })

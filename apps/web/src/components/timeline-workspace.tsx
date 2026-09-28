@@ -247,21 +247,15 @@ export function TimelineWorkspace({
 
   function openEntry(entry: TimelineEntry) {
     if (entry.itemKind === "entity" && entry.itemSubtype === "home") {
-      const home = homes.find((item) => item.id === entry.id);
-      if (home) setSelection({ type: "home", entry: home });
-      else router.push(`/homes?entry=${entry.id}`);
+      router.push(`/homes/${entry.id}`);
       return;
     }
     if (entry.itemKind === "entity" && entry.itemSubtype === "vehicle") {
-      const vehicle = vehicles.find((item) => item.id === entry.id);
-      if (vehicle) setSelection({ type: "vehicle", entry: vehicle });
-      else router.push(`/vehicles?entry=${entry.id}`);
+      router.push(`/vehicles/${entry.id}`);
       return;
     }
     if (entry.itemKind === "entry" && entry.itemSubtype === "first_time") {
-      const firstTime = firstTimes.find((item) => item.id === entry.id);
-      if (firstTime) setSelection({ type: "first-time", entry: firstTime });
-      else router.push("/first-times");
+      router.push(`/first-times/${entry.id}`);
       return;
     }
     setSelection({ type: "timeline", entry, initialTrackId: null });

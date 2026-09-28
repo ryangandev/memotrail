@@ -22,6 +22,7 @@ import {
   type SyncInboxEntryResult,
 } from "@/app/inbox/actions";
 import { Icon } from "@/components/icon";
+import { Badge } from "@/components/badge";
 import { PhotoUploadProgress } from "@/components/photo-upload-progress";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { SelectedPhotoPreview } from "@/components/selected-photo-preview";
@@ -867,9 +868,7 @@ export function CaptureComposer({
                   <time dateTime={entry.occurredAt ?? undefined}>
                     {occurrenceLabel(queuedOccurrence(entry))}
                   </time>
-                  <span className={captureComposerStyles.pendingBadge}>
-                    On this device
-                  </span>
+                  <Badge>On this device</Badge>
                 </div>
                 <h3>{entry.title ?? "Untitled Entry"}</h3>
                 {entry.body ? <p>{entry.body}</p> : null}

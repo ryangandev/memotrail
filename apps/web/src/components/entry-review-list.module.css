@@ -46,15 +46,6 @@
   gap: 6px;
 }
 
-.tags span {
-  padding: 3px var(--mt-space-2);
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-subtle);
-  font-size: 10px;
-  line-height: 1.4;
-}
-
 .reviewRichTextField {
   display: grid;
   gap: var(--mt-space-2);

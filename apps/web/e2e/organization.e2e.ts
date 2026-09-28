@@ -389,7 +389,7 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await journeysDialog
       .getByRole("link", { name: "View all Entries for this tag" })
       .click();
-    await expect(page).toHaveURL(/\/search\?tag=journeys$/);
+    await expect(page).toHaveURL(/\/library\?tag=journeys$/);
     await expect(
       page.getByRole("combobox", { name: "Tag", exact: true }),
     ).toHaveValue("journeys");

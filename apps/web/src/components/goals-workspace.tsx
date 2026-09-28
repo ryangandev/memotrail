@@ -1,6 +1,6 @@
 "use client";
 import { notify } from "@/components/app-toast";
-import { Dialog } from "@/components/dialog";
+import { FocusedEditorSurface } from "@/components/focused-editor-surface";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import {
   RecordCard,
@@ -10,6 +10,7 @@ import {
 import { EmptyState } from "@/components/empty-state";
 import { FocusedViewLayout } from "@/components/focused-view-layout";
 import { Button } from "@/components/button";
+import { Badge } from "@/components/badge";
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -190,7 +191,7 @@ export function GoalsWorkspace({
                 detail={section.detail}
                 goals={sectionGoals}
                 key={section.title}
-                onSelect={setSelectedGoal}
+                onSelect={(goal) => router.push(`/goals/${goal.id}`)}
                 title={section.title}
               />
             ) : null;
@@ -267,16 +268,33 @@ function GoalCard({
         <RecordCardVisual className={styles.goalCover}>
           <ProgressiveImage alt="" src={cover.imageUrl} />
           {goal.attachments.length > 1 ? (
-            <span className={styles.photoCount}>
+            <Badge
+              className={styles.photoCount}
+              size="micro"
+              tone="inverse"
+              uppercase
+            >
               {goal.attachments.length} photos
-            </span>
+            </Badge>
           ) : null}
         </RecordCardVisual>
       ) : null}
       <RecordCardBody className={styles.goalCardBody}>
         <div className={styles.goalMeta}>
-          <span data-status={goal.status}>{goalStatusLabels[goal.status]}</span>
-          <span>{goalHorizonLabels[goal.horizon]}</span>
+          <Badge
+            size="micro"
+            tone={
+              goal.status === "active" || goal.status === "achieved"
+                ? "accent"
+                : "neutral"
+            }
+            uppercase
+          >
+            {goalStatusLabels[goal.status]}
+          </Badge>
+          <Badge size="micro" tone="neutral" uppercase>
+            {goalHorizonLabels[goal.horizon]}
+          </Badge>
         </div>
         <h3>{goal.title}</h3>
         <p className={styles.target}>{goalTargetLabel(goal)}</p>
@@ -300,12 +318,22 @@ function GoalCard({
               .filter((name) => name.toLocaleLowerCase() !== "bucket list")
               .slice(0, 2)
               .map((name) => (
-                <span key={`collection:${name.toLocaleLowerCase()}`}>
+                <Badge
+                  key={`collection:${name.toLocaleLowerCase()}`}
+                  size="micro"
+                  tone="neutral"
+                >
                   {name}
-                </span>
+                </Badge>
               ))}
             {goal.tagNames.slice(0, 2).map((name) => (
-              <span key={`tag:${name.toLocaleLowerCase()}`}>#{name}</span>
+              <Badge
+                key={`tag:${name.toLocaleLowerCase()}`}
+                size="micro"
+                tone="neutral"
+              >
+                #{name}
+              </Badge>
             ))}
           </div>
           <Icon name="chevron" size={15} />
@@ -315,12 +343,14 @@ function GoalCard({
   );
 }
 
-function GoalEditor({
+export function GoalEditor({
   collectionOptions,
   goal,
   linkOptions,
   onClose,
+  onTrashed,
   ownerId,
+  presentation = "dialog",
   sourceCapture = null,
   tagOptions,
 }: {
@@ -328,7 +358,9 @@ function GoalEditor({
   goal: GoalRecord | null;
   linkOptions: GoalLinkOption[];
   onClose: () => void;
+  onTrashed?: () => void;
   ownerId: string;
+  presentation?: "dialog" | "page";
   sourceCapture?: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
@@ -555,6 +587,7 @@ function GoalEditor({
         revision: currentRevision,
       });
       if (nextResult.status === "trashed") {
+        onTrashed?.();
         router.refresh();
         onClose();
         notify.info("Goal moved to Trash.");
@@ -569,11 +602,9 @@ function GoalEditor({
   }
 
   return (
-    <Dialog
-      open
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) onClose();
-      }}
+    <FocusedEditorSurface
+      onClose={onClose}
+      presentation={presentation}
       title={
         <>
           {currentId
@@ -587,7 +618,6 @@ function GoalEditor({
       eyebrow={<>{currentId ? "Edit Goal" : "New Goal"}</>}
       closeLabel="Close Goal editor"
       busy={isPending}
-      size="wide"
       footer={
         <div className={common.dialogFooter}>
           <div>
@@ -836,7 +866,7 @@ function GoalEditor({
           </p>
         ) : null}
       </form>
-    </Dialog>
+    </FocusedEditorSurface>
   );
 }
 

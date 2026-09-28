@@ -15,6 +15,7 @@ import {
 } from "@/app/trash/actions";
 import styles from "@/components/trash-workspace.module.css";
 import { Icon } from "@/components/icon";
+import { Badge } from "@/components/badge";
 import { EmptyTrashControl } from "@/components/empty-trash-control";
 import { PageFrame } from "@/components/page-frame";
 import { ProgressiveImage } from "@/components/progressive-image";
@@ -145,8 +146,8 @@ export function TrashWorkspace({
             title={<>Nothing in Trash</>}
             description={
               <>
-                Removed Entries, People, and individual photos will
-                appear here. Legacy records remain recoverable too.
+                Removed Entries, People, and individual photos will appear here.
+                Legacy records remain recoverable too.
               </>
             }
             icon={
@@ -189,7 +190,7 @@ export function TrashWorkspace({
 
                   <div className={styles.itemBody}>
                     <div className={styles.itemMeta}>
-                      <span>{labelForItem(item)}</span>
+                      <Badge tone="warm">{labelForItem(item)}</Badge>
                       <time dateTime={item.deletedAt}>
                         Removed {formatDate(item.deletedAt)}
                       </time>

@@ -1,10 +1,11 @@
 "use client";
 import { notify } from "@/components/app-toast";
-import { Dialog } from "@/components/dialog";
+import { FocusedEditorSurface } from "@/components/focused-editor-surface";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { FocusedViewLayout } from "@/components/focused-view-layout";
 import { Button } from "@/components/button";
+import { Badge } from "@/components/badge";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -72,7 +73,9 @@ export function FirstTimesWorkspace({
   const [selectedEntry, setSelectedEntry] = useState<
     FirstTimeEntry | null | undefined
   >(() =>
-    initialEntryId ? entries.find((item) => item.id === initialEntryId) : undefined,
+    initialEntryId
+      ? entries.find((item) => item.id === initialEntryId)
+      : undefined,
   );
   const [confirmedEntries, setConfirmedEntries] = useState<
     Record<string, FirstTimeEntry>
@@ -147,7 +150,7 @@ export function FirstTimesWorkspace({
               entry={entry}
               index={index}
               key={entry.id}
-              onSelect={() => setSelectedEntry(entry)}
+              onSelect={() => router.push(`/first-times/${entry.id}`)}
             />
           ))}
         </section>
@@ -160,7 +163,8 @@ export function FirstTimesWorkspace({
           key={selectedEntry?.id ?? "new-first-time"}
           onClose={() => {
             setSelectedEntry(undefined);
-            if (initialEntryId) router.replace("/first-times", { scroll: false });
+            if (initialEntryId)
+              router.replace("/first-times", { scroll: false });
           }}
           onSaved={(entry) =>
             setConfirmedEntries((current) => ({
@@ -204,7 +208,16 @@ function FirstTimeCard({
               Private photo
             </span>
           )}
-          {photos.length > 1 ? <small>{photos.length} photos</small> : null}
+          {photos.length > 1 ? (
+            <Badge
+              className={styles.photoBadge}
+              size="micro"
+              tone="inverse"
+              uppercase
+            >
+              {photos.length} photos
+            </Badge>
+          ) : null}
         </RecordCardVisual>
       ) : (
         <RecordCardVisual className={styles.coverPhoto}>
@@ -235,12 +248,28 @@ function FirstTimeCard({
         {entry.body ? <p>{truncate(entry.body, 180)}</p> : null}
         <footer>
           <div>
-            {entry.inboxStatus === "unreviewed" ? <span>In Inbox</span> : null}
+            {entry.inboxStatus === "unreviewed" ? (
+              <Badge size="micro" tone="warm">
+                In Inbox
+              </Badge>
+            ) : null}
             {entry.collectionNames.slice(0, 2).map((name) => (
-              <span key={`collection:${name.toLocaleLowerCase()}`}>{name}</span>
+              <Badge
+                key={`collection:${name.toLocaleLowerCase()}`}
+                size="micro"
+                tone="neutral"
+              >
+                {name}
+              </Badge>
             ))}
             {entry.tagNames.slice(0, 2).map((name) => (
-              <span key={`tag:${name.toLocaleLowerCase()}`}>#{name}</span>
+              <Badge
+                key={`tag:${name.toLocaleLowerCase()}`}
+                size="micro"
+                tone="neutral"
+              >
+                #{name}
+              </Badge>
             ))}
           </div>
           <Icon name="chevron" size={15} />
@@ -256,7 +285,9 @@ export function FirstTimeEditor({
   entry,
   onClose,
   onSaved,
+  onTrashed,
   ownerId,
+  presentation = "dialog",
   tagOptions,
 }: {
   collectionOptions: string[];
@@ -264,7 +295,9 @@ export function FirstTimeEditor({
   entry: FirstTimeEntry | null;
   onClose: () => void;
   onSaved: (entry: FirstTimeEntry) => void;
+  onTrashed?: () => void;
   ownerId: string;
+  presentation?: "dialog" | "page";
   tagOptions: string[];
 }) {
   const router = useRouter();
@@ -495,6 +528,7 @@ export function FirstTimeEditor({
       });
 
       if (nextResult.status === "trashed") {
+        onTrashed?.();
         router.refresh();
         onClose();
         notify.info("First Time moved to Trash.");
@@ -511,17 +545,14 @@ export function FirstTimeEditor({
   }
 
   return (
-    <Dialog
-      open
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) onClose();
-      }}
+    <FocusedEditorSurface
+      onClose={onClose}
+      presentation={presentation}
       title={<>{currentId ? title || "First Time" : "Keep a beginning"}</>}
       titleId="first-time-editor-title"
       eyebrow={<>{currentId ? "Edit First Time" : "New First Time"}</>}
       closeLabel="Close First Time editor"
       busy={isPending}
-      size="wide"
       footer={
         <div className={styles.dialogFooter}>
           <div>
@@ -652,7 +683,7 @@ export function FirstTimeEditor({
           </p>
         ) : null}
       </form>
-    </Dialog>
+    </FocusedEditorSurface>
   );
 }
 

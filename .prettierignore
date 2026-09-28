@@ -6,3 +6,5 @@ pnpm-lock.yaml
 *.xcodeproj
 apps/ios/**/Generated
 apps/web/src/styles/generated-tokens.css
+# Standalone design explorations use their own authored formatting.
+timeline-ideas/

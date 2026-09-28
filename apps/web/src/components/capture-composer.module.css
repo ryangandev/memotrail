@@ -284,15 +284,6 @@
   -webkit-line-clamp: 3;
 }
 
-.pendingBadge {
-  padding: 3px var(--mt-space-2);
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-accent);
-  background: var(--mt-color-accent-subtle);
-  font-size: 10px;
-  line-height: 1.4;
-}
-
 .visuallyHidden {
   position: absolute;
   width: 1px;

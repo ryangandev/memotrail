@@ -226,13 +226,17 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
 
     await page.goto("/first-times");
     await page.getByRole("button", { name: /First hike/ }).click();
-    const editDialog = page.getByRole("dialog");
+    await page.getByRole("button", { name: "Edit First Time" }).click();
+    const editDialog = page.getByRole("main");
     await expect(
       editDialog.getByRole("img", { name: /Map showing 10 Pine Street/ }),
     ).toBeVisible();
     await editDialog.getByRole("button", { name: "Remove" }).click();
     await editDialog.getByRole("button", { name: "Save changes" }).click();
-    await expect(editDialog).not.toBeVisible();
+    await expect(
+      editDialog.getByRole("button", { name: "Save changes" }),
+    ).not.toBeVisible();
+    await page.goto("/first-times");
     await expect(
       page
         .getByRole("button", { name: /First hike/ })

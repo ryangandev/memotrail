@@ -24,14 +24,6 @@
   position: absolute;
   right: var(--mt-space-3);
   bottom: var(--mt-space-3);
-  padding: var(--mt-space-1) var(--mt-space-2);
-  border-radius: var(--mt-radius-pill);
-  color: white;
-  background: rgb(24 24 20 / 0.72);
-  font-size: 9px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  backdrop-filter: blur(8px);
 }
 
 .goalCardBody {
@@ -44,27 +36,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-}
-
-.goalMeta span {
-  padding: var(--mt-space-1) var(--mt-space-2);
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-subtle);
-  font-size: 9px;
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.055em;
-  text-transform: uppercase;
-}
-
-.goalMeta span[data-status="active"],
-.goalMeta span[data-status="achieved"] {
-  color: var(--mt-color-accent);
-  background: var(--mt-color-accent-subtle);
-}
-
-.goalMeta span[data-status="let_go"] {
-  color: var(--mt-color-ink-faint);
 }
 
 .goalCardBody h3 {
@@ -128,14 +99,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-}
-
-.goalCardBody footer span {
-  padding: 3px 7px;
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-subtle);
-  font-size: 9px;
 }
 
 .relatedSection {

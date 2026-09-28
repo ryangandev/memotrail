@@ -7,6 +7,7 @@ import {
   fillOccurrenceEnd,
   fillOccurrenceStart,
   occurrenceStartField,
+  setDateDescription,
 } from "./helpers/occurrence";
 
 test("Inbox preserves uncertain dates and edits calendar precision without inventing dates", async ({
@@ -160,31 +161,11 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
     expect(range.data?.date_precision).toBe("range");
     expect(range.data?.occurred_end).not.toBeNull();
 
-    // A deterministic provider-response fixture isolates editable date adoption
-    // from provider availability and costs. Real provider generation is covered
-    // by the separately opt-in AI acceptance suite.
-    await page.route("**/api/ai/suggestions", (route) =>
-      route.fulfill({
-        json: {
-          suggestion: {
-            id: randomUUID(),
-            entry_revision: 6,
-            status: "proposed",
-            suggestions: {
-              title: null,
-              entryType: null,
-              collections: [],
-              tags: [],
-              dateText: "17岁，第一次去日本",
-              rationale: "Only the age is known.",
-              confidence: 0.9,
-            },
-          },
-        },
-      }),
-    );
     await card.getByRole("button", { name: "Organize", exact: true }).click();
-    await page.getByRole("button", { name: "Use as approximate date" }).click();
+    await page
+      .getByRole("combobox", { name: "Date type", exact: true })
+      .selectOption("approximate");
+    await setDateDescription(page, "17岁，第一次去日本");
     await expect(
       page.getByRole("combobox", { name: "Date type", exact: true }),
     ).toHaveValue("approximate");

@@ -103,19 +103,6 @@
   gap: 6px;
 }
 
-.entryMeta span {
-  padding: 3px var(--mt-space-2);
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-subtle);
-  font-size: 10px;
-}
-
-.entryMeta span:nth-child(2) {
-  color: var(--mt-color-warm);
-  background: var(--mt-color-warm-subtle);
-}
-
 .entryMeta time {
   margin-left: auto;
   color: var(--mt-color-ink-faint);

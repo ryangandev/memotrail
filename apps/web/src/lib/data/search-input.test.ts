@@ -3,7 +3,7 @@ import {
   SEARCH_PAGE_SIZE,
   parseQuickSearchResult,
   parseSearchRequest,
-  searchPageHref,
+  librarySearchHref,
 } from "./search-input";
 
 describe("parseSearchRequest", () => {
@@ -72,7 +72,7 @@ describe("parseSearchRequest", () => {
   });
 });
 
-describe("searchPageHref", () => {
+describe("librarySearchHref", () => {
   it("preserves the full search while changing pages", () => {
     const request = parseSearchRequest({
       collection: "Travel",
@@ -82,8 +82,8 @@ describe("searchPageHref", () => {
       type: "first_time",
     }).request;
 
-    expect(searchPageHref(request, 2)).toBe(
-      "/search?q=first+snow&type=first_time&collection=Travel&tag=skiing&from=2026-01-01&page=2",
+    expect(librarySearchHref(request, 2)).toBe(
+      "/library?q=first+snow&type=first_time&collection=Travel&tag=skiing&from=2026-01-01&page=2",
     );
   });
 });

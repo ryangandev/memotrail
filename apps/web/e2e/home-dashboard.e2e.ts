@@ -132,7 +132,7 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
         exact: true,
       });
       await expect(
-        nav.getByRole("link", { name: "Home", exact: true }),
+        nav.getByRole("link", { name: "Dashboard", exact: true }),
       ).toHaveAttribute("aria-current", "page");
       await expect(page.getByRole("heading", { level: 1 })).toContainText(
         "Preview",
@@ -235,6 +235,40 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
             }),
           ),
         ).toBe(true);
+        const metricRows = await metrics
+          .getByRole("link")
+          .evaluateAll((links) =>
+            links.map((link) => Math.round(link.getBoundingClientRect().top)),
+          );
+        const metricLayout = await metrics.evaluate((element) => {
+          const [first, second] = Array.from(element.querySelectorAll("a"));
+          return {
+            borderRadius: getComputedStyle(element).borderRadius,
+            cellBorderRadius: getComputedStyle(first).borderRadius,
+            firstCellRight: first.getBoundingClientRect().right,
+            secondCellLeft: second.getBoundingClientRect().left,
+          };
+        });
+        expect(metricLayout.borderRadius).not.toBe("0px");
+        expect(metricLayout.cellBorderRadius).toBe("0px");
+        expect(
+          Math.abs(metricLayout.firstCellRight - metricLayout.secondCellLeft),
+        ).toBeLessThan(1);
+        expect(metricRows.slice(0, 3)).toEqual([
+          metricRows[0],
+          metricRows[0],
+          metricRows[0],
+        ]);
+        if (width === 1440) {
+          expect(metricRows[4]).toBe(metricRows[0]);
+        } else {
+          expect(metricRows[3]).toBeGreaterThan(metricRows[0]);
+          expect(metricRows[4]).toBe(metricRows[3]);
+          await page.screenshot({
+            path: "/tmp/memotrail-home-dashboard-medium.png",
+            animations: "disabled",
+          });
+        }
       }
       await page.setViewportSize({ width: 1440, height: 1000 });
       await page.screenshot({
@@ -272,12 +306,23 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
             animations: "disabled",
           });
       }
+      await page.setViewportSize({ width: 320, height: 700 });
+      const formattingToolbar = page.getByRole("toolbar", {
+        name: "Text formatting",
+      });
+      await expect
+        .poll(() =>
+          formattingToolbar.evaluate((element) =>
+            Math.round(element.scrollWidth - element.clientWidth),
+          ),
+        )
+        .toBeLessThanOrEqual(1);
     }
 
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page
       .getByRole("navigation", { name: "Primary navigation", exact: true })
-      .getByRole("link", { name: "Home", exact: true })
+      .getByRole("link", { name: "Dashboard", exact: true })
       .click();
     await expect(page).toHaveURL("/");
     await page

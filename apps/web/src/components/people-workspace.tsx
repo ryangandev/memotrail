@@ -1,6 +1,6 @@
 "use client";
 import { notify } from "@/components/app-toast";
-import { Dialog } from "@/components/dialog";
+import { FocusedEditorSurface } from "@/components/focused-editor-surface";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { RecordCard, RecordCardBody } from "@/components/record-card";
 import { EmptyState } from "@/components/empty-state";
@@ -98,7 +98,10 @@ export function PeopleWorkspace({
         <div className={styles.peopleResults}>
           <div className={styles.peopleGrid}>
             {people.map((person) => (
-              <RecordCard key={person.id} onClick={() => setSelected(person)}>
+              <RecordCard
+                key={person.id}
+                onClick={() => router.push(`/people/${person.id}`)}
+              >
                 <RecordCardBody className={styles.personBody}>
                   <span className={styles.initial}>
                     {Array.from(person.name)[0]?.toUpperCase()}
@@ -136,14 +139,18 @@ export function PeopleWorkspace({
   );
 }
 
-function PersonEditor({
+export function PersonEditor({
   person,
   entries,
   onClose,
+  onTrashed,
+  presentation = "dialog",
 }: {
   person: Person | null;
   entries: PersonEntry[];
   onClose: () => void;
+  onTrashed?: () => void;
+  presentation?: "dialog" | "page";
 }) {
   const router = useRouter();
   const requestConfirmation = useConfirmationDialog();
@@ -188,6 +195,7 @@ function PersonEditor({
             });
       if (failure) notify.error(failure);
       else {
+        if (remove) onTrashed?.();
         router.refresh();
         onClose();
         if (remove) notify.info("Person moved to Trash.");
@@ -202,17 +210,14 @@ function PersonEditor({
     }
   }
   return (
-    <Dialog
-      open
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) onClose();
-      }}
+    <FocusedEditorSurface
+      onClose={onClose}
+      presentation={presentation}
       title={<>{person ? person.name : "Keep someone in your story"}</>}
       titleId="person-title"
       eyebrow={<>{person ? "Edit Person" : "New Person"}</>}
       closeLabel="Close Person editor"
       busy={busy}
-      size="wide"
       footer={
         <div className={common.dialogFooter}>
           <div>
@@ -360,7 +365,7 @@ function PersonEditor({
           </fieldset>
         </div>
       </form>
-    </Dialog>
+    </FocusedEditorSurface>
   );
 }
 
