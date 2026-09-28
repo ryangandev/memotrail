@@ -111,7 +111,7 @@ final class FirstTimeEntryTests: XCTestCase {
     XCTAssertNil(valid.displayURL(base: nil))
     XCTAssertNil(valid.displayURL(base: URL(string: "https://other.example")))
   }
-  func testPhotoPlaceDraftValidatesExplicitNewOrExistingChoice() throws {
+  func testPhotoPlaceDraftCreatesAnEntryOwnedSnapshotAndRejectsCatalogSelection() throws {
     let photo = UUID()
     var draft = PhotoPlaceDraft(
       attachmentId: photo, name: "Ski slope", latitude: 39.95, longitude: -75.166667)
@@ -119,17 +119,18 @@ final class FirstTimeEntryTests: XCTestCase {
     draft.latitude = .nan
     XCTAssertThrowsError(try draft.validate())
     draft.latitude = 39.95
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(draft)) as? [String: Any])
+    XCTAssertEqual(json["kind"] as? String, "new")
+    XCTAssertEqual(json["latitude"] as? Double, 39.95)
+    XCTAssertEqual(json["longitude"] as? Double, -75.166667)
+    XCTAssertEqual(json["attachmentId"] as? String, photo.uuidString)
+    XCTAssertNil(json["placeId"])
     draft.name = " "
     XCTAssertThrowsError(try draft.validate())
     let existing = PhotoPlaceDraft(
       kind: "existing", attachmentId: photo, placeId: UUID(), revision: 2, name: "Existing place")
-    XCTAssertNoThrow(try existing.validate())
-    let json = try XCTUnwrap(
-      JSONSerialization.jsonObject(with: JSONEncoder().encode(existing)) as? [String: Any])
-    XCTAssertEqual(json["kind"] as? String, "existing")
-    XCTAssertNil(json["latitude"])
-    XCTAssertNil(json["longitude"])
-    XCTAssertEqual(json["attachmentId"] as? String, photo.uuidString)
+    XCTAssertThrowsError(try existing.validate())
   }
   func testCameraDateAdoptionIsAnExplicitDayDraftWithNoTimezoneInference() throws {
     let data = Data(

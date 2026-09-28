@@ -5,12 +5,12 @@ import XCTest
 final class SearchEntryTests: XCTestCase {
   func testSearchResultPreservesPartialDatesAndPeriodEnds() throws {
     for (precision, kind, subtype, end, expected) in [
-      ("year", "writing", "note", "null", "2017"),
-      ("month", "writing", "note", "null", "Jan 2017"),
-      ("range", "writing", "note", "\"2019-02-03T12:00:00Z\"", "Jan 1, 2017 to Feb 3, 2019"),
-      ("year", "event", "life_stage", "\"2020-01-01T12:00:00Z\"", "2017 - 2020"),
+      ("year", "entry", "entry", "null", "2017"),
+      ("month", "entry", "entry", "null", "Jan 2017"),
+      ("range", "entry", "entry", "\"2019-02-03T12:00:00Z\"", "Jan 1, 2017 to Feb 3, 2019"),
+      ("year", "entry", "period", "\"2020-01-01T12:00:00Z\"", "2017 - 2020"),
       ("day", "entity", "home", "null", "Since Jan 1, 2017"),
-      ("unknown", "writing", "note", "null", "Date unknown"),
+      ("unknown", "entry", "entry", "null", "Date unknown"),
     ] {
       let json = """
         {"entry_id":"4F8D0FE6-61D0-418A-8713-CF071AEEA450","title":"Memory","body":"Original","item_kind":"\(kind)","item_subtype":"\(subtype)","inbox_status":"organized","occurred_start":"2017-01-01T12:00:00Z","occurred_end":\(end),"date_precision":"\(precision)","occurred_timezone":"UTC","updated_at":"2026-09-02T12:00:00Z","total_count":1}
@@ -93,11 +93,11 @@ final class SearchEntryTests: XCTestCase {
 
   func testAISearchUsesSharedFiltersWithoutProviderSecrets() throws {
     let request = try EntrySearchRequest.validate(
-      query: "第一次滑雪?", itemKinds: [.event], collectionNames: ["Travel"], tagNames: ["winter"],
+      query: "第一次滑雪?", itemKinds: [.entry], collectionNames: ["Travel"], tagNames: ["winter"],
       dateFrom: nil, dateTo: nil)
     let input = AISearchRequest(request: request, timeZone: "America/Los_Angeles")
     XCTAssertEqual(input.parameters["q"], ["第一次滑雪?"])
-    XCTAssertEqual(input.parameters["type"], ["event"])
+    XCTAssertEqual(input.parameters["type"], ["entry"])
     XCTAssertEqual(input.parameters["collection"], ["Travel"])
     XCTAssertEqual(input.parameters["tag"], ["winter"])
     XCTAssertEqual(input.parameters["from"], [])
@@ -118,7 +118,7 @@ final class SearchEntryTests: XCTestCase {
   func testSearchRequestNormalizesContentAndOrganization() throws {
     let request = try EntrySearchRequest.validate(
       query: "  teeth movement  ",
-      itemKinds: [.event, .event, .writing],
+      itemKinds: [.goal, .goal, .entry],
       collectionNames: [" Learning ", "learning", "Health"],
       tagNames: [" Teeth ", "teeth", "science"],
       dateFrom: nil,
@@ -126,7 +126,7 @@ final class SearchEntryTests: XCTestCase {
     )
 
     XCTAssertEqual(request.query, "teeth movement")
-    XCTAssertEqual(request.itemKinds, [.event, .writing])
+    XCTAssertEqual(request.itemKinds, [.entry, .goal])
     XCTAssertEqual(request.collectionNames, ["Learning", "Health"])
     XCTAssertEqual(request.tagNames, ["Teeth", "science"])
     XCTAssertTrue(request.hasCriteria)
@@ -135,7 +135,7 @@ final class SearchEntryTests: XCTestCase {
   func testFilterOnlySearchIsValidAndEmptySearchStaysIdle() throws {
     let filtered = try EntrySearchRequest.validate(
       query: " ",
-      itemKinds: [.event],
+      itemKinds: [.entry],
       collectionNames: [],
       tagNames: [],
       dateFrom: nil,
@@ -202,7 +202,7 @@ final class SearchEntryTests: XCTestCase {
     calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "America/Los_Angeles"))
     let request = try EntrySearchRequest.validate(
       query: "Japan",
-      itemKinds: [.event],
+      itemKinds: [.entry],
       collectionNames: ["Travel"],
       tagNames: ["Japan"],
       dateFrom: Date(timeIntervalSince1970: 1_499_491_800),
@@ -215,7 +215,7 @@ final class SearchEntryTests: XCTestCase {
     let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
     XCTAssertEqual(json["p_query"] as? String, "Japan")
-    XCTAssertEqual(json["p_item_classifications"] as? [String], ["event"])
+    XCTAssertEqual(json["p_item_classifications"] as? [String], ["entry"])
     XCTAssertEqual(json["p_collection_names"] as? [String], ["Travel"])
     XCTAssertEqual(json["p_tag_names"] as? [String], ["Japan"])
     XCTAssertEqual(json["p_date_from"] as? String, "2017-07-07")
@@ -263,7 +263,7 @@ final class SearchEntryTests: XCTestCase {
         "entry_id": "4F8D0FE6-61D0-418A-8713-CF071AEEA450",
         "title": "First time in Japan",
         "body": "A summer trip.",
-        "item_kind": "event",
+        "item_kind": "entry",
         "item_subtype": "first_time",
         "inbox_status": "organized",
         "occurred_start": "2017-07-08T06:30:00Z",
@@ -281,7 +281,7 @@ final class SearchEntryTests: XCTestCase {
     let entry = try decoder.decode(SearchEntry.self, from: Data(json.utf8))
 
     XCTAssertEqual(entry.displayTitle, "First time in Japan")
-    XCTAssertEqual(entry.displayType, "Event · First Time")
+    XCTAssertEqual(entry.displayType, "First Time")
     XCTAssertEqual(entry.displayDate, "Jul 8, 2017")
     XCTAssertEqual(entry.collectionNames, ["Travel"])
     XCTAssertEqual(entry.tagNames, ["Japan"])
@@ -313,7 +313,7 @@ final class SearchEntryTests: XCTestCase {
     XCTAssertEqual(entry.itemSubtype, "person")
     XCTAssertEqual(entry.recordSource, .person)
     XCTAssertEqual(entry.recordID.uuidString, "F0A97797-CE56-4BD4-BA1E-BCE57304509E")
-    XCTAssertEqual(entry.displayType, "Entity · Person")
+    XCTAssertEqual(entry.displayType, "Person")
   }
 
   func testSearchEntryFallsBackToUTCForAnInvalidLegacyTimezone() throws {
@@ -322,8 +322,8 @@ final class SearchEntryTests: XCTestCase {
         "entry_id": "4F8D0FE6-61D0-418A-8713-CF071AEEA450",
         "title": null,
         "body": "Why keep learning?\\nBecause the world keeps changing.",
-        "item_kind": "capture",
-        "item_subtype": "quick_capture",
+        "item_kind": "entry",
+        "item_subtype": "entry",
         "inbox_status": "unreviewed",
         "occurred_start": "2026-07-03T23:30:00Z",
         "occurred_label": null,

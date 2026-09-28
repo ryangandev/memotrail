@@ -1,10 +1,10 @@
-import { authenticateAI, AIError } from "@/lib/ai/server";
+import { authenticateAPI, APIError } from "@/lib/auth/api";
 import { displayImageURLs } from "@/lib/media/urls";
 export const runtime = "nodejs";
 export async function POST(request: Request) {
   const headers = { "Cache-Control": "private, no-store" };
   try {
-    const { client, ownerID } = await authenticateAI(request);
+    const { client, ownerID } = await authenticateAPI(request);
     const id = new URL(request.url).searchParams.get("entryId");
     if (
       !id ||
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
   } catch (error) {
     return Response.json(
       { error: "Photos unavailable. Try again." },
-      { status: error instanceof AIError ? error.status : 503, headers },
+      { status: error instanceof APIError ? error.status : 503, headers },
     );
   }
 }

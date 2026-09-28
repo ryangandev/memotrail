@@ -70,7 +70,7 @@ final class TrashItemTests: XCTestCase {
   func testDecodesEveryTrashKindAndPreservesOptimisticTimestamp() throws {
     let items = try decodeItems()
 
-    XCTAssertEqual(items.map(\.kind), [.entry, .attachment, .place])
+    XCTAssertEqual(items.map(\.kind), [.entry, .attachment, .person])
     XCTAssertEqual(items[0].deletedAt, "2026-09-02T12:34:56.123456+00:00")
     XCTAssertEqual(items[0].revision, 4)
     XCTAssertNil(items[1].revision)
@@ -84,7 +84,7 @@ final class TrashItemTests: XCTestCase {
     XCTAssertEqual(Set(items.map(\.id)).count, 3)
     XCTAssertTrue(items[0].id.hasPrefix("entry-"))
     XCTAssertTrue(items[1].id.hasPrefix("attachment-"))
-    XCTAssertTrue(items[2].id.hasPrefix("place-"))
+    XCTAssertTrue(items[2].id.hasPrefix("person-"))
   }
 
   func testDisplayMetadataDistinguishesFirstTimesAndRemovesDuplicateDetail() throws {
@@ -92,7 +92,7 @@ final class TrashItemTests: XCTestCase {
 
     XCTAssertEqual(items[0].displayKind, "First Time")
     XCTAssertEqual(items[1].displayKind, "Photo")
-    XCTAssertEqual(items[2].displayKind, "Place")
+    XCTAssertEqual(items[2].displayKind, "Person")
     XCTAssertNil(items[0].displayDetail)
     XCTAssertEqual(items[1].displayDetail, "Photo from First ski trip")
   }
@@ -154,7 +154,7 @@ final class TrashItemTests: XCTestCase {
           "deleted_at": "2026-09-02T12:34:56.123456+00:00",
           "expires_at": "2026-10-02T12:34:56.123456+00:00",
           "revision": 4,
-          "wiki_item_kind": "event",
+          "wiki_item_kind": "entry",
           "wiki_item_subtype": "first_time",
           "parent_entry_id": null,
           "storage_paths": ["21000000/entry/photo.png"],
@@ -175,7 +175,7 @@ final class TrashItemTests: XCTestCase {
           "total_count": 3
         },
         {
-          "item_kind": "place",
+          "item_kind": "person",
           "item_id": "21000000-0000-4000-8000-000000000001",
           "title": "Golden Gate Park",
           "detail": "San Francisco, California",
@@ -183,7 +183,7 @@ final class TrashItemTests: XCTestCase {
           "expires_at": "2026-10-02T12:37:56.123456+00:00",
           "revision": 3,
           "wiki_item_kind": "entity",
-          "wiki_item_subtype": "place",
+          "wiki_item_subtype": "person",
           "parent_entry_id": null,
           "storage_paths": [],
           "total_count": 3

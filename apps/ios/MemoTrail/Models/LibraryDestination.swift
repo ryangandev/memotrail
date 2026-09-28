@@ -6,7 +6,6 @@ enum LibraryDestination: String, CaseIterable, Equatable, Hashable, Identifiable
   case goals
   case homes
   case people
-  case places
   case trash
   case vehicles
 
@@ -24,8 +23,6 @@ enum LibraryDestination: String, CaseIterable, Equatable, Hashable, Identifiable
       "Homes"
     case .people:
       "People"
-    case .places:
-      "Places"
     case .trash:
       "Trash"
     case .vehicles:
@@ -45,8 +42,6 @@ enum LibraryDestination: String, CaseIterable, Equatable, Hashable, Identifiable
       "Keep each residence as a structured Entity."
     case .people:
       "Connect reusable people to the items they shaped."
-    case .places:
-      "Reuse meaningful locations across your Life Wiki."
     case .trash:
       "Restore removed items or delete them permanently."
     case .vehicles:
@@ -66,8 +61,6 @@ enum LibraryDestination: String, CaseIterable, Equatable, Hashable, Identifiable
       "house"
     case .people:
       "person.2"
-    case .places:
-      "map"
     case .trash:
       "trash"
     case .vehicles:
@@ -77,11 +70,11 @@ enum LibraryDestination: String, CaseIterable, Equatable, Hashable, Identifiable
 
   var isAvailable: Bool {
     self == .collections || self == .firstTimes || self == .goals || self == .homes
-      || self == .places || self == .people || self == .trash || self == .vehicles
+      || self == .people || self == .trash || self == .vehicles
   }
 
   static let available: [LibraryDestination] = [
-    .collections, .firstTimes, .homes, .places, .people, .vehicles, .goals, .trash,
+    .collections, .firstTimes, .homes, .people, .vehicles, .goals, .trash,
   ]
   static let planned: [LibraryDestination] = []
 }

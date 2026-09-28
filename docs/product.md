@@ -189,9 +189,11 @@ Locations have no user-authored name or notes, no Saved Location catalog, and no
 Replaced Location snapshots remain private history for their owning Item, while permanently deleting the Item also deletes all of its Location snapshots.
 Editors show a formatted address and map preview when coordinates exist; a photo's GPS position may be saved without an inferred address.
 Homes may be saved without a Location; manually editing an address clears any provider-backed coordinate preview until another address is selected.
-The Web Map clusters current Entry coordinates, filters by Kind and year, and opens the Entries associated with a selected point without turning Location into a named Place.
-When records span several cities, the Web Map offers shortcuts to the most recorded areas within the current filters and a way to return to the full map.
-The Map and Location previews follow the effective Web appearance, including System mode and changes while a map is open.
+Both maps cluster current Entry coordinates, filter by Kind and occurred year, and open the records associated with a selected point.
+The native iOS Map uses MapKit, including native annotation clustering and a record list that provides an alternative to selecting a marker.
+When records span several cities, both maps offer shortcuts to the most recorded areas within the current filters and a way to return to the full map.
+The Web Map and Location previews follow the effective Web appearance, including System mode and changes while a map is open.
+The iOS Map follows the app's System, Light, or Dark appearance.
 Photo GPS Locations retain their source photo identity as provenance after explicit adoption.
 People contain a name plus optional relationship label and notes.
 People remain reusable across Entries.
@@ -204,6 +206,7 @@ Provider-backed Location editing on native iOS remains deferred until the Web fl
 Soft Ledger is the visual direction: minimal, archival, modern, calm, and approachable.
 Both clients support light and dark appearance, share semantic design intent, and still follow native platform conventions where identical interaction would reduce usability.
 Web appearance is a per-browser choice between System, Light, and Dark; System remains the default and follows operating-system changes.
+iOS appearance is an app-local choice with the same three options.
 
 Mobile uses Dashboard, Inbox, Timeline, Library, and More in its bottom navigation.
 Library opens with the same all-items Life Wiki browser as Web, including debounced keyword search and Kind filters.

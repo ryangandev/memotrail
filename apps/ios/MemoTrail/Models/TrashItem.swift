@@ -3,7 +3,6 @@ import Foundation
 enum TrashItemKind: String, Codable, Equatable, Hashable, Sendable {
   case attachment
   case entry
-  case place
   case person
   case collection
 
@@ -15,8 +14,6 @@ enum TrashItemKind: String, Codable, Equatable, Hashable, Sendable {
       "Photo"
     case .entry:
       "Entry"
-    case .place:
-      "Place"
     case .person:
       "Person"
     }
@@ -30,8 +27,6 @@ enum TrashItemKind: String, Codable, Equatable, Hashable, Sendable {
       "photo"
     case .entry:
       "text.line.first.and.arrowtriangle.forward"
-    case .place:
-      "map"
     case .person:
       "person.2"
     }
@@ -73,7 +68,7 @@ struct TrashItem: Decodable, Equatable, Identifiable, Sendable {
   }
 
   var displayKind: String {
-    if kind == .entry, wikiItemKind == .event, wikiItemSubtype == "first_time" {
+    if kind == .entry, wikiItemKind == .entry, wikiItemSubtype == "first_time" {
       return "First Time"
     }
 

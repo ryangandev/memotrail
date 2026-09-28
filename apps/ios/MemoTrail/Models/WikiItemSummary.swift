@@ -1,7 +1,7 @@
 import Foundation
 
 enum WikiItemRecordSource: String, Codable, Equatable, Hashable, Sendable {
-  case entry, person, place
+  case entry, person
 }
 
 struct WikiItemSummary: Decodable, Equatable, Hashable, Identifiable, Sendable {
@@ -25,10 +25,7 @@ struct WikiItemSummary: Decodable, Equatable, Hashable, Identifiable, Sendable {
   }
 
   var identityLabel: String {
-    if itemKind == .capture || subtypeLabel == itemKind.displayName {
-      return itemKind.displayName
-    }
-    return "\(itemKind.displayName) · \(subtypeLabel)"
+    itemKind.displayName(subtype: itemSubtype)
   }
 
   var dateLabel: String {
@@ -57,22 +54,7 @@ struct WikiItemSummary: Decodable, Equatable, Hashable, Identifiable, Sendable {
   }
 
   private static func subtypeLabel(itemKind: WikiItemKind, itemSubtype: String) -> String {
-    if itemKind == .capture { return "Unorganized" }
-    if itemKind == .goal { return itemSubtype == "bucket_list" ? "Bucket List" : "Goal" }
-    if itemKind == .entity {
-      switch itemSubtype {
-      case "person": return "Person"
-      case "place": return "Place"
-      case "home": return "Home"
-      case "vehicle": return "Vehicle"
-      default: break
-      }
-    }
-    return
-      itemSubtype
-      .split(separator: "_")
-      .map { $0.prefix(1).uppercased() + $0.dropFirst() }
-      .joined(separator: " ")
+    itemKind.displayName(subtype: itemSubtype)
   }
 }
 

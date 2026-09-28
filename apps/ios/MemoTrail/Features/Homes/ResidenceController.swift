@@ -8,7 +8,6 @@ final class ResidenceController {
   private(set) var entries: [ResidenceEntry] = []
   private(set) var collectionOptions: [String] = []
   private(set) var tagOptions: [String] = []
-  private(set) var placeOptions: [ResidencePlace] = []
   private(set) var hasLoaded = false
   private(set) var isLoading = false
   private(set) var isSaving = false
@@ -64,12 +63,10 @@ final class ResidenceController {
 
       async let collectionsRequest: [ResidenceOrganizationName] = loadCollections()
       async let tagsRequest: [ResidenceOrganizationName] = loadTags()
-      async let placesRequest: [ResidencePlace] = loadPlaces()
 
       entries = loadedEntries
       collectionOptions = try await collectionsRequest.map(\.name)
       tagOptions = try await tagsRequest.map(\.name)
-      placeOptions = try await placesRequest
     } catch {
       loadErrorMessage = "MemoTrail could not load your Homes. Pull to refresh or try again."
     }
@@ -354,17 +351,6 @@ final class ResidenceController {
       .value
   }
 
-  private func loadPlaces() async throws -> [ResidencePlace] {
-    try await client
-      .from("locations")
-      .select("id,name,address,city,region,country,latitude,longitude,notes")
-      .eq("owner_id", value: ownerID.uuidString)
-      .is("deleted_at", value: nil)
-      .order("name")
-      .execute()
-      .value
-  }
-
   private func validateSessionOwner() async throws {
     let session = try await client.auth.session
     guard session.user.id == ownerID else { throw ResidenceControllerError.ownerChanged }
@@ -379,7 +365,7 @@ extension ResidenceController {
   struct SavedIdentity: Equatable, Sendable {
     let id: UUID
     let revision: Int
-    let placeID: UUID
+    let placeID: UUID?
   }
 
   struct MutationResult: Equatable, Sendable {

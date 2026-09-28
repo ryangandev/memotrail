@@ -112,14 +112,4 @@ export function formatAICost(micros: number) {
     maximumFractionDigits: 6,
   }).format(micros / 1_000_000);
 }
-export function aiOriginAllowed(
-  request: Request,
-  bearer: boolean,
-  appURL?: string,
-) {
-  if (bearer) return true;
-  const origin = request.headers.get("origin");
-  // Next may normalize the internal hostname behind its development server or proxy.
-  // The explicitly configured public URL remains the trusted browser origin.
-  return origin === new URL(appURL || request.url).origin;
-}
+export { requestOriginAllowed as aiOriginAllowed } from "@/lib/auth/origin";

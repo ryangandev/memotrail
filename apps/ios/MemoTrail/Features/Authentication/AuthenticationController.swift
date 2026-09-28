@@ -49,7 +49,8 @@ final class AuthenticationController {
     if let configuration {
       client = SupabaseClient(
         supabaseURL: configuration.supabaseURL,
-        supabaseKey: configuration.supabasePublishableKey
+        supabaseKey: configuration.supabasePublishableKey,
+        options: .init(auth: .init(emitLocalSessionAsInitialSession: true))
       )
       state = .checking
       GIDSignIn.sharedInstance.configuration = GIDConfiguration(

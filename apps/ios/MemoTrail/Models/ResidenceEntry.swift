@@ -40,7 +40,7 @@ struct ResidenceEntry: Equatable, Hashable, Identifiable, Sendable {
   let updatedAt: Date
   let moveInReason: String?
   let moveOutReason: String?
-  let placeID: UUID
+  let placeID: UUID?
   let placeName: String
   let address: String?
   let city: String?
@@ -72,7 +72,8 @@ struct ResidenceEntry: Equatable, Hashable, Identifiable, Sendable {
       guard let value = value?.trimmed.nonEmpty, seen.insert(value).inserted else { return nil }
       return value
     }
-    return parts.isEmpty ? placeName : parts.joined(separator: ", ")
+    return parts.isEmpty
+      ? (placeName.nonEmpty ?? "Location not added") : parts.joined(separator: ", ")
   }
 
   var displayRange: String { occurrence.spanLabel }
@@ -93,8 +94,8 @@ struct ResidenceWorkspaceRow: Decodable, Equatable, Sendable {
   let updatedAt: Date
   let moveInReason: String?
   let moveOutReason: String?
-  let placeID: UUID
-  let placeName: String
+  let placeID: UUID?
+  let placeName: String?
   let address: String?
   let city: String?
   let region: String?
@@ -157,7 +158,7 @@ struct ResidenceWorkspaceRow: Decodable, Equatable, Sendable {
       moveInReason: moveInReason?.trimmed.nonEmpty,
       moveOutReason: moveOutReason?.trimmed.nonEmpty,
       placeID: placeID,
-      placeName: placeName,
+      placeName: placeName ?? "",
       address: address?.trimmed.nonEmpty,
       city: city?.trimmed.nonEmpty,
       region: region?.trimmed.nonEmpty,
@@ -175,18 +176,6 @@ struct ResidenceWorkspaceRow: Decodable, Equatable, Sendable {
       occurredEndRaw: occurredEndRaw
     )
   }
-}
-
-struct ResidencePlace: Decodable, Equatable, Hashable, Identifiable, Sendable {
-  let id: UUID
-  let name: String
-  let address: String?
-  let city: String?
-  let region: String?
-  let country: String?
-  let latitude: Double?
-  let longitude: Double?
-  let notes: String?
 }
 
 enum ResidenceWorkspace {
@@ -289,7 +278,6 @@ struct ResidenceEntryInput: Equatable, Sendable {
     guard !title.isEmpty else { throw ResidenceEntryError.titleRequired }
     guard title.count <= titleLimit else { throw ResidenceEntryError.titleTooLong }
     guard body.count <= bodyLimit else { throw ResidenceEntryError.bodyTooLong }
-    guard !placeName.isEmpty else { throw ResidenceEntryError.placeRequired }
     guard placeName.count <= placeNameLimit else { throw ResidenceEntryError.placeTooLong }
     guard (address?.count ?? 0) <= addressLimit,
       (city?.count ?? 0) <= locationLimit,
@@ -493,7 +481,7 @@ struct ExtractedCaptureHome: Decodable, Equatable, Sendable {
   let captureRevision: Int
   let homeEntryID: UUID
   let homeRevision: Int
-  let placeID: UUID
+  let placeID: UUID?
 
   enum CodingKeys: String, CodingKey {
     case captureID = "capture_id"
@@ -507,7 +495,7 @@ struct ExtractedCaptureHome: Decodable, Equatable, Sendable {
 struct SavedResidenceEntry: Decodable, Equatable, Sendable {
   let entryID: UUID
   let revision: Int
-  let placeID: UUID
+  let placeID: UUID?
   let wasCreated: Bool
 
   enum CodingKeys: String, CodingKey {
@@ -607,7 +595,6 @@ enum ResidenceEntryError: LocalizedError, Equatable {
   case invalidTimezone
   case labelTooLong
   case moveOutRequiresDate
-  case placeRequired
   case placeTooLong
   case reversedRange
   case titleRequired
@@ -635,8 +622,6 @@ enum ResidenceEntryError: LocalizedError, Equatable {
       "Human date labels can be up to \(ResidenceEntryInput.labelLimit) characters."
     case .moveOutRequiresDate:
       "Add a move-out date before recording why you left."
-    case .placeRequired:
-      "Add a Location name for this Home."
     case .placeTooLong:
       "Location names can be up to \(ResidenceEntryInput.placeNameLimit) characters."
     case .reversedRange:
@@ -664,8 +649,8 @@ extension ResidenceWorkspaceRow {
     updatedAt = try values.decode(Date.self, forKey: .updatedAt)
     moveInReason = try values.decodeIfPresent(String.self, forKey: .moveInReason)
     moveOutReason = try values.decodeIfPresent(String.self, forKey: .moveOutReason)
-    placeID = try values.decode(UUID.self, forKey: .placeID)
-    placeName = try values.decode(String.self, forKey: .placeName)
+    placeID = try values.decodeIfPresent(UUID.self, forKey: .placeID)
+    placeName = try values.decodeIfPresent(String.self, forKey: .placeName)
     address = try values.decodeIfPresent(String.self, forKey: .address)
     city = try values.decodeIfPresent(String.self, forKey: .city)
     region = try values.decodeIfPresent(String.self, forKey: .region)

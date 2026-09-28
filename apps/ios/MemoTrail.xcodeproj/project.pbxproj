@@ -6,6 +6,7 @@
 	objectVersion = 56;
 	objects = {
 
+
 /* Begin PBXBuildFile section */
         B00000000000000000000040 /* EntryPhotoGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000047 /* EntryPhotoGalleryView.swift */; };
 		B0000000000000000000003F /* EntryPhotoDatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000046 /* EntryPhotoDatesView.swift */; };
@@ -19,6 +20,7 @@
 		B00000000000000000000036 /* EntryAISuggestionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003D /* EntryAISuggestionsView.swift */; };
 		B00000000000000000000035 /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003C /* AISettingsView.swift */; };
 		B00000000000000000000001 /* MemoTrailApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000001 /* MemoTrailApp.swift */; };
+		BA0000000000000000000001 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA0000000000000000000001 /* SplashView.swift */; };
 		B00000000000000000000002 /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000002 /* RootTabView.swift */; };
 		B00000000000000000000003 /* InboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000003 /* InboxView.swift */; };
 		B00000000000000000000004 /* CaptureCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000004 /* CaptureCard.swift */; };
@@ -68,10 +70,8 @@
 		B0000000000000000000002E /* GoalEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000035 /* GoalEntry.swift */; };
 		B0000000000000000000002F /* GoalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000036 /* GoalController.swift */; };
 		B00000000000000000000030 /* GoalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000037 /* GoalsView.swift */; };
-		B00000000000000000000031 /* PlaceEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000038 /* PlaceEntry.swift */; };
-		B00000000000000000000032 /* PlaceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000039 /* PlaceController.swift */; };
-		B00000000000000000000033 /* PlacesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003A /* PlacesView.swift */; };
 		B10000000000000000000001 /* InboxEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000001 /* InboxEntryTests.swift */; };
+		B10000000000000000000010 /* NativeContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000010 /* NativeContractTests.swift */; };
 		B10000000000000000000002 /* SearchEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000003 /* SearchEntryTests.swift */; };
 		B10000000000000000000003 /* TimelineEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000004 /* TimelineEntryTests.swift */; };
 		B10000000000000000000004 /* FirstTimeEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000005 /* FirstTimeEntryTests.swift */; };
@@ -83,8 +83,22 @@
 		B1000000000000000000000B /* ResidenceEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000C /* ResidenceEntryTests.swift */; };
 		B1000000000000000000000C /* VehicleEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000D /* VehicleEntryTests.swift */; };
 		B1000000000000000000000D /* GoalEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000E /* GoalEntryTests.swift */; };
-		B1000000000000000000000E /* PlaceEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000F /* PlaceEntryTests.swift */; };
 		B00000000000000000000034 /* PeopleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003B /* PeopleView.swift */; };
+		BD0000000000000000000001 /* NativeComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000001 /* NativeComponents.swift */; };
+		BD0000000000000000000002 /* DesignSystemGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000002 /* DesignSystemGallery.swift */; };
+		BD0000000000000000000003 /* LocationMapModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000003 /* LocationMapModel.swift */; };
+		BD0000000000000000000004 /* LocationMapController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000004 /* LocationMapController.swift */; };
+		BD0000000000000000000005 /* NativeLocationMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000005 /* NativeLocationMap.swift */; };
+		BD0000000000000000000006 /* LocationMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000006 /* LocationMapView.swift */; };
+		BD0000000000000000000007 /* WorkspaceRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000007 /* WorkspaceRoute.swift */; };
+		BD0000000000000000000008 /* NativeReview.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000008 /* NativeReview.swift */; };
+		BD0000000000000000000009 /* NativeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000009 /* NativeSettingsView.swift */; };
+		BD000000000000000000000A /* LocationMapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD000000000000000000000A /* LocationMapTests.swift */; };
+		BF0000000000000000000001 = {isa = PBXBuildFile; fileRef = CF0000000000000000000002; };
+		BE0000000000000000000001 /* EntryEmphasisContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0000000000000000000001 /* EntryEmphasisContent.swift */; };
+		BE0000000000000000000002 /* NativeRichTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0000000000000000000002 /* NativeRichTextEditor.swift */; };
+		BE0000000000000000000003 /* NativeWritingSpecimens.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0000000000000000000003 /* NativeWritingSpecimens.swift */; };
+		BE0000000000000000000004 /* EntryEmphasisContentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0000000000000000000004 /* EntryEmphasisContentTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -95,6 +109,7 @@
 			remoteGlobalIDString = A00000000000000000000002;
 			remoteInfo = MemoTrail;
 		};
+		AF0000000000000000000006 = {isa = PBXContainerItemProxy; containerPortal = A00000000000000000000001; proxyType = 1; remoteGlobalIDString = A00000000000000000000002; remoteInfo = MemoTrail; };
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -110,6 +125,7 @@
 		C0000000000000000000003D /* EntryAISuggestionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AI/EntryAISuggestionsView.swift; sourceTree = "<group>"; };
 		C0000000000000000000003C /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AI/AISettingsView.swift; sourceTree = "<group>"; };
 		C00000000000000000000001 /* MemoTrailApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoTrailApp.swift; sourceTree = "<group>"; };
+		CA0000000000000000000001 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		C00000000000000000000002 /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
 		C00000000000000000000003 /* InboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxView.swift; sourceTree = "<group>"; };
 		C00000000000000000000004 /* CaptureCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureCard.swift; sourceTree = "<group>"; };
@@ -160,10 +176,8 @@
 		C00000000000000000000035 /* GoalEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEntry.swift; sourceTree = "<group>"; };
 		C00000000000000000000036 /* GoalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalController.swift; sourceTree = "<group>"; };
 		C00000000000000000000037 /* GoalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsView.swift; sourceTree = "<group>"; };
-		C00000000000000000000038 /* PlaceEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceEntry.swift; sourceTree = "<group>"; };
-		C00000000000000000000039 /* PlaceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceController.swift; sourceTree = "<group>"; };
-		C0000000000000000000003A /* PlacesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlacesView.swift; sourceTree = "<group>"; };
 		C10000000000000000000001 /* InboxEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxEntryTests.swift; sourceTree = "<group>"; };
+		C10000000000000000000010 /* NativeContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeContractTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000002 /* MemoTrailTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MemoTrailTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C10000000000000000000003 /* SearchEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchEntryTests.swift; sourceTree = "<group>"; };
 		C10000000000000000000004 /* TimelineEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineEntryTests.swift; sourceTree = "<group>"; };
@@ -176,8 +190,23 @@
 		C1000000000000000000000C /* ResidenceEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResidenceEntryTests.swift; sourceTree = "<group>"; };
 		C1000000000000000000000D /* VehicleEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleEntryTests.swift; sourceTree = "<group>"; };
 		C1000000000000000000000E /* GoalEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEntryTests.swift; sourceTree = "<group>"; };
-		C1000000000000000000000F /* PlaceEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceEntryTests.swift; sourceTree = "<group>"; };
 		C0000000000000000000003B /* PeopleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/PeopleView.swift; sourceTree = "<group>"; };
+		CD0000000000000000000001 /* NativeComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeComponents.swift; sourceTree = "<group>"; };
+		CD0000000000000000000002 /* DesignSystemGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystemGallery.swift; sourceTree = "<group>"; };
+		CD0000000000000000000003 /* LocationMapModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Map/LocationMapModel.swift; sourceTree = "<group>"; };
+		CD0000000000000000000004 /* LocationMapController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Map/LocationMapController.swift; sourceTree = "<group>"; };
+		CD0000000000000000000005 /* NativeLocationMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Map/NativeLocationMap.swift; sourceTree = "<group>"; };
+		CD0000000000000000000006 /* LocationMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Map/LocationMapView.swift; sourceTree = "<group>"; };
+		CD0000000000000000000007 /* WorkspaceRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceRoute.swift; sourceTree = "<group>"; };
+		CD0000000000000000000008 /* NativeReview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeReview.swift; sourceTree = "<group>"; };
+		CD0000000000000000000009 /* NativeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings/NativeSettingsView.swift; sourceTree = "<group>"; };
+		CD000000000000000000000A /* LocationMapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationMapTests.swift; sourceTree = "<group>"; };
+		CF0000000000000000000001 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MemoTrailUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CF0000000000000000000002 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWorkspaceUITests.swift; sourceTree = "<group>"; };
+		CE0000000000000000000001 /* EntryEmphasisContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryEmphasisContent.swift; sourceTree = "<group>"; };
+		CE0000000000000000000002 /* NativeRichTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeRichTextEditor.swift; sourceTree = "<group>"; };
+		CE0000000000000000000003 /* NativeWritingSpecimens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWritingSpecimens.swift; sourceTree = "<group>"; };
+		CE0000000000000000000004 /* EntryEmphasisContentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryEmphasisContentTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -198,12 +227,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AF0000000000000000000003 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		A10000000000000000000001 = {
 			isa = PBXGroup;
 			children = (
+				AF0000000000000000000007 /* MemoTrailUITests */,
 				A10000000000000000000003 /* MemoTrail */,
 				A10000000000000000000014 /* MemoTrailTests */,
 				A10000000000000000000012 /* Configuration */,
@@ -214,6 +245,7 @@
 		A10000000000000000000002 /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				CF0000000000000000000001 /* MemoTrailUITests.xctest */,
 				C00000000000000000000009 /* MemoTrail.app */,
 				C10000000000000000000002 /* MemoTrailTests.xctest */,
 			);
@@ -235,7 +267,10 @@
 		A10000000000000000000004 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				CD0000000000000000000008 /* NativeReview.swift */,
+				CD0000000000000000000007 /* WorkspaceRoute.swift */,
 				C00000000000000000000001 /* MemoTrailApp.swift */,
+				CA0000000000000000000001 /* SplashView.swift */,
 				C00000000000000000000002 /* RootTabView.swift */,
 				C00000000000000000000012 /* AppConfiguration.swift */,
 			);
@@ -245,12 +280,16 @@
 		A10000000000000000000005 /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				CD0000000000000000000009 /* NativeSettingsView.swift */,
+				CD0000000000000000000006 /* LocationMapView.swift */,
+				CD0000000000000000000005 /* NativeLocationMap.swift */,
+				CD0000000000000000000004 /* LocationMapController.swift */,
+				CD0000000000000000000003 /* LocationMapModel.swift */,
 				A10000000000000000000013 /* Authentication */,
 				A10000000000000000000022 /* Home */,
 				A10000000000000000000023 /* Homes */,
 				A10000000000000000000024 /* Vehicles */,
 				A10000000000000000000025 /* Goals */,
-				A10000000000000000000026 /* Places */,
 				C0000000000000000000003B /* PeopleView.swift */,
 				C0000000000000000000003C /* AISettingsView.swift */,
 				C00000000000000000000043 /* ExplorationView.swift */,
@@ -286,6 +325,8 @@
 		A10000000000000000000007 /* DesignSystem */ = {
 			isa = PBXGroup;
 			children = (
+				CE0000000000000000000003 /* NativeWritingSpecimens.swift */,
+				CD0000000000000000000002 /* DesignSystemGallery.swift */,
 				A10000000000000000000008 /* Components */,
 				A10000000000000000000009 /* Generated */,
 			);
@@ -295,6 +336,8 @@
 		A10000000000000000000008 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				CE0000000000000000000002 /* NativeRichTextEditor.swift */,
+				CD0000000000000000000001 /* NativeComponents.swift */,
 				C00000000000000000000004 /* CaptureCard.swift */,
 				C00000000000000000000005 /* EntryCard.swift */,
 				C80000000000000000000001 /* MemoTrailMark.swift */,
@@ -314,6 +357,7 @@
 		A10000000000000000000010 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				CE0000000000000000000001 /* EntryEmphasisContent.swift */,
 				C0000000000000000000002B /* HomeEntry.swift */,
 				C00000000000000000000007 /* InboxEntry.swift */,
 				C00000000000000000000041 /* EntryOccurrence.swift */,
@@ -328,7 +372,6 @@
 				C0000000000000000000002F /* ResidenceEntry.swift */,
 				C00000000000000000000032 /* VehicleEntry.swift */,
 				C00000000000000000000035 /* GoalEntry.swift */,
-				C00000000000000000000038 /* PlaceEntry.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -363,13 +406,15 @@
 		A10000000000000000000014 /* MemoTrailTests */ = {
 			isa = PBXGroup;
 			children = (
+				CE0000000000000000000004 /* EntryEmphasisContentTests.swift */,
+				CD000000000000000000000A /* LocationMapTests.swift */,
 				C1000000000000000000000A /* HomeEntryTests.swift */,
 				C1000000000000000000000B /* VoiceTranscriptTextTests.swift */,
 				C1000000000000000000000C /* ResidenceEntryTests.swift */,
 				C1000000000000000000000D /* VehicleEntryTests.swift */,
 				C1000000000000000000000E /* GoalEntryTests.swift */,
-				C1000000000000000000000F /* PlaceEntryTests.swift */,
 				C10000000000000000000001 /* InboxEntryTests.swift */,
+				C10000000000000000000010 /* NativeContractTests.swift */,
 				C10000000000000000000003 /* SearchEntryTests.swift */,
 				C10000000000000000000004 /* TimelineEntryTests.swift */,
 				C10000000000000000000005 /* FirstTimeEntryTests.swift */,
@@ -470,15 +515,8 @@
 			path = Goals;
 			sourceTree = "<group>";
 		};
-		A10000000000000000000026 /* Places */ = {
-			isa = PBXGroup;
-			children = (
-				C00000000000000000000039 /* PlaceController.swift */,
-				C0000000000000000000003A /* PlacesView.swift */,
-			);
-			path = Places;
-			sourceTree = "<group>";
-		};
+
+		AF0000000000000000000007 = {isa = PBXGroup; children = (CF0000000000000000000002); path = MemoTrailUITests; sourceTree = "<group>"; };
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -524,6 +562,17 @@
 			productReference = C10000000000000000000002 /* MemoTrailTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		AF0000000000000000000001 /* MemoTrailUITests */ = {
+		    isa = PBXNativeTarget;
+		    buildConfigurationList = EF0000000000000000000001;
+		    buildPhases = (AF0000000000000000000002, AF0000000000000000000003, AF0000000000000000000004);
+		    buildRules = ();
+		    dependencies = (AF0000000000000000000005);
+		    name = MemoTrailUITests;
+		    productName = MemoTrailUITests;
+		    productReference = CF0000000000000000000001;
+		    productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -534,6 +583,10 @@
 				LastSwiftUpdateCheck = 2660;
 				LastUpgradeCheck = 2660;
 				TargetAttributes = {
+                    AF0000000000000000000001 = {
+                        CreatedOnToolsVersion = 26.6;
+                        TestTargetID = A00000000000000000000002;
+                    };
 					A00000000000000000000002 = {
 						CreatedOnToolsVersion = 26.6;
 					};
@@ -560,6 +613,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				AF0000000000000000000001 /* MemoTrailUITests */,
 				A00000000000000000000002 /* MemoTrail */,
 				A00000000000000000000003 /* MemoTrailTests */,
 			);
@@ -582,6 +636,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AF0000000000000000000004 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -589,7 +644,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BE0000000000000000000003 /* NativeWritingSpecimens.swift in Sources */,
+				BE0000000000000000000002 /* NativeRichTextEditor.swift in Sources */,
+				BE0000000000000000000001 /* EntryEmphasisContent.swift in Sources */,
+				BD0000000000000000000009 /* NativeSettingsView.swift in Sources */,
+				BD0000000000000000000008 /* NativeReview.swift in Sources */,
+				BD0000000000000000000007 /* WorkspaceRoute.swift in Sources */,
+				BD0000000000000000000006 /* LocationMapView.swift in Sources */,
+				BD0000000000000000000005 /* NativeLocationMap.swift in Sources */,
+				BD0000000000000000000004 /* LocationMapController.swift in Sources */,
+				BD0000000000000000000003 /* LocationMapModel.swift in Sources */,
+				BD0000000000000000000002 /* DesignSystemGallery.swift in Sources */,
+				BD0000000000000000000001 /* NativeComponents.swift in Sources */,
 				B00000000000000000000001 /* MemoTrailApp.swift in Sources */,
+				BA0000000000000000000001 /* SplashView.swift in Sources */,
 				B00000000000000000000002 /* RootTabView.swift in Sources */,
 				B00000000000000000000003 /* InboxView.swift in Sources */,
 				B00000000000000000000004 /* CaptureCard.swift in Sources */,
@@ -638,9 +706,6 @@
 				B0000000000000000000002E /* GoalEntry.swift in Sources */,
 				B0000000000000000000002F /* GoalController.swift in Sources */,
 				B00000000000000000000030 /* GoalsView.swift in Sources */,
-				B00000000000000000000031 /* PlaceEntry.swift in Sources */,
-				B00000000000000000000032 /* PlaceController.swift in Sources */,
-				B00000000000000000000033 /* PlacesView.swift in Sources */,
 				B00000000000000000000034 /* PeopleView.swift in Sources */,
 				B00000000000000000000035 /* AISettingsView.swift in Sources */,
 				B0000000000000000000003C /* ExplorationView.swift in Sources */,
@@ -657,7 +722,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BE0000000000000000000004 /* EntryEmphasisContentTests.swift in Sources */,
+				BD000000000000000000000A /* LocationMapTests.swift in Sources */,
 				B10000000000000000000001 /* InboxEntryTests.swift in Sources */,
+				B10000000000000000000010 /* NativeContractTests.swift in Sources */,
 				B10000000000000000000002 /* SearchEntryTests.swift in Sources */,
 				B10000000000000000000003 /* TimelineEntryTests.swift in Sources */,
 				B10000000000000000000004 /* FirstTimeEntryTests.swift in Sources */,
@@ -669,10 +737,10 @@
 				B1000000000000000000000B /* ResidenceEntryTests.swift in Sources */,
 				B1000000000000000000000C /* VehicleEntryTests.swift in Sources */,
 				B1000000000000000000000D /* GoalEntryTests.swift in Sources */,
-				B1000000000000000000000E /* PlaceEntryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AF0000000000000000000002 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (BF0000000000000000000001); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -681,6 +749,7 @@
 			target = A00000000000000000000002 /* MemoTrail */;
 			targetProxy = A30000000000000000000001 /* PBXContainerItemProxy */;
 		};
+		AF0000000000000000000005 = {isa = PBXTargetDependency; target = A00000000000000000000002; targetProxy = AF0000000000000000000006; };
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -751,7 +820,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				LM_FILTER_WARNINGS = YES;
+				/* Enable extraction when this target declares App Intents. */
+				LM_SKIP_METADATA_EXTRACTION = YES;
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rystudio.memotrail.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -781,7 +851,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				LM_FILTER_WARNINGS = YES;
+				/* Enable extraction when this target declares App Intents. */
+				LM_SKIP_METADATA_EXTRACTION = YES;
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rystudio.memotrail.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -800,6 +871,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LM_SKIP_METADATA_EXTRACTION = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rystudio.memotrail.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -817,6 +889,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LM_SKIP_METADATA_EXTRACTION = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rystudio.memotrail.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -826,6 +899,38 @@
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MemoTrail.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MemoTrail";
 			};
 			name = Release;
+		};
+		DF0000000000000000000001 = {
+		    isa = XCBuildConfiguration;
+		    buildSettings = {
+		        CODE_SIGN_STYLE = Automatic;
+		        GENERATE_INFOPLIST_FILE = YES;
+		        IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+		        LM_SKIP_METADATA_EXTRACTION = YES;
+		        PRODUCT_BUNDLE_IDENTIFIER = com.rystudio.memotrail.uitests;
+		        PRODUCT_NAME = "$(TARGET_NAME)";
+		        SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+		        SWIFT_VERSION = 6.0;
+		        TARGETED_DEVICE_FAMILY = 1;
+		        TEST_TARGET_NAME = MemoTrail;
+		    };
+		    name = Debug;
+		};
+		DF0000000000000000000002 = {
+		    isa = XCBuildConfiguration;
+		    buildSettings = {
+		        CODE_SIGN_STYLE = Automatic;
+		        GENERATE_INFOPLIST_FILE = YES;
+		        IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+		        LM_SKIP_METADATA_EXTRACTION = YES;
+		        PRODUCT_BUNDLE_IDENTIFIER = com.rystudio.memotrail.uitests;
+		        PRODUCT_NAME = "$(TARGET_NAME)";
+		        SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+		        SWIFT_VERSION = 6.0;
+		        TARGETED_DEVICE_FAMILY = 1;
+		        TEST_TARGET_NAME = MemoTrail;
+		    };
+		    name = Release;
 		};
 /* End XCBuildConfiguration section */
 
@@ -857,6 +962,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		EF0000000000000000000001 = {isa = XCConfigurationList; buildConfigurations = (DF0000000000000000000001, DF0000000000000000000002); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */

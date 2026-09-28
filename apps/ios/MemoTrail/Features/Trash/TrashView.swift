@@ -309,8 +309,6 @@ struct TrashView: View {
       "Only the Collection and its grouping links will be removed. Your Entries and photos stay in the archive."
     case .attachment:
       "The private photo file and its attachment record will be removed."
-    case .place:
-      "The Place and its version history will be removed."
     case .person:
       "The Person and their version history will be removed."
     case .entry:

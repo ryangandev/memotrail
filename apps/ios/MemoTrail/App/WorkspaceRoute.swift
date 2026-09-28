@@ -1,0 +1,148 @@
+import Foundation
+@preconcurrency import Supabase
+import SwiftUI
+
+enum WorkspaceRoute: String, CaseIterable, Identifiable, Hashable {
+  case map, people, homes, vehicles, firstTimes, goals, collections, tags, history, trash, settings
+  var id: String { rawValue }
+  var title: String {
+    switch self {
+    case .map: "Map"
+    case .people: "People"
+    case .homes: "Homes"
+    case .vehicles: "Vehicles"
+    case .firstTimes: "First Times"
+    case .goals: "Goals"
+    case .collections: "Collections"
+    case .tags: "Tags"
+    case .history: "Version history"
+    case .trash: "Trash"
+    case .settings: "Settings"
+    }
+  }
+  var systemImage: String {
+    switch self {
+    case .map: "map"
+    case .people: "person.2"
+    case .homes: "house"
+    case .vehicles: "car"
+    case .firstTimes: "star"
+    case .goals: "target"
+    case .collections: "square.stack"
+    case .tags: "tag"
+    case .history: "clock.arrow.circlepath"
+    case .trash: "trash"
+    case .settings: "gearshape"
+    }
+  }
+
+  static let groups: [(title: String, routes: [Self])] = [
+    ("Explore", [.map]),
+    ("Focused views", [.people, .homes, .vehicles, .firstTimes, .goals]),
+    ("Organize", [.collections, .tags]),
+    ("Archive and account", [.history, .trash, .settings]),
+  ]
+}
+
+struct MoreView: View {
+  let client: SupabaseClient
+  let user: AuthenticatedUser
+  let isAuthenticationBusy: Bool
+  let signOut: @MainActor () async -> Void
+
+  var body: some View {
+    NavigationStack {
+      List {
+        ForEach(WorkspaceRoute.groups, id: \.title) { group in
+          Section(group.title) {
+            ForEach(group.routes) { route in
+              NavigationLink(value: route) {
+                Label(route.title, systemImage: route.systemImage)
+              }
+              .accessibilityIdentifier("more-\(route.rawValue)")
+            }
+          }
+        }
+        #if DEBUG
+          Section("Development") {
+            NavigationLink {
+              DesignSystemGallery()
+            } label: {
+              Label("Design System", systemImage: "square.grid.2x2")
+            }
+            .accessibilityIdentifier("more-design-system")
+          }
+        #endif
+      }
+      .scrollContentBackground(.hidden).background(MTColor.canvas)
+      .navigationTitle("More")
+      .navigationDestination(for: WorkspaceRoute.self) { route in
+        WorkspaceDestinationView(
+          route: route, client: client, user: user, isAuthenticationBusy: isAuthenticationBusy,
+          signOut: signOut)
+      }
+    }
+  }
+}
+
+struct WorkspaceDestinationView: View {
+  let route: WorkspaceRoute
+  let client: SupabaseClient
+  let user: AuthenticatedUser
+  let isAuthenticationBusy: Bool
+  let signOut: @MainActor () async -> Void
+
+  var body: some View {
+    switch route {
+    case .map:
+      #if DEBUG
+        if NativeReviewMode.current == .navigation {
+          LocationMapView(preview: NativeReviewView.mapSnapshot)
+        } else {
+          LocationMapView(client: client, ownerID: user.id)
+        }
+      #else
+        LocationMapView(client: client, ownerID: user.id)
+      #endif
+    case .people: PeopleView(client: client, ownerID: user.id)
+    case .homes: HomesView(client: client, ownerID: user.id, embedded: true)
+    case .vehicles: VehiclesView(client: client, ownerID: user.id, embedded: true)
+    case .firstTimes: FirstTimesView(client: client, ownerID: user.id, embedded: true)
+    case .goals: GoalsView(client: client, ownerID: user.id, embedded: true)
+    case .collections: CollectionsView(client: client, ownerID: user.id, embedded: true)
+    case .tags: OrganizationView(client: client, ownerID: user.id, initialKind: .tag)
+    case .history: EntryHistoryIndexView(client: client, ownerID: user.id)
+    case .trash: TrashView(client: client, ownerID: user.id, embedded: true)
+    case .settings:
+      NativeSettingsView(
+        client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut)
+    }
+  }
+}
+
+// Canonical detail routing is shared by Library and the Map.
+struct WikiItemDestinationView: View {
+  let client: SupabaseClient
+  let ownerID: UUID
+  let entryID: UUID
+  let kind: WikiItemKind
+  let subtype: String
+  var personID: UUID? = nil
+
+  var body: some View {
+    switch (kind, subtype) {
+    case (.entity, "home"):
+      HomesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entryID)
+    case (.entity, "vehicle"):
+      VehiclesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entryID)
+    case (.entity, "person"):
+      PeopleView(client: client, ownerID: ownerID, focusedPersonID: personID ?? entryID)
+    case (.goal, _):
+      GoalsView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entryID)
+    case (.entry, "first_time"):
+      FirstTimesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entryID)
+    default:
+      EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: entryID)
+    }
+  }
+}

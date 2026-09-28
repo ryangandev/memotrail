@@ -1,14 +1,14 @@
-import { AIError, authenticateAI } from "@/lib/ai/server";
+import { APIError, authenticateAPI } from "@/lib/auth/api";
 
 // Retained only so older clients receive an explicit response instead of a
 // saved-Location catalog. New Location selection uses provider search.
 export async function POST(request: Request) {
   try {
-    await authenticateAI(request);
+    await authenticateAPI(request);
   } catch (error) {
     return Response.json(
       { error: "unauthorized" },
-      { status: error instanceof AIError ? error.status : 503 },
+      { status: error instanceof APIError ? error.status : 503 },
     );
   }
   return Response.json(

@@ -1,6 +1,6 @@
 # MemoTrail Status
 
-Last reviewed: 2026-09-27.
+Last reviewed: 2026-09-28.
 
 ## Current state
 
@@ -16,7 +16,10 @@ Inbox review now hides AI suggestions and places photos after tags; the Library 
 Web AI capabilities are paused, with a disabled Beta setting and no active AI entry points.
 The accepted Data Ribbon layout now replaces the Web Dashboard, using the signed-in user's data and the shared capture, page, image, empty-state, and tag components.
 The development preview routes and all 20 static Home mockups have been removed; Production deployment verification and browser acceptance remain pending.
-Native iOS still uses the older Kind and subtype contract and needs a separate update before its write flows are compatible.
+Native iOS now adopts the canonical Entry, Entity, and Goal contracts, optional Home Locations, and the paused AI state.
+The retired native Place surface and saved-Location catalog are removed; the existing screen layouts and accepted splash remain.
+Native navigation now uses Dashboard, Inbox, Timeline, Library, and More, with the active Web destinations grouped under More.
+The native MapKit screen and Debug Design System gallery are implemented; personal acceptance and broad screen migration remain pending.
 The merged Web release still needs Production deployment verification and browser acceptance; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 
 Use Git history for feature-level implementation and test evidence.
@@ -24,16 +27,16 @@ Use Git history for feature-level implementation and test evidence.
 | Area                                                                                            | State                                                                                                                                                                |
 | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Capture, Inbox, organization, dates, drafts, and offline queues                                 | Implemented on Web and iOS                                                                                                                                           |
-| Timeline, Home (Dashboard on Web), First Times, Homes, Vehicles, Goals, People, and Collections | Implemented on Web and iOS; the native Place surface is legacy and needs a separate update                                                                           |
-| Location data layer                                                                             | Web Map, optional Home Location, photo GPS provenance, and provider quotas are implemented; personal browser acceptance remains.                                     |
+| Timeline, Home (Dashboard on Web), First Times, Homes, Vehicles, Goals, People, and Collections | Implemented on Web and iOS; the retired Place surface is removed                                                                                                     |
+| Location data layer                                                                             | Web and native Map, optional Home Location, photo GPS provenance, and Web provider quotas are implemented; personal acceptance remains.                              |
 | Habits                                                                                          | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                   |
 | Web navigation shell                                                                            | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                    |
 | Web Settings                                                                                    | Account, preferred name, dates, timezone, appearance, browser-local Timeline style, simplified AI, and account controls implemented                                  |
 | Web Collections and tags                                                                        | Direct Library destinations and shared Entry organization editor implemented                                                                                         |
-| Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI               | Keyword search remains available. Web AI is paused behind an off/disabled Beta setting; provider logic and historical data are retained.                              |
+| Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI               | Keyword search remains available. Web AI is paused behind an off/disabled Beta setting; provider logic and historical data are retained.                             |
 | Private media, Entry history, relationships, Trash, and complete export                         | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                   |
 | Hosted Supabase contracts                                                                       | `202609240004` is deployed to project `kaivkozeyuwzqrckmyqu`; the remote ledger matches the repository                                                               |
-| Entry-centered information model                                                                | Web `main` and hosted database use Entry, focused records, and intentional Timeline Moment or Period; native iOS still needs a separate cutover                      |
+| Entry-centered information model                                                                | Web, hosted database, and native iOS use Entry, focused records, and intentional Timeline Moment or Period; native personal acceptance remains                       |
 | Web design system                                                                               | Approved canonical components migrated across Web; component-owned CSS and token boundaries enforced; local regression passed; production browser acceptance pending |
 | Backup and restore                                                                              | Not ready                                                                                                                                                            |
 | Current GitHub CI                                                                               | Manually disabled; the previous jobs failed before starting because of account billing or spending limits                                                            |
@@ -47,7 +50,7 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 - Verify the merged `main` deployment against the migrated hosted project, then check Quick Capture, Inbox review, Library routing, First Time, Moment, Period, Home, Vehicle, and Goal in a browser.
 - The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
-- Keep native iOS writes out of this cutover until its older Kind and subtype calls are updated.
+- Native compatibility is updated separately; complete personal native acceptance before treating it as a release.
 - The earlier Entry model passed 61 database files with 1,552 assertions and all 72 browser E2E tests. Place removal passed 59 database files with 1,497 assertions. The final Web typography pass passed 438 unit tests, 14 targeted browser E2E tests, lint, type checking, and a production build; the full browser suite has not been rerun for the merged head.
 - A seeded pre-migration local exercise converted Journal, Story, and Trip to tags; Timeline point and span to Moment and Period; and preserved Inbox state and revision numbers.
 
@@ -60,12 +63,33 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - Accept the revised UI with a personal `localhost:3000` record, including retrying a provider-backed Home Location save after the precision migration, Home removal/manual address edits, and Entry map points. Map clustering is locally browser-tested but not yet personally accepted against hosted data.
 - The accepted shared SearchField is now used across Web search surfaces, including Location, Library search, Tags, related Items, organization pickers, and Command Palette.
 - The server-only Production `GEOAPIFY_API_KEY` is configured in Vercel. The local key and provider-backed `localhost:3000` browser flow are verified; Production browser acceptance remains pending.
-- Native iOS provider UI and its legacy custom Location fields remain deferred until Web acceptance.
+- Native MapKit now reads current Entry-owned Locations and supports native clustering, Kind/year filters, city shortcuts, and associated record navigation.
+  Native address-provider search remains deferred; manual Home addresses follow the Entry-owned, optional Location contract.
 
-### 3. Update and accept native Life Wiki UI
+### 3. Accept native foundations, Map, and navigation
 
-- Native iOS source was intentionally untouched during the Web redesign. Its Inbox and related write flows still send removed Writing, Event, Story, and Capture identities.
-- A full simulator build and UI acceptance remain blocked until the local Xcode license is accepted.
+- Native models, filters, Capture, and ordinary Inbox review now use the shared canonical identities; focused forms retain their existing RPCs.
+- Home Location IDs and labels decode as optional, and editing address facts clears stale coordinates.
+- Supabase public configuration matches Web locally. Media, metadata, and export use the Web API base URL; Geoapify, AI, and Supabase secret keys remain on the server.
+- Shared media and export authentication is independent of the AI pause; local HTTP checks cover native bearer identity, Web cookies and Origin checks, metadata, retired catalog responses, invalid sessions, and all four paused AI endpoints.
+- The Simulator build passes, along with 202 native tests without skips, including five real local Supabase contract tests for Capture/review/search, Moment/Period, optional Home Location, and focused records across Library, Collections, and Home, plus current Map Locations and Trash exclusion.
+  The temporary local test account and its owned data were removed.
+  Debug and Release Simulator builds pass.
+  Four Simulator UI scenarios cover native editor actions, MapKit clustering and filters, More routing, and gallery appearance/text-size controls; screenshot review is separate from personal data acceptance.
+  The shared API change passed the native API and existing AI-pause E2E scenarios, 445 Web unit tests, lint, type checking, and repository formatting.
+  A signed Simulator build launches to the Google sign-in screen; personal login, physical-device flows, and deployed shared API acceptance remain pending.
+- Review the Debug-only native Design System gallery, including appearance, Dynamic Type, action states, forms, cards, media placeholders, and feedback.
+  The new Map uses its shared presentation components; existing screens retain their layouts pending acceptance.
+- The gallery's Writing & formatting page now previews a native Aa toolbar with bold, italic, underline, strikethrough, selection formatting, typing styles, undo/redo, and saved note reopening.
+  The sample form uses the same reusable editor.
+  Preview saves round-trip Web-compatible paragraph and emphasis JSON locally; they do not create an Entry.
+  Six targeted native tests and three Simulator UI scenarios pass, with no runtime warnings.
+  Web's actual validator accepts the Swift-encoded payload; light, dark, large-text, and native selection screenshots were reviewed.
+  After component acceptance, adopt the rich payload in native Capture drafts, offline queues, review saves, and full-note rendering before enabling it on those business screens.
+- Native Settings routing includes Account, dates/timezone context, app-local appearance, Collections, Tags, organization settings, export, and the paused Beta AI state.
+  Web profile/date preference editing is not yet replicated on iOS.
+- Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
+- Refactor existing screens after component acceptance; native address search remains later work.
 
 ### 4. AI capabilities paused
 
@@ -79,16 +103,14 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - Branch validation passed 445 unit tests, lint, type checking, a production build, and targeted AI-pause, Settings, page-frame, and navigation browser tests.
 - The AI-pause flow also passed against a local production build; four retained active-AI E2E scenarios are explicitly skipped while paused, while provider unit tests still run.
 - A development navigation run logged a client-aborted request; the production-build AI-pause check passed without that diagnostic.
-- Production deployment and live acceptance remain unverified; native UI is unchanged.
+- Production deployment and live acceptance remain unverified; native AI entry points now follow the same pause.
 
 ### 5. Complete real interaction acceptance
 
 - Verify an actual production browser export download.
 - Verify native Save and share for a production export.
-- Exercise authenticated native capture, photos, galleries, Trash, AI, and export through the real UI with an isolated account.
+- Exercise authenticated native capture, photos, galleries, Trash, AI pause status, and export through the real UI with an isolated account.
 - Finish the remaining photo-surface and specialized metadata or relationship lifecycle audit.
-
-The latest automated native UI attempt was blocked by the locked development Mac.
 
 ### 6. Establish recovery
 

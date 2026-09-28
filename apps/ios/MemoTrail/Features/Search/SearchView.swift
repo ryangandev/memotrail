@@ -100,7 +100,7 @@ struct SearchView: View {
         .font(MTTypography.display)
         .foregroundStyle(MTColor.ink)
 
-      Text("Find any Writing, Entity, Event, Story, or Goal by what you remember.")
+      Text("Find Entries, focused records, and Goals by what you remember.")
         .font(MTTypography.body)
         .foregroundStyle(MTColor.inkMuted)
         .lineSpacing(2)
@@ -154,19 +154,6 @@ struct SearchView: View {
       .controlSize(.large)
       .disabled(!controller.hasCriteria || controller.isLoading || controller.isAskingAI)
       .accessibilityIdentifier("search-entries")
-
-      Button("Ask AI", systemImage: "sparkles") { Task { await controller.askAI() } }
-        .buttonStyle(.bordered).tint(MTColor.accent)
-        .disabled(controller.isAskingAI || controller.isLoading || controller.query.trimmed.isEmpty)
-        .accessibilityIdentifier("ask-ai-search")
-      Text(
-        "Uses this search field and its filters. Sends the question and relevant text to Anthropic only when you ask."
-      )
-      .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-      NavigationLink("AI settings") { AISettingsView(client: client, ownerID: ownerID) }
-      if let error = controller.aiError {
-        Text(error).font(MTTypography.caption).foregroundStyle(MTColor.warm)
-      }
 
       if let filterErrorMessage = controller.filterErrorMessage {
         Label(filterErrorMessage, systemImage: "exclamationmark.circle")
@@ -274,11 +261,6 @@ struct SearchView: View {
         if source.kind == "entry" {
           NavigationLink("Open original record") {
             EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: source.recordID)
-          }
-        } else if source.kind == "place" {
-          NavigationLink("Open original Place") {
-            PlacesView(
-              client: client, ownerID: ownerID, embedded: true, focusedPlaceID: source.recordID)
           }
         } else if source.kind == "person" {
           NavigationLink("Open original Person") {
@@ -400,8 +382,6 @@ struct SearchView: View {
     switch entry.recordSource {
     case .person:
       PeopleView(client: client, ownerID: ownerID, focusedPersonID: entry.recordID)
-    case .place:
-      PlacesView(client: client, ownerID: ownerID, embedded: true, focusedPlaceID: entry.recordID)
     case .entry:
       switch (entry.itemKind, entry.itemSubtype) {
       case (.entity, "home"):
@@ -410,7 +390,7 @@ struct SearchView: View {
         VehiclesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
       case (.goal, _):
         GoalsView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
-      case (.event, "first_time"):
+      case (.entry, "first_time"):
         FirstTimesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
       default:
         EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: entry.id)

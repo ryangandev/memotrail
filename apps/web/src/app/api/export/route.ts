@@ -1,4 +1,4 @@
-import { authenticateAI, AIError } from "@/lib/ai/server";
+import { authenticateAPI, APIError } from "@/lib/auth/api";
 import {
   ExportError,
   createExportArchive,
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   };
   try {
     // Shared verified cookie/bearer identity and browser Origin gate. No AI calls.
-    const { client, ownerID } = await authenticateAI(request);
+    const { client, ownerID } = await authenticateAPI(request);
     const reader = request.body?.getReader();
     if (!reader)
       throw new ExportError("invalid_request", 400, "Choose an export action.");
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
       },
     );
   } catch (error) {
-    if (error instanceof AIError || error instanceof ExportError)
+    if (error instanceof APIError || error instanceof ExportError)
       return Response.json(
         {
           code: error.code,

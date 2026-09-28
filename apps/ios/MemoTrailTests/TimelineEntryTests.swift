@@ -36,7 +36,7 @@ final class TimelineEntryTests: XCTestCase {
 
   func testExactTimelineSerializationPreservesDatabaseMicroseconds() throws {
     let json = """
-      {"track_id":"10000000-0000-4000-8000-000000000001","track_name":"Life","track_sort_order":1,"track_is_hidden":false,"entry_id":"20000000-0000-4000-8000-000000000001","title":"A moment","body":"Original","item_kind":"event","item_subtype":"memory","timeline_kind":"event","occurred_start":"2026-11-01T09:30:00.123456Z","date_precision":"exact","occurred_timezone":"America/Los_Angeles","revision":1,"updated_at":"2026-09-12T12:00:00Z"}
+      {"track_id":"10000000-0000-4000-8000-000000000001","track_name":"Life","track_sort_order":1,"track_is_hidden":false,"entry_id":"20000000-0000-4000-8000-000000000001","title":"A moment","body":"Original","item_kind":"entry","item_subtype":"moment","timeline_kind":"event","occurred_start":"2026-11-01T09:30:00.123456Z","date_precision":"exact","occurred_timezone":"America/Los_Angeles","revision":1,"updated_at":"2026-09-12T12:00:00Z"}
       """
     // Match the Supabase SDK's fractional-second decoding behavior.
     let jsonDecoder = JSONDecoder()
@@ -320,8 +320,8 @@ final class TimelineEntryTests: XCTestCase {
     title: String?,
     occurredStart: Date?,
     occurredLabel: String? = nil,
-    itemKind: WikiItemKind = .event,
-    itemSubtype: String = "life_stage"
+    itemKind: WikiItemKind = .entry,
+    itemSubtype: String = "period"
   ) -> TimelineWorkspaceRow {
     TimelineWorkspaceRow(
       trackID: trackID,

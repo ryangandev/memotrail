@@ -5,6 +5,7 @@ struct HomeView: View {
   let user: AuthenticatedUser
   let isAuthenticationBusy: Bool
   let signOut: @MainActor () async -> Void
+  let openLibrary: () -> Void
 
   private let client: SupabaseClient
   @Bindable private var controller: HomeController
@@ -25,6 +26,7 @@ struct HomeView: View {
     user: AuthenticatedUser,
     isAuthenticationBusy: Bool,
     signOut: @escaping @MainActor () async -> Void,
+    openLibrary: @escaping () -> Void,
     controller: HomeController,
     captureController: InboxController,
     captureTitle: Binding<String>,
@@ -39,6 +41,7 @@ struct HomeView: View {
     self.user = user
     self.isAuthenticationBusy = isAuthenticationBusy
     self.signOut = signOut
+    self.openLibrary = openLibrary
     self.controller = controller
     self.captureController = captureController
     _captureTitle = captureTitle
@@ -80,7 +83,7 @@ struct HomeView: View {
         .padding(.bottom, MTSpacing.s12)
       }
       .background(MTColor.canvas)
-      .navigationTitle("Home")
+      .navigationTitle("Dashboard")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
@@ -91,7 +94,7 @@ struct HomeView: View {
           Button("Profile", systemImage: "person.crop.circle.fill") {
             isShowingAccount = true
           }
-          .accessibilityLabel("Open account for \(user.name)")
+          .accessibilityLabel("Open Settings for \(user.name)")
         }
       }
       .toolbarBackground(MTColor.surface, for: .navigationBar)
@@ -100,11 +103,16 @@ struct HomeView: View {
         await refresh()
       }
       .sheet(isPresented: $isShowingAccount) {
-        AccountView(
-          user: user,
-          isBusy: isAuthenticationBusy,
-          signOut: signOut
-        )
+        NavigationStack {
+          NativeSettingsView(
+            client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
+          )
+          .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+              Button("Done") { isShowingAccount = false }
+            }
+          }
+        }
       }
       .task {
         if !controller.hasLoaded {
@@ -141,9 +149,7 @@ struct HomeView: View {
 
       Spacer(minLength: 0)
 
-      NavigationLink {
-        SearchView(client: client, ownerID: user.id, embedded: true)
-      } label: {
+      Button(action: openLibrary) {
         Image(systemName: "magnifyingglass")
           .font(.system(size: 17, weight: .medium))
           .foregroundStyle(MTColor.accent)

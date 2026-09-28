@@ -1,11 +1,11 @@
-import { authenticateAI, AIError } from "@/lib/ai/server";
+import { authenticateAPI, APIError } from "@/lib/auth/api";
 import { parseMediaPaths } from "@/lib/media/contracts";
 import { displayImageURLs } from "@/lib/media/urls";
 export const runtime = "nodejs";
 export async function POST(request: Request) {
   const headers = { "Cache-Control": "no-store" };
   try {
-    const { client } = await authenticateAI(request);
+    const { client } = await authenticateAPI(request);
     const reader = request.body?.getReader();
     if (!reader)
       return Response.json(
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
   } catch (error) {
     return Response.json(
       { error: "Sign in again or retry loading photos." },
-      { status: error instanceof AIError ? error.status : 503, headers },
+      { status: error instanceof APIError ? error.status : 503, headers },
     );
   }
 }

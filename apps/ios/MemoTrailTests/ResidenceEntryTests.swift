@@ -136,9 +136,6 @@ final class ResidenceEntryTests: XCTestCase {
     XCTAssertThrowsError(try makeInput(title: " ")) { error in
       XCTAssertEqual(error as? ResidenceEntryError, .titleRequired)
     }
-    XCTAssertThrowsError(try makeInput(placeName: " ")) { error in
-      XCTAssertEqual(error as? ResidenceEntryError, .placeRequired)
-    }
     XCTAssertThrowsError(
       try makeInput(
         occurredStart: Date(timeIntervalSince1970: 200),

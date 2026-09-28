@@ -79,15 +79,13 @@ struct CollectionsView: View {
     switch (entry.itemKind, entry.itemSubtype, entry.recordSource) {
     case (.entity, "person", .person):
       PeopleView(client: client, ownerID: ownerID, focusedPersonID: entry.recordID)
-    case (.entity, "place", .place):
-      PlacesView(client: client, ownerID: ownerID, embedded: true, focusedPlaceID: entry.recordID)
     case (.entity, "home", _):
       HomesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
     case (.entity, "vehicle", _):
       VehiclesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
     case (.goal, _, _):
       GoalsView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
-    case (.event, "first_time", _):
+    case (.entry, "first_time", _):
       FirstTimesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
     default:
       EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: entry.id)
