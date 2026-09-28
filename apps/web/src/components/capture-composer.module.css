@@ -307,6 +307,8 @@
 
   .dialogCaptureCard {
     --capture-inline-padding: var(--mt-space-4);
+
+    margin-top: 0;
   }
 
   .captureIntro {

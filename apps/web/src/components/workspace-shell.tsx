@@ -221,6 +221,7 @@ export function WorkspaceShell({
   }, []);
   const openQuickCapture = useCallback(() => {
     setCommandPaletteOpen(false);
+    setMobileMoreOpen(false);
     setQuickCaptureOpen(true);
   }, []);
 
@@ -308,14 +309,6 @@ export function WorkspaceShell({
                 size={18}
               />
             </button>
-            <QuickCaptureDialog
-              idPrefix="topbar-capture"
-              onClose={closeQuickCapture}
-              onOpen={openQuickCapture}
-              open={quickCaptureOpen}
-              ownerId={viewer.id}
-              triggerClassName={`${workspaceShellStyles.topActionButton} ${workspaceShellStyles.newEntryTopAction}`}
-            />
           </div>
 
           <div className={workspaceShellStyles.topActions}>
@@ -355,6 +348,14 @@ export function WorkspaceShell({
 
         {children}
       </main>
+
+      <QuickCaptureDialog
+        idPrefix="dock-capture"
+        onClose={closeQuickCapture}
+        onOpen={openQuickCapture}
+        open={quickCaptureOpen}
+        ownerId={viewer.id}
+      />
 
       <nav
         className={workspaceShellStyles.mobileNavigation}

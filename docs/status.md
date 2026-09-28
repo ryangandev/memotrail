@@ -11,6 +11,9 @@ The accepted compact Collection card is shared by the Web Design System and Coll
 The Web Map and Location previews now follow light, dark, and System appearance; a local provider-backed dark map loaded successfully.
 The Map also offers filtered shortcuts to the user's most recorded cities when records span more than one city.
 The desktop sidebar has a compact icon rail, panel control, and animated width change; its browser preference persists across reloads.
+The Web sidebar supports an editor-aware Command B shortcut, and New Entry opens from a bottom glass-effect control or Command J; personal visual acceptance is pending.
+The changes pass 445 Web unit tests, lint, type checking, formatting, a local production build, and five browser scenarios in both development and production mode, including draft recovery, offline replay, editor shortcuts, and narrow layouts.
+Development logged one early-closed response stream while assertions passed; the same production-mode suite passed without that diagnostic.
 Library now combines the organized all-items browser with keyword and filtered search; older `/search` URLs redirect to Library.
 Inbox review now hides AI suggestions and places photos after tags; the Library browser excludes unreviewed captures until Save to Library.
 Web AI capabilities are paused, with a disabled Beta setting and no active AI entry points.

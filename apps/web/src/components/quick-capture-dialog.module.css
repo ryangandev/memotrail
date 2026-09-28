@@ -1,16 +1,120 @@
+.dock {
+  position: fixed;
+  inset: auto 0 24px var(--capture-workspace-left, 0px);
+  z-index: 12;
+  display: flex;
+  justify-content: center;
+  padding-inline: var(--mt-space-4);
+  pointer-events: none;
+  transition: left var(--sidebar-motion);
+}
+
+.trigger {
+  display: flex;
+  width: min(400px, 100%);
+  min-height: 56px;
+  align-items: center;
+  gap: var(--mt-space-3);
+  padding: var(--mt-space-2) var(--mt-space-4) var(--mt-space-2)
+    var(--mt-space-2);
+  border: 1px solid
+    color-mix(in srgb, var(--mt-color-border-strong) 65%, transparent);
+  border-radius: var(--mt-radius-pill);
+  color: var(--mt-color-ink-muted);
+  background: color-mix(
+    in srgb,
+    var(--mt-color-surface-raised) 76%,
+    transparent
+  );
+  box-shadow:
+    inset 0 1px 0
+      color-mix(in srgb, var(--mt-color-surface-raised) 85%, transparent),
+    0 8px 32px color-mix(in srgb, var(--mt-color-ink) 12%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  backdrop-filter: blur(24px) saturate(150%);
+  font: inherit;
+  text-align: left;
+  cursor: text;
+  pointer-events: auto;
+  transition:
+    border-color var(--mt-motion-quick),
+    box-shadow var(--mt-motion-quick),
+    transform var(--mt-motion-quick);
+}
+
+.trigger:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(
+    in srgb,
+    var(--mt-color-accent) 45%,
+    var(--mt-color-border)
+  );
+  box-shadow: 0 12px 40px
+    color-mix(in srgb, var(--mt-color-ink) 15%, transparent);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--mt-color-accent);
+  outline-offset: 4px;
+}
+
+.trigger[aria-expanded="true"] {
+  visibility: hidden;
+}
+
+.triggerMark {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--mt-color-accent) 15%, transparent);
+  border-radius: 50%;
+  color: var(--mt-color-accent);
+  background: color-mix(
+    in srgb,
+    var(--mt-color-accent-subtle) 75%,
+    transparent
+  );
+}
+
+.triggerPrompt {
+  flex: 1;
+  font-size: var(--mt-font-size-body);
+}
+
+.trigger kbd {
+  flex: none;
+  color: var(--mt-color-ink-faint);
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-caption);
+}
+
 .dialog {
   --capture-inline-padding: var(--mt-space-5);
 
-  width: min(720px, calc(100% - 40px));
-  max-height: min(820px, calc(100dvh - 48px));
-  margin: auto;
+  position: fixed;
+  inset: auto 0 calc(24px + var(--capture-keyboard-offset, 0px))
+    var(--capture-workspace-left, 0px);
+  width: min(680px, calc(100% - var(--capture-workspace-left, 0px) - 48px));
+  max-height: min(820px, calc(var(--capture-viewport-height, 100dvh) - 96px));
+  margin: 0 auto;
   overflow: auto;
   padding: 0;
   border: 1px solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-large);
   color: var(--mt-color-ink);
-  background: var(--mt-color-surface-raised);
-  box-shadow: var(--mt-shadow-floating);
+  background: color-mix(
+    in srgb,
+    var(--mt-color-surface-raised) 88%,
+    transparent
+  );
+  box-shadow:
+    inset 0 1px 0 var(--mt-color-surface-raised),
+    var(--mt-shadow-floating);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
+  backdrop-filter: blur(28px) saturate(140%);
+  transform-origin: bottom center;
 }
 
 .dialog[open] {
@@ -19,8 +123,7 @@
 }
 
 .dialog::backdrop {
-  background: color-mix(in srgb, var(--mt-color-scrim) 44%, transparent);
-  backdrop-filter: blur(7px);
+  background: color-mix(in srgb, var(--mt-color-scrim) 12%, transparent);
 }
 
 .dialog[open]::backdrop {
@@ -31,7 +134,7 @@
 @keyframes quick-capture-enter {
   from {
     opacity: 0;
-    transform: translateY(8px) scale(0.985);
+    transform: translateY(12px) scale(0.97);
   }
 
   to {
@@ -97,15 +200,22 @@
 }
 
 @media (max-width: 720px) {
+  .dock {
+    bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+
   .dialog {
     --capture-inline-padding: var(--mt-space-4);
 
-    width: 100%;
-    max-width: none;
-    height: 100dvh;
-    max-height: none;
-    border: 0;
-    border-radius: 0;
+    inset-inline: 0;
+    bottom: calc(
+      12px + env(safe-area-inset-bottom) + var(--capture-keyboard-offset, 0px)
+    );
+    width: calc(100% - 24px);
+    max-height: calc(
+      var(--capture-viewport-height, 100dvh) - 32px -
+        env(safe-area-inset-bottom)
+    );
   }
 
   .dialogHeader {
@@ -113,7 +223,32 @@
   }
 }
 
+@media (max-width: 390px) {
+  .dialogHeader,
+  .dialogTitle {
+    gap: var(--mt-space-2);
+  }
+
+  .dialogHeader h2 {
+    font-size: var(--mt-font-size-body-large);
+  }
+
+  .dialogMark {
+    width: 28px;
+    height: 28px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .dock,
+  .trigger {
+    transition: none;
+  }
+
+  .trigger:hover {
+    transform: none;
+  }
+
   .dialog[open],
   .dialog[open]::backdrop {
     animation: none;

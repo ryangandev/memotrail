@@ -16,16 +16,16 @@ export function QuickCaptureDialog({
   onOpen,
   open,
   ownerId,
-  triggerClassName,
 }: {
   idPrefix: string;
   onClose: () => void;
   onOpen: () => void;
   open: boolean;
   ownerId: string;
-  triggerClassName: string;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const wasOpenRef = useRef(false);
   const nativePhotoPickerOpenRef = useRef(false);
   const suppressEscapeUntilRef = useRef(0);
   const close = useCallback(() => {
@@ -59,7 +59,34 @@ export function QuickCaptureDialog({
 
     if (open && dialog && !dialog.open) {
       dialog.showModal();
+    } else if (!open && wasOpenRef.current) {
+      triggerRef.current?.focus();
     }
+    wasOpenRef.current = open;
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || !window.visualViewport) return;
+    const viewport = window.visualViewport;
+    function updateViewport() {
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      dialog.style.setProperty(
+        "--capture-viewport-height",
+        `${viewport.height}px`,
+      );
+      dialog.style.setProperty(
+        "--capture-keyboard-offset",
+        `${Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)}px`,
+      );
+    }
+    updateViewport();
+    viewport.addEventListener("resize", updateViewport);
+    viewport.addEventListener("scroll", updateViewport);
+    return () => {
+      viewport.removeEventListener("resize", updateViewport);
+      viewport.removeEventListener("scroll", updateViewport);
+    };
   }, [open]);
 
   useEffect(() => {
@@ -71,6 +98,7 @@ export function QuickCaptureDialog({
         event.shiftKey ||
         event.altKey ||
         event.repeat ||
+        event.isComposing ||
         isEditableTarget(event.target)
       ) {
         return;
@@ -88,7 +116,14 @@ export function QuickCaptureDialog({
     if (!open) return;
 
     function closeOnEscape(event: KeyboardEvent) {
-      if (event.key !== "Escape" || event.defaultPrevented) return;
+      if (event.key !== "Escape") return;
+      // Escape in the writing field collapses the composer; nested controls
+      // retain their own dismissal behavior.
+      if (
+        event.defaultPrevented &&
+        !(event.target instanceof HTMLElement && event.target.isContentEditable)
+      )
+        return;
 
       if (
         event.target instanceof Element &&
@@ -131,23 +166,60 @@ export function QuickCaptureDialog({
 
   return (
     <>
-      <button
-        aria-keyshortcuts="Meta+J Control+J"
-        aria-label="New entry"
-        aria-haspopup="dialog"
-        className={triggerClassName}
-        onClick={onOpen}
-        type="button"
-      >
-        <Icon name="plus" size={17} />
-        <span>New</span>
-        <kbd aria-hidden="true">⌘ J</kbd>
-      </button>
+      <div className={styles.dock} data-capture-dock>
+        <button
+          aria-keyshortcuts="Meta+J Control+J"
+          aria-label="New entry"
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-controls={open ? `${idPrefix}-dialog` : undefined}
+          className={styles.trigger}
+          onClick={onOpen}
+          ref={triggerRef}
+          title="New entry (⌘ J / Ctrl+J)"
+          type="button"
+        >
+          <span className={styles.triggerMark}>
+            <Icon name="plus" size={19} />
+          </span>
+          <span className={styles.triggerPrompt}>What’s on your mind?</span>
+          <kbd aria-hidden="true">⌘ J</kbd>
+        </button>
+      </div>
 
       {open ? (
         <dialog
           aria-labelledby={`${idPrefix}-heading`}
           className={styles.dialog}
+          id={`${idPrefix}-dialog`}
+          onKeyDown={(event) => {
+            if (event.key !== "Tab" || event.defaultPrevented) return;
+            if (
+              !(event.target instanceof Element) ||
+              event.target.closest("dialog, [data-escape-layer]") !==
+                event.currentTarget
+            )
+              return;
+            const controls = Array.from(
+              event.currentTarget.querySelectorAll<HTMLElement>(
+                'a[href], button, input, select, textarea, [tabindex], [contenteditable="true"]',
+              ),
+            ).filter(
+              (element) =>
+                element.tabIndex >= 0 &&
+                !element.matches(":disabled") &&
+                element.getClientRects().length > 0,
+            );
+            const first = controls[0];
+            const last = controls.at(-1);
+            if (event.shiftKey && document.activeElement === first) {
+              event.preventDefault();
+              last?.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+              event.preventDefault();
+              first?.focus();
+            }
+          }}
           onCancel={(event) => {
             if (event.target !== event.currentTarget) return;
             event.preventDefault();
@@ -173,6 +245,7 @@ export function QuickCaptureDialog({
               size="small"
               variant="ghost"
               onClick={close}
+              title="Collapse composer (Esc)"
               type="button"
             >
               <Icon name="close" size={18} />
