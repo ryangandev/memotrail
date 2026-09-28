@@ -463,7 +463,11 @@ function Sidebar({
           className={workspaceShellStyles.brand}
           href="/"
         >
-          <BrandMark className={workspaceShellStyles.brandMark} />
+          <BrandMark
+            className={workspaceShellStyles.brandMark}
+            collapsed={collapsed}
+            motion="counter-rotation"
+          />
           <span className={workspaceShellStyles.brandName}>MemoTrail</span>
         </Link>
       </div>

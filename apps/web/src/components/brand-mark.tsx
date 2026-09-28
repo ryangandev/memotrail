@@ -1,12 +1,23 @@
+import styles from "./brand-mark.module.css";
+
 type BrandMarkProps = {
   className?: string;
+  motion?: "counter-rotation";
+  collapsed?: boolean;
 };
 
-export function BrandMark({ className }: BrandMarkProps) {
+export function BrandMark({
+  className,
+  motion,
+  collapsed = false,
+}: BrandMarkProps) {
   return (
     <svg
       aria-hidden="true"
-      className={className}
+      className={[className, motion && styles.counterRotation]
+        .filter(Boolean)
+        .join(" ")}
+      data-collapsed={motion ? collapsed : undefined}
       focusable="false"
       shapeRendering="geometricPrecision"
       viewBox="0 0 64 64"

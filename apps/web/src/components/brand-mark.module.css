@@ -1,0 +1,24 @@
+.counterRotation [data-brand-part] {
+  transform-box: view-box;
+  transform-origin: center;
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.counterRotation[data-collapsed="true"] [data-brand-part="outer-ring"],
+.counterRotation[data-collapsed="true"] [data-brand-part="accent"] {
+  transform: rotate(90deg);
+}
+
+.counterRotation[data-collapsed="true"] [data-brand-part="inner-ring"] {
+  transform: rotate(-90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .counterRotation [data-brand-part] {
+    transition: none;
+  }
+
+  .counterRotation[data-collapsed="true"] [data-brand-part] {
+    transform: none;
+  }
+}

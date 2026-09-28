@@ -11,6 +11,8 @@ type SidebarMotionFrame = {
 };
 
 async function toggleSidebarAndMeasureMotion(toggle: Locator) {
+  const collapsing =
+    (await toggle.getAttribute("aria-label")) === "Collapse sidebar";
   await toggle.evaluate((button) => {
     const motionWindow = window as typeof window & {
       sidebarMotionFrames?: Promise<SidebarMotionFrame[]>;
@@ -78,6 +80,19 @@ async function toggleSidebarAndMeasureMotion(toggle: Locator) {
         `${key} stays between its resting positions`,
       ).toBeLessThanOrEqual(upperBound);
     }
+  }
+  const brand = toggle.page().locator("aside").getByRole("link", {
+    name: "MemoTrail dashboard",
+  });
+  for (const part of ["outer-ring", "accent", "inner-ring"]) {
+    await expect(brand.locator(`[data-brand-part="${part}"]`)).toHaveCSS(
+      "transform",
+      collapsing
+        ? part === "inner-ring"
+          ? "matrix(0, -1, 1, 0, 0, 0)"
+          : "matrix(0, 1, -1, 0, 0, 0)"
+        : "none",
+    );
   }
 }
 
@@ -476,6 +491,8 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     const logoBox = await collapsedBrand.locator("svg").boundingBox();
     expect(logoBox?.width).toBe(29);
     expect(logoBox?.height).toBe(29);
+    await expect(homeLink.locator("svg")).toHaveCSS("width", "18px");
+    await expect(homeLink.locator("svg")).toHaveCSS("height", "18px");
     expect(
       Math.abs(
         (logoBox?.x ?? 0) +
@@ -550,6 +567,10 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(page).toHaveURL(/\/library$/);
     await page.reload();
     await expect(shell).toHaveCSS("width", "64px");
+    await expect(brand.locator('[data-brand-part="outer-ring"]')).toHaveCSS(
+      "transform",
+      "matrix(0, 1, -1, 0, 0, 0)",
+    );
     await primaryNavigation
       .getByRole("link", { name: "Dashboard", exact: true })
       .click();
@@ -612,6 +633,12 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(homeLink).toHaveCSS("box-shadow", /inset/);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await expect(shell).toHaveCSS("transition-duration", "0s");
+    await page.getByRole("button", { name: "Collapse sidebar" }).click();
+    for (const part of await brand.locator("path").all()) {
+      await expect(part).toHaveCSS("transition-duration", "0s");
+      await expect(part).toHaveCSS("transform", "none");
+    }
+    await page.getByRole("button", { name: "Expand sidebar" }).click();
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.screenshot({
       animations: "disabled",
