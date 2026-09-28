@@ -201,11 +201,6 @@ export function EntryHistoryView({
             }}
           />
         )}
-        {!history.current.deleted_at && (
-          <ButtonLink href={`/explore?entry=${history.current.id}`}>
-            Explore with AI
-          </ButtonLink>
-        )}
         {!history.current.deleted_at &&
           history.current.item_kind !== "goal" && (
             <GoalExtraction

@@ -62,7 +62,7 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - Voice capture produces editable text and never retains the original audio.
 - Every new free-form Capture enters Inbox, even when AI suggestions are available.
 - Inbox review keeps AI suggestions hidden for now; people organize the Entry manually.
-- AI may suggest title, Collections, tags, date, and photo-derived date or Location context.
+- AI suggestions are paused; retained implementation may suggest title, Collections, tags, date, and photo-derived date or Location context when the product is re-enabled.
 - Suggestions remain editable and require explicit adoption.
 - AI may propose a Collection but cannot create it without confirmation.
 - The Capture remains in Inbox until the user selects `Save to Library`, completes another explicit organization action, or moves it to Trash.
@@ -106,16 +106,22 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 
 ## Retrieval and AI
 
-- One search experience supports literal keyword search and an explicit AI question action.
+Earlier AI requirements and exploratory directions remain in the [AI direction record](./ai-direction-record.md) for future reconsideration; they do not reactivate the retired UI.
+
+- One search experience supports literal keyword search; the AI question action is paused.
 - Keyword search covers canonical Wiki Items, including People, and uses linked Location data as searchable context.
 - Filters include date, record category, focused form, Collection, and tag where each applies.
 - Search results explain matches and open the original source.
 - AI answers are grounded in bounded source evidence and cite the Entries used.
 - The original Entry is never changed by an AI answer.
-- `Explore with AI` creates a separate conversation attached to its source Entry.
+- The retained `Explore with AI` implementation creates a separate conversation attached to its source Entry, but is not exposed while AI is paused.
 - `Save as Entry` creates an editable, independent Inbox Entry with a bidirectional source link.
 - AI defaults off, and manual capture, organization, browsing, and keyword search continue without it.
-- Web offers one master permission, one optional organizing-suggestions control, and separate photo understanding consent. Library search currently shows keyword retrieval without an Ask AI action; Explore runs only after an explicit user action.
+- Web AI capabilities are Beta, off, and unavailable to enable while their use cases and UI are reconsidered.
+- Settings retains only a paused AI status; organizing, AI search, photo understanding, and Explore entry points are hidden.
+- Keyword search and manual organization remain available; previous AI data and business logic are retained.
+- Previous AI UI designs are retired and removed; revisiting AI requires a new interface rather than restoring those components.
+- Future decision-model actions are an exploration direction, not an approved feature or permission to act for the user.
 - Photo understanding requires separate consent from text features.
 
 ## Timeline and Dashboard

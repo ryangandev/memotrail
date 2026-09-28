@@ -1,4 +1,5 @@
 import "server-only";
+import { AI_CAPABILITIES_AVAILABLE, AI_PAUSED_MESSAGE } from "./availability";
 import { createClient as supabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { requireSupabasePublicConfig } from "@/lib/supabase/config";
@@ -16,6 +17,7 @@ export class AIError extends Error {
 }
 
 export async function authenticateAI(request: Request) {
+  assertAIAvailable();
   const authorization = request.headers.get("authorization");
   const bearer = authorization?.startsWith("Bearer ") === true;
   if (!aiOriginAllowed(request, bearer, process.env.NEXT_PUBLIC_APP_URL))
@@ -52,6 +54,11 @@ export function aiProviderConfigured() {
   );
 }
 
+export function assertAIAvailable() {
+  if (!AI_CAPABILITIES_AVAILABLE)
+    throw new AIError("ai_paused", 503, AI_PAUSED_MESSAGE);
+}
+
 export async function generateAI(
   ownerID: string,
   feature: AIFeature | "connection",
@@ -61,6 +68,7 @@ export async function generateAI(
   outputSchema?: Record<string, unknown>,
   images: AIImage[] = [],
 ) {
+  assertAIAvailable();
   if (!aiProviderConfigured())
     throw new AIError(
       "provider_unavailable",

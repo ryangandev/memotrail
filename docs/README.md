@@ -18,6 +18,9 @@ Do not read all docs unless the request genuinely spans the whole product.
 
 ## Ownership
 
+The explicitly retained [AI direction record](./ai-direction-record.md) preserves earlier AI requirements and exploration for future reconsideration.
+It is background, not the current product contract.
+
 - `product.md` says what is true for the user. It contains no implementation progress or decision history.
 - `architecture.md` says how the system is divided and where work belongs. It contains no delivery diary.
 - `status.md` says what is true right now. It keeps only actionable gaps and recent evidence boundaries.

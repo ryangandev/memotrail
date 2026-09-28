@@ -137,11 +137,15 @@ Pair it with the test file carrying the same feature name.
 
 ## AI rules
 
+- `lib/ai/availability.ts` is the Web product pause gate, separate from provider configuration and saved consent.
+- Old AI feature components and their CSS have been removed; `ai-paused-settings` is only a status placeholder, and `/explore` is a redirect-only compatibility route.
+- While paused, Settings renders an off/disabled Beta status, Explore redirects to Library, and AI API requests and generation fail with `ai_paused` before provider calls or budget reservations.
+- Stored preferences and historical AI records are preserved, not bulk-reset; native requests through this server are also blocked, but native UI is unchanged.
 - The Next.js server is the only AI provider boundary.
 - Native requests reuse the user's Supabase bearer session and never receive provider credentials.
 - Anthropic is the initial text provider behind a replaceable server interface.
-- AI defaults off. Web maps its user-facing master, organizing, and photo controls onto the more granular shared preference contract; photo understanding retains separate consent.
-- AI provider diagnostics, model identifiers, token prices, and editable spending caps stay out of ordinary Web settings. Existing per-user and server-wide budget enforcement remains active behind a simple monthly activity summary.
+- The retained preference contract distinguishes master, organizing, and photo permissions; its former Web controls are deleted, and photo understanding still requires separate consent before any future reactivation.
+- AI provider diagnostics, model identifiers, token prices, and editable spending caps stay out of ordinary Web settings. Per-user and server-wide budget logic remains intact; the former monthly activity UI is deleted.
 - Budget is reserved before a request and reconciled from actual usage.
 - Interrupted provider outcomes do not trigger automatic paid retries.
 - Suggestion and search outputs are schema-validated and remain separate from original writing until explicit user action.

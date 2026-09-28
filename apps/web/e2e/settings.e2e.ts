@@ -74,7 +74,7 @@ test("Settings is reachable from the sidebar and owns account controls", async (
       main.getByText("Google Sign-In", { exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: /AI assistance/ }),
+      page.getByRole("link", { name: /AI capabilities/ }),
     ).toHaveAttribute("href", "/settings/ai");
 
     const preferredName = main.getByRole("textbox", {
