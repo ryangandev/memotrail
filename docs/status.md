@@ -1,6 +1,6 @@
 # MemoTrail Status
 
-Last reviewed: 2026-09-26.
+Last reviewed: 2026-09-27.
 
 ## Current state
 
@@ -35,7 +35,7 @@ Use Git history for feature-level implementation and test evidence.
 | Entry-centered information model                                                                | Web `main` and hosted database use Entry, focused records, and intentional Timeline Moment or Period; native iOS still needs a separate cutover                      |
 | Web design system                                                                               | Approved canonical components migrated across Web; component-owned CSS and token boundaries enforced; local regression passed; production browser acceptance pending |
 | Backup and restore                                                                              | Not ready                                                                                                                                                            |
-| Current GitHub CI                                                                               | Blocked before jobs start by account billing or spending limits                                                                                                      |
+| Current GitHub CI                                                                               | Manually disabled; the previous jobs failed before starting because of account billing or spending limits                                                            |
 
 The latest hosted synthetic run verified JPEG, HEIC, and PNG display derivatives, metadata extraction, unchanged originals, and a complete ZIP with all canonical datasets.
 Its marked account and Storage objects were confirmed removed without accessing personal data or calling AI.
@@ -92,6 +92,7 @@ The latest automated native UI attempt was blocked by the locked development Mac
 ### 7. Restore current CI evidence
 
 - Resolve the GitHub account billing or spending-limit issue.
+- Re-enable the manually disabled CI workflow after the account issue is resolved.
 - Rerun all Web, iOS, and database jobs for current `main` and confirm they actually execute.
 
 ## Watch list
