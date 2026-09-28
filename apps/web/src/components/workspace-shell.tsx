@@ -121,15 +121,7 @@ const mobileNavigation: NavigationItem[] = [
 const mobileMoreGroups: { label: string; items: NavigationItem[] }[] = [
   {
     label: "Explore",
-    items: [
-      mapNavigation,
-      {
-        destination: "explore",
-        href: "/explore",
-        icon: "sparkle",
-        label: "Explore with AI",
-      },
-    ],
+    items: [mapNavigation],
   },
   { label: "Focused views", items: recordNavigation },
   { label: "Organize", items: organizationNavigation.slice(0, 2) },

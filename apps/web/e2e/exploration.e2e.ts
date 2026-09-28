@@ -1,4 +1,10 @@
 import { execFileSync } from "node:child_process";
+import { AI_CAPABILITIES_AVAILABLE } from "../src/lib/ai/availability";
+
+test.skip(
+  !AI_CAPABILITIES_AVAILABLE,
+  "AI product paused; coverage is in ai-paused.e2e.ts.",
+);
 import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";

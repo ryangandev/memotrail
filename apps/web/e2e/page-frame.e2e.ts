@@ -10,7 +10,6 @@ const pageFamilies = [
   { path: "/settings", variant: "compact", width: 880 },
   { path: "/settings/ai", variant: "compact", width: 880 },
   { path: "/settings/export", variant: "compact", width: 880 },
-  { path: "/explore", variant: "compact", width: 880 },
   { path: "/search", variant: "standard", width: 960 },
   { path: "/tags", variant: "standard", width: 960 },
   { path: "/trash", variant: "standard", width: 960 },

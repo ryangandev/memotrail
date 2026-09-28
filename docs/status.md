@@ -13,6 +13,7 @@ The Map also offers filtered shortcuts to the user's most recorded cities when r
 The desktop sidebar has a compact icon rail, panel control, and animated width change; its browser preference persists across reloads.
 Library now combines the organized all-items browser with keyword and filtered search; older `/search` URLs redirect to Library.
 Inbox review now hides AI suggestions and places photos after tags; the Library browser excludes unreviewed captures until Save to Library.
+Web AI capabilities are paused, with a disabled Beta setting and no active AI entry points.
 The accepted Data Ribbon layout now replaces the Web Dashboard, using the signed-in user's data and the shared capture, page, image, empty-state, and tag components.
 The development preview routes and all 20 static Home mockups have been removed; Production deployment verification and browser acceptance remain pending.
 Native iOS still uses the older Kind and subtype contract and needs a separate update before its write flows are compatible.
@@ -29,7 +30,7 @@ Use Git history for feature-level implementation and test evidence.
 | Web navigation shell                                                                            | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                    |
 | Web Settings                                                                                    | Account, preferred name, dates, timezone, appearance, browser-local Timeline style, simplified AI, and account controls implemented                                  |
 | Web Collections and tags                                                                        | Direct Library destinations and shared Entry organization editor implemented                                                                                         |
-| Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI               | Keyword search is visible in Library; Ask AI is temporarily absent from the search form. Production AI configuration is not accepted.                                |
+| Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI               | Keyword search remains available. Web AI is paused behind an off/disabled Beta setting; provider logic and historical data are retained.                              |
 | Private media, Entry history, relationships, Trash, and complete export                         | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                   |
 | Hosted Supabase contracts                                                                       | `202609240004` is deployed to project `kaivkozeyuwzqrckmyqu`; the remote ledger matches the repository                                                               |
 | Entry-centered information model                                                                | Web `main` and hosted database use Entry, focused records, and intentional Timeline Moment or Period; native iOS still needs a separate cutover                      |
@@ -66,12 +67,19 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - Native iOS source was intentionally untouched during the Web redesign. Its Inbox and related write flows still send removed Writing, Event, Story, and Capture identities.
 - A full simulator build and UI acceptance remain blocked until the local Xcode license is accepted.
 
-### 4. Accept Production AI
+### 4. AI capabilities paused
 
-- Set the Production Vercel values for `AI_PROVIDER`, server-only `AI_API_KEY`, `AI_CHAT_MODEL`, and `AI_TOTAL_BUDGET_USD`.
-- Confirm the existing server-only `SUPABASE_SECRET_KEY` remains present.
-- Redeploy and run `MEMOTRAIL_VERIFY_HOSTED_AI=1 node apps/web/scripts/verify-hosted-ai.mjs` with synthetic data.
-- The last authenticated check returned HTTP 503 `provider_unavailable`; a valid local key does not configure Production.
+- Web AI entry points are removed; Settings shows an off, disabled Beta status.
+- Earlier AI narrative, requirements, and decision-model exploration are preserved in the [AI direction record](./ai-direction-record.md), not discarded with the UI.
+- Existing AI business logic, saved preferences, and historical records remain intact behind a server pause gate.
+- The old AI settings, search form, Entry suggestions panel, and exploration UI components and their dedicated styles are deleted, not merely unmounted.
+- The Beta pause page has its own minimal styles; old Explore URLs retain only a redirect, and future AI UI must be designed anew.
+- Do not install a local model or enable Production AI as part of this work.
+- Resume only after worthwhile use cases and redesigned entry points are accepted; decision-model actions remain exploratory.
+- Branch validation passed 445 unit tests, lint, type checking, a production build, and targeted AI-pause, Settings, page-frame, and navigation browser tests.
+- The AI-pause flow also passed against a local production build; four retained active-AI E2E scenarios are explicitly skipped while paused, while provider unit tests still run.
+- A development navigation run logged a client-aborted request; the production-build AI-pause check passed without that diagnostic.
+- Production deployment and live acceptance remain unverified; native UI is unchanged.
 
 ### 5. Complete real interaction acceptance
 

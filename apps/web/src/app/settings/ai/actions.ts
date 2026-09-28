@@ -1,7 +1,12 @@
 "use server";
+import {
+  AI_CAPABILITIES_AVAILABLE,
+  AI_PAUSED_MESSAGE,
+} from "@/lib/ai/availability";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { parseAIPreferences, type AIPreferences } from "@/lib/ai/contracts";
 export async function saveAISettings(value: AIPreferences) {
+  if (!AI_CAPABILITIES_AVAILABLE) return { error: AI_PAUSED_MESSAGE };
   const preferences = parseAIPreferences(value);
   if (!preferences) return { error: "These AI preferences are invalid." };
   const context = await getAuthenticatedContext();

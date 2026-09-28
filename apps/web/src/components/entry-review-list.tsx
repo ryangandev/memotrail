@@ -314,10 +314,6 @@ export function EntryReviewDialog({
             <p>Review what you captured, then save it to your Library.</p>
           )}
           <Link href={`/history?entry=${entry.id}`}>Version history</Link>
-          <p>
-            <Link href={`/explore?entry=${entry.id}`}>Explore with AI</Link> ·
-            Uses the saved version. Save your edits first.
-          </p>
         </>
       }
       closeLabel={organized ? "Close item editor" : "Close Inbox review"}

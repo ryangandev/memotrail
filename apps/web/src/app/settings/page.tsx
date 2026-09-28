@@ -32,10 +32,10 @@ const preferences: Array<{
   title: string;
 }> = [
   {
-    detail: "Choose when AI may help and review its privacy controls.",
+    detail: "Off and unavailable while we rethink how AI can help.",
     href: "/settings/ai",
     icon: "sparkle",
-    title: "AI assistance",
+    title: "AI capabilities · Beta",
   },
   {
     detail: "Open the Library to manage Collections and tags across items.",
