@@ -1,6 +1,6 @@
 # MemoTrail Architecture
 
-Last reviewed: 2026-09-16.
+Last reviewed: 2026-09-28.
 
 ## System map
 
@@ -69,13 +69,15 @@ Pair it with the test file carrying the same feature name.
   Homes may omit a Location entirely; `homes_workspace` keeps them visible with a left join, and manual address edits discard stale provider coordinates.
   `coordinate_source` distinguishes manual, Geoapify, and explicitly adopted photo GPS coordinates; `source_attachment_id` points to the adopted original photo while it exists.
 - `homes.place_id` and `entry_places.place_id` remain compatibility column names for one cross-client window, but their foreign keys target `locations`; new reads use the `entry_locations` view and Location vocabulary.
-- Quick Capture creates an unreviewed `entry:entry`; Web Inbox review saves that same Entry without a Kind selector.
+- Quick Capture creates an unreviewed `entry:entry`; Web and iOS Inbox review save that same Entry without a Kind selector.
 - First Time, Home, Vehicle, Goal, Moment, and Period creation starts in Timeline or a focused view.
 - Older source extraction RPCs remain available for existing provenance links, but Web Inbox does not offer focused-form handoffs.
 - `capture_extraction_source` and specialized extraction RPCs retain their owner-scoped source revision checks and link provenance when invoked directly.
 - Web Goal extraction uses a caller-generated target UUID for idempotency, preserves the source revision and identity, and records `derived` plus `derived_from` provenance links so both items remain discoverable.
 - `review_wiki_item_with_photo_place` is the plaintext review boundary. It now accepts `entry:entry` for Inbox review and preserves rich-text metadata that the native editor does not author.
-- The native iOS organizer still sends the older Kind and subtype values. Its interface and write path need a separate follow-up before it is compatible with the new hosted schema.
+- Native iOS uses the canonical Entry, Entity, and Goal decoding and filter identities.
+  Its ordinary Entry editor uses the plaintext compatibility RPC; focused records keep their own editors and RPCs.
+  The retired Place surface and saved-Location catalog are removed, and Home Location is optional.
 - Web and iOS create a separately editable Goal with `extract_goal_from_item` when an established Wiki Item inspires a Goal. The caller-generated Goal ID makes lost-response retries idempotent, and History exposes both provenance directions.
 - `convert_entry_to_goal` remains only as an administrative recovery function. Authenticated and anonymous clients have no execute grant because established items must never change Kind through a conversion.
 - Specialized tables add typed facts without duplicating common writing, organization, dates, media, or history.
@@ -207,6 +209,8 @@ Pair it with the test file carrying the same feature name.
 - Interactive tiles and static Location previews accept only light or dark theme parameters; authenticated routes choose allowlisted Geoapify styles while keeping the provider key server-side.
 - Search, preview, and tile routes each consume an owner-scoped hourly database quota before contacting Geoapify.
 - iOS receives public backend configuration and the Web API base URL.
+- `lib/auth/api.ts` verifies Web cookie or native bearer identity for media, metadata, and export independently of AI availability.
+  AI routes add their own pause gate before shared authentication, and native AI entry points remain paused as well.
 - Shared behavior should be implemented and tested across Web, iOS, and Supabase in the same product slice.
 - Validation should cover the narrow unit or SQL contract first, then builds, then the closest real browser or native interaction.
 - Hosted configuration, destructive behavior, media integrity, and recovery require their own end-to-end evidence.

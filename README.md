@@ -74,7 +74,10 @@ When backend credentials exist, copy the local configuration template:
 cp apps/ios/Configuration/Secrets.xcconfig.example apps/ios/Configuration/Secrets.xcconfig
 ```
 
-Never put a Supabase secret key, Google client secret, or AI provider key in the iOS configuration.
+Use the same Supabase URL and publishable key as Web, plus the iOS Google client ID and URL scheme.
+`MEMOTRAIL_API_URL` points to the Web server that handles authenticated media, metadata, and export.
+For a Simulator using your local Web server, override it in the ignored configuration with `http:/$()/127.0.0.1:3000`.
+Never put a Supabase secret key, Google client secret, Geoapify key, or AI provider key in the iOS configuration.
 
 ## Supabase setup
 
@@ -129,6 +132,16 @@ Run database security and behavior tests with the local Supabase stack active:
 ```bash
 supabase test db
 ```
+
+Run the full native test suite, including real data-contract tests against local Supabase:
+
+```bash
+python3 apps/ios/scripts/verify-local-contracts.py --simulator-id YOUR_SIMULATOR_UDID
+```
+
+The script creates a temporary local account, runs XCTest, requires the contract tests to execute, and removes the account and its owned data afterward.
+It never uses the hosted Supabase project.
+Regular Xcode test runs skip the local integration tests when this temporary configuration is absent.
 
 Green builds do not by themselves prove authenticated user flows, production configuration, private media delivery, or recovery.
 Use [docs/status.md](./docs/status.md) for the remaining acceptance gates.

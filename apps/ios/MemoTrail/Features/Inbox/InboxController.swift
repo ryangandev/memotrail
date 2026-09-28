@@ -374,13 +374,15 @@ final class InboxController {
       }
 
       pendingEntries = nextQueue
-      Task { [weak self] in
-        // Optional suggestions cannot delay capture or requeue a successfully saved Entry.
-        guard let self,
-          let revision = try? await EntryPhotoUpload.writingRevision(
-            client: self.client, entryID: entry.id, revision: 1)
-        else { return }
-        _ = try? await self.aiSuggestions(entryID: entry.id, revision: revision)
+      if AppConfiguration.aiEnabled {
+        Task { [weak self] in
+          // Optional suggestions cannot delay capture or requeue a successfully saved Entry.
+          guard let self,
+            let revision = try? await EntryPhotoUpload.writingRevision(
+              client: self.client, entryID: entry.id, revision: 1)
+          else { return }
+          _ = try? await self.aiSuggestions(entryID: entry.id, revision: revision)
+        }
       }
       didSyncEntry = true
       lastSyncedPhotoCount = entry.attachments.count
@@ -613,8 +615,8 @@ struct InboxEntryInsert: Encodable, Sendable {
   let ownerID: UUID
   let title: String?
   let body: String
-  let itemKind = "capture"
-  let itemSubtype = "quick_capture"
+  let itemKind = "entry"
+  let itemSubtype = "entry"
   let inboxStatus = "unreviewed"
   let occurredStart: Date?
   let occurredTimezone: String

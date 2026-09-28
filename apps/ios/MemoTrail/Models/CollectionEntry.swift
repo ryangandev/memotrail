@@ -160,15 +160,7 @@ struct CollectionEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   }
 
   var displayType: String {
-    let subtype =
-      itemSubtype
-      .split(separator: "_")
-      .map { $0.prefix(1).uppercased() + $0.dropFirst() }
-      .joined(separator: " ")
-    if itemKind == .capture || subtype == itemKind.displayName {
-      return itemKind.displayName
-    }
-    return "\(itemKind.displayName) · \(subtype)"
+    itemKind.displayName(subtype: itemSubtype)
   }
 
   var displayDate: String {

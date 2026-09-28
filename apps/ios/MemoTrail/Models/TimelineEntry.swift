@@ -7,9 +7,9 @@ enum TimelineKind: String, CaseIterable, Codable, Equatable, Hashable, Sendable 
   var displayName: String {
     switch self {
     case .stage:
-      "Stage"
+      "Period"
     case .event:
-      "Event"
+      "Moment"
     }
   }
 

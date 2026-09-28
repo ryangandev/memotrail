@@ -55,7 +55,7 @@ struct LibraryView: View {
         .font(MTTypography.display)
         .foregroundStyle(MTColor.ink)
 
-      Text("Browse the Writings, Entities, Events, Stories, and Goals that make up your Life Wiki.")
+      Text("Browse your Entries, focused records, and Goals.")
         .font(MTTypography.body)
         .foregroundStyle(MTColor.inkMuted)
         .lineSpacing(2)
@@ -258,11 +258,8 @@ struct LibraryView: View {
 
   private func kindFilterTitle(_ kind: WikiItemKind) -> String {
     switch kind {
-    case .capture: "Captures"
-    case .writing: "Writing"
+    case .entry: "Entries"
     case .entity: "Entities"
-    case .event: "Events"
-    case .story: "Stories"
     case .goal: "Goals"
     }
   }
@@ -302,8 +299,6 @@ struct LibraryView: View {
       FirstTimesView(client: client, ownerID: ownerID, embedded: true)
     case .homes:
       HomesView(client: client, ownerID: ownerID, embedded: true)
-    case .places:
-      PlacesView(client: client, ownerID: ownerID, embedded: true)
     case .vehicles:
       VehiclesView(client: client, ownerID: ownerID, embedded: true)
     case .goals:
@@ -320,15 +315,13 @@ struct LibraryView: View {
     switch (item.itemKind, item.itemSubtype, item.recordSource) {
     case (.entity, "person", .person):
       PeopleView(client: client, ownerID: ownerID, focusedPersonID: item.recordID)
-    case (.entity, "place", .place):
-      PlacesView(client: client, ownerID: ownerID, embedded: true, focusedPlaceID: item.recordID)
     case (.entity, "home", _):
       HomesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: item.id)
     case (.entity, "vehicle", _):
       VehiclesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: item.id)
     case (.goal, _, _):
       GoalsView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: item.id)
-    case (.event, "first_time", _):
+    case (.entry, "first_time", _):
       FirstTimesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: item.id)
     default:
       EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: item.id)

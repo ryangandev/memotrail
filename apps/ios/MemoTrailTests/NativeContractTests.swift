@@ -1,0 +1,212 @@
+import Foundation
+@preconcurrency import Supabase
+import XCTest
+
+@testable import MemoTrail
+
+@MainActor
+final class NativeContractTests: XCTestCase {
+  // Keep synthetic sessions out of the device Keychain, including unsigned test hosts.
+  private final class SessionStorage: AuthLocalStorage, @unchecked Sendable {
+    private let lock = NSLock()
+    private var values: [String: Data] = [:]
+
+    func store(key: String, value: Data) throws {
+      lock.lock()
+      defer { lock.unlock() }
+      values[key] = value
+    }
+
+    func retrieve(key: String) throws -> Data? {
+      lock.lock()
+      defer { lock.unlock() }
+      return values[key]
+    }
+
+    func remove(key: String) throws {
+      lock.lock()
+      defer { lock.unlock() }
+      values.removeValue(forKey: key)
+    }
+  }
+
+  private struct Configuration: Decodable {
+    let supabaseURL: URL
+    let publishableKey: String
+    let accessToken: String
+    let refreshToken: String
+    let ownerID: UUID
+  }
+
+  private func client() async throws -> (SupabaseClient, UUID) {
+    let path = ProcessInfo.processInfo.environment["MEMOTRAIL_NATIVE_CONTRACT_CONFIG"] ?? ""
+    guard !path.isEmpty, !path.contains("$(") else {
+      throw XCTSkip("Run apps/ios/scripts/verify-local-contracts.py with the local Supabase stack.")
+    }
+    let config = try JSONDecoder().decode(
+      Configuration.self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+    XCTAssertEqual(config.supabaseURL.host, "127.0.0.1")
+    guard config.supabaseURL.host == "127.0.0.1" else { throw URLError(.badURL) }
+    let client = SupabaseClient(
+      supabaseURL: config.supabaseURL, supabaseKey: config.publishableKey,
+      options: .init(
+        auth: .init(
+          storage: SessionStorage(), storageKey: "native-contract-\(config.ownerID)",
+          autoRefreshToken: false, emitLocalSessionAsInitialSession: true)))
+    let session = try await client.auth.setSession(
+      accessToken: config.accessToken, refreshToken: config.refreshToken)
+    XCTAssertEqual(session.user.id, config.ownerID)
+    let stored = try await client.auth.session
+    XCTAssertEqual(stored.user.id, config.ownerID)
+    return (client, config.ownerID)
+  }
+
+  func testCaptureReviewLibraryAndSearchUseTheSameEntryIdentity() async throws {
+    let (client, ownerID) = try await client()
+    let id = UUID()
+    let title = "Native contract \(id.uuidString)"
+    let payload = InboxEntryInsert(
+      id: id, ownerID: ownerID, title: title, body: "A private synthetic Entry.",
+      occurredStart: nil, occurredTimezone: "UTC", datePrecision: "unknown",
+      clientID: "native-contract:\(id)")
+    try await client.from("entries").insert(payload).execute()
+
+    let inbox = InboxController(client: client, ownerID: ownerID)
+    await inbox.load()
+    XCTAssertNil(inbox.loadErrorMessage)
+    let entry = try XCTUnwrap(inbox.entries.first { $0.id == id })
+    XCTAssertEqual(entry.itemKind, .entry)
+    XCTAssertEqual(entry.itemSubtype, "entry")
+
+    let library = LibraryController(client: client, ownerID: ownerID)
+    library.query = title
+    await library.load()
+    XCTAssertNil(library.errorMessage)
+    XCTAssertFalse(library.items.contains { $0.id == id })
+
+    let result = await inbox.review(
+      entry: entry, title: title, body: entry.body, collectionNames: ["Native contract"],
+      itemKind: .entry, itemSubtype: "entry", occurredAt: nil, occurredTimezone: "UTC",
+      tagNames: ["native-contract"], intent: .done, datePrecision: .unknown)
+    XCTAssertEqual(result.status, .done, result.message)
+
+    await library.load()
+    let organized = try XCTUnwrap(library.items.first { $0.id == id })
+    XCTAssertEqual(organized.itemKind, .entry)
+    XCTAssertFalse(organized.isInInbox)
+
+    let search = SearchController(client: client, ownerID: ownerID)
+    search.query = title
+    search.selectedItemKind = .entry
+    await search.search()
+    XCTAssertNil(search.searchErrorMessage)
+    let found = try XCTUnwrap(search.entries.first { $0.id == id })
+    XCTAssertEqual(found.tagNames, ["native-contract"])
+    XCTAssertEqual(found.collectionNames, ["Native contract"])
+
+    let stale = await inbox.review(
+      entry: entry, title: title, body: "A stale edit", collectionNames: [],
+      itemKind: .entry, itemSubtype: "entry", occurredAt: nil, occurredTimezone: "UTC",
+      tagNames: [], intent: .done, datePrecision: .unknown)
+    XCTAssertEqual(stale.status, .conflict)
+  }
+
+  func testTimelineCreatesMomentAndPeriodWithoutLegacyKinds() async throws {
+    let (client, ownerID) = try await client()
+    let timeline = TimelineController(client: client, ownerID: ownerID)
+    await timeline.load()
+    XCTAssertNil(timeline.loadErrorMessage)
+    let track = try XCTUnwrap(timeline.tracks.first { $0.systemKey == "other_events" })
+    let start = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-01-01T12:00:00Z"))
+    for (kind, subtype) in [(TimelineKind.event, "moment"), (.stage, "period")] {
+      let title = "Native \(subtype) \(UUID().uuidString)"
+      let result = await timeline.save(
+        entry: nil, trackID: track.id, kind: kind, title: title, body: "Synthetic Timeline record.",
+        occurredStart: start, occurredEnd: kind == .stage ? start.addingTimeInterval(86_400) : nil,
+        datePrecision: .day, occurredLabel: "", occurredTimezone: "UTC")
+      XCTAssertEqual(result.status, .saved, result.message)
+      let entry = try XCTUnwrap(timeline.tracks.flatMap(\.entries).first { $0.title == title })
+      XCTAssertEqual(entry.itemKind, .entry)
+      XCTAssertEqual(entry.itemSubtype, subtype)
+    }
+  }
+
+  func testHomeWithoutLocationCanBeSavedAndLoaded() async throws {
+    let (client, ownerID) = try await client()
+    let homes = ResidenceController(client: client, ownerID: ownerID)
+    let result = await homes.save(
+      entryID: nil, expectedRevision: nil, title: "Native Home \(UUID().uuidString)", body: "",
+      occurredStart: nil, occurredEnd: nil, datePrecision: .unknown, occurredLabel: "",
+      occurredTimezone: "UTC", placeID: nil, placeName: "", address: "", city: "", region: "",
+      country: "", latitude: nil, longitude: nil, placeNotes: "", moveInReason: "",
+      moveOutReason: "", collectionNames: [], tagNames: [])
+    XCTAssertEqual(result.status, .saved, result.message)
+    let identity = try XCTUnwrap(result.identity)
+    XCTAssertNil(identity.placeID)
+    await homes.load()
+    XCTAssertNil(homes.loadErrorMessage)
+    let home = try XCTUnwrap(homes.entries.first { $0.id == identity.id })
+    XCTAssertNil(home.placeID)
+    XCTAssertEqual(home.displayLocation, "Location not added")
+  }
+
+  func testFocusedRecordsDecodeInLibraryCollectionsAndHome() async throws {
+    let (client, ownerID) = try await client()
+    let collectionName = "Native focused \(UUID().uuidString)"
+    let firstTimes = FirstTimesController(client: client, ownerID: ownerID)
+    let first = await firstTimes.save(
+      entryID: nil, expectedRevision: nil, title: "Native First Time", body: "Synthetic record.",
+      occurredStart: nil, datePrecision: .unknown, occurredLabel: "", occurredTimezone: nil,
+      collectionNames: [collectionName], tagNames: [])
+    XCTAssertEqual(first.status, .saved, first.message)
+    let firstID = try XCTUnwrap(first.identity?.id)
+    await firstTimes.load()
+    XCTAssertNil(firstTimes.loadErrorMessage)
+    XCTAssertTrue(firstTimes.entries.contains { $0.id == firstID })
+
+    let vehicles = VehicleController(client: client, ownerID: ownerID)
+    let vehicle = await vehicles.save(
+      entryID: nil, expectedRevision: nil, title: "Native Vehicle", body: "Synthetic record.",
+      occurredStart: nil, occurredEnd: nil, datePrecision: .unknown, occurredLabel: "",
+      occurredTimezone: "UTC", make: "Native", model: "Fixture", modelYear: nil, color: "",
+      collectionNames: [collectionName], tagNames: [])
+    XCTAssertEqual(vehicle.status, .saved, vehicle.message)
+    let vehicleID = try XCTUnwrap(vehicle.identity?.id)
+    await vehicles.load()
+    XCTAssertNil(vehicles.loadErrorMessage)
+    XCTAssertTrue(vehicles.entries.contains { $0.id == vehicleID })
+
+    let goals = GoalController(client: client, ownerID: ownerID)
+    let goal = await goals.save(
+      entryID: nil, expectedRevision: nil, title: "Native Goal", body: "Synthetic record.",
+      horizon: .someday, status: .considering, targetDate: nil, collectionNames: [collectionName],
+      tagNames: [], relatedEntryIDs: [firstID])
+    XCTAssertEqual(goal.status, .saved, goal.message)
+    let goalID = try XCTUnwrap(goal.identity?.id)
+    await goals.load()
+    XCTAssertNil(goals.loadErrorMessage)
+    XCTAssertTrue(goals.entries.contains { $0.id == goalID })
+
+    let library = LibraryController(client: client, ownerID: ownerID)
+    await library.load()
+    XCTAssertNil(library.errorMessage)
+    XCTAssertEqual(library.items.first { $0.id == firstID }?.itemKind, .entry)
+    XCTAssertEqual(library.items.first { $0.id == vehicleID }?.itemKind, .entity)
+    XCTAssertEqual(library.items.first { $0.id == goalID }?.itemKind, .goal)
+
+    let collections = CollectionsController(client: client, ownerID: ownerID)
+    await collections.load()
+    XCTAssertNil(collections.loadErrorMessage)
+    let collection = try XCTUnwrap(collections.collections.first { $0.name == collectionName })
+    let detail = CollectionDetailController(
+      client: client, ownerID: ownerID, collectionID: collection.id)
+    await detail.load()
+    XCTAssertNil(detail.loadErrorMessage)
+    XCTAssertEqual(Set(detail.entries.map(\.id)), Set([firstID, vehicleID, goalID]))
+
+    let home = HomeController(client: client, ownerID: ownerID)
+    await home.load()
+    XCTAssertNil(home.loadErrorMessage)
+    XCTAssertNotNil(home.snapshot)
+  }
+}

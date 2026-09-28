@@ -139,15 +139,7 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   }
 
   var displayType: String {
-    let subtype =
-      itemSubtype
-      .split(separator: "_")
-      .map { $0.prefix(1).uppercased() + $0.dropFirst() }
-      .joined(separator: " ")
-    if itemSubtype == itemKind.rawValue || (itemKind == .goal && itemSubtype == "goal") {
-      return itemKind.displayName
-    }
-    return "\(itemKind.displayName) · \(subtype)"
+    itemKind.displayName(subtype: itemSubtype)
   }
 
   var displayDate: String {
@@ -156,7 +148,7 @@ struct SearchEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
         precision: precision, start: occurredAt, end: occurredEnd, label: occurredLabel,
         timezone: occurredTimezone ?? "UTC")
       return (itemKind == .entity && ["home", "vehicle"].contains(itemSubtype))
-        || (itemKind == .event && itemSubtype == "life_stage")
+        || (itemKind == .entry && itemSubtype == "period")
         ? occurrence.spanLabel : occurrence.displayLabel
     }
     if let occurredLabel {

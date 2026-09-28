@@ -1,48 +1,22 @@
 import "server-only";
 import { AI_CAPABILITIES_AVAILABLE, AI_PAUSED_MESSAGE } from "./availability";
 import { createClient as supabaseClient } from "@supabase/supabase-js";
-import { createClient } from "@/lib/supabase/server";
+import { authenticateAPI, APIError } from "@/lib/auth/api";
 import { requireSupabasePublicConfig } from "@/lib/supabase/config";
-import { AI_MODEL, aiOriginAllowed, type AIFeature } from "./contracts";
+import { AI_MODEL, type AIFeature } from "./contracts";
 import { imageContent, AI_PHOTO_RESERVE, type AIImage } from "./image-input";
 
-export class AIError extends Error {
-  constructor(
-    public code: string,
-    public status: number,
-    message: string,
-  ) {
-    super(message);
-  }
-}
+export class AIError extends APIError {}
 
 export async function authenticateAI(request: Request) {
   assertAIAvailable();
-  const authorization = request.headers.get("authorization");
-  const bearer = authorization?.startsWith("Bearer ") === true;
-  if (!aiOriginAllowed(request, bearer, process.env.NEXT_PUBLIC_APP_URL))
-    throw new AIError(
-      "invalid_origin",
-      403,
-      "This request must come from MemoTrail.",
-    );
-  const { url, publishableKey } = requireSupabasePublicConfig();
-  const client = bearer
-    ? supabaseClient(url, publishableKey, {
-        auth: { persistSession: false, autoRefreshToken: false },
-        global: { headers: { Authorization: authorization! } },
-      })
-    : await createClient();
-  const { data, error } = await client.auth.getUser(
-    bearer ? authorization!.slice(7) : undefined,
-  );
-  if (error || !data.user)
-    throw new AIError(
-      "authentication_required",
-      401,
-      "Sign in again to use AI.",
-    );
-  return { client, ownerID: data.user.id };
+  try {
+    return await authenticateAPI(request);
+  } catch (error) {
+    if (error instanceof APIError)
+      throw new AIError(error.code, error.status, error.message);
+    throw error;
+  }
 }
 
 export function aiProviderConfigured() {

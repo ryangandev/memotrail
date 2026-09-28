@@ -403,8 +403,8 @@ struct InboxReviewSheet: View {
   @State private var note: String
   @State private var collectionNames: [String]
   @State private var collectionInput = ""
-  @State private var itemKind: WikiItemKind
-  @State private var itemSubtype: String
+  private let itemKind = WikiItemKind.entry
+  private let itemSubtype = "entry"
   @State private var photoPlace: PhotoPlaceDraft?
   @State private var occurrence: OccurrenceDraft
   @State private var isWorking = false
@@ -448,13 +448,6 @@ struct InboxReviewSheet: View {
     _title = State(initialValue: entry.title ?? "")
     _note = State(initialValue: entry.body)
     _collectionNames = State(initialValue: entry.collectionNames)
-    let initialKind =
-      WikiItemKind.reviewableCases.contains(entry.itemKind)
-      ? entry.itemKind : .writing
-    _itemKind = State(initialValue: initialKind)
-    _itemSubtype = State(
-      initialValue: initialKind.supportsReviewSubtype(entry.itemSubtype)
-        ? entry.itemSubtype : initialKind.defaultReviewSubtype)
     _occurrence = State(initialValue: OccurrenceDraft(entry.occurrence))
     _tagNames = State(initialValue: entry.tagNames)
   }
@@ -462,59 +455,6 @@ struct InboxReviewSheet: View {
   var body: some View {
     NavigationStack {
       Form {
-        Section {
-          NavigationLink("Explore with AI") {
-            ExplorationView(client: client, ownerID: ownerID, entryID: entry.id)
-          }
-          Text("Uses the saved version. Save your edits first.")
-            .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-        }
-        if entry.inboxStatus != "organized" {
-          EntryAISuggestionsView(
-            request: requestSuggestions, dismiss: dismissSuggestion,
-            applyTitle: { title = $0 },
-            applyClassification: { classification in
-              guard classification.itemKind.supportsReviewSubtype(classification.itemSubtype) else {
-                return
-              }
-              itemKind = classification.itemKind
-              itemSubtype = classification.itemSubtype
-            },
-            applyDate: { occurrence.useDateSuggestion($0) },
-            addCollection: { name in
-              if collectionNames.count < 20
-                && !collectionNames.contains(where: { $0.lowercased() == name.lowercased() })
-              {
-                collectionNames.append(name)
-              }
-            },
-            addTag: { name in
-              if tagNames.count < 50
-                && !tagNames.contains(where: { $0.lowercased() == name.lowercased() })
-              {
-                tagNames.append(name)
-              }
-            })
-        }
-        if entry.itemKind == .capture {
-          Section {
-            Button("Create a Home", systemImage: "house") {
-              prepareExtraction(.home)
-            }
-            Button("Create a Vehicle", systemImage: "car") {
-              prepareExtraction(.vehicle)
-            }
-            Button("Create a Goal", systemImage: "target") {
-              prepareExtraction(.goal)
-            }
-          } header: {
-            Text("Use a detailed form")
-          } footer: {
-            Text(
-              "These create a separate structured item and keep this Capture linked as its source."
-            )
-          }
-        }
         Section("Content") {
           TextField("Title", text: $title, axis: .vertical)
             .textInputAutocapitalization(.sentences)
@@ -526,34 +466,6 @@ struct InboxReviewSheet: View {
             .accessibilityIdentifier("review-body")
         }
 
-        Section {
-          Picker("Kind", selection: $itemKind) {
-            ForEach(WikiItemKind.reviewableCases, id: \.self) { kind in
-              Text(kind.displayName).tag(kind)
-            }
-          }
-          .disabled(entry.itemKind != .capture)
-          .onChange(of: itemKind) { _, nextKind in
-            if !nextKind.supportsReviewSubtype(itemSubtype) {
-              itemSubtype = nextKind.defaultReviewSubtype
-            }
-          }
-
-          Picker("Type", selection: $itemSubtype) {
-            ForEach(itemKind.reviewPresets) { preset in
-              Text(preset.label).tag(preset.subtype)
-            }
-          }
-
-        } header: {
-          Text("Classification")
-        } footer: {
-          Text(
-            entry.inboxStatus == "organized"
-              ? "This Entry stays organized when you save."
-              : "Choose what this Capture becomes. Homes, Vehicles, and Goals use their dedicated forms. Save changes keeps it in Inbox; Done marks it organized."
-          )
-        }
         EntryPhotoDatesView(
           client: client, ownerID: ownerID, entryID: entry.id, occurrence: $occurrence,
           photoPlace: $photoPlace)

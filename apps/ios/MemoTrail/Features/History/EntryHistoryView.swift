@@ -334,13 +334,12 @@ struct EntryHistoryDetailView: View {
         if let record {
           Text(HistoryPresentation.title(record.current)).font(MTTypography.title)
           if !record.isDeleted {
-            if ["writing", "event", "story"].contains(record.current["item_kind"]?.text ?? "") {
+            if record.current["item_kind"]?.text == "entry",
+              record.current["item_subtype"]?.text == "entry"
+            {
               Button("Edit Entry") { Task { await openEditor() } }.disabled(busy)
             }
-            NavigationLink("Explore with AI") {
-              ExplorationView(client: client, ownerID: ownerID, entryID: entryID)
-            }
-            if ["writing", "entity", "event", "story"].contains(
+            if ["entry", "entity"].contains(
               record.current["item_kind"]?.text ?? ""
             ) {
               Button("Create linked Goal") { showGoalExtraction = true }.disabled(busy)

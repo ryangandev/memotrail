@@ -75,6 +75,11 @@ enum AIAPI {
     _ path: String, body: Body, client: SupabaseClient, ownerID: UUID,
     timeout: TimeInterval = 35
   ) async throws -> T {
+    guard AppConfiguration.aiEnabled else {
+      throw NSError(
+        domain: "MemoTrail.AI", code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "AI features are paused.", "serverCode": "ai_paused"])
+    }
     let session = try await client.auth.session
     guard session.user.id == ownerID else { throw URLError(.userAuthenticationRequired) }
     guard let base = AppConfiguration.apiURL else { throw URLError(.badURL) }
@@ -111,77 +116,18 @@ struct AISettingsView: View {
 
   var body: some View {
     Form {
-      Section("Provider & privacy") {
-        Text("Anthropic · Claude Haiku 4.5")
+      Section {
+        Toggle("AI assistance (Beta)", isOn: .constant(false))
+          .disabled(true)
+      } footer: {
         Text(
-          "Enabled features send relevant Entry text or search questions to Anthropic. Photo analysis separately permits up to 12 compact, metadata-free previews for Inbox suggestions, never originals. Secrets remain on the server, never in this app."
+          "AI features are paused while their next version is being designed. Your saved preferences and history are preserved."
         )
-        Text(
-          "Suggestions never silently overwrite your words or mark Entries Done. Feature switches grant permission, not bulk analysis of your archive."
-        )
-        .foregroundStyle(MTColor.inkMuted)
-      }
-      if workspace != nil {
-        Section {
-          Toggle("Enable AI assistance", isOn: $preferences.enabled)
-        } footer: {
-          Text("Off by default. Turning off stops new AI requests on every device.")
-        }
-        Section("Allow these features") {
-          Toggle("Title, Type, Collection, and date suggestions", isOn: $preferences.classification)
-          Toggle("Tag suggestions", isOn: $preferences.tagging)
-          Toggle("Natural-language search", isOn: $preferences.search)
-          Toggle("Explore with AI", isOn: $preferences.explore)
-          Toggle("AI-assisted memory resurfacing", isOn: $preferences.resurfacing)
-          Toggle("Photo analysis (separate opt-in)", isOn: $preferences.photoAnalysis)
-        }.disabled(!preferences.enabled)
-        Section {
-          TextField("Monthly budget (USD)", text: $budget).keyboardType(.decimalPad)
-          Button("Save AI settings") { Task { await save() } }
-          Button("Test connection") { Task { await test() } }
-            .disabled(workspace?.preferences.enabled != true)
-        } header: {
-          Text("Spending")
-        } footer: {
-          Text(
-            "Monthly budget resets at the start of each UTC month. A separate server total cap can stop requests earlier. Test connection sends only synthetic text with a small usage cost. Save Enable AI first."
-          )
-        }
-        if let workspace {
-          Section("Usage this month") {
-            Text(
-              "\(AIAPI.cost(workspace.monthChargedMicros)) of \(AIAPI.cost(workspace.preferences.monthlyBudgetMicros))"
-            )
-            Text(
-              "Includes in-flight and uncertain reservations. Completed requests use reported tokens at $1 / million input and $5 / million output. This is not your Anthropic balance."
-            )
-            .foregroundStyle(MTColor.inkMuted)
-            if workspace.recentUsage.isEmpty { Text("No AI requests yet.") }
-            ForEach(workspace.recentUsage) { item in
-              HStack {
-                VStack(alignment: .leading) {
-                  Text(item.feature.replacingOccurrences(of: "_", with: " "))
-                  Text(item.status).font(.caption).foregroundStyle(MTColor.inkMuted)
-                }
-                Spacer()
-                Text(AIAPI.cost(item.chargedMicros))
-              }
-            }
-          }
-        }
-      }
-      if let message { Section { Text(message).accessibilityIdentifier("ai-settings-message") } }
-      if workspace == nil { Button("Retry") { Task { await load() } } }
-    }
-    .disabled(busy)
-    .overlay {
-      if busy {
-        ProgressView().padding().background(MTColor.surface, in: RoundedRectangle(cornerRadius: 12))
       }
     }
-    .scrollContentBackground(.hidden).background(MTColor.canvas)
+    .scrollContentBackground(.hidden)
+    .background(MTColor.canvas)
     .navigationTitle("AI settings")
-    .task { await load() }
   }
 
   private func checkOwner() async throws {

@@ -58,7 +58,7 @@ final class CollectionEntryTests: XCTestCase {
     let entry = try decodeEntry()
 
     XCTAssertEqual(entry.displayTitle, "First sunrise trail")
-    XCTAssertEqual(entry.displayType, "Event · First Time")
+    XCTAssertEqual(entry.displayType, "First Time")
     XCTAssertEqual(entry.collectionNames, ["Milestones", "Travel"])
     XCTAssertEqual(entry.tagNames, ["outdoors"])
     XCTAssertEqual(entry.coverAttachment?.mimeType, .png)
@@ -119,7 +119,7 @@ final class CollectionEntryTests: XCTestCase {
     XCTAssertEqual(entry.itemSubtype, "person")
     XCTAssertEqual(entry.recordSource, .person)
     XCTAssertEqual(entry.recordID.uuidString, "30000000-0000-4000-8000-000000000099")
-    XCTAssertEqual(entry.displayType, "Entity · Person")
+    XCTAssertEqual(entry.displayType, "Person")
   }
 
   func testPaginationValidationAcceptsSharedContractBounds() throws {
@@ -197,7 +197,7 @@ final class CollectionEntryTests: XCTestCase {
     occurredLabel: String? = "Labor Day week, 2026",
     datePrecision: String = "approximate",
     timezone: String? = "America/Los_Angeles",
-    itemKind: String = "event",
+    itemKind: String = "entry",
     itemSubtype: String = "first_time",
     recordSource: String = "entry",
     recordID: String = "20000000-0000-4000-8000-000000000001"

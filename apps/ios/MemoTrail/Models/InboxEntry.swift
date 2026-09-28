@@ -24,8 +24,8 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     title: String?,
     body: String,
     collectionNames: [String] = [],
-    itemKind: WikiItemKind = .capture,
-    itemSubtype: String = "quick_capture",
+    itemKind: WikiItemKind = .entry,
+    itemSubtype: String = "entry",
     createdAt: Date,
     occurredStart: Date?,
     occurredTimezone: String? = nil,
@@ -162,78 +162,32 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
 }
 
 enum WikiItemKind: String, CaseIterable, Codable, Equatable, Hashable, Sendable {
-  case capture
-  case writing
+  case entry
   case entity
-  case event
-  case story
   case goal
-
-  static let reviewableCases: [WikiItemKind] = [.writing, .event, .story]
 
   var displayName: String {
     switch self {
-    case .capture: "Capture"
-    case .writing: "Writing"
+    case .entry: "Entry"
     case .entity: "Entity"
-    case .event: "Event"
-    case .story: "Story"
     case .goal: "Goal"
     }
   }
 
-  var reviewPresets: [WikiItemPreset] {
-    switch self {
-    case .writing:
-      [
-        .init(subtype: "note", label: "Note"),
-        .init(subtype: "journal", label: "Journal"),
-        .init(subtype: "reflection", label: "Reflection"),
-        .init(subtype: "lesson", label: "Lesson"),
-        .init(subtype: "idea", label: "Idea"),
-      ]
-    case .event:
-      [
-        .init(subtype: "memory", label: "Memory"),
-        .init(subtype: "first_time", label: "First Time"),
-        .init(subtype: "milestone", label: "Milestone"),
-        .init(subtype: "trip", label: "Trip"),
-        .init(subtype: "life_stage", label: "Life Stage"),
-        .init(subtype: "other", label: "Other Event"),
-      ]
-    case .story:
-      [
-        .init(subtype: "chapter", label: "Chapter"),
-        .init(subtype: "story", label: "Story"),
-      ]
-    case .capture, .entity, .goal:
-      []
-    }
-  }
-
-  var defaultReviewSubtype: String {
-    reviewPresets.first?.subtype ?? "note"
-  }
-
-  func supportsReviewSubtype(_ subtype: String) -> Bool {
-    reviewPresets.contains { $0.subtype == subtype }
-  }
-
   func displayName(subtype: String) -> String {
-    let subtypeName = subtype.replacingOccurrences(of: "_", with: " ").capitalized
-    if subtype == rawValue || (self == .goal && subtype == "goal") {
-      return displayName
+    switch (self, subtype) {
+    case (.entry, "first_time"): return "First Time"
+    case (.entry, "moment"): return "Moment"
+    case (.entry, "period"): return "Period"
+    case (.entry, _): return "Entry"
+    case (.entity, "home"): return "Home"
+    case (.entity, "vehicle"): return "Vehicle"
+    case (.entity, "person"): return "Person"
+    case (.goal, "bucket_list"): return "Bucket List"
+    case (.goal, _): return "Goal"
+    default: return subtype.replacingOccurrences(of: "_", with: " ").capitalized
     }
-    return "\(displayName) · \(subtypeName)"
   }
-
-}
-
-struct WikiItemPreset: Equatable, Hashable, Identifiable, Sendable {
-  let subtype: String
-  let label: String
-
-  var id: String { subtype }
 }
 
 struct CaptureExtractionSource: Equatable, Sendable {
@@ -332,14 +286,9 @@ struct InboxReviewInput: Equatable, Sendable {
 
     let capture = try InboxCapture.validate(title: title, body: body)
 
-    guard WikiItemKind.reviewableCases.contains(itemKind),
-      itemKind.supportsReviewSubtype(itemSubtype)
+    guard itemKind == .entry, itemSubtype == "entry"
     else {
       throw InboxReviewError.invalidClassification
-    }
-
-    if itemKind == .event, itemSubtype == "first_time", capture.title == nil {
-      throw InboxReviewError.firstTimeRequiresTitle
     }
 
     guard !occurredTimezone.isEmpty, occurredTimezone.count <= 100,
@@ -923,7 +872,6 @@ enum InboxCaptureError: LocalizedError, Equatable {
 }
 
 enum InboxReviewError: LocalizedError, Equatable {
-  case firstTimeRequiresTitle
   case invalidClassification
   case invalidCollections
   case invalidRevision
@@ -932,10 +880,8 @@ enum InboxReviewError: LocalizedError, Equatable {
 
   var errorDescription: String? {
     switch self {
-    case .firstTimeRequiresTitle:
-      "Add a title before marking an Entry as a First Time."
     case .invalidClassification:
-      "Choose a compatible Kind and Type for this Entry."
+      "Open this item in its focused view to edit it."
     case .invalidCollections:
       "Use up to 20 Collections with names under 80 characters."
     case .invalidRevision:

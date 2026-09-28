@@ -339,7 +339,6 @@ struct ResidenceEditorSheet: View {
   @State private var title: String
   @State private var note: String
   @State private var occurrence: OccurrenceDraft
-  @State private var selectedSavedPlaceID: UUID?
   @State private var placeName: String
   @State private var address: String
   @State private var city: String
@@ -384,7 +383,6 @@ struct ResidenceEditorSheet: View {
           ?? EntryOccurrence(
             precision: .unknown, start: nil, end: nil, label: nil,
             timezone: TimeZone.current.identifier)))
-    _selectedSavedPlaceID = State(initialValue: entry?.placeID)
     _placeName = State(initialValue: entry?.placeName ?? "")
     _address = State(initialValue: entry?.address ?? "")
     _city = State(initialValue: entry?.city ?? "")
@@ -425,14 +423,10 @@ struct ResidenceEditorSheet: View {
       .disabled(isWorking)
       .onChange(of: title) { trim(&title, to: ResidenceEntryInput.titleLimit) }
       .onChange(of: note) { trim(&note, to: ResidenceEntryInput.bodyLimit) }
-      .onChange(of: selectedSavedPlaceID) { _, placeID in
-        guard let placeID, let place = controller.placeOptions.first(where: { $0.id == placeID })
-        else {
-          if placeID == nil { currentPlaceID = nil }
-          return
-        }
-        apply(place)
-      }
+      .onChange(of: address) { clearLocationCoordinates() }
+      .onChange(of: city) { clearLocationCoordinates() }
+      .onChange(of: region) { clearLocationCoordinates() }
+      .onChange(of: country) { clearLocationCoordinates() }
       .onChange(of: pickerItems) { _, items in Task { await loadPhotos(from: items) } }
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
@@ -515,16 +509,6 @@ struct ResidenceEditorSheet: View {
 
   private var placeSection: some View {
     Section {
-      if !controller.placeOptions.isEmpty {
-        Picker("Saved Location", selection: $selectedSavedPlaceID) {
-          Text("Add a new Location").tag(nil as UUID?)
-          ForEach(controller.placeOptions) { place in
-            Text(place.name).tag(place.id as UUID?)
-          }
-        }
-      }
-      TextField("Location name", text: $placeName)
-        .textInputAutocapitalization(.words)
       TextField("Exact address", text: $address, axis: .vertical)
         .textContentType(.fullStreetAddress)
       TextField("City", text: $city)
@@ -533,12 +517,11 @@ struct ResidenceEditorSheet: View {
         .textInputAutocapitalization(.words)
       TextField("Country", text: $country)
         .textInputAutocapitalization(.words)
-      TextField("Location notes (optional)", text: $placeNotes, axis: .vertical)
     } header: {
       Text("Location")
     } footer: {
       Text(
-        "Locations are reusable geographic data and do not create a Place in Focused Views. Exact addresses stay private."
+        "Location is optional and belongs only to this Home. Exact addresses stay private."
       )
     }
   }
@@ -663,16 +646,9 @@ struct ResidenceEditorSheet: View {
     .accessibilityLabel(label)
   }
 
-  private func apply(_ place: ResidencePlace) {
-    currentPlaceID = place.id
-    placeName = place.name
-    address = place.address ?? ""
-    city = place.city ?? ""
-    region = place.region ?? ""
-    country = place.country ?? ""
-    latitude = place.latitude.map { String($0) } ?? ""
-    longitude = place.longitude.map { String($0) } ?? ""
-    placeNotes = place.notes ?? ""
+  private func clearLocationCoordinates() {
+    latitude = ""
+    longitude = ""
   }
 
   private func trim(_ value: inout String, to limit: Int) {

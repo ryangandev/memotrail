@@ -139,7 +139,7 @@ final class LibraryDestinationTests: XCTestCase {
     let id = UUID()
     let target = UUID()
     let data = Data(
-      "{\"revision\":3,\"total_count\":25,\"items\":[{\"entry_id\":\"\(target)\",\"title\":null,\"excerpt\":\"牙套笔记\",\"item_kind\":\"writing\",\"item_subtype\":\"note\",\"is_deleted\":true}]}"
+      "{\"revision\":3,\"total_count\":25,\"items\":[{\"entry_id\":\"\(target)\",\"title\":null,\"excerpt\":\"牙套笔记\",\"item_kind\":\"entry\",\"item_subtype\":\"entry\",\"is_deleted\":true}]}"
         .utf8)
     let result = try JSONDecoder().decode(EntryRelationsResult.self, from: data)
     XCTAssertEqual(result.revision, 3)
@@ -221,7 +221,7 @@ final class LibraryDestinationTests: XCTestCase {
       [{"id":"92000000-0000-4000-8000-000000000001","name":"Friend","relationship_label":"Mentor",
         "notes":null,"revision":2,"total_count":1,"linked_entries":[
         {"id":"91000000-0000-4000-8000-000000000001","title":null,"body":"A shared memory",
-          "item_kind":"event","item_subtype":"memory","is_deleted":true}]}]
+          "item_kind":"entry","item_subtype":"moment","is_deleted":true}]}]
       """.utf8)
     let row = try XCTUnwrap(JSONDecoder().decode([PersonRecord].self, from: data).first)
     XCTAssertEqual(row.linked_entries.first?.displayTitle, "A shared memory")
@@ -232,7 +232,7 @@ final class LibraryDestinationTests: XCTestCase {
   func testAvailableDestinationsContainOnlyImplementedArchives() {
     XCTAssertEqual(
       LibraryDestination.available,
-      [.collections, .firstTimes, .homes, .places, .people, .vehicles, .goals, .trash]
+      [.collections, .firstTimes, .homes, .people, .vehicles, .goals, .trash]
     )
     XCTAssertTrue(LibraryDestination.available.allSatisfy(\.isAvailable))
   }
@@ -246,8 +246,9 @@ final class LibraryDestinationTests: XCTestCase {
   }
 
   func testEveryDestinationHasDistinctStableIdentity() {
-    XCTAssertEqual(Set(LibraryDestination.allCases.map(\.id)).count, 8)
-    XCTAssertEqual(LibraryDestination.allCases.count, 8)
+    XCTAssertEqual(Set(LibraryDestination.allCases.map(\.id)).count, 7)
+    XCTAssertEqual(LibraryDestination.allCases.count, 7)
+    XCTAssertNil(LibraryDestination(rawValue: "places"))
   }
 
   func testEveryDestinationHasUserFacingMetadata() {
@@ -283,7 +284,7 @@ final class LibraryDestinationTests: XCTestCase {
     XCTAssertEqual(item.recordID.uuidString, "98900000-0000-4000-8000-000000000001")
     XCTAssertEqual(item.recordSource, .person)
     XCTAssertEqual(item.itemKind, .entity)
-    XCTAssertEqual(item.identityLabel, "Entity · Person")
+    XCTAssertEqual(item.identityLabel, "Person")
     XCTAssertEqual(item.totalCount, 14)
   }
 

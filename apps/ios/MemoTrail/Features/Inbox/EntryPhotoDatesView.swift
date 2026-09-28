@@ -11,30 +11,20 @@ struct PhotoPlaceDraft: Encodable, Equatable, Sendable {
   var latitude: Double?
   var longitude: Double?
   func validate() throws {
-    if kind == "existing" {
-      guard placeId != nil, let revision, revision > 0, revision < 1_000_000_000 else {
-        throw PlaceEntryError.invalidRevision
-      }
-    } else {
-      guard kind == "new", let latitude, let longitude else {
-        throw PlaceEntryError.invalidCoordinates
-      }
-      _ = try PlaceInput.validate(
-        placeID: nil, expectedRevision: nil, name: name, address: "", city: "", region: "",
-        country: "", latitude: latitude, longitude: longitude, notes: "", relatedEntryIDs: [])
-    }
+    guard kind == "new", placeId == nil, revision == nil,
+      !name.trimmed.isEmpty, name.trimmed.count <= 200,
+      let latitude, let longitude, latitude.isFinite, longitude.isFinite,
+      (-90...90).contains(latitude), (-180...180).contains(longitude)
+    else { throw PhotoLocationError.invalidDraft }
   }
+
 }
-struct PhotoPlaceOption: Decodable, Identifiable, Sendable {
-  let id: UUID
-  let name: String
-  let revision: Int
-  let latitude: Double?
-  let longitude: Double?
-}
-struct PhotoPlaceOptions: Decodable, Sendable {
-  let places: [PhotoPlaceOption]
-  let hasMore: Bool
+enum PhotoLocationError: LocalizedError {
+  case invalidDraft
+
+  var errorDescription: String? {
+    "Add a Location label and valid photo coordinates, or remove the Location from this draft."
+  }
 }
 
 struct EntryPhotoInfo: Decodable, Identifiable, Sendable {
@@ -149,7 +139,7 @@ struct EntryPhotoDatesView: View {
       }
       if busy { ProgressView() }
       if photoPlace != nil {
-        PhotoPlaceDraftEditor(client: client, ownerID: ownerID, value: $photoPlace)
+        PhotoPlaceDraftEditor(value: $photoPlace)
           .id("\(photoPlace?.attachmentId.uuidString ?? ""):\(photoPlace?.kind ?? "")")
       }
       if let message { Text(message).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted) }
@@ -191,71 +181,20 @@ struct EntryPhotoDatesView: View {
 }
 
 private struct PhotoPlaceDraftEditor: View {
-  let client: SupabaseClient
-  let ownerID: UUID
   @Binding var value: PhotoPlaceDraft?
-  @State private var query = ""
-  @State private var options: [PhotoPlaceOption] = []
-  @State private var message: String?
-  @State private var busy = false
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
       Text("Location to add when you save").font(MTTypography.body).bold()
-      Text(
-        "No Location is created or linked until Save changes or Done. Existing links stay unchanged."
-      ).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-      if value?.kind == "new" {
-        TextField(
-          "New Location name", text: Binding(get: { value?.name ?? "" }, set: { value?.name = $0 }))
-        Text("Geographic coordinates came from this photo and stay private. No address is inferred.")
-          .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-      } else {
-        Text(
-          "Link existing Location: \(value?.name ?? ""). Its name, coordinates, and other facts will not change."
-        ).font(MTTypography.caption)
-      }
-      TextField("Find an existing Location", text: $query)
-      Button("Search Locations") { Task { await search() } }.disabled(busy)
-      if !options.isEmpty {
-        Picker(
-          "Existing Location",
-          selection: Binding(
-            get: { value?.placeId?.uuidString ?? "" },
-            set: { raw in
-              guard let place = options.first(where: { $0.id.uuidString == raw }),
-                let attachment = value?.attachmentId
-              else { return }
-              value = PhotoPlaceDraft(
-                kind: "existing", attachmentId: attachment, placeId: place.id,
-                revision: place.revision, name: place.name)
-            })
-        ) {
-          Text("Choose a Location").tag("")
-          ForEach(options) { p in
-            Text(p.name).tag(p.id.uuidString)
-          }
-        }
-      }
-      if let message { Text(message).font(MTTypography.caption) }
+      Text("This creates a private Location snapshot for this Entry when you save.")
+        .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+      TextField(
+        "Location label", text: Binding(get: { value?.name ?? "" }, set: { value?.name = $0 }))
+      Text("Coordinates came from this photo. No address is inferred.")
+        .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
       Button("Remove Location from draft") { value = nil }
     }
   }
-  @MainActor private func search() async {
-    guard !busy else { return }
-    busy = true
-    message = nil
-    defer { busy = false }
-    do {
-      let result: PhotoPlaceOptions = try await MediaDelivery.metadataRequest(
-        path: "api/media/place-options", query: URLQueryItem(name: "query", value: query),
-        client: client, ownerID: ownerID)
-      options = result.places
-      message =
-        result.hasMore
-        ? "First 100 Locations shown. Refine your search."
-        : result.places.isEmpty ? "No matching Locations." : nil
-    } catch { message = "Locations could not be loaded. Try again." }
-  }
+
 }
 
 extension MediaDelivery {

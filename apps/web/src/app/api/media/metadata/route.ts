@@ -1,11 +1,11 @@
-import { authenticateAI, AIError } from "@/lib/ai/server";
+import { authenticateAPI, APIError } from "@/lib/auth/api";
 import { photoMetadata, MediaError } from "@/lib/media/server";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 export async function POST(request: Request) {
   const headers = { "Cache-Control": "private, no-store" };
   try {
-    const { ownerID } = await authenticateAI(request);
+    const { ownerID } = await authenticateAPI(request);
     const id = new URL(request.url).searchParams.get("attachmentId");
     if (
       !id ||
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       { error: "Photo metadata unavailable. The original is unchanged." },
       {
         status:
-          error instanceof AIError || error instanceof MediaError
+          error instanceof APIError || error instanceof MediaError
             ? error.status
             : 422,
         headers,

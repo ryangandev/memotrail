@@ -1,6 +1,8 @@
 import Foundation
 
 enum AppConfiguration {
+  static let aiEnabled = false
+
   static var apiURL: URL? {
     guard let raw = value(forInfoDictionaryKey: "MEMOTRAIL_API_URL"),
       let url = URL(string: raw), let host = url.host,
