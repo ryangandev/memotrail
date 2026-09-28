@@ -84,6 +84,8 @@ test("shared badges keep long labels on one line across sizes", async ({
   await page.goto("/design-system");
   const longBadge = page.getByTitle("A long label that stays on one line");
   await expect(longBadge).toHaveAttribute("data-ui-badge", "true");
+  await expect(longBadge).toBeVisible();
+  await expect(longBadge).toHaveCSS("white-space", "nowrap");
   await longBadge.evaluate((element) => {
     (element as HTMLElement).style.width = "90px";
   });
