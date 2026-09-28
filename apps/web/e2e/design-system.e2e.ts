@@ -1,79 +1,68 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
 
-test("brand motion previews compare both panel directions and respect reduced motion", async ({
+test("selected brand motion previews both panel directions and respects reduced motion", async ({
   page,
 }) => {
+  const hydrationWarnings: string[] = [];
+  page.on("console", (message) => {
+    if (/hydration|hydrated/i.test(message.text())) {
+      hydrationWarnings.push(message.text());
+    }
+  });
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/design-system#brand-motion");
   const specimen = page.locator("#brand-motion");
   const studies = specimen.locator("[data-brand-motion-study]");
-  await expect(studies).toHaveCount(3);
+  await expect(studies).toHaveCount(1);
+  const counter = specimen.locator('[data-brand-motion-study="counter"]');
+  await expect(
+    counter.getByRole("heading", { name: "Counter rotation" }),
+  ).toBeVisible();
   await specimen.screenshot({
+    caret: "initial",
     path: "/private/tmp/memotrail-brand-motion-expanded.png",
   });
-  const gentle = specimen.locator('[data-brand-motion-study="gentle"]');
-  const counter = specimen.locator('[data-brand-motion-study="counter"]');
-  const relay = specimen.locator('[data-brand-motion-study="relay"]');
-  await specimen.getByRole("button", { name: "Collapse all previews" }).click();
-  const orbitAnimations = await relay
-    .locator("svg")
-    .first()
-    .evaluate((svg) =>
-      Array.from(svg.querySelectorAll("path")).flatMap((part) =>
-        part.getAnimations().map((animation) => ({
-          delay: animation.effect!.getTiming().delay ?? 0,
-          duration: animation.effect!.getTiming().duration,
-        })),
-      ),
-    );
-  expect(
-    orbitAnimations.map(({ delay }) => delay).sort((a, b) => a - b),
-  ).toEqual([0, 0, 70]);
-  expect(orbitAnimations.every(({ duration }) => duration === 350)).toBe(true);
-  await expect(gentle.locator("svg").first()).toHaveCSS(
-    "transform",
-    "matrix(0, 1, -1, 0, 0, 0)",
-  );
-  const outerRing = counter.locator('[data-brand-part="outer-ring"]').first();
-  const innerRing = counter.locator('[data-brand-part="inner-ring"]').first();
-  await expect(outerRing).toHaveCSS("transform", "matrix(0, 1, -1, 0, 0, 0)");
-  await expect(innerRing).toHaveCSS("transform", "matrix(0, -1, 1, 0, 0, 0)");
-  for (const study of await studies.all()) {
-    await expect(study).toHaveAttribute("data-collapsed", "true");
+  await counter
+    .getByRole("button", { name: "Collapse Counter rotation preview" })
+    .click();
+  for (const part of ["outer-ring", "accent", "inner-ring"]) {
+    for (const ring of await counter
+      .locator(`[data-brand-part="${part}"]`)
+      .all()) {
+      await expect(ring).toHaveCSS(
+        "transform",
+        part === "inner-ring"
+          ? "matrix(0, -1, 1, 0, 0, 0)"
+          : "matrix(0, 1, -1, 0, 0, 0)",
+      );
+    }
   }
+  await expect(counter).toHaveAttribute("data-collapsed", "true");
   const staticBrand = page.locator("[data-brand-identity] svg");
-  await expect(staticBrand).toHaveCSS("transform", "none");
   for (const part of await staticBrand.locator("path").all()) {
-    await expect(part).toHaveCSS("animation-name", "none");
     await expect(part).toHaveCSS("transform", "none");
   }
   await specimen.screenshot({
+    caret: "initial",
     path: "/private/tmp/memotrail-brand-motion-collapsed.png",
     animations: "disabled",
   });
-  await specimen.getByRole("button", { name: "Expand all previews" }).click();
-  await expect(gentle.locator("svg").first()).toHaveCSS("transform", "none");
-  await expect(outerRing).toHaveCSS("transform", "none");
-  await expect(innerRing).toHaveCSS("transform", "none");
-  await gentle
-    .getByRole("button", { name: "Collapse Gentle turn preview" })
+  await counter
+    .getByRole("button", { name: "Expand Counter rotation preview" })
     .click();
-  await expect(gentle).toHaveAttribute("data-collapsed", "true");
-  await expect(counter).toHaveAttribute("data-collapsed", "false");
-  await gentle
-    .getByRole("button", { name: "Expand Gentle turn preview" })
-    .click();
+  for (const part of await counter.locator("path").all()) {
+    await expect(part).toHaveCSS("transform", "none");
+  }
   await page.setViewportSize({ width: 320, height: 740 });
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
-  await specimen.getByRole("button", { name: "Collapse all previews" }).click();
-  await expect(gentle.locator("svg").first()).toHaveCSS("transform", "none");
-  await expect(outerRing).toHaveCSS("transition-duration", "0s");
-  await expect(innerRing).toHaveCSS("transform", "none");
-  await expect(relay.locator('[data-brand-part="accent"]').first()).toHaveCSS(
-    "animation-name",
-    "none",
-  );
+  await counter
+    .getByRole("button", { name: "Collapse Counter rotation preview" })
+    .click();
+  for (const part of await counter.locator("path").all()) {
+    await expect(part).toHaveCSS("transition-duration", "0s");
+    await expect(part).toHaveCSS("transform", "none");
+  }
   await expect(
     specimen.getByText("Reduced motion is on.", { exact: false }),
   ).toBeVisible();
@@ -83,8 +72,10 @@ test("brand motion previews compare both panel directions and respect reduced mo
     ),
   ).toBe(true);
   await specimen.screenshot({
+    caret: "initial",
     path: "/private/tmp/memotrail-brand-motion-mobile.png",
   });
+  expect(hydrationWarnings).toEqual([]);
 });
 
 test("shared badges keep long labels on one line across sizes", async ({

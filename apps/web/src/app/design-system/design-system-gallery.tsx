@@ -27,7 +27,7 @@ import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import type { EntryRichText } from "@/lib/data/rich-text";
 import styles from "./page.module.css";
 import { SharedPrimitivesGallery } from "./shared-primitives-gallery";
-import { BrandMotionStudies } from "./brand-motion-studies";
+import { BrandMotionPreview } from "./brand-motion-preview";
 
 type TokenSet = {
   meta: { name: string; version: string };
@@ -290,7 +290,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="Shared identity and the complete production icon set. Icon accepts name and size; BrandMark accepts className."
+        description="Shared identity and the complete production icon set. Icon accepts name and size; BrandMark accepts className, optional counter-rotation motion, and collapsed state."
         id="identity"
         index="02"
         title="Identity and icons"
@@ -303,11 +303,11 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
           </div>
         </div>
         <Specimen
-          description="Three interactive directions for the sidebar logo. Toggle a preview or compare all three together."
+          description="The selected sidebar animation, using the shared BrandMark. Toggle the panel to preview both directions."
           id="brand-motion"
-          title="Brand motion studies"
+          title="Brand motion"
         >
-          <BrandMotionStudies />
+          <BrandMotionPreview />
         </Specimen>
         <div className={styles.iconGrid}>
           {iconNames.map((name) => (
