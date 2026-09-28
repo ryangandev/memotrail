@@ -89,6 +89,10 @@ Pair it with the test file carrying the same feature name.
   `components/entry-rich-text-content.tsx` safely renders validated formatting on note surfaces and falls back to canonical plaintext when rich metadata is absent, invalid, or stale.
   Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while the compatibility RPC `review_entry_with_photo_place_rich` writes plaintext, formatting, organization, occurrence, and photo Location adoption in one revision.
   Older review RPCs preserve rich metadata they do not understand.
+- Native `DesignSystem/Components/NativeRichTextEditor.swift` provides a reusable UIKit writing surface with an Aa formatting toggle, bold, italic, underline, strikethrough, selection formatting, typing styles, and undo/redo.
+  The Debug gallery exercises standalone and sheet presentation, plus an encode/decode save preview using `Models/EntryEmphasisContent.swift`.
+  This codec authors the paragraph and emphasis subset of Web's versioned `body_rich` document and rejects unsupported blocks or marks rather than flattening them.
+  Ordinary native Capture and Inbox review still use their existing plaintext compatibility path pending component acceptance and persistence adoption.
 - Collections, tags, People, and Wiki Item links are owner-scoped reusable relationships. Locations are Entry-owned snapshots.
 - Focused forms own specialized structure, Collections own curated groupings, tags own descriptive labels, and Timeline tracks own presentation only.
 - Home and Vehicle are Entity subtypes whose occurrence range describes the user's relationship span.

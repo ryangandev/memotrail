@@ -2,12 +2,13 @@
   import SwiftUI
 
   enum DesignSystemSection: String, CaseIterable, Identifiable {
-    case foundations, actions, forms, records, feedback
+    case foundations, actions, writing, forms, records, feedback
     var id: String { rawValue }
     var title: String {
       switch self {
       case .foundations: "Foundations"
       case .actions: "Actions & labels"
+      case .writing: "Writing & formatting"
       case .forms: "Forms & sheets"
       case .records: "Records & media"
       case .feedback: "Feedback & states"
@@ -17,6 +18,7 @@
       switch self {
       case .foundations: "Brand, semantic colors, type, spacing, and motion."
       case .actions: "Native buttons, filter chips, badges, and disabled states."
+      case .writing: "Rich text, a collapsible Aa toolbar, and saved note previews."
       case .forms: "Search, fields, pickers, dates, and native presentation."
       case .records: "Record summaries, long content, and photo placeholders."
       case .feedback: "Empty, loading, error, success, and local draft states."
@@ -26,6 +28,7 @@
       switch self {
       case .foundations: "paintpalette"
       case .actions: "hand.tap"
+      case .writing: "textformat"
       case .forms: "rectangle.and.pencil.and.ellipsis"
       case .records: "book.closed"
       case .feedback: "bubble.left.and.text.bubble.right"
@@ -152,6 +155,7 @@
           switch section {
           case .foundations: foundations
           case .actions: actions
+          case .writing: NativeWritingSpecimens()
           case .forms: forms
           case .records: records
           case .feedback: feedback
@@ -374,7 +378,7 @@
 
   private struct DesignSystemEditor: View {
     @State private var title = "A moment worth keeping"
-    @State private var note = ""
+    @State private var note = NSAttributedString(string: "")
     @State private var date = Date()
     @State private var precision = "Day"
     @State private var includeDate = true
@@ -385,7 +389,7 @@
         Form {
           Section("Entry") {
             TextField("Title", text: $title).accessibilityIdentifier("design-editor-title")
-            TextField("Write a note...", text: $note, axis: .vertical).lineLimit(3...8)
+            MTRichTextEditor(text: $note, accessibilityIdentifier: "design-editor-note")
           }
           Section("When it happened") {
             Toggle("Include a date", isOn: $includeDate)

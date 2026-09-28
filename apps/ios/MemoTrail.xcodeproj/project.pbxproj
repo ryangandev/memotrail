@@ -95,6 +95,10 @@
 		BD0000000000000000000009 /* NativeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000009 /* NativeSettingsView.swift */; };
 		BD000000000000000000000A /* LocationMapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD000000000000000000000A /* LocationMapTests.swift */; };
 		BF0000000000000000000001 = {isa = PBXBuildFile; fileRef = CF0000000000000000000002; };
+		BE0000000000000000000001 /* EntryEmphasisContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0000000000000000000001 /* EntryEmphasisContent.swift */; };
+		BE0000000000000000000002 /* NativeRichTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0000000000000000000002 /* NativeRichTextEditor.swift */; };
+		BE0000000000000000000003 /* NativeWritingSpecimens.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0000000000000000000003 /* NativeWritingSpecimens.swift */; };
+		BE0000000000000000000004 /* EntryEmphasisContentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0000000000000000000004 /* EntryEmphasisContentTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -199,6 +203,10 @@
 		CD000000000000000000000A /* LocationMapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationMapTests.swift; sourceTree = "<group>"; };
 		CF0000000000000000000001 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MemoTrailUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CF0000000000000000000002 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWorkspaceUITests.swift; sourceTree = "<group>"; };
+		CE0000000000000000000001 /* EntryEmphasisContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryEmphasisContent.swift; sourceTree = "<group>"; };
+		CE0000000000000000000002 /* NativeRichTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeRichTextEditor.swift; sourceTree = "<group>"; };
+		CE0000000000000000000003 /* NativeWritingSpecimens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWritingSpecimens.swift; sourceTree = "<group>"; };
+		CE0000000000000000000004 /* EntryEmphasisContentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryEmphasisContentTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -317,6 +325,7 @@
 		A10000000000000000000007 /* DesignSystem */ = {
 			isa = PBXGroup;
 			children = (
+				CE0000000000000000000003 /* NativeWritingSpecimens.swift */,
 				CD0000000000000000000002 /* DesignSystemGallery.swift */,
 				A10000000000000000000008 /* Components */,
 				A10000000000000000000009 /* Generated */,
@@ -327,6 +336,7 @@
 		A10000000000000000000008 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				CE0000000000000000000002 /* NativeRichTextEditor.swift */,
 				CD0000000000000000000001 /* NativeComponents.swift */,
 				C00000000000000000000004 /* CaptureCard.swift */,
 				C00000000000000000000005 /* EntryCard.swift */,
@@ -347,6 +357,7 @@
 		A10000000000000000000010 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				CE0000000000000000000001 /* EntryEmphasisContent.swift */,
 				C0000000000000000000002B /* HomeEntry.swift */,
 				C00000000000000000000007 /* InboxEntry.swift */,
 				C00000000000000000000041 /* EntryOccurrence.swift */,
@@ -395,6 +406,7 @@
 		A10000000000000000000014 /* MemoTrailTests */ = {
 			isa = PBXGroup;
 			children = (
+				CE0000000000000000000004 /* EntryEmphasisContentTests.swift */,
 				CD000000000000000000000A /* LocationMapTests.swift */,
 				C1000000000000000000000A /* HomeEntryTests.swift */,
 				C1000000000000000000000B /* VoiceTranscriptTextTests.swift */,
@@ -632,6 +644,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BE0000000000000000000003 /* NativeWritingSpecimens.swift in Sources */,
+				BE0000000000000000000002 /* NativeRichTextEditor.swift in Sources */,
+				BE0000000000000000000001 /* EntryEmphasisContent.swift in Sources */,
 				BD0000000000000000000009 /* NativeSettingsView.swift in Sources */,
 				BD0000000000000000000008 /* NativeReview.swift in Sources */,
 				BD0000000000000000000007 /* WorkspaceRoute.swift in Sources */,
@@ -707,6 +722,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BE0000000000000000000004 /* EntryEmphasisContentTests.swift in Sources */,
 				BD000000000000000000000A /* LocationMapTests.swift in Sources */,
 				B10000000000000000000001 /* InboxEntryTests.swift in Sources */,
 				B10000000000000000000010 /* NativeContractTests.swift in Sources */,
@@ -855,6 +871,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LM_SKIP_METADATA_EXTRACTION = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rystudio.memotrail.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -872,6 +889,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LM_SKIP_METADATA_EXTRACTION = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rystudio.memotrail.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -888,6 +906,7 @@
 		        CODE_SIGN_STYLE = Automatic;
 		        GENERATE_INFOPLIST_FILE = YES;
 		        IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+		        LM_SKIP_METADATA_EXTRACTION = YES;
 		        PRODUCT_BUNDLE_IDENTIFIER = com.rystudio.memotrail.uitests;
 		        PRODUCT_NAME = "$(TARGET_NAME)";
 		        SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -903,6 +922,7 @@
 		        CODE_SIGN_STYLE = Automatic;
 		        GENERATE_INFOPLIST_FILE = YES;
 		        IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+		        LM_SKIP_METADATA_EXTRACTION = YES;
 		        PRODUCT_BUNDLE_IDENTIFIER = com.rystudio.memotrail.uitests;
 		        PRODUCT_NAME = "$(TARGET_NAME)";
 		        SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

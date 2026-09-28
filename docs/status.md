@@ -80,6 +80,12 @@ Its marked account and Storage objects were confirmed removed without accessing 
   A signed Simulator build launches to the Google sign-in screen; personal login, physical-device flows, and deployed shared API acceptance remain pending.
 - Review the Debug-only native Design System gallery, including appearance, Dynamic Type, action states, forms, cards, media placeholders, and feedback.
   The new Map uses its shared presentation components; existing screens retain their layouts pending acceptance.
+- The gallery's Writing & formatting page now previews a native Aa toolbar with bold, italic, underline, strikethrough, selection formatting, typing styles, undo/redo, and saved note reopening.
+  The sample form uses the same reusable editor.
+  Preview saves round-trip Web-compatible paragraph and emphasis JSON locally; they do not create an Entry.
+  Six targeted native tests and three Simulator UI scenarios pass, with no runtime warnings.
+  Web's actual validator accepts the Swift-encoded payload; light, dark, large-text, and native selection screenshots were reviewed.
+  After component acceptance, adopt the rich payload in native Capture drafts, offline queues, review saves, and full-note rendering before enabling it on those business screens.
 - Native Settings routing includes Account, dates/timezone context, app-local appearance, Collections, Tags, organization settings, export, and the paused Beta AI state.
   Web profile/date preference editing is not yet replicated on iOS.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
