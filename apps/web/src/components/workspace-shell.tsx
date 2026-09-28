@@ -236,11 +236,37 @@ export function WorkspaceShell({
     return () => document.removeEventListener("keydown", closeOnEscape);
   }, [mobileMoreOpen]);
 
-  function toggleSidebar() {
+  const toggleSidebar = useCallback(() => {
     const next = !sidebarCollapsed;
     setSidebarCollapsed(next);
     document.cookie = `${SIDEBAR_COOKIE_NAME}=${next ? "collapsed" : "expanded"}; Path=/; Max-Age=31536000; SameSite=Lax`;
-  }
+  }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    function handleSidebarShortcut(event: KeyboardEvent) {
+      if (
+        event.defaultPrevented ||
+        event.key.toLowerCase() !== "b" ||
+        (!event.metaKey && !event.ctrlKey) ||
+        event.altKey ||
+        event.shiftKey ||
+        event.repeat ||
+        event.isComposing ||
+        !window.matchMedia("(min-width: 721px)").matches ||
+        (event.target instanceof HTMLElement &&
+          (event.target.isContentEditable ||
+            event.target.closest(
+              "input, textarea, select, [data-rich-text-editor]",
+            )))
+      ) {
+        return;
+      }
+      event.preventDefault();
+      toggleSidebar();
+    }
+    window.addEventListener("keydown", handleSidebarShortcut);
+    return () => window.removeEventListener("keydown", handleSidebarShortcut);
+  }, [toggleSidebar]);
 
   return (
     <div
@@ -268,12 +294,13 @@ export function WorkspaceShell({
             </Link>
             <WorkspaceHistoryControls />
             <button
+              aria-keyshortcuts="Meta+B Control+B"
               aria-label={
                 sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
               }
               className={workspaceShellStyles.sidebarToggle}
               onClick={toggleSidebar}
-              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              title={`${sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} (⌘ B / Ctrl+B)`}
               type="button"
             >
               <Icon

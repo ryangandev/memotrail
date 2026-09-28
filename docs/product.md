@@ -217,6 +217,7 @@ Settings lets the user choose a preferred name for Dashboard greetings, or clear
 Desktop treats Library as a primary destination beside Dashboard, Timeline, and Map; Search is part of Library.
 Its sidebar omits Inbox, keeps optional focused views separate from Collections, tags, Trash, and the single Settings entry point.
 The desktop sidebar can collapse to a compact icon rail from the top-bar panel control; the width change animates, and the choice persists in this browser without changing mobile navigation.
+Command B (Control B on Windows) also toggles the desktop sidebar when focus is outside text inputs and editors; inside the rich-text editor it retains its Bold behavior.
 The collapsed rail shows the MemoTrail logo without its wordmark above square navigation targets and keeps keyboard focus indicators inside the controls.
 On collapse, the logo's outer ring and accent rotate 90 degrees together while the inner ring turns in the opposite direction over 320ms; expanding reverses the rotation, and reduced motion keeps the mark still.
 The persistent top bar places Back and Forward history controls, then the desktop sidebar panel control, before the accent-tinted `New` control; unavailable history directions are disabled.
