@@ -150,6 +150,32 @@ final class NativeContractTests: XCTestCase {
     XCTAssertEqual(home.displayLocation, "Location not added")
   }
 
+  func testMapReadsCurrentOwnedLocationsAndExcludesTrashedRecords() async throws {
+    let (client, ownerID) = try await client()
+    let homes = ResidenceController(client: client, ownerID: ownerID)
+    let result = await homes.save(
+      entryID: nil, expectedRevision: nil, title: "Native Map \(UUID().uuidString)", body: "",
+      occurredStart: nil, occurredEnd: nil, datePrecision: .unknown, occurredLabel: "",
+      occurredTimezone: "UTC", placeID: nil, placeName: "Austin", address: "Austin, Texas",
+      city: "Austin", region: "Texas", country: "US", latitude: 30.2672, longitude: -97.7431,
+      placeNotes: "", moveInReason: "", moveOutReason: "", collectionNames: [], tagNames: [])
+    XCTAssertEqual(result.status, .saved, result.message)
+    let identity = try XCTUnwrap(result.identity)
+    let snapshot = try await LocationMapRepository(client: client, ownerID: ownerID).load()
+    let item = try XCTUnwrap(snapshot.items.first { $0.entryID == identity.id })
+    XCTAssertEqual(item.kind, .entity)
+    XCTAssertEqual(item.subtype, "home")
+    XCTAssertEqual(item.latitude, 30.2672, accuracy: 0.000001)
+    XCTAssertEqual(item.city, "Austin")
+    XCTAssertFalse(snapshot.truncated)
+    await homes.load()
+    let home = try XCTUnwrap(homes.entries.first { $0.id == identity.id })
+    let removed = await homes.moveToTrash(entryID: home.id, expectedRevision: home.revision)
+    XCTAssertEqual(removed.status, .trashed, removed.message)
+    let afterTrash = try await LocationMapRepository(client: client, ownerID: ownerID).load()
+    XCTAssertFalse(afterTrash.items.contains { $0.entryID == home.id })
+  }
+
   func testFocusedRecordsDecodeInLibraryCollectionsAndHome() async throws {
     let (client, ownerID) = try await client()
     let collectionName = "Native focused \(UUID().uuidString)"

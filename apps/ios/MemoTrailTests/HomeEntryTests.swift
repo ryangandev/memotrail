@@ -143,15 +143,15 @@ final class HomeEntryTests: XCTestCase {
     XCTAssertEqual(HomePresentation.firstName("   "), "MemoTrail")
   }
 
-  func testRootTabsMatchTheFourDestinationProductContract() {
+  func testRootTabsMatchTheFiveDestinationProductContract() {
     XCTAssertEqual(
       RootTabDestination.allCases,
-      [.home, .inbox, .timeline, .library]
+      [.home, .inbox, .timeline, .library, .more]
     )
     XCTAssertEqual(
       RootTabDestination.allCases.map(\.title),
       [
-        "Home", "Inbox", "Timeline", "Library",
+        "Dashboard", "Inbox", "Timeline", "Library", "More",
       ])
     XCTAssertFalse(RootTabDestination.allCases.map(\.systemImage).contains(where: \.isEmpty))
     XCTAssertEqual(

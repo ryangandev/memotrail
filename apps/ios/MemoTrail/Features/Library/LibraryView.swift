@@ -18,7 +18,6 @@ struct LibraryView: View {
         LazyVStack(alignment: .leading, spacing: MTSpacing.s8) {
           header
           allItemsSection
-          availableSection
           toolsSection
         }
         .padding(.horizontal, MTSpacing.s4)
@@ -172,37 +171,12 @@ struct LibraryView: View {
     }
   }
 
-  private var availableSection: some View {
-    VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      sectionTitle("BROWSE BY STRUCTURE", subtitle: "Focused records")
-
-      ForEach(LibraryDestination.available) { destination in
-        NavigationLink {
-          availableDestination(destination)
-        } label: {
-          LibraryDestinationCard(destination: destination)
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("library-\(destination.rawValue)")
-      }
-    }
-  }
-
   private var toolsSection: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      sectionTitle("LIBRARY TOOLS", subtitle: "Organize, recover, and export")
+      sectionTitle("LIBRARY TOOLS", subtitle: "Earlier versions")
 
-      libraryTool(title: "Organization", systemImage: "tag") {
-        OrganizationView(client: client, ownerID: ownerID)
-      }
-      libraryTool(title: "Entry history", systemImage: "clock.arrow.circlepath") {
+      libraryTool(title: "Version history", systemImage: "clock.arrow.circlepath") {
         EntryHistoryIndexView(client: client, ownerID: ownerID)
-      }
-      libraryTool(title: "Export archive", systemImage: "square.and.arrow.up") {
-        ExportView(client: client, ownerID: ownerID)
-      }
-      libraryTool(title: "AI settings", systemImage: "sparkles") {
-        AISettingsView(client: client, ownerID: ownerID)
       }
     }
   }
@@ -291,41 +265,10 @@ struct LibraryView: View {
   }
 
   @ViewBuilder
-  private func availableDestination(_ destination: LibraryDestination) -> some View {
-    switch destination {
-    case .collections:
-      CollectionsView(client: client, ownerID: ownerID, embedded: true)
-    case .firstTimes:
-      FirstTimesView(client: client, ownerID: ownerID, embedded: true)
-    case .homes:
-      HomesView(client: client, ownerID: ownerID, embedded: true)
-    case .vehicles:
-      VehiclesView(client: client, ownerID: ownerID, embedded: true)
-    case .goals:
-      GoalsView(client: client, ownerID: ownerID, embedded: true)
-    case .trash:
-      TrashView(client: client, ownerID: ownerID, embedded: true)
-    case .people:
-      PeopleView(client: client, ownerID: ownerID)
-    }
-  }
-
-  @ViewBuilder
   private func wikiItemDestination(_ item: WikiItemSummary) -> some View {
-    switch (item.itemKind, item.itemSubtype, item.recordSource) {
-    case (.entity, "person", .person):
-      PeopleView(client: client, ownerID: ownerID, focusedPersonID: item.recordID)
-    case (.entity, "home", _):
-      HomesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: item.id)
-    case (.entity, "vehicle", _):
-      VehiclesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: item.id)
-    case (.goal, _, _):
-      GoalsView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: item.id)
-    case (.entry, "first_time", _):
-      FirstTimesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: item.id)
-    default:
-      EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: item.id)
-    }
+    WikiItemDestinationView(
+      client: client, ownerID: ownerID, entryID: item.id, kind: item.itemKind,
+      subtype: item.itemSubtype, personID: item.recordSource == .person ? item.recordID : nil)
   }
 }
 
@@ -384,45 +327,5 @@ private struct WikiItemCard: View {
     .background(MTColor.surfaceRaised)
     .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay { RoundedRectangle(cornerRadius: MTRadius.large).stroke(MTColor.border) }
-  }
-}
-
-private struct LibraryDestinationCard: View {
-  let destination: LibraryDestination
-
-  var body: some View {
-    HStack(spacing: MTSpacing.s4) {
-      Image(systemName: destination.systemImage)
-        .font(.system(size: 19, weight: .medium))
-        .foregroundStyle(MTColor.accent)
-        .frame(width: 44, height: 44)
-        .background(MTColor.accentSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
-
-      VStack(alignment: .leading, spacing: 4) {
-        Text(destination.title)
-          .font(MTTypography.titleSmall)
-          .foregroundStyle(MTColor.ink)
-
-        Text(destination.summary)
-          .font(MTTypography.caption)
-          .foregroundStyle(MTColor.inkFaint)
-          .lineLimit(2)
-      }
-
-      Spacer(minLength: MTSpacing.s2)
-
-      Image(systemName: "chevron.right")
-        .font(.system(size: 12, weight: .semibold))
-        .foregroundStyle(MTColor.inkFaint)
-    }
-    .frame(maxWidth: .infinity, minHeight: 74, alignment: .leading)
-    .padding(.horizontal, MTSpacing.s4)
-    .padding(.vertical, MTSpacing.s3)
-    .background(MTColor.surfaceRaised)
-    .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
-    .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large)
-        .stroke(MTColor.border, lineWidth: 1)
-    }
   }
 }

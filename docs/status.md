@@ -18,6 +18,8 @@ The accepted Data Ribbon layout now replaces the Web Dashboard, using the signed
 The development preview routes and all 20 static Home mockups have been removed; Production deployment verification and browser acceptance remain pending.
 Native iOS now adopts the canonical Entry, Entity, and Goal contracts, optional Home Locations, and the paused AI state.
 The retired native Place surface and saved-Location catalog are removed; the existing screen layouts and accepted splash remain.
+Native navigation now uses Dashboard, Inbox, Timeline, Library, and More, with the active Web destinations grouped under More.
+The native MapKit screen and Debug Design System gallery are implemented; personal acceptance and broad screen migration remain pending.
 The merged Web release still needs Production deployment verification and browser acceptance; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 
 Use Git history for feature-level implementation and test evidence.
@@ -26,7 +28,7 @@ Use Git history for feature-level implementation and test evidence.
 | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Capture, Inbox, organization, dates, drafts, and offline queues                                 | Implemented on Web and iOS                                                                                                                                           |
 | Timeline, Home (Dashboard on Web), First Times, Homes, Vehicles, Goals, People, and Collections | Implemented on Web and iOS; the retired Place surface is removed                                                                                                     |
-| Location data layer                                                                             | Web Map, optional Home Location, photo GPS provenance, and provider quotas are implemented; personal browser acceptance remains.                                     |
+| Location data layer                                                                             | Web and native Map, optional Home Location, photo GPS provenance, and Web provider quotas are implemented; personal acceptance remains.                              |
 | Habits                                                                                          | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                   |
 | Web navigation shell                                                                            | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                    |
 | Web Settings                                                                                    | Account, preferred name, dates, timezone, appearance, browser-local Timeline style, simplified AI, and account controls implemented                                  |
@@ -61,19 +63,27 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - Accept the revised UI with a personal `localhost:3000` record, including retrying a provider-backed Home Location save after the precision migration, Home removal/manual address edits, and Entry map points. Map clustering is locally browser-tested but not yet personally accepted against hosted data.
 - The accepted shared SearchField is now used across Web search surfaces, including Location, Library search, Tags, related Items, organization pickers, and Command Palette.
 - The server-only Production `GEOAPIFY_API_KEY` is configured in Vercel. The local key and provider-backed `localhost:3000` browser flow are verified; Production browser acceptance remains pending.
-- Native iOS Map and provider search UI remain deferred; its manual Home addresses now follow the Entry-owned, optional Location contract.
+- Native MapKit now reads current Entry-owned Locations and supports native clustering, Kind/year filters, city shortcuts, and associated record navigation.
+  Native address-provider search remains deferred; manual Home addresses follow the Entry-owned, optional Location contract.
 
-### 3. Accept native data adoption, then design native UI
+### 3. Accept native foundations, Map, and navigation
 
 - Native models, filters, Capture, and ordinary Inbox review now use the shared canonical identities; focused forms retain their existing RPCs.
 - Home Location IDs and labels decode as optional, and editing address facts clears stale coordinates.
 - Supabase public configuration matches Web locally. Media, metadata, and export use the Web API base URL; Geoapify, AI, and Supabase secret keys remain on the server.
 - Shared media and export authentication is independent of the AI pause; local HTTP checks cover native bearer identity, Web cookies and Origin checks, metadata, retired catalog responses, invalid sessions, and all four paused AI endpoints.
-- The Simulator build passes, along with 194 native tests without skips, including four real local Supabase contract tests for Capture/review/search, Moment/Period, optional Home Location, and focused records across Library, Collections, and Home.
+- The Simulator build passes, along with 202 native tests without skips, including five real local Supabase contract tests for Capture/review/search, Moment/Period, optional Home Location, and focused records across Library, Collections, and Home, plus current Map Locations and Trash exclusion.
   The temporary local test account and its owned data were removed.
+  Debug and Release Simulator builds pass.
+  Four Simulator UI scenarios cover native editor actions, MapKit clustering and filters, More routing, and gallery appearance/text-size controls; screenshot review is separate from personal data acceptance.
   The shared API change passed the native API and existing AI-pause E2E scenarios, 445 Web unit tests, lint, type checking, and repository formatting.
   A signed Simulator build launches to the Google sign-in screen; personal login, physical-device flows, and deployed shared API acceptance remain pending.
-- Build the native design system before refactoring individual screens, entry points, and components. Map UI and provider search are later work.
+- Review the Debug-only native Design System gallery, including appearance, Dynamic Type, action states, forms, cards, media placeholders, and feedback.
+  The new Map uses its shared presentation components; existing screens retain their layouts pending acceptance.
+- Native Settings routing includes Account, dates/timezone context, app-local appearance, Collections, Tags, organization settings, export, and the paused Beta AI state.
+  Web profile/date preference editing is not yet replicated on iOS.
+- Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
+- Refactor existing screens after component acceptance; native address search remains later work.
 
 ### 4. AI capabilities paused
 

@@ -32,11 +32,14 @@ Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/Me
 | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | Authentication or environment                             | `app/auth`, `lib/auth`, `lib/supabase`, `src/proxy.ts`                                                                              | `Features/Authentication`, `App/AppConfiguration.swift`                               | foundation and security migrations, `0001_rls.test.sql`                          |
 | Capture, Inbox, drafts, dates, rich text, or offline sync | `app/inbox`, capture, rich-text and occurrence components, `lib/data/inbox*`, `lib/data/rich-text.ts`, `lib/data/occurrence.ts`     | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests               |
-| Library browsing, search, AI suggestions, or exploration  | `app/library`, `components/library-search`, `app/search` redirect, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`   | `Features/Search`, `Features/AI`                                                      | AI, evidence, exploration, and search migrations and tests                       |
+| Library browsing, search, AI suggestions, or exploration  | `app/library`, `components/library-search`, `app/search` redirect, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`   | `Features/Library`, `Features/Search`, `Features/AI`                                  | AI, evidence, exploration, and search migrations and tests                       |
 | Photos, metadata, or export                               | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                               | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, photo-history, cleanup, and export migrations and tests                   |
 | Timeline, Homes, Vehicles, Goals, or First Times          | matching `app` route, workspace component, and `lib/data` module                                                                    | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                            |
 | Collections, tags, People, links, history, or Trash       | matching `app` route and component, shared Entry organization editor, `lib/data` organization, relation, history, and Trash modules | matching directory under `Features`                                                   | organization, relationship, history, Trash, and Empty Trash migrations and tests |
 | Visual system                                             | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                        | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-tokens/tokens.json` and generator                               |
+
+Native destinations and shared detail routing live in `App/WorkspaceRoute.swift`; the primary tabs live in `App/RootTabView.swift`.
+Map data and MapKit presentation live in `Features/Map`; native Settings live in `Features/Settings`.
 
 For a database behavior, search migrations for the newest definition of the relevant RPC instead of assuming the first occurrence is current.
 Pair it with the test file carrying the same feature name.
@@ -186,6 +189,14 @@ Pair it with the test file carrying the same feature name.
 - Inside a modal, date/time fields inherit its overlay container or accept an explicit `portalContainer` so their popovers stay inside its accessibility and theme boundary.
   Unnamed domain date fields retain the editor's contextual submit validation rather than introducing native custom-validity interception.
 - Cross-platform components preserve meaning and state while allowing native interaction differences.
+- Native `DesignSystem/Components/NativeComponents.swift` owns adaptive text styles and reusable presentation components.
+  Native text roles map to Dynamic Type styles; shared semantic colors, spacing, radius, and motion still come from generated tokens.
+- The Debug-only `DesignSystem/DesignSystemGallery.swift` renders those real components with appearance and text-size controls.
+  It is reached from the signed-out screen, More, or Settings; broad existing-screen migration follows review.
+- Debug launch arguments in `App/NativeReview.swift` expose isolated gallery, synthetic Map, and navigation review modes.
+  Release builds omit these modes and the gallery; `MemoTrailUI` runs their Simulator interaction tests.
+- Native app targets skip App Intents metadata extraction because they declare no App Intents.
+  Enable extraction when native shortcuts are introduced.
 - Authenticated Web routes use `components/page-frame.tsx` for outer width, centering, responsive gutters, and vertical page rhythm.
 - Page frame variants are semantic: `compact` is 880px for forms and focused reading, `standard` is 960px for lists and search, `wide` is 1080px for dashboards and card grids, and `canvas` is 1180px for dense spatial views.
 - New route pages choose the narrowest variant that fits their content; feature grids and visualizations own their internal breakpoints instead of redefining the outer page geometry.
@@ -204,7 +215,10 @@ Pair it with the test file carrying the same feature name.
 - Server-only Supabase, Geoapify, and AI credentials exist only in trusted environments.
 - Web address searches and static maps pass through authenticated route handlers, so `GEOAPIFY_API_KEY` is never exposed to the browser.
   The proxy sends only the requested search text or coordinates to Geoapify, not the signed-in user's identity.
-- The Web Map reads current Entry-Location links through owner-scoped RLS and proxies Geoapify raster tiles through an authenticated route.
+- Both maps read current Entry-Location links through owner-scoped RLS.
+  Native Map reads page in stable order with a 5,000-link cap and publish only complete results; Kind/year filters apply to the loaded set.
+  Native MapKit provides the base map and collision-based annotation clusters without a provider key or device-location permission.
+  The Web Map proxies Geoapify raster tiles through an authenticated route.
   Its 5,000-link bound is ordered newest first and explicitly disclosed in the UI; filters apply to loaded results.
 - Interactive tiles and static Location previews accept only light or dark theme parameters; authenticated routes choose allowlisted Geoapify styles while keeping the provider key server-side.
 - Search, preview, and tile routes each consume an owner-scoped hourly database quota before contacting Geoapify.

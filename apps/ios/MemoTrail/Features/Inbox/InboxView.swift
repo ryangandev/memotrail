@@ -96,17 +96,22 @@ struct InboxView: View {
           Button("Profile", systemImage: "person.crop.circle.fill") {
             isShowingAccount = true
           }
-          .accessibilityLabel("Open account for \(user.name)")
+          .accessibilityLabel("Open Settings for \(user.name)")
         }
       }
       .toolbarBackground(MTColor.surface, for: .navigationBar)
       .toolbarBackground(.visible, for: .navigationBar)
       .sheet(isPresented: $isShowingAccount) {
-        AccountView(
-          user: user,
-          isBusy: isAuthenticationBusy,
-          signOut: signOut
-        )
+        NavigationStack {
+          NativeSettingsView(
+            client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
+          )
+          .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+              Button("Done") { isShowingAccount = false }
+            }
+          }
+        }
       }
       .sheet(item: $selectedEntry) { entry in
         InboxReviewSheet(

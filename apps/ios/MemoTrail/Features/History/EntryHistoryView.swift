@@ -288,7 +288,7 @@ struct EntryHistoryIndexView: View {
         }
         if busy { ProgressView() }
       }.padding()
-    }.background(MTColor.canvas).navigationTitle("Entry history").task { await load() }.refreshable
+    }.background(MTColor.canvas).navigationTitle("Version history").task { await load() }.refreshable
     { await load() }
   }
   private func load(more: Bool = false) async {

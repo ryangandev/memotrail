@@ -79,6 +79,24 @@ Use the same Supabase URL and publishable key as Web, plus the iOS Google client
 For a Simulator using your local Web server, override it in the ignored configuration with `http:/$()/127.0.0.1:3000`.
 Never put a Supabase secret key, Google client secret, Geoapify key, or AI provider key in the iOS configuration.
 
+### Native UI review
+
+Debug builds expose Design System from the signed-out screen and from More or Settings after sign-in.
+The gallery uses real native components and includes appearance and Dynamic Type preview controls.
+Existing screens keep their layouts pending component acceptance.
+
+Xcode launch arguments `--review-design-system`, `--review-map`, and `--review-navigation` open isolated review modes.
+The Map review uses clearly synthetic records; these modes do not sign in or write to the backend and are excluded from Release builds.
+The normal Map is available under More and reads the signed-in user's current Locations using MapKit.
+No Geoapify key is needed on iOS.
+
+Run Simulator UI interactions with the shared `MemoTrailUI` scheme:
+
+```bash
+xcodebuild -project apps/ios/MemoTrail.xcodeproj -scheme MemoTrailUI \
+  -destination 'platform=iOS Simulator,id=YOUR_SIMULATOR_UDID' test
+```
+
 ## Supabase setup
 
 Start the local stack and recreate the database from migrations and synthetic seed data:

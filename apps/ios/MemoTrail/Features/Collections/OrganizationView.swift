@@ -83,6 +83,11 @@ struct OrganizationView: View {
   @State private var adding = false
   @State private var busy = false
   @State private var message: String?
+  init(client: SupabaseClient, ownerID: UUID, initialKind: OrganizationKind = .collection) {
+    self.client = client
+    self.ownerID = ownerID
+    _kind = State(initialValue: initialKind)
+  }
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 18) {
@@ -142,7 +147,7 @@ struct OrganizationView: View {
         }
         if busy { ProgressView() }
       }.padding()
-    }.background(MTColor.canvas).navigationTitle("Organization").navigationBarTitleDisplayMode(
+    }.background(MTColor.canvas).navigationTitle(kind.plural).navigationBarTitleDisplayMode(
       .inline
     )
     .task { await load() }.refreshable { await load() }

@@ -6,6 +6,9 @@ struct AuthenticationView: View {
   let isBusy: Bool
   let errorMessage: String?
   let signIn: @MainActor () async -> Void
+  #if DEBUG
+    @State private var showingDesignSystem = false
+  #endif
 
   var body: some View {
     ScrollView {
@@ -13,6 +16,11 @@ struct AuthenticationView: View {
         brand
         story
         signInCard
+        #if DEBUG
+          Button("Design System", systemImage: "square.grid.2x2") { showingDesignSystem = true }
+            .font(MTFont.caption)
+            .accessibilityIdentifier("signed-out-design-system")
+        #endif
       }
       .frame(maxWidth: 560, alignment: .leading)
       .padding(.horizontal, MTSpacing.s6)
@@ -31,6 +39,18 @@ struct AuthenticationView: View {
       }
       .ignoresSafeArea()
     }
+    #if DEBUG
+      .sheet(isPresented: $showingDesignSystem) {
+        NavigationStack {
+          DesignSystemGallery()
+          .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+              Button("Close") { showingDesignSystem = false }
+            }
+          }
+        }
+      }
+    #endif
   }
 
   private var brand: some View {

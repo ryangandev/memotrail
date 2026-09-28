@@ -62,6 +62,7 @@ struct RootTabView: View {
         user: user,
         isAuthenticationBusy: isAuthenticationBusy,
         signOut: signOut,
+        openLibrary: { selectedTab = .library },
         controller: homeController,
         captureController: inboxController,
         captureTitle: $captureTitle,
@@ -112,6 +113,14 @@ struct RootTabView: View {
             RootTabDestination.library.title, systemImage: RootTabDestination.library.systemImage)
         }
         .tag(RootTabDestination.library)
+
+      MoreView(
+        client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
+      )
+      .tabItem {
+        Label(RootTabDestination.more.title, systemImage: RootTabDestination.more.systemImage)
+      }
+      .tag(RootTabDestination.more)
     }
     .overlay(alignment: .bottomTrailing) {
       if selectedTab.usesGlobalCaptureButton {
@@ -235,13 +244,15 @@ enum RootTabDestination: String, CaseIterable, Sendable {
   case inbox
   case timeline
   case library
+  case more
 
   var title: String {
     switch self {
-    case .home: "Home"
+    case .home: "Dashboard"
     case .inbox: "Inbox"
     case .timeline: "Timeline"
     case .library: "Library"
+    case .more: "More"
     }
   }
 
@@ -251,11 +262,12 @@ enum RootTabDestination: String, CaseIterable, Sendable {
     case .inbox: "tray"
     case .timeline: "point.bottomleft.forward.to.point.topright.scurvepath"
     case .library: "books.vertical"
+    case .more: "ellipsis"
     }
   }
 
   var usesGlobalCaptureButton: Bool {
-    self != .home && self != .inbox
+    self == .timeline || self == .library
   }
 }
 
