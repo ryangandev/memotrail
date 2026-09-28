@@ -13,12 +13,6 @@
   border: 0;
 }
 
-.occurrenceEditor legend {
-  margin-bottom: var(--mt-space-3);
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-medium);
-}
-
 .occurrenceEditor p {
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
@@ -51,7 +45,9 @@
   outline: 0;
   color: var(--mt-color-ink);
   background-color: var(--mt-color-surface);
-  font: inherit;
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-regular);
 }
 
 .occurrenceEditor > label > input:focus,
@@ -135,7 +131,9 @@
   background: transparent;
   box-shadow: none;
   appearance: none;
-  font: inherit;
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-regular);
   font-variant-numeric: tabular-nums;
 }
 
@@ -204,7 +202,7 @@
   gap: 5px;
   margin-right: 2px;
   padding: 0 var(--mt-space-2);
-  font-size: var(--mt-font-size-caption);
+  font-size: var(--mt-font-size-label);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -281,6 +279,8 @@
   color: var(--mt-color-ink);
   background: var(--mt-color-surface-raised);
   box-shadow: var(--mt-shadow-floating);
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
 }
 
 .datePickerContent[hidden] {
@@ -299,11 +299,13 @@
   color: var(--mt-color-ink);
   background: var(--mt-color-surface-raised);
   box-shadow: var(--mt-shadow-floating);
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
 }
 
 .timePickerContent > [data-part="title"] {
   margin-bottom: var(--mt-space-3);
-  font-size: var(--mt-font-size-caption);
+  font-size: var(--mt-font-size-label);
   font-weight: var(--mt-font-weight-medium);
 }
 
@@ -321,12 +323,13 @@
 
 .timePickerFields label span {
   color: var(--mt-color-ink-muted);
-  font-size: 10px;
+  font-size: var(--mt-font-size-caption);
 }
 
 .timePickerFields > span {
   padding-bottom: 10px;
   color: var(--mt-color-ink-faint);
+  font-size: var(--mt-font-size-label);
 }
 
 .timePickerFields select {
@@ -338,7 +341,9 @@
   outline: 0;
   color: var(--mt-color-ink);
   background-color: var(--mt-color-surface);
-  font: inherit;
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-regular);
   font-variant-numeric: tabular-nums;
 }
 
@@ -354,7 +359,7 @@
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-accent-ink);
   background: var(--mt-color-accent);
-  font-size: var(--mt-font-size-caption);
+  font-size: var(--mt-font-size-label);
   font-weight: var(--mt-font-weight-medium);
   cursor: pointer;
 }
@@ -400,7 +405,7 @@
 .calendarTable th {
   height: 28px;
   color: var(--mt-color-ink-faint);
-  font-size: 10px;
+  font-size: var(--mt-font-size-caption);
   font-weight: var(--mt-font-weight-medium);
   text-align: center;
 }
@@ -416,7 +421,7 @@
   place-items: center;
   border-radius: var(--mt-radius-small);
   color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
+  font-size: var(--mt-font-size-label);
   font-variant-numeric: tabular-nums;
   cursor: pointer;
 }

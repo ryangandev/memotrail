@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
+// Keep exercising the retained provider logic independently of the product pause.
+vi.mock("./availability", () => ({ AI_CAPABILITIES_AVAILABLE: true }));
 const rpc = vi.hoisted(() => vi.fn());
 vi.mock("@supabase/supabase-js", () => ({ createClient: () => ({ rpc }) }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));

@@ -6,16 +6,22 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { signOut } from "@/app/auth/actions";
 import { AppearanceSetting } from "@/components/appearance-setting";
+import { TimelineStyleSetting } from "@/components/timeline/timeline-style-setting";
 import { Icon, type IconName } from "@/components/icon";
 import { BirthDateSetting } from "@/components/birth-date-setting";
 import { TimezoneSetting } from "@/components/timezone-setting";
 import { PageFrame } from "@/components/page-frame";
+import { PreferredNameSetting } from "@/components/preferred-name-setting";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
   storedBirthDate,
   storedProfileTimezone,
 } from "@/lib/data/profile-input";
 import { storedThemePreference, THEME_COOKIE_NAME } from "@/lib/theme";
+import {
+  storedTimelineStyle,
+  TIMELINE_STYLE_COOKIE_NAME,
+} from "@/lib/timeline-style";
 
 export const dynamic = "force-dynamic";
 
@@ -26,10 +32,10 @@ const preferences: Array<{
   title: string;
 }> = [
   {
-    detail: "Choose when AI may help and review its privacy controls.",
+    detail: "Off and unavailable while we rethink how AI can help.",
     href: "/settings/ai",
     icon: "sparkle",
-    title: "AI assistance",
+    title: "AI capabilities · Beta",
   },
   {
     detail: "Open the Library to manage Collections and tags across items.",
@@ -60,8 +66,18 @@ export default async function SettingsPage() {
   const profileTimezone = storedProfileTimezone(
     profile.error ? null : profile.data,
   );
+  const cookieStore = await cookies();
+  const preferredName =
+    !profile.error && typeof profile.data?.display_name === "string"
+      ? profile.data.display_name.trim() || null
+      : null;
+  const accountName = preferredName ?? viewer.name;
   const themePreference = storedThemePreference(
-    (await cookies()).get(THEME_COOKIE_NAME)?.value,
+    cookieStore.get(THEME_COOKIE_NAME)?.value,
+  );
+  const timelineStyle = storedTimelineStyle(
+    cookieStore.get(TIMELINE_STYLE_COOKIE_NAME)?.value,
+    viewer.id,
   );
 
   return (
@@ -84,9 +100,11 @@ export default async function SettingsPage() {
         </div>
 
         <div className={pageStyles.accountCard}>
-          <span className={pageStyles.accountAvatar}>{viewer.initial}</span>
+          <span className={pageStyles.accountAvatar}>
+            {accountName.charAt(0).toUpperCase()}
+          </span>
           <div className={pageStyles.accountIdentity}>
-            <strong>{viewer.name}</strong>
+            <strong>{accountName}</strong>
             <span>{viewer.email}</span>
             <small>Google Sign-In</small>
           </div>
@@ -96,6 +114,10 @@ export default async function SettingsPage() {
             </Button>
           </form>
         </div>
+
+        {!profile.error ? (
+          <PreferredNameSetting initialName={preferredName} />
+        ) : null}
 
         {birthDate.available ? (
           <BirthDateSetting
@@ -119,6 +141,7 @@ export default async function SettingsPage() {
 
         <div className={pageStyles.preferenceList}>
           <AppearanceSetting initialPreference={themePreference} />
+          <TimelineStyleSetting initialStyle={timelineStyle} />
 
           {preferences.map((preference) => (
             <Link href={preference.href} key={preference.href}>

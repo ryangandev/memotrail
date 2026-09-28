@@ -171,9 +171,11 @@ test("Timeline tracks create, rename, reorder, hide and reveal moments with revi
     ).toBeNull();
     await renamed.getByLabel("Name", { exact: true }).fill("Stale overwrite");
     await renamed.getByRole("button", { name: "Save track" }).click();
-    await expect(renamed.getByRole("status")).toContainText(
-      "changed on another device",
-    );
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "changed on another device",
+      }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "Reload tracks" }).click();
     await expect(renamed.getByLabel("Order", { exact: true })).toHaveValue(
       "-90",
@@ -186,7 +188,9 @@ test("Timeline tracks create, rename, reorder, hide and reveal moments with revi
     await page.getByRole("button", { name: "Add track", exact: true }).click();
     await form.getByLabel("Name", { exact: true }).fill("ART & LEARNING");
     await form.getByRole("button", { name: "Create track" }).click();
-    await expect(form.getByRole("status")).toContainText("already exists");
+    await expect(
+      page.locator("[data-sonner-toast]").filter({ hasText: "already exists" }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "Cancel new track" }).click();
     await page.screenshot({
       caret: "initial",

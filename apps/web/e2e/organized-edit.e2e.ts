@@ -63,8 +63,8 @@ test("Organized Entries stay editable without returning to Inbox", async ({
           owner_id: owner,
           title: "Finished organizing",
           body: "Original words",
-          item_kind: "writing",
-          item_subtype: "note",
+          item_kind: "entry",
+          item_subtype: "entry",
           inbox_status: "organized",
           date_precision: "exact",
           metadata: {
@@ -120,7 +120,7 @@ test("Organized Entries stay editable without returning to Inbox", async ({
       currentVersion.locator("strong").filter({ hasText: /^Original words$/ }),
     ).toHaveText("Original words");
     await page
-      .getByRole("button", { name: "Edit Writing", exact: true })
+      .getByRole("button", { name: "Edit Entry", exact: true })
       .click({ timeout: 5000 });
     const dialog = page.getByRole("dialog");
     await expect(
@@ -154,9 +154,7 @@ test("Organized Entries stay editable without returning to Inbox", async ({
       (await client.from("entries").select("body").eq("id", id).single()).data!
         .body,
     ).toBe("Original words");
-    await page
-      .getByRole("button", { name: "Edit Writing", exact: true })
-      .click();
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await expect(noteEditor.locator("strong")).toHaveText("Original words");

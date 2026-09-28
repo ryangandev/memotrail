@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MemoTrail · Life as a Book</title>
+<style>
+  :root {
+    --paper: #f6efe1;
+    --paper-2: #fbf6ea;
+    --ink: #2e2418;
+    --muted: #7c6f5c;
+    --rule: #ddceb2;
+    --gold: #a9821f;
+    --gold-soft: #f0e2b8;
+    --accent: #7a3b23;
+    --shadow: 0 10px 30px -16px rgba(60, 42, 16, 0.5);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background:
+      radial-gradient(1000px 700px at 90% -10%, #fdf8ec 0%, transparent 60%),
+      repeating-linear-gradient(0deg, rgba(120,90,40,0.015) 0 2px, transparent 2px 4px),
+      var(--paper);
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* reading progress bar */
+  .progress {
+    position: fixed; top: 0; left: 0; right: 0; height: 4px;
+    background: transparent; z-index: 50;
+  }
+  .progress > i {
+    display: block; height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--gold), var(--accent));
+    transition: width 0.08s linear;
+  }
+
+  header.page {
+    max-width: 760px; margin: 0 auto; padding: 64px 28px 8px; text-align: center;
+  }
+  .eyebrow {
+    display: inline-block; font-size: 12px; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--gold); font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  header.page h1 {
+    font-size: clamp(34px, 6vw, 52px); margin: 12px 0 6px; letter-spacing: 0.01em; font-weight: 600;
+  }
+  header.page .rule-orn {
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    color: var(--gold); margin: 14px 0 8px;
+  }
+  header.page .rule-orn::before,
+  header.page .rule-orn::after {
+    content: ""; height: 1px; width: 80px; background: var(--rule);
+  }
+  header.page p.desc {
+    margin: 8px auto 0; color: var(--muted); max-width: 54ch; font-size: 16px; font-style: italic;
+  }
+  .byline {
+    margin-top: 10px; font-size: 14px; color: var(--muted);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  main { max-width: 760px; margin: 30px auto 120px; padding: 0 28px; }
+
+  .chapter {
+    background: linear-gradient(180deg, var(--paper-2), var(--paper));
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    box-shadow: var(--shadow);
+    margin: 22px 0;
+    overflow: hidden;
+  }
+  .chapter > .head {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 22px 26px;
+    display: flex; align-items: baseline; gap: 16px;
+    font-family: inherit;
+    color: inherit;
+  }
+  .chapter > .head:focus-visible { outline: 2px solid var(--gold); outline-offset: -4px; }
+  .chapter .numeral {
+    font-size: 34px; color: var(--gold); font-weight: 600; line-height: 1;
+    min-width: 44px;
+  }
+  .chapter .titles { flex: 1; }
+  .chapter .titles h2 { margin: 0; font-size: 23px; font-weight: 600; letter-spacing: 0.01em; }
+  .chapter .titles .span {
+    font-size: 13px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .chapter .caret {
+    font-size: 14px; color: var(--muted); transition: transform 0.3s ease;
+    align-self: center;
+  }
+  .chapter[aria-expanded="false"] .caret { transform: rotate(-90deg); }
+
+  .chapter .body-wrap {
+    display: grid; grid-template-rows: 1fr;
+    transition: grid-template-rows 0.4s ease;
+  }
+  .chapter[aria-expanded="false"] .body-wrap { grid-template-rows: 0fr; }
+  .chapter .body-inner { overflow: hidden; }
+  .chapter .prose { padding: 0 26px 26px; }
+
+  /* drop cap on first paragraph of chapter */
+  .chapter .opening {
+    font-size: 16.5px; color: #4a3d2b; margin: 0 0 20px;
+  }
+  .chapter .opening::first-letter {
+    float: left; font-size: 62px; line-height: 0.8; padding: 4px 10px 0 0;
+    color: var(--accent); font-weight: 700;
+  }
+
+  ol.events { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+  ol.events li {
+    display: grid; grid-template-columns: 92px 1fr; gap: 16px;
+    padding: 14px 2px; border-bottom: 1px dashed var(--rule);
+  }
+  ol.events li:last-child { border-bottom: none; }
+  .ev-date {
+    font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 600;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px; padding-top: 2px;
+  }
+  .ev-date .approx { color: var(--gold); }
+  .ev-body h3 { margin: 0 0 3px; font-size: 17px; font-weight: 600; }
+  .ev-body p { margin: 0; font-size: 14.5px; color: #5f5241; font-style: italic; }
+  .ev-tags {
+    margin-top: 6px; display: flex; gap: 8px; flex-wrap: wrap;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .ev-tags span { font-size: 11px; color: var(--muted); border: 1px solid var(--rule); padding: 2px 8px; border-radius: 3px; }
+
+  /* illuminated milestone */
+  li.milestone .ev-body h3::before {
+    content: "✦ "; color: var(--gold);
+  }
+  li.milestone {
+    background:
+      linear-gradient(90deg, rgba(169,130,31,0.10), transparent 60%);
+    border-left: 3px solid var(--gold);
+    padding-left: 12px;
+    margin-left: -12px;
+  }
+  li.milestone .ev-body h3 {
+    color: var(--accent);
+    text-shadow: 0 0 1px rgba(169,130,31,0.2);
+  }
+  li.milestone .ev-date { color: var(--gold); }
+
+  .fin { text-align: center; color: var(--muted); font-style: italic; margin: 40px 0 0; letter-spacing: 0.2em; }
+
+  @media (max-width: 800px) {
+    ol.events li { grid-template-columns: 70px 1fr; gap: 10px; }
+    .chapter .numeral { font-size: 26px; min-width: 34px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .chapter .body-wrap, .chapter .caret, .progress > i { transition: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+
+  <header class="page">
+    <span class="eyebrow">MemoTrail · 08</span>
+    <h1>A Life in Chapters</h1>
+    <div class="rule-orn" aria-hidden="true">❧</div>
+    <p class="desc">The story of one life, bound like a book. Each era is a chapter you can open or close; milestones are illuminated in gold.</p>
+    <p class="byline">The Collected Life of Ava Chen · Portland, 1990 – Present, 2025</p>
+  </header>
+
+  <main aria-label="Ava Chen life chapters">
+
+    <!-- Chapter I -->
+    <section class="chapter" aria-expanded="true">
+      <button class="head" aria-expanded="true" aria-controls="ch1">
+        <span class="numeral" aria-hidden="true">I</span>
+        <span class="titles">
+          <span class="span">1990 – 2002</span>
+          <h2>Roots</h2>
+        </span>
+        <span class="caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="body-wrap"><div class="body-inner"><div class="prose" id="ch1">
+        <p class="opening">Portland gave her the first years - grey rain, tall firs, and a childhood home that would anchor every memory that followed. The world was small and complete, until the family packed it all north.</p>
+        <ol class="events">
+          <li class="milestone">
+            <span class="ev-date">Mar 14 1990</span>
+            <div class="ev-body">
+              <h3>Born in Portland, Oregon</h3>
+              <p>The birth anchor - where the whole story begins.</p>
+              <div class="ev-tags"><span>#family</span><span>Firsts</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date">1990 – 2002</span>
+            <div class="ev-body">
+              <h3>Childhood home · Portland <em>(stage)</em></h3>
+              <p>Twelve formative years under one Oregon roof.</p>
+              <div class="ev-tags"><span>#home</span><span>Home &amp; Places</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date">2002</span>
+            <div class="ev-body">
+              <h3>Family moved to Seattle</h3>
+              <p>A new city closes the first chapter of home.</p>
+              <div class="ev-tags"><span>#home</span><span>Big moves</span></div>
+            </div>
+          </li>
+        </ol>
+      </div></div></div>
+    </section>
+
+    <!-- Chapter II -->
+    <section class="chapter" aria-expanded="true">
+      <button class="head" aria-expanded="true" aria-controls="ch2">
+        <span class="numeral" aria-hidden="true">II</span>
+        <span class="titles">
+          <span class="span">2002 – 2012</span>
+          <h2>Becoming</h2>
+        </span>
+        <span class="caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="body-wrap"><div class="body-inner"><div class="prose" id="ch2">
+        <p class="opening">School gave way to code, and code gave way to a calling. Two diplomas bracket this chapter - the leap from a Seattle classroom to a San Francisco desk.</p>
+        <ol class="events">
+          <li class="milestone">
+            <span class="ev-date">2008</span>
+            <div class="ev-body">
+              <h3>Graduated high school</h3>
+              <p>One chapter of learning closes; another begins.</p>
+              <div class="ev-tags"><span>#career</span><span>Firsts</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date">2008 – 2012</span>
+            <div class="ev-body">
+              <h3>University · Computer Science <em>(stage)</em></h3>
+              <p>Four years that set the trajectory for everything after.</p>
+              <div class="ev-tags"><span>#career</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date">2011</span>
+            <div class="ev-body">
+              <h3>First internship at a startup</h3>
+              <p>First taste of shipping real software.</p>
+              <div class="ev-tags"><span>#career</span><span>Firsts</span></div>
+            </div>
+          </li>
+          <li class="milestone">
+            <span class="ev-date">2012</span>
+            <div class="ev-body">
+              <h3>Graduated university · B.S. Computer Science</h3>
+              <p>Degree in hand, the working world opens.</p>
+              <div class="ev-tags"><span>#career</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date">2012</span>
+            <div class="ev-body">
+              <h3>First job · Junior Developer</h3>
+              <p>The career officially begins.</p>
+              <div class="ev-tags"><span>#career</span><span>Firsts</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date">2012</span>
+            <div class="ev-body">
+              <h3>Moved to San Francisco</h3>
+              <p>Chasing the work, the fog, the hills.</p>
+              <div class="ev-tags"><span>#home</span><span>Big moves</span></div>
+            </div>
+          </li>
+        </ol>
+      </div></div></div>
+    </section>
+
+    <!-- Chapter III -->
+    <section class="chapter" aria-expanded="true">
+      <button class="head" aria-expanded="true" aria-controls="ch3">
+        <span class="numeral" aria-hidden="true">III</span>
+        <span class="titles">
+          <span class="span">2012 – 2019</span>
+          <h2>Building</h2>
+        </span>
+        <span class="caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="body-wrap"><div class="body-inner"><div class="prose" id="ch3">
+        <p class="opening">Rising through the ranks by day and roaming the world between - Southeast Asia, a first marathon, Japan in bloom. Somewhere in these years she met Sam, and the story gained a second author.</p>
+        <ol class="events">
+          <li>
+            <span class="ev-date">2013</span>
+            <div class="ev-body">
+              <h3>Backpacked Southeast Asia</h3>
+              <p>Two months, six countries, one backpack.</p>
+              <div class="ev-tags"><span>#travel</span><span>Adventures</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date"><span class="approx">~</span>2014</span>
+            <div class="ev-body">
+              <h3>Started photography</h3>
+              <p>Around 2014 - a lens became a second way of seeing.</p>
+              <div class="ev-tags"><span>#creative</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date">2015</span>
+            <div class="ev-body">
+              <h3>Promoted to Senior Engineer</h3>
+              <p>Ownership grows; so does the impact.</p>
+              <div class="ev-tags"><span>#career</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date">2015</span>
+            <div class="ev-body">
+              <h3>Met Sam</h3>
+              <p>A chance introduction that would change everything.</p>
+              <div class="ev-tags"><span>#family</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date"><span class="approx">~</span>2016</span>
+            <div class="ev-body">
+              <h3>First marathon · Chicago</h3>
+              <p>Approximate date - 26.2 miles, one finish line.</p>
+              <div class="ev-tags"><span>#health</span><span>Firsts</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date">2018</span>
+            <div class="ev-body">
+              <h3>Became Tech Lead</h3>
+              <p>From writing code to steering the team.</p>
+              <div class="ev-tags"><span>#career</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date">2018</span>
+            <div class="ev-body">
+              <h3>Trip to Japan · cherry blossoms</h3>
+              <p>Pink petals and slow trains through spring.</p>
+              <div class="ev-tags"><span>#travel</span><span>Adventures</span></div>
+            </div>
+          </li>
+        </ol>
+      </div></div></div>
+    </section>
+
+    <!-- Chapter IV -->
+    <section class="chapter" aria-expanded="true">
+      <button class="head" aria-expanded="true" aria-controls="ch4">
+        <span class="numeral" aria-hidden="true">IV</span>
+        <span class="titles">
+          <span class="span">2019 – present</span>
+          <h2>Family</h2>
+        </span>
+        <span class="caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="body-wrap"><div class="body-inner"><div class="prose" id="ch4">
+        <p class="opening">Vows, keys, a company, a child, a dog. This chapter is the fullest yet - a marriage to Sam, a home in Oakland, a start-up named Loomly, and a boy named Noah who changed the meaning of every year that came before.</p>
+        <ol class="events">
+          <li class="milestone">
+            <span class="ev-date">2019</span>
+            <div class="ev-body">
+              <h3>Married Sam</h3>
+              <p>Two paths become one.</p>
+              <div class="ev-tags"><span>#family</span></div>
+            </div>
+          </li>
+          <li class="milestone">
+            <span class="ev-date">2020</span>
+            <div class="ev-body">
+              <h3>Bought first home · Oakland</h3>
+              <p>Keys to a place that is finally theirs.</p>
+              <div class="ev-tags"><span>#home</span><span>Big moves</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date">2021</span>
+            <div class="ev-body">
+              <h3>Learned pottery</h3>
+              <p>Hands in clay, mind at rest.</p>
+              <div class="ev-tags"><span>#creative</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date">2021 – now</span>
+            <div class="ev-body">
+              <h3>Founded "Loomly" · a design tool <em>(stage)</em></h3>
+              <p>Left the desk to build something of her own.</p>
+              <div class="ev-tags"><span>#career</span><span>Loomly</span></div>
+            </div>
+          </li>
+          <li class="milestone">
+            <span class="ev-date">2022</span>
+            <div class="ev-body">
+              <h3>First child, Noah, born</h3>
+              <p>The house gets louder and warmer.</p>
+              <div class="ev-tags"><span>#family</span><span>Firsts</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date">2023</span>
+            <div class="ev-body">
+              <h3>Raised seed funding · $2M</h3>
+              <p>Loomly gets fuel for the next climb.</p>
+              <div class="ev-tags"><span>#career</span><span>Loomly</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date">2023</span>
+            <div class="ev-body">
+              <h3>Summited Mount Rainier</h3>
+              <p>14,411 feet of grit and thin air.</p>
+              <div class="ev-tags"><span>#travel</span><span>Adventures</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date">2024</span>
+            <div class="ev-body">
+              <h3>Adopted a dog, Miso</h3>
+              <p>A wagging tail joins the family.</p>
+              <div class="ev-tags"><span>#family</span></div>
+            </div>
+          </li>
+          <li>
+            <span class="ev-date">2024</span>
+            <div class="ev-body">
+              <h3>Learned to sail</h3>
+              <p>Reading the wind, one tack at a time.</p>
+              <div class="ev-tags"><span>#health</span></div>
+            </div>
+          </li>
+          <li class="milestone">
+            <span class="ev-date">2025</span>
+            <div class="ev-body">
+              <h3>Now · age 35</h3>
+              <p>The pen is still moving; the story continues.</p>
+              <div class="ev-tags"><span>#life</span></div>
+            </div>
+          </li>
+        </ol>
+      </div></div></div>
+    </section>
+
+    <p class="fin" aria-hidden="true">· to be continued ·</p>
+  </main>
+
+  <script>
+    (function () {
+      // collapsible chapters
+      var chapters = document.querySelectorAll('.chapter');
+      chapters.forEach(function (ch) {
+        var btn = ch.querySelector('.head');
+        btn.addEventListener('click', function () {
+          var open = ch.getAttribute('aria-expanded') === 'true';
+          ch.setAttribute('aria-expanded', String(!open));
+          btn.setAttribute('aria-expanded', String(!open));
+        });
+      });
+
+      // reading progress bar
+      var bar = document.getElementById('bar');
+      function update() {
+        var doc = document.documentElement;
+        var scrollTop = doc.scrollTop || document.body.scrollTop;
+        var height = doc.scrollHeight - doc.clientHeight;
+        var pct = height > 0 ? (scrollTop / height) * 100 : 0;
+        bar.style.width = pct.toFixed(1) + '%';
+      }
+      window.addEventListener('scroll', update, { passive: true });
+      window.addEventListener('resize', update);
+      update();
+    })();
+  </script>
+  <script src="shared/nav.js" defer></script>
+</body>
+</html>

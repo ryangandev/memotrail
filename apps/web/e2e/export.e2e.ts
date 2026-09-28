@@ -138,7 +138,7 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
         configurable: true,
       });
     });
-    await page.goto("/library");
+    await page.goto("/settings");
     await page.getByRole("link", { name: /Export archive/ }).click();
     await expect(
       page.getByRole("heading", { name: "Export archive" }),
@@ -152,7 +152,11 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
       ).status(),
     ).toBe(403);
     await page.getByRole("button", { name: "Prepare snapshot" }).click();
-    await expect(page.getByRole("status")).toContainText("Snapshot prepared");
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "Snapshot prepared",
+      }),
+    ).toBeVisible();
     const nativeList = await page.request.post("/api/export", {
       headers: nativeHeaders,
       data: { action: "list" },
@@ -196,7 +200,9 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
         maxBuffer: 10 * 1024 * 1024,
       });
     const manifest = JSON.parse(read("manifest.json").toString());
-    expect(Object.keys(manifest.datasets)).toHaveLength(27);
+    expect(Object.keys(manifest.datasets).sort()).toEqual(
+      Object.keys(snapshot.datasets).sort(),
+    );
     for (const [name, value] of Object.entries(snapshot.datasets))
       expect(JSON.parse(read(`data/${name}.json`).toString())).toHaveLength(
         value as number,
@@ -241,7 +247,11 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
       });
     });
     await page.getByRole("button", { name: "Download ZIP" }).click();
-    await expect(page.getByRole("status")).toContainText("Complete ZIP saved");
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "Complete ZIP saved",
+      }),
+    ).toBeVisible();
     const sink = await page.evaluate(
       () =>
         (
@@ -298,9 +308,11 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
       .getByRole("button", { name: "Discard snapshot", exact: true })
       .click();
     await page.getByRole("button", { name: "Confirm discard" }).click();
-    await expect(page.getByRole("status")).toContainText(
-      "Temporary copy discarded",
-    );
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "Temporary copy discarded",
+      }),
+    ).toBeVisible();
     expect(
       (
         await page.request.post("/api/export", {

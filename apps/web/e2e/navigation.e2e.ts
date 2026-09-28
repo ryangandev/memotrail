@@ -1,8 +1,100 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+
+type SidebarMotionFrame = {
+  logoCenter: number;
+  navigationCenter: number;
+  sidebarWidth: number;
+};
+
+async function toggleSidebarAndMeasureMotion(toggle: Locator) {
+  const collapsing =
+    (await toggle.getAttribute("aria-label")) === "Collapse sidebar";
+  await toggle.evaluate((button) => {
+    const motionWindow = window as typeof window & {
+      sidebarMotionFrames?: Promise<SidebarMotionFrame[]>;
+    };
+    motionWindow.sidebarMotionFrames = new Promise((resolve) => {
+      button.addEventListener(
+        "click",
+        () => {
+          const sidebar = document.querySelector("aside")!;
+          const logo = sidebar.querySelector(
+            'a[aria-label="MemoTrail dashboard"] svg',
+          )!;
+          const navigationIcon = sidebar.querySelector(
+            'nav[aria-label="Primary navigation"] a svg',
+          )!;
+          const frames: SidebarMotionFrame[] = [];
+          const started = performance.now();
+          const sample = () => {
+            const logoBox = logo.getBoundingClientRect();
+            const navigationBox = navigationIcon.getBoundingClientRect();
+            frames.push({
+              logoCenter: logoBox.x + logoBox.width / 2,
+              navigationCenter: navigationBox.x + navigationBox.width / 2,
+              sidebarWidth: sidebar.getBoundingClientRect().width,
+            });
+            if (performance.now() - started < 320) {
+              requestAnimationFrame(sample);
+            } else {
+              resolve(frames);
+            }
+          };
+          sample();
+        },
+        { once: true, capture: true },
+      );
+    });
+  });
+  await toggle.click();
+  const frames = await toggle.page().evaluate(() => {
+    const motionWindow = window as typeof window & {
+      sidebarMotionFrames?: Promise<SidebarMotionFrame[]>;
+    };
+    return motionWindow.sidebarMotionFrames!;
+  });
+  const first = frames[0];
+  const last = frames.at(-1)!;
+  expect(
+    frames.some(
+      (frame) =>
+        frame.sidebarWidth > Math.min(first.sidebarWidth, last.sidebarWidth) &&
+        frame.sidebarWidth < Math.max(first.sidebarWidth, last.sidebarWidth),
+    ),
+    "the measurement includes frames during the width transition",
+  ).toBe(true);
+  for (const key of ["logoCenter", "navigationCenter"] as const) {
+    const lowerBound = Math.min(first[key], last[key]) - 1;
+    const upperBound = Math.max(first[key], last[key]) + 1;
+    for (const frame of frames) {
+      expect(
+        frame[key],
+        `${key} stays between its resting positions`,
+      ).toBeGreaterThanOrEqual(lowerBound);
+      expect(
+        frame[key],
+        `${key} stays between its resting positions`,
+      ).toBeLessThanOrEqual(upperBound);
+    }
+  }
+  const brand = toggle.page().locator("aside").getByRole("link", {
+    name: "MemoTrail dashboard",
+  });
+  for (const part of ["outer-ring", "accent", "inner-ring"]) {
+    await expect(brand.locator(`[data-brand-part="${part}"]`)).toHaveCSS(
+      "transform",
+      collapsing
+        ? part === "inner-ring"
+          ? "matrix(0, -1, 1, 0, 0, 0)"
+          : "matrix(0, 1, -1, 0, 0, 0)"
+        : "none",
+    );
+  }
+}
 
 test("primary navigation keeps the app shell visible while fresh data loads", async ({
   context,
@@ -56,17 +148,17 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       })),
     );
 
-    let searchNavigationStarted = false;
+    let mapNavigationStarted = false;
 
-    await page.route("**/search*", async (route) => {
+    await page.route("**/map*", async (route) => {
       const headers = route.request().headers();
       const isRscRequest =
         headers.rsc === "1" ||
         new URL(route.request().url()).searchParams.has("_rsc");
 
-      if (isRscRequest && !searchNavigationStarted) {
+      if (isRscRequest && !mapNavigationStarted) {
         await route.fulfill({
-          body: "Search prefetch intentionally unavailable during this test.",
+          body: "Map prefetch intentionally unavailable during this test.",
           contentType: "text/plain",
           status: 503,
         });
@@ -122,14 +214,73 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       .evaluate((element) => element.getBoundingClientRect().top);
     expect(Math.round(homeActionsTop - homeToolbarBottom)).toBe(20);
 
-    const shell = page.getByRole("complementary");
+    const shell = page.getByRole("complementary").filter({
+      has: page.getByRole("navigation", { name: "Primary navigation" }),
+    });
     await expect(shell).toBeVisible();
+    const keyboardBrand = shell.getByRole("link", {
+      name: "MemoTrail dashboard",
+    });
+    await page.keyboard.press("Tab");
+    await expect(keyboardBrand).toBeFocused();
+    await page.screenshot({
+      clip: { x: 0, y: 0, width: 240, height: 110 },
+      path: "/private/tmp/memotrail-brand-focus.png",
+    });
+    await expect(keyboardBrand).toHaveCSS("outline-style", "none");
+    await expect(keyboardBrand).toHaveCSS("box-shadow", /inset/);
     const primaryNavigation = shell.getByRole("navigation", {
       name: "Primary navigation",
     });
     await expect(
       primaryNavigation.getByRole("link", { name: "Library", exact: true }),
     ).toBeVisible();
+    const goBack = page.getByRole("button", { name: "Go back" });
+    const goForward = page.getByRole("button", { name: "Go forward" });
+    await expect(goBack).toBeDisabled();
+    await expect(goForward).toBeDisabled();
+    await primaryNavigation
+      .getByRole("link", { name: "Library", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/library$/);
+    await expect(goBack).toBeEnabled();
+    await expect(goForward).toBeDisabled();
+    await goBack.hover();
+    await expect(goBack).toHaveCSS(
+      "transition-property",
+      "color, background-color",
+    );
+    await expect(goBack.locator("svg")).toHaveCSS("transform", "none");
+    await goBack.focus();
+    await page.keyboard.press("Tab");
+    const panelControl = page.getByRole("button", { name: "Collapse sidebar" });
+    await expect(panelControl).toBeFocused();
+    await expect(panelControl).toHaveCSS("border-radius", "8px");
+    const panelFocusShadow = await panelControl.evaluate(
+      (element) => getComputedStyle(element).boxShadow,
+    );
+    await page.keyboard.press("Shift+Tab");
+    await expect(goBack).toBeFocused();
+    await expect(goBack).toHaveCSS("outline-style", "none");
+    await expect(goBack).toHaveCSS("box-shadow", panelFocusShadow);
+    await goBack.screenshot({
+      path: "/private/tmp/memotrail-history-focus.png",
+    });
+    await goBack.click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(goForward).toBeEnabled();
+    await goBack.focus();
+    await page.keyboard.press("Tab");
+    await expect(goForward).toBeFocused();
+    await expect(goForward).toHaveCSS("outline-style", "none");
+    await expect(goForward).toHaveCSS("box-shadow", panelFocusShadow);
+    await goForward.click();
+    await expect(page).toHaveURL(/\/library$/);
+    await primaryNavigation
+      .getByRole("link", { name: "Dashboard", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(goForward).toBeDisabled();
     await expect(
       primaryNavigation.getByRole("link", { name: "Inbox", exact: true }),
     ).toHaveCount(0);
@@ -209,12 +360,9 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
         .getByRole("navigation", { name: "Settings navigation" })
         .getByRole("link", { name: "Settings", exact: true }),
     ).toHaveCount(1);
-    const syncNote = shell.getByRole("note", { name: "Private cloud sync" });
-    await expect(syncNote).toBeVisible();
-    await syncNote
-      .getByRole("button", { name: "Dismiss private cloud sync" })
-      .click();
-    await expect(syncNote).not.toBeVisible();
+    await expect(
+      shell.getByRole("note", { name: "Private cloud sync" }),
+    ).toHaveCount(0);
     await page.reload();
     await expect(
       shell.getByRole("note", { name: "Private cloud sync" }),
@@ -227,7 +375,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
         return [style.marginTop, style.marginBottom];
       }),
     );
-    expect(dividerMargins[2]).toEqual(dividerMargins[0]);
+    expect(dividerMargins.at(-1)).toEqual(dividerMargins[0]);
     await shell.evaluate((element) => {
       element.setAttribute("data-shell-instance", "kept");
     });
@@ -236,10 +384,13 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     const scrollRegion = page.getByRole("region", {
       name: "Sidebar navigation",
     });
-    const brand = shell.getByRole("link", { name: "MemoTrail", exact: true });
+    const brand = shell.getByRole("link", {
+      name: "MemoTrail dashboard",
+      exact: true,
+    });
     const homeLink = shell
       .getByRole("navigation", { name: "Primary navigation" })
-      .getByRole("link", { name: "Home", exact: true });
+      .getByRole("link", { name: "Dashboard", exact: true });
     const capture = newEntryShortcut;
     const brandBottom = await brand.evaluate(
       (element) => element.getBoundingClientRect().bottom,
@@ -254,7 +405,14 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     const homeRight = await homeLink.evaluate(
       (element) => element.getBoundingClientRect().right,
     );
-    expect(Math.round(scrollRegionRight - homeRight)).toBe(16);
+    expect(Math.round(scrollRegionRight - homeRight)).toBe(8);
+    const brandMarkLeft = await brand
+      .locator("svg")
+      .evaluate((element) => element.getBoundingClientRect().left);
+    const homeIconLeft = await homeLink
+      .locator("svg")
+      .evaluate((element) => element.getBoundingClientRect().left);
+    expect(Math.round(homeIconLeft - brandMarkLeft)).toBe(4);
     const brandTop = await brand.evaluate(
       (element) => element.getBoundingClientRect().top,
     );
@@ -282,6 +440,214 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       await capture.evaluate((element) => element.getBoundingClientRect().top),
     ).toBe(captureTop);
     await page.setViewportSize({ width: 1280, height: 720 });
+    await scrollRegion.evaluate((element) => {
+      element.scrollTop = 0;
+    });
+
+    expect(
+      await shell.evaluate((element) =>
+        getComputedStyle(element)
+          .transitionDuration.split(", ")
+          .some((duration) => Number.parseFloat(duration) > 0),
+      ),
+    ).toBe(true);
+    for (let repetition = 0; repetition < 2; repetition++) {
+      await toggleSidebarAndMeasureMotion(
+        page.getByRole("button", { name: "Collapse sidebar" }),
+      );
+      await toggleSidebarAndMeasureMotion(
+        page.getByRole("button", { name: "Expand sidebar" }),
+      );
+    }
+    await toggleSidebarAndMeasureMotion(
+      page.getByRole("button", { name: "Collapse sidebar" }),
+    );
+    await expect(page.locator('[data-sidebar-collapsed="true"]')).toBeVisible();
+    await expect(shell).toHaveCSS("width", "64px");
+    await expect(page.locator("main")).toHaveCSS("margin-left", "64px");
+    await expect(homeLink).toBeInViewport();
+    const [collapsedRailBox, activeHomeBox] = await Promise.all([
+      shell.boundingBox(),
+      homeLink.boundingBox(),
+    ]);
+    expect(
+      (collapsedRailBox?.x ?? 0) +
+        (collapsedRailBox?.width ?? 0) -
+        ((activeHomeBox?.x ?? 0) + (activeHomeBox?.width ?? 0)),
+    ).toBeGreaterThanOrEqual(7);
+    await expect(homeCaptureHeading).toBeVisible();
+    const collapsedBrand = shell.getByRole("link", {
+      name: "MemoTrail dashboard",
+    });
+    await expect(collapsedBrand).toBeVisible();
+    await homeLink.focus();
+    await page.keyboard.press("Shift+Tab");
+    await expect(collapsedBrand).toBeFocused();
+    await expect(collapsedBrand).toHaveCSS("outline-style", "none");
+    await expect(collapsedBrand).toHaveCSS("box-shadow", /inset/);
+    await expect(
+      collapsedBrand.getByText("MemoTrail", { exact: true }),
+    ).toBeHidden();
+    const logoBox = await collapsedBrand.locator("svg").boundingBox();
+    expect(logoBox?.width).toBe(29);
+    expect(logoBox?.height).toBe(29);
+    await expect(homeLink.locator("svg")).toHaveCSS("width", "18px");
+    await expect(homeLink.locator("svg")).toHaveCSS("height", "18px");
+    expect(
+      Math.abs(
+        (logoBox?.x ?? 0) +
+          (logoBox?.width ?? 0) / 2 -
+          ((activeHomeBox?.x ?? 0) + (activeHomeBox?.width ?? 0) / 2),
+      ),
+    ).toBeLessThanOrEqual(1);
+    const expandSidebar = page.getByRole("button", {
+      name: "Expand sidebar",
+    });
+    await expect(expandSidebar.locator("svg circle")).toHaveCount(3);
+    await expect(expandSidebar.locator("svg")).toHaveAttribute("width", "18");
+    await expect(expandSidebar.locator("svg")).toHaveAttribute("height", "18");
+    const [forwardBox, toggleBox, newBox] = await Promise.all([
+      goForward.boundingBox(),
+      expandSidebar.boundingBox(),
+      newEntryShortcut.boundingBox(),
+    ]);
+    expect(toggleBox?.width).toBe(36);
+    expect(toggleBox?.height).toBe(36);
+    expect(toggleBox?.x).toBeGreaterThan(
+      (forwardBox?.x ?? 0) + (forwardBox?.width ?? 0),
+    );
+    expect((toggleBox?.x ?? 0) + (toggleBox?.width ?? 0)).toBeLessThan(
+      newBox?.x ?? 0,
+    );
+    await expect(
+      shell.getByRole("button", { name: "Expand sidebar" }),
+    ).toHaveCount(0);
+    const collapsedLibrary = primaryNavigation.getByRole("link", {
+      name: "Library",
+      exact: true,
+    });
+    await expect(collapsedLibrary).toBeVisible();
+    await expect(homeLink).toHaveCSS("width", "40px");
+    await expect(homeLink).toHaveCSS("height", "40px");
+    await collapsedLibrary.hover();
+    await expect(collapsedLibrary).toHaveCSS("width", "40px");
+    await expect(collapsedLibrary).toHaveCSS("height", "40px");
+    await page.screenshot({
+      animations: "disabled",
+      caret: "initial",
+      path: "/private/tmp/memotrail-sidebar-collapsed.png",
+    });
+    await page.mouse.move(800, 100);
+    await expandSidebar.focus();
+    await page.keyboard.press("Tab");
+    await expect(newEntryShortcut).toBeFocused();
+    await homeLink.focus();
+    await expect(homeLink).toBeFocused();
+    await expect(homeLink).toHaveCSS("outline-style", "none");
+    await expect(homeLink).toHaveCSS("box-shadow", /inset/);
+    await page.screenshot({
+      animations: "disabled",
+      caret: "initial",
+      path: "/private/tmp/memotrail-sidebar-focus-collapsed.png",
+    });
+    const previousTheme = await page.locator("html").getAttribute("data-theme");
+    await page.evaluate(() =>
+      document.documentElement.setAttribute("data-theme", "dark"),
+    );
+    await page.screenshot({
+      animations: "disabled",
+      caret: "initial",
+      path: "/private/tmp/memotrail-sidebar-collapsed-dark.png",
+    });
+    await page.evaluate((theme) => {
+      if (theme) document.documentElement.setAttribute("data-theme", theme);
+      else document.documentElement.removeAttribute("data-theme");
+    }, previousTheme);
+    await collapsedLibrary.click();
+    await expect(page).toHaveURL(/\/library$/);
+    await page.reload();
+    await expect(shell).toHaveCSS("width", "64px");
+    await expect(brand.locator('[data-brand-part="outer-ring"]')).toHaveCSS(
+      "transform",
+      "matrix(0, 1, -1, 0, 0, 0)",
+    );
+    await primaryNavigation
+      .getByRole("link", { name: "Dashboard", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/$/);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(shell).toBeHidden();
+    await expect(expandSidebar).toBeHidden();
+    await expect(page.locator("main")).toHaveCSS("margin-left", "0px");
+    await expect(
+      page.getByRole("navigation", { name: "Mobile navigation" }),
+    ).toBeVisible();
+    for (const label of ["Dashboard", "Inbox", "Timeline", "Library"]) {
+      await expect(
+        page
+          .getByRole("navigation", { name: "Mobile navigation" })
+          .getByText(label),
+      ).toHaveCSS("opacity", "1");
+    }
+    await page.setViewportSize({ width: 320, height: 700 });
+    const mobileNavigation = page.getByRole("navigation", {
+      name: "Mobile navigation",
+    });
+    await expect(mobileNavigation.locator(":scope > *")).toHaveCount(5);
+    const moreButton = mobileNavigation.getByRole("button", {
+      name: "More destinations",
+    });
+    await moreButton.click();
+    const moreDestinations = page.getByRole("navigation", {
+      name: "More destinations",
+    });
+    await expect(moreDestinations).toBeVisible();
+    await moreDestinations.getByRole("link", { name: "Map" }).click();
+    await expect(page).toHaveURL(/\/map$/);
+    await expect(
+      page.getByRole("heading", { name: "Map", exact: true }),
+    ).toBeVisible();
+    await expect(moreDestinations).toBeHidden();
+    await page.waitForLoadState("networkidle");
+    await moreButton.click();
+    await expect(moreDestinations).toBeVisible();
+    await expect(
+      moreDestinations.getByRole("link", { name: "Map" }),
+    ).toHaveAttribute("aria-current", "page");
+    await page.keyboard.press("Escape");
+    await expect(moreDestinations).toBeHidden();
+    await expect(moreButton).toBeFocused();
+    await mobileNavigation.getByRole("link", { name: "Dashboard" }).click();
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await toggleSidebarAndMeasureMotion(
+      page.getByRole("button", { name: "Expand sidebar" }),
+    );
+    await expect(shell).toHaveCSS("width", "224px");
+    await expect(page.locator("main")).toHaveCSS("margin-left", "224px");
+    await page.getByRole("button", { name: "Collapse sidebar" }).focus();
+    await page.keyboard.press("Tab");
+    await expect(newEntryShortcut).toBeFocused();
+    await homeLink.focus();
+    await expect(homeLink).toBeFocused();
+    await expect(homeLink).toHaveCSS("outline-style", "none");
+    await expect(homeLink).toHaveCSS("box-shadow", /inset/);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(shell).toHaveCSS("transition-duration", "0s");
+    await page.getByRole("button", { name: "Collapse sidebar" }).click();
+    for (const part of await brand.locator("path").all()) {
+      await expect(part).toHaveCSS("transition-duration", "0s");
+      await expect(part).toHaveCSS("transform", "none");
+    }
+    await page.getByRole("button", { name: "Expand sidebar" }).click();
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.screenshot({
+      animations: "disabled",
+      caret: "initial",
+      path: "/private/tmp/memotrail-sidebar-expanded.png",
+    });
+    await shell.evaluate((element) => {
+      element.setAttribute("data-shell-instance", "kept");
+    });
 
     await page.keyboard.press("Meta+k");
     const commandPalette = page.getByRole("dialog", {
@@ -307,23 +673,23 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.keyboard.press("Escape");
     await expect(commandPalette).not.toBeVisible();
 
-    searchNavigationStarted = true;
+    mapNavigationStarted = true;
     await page
       .getByRole("navigation", { name: "Primary navigation" })
-      .getByRole("link", { name: "Search", exact: true })
+      .getByRole("link", { name: "Map", exact: true })
       .click({ noWaitAfter: true });
 
-    await expect(
-      page.getByRole("status", { name: "Opening Search" }),
-    ).toBeVisible({ timeout: 500 });
+    await expect(page.getByRole("status", { name: "Opening Map" })).toBeVisible(
+      { timeout: 500 },
+    );
     await page.screenshot({
       caret: "initial",
       path: "/private/tmp/memotrail-navigation-loading.png",
     });
     await expect(shell).toHaveAttribute("data-shell-instance", "kept");
-    await expect(page).toHaveURL(/\/search$/);
+    await expect(page).toHaveURL(/\/map$/);
     await expect(
-      page.getByRole("heading", { name: "Search your trail", exact: true }),
+      page.getByRole("heading", { name: "Map", exact: true }),
     ).toBeVisible();
 
     await page.getByRole("link", { name: "Open Inbox", exact: true }).click();
@@ -652,7 +1018,11 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(quickCaptureForm).not.toContainText(
       "MemoTrail could not store this Entry",
     );
-    await expect(quickCaptureForm).toContainText("Saved to Inbox.");
+    await expect(
+      page
+        .locator("[data-sonner-toast]")
+        .filter({ hasText: "Saved to Inbox." }),
+    ).toBeVisible();
     await expect
       .poll(async () => {
         const result = await client
@@ -675,6 +1045,34 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
         },
         error: null,
       });
+
+    await quickCapture
+      .getByRole("button", { name: "Close quick capture", exact: true })
+      .click();
+    await primaryNavigation
+      .getByRole("link", { name: "Library", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/library$/);
+    await page.getByRole("link", { name: "Version history" }).click();
+    await expect(page).toHaveURL(/\/history$/);
+    await expect(goForward).toBeDisabled();
+    await goBack.click();
+    await expect(page).toHaveURL(/\/library$/);
+    await expect(goForward).toBeEnabled();
+    await goForward.click();
+    await expect(page).toHaveURL(/\/history$/);
+    await goBack.click();
+    await expect(page).toHaveURL(/\/library$/);
+    await page.goto("/history");
+    await expect(page).toHaveURL(/\/history$/);
+    await expect(goBack).toBeEnabled();
+    await goBack.click();
+    await expect(page).toHaveURL(/\/library$/);
+    await expect(goForward).toBeEnabled();
+    await goForward.click();
+    await expect(page).toHaveURL(/\/history$/);
+    await page.goBack();
+    await expect(page).toHaveURL(/\/library$/);
   } finally {
     await page.close();
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();

@@ -17,6 +17,9 @@ export type LocationMapItem = {
   latitude: number;
   longitude: number;
   address: string;
+  city: string | null;
+  region: string | null;
+  country: string | null;
   href: string;
 };
 
@@ -35,6 +38,9 @@ type LocationRow = {
   longitude: number | null;
   formatted_address: string | null;
   name: string;
+  city: string | null;
+  region: string | null;
+  country: string | null;
 };
 
 export async function getLocationMapWorkspace() {
@@ -83,7 +89,9 @@ export async function getLocationMapWorkspace() {
         .returns<EntryRow[]>(),
       context.client
         .from("locations")
-        .select("id,latitude,longitude,formatted_address,name")
+        .select(
+          "id,latitude,longitude,formatted_address,name,city,region,country",
+        )
         .eq("owner_id", context.userId)
         .is("deleted_at", null)
         .in("id", locationIds)
@@ -126,6 +134,9 @@ export async function getLocationMapWorkspace() {
         latitude: location.latitude,
         longitude: location.longitude,
         address: location.formatted_address ?? location.name,
+        city: location.city,
+        region: location.region,
+        country: location.country,
         href: wikiEntryHref({
           id: entry.id,
           itemKind: entry.item_kind,

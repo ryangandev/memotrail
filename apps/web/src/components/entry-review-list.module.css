@@ -32,19 +32,18 @@
   margin-top: var(--mt-space-3);
 }
 
+.cardActions {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--mt-space-2);
+}
+
 .tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-}
-
-.tags span {
-  padding: 3px var(--mt-space-2);
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-subtle);
-  font-size: 10px;
-  line-height: 1.4;
 }
 
 .reviewRichTextField {
@@ -120,7 +119,8 @@
   width: 100%;
 }
 
-.reviewActions > div {
+.reviewSecondaryActions,
+.reviewSaveActions {
   display: flex;
   gap: var(--mt-space-2);
 }
@@ -132,6 +132,11 @@
 
   .entryCard footer {
     align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .cardActions {
+    width: 100%;
   }
 
   .reviewFieldRow {
@@ -144,8 +149,12 @@
     width: 100%;
   }
 
-  .reviewActions > div {
+  .reviewSaveActions {
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .reviewSecondaryActions {
+    justify-content: space-between;
   }
 }

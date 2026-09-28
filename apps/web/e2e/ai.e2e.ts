@@ -1,4 +1,10 @@
 import { execFileSync } from "node:child_process";
+import { AI_CAPABILITIES_AVAILABLE } from "../src/lib/ai/availability";
+
+test.skip(
+  !AI_CAPABILITIES_AVAILABLE,
+  "AI product paused; coverage is in ai-paused.e2e.ts.",
+);
 import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
@@ -97,7 +103,11 @@ test("AI consent, settings persistence, API authentication, and bounded connecti
       page.getByText("AI-assisted memory resurfacing", { exact: true }),
     ).toHaveCount(0);
     await enable.check();
-    await expect(page.getByRole("status")).toHaveText("AI assistance is on.");
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "AI assistance is on.",
+      }),
+    ).toBeVisible();
     await expect(organizing).toBeEnabled();
     await expect(photoUnderstanding).toBeEnabled();
     let { data: workspace } = await client.rpc("ai_workspace");
@@ -108,26 +118,34 @@ test("AI consent, settings persistence, API authentication, and bounded connecti
     expect(workspace.preferences.monthly_budget_micros).toBe(1_000_000);
     expect(workspace.preferences.photo_analysis).toBe(false);
     await organizing.uncheck();
-    await expect(page.getByRole("status")).toHaveText(
-      "Organizing suggestions are off.",
-    );
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "Organizing suggestions are off.",
+      }),
+    ).toBeVisible();
     ({ data: workspace } = await client.rpc("ai_workspace"));
     expect(workspace.preferences.classification).toBe(false);
     expect(workspace.preferences.tagging).toBe(false);
     await organizing.check();
-    await expect(page.getByRole("status")).toHaveText(
-      "Organizing suggestions are on.",
-    );
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "Organizing suggestions are on.",
+      }),
+    ).toBeVisible();
     await photoUnderstanding.check();
-    await expect(page.getByRole("status")).toHaveText(
-      "Photo understanding is on.",
-    );
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "Photo understanding is on.",
+      }),
+    ).toBeVisible();
     ({ data: workspace } = await client.rpc("ai_workspace"));
     expect(workspace.preferences.photo_analysis).toBe(true);
     await photoUnderstanding.uncheck();
-    await expect(page.getByRole("status")).toHaveText(
-      "Photo understanding is off.",
-    );
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "Photo understanding is off.",
+      }),
+    ).toBeVisible();
     await page.screenshot({
       caret: "initial",
       path: "/private/tmp/memotrail-ai-settings-simple-desktop.png",
@@ -261,7 +279,11 @@ test("AI consent, settings persistence, API authentication, and bounded connecti
       ),
     ).toBe(true);
     await enable.uncheck();
-    await expect(page.getByRole("status")).toHaveText("AI assistance is off.");
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: "AI assistance is off.",
+      }),
+    ).toBeVisible();
     await expect(organizing).toBeDisabled();
     expect(errors).toEqual([]);
   } finally {

@@ -23,13 +23,79 @@
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-ink);
   background: var(--mt-color-surface-raised);
-  font: inherit;
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-regular);
 }
 
 .filters p {
   margin: 0 0 var(--mt-space-2) auto;
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
+}
+
+.areas {
+  display: grid;
+  gap: var(--mt-space-2);
+  margin: 0 0 var(--mt-space-4);
+}
+
+.areasHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.areas h2 {
+  margin: 0;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.areaActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mt-space-2);
+}
+
+.areaButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mt-space-2);
+  min-height: 36px;
+  padding: var(--mt-space-1) var(--mt-space-3);
+  border: 1px solid var(--mt-color-border);
+  border-radius: 999px;
+  background: var(--mt-color-surface-raised);
+  color: var(--mt-color-ink);
+  font: inherit;
+  font-size: var(--mt-font-size-caption);
+  cursor: pointer;
+}
+
+.areaButton:hover,
+.areaButton:focus-visible,
+.allAreasButton:hover,
+.allAreasButton:focus-visible {
+  border-color: var(--mt-color-accent);
+  background: var(--mt-color-accent-subtle);
+}
+
+.areaButton small {
+  color: var(--mt-color-ink-muted);
+  font-size: inherit;
+}
+
+.allAreasButton {
+  padding: var(--mt-space-1) var(--mt-space-2);
+  border: 0;
+  border-radius: var(--mt-radius-small);
+  background: transparent;
+  color: var(--mt-color-ink-muted);
+  font: inherit;
+  font-size: var(--mt-font-size-caption);
+  cursor: pointer;
 }
 
 .layout {
@@ -51,6 +117,21 @@
 .map {
   width: 100%;
   height: 580px;
+}
+
+.mapWrap :global(.leaflet-container) {
+  background: var(--mt-color-surface-subtle);
+}
+
+.mapWrap :global(.leaflet-bar) {
+  border-color: var(--mt-color-border);
+}
+
+.mapWrap :global(.leaflet-bar a),
+.mapWrap :global(.leaflet-bar a:hover) {
+  border-bottom-color: var(--mt-color-border);
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-raised);
 }
 
 .mapNotice {
@@ -75,8 +156,8 @@
   bottom: 0;
   margin: 0;
   padding: 3px 7px;
-  background: rgb(255 255 255 / 0.9);
-  color: #343a35;
+  background: var(--mt-color-surface-raised);
+  color: var(--mt-color-ink-muted);
   font-size: 10px;
 }
 

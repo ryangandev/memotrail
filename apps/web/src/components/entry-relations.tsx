@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/components/app-toast";
 import { Button } from "@/components/button";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import Link from "next/link";
@@ -101,6 +102,7 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
         setPage(0);
         setRefresh((v) => v + 1);
         router.refresh();
+        notify.success(linked ? "Item linked." : "Item unlinked.");
       }
     } catch {
       setMessage("Could not confirm the change. Refresh before retrying.");
@@ -111,7 +113,7 @@ export function EntryRelationsPanel({ entryID }: { entryID: string }) {
     <section className={styles.panel} aria-label="Related Items">
       <h3>Related Items</h3>
       <p>
-        Connect existing writing without copying it. Link changes save
+        Connect existing Entries without copying them. Link changes save
         immediately and stay in this Item&apos;s history.
       </p>
       <div className={styles.controls} aria-label="Relationship views">

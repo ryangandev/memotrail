@@ -1,5 +1,7 @@
 export const iconNames = [
   "archive",
+  "arrowLeft",
+  "arrowRight",
   "bold",
   "bulletList",
   "calendar",
@@ -10,6 +12,8 @@ export const iconNames = [
   "clock",
   "code",
   "codeBlock",
+  "dashboard",
+  "edit",
   "inbox",
   "home",
   "italic",
@@ -24,6 +28,8 @@ export const iconNames = [
   "refresh",
   "search",
   "settings",
+  "sidebarClosed",
+  "sidebarOpen",
   "sparkle",
   "star",
   "stop",
@@ -71,6 +77,8 @@ const paths: Record<IconName, React.ReactNode> = {
       <path d="M3 4.5h18v4H3zM9 13h6" />
     </>
   ),
+  arrowLeft: <path d="M20 12H4m0 0 7-7m-7 7 7 7" />,
+  arrowRight: <path d="M4 12h16m0 0-7-7m7 7-7 7" />,
   bold: (
     <>
       <path d="M7 4h6a4 4 0 0 1 0 8H7V4Z" />
@@ -111,6 +119,20 @@ const paths: Record<IconName, React.ReactNode> = {
     <>
       <rect height="18" rx="2" width="20" x="2" y="3" />
       <path d="m9 8-4 4 4 4M15 8l4 4-4 4" />
+    </>
+  ),
+  dashboard: (
+    <>
+      <rect height="7" rx="1" width="7" x="3" y="3" />
+      <rect height="7" rx="1" width="7" x="14" y="3" />
+      <rect height="7" rx="1" width="7" x="3" y="14" />
+      <rect height="7" rx="1" width="7" x="14" y="14" />
+    </>
+  ),
+  edit: (
+    <>
+      <path d="M20 12.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7" />
+      <path d="m10 14 1.8-4.4L18.7 2.7a2.1 2.1 0 0 1 3 3l-6.9 6.9L10 14Z" />
     </>
   ),
   inbox: (
@@ -188,6 +210,21 @@ const paths: Record<IconName, React.ReactNode> = {
     <>
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" />
+    </>
+  ),
+  sidebarClosed: (
+    <>
+      <rect height="17" rx="2" width="18" x="3" y="3.5" />
+      <path d="M9 3.5v17" />
+      <circle cx="6" cy="8" fill="currentColor" r="0.8" stroke="none" />
+      <circle cx="6" cy="12" fill="currentColor" r="0.8" stroke="none" />
+      <circle cx="6" cy="16" fill="currentColor" r="0.8" stroke="none" />
+    </>
+  ),
+  sidebarOpen: (
+    <>
+      <rect height="17" rx="2" width="18" x="3" y="3.5" />
+      <path d="M9 3.5v17" />
     </>
   ),
   sparkle: (

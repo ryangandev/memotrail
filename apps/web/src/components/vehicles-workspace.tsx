@@ -1,9 +1,11 @@
 "use client";
-import { Dialog } from "@/components/dialog";
+import { notify } from "@/components/app-toast";
+import { FocusedEditorSurface } from "@/components/focused-editor-surface";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { FocusedViewLayout } from "@/components/focused-view-layout";
 import { Button } from "@/components/button";
+import { Badge } from "@/components/badge";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -20,6 +22,7 @@ import { EntryOrganizationEditor } from "@/components/entry-organization-editor"
 import { LocationPicker } from "@/components/location-picker";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { RecordCardMap } from "@/components/record-card-map";
 import {
   RecordCard,
   RecordCardBody,
@@ -157,7 +160,7 @@ export function VehiclesWorkspace({
       {!loadError && orderedVehicles.length > 0 ? (
         <VehicleSection
           label="Current first, followed by earlier vehicles"
-          onSelect={setSelectedVehicle}
+          onSelect={(vehicle) => router.push(`/vehicles/${vehicle.id}`)}
           title="Vehicle archive"
           vehicles={orderedVehicles}
         />
@@ -203,8 +206,9 @@ function VehicleSection({
         <span>{label}</span>
       </header>
       <div className={styles.homeGrid}>
-        {vehicles.map((vehicle) => (
+        {vehicles.map((vehicle, index) => (
           <VehicleCard
+            eagerMap={index < 3}
             key={vehicle.id}
             onSelect={() => onSelect(vehicle)}
             vehicle={vehicle}
@@ -216,9 +220,11 @@ function VehicleSection({
 }
 
 function VehicleCard({
+  eagerMap,
   onSelect,
   vehicle,
 }: {
+  eagerMap: boolean;
   onSelect: () => void;
   vehicle: VehicleRecord;
 }) {
@@ -234,20 +240,37 @@ function VehicleCard({
         {cover?.imageUrl ? (
           <ProgressiveImage alt="" src={cover.imageUrl} />
         ) : (
-          <div className={styles.homeMark}>
-            <Icon name="car" size={24} />
-            <span>{vehicleFactsLabel(vehicle)}</span>
-          </div>
+          <RecordCardMap
+            eager={eagerMap}
+            fallback={
+              <div className={styles.homeMark}>
+                <Icon name="car" size={24} />
+                <span>{vehicleFactsLabel(vehicle)}</span>
+              </div>
+            }
+            latitude={vehicle.location?.latitude}
+            longitude={vehicle.location?.longitude}
+          />
         )}
-        <span
+        <Badge
           className={
             vehicle.occurredEnd ? styles.pastBadge : styles.currentBadge
           }
+          size="micro"
+          tone={vehicle.occurredEnd ? "glassNeutral" : "glassAccent"}
+          uppercase
         >
           {vehicle.occurredEnd ? "Earlier" : "Current"}
-        </span>
+        </Badge>
         {vehicle.attachments.length > 1 ? (
-          <small>{vehicle.attachments.length} photos</small>
+          <Badge
+            className={styles.photoBadge}
+            size="micro"
+            tone="inverse"
+            uppercase
+          >
+            {vehicle.attachments.length} photos
+          </Badge>
         ) : null}
       </RecordCardVisual>
 
@@ -273,10 +296,22 @@ function VehicleCard({
         <footer>
           <div>
             {vehicle.collectionNames.slice(0, 2).map((name) => (
-              <span key={`collection:${name.toLocaleLowerCase()}`}>{name}</span>
+              <Badge
+                key={`collection:${name.toLocaleLowerCase()}`}
+                size="micro"
+                tone="neutral"
+              >
+                {name}
+              </Badge>
             ))}
             {vehicle.tagNames.slice(0, 2).map((name) => (
-              <span key={`tag:${name.toLocaleLowerCase()}`}>#{name}</span>
+              <Badge
+                key={`tag:${name.toLocaleLowerCase()}`}
+                size="micro"
+                tone="neutral"
+              >
+                #{name}
+              </Badge>
             ))}
           </div>
           <Icon name="chevron" size={15} />
@@ -293,6 +328,7 @@ export function VehicleEditor({
   onSaved,
   onTrashed,
   ownerId,
+  presentation = "dialog",
   sourceCapture = null,
   tagOptions,
   vehicle,
@@ -303,6 +339,7 @@ export function VehicleEditor({
   onSaved: (record: VehicleRecord) => void;
   onTrashed: (id: string) => void;
   ownerId: string;
+  presentation?: "dialog" | "page";
   sourceCapture?: CaptureExtractionSource | null;
   tagOptions: string[];
   vehicle: VehicleRecord | null;
@@ -478,6 +515,9 @@ export function VehicleEditor({
         return;
       }
 
+      notify.success(
+        saved.status === "created" ? "Vehicle created." : "Vehicle saved.",
+      );
       onClose();
     } catch {
       setResult(
@@ -511,6 +551,7 @@ export function VehicleEditor({
           current.filter((item) => item.id !== photo.id),
         );
         router.refresh();
+        notify.info("Photo moved to Trash.");
       } else {
         setResult(nextResult);
       }
@@ -543,6 +584,7 @@ export function VehicleEditor({
       if (nextResult.status === "trashed") {
         onTrashed(currentId);
         onClose();
+        notify.info("Vehicle moved to Trash.");
       } else {
         setResult(nextResult);
       }
@@ -554,11 +596,9 @@ export function VehicleEditor({
   }
 
   return (
-    <Dialog
-      open
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) onClose();
-      }}
+    <FocusedEditorSurface
+      onClose={onClose}
+      presentation={presentation}
       title={
         <>
           {currentId
@@ -572,7 +612,6 @@ export function VehicleEditor({
       eyebrow={<>{currentId ? "Edit Vehicle" : "New Vehicle"}</>}
       closeLabel="Close Vehicle editor"
       busy={isPending}
-      size="wide"
       footer={
         <div className={styles.dialogFooter}>
           <div>
@@ -761,7 +800,7 @@ export function VehicleEditor({
           </p>
         ) : null}
       </form>
-    </Dialog>
+    </FocusedEditorSurface>
   );
 }
 

@@ -32,7 +32,7 @@ select ok(
 select is(
   (select item_kind || ':' || item_subtype || ':' || inbox_status
    from public.entries where id='98500000-0000-4000-8000-000000000001'),
-  'capture:source_capture:organized',
+  'entry:source_capture:organized',
   'The original Capture is preserved as provenance'
 );
 select is(

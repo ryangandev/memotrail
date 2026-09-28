@@ -20,6 +20,7 @@ import {
   storedProfileTimezone,
 } from "@/lib/data/profile-input";
 import { isWikiItemKind, type WikiItemKind } from "@/lib/data/wiki-item";
+import { includeUnplacedFirstTimes } from "@/lib/data/timeline-first-times";
 
 export type TimelineEntry = {
   body: string;
@@ -142,6 +143,9 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
   const timelineEntryIds = new Set(
     (rows ?? []).flatMap((row) => (row.entry_id ? [row.entry_id] : [])),
   );
+  const firstTimesTrackVisible = rows?.some(
+    (row) => row.track_system_key === "first_times",
+  );
   const homeRows = (
     homes.error ? [] : (parseHomeRows(homes.data) ?? [])
   ).filter((home) => timelineEntryIds.has(home.id));
@@ -150,7 +154,11 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
   ).filter((vehicle) => timelineEntryIds.has(vehicle.id));
   const firstTimeRows = (
     firstTimes.error ? [] : (parseFirstTimeRows(firstTimes.data) ?? [])
-  ).filter((entry) => timelineEntryIds.has(entry.entry_id));
+  ).filter(
+    (entry) =>
+      timelineEntryIds.has(entry.entry_id) ||
+      (firstTimesTrackVisible && Boolean(entry.occurred_start)),
+  );
   const imageUrls = await displayImageURLs(
     context.client,
     [
@@ -163,6 +171,25 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
   const profileTimezone = storedProfileTimezone(
     profile.error ? null : profile.data,
   );
+  const firstTimeEntries: FirstTimeEntry[] = firstTimeRows.map((entry) => ({
+    attachments: entry.attachments.map((attachment) => ({
+      ...attachment,
+      imageUrl: imageUrls.get(attachment.objectPath) ?? null,
+    })),
+    body: entry.body,
+    collectionNames: entry.collection_names,
+    datePrecision: entry.date_precision,
+    id: entry.entry_id,
+    inboxStatus: entry.inbox_status,
+    occurredEnd: entry.occurred_end,
+    occurredLabel: entry.occurred_label,
+    occurredStart: entry.occurred_start,
+    occurredTimezone: entry.occurred_timezone,
+    revision: entry.revision,
+    tagNames: entry.tag_names,
+    title: entry.title,
+    updatedAt: entry.updated_at,
+  }));
 
   return {
     birthDate: profileBirthDate.birthDate,
@@ -171,25 +198,7 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
       ? []
       : (collections.data ?? []).map((item) => item.name),
     defaultTimezone: profileTimezone.timezone,
-    firstTimes: firstTimeRows.map((entry) => ({
-      attachments: entry.attachments.map((attachment) => ({
-        ...attachment,
-        imageUrl: imageUrls.get(attachment.objectPath) ?? null,
-      })),
-      body: entry.body,
-      collectionNames: entry.collection_names,
-      datePrecision: entry.date_precision,
-      id: entry.entry_id,
-      inboxStatus: entry.inbox_status,
-      occurredEnd: entry.occurred_end,
-      occurredLabel: entry.occurred_label,
-      occurredStart: entry.occurred_start,
-      occurredTimezone: entry.occurred_timezone,
-      revision: entry.revision,
-      tagNames: entry.tag_names,
-      title: entry.title,
-      updatedAt: entry.updated_at,
-    })),
+    firstTimes: firstTimeEntries,
     homes: homeRows.map((home) => ({
       ...home,
       attachments: home.attachments.map((attachment) => ({
@@ -203,7 +212,9 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
         ? "MemoTrail could not load your Timeline. Refresh to try again."
         : null,
     tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
-    tracks: rows ? tracksFromRows(rows) : [],
+    tracks: rows
+      ? includeUnplacedFirstTimes(tracksFromRows(rows), firstTimeEntries)
+      : [],
     vehicles: vehicleRows.map((vehicle) => ({
       ...vehicle,
       attachments: vehicle.attachments.map((attachment) => ({
@@ -239,8 +250,8 @@ function tracksFromRows(rows: TimelineRow[]) {
         collectionNames: row.collection_names,
         datePrecision: row.date_precision ?? "unknown",
         id: row.entry_id,
-        itemKind: row.item_kind ?? "event",
-        itemSubtype: row.item_subtype ?? "other",
+        itemKind: row.item_kind ?? "entry",
+        itemSubtype: row.item_subtype ?? "entry",
         kind: row.timeline_kind ?? "event",
         occurredEnd: row.occurred_end,
         occurredLabel: row.occurred_label,

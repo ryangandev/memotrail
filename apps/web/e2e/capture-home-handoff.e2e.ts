@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
-test("Inbox Capture creates a linked Home through the specialized form", async ({
+test("Inbox saves an Entry while Home uses its focused form", async ({
   context,
   page,
 }) => {
@@ -74,8 +74,8 @@ test("Inbox Capture creates a linked Home through the specialized form", async (
           owner_id: ownerID,
           title: "Moved near the lake",
           body: "First evening in the new apartment.",
-          item_kind: "capture",
-          item_subtype: "quick_capture",
+          item_kind: "entry",
+          item_subtype: "entry",
           inbox_status: "unreviewed",
           date_precision: "unknown",
         })
@@ -87,45 +87,23 @@ test("Inbox Capture creates a linked Home through the specialized form", async (
       has: page.getByRole("heading", { name: "Moved near the lake" }),
     });
     await card.getByRole("button", { name: "Organize", exact: true }).click();
-    const review = page.getByRole("dialog", { name: "Organize Capture" });
-    await expect(
-      review.getByText("Organize as", { exact: true }),
-    ).toBeVisible();
-    await expect(
-      review.getByRole("combobox", { name: "Kind", exact: true }),
-    ).toHaveValue("writing");
-    await expect(
-      review.getByRole("button", { name: "Save to Library", exact: true }),
-    ).toBeVisible();
-    await page.screenshot({
-      caret: "initial",
-      path: "/private/tmp/memotrail-capture-organizer.png",
-      fullPage: true,
-    });
-    await review.getByRole("link", { name: "Home", exact: true }).click();
+    const review = page.getByRole("dialog", { name: "Review Entry" });
+    await expect(review.getByRole("combobox", { name: "Kind" })).toHaveCount(0);
+    await expect(review.getByRole("link", { name: "Home" })).toHaveCount(0);
+    await review.getByRole("button", { name: "Save to Library" }).click();
+    await expect(review).not.toBeVisible();
 
-    await expect(page).toHaveURL(new RegExp(`/homes\\?source=${captureID}$`));
+    await page.goto("/homes");
+    await page.getByRole("button", { name: "Add Home" }).click();
     const editor = page.getByRole("dialog", {
-      name: "Create a Home from this Capture",
+      name: "Keep a Home in your Life Wiki",
     });
-    await expect(
-      editor.getByText("Starting from an Inbox Capture"),
-    ).toBeVisible();
-    await expect(editor.getByLabel("Home name", { exact: true })).toHaveValue(
-      "Moved near the lake",
-    );
-    await expect(editor.getByRole("textbox", { name: /Memories/ })).toHaveValue(
-      "First evening in the new apartment.",
-    );
+    await editor
+      .getByLabel("Home name", { exact: true })
+      .fill("Moved near the lake");
     await editor.getByLabel("City", { exact: true }).fill("Oakland");
-    await page.screenshot({
-      caret: "initial",
-      path: "/private/tmp/memotrail-capture-home-handoff.png",
-      fullPage: true,
-    });
     await editor.getByRole("button", { name: "Add Home", exact: true }).click();
     await expect(editor).not.toBeVisible();
-    await expect(page).toHaveURL(/\/homes$/);
     await expect(
       page.getByRole("button", { name: /Moved near the lake/ }),
     ).toBeVisible();
@@ -136,8 +114,8 @@ test("Inbox Capture creates a linked Home through the specialized form", async (
       .eq("id", captureID)
       .single();
     expect(source.data).toEqual({
-      item_kind: "capture",
-      item_subtype: "source_capture",
+      item_kind: "entry",
+      item_subtype: "entry",
       inbox_status: "organized",
     });
     const home = await client
@@ -157,7 +135,7 @@ test("Inbox Capture creates a linked Home through the specialized form", async (
       .select("source_entry_id,target_entry_id,relationship")
       .eq("owner_id", ownerID)
       .in("relationship", ["derived", "derived_from"]);
-    expect(provenance.data).toHaveLength(2);
+    expect(provenance.data).toHaveLength(0);
     expect(uiErrors).toEqual([]);
   } finally {
     await admin.auth.admin.deleteUser(ownerID);

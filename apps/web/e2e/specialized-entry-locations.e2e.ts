@@ -133,6 +133,13 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
       .getByRole("button", { name: "Add First Time" })
       .click();
     await expect(firstTimeEditor).not.toBeVisible();
+    const firstTimeCard = page.getByRole("button", { name: /First hike/ });
+    await expect(
+      firstTimeCard.locator('[data-record-card-map="true"]'),
+    ).toBeVisible();
+    await firstTimeCard.screenshot({
+      path: "/private/tmp/memotrail-first-time-map-card-desktop.png",
+    });
 
     await page.goto("/vehicles");
     await page.getByRole("button", { name: "Add Vehicle" }).first().click();
@@ -163,6 +170,13 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
     });
     await vehicleEditor.getByRole("button", { name: "Add Vehicle" }).click();
     await expect(vehicleEditor).not.toBeVisible();
+    const vehicleCard = page.getByRole("button", { name: /Blue Civic/ });
+    await expect(
+      vehicleCard.locator('[data-record-card-map="true"]'),
+    ).toBeVisible();
+    await vehicleCard.screenshot({
+      path: "/private/tmp/memotrail-vehicle-map-card-mobile.png",
+    });
 
     const entries = (
       await client
@@ -212,13 +226,22 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
 
     await page.goto("/first-times");
     await page.getByRole("button", { name: /First hike/ }).click();
-    const editDialog = page.getByRole("dialog");
+    await page.getByRole("button", { name: "Edit First Time" }).click();
+    const editDialog = page.getByRole("main");
     await expect(
       editDialog.getByRole("img", { name: /Map showing 10 Pine Street/ }),
     ).toBeVisible();
     await editDialog.getByRole("button", { name: "Remove" }).click();
     await editDialog.getByRole("button", { name: "Save changes" }).click();
-    await expect(editDialog).not.toBeVisible();
+    await expect(
+      editDialog.getByRole("button", { name: "Save changes" }),
+    ).not.toBeVisible();
+    await page.goto("/first-times");
+    await expect(
+      page
+        .getByRole("button", { name: /First hike/ })
+        .locator('[data-record-card-map="true"]'),
+    ).toHaveCount(0);
     const remaining = (
       await client
         .from("entry_places")

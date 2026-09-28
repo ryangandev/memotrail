@@ -23,8 +23,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 10.33.0
 
       - name: Install Node.js
         uses: actions/setup-node@v7
@@ -41,14 +39,8 @@ jobs:
       - name: Check generated design tokens
         run: pnpm tokens:check
 
-      - name: Lint
-        run: pnpm lint
-
-      - name: Type-check
-        run: pnpm typecheck
-
-      - name: Test Web contracts
-        run: pnpm test
+      - name: Lint, type-check, and test Web contracts
+        run: pnpm turbo run lint typecheck test
 
       - name: Build Web app
         run: pnpm build

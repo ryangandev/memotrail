@@ -23,7 +23,7 @@ export type ParsedSearchRequest = {
 export type QuickSearchItem = {
   href: string;
   id: string;
-  kind: "entry" | "person" | "place";
+  kind: "entry" | "person";
   label: string;
   subtitle: string;
   title: string;
@@ -52,7 +52,7 @@ export function parseQuickSearchResult(
     (item) =>
       item &&
       typeof item.id === "string" &&
-      ["entry", "person", "place"].includes(item.kind) &&
+      ["entry", "person"].includes(item.kind) &&
       typeof item.href === "string" &&
       item.href.startsWith("/") &&
       !item.href.startsWith("//") &&
@@ -116,7 +116,7 @@ export function parseSearchRequest(
   };
 }
 
-export function searchPageHref(request: SearchRequest, page: number) {
+export function librarySearchHref(request: SearchRequest, page: number) {
   const parameters = new URLSearchParams();
 
   if (request.query) {
@@ -148,7 +148,7 @@ export function searchPageHref(request: SearchRequest, page: number) {
   }
 
   const queryString = parameters.toString();
-  return queryString ? `/search?${queryString}` : "/search";
+  return queryString ? `/library?${queryString}` : "/library";
 }
 
 function firstValue(value: string | string[] | undefined) {

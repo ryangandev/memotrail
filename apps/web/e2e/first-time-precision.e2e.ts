@@ -3,7 +3,11 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
-import { fillOccurrenceEnd, fillOccurrenceStart } from "./helpers/occurrence";
+import {
+  fillOccurrenceEnd,
+  fillOccurrenceStart,
+  setDateDescription,
+} from "./helpers/occurrence";
 
 test("Editing a First Time keeps its original date range", async ({
   page,
@@ -66,7 +70,8 @@ test("Editing a First Time keeps its original date range", async ({
           owner_id: owner,
           title: "First trip to Japan",
           body: "Original travel memory",
-          item_kind: "event",
+          inbox_status: "organized",
+          item_kind: "entry",
           item_subtype: "first_time",
           occurred_start: start,
           occurred_end: end,
@@ -75,9 +80,15 @@ test("Editing a First Time keeps its original date range", async ({
         })
       ).error,
     ).toBeNull();
-    await page.goto("/first-times");
-    await page.getByRole("button", { name: /First trip to Japan/ }).click();
-    const dialog = page.getByRole("dialog");
+    await page.goto("/library");
+    await page.getByRole("link", { name: /First trip to Japan/ }).click();
+    await expect(page).toHaveURL(`/first-times/${id}`);
+    await expect(
+      page.getByRole("button", { name: "Edit First Time" }),
+    ).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Title" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Edit First Time" }).click();
+    const dialog = page.getByRole("main");
     await expect(
       dialog.getByText("Add this item to a larger story or chapter."),
     ).toHaveCount(0);
@@ -111,7 +122,10 @@ test("Editing a First Time keeps its original date range", async ({
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.emulateMedia({ colorScheme: "light" });
     await dialog.getByRole("button", { name: "Save changes" }).click();
-    await expect(dialog).not.toBeVisible();
+    await expect(
+      dialog.getByRole("button", { name: "Save changes" }),
+    ).not.toBeVisible();
+    await expect(page).toHaveURL(`/first-times/${id}`);
     await expect
       .poll(
         async () =>
@@ -154,12 +168,14 @@ test("Editing a First Time keeps its original date range", async ({
       ).error,
     ).toBeNull();
     await page.reload();
-    await page.getByRole("button", { name: /First trip to Japan/ }).click();
+    await page.getByRole("button", { name: "Edit First Time" }).click();
     await expect(
       dialog.getByRole("combobox", { name: "Date type", exact: true }),
     ).toHaveValue("exact");
     await dialog.getByRole("button", { name: "Save changes" }).click();
-    await expect(dialog).not.toBeVisible();
+    await expect(
+      dialog.getByRole("button", { name: "Save changes" }),
+    ).not.toBeVisible();
     expect(
       (
         await client
@@ -183,15 +199,29 @@ test("Editing a First Time keeps its original date range", async ({
       { precision: "range", start: "2017-07-08", label: "", end: "2017-07-15" },
       { precision: "unknown", start: "", label: "", end: "" },
     ]) {
-      await page.getByRole("button", { name: /First trip to Japan/ }).click();
+      await page.getByRole("button", { name: "Edit First Time" }).click();
       await dialog
         .getByRole("combobox", { name: "Date type", exact: true })
         .selectOption(sample.precision);
       if (sample.start) await fillOccurrenceStart(dialog, sample.start);
       if (sample.end) await fillOccurrenceEnd(dialog, sample.end);
-      await dialog.getByLabel("Date description").fill(sample.label);
+      await setDateDescription(dialog, sample.label);
       await dialog.getByRole("button", { name: "Save changes" }).click();
-      await expect(dialog).not.toBeVisible();
+      await expect(
+        dialog.getByRole("button", { name: "Save changes" }),
+      ).not.toBeVisible();
+      await expect
+        .poll(
+          async () =>
+            (
+              await client
+                .from("entries")
+                .select("date_precision")
+                .eq("id", id)
+                .single()
+            ).data?.date_precision,
+        )
+        .toBe(sample.precision);
       const value = (
         await client
           .from("entries")

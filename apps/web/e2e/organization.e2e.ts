@@ -65,12 +65,23 @@ test("Collections and Tags are first-class and organize generic Timeline moments
         sameSite: "Lax" as const,
       })),
     );
+    const seededCollections = await client.from("collections").insert(
+      ["Early years", "Family", "First times", "Notes from my travels"].map(
+        (name, sortOrder) => ({
+          owner_id: owner,
+          name,
+          sort_order: sortOrder,
+        }),
+      ),
+    );
+    expect(seededCollections.error).toBeNull();
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     page.on("console", (message) => {
       if (message.type() === "error") errors.push(message.text());
     });
 
+    await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/collections");
     await expect(
       page.getByRole("heading", { name: "Collections", exact: true }),
@@ -91,6 +102,46 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await expect(
       page.getByRole("heading", { name: "City chapters" }),
     ).toBeVisible();
+    await page
+      .locator("[data-sonner-toast]")
+      .getByRole("button", { name: "Close toast" })
+      .click();
+    await expect(page.locator("[data-sonner-toast]")).toHaveCount(0);
+    const collectionCards = page
+      .getByRole("region", { name: "Collections" })
+      .locator("[data-collection-card]");
+    await expect(collectionCards).toHaveCount(5);
+    const desktopBoxes = await Promise.all(
+      [0, 1, 2, 3, 4].map((index) => collectionCards.nth(index).boundingBox()),
+    );
+    expect(desktopBoxes.every(Boolean)).toBe(true);
+    expect(desktopBoxes.slice(0, 4).map((box) => box!.y)).toEqual([
+      desktopBoxes[0]!.y,
+      desktopBoxes[0]!.y,
+      desktopBoxes[0]!.y,
+      desktopBoxes[0]!.y,
+    ]);
+    expect(desktopBoxes[4]!.y).toBeGreaterThan(desktopBoxes[0]!.y);
+    expect(desktopBoxes[0]!.height).toBeLessThan(170);
+    await page.screenshot({
+      animations: "disabled",
+      path: "/private/tmp/memotrail-collections-live-desktop.png",
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    const mobileBoxes = await Promise.all(
+      [0, 1].map((index) => collectionCards.nth(index).boundingBox()),
+    );
+    expect(mobileBoxes[1]!.y).toBeGreaterThan(mobileBoxes[0]!.y);
+    await page.screenshot({
+      animations: "disabled",
+      path: "/private/tmp/memotrail-collections-live-mobile.png",
+    });
+    await page.setViewportSize({ width: 1440, height: 900 });
     const cityCollectionCard = page
       .getByRole("article")
       .filter({ hasText: "City chapters" });
@@ -338,7 +389,7 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await journeysDialog
       .getByRole("link", { name: "View all Entries for this tag" })
       .click();
-    await expect(page).toHaveURL(/\/search\?tag=journeys$/);
+    await expect(page).toHaveURL(/\/library\?tag=journeys$/);
     await expect(
       page.getByRole("combobox", { name: "Tag", exact: true }),
     ).toHaveValue("journeys");

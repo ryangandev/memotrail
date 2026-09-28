@@ -1,5 +1,6 @@
 "use client";
 import { Button } from "@/components/button";
+import { notify } from "@/components/app-toast";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -39,7 +40,6 @@ export function EntryPhotoGallery({
   const [pending, setPending] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] =
     useState<PhotoUploadProgressValue | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const request = useRef<AbortController | null>(null);
   const observedRevision = useRef(entryRevision);
   useEffect(() => () => request.current?.abort(), []);
@@ -98,7 +98,6 @@ export function EntryPhotoGallery({
     if (busy || pending.length === 0) return;
     setBusy(true);
     setError(null);
-    setNotice(null);
     try {
       const failed = await uploadEntryPhotos(
         ownerId,
@@ -117,7 +116,7 @@ export function EntryPhotoGallery({
           "Some photos are not confirmed. Keep this view open and select Upload photos again to retry safely.",
         );
       else {
-        setNotice("Photos attached.");
+        notify.success("Photos attached.");
         onChanged();
       }
     } catch {
@@ -142,7 +141,6 @@ export function EntryPhotoGallery({
     if (!shouldRemove) return;
     setBusy(true);
     setError(null);
-    setNotice(null);
     try {
       const confirmed = await trashEntryPhoto(entryId, photo.id);
       await load();
@@ -151,7 +149,7 @@ export function EntryPhotoGallery({
           "Could not confirm removal. Refresh to check the current photos before retrying.",
         );
       else {
-        setNotice("Photo moved to Trash. Restore it from Trash any time.");
+        notify.info("Photo moved to Trash. Restore it from Trash any time.");
         onChanged();
       }
     } catch {
@@ -181,7 +179,6 @@ export function EntryPhotoGallery({
         photo access or check for changes.
       </p>
       {error && <p role="alert">{error}</p>}
-      {notice && <p role="status">{notice}</p>}
       {photos && (
         <label className={styles.picker}>
           Add photos
@@ -202,7 +199,6 @@ export function EntryPhotoGallery({
               );
               setPending(selection.accepted.map((draft) => draft.file));
               setError(selection.message);
-              setNotice(null);
               event.target.value = "";
             }}
           />

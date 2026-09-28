@@ -1,11 +1,30 @@
 import { describe, expect, it } from "vitest";
 import {
   parseBirthDate,
+  parsePreferredName,
   parseProfileTimezone,
   storedBirthDate,
   storedProfileTimezone,
   validStoredBirthDate,
 } from "./profile-input";
+
+describe("parsePreferredName", () => {
+  it("normalizes a chosen name and allows falling back to the Google name", () => {
+    expect(parsePreferredName("  River  Gan  ")).toEqual({
+      preferredName: "River Gan",
+      success: true,
+    });
+    expect(parsePreferredName("   ")).toEqual({
+      preferredName: null,
+      success: true,
+    });
+  });
+
+  it("rejects overlong and multiline values", () => {
+    expect(parsePreferredName("x".repeat(81)).success).toBe(false);
+    expect(parsePreferredName("River\nGan").success).toBe(false);
+  });
+});
 
 describe("parseBirthDate", () => {
   it("accepts a real date or an explicit removal", () => {

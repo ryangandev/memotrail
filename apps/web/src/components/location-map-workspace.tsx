@@ -6,18 +6,22 @@ import type * as Leaflet from "leaflet";
 import { PageFrame } from "@/components/page-frame";
 import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/icon";
+import { useEffectiveTheme } from "@/components/use-effective-theme";
 import type { LocationMapItem } from "@/lib/data/location-map";
 import styles from "./location-map-workspace.module.css";
 
 type MapKind = "all" | LocationMapItem["kind"];
+type MapArea = {
+  key: string;
+  label: string;
+  items: LocationMapItem[];
+  entryCount: number;
+};
 const kinds: { label: string; value: MapKind }[] = [
-  { label: "All kinds", value: "all" },
-  { label: "Events", value: "event" },
-  { label: "Writing", value: "writing" },
+  { label: "All records", value: "all" },
+  { label: "Entries", value: "entry" },
   { label: "Entities", value: "entity" },
-  { label: "Stories", value: "story" },
   { label: "Goals", value: "goal" },
-  { label: "Captures", value: "capture" },
 ];
 
 export function LocationMapWorkspace({
@@ -40,6 +44,7 @@ export function LocationMapWorkspace({
   const [toYear, setToYear] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[] | null>(null);
   const [tileError, setTileError] = useState(false);
+  const theme = useEffectiveTheme();
 
   const filtered = useMemo(
     () =>
@@ -55,6 +60,58 @@ export function LocationMapWorkspace({
       }),
     [items, kind, fromYear, toYear],
   );
+  const areas = useMemo(() => {
+    const grouped = new Map<string, MapArea>();
+    for (const item of filtered) {
+      const city = item.city?.trim();
+      if (!city) continue;
+      const region = item.region?.trim();
+      const country = item.country?.trim();
+      const key = [city, region, country]
+        .map((part) => part?.toLocaleLowerCase() ?? "")
+        .join("\u0000");
+      const area = grouped.get(key) ?? {
+        key,
+        label: [city, region || country].filter(Boolean).join(", "),
+        items: [],
+        entryCount: 0,
+      };
+      area.items.push(item);
+      grouped.set(key, area);
+    }
+    return [...grouped.values()]
+      .map((area) => ({
+        ...area,
+        entryCount: new Set(area.items.map((item) => item.id)).size,
+      }))
+      .sort(
+        (a, b) => b.entryCount - a.entryCount || a.label.localeCompare(b.label),
+      )
+      .slice(0, 4);
+  }, [filtered]);
+
+  function zoomToItems(areaItems: LocationMapItem[]) {
+    const map = mapRef.current;
+    const L = leafletRef.current;
+    if (!map || !L || !areaItems.length) return;
+    setSelectedIds(null);
+    if (
+      areaItems.every(
+        (item) =>
+          item.latitude === areaItems[0].latitude &&
+          item.longitude === areaItems[0].longitude,
+      )
+    ) {
+      map.setView([areaItems[0].latitude, areaItems[0].longitude], 11, {
+        animate: false,
+      });
+      return;
+    }
+    map.fitBounds(
+      L.latLngBounds(areaItems.map((item) => [item.latitude, item.longitude])),
+      { padding: [48, 48], maxZoom: 11, animate: false },
+    );
+  }
 
   useEffect(() => {
     let disposed = false;
@@ -70,17 +127,9 @@ export function LocationMapWorkspace({
         maxZoom: 19,
         worldCopyJump: true,
         attributionControl: false,
+        zoomAnimation: false,
       });
       mapRef.current = map;
-      if (mapConfigured) {
-        L.tileLayer("/api/locations/tiles/{z}/{x}/{y}", {
-          maxZoom: 19,
-          minZoom: 2,
-          tileSize: 256,
-        })
-          .on("tileerror", () => setTileError(true))
-          .addTo(map);
-      }
       setReady(true);
     }
     void initialize();
@@ -89,7 +138,26 @@ export function LocationMapWorkspace({
       map?.remove();
       mapRef.current = null;
     };
-  }, [mapConfigured]);
+  }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const L = leafletRef.current;
+    if (!ready || !mapConfigured || !theme || !map || !L) return;
+
+    setTileError(false);
+    const onTileError = () => setTileError(true);
+    const tiles = L.tileLayer(
+      `/api/locations/tiles/{z}/{x}/{y}?theme=${theme}`,
+      { maxZoom: 19, minZoom: 2, tileSize: 256 },
+    )
+      .on("tileerror", onTileError)
+      .addTo(map);
+    return () => {
+      tiles.off("tileerror", onTileError);
+      tiles.remove();
+    };
+  }, [mapConfigured, ready, theme]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -148,6 +216,7 @@ export function LocationMapWorkspace({
         {
           padding: [48, 48],
           maxZoom: 13,
+          animate: false,
         },
       );
     } else {
@@ -168,9 +237,7 @@ export function LocationMapWorkspace({
   const sorted = [
     ...new Map(
       [...selected]
-        .sort((a, b) =>
-          (b.occurredAt ?? "").localeCompare(a.occurredAt ?? ""),
-        )
+        .sort((a, b) => (b.occurredAt ?? "").localeCompare(a.occurredAt ?? ""))
         .map((item) => [item.id, item]),
     ).values(),
   ];
@@ -189,7 +256,7 @@ export function LocationMapWorkspace({
       />
       <div className={styles.filters} aria-label="Map filters">
         <label>
-          <span>Kind</span>
+          <span>Category</span>
           <select
             value={kind}
             onChange={(event) => {
@@ -235,9 +302,39 @@ export function LocationMapWorkspace({
           />
         </label>
         <p role="status">
-          {filtered.length} Entry {filtered.length === 1 ? "Location" : "Locations"}
+          {filtered.length} Entry{" "}
+          {filtered.length === 1 ? "Location" : "Locations"}
         </p>
       </div>
+
+      {areas.length > 1 ? (
+        <section aria-labelledby="map-areas-heading" className={styles.areas}>
+          <div className={styles.areasHead}>
+            <h2 id="map-areas-heading">Your areas</h2>
+            <button
+              className={styles.allAreasButton}
+              onClick={() => zoomToItems(filtered)}
+              type="button"
+            >
+              View all
+            </button>
+          </div>
+          <div className={styles.areaActions}>
+            {areas.map((area) => (
+              <button
+                aria-label={`Zoom to ${area.label}, ${area.entryCount} ${area.entryCount === 1 ? "Entry" : "Entries"}`}
+                className={styles.areaButton}
+                key={area.key}
+                onClick={() => zoomToItems(area.items)}
+                type="button"
+              >
+                <span>{area.label}</span>
+                <small>{area.entryCount}</small>
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {loadError ? (
         <p className={styles.notice} role="alert">
@@ -255,6 +352,7 @@ export function LocationMapWorkspace({
           <div
             aria-label="Interactive map of your Entry Locations"
             className={styles.map}
+            data-map-theme={theme ?? undefined}
             ref={elementRef}
             role="region"
           />
@@ -278,6 +376,14 @@ export function LocationMapWorkspace({
               target="_blank"
             >
               © OpenStreetMap contributors
+            </a>
+            {" · "}
+            <a
+              href="https://openmaptiles.org/"
+              rel="noreferrer"
+              target="_blank"
+            >
+              © OpenMapTiles
             </a>
             {" · "}
             <a

@@ -60,25 +60,6 @@
   margin-top: var(--mt-space-6);
 }
 
-.successMessage,
-.errorMessage {
-  margin-top: var(--mt-space-4);
-  padding: var(--mt-space-3) var(--mt-space-4);
-  border-radius: var(--mt-radius-medium);
-  font-size: var(--mt-font-size-label);
-}
-
-.successMessage {
-  color: var(--mt-color-success);
-  background: var(--mt-color-accent-subtle);
-}
-
-.errorMessage,
-.dialogError {
-  color: var(--mt-color-warning);
-  background: var(--mt-color-warm-subtle);
-}
-
 .listSummary {
   display: flex;
   justify-content: space-between;
@@ -143,15 +124,6 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--mt-space-2);
-}
-
-.itemMeta span {
-  padding: 3px var(--mt-space-2);
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-warm);
-  background: var(--mt-color-warm-subtle);
-  font-size: 10px;
-  font-weight: var(--mt-font-weight-medium);
 }
 
 .itemMeta time {
@@ -220,13 +192,6 @@
 .pagination a:last-child,
 .pagination span:last-child {
   justify-self: end;
-}
-
-.dialogError {
-  margin-top: var(--mt-space-4);
-  padding: var(--mt-space-3);
-  border-radius: var(--mt-radius-small);
-  font-size: var(--mt-font-size-caption);
 }
 
 @media (max-width: 720px) {

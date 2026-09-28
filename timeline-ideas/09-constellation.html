@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Constellations of a Life · MemoTrail timeline concept</title>
+<style>
+  :root{
+    --ink:#eaf0ff; --dim:#9fb0d8; --faint:#6b7aa6;
+    --career:#ffb15c; --home:#7ec8ff; --rel:#ff9ecb; --travel:#78f0d0; --health:#c9a6ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:#05060f;
+    min-height:100vh;
+  }
+  header.page{max-width:1220px;margin:0 auto;padding:24px 30px 8px;position:relative;z-index:2}
+  header.page h1{margin:0;font-size:26px;letter-spacing:.4px;
+    background:linear-gradient(90deg,#fff,#bcd0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  header.page p{color:var(--dim);font-size:14px;margin:6px 0 0;max-width:82ch}
+  .sky-wrap{max-width:1220px;margin:0 auto;padding:0 16px 34px}
+  .sky{position:relative;border-radius:18px;overflow:hidden;border:1px solid #171c33;
+    background:
+      radial-gradient(1000px 500px at 80% 10%, rgba(60,40,110,.35), rgba(0,0,0,0) 60%),
+      radial-gradient(900px 600px at 15% 90%, rgba(20,60,110,.35), rgba(0,0,0,0) 60%),
+      linear-gradient(160deg,#070914,#0a0a1c 45%,#06060f);
+    box-shadow:0 20px 60px rgba(0,0,0,.6);}
+  svg#sky{width:100%;height:auto;display:block}
+  .legend{display:flex;flex-wrap:wrap;gap:10px 26px;padding:14px 20px 4px}
+  .leg{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--dim)}
+  .leg .star{width:12px;height:12px;border-radius:50%;box-shadow:0 0 10px currentColor,0 0 4px #fff}
+  .leg b{color:#fff;font-weight:600}
+  .leg .cname{font-style:italic;color:var(--faint)}
+  .note{padding:8px 20px 2px;color:var(--faint);font-size:12.5px}
+
+  @keyframes tw{0%,100%{opacity:.25}50%{opacity:1}}
+  .bg-star{animation:tw 3s ease-in-out infinite}
+  @keyframes evtw{0%,100%{opacity:.7}50%{opacity:1}}
+  .evstar{animation:evtw 4s ease-in-out infinite}
+  @keyframes nowpulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:.85;transform:scale(1.5)}}
+  .now-halo{transform-box:fill-box;transform-origin:center;animation:nowpulse 2.4s ease-in-out infinite}
+  .evt-label{fill:var(--dim);font-size:10px;opacity:.55;transition:opacity .2s,fill .2s;pointer-events:none}
+  .evt:hover .evt-label{opacity:1;fill:#fff}
+  .evt:hover .evstar{opacity:1}
+  .cname-lbl{font-size:15px;letter-spacing:2px;font-weight:600;opacity:.85;font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif}
+  @media (max-width:820px){.cname-lbl{font-size:13px}}
+</style>
+</head>
+<body>
+  <header class="page">
+    <h1>Constellations of a Life</h1>
+    <p>Ava Chen's story mapped onto the night sky. Each life track is its own constellation; each event is a star, and the pivotal milestones burn brightest. Faint lines trace the shape of each chapter.</p>
+  </header>
+  <div class="sky-wrap">
+    <div class="sky">
+      <svg id="sky" viewBox="0 0 1220 760" role="img"
+        aria-label="A night-sky chart of Ava Chen's life. Events are stars grouped into five named constellations, one per life track. Milestone events are the brightest stars. The birth star sits at lower-left; the 'Now' star pulses.">
+        <defs>
+          <linearGradient id="milky" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(255,255,255,0)"/>
+            <stop offset="45%" stop-color="rgba(150,170,255,.10)"/>
+            <stop offset="55%" stop-color="rgba(200,180,255,.12)"/>
+            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+          </linearGradient>
+          <filter id="starglow" x="-200%" y="-200%" width="500%" height="500%">
+            <feGaussianBlur stdDeviation="3.2" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="bigglow" x="-300%" y="-300%" width="700%" height="700%">
+            <feGaussianBlur stdDeviation="6" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <rect x="-100" y="120" width="1500" height="360" fill="url(#milky)" transform="rotate(-18 610 380)"/>
+        <g id="bgstars"></g>
+        <g id="conlines"></g>
+        <g id="cnames"></g>
+        <g id="stars"></g>
+        <g id="anchors"></g>
+      </svg>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="note">Star size &amp; glow scale with importance - milestones (⭐) shine brightest. Dashed halo = approximate date. The birth star anchors the lower-left; the pulsing star marks <b style="color:#fff">Now, 2025</b>.</div>
+  </div>
+
+<script>
+(function(){
+  const NS="http://www.w3.org/2000/svg";
+  const $=id=>document.getElementById(id);
+  const el=(n,a,p)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;};
+  const text=(x,y,s,a,p)=>{const t=el("text",Object.assign({x,y},a),p);t.textContent=s;return t;};
+
+  const COL={career:"#ffb15c",home:"#7ec8ff",rel:"#ff9ecb",travel:"#78f0d0",health:"#c9a6ff"};
+
+  // ---- background stars (decorative depth) ----
+  let seed=1337; const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;};
+  for(let i=0;i<150;i++){
+    const x=rnd()*1220, y=rnd()*760, r=rnd()*1.1+0.3;
+    const s=el("circle",{cx:x.toFixed(1),cy:y.toFixed(1),r:r.toFixed(2),fill:"#dfe8ff",class:"bg-star",opacity:0.5},$("bgstars"));
+    s.style.animationDelay=(rnd()*3).toFixed(2)+"s";
+    s.style.animationDuration=(2+rnd()*3).toFixed(2)+"s";
+  }
+
+  // ---- constellations ----
+  const cons={
+    career:{name:"The Ascent",cx:600,cy:120,stars:[
+      {yr:2008,t:"Graduated high school",px:420,py:150,ms:true},
+      {yr:2011,t:"First internship",px:515,py:110},
+      {yr:2012,t:"B.S. Computer Science",px:610,py:150,ms:true},
+      {yr:2015,t:"Senior Engineer",px:705,py:118},
+      {yr:2018,t:"Tech Lead",px:775,py:180},
+      {yr:2021,t:"Founded Loomly",px:700,py:250},
+      {yr:2023,t:"Seed · $2M",px:610,py:238}
+    ]},
+    home:{name:"The Hearth",cx:250,cy:520,stars:[
+      {yr:1990,t:"Born · Portland",px:120,py:648,ms:true,birth:true},
+      {yr:2002,t:"Seattle",px:230,py:560},
+      {yr:2012,t:"San Francisco",px:340,py:470},
+      {yr:2020,t:"First home · Oakland",px:250,py:388,ms:true}
+    ]},
+    rel:{name:"The Beloved",cx:700,cy:440,stars:[
+      {yr:2015,t:"Met Sam",px:560,py:430},
+      {yr:2019,t:"Married Sam",px:655,py:470,ms:true},
+      {yr:2022,t:"Noah born",px:745,py:430,ms:true},
+      {yr:2024,t:"Adopted Miso 🐶",px:830,py:468}
+    ]},
+    travel:{name:"The Wanderer",cx:680,cy:640,stars:[
+      {yr:2013,t:"Backpacked SE Asia",px:520,py:660},
+      {yr:2016,t:"Marathon · Chicago",px:615,py:612,appx:true},
+      {yr:2018,t:"Japan 🌸",px:715,py:658},
+      {yr:2023,t:"Summited Rainier",px:835,py:600}
+    ]},
+    health:{name:"The Maker",cx:1010,cy:340,stars:[
+      {yr:2014,t:"Photography",px:930,py:320,appx:true},
+      {yr:2021,t:"Pottery",px:1015,py:378},
+      {yr:2024,t:"Learned to sail ⛵",px:1085,py:318}
+    ]}
+  };
+
+  // ---- connecting lines (faint) ----
+  Object.keys(cons).forEach(k=>{
+    const c=cons[k], s=c.stars.slice().sort((a,b)=>a.yr-b.yr);
+    let d="";
+    s.forEach((st,i)=>{d+=(i?"L":"M")+st.px+" "+st.py+" ";});
+    el("path",{d,fill:"none",stroke:COL[k],"stroke-width":1,opacity:.28,"stroke-linecap":"round"},$("conlines"));
+  });
+
+  // ---- constellation name labels ----
+  Object.keys(cons).forEach(k=>{
+    const c=cons[k];
+    text(c.cx,c.cy,c.name.toUpperCase(),{ "text-anchor":"middle",class:"cname-lbl",fill:COL[k]},$("cnames"));
+  });
+
+  // ---- stars (events) ----
+  const sparkle=(g,x,y,rad,col)=>{
+    el("line",{x1:x-rad,y1:y,x2:x+rad,y2:y,stroke:col,"stroke-width":1,opacity:.8},g);
+    el("line",{x1:x,y1:y-rad,x2:x,y2:y+rad,stroke:col,"stroke-width":1,opacity:.8},g);
+  };
+  Object.keys(cons).forEach(k=>{
+    const col=COL[k];
+    cons[k].stars.forEach(st=>{
+      const g=el("g",{class:"evt"},$("stars"));
+      const r=st.ms?7:4.2;
+      if(st.ms){
+        el("circle",{cx:st.px,cy:st.py,r:r+4,fill:col,opacity:.22,filter:"url(#bigglow)"},g);
+        sparkle(g,st.px,st.py,15,col);
+      }
+      if(st.appx){
+        el("circle",{cx:st.px,cy:st.py,r:r+3,fill:"none",stroke:col,"stroke-width":1,"stroke-dasharray":"2 2.5",opacity:.7},g);
+      }
+      const c=el("circle",{cx:st.px,cy:st.py,r:r,fill:"#ffffff",stroke:col,"stroke-width":st.ms?2:1.2,class:"evstar",filter:"url(#starglow)"},g);
+      c.style.setProperty("color",col);
+      c.style.animationDelay=(st.yr%5)*0.5+"s";
+      // label
+      const up=st.py<200||k==="career";
+      const t=text(st.px+9,st.py+(st.ms?-8:4),"",{class:"evt-label","font-size":st.ms?11:10},g);
+      const yr=el("tspan",{"font-weight":700,fill:col},t); yr.textContent=(st.appx?"~":"")+st.yr+" ";
+      const tt=el("tspan",{},t); tt.textContent=st.t;
+      if(st.ms){t.setAttribute("font-weight","600");}
+    });
+  });
+
+  // ---- birth star anchor label ----
+  text(120,684,"AVA · born 1990 · Portland",{ "text-anchor":"middle","font-size":11,"font-weight":600,fill:"#cfe0ff","letter-spacing":".5px"},$("anchors"));
+
+  // ---- Now star (pulsing) ----
+  const nx=1120,ny=110;
+  el("circle",{cx:nx,cy:ny,r:16,fill:"#fff",opacity:.25,class:"now-halo"},$("anchors"));
+  sparkle($("anchors"),nx,ny,20,"#fff");
+  el("circle",{cx:nx,cy:ny,r:6.5,fill:"#ffffff",filter:"url(#bigglow)"},$("anchors"));
+  text(nx,ny-24,"NOW · 2025",{ "text-anchor":"middle","font-size":12,"font-weight":800,fill:"#fff","letter-spacing":"1.5px"},$("anchors"));
+  text(nx,ny+30,"age 35",{ "text-anchor":"middle","font-size":10.5,fill:"#9fb0d8"},$("anchors"));
+
+  // ---- legend ----
+  const NAME={career:"Career & School",home:"Home & Places",rel:"Relationships",travel:"Travel",health:"Health & Hobbies"};
+  const leg=$("legend");
+  Object.keys(cons).forEach(k=>{
+    const d=document.createElement("div"); d.className="leg";
+    const s=document.createElement("span"); s.className="star"; s.style.background=COL[k]; s.style.color=COL[k];
+    const b=document.createElement("b"); b.textContent=NAME[k];
+    const cn=document.createElement("span"); cn.className="cname"; cn.textContent="“"+cons[k].name+"”";
+    d.appendChild(s); d.appendChild(b); d.appendChild(cn); leg.appendChild(d);
+  });
+})();
+</script>
+  <script src="shared/nav.js" defer></script>
+</body>
+</html>

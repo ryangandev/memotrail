@@ -1,171 +1,53 @@
 import { PageHeader } from "@/components/page-header";
-import { Button } from "@/components/button";
+import { Badge } from "@/components/badge";
 import Link from "next/link";
-import { Icon, type IconName } from "@/components/icon";
+import { redirect } from "next/navigation";
+import { Icon } from "@/components/icon";
+import { LibrarySearch } from "@/components/library-search";
 import { PageFrame } from "@/components/page-frame";
-import { SearchField } from "@/components/search-field";
+import { getSearchWorkspace } from "@/lib/data/search";
 import {
-  isWikiItemKind,
-  wikiItemKindLabel,
-  wikiItemSubtypeLabel,
-} from "@/lib/data/wiki-item";
+  parseSearchRequest,
+  type RawSearchParams,
+} from "@/lib/data/search-input";
+import { wikiItemKindLabel, wikiItemSubtypeLabel } from "@/lib/data/wiki-item";
 import {
   getWikiItemsWorkspace,
   wikiItemHref,
   wikiItemsPage,
+  wikiItemsPageSize,
 } from "@/lib/data/wiki-items";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
 
-type LibraryDestination = {
-  detail: string;
-  href: string;
-  icon: IconName;
-  title: string;
-};
-
-const kindDestinations: Array<{
-  detail?: string;
-  icon: IconName;
-  kind: "entity" | "event" | "goal" | "story" | "writing" | null;
-  title: string;
-}> = [
-  {
-    icon: "archive" as const,
-    kind: null,
-    title: "All items",
-  },
-  {
-    detail: "Journal, reflection, or lesson.",
-    icon: "bold" as const,
-    kind: "writing",
-    title: "Writing",
-  },
-  {
-    detail: "Memory, first time, or milestone.",
-    icon: "timeline" as const,
-    kind: "event",
-    title: "Events",
-  },
-  {
-    detail: "Person, place, home, or vehicle.",
-    icon: "archive" as const,
-    kind: "entity",
-    title: "Entities",
-  },
-  {
-    detail: "An authored life chapter.",
-    icon: "star" as const,
-    kind: "story",
-    title: "Stories",
-  },
-  {
-    detail: "An intention you want to pursue.",
-    icon: "target" as const,
-    kind: "goal",
-    title: "Goals",
-  },
-];
-
-const focusedDestinations: LibraryDestination[] = [
-  {
-    detail: "Connect the people who shaped your life.",
-    href: "/people",
-    icon: "person" as const,
-    title: "People",
-  },
-  {
-    detail: "Remember every place you called home and when it was yours.",
-    href: "/homes",
-    icon: "home" as const,
-    title: "Homes",
-  },
-  {
-    detail: "Remember every vehicle and the time it was part of your life.",
-    href: "/vehicles",
-    icon: "car" as const,
-    title: "Vehicles",
-  },
-  {
-    detail: "Keep the places that matter to you as personal records.",
-    href: "/places",
-    icon: "map" as const,
-    title: "Places",
-  },
-  {
-    detail: "Explore the memories and events tied to coordinates on a map.",
-    href: "/map",
-    icon: "map" as const,
-    title: "Map",
-  },
-  {
-    detail: "Revisit the experiences you tried, saw, or learned first.",
-    href: "/first-times",
-    icon: "star" as const,
-    title: "First Times",
-  },
-  {
-    detail: "Keep active plans, distant hopes, and someday ideas close.",
-    href: "/goals",
-    icon: "target" as const,
-    title: "Goals",
-  },
-];
-
-const organizationDestinations: LibraryDestination[] = [
-  {
-    detail: "Curate items from different Kinds into meaningful groups.",
-    href: "/collections",
-    icon: "archive" as const,
-    title: "Collections",
-  },
-  {
-    detail: "Use lightweight descriptors to reconnect related items.",
-    href: "/tags",
-    icon: "tag" as const,
-    title: "Tags",
-  },
-];
-
-const archiveDestinations: LibraryDestination[] = [
-  {
-    detail: "Inspect earlier versions and restore one without losing today.",
-    href: "/history",
-    icon: "clock" as const,
-    title: "Version history",
-  },
-  {
-    detail: "Restore removed items or permanently clear them.",
-    href: "/trash",
-    icon: "trash" as const,
-    title: "Trash",
-  },
-  {
-    detail: "Keep a portable copy with history and original photos.",
-    href: "/settings/export",
-    icon: "archive" as const,
-    title: "Export archive",
-  },
-];
-
 export default async function LibraryPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    kind?: string | string[];
-    page?: string | string[];
-    q?: string | string[];
-  }>;
+  searchParams: Promise<RawSearchParams>;
 }) {
   const parameters = await searchParams;
-  const query = firstParameter(parameters.q).trim().slice(0, 200);
-  const requestedKind = firstParameter(parameters.kind);
-  const itemKind = isWikiItemKind(requestedKind) ? requestedKind : null;
+  const parsed = parseSearchRequest({
+    ...parameters,
+    type: parameters.type ?? parameters.kind,
+  });
   const page = wikiItemsPage(firstParameter(parameters.page));
-  const workspace = await getWikiItemsWorkspace({ itemKind, page, query });
-  if (!workspace) return null;
-  const totalCount = workspace.items[0]?.totalCount ?? 0;
+  const [searchWorkspace, browseWorkspace] = await Promise.all([
+    getSearchWorkspace(parsed),
+    parsed.request.hasCriteria
+      ? Promise.resolve(null)
+      : getWikiItemsWorkspace({ itemKind: null, page, query: "" }),
+  ]);
+  if (!searchWorkspace || (!parsed.request.hasCriteria && !browseWorkspace))
+    return null;
+  if (
+    browseWorkspace &&
+    !browseWorkspace.error &&
+    page > 1 &&
+    browseWorkspace.items.length === 0
+  ) {
+    redirect("/library");
+  }
 
   return (
     <PageFrame className={styles.content} variant="standard">
@@ -174,168 +56,100 @@ export default async function LibraryPage({
         eyebrow={<>Your Life Wiki</>}
         description={
           <>
-            One place for the writing, people, places, moments, stories, and
-            goals that make up your life.
+            Browse your organized records, or search across your Life Wiki and
+            Inbox.
           </>
         }
       />
 
-      <section aria-labelledby="kinds-heading">
-        <div className={styles.sectionHeading}>
-          <h2 id="kinds-heading">Browse by Kind</h2>
-        </div>
-        <nav className={styles.kindGrid} aria-label="Life Wiki Kinds">
-          {kindDestinations.map((destination) => (
-            <Link
-              aria-current={
-                destination.kind === itemKind ||
-                (!destination.kind && !itemKind)
-                  ? "page"
-                  : undefined
-              }
-              href={libraryPageHref(query, destination.kind, 1)}
-              key={destination.title}
-            >
-              <span>
-                <Icon name={destination.icon} size={18} />
-              </span>
-              <strong>{destination.title}</strong>
-              {destination.detail ? <p>{destination.detail}</p> : null}
-            </Link>
-          ))}
-        </nav>
-      </section>
+      <LibrarySearch
+        browse={
+          browseWorkspace ? (
+            <LibraryBrowse page={page} workspace={browseWorkspace} />
+          ) : null
+        }
+        workspace={searchWorkspace}
+      />
 
-      <section aria-labelledby="all-items-heading">
-        <div className={styles.sectionHeading}>
-          <h2 id="all-items-heading">
-            {itemKind ? wikiItemKindLabel(itemKind) : "All items"}
-          </h2>
-          <span>
-            {totalCount} {totalCount === 1 ? "item" : "items"}
-          </span>
-        </div>
-        <form className={styles.wikiFilters}>
-          <SearchField
-            defaultValue={query}
-            label="Find in your Life Wiki"
-            maxLength={200}
-            name="q"
-            placeholder="Search titles, writing, people, or places"
-          />
-          <label>
-            <span>Kind</span>
-            <select defaultValue={itemKind ?? ""} name="kind">
-              <option value="">All kinds</option>
-              <option value="writing">Writing</option>
-              <option value="entity">Entities</option>
-              <option value="event">Events</option>
-              <option value="story">Stories</option>
-              <option value="goal">Goals</option>
-              <option value="capture">Source captures</option>
-            </select>
-          </label>
-          <Button variant="primary" type="submit">
-            Apply
-          </Button>
-        </form>
-
-        {workspace.error ? (
-          <p role="alert">{workspace.error}</p>
-        ) : workspace.items.length === 0 ? (
-          <div className={styles.wikiEmpty}>
-            <strong>No matching items</strong>
-            <p>Try another phrase or Kind, or capture something new.</p>
-          </div>
-        ) : (
-          <div className={styles.wikiGrid}>
-            {workspace.items.map((item) => (
-              <Link
-                href={wikiItemHref(item)}
-                key={`${item.recordSource}:${item.id}`}
-              >
-                <div className={styles.wikiBadges}>
-                  <span>{wikiItemKindLabel(item.itemKind)}</span>
-                  <span>
-                    {wikiItemSubtypeLabel(item.itemKind, item.itemSubtype)}
-                  </span>
-                </div>
-                <strong>{item.title}</strong>
-                {item.excerpt ? <p>{item.excerpt}</p> : null}
-                <small>{wikiItemDateLabel(item)}</small>
-              </Link>
-            ))}
-          </div>
-        )}
-
-        <nav className={styles.pagination} aria-label="Life Wiki pages">
-          {page > 1 ? (
-            <Link href={libraryPageHref(query, itemKind, page - 1)}>
-              Newer items
-            </Link>
-          ) : (
-            <span />
-          )}
-          <span>Page {page}</span>
-          {totalCount > page * 36 ? (
-            <Link href={libraryPageHref(query, itemKind, page + 1)}>
-              Older items
-            </Link>
-          ) : (
-            <span />
-          )}
-        </nav>
-      </section>
-
-      <section aria-labelledby="focused-library-heading">
-        <div className={styles.sectionHeading}>
-          <h2 id="focused-library-heading">Focused views</h2>
-          <span>Structured parts of your life</span>
-        </div>
-        <DestinationGrid destinations={focusedDestinations} />
-      </section>
-
-      <div className={styles.libraryUtilities}>
-        <section aria-labelledby="organize-library-heading">
-          <div className={styles.sectionHeading}>
-            <h2 id="organize-library-heading">Organize</h2>
-            <span>Across every Kind</span>
-          </div>
-          <DestinationGrid destinations={organizationDestinations} />
-        </section>
-
-        <section aria-labelledby="archive-library-heading">
-          <div className={styles.sectionHeading}>
-            <h2 id="archive-library-heading">Archive tools</h2>
-            <span>History, recovery, and export</span>
-          </div>
-          <DestinationGrid destinations={archiveDestinations} />
-        </section>
-      </div>
+      <footer className={styles.libraryFooter}>
+        <Link href="/history">
+          <Icon name="clock" size={16} />
+          <span>Version history</span>
+          <Icon name="chevron" size={14} />
+        </Link>
+      </footer>
     </PageFrame>
   );
 }
 
-function DestinationGrid({
-  destinations,
+function LibraryBrowse({
+  page,
+  workspace,
 }: {
-  destinations: LibraryDestination[];
+  page: number;
+  workspace: NonNullable<Awaited<ReturnType<typeof getWikiItemsWorkspace>>>;
 }) {
+  const totalCount = workspace.items[0]?.totalCount ?? 0;
+  const pageCount = Math.max(1, Math.ceil(totalCount / wikiItemsPageSize));
+
   return (
-    <div className={styles.destinationGrid}>
-      {destinations.map((destination) => (
-        <Link href={destination.href} key={destination.href}>
+    <section aria-labelledby="all-items-heading">
+      <div className={styles.sectionHeading}>
+        <h2 id="all-items-heading">All items</h2>
+        <span>
+          {totalCount} {totalCount === 1 ? "item" : "items"}
+        </span>
+      </div>
+      {workspace.error ? (
+        <p role="alert">{workspace.error}</p>
+      ) : workspace.items.length === 0 ? (
+        <div className={styles.wikiEmpty}>
+          <strong>No matching items</strong>
+          <p>Try another phrase or category, or capture something new.</p>
+        </div>
+      ) : (
+        <ul aria-label="Library items" className={styles.wikiList}>
+          {workspace.items.map((item) => (
+            <li key={`${item.recordSource}:${item.id}`}>
+              <Link href={wikiItemHref(item)}>
+                <div className={styles.wikiBadges}>
+                  <Badge size="micro" uppercase>
+                    {wikiItemKindLabel(item.itemKind)}
+                  </Badge>
+                  {wikiItemSubtypeLabel(item.itemKind, item.itemSubtype) !==
+                  wikiItemKindLabel(item.itemKind) ? (
+                    <Badge size="micro" tone="neutral" uppercase>
+                      {wikiItemSubtypeLabel(item.itemKind, item.itemSubtype)}
+                    </Badge>
+                  ) : null}
+                </div>
+                <small>{wikiItemDateLabel(item)}</small>
+                <strong>{item.title}</strong>
+                {item.excerpt ? <p>{item.excerpt}</p> : null}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {pageCount > 1 ? (
+        <nav className={styles.pagination} aria-label="Life Wiki pages">
+          {page > 1 ? (
+            <Link href={libraryPageHref(page - 1)}>Previous</Link>
+          ) : (
+            <span />
+          )}
           <span>
-            <Icon name={destination.icon} size={19} />
+            Page {page} of {pageCount}
           </span>
-          <div>
-            <strong>{destination.title}</strong>
-            <p>{destination.detail}</p>
-          </div>
-          <Icon name="chevron" size={14} />
-        </Link>
-      ))}
-    </div>
+          {page < pageCount ? (
+            <Link href={libraryPageHref(page + 1)}>Next</Link>
+          ) : (
+            <span />
+          )}
+        </nav>
+      ) : null}
+    </section>
   );
 }
 
@@ -343,13 +157,8 @@ function firstParameter(value: string | string[] | undefined) {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
 }
 
-function libraryPageHref(query: string, itemKind: string | null, page: number) {
-  const parameters = new URLSearchParams();
-  if (query) parameters.set("q", query);
-  if (itemKind) parameters.set("kind", itemKind);
-  if (page > 1) parameters.set("page", String(page));
-  const value = parameters.toString();
-  return value ? `/library?${value}` : "/library";
+function libraryPageHref(page: number) {
+  return page > 1 ? `/library?page=${page}` : "/library";
 }
 
 function wikiItemDateLabel(item: {

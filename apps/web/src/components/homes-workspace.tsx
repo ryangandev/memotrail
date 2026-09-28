@@ -1,9 +1,11 @@
 "use client";
-import { Dialog } from "@/components/dialog";
+import { notify } from "@/components/app-toast";
+import { FocusedEditorSurface } from "@/components/focused-editor-surface";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { FocusedViewLayout } from "@/components/focused-view-layout";
 import { Button } from "@/components/button";
+import { Badge } from "@/components/badge";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -19,6 +21,7 @@ import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { RecordCardMap } from "@/components/record-card-map";
 import {
   RecordCard,
   RecordCardBody,
@@ -150,7 +153,7 @@ export function HomesWorkspace({
         <HomeSection
           homes={currentHomes}
           label="Where life is happening now"
-          onSelect={setSelectedHome}
+          onSelect={(home) => router.push(`/homes/${home.id}`)}
           title="Current"
         />
       ) : null}
@@ -159,7 +162,7 @@ export function HomesWorkspace({
         <HomeSection
           homes={earlierHomes}
           label="Places you lived before"
-          onSelect={setSelectedHome}
+          onSelect={(home) => router.push(`/homes/${home.id}`)}
           title="Earlier homes"
         />
       ) : null}
@@ -204,8 +207,13 @@ function HomeSection({
         <span>{label}</span>
       </header>
       <div className={styles.homeGrid}>
-        {homes.map((home) => (
-          <HomeCard home={home} key={home.id} onSelect={() => onSelect(home)} />
+        {homes.map((home, index) => (
+          <HomeCard
+            eagerMap={index < 3}
+            home={home}
+            key={home.id}
+            onSelect={() => onSelect(home)}
+          />
         ))}
       </div>
     </section>
@@ -213,9 +221,11 @@ function HomeSection({
 }
 
 function HomeCard({
+  eagerMap,
   home,
   onSelect,
 }: {
+  eagerMap: boolean;
   home: HomeRecord;
   onSelect: () => void;
 }) {
@@ -231,18 +241,37 @@ function HomeCard({
         {cover?.imageUrl ? (
           <ProgressiveImage alt="" src={cover.imageUrl} />
         ) : (
-          <div className={styles.homeMark}>
-            <Icon name="home" size={24} />
-            <span>{home.city ?? home.country ?? "A place in your trail"}</span>
-          </div>
+          <RecordCardMap
+            eager={eagerMap}
+            fallback={
+              <div className={styles.homeMark}>
+                <Icon name="home" size={24} />
+                <span>
+                  {home.city ?? home.country ?? "A place in your trail"}
+                </span>
+              </div>
+            }
+            latitude={home.latitude}
+            longitude={home.longitude}
+          />
         )}
-        <span
+        <Badge
           className={home.occurredEnd ? styles.pastBadge : styles.currentBadge}
+          size="micro"
+          tone={home.occurredEnd ? "glassNeutral" : "glassAccent"}
+          uppercase
         >
           {home.occurredEnd ? "Earlier" : "Current"}
-        </span>
+        </Badge>
         {home.attachments.length > 1 ? (
-          <small>{home.attachments.length} photos</small>
+          <Badge
+            className={styles.photoBadge}
+            size="micro"
+            tone="inverse"
+            uppercase
+          >
+            {home.attachments.length} photos
+          </Badge>
         ) : null}
       </RecordCardVisual>
 
@@ -262,10 +291,22 @@ function HomeCard({
         <footer>
           <div>
             {home.collectionNames.slice(0, 2).map((name) => (
-              <span key={`collection:${name.toLocaleLowerCase()}`}>{name}</span>
+              <Badge
+                key={`collection:${name.toLocaleLowerCase()}`}
+                size="micro"
+                tone="neutral"
+              >
+                {name}
+              </Badge>
             ))}
             {home.tagNames.slice(0, 2).map((name) => (
-              <span key={`tag:${name.toLocaleLowerCase()}`}>#{name}</span>
+              <Badge
+                key={`tag:${name.toLocaleLowerCase()}`}
+                size="micro"
+                tone="neutral"
+              >
+                #{name}
+              </Badge>
             ))}
           </div>
           <Icon name="chevron" size={15} />
@@ -283,6 +324,7 @@ export function HomeEditor({
   onSaved,
   onTrashed,
   ownerId,
+  presentation = "dialog",
   sourceCapture = null,
   tagOptions,
 }: {
@@ -293,6 +335,7 @@ export function HomeEditor({
   onSaved: (record: HomeRecord) => void;
   onTrashed: (id: string) => void;
   ownerId: string;
+  presentation?: "dialog" | "page";
   sourceCapture?: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
@@ -502,6 +545,9 @@ export function HomeEditor({
         return;
       }
 
+      notify.success(
+        saved.status === "created" ? "Home created." : "Home saved.",
+      );
       onClose();
     } catch {
       setResult(
@@ -534,6 +580,7 @@ export function HomeEditor({
           current.filter((item) => item.id !== photo.id),
         );
         router.refresh();
+        notify.info("Photo moved to Trash.");
       } else {
         setResult(nextResult);
       }
@@ -569,6 +616,7 @@ export function HomeEditor({
       if (nextResult.status === "trashed") {
         onTrashed(currentId);
         onClose();
+        notify.info("Home moved to Trash.");
       } else {
         setResult(nextResult);
       }
@@ -580,11 +628,9 @@ export function HomeEditor({
   }
 
   return (
-    <Dialog
-      open
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) onClose();
-      }}
+    <FocusedEditorSurface
+      onClose={onClose}
+      presentation={presentation}
       title={
         <>
           {currentId
@@ -598,9 +644,18 @@ export function HomeEditor({
       eyebrow={<>{currentId ? "Edit Home" : "New Home"}</>}
       closeLabel="Close Home editor"
       busy={isPending}
-      size="wide"
       footer={
-        <div className={styles.dialogFooter}>
+        <div
+          className={`${styles.dialogFooter} ${result ? styles.dialogFooterWithMessage : ""}`}
+        >
+          {result ? (
+            <p
+              className={`${styles.formMessage} ${styles.footerMessage}`}
+              role="alert"
+            >
+              {result.message}
+            </p>
+          ) : null}
           <div>
             {currentId ? (
               <Button
@@ -817,14 +872,8 @@ export function HomeEditor({
             recordLabel="Home"
           />
         </div>
-
-        {result ? (
-          <p className={styles.formMessage} role="alert">
-            {result.message}
-          </p>
-        ) : null}
       </form>
-    </Dialog>
+    </FocusedEditorSurface>
   );
 }
 

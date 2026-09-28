@@ -11,7 +11,7 @@ const snapshot = {
   id: "94000000-0000-4000-8000-000000000001",
   title: "Original",
   body: "Writing",
-  item_kind: "writing" as const,
+  item_kind: "entry" as const,
   item_subtype: "note",
   inbox_status: "unreviewed",
   revision: 1,

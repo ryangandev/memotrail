@@ -1,6 +1,7 @@
 import { GoalsWorkspace } from "@/components/goals-workspace";
 import { getCaptureExtractionSource } from "@/lib/data/capture-extraction";
 import { getGoalsWorkspace } from "@/lib/data/goal-records";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,8 @@ export default async function GoalsPage({
   const params = await searchParams;
   const requestedEntry = params.entry;
   const requestedSource = params.source;
+  if (typeof requestedEntry === "string" && !requestedSource)
+    redirect(`/goals/${requestedEntry}`);
   const [workspace, sourceCapture] = await Promise.all([
     getGoalsWorkspace(),
     getCaptureExtractionSource(

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Transit Map · MemoTrail timeline concept</title>
+<style>
+  :root{
+    --paper:#f5f2ea; --paper2:#efeadd; --ink:#20242b; --muted:#5a6472; --faint:#95a0b0;
+    --career:#e8452b; --home:#1e6fd9; --rel:#e23fa6; --travel:#0f9d8f; --health:#7a5af5;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1400px 600px at 50% -5%, #fffdf7 0%, rgba(255,253,247,0) 60%),
+      linear-gradient(180deg,var(--paper),var(--paper2));
+    min-height:100vh;
+  }
+  header.page{max-width:1280px;margin:0 auto;padding:24px 30px 6px}
+  header.page h1{margin:0;font-size:26px;letter-spacing:.3px}
+  header.page .sub{color:var(--muted);font-size:14px;margin-top:5px;max-width:80ch}
+  .line-badge{display:inline-block;background:var(--ink);color:#fff;font-weight:700;
+    padding:2px 9px;border-radius:20px;font-size:12px;letter-spacing:.6px;vertical-align:middle}
+  .wrap{max-width:1280px;margin:0 auto;padding:6px 16px 40px}
+  .board{background:#fbf9f3;border:1px solid #e2dccb;border-radius:16px;
+    box-shadow:0 12px 40px rgba(60,50,30,.10);overflow:hidden}
+  svg#map{width:100%;height:auto;display:block}
+  .legend{display:flex;flex-wrap:wrap;gap:10px 22px;padding:14px 22px 16px;border-top:1px solid #eae3d2;background:#f7f4ec}
+  .leg{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--muted)}
+  .leg .bar{width:26px;height:7px;border-radius:4px}
+  .leg b{color:var(--ink)}
+  .keynote{display:flex;flex-wrap:wrap;gap:8px 20px;padding:0 22px 14px;font-size:12.5px;color:var(--muted)}
+  .keyswatch{display:inline-flex;align-items:center;gap:7px}
+  .ico-inter{width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--ink);box-shadow:inset 0 0 0 2px #fff, 0 0 0 1px var(--ink)}
+  .ico-stn{width:13px;height:13px;border-radius:50%;background:#fff;border:3px solid var(--faint)}
+  .ico-appx{width:13px;height:13px;border-radius:50%;background:#fff;border:2px dashed var(--faint)}
+  @keyframes draw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
+  .metroline{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw 2.2s ease forwards}
+  .stn{transition:transform .15s}
+  .stn:hover{transform:scale(1.35)}
+  @keyframes nowpulse{0%,100%{opacity:.25}50%{opacity:.7}}
+  .nowring{animation:nowpulse 2s ease-in-out infinite}
+</style>
+</head>
+<body>
+  <header class="page">
+    <h1>Life Transit Map <span class="line-badge">AVA CHEN LINE</span></h1>
+    <div class="sub">Ava Chen's life as a subway diagram - born Portland 1990, riding to the present. Five lines run the length of a life; stations are events, interchanges are the pivots where lines meet.</div>
+  </header>
+  <div class="wrap">
+    <div class="board">
+      <svg id="map" viewBox="0 0 1660 760" role="img"
+        aria-label="A subway-style diagram of Ava Chen's life. Five colored lines (Career, Home, Relationships, Travel, Health) run left to right from a Birth 1990 terminus to a 'You are here 2025' terminus. Stations are life events; large double-ring interchanges are milestones.">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="#20242b"/>
+          </marker>
+        </defs>
+        <g id="axis"></g>
+        <g id="stages"></g>
+        <g id="inter"></g>
+        <g id="lines"></g>
+        <g id="stations"></g>
+        <g id="termini"></g>
+      </svg>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="keynote">
+      <span class="keyswatch"><span class="ico-inter"></span> <b style="color:#20242b">Interchange</b> = milestone (pivotal life event)</span>
+      <span class="keyswatch"><span class="ico-stn"></span> Station = event</span>
+      <span class="keyswatch"><span class="ico-appx"></span> Dashed = approximate date (~)</span>
+      <span class="keyswatch">Thick pale band = a <b style="color:#20242b">stage</b> (span of years)</span>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const NS="http://www.w3.org/2000/svg";
+  const $=id=>document.getElementById(id);
+  const el=(n,a,p)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;};
+  const text=(x,y,s,a,p)=>{const t=el("text",Object.assign({x,y},a),p);t.textContent=s;return t;};
+
+  const Y0=1990,Y1=2025;
+  const XL=170,XR=1380,TERM_L=70,TERM_R=1590,MID=400;
+  const per=(XR-XL)/(Y1-Y0);
+  const X=y=>XL+(y-Y0)*per;
+  const COL={career:"#e8452b",home:"#1e6fd9",rel:"#e23fa6",travel:"#0f9d8f",health:"#7a5af5"};
+  const LANE={career:200,home:300,rel:400,travel:500,health:600};
+  const NAME={career:"Career & School",home:"Home & Places",rel:"Relationships",travel:"Travel",health:"Health & Hobbies"};
+
+  // ---------- year axis ----------
+  for(let yr=1990;yr<=2025;yr+=5){
+    const x=X(yr);
+    el("line",{x1:x,y1:120,x2:x,y2:690,stroke:"#e7e0cf","stroke-width":1},$("axis"));
+    text(x,712,yr,{ "text-anchor":"middle","font-size":13,fill:"#95a0b0","font-weight":600},$("axis"));
+  }
+  text(TERM_L,712,"1990",{ "text-anchor":"middle","font-size":13,fill:"#95a0b0","font-weight":600},$("axis"));
+
+  // ---------- lines & stations ----------
+  const lines={
+    home:[
+      {y:1990,t:"Born · Portland",ms:true,term:true},
+      {y:2002,t:"Moved to Seattle"},
+      {y:2012,t:"Moved to San Francisco"},
+      {y:2020,t:"First home · Oakland",ms:true}
+    ],
+    career:[
+      {y:2008,t:"Graduated high school",ms:true},
+      {y:2011,t:"First internship"},
+      {y:2012,t:"B.S. Computer Science",ms:true},
+      {y:2012,t:"First job · Junior Dev",xoff:34,side:"down"},
+      {y:2015,t:"Senior Engineer"},
+      {y:2018,t:"Became Tech Lead"},
+      {y:2021,t:"Founded Loomly"},
+      {y:2023,t:"Seed round · $2M"}
+    ],
+    rel:[
+      {y:2015,t:"Met Sam"},
+      {y:2019,t:"Married Sam",ms:true},
+      {y:2022,t:"Noah born",ms:true},
+      {y:2024,t:"Adopted Miso 🐶"}
+    ],
+    travel:[
+      {y:2013,t:"Backpacked SE Asia"},
+      {y:2016,t:"Marathon · Chicago",appx:true},
+      {y:2018,t:"Japan 🌸"},
+      {y:2023,t:"Summited Rainier"}
+    ],
+    health:[
+      {y:2014,t:"Photography",appx:true},
+      {y:2021,t:"Learned pottery"},
+      {y:2024,t:"Learned to sail ⛵"}
+    ]
+  };
+  const order=["career","home","rel","travel","health"];
+
+  // build each line path: fan from birth terminus -> lane -> horizontal -> converge into NOW terminus
+  order.forEach(key=>{
+    const lane=LANE[key], sts=lines[key];
+    const firstX=X(sts[0].y), lastX=X(sts[sts.length-1].y);
+    let d;
+    // left entry
+    if(Math.abs(lane-MID)<1){ d=`M ${TERM_L} ${MID} L ${firstX} ${lane}`; }
+    else {
+      const dv=Math.abs(lane-MID);
+      const elbowX=TERM_L+dv;
+      d=`M ${TERM_L} ${MID} L ${elbowX} ${lane} L ${firstX} ${lane}`;
+    }
+    // horizontal along lane
+    d+=` L ${lastX} ${lane}`;
+    // right converge
+    const dvr=Math.abs(lane-MID);
+    const cxr=TERM_R-dvr;
+    if(Math.abs(lane-MID)<1){ d+=` L ${TERM_R} ${MID}`; }
+    else { d+=` L ${cxr} ${lane} L ${TERM_R} ${MID}`; }
+
+    const path=el("path",{d,fill:"none",stroke:COL[key],"stroke-width":8,"stroke-linejoin":"round","stroke-linecap":"round",class:"metroline"},$("lines"));
+    const len=path.getTotalLength();
+    path.style.setProperty("--len",len);
+    path.style.animationDelay=(order.indexOf(key)*0.15)+"s";
+  });
+
+  // ---------- stages (pale thick bands) ----------
+  const stages=[
+    {key:"home",s:1990,e:2002,label:"Childhood home"},
+    {key:"career",s:2008,e:2012,label:"University"},
+    {key:"career",s:2021,e:2025,label:"Loomly"}
+  ];
+  stages.forEach(st=>{
+    const y=LANE[st.key];
+    el("line",{x1:X(st.s),y1:y,x2:X(st.e),y2:y,stroke:COL[st.key],"stroke-width":18,"stroke-linecap":"round",opacity:.18},$("stages"));
+    text((X(st.s)+X(st.e))/2,y-15,st.label,{ "text-anchor":"middle","font-size":11,"font-style":"italic",fill:COL[st.key],"font-weight":600,opacity:.85},$("stages"));
+  });
+
+  // ---------- interchange connectors (lines meeting at shared years) ----------
+  const meets=[
+    {yr:2012,from:"career",to:"home"},
+    {yr:2015,from:"career",to:"rel"},
+    {yr:2018,from:"career",to:"travel"},
+    {yr:2023,from:"career",to:"travel"},
+    {yr:2024,from:"rel",to:"health"}
+  ];
+  meets.forEach(m=>{
+    const x=X(m.yr);
+    el("line",{x1:x,y1:LANE[m.from],x2:x,y2:LANE[m.to],stroke:"#b9b0a0","stroke-width":3,opacity:.55},$("inter"));
+  });
+
+  // ---------- stations + labels ----------
+  order.forEach(key=>{
+    const lane=LANE[key], defSide=(lane>=500)?"down":"up";
+    lines[key].forEach(s=>{
+      const x=X(s.y)+(s.xoff||0);
+      const g=el("g",{class:"stn"},$("stations"));
+      g.style.transformOrigin=x+"px "+lane+"px";
+      if(s.ms){
+        el("circle",{cx:x,cy:lane,r:13,fill:"#fff",stroke:"#20242b","stroke-width":3.5},g);
+        el("circle",{cx:x,cy:lane,r:6,fill:COL[key]},g);
+      } else if(s.appx){
+        el("circle",{cx:x,cy:lane,r:7.5,fill:"#fff",stroke:COL[key],"stroke-width":3,"stroke-dasharray":"3 3"},g);
+      } else {
+        el("circle",{cx:x,cy:lane,r:7,fill:"#fff",stroke:COL[key],"stroke-width":3.5},g);
+      }
+      // label
+      const side=s.side||defSide;
+      const ly=side==="up"?lane-(s.ms?24:20):lane+(s.ms?28:24);
+      const t=text(x,ly,(s.appx?"~":"")+s.y,{"text-anchor":"middle","font-size":s.ms?12:10.5,"font-weight":s.ms?700:600,fill:s.ms?"#20242b":"#5a6472"},$("stations"));
+      const t2=text(x,ly+(side==="up"?-12:13),s.t,{"text-anchor":"middle","font-size":s.ms?12:10.5,"font-weight":s.ms?700:500,fill:s.ms?"#20242b":"#5a6472"},$("stations"));
+    });
+  });
+
+  // ---------- termini ----------
+  // Birth terminus (left)
+  el("circle",{cx:TERM_L,cy:MID,r:16,fill:"#20242b"},$("termini"));
+  el("circle",{cx:TERM_L,cy:MID,r:7,fill:"#fff"},$("termini"));
+  text(TERM_L,MID-26,"BIRTH",{ "text-anchor":"middle","font-size":12,"font-weight":800,fill:"#20242b","letter-spacing":"1px"},$("termini"));
+  text(TERM_L,MID+40,"1990 · Portland",{ "text-anchor":"middle","font-size":11.5,"font-weight":600,fill:"#5a6472"},$("termini"));
+
+  // NOW terminus (right)
+  el("circle",{cx:TERM_R,cy:MID,r:26,fill:"none",stroke:"#20242b","stroke-width":2,class:"nowring"},$("termini"));
+  el("circle",{cx:TERM_R,cy:MID,r:16,fill:"#20242b"},$("termini"));
+  el("circle",{cx:TERM_R,cy:MID,r:7,fill:"#fff"},$("termini"));
+  el("line",{x1:TERM_R,y1:MID-46,x2:TERM_R,y2:MID-30,stroke:"#20242b","stroke-width":3,"marker-end":"url(#arrow)"},$("termini"));
+  text(TERM_R,MID-58,"YOU ARE HERE",{ "text-anchor":"middle","font-size":12,"font-weight":800,fill:"#20242b","letter-spacing":"1px"},$("termini"));
+  text(TERM_R,MID+42,"2025 · age 35",{ "text-anchor":"middle","font-size":11.5,"font-weight":700,fill:"#20242b"},$("termini"));
+
+  // ---------- legend ----------
+  const leg=$("legend");
+  order.forEach(key=>{
+    const d=document.createElement("div"); d.className="leg";
+    const bar=document.createElement("span"); bar.className="bar"; bar.style.background=COL[key];
+    const b=document.createElement("b"); b.textContent=NAME[key];
+    d.appendChild(bar); d.appendChild(b); leg.appendChild(d);
+  });
+})();
+</script>
+  <script src="shared/nav.js" defer></script>
+</body>
+</html>

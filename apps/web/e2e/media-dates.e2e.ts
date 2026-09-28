@@ -250,7 +250,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       path: "/private/tmp/memotrail-photo-dates-mobile.png",
       fullPage: true,
     });
-    await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+    await dialog.getByRole("button", { name: "Close Inbox review" }).click();
     expect(await snapshot()).toEqual(before);
     await page
       .getByRole("button", { name: "Organize", exact: true })
@@ -322,7 +322,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     expect(
       (await client.from("locations").select("id").eq("owner_id", owner)).data,
     ).toEqual([]);
-    await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+    await dialog.getByRole("button", { name: "Close Inbox review" }).click();
     expect(
       (await client.from("locations").select("id").eq("owner_id", owner)).data,
     ).toEqual([]);
@@ -381,8 +381,8 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       p_expected_revision: raceBefore.revision,
       p_title: raceBefore.title,
       p_body: raceBefore.body,
-      p_item_kind: "writing",
-      p_item_subtype: "note",
+      p_item_kind: "entry",
+      p_item_subtype: "entry",
       p_occurred_start: raceBefore.occurred_start,
       p_occurred_timezone: raceBefore.occurred_timezone,
       p_collection_names: [],

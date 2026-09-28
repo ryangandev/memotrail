@@ -104,12 +104,13 @@ Run the Web and shared checks:
 ```bash
 pnpm format:check
 pnpm tokens:check
-pnpm lint
-pnpm typecheck
-pnpm test
+pnpm turbo run lint typecheck test
 pnpm build
 node apps/web/scripts/verify-media-trace.mjs
 ```
+
+The CI Web job runs these independent checks concurrently before the build.
+Playwright browser tests are a separate local acceptance suite that requires the local Supabase stack; they are not part of the current GitHub CI job.
 
 Build the iOS app without signing:
 

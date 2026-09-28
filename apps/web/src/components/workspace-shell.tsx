@@ -3,30 +3,37 @@ import workspaceShellStyles from "@/components/workspace-shell.module.css";
 
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { AuthGate } from "@/components/auth-gate";
 import { BrandMark } from "@/components/brand-mark";
 import { CommandPalette } from "@/components/command-palette";
-import { DismissibleSyncNote } from "@/components/dismissible-sync-note";
 import { Icon, type IconName } from "@/components/icon";
 import { QuickCaptureDialog } from "@/components/quick-capture-dialog";
 import { SearchShortcutButton } from "@/components/search-shortcut-link";
 import { SyncStatus } from "@/components/sync-status";
 import { TimezoneSync } from "@/components/timezone-sync";
+import { WorkspaceHistoryControls } from "@/components/workspace-history-controls";
 import type { Viewer } from "@/lib/data/inbox";
+import { SIDEBAR_COOKIE_NAME } from "@/lib/sidebar-preference";
 
 export type WorkspaceDestination =
   | "collections"
+  | "explore"
+  | "history"
   | "home"
   | "homes"
   | "inbox"
   | "library"
   | "map"
   | "goals"
-  | "places"
   | "people"
-  | "search"
   | "settings"
   | "tags"
   | "timeline"
@@ -41,8 +48,15 @@ type NavigationItem = {
   label: string;
 };
 
+const mapNavigation: NavigationItem = {
+  destination: "map",
+  href: "/map",
+  icon: "map",
+  label: "Map",
+};
+
 const primaryNavigation: NavigationItem[] = [
-  { destination: "home", href: "/", icon: "home", label: "Home" },
+  { destination: "home", href: "/", icon: "dashboard", label: "Dashboard" },
   {
     destination: "timeline",
     href: "/timeline",
@@ -55,13 +69,11 @@ const primaryNavigation: NavigationItem[] = [
     icon: "archive",
     label: "Library",
   },
-  { destination: "map", href: "/map", icon: "map", label: "Map" },
-  { destination: "search", href: "/search", icon: "search", label: "Search" },
+  mapNavigation,
 ];
 
 const recordNavigation: NavigationItem[] = [
   { destination: "people", href: "/people", icon: "person", label: "People" },
-  { destination: "places", href: "/places", icon: "map", label: "Places" },
   { destination: "homes", href: "/homes", icon: "home", label: "Homes" },
   {
     destination: "vehicles",
@@ -90,7 +102,7 @@ const organizationNavigation: NavigationItem[] = [
 ];
 
 const mobileNavigation: NavigationItem[] = [
-  { destination: "home", href: "/", icon: "home", label: "Home" },
+  { destination: "home", href: "/", icon: "dashboard", label: "Dashboard" },
   { destination: "inbox", href: "/inbox", icon: "inbox", label: "Inbox" },
   {
     destination: "timeline",
@@ -106,6 +118,33 @@ const mobileNavigation: NavigationItem[] = [
   },
 ];
 
+const mobileMoreGroups: { label: string; items: NavigationItem[] }[] = [
+  {
+    label: "Explore",
+    items: [mapNavigation],
+  },
+  { label: "Focused views", items: recordNavigation },
+  { label: "Organize", items: organizationNavigation.slice(0, 2) },
+  {
+    label: "Archive and account",
+    items: [
+      {
+        destination: "history",
+        href: "/history",
+        icon: "clock",
+        label: "Version history",
+      },
+      organizationNavigation[2],
+      {
+        destination: "settings",
+        href: "/settings",
+        icon: "settings",
+        label: "Settings",
+      },
+    ],
+  },
+];
+
 const settingsNavigation: NavigationItem = {
   destination: "settings",
   href: "/settings",
@@ -117,11 +156,13 @@ export function WorkspaceBoundary({
   children,
   configured,
   inboxCount,
+  initialSidebarCollapsed,
   viewer,
 }: {
   children: ReactNode;
   configured: boolean;
   inboxCount?: number;
+  initialSidebarCollapsed: boolean;
   viewer: Viewer | null;
 }) {
   const pathname = usePathname();
@@ -139,7 +180,11 @@ export function WorkspaceBoundary({
   }
 
   return (
-    <WorkspaceShell inboxCount={inboxCount} viewer={viewer}>
+    <WorkspaceShell
+      inboxCount={inboxCount}
+      initialSidebarCollapsed={initialSidebarCollapsed}
+      viewer={viewer}
+    >
       {children}
     </WorkspaceShell>
   );
@@ -148,15 +193,23 @@ export function WorkspaceBoundary({
 export function WorkspaceShell({
   children,
   inboxCount,
+  initialSidebarCollapsed,
   viewer,
 }: {
   children: ReactNode;
   inboxCount?: number;
+  initialSidebarCollapsed: boolean;
   viewer: Viewer;
 }) {
-  const activeDestination = destinationForPathname(usePathname());
+  const pathname = usePathname();
+  const activeDestination = destinationForPathname(pathname);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
+  const mobileMoreButton = useRef<HTMLButtonElement>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    initialSidebarCollapsed,
+  );
   const closeCommandPalette = useCallback(
     () => setCommandPaletteOpen(false),
     [],
@@ -171,14 +224,35 @@ export function WorkspaceShell({
     setQuickCaptureOpen(true);
   }, []);
 
+  useEffect(() => {
+    if (!mobileMoreOpen) return;
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMobileMoreOpen(false);
+        mobileMoreButton.current?.focus();
+      }
+    }
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [mobileMoreOpen]);
+
+  function toggleSidebar() {
+    const next = !sidebarCollapsed;
+    setSidebarCollapsed(next);
+    document.cookie = `${SIDEBAR_COOKIE_NAME}=${next ? "collapsed" : "expanded"}; Path=/; Max-Age=31536000; SameSite=Lax`;
+  }
+
   return (
-    <div className={workspaceShellStyles.appShell}>
+    <div
+      className={workspaceShellStyles.appShell}
+      data-sidebar-collapsed={sidebarCollapsed}
+    >
       <TimezoneSync />
       <CommandPalette onClose={closeCommandPalette} open={commandPaletteOpen} />
       <Sidebar
         activeDestination={activeDestination}
+        collapsed={sidebarCollapsed}
         inboxCount={inboxCount}
-        viewer={viewer}
       />
 
       <main className={workspaceShellStyles.workspace}>
@@ -187,11 +261,26 @@ export function WorkspaceShell({
             <Link
               className={workspaceShellStyles.mobileBrand}
               href="/"
-              aria-label="MemoTrail home"
+              aria-label="MemoTrail dashboard"
             >
               <BrandMark className={workspaceShellStyles.brandMark} />
               <span>MemoTrail</span>
             </Link>
+            <WorkspaceHistoryControls />
+            <button
+              aria-label={
+                sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+              }
+              className={workspaceShellStyles.sidebarToggle}
+              onClick={toggleSidebar}
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              type="button"
+            >
+              <Icon
+                name={sidebarCollapsed ? "sidebarClosed" : "sidebarOpen"}
+                size={18}
+              />
+            </button>
             <QuickCaptureDialog
               idPrefix="topbar-capture"
               onClose={closeQuickCapture}
@@ -225,14 +314,6 @@ export function WorkspaceShell({
               <NavigationPendingIndicator label="Inbox" />
             </Link>
             <Link
-              aria-current={activeDestination === "trash" ? "page" : undefined}
-              aria-label="Open Trash"
-              className={workspaceShellStyles.mobileTrashButton}
-              href="/trash"
-            >
-              <Icon name="trash" size={19} />
-            </Link>
-            <Link
               aria-current={
                 activeDestination === "settings" ? "page" : undefined
               }
@@ -254,28 +335,100 @@ export function WorkspaceShell({
       >
         {mobileNavigation.map((item) => (
           <NavigationControl
-            active={isNavigationActive(item, activeDestination)}
+            active={item.destination === activeDestination}
             inboxCount={item.destination === "inbox" ? inboxCount : undefined}
             item={item}
             key={item.destination}
             mobile
+            onNavigate={() => setMobileMoreOpen(false)}
           />
         ))}
+        <button
+          aria-controls={mobileMoreOpen ? "mobile-more-menu" : undefined}
+          aria-expanded={mobileMoreOpen}
+          aria-label="More destinations"
+          className={
+            !mobileNavigation.some(
+              (item) => item.destination === activeDestination,
+            )
+              ? workspaceShellStyles.mobileActive
+              : undefined
+          }
+          onClick={() => setMobileMoreOpen((open) => !open)}
+          ref={mobileMoreButton}
+          type="button"
+        >
+          <Icon name="more" size={20} />
+          <span>More</span>
+        </button>
       </nav>
+      {mobileMoreOpen ? (
+        <>
+          <button
+            aria-label="Close more destinations"
+            className={workspaceShellStyles.mobileMoreScrim}
+            onClick={() => setMobileMoreOpen(false)}
+            tabIndex={-1}
+            type="button"
+          />
+          <nav
+            aria-label="More destinations"
+            className={workspaceShellStyles.mobileMoreMenu}
+            id="mobile-more-menu"
+          >
+            <div className={workspaceShellStyles.mobileMoreHeader}>
+              <h2>More</h2>
+              <button
+                aria-label="Close more destinations"
+                onClick={() => setMobileMoreOpen(false)}
+                type="button"
+              >
+                <Icon name="close" size={18} />
+              </button>
+            </div>
+            {mobileMoreGroups.map((group) => (
+              <div
+                className={workspaceShellStyles.mobileMoreGroup}
+                key={group.label}
+              >
+                <h3>{group.label}</h3>
+                <div className={workspaceShellStyles.mobileMoreLinks}>
+                  {group.items.map((item) => (
+                    <Link
+                      aria-current={
+                        item.destination === activeDestination
+                          ? "page"
+                          : undefined
+                      }
+                      href={item.href ?? "/"}
+                      key={item.href}
+                      onClick={() => setMobileMoreOpen(false)}
+                    >
+                      <Icon name={item.icon} size={18} />
+                      <span>{item.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </nav>
+        </>
+      ) : null}
     </div>
   );
 }
 
 function destinationForPathname(pathname: string): WorkspaceDestination {
   if (pathname === "/") return "home";
-  if (pathname.startsWith("/search")) return "search";
+  if (pathname.startsWith("/search")) return "library";
+  if (pathname.startsWith("/history")) return "history";
+  if (pathname.startsWith("/explore")) return "explore";
   if (pathname.startsWith("/settings")) return "settings";
   if (pathname.startsWith("/inbox")) return "inbox";
   if (pathname.startsWith("/timeline")) return "timeline";
   if (pathname.startsWith("/goals")) return "goals";
   if (pathname.startsWith("/homes")) return "homes";
   if (pathname.startsWith("/map")) return "map";
-  if (pathname.startsWith("/places")) return "places";
   if (pathname.startsWith("/people")) return "people";
   if (pathname.startsWith("/vehicles")) return "vehicles";
   if (pathname.startsWith("/first-times")) return "first-times";
@@ -287,19 +440,29 @@ function destinationForPathname(pathname: string): WorkspaceDestination {
 
 function Sidebar({
   activeDestination,
+  collapsed,
   inboxCount,
-  viewer,
 }: {
   activeDestination: WorkspaceDestination;
+  collapsed: boolean;
   inboxCount?: number;
-  viewer: Viewer;
 }) {
   return (
     <aside className={workspaceShellStyles.sidebar}>
-      <Link className={workspaceShellStyles.brand} href="/">
-        <BrandMark className={workspaceShellStyles.brandMark} />
-        <span>MemoTrail</span>
-      </Link>
+      <div className={workspaceShellStyles.sidebarHeader}>
+        <Link
+          aria-label="MemoTrail dashboard"
+          className={workspaceShellStyles.brand}
+          href="/"
+        >
+          <BrandMark
+            className={workspaceShellStyles.brandMark}
+            collapsed={collapsed}
+            motion="counter-rotation"
+          />
+          <span className={workspaceShellStyles.brandName}>MemoTrail</span>
+        </Link>
+      </div>
 
       <div
         aria-label="Sidebar navigation"
@@ -309,25 +472,31 @@ function Sidebar({
         <nav aria-label="Primary navigation">
           <NavGroup
             activeDestination={activeDestination}
+            collapsed={collapsed}
             inboxCount={inboxCount}
             items={primaryNavigation}
           />
           <div className={workspaceShellStyles.navDivider} role="separator" />
-          <p className={workspaceShellStyles.navLabel}>Focused views</p>
+          <p aria-hidden={collapsed} className={workspaceShellStyles.navLabel}>
+            Focused views
+          </p>
           <NavGroup
             activeDestination={activeDestination}
+            collapsed={collapsed}
             items={recordNavigation}
           />
           <div className={workspaceShellStyles.navDivider} role="separator" />
-          <p className={workspaceShellStyles.navLabel}>Organize</p>
+          <p aria-hidden={collapsed} className={workspaceShellStyles.navLabel}>
+            Organize
+          </p>
           <NavGroup
             activeDestination={activeDestination}
+            collapsed={collapsed}
             items={organizationNavigation}
           />
         </nav>
 
         <div className={workspaceShellStyles.sidebarFooter}>
-          <DismissibleSyncNote ownerId={viewer.id} />
           <div className={workspaceShellStyles.navDivider} role="separator" />
           <nav
             className={workspaceShellStyles.navGroup}
@@ -335,6 +504,7 @@ function Sidebar({
           >
             <NavigationControl
               active={activeDestination === "settings"}
+              collapsed={collapsed}
               item={settingsNavigation}
             />
           </nav>
@@ -346,10 +516,12 @@ function Sidebar({
 
 function NavGroup({
   activeDestination,
+  collapsed,
   inboxCount,
   items,
 }: {
   activeDestination: WorkspaceDestination;
+  collapsed: boolean;
   inboxCount?: number;
   items: NavigationItem[];
 }) {
@@ -358,6 +530,7 @@ function NavGroup({
       {items.map((item) => (
         <NavigationControl
           active={item.destination === activeDestination}
+          collapsed={collapsed}
           inboxCount={item.destination === "inbox" ? inboxCount : undefined}
           item={item}
           key={item.destination}
@@ -369,22 +542,28 @@ function NavGroup({
 
 function NavigationControl({
   active,
+  collapsed = false,
   inboxCount,
   item,
   mobile = false,
+  onNavigate,
 }: {
   active: boolean;
+  collapsed?: boolean;
   inboxCount?: number;
   item: NavigationItem;
   mobile?: boolean;
+  onNavigate?: () => void;
 }) {
   const content = (
     <>
       <Icon name={item.icon} size={mobile ? 20 : 18} />
-      <span>
+      <span className={workspaceShellStyles.navItemLabel}>
         {mobile && item.label === "First Times" ? "Firsts" : item.label}
       </span>
-      {!mobile && inboxCount ? <small>{inboxCount}</small> : null}
+      {inboxCount ? (
+        <small aria-hidden={mobile || undefined}>{inboxCount}</small>
+      ) : null}
     </>
   );
   const className = active
@@ -397,8 +576,11 @@ function NavigationControl({
     return (
       <Link
         aria-current={active ? "page" : undefined}
+        aria-label={collapsed ? item.label : undefined}
         className={className}
         href={item.href}
+        onClick={onNavigate}
+        title={collapsed ? item.label : undefined}
       >
         {content}
         <NavigationPendingIndicator label={item.label} />
@@ -424,26 +606,5 @@ function NavigationPendingIndicator({ label }: { label: string }) {
       className={workspaceShellStyles.navigationProgress}
       role="status"
     />
-  );
-}
-
-function isNavigationActive(
-  item: NavigationItem,
-  activeDestination: WorkspaceDestination,
-) {
-  return (
-    item.destination === activeDestination ||
-    (item.destination === "library" &&
-      [
-        "collections",
-        "first-times",
-        "goals",
-        "homes",
-        "places",
-        "people",
-        "tags",
-        "trash",
-        "vehicles",
-      ].includes(activeDestination))
   );
 }

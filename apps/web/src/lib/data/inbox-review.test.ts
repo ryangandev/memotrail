@@ -5,8 +5,6 @@ import { createEntryRichText, plainTextDocument } from "./rich-text";
 const validInput = {
   body: "Small forces trigger bone remodeling.",
   collectionNames: ["Learning", "Health"],
-  itemKind: "writing",
-  itemSubtype: "note",
   id: "f4d2df16-a506-4be6-a63e-b7b18afe3468",
   location: null,
   occurredAt: "2026-09-01T15:00:00.000Z",
@@ -58,28 +56,14 @@ describe("Inbox Entry review", () => {
     });
   });
 
-  it("requires a title for a First Time", () => {
+  it("ignores an old client classification and rejects invalid revisions", () => {
     expect(
       parseInboxReviewInput({
         ...validInput,
         itemKind: "event",
         itemSubtype: "first_time",
-        title: " ",
       }),
-    ).toEqual({
-      message: "Add a title before marking an Entry as a First Time.",
-      success: false,
-    });
-  });
-
-  it("rejects unsupported types and invalid revisions", () => {
-    expect(
-      parseInboxReviewInput({
-        ...validInput,
-        itemKind: "entity",
-        itemSubtype: "vehicle",
-      }).success,
-    ).toBe(false);
+    ).toEqual({ data: { ...validInput, bodyRich: null }, success: true });
     expect(parseInboxReviewInput({ ...validInput, revision: 0 }).success).toBe(
       false,
     );

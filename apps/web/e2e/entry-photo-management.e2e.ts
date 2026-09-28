@@ -94,6 +94,14 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
       buffer: bytes,
     });
     await gallery
+      .getByRole("button", { name: "Preview selected New memory.png" })
+      .click();
+    const pendingPreview = page.getByRole("dialog", { name: "New memory.png" });
+    await expect(pendingPreview).toBeVisible();
+    await pendingPreview
+      .getByRole("button", { name: "Close", exact: true })
+      .click();
+    await gallery
       .getByRole("button", {
         name: "Discard selected New memory.png",
         exact: true,

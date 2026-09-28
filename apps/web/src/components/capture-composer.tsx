@@ -3,6 +3,7 @@ import captureComposerStyles from "@/components/capture-composer.module.css";
 import entryFormStyles from "@/components/entry-form.module.css";
 import entryListStyles from "@/components/entry-list.module.css";
 import { Button } from "@/components/button";
+import { notify } from "@/components/app-toast";
 
 import {
   type ChangeEvent,
@@ -21,6 +22,7 @@ import {
   type SyncInboxEntryResult,
 } from "@/app/inbox/actions";
 import { Icon } from "@/components/icon";
+import { Badge } from "@/components/badge";
 import { PhotoUploadProgress } from "@/components/photo-upload-progress";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { SelectedPhotoPreview } from "@/components/selected-photo-preview";
@@ -82,11 +84,13 @@ export type NativePhotoPickerState = "canceled" | "opened" | "selected";
 const idleFeedback: CaptureFeedback = { isError: false, message: "" };
 
 export function CaptureComposer({
+  embedded = false,
   idPrefix = "capture",
   onNativePhotoPickerChange,
   ownerId,
   variant = "page",
 }: {
+  embedded?: boolean;
   idPrefix?: string;
   onNativePhotoPickerChange?: (state: NativePhotoPickerState) => void;
   ownerId: string;
@@ -108,6 +112,7 @@ export function CaptureComposer({
   const [isPhotoStateReady, setIsPhotoStateReady] = useState(false);
   const [isPhotoStorageAvailable, setIsPhotoStorageAvailable] = useState(true);
   const [pendingEntries, setPendingEntries] = useState<QueuedInboxEntry[]>([]);
+  const [showPendingEntries, setShowPendingEntries] = useState(false);
   const [isVoiceSupported, setIsVoiceSupported] = useState<boolean | null>(
     null,
   );
@@ -224,12 +229,13 @@ export function CaptureComposer({
     syncInFlightRef.current = false;
     setPhotoUploadProgress(null);
     setIsSyncing(false);
+    setShowPendingEntries(pendingEntriesRef.current.length > 0);
 
-    if (latestResult) {
-      setFeedback({
-        isError: latestResult.status === "retry",
-        message: latestResult.message,
-      });
+    if (latestResult?.status === "synced") {
+      setFeedback(idleFeedback);
+      notify.success(latestResult.message);
+    } else if (latestResult) {
+      setFeedback({ isError: true, message: latestResult.message });
     }
 
     if (didSyncEntry) {
@@ -266,6 +272,7 @@ export function CaptureComposer({
       occurrenceRef.current = savedOccurrence;
       setHasLocalDraft(Boolean(draft));
       replacePendingEntries(queue);
+      setShowPendingEntries(queue.length > 0);
       setIsLocalStateReady(true);
 
       if (queue.length > 0 && navigator.onLine) {
@@ -614,12 +621,11 @@ export function CaptureComposer({
     setPhotos([]);
     setHasLocalDraft(false);
     setVoiceFeedback(null);
-    setFeedback({
-      isError: false,
-      message: navigator.onLine
-        ? "Saved on this device. Syncing…"
-        : "Saved on this device. Waiting for a connection.",
-    });
+    setFeedback(idleFeedback);
+    if (!navigator.onLine) {
+      setShowPendingEntries(true);
+      notify.info("Saved on this device. Waiting for a connection.");
+    }
     setIsSaving(false);
     await synchronizeQueue();
   }
@@ -633,7 +639,7 @@ export function CaptureComposer({
   return (
     <>
       <form
-        className={`${captureComposerStyles.captureCard} ${variant === "dialog" ? captureComposerStyles.dialogCaptureCard : ""}`}
+        className={`${captureComposerStyles.captureCard} ${variant === "dialog" ? captureComposerStyles.dialogCaptureCard : ""} ${embedded ? captureComposerStyles.embeddedCaptureCard : ""}`}
         aria-label="Quick capture"
         onSubmit={handleSubmit}
       >
@@ -825,14 +831,14 @@ export function CaptureComposer({
               }
               type="submit"
             >
-              {isSaving ? "Saving…" : "Save to Inbox"}
+              {isSaving || isSyncing ? "Saving…" : "Save to Inbox"}
               <Icon name="chevron" size={16} />
             </Button>
           </div>
         </div>
       </form>
 
-      {pendingEntries.length > 0 ? (
+      {showPendingEntries && pendingEntries.length > 0 ? (
         <section
           className={captureComposerStyles.pendingSection}
           aria-labelledby={`${idPrefix}-pending-heading`}
@@ -862,9 +868,7 @@ export function CaptureComposer({
                   <time dateTime={entry.occurredAt ?? undefined}>
                     {occurrenceLabel(queuedOccurrence(entry))}
                   </time>
-                  <span className={captureComposerStyles.pendingBadge}>
-                    On this device
-                  </span>
+                  <Badge>On this device</Badge>
                 </div>
                 <h3>{entry.title ?? "Untitled Entry"}</h3>
                 {entry.body ? <p>{entry.body}</p> : null}
@@ -898,10 +902,11 @@ function CapturePhoto({
       />
       <button
         aria-label={`Remove selected ${photo.file.name}`}
+        className={captureComposerStyles.removePhotoButton}
         onClick={onRemove}
         type="button"
       >
-        ×
+        <Icon name="close" size={16} />
       </button>
     </div>
   );

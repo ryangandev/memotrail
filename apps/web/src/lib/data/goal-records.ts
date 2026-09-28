@@ -22,7 +22,9 @@ export type GoalsWorkspace = {
 
 type NameRow = { name: string };
 
-export async function getGoalsWorkspace(): Promise<GoalsWorkspace | null> {
+export async function getGoalsWorkspace(
+  targetId?: string,
+): Promise<GoalsWorkspace | null> {
   const context = await getAuthenticatedContext();
   if (!context) return null;
 
@@ -61,7 +63,25 @@ export async function getGoalsWorkspace(): Promise<GoalsWorkspace | null> {
     return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
   }
 
-  const attachments = rows.flatMap((goal) => goal.attachments);
+  if (targetId && !rows.some((record) => record.id === targetId)) {
+    for (let offset = 100; rows.length >= offset; offset += 100) {
+      const page = await context.client.rpc("goals_workspace", {
+        p_limit: 100,
+        p_offset: offset,
+      });
+      const more = page.error ? null : parseGoalRows(page.data);
+      if (!more)
+        return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+      rows.push(...more);
+      if (more.length < 100 || more.some((record) => record.id === targetId))
+        break;
+    }
+  }
+  const visibleRows = targetId
+    ? rows.filter((record) => record.id === targetId)
+    : rows;
+
+  const attachments = visibleRows.flatMap((goal) => goal.attachments);
   const signedUrls = await signedImageUrls(context.client, attachments);
   const linkOptions = links.error
     ? []
@@ -71,7 +91,7 @@ export async function getGoalsWorkspace(): Promise<GoalsWorkspace | null> {
     collectionOptions: collections.error
       ? []
       : (collections.data ?? []).map((item) => item.name),
-    goals: rows.map((goal) => ({
+    goals: visibleRows.map((goal) => ({
       ...goal,
       attachments: goal.attachments.map((attachment) => ({
         ...attachment,

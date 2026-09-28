@@ -64,8 +64,9 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
           owner_id: ownerID,
           title: "How an electric lighter works",
           body: "今天学了电打火机使用电弧点燃蜡烛。Electric arcs produce heat.",
-          item_kind: "writing",
-          item_subtype: "note",
+          inbox_status: "organized",
+          item_kind: "entry",
+          item_subtype: "entry",
           date_precision: "day",
           occurred_start: "2026-01-05T12:00:00Z",
           occurred_timezone: "UTC",
@@ -122,7 +123,33 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
     await commandPalette
       .getByRole("button", { name: /Search all for “electric”/ })
       .click();
-    await expect(page).toHaveURL(/\/search\?q=electric$/);
+    await expect(page).toHaveURL(/\/library\?q=electric$/);
+    const searchSurface = page.getByRole("region", { name: "Entry search" });
+    await searchSurface.getByText("Filters", { exact: true }).click();
+    await expect(searchSurface).not.toContainText("Date filters include");
+    await expect(searchSurface).toHaveCSS(
+      "background-color",
+      "rgba(0, 0, 0, 0)",
+    );
+    for (const width of [1500, 1050, 700, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      const dates = searchSurface.locator("[data-date-picker-field]");
+      const from = await dates.nth(0).boundingBox();
+      const to = await dates.nth(1).boundingBox();
+      expect(from).not.toBeNull();
+      expect(to).not.toBeNull();
+      expect(from!.x + from!.width).toBeLessThanOrEqual(width);
+      expect(to!.x + to!.width).toBeLessThanOrEqual(width);
+      await expect
+        .poll(() => page.evaluate(() => document.documentElement.scrollWidth))
+        .toBeLessThanOrEqual(width);
+      if (width === 1500 || width === 390) {
+        await searchSurface.screenshot({
+          animations: "disabled",
+          path: `/private/tmp/memotrail-search-filters-${width}.png`,
+        });
+      }
+    }
     await expect(
       page.getByRole("heading", { name: "How an electric lighter works" }),
     ).toBeVisible();
@@ -131,8 +158,7 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
         "今天学了电打火机使用电弧点燃蜡烛。Electric arcs produce heat.",
       ),
     ).toBeVisible();
-    // Classified Writing opens its current durable detail even when it has not
-    // left the Inbox yet. Only raw Captures return to Inbox review.
+    // An organized Entry opens its current durable detail.
     await page
       .getByRole("link", { name: "How an electric lighter works" })
       .click();
@@ -150,6 +176,7 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
       caret: "initial",
     });
     await page.goto("/search?q=" + encodeURIComponent("电弧"));
+    await expect(page).toHaveURL(/\/library\?q=/);
     await expect(
       page.getByRole("heading", { name: "How an electric lighter works" }),
     ).toBeVisible();
@@ -163,7 +190,7 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
       .select("revision,inbox_status")
       .eq("id", entryID)
       .single();
-    expect(unchanged.data).toEqual({ revision: 1, inbox_status: "unreviewed" });
+    expect(unchanged.data).toEqual({ revision: 1, inbox_status: "organized" });
   } finally {
     expect((await admin.auth.admin.deleteUser(ownerID)).error).toBeNull();
   }

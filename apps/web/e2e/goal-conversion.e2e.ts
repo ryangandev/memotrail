@@ -77,8 +77,8 @@ test("An Idea creates a linked Goal without changing the source", async ({
           title: "Original chapter",
           body: "The original words I want to keep.",
           inbox_status: "organized",
-          item_kind: "writing",
-          item_subtype: "idea",
+          item_kind: "entry",
+          item_subtype: "entry",
         })
       ).error,
     ).toBeNull();
@@ -162,7 +162,7 @@ test("An Idea creates a linked Goal without changing the source", async ({
           .eq("id", entryID)
           .single()
       ).data,
-    ).toEqual({ item_kind: "writing", item_subtype: "idea" });
+    ).toEqual({ item_kind: "entry", item_subtype: "entry" });
     await page
       .getByRole("button", { name: "Create linked Goal", exact: true })
       .click();
@@ -191,8 +191,8 @@ test("An Idea creates a linked Goal without changing the source", async ({
     await form
       .getByRole("button", { name: "Create linked Goal", exact: true })
       .click();
-    await expect(page).toHaveURL(/\/goals\?entry=/);
-    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page).toHaveURL(/\/goals\/[0-9a-f-]+$/);
+    await expect(page.getByRole("button", { name: "Edit Goal" })).toBeVisible();
     const derivedLinks = await client
       .from("entry_links")
       .select("target_entry_id")
@@ -260,11 +260,12 @@ test("An Idea creates a linked Goal without changing the source", async ({
     expect(retry.error).toBeNull();
     expect(retry.data).toHaveLength(1);
     expect(retry.data[0].goal_entry_id).toBe(goalID);
+    await page.getByRole("button", { name: "Edit Goal" }).click();
     await page
-      .getByRole("dialog")
+      .getByRole("main")
       .getByRole("button", { name: "Save changes", exact: true })
       .click();
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "Edit Goal" })).toBeVisible();
     const later = (
       await client
         .from("entries")

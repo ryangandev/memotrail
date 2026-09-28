@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
-test("Inbox Capture creates a linked Vehicle through the specialized form", async ({
+test("Inbox saves an Entry while Vehicle uses its focused form", async ({
   context,
   page,
 }) => {
@@ -73,8 +73,8 @@ test("Inbox Capture creates a linked Vehicle through the specialized form", asyn
           owner_id: ownerID,
           title: "My first EV",
           body: "Quiet drives around the bay.",
-          item_kind: "capture",
-          item_subtype: "quick_capture",
+          item_kind: "entry",
+          item_subtype: "entry",
           inbox_status: "unreviewed",
           date_precision: "unknown",
         })
@@ -86,40 +86,25 @@ test("Inbox Capture creates a linked Vehicle through the specialized form", asyn
       has: page.getByRole("heading", { name: "My first EV" }),
     });
     await card.getByRole("button", { name: "Organize", exact: true }).click();
-    await page
-      .getByRole("dialog", { name: "Organize Capture" })
-      .getByRole("link", { name: "Vehicle", exact: true })
-      .click();
+    const review = page.getByRole("dialog", { name: "Review Entry" });
+    await expect(review.getByRole("link", { name: "Vehicle" })).toHaveCount(0);
+    await review.getByRole("button", { name: "Save to Library" }).click();
+    await expect(review).not.toBeVisible();
 
-    await expect(page).toHaveURL(
-      new RegExp(`/vehicles\\?source=${captureID}$`),
-    );
-    const editor = page.getByRole("dialog", {
-      name: "Create a Vehicle from this Capture",
-    });
-    await expect(
-      editor.getByText("Starting from an Inbox Capture"),
-    ).toBeVisible();
-    await expect(
-      editor.getByLabel("Name or nickname", { exact: true }),
-    ).toHaveValue("My first EV");
-    await expect(editor.getByRole("textbox", { name: /Memories/ })).toHaveValue(
-      "Quiet drives around the bay.",
-    );
+    await page.goto("/vehicles");
+    await page.getByRole("button", { name: "Add Vehicle" }).click();
+    const editor = page.getByRole("dialog");
+    await editor
+      .getByLabel("Name or nickname", { exact: true })
+      .fill("My first EV");
     await editor.getByRole("textbox", { name: /Make/ }).fill("Toyota");
     await editor.getByRole("textbox", { name: /Model/ }).fill("RAV4");
     await editor.getByRole("spinbutton", { name: /Model year/ }).fill("2025");
     await editor.getByRole("textbox", { name: /Color/ }).fill("White Pearl");
-    await page.screenshot({
-      caret: "initial",
-      path: "/private/tmp/memotrail-capture-vehicle-handoff.png",
-      fullPage: true,
-    });
     await editor
       .getByRole("button", { name: "Add Vehicle", exact: true })
       .click();
     await expect(editor).not.toBeVisible();
-    await expect(page).toHaveURL(/\/vehicles$/);
     await expect(
       page.getByRole("button", { name: /My first EV/ }),
     ).toBeVisible();
@@ -130,8 +115,8 @@ test("Inbox Capture creates a linked Vehicle through the specialized form", asyn
       .eq("id", captureID)
       .single();
     expect(source.data).toEqual({
-      item_kind: "capture",
-      item_subtype: "source_capture",
+      item_kind: "entry",
+      item_subtype: "entry",
       inbox_status: "organized",
     });
     const vehicle = await client

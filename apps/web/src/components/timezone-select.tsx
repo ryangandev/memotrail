@@ -1,11 +1,16 @@
 "use client";
 
-import type { ChangeEventHandler } from "react";
+import { useSyncExternalStore, type ChangeEventHandler } from "react";
 import {
   commonTimezones,
   supportedTimezones,
+  timezoneLabel,
   timezoneOptionLabel,
 } from "@/lib/data/timezones";
+
+function subscribeToHydration() {
+  return () => {};
+}
 
 export function TimezoneSelect({
   ariaLabel,
@@ -25,6 +30,15 @@ export function TimezoneSelect({
   const allTimezones = supportedTimezones();
   const commonTimezoneSet = new Set<string>(commonTimezones);
   const currentTimezoneIsListed = allTimezones.includes(value);
+  const hydrated = useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false,
+  );
+  const optionLabel = (timezone: string) =>
+    hydrated
+      ? timezoneOptionLabel(timezone, referenceDate)
+      : timezoneLabel(timezone);
 
   return (
     <select
@@ -37,15 +51,13 @@ export function TimezoneSelect({
     >
       {!currentTimezoneIsListed ? (
         <optgroup label="Current time zone">
-          <option value={value}>
-            {timezoneOptionLabel(value, referenceDate)}
-          </option>
+          <option value={value}>{optionLabel(value)}</option>
         </optgroup>
       ) : null}
       <optgroup label="Common time zones">
         {commonTimezones.map((timezone) => (
           <option key={timezone} value={timezone}>
-            {timezoneOptionLabel(timezone, referenceDate)}
+            {optionLabel(timezone)}
           </option>
         ))}
       </optgroup>
@@ -54,7 +66,7 @@ export function TimezoneSelect({
           .filter((timezone) => !commonTimezoneSet.has(timezone))
           .map((timezone) => (
             <option key={timezone} value={timezone}>
-              {timezoneOptionLabel(timezone, referenceDate)}
+              {optionLabel(timezone)}
             </option>
           ))}
       </optgroup>

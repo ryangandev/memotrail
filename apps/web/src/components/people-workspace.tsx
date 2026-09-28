@@ -1,5 +1,6 @@
 "use client";
-import { Dialog } from "@/components/dialog";
+import { notify } from "@/components/app-toast";
+import { FocusedEditorSurface } from "@/components/focused-editor-surface";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { RecordCard, RecordCardBody } from "@/components/record-card";
 import { EmptyState } from "@/components/empty-state";
@@ -97,7 +98,10 @@ export function PeopleWorkspace({
         <div className={styles.peopleResults}>
           <div className={styles.peopleGrid}>
             {people.map((person) => (
-              <RecordCard key={person.id} onClick={() => setSelected(person)}>
+              <RecordCard
+                key={person.id}
+                onClick={() => router.push(`/people/${person.id}`)}
+              >
                 <RecordCardBody className={styles.personBody}>
                   <span className={styles.initial}>
                     {Array.from(person.name)[0]?.toUpperCase()}
@@ -135,14 +139,18 @@ export function PeopleWorkspace({
   );
 }
 
-function PersonEditor({
+export function PersonEditor({
   person,
   entries,
   onClose,
+  onTrashed,
+  presentation = "dialog",
 }: {
   person: Person | null;
   entries: PersonEntry[];
   onClose: () => void;
+  onTrashed?: () => void;
+  presentation?: "dialog" | "page";
 }) {
   const router = useRouter();
   const requestConfirmation = useConfirmationDialog();
@@ -156,7 +164,6 @@ function PersonEditor({
   );
   const [entryId, setEntryId] = useState("");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
   const options = new Map(
     [...entries, ...(person?.linked_entries ?? [])].map((e) => [e.id, e]),
   );
@@ -174,7 +181,6 @@ function PersonEditor({
       if (!confirmed) return;
     }
     setBusy(true);
-    setMessage(null);
     try {
       const failure =
         remove && person
@@ -187,13 +193,16 @@ function PersonEditor({
               notes,
               entryIds,
             });
-      if (failure) setMessage(failure);
+      if (failure) notify.error(failure);
       else {
+        if (remove) onTrashed?.();
         router.refresh();
         onClose();
+        if (remove) notify.info("Person moved to Trash.");
+        else notify.success(person ? "Person saved." : "Person created.");
       }
     } catch {
-      setMessage(
+      notify.error(
         "Could not reach MemoTrail. Your edits are still here; try again when online.",
       );
     } finally {
@@ -201,17 +210,14 @@ function PersonEditor({
     }
   }
   return (
-    <Dialog
-      open
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) onClose();
-      }}
+    <FocusedEditorSurface
+      onClose={onClose}
+      presentation={presentation}
       title={<>{person ? person.name : "Keep someone in your story"}</>}
       titleId="person-title"
       eyebrow={<>{person ? "Edit Person" : "New Person"}</>}
       closeLabel="Close Person editor"
       busy={busy}
-      size="wide"
       footer={
         <div className={common.dialogFooter}>
           <div>
@@ -358,13 +364,8 @@ function PersonEditor({
             </div>
           </fieldset>
         </div>
-        {message ? (
-          <p className={common.formMessage} role="alert">
-            {message}
-          </p>
-        ) : null}
       </form>
-    </Dialog>
+    </FocusedEditorSurface>
   );
 }
 

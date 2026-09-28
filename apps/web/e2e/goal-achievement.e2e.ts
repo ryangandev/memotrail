@@ -3,7 +3,11 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
-import { fillOccurrenceEnd, fillOccurrenceStart } from "./helpers/occurrence";
+import {
+  fillOccurrenceEnd,
+  fillOccurrenceStart,
+  setDateDescription,
+} from "./helpers/occurrence";
 
 test("Goal achievements preserve all eight date precisions and reject duplicate completion", async ({
   page,
@@ -119,8 +123,9 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
       const saved = await client.rpc("save_goal_entry", goalParameters);
       expect(saved.error).toBeNull();
       const id = saved.data[0].entry_id;
-      await page.goto("/goals?entry=" + id);
-      const dialog = page.getByRole("dialog");
+      await page.goto("/goals/" + id);
+      await page.getByRole("button", { name: "Edit Goal" }).click();
+      const dialog = page.getByRole("main");
       await dialog
         .getByRole("combobox", { name: "Date type", exact: true })
         .selectOption(value.precision);
@@ -132,9 +137,7 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
         .selectOption("America/Los_Angeles");
       if (value.start) await fillOccurrenceStart(dialog, value.start);
       if (value.end) await fillOccurrenceEnd(dialog, value.end);
-      await dialog
-        .getByRole("textbox", { name: /Human date label|Date description/ })
-        .fill(value.label);
+      await setDateDescription(dialog, value.label);
       await expect(
         dialog.getByRole("combobox", { name: "Date type", exact: true }),
       ).toHaveValue(value.precision);

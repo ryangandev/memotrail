@@ -1,6 +1,7 @@
 import { VehiclesWorkspace } from "@/components/vehicles-workspace";
 import { getCaptureExtractionSource } from "@/lib/data/capture-extraction";
 import { getVehiclesWorkspace } from "@/lib/data/vehicle-records";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,8 @@ export default async function VehiclesPage({
   const params = await searchParams;
   const requestedEntry = params.entry;
   const requestedSource = params.source;
+  if (typeof requestedEntry === "string" && !requestedSource)
+    redirect(`/vehicles/${requestedEntry}`);
   const [workspace, sourceCapture] = await Promise.all([
     getVehiclesWorkspace(),
     getCaptureExtractionSource(

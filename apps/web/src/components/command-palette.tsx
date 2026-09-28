@@ -23,18 +23,11 @@ type SearchState = QuickSearchResult & { query: string };
 
 const commands: Command[] = [
   {
-    description: "Open full search with filters and AI",
-    href: "/search",
-    icon: "search",
-    keywords: "find advanced filter ai",
-    label: "Search page",
-  },
-  {
     description: "Return to your recent story",
     href: "/",
-    icon: "home",
-    keywords: "recent story",
-    label: "Home",
+    icon: "dashboard",
+    keywords: "home recent story",
+    label: "Dashboard",
   },
   {
     description: "Review newly captured Entries",
@@ -54,7 +47,7 @@ const commands: Command[] = [
     description: "Browse every part of your archive",
     href: "/library",
     icon: "archive",
-    keywords: "records archive",
+    keywords: "records archive search find filter",
     label: "Library",
   },
   {
@@ -125,8 +118,8 @@ export function CommandPalette({
   }));
   const fullSearchItem: PaletteItem | null = normalizedQuery
     ? {
-        description: "Use filters or ask AI on the full Search page",
-        href: `/search?q=${encodeURIComponent(normalizedQuery)}`,
+        description: "Search the Library and Inbox with filters",
+        href: `/library?q=${encodeURIComponent(normalizedQuery)}`,
         icon: "search",
         key: "full-search",
         label: `Search all for “${normalizedQuery}”`,
@@ -359,8 +352,7 @@ function filterCommands(query: string) {
   });
 }
 
-function quickResultIcon(kind: "entry" | "person" | "place"): IconName {
-  if (kind === "place") return "map";
+function quickResultIcon(kind: "entry" | "person"): IconName {
   if (kind === "person") return "archive";
   return "timeline";
 }

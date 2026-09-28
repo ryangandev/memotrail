@@ -10,7 +10,6 @@ const pageFamilies = [
   { path: "/settings", variant: "compact", width: 880 },
   { path: "/settings/ai", variant: "compact", width: 880 },
   { path: "/settings/export", variant: "compact", width: 880 },
-  { path: "/explore", variant: "compact", width: 880 },
   { path: "/search", variant: "standard", width: 960 },
   { path: "/tags", variant: "standard", width: 960 },
   { path: "/trash", variant: "standard", width: 960 },
@@ -21,7 +20,6 @@ const pageFamilies = [
   { path: "/goals", variant: "wide", width: 1080 },
   { path: "/history", variant: "wide", width: 1080 },
   { path: "/homes", variant: "wide", width: 1080 },
-  { path: "/places", variant: "wide", width: 1080 },
   { path: "/vehicles", variant: "wide", width: 1080 },
   { path: "/people", variant: "wide", width: 1080 },
   { path: "/timeline", variant: "canvas", width: 1180 },
@@ -32,7 +30,6 @@ const focusedViewPaths = new Set([
   "/goals",
   "/homes",
   "/people",
-  "/places",
   "/vehicles",
 ]);
 

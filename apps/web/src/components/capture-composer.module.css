@@ -19,6 +19,30 @@
   box-shadow: none;
 }
 
+.embeddedCaptureCard {
+  container-type: inline-size;
+  margin-top: 0;
+}
+
+@container (max-width: 440px) {
+  .embeddedCaptureCard .captureActions {
+    flex-wrap: wrap;
+    gap: var(--mt-space-2);
+  }
+
+  .embeddedCaptureCard .quietButton {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+    font-size: 0;
+  }
+
+  .embeddedCaptureCard .captureStatus,
+  .embeddedCaptureCard .captureError {
+    max-width: 160px;
+  }
+}
+
 .dialogCaptureCard .captureIntro {
   min-height: 0;
 }
@@ -102,10 +126,7 @@
   object-fit: cover;
 }
 
-.capturePhoto
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
+.capturePhoto > .removePhotoButton {
   position: absolute;
   top: 6px;
   right: 6px;
@@ -113,19 +134,15 @@
   width: 24px;
   height: 24px;
   place-items: center;
+  padding: 0;
   border: 1px solid color-mix(in srgb, white 40%, transparent);
   border-radius: 50%;
   color: white;
   background: color-mix(in srgb, black 64%, transparent);
-  font-size: var(--mt-font-size-body-large);
-  line-height: 1;
   cursor: pointer;
 }
 
-.capturePhoto
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ):hover {
+.capturePhoto > .removePhotoButton:hover {
   background: color-mix(in srgb, black 78%, transparent);
 }
 
@@ -267,15 +284,6 @@
   -webkit-line-clamp: 3;
 }
 
-.pendingBadge {
-  padding: 3px var(--mt-space-2);
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-accent);
-  background: var(--mt-color-accent-subtle);
-  font-size: 10px;
-  line-height: 1.4;
-}
-
 .visuallyHidden {
   position: absolute;
   width: 1px;
@@ -291,6 +299,10 @@
     --capture-inline-padding: var(--mt-space-5);
 
     margin-top: var(--mt-space-6);
+  }
+
+  .embeddedCaptureCard {
+    margin-top: 0;
   }
 
   .dialogCaptureCard {

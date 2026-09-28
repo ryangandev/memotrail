@@ -2,6 +2,7 @@ import { PeopleWorkspace } from "@/components/people-workspace";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import type { Person, PersonEntry } from "@/lib/data/person";
 import { isFirstTimeUuid } from "@/lib/data/first-time-input";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export default async function PeoplePage({
   if (!context) return null;
   const parameters = await searchParams;
   const focused = parameters.person;
+  if (focused) redirect(`/people/${focused}`);
   const raw = Number(parameters.page ?? 1);
   const page =
     !focused && Number.isInteger(raw) && raw > 0 && raw <= 101 ? raw : 1;
