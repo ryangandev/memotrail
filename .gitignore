@@ -5,6 +5,7 @@ node_modules/
 # Next.js and Turborepo
 .next/
 .next-e2e/
+/apps/web/next-env.d.ts
 .turbo/
 out/
 

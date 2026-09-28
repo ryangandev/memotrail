@@ -131,6 +131,8 @@ node apps/web/scripts/verify-media-trace.mjs
 ```
 
 The CI Web job runs these independent checks concurrently before the build.
+Web type checking runs `next typegen` before TypeScript so a fresh checkout generates the required Next.js declarations.
+The generated `apps/web/next-env.d.ts` stays local and is ignored by Git.
 Playwright browser tests are a separate local acceptance suite that requires the local Supabase stack; they are not part of the current GitHub CI job.
 
 Build the iOS app without signing:
