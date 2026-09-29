@@ -64,19 +64,40 @@ def seed(stack, user):
             "metadata": metadata or {},
         }, prefer="return=representation")[0]
 
-    def organize(title, body, collections=(), tags=(), **when):
+    def organize(title, body, collections=(), tags=(), rich=None, **when):
         """Saves a capture to the Library like Inbox review's Save to Library."""
         row = capture(title, body)
         rpc("review_wiki_item_with_location_rich",
             p_entry_id=row["id"], p_expected_revision=row["revision"], p_title=title,
             p_body=body, p_item_kind="entry", p_item_subtype="entry",
             p_collection_names=list(collections), p_tag_names=list(tags), p_mark_done=True,
-            p_photo_place=None, p_primary_location=None, p_body_rich=None, **occurrence(**when))
+            p_photo_place=None, p_primary_location=None, p_body_rich=rich, **occurrence(**when))
+
+    def span(value, *marks):
+        return {"type": "text", "text": value, **({"marks": [{"type": m} for m in marks]}
+                                                 if marks else {})}
 
     organize("A quiet afternoon by the coast",
              "Low tide, warm light, and a thermos of tea on the sea wall.",
              collections=["Summer 2025"], tags=["coast", "family"],
              precision="day", start="2025-08-14")
+    # A long Web-formatted note, so search results clamp it and offer "Read full note".
+    opening = ("Low tide at six.", " We walked the whole sea wall before breakfast, counted the "
+               "fishing boats coming back in, and found the cafe by the lighthouse finally open.")
+    packed = ("Thermos of tea", "Two wool blankets", "The good binoculars")
+    closing = ("By noon the fog had lifted and the whole bay turned silver. We stayed until the "
+               "last ferry and promised to come back before the summer ended.")
+    letter = "\n".join(["".join(opening), *packed, closing])
+    organize("Letters from the coast house", letter, collections=["Summer 2025"],
+             tags=["coast"], precision="day", start="2025-08-16", rich={
+                 "version": 1, "text": letter, "document": {"type": "doc", "content": [
+                     {"type": "paragraph",
+                      "content": [span(opening[0], "bold"), span(opening[1])]},
+                     {"type": "bulletList", "content": [
+                         {"type": "listItem", "content": [
+                             {"type": "paragraph", "content": [span(item)]}]}
+                         for item in packed]},
+                     {"type": "paragraph", "content": [span(closing, "italic")]}]}})
     first_time = occurrence("day", "2024-03-02")
     first_time.pop("p_occurred_end")
     rpc("save_first_time_with_occurrence",

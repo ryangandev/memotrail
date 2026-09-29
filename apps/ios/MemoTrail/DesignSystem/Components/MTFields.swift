@@ -168,6 +168,7 @@ struct MTSearchField<Trailing: View>: View {
         .autocorrectionDisabled()
         .submitLabel(.search)
         .focused($isFocused)
+        .accessibilityLabel(label)
         if !text.isEmpty {
           Button {
             text = ""

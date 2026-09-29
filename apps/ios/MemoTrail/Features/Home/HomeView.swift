@@ -105,7 +105,7 @@ struct HomeView: View {
         }
         ToolbarItemGroup(placement: .topBarTrailing) {
           Button("Search your trail", systemImage: MTIcon.search.systemName) {
-            navigator.show(.library)
+            navigator.searchLibrary()
           }
           .accessibilityIdentifier("home-search")
           Button("Profile", systemImage: "person.crop.circle.fill") {

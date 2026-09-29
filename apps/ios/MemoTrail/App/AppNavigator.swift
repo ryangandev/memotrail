@@ -13,9 +13,16 @@ final class AppNavigator {
   var inboxReviewRequest: UUID?
   /// A Timeline record to open, like Web `/timeline?entry=`.
   var timelineEntryRequest: UUID?
+  /// Library should focus its search field, like the Web header's search action.
+  var librarySearchRequested = false
 
   func show(_ tab: RootTabDestination) {
     selectedTab = tab
+  }
+
+  func searchLibrary() {
+    librarySearchRequested = true
+    selectedTab = .library
   }
 
   func show(_ route: WorkspaceRoute) {

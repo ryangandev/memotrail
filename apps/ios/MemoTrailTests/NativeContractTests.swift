@@ -79,11 +79,15 @@ final class NativeContractTests: XCTestCase {
     XCTAssertEqual(entry.itemKind, .entry)
     XCTAssertEqual(entry.itemSubtype, "entry")
 
+    // Browsing lists organized records only, while search also finds Inbox captures.
     let library = LibraryController(client: client, ownerID: ownerID)
-    library.query = title
     await library.load()
     XCTAssertNil(library.errorMessage)
     XCTAssertFalse(library.items.contains { $0.id == id })
+    library.query = title
+    await library.search()
+    XCTAssertNil(library.searchErrorMessage)
+    XCTAssertTrue(try XCTUnwrap(library.results.first { $0.id == id }).isInInbox)
 
     let result = await inbox.review(
       entry: entry,
@@ -93,19 +97,26 @@ final class NativeContractTests: XCTestCase {
       intent: .done)
     XCTAssertEqual(result.status, .done, result.message)
 
+    library.clearAll()
     await library.load()
     let organized = try XCTUnwrap(library.items.first { $0.id == id })
     XCTAssertEqual(organized.itemKind, .entry)
     XCTAssertFalse(organized.isInInbox)
 
-    let search = SearchController(client: client, ownerID: ownerID)
-    search.query = title
-    search.selectedItemKind = .entry
-    await search.search()
-    XCTAssertNil(search.searchErrorMessage)
-    let found = try XCTUnwrap(search.entries.first { $0.id == id })
+    library.query = title
+    library.classification = .entry
+    library.tagName = "native-contract"
+    await library.search()
+    XCTAssertNil(library.searchErrorMessage)
+    let found = try XCTUnwrap(library.results.first { $0.id == id })
+    XCTAssertFalse(found.isInInbox)
     XCTAssertEqual(found.tagNames, ["native-contract"])
     XCTAssertEqual(found.collectionNames, ["Native contract"])
+    XCTAssertTrue(library.collectionOptions.contains("Native contract"))
+    XCTAssertTrue(library.tagOptions.contains("native-contract"))
+    library.classification = .goal
+    await library.search()
+    XCTAssertFalse(library.results.contains { $0.id == id })
 
     let stale = await inbox.review(
       entry: entry,
@@ -145,6 +156,13 @@ final class NativeContractTests: XCTestCase {
     let formatted = try XCTUnwrap(inbox.entries.first { $0.id == id })
     XCTAssertEqual(formatted.bodyRich, rich)
     XCTAssertGreaterThan(formatted.revision, capture.revision)
+
+    // Library search results show the same formatting, like Web `loadEntryRichTextMap`.
+    let library = LibraryController(client: client, ownerID: ownerID)
+    library.query = "Harbor lights"
+    await library.search()
+    XCTAssertNil(library.searchErrorMessage)
+    XCTAssertEqual(library.results.first { $0.id == id }?.bodyRich, rich)
 
     // Like Web, a capture moves to Trash only at the revision the person reviewed.
     let stale = await inbox.moveToTrash(capture)

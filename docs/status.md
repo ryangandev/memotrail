@@ -21,6 +21,7 @@ The retired native Place surface and saved-Location catalog are removed; the exi
 Native navigation now uses Dashboard, Inbox, Timeline, Library, and More, with the active Web destinations grouped under More and the Web navigation icons.
 The native Dashboard now follows the Web Data Ribbon order and links, verified against a seeded local account.
 The native Inbox now matches the Web review list and Review Entry dialog, including Move to Trash and formatted note review, verified against a seeded local account.
+The native Library now matches Web Library, combining the all-items browser with keyword search, grouped filters, formatted result notes, and match reasons, verified against a seeded local account.
 The native MapKit screen and Debug Design System gallery are implemented; personal acceptance and broad screen migration remain pending.
 The merged Web release still needs Production deployment verification and browser acceptance; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 

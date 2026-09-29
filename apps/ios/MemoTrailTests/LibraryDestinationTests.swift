@@ -229,36 +229,6 @@ final class LibraryDestinationTests: XCTestCase {
     XCTAssertEqual(TrashItemKind(rawValue: "person")?.displayName, "Person")
   }
 
-  func testAvailableDestinationsContainOnlyImplementedArchives() {
-    XCTAssertEqual(
-      LibraryDestination.available,
-      [.collections, .firstTimes, .homes, .people, .vehicles, .goals, .trash]
-    )
-    XCTAssertTrue(LibraryDestination.available.allSatisfy(\.isAvailable))
-  }
-
-  func testPlannedDestinationsRemainVisibleButUnavailable() {
-    XCTAssertEqual(
-      LibraryDestination.planned,
-      []
-    )
-    XCTAssertTrue(LibraryDestination.planned.allSatisfy { !$0.isAvailable })
-  }
-
-  func testEveryDestinationHasDistinctStableIdentity() {
-    XCTAssertEqual(Set(LibraryDestination.allCases.map(\.id)).count, 7)
-    XCTAssertEqual(LibraryDestination.allCases.count, 7)
-    XCTAssertNil(LibraryDestination(rawValue: "places"))
-  }
-
-  func testEveryDestinationHasUserFacingMetadata() {
-    for destination in LibraryDestination.allCases {
-      XCTAssertFalse(destination.title.isEmpty)
-      XCTAssertFalse(destination.summary.isEmpty)
-      XCTAssertFalse(destination.systemImage.isEmpty)
-    }
-  }
-
   func testWikiItemSummaryDecodesCanonicalAndSpecializedIdentity() throws {
     let json = """
       {
@@ -286,6 +256,32 @@ final class LibraryDestinationTests: XCTestCase {
     XCTAssertEqual(item.itemKind, .entity)
     XCTAssertEqual(item.identityLabel, "Person")
     XCTAssertEqual(item.totalCount, 14)
+    XCTAssertEqual(item.dateLabel, "Updated Sep 15, 2026")
+  }
+
+  func testWikiItemDateLabelsReadStoredDatesInUTCLikeWeb() throws {
+    let json = """
+      {
+        "record_source": "entry",
+        "item_id": "98900000-0000-4000-8000-000000000002",
+        "canonical_item_id": "98900000-0000-4000-8000-000000000002",
+        "item_kind": "entry",
+        "item_subtype": "period",
+        "title": "Evening walks",
+        "excerpt": "",
+        "inbox_status": "organized",
+        "occurred_start": "2025-04-01T00:30:00Z",
+        "occurred_end": "2025-06-30T23:30:00Z",
+        "updated_at": "2026-09-15T12:00:00Z",
+        "total_count": 1
+      }
+      """
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    let item = try decoder.decode(WikiItemSummary.self, from: Data(json.utf8))
+
+    XCTAssertEqual(item.dateLabel, "Apr 1, 2025 to Jun 30, 2025")
+    XCTAssertEqual(item.subtypeLabel, "Period")
   }
 
   func testWikiItemsPageParametersUseTheBoundedRPCContract() throws {

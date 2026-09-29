@@ -10,8 +10,9 @@ final class LocalSessionUITests: XCTestCase {
     let app = try launchLocalSession()
     XCTAssertTrue(text("Review", in: app).waitForExistence(timeout: 20))
     attach(app, "Dashboard")
+    // Other tests organize or trash the remaining seeded captures, but none removes this one.
     for (tab, expected) in [
-      ("Inbox", "Notes from the farmers market"), ("Timeline", "Finished the first marathon"),
+      ("Inbox", "Weekend packing list"), ("Timeline", "Finished the first marathon"),
       ("Library", "Grandmother's recipe cards"),
     ] {
       app.tabBars.buttons[tab].tap()
@@ -140,6 +141,48 @@ final class LocalSessionUITests: XCTestCase {
     attach(app, "Inbox organized")
   }
 
+  func testLibrarySearchFiltersAndOpensRecords() throws {
+    let app = try launchLocalSession()
+    // The Dashboard search action opens Library ready to type, over the browse list.
+    XCTAssertTrue(app.buttons["home-search"].waitForExistence(timeout: 20))
+    app.buttons["home-search"].tap()
+    let field = app.textFields["Search your Life Wiki"]
+    XCTAssertTrue(field.waitForExistence(timeout: 10))
+    XCTAssertTrue(element("library-items", in: app).waitForExistence(timeout: 15))
+    XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+    attach(app, "Library browse")
+
+    // A keyword search shows why each record matched, with its formatted note.
+    field.typeText("coast\n")
+    XCTAssertTrue(element("library-results", in: app).waitForExistence(timeout: 15))
+    XCTAssertTrue(app.staticTexts["3 items"].exists)
+    XCTAssertTrue(text("Matched in Title", in: app).exists)
+    attach(app, "Library results")
+    reveal(app.buttons["Read full note"], in: app).tap()
+    XCTAssertEqual(app.buttons["Read full note"].value as? String, "Expanded")
+    attach(app, "Library full note")
+
+    // Filters apply as they change and count as active.
+    reveal(app.buttons["library-filters"], in: app).tap()
+    reveal(app.buttons["Record"], in: app).tap()
+    app.buttons["Goals"].tap()
+    XCTAssertTrue(app.staticTexts["1 item"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Filters · 1 active"].exists)
+    attach(app, "Library filtered results")
+
+    // A result opens its record, and Clear all returns to browsing.
+    app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Goal, Hike the coast trail"))
+      .firstMatch.tap()
+    XCTAssertTrue(app.navigationBars["Goals"].waitForExistence(timeout: 10))
+    app.navigationBars["Goals"].buttons.element(boundBy: 0).tap()
+    reveal(app.buttons["library-clear-search"], in: app).tap()
+    XCTAssertTrue(element("library-items", in: app).waitForExistence(timeout: 10))
+    XCTAssertEqual(field.value as? String, "A phrase, date, or question about your life...")
+
+    reveal(app.buttons["library-version-history"], in: app).tap()
+    XCTAssertTrue(app.navigationBars["Version history"].waitForExistence(timeout: 10))
+  }
+
   private func launchLocalSession() throws -> XCUIApplication {
     let path = ProcessInfo.processInfo.environment["MEMOTRAIL_REVIEW_SESSION"] ?? ""
     guard !path.isEmpty else {
@@ -150,6 +193,10 @@ final class LocalSessionUITests: XCTestCase {
     app.launchEnvironment["MEMOTRAIL_REVIEW_SESSION"] = path
     app.launch()
     return app
+  }
+
+  private func element(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
+    app.descendants(matching: .any)[identifier]
   }
 
   private func text(_ label: String, in app: XCUIApplication) -> XCUIElement {

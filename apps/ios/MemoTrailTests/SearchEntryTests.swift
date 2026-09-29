@@ -91,66 +91,37 @@ final class SearchEntryTests: XCTestCase {
     XCTAssertNil(deleted.entryID)
   }
 
-  func testAISearchUsesSharedFiltersWithoutProviderSecrets() throws {
-    let request = try EntrySearchRequest.validate(
-      query: "第一次滑雪?", itemKinds: [.entry], collectionNames: ["Travel"], tagNames: ["winter"],
-      dateFrom: nil, dateTo: nil)
-    let input = AISearchRequest(request: request, timeZone: "America/Los_Angeles")
-    XCTAssertEqual(input.parameters["q"], ["第一次滑雪?"])
-    XCTAssertEqual(input.parameters["type"], ["entry"])
-    XCTAssertEqual(input.parameters["collection"], ["Travel"])
-    XCTAssertEqual(input.parameters["tag"], ["winter"])
-    XCTAssertEqual(input.parameters["from"], [])
-    let encoded = try XCTUnwrap(String(data: JSONEncoder().encode(input), encoding: .utf8))
-    XCTAssertFalse(encoded.contains("AI_API_KEY"))
-    XCTAssertTrue(encoded.contains("America"))
-  }
-  func testAISearchDecodesVerifiableCitationsAndUnknownDates() throws {
-    let data = Data(
-      #"{"question":"When did I ski?","findings":[{"text":"At age 17.","citations":[{"sourceID":"S1","quote":"第一次滑雪是在17岁。"}]}],"sources":[{"id":"S1","recordID":"11111111-1111-4111-8111-111111111111","kind":"entry","title":"Skiing","text":"第一次滑雪是在17岁。","href":"/history?entry=11111111-1111-4111-8111-111111111111","truncated":false}],"notices":[],"insufficientEvidence":false,"queries":["skiing","滑雪"]}"#
-        .utf8)
-    let answer = try JSONDecoder().decode(AISearchAnswer.self, from: data)
-    XCTAssertEqual(answer.findings[0].citations[0].sourceID, answer.sources[0].id)
-    XCTAssertEqual(
-      answer.sources[0].recordID.uuidString.lowercased(), "11111111-1111-4111-8111-111111111111")
-    XCTAssertFalse(answer.insufficientEvidence)
-  }
   func testSearchRequestNormalizesContentAndOrganization() throws {
     let request = try EntrySearchRequest.validate(
       query: "  teeth movement  ",
-      itemKinds: [.goal, .goal, .entry],
-      collectionNames: [" Learning ", "learning", "Health"],
+      classifications: [.goal, .goal, .entry],
+      collectionNames: [" Learning ", "learning", "Health", " "],
       tagNames: [" Teeth ", "teeth", "science"],
-      dateFrom: nil,
+      dateFrom: " ",
       dateTo: nil
     )
 
     XCTAssertEqual(request.query, "teeth movement")
-    XCTAssertEqual(request.itemKinds, [.entry, .goal])
+    XCTAssertEqual(request.classifications, [.goal, .entry])
     XCTAssertEqual(request.collectionNames, ["Learning", "Health"])
     XCTAssertEqual(request.tagNames, ["Teeth", "science"])
+    XCTAssertNil(request.dateFrom)
     XCTAssertTrue(request.hasCriteria)
   }
 
   func testFilterOnlySearchIsValidAndEmptySearchStaysIdle() throws {
     let filtered = try EntrySearchRequest.validate(
-      query: " ",
-      itemKinds: [.entry],
-      collectionNames: [],
-      tagNames: [],
-      dateFrom: nil,
-      dateTo: nil
-    )
+      query: " ", classifications: [.firstTime], collectionNames: [], tagNames: [], dateFrom: nil,
+      dateTo: nil)
+    let dated = try EntrySearchRequest.validate(
+      query: "", classifications: [], collectionNames: [], tagNames: [], dateFrom: nil,
+      dateTo: "2026-09-29")
     let empty = try EntrySearchRequest.validate(
-      query: " ",
-      itemKinds: [],
-      collectionNames: [],
-      tagNames: [],
-      dateFrom: nil,
-      dateTo: nil
-    )
+      query: " ", classifications: [], collectionNames: [], tagNames: [], dateFrom: "",
+      dateTo: "")
 
     XCTAssertTrue(filtered.hasCriteria)
+    XCTAssertTrue(dated.hasCriteria)
     XCTAssertFalse(empty.hasCriteria)
   }
 
@@ -158,81 +129,79 @@ final class SearchEntryTests: XCTestCase {
     XCTAssertThrowsError(
       try EntrySearchRequest.validate(
         query: String(repeating: "a", count: EntrySearchRequest.queryLimit + 1),
-        itemKinds: [],
-        collectionNames: [],
-        tagNames: [],
-        dateFrom: nil,
-        dateTo: nil
-      )
+        classifications: [], collectionNames: [], tagNames: [], dateFrom: nil, dateTo: nil)
     ) { error in
       XCTAssertEqual(error as? EntrySearchError, .queryTooLong)
     }
 
     XCTAssertThrowsError(
       try EntrySearchRequest.validate(
-        query: "valid",
-        itemKinds: [],
-        collectionNames: [String(repeating: "c", count: 81)],
-        tagNames: [],
-        dateFrom: nil,
-        dateTo: nil
-      )
+        query: "valid", classifications: [], collectionNames: [String(repeating: "c", count: 81)],
+        tagNames: [], dateFrom: nil, dateTo: nil)
     ) { error in
       XCTAssertEqual(error as? EntrySearchError, .invalidCollections)
     }
-  }
 
-  func testSearchRejectsReversedDateRange() {
     XCTAssertThrowsError(
       try EntrySearchRequest.validate(
-        query: "",
-        itemKinds: [],
-        collectionNames: [],
-        tagNames: [],
-        dateFrom: Date(timeIntervalSince1970: 1_788_364_800),
-        dateTo: Date(timeIntervalSince1970: 1_788_278_400)
-      )
+        query: "valid", classifications: [], collectionNames: [],
+        tagNames: [String(repeating: "t", count: 61)], dateFrom: nil, dateTo: nil)
     ) { error in
-      XCTAssertEqual(error as? EntrySearchError, .invalidDateRange)
+      XCTAssertEqual(error as? EntrySearchError, .invalidTags)
     }
   }
 
-  func testSearchEncodesDateOnlyFiltersAndPagination() throws {
-    var calendar = Calendar(identifier: .gregorian)
-    calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "America/Los_Angeles"))
+  func testSearchRejectsInvalidAndReversedDates() {
+    for (from, to, expected) in [
+      ("2026-02-30", nil, EntrySearchError.invalidStartDate),
+      ("2026-9-1", nil, .invalidStartDate),
+      (nil, "September 1", .invalidEndDate),
+      ("2026-09-03", "2026-09-02", .invalidDateRange),
+    ] as [(String?, String?, EntrySearchError)] {
+      XCTAssertThrowsError(
+        try EntrySearchRequest.validate(
+          query: "", classifications: [], collectionNames: [], tagNames: [], dateFrom: from,
+          dateTo: to)
+      ) { error in
+        XCTAssertEqual(error as? EntrySearchError, expected, "\(from ?? "-") \(to ?? "-")")
+      }
+    }
+  }
+
+  func testSearchEncodesTheWebRPCContract() throws {
     let request = try EntrySearchRequest.validate(
-      query: "Japan",
-      itemKinds: [.entry],
-      collectionNames: ["Travel"],
-      tagNames: ["Japan"],
-      dateFrom: Date(timeIntervalSince1970: 1_499_491_800),
-      dateTo: Date(timeIntervalSince1970: 1_499_578_200),
-      limit: 25,
-      offset: 50,
-      calendar: calendar
-    )
+      query: "Japan", classifications: [.firstTime], collectionNames: ["Travel"],
+      tagNames: ["Japan"], dateFrom: "2017-07-07", dateTo: "2017-07-08", limit: 25, offset: 50)
     let data = try JSONEncoder().encode(request.parameters)
     let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
     XCTAssertEqual(json["p_query"] as? String, "Japan")
-    XCTAssertEqual(json["p_item_classifications"] as? [String], ["entry"])
+    XCTAssertEqual(json["p_item_classifications"] as? [String], ["first_time"])
     XCTAssertEqual(json["p_collection_names"] as? [String], ["Travel"])
     XCTAssertEqual(json["p_tag_names"] as? [String], ["Japan"])
     XCTAssertEqual(json["p_date_from"] as? String, "2017-07-07")
     XCTAssertEqual(json["p_date_to"] as? String, "2017-07-08")
     XCTAssertEqual(json["p_limit"] as? Int, 25)
     XCTAssertEqual(json["p_offset"] as? Int, 50)
+    XCTAssertEqual(json["p_order"] as? String, "relevance")
+    XCTAssertEqual(try request.page(offset: 75).offset, 75)
+    XCTAssertEqual(try request.page(offset: 75).classifications, [.firstTime])
+  }
+
+  func testRecordFilterGroupsMatchTheWebClassifications() {
+    XCTAssertEqual(WikiItemClassification.groups.map(\.title), ["Records", "Focused records"])
+    XCTAssertEqual(
+      WikiItemClassification.groups.flatMap(\.options).map(\.rawValue),
+      ["entry", "entity", "goal", "first_time", "person", "home", "vehicle"])
+    XCTAssertEqual(
+      WikiItemClassification.groups.flatMap(\.options).map(\.title),
+      ["Entries", "Entities", "Goals", "First Times", "People", "Homes", "Vehicles"])
   }
 
   func testSearchParametersEncodeAbsentDatesExplicitly() throws {
     let request = try EntrySearchRequest.validate(
-      query: "learning",
-      itemKinds: [],
-      collectionNames: [],
-      tagNames: [],
-      dateFrom: nil,
-      dateTo: nil
-    )
+      query: "learning", classifications: [], collectionNames: [], tagNames: [], dateFrom: nil,
+      dateTo: nil)
     let data = try JSONEncoder().encode(request.parameters)
     let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
@@ -243,15 +212,8 @@ final class SearchEntryTests: XCTestCase {
   func testSearchRejectsInvalidPagination() {
     XCTAssertThrowsError(
       try EntrySearchRequest.validate(
-        query: "learning",
-        itemKinds: [],
-        collectionNames: [],
-        tagNames: [],
-        dateFrom: nil,
-        dateTo: nil,
-        limit: 101,
-        offset: 0
-      )
+        query: "learning", classifications: [], collectionNames: [], tagNames: [], dateFrom: nil,
+        dateTo: nil, limit: 101, offset: 0)
     ) { error in
       XCTAssertEqual(error as? EntrySearchError, .invalidPagination)
     }
@@ -281,7 +243,7 @@ final class SearchEntryTests: XCTestCase {
     let entry = try decoder.decode(SearchEntry.self, from: Data(json.utf8))
 
     XCTAssertEqual(entry.displayTitle, "First time in Japan")
-    XCTAssertEqual(entry.displayType, "First Time")
+    XCTAssertEqual(entry.identityLabel, "First Time")
     XCTAssertEqual(entry.displayDate, "Jul 8, 2017")
     XCTAssertEqual(entry.collectionNames, ["Travel"])
     XCTAssertEqual(entry.tagNames, ["Japan"])
@@ -313,7 +275,7 @@ final class SearchEntryTests: XCTestCase {
     XCTAssertEqual(entry.itemSubtype, "person")
     XCTAssertEqual(entry.recordSource, .person)
     XCTAssertEqual(entry.recordID.uuidString, "F0A97797-CE56-4BD4-BA1E-BCE57304509E")
-    XCTAssertEqual(entry.displayType, "Person")
+    XCTAssertEqual(entry.identityLabel, "Person")
   }
 
   func testSearchEntryFallsBackToUTCForAnInvalidLegacyTimezone() throws {
@@ -321,7 +283,7 @@ final class SearchEntryTests: XCTestCase {
       {
         "entry_id": "4F8D0FE6-61D0-418A-8713-CF071AEEA450",
         "title": null,
-        "body": "Why keep learning?\\nBecause the world keeps changing.",
+        "body": "\\n  \\nWhy keep learning?\\nBecause the world keeps changing.\\n",
         "item_kind": "entry",
         "item_subtype": "entry",
         "inbox_status": "unreviewed",
@@ -340,7 +302,9 @@ final class SearchEntryTests: XCTestCase {
     let entry = try decoder.decode(SearchEntry.self, from: Data(json.utf8))
 
     XCTAssertEqual(entry.displayTitle, "Why keep learning?")
-    XCTAssertEqual(entry.displayExcerpt, "Because the world keeps changing.")
+    XCTAssertEqual(entry.note, "Why keep learning?\nBecause the world keeps changing.")
+    XCTAssertFalse(entry.hasLongNote)
+    XCTAssertNil(entry.bodyRich)
     XCTAssertEqual(entry.displayDate, "Jul 3, 2026")
     XCTAssertTrue(entry.collectionNames.isEmpty)
     XCTAssertTrue(entry.tagNames.isEmpty)
