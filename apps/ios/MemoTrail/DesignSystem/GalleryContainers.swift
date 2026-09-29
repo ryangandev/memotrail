@@ -101,34 +101,6 @@
         }
 
         GallerySpecimen(
-          title: "List",
-          api: "MTListHeader · title · detail · alignsDetailTrailing · trailing; MTListSurface",
-          description:
-            "The uppercase list heading and bordered row surface shared by the Inbox and Library, with pressable whole-row links."
-        ) {
-          VStack(alignment: .leading, spacing: MTSpacing.s3) {
-            MTListHeader("Results", detail: "2 items")
-            MTListSurface {
-              ForEach(["A quiet afternoon by the coast", "Hike the coast trail"], id: \.self) {
-                title in
-                Button {
-                  recordMessage = "Opened \(title)."
-                } label: {
-                  VStack(alignment: .leading, spacing: MTSpacing.s1) {
-                    Text(title).font(MTFont.cardTitle).foregroundStyle(MTColor.ink)
-                    Text("Matched in Title").font(MTFont.caption).foregroundStyle(MTColor.accent)
-                  }
-                  .padding(MTSpacing.s4)
-                }
-                .buttonStyle(MTListRowButtonStyle())
-                if title == "A quiet afternoon by the coast" { MTListDivider() }
-              }
-            }
-            MTListHeader("All items", detail: "9 items", alignsDetailTrailing: true)
-          }
-        }
-
-        GallerySpecimen(
           title: "RecordSummary",
           api: "kind · title · subtitle · status",
           description: "The compact record identity used in Map results."
@@ -159,6 +131,34 @@
           MTCard {
             Text("Grouped context, such as a saved preview or a short explanation.")
               .font(MTFont.body).foregroundStyle(MTColor.inkMuted)
+          }
+        }
+
+        GallerySpecimen(
+          title: "List",
+          api: "MTListHeader · title · detail · alignsDetailTrailing · trailing; MTListSurface",
+          description:
+            "The uppercase list heading and bordered row surface shared by the Inbox and Library, with pressable whole-row links."
+        ) {
+          VStack(alignment: .leading, spacing: MTSpacing.s3) {
+            MTListHeader("Results", detail: "2 items")
+            MTListSurface {
+              ForEach(["Letters from the coast house", "Hike the coast trail"], id: \.self) {
+                title in
+                Button {
+                  recordMessage = "Opened \(title)."
+                } label: {
+                  VStack(alignment: .leading, spacing: MTSpacing.s1) {
+                    Text(title).font(MTFont.cardTitle).foregroundStyle(MTColor.ink)
+                    Text("Matched in Title").font(MTFont.caption).foregroundStyle(MTColor.accent)
+                  }
+                  .padding(MTSpacing.s4)
+                }
+                .buttonStyle(MTListRowButtonStyle())
+                if title == "Letters from the coast house" { MTListDivider() }
+              }
+            }
+            MTListHeader("All items", detail: "9 items", alignsDetailTrailing: true)
           }
         }
       }
