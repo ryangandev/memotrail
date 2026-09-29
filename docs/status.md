@@ -100,7 +100,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
   The Dashboard greeting refreshes after a name save; a local contract run and a seeded Simulator UI run confirmed saving, clearing, and the greeting.
   Web's browser-local Timeline style stays Web-only.
 - Native Timeline now follows the Web phone layout with the shared header, type chooser, birth date prompt, and a Timeline editor that uses the Settings time zone and saves Collections and tags.
-  Local contract and seeded Simulator runs confirmed creating, editing, and trashing Moments and saving the birth date; Manage tracks still uses the earlier native sheet.
+  Local contract and seeded Simulator runs confirmed creating, editing, and trashing Moments and saving the birth date.
+  Manage tracks opens the Web track page, where each track saves its own name, order, and visibility.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
 - Refactor existing screens after component acceptance; native address search remains later work.
 

@@ -288,6 +288,25 @@ final class LocalSessionUITests: XCTestCase {
     confirm.tap()
     XCTAssertTrue(text("Moment moved to Trash.", in: app).waitForExistence(timeout: 10))
     XCTAssertTrue(moment.waitForNonExistence(timeout: 10))
+
+    // Manage tracks creates a track that the Timeline shows on return.
+    app.buttons["manage-timeline-tracks"].tap()
+    XCTAssertTrue(app.staticTexts["Timeline tracks"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.otherElements["Edit Education"].waitForExistence(timeout: 10))
+    XCTAssertTrue(text("Default · 2 moments", in: app).exists)
+    attach(app, "Timeline tracks")
+    app.buttons["add-timeline-track"].tap()
+    let name = app.textFields["Name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 5))
+    name.tap()
+    name.typeText("Travel")
+    attach(app, "New track")
+    app.buttons["create-timeline-track"].tap()
+    XCTAssertTrue(text("Track created.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(app.otherElements["Edit Travel"].waitForExistence(timeout: 10))
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    XCTAssertTrue(reveal(app.staticTexts["Travel"], in: app).waitForExistence(timeout: 10))
+    attach(app, "Timeline with the new track")
   }
 
   private func launchLocalSession() throws -> XCUIApplication {

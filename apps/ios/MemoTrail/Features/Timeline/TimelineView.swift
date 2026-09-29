@@ -92,15 +92,11 @@ struct TimelineView: View {
             tagOptions: firstTimesController.tagOptions)
         }
       }
-      .sheet(isPresented: $managingTracks, onDismiss: { Task { await controller.load() } }) {
-        NavigationStack {
-          TimelineTracksView(client: client, ownerID: user.id)
-            .toolbar {
-              ToolbarItem(placement: .confirmationAction) {
-                Button("Done") { managingTracks = false }
-              }
-            }
-        }
+      .navigationDestination(isPresented: $managingTracks) {
+        TimelineTracksView(client: client, ownerID: user.id)
+      }
+      .onChange(of: managingTracks) {
+        if !managingTracks { Task { await controller.reloadAfterMutation() } }
       }
       .task {
         guard !controller.hasLoaded else { return }
