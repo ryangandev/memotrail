@@ -9,7 +9,7 @@
     @State private var filtered = true
 
     private enum PresentedSheet: String, Identifiable {
-      case form, long
+      case form, compact, long
       var id: String { rawValue }
     }
 
@@ -66,9 +66,9 @@
 
         GallerySpecimen(
           title: "Sheets & confirmations",
-          api: "confirmationDialog · sheet · busy dismissal · large detents",
+          api: "MTSheet · form · fitted · message · footer · MTSheetOption · confirmationDialog",
           description:
-            "Native presentation replaces the Web Dialog: confirmations for destructive choices, sheets for editors and long reading."
+            "MTSheet is the Web Dialog: a form sheet for editors, a fitted sheet for short choices, and confirmations for destructive actions."
         ) {
           ViewThatFits(in: .horizontal) {
             HStack(spacing: MTSpacing.s2) { presentationButtons }
@@ -150,12 +150,25 @@
       } message: {
         Text("The memory will move to Trash, where it can be restored.")
       }
-      .sheet(item: $sheet) { sheet in
-        switch sheet {
+      .sheet(item: $sheet) { presented in
+        switch presented {
         case .form:
           GalleryFormSheet {
-            message =
-              "Demo saved for \($0.formatted(date: .long, time: .omitted)). No data was uploaded."
+            message = "Demo saved for \($0). No data was uploaded."
+          }
+        case .compact:
+          MTSheet(
+            eyebrow: "New entry", title: "What are you adding?",
+            closeLabel: "Close entry type chooser", size: .fitted
+          ) {
+            VStack(spacing: MTSpacing.s3) {
+              ForEach(GalleryChoice.allCases, id: \.self) { choice in
+                MTSheetOption(icon: choice.icon, title: choice.title, detail: choice.detail) {
+                  message = "\(choice.title) chosen."
+                  sheet = nil
+                }
+              }
+            }
           }
         case .long: GalleryLongSheet()
         }
@@ -172,6 +185,7 @@
     @ViewBuilder private var presentationButtons: some View {
       Button("Open confirmation") { showingConfirmation = true }.mtButtonStyle(.danger)
       Button("Open form sheet") { sheet = .form }.mtButtonStyle(.secondary)
+      Button("Open fitted sheet") { sheet = .compact }.mtButtonStyle(.secondary)
       Button("Open long content") { sheet = .long }.mtButtonStyle(.secondary)
     }
 
@@ -186,46 +200,56 @@
     }
   }
 
+  private enum GalleryChoice: CaseIterable {
+    case moment, home
+
+    var icon: MTIcon { self == .moment ? .timeline : .home }
+    var title: String { self == .moment ? "Moment" : "Home" }
+    var detail: String {
+      self == .moment
+        ? "A flexible event or life stage on any Timeline track."
+        : "A place you called home, with its facts and memories."
+    }
+  }
+
   private struct GalleryFormSheet: View {
-    let saved: (Date) -> Void
-    @State private var date = Date()
+    let saved: (String) -> Void
+    @State private var title = ""
+    @State private var date = ""
     @State private var isSaving = false
+    @State private var failure: String?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-      NavigationStack {
-        Form {
-          Section {
-            DatePicker("Memory date", selection: $date, displayedComponents: .date)
-          } footer: {
-            Text("Saving is simulated for 1.5 seconds. Dismissal and duplicate saves are disabled.")
-          }
-        }
-        .scrollContentBackground(.hidden).background(MTColor.canvas)
-        .disabled(isSaving)
-        .navigationTitle("Edit a memory").navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-          ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel") { dismiss() }.disabled(isSaving)
-          }
-          ToolbarItem(placement: .confirmationAction) {
-            if isSaving {
-              ProgressView()
-            } else {
-              Button("Save memory") {
-                isSaving = true
-                Task {
-                  try? await Task.sleep(for: .milliseconds(1_500))
-                  saved(date)
-                  dismiss()
-                }
-              }
-            }
-          }
+      MTSheet(
+        eyebrow: "New memory", title: "Edit a memory",
+        description: "Saving is simulated for 1.5 seconds. Closing and saving again wait for it.",
+        closeLabel: "Close memory editor", isBusy: isSaving, message: failure
+      ) {
+        MTTextField(label: "Title", text: $title, prompt: "First ski day", isRequired: true)
+        MTDateField(label: "Memory date", value: $date)
+      } footer: {
+        HStack(spacing: MTSpacing.s2) {
+          Button("Cancel") { dismiss() }
+            .mtButtonStyle(.secondary, fillsWidth: true)
+          Button("Save memory") { save() }
+            .mtButtonStyle(isLoading: isSaving, fillsWidth: true)
         }
       }
-      .interactiveDismissDisabled(isSaving)
-      .presentationDetents([.medium, .large])
+    }
+
+    private func save() {
+      guard !title.trimmed.isEmpty else {
+        failure = "Add a title before saving."
+        return
+      }
+      failure = nil
+      isSaving = true
+      Task {
+        try? await Task.sleep(for: .milliseconds(1_500))
+        saved(date.isEmpty ? "an undated memory" : date)
+        dismiss()
+      }
     }
   }
 

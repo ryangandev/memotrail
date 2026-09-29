@@ -15,6 +15,8 @@ enum MTFont {
   static let heading = Font.headline
   /// Serif record, Collection, and empty-state titles at the title-small size.
   static let cardTitle = Font.system(.title3, design: .serif).weight(.medium)
+  /// Serif sheet and dialog titles.
+  static let sheetTitle = Font.system(.title2, design: .serif).weight(.medium)
   /// Uppercase eyebrows, metadata, and dense badges.
   static let micro = Font.caption2.weight(.semibold)
 }

@@ -126,6 +126,7 @@
 		E1000000000000000000001E /* SettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001E /* SettingsController.swift */; };
 		E1000000000000000000001F /* ProfileSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001F /* ProfileSettings.swift */; };
 		E10000000000000000000020 /* ProfileSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000020 /* ProfileSettingsTests.swift */; };
+		E10000000000000000000021 /* MTSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000021 /* MTSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -261,6 +262,7 @@
 		E2000000000000000000001E /* SettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings/SettingsController.swift; sourceTree = "<group>"; };
 		E2000000000000000000001F /* ProfileSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettings.swift; sourceTree = "<group>"; };
 		E20000000000000000000020 /* ProfileSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsTests.swift; sourceTree = "<group>"; };
+		E20000000000000000000021 /* MTSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -398,6 +400,7 @@
 		A10000000000000000000008 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000021 /* MTSheet.swift */,
 				E20000000000000000000015 /* MTMedia.swift */,
 				E20000000000000000000014 /* MTToast.swift */,
 				E20000000000000000000010 /* MTRichTextContent.swift */,
@@ -715,6 +718,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E10000000000000000000021 /* MTSheet.swift in Sources */,
 				E1000000000000000000001F /* ProfileSettings.swift in Sources */,
 				E1000000000000000000001E /* SettingsController.swift in Sources */,
 				E1000000000000000000001D /* WorkspaceToolbar.swift in Sources */,

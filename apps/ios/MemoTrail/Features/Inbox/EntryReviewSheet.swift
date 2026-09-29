@@ -68,69 +68,29 @@ struct EntryReviewSheet: View {
   private var isBusy: Bool { savingIntent != nil || isTrashing }
 
   var body: some View {
-    NavigationStack {
-      ScrollView {
-        VStack(alignment: .leading, spacing: MTSpacing.s5) {
-          header
-          MTTextField(
-            label: "Title", text: $title, prompt: "Add a title",
-            maxLength: InboxCapture.titleLimit
-          )
-          .accessibilityIdentifier("review-title")
-          noteField
-          OccurrenceEditor(value: $occurrence)
-          MTOrganizationEditor(
-            kind: .collection, names: $collectionNames, options: collectionOptions)
-          MTOrganizationEditor(kind: .tag, names: $tagNames, options: tagOptions)
-          EntryPhotoDatesView(
-            client: client, ownerID: ownerID, entryID: entry.id, occurrence: $occurrence,
-            photoPlace: $photoPlace)
-        }
-        .padding(.horizontal, MTSpacing.s5)
-        .padding(.bottom, MTSpacing.s6)
-        .disabled(isBusy)
-      }
-      .scrollDismissesKeyboard(.interactively)
-      .background(MTColor.surfaceRaised)
-      .safeAreaInset(edge: .bottom, spacing: 0) { footer }
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .topBarTrailing) {
-          Button(
-            isOrganized ? "Close item editor" : "Close Inbox review",
-            systemImage: MTIcon.close.systemName
-          ) {
-            dismiss()
-          }
-          .disabled(isBusy)
-          .accessibilityIdentifier("close-entry-review")
-        }
-      }
-      .navigationDestination(isPresented: $isShowingHistory) {
-        EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: entry.id)
-      }
-    }
-    .presentationDetents([.large])
-    .interactiveDismissDisabled(isBusy)
-  }
-
-  private var header: some View {
-    VStack(alignment: .leading, spacing: MTSpacing.s2) {
-      Text(isOrganized ? "Life Wiki editor" : "Inbox review")
-        .font(MTFont.label.weight(.semibold))
-        .foregroundStyle(MTColor.warm)
-      Text(isOrganized ? "Edit Entry" : "Review Entry")
-        .font(.system(.title2, design: .serif).weight(.medium))
-        .foregroundStyle(MTColor.ink)
-        .accessibilityAddTraits(.isHeader)
-      Text(
-        isOrganized
-          ? "This Entry is already part of your Life Wiki."
-          : "Review what you captured, then save it to your Library."
+    MTSheet(
+      eyebrow: isOrganized ? "Life Wiki editor" : "Inbox review",
+      title: isOrganized ? "Edit Entry" : "Review Entry",
+      description: isOrganized
+        ? "This Entry is already part of your Life Wiki."
+        : "Review what you captured, then save it to your Library.",
+      closeLabel: isOrganized ? "Close item editor" : "Close Inbox review",
+      closeIdentifier: "close-entry-review", isBusy: isBusy, message: errorMessage
+    ) {
+      MTTextField(
+        label: "Title", text: $title, prompt: "Add a title",
+        maxLength: InboxCapture.titleLimit
       )
-      .font(MTFont.body)
-      .foregroundStyle(MTColor.inkMuted)
-      .mtLineSpacing(MTLineHeight.body)
+      .accessibilityIdentifier("review-title")
+      noteField
+      OccurrenceEditor(value: $occurrence)
+      MTOrganizationEditor(
+        kind: .collection, names: $collectionNames, options: collectionOptions)
+      MTOrganizationEditor(kind: .tag, names: $tagNames, options: tagOptions)
+      EntryPhotoDatesView(
+        client: client, ownerID: ownerID, entryID: entry.id, occurrence: $occurrence,
+        photoPlace: $photoPlace)
+    } accessory: {
       if showsVersionHistory {
         Button {
           isShowingHistory = true
@@ -143,9 +103,13 @@ struct EntryReviewSheet: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("review-version-history")
+        .navigationDestination(isPresented: $isShowingHistory) {
+          EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: entry.id)
+        }
       }
+    } footer: {
+      footer
     }
-    .fixedSize(horizontal: false, vertical: true)
   }
 
   private var noteField: some View {
@@ -164,56 +128,40 @@ struct EntryReviewSheet: View {
     }
   }
 
-  /// Web's sticky dialog footer: the save actions, then Move to Trash for Inbox captures.
-  private var footer: some View {
-    VStack(alignment: .leading, spacing: MTSpacing.s2) {
-      if let errorMessage {
-        Label(errorMessage, icon: .warning)
-          .font(MTFont.caption)
-          .foregroundStyle(MTColor.warm)
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .padding(MTSpacing.s3)
-          .background(MTColor.warmSubtle, in: RoundedRectangle(cornerRadius: MTRadius.small))
-          .accessibilityIdentifier("review-error")
-      }
-      HStack(spacing: MTSpacing.s2) {
-        if isOrganized {
-          Button("Cancel") { dismiss() }
-            .mtButtonStyle(.secondary, fillsWidth: true)
-          Button("Save changes") { Task { await submit(.save) } }
-            .mtButtonStyle(isLoading: savingIntent == .save, fillsWidth: true)
-            .accessibilityIdentifier("save-entry-review")
-        } else {
-          Button("Save changes") { Task { await submit(.save) } }
-            .mtButtonStyle(.secondary, isLoading: savingIntent == .save, fillsWidth: true)
-            .accessibilityIdentifier("save-entry-review")
-          Button {
-            Task { await submit(.done) }
-          } label: {
-            Label("Save to Library", icon: .check)
-          }
-          .mtButtonStyle(isLoading: savingIntent == .done, fillsWidth: true)
-          .accessibilityIdentifier("organize-entry")
-        }
-      }
-      if moveToTrash != nil, !isOrganized {
+  /// Web's dialog footer: the save actions, then Move to Trash for Inbox captures.
+  @ViewBuilder private var footer: some View {
+    HStack(spacing: MTSpacing.s2) {
+      if isOrganized {
+        Button("Cancel") { dismiss() }
+          .mtButtonStyle(.secondary, fillsWidth: true)
+        Button("Save changes") { Task { await submit(.save) } }
+          .mtButtonStyle(isLoading: savingIntent == .save, fillsWidth: true)
+          .accessibilityIdentifier("save-entry-review")
+      } else {
+        Button("Save changes") { Task { await submit(.save) } }
+          .mtButtonStyle(.secondary, isLoading: savingIntent == .save, fillsWidth: true)
+          .accessibilityIdentifier("save-entry-review")
         Button {
-          isConfirmingTrash = true
+          Task { await submit(.done) }
         } label: {
-          Label("Move to Trash", icon: .trash)
+          Label("Save to Library", icon: .check)
         }
-        .mtButtonStyle(.ghost, isLoading: isTrashing)
-        .accessibilityIdentifier("trash-entry-review")
-        .captureTrashConfirmation(entry.displayTitle, isPresented: $isConfirmingTrash) {
-          Task { await trash() }
-        }
+        .mtButtonStyle(isLoading: savingIntent == .done, fillsWidth: true)
+        .accessibilityIdentifier("organize-entry")
       }
     }
-    .disabled(isBusy)
-    .padding(.horizontal, MTSpacing.s5)
-    .padding(.vertical, MTSpacing.s3)
-    .background(MTColor.surfaceRaised)
-    .overlay(alignment: .top) { Divider().overlay(MTColor.border) }
+    if moveToTrash != nil, !isOrganized {
+      Button {
+        isConfirmingTrash = true
+      } label: {
+        Label("Move to Trash", icon: .trash)
+      }
+      .mtButtonStyle(.ghost, isLoading: isTrashing)
+      .accessibilityIdentifier("trash-entry-review")
+      .captureTrashConfirmation(entry.displayTitle, isPresented: $isConfirmingTrash) {
+        Task { await trash() }
+      }
+    }
   }
 
   /// The saved note: an untouched note keeps its original document, including Web-only

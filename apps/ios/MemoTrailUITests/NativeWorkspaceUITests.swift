@@ -133,6 +133,29 @@ final class NativeWorkspaceUITests: XCTestCase {
     XCTAssertFalse(app.buttons["rich-format-bold"].exists)
   }
 
+  func testGallerySheetsShowMessagesAndFitShortChoices() {
+    let app = launchSection("primitives")
+    reveal(app.buttons["Open form sheet"], in: app).tap()
+    XCTAssertTrue(app.staticTexts["Edit a memory"].waitForExistence(timeout: 3))
+    app.buttons["Save memory"].tap()
+    XCTAssertTrue(app.staticTexts["Add a title before saving."].waitForExistence(timeout: 3))
+    attach(app, "Form sheet with message")
+    let title = app.textFields["Title, required"]
+    title.tap()
+    title.typeText("First ski day")
+    app.buttons["Save memory"].tap()
+    XCTAssertTrue(
+      app.staticTexts["Demo saved for an undated memory. No data was uploaded."]
+        .waitForExistence(timeout: 5))
+
+    reveal(app.buttons["Open fitted sheet"], in: app).tap()
+    XCTAssertTrue(app.staticTexts["What are you adding?"].waitForExistence(timeout: 3))
+    Thread.sleep(forTimeInterval: 0.6)
+    attach(app, "Fitted sheet")
+    app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Moment")).firstMatch.tap()
+    XCTAssertTrue(app.staticTexts["Moment chosen."].waitForExistence(timeout: 3))
+  }
+
   func testRichWritingDarkLargeTextAndSheetCancel() {
     let app = launch("--review-design-system")
     app.buttons["design-preview-settings"].tap()
