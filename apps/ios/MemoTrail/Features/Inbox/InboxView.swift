@@ -110,7 +110,7 @@ struct InboxView: View {
 
   private var pendingSection: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      InboxSectionHeader(
+      MTListHeader(
         "Waiting to sync", detail: "\(captureCount(controller.pendingEntries.count)) on this iPhone"
       ) {
         Button {
@@ -121,11 +121,11 @@ struct InboxView: View {
         .mtButtonStyle(.ghost, size: .small, isLoading: controller.isSyncing)
         .accessibilityIdentifier("retry-pending-entries")
       }
-      InboxList {
+      MTListSurface {
         ForEach(controller.pendingEntries) { entry in
           PendingCaptureRow(entry: entry)
           if entry.id != controller.pendingEntries.last?.id {
-            Divider().overlay(MTColor.border)
+            MTListDivider()
           }
         }
       }
@@ -135,12 +135,12 @@ struct InboxView: View {
 
   private var entrySection: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      InboxSectionHeader("Ready to organize", detail: captureCount(controller.entries.count)) {
+      MTListHeader("Ready to organize", detail: captureCount(controller.entries.count)) {
         if controller.isLoading, controller.hasLoaded {
           ProgressView().controlSize(.small).tint(MTColor.accent)
         }
       }
-      InboxList {
+      MTListSurface {
         if !controller.hasLoaded, controller.isLoading {
           ProgressView("Loading your Inbox...")
             .font(MTFont.caption)
@@ -168,7 +168,7 @@ struct InboxView: View {
               organize: { selectedEntry = entry },
               moveToTrash: { Task { await moveToTrash(entry) } })
             if entry.id != controller.entries.last?.id {
-              Divider().overlay(MTColor.border)
+              MTListDivider()
             }
           }
         }

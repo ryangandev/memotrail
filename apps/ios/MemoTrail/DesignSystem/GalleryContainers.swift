@@ -83,16 +83,48 @@
 
         GallerySpecimen(
           title: "RichTextContent",
-          api: "text · richText · font · falls back to the plain body",
+          api: "text · richText · font · color · lineLimit · falls back to the plain body",
           description:
-            "Renders Web-authored writing: emphasis, code, links, quotes, lists, and code blocks."
+            "Renders Web-authored writing: emphasis, code, links, quotes, lists, and code blocks. A line limit flows it into a clamped preview."
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s4) {
             MTRichTextContent(
               text: GallerySamples.richText?.text ?? "", richText: GallerySamples.richText)
-            Rectangle().fill(MTColor.border).frame(height: 1)
+            MTListDivider()
+            MTRichTextContent(
+              text: GallerySamples.richText?.text ?? "", richText: GallerySamples.richText,
+              font: MTFont.body, textStyle: .subheadline, color: MTColor.inkMuted, lineLimit: 4)
+            MTListDivider()
             MTRichTextContent(
               text: "A plain body renders as one paragraph when no valid rich document is stored.")
+          }
+        }
+
+        GallerySpecimen(
+          title: "List",
+          api: "MTListHeader · title · detail · alignsDetailTrailing · trailing; MTListSurface",
+          description:
+            "The uppercase list heading and bordered row surface shared by the Inbox and Library, with pressable whole-row links."
+        ) {
+          VStack(alignment: .leading, spacing: MTSpacing.s3) {
+            MTListHeader("Results", detail: "2 items")
+            MTListSurface {
+              ForEach(["A quiet afternoon by the coast", "Hike the coast trail"], id: \.self) {
+                title in
+                Button {
+                  recordMessage = "Opened \(title)."
+                } label: {
+                  VStack(alignment: .leading, spacing: MTSpacing.s1) {
+                    Text(title).font(MTFont.cardTitle).foregroundStyle(MTColor.ink)
+                    Text("Matched in Title").font(MTFont.caption).foregroundStyle(MTColor.accent)
+                  }
+                  .padding(MTSpacing.s4)
+                }
+                .buttonStyle(MTListRowButtonStyle())
+                if title == "A quiet afternoon by the coast" { MTListDivider() }
+              }
+            }
+            MTListHeader("All items", detail: "9 items", alignsDetailTrailing: true)
           }
         }
 

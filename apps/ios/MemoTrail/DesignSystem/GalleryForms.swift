@@ -72,13 +72,18 @@
 
         GallerySpecimen(
           title: "SelectField",
-          api: "label · selection · options · title · size · required · disabled",
-          description: "A labeled native menu with the same surface as SearchField."
+          api: "label · selection · options | groups · title · size · required · disabled",
+          description:
+            "A labeled native menu with the same surface as SearchField. Groups title runs of options, like a Web optgroup."
         ) {
           MTFieldGrid {
             MTSelectField(
-              label: "Show records", selection: $recordFilter,
-              options: ["All records", "Entries", "People, homes & vehicles"], title: { $0 })
+              label: "Record", selection: $recordFilter,
+              groups: [
+                MTSelectGroup(options: ["All records"]),
+                MTSelectGroup(title: "Records", options: ["Entries", "Entities", "Goals"]),
+                MTSelectGroup(title: "Focused records", options: ["First Times", "People"]),
+              ], title: { $0 })
             MTSelectField(
               label: "Unavailable filter", selection: .constant("Unavailable"),
               options: ["Unavailable"], title: { $0 }, size: .small

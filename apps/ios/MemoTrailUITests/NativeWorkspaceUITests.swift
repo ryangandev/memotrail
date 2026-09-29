@@ -154,6 +154,13 @@ final class NativeWorkspaceUITests: XCTestCase {
 
   func testFormFieldsPickersAndOrganizationEditing() {
     let app = launchSection("forms")
+    let record = reveal(app.buttons["Record"], in: app)
+    record.tap()
+    XCTAssertTrue(app.buttons["People"].waitForExistence(timeout: 3))
+    attach(app, "Grouped select menu")
+    app.buttons["People"].tap()
+    XCTAssertEqual(record.value as? String, "People")
+
     let emptyDate = reveal(app.buttons["Empty date"], in: app)
     XCTAssertEqual(emptyDate.value as? String, "Not set")
     emptyDate.tap()

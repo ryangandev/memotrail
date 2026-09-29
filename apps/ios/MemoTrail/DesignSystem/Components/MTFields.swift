@@ -130,18 +130,24 @@ struct MTSearchField<Trailing: View>: View {
   var prompt: String?
   var size: MTFieldSize
   var hidesLabel: Bool
+  var maxLength: Int?
+  /// Each increase moves keyboard focus into the field.
+  var focusRequest: Int
   private let trailing: Trailing
   @FocusState private var isFocused: Bool
 
   init(
     _ label: String, text: Binding<String>, prompt: String? = nil, size: MTFieldSize = .medium,
-    hidesLabel: Bool = false, @ViewBuilder trailing: () -> Trailing
+    hidesLabel: Bool = false, maxLength: Int? = nil, focusRequest: Int = 0,
+    @ViewBuilder trailing: () -> Trailing
   ) {
     self.label = label
     _text = text
     self.prompt = prompt
     self.size = size
     self.hidesLabel = hidesLabel
+    self.maxLength = maxLength
+    self.focusRequest = focusRequest
     self.trailing = trailing()
   }
 
@@ -178,37 +184,80 @@ struct MTSearchField<Trailing: View>: View {
       }
       .mtFieldSurface(size: size, isFocused: isFocused) { isFocused = true }
     }
+    .onChange(of: text) {
+      if let maxLength, text.count > maxLength { text = String(text.prefix(maxLength)) }
+    }
+    .onChange(of: focusRequest) { isFocused = true }
   }
 }
 
 extension MTSearchField where Trailing == EmptyView {
   init(
     _ label: String, text: Binding<String>, prompt: String? = nil, size: MTFieldSize = .medium,
-    hidesLabel: Bool = false
+    hidesLabel: Bool = false, maxLength: Int? = nil, focusRequest: Int = 0
   ) {
-    self.init(label, text: text, prompt: prompt, size: size, hidesLabel: hidesLabel) {
+    self.init(
+      label, text: text, prompt: prompt, size: size, hidesLabel: hidesLabel, maxLength: maxLength,
+      focusRequest: focusRequest
+    ) {
       EmptyView()
     }
   }
+}
+
+/// A titled run of options inside an `MTSelectField` menu, like a Web `optgroup`.
+struct MTSelectGroup<Value: Hashable>: Hashable {
+  var title: String?
+  let options: [Value]
 }
 
 /// A labeled single choice presented as a native menu with a check beside the selection.
 struct MTSelectField<Value: Hashable>: View {
   let label: String
   @Binding var selection: Value
-  let options: [Value]
+  let groups: [MTSelectGroup<Value>]
   let title: (Value) -> String
   var size: MTFieldSize = .medium
   var isRequired = false
   var note: String?
   var hidesLabel = false
 
+  init(
+    label: String, selection: Binding<Value>, options: [Value], title: @escaping (Value) -> String,
+    size: MTFieldSize = .medium, isRequired: Bool = false, note: String? = nil,
+    hidesLabel: Bool = false
+  ) {
+    self.init(
+      label: label, selection: selection, groups: [MTSelectGroup(options: options)], title: title,
+      size: size, isRequired: isRequired, note: note, hidesLabel: hidesLabel)
+  }
+
+  init(
+    label: String, selection: Binding<Value>, groups: [MTSelectGroup<Value>],
+    title: @escaping (Value) -> String, size: MTFieldSize = .medium, isRequired: Bool = false,
+    note: String? = nil, hidesLabel: Bool = false
+  ) {
+    self.label = label
+    _selection = selection
+    self.groups = groups
+    self.title = title
+    self.size = size
+    self.isRequired = isRequired
+    self.note = note
+    self.hidesLabel = hidesLabel
+  }
+
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
       if !hidesLabel { MTFieldLabel(title: label, isRequired: isRequired, note: note) }
       Menu {
-        Picker(label, selection: $selection) {
-          ForEach(options, id: \.self) { Text(title($0)).tag($0) }
+        // Titled sections of checkable items, because a menu Picker drops section titles.
+        ForEach(groups, id: \.self) { group in
+          if let heading = group.title {
+            Section(heading) { options(group) }
+          } else {
+            Section { options(group) }
+          }
         }
       } label: {
         HStack(spacing: MTSpacing.s2) {
@@ -227,6 +276,14 @@ struct MTSelectField<Value: Hashable>: View {
       .buttonStyle(.plain)
       .mtFieldAccessibility(label, isRequired: isRequired)
       .accessibilityValue(title(selection))
+    }
+  }
+
+  private func options(_ group: MTSelectGroup<Value>) -> some View {
+    ForEach(group.options, id: \.self) { option in
+      Toggle(
+        title(option),
+        isOn: Binding(get: { selection == option }, set: { if $0 { selection = option } }))
     }
   }
 }

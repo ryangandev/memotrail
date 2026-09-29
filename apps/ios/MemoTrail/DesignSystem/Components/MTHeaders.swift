@@ -111,6 +111,52 @@ extension MTSectionHeader where Trailing == EmptyView {
   }
 }
 
+/// The small uppercase heading above a list, like the Web Inbox and Library headings: a title,
+/// a quiet count beside it or at the far edge, and an optional trailing action.
+struct MTListHeader<Trailing: View>: View {
+  let title: String
+  var detail: String?
+  var alignsDetailTrailing = false
+  private let trailing: Trailing
+
+  init(
+    _ title: String, detail: String? = nil, alignsDetailTrailing: Bool = false,
+    @ViewBuilder trailing: () -> Trailing
+  ) {
+    self.title = title
+    self.detail = detail
+    self.alignsDetailTrailing = alignsDetailTrailing
+    self.trailing = trailing()
+  }
+
+  var body: some View {
+    HStack(alignment: .center, spacing: MTSpacing.s2) {
+      HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
+        Text(title.uppercased())
+          .font(MTFont.label.weight(.semibold))
+          .tracking(0.5)
+          .foregroundStyle(MTColor.ink)
+          .accessibilityAddTraits(.isHeader)
+        if alignsDetailTrailing { Spacer(minLength: MTSpacing.s2) }
+        if let detail {
+          Text(detail)
+            .font(MTFont.caption.weight(.regular))
+            .foregroundStyle(MTColor.inkFaint)
+        }
+      }
+      if !alignsDetailTrailing { Spacer(minLength: MTSpacing.s2) }
+      trailing
+    }
+    .frame(minHeight: 34)
+  }
+}
+
+extension MTListHeader where Trailing == EmptyView {
+  init(_ title: String, detail: String? = nil, alignsDetailTrailing: Bool = false) {
+    self.init(title, detail: detail, alignsDetailTrailing: alignsDetailTrailing) { EmptyView() }
+  }
+}
+
 /// The accent "Open ›" link used by section headers and footers.
 struct MTSectionLink: View {
   let title: String

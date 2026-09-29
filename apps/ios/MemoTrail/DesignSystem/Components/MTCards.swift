@@ -17,6 +17,45 @@ struct MTCard<Content: View>: View {
   }
 }
 
+/// The bordered surface that holds list rows, like the Web Inbox and search result lists.
+/// Separate rows with `MTListDivider`.
+struct MTListSurface<Content: View>: View {
+  private let content: Content
+
+  init(@ViewBuilder content: () -> Content) { self.content = content() }
+
+  var body: some View {
+    VStack(spacing: 0) { content }
+      .frame(maxWidth: .infinity)
+      .background(MTColor.surface)
+      .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
+      .overlay {
+        RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border, lineWidth: 1)
+      }
+  }
+}
+
+/// The hairline between list rows.
+struct MTListDivider: View {
+  var body: some View {
+    Rectangle().fill(MTColor.border).frame(height: 1).accessibilityHidden(true)
+  }
+}
+
+/// A whole-row link in a list, which shows the Web hover surface while pressed.
+struct MTListRowButtonStyle: ButtonStyle {
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background(
+        configuration.isPressed ? MTColor.surfaceRaised : .clear,
+        in: RoundedRectangle(cornerRadius: MTRadius.medium)
+      )
+      .contentShape(Rectangle())
+      .animation(.easeOut(duration: MTMotion.quick), value: configuration.isPressed)
+  }
+}
+
 /// The interactive record surface shared by record cards and Collection cards. It works with
 /// `Button` and `NavigationLink`, and presses with the stronger border and raised shadow that
 /// the Web card shows on hover.

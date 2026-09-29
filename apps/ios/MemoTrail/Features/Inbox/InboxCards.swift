@@ -1,57 +1,5 @@
 import SwiftUI
 
-/// The Web Inbox section label: an uppercase title, a quiet count, and a trailing action.
-struct InboxSectionHeader<Trailing: View>: View {
-  let title: String
-  let detail: String
-  private let trailing: Trailing
-
-  init(_ title: String, detail: String, @ViewBuilder trailing: () -> Trailing) {
-    self.title = title
-    self.detail = detail
-    self.trailing = trailing()
-  }
-
-  var body: some View {
-    HStack(alignment: .center, spacing: MTSpacing.s2) {
-      HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
-        Text(title.uppercased())
-          .font(MTFont.label.weight(.semibold))
-          .tracking(0.5)
-          .foregroundStyle(MTColor.ink)
-          .accessibilityAddTraits(.isHeader)
-        Text(detail)
-          .font(MTFont.caption.weight(.regular))
-          .foregroundStyle(MTColor.inkFaint)
-      }
-      Spacer(minLength: MTSpacing.s2)
-      trailing
-    }
-    .frame(minHeight: 34)
-  }
-}
-
-extension InboxSectionHeader where Trailing == EmptyView {
-  init(_ title: String, detail: String) {
-    self.init(title, detail: detail) { EmptyView() }
-  }
-}
-
-/// The bordered list surface that holds Inbox rows, like Web `entryList`.
-struct InboxList<Content: View>: View {
-  @ViewBuilder let content: Content
-
-  var body: some View {
-    VStack(spacing: 0) { content }
-      .frame(maxWidth: .infinity)
-      .background(MTColor.surface)
-      .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
-      .overlay {
-        RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border, lineWidth: 1)
-      }
-  }
-}
-
 /// A calm message inside an Inbox list: loading trouble, an empty Inbox, or waiting to sync.
 struct InboxMessage<Actions: View>: View {
   let icon: MTIcon
