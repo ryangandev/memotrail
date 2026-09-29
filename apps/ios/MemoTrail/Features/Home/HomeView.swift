@@ -10,7 +10,7 @@ struct HomeView: View {
   @Bindable private var controller: HomeController
   @Bindable private var captureController: InboxController
   @Binding private var captureTitle: String
-  @Binding private var captureBody: String
+  @Binding private var captureNote: NSAttributedString
   @Binding private var captureOccurrence: OccurrenceDraft?
   @Binding private var capturePhotos: [FirstTimePhotoDraft]
   private let addCapturePhoto: @MainActor (FirstTimePhotoDraft) async throws -> Void
@@ -18,7 +18,6 @@ struct HomeView: View {
   @Binding private var hasLocalDraft: Bool
   @State private var isShowingAccount = false
   @Environment(AppNavigator.self) private var navigator
-  @FocusState private var isTitleFocused: Bool
   @Environment(\.scenePhase) private var scenePhase
 
   init(
@@ -29,7 +28,7 @@ struct HomeView: View {
     controller: HomeController,
     captureController: InboxController,
     captureTitle: Binding<String>,
-    captureBody: Binding<String>,
+    captureNote: Binding<NSAttributedString>,
     captureOccurrence: Binding<OccurrenceDraft?>,
     capturePhotos: Binding<[FirstTimePhotoDraft]>,
     addCapturePhoto: @escaping @MainActor (FirstTimePhotoDraft) async throws -> Void,
@@ -43,7 +42,7 @@ struct HomeView: View {
     self.controller = controller
     self.captureController = captureController
     _captureTitle = captureTitle
-    _captureBody = captureBody
+    _captureNote = captureNote
     _captureOccurrence = captureOccurrence
     _capturePhotos = capturePhotos
     self.addCapturePhoto = addCapturePhoto
@@ -71,14 +70,12 @@ struct HomeView: View {
         }
 
         CaptureCard(
-          title: $captureTitle,
-          note: $captureBody,
+          note: $captureNote,
           occurrence: $captureOccurrence,
           photos: $capturePhotos,
           isSaving: captureController.isSaving,
           hasLocalDraft: hasLocalDraft,
           message: captureController.captureMessage,
-          titleFocus: $isTitleFocused,
           addPhoto: addCapturePhoto,
           removePhoto: removeCapturePhoto,
           save: saveCapture
@@ -275,15 +272,12 @@ struct HomeView: View {
   @MainActor
   private func saveCapture() async {
     let didSave = await captureController.save(
-      title: captureTitle,
-      body: captureBody,
-      occurrenceDraft: captureOccurrence,
-      photos: capturePhotos
-    )
+      title: captureTitle, note: captureNote, occurrenceDraft: captureOccurrence,
+      photos: capturePhotos)
 
     if didSave {
       captureTitle = ""
-      captureBody = ""
+      captureNote = NSAttributedString()
       captureOccurrence = nil
       capturePhotos = []
       hasLocalDraft = false

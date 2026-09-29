@@ -9,7 +9,7 @@ struct InboxView: View {
 
   @Bindable private var controller: InboxController
   @Binding private var captureTitle: String
-  @Binding private var captureBody: String
+  @Binding private var captureNote: NSAttributedString
   @Binding private var captureOccurrence: OccurrenceDraft?
   @Binding private var capturePhotos: [FirstTimePhotoDraft]
   private let addCapturePhoto: @MainActor (FirstTimePhotoDraft) async throws -> Void
@@ -18,7 +18,7 @@ struct InboxView: View {
   @State private var isShowingAccount = false
   @State private var selectedEntry: InboxEntry?
   @Environment(AppNavigator.self) private var navigator
-  @FocusState private var isTitleFocused: Bool
+  @State private var captureFocusRequest = 0
   @Environment(\.scenePhase) private var scenePhase
 
   init(
@@ -28,7 +28,7 @@ struct InboxView: View {
     signOut: @escaping @MainActor () async -> Void,
     controller: InboxController,
     captureTitle: Binding<String>,
-    captureBody: Binding<String>,
+    captureNote: Binding<NSAttributedString>,
     captureOccurrence: Binding<OccurrenceDraft?>,
     capturePhotos: Binding<[FirstTimePhotoDraft]>,
     addCapturePhoto: @escaping @MainActor (FirstTimePhotoDraft) async throws -> Void,
@@ -41,7 +41,7 @@ struct InboxView: View {
     self.signOut = signOut
     self.controller = controller
     _captureTitle = captureTitle
-    _captureBody = captureBody
+    _captureNote = captureNote
     _captureOccurrence = captureOccurrence
     _capturePhotos = capturePhotos
     self.addCapturePhoto = addCapturePhoto
@@ -56,14 +56,13 @@ struct InboxView: View {
         LazyVStack(alignment: .leading, spacing: MTSpacing.s8) {
           header
           CaptureCard(
-            title: $captureTitle,
-            note: $captureBody,
+            note: $captureNote,
             occurrence: $captureOccurrence,
             photos: $capturePhotos,
             isSaving: controller.isSaving,
             hasLocalDraft: hasLocalDraft,
             message: controller.captureMessage,
-            titleFocus: $isTitleFocused,
+            focusRequest: captureFocusRequest,
             addPhoto: addCapturePhoto,
             removePhoto: removeCapturePhoto,
             save: saveCapture
@@ -251,7 +250,7 @@ struct InboxView: View {
       Spacer()
 
       Button("New entry", systemImage: "plus") {
-        isTitleFocused = true
+        captureFocusRequest += 1
       }
       .labelStyle(.iconOnly)
       .font(.system(size: 18, weight: .medium))
@@ -384,15 +383,12 @@ struct InboxView: View {
   @MainActor
   private func saveCapture() async {
     let didSave = await controller.save(
-      title: captureTitle,
-      body: captureBody,
-      occurrenceDraft: captureOccurrence,
-      photos: capturePhotos
-    )
+      title: captureTitle, note: captureNote, occurrenceDraft: captureOccurrence,
+      photos: capturePhotos)
 
     if didSave {
       captureTitle = ""
-      captureBody = ""
+      captureNote = NSAttributedString()
       captureOccurrence = nil
       capturePhotos = []
       hasLocalDraft = false

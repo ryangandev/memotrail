@@ -12,7 +12,7 @@ struct RootTabView: View {
   @State private var homeController: HomeController
   @State private var inboxController: InboxController
   @State private var captureTitle: String
-  @State private var captureBody: String
+  @State private var captureNote: NSAttributedString
   @State private var captureOccurrence: OccurrenceDraft?
   @State private var capturePhotos: [FirstTimePhotoDraft]
   @State private var hasLocalDraft: Bool
@@ -49,7 +49,7 @@ struct RootTabView: View {
       )
     )
     _captureTitle = State(initialValue: draft?.title ?? "")
-    _captureBody = State(initialValue: draft?.body ?? "")
+    _captureNote = State(initialValue: draft?.note ?? NSAttributedString())
     _captureOccurrence = State(initialValue: draft?.captureOccurrence)
     _capturePhotos = State(initialValue: [])
     _hasLocalDraft = State(initialValue: draft != nil)
@@ -65,7 +65,7 @@ struct RootTabView: View {
         controller: homeController,
         captureController: inboxController,
         captureTitle: $captureTitle,
-        captureBody: $captureBody,
+        captureNote: $captureNote,
         captureOccurrence: $captureOccurrence,
         capturePhotos: $capturePhotos,
         addCapturePhoto: addCapturePhoto,
@@ -84,7 +84,7 @@ struct RootTabView: View {
         signOut: signOut,
         controller: inboxController,
         captureTitle: $captureTitle,
-        captureBody: $captureBody,
+        captureNote: $captureNote,
         captureOccurrence: $captureOccurrence,
         capturePhotos: $capturePhotos,
         addCapturePhoto: addCapturePhoto,
@@ -144,7 +144,7 @@ struct RootTabView: View {
       QuickCaptureView(
         controller: inboxController,
         title: $captureTitle,
-        draftBody: $captureBody,
+        note: $captureNote,
         occurrence: $captureOccurrence,
         photos: $capturePhotos,
         addPhoto: addCapturePhoto,
@@ -155,7 +155,7 @@ struct RootTabView: View {
     .onChange(of: captureTitle) {
       persistDraft()
     }
-    .onChange(of: captureBody) {
+    .onChange(of: captureNote) {
       persistDraft()
     }
     .onChange(of: captureOccurrence) {
@@ -175,14 +175,17 @@ struct RootTabView: View {
       captureTitle = String(captureTitle.prefix(InboxCapture.titleLimit))
     }
 
-    if captureBody.count > InboxCapture.bodyLimit {
-      captureBody = String(captureBody.prefix(InboxCapture.bodyLimit))
+    // Web counts the note limit in UTF-16 code units, like NSAttributedString.
+    if captureNote.length > InboxCapture.bodyLimit {
+      captureNote = captureNote.attributedSubstring(
+        from: NSRange(location: 0, length: InboxCapture.bodyLimit))
     }
 
     hasLocalDraft =
       draftStore.save(
         title: captureTitle,
-        body: captureBody,
+        body: captureNote.string,
+        bodyRich: captureNote.length > 0 ? EntryEmphasisContent(attributedText: captureNote) : nil,
         occurrenceDraft: captureOccurrence,
         ownerID: user.id
       ) || !capturePhotos.isEmpty
@@ -275,7 +278,7 @@ enum RootTabDestination: String, CaseIterable, Sendable {
 private struct QuickCaptureView: View {
   @Bindable var controller: InboxController
   @Binding var title: String
-  @Binding var draftBody: String
+  @Binding var note: NSAttributedString
   @Binding var occurrence: OccurrenceDraft?
   @Binding var photos: [FirstTimePhotoDraft]
   let addPhoto: @MainActor (FirstTimePhotoDraft) async throws -> Void
@@ -283,7 +286,6 @@ private struct QuickCaptureView: View {
   @Binding var hasLocalDraft: Bool
 
   @Environment(\.dismiss) private var dismiss
-  @FocusState private var isTitleFocused: Bool
 
   var body: some View {
     NavigationStack {
@@ -301,14 +303,13 @@ private struct QuickCaptureView: View {
           }
 
           CaptureCard(
-            title: $title,
-            note: $draftBody,
+            note: $note,
             occurrence: $occurrence,
             photos: $photos,
             isSaving: controller.isSaving,
             hasLocalDraft: hasLocalDraft,
             message: controller.captureMessage,
-            titleFocus: $isTitleFocused,
+            focusRequest: 1,
             addPhoto: addPhoto,
             removePhoto: removePhoto,
             save: save
@@ -337,24 +338,17 @@ private struct QuickCaptureView: View {
           Button("Close") { dismiss() }
         }
       }
-      .task {
-        isTitleFocused = true
-      }
     }
   }
 
   @MainActor
   private func save() async {
     let didSave = await controller.save(
-      title: title,
-      body: draftBody,
-      occurrenceDraft: occurrence,
-      photos: photos
-    )
+      title: title, note: note, occurrenceDraft: occurrence, photos: photos)
 
     if didSave {
       title = ""
-      draftBody = ""
+      note = NSAttributedString()
       occurrence = nil
       photos = []
       hasLocalDraft = false

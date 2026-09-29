@@ -365,6 +365,8 @@ struct InboxDraft: Codable, Equatable, Sendable {
   let occurredAt: Date?
   let updatedAt: Date
   var occurrenceDraft: OccurrenceDraft? = nil
+  /// The formatted note, stored like Web's `bodyRich` draft field.
+  var bodyRich: EntryEmphasisContent? = nil
 
   var captureOccurrence: OccurrenceDraft? {
     occurrenceDraft
@@ -385,6 +387,13 @@ struct InboxDraft: Codable, Equatable, Sendable {
 
   var hasContent: Bool {
     !title.isEmpty || !body.isEmpty || occurrenceDraft != nil
+  }
+
+  /// The note to reopen in the editor; formatting returns only when it still matches the text.
+  @MainActor
+  var note: NSAttributedString {
+    if let bodyRich, bodyRich.text == body, let text = bodyRich.attributedText() { return text }
+    return NSAttributedString(string: body)
   }
 }
 
@@ -413,12 +422,13 @@ struct InboxDraftStore {
 
   @discardableResult
   func save(
-    title: String, body: String, occurredAt: Date? = nil, occurrenceDraft: OccurrenceDraft? = nil,
-    ownerID: UUID
+    title: String, body: String, bodyRich: EntryEmphasisContent? = nil,
+    occurredAt: Date? = nil, occurrenceDraft: OccurrenceDraft? = nil, ownerID: UUID
   ) -> Bool {
     let key = Self.storageKey(ownerID: ownerID)
     var draft = InboxDraft(title: title, body: body, occurredAt: occurredAt, updatedAt: Date())
     draft.occurrenceDraft = occurrenceDraft
+    draft.bodyRich = bodyRich?.text == body ? bodyRich : nil
 
     guard draft.hasContent else {
       defaults.removeObject(forKey: key)
@@ -451,6 +461,8 @@ struct QueuedInboxEntry: Codable, Equatable, Identifiable, Sendable {
   let queuedAt: Date
   let attachments: [QueuedInboxAttachment]
   var occurrence: EntryOccurrence? = nil
+  /// Web's `metadata.body_rich` for the note, when it was written with formatting.
+  var bodyRich: EntryEmphasisContent? = nil
 
   var effectiveOccurrence: EntryOccurrence {
     occurrence
@@ -478,6 +490,7 @@ struct QueuedInboxEntry: Codable, Equatable, Identifiable, Sendable {
 
   private enum CodingKeys: String, CodingKey {
     case id, title, body, occurredAt, occurredTimezone, queuedAt, attachments, occurrence
+    case bodyRich
   }
 
   init(from decoder: Decoder) throws {
@@ -491,6 +504,7 @@ struct QueuedInboxEntry: Codable, Equatable, Identifiable, Sendable {
     attachments =
       try values.decodeIfPresent([QueuedInboxAttachment].self, forKey: .attachments) ?? []
     occurrence = try values.decodeIfPresent(EntryOccurrence.self, forKey: .occurrence)
+    bodyRich = try values.decodeIfPresent(EntryEmphasisContent.self, forKey: .bodyRich)
   }
 
   var presentedEntry: InboxEntry {
@@ -522,6 +536,7 @@ struct QueuedInboxEntry: Codable, Equatable, Identifiable, Sendable {
       && attachments.allSatisfy(\.isValid)
       && Set(attachments.map(\.id)).count == attachments.count
       && (normalizedTitle != nil || !body.isEmpty || !attachments.isEmpty)
+      && (bodyRich.map { $0.isValid(expectedText: body) } ?? true)
   }
 }
 

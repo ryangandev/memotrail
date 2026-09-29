@@ -93,7 +93,8 @@ Pair it with the test file carrying the same feature name.
 - Native `DesignSystem/Components/NativeRichTextEditor.swift` provides a reusable UIKit writing surface with an Aa formatting toggle, bold, italic, underline, strikethrough, selection formatting, typing styles, and undo/redo.
   The Debug gallery exercises standalone and sheet presentation, plus an encode/decode save preview using `Models/EntryEmphasisContent.swift`.
   This codec authors the paragraph and emphasis subset of Web's versioned `body_rich` document and rejects unsupported blocks or marks rather than flattening them.
-  Ordinary native Capture and Inbox review still use their existing plaintext compatibility path pending component acceptance and persistence adoption.
+  Native Capture now writes through it like Web: `CaptureCard` edits one formatted note, `EntryEmphasisContent.capture` trims surrounding whitespace without dropping formatting, and drafts, the offline queue, and the Entry insert carry `body_rich` only when it matches the saved plaintext.
+  Native Inbox review still uses its plaintext compatibility path, which preserves rich metadata it does not understand.
 - Collections, tags, People, and Wiki Item links are owner-scoped reusable relationships. Locations are Entry-owned snapshots.
 - Focused forms own specialized structure, Collections own curated groupings, tags own descriptive labels, and Timeline tracks own presentation only.
 - Home and Vehicle are Entity subtypes whose occurrence range describes the user's relationship span.

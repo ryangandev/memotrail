@@ -91,7 +91,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Preview saves round-trip Web-compatible paragraph and emphasis JSON locally; they do not create an Entry.
   Six targeted native tests and three Simulator UI scenarios pass, with no runtime warnings.
   Web's actual validator accepts the Swift-encoded payload; light, dark, large-text, and native selection screenshots were reviewed.
-  After component acceptance, adopt the rich payload in native Capture drafts, offline queues, review saves, and full-note rendering before enabling it on those business screens.
+  Native Capture now uses this editor as its single note, like the Web composer, and stores Web-compatible `body_rich` through drafts, the offline queue, and sync; a seeded local run confirmed the stored bold run.
+  Native review saves and full-note rendering still need to adopt the rich payload.
 - Native Settings routing includes Account, dates/timezone context, app-local appearance, Collections, Tags, organization settings, export, and the paused Beta AI state.
   Web profile/date preference editing is not yet replicated on iOS.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.

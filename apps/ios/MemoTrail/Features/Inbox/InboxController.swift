@@ -131,6 +131,7 @@ final class InboxController {
   func save(
     title: String,
     body: String,
+    bodyRich: EntryEmphasisContent? = nil,
     occurredAt: Date? = nil,
     occurrenceDraft: OccurrenceDraft? = nil,
     photos: [FirstTimePhotoDraft] = []
@@ -174,6 +175,8 @@ final class InboxController {
       attachments: photos.map(QueuedInboxAttachment.init)
     )
     pendingEntry.occurrence = occurrence
+    // Like Web, keep formatting only when it describes exactly the saved note.
+    pendingEntry.bodyRich = bodyRich?.isValid(expectedText: capture.body) == true ? bodyRich : nil
 
     guard let nextQueue = queueStore.enqueue(pendingEntry, ownerID: ownerID) else {
       captureMessage = CaptureMessage(
@@ -198,6 +201,17 @@ final class InboxController {
     }
 
     return true
+  }
+
+  /// Saves the composer's note, keeping its Web-compatible formatting.
+  func save(
+    title: String, note: NSAttributedString, occurrenceDraft: OccurrenceDraft?,
+    photos: [FirstTimePhotoDraft]
+  ) async -> Bool {
+    let captured = EntryEmphasisContent.capture(note)
+    return await save(
+      title: title, body: captured.body, bodyRich: captured.rich,
+      occurrenceDraft: occurrenceDraft, photos: photos)
   }
 
   func review(
@@ -411,7 +425,8 @@ final class InboxController {
       datePrecision: entry.effectiveOccurrence.precision.rawValue,
       occurredEnd: entry.effectiveOccurrence.end,
       occurredLabel: entry.effectiveOccurrence.label,
-      clientID: "ios:\(entry.id.uuidString.lowercased())"
+      clientID: "ios:\(entry.id.uuidString.lowercased())",
+      metadata: entry.bodyRich.map { [EntryRichText.metadataKey: $0] } ?? [:]
     )
 
     try await client
@@ -624,6 +639,8 @@ struct InboxEntryInsert: Encodable, Sendable {
   var occurredEnd: Date? = nil
   var occurredLabel: String? = nil
   let clientID: String
+  /// Web's `metadataWithEntryRichText`: `body_rich` when present, otherwise empty.
+  var metadata: [String: EntryEmphasisContent] = [:]
 
   enum CodingKeys: String, CodingKey {
     case id
@@ -639,6 +656,7 @@ struct InboxEntryInsert: Encodable, Sendable {
     case occurredEnd = "occurred_end"
     case occurredLabel = "occurred_label"
     case clientID = "client_id"
+    case metadata
   }
 }
 

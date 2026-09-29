@@ -67,6 +67,27 @@ final class LocalSessionUITests: XCTestCase {
     attach(app, "Recent Entry destination")
   }
 
+  func testCaptureSavesAFormattedNoteToTheInbox() throws {
+    let app = try launchLocalSession()
+    let editor = app.textViews["capture-body"]
+    XCTAssertTrue(editor.waitForExistence(timeout: 20))
+    reveal(editor, in: app).tap()
+    app.buttons["rich-format-toggle"].tap()
+    app.buttons["rich-format-bold"].tap()
+    editor.typeText("Harbor lights")
+    app.buttons["rich-format-bold"].tap()
+    editor.typeText(" after the storm")
+    attach(app, "Formatted capture")
+    app.buttons["rich-dismiss-keyboard"].tap()
+    XCTAssertTrue(app.staticTexts["Draft saved on this iPhone."].waitForExistence(timeout: 5))
+    app.buttons["save-entry"].tap()
+    XCTAssertTrue(text("Saved to Inbox", in: app).waitForExistence(timeout: 15))
+    let row = app.buttons["Organize Harbor lights after the storm"]
+    XCTAssertTrue(row.waitForExistence(timeout: 15))
+    XCTAssertEqual(editor.value as? String ?? "", "")
+    attach(app, "Saved formatted capture")
+  }
+
   private func launchLocalSession() throws -> XCUIApplication {
     let path = ProcessInfo.processInfo.environment["MEMOTRAIL_REVIEW_SESSION"] ?? ""
     guard !path.isEmpty else {

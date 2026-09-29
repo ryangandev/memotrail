@@ -2,9 +2,10 @@ import PhotosUI
 import SwiftUI
 import UIKit
 
+/// The Web CaptureComposer: one formatted note, an optional relevant date, voice, and photos,
+/// saved to the Inbox through the offline queue.
 struct CaptureCard: View {
-  @Binding var title: String
-  @Binding var note: String
+  @Binding var note: NSAttributedString
   @Binding var occurrence: OccurrenceDraft?
   @State private var showOccurrence = false
   @Binding var photos: [FirstTimePhotoDraft]
@@ -12,7 +13,7 @@ struct CaptureCard: View {
   let isSaving: Bool
   let hasLocalDraft: Bool
   let message: InboxController.CaptureMessage?
-  let titleFocus: FocusState<Bool>.Binding
+  var focusRequest = 0
   let addPhoto: @MainActor (FirstTimePhotoDraft) async throws -> Void
   let removePhoto: @MainActor (UUID) async throws -> Void
   let save: @MainActor () async -> Void
@@ -22,147 +23,79 @@ struct CaptureCard: View {
   @State private var photoError: String?
   @State private var voiceController = VoiceTranscriptionController()
 
+  private var isBusy: Bool { isSaving || isLoadingPhotos || voiceController.isActive }
+
   var body: some View {
-    VStack(spacing: 0) {
-      VStack(alignment: .leading, spacing: MTSpacing.s3) {
-        HStack(alignment: .center, spacing: MTSpacing.s3) {
-          Image(systemName: "sparkles")
-            .font(.system(size: 16, weight: .medium))
-            .foregroundStyle(MTColor.accent)
-            .frame(width: 34, height: 34)
-            .background(MTColor.accentSubtle, in: Circle())
-
-          VStack(alignment: .leading, spacing: MTSpacing.s1) {
-            Text("What is worth keeping?")
-              .font(MTTypography.titleSmall)
-              .foregroundStyle(MTColor.ink)
-
-            Text("A thought, a first, something learned, or whatever is on your mind.")
-              .font(MTTypography.body)
-              .foregroundStyle(MTColor.inkFaint)
-              .lineSpacing(3)
-          }
-        }
-
-        TextField("Optional title", text: $title)
-          .focused(titleFocus)
-          .font(MTTypography.bodyLarge)
+    VStack(alignment: .leading, spacing: 0) {
+      HStack(spacing: MTSpacing.s3) {
+        Image(.sparkle)
+          .font(.system(size: 15, weight: .medium))
+          .foregroundStyle(MTColor.accent)
+          .frame(width: 32, height: 32)
+          .background(MTColor.accentSubtle, in: Circle())
+          .accessibilityHidden(true)
+        Text("What\u{2019}s on your mind?")
+          .font(MTFont.cardTitle)
           .foregroundStyle(MTColor.ink)
-          .textInputAutocapitalization(.sentences)
-          .submitLabel(.next)
-          .accessibilityIdentifier("capture-title")
-
-        Divider()
-          .overlay(MTColor.border)
-
-        TextField(
-          "Write a note...",
-          text: $note,
-          axis: .vertical
-        )
-        .lineLimit(3...10)
-        .font(MTTypography.body)
-        .foregroundStyle(MTColor.ink)
-        .textInputAutocapitalization(.sentences)
-        .disabled(isSaving || voiceController.isActive)
-        .accessibilityIdentifier("capture-body")
-
-        if let photoError {
-          Label(photoError, systemImage: "exclamationmark.circle.fill")
-            .font(MTTypography.caption)
-            .foregroundStyle(MTColor.warm)
-            .accessibilityIdentifier("capture-photo-error")
-        } else if let voiceMessage = voiceController.message {
-          Label(
-            voiceMessage,
-            systemImage: voiceController.hasError
-              ? "exclamationmark.circle.fill"
-              : (voiceController.isActive ? "waveform" : "checkmark.circle.fill")
-          )
-          .font(MTTypography.caption)
-          .foregroundStyle(voiceController.hasError ? MTColor.warm : MTColor.inkMuted)
-          .accessibilityIdentifier("capture-voice-message")
-        } else if let message {
-          Label(
-            message.text,
-            systemImage: message.style == .success
-              ? "checkmark.circle.fill"
-              : "exclamationmark.circle.fill"
-          )
-          .font(MTTypography.caption)
-          .foregroundStyle(message.style == .success ? MTColor.success : MTColor.warm)
-          .accessibilityIdentifier("capture-message")
-        } else if hasLocalDraft {
-          Label("Draft saved on this iPhone.", systemImage: "clock.arrow.circlepath")
-            .font(MTTypography.caption)
-            .foregroundStyle(MTColor.inkMuted)
-            .accessibilityIdentifier("draft-message")
-        }
+          .accessibilityAddTraits(.isHeader)
       }
-      .frame(maxWidth: .infinity, alignment: .topLeading)
-      .padding(MTSpacing.s4)
+      .padding(.horizontal, MTSpacing.s5)
+      .padding(.top, MTSpacing.s5)
+
+      MTRichTextEditor(
+        text: $note, placeholder: "What is on your mind?", accessibilityIdentifier: "capture-body",
+        isEmbedded: true, minimumHeight: 120, focusRequest: focusRequest
+      )
+      .disabled(isSaving || voiceController.isActive)
+      .padding(.horizontal, MTSpacing.s2)
+      .padding(.top, MTSpacing.s2)
+
+      if let status {
+        Label(status.text, systemImage: status.systemImage)
+          .font(MTFont.caption)
+          .foregroundStyle(status.color)
+          .padding(.horizontal, MTSpacing.s5)
+          .padding(.bottom, MTSpacing.s3)
+          .accessibilityIdentifier(status.identifier)
+      }
 
       if let occurrence {
-        VStack(alignment: .leading, spacing: MTSpacing.s2) {
-          Text((try? occurrence.resolve().displayLabel) ?? "Date needs attention")
-            .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+        HStack(spacing: MTSpacing.s3) {
+          Label(
+            (try? occurrence.resolve().displayLabel) ?? "Date needs attention", icon: .calendar
+          )
+          .font(MTFont.caption)
+          .foregroundStyle(MTColor.accent)
+          Spacer(minLength: 0)
           Button("Edit date") { showOccurrence = true }
-            .font(MTTypography.label).foregroundStyle(MTColor.accent)
+            .mtButtonStyle(.ghost, size: .small)
         }
-        .frame(maxWidth: .infinity, alignment: .leading).padding(MTSpacing.s4)
-        .background(MTColor.accentSubtle)
+        .padding(.horizontal, MTSpacing.s5)
+        .padding(.vertical, MTSpacing.s2)
+        .background(MTColor.accentSubtle.opacity(0.6))
       }
 
       if !photos.isEmpty {
-        Divider()
-          .overlay(MTColor.border)
-
         ScrollView(.horizontal, showsIndicators: false) {
-          HStack(spacing: MTSpacing.s3) {
-            ForEach(photos) { photo in
-              ZStack(alignment: .topTrailing) {
-                if let image = UIImage(data: photo.data) {
-                  Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 88, height: 80)
-                    .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
-                } else {
-                  Image(systemName: "photo")
-                    .foregroundStyle(MTColor.inkFaint)
-                    .frame(width: 88, height: 80)
-                    .background(MTColor.surfaceSubtle)
-                    .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
-                }
-
-                Button {
-                  Task { await remove(photo.id) }
-                } label: {
-                  Image(systemName: "xmark")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(Color.white)
-                    .frame(width: 24, height: 24)
-                    .background(Color.black.opacity(0.66), in: Circle())
-                }
-                .buttonStyle(.plain)
-                .disabled(isSaving || isLoadingPhotos)
-                .padding(5)
-                .accessibilityLabel("Remove selected photo")
-              }
+          HStack(spacing: MTSpacing.s2) {
+            ForEach(Array(photos.enumerated()), id: \.element.id) { index, photo in
+              photoThumbnail(photo, index: index)
             }
           }
-          .padding(.horizontal, MTSpacing.s4)
+          .padding(.horizontal, MTSpacing.s5)
           .padding(.vertical, MTSpacing.s3)
         }
-        .background(MTColor.surfaceSubtle.opacity(0.72))
+        .accessibilityLabel("Draft photos")
         .accessibilityIdentifier("capture-photo-preview")
       }
 
-      Divider()
-        .overlay(MTColor.border)
+      Divider().overlay(MTColor.border)
 
       HStack(spacing: MTSpacing.s1) {
-        Button {
+        quietButton(
+          label: occurrence == nil ? "Add relevant date" : "Edit relevant date", icon: .calendar,
+          isActive: occurrence != nil, identifier: "capture-date"
+        ) {
           if occurrence == nil {
             occurrence = OccurrenceDraft(
               EntryOccurrence(
@@ -170,69 +103,44 @@ struct CaptureCard: View {
                 timezone: TimeZone.current.identifier))
           }
           showOccurrence = true
-        } label: {
-          Image(systemName: "calendar")
-            .font(.system(size: 17))
-            .foregroundStyle(occurrence == nil ? MTColor.inkFaint : MTColor.accent)
-            .frame(width: 38, height: 36)
-            .background(
-              occurrence == nil ? Color.clear : MTColor.accentSubtle,
-              in: RoundedRectangle(cornerRadius: MTRadius.small)
-            )
-            .contentShape(Rectangle())
         }
-        .accessibilityLabel(occurrence == nil ? "Add relevant date" : "Edit relevant date")
-        .accessibilityIdentifier("capture-date")
-        .disabled(isSaving || isLoadingPhotos || voiceController.isActive)
+        .disabled(isBusy)
 
         voiceButton
         photoPicker
 
-        Spacer()
+        Spacer(minLength: MTSpacing.s2)
 
         Button {
-          Task {
-            await save()
-          }
+          Task { await save() }
         } label: {
           HStack(spacing: MTSpacing.s2) {
-            if isSaving {
-              ProgressView()
-                .controlSize(.small)
-                .tint(MTColor.accentInk)
-            } else {
-              Text("Save to Inbox")
-              Image(systemName: "chevron.right")
-                .font(.system(size: 11, weight: .semibold))
-            }
+            Text("Save to Inbox")
+            Image(.chevron).font(.system(size: 11, weight: .semibold))
           }
-          .font(MTTypography.label)
-          .foregroundStyle(MTColor.accentInk)
-          .padding(.horizontal, MTSpacing.s3)
-          .frame(minWidth: 130, minHeight: 36)
-          .background(MTColor.accent, in: RoundedRectangle(cornerRadius: MTRadius.medium))
         }
-        .disabled(isSaving || isLoadingPhotos || voiceController.isActive)
+        .mtButtonStyle(.primary, isLoading: isSaving)
+        .disabled(isBusy)
         .accessibilityIdentifier("save-entry")
       }
-      .padding(.horizontal, MTSpacing.s2)
-      .padding(.vertical, MTSpacing.s2)
-      .background(MTColor.surface)
+      .padding(.horizontal, MTSpacing.s3)
+      .padding(.vertical, MTSpacing.s3)
     }
-    .background(MTColor.surfaceRaised)
+    .background(MTColor.surface)
     .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large)
-        .stroke(MTColor.borderStrong, lineWidth: 1)
+      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(
+        MTColor.borderStrong, lineWidth: 1)
     }
-    .shadow(color: MTColor.scrim.opacity(0.06), radius: 16, y: 8)
+    .mtShadow(MTShadow.raised)
+    .accessibilityElement(children: .contain)
+    .accessibilityLabel("Quick capture")
     .onChange(of: pickerItems) { _, items in
       Task { await loadPhotos(from: items) }
     }
     .onChange(of: voiceController.transcribedText) { _, transcribedText in
-      if let transcribedText {
-        note = transcribedText
-      }
+      // Like Web, dictated text replaces the draft note as plain text.
+      if let transcribedText { note = NSAttributedString(string: transcribedText) }
     }
     .sheet(isPresented: $showOccurrence) {
       NavigationStack {
@@ -251,13 +159,98 @@ struct CaptureCard: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .confirmationAction) {
-            Button("Close") { showOccurrence = false }
+            Button("Done") { showOccurrence = false }
           }
         }
       }
     }
     .onDisappear {
       voiceController.stop(silently: true)
+    }
+  }
+
+  private struct Status {
+    let text: String
+    let systemImage: String
+    let color: Color
+    let identifier: String
+  }
+
+  private var status: Status? {
+    if let photoError {
+      return Status(
+        text: photoError, systemImage: "exclamationmark.circle.fill", color: MTColor.warm,
+        identifier: "capture-photo-error")
+    }
+    if let voiceMessage = voiceController.message {
+      return Status(
+        text: voiceMessage,
+        systemImage: voiceController.hasError
+          ? "exclamationmark.circle.fill"
+          : (voiceController.isActive ? "waveform" : "checkmark.circle.fill"),
+        color: voiceController.hasError ? MTColor.warm : MTColor.inkMuted,
+        identifier: "capture-voice-message")
+    }
+    if let message {
+      return Status(
+        text: message.text,
+        systemImage: message.style == .success
+          ? "checkmark.circle.fill" : "exclamationmark.circle.fill",
+        color: message.style == .success ? MTColor.success : MTColor.warm,
+        identifier: "capture-message")
+    }
+    if hasLocalDraft {
+      return Status(
+        text: "Draft saved on this iPhone.", systemImage: MTIcon.history.systemName,
+        color: MTColor.inkMuted, identifier: "draft-message")
+    }
+    return nil
+  }
+
+  private func quietButton(
+    label: String, icon: MTIcon, isActive: Bool, identifier: String,
+    action: @escaping () -> Void
+  ) -> some View {
+    Button(action: action) {
+      CaptureQuietIcon(icon: icon, isActive: isActive)
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel(label)
+    .accessibilityIdentifier(identifier)
+  }
+
+  private func photoThumbnail(_ photo: FirstTimePhotoDraft, index: Int) -> some View {
+    ZStack(alignment: .topTrailing) {
+      Group {
+        if let image = UIImage(data: photo.data) {
+          Image(uiImage: image).resizable().scaledToFill()
+            .accessibilityLabel("Selected photo \(index + 1)")
+        } else {
+          Image(.photo).foregroundStyle(MTColor.inkFaint)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(MTColor.surfaceSubtle)
+        }
+      }
+      .frame(width: 80, height: 80)
+      .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
+      .contentShape(RoundedRectangle(cornerRadius: MTRadius.medium))
+
+      Button {
+        Task { await remove(photo.id) }
+      } label: {
+        Image(.close)
+          .font(.system(size: 11, weight: .semibold))
+          .foregroundStyle(.white)
+          .frame(width: 24, height: 24)
+          .background(
+            Color(red: 24 / 255, green: 24 / 255, blue: 20 / 255).opacity(0.72), in: Circle()
+          )
+          .frame(width: 36, height: 36)
+          .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+      .disabled(isSaving || isLoadingPhotos)
+      .accessibilityLabel("Remove selected photo \(index + 1)")
     }
   }
 
@@ -276,55 +269,37 @@ struct CaptureCard: View {
 
   private var voiceButton: some View {
     Button {
-      titleFocus.wrappedValue = false
       if voiceController.isActive {
         voiceController.stop()
       } else {
-        Task { await voiceController.start(currentText: note) }
+        Task { await voiceController.start(currentText: note.string) }
       }
     } label: {
-      Image(systemName: voiceController.isActive ? "stop.fill" : "mic")
-        .font(.system(size: voiceController.isActive ? 13 : 17, weight: .medium))
-        .foregroundStyle(voiceController.isActive ? MTColor.warm : MTColor.inkFaint)
-        .frame(width: 38, height: 36)
-        .background(
-          voiceController.isActive ? MTColor.warmSubtle : Color.clear,
-          in: RoundedRectangle(cornerRadius: MTRadius.small)
-        )
-        .contentShape(Rectangle())
+      CaptureQuietIcon(
+        icon: voiceController.isActive ? .stop : .mic, isActive: voiceController.isActive,
+        tint: MTColor.warm)
     }
+    .buttonStyle(.plain)
     .disabled(isSaving || isLoadingPhotos)
     .accessibilityLabel(voiceController.isActive ? "Stop voice capture" : "Start voice capture")
     .accessibilityValue(voiceController.phase == .listening ? "Listening" : "")
-    .accessibilityHint("Transcribes speech into the Entry body without saving audio")
+    .accessibilityHint("Transcribes speech into the note without saving audio")
     .accessibilityIdentifier("capture-voice")
   }
 
   private var photoPicker: some View {
-    let photoCount = photos.count
-    let hasPhotos = photoCount > 0
-
+    let hasPhotos = !photos.isEmpty
     return PhotosPicker(
       selection: $pickerItems,
-      maxSelectionCount: max(1, FirstTimePhotoDraft.maximumCount - photoCount),
+      maxSelectionCount: max(1, FirstTimePhotoDraft.maximumCount - photos.count),
       matching: .images
     ) {
-      Image(systemName: "photo")
-        .font(.system(size: 17))
-        .foregroundStyle(hasPhotos ? MTColor.accent : MTColor.inkFaint)
-        .frame(width: 38, height: 36)
-        .background(
-          hasPhotos ? MTColor.accentSubtle : Color.clear,
-          in: RoundedRectangle(cornerRadius: MTRadius.small)
-        )
-        .contentShape(Rectangle())
+      CaptureQuietIcon(icon: .photo, isActive: hasPhotos)
     }
-    .disabled(
-      isSaving || isLoadingPhotos || voiceController.isActive
-        || photoCount >= FirstTimePhotoDraft.maximumCount
-    )
+    .buttonStyle(.plain)
+    .disabled(isBusy || photos.count >= FirstTimePhotoDraft.maximumCount)
     .accessibilityLabel("Add photos")
-    .accessibilityValue("\(photoCount) selected")
+    .accessibilityValue("\(photos.count) selected")
     .accessibilityIdentifier("capture-add-photos")
   }
 
@@ -379,5 +354,24 @@ struct CaptureCard: View {
     } catch {
       photoError = "MemoTrail could not remove that local photo. Try again."
     }
+  }
+}
+
+/// The Web composer's quiet icon action: muted until active, then tinted on a soft fill.
+private struct CaptureQuietIcon: View {
+  let icon: MTIcon
+  let isActive: Bool
+  var tint: Color = MTColor.accent
+
+  var body: some View {
+    Image(icon)
+      .font(.system(size: 17))
+      .foregroundStyle(isActive ? tint : MTColor.inkMuted)
+      .frame(width: 40, height: 36)
+      .background(
+        isActive ? (tint == MTColor.warm ? MTColor.warmSubtle : MTColor.accentSubtle) : .clear,
+        in: RoundedRectangle(cornerRadius: MTRadius.small)
+      )
+      .contentShape(Rectangle())
   }
 }

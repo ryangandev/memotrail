@@ -2,9 +2,9 @@ import UIKit
 
 /// The paragraph and emphasis subset of Web's versioned `metadata.body_rich` contract.
 /// Decoding fails for other block structures instead of flattening Web-authored writing.
-struct EntryEmphasisContent: Codable, Equatable {
-  struct Mark: Codable, Equatable { let type: String }
-  struct Node: Codable, Equatable {
+struct EntryEmphasisContent: Codable, Equatable, Sendable {
+  struct Mark: Codable, Equatable, Sendable { let type: String }
+  struct Node: Codable, Equatable, Sendable {
     let type: String
     var content: [Node]?
     var text: String?
@@ -38,6 +38,16 @@ struct EntryEmphasisContent: Codable, Equatable {
       return Node(type: "paragraph", content: runs.isEmpty ? nil : runs)
     }
     document = Node(type: "doc", content: paragraphs)
+  }
+
+  /// The note as Web stores it: surrounding whitespace trimmed, formatting kept, and
+  /// nothing at all when only whitespace remains.
+  @MainActor
+  static func capture(_ note: NSAttributedString) -> (body: String, rich: Self?) {
+    let trimmed = note.trimmingWhitespace()
+    guard trimmed.length > 0 else { return ("", nil) }
+    let rich = Self(attributedText: trimmed)
+    return (trimmed.string, rich.isValid(expectedText: trimmed.string) ? rich : nil)
   }
 
   /// Validate the exact plaintext alongside the document, as Web does.
@@ -143,5 +153,26 @@ enum EmphasisStyle: String, CaseIterable {
         attributes.removeValue(forKey: key)
       }
     }
+  }
+}
+
+extension NSAttributedString {
+  /// Removes leading and trailing whitespace and newlines while keeping inner formatting.
+  func trimmingWhitespace() -> NSAttributedString {
+    let text = string as NSString
+    let characters = CharacterSet.whitespacesAndNewlines
+    var start = 0
+    var end = text.length
+    while start < end, let scalar = UnicodeScalar(text.character(at: start)),
+      characters.contains(scalar)
+    {
+      start += 1
+    }
+    while end > start, let scalar = UnicodeScalar(text.character(at: end - 1)),
+      characters.contains(scalar)
+    {
+      end -= 1
+    }
+    return attributedSubstring(from: NSRange(location: start, length: end - start))
   }
 }

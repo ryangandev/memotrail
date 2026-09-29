@@ -156,6 +156,8 @@ def main():
     parser.add_argument("--derived-data", default="/private/tmp/memotrail-ios-review-build")
     parser.add_argument("--attachments", help="Export screenshots and recordings here")
     parser.add_argument("--web", action="store_true", help="Serve the Web media API locally")
+    parser.add_argument("--dump-entries", action="store_true",
+                        help="Print the synthetic account's Entries after the tests")
     args = parser.parse_args()
     stack = LocalStack()
     web = start_web() if args.web else None
@@ -191,6 +193,12 @@ def main():
                 result = subprocess.run(command, cwd=ROOT, env=env, stdout=output,
                                         stderr=subprocess.STDOUT)
             summary = summarize(result_bundle)
+            if args.dump_entries:
+                rows = stack.request(
+                    "/rest/v1/entries?select=title,body,inbox_status,item_kind,item_subtype,"
+                    "date_precision,metadata&deleted_at=is.null&order=created_at",
+                    method="GET", key=stack.anon_key, token=user["access_token"])
+                print(json.dumps(rows, indent=2, ensure_ascii=False), flush=True)
             if args.attachments:
                 subprocess.run([
                     "xcrun", "xcresulttool", "export", "attachments", "--path",
