@@ -127,6 +127,7 @@
 		E1000000000000000000001F /* ProfileSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001F /* ProfileSettings.swift */; };
 		E10000000000000000000020 /* ProfileSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000020 /* ProfileSettingsTests.swift */; };
 		E10000000000000000000021 /* MTSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000021 /* MTSheet.swift */; };
+		E10000000000000000000022 /* OrganizationNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000022 /* OrganizationNames.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -263,6 +264,7 @@
 		E2000000000000000000001F /* ProfileSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettings.swift; sourceTree = "<group>"; };
 		E20000000000000000000020 /* ProfileSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsTests.swift; sourceTree = "<group>"; };
 		E20000000000000000000021 /* MTSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTSheet.swift; sourceTree = "<group>"; };
+		E20000000000000000000022 /* OrganizationNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrganizationNames.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -434,6 +436,7 @@
 		A10000000000000000000010 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000022 /* OrganizationNames.swift */,
 				E2000000000000000000001F /* ProfileSettings.swift */,
 				E20000000000000000000012 /* EntryRichText.swift */,
 				E2000000000000000000000C /* TimeZoneOptions.swift */,
@@ -718,6 +721,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E10000000000000000000022 /* OrganizationNames.swift in Sources */,
 				E10000000000000000000021 /* MTSheet.swift in Sources */,
 				E1000000000000000000001F /* ProfileSettings.swift in Sources */,
 				E1000000000000000000001E /* SettingsController.swift in Sources */,

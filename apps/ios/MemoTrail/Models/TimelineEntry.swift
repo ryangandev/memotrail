@@ -16,7 +16,7 @@ enum TimelineKind: String, CaseIterable, Codable, Equatable, Hashable, Sendable 
   var explanation: String {
     switch self {
     case .stage:
-      "A chapter that spans time and may still be ongoing."
+      "A meaningful period that spans time and may still be ongoing."
     case .event:
       "A meaningful moment on one date."
     }
@@ -56,9 +56,11 @@ enum TimelineDatePrecision: String, CaseIterable, Codable, Equatable, Hashable, 
   }
 }
 
+/// Records that open their own editor, like Web `/homes/`, `/vehicles/`, and `/first-times/`.
 enum TimelineSpecializedEditor: Equatable, Sendable {
   case home
   case vehicle
+  case firstTime
 }
 
 struct TimelineEntry: Equatable, Hashable, Identifiable, Sendable {
@@ -79,6 +81,8 @@ struct TimelineEntry: Equatable, Hashable, Identifiable, Sendable {
 
   var occurredStartRaw: String? = nil
   var occurredEndRaw: String? = nil
+  var collectionNames: [String] = []
+  var tagNames: [String] = []
 
   var occurrence: EntryOccurrence {
     EntryOccurrence(
@@ -87,11 +91,11 @@ struct TimelineEntry: Equatable, Hashable, Identifiable, Sendable {
   }
 
   var specializedEditor: TimelineSpecializedEditor? {
-    guard itemKind == .entity else { return nil }
-    switch itemSubtype {
-    case "home": return .home
-    case "vehicle": return .vehicle
-    default: return nil
+    switch (itemKind, itemSubtype) {
+    case (.entity, "home"): .home
+    case (.entity, "vehicle"): .vehicle
+    case (.entry, "first_time"): .firstTime
+    default: nil
     }
   }
 
@@ -133,6 +137,8 @@ struct TimelineWorkspaceRow: Decodable, Equatable, Sendable {
   let updatedAt: Date?
   var occurredStartRaw: String? = nil
   var occurredEndRaw: String? = nil
+  var collectionNames: [String] = []
+  var tagNames: [String] = []
 
   enum CodingKeys: String, CodingKey {
     case trackID = "track_id"
@@ -153,6 +159,8 @@ struct TimelineWorkspaceRow: Decodable, Equatable, Sendable {
     case occurredTimezone = "occurred_timezone"
     case revision
     case updatedAt = "updated_at"
+    case collectionNames = "collection_names"
+    case tagNames = "tag_names"
   }
 
   var entry: TimelineEntry? {
@@ -187,12 +195,82 @@ struct TimelineWorkspaceRow: Decodable, Equatable, Sendable {
       revision: revision,
       updatedAt: updatedAt,
       occurredStartRaw: occurredStartRaw,
-      occurredEndRaw: occurredEndRaw
+      occurredEndRaw: occurredEndRaw,
+      collectionNames: collectionNames,
+      tagNames: tagNames
     )
   }
 }
 
 enum TimelineWorkspace {
+  /// Web `includeUnplacedFirstTimes`: dated First Times not yet on a track appear on the First
+  /// Times track as moments.
+  static func includingUnplacedFirstTimes(
+    _ tracks: [TimelineTrack], firstTimes: [FirstTimeEntry]
+  ) -> [TimelineTrack] {
+    guard let index = tracks.firstIndex(where: { $0.systemKey == "first_times" }) else {
+      return tracks
+    }
+    let placed = Set(tracks.flatMap { $0.entries.map(\.id) })
+    let projected = firstTimes.filter { $0.occurredStart != nil && !placed.contains($0.id) }
+      .map { firstTime in
+        TimelineEntry(
+          id: firstTime.id, trackID: tracks[index].id, title: firstTime.title,
+          body: firstTime.body, itemKind: .entry, itemSubtype: "first_time", kind: .event,
+          occurredStart: firstTime.occurredStart, occurredEnd: firstTime.occurredEnd,
+          datePrecision: TimelineDatePrecision(rawValue: firstTime.datePrecision.rawValue)
+            ?? .unknown,
+          occurredLabel: firstTime.occurredLabel,
+          occurredTimezone: firstTime.occurredTimezone ?? "UTC", revision: firstTime.revision,
+          updatedAt: firstTime.updatedAt, occurredStartRaw: firstTime.occurredStartRaw,
+          occurredEndRaw: firstTime.occurredEndRaw, collectionNames: firstTime.collectionNames,
+          tagNames: firstTime.tagNames)
+      }
+    guard !projected.isEmpty else { return tracks }
+    var tracks = tracks
+    tracks[index].entries = sorted(tracks[index].entries + projected)
+    return tracks
+  }
+
+  /// Web `rangeLabel(layout.start, layout.end)`: the UTC years the Timeline spans, with the
+  /// padding of the Web layout, or nil while nothing has a calendar date.
+  static func rangeLabel(entries: [TimelineEntry], birthDate: String?, reference: Date)
+    -> String?
+  {
+    let dated = entries.compactMap { entry -> (start: Date, end: Date)? in
+      guard let start = entry.occurredStart else { return nil }
+      return (start, entry.kind == .stage ? max(start, entry.occurredEnd ?? reference) : start)
+    }
+    guard let firstStart = dated.map(\.start).min(), let lastEnd = dated.map(\.end).max() else {
+      return nil
+    }
+    let minimumRange: TimeInterval = 365 * 86_400
+    let birth = birthDate.flatMap { try? Date($0, strategy: .iso8601.year().month().day()) }
+    var earliest = birth ?? firstStart
+    var latest = max(reference, lastEnd)
+    let padding = max(max(latest.timeIntervalSince(earliest), minimumRange) * 0.025, 30 * 86_400)
+    if birth == nil { earliest -= padding }
+    latest += padding
+    let shortfall = minimumRange - latest.timeIntervalSince(earliest)
+    if shortfall > 0 {
+      if birth == nil { earliest -= shortfall / 2 }
+      latest += shortfall / 2
+    }
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = .gmt
+    let years = [earliest, latest].map { calendar.component(.year, from: $0) }
+    return "\(years[0]) to \(years[1])"
+  }
+
+  /// Web track order: dated records first, then by title.
+  static func sorted(_ entries: [TimelineEntry]) -> [TimelineEntry] {
+    entries.sorted {
+      $0.occurredStart == $1.occurredStart
+        ? $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
+        : ($0.occurredStart ?? .distantFuture) < ($1.occurredStart ?? .distantFuture)
+    }
+  }
+
   static func tracks(from rows: [TimelineWorkspaceRow]) -> [TimelineTrack] {
     var tracksByID: [UUID: TimelineTrack] = [:]
 
@@ -218,11 +296,7 @@ enum TimelineWorkspace {
     return tracksByID.values
       .map { track in
         var track = track
-        track.entries.sort {
-          $0.occurredStart == $1.occurredStart
-            ? $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
-            : ($0.occurredStart ?? .distantFuture) < ($1.occurredStart ?? .distantFuture)
-        }
+        track.entries = sorted(track.entries)
         return track
       }
       .sorted {
@@ -249,6 +323,8 @@ struct TimelineEntryInput: Equatable, Sendable {
   let datePrecision: TimelineDatePrecision
   let occurredLabel: String?
   let occurredTimezone: String
+  var collectionNames: [String] = []
+  var tagNames: [String] = []
 
   var occurredStartRaw: String? = nil
   var occurredEndRaw: String? = nil
@@ -272,8 +348,20 @@ struct TimelineEntryInput: Equatable, Sendable {
     occurredEnd: Date?,
     datePrecision: TimelineDatePrecision,
     occurredLabel: String,
-    occurredTimezone: String
+    occurredTimezone: String,
+    collectionNames: [String] = [],
+    tagNames: [String] = []
   ) throws -> TimelineEntryInput {
+    let collectionNames = OrganizationNames.normalized(collectionNames)
+    let tagNames = OrganizationNames.normalized(tagNames)
+    guard
+      collectionNames.count <= OrganizationNames.collectionLimit,
+      collectionNames.allSatisfy({ $0.count <= OrganizationNames.collectionNameLimit })
+    else { throw TimelineEntryError.invalidCollections }
+    guard
+      tagNames.count <= OrganizationNames.tagLimit,
+      tagNames.allSatisfy({ $0.count <= OrganizationNames.tagNameLimit })
+    else { throw TimelineEntryError.invalidTags }
     let title = title.trimmed
     let body = body.trimmed
     let occurredLabel = occurredLabel.trimmed.nonEmpty
@@ -321,7 +409,9 @@ struct TimelineEntryInput: Equatable, Sendable {
       occurredEnd: occurredEnd,
       datePrecision: datePrecision,
       occurredLabel: occurredLabel,
-      occurredTimezone: occurredTimezone
+      occurredTimezone: occurredTimezone,
+      collectionNames: collectionNames,
+      tagNames: tagNames
     )
   }
 }
@@ -339,6 +429,8 @@ struct SaveTimelineEntryParameters: Encodable, Equatable, Sendable {
     case datePrecision = "p_date_precision"
     case occurredLabel = "p_occurred_label"
     case occurredTimezone = "p_occurred_timezone"
+    case collectionNames = "p_collection_names"
+    case tagNames = "p_tag_names"
     case entryID = "p_entry_id"
     case expectedRevision = "p_expected_revision"
   }
@@ -365,6 +457,8 @@ struct SaveTimelineEntryParameters: Encodable, Equatable, Sendable {
     }
     try values.encodeIfPresent(input.occurredLabel, forKey: .occurredLabel)
     if input.occurredLabel == nil { try values.encodeNil(forKey: .occurredLabel) }
+    try values.encode(input.collectionNames, forKey: .collectionNames)
+    try values.encode(input.tagNames, forKey: .tagNames)
     try values.encodeIfPresent(input.entryID, forKey: .entryID)
     if input.entryID == nil { try values.encodeNil(forKey: .entryID) }
     try values.encodeIfPresent(input.expectedRevision, forKey: .expectedRevision)
@@ -403,8 +497,10 @@ struct SavedTimelineEntry: Decodable, Sendable {
 enum TimelineEntryError: LocalizedError, Equatable {
   case bodyTooLong
   case eventHasEnd
+  case invalidCollections
   case invalidDate
   case invalidRevision
+  case invalidTags
   case invalidTimezone
   case labelTooLong
   case reversedRange
@@ -417,10 +513,14 @@ enum TimelineEntryError: LocalizedError, Equatable {
       "Notes can be up to \(TimelineEntryInput.bodyLimit) characters."
     case .eventHasEnd:
       "Events happen at one point and cannot have an end date."
+    case .invalidCollections:
+      "Use up to \(OrganizationNames.collectionLimit) Collections with \(OrganizationNames.collectionNameLimit) characters each."
     case .invalidDate:
       "Choose a valid occurrence date."
     case .invalidRevision:
       "This Timeline version is invalid. Refresh and try again."
+    case .invalidTags:
+      "Use up to \(OrganizationNames.tagLimit) tags with \(OrganizationNames.tagNameLimit) characters each."
     case .invalidTimezone:
       "Choose a valid occurrence time zone."
     case .labelTooLong:
@@ -458,5 +558,7 @@ extension TimelineWorkspaceRow {
     updatedAt = try values.decodeIfPresent(Date.self, forKey: .updatedAt)
     occurredStartRaw = try values.decodeIfPresent(String.self, forKey: .occurredStart)
     occurredEndRaw = try values.decodeIfPresent(String.self, forKey: .occurredEnd)
+    collectionNames = try values.decodeIfPresent([String].self, forKey: .collectionNames) ?? []
+    tagNames = try values.decodeIfPresent([String].self, forKey: .tagNames) ?? []
   }
 }

@@ -90,14 +90,14 @@ struct RootTabView: View {
       .tag(RootTabDestination.inbox)
       .badge(inboxBadgeCount)
 
-      TimelineView(client: client, ownerID: user.id)
-        .tabItem {
-          Label(
-            RootTabDestination.timeline.title,
-            systemImage: RootTabDestination.timeline.systemImage
-          )
-        }
-        .tag(RootTabDestination.timeline)
+      TimelineView(
+        client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
+      )
+      .tabItem {
+        Label(
+          RootTabDestination.timeline.title, systemImage: RootTabDestination.timeline.systemImage)
+      }
+      .tag(RootTabDestination.timeline)
 
       LibraryView(
         client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut

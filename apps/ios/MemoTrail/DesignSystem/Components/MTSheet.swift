@@ -200,16 +200,16 @@ struct MTSheetOption: View {
 
   var body: some View {
     Button(action: action) {
-      HStack(spacing: MTSpacing.s4) {
+      HStack(spacing: MTSpacing.s3) {
         Image(icon)
           .font(.system(size: 18, weight: .medium))
           .foregroundStyle(MTColor.accent)
           .frame(width: 42, height: 42)
-          .background(MTColor.accentSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
+          .background(MTColor.accentSubtle, in: RoundedRectangle(cornerRadius: MTRadius.small))
           .accessibilityHidden(true)
         VStack(alignment: .leading, spacing: 3) {
           Text(title)
-            .font(MTFont.heading)
+            .font(MTFont.body.weight(.semibold))
             .foregroundStyle(MTColor.ink)
           Text(detail)
             .font(MTFont.caption.weight(.regular))
@@ -223,24 +223,25 @@ struct MTSheetOption: View {
           .foregroundStyle(MTColor.inkMuted)
           .accessibilityHidden(true)
       }
-      .padding(MTSpacing.s4)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .contentShape(RoundedRectangle(cornerRadius: MTRadius.large))
+      .padding(.horizontal, MTSpacing.s4)
+      .padding(.vertical, MTSpacing.s3)
+      .frame(maxWidth: .infinity, minHeight: 76, alignment: .leading)
+      .contentShape(RoundedRectangle(cornerRadius: MTRadius.medium))
     }
     .buttonStyle(MTSheetOptionButtonStyle())
     .accessibilityElement(children: .combine)
   }
 }
 
+/// Web `creationOption`: the surface card that takes the accent while pressed.
 private struct MTSheetOptionButtonStyle: ButtonStyle {
   func makeBody(configuration: Configuration) -> some View {
+    let shape = RoundedRectangle(cornerRadius: MTRadius.medium)
     configuration.label
-      .background(
-        configuration.isPressed ? MTColor.surfaceSubtle : MTColor.canvas,
-        in: RoundedRectangle(cornerRadius: MTRadius.large)
-      )
+      .background(configuration.isPressed ? MTColor.accentSubtle : MTColor.surface, in: shape)
       .overlay {
-        RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border, lineWidth: 1)
+        shape.strokeBorder(
+          configuration.isPressed ? MTColor.accent : MTColor.border, lineWidth: 1)
       }
   }
 }

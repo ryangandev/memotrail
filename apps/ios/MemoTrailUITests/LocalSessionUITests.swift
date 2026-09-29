@@ -21,6 +21,11 @@ final class LocalSessionUITests: XCTestCase {
       ("Library", "Grandmother's recipe cards"),
     ] {
       app.tabBars.buttons[tab].tap()
+      if tab == "Timeline" {
+        // Timeline asks for the birth date on the first visit until one is saved, like Web.
+        XCTAssertTrue(app.buttons["Not now"].waitForExistence(timeout: 15))
+        app.buttons["Not now"].tap()
+      }
       XCTAssertTrue(text(expected, in: app).waitForExistence(timeout: 15), tab)
       attach(app, tab)
     }
@@ -215,6 +220,74 @@ final class LocalSessionUITests: XCTestCase {
     // The Dashboard greeting follows the saved name.
     app.navigationBars["Settings"].buttons["Done"].tap()
     XCTAssertTrue(text("River.", in: app).waitForExistence(timeout: 10))
+  }
+
+  func testTimelineStartsFromTheBirthDateAndAddsEditsAndTrashesMoments() throws {
+    let app = try launchLocalSession()
+    XCTAssertTrue(app.tabBars.buttons["Timeline"].waitForExistence(timeout: 20))
+    app.tabBars.buttons["Timeline"].tap()
+    XCTAssertTrue(app.staticTexts["When did your story begin?"].waitForExistence(timeout: 15))
+    Thread.sleep(forTimeInterval: 0.6)
+    attach(app, "Birth date prompt")
+    app.buttons["Not now"].tap()
+    XCTAssertTrue(app.buttons["timeline-set-birth-date"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["2019 to 2026"].exists)
+    attach(app, "Timeline")
+
+    // Set birth date saves the profile and starts the range there.
+    app.buttons["timeline-set-birth-date"].tap()
+    app.buttons["Birth date, required"].tap()
+    // The calendar's month and year header opens the month and year wheels.
+    let header = app.datePickers.buttons["DatePicker.Show"]
+    XCTAssertTrue(header.waitForExistence(timeout: 5))
+    header.tap()
+    let year = app.pickerWheels.element(boundBy: 1)
+    XCTAssertTrue(year.waitForExistence(timeout: 5))
+    year.adjust(toPickerWheelValue: "1994")
+    app.datePickers.buttons["DatePicker.Hide"].tap()
+    app.datePickers.buttons.matching(NSPredicate(format: "label ENDSWITH %@", "September 18"))
+      .firstMatch.tap()
+    app.buttons["date-picker-done"].tap()
+    attach(app, "Birth date chosen")
+    app.buttons["timeline-save-birth-date"].tap()
+    XCTAssertTrue(text("Birth date saved.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["timeline-set-birth-date"].waitForNonExistence(timeout: 5))
+    XCTAssertTrue(text("1994 to", in: app).exists)
+
+    // Add moment asks what to add, then saves a Moment to the first track.
+    app.buttons["add-timeline-moment"].tap()
+    XCTAssertTrue(app.staticTexts["What are you adding?"].waitForExistence(timeout: 5))
+    Thread.sleep(forTimeInterval: 0.6)
+    attach(app, "Type chooser")
+    app.buttons["timeline-type-moment"].tap()
+    let title = app.textFields["timeline-title"]
+    XCTAssertTrue(title.waitForExistence(timeout: 5))
+    title.tap()
+    title.typeText("First ski day")
+    attach(app, "New moment")
+    app.swipeUp()
+    attach(app, "New moment notes and organization")
+    app.buttons["save-timeline-moment"].tap()
+    XCTAssertTrue(text("Moment created.", in: app).waitForExistence(timeout: 10))
+    let moment = app.buttons.matching(
+      NSPredicate(format: "label BEGINSWITH %@", "First ski day")
+    ).firstMatch
+    XCTAssertTrue(moment.waitForExistence(timeout: 10))
+    attach(app, "Moment on its track")
+
+    // The moment reopens for editing and moves to Trash.
+    moment.tap()
+    XCTAssertTrue(app.staticTexts["Edit moment"].waitForExistence(timeout: 5))
+    reveal(app.buttons["trash-timeline-moment"], in: app).tap()
+    let confirm = app.buttons.matching(
+      NSPredicate(
+        format: "label == %@ AND identifier != %@", "Move to Trash", "trash-timeline-moment")
+    ).firstMatch
+    XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+    attach(app, "Moment trash confirmation")
+    confirm.tap()
+    XCTAssertTrue(text("Moment moved to Trash.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(moment.waitForNonExistence(timeout: 10))
   }
 
   private func launchLocalSession() throws -> XCUIApplication {

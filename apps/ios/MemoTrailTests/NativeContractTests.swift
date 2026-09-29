@@ -216,15 +216,33 @@ final class NativeContractTests: XCTestCase {
     let start = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-01-01T12:00:00Z"))
     for (kind, subtype) in [(TimelineKind.event, "moment"), (.stage, "period")] {
       let title = "Native \(subtype) \(UUID().uuidString)"
+      let occurrence = EntryOccurrence(
+        precision: .day, start: start,
+        end: kind == .stage ? start.addingTimeInterval(86_400) : nil, label: nil, timezone: "UTC")
       let result = await timeline.save(
         entry: nil, trackID: track.id, kind: kind, title: title, body: "Synthetic Timeline record.",
-        occurredStart: start, occurredEnd: kind == .stage ? start.addingTimeInterval(86_400) : nil,
-        datePrecision: .day, occurredLabel: "", occurredTimezone: "UTC")
-      XCTAssertEqual(result.status, .saved, result.message)
-      let entry = try XCTUnwrap(timeline.tracks.flatMap(\.entries).first { $0.title == title })
+        occurrence: occurrence, collectionNames: ["Native trips"], tagNames: ["native"])
+      XCTAssertEqual(result, .init(message: "Moment created.", status: .created))
+      let entry = try XCTUnwrap(timeline.entries.first { $0.title == title })
       XCTAssertEqual(entry.itemKind, .entry)
       XCTAssertEqual(entry.itemSubtype, subtype)
+      XCTAssertEqual(entry.collectionNames, ["Native trips"])
+      XCTAssertEqual(entry.tagNames, ["native"])
     }
+    XCTAssertTrue(timeline.collectionOptions.contains("Native trips"))
+
+    // Editing replaces the organization, and Move to Trash removes the moment.
+    let moment = try XCTUnwrap(timeline.entries.first { $0.itemSubtype == "moment" })
+    let saved = await timeline.save(
+      entry: moment, trackID: moment.trackID, kind: .event, title: moment.title,
+      body: moment.body, occurrence: moment.occurrence, collectionNames: [], tagNames: ["edited"])
+    XCTAssertEqual(saved, .init(message: "Moment saved.", status: .saved))
+    let edited = try XCTUnwrap(timeline.entries.first { $0.id == moment.id })
+    XCTAssertEqual(edited.collectionNames, [])
+    XCTAssertEqual(edited.tagNames, ["edited"])
+    let trashed = await timeline.moveToTrash(edited)
+    XCTAssertEqual(trashed, .init(message: "Moment moved to Trash.", status: .trashed))
+    XCTAssertFalse(timeline.entries.contains { $0.id == moment.id })
   }
 
   func testHomeWithoutLocationCanBeSavedAndLoaded() async throws {

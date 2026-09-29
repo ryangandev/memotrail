@@ -98,7 +98,9 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Native full-note rendering on focused record pages still needs to adopt the rich payload.
 - Native Settings now follows Web `/settings`: the account card with Sign out, preferred name, birth date, and default time zone each save on their own with Web validation and toasts, then app-local appearance and the paused Beta AI, organization, and export rows.
   The Dashboard greeting refreshes after a name save; a local contract run and a seeded Simulator UI run confirmed saving, clearing, and the greeting.
-  Web's browser-local Timeline style stays Web-only, and native Timeline editors do not yet default new exact times to the saved time zone.
+  Web's browser-local Timeline style stays Web-only.
+- Native Timeline now follows the Web phone layout with the shared header, type chooser, birth date prompt, and a Timeline editor that uses the Settings time zone and saves Collections and tags.
+  Local contract and seeded Simulator runs confirmed creating, editing, and trashing Moments and saving the birth date; Manage tracks still uses the earlier native sheet.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
 - Refactor existing screens after component acceptance; native address search remains later work.
 

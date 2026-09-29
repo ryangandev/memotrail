@@ -311,12 +311,12 @@ private struct FirstTimePill: View {
   }
 }
 
-private struct FirstTimeEditorSelection: Identifiable {
+struct FirstTimeEditorSelection: Identifiable {
   let id = UUID()
   let entry: FirstTimeEntry?
 }
 
-private struct FirstTimeEditorSheet: View {
+struct FirstTimeEditorSheet: View {
   let controller: FirstTimesController
   let entry: FirstTimeEntry?
   let collectionOptions: [String]

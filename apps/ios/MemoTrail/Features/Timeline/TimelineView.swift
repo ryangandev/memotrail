@@ -1,72 +1,100 @@
 @preconcurrency import Supabase
 import SwiftUI
 
+/// Web `/timeline` at phone width: each track's periods and moments, the chooser for what to
+/// add, and the first-visit prompt for the birth date that starts the story.
 struct TimelineView: View {
-  private let client: SupabaseClient
-  private let ownerID: UUID
-  @State private var managingTracks = false
+  let client: SupabaseClient
+  let user: AuthenticatedUser
+  let isAuthenticationBusy: Bool
+  let signOut: @MainActor () async -> Void
+
   @State private var controller: TimelineController
+  @State private var profile: SettingsController
   @State private var residenceController: ResidenceController
   @State private var vehicleController: VehicleController
-  @State private var editorSelection: TimelineEditorSelection?
-  @State private var residenceEditorSelection: ResidenceEditorSelection?
-  @State private var vehicleEditorSelection: VehicleEditorSelection?
-  @State private var residenceErrorMessage: String?
-  @State private var vehicleErrorMessage: String?
+  @State private var firstTimesController: FirstTimesController
+  @State private var sheet: TimelineSheet?
+  @State private var reloadsAfterSheet = false
+  @State private var managingTracks = false
+  @State private var hasOfferedBirthDate = false
+  @State private var openingRecordID: UUID?
   @Environment(AppNavigator.self) private var navigator
 
-  init(client: SupabaseClient, ownerID: UUID) {
+  init(
+    client: SupabaseClient, user: AuthenticatedUser, isAuthenticationBusy: Bool,
+    signOut: @escaping @MainActor () async -> Void
+  ) {
     self.client = client
-    self.ownerID = ownerID
-    _controller = State(
-      initialValue: TimelineController(client: client, ownerID: ownerID)
-    )
+    self.user = user
+    self.isAuthenticationBusy = isAuthenticationBusy
+    self.signOut = signOut
+    _controller = State(initialValue: TimelineController(client: client, ownerID: user.id))
+    _profile = State(initialValue: SettingsController(client: client, ownerID: user.id))
     _residenceController = State(
-      initialValue: ResidenceController(client: client, ownerID: ownerID)
-    )
-    _vehicleController = State(
-      initialValue: VehicleController(client: client, ownerID: ownerID)
-    )
+      initialValue: ResidenceController(client: client, ownerID: user.id))
+    _vehicleController = State(initialValue: VehicleController(client: client, ownerID: user.id))
+    _firstTimesController = State(
+      initialValue: FirstTimesController(client: client, ownerID: user.id))
+  }
+
+  private var birthDate: String? { profile.profile?.birthDate }
+  /// Web shows Set birth date only once the profile has loaded without one.
+  private var needsBirthDate: Bool {
+    profile.profile != nil && birthDate == nil && controller.loadErrorMessage == nil
   }
 
   var body: some View {
     NavigationStack {
-      ScrollView {
-        LazyVStack(alignment: .leading, spacing: MTSpacing.s6) {
-          header
-          summary
-          content
-        }
-        .padding(.horizontal, MTSpacing.s4)
-        .padding(.top, MTSpacing.s6)
-        .padding(.bottom, MTSpacing.s12)
-      }
-      .background(MTColor.canvas)
-      .navigationTitle("Timeline")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbarBackground(MTColor.surface, for: .navigationBar)
-      .toolbarBackground(.visible, for: .navigationBar)
-      .toolbar {
-        ToolbarItem(placement: .topBarLeading) {
-          Button("Manage tracks", systemImage: "slider.horizontal.3") { managingTracks = true }
-        }
-        ToolbarItem(placement: .topBarTrailing) {
+      MTPage(width: .canvas, spacing: MTSpacing.s4) {
+        MTPageHeader(
+          eyebrow: "Your life in context", title: "Timeline",
+          description: "See the chapters and moments that shape your life."
+        ) {
           Button {
-            openEditor(trackID: controller.tracks.first?.id)
+            sheet = .chooser
           } label: {
-            Image(systemName: "plus")
+            Label("Add moment", icon: .plus)
           }
+          .mtButtonStyle()
           .disabled(controller.tracks.isEmpty)
-          .accessibilityLabel("Add Timeline moment")
           .accessibilityIdentifier("add-timeline-moment")
         }
+        summary
+        content
+          .padding(.top, MTSpacing.s4)
       }
-      .refreshable {
-        await controller.load()
+      // Leave the last track clear of the Quick capture button.
+      .contentMargins(.bottom, MTSpacing.s12, for: .scrollContent)
+      .refreshable { await load() }
+      .navigationTitle("Timeline")
+      .workspaceToolbar(
+        client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
+      )
+      .sheet(item: $sheet, onDismiss: sheetDismissed) { sheet in
+        switch sheet {
+        case .chooser:
+          TimelineTypeChooser { choose($0, trackID: controller.tracks.first?.id) }
+        case .birthDate:
+          TimelineBirthDatePrompt(profile: profile) { navigator.profileRevision += 1 }
+        case .moment(let entry, let trackID):
+          TimelineEditorSheet(
+            controller: controller, entry: entry, initialTrackID: trackID,
+            defaultTimezone: profile.profile?.timezone)
+        case .home(let entry):
+          ResidenceEditorSheet(controller: residenceController, entry: entry)
+        case .vehicle(let entry):
+          VehicleEditorSheet(controller: vehicleController, entry: entry)
+        case .firstTime(let entry):
+          FirstTimeEditorSheet(
+            controller: firstTimesController, entry: entry,
+            collectionOptions: firstTimesController.collectionOptions,
+            tagOptions: firstTimesController.tagOptions)
+        }
       }
       .sheet(isPresented: $managingTracks, onDismiss: { Task { await controller.load() } }) {
         NavigationStack {
-          TimelineTracksView(client: client, ownerID: ownerID)
+          TimelineTracksView(client: client, ownerID: user.id)
             .toolbar {
               ToolbarItem(placement: .confirmationAction) {
                 Button("Done") { managingTracks = false }
@@ -74,359 +102,420 @@ struct TimelineView: View {
             }
         }
       }
-      .sheet(item: $editorSelection) { selection in
-        TimelineEditorSheet(
-          controller: controller,
-          entry: selection.entry,
-          initialTrackID: selection.initialTrackID,
-          tracks: controller.tracks
-        )
-      }
-      .sheet(
-        item: $residenceEditorSelection,
-        onDismiss: {
-          Task { await controller.load() }
-        }
-      ) { selection in
-        ResidenceEditorSheet(controller: residenceController, entry: selection.entry)
-      }
-      .sheet(
-        item: $vehicleEditorSelection,
-        onDismiss: {
-          Task { await controller.load() }
-        }
-      ) { selection in
-        VehicleEditorSheet(controller: vehicleController, entry: selection.entry)
-      }
-      .alert(
-        "Home unavailable",
-        isPresented: Binding(
-          get: { residenceErrorMessage != nil },
-          set: { if !$0 { residenceErrorMessage = nil } }
-        )
-      ) {
-        Button("OK", role: .cancel) { residenceErrorMessage = nil }
-      } message: {
-        Text(residenceErrorMessage ?? "")
-      }
-      .alert(
-        "Vehicle unavailable",
-        isPresented: Binding(
-          get: { vehicleErrorMessage != nil },
-          set: { if !$0 { vehicleErrorMessage = nil } }
-        )
-      ) {
-        Button("OK", role: .cancel) { vehicleErrorMessage = nil }
-      } message: {
-        Text(vehicleErrorMessage ?? "")
-      }
       .task {
-        if !controller.hasLoaded {
-          await controller.load()
-        }
+        guard !controller.hasLoaded else { return }
+        await load()
+        offerBirthDate()
       }
       .task(id: navigator.timelineEntryRequest) { await openRequestedEntry() }
       .onChange(of: controller.isLoading) { Task { await openRequestedEntry() } }
+      .onChange(of: navigator.profileRevision) { Task { await profile.load() } }
     }
   }
 
-  private var header: some View {
-    VStack(alignment: .leading, spacing: MTSpacing.s2) {
-      Text("YOUR LIFE IN CONTEXT")
-        .font(MTTypography.caption)
-        .tracking(1.1)
-        .foregroundStyle(MTColor.inkFaint)
-
-      Text("Timeline")
-        .font(MTTypography.display)
-        .foregroundStyle(MTColor.ink)
-
-      Text("See the chapters, places, and moments that overlap your story.")
-        .font(MTTypography.body)
-        .foregroundStyle(MTColor.inkMuted)
-        .lineSpacing(2)
-    }
-  }
-
+  /// Web's summary line: Manage tracks, the counts, the years covered, and Set birth date.
   private var summary: some View {
-    HStack(spacing: MTSpacing.s2) {
-      Label(trackCountLabel, systemImage: "square.stack.3d.up")
-      Text("·")
-      Text(entryCountLabel)
-
-      Spacer()
-
+    MTFlowLayout(spacing: MTSpacing.s2) {
+      Button("Manage tracks") { managingTracks = true }
+        .buttonStyle(.plain)
+        .font(MTFont.caption.weight(.medium))
+        .foregroundStyle(MTColor.accent)
+        .frame(minHeight: 32)
+        .contentShape(Rectangle())
+        .accessibilityIdentifier("manage-timeline-tracks")
+      ForEach(summaryFacts, id: \.self) { fact in
+        Text("·").accessibilityHidden(true)
+        Text(fact)
+      }
+      if needsBirthDate {
+        Text("·").accessibilityHidden(true)
+        Button("Set birth date") { sheet = .birthDate }
+          .mtButtonStyle(.secondary, size: .small)
+          .accessibilityIdentifier("timeline-set-birth-date")
+      }
       if controller.isLoading, controller.hasLoaded {
-        ProgressView()
-          .controlSize(.small)
+        ProgressView().controlSize(.small).tint(MTColor.accent)
       }
     }
-    .font(MTTypography.caption)
+    .font(MTFont.caption.weight(.regular))
     .foregroundStyle(MTColor.inkFaint)
+  }
+
+  private var summaryFacts: [String] {
+    let entries = controller.entries
+    return [
+      count(controller.tracks.count, "track"), count(entries.count, "moment"),
+      TimelineWorkspace.rangeLabel(entries: entries, birthDate: birthDate, reference: .now),
+    ].compactMap(\.self)
   }
 
   @ViewBuilder
   private var content: some View {
-    if controller.isLoading, !controller.hasLoaded {
+    if !controller.hasLoaded {
       HStack(spacing: MTSpacing.s3) {
-        ProgressView()
+        ProgressView().tint(MTColor.accent)
         Text("Loading your Timeline...")
-          .font(MTTypography.body)
+          .font(MTFont.body)
           .foregroundStyle(MTColor.inkMuted)
       }
       .frame(maxWidth: .infinity, minHeight: 180)
-    } else if let loadErrorMessage = controller.loadErrorMessage {
-      timelineMessage(
-        title: "Timeline unavailable",
-        message: loadErrorMessage,
-        systemImage: "exclamationmark.triangle"
-      )
+    } else if let message = controller.loadErrorMessage, controller.tracks.isEmpty {
+      MTEmptyState(title: "Timeline unavailable", message: message, icon: .clock) {
+        Button("Try again") { Task { await load() } }
+          .mtButtonStyle(.secondary)
+      }
     } else if controller.tracks.isEmpty {
-      timelineMessage(
+      MTEmptyState(
         title: "Your Timeline needs tracks",
-        message: "Pull to refresh after your default Timeline tracks are available.",
-        systemImage: "point.bottomleft.forward.to.point.topright.scurvepath"
-      )
+        message: "Open Manage tracks to add a track or show a hidden one.", icon: .timeline
+      ) {
+        Button("Manage tracks") { managingTracks = true }
+          .mtButtonStyle(.secondary)
+      }
     } else {
-      LazyVStack(spacing: MTSpacing.s4) {
-        ForEach(controller.tracks) { track in
-          TimelineTrackCard(
-            track: track,
-            addMoment: { openEditor(trackID: track.id) },
-            selectEntry: select
-          )
-        }
+      ForEach(controller.tracks) { track in
+        TimelineTrackCard(
+          track: track, openingRecordID: openingRecordID, add: { add(to: track) },
+          select: select)
       }
     }
   }
 
-  private func timelineMessage(
-    title: String,
-    message: String,
-    systemImage: String
-  ) -> some View {
-    HStack(alignment: .top, spacing: MTSpacing.s4) {
-      Image(systemName: systemImage)
-        .font(.system(size: 22, weight: .medium))
-        .foregroundStyle(MTColor.accent)
+  private func load() async {
+    async let timeline: Void = controller.load()
+    async let settings: Void = profile.load()
+    _ = await (timeline, settings)
+  }
 
-      VStack(alignment: .leading, spacing: MTSpacing.s2) {
-        Text(title)
-          .font(MTTypography.titleSmall)
-          .foregroundStyle(MTColor.ink)
+  /// Web opens the birth date prompt on the first visit until one is saved; a record link from
+  /// elsewhere opens that record instead.
+  private func offerBirthDate() {
+    guard !hasOfferedBirthDate, needsBirthDate else { return }
+    hasOfferedBirthDate = true
+    guard sheet == nil, navigator.timelineEntryRequest == nil else { return }
+    sheet = .birthDate
+  }
 
-        Text(message)
-          .font(MTTypography.body)
-          .foregroundStyle(MTColor.inkMuted)
-          .lineSpacing(2)
-      }
-
-      Spacer(minLength: 0)
-    }
-    .frame(maxWidth: .infinity, minHeight: 110, alignment: .topLeading)
-    .padding(MTSpacing.s6)
-    .background(MTColor.surfaceSubtle.opacity(0.45))
-    .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
-    .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large)
-        .stroke(MTColor.border, lineWidth: 1)
+  private func add(to track: TimelineTrack) {
+    switch track.systemKey {
+    case "homes": choose(.home, trackID: track.id)
+    case "vehicles": choose(.vehicle, trackID: track.id)
+    case "first_times": choose(.firstTime, trackID: track.id)
+    default: choose(.moment, trackID: track.id)
     }
   }
 
-  private func select(_ entry: TimelineEntry) {
-    switch entry.specializedEditor {
+  private func choose(_ type: TimelineCreationType, trackID: UUID?) {
+    switch type {
+    case .moment:
+      guard let trackID else { return }
+      sheet = .moment(nil, trackID: trackID)
     case .home:
-      Task { await openResidence(entryID: entry.id) }
+      present(.home(nil))
     case .vehicle:
-      Task { await openVehicle(entryID: entry.id) }
-    case nil:
-      editorSelection = TimelineEditorSelection(entry: entry, initialTrackID: entry.trackID)
+      present(.vehicle(nil))
+    case .firstTime:
+      Task {
+        await firstTimesController.load()
+        present(.firstTime(nil))
+      }
     }
   }
 
-  /// Opens the record a Dashboard chapter asked for, like Web `/timeline?entry=`.
+  /// Home, Vehicle, and First Time editors save through their own controllers, so the Timeline
+  /// reloads once they close.
+  private func present(_ editor: TimelineSheet) {
+    reloadsAfterSheet = true
+    sheet = editor
+  }
+
+  private func sheetDismissed() {
+    guard sheet == nil, reloadsAfterSheet else { return }
+    reloadsAfterSheet = false
+    Task { await controller.reloadAfterMutation() }
+  }
+
+  /// Web `openEntry`: Homes, Vehicles, and First Times open their own editors.
+  private func select(_ entry: TimelineEntry) {
+    guard openingRecordID == nil else { return }
+    switch entry.specializedEditor {
+    case nil:
+      sheet = .moment(entry, trackID: entry.trackID)
+    case .home:
+      open(entry) {
+        await residenceController.load()
+        return residenceController.entry(id: entry.id).map { .home($0) }
+      }
+    case .vehicle:
+      open(entry) {
+        await vehicleController.load()
+        return vehicleController.entry(id: entry.id).map { .vehicle($0) }
+      }
+    case .firstTime:
+      open(entry) {
+        await firstTimesController.load()
+        return firstTimesController.entries.first { $0.id == entry.id }.map { .firstTime($0) }
+      }
+    }
+  }
+
+  private func open(
+    _ entry: TimelineEntry, editor: @escaping @MainActor () async -> TimelineSheet?
+  ) {
+    openingRecordID = entry.id
+    Task {
+      let loaded = await editor()
+      openingRecordID = nil
+      guard let loaded else {
+        MTToastCenter.shared.error("“\(entry.title)” could not be opened. Refresh and try again.")
+        return
+      }
+      present(loaded)
+    }
+  }
+
+  /// Opens the record a Dashboard or Library link asked for, like Web `/timeline?entry=`.
   private func openRequestedEntry() async {
     guard let id = navigator.timelineEntryRequest, !controller.isLoading else { return }
-    let entries = { controller.tracks.flatMap(\.entries) }
-    if !entries().contains(where: { $0.id == id }) { await controller.load() }
+    if !controller.entries.contains(where: { $0.id == id }) { await controller.load() }
     guard navigator.timelineEntryRequest == id else { return }
     navigator.timelineEntryRequest = nil
-    guard let entry = entries().first(where: { $0.id == id }) else {
+    guard let entry = controller.entries.first(where: { $0.id == id }) else {
       MTToastCenter.shared.info("This record is no longer on your Timeline.")
       return
     }
     select(entry)
   }
 
-  private func openEditor(trackID: UUID?) {
-    guard let trackID else { return }
-    editorSelection = TimelineEditorSelection(entry: nil, initialTrackID: trackID)
-  }
-
-  @MainActor
-  private func openResidence(entryID: UUID) async {
-    await residenceController.load()
-    guard let entry = residenceController.entry(id: entryID) else {
-      residenceErrorMessage =
-        residenceController.loadErrorMessage
-        ?? "This Home could not be opened. Refresh the Timeline and try again."
-      return
-    }
-    residenceEditorSelection = ResidenceEditorSelection(entry: entry)
-  }
-
-  @MainActor
-  private func openVehicle(entryID: UUID) async {
-    await vehicleController.load()
-    guard let entry = vehicleController.entry(id: entryID) else {
-      vehicleErrorMessage =
-        vehicleController.loadErrorMessage
-        ?? "This Vehicle could not be opened. Refresh the Timeline and try again."
-      return
-    }
-    vehicleEditorSelection = VehicleEditorSelection(entry: entry)
-  }
-
-  private var trackCountLabel: String {
-    "\(controller.tracks.count) \(controller.tracks.count == 1 ? "track" : "tracks")"
-  }
-
-  private var entryCountLabel: String {
-    "\(controller.entryCount) \(controller.entryCount == 1 ? "moment" : "moments")"
+  private func count(_ value: Int, _ noun: String) -> String {
+    "\(value) \(value == 1 ? noun : noun + "s")"
   }
 }
 
+private enum TimelineCreationType: CaseIterable {
+  case moment, home, vehicle, firstTime
+
+  var icon: MTIcon {
+    switch self {
+    case .moment: .timeline
+    case .home: .home
+    case .vehicle: .car
+    case .firstTime: .star
+    }
+  }
+
+  var title: String {
+    switch self {
+    case .moment: "Moment"
+    case .home: "Home"
+    case .vehicle: "Vehicle"
+    case .firstTime: "First Time"
+    }
+  }
+
+  var detail: String {
+    switch self {
+    case .moment: "A flexible event or life stage on any Timeline track."
+    case .home: "A place you called home, with its facts and memories."
+    case .vehicle: "A car, bike, or other vehicle that carried your story."
+    case .firstTime: "A beginning or milestone you want to remember."
+    }
+  }
+}
+
+private enum TimelineSheet: Identifiable {
+  case chooser
+  case birthDate
+  case moment(TimelineEntry?, trackID: UUID)
+  case home(ResidenceEntry?)
+  case vehicle(VehicleEntry?)
+  case firstTime(FirstTimeEntry?)
+
+  var id: String {
+    switch self {
+    case .chooser: "chooser"
+    case .birthDate: "birth-date"
+    case .moment(let entry, let trackID): "moment-\(entry?.id ?? trackID)"
+    case .home(let entry): "home-\(entry?.id.uuidString ?? "new")"
+    case .vehicle(let entry): "vehicle-\(entry?.id.uuidString ?? "new")"
+    case .firstTime(let entry): "first-time-\(entry?.id.uuidString ?? "new")"
+    }
+  }
+}
+
+/// Web `mobileTrack`: the track name and count, its add action, then each record.
 private struct TimelineTrackCard: View {
   let track: TimelineTrack
-  let addMoment: () -> Void
-  let selectEntry: (TimelineEntry) -> Void
+  let openingRecordID: UUID?
+  let add: () -> Void
+  let select: (TimelineEntry) -> Void
 
   var body: some View {
     VStack(spacing: 0) {
       HStack(spacing: MTSpacing.s3) {
         VStack(alignment: .leading, spacing: 2) {
           Text(track.name)
-            .font(MTTypography.titleSmall)
+            .font(MTFont.cardTitle)
             .foregroundStyle(MTColor.ink)
-
-          Text(momentCountLabel)
-            .font(.system(size: 10, weight: .medium))
+            .accessibilityAddTraits(.isHeader)
+          Text("\(track.entries.count) \(track.entries.count == 1 ? "moment" : "moments")")
+            .font(.caption2)
             .foregroundStyle(MTColor.inkFaint)
         }
-
-        Spacer()
-
-        Button(action: addMoment) {
-          Image(systemName: "plus")
-            .font(.system(size: 13, weight: .semibold))
-            .frame(width: 30, height: 30)
-            .background(MTColor.surfaceSubtle, in: RoundedRectangle(cornerRadius: MTRadius.small))
-        }
-        .buttonStyle(.plain)
-        .foregroundStyle(MTColor.accent)
-        .accessibilityLabel("Add a moment to \(track.name)")
+        Spacer(minLength: 0)
+        MTIconButton(label: "Add a moment to \(track.name)", icon: .plus, size: .small, action: add)
+          .foregroundStyle(MTColor.inkFaint)
       }
-      .padding(MTSpacing.s4)
-
-      Divider()
-        .overlay(MTColor.border)
-
+      .padding(.horizontal, MTSpacing.s4)
+      .padding(.vertical, MTSpacing.s3)
+      .frame(minHeight: 62)
+      MTListDivider()
       if track.entries.isEmpty {
-        Button(action: addMoment) {
-          Label("Add the first moment", systemImage: "plus.circle")
-            .font(MTTypography.caption)
-            .foregroundStyle(MTColor.inkFaint)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(MTSpacing.s4)
-        }
-        .buttonStyle(.plain)
+        Text("No moments yet.")
+          .font(MTFont.caption.weight(.regular))
+          .foregroundStyle(MTColor.inkFaint)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.horizontal, MTSpacing.s4)
+          .padding(.vertical, MTSpacing.s5)
       } else {
         ForEach(track.entries) { entry in
+          if entry.id != track.entries.first?.id { MTListDivider() }
           Button {
-            selectEntry(entry)
+            select(entry)
           } label: {
-            TimelineEntryRow(entry: entry)
+            TimelineEntryRow(entry: entry, isOpening: openingRecordID == entry.id)
           }
-          .buttonStyle(.plain)
-
-          if entry.id != track.entries.last?.id {
-            Divider()
-              .padding(.leading, 50)
-              .overlay(MTColor.border)
-          }
+          .buttonStyle(MTListRowButtonStyle())
+          .accessibilityLabel("\(entry.title), \(entry.displayDate)")
         }
       }
     }
     .background(MTColor.surfaceRaised)
     .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large)
-        .stroke(MTColor.border, lineWidth: 1)
+      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border, lineWidth: 1)
     }
-  }
-
-  private var momentCountLabel: String {
-    "\(track.entries.count) \(track.entries.count == 1 ? "moment" : "moments")"
   }
 }
 
 private struct TimelineEntryRow: View {
   let entry: TimelineEntry
+  let isOpening: Bool
 
   var body: some View {
     HStack(spacing: MTSpacing.s3) {
-      marker
-
-      VStack(alignment: .leading, spacing: 4) {
+      Group {
+        if entry.kind == .stage {
+          Capsule().fill(MTColor.accent).frame(width: 14, height: 7)
+        } else {
+          Circle().fill(MTColor.warm).frame(width: 10, height: 10)
+        }
+      }
+      .frame(width: 14)
+      VStack(alignment: .leading, spacing: 3) {
         Text(entry.title)
-          .font(MTTypography.label)
+          .font(MTFont.label)
           .foregroundStyle(MTColor.ink)
-          .lineLimit(2)
-
+          .lineLimit(1)
         Text(entry.displayDate)
-          .font(.system(size: 10, weight: .medium))
+          .font(.caption2)
           .foregroundStyle(MTColor.inkFaint)
           .lineLimit(1)
       }
-
       Spacer(minLength: MTSpacing.s2)
-
-      Image(systemName: "chevron.right")
-        .font(.system(size: 11, weight: .semibold))
-        .foregroundStyle(MTColor.inkFaint)
+      if isOpening {
+        ProgressView().controlSize(.small).tint(MTColor.accent)
+      } else {
+        Image(.chevron)
+          .font(.system(size: 12, weight: .semibold))
+          .foregroundStyle(MTColor.inkMuted)
+      }
     }
-    .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
     .padding(.horizontal, MTSpacing.s4)
-    .padding(.vertical, MTSpacing.s2)
+    .padding(.vertical, MTSpacing.s3)
+    .frame(maxWidth: .infinity, minHeight: 62, alignment: .leading)
     .contentShape(Rectangle())
   }
+}
 
-  @ViewBuilder
-  private var marker: some View {
-    if entry.kind == .stage {
-      Capsule()
-        .fill(MTColor.accent)
-        .frame(width: 18, height: 7)
-        .frame(width: 22)
-    } else {
-      Circle()
-        .fill(MTColor.warm)
-        .frame(width: 10, height: 10)
-        .frame(width: 22)
+/// Web `MomentTypeChooser`.
+private struct TimelineTypeChooser: View {
+  let choose: (TimelineCreationType) -> Void
+
+  var body: some View {
+    MTSheet(
+      eyebrow: "New entry", title: "What are you adding?",
+      closeLabel: "Close entry type chooser", size: .fitted
+    ) {
+      VStack(spacing: MTSpacing.s3) {
+        ForEach(TimelineCreationType.allCases, id: \.self) { type in
+          MTSheetOption(icon: type.icon, title: type.title, detail: type.detail) {
+            choose(type)
+          }
+          .accessibilityLabel("Add \(type.title)")
+          .accessibilityIdentifier("timeline-type-\(type)")
+        }
+      }
     }
   }
 }
 
-private struct TimelineEditorSelection: Identifiable {
-  let id = UUID()
-  let entry: TimelineEntry?
-  let initialTrackID: UUID
+/// Web `BirthDatePrompt`: a picker-only birth date that starts the Timeline, saved like Settings.
+private struct TimelineBirthDatePrompt: View {
+  let profile: SettingsController
+  let saved: () -> Void
+
+  @Environment(\.dismiss) private var dismiss
+  @State private var birthDate = ""
+  @State private var message: String?
+
+  private var isSaving: Bool { profile.savingField == .birthDate }
+
+  var body: some View {
+    MTSheet(
+      eyebrow: "Your starting point", title: "When did your story begin?",
+      closeLabel: "Close birth date prompt", size: .fitted, isBusy: isSaving, message: message
+    ) {
+      Text(
+        "Add your birth date so Timeline begins with your life, not just your earliest saved moment. It stays private and can be changed in Settings."
+      )
+      .font(MTFont.body)
+      .foregroundStyle(MTColor.inkMuted)
+      .mtLineSpacing(MTLineHeight.body)
+      .fixedSize(horizontal: false, vertical: true)
+      MTDateField(label: "Birth date", value: $birthDate, size: .large, isRequired: true)
+        .accessibilityIdentifier("timeline-birth-date")
+    } footer: {
+      HStack(spacing: MTSpacing.s2) {
+        Spacer(minLength: 0)
+        Button("Not now") { dismiss() }
+          .mtButtonStyle(.secondary)
+        Button("Start my Timeline") { Task { await save() } }
+          .mtButtonStyle(isLoading: isSaving)
+          .disabled(birthDate.isEmpty)
+          .accessibilityIdentifier("timeline-save-birth-date")
+      }
+    }
+  }
+
+  private func save() async {
+    message = nil
+    let result = await profile.saveBirthDate(birthDate)
+    guard result.isSaved else {
+      message = result.message
+      return
+    }
+    MTToastCenter.shared.success(result.message)
+    saved()
+    dismiss()
+  }
 }
 
+/// Web `TimelineEditor`: the shape, title, track, when it happened, notes, and organization.
 private struct TimelineEditorSheet: View {
   let controller: TimelineController
   let entry: TimelineEntry?
-  let tracks: [TimelineTrack]
+  let defaultTimezone: String?
 
   @Environment(\.dismiss) private var dismiss
   @State private var trackID: UUID
@@ -434,21 +523,21 @@ private struct TimelineEditorSheet: View {
   @State private var title: String
   @State private var note: String
   @State private var occurrence: OccurrenceDraft
+  @State private var collectionNames: [String]
+  @State private var tagNames: [String]
   @State private var isWorking = false
   @State private var errorMessage: String?
   @State private var isConfirmingTrash = false
 
   init(
-    controller: TimelineController,
-    entry: TimelineEntry?,
-    initialTrackID: UUID,
-    tracks: [TimelineTrack]
+    controller: TimelineController, entry: TimelineEntry?, initialTrackID: UUID,
+    defaultTimezone: String?
   ) {
     self.controller = controller
     self.entry = entry
-    self.tracks = tracks
+    self.defaultTimezone = defaultTimezone
     _trackID = State(initialValue: entry?.trackID ?? initialTrackID)
-    _kind = State(initialValue: entry?.kind ?? .stage)
+    _kind = State(initialValue: entry?.kind ?? .event)
     _title = State(initialValue: entry?.title ?? "")
     _note = State(initialValue: entry?.body ?? "")
     _occurrence = State(
@@ -456,174 +545,146 @@ private struct TimelineEditorSheet: View {
         entry?.occurrence
           ?? EntryOccurrence(
             precision: .unknown, start: nil, end: nil, label: nil,
-            timezone: TimeZone.current.identifier)))
+            timezone: defaultTimezone ?? TimeZone.current.identifier)))
+    _collectionNames = State(initialValue: entry?.collectionNames ?? [])
+    _tagNames = State(initialValue: entry?.tagNames ?? [])
   }
 
   var body: some View {
-    NavigationStack {
-      Form {
-        Section {
-          Picker("Moment type", selection: $kind) {
-            ForEach(TimelineKind.allCases, id: \.self) { kind in
-              Text(kind.displayName).tag(kind)
-            }
-          }
-          .pickerStyle(.segmented)
-
-          Text(kind.explanation)
-            .font(MTTypography.caption)
-            .foregroundStyle(MTColor.inkFaint)
-        }
-
-        Section("Content") {
-          TextField("Title", text: $title, axis: .vertical)
-            .textInputAutocapitalization(.sentences)
-            .accessibilityIdentifier("timeline-title")
-
-          TextEditor(text: $note)
-            .frame(minHeight: 140)
-            .accessibilityLabel("Notes")
-            .accessibilityIdentifier("timeline-notes")
-        }
-
-        Section("Place in Timeline") {
-          Picker("Track", selection: $trackID) {
-            ForEach(tracks) { track in
-              Text(track.name).tag(track.id)
-            }
-          }
-
-        }
-        Section {
-          OccurrenceEditor(value: $occurrence, span: kind == .stage, point: kind == .event)
-        } header: {
-          Text("When it happened")
-        }
-
-        if let errorMessage {
-          Section {
-            Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
-              .font(MTTypography.caption)
-              .foregroundStyle(MTColor.warm)
-              .accessibilityIdentifier("timeline-editor-error")
-          }
-        }
-
-        if entry != nil {
-          Section {
-            Button("Move to Trash", role: .destructive) {
-              isConfirmingTrash = true
-            }
-            .disabled(isWorking)
-          } footer: {
-            Text("The moment and its edit history will be preserved for future restoration.")
-          }
-        }
-      }
-      .navigationTitle(entry == nil ? "New Timeline Moment" : "Edit Timeline Moment")
-      .navigationBarTitleDisplayMode(.inline)
-      .disabled(isWorking)
-      .onChange(of: title) {
-        if title.count > TimelineEntryInput.titleLimit {
-          title = String(title.prefix(TimelineEntryInput.titleLimit))
-        }
-      }
-      .onChange(of: note) {
-        if note.count > TimelineEntryInput.bodyLimit {
-          note = String(note.prefix(TimelineEntryInput.bodyLimit))
-        }
-      }
-      .onChange(of: kind) { if kind == .event { occurrence.end = "" } }
-      .toolbar {
-        ToolbarItem(placement: .cancellationAction) {
-          Button("Cancel") { dismiss() }
-            .disabled(isWorking)
-        }
-
-        ToolbarItem(placement: .confirmationAction) {
-          Button(entry == nil ? "Add" : "Save") {
-            Task { await save() }
-          }
-          .fontWeight(.semibold)
-          .disabled(isWorking)
-          .accessibilityIdentifier("save-timeline-moment")
-        }
-      }
-      .overlay {
-        if isWorking {
-          ProgressView()
-            .padding(MTSpacing.s4)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: MTRadius.medium))
-        }
-      }
-      .confirmationDialog(
-        "Move this moment to Trash?",
-        isPresented: $isConfirmingTrash,
-        titleVisibility: .visible
-      ) {
-        Button("Move to Trash", role: .destructive) {
-          Task { await moveToTrash() }
-        }
-        Button("Cancel", role: .cancel) {}
-      } message: {
-        Text("Its history will be preserved.")
-      }
+    MTSheet(
+      eyebrow: entry == nil ? "New Timeline moment" : "Edit moment",
+      title: entry?.title ?? "Add to your story", closeLabel: "Close Timeline editor",
+      closeIdentifier: "close-timeline-editor", isBusy: isWorking, message: errorMessage
+    ) {
+      shapePicker
+      MTTextField(
+        label: "Title", text: $title,
+        prompt: kind == .stage ? "Living in Philadelphia" : "First ski day", isRequired: true,
+        maxLength: TimelineEntryInput.titleLimit
+      )
+      .accessibilityIdentifier("timeline-title")
+      MTSelectField(
+        label: "Track", selection: $trackID, options: controller.tracks.map(\.id),
+        title: { id in controller.tracks.first { $0.id == id }?.name ?? "" }, isRequired: true)
+      OccurrenceEditor(
+        value: $occurrence, span: kind == .stage, point: kind == .event,
+        defaultTimezone: defaultTimezone)
+      MTTextField(
+        label: "Notes", text: $note, prompt: "What made this period or moment meaningful?",
+        maxLength: TimelineEntryInput.bodyLimit, axis: .vertical, lines: 5...12
+      )
+      .accessibilityIdentifier("timeline-notes")
+      MTOrganizationEditor(
+        kind: .collection, names: $collectionNames, options: controller.collectionOptions)
+      MTOrganizationEditor(kind: .tag, names: $tagNames, options: controller.tagOptions)
+    } footer: {
+      footer
     }
-    .presentationDetents([.large])
-    .interactiveDismissDisabled(isWorking)
   }
 
-  @MainActor
-  private func save() async {
-    isWorking = true
-    errorMessage = nil
+  /// Web `kindPicker`: Period or Moment, and what that shape means.
+  private var shapePicker: some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s2) {
+      MTFieldLabel(title: "Timeline shape")
+      Picker("Timeline shape", selection: $kind) {
+        Text("Period").tag(TimelineKind.stage)
+        Text("Moment").tag(TimelineKind.event)
+      }
+      .pickerStyle(.segmented)
+      .accessibilityIdentifier("timeline-shape")
+      .onChange(of: kind) {
+        guard kind == .event else { return }
+        occurrence.end = ""
+        occurrence.endMode = .date
+        if occurrence.precision == .range { occurrence.precision = .day }
+      }
+      Text(kind.explanation)
+        .font(MTFont.caption.weight(.regular))
+        .foregroundStyle(MTColor.inkFaint)
+    }
+  }
 
+  /// Web's dialog footer: Move to Trash on the left, then Cancel and the save action.
+  private var footer: some View {
+    ViewThatFits(in: .horizontal) {
+      HStack(spacing: MTSpacing.s2) {
+        trashButton
+        Spacer(minLength: 0)
+        cancelButton
+        saveButton
+      }
+      VStack(spacing: MTSpacing.s2) {
+        HStack(spacing: MTSpacing.s2) {
+          cancelButton.frame(maxWidth: .infinity)
+          saveButton.frame(maxWidth: .infinity)
+        }
+        trashButton
+      }
+    }
+  }
+
+  @ViewBuilder private var trashButton: some View {
+    if let entry {
+      Button("Move to Trash") { isConfirmingTrash = true }
+        .mtButtonStyle(.danger)
+        .accessibilityIdentifier("trash-timeline-moment")
+        .confirmationDialog(
+          "Move “\(entry.title)” to Trash?", isPresented: $isConfirmingTrash,
+          titleVisibility: .visible
+        ) {
+          Button("Move to Trash", role: .destructive) { Task { await moveToTrash() } }
+          Button("Cancel", role: .cancel) {}
+        } message: {
+          Text("Its history will be preserved.")
+        }
+    }
+  }
+
+  private var cancelButton: some View {
+    Button("Cancel") { dismiss() }
+      .mtButtonStyle(.secondary)
+  }
+
+  private var saveButton: some View {
+    Button(entry == nil ? "Add moment" : "Save changes") { Task { await save() } }
+      .mtButtonStyle(isLoading: isWorking)
+      .accessibilityIdentifier("save-timeline-moment")
+  }
+
+  private func save() async {
     let resolved: EntryOccurrence
     do {
       resolved = try occurrence.resolve(original: entry?.occurrence, span: kind == .stage)
     } catch {
-      isWorking = false
       errorMessage = error.localizedDescription
       return
     }
-
+    isWorking = true
+    errorMessage = nil
     let result = await controller.save(
-      entry: entry,
-      trackID: trackID,
-      kind: kind,
-      title: title,
-      body: note,
-      occurredStart: resolved.start,
-      occurredEnd: resolved.end,
-      datePrecision: resolved.precision,
-      occurredLabel: resolved.label ?? "",
-      occurredTimezone: resolved.timezone
-    )
-
+      entry: entry, trackID: trackID, kind: kind, title: title, body: note,
+      occurrence: resolved,
+      collectionNames: collectionNames, tagNames: tagNames)
     isWorking = false
-
-    switch result.status {
-    case .saved:
-      dismiss()
-    case .conflict, .error, .trashed:
+    guard result.succeeded else {
       errorMessage = result.message
+      return
     }
+    MTToastCenter.shared.success(result.message)
+    dismiss()
   }
 
-  @MainActor
   private func moveToTrash() async {
     guard let entry else { return }
-
     isWorking = true
     errorMessage = nil
     let result = await controller.moveToTrash(entry)
     isWorking = false
-
-    switch result.status {
-    case .trashed:
-      dismiss()
-    case .conflict, .error, .saved:
+    guard result.succeeded else {
       errorMessage = result.message
+      return
     }
+    MTToastCenter.shared.info(result.message)
+    dismiss()
   }
 }
