@@ -4,6 +4,7 @@
   struct FormSpecimens: View {
     @State private var name = "Alex Morgan"
     @State private var emptyName = ""
+    @State private var notes = ""
     @State private var search = ""
     @State private var compactSearch = ""
     @State private var searchMessage = "No demo search yet."
@@ -33,7 +34,8 @@
       VStack(alignment: .leading, spacing: MTSpacing.s4) {
         GallerySpecimen(
           title: "TextField",
-          api: "label · prompt · size: small | medium | large · required · note · maxLength · axis",
+          api:
+            "label · prompt · size: small | medium | large · required · note · maxLength · axis · lines",
           description:
             "Plain text input with the same font, height, border, and focus surface as SearchField and SelectField."
         ) {
@@ -45,6 +47,9 @@
             )
             .disabled(true)
           }
+          MTTextField(
+            label: "Notes", text: $notes, prompt: "What made this period or moment meaningful?",
+            axis: .vertical, lines: 5...12)
         }
 
         GallerySpecimen(

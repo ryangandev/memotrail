@@ -88,9 +88,14 @@ extension View {
   fileprivate func mtFieldAccessibility(_ label: String, isRequired: Bool) -> some View {
     accessibilityLabel(isRequired ? "\(label), required" : label)
   }
+
+  @ViewBuilder fileprivate func mtLineLimit(_ lines: ClosedRange<Int>?) -> some View {
+    if let lines { lineLimit(lines) } else { self }
+  }
 }
 
-/// A labeled single-line or growing text input.
+/// A labeled single-line input, or with a vertical axis a growing textarea. `lines` sets the
+/// textarea's visible range, like Web `rows`, without affecting the label.
 struct MTTextField: View {
   let label: String
   @Binding var text: String
@@ -101,6 +106,7 @@ struct MTTextField: View {
   var hidesLabel = false
   var maxLength: Int?
   var axis: Axis = .horizontal
+  var lines: ClosedRange<Int>?
   @FocusState private var isFocused: Bool
 
   var body: some View {
@@ -110,6 +116,7 @@ struct MTTextField: View {
         label, text: $text,
         prompt: prompt.map { Text($0).foregroundStyle(MTColor.inkFaint) }, axis: axis
       )
+      .mtLineLimit(lines)
       .font(MTFont.body)
       .foregroundStyle(MTColor.ink)
       .focused($isFocused)
