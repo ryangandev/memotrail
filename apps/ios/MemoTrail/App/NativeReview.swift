@@ -9,15 +9,100 @@
     }
   }
 
-  // Explicit Debug-only review modes use synthetic data and never sign in.
+  // Explicit Debug-only review modes use synthetic data and never sign in with a real account.
   enum NativeReviewMode: String {
     case designSystem = "--review-design-system"
     case map = "--review-map"
     case navigation = "--review-navigation"
+    case localSession = "--review-local-session"
 
     static var current: Self? {
-      [Self.designSystem, .map, .navigation].first {
+      [Self.designSystem, .map, .navigation, .localSession].first {
         ProcessInfo.processInfo.arguments.contains($0.rawValue)
+      }
+    }
+  }
+
+  /// A disposable account on the local Supabase stack, created and seeded by
+  /// `apps/ios/scripts/review-local-session.py`. Only 127.0.0.1 endpoints are accepted.
+  struct NativeReviewSession: Decodable, Sendable {
+    let supabaseURL: URL
+    let publishableKey: String
+    let accessToken: String
+    let refreshToken: String
+    let ownerID: UUID
+    let email: String
+    let name: String
+    let apiURL: URL?
+
+    static let current: Self? = {
+      guard NativeReviewMode.current == .localSession,
+        let path = ProcessInfo.processInfo.environment["MEMOTRAIL_REVIEW_SESSION"],
+        let data = FileManager.default.contents(atPath: path),
+        let session = try? JSONDecoder().decode(Self.self, from: data),
+        session.supabaseURL.host == "127.0.0.1",
+        session.apiURL.map({ $0.host == "127.0.0.1" }) ?? true
+      else { return nil }
+      return session
+    }()
+  }
+
+  // Keeps the disposable session out of the Keychain.
+  private final class NativeReviewSessionStorage: AuthLocalStorage, @unchecked Sendable {
+    private let lock = NSLock()
+    private var values: [String: Data] = [:]
+
+    func store(key: String, value: Data) throws { lock.withLock { values[key] = value } }
+    func retrieve(key: String) throws -> Data? { lock.withLock { values[key] } }
+    func remove(key: String) throws { _ = lock.withLock { values.removeValue(forKey: key) } }
+  }
+
+  private struct NativeLocalSessionView: View {
+    private enum Phase {
+      case connecting
+      case ready(SupabaseClient, AuthenticatedUser)
+      case failed(String)
+    }
+
+    @State private var phase = Phase.connecting
+
+    var body: some View {
+      switch phase {
+      case .connecting:
+        ProgressView("Opening local session")
+          .task { await connect() }
+      case .ready(let client, let user):
+        RootTabView(client: client, user: user, isAuthenticationBusy: false, signOut: {})
+      case .failed(let message):
+        ContentUnavailableView(
+          "Local session unavailable", systemImage: "exclamationmark.triangle",
+          description: Text(message))
+      }
+    }
+
+    private func connect() async {
+      guard let session = NativeReviewSession.current else {
+        phase = .failed(
+          "Run apps/ios/scripts/review-local-session.py with the local Supabase stack.")
+        return
+      }
+      let client = SupabaseClient(
+        supabaseURL: session.supabaseURL, supabaseKey: session.publishableKey,
+        options: .init(
+          auth: .init(
+            storage: NativeReviewSessionStorage(), storageKey: "native-review-\(session.ownerID)",
+            emitLocalSessionAsInitialSession: true)))
+      do {
+        let restored = try await client.auth.setSession(
+          accessToken: session.accessToken, refreshToken: session.refreshToken)
+        guard restored.user.id == session.ownerID else {
+          phase = .failed("The local session belongs to a different account.")
+          return
+        }
+        phase = .ready(
+          client, AuthenticatedUser(id: session.ownerID, email: session.email, name: session.name))
+      } catch {
+        phase = .failed(error.localizedDescription)
       }
     }
   }
@@ -51,6 +136,7 @@
           client: client,
           user: AuthenticatedUser(id: ownerID, email: "preview@example.invalid", name: "Preview"),
           isAuthenticationBusy: false, signOut: {})
+      case .localSession: NativeLocalSessionView()
       }
     }
 

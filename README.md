@@ -164,6 +164,17 @@ The script creates a temporary local account, runs XCTest, requires the contract
 It never uses the hosted Supabase project.
 Regular Xcode test runs skip the local integration tests when this temporary configuration is absent.
 
+Run signed-in native UI flows as a seeded, disposable local account:
+
+```bash
+python3 apps/ios/scripts/review-local-session.py --simulator-id YOUR_SIMULATOR_UDID \
+  --attachments /private/tmp/memotrail-native-review
+```
+
+The script seeds a small synthetic archive through the same database functions the apps use, opens the Debug `--review-local-session` mode, runs `LocalSessionUITests`, exports screenshots, and removes the account, its rows, and its media afterward.
+Add `--web` to serve the Web media API on `127.0.0.1:3100` for photo flows, and `--only-testing` to pick other UI tests.
+Both the stack and the Web API must answer on `127.0.0.1`; regular `MemoTrailUI` runs skip these tests.
+
 Green builds do not by themselves prove authenticated user flows, production configuration, private media delivery, or recovery.
 Use [docs/status.md](./docs/status.md) for the remaining acceptance gates.
 

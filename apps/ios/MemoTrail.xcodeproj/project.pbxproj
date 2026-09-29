@@ -120,6 +120,8 @@
 		E10000000000000000000014 /* MTToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000014 /* MTToast.swift */; };
 		E10000000000000000000015 /* MTMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000015 /* MTMedia.swift */; };
 		E10000000000000000000016 /* GalleryFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000016 /* GalleryFeedback.swift */; };
+		E10000000000000000000017 /* UITestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000017 /* UITestSupport.swift */; };
+		E10000000000000000000018 /* LocalSessionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000018 /* LocalSessionUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -249,6 +251,8 @@
 		E20000000000000000000014 /* MTToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTToast.swift; sourceTree = "<group>"; };
 		E20000000000000000000015 /* MTMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMedia.swift; sourceTree = "<group>"; };
 		E20000000000000000000016 /* GalleryFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryFeedback.swift; sourceTree = "<group>"; };
+		E20000000000000000000017 /* UITestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestSupport.swift; sourceTree = "<group>"; };
+		E20000000000000000000018 /* LocalSessionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalSessionUITests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -579,7 +583,7 @@
 			sourceTree = "<group>";
 		};
 
-		AF0000000000000000000007 = {isa = PBXGroup; children = (CF0000000000000000000002); path = MemoTrailUITests; sourceTree = "<group>"; };
+		AF0000000000000000000007 = {isa = PBXGroup; children = (E20000000000000000000018, E20000000000000000000017, CF0000000000000000000002); path = MemoTrailUITests; sourceTree = "<group>"; };
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -824,7 +828,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		AF0000000000000000000002 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (BF0000000000000000000001); runOnlyForDeploymentPostprocessing = 0; };
+		AF0000000000000000000002 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (E10000000000000000000018, E10000000000000000000017, BF0000000000000000000001); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */

@@ -4,6 +4,9 @@ enum AppConfiguration {
   static let aiEnabled = false
 
   static var apiURL: URL? {
+    #if DEBUG
+      if NativeReviewMode.current == .localSession { return NativeReviewSession.current?.apiURL }
+    #endif
     guard let raw = value(forInfoDictionaryKey: "MEMOTRAIL_API_URL"),
       let url = URL(string: raw), let host = url.host,
       url.scheme == "https" || (url.scheme == "http" && ["localhost", "127.0.0.1"].contains(host))

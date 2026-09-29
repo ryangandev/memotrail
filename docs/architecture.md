@@ -207,7 +207,9 @@ Pair it with the test file carrying the same feature name.
 - The Debug-only `DesignSystem/DesignSystemGallery.swift` renders those real components with appearance and text-size controls, in the same section order as the Web gallery.
   It is reached from the signed-out screen, More, or Settings; broad existing-screen migration follows review.
 - Debug launch arguments in `App/NativeReview.swift` expose isolated gallery, synthetic Map, and navigation review modes; `--review-design-section <name>` opens one gallery section directly.
+  `--review-local-session` signs in with a disposable local Supabase session from `scripts/review-local-session.py`, keeps it out of the Keychain, and accepts only 127.0.0.1 endpoints.
   Release builds omit these modes and the gallery; `MemoTrailUI` runs their Simulator interaction tests.
+  `scripts/local_supabase.py` owns disposable account creation and cleanup for both native local scripts.
 - Native app targets skip App Intents metadata extraction because they declare no App Intents.
   Enable extraction when native shortcuts are introduced.
 - Authenticated Web routes use `components/page-frame.tsx` for outer width, centering, responsive gutters, and vertical page rhythm.
