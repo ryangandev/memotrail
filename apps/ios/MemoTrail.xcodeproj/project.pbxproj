@@ -113,6 +113,11 @@
 		E1000000000000000000000C /* TimeZoneOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000000C /* TimeZoneOptions.swift */; };
 		E1000000000000000000000D /* GalleryForms.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000000D /* GalleryForms.swift */; };
 		E1000000000000000000000E /* FormFieldTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000000E /* FormFieldTests.swift */; };
+		E1000000000000000000000F /* MTCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000000F /* MTCards.swift */; };
+		E10000000000000000000010 /* MTRichTextContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000010 /* MTRichTextContent.swift */; };
+		E10000000000000000000011 /* GalleryContainers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000011 /* GalleryContainers.swift */; };
+		E10000000000000000000012 /* EntryRichText.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000012 /* EntryRichText.swift */; };
+		E10000000000000000000013 /* EntryRichTextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000013 /* EntryRichTextTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -235,6 +240,11 @@
 		E2000000000000000000000C /* TimeZoneOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeZoneOptions.swift; sourceTree = "<group>"; };
 		E2000000000000000000000D /* GalleryForms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryForms.swift; sourceTree = "<group>"; };
 		E2000000000000000000000E /* FormFieldTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormFieldTests.swift; sourceTree = "<group>"; };
+		E2000000000000000000000F /* MTCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTCards.swift; sourceTree = "<group>"; };
+		E20000000000000000000010 /* MTRichTextContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTRichTextContent.swift; sourceTree = "<group>"; };
+		E20000000000000000000011 /* GalleryContainers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryContainers.swift; sourceTree = "<group>"; };
+		E20000000000000000000012 /* EntryRichText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryRichText.swift; sourceTree = "<group>"; };
+		E20000000000000000000013 /* EntryRichTextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryRichTextTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -352,6 +362,7 @@
 		A10000000000000000000007 /* DesignSystem */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000011 /* GalleryContainers.swift */,
 				E2000000000000000000000D /* GalleryForms.swift */,
 				E20000000000000000000007 /* GalleryPrimitives.swift */,
 				E20000000000000000000002 /* GalleryFoundations.swift */,
@@ -366,6 +377,8 @@
 		A10000000000000000000008 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000010 /* MTRichTextContent.swift */,
+				E2000000000000000000000F /* MTCards.swift */,
 				E2000000000000000000000B /* MTOrganizationEditor.swift */,
 				E2000000000000000000000A /* MTTimeZoneField.swift */,
 				E20000000000000000000009 /* MTDateField.swift */,
@@ -397,6 +410,7 @@
 		A10000000000000000000010 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000012 /* EntryRichText.swift */,
 				E2000000000000000000000C /* TimeZoneOptions.swift */,
 				CE0000000000000000000001 /* EntryEmphasisContent.swift */,
 				C0000000000000000000002B /* HomeEntry.swift */,
@@ -447,6 +461,7 @@
 		A10000000000000000000014 /* MemoTrailTests */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000013 /* EntryRichTextTests.swift */,
 				E2000000000000000000000E /* FormFieldTests.swift */,
 				CE0000000000000000000004 /* EntryEmphasisContentTests.swift */,
 				CD000000000000000000000A /* LocationMapTests.swift */,
@@ -686,6 +701,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E10000000000000000000012 /* EntryRichText.swift in Sources */,
+				E10000000000000000000011 /* GalleryContainers.swift in Sources */,
+				E10000000000000000000010 /* MTRichTextContent.swift in Sources */,
+				E1000000000000000000000F /* MTCards.swift in Sources */,
 				E1000000000000000000000D /* GalleryForms.swift in Sources */,
 				E1000000000000000000000C /* TimeZoneOptions.swift in Sources */,
 				E1000000000000000000000B /* MTOrganizationEditor.swift in Sources */,
@@ -777,6 +796,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E10000000000000000000013 /* EntryRichTextTests.swift in Sources */,
 				E1000000000000000000000E /* FormFieldTests.swift in Sources */,
 				BE0000000000000000000004 /* EntryEmphasisContentTests.swift in Sources */,
 				BD000000000000000000000A /* LocationMapTests.swift in Sources */,

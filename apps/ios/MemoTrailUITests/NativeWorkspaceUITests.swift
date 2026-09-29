@@ -86,9 +86,11 @@ final class NativeWorkspaceUITests: XCTestCase {
     app.buttons["Accessibility text"].tap()
     reveal(app.buttons["design-section-containers"], in: app).tap()
     XCTAssertTrue(app.navigationBars["Containers & data"].waitForExistence(timeout: 3))
-    app.swipeUp()
+    reveal(app.buttons["Open sample memory"], in: app).tap()
+    XCTAssertTrue(app.staticTexts["RecordCard action fired."].waitForExistence(timeout: 3))
+    let summary = reveal(app.staticTexts["A quiet afternoon by the coast"], in: app)
     attach(app, "Dark records at accessibility text size")
-    XCTAssertTrue(app.staticTexts["A quiet afternoon by the coast"].exists)
+    XCTAssertTrue(summary.isHittable)
   }
 
   func testRichWritingTypingFormattingUndoAndSavedPreview() {

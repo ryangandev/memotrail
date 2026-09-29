@@ -28,7 +28,7 @@
       case .layout: "Page widths, gutters, and section rhythm."
       case .forms: "Search, fields, pickers, dates, labels, and native presentation."
       case .writing: "Rich text, a collapsible Aa toolbar, and saved note previews."
-      case .containers: "Record summaries, long content, and photo placeholders."
+      case .containers: "Record and Collection cards, rich writing, and compact record summaries."
       case .feedback: "Empty, loading, error, success, and local draft states."
       }
     }
@@ -194,36 +194,6 @@
         }
       }
       .navigationTitle(section.title).navigationBarTitleDisplayMode(.inline)
-    }
-  }
-
-  private struct ContainerSpecimens: View {
-    @State private var chinese = false
-
-    var body: some View {
-      VStack(alignment: .leading, spacing: MTSpacing.s4) {
-        Toggle("Preview Chinese & long content", isOn: $chinese)
-        MTCard {
-          MTRecordSummary(
-            title: chinese ? "第一次沿着海岸慢慢走，记住了风、灯塔，以及那天没有说完的故事。" : "A quiet afternoon by the coast",
-            subtitle: chinese
-              ? "旧金山，加利福尼亚 · 2026年9月" : "San Francisco, California · September 2026",
-            kind: "First Time")
-        }
-        MTCard {
-          MTRecordSummary(
-            title: "The next chapter", subtitle: "No occurred date · On this iPhone", kind: "Entry",
-            status: "In Inbox")
-        }
-        MTCard {
-          VStack(alignment: .leading, spacing: MTSpacing.s3) {
-            MTMediaPlaceholder(state: .empty).frame(height: 160)
-            MTRecordSummary(title: "Our first home", subtitle: "Austin, Texas", kind: "Home")
-          }
-        }
-        MTMediaPlaceholder(state: .loading).frame(height: 120)
-        MTMediaPlaceholder(state: .failed).frame(height: 120)
-      }
     }
   }
 

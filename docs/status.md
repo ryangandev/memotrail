@@ -80,7 +80,7 @@ Its marked account and Storage objects were confirmed removed without accessing 
   A signed Simulator build launches to the Google sign-in screen; personal login, physical-device flows, and deployed shared API acceptance remain pending.
 - Review the Debug-only native Design System gallery, including appearance, Dynamic Type, action states, forms, cards, media placeholders, and feedback.
   The new Map uses its shared presentation components; existing screens retain their layouts pending acceptance.
-  Native actions, badges, headers, empty states, and form fields now mirror the Web gallery specimens.
+  Native actions, badges, headers, empty states, form fields, record and Collection cards, and read-only rich writing now mirror the Web gallery specimens.
   One shared OccurrenceEditor and tag/Collection editor now serve Capture, Inbox review, Timeline, First Times, Homes, Vehicles, and Goals, with the Web Date types, Present end, and optional description.
 - The gallery's Writing & formatting page now previews a native Aa toolbar with bold, italic, underline, strikethrough, selection formatting, typing styles, undo/redo, and saved note reopening.
   The sample form uses the same reusable editor.
