@@ -82,14 +82,7 @@ struct RootTabView: View {
         user: user,
         isAuthenticationBusy: isAuthenticationBusy,
         signOut: signOut,
-        controller: inboxController,
-        captureTitle: $captureTitle,
-        captureNote: $captureNote,
-        captureOccurrence: $captureOccurrence,
-        capturePhotos: $capturePhotos,
-        addCapturePhoto: addCapturePhoto,
-        removeCapturePhoto: removeCapturePhoto,
-        hasLocalDraft: $hasLocalDraft
+        controller: inboxController
       )
       .tabItem {
         Label(RootTabDestination.inbox.title, systemImage: RootTabDestination.inbox.systemImage)
@@ -162,6 +155,11 @@ struct RootTabView: View {
       persistDraft()
     }
     .onChange(of: inboxController.pendingEntries.count) { previousCount, count in
+      guard count < previousCount else { return }
+      Task { await homeController.load() }
+    }
+    // Organizing or trashing a capture changes the Dashboard counts and Ready to organize.
+    .onChange(of: inboxController.entries.count) { previousCount, count in
       guard count < previousCount else { return }
       Task { await homeController.load() }
     }
@@ -270,8 +268,10 @@ enum RootTabDestination: String, CaseIterable, Sendable {
     }
   }
 
+  /// The Dashboard has its own composer; the other lists capture from this button, like the
+  /// Web header's capture action.
   var usesGlobalCaptureButton: Bool {
-    self == .timeline || self == .library
+    self == .inbox || self == .timeline || self == .library
   }
 }
 

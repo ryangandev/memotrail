@@ -56,11 +56,12 @@ def seed(stack, user):
     rest(f"/rest/v1/profiles?user_id=eq.{owner}",
          {"display_name": "Review Tester", "timezone": TIMEZONE}, method="PATCH")
 
-    def capture(title, body):
+    def capture(title, body, metadata=None):
         return rest("/rest/v1/entries", {
             "owner_id": owner, "title": title, "body": body, "inbox_status": "unreviewed",
             "item_kind": "entry", "item_subtype": "entry", "date_precision": "unknown",
             "occurred_timezone": TIMEZONE, "client_id": "review:" + secrets.token_hex(8),
+            "metadata": metadata or {},
         }, prefer="return=representation")[0]
 
     def organize(title, body, collections=(), tags=(), **when):
@@ -92,6 +93,12 @@ def seed(stack, user):
              label="Late 1990s")
     capture(None, "Waiting for a little context")
     capture("Notes from the farmers market", "Peaches, basil, and a jar of local honey.")
+    # A Web-formatted list that the native editor cannot author, so review must keep it.
+    items = [{"type": "listItem", "content": [{"type": "paragraph", "content": [
+        {"type": "text", "text": item}]}]} for item in ("Tent", "Stove")]
+    capture("Weekend packing list", "Tent\nStove", {"body_rich": {
+        "version": 1, "text": "Tent\nStove",
+        "document": {"type": "doc", "content": [{"type": "bulletList", "content": items}]}}})
 
     tracks = stack.request(f"/rest/v1/timeline_tracks?select=id,system_key&order=sort_order",
                            method="GET", key=stack.anon_key, token=user["access_token"])

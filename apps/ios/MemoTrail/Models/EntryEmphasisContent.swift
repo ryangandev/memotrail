@@ -40,6 +40,16 @@ struct EntryEmphasisContent: Codable, Equatable, Sendable {
     document = Node(type: "doc", content: paragraphs)
   }
 
+  /// The editable subset of a Web document, or nil when it uses quotes, lists, code, or links
+  /// that the native editor cannot keep.
+  init?(_ rich: EntryRichText) {
+    guard let data = try? JSONEncoder().encode(rich),
+      let value = try? JSONDecoder().decode(Self.self, from: data),
+      value.isValid(expectedText: rich.text)
+    else { return nil }
+    self = value
+  }
+
   /// The note as Web stores it: surrounding whitespace trimmed, formatting kept, and
   /// nothing at all when only whitespace remains.
   @MainActor

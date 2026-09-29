@@ -1,6 +1,6 @@
 # MemoTrail Status
 
-Last reviewed: 2026-09-28.
+Last reviewed: 2026-09-29.
 
 ## Current state
 
@@ -20,6 +20,7 @@ Native iOS now adopts the canonical Entry, Entity, and Goal contracts, optional 
 The retired native Place surface and saved-Location catalog are removed; the existing screen layouts and accepted splash remain.
 Native navigation now uses Dashboard, Inbox, Timeline, Library, and More, with the active Web destinations grouped under More and the Web navigation icons.
 The native Dashboard now follows the Web Data Ribbon order and links, verified against a seeded local account.
+The native Inbox now matches the Web review list and Review Entry dialog, including Move to Trash and formatted note review, verified against a seeded local account.
 The native MapKit screen and Debug Design System gallery are implemented; personal acceptance and broad screen migration remain pending.
 The merged Web release still needs Production deployment verification and browser acceptance; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 
@@ -83,7 +84,7 @@ Its marked account and Storage objects were confirmed removed without accessing 
   The new Map uses its shared presentation components; existing screens retain their layouts pending acceptance.
   Native actions, badges, headers, empty states, form fields, record and Collection cards, read-only rich writing, toasts, remote images, upload progress, and the photo field now mirror the Web gallery specimens.
   First Times, Homes, Vehicles, Goals, Collections, and the Entry photo viewer load photos through the shared remote image; Home and Trash follow with their screen syncs.
-  Ten Simulator UI scenarios pass, adding form pickers, organization editing, toasts, photo field removal, and a gallery screenshot tour; all 220 native tests pass against local Supabase, including the five contract tests.
+  Ten Simulator UI scenarios pass, adding form pickers, organization editing, toasts, photo field removal, and a gallery screenshot tour; all 230 native tests pass against local Supabase, including six contract tests.
   `review-local-session.py` now runs signed-in UI flows as a seeded, disposable local account, so screen syncs are checked against real local data rather than synthetic previews.
   One shared OccurrenceEditor and tag/Collection editor now serve Capture, Inbox review, Timeline, First Times, Homes, Vehicles, and Goals, with the Web Date types, Present end, and optional description.
 - The gallery's Writing & formatting page now previews a native Aa toolbar with bold, italic, underline, strikethrough, selection formatting, typing styles, undo/redo, and saved note reopening.
@@ -92,7 +93,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Six targeted native tests and three Simulator UI scenarios pass, with no runtime warnings.
   Web's actual validator accepts the Swift-encoded payload; light, dark, large-text, and native selection screenshots were reviewed.
   Native Capture now uses this editor as its single note, like the Web composer, and stores Web-compatible `body_rich` through drafts, the offline queue, and sync; a seeded local run confirmed the stored bold run.
-  Native review saves and full-note rendering still need to adopt the rich payload.
+  Native Inbox review now saves the same payload through `review_wiki_item_with_photo_place_rich` and keeps untouched Web-only formatting; a seeded local run confirmed a stored bold edit and an unchanged Web list.
+  Native full-note rendering on focused record pages still needs to adopt the rich payload.
 - Native Settings routing includes Account, dates/timezone context, app-local appearance, Collections, Tags, organization settings, export, and the paused Beta AI state.
   Web profile/date preference editing is not yet replicated on iOS.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.

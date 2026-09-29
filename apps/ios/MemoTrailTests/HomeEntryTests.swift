@@ -187,7 +187,7 @@ final class HomeEntryTests: XCTestCase {
     XCTAssertFalse(RootTabDestination.allCases.map(\.systemImage).contains(where: \.isEmpty))
     XCTAssertEqual(
       RootTabDestination.allCases.filter(\.usesGlobalCaptureButton),
-      [.timeline, .library]
+      [.inbox, .timeline, .library]
     )
   }
 

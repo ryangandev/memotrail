@@ -48,14 +48,33 @@ final class EntryRichTextTests: XCTestCase {
     XCTAssertFalse(try richText(document, text: "Tampered").isValid())
   }
 
+  /// An Entry row that reads `body_rich` from its metadata like the app's models.
+  private struct Row: Decodable {
+    let bodyRich: EntryRichText?
+
+    enum CodingKeys: String, CodingKey { case body, metadata }
+
+    init(from decoder: Decoder) throws {
+      let values = try decoder.container(keyedBy: CodingKeys.self)
+      bodyRich = values.decodeEntryRichText(
+        metadataKey: .metadata, body: try values.decode(String.self, forKey: .body))
+    }
+  }
+
   func testMetadataReadsOnlyAMatchingBodyRichDocument() throws {
     let value = try richText(document)
     let encoded = try String(decoding: JSONEncoder().encode(value), as: UTF8.self)
-    let metadata = Data(#"{"source":"web","count":3,"body_rich":\#(encoded)}"#.utf8)
-    XCTAssertEqual(EntryRichText.from(metadataJSON: metadata, body: text), value)
-    XCTAssertNil(EntryRichText.from(metadataJSON: metadata, body: "Edited on iOS"))
-    XCTAssertNil(EntryRichText.from(metadataJSON: Data(#"{"body_rich":7}"#.utf8), body: text))
-    XCTAssertNil(EntryRichText.from(metadataJSON: nil, body: text))
+    let body = try String(decoding: JSONEncoder().encode(text), as: UTF8.self)
+    func row(_ body: String, _ metadata: String) throws -> Row {
+      try JSONDecoder().decode(
+        Row.self, from: Data(#"{"body":\#(body),"metadata":\#(metadata)}"#.utf8))
+    }
+    let metadata = #"{"source":"web","count":3,"body_rich":\#(encoded)}"#
+    XCTAssertEqual(try row(body, metadata).bodyRich, value)
+    XCTAssertNil(try row(#""Edited on iOS""#, metadata).bodyRich)
+    XCTAssertNil(try row(body, #"{"body_rich":7}"#).bodyRich)
+    XCTAssertNil(try row(body, "null").bodyRich)
+    XCTAssertNil(try JSONDecoder().decode(Row.self, from: Data(#"{"body":"x"}"#.utf8)).bodyRich)
   }
 
   func testOnlyWebMailAndPhoneLinksAreSafe() {

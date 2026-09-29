@@ -64,6 +64,7 @@ final class InboxEntryTests: XCTestCase {
       XCTAssertEqual(json["occurred_label"] as? String, occurrence.label)
     }
   }
+
   @MainActor
   func testCapturedNoteTrimsWhitespaceAndKeepsWebFormatting() throws {
     let bold = UIFont.boldSystemFont(ofSize: 17)
@@ -77,9 +78,8 @@ final class InboxEntryTests: XCTestCase {
     let first = try XCTUnwrap(rich.document.content?.first?.content?.first)
     XCTAssertEqual(first.text, "Low tide")
     XCTAssertEqual(first.marks, [EntryEmphasisContent.Mark(type: "bold")])
-    // Web's validator reads the same document from Entry metadata.
-    let metadata = try JSONEncoder().encode([EntryRichText.metadataKey: rich])
-    XCTAssertNotNil(EntryRichText.from(metadataJSON: metadata, body: captured.body))
+    // Web's validator accepts the same document as Entry metadata.
+    XCTAssertEqual(EntryRichText(rich)?.isValid(expectedText: captured.body), true)
     XCTAssertEqual(EntryEmphasisContent.capture(NSAttributedString(string: " \n ")).body, "")
     XCTAssertNil(EntryEmphasisContent.capture(NSAttributedString(string: " \n ")).rich)
   }
@@ -808,6 +808,97 @@ final class InboxEntryTests: XCTestCase {
       try? FileManager.default.removeItem(at: url)
     }
     return url
+  }
+
+  func testInboxEntryKeepsOnlyBodyRichThatMatchesTheNote() throws {
+    func entry(body: String, metadata: String) throws -> InboxEntry {
+      let data = Data(
+        """
+        {"id":"95000000-0000-4000-8000-000000000003","title":null,"body":"\(body)",\
+        "metadata":\(metadata),"item_kind":"entry","item_subtype":"entry",\
+        "inbox_status":"unreviewed","revision":1,"created_at":"2026-09-16T12:00:00Z",\
+        "occurred_start":null,"date_precision":"unknown","occurred_timezone":"UTC"}
+        """.utf8)
+      let decoder = JSONDecoder()
+      decoder.dateDecodingStrategy = .iso8601
+      return try decoder.decode(InboxEntry.self, from: data)
+    }
+    let document = """
+      {"source":"web","body_rich":{"version":1,"text":"Harbor lights","document":{"type":"doc",\
+      "content":[{"type":"paragraph","content":[{"type":"text","text":"Harbor",\
+      "marks":[{"type":"bold"}]},{"type":"text","text":" lights"}]}]}}}
+      """
+
+    let formatted = try entry(body: "Harbor lights", metadata: document)
+    XCTAssertEqual(formatted.bodyRich?.text, "Harbor lights")
+    XCTAssertEqual(
+      formatted.withOrganization(collectionNames: [], tagNames: []).bodyRich,
+      formatted.bodyRich)
+    XCTAssertNil(try entry(body: "Harbor lights, edited", metadata: document).bodyRich)
+    XCTAssertNil(try entry(body: "Harbor lights", metadata: "{}").bodyRich)
+    XCTAssertNil(try entry(body: "Harbor lights", metadata: "null").bodyRich)
+  }
+
+  @MainActor
+  func testReviewEditorKeepsEmphasisButNotWebOnlyStructure() throws {
+    let note = NSMutableAttributedString(
+      string: "Harbor", attributes: [.font: UIFont.boldSystemFont(ofSize: 17)])
+    note.append(
+      NSAttributedString(string: " lights", attributes: [.font: UIFont.systemFont(ofSize: 17)]))
+    let emphasis = EntryEmphasisContent(attributedText: note)
+    let rich = try XCTUnwrap(EntryRichText(emphasis))
+    XCTAssertTrue(rich.isValid(expectedText: "Harbor lights"))
+    XCTAssertEqual(EntryEmphasisContent(rich), emphasis)
+
+    let list = try XCTUnwrap(GallerySamples.richText)
+    XCTAssertTrue(list.isValid())
+    XCTAssertNil(EntryEmphasisContent(list))
+  }
+
+  func testReviewRejectsEmptyNotesAndMismatchedFormattingLikeWeb() throws {
+    func validate(title: String, body: String, rich: EntryRichText? = nil) throws {
+      _ = try InboxReviewInput.validate(
+        entryID: UUID(), revision: 1, title: title, body: body, bodyRich: rich,
+        collectionNames: [], itemKind: .entry, itemSubtype: "entry", occurredAt: nil,
+        occurredTimezone: "UTC", tagNames: [], datePrecision: .unknown)
+    }
+    XCTAssertThrowsError(try validate(title: " ", body: " ")) { error in
+      XCTAssertEqual(error as? InboxReviewError, .empty)
+      XCTAssertEqual(error.localizedDescription, "Keep a title or note before saving.")
+    }
+    let rich = try JSONDecoder().decode(
+      EntryRichText.self,
+      from: Data(
+        """
+        {"version":1,"text":"Harbor lights","document":{"type":"doc","content":[\
+        {"type":"paragraph","content":[{"type":"text","text":"Harbor lights"}]}]}}
+        """.utf8))
+    XCTAssertNoThrow(try validate(title: "", body: "  Harbor lights ", rich: rich))
+    XCTAssertThrowsError(try validate(title: "", body: "Harbor lights tonight", rich: rich)) {
+      XCTAssertEqual($0 as? InboxReviewError, .invalidRichText)
+    }
+  }
+
+  func testReviewParametersSendBodyRichOrClearIt() throws {
+    var parameters = ReviewEntryParameters(
+      entryID: UUID(), expectedRevision: 1, title: nil, body: "Harbor lights",
+      itemKind: .entry, itemSubtype: "entry", occurredStart: nil, occurredTimezone: "UTC",
+      collectionNames: [], tagNames: [], markDone: true, datePrecision: .unknown)
+    func json() throws -> [String: Any] {
+      try XCTUnwrap(
+        JSONSerialization.jsonObject(with: JSONEncoder().encode(parameters)) as? [String: Any])
+    }
+    XCTAssertTrue(try json()["p_body_rich"] is NSNull)
+    parameters.bodyRich = try JSONDecoder().decode(
+      EntryRichText.self,
+      from: Data(
+        """
+        {"version":1,"text":"Harbor lights","document":{"type":"doc","content":[\
+        {"type":"paragraph","content":[{"type":"text","text":"Harbor lights"}]}]}}
+        """.utf8))
+    let rich = try XCTUnwrap(try json()["p_body_rich"] as? [String: Any])
+    XCTAssertEqual(rich["text"] as? String, "Harbor lights")
+    XCTAssertEqual(rich["version"] as? Int, 1)
   }
 
   private func makeDefaults() -> UserDefaults {

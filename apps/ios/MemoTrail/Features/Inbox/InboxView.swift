@@ -1,97 +1,50 @@
 @preconcurrency import Supabase
 import SwiftUI
 
+/// Web `/inbox`: the captures waiting for a place, each ready to organize or move to Trash.
+/// New captures start from the Dashboard composer or the Quick capture button.
 struct InboxView: View {
   let client: SupabaseClient
   let user: AuthenticatedUser
   let isAuthenticationBusy: Bool
   let signOut: @MainActor () async -> Void
+  @Bindable var controller: InboxController
 
-  @Bindable private var controller: InboxController
-  @Binding private var captureTitle: String
-  @Binding private var captureNote: NSAttributedString
-  @Binding private var captureOccurrence: OccurrenceDraft?
-  @Binding private var capturePhotos: [FirstTimePhotoDraft]
-  private let addCapturePhoto: @MainActor (FirstTimePhotoDraft) async throws -> Void
-  private let removeCapturePhoto: @MainActor (UUID) async throws -> Void
-  @Binding private var hasLocalDraft: Bool
   @State private var isShowingAccount = false
   @State private var selectedEntry: InboxEntry?
+  @State private var trashingEntryID: UUID?
   @Environment(AppNavigator.self) private var navigator
-  @State private var captureFocusRequest = 0
   @Environment(\.scenePhase) private var scenePhase
-
-  init(
-    client: SupabaseClient,
-    user: AuthenticatedUser,
-    isAuthenticationBusy: Bool,
-    signOut: @escaping @MainActor () async -> Void,
-    controller: InboxController,
-    captureTitle: Binding<String>,
-    captureNote: Binding<NSAttributedString>,
-    captureOccurrence: Binding<OccurrenceDraft?>,
-    capturePhotos: Binding<[FirstTimePhotoDraft]>,
-    addCapturePhoto: @escaping @MainActor (FirstTimePhotoDraft) async throws -> Void,
-    removeCapturePhoto: @escaping @MainActor (UUID) async throws -> Void,
-    hasLocalDraft: Binding<Bool>
-  ) {
-    self.client = client
-    self.user = user
-    self.isAuthenticationBusy = isAuthenticationBusy
-    self.signOut = signOut
-    self.controller = controller
-    _captureTitle = captureTitle
-    _captureNote = captureNote
-    _captureOccurrence = captureOccurrence
-    _capturePhotos = capturePhotos
-    self.addCapturePhoto = addCapturePhoto
-    self.removeCapturePhoto = removeCapturePhoto
-    _hasLocalDraft = hasLocalDraft
-    _selectedEntry = State(initialValue: nil)
-  }
 
   var body: some View {
     NavigationStack {
-      ScrollView {
-        LazyVStack(alignment: .leading, spacing: MTSpacing.s8) {
-          header
-          CaptureCard(
-            note: $captureNote,
-            occurrence: $captureOccurrence,
-            photos: $capturePhotos,
-            isSaving: controller.isSaving,
-            hasLocalDraft: hasLocalDraft,
-            message: controller.captureMessage,
-            focusRequest: captureFocusRequest,
-            addPhoto: addCapturePhoto,
-            removePhoto: removeCapturePhoto,
-            save: saveCapture
-          )
-          if !controller.pendingEntries.isEmpty {
-            pendingSection
-          }
-          entrySection
+      MTPage(width: .compact) {
+        MTPageHeader(
+          eyebrow: Date.now.formatted(.dateTime.weekday(.wide).month(.wide).day()),
+          title: "Inbox",
+          description: "Review and organize the captures waiting for a place.")
+        if !controller.pendingEntries.isEmpty {
+          pendingSection
         }
-        .padding(.horizontal, MTSpacing.s4)
-        .padding(.top, MTSpacing.s6)
-        .padding(.bottom, MTSpacing.s12)
+        entrySection
       }
+      // Leave the last card's actions clear of the Quick capture button.
+      .contentMargins(.bottom, MTSpacing.s12, for: .scrollContent)
       .refreshable {
         await controller.refresh()
       }
-      .background(MTColor.canvas)
+      .navigationTitle("Inbox")
+      .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
           HStack(spacing: MTSpacing.s2) {
             MemoTrailMark()
               .frame(width: 28, height: 28)
-
             Text("MemoTrail")
               .font(.system(size: 18, weight: .medium, design: .serif))
               .foregroundStyle(MTColor.ink)
           }
         }
-
         ToolbarItem(placement: .topBarTrailing) {
           Button("Profile", systemImage: "person.crop.circle.fill") {
             isShowingAccount = true
@@ -114,43 +67,15 @@ struct InboxView: View {
         }
       }
       .sheet(item: $selectedEntry) { entry in
-        InboxReviewSheet(
+        EntryReviewSheet(
           client: client,
           ownerID: user.id,
           entry: entry,
-          requestSuggestions: { retry in
-            try await controller.aiSuggestions(
-              entryID: entry.id, revision: entry.revision, retry: retry)
-          },
-          dismissSuggestion: { id in try await controller.dismissAISuggestion(id) },
           collectionOptions: controller.collectionOptions,
           tagOptions: controller.tagOptions,
-          extractionCompleted: { await controller.refresh() }
-        ) {
-          title,
-          body,
-          collectionNames,
-          itemKind,
-          itemSubtype,
-          occurrence,
-          tagNames,
-          intent, photoPlace in
-          await controller.review(
-            entry: entry,
-            title: title,
-            body: body,
-            collectionNames: collectionNames,
-            itemKind: itemKind,
-            itemSubtype: itemSubtype,
-            occurredAt: occurrence.start,
-            occurredTimezone: occurrence.timezone,
-            tagNames: tagNames,
-            intent: intent,
-            datePrecision: occurrence.precision,
-            occurredEnd: occurrence.end,
-            occurredLabel: occurrence.label,
-            photoPlace: photoPlace
-          )
+          moveToTrash: { await moveToTrash(entry) }
+        ) { draft, intent in
+          await controller.review(entry: entry, draft: draft, intent: intent)
         }
       }
       .task {
@@ -185,550 +110,93 @@ struct InboxView: View {
 
   private var pendingSection: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      HStack(alignment: .center) {
-        VStack(alignment: .leading, spacing: 2) {
-          Text("PENDING SYNC")
-            .font(MTTypography.label)
-            .tracking(0.7)
-            .foregroundStyle(MTColor.ink)
-
-          Text(pendingCountLabel)
-            .font(MTTypography.caption)
-            .foregroundStyle(MTColor.inkFaint)
-        }
-
-        Spacer()
-
+      InboxSectionHeader(
+        "Waiting to sync", detail: "\(captureCount(controller.pendingEntries.count)) on this iPhone"
+      ) {
         Button {
           Task { await controller.refresh() }
         } label: {
-          if controller.isSyncing {
-            ProgressView()
-              .controlSize(.small)
-          } else {
-            Label("Retry now", systemImage: "arrow.clockwise")
-          }
+          Label("Retry now", icon: .refresh)
         }
-        .font(MTTypography.caption)
-        .buttonStyle(.bordered)
-        .disabled(controller.isSyncing)
+        .mtButtonStyle(.ghost, size: .small, isLoading: controller.isSyncing)
         .accessibilityIdentifier("retry-pending-entries")
       }
-
-      LazyVStack(spacing: 0) {
+      InboxList {
         ForEach(controller.pendingEntries) { entry in
-          PendingEntryCard(entry: entry)
-
+          PendingCaptureRow(entry: entry)
           if entry.id != controller.pendingEntries.last?.id {
-            Divider()
-              .overlay(MTColor.border)
+            Divider().overlay(MTColor.border)
           }
         }
       }
-      .background(MTColor.accentSubtle.opacity(0.22))
-      .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
-      .overlay {
-        RoundedRectangle(cornerRadius: MTRadius.large)
-          .stroke(MTColor.border, lineWidth: 1)
-      }
     }
-  }
-
-  private var header: some View {
-    HStack(alignment: .bottom) {
-      VStack(alignment: .leading, spacing: MTSpacing.s2) {
-        Text(Date.now.formatted(.dateTime.weekday(.wide).month(.wide).day()).uppercased())
-          .font(MTTypography.caption)
-          .tracking(1.1)
-          .foregroundStyle(MTColor.inkFaint)
-
-        Text("Inbox")
-          .font(MTTypography.display)
-          .foregroundStyle(MTColor.ink)
-      }
-
-      Spacer()
-
-      Button("New entry", systemImage: "plus") {
-        captureFocusRequest += 1
-      }
-      .labelStyle(.iconOnly)
-      .font(.system(size: 18, weight: .medium))
-      .foregroundStyle(MTColor.accentInk)
-      .frame(width: 42, height: 42)
-      .background(MTColor.accent, in: RoundedRectangle(cornerRadius: MTRadius.medium))
-      .accessibilityLabel("New entry")
-    }
+    .accessibilityIdentifier("inbox-pending-entries")
   }
 
   private var entrySection: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      HStack(alignment: .firstTextBaseline) {
-        Text("UNSORTED")
-          .font(MTTypography.label)
-          .tracking(0.7)
-          .foregroundStyle(MTColor.ink)
-
-        Text(entryCountLabel)
-          .font(MTTypography.caption)
-          .foregroundStyle(MTColor.inkFaint)
-
-        Spacer()
-
+      InboxSectionHeader("Ready to organize", detail: captureCount(controller.entries.count)) {
         if controller.isLoading, controller.hasLoaded {
-          ProgressView()
-            .controlSize(.small)
+          ProgressView().controlSize(.small).tint(MTColor.accent)
         }
       }
-
-      Group {
+      InboxList {
         if !controller.hasLoaded, controller.isLoading {
-          loadingState
-        } else if let loadErrorMessage = controller.loadErrorMessage,
-          controller.entries.isEmpty
-        {
-          errorState(loadErrorMessage)
+          ProgressView("Loading your Inbox...")
+            .font(MTFont.caption)
+            .tint(MTColor.accent)
+            .frame(maxWidth: .infinity, minHeight: 140)
+        } else if let message = controller.loadErrorMessage, controller.entries.isEmpty {
+          InboxMessage(icon: .clock, title: "Inbox unavailable", message: message) {
+            Button("Try again") { Task { await controller.refresh() } }
+              .mtButtonStyle(.secondary, size: .small)
+          }
         } else if controller.entries.isEmpty {
-          emptyState
+          if controller.pendingEntries.isEmpty {
+            InboxMessage(
+              icon: .inbox, title: "Your Inbox is ready",
+              message: "New captures will wait here until you give them a place.")
+          } else {
+            InboxMessage(
+              icon: .history, title: "Waiting to sync",
+              message: "Captures on this iPhone will appear here after MemoTrail reconnects.")
+          }
         } else {
-          entryList
+          ForEach(controller.entries) { entry in
+            InboxCaptureRow(
+              entry: entry, isTrashing: trashingEntryID == entry.id,
+              organize: { selectedEntry = entry },
+              moveToTrash: { Task { await moveToTrash(entry) } })
+            if entry.id != controller.entries.last?.id {
+              Divider().overlay(MTColor.border)
+            }
+          }
         }
       }
-      .background(MTColor.surface)
-      .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
-      .overlay {
-        RoundedRectangle(cornerRadius: MTRadius.large)
-          .stroke(MTColor.border, lineWidth: 1)
-      }
-
-      if let loadErrorMessage = controller.loadErrorMessage,
-        !controller.entries.isEmpty
-      {
-        Label(loadErrorMessage, systemImage: "exclamationmark.circle.fill")
-          .font(MTTypography.caption)
+      if let message = controller.loadErrorMessage, !controller.entries.isEmpty {
+        Label(message, icon: .warning)
+          .font(MTFont.caption)
           .foregroundStyle(MTColor.warm)
       }
     }
+    .accessibilityIdentifier("inbox-ready-to-organize")
   }
 
-  private var entryList: some View {
-    LazyVStack(spacing: 0) {
-      ForEach(controller.entries) { entry in
-        EntryCard(entry: entry) {
-          selectedEntry = entry
-        }
+  private func captureCount(_ count: Int) -> String {
+    "\(count) \(count == 1 ? "capture" : "captures")"
+  }
 
-        if entry.id != controller.entries.last?.id {
-          Divider()
-            .overlay(MTColor.border)
-        }
-      }
+  /// Web `moveEntryToTrash`: move the capture, close its review, and confirm with a toast.
+  @MainActor @discardableResult
+  private func moveToTrash(_ entry: InboxEntry) async -> Bool {
+    guard trashingEntryID == nil else { return false }
+    trashingEntryID = entry.id
+    defer { trashingEntryID = nil }
+    if let message = await controller.moveToTrash(entry) {
+      MTToastCenter.shared.error(message)
+      return false
     }
-  }
-
-  private var loadingState: some View {
-    HStack(spacing: MTSpacing.s3) {
-      ProgressView()
-      Text("Loading your Inbox...")
-        .font(MTTypography.body)
-        .foregroundStyle(MTColor.inkMuted)
-    }
-    .frame(maxWidth: .infinity, minHeight: 112)
-  }
-
-  private func errorState(_ message: String) -> some View {
-    VStack(spacing: MTSpacing.s3) {
-      Label("Inbox unavailable", systemImage: "exclamationmark.triangle")
-        .font(MTTypography.titleSmall)
-        .foregroundStyle(MTColor.ink)
-
-      Text(message)
-        .font(MTTypography.body)
-        .foregroundStyle(MTColor.inkMuted)
-        .multilineTextAlignment(.center)
-
-      Button("Try again") {
-        Task { await controller.load() }
-      }
-      .buttonStyle(.borderedProminent)
-    }
-    .frame(maxWidth: .infinity, minHeight: 180)
-    .padding(MTSpacing.s4)
-  }
-
-  private var emptyState: some View {
-    ContentUnavailableView(
-      controller.pendingEntries.isEmpty ? "Your Inbox is ready" : "Waiting to sync",
-      systemImage: "tray",
-      description: Text(
-        controller.pendingEntries.isEmpty
-          ? "Save a thought above and it will appear here."
-          : "Pending Entries will appear here after MemoTrail reconnects."
-      )
-    )
-    .foregroundStyle(MTColor.inkMuted)
-    .frame(maxWidth: .infinity, minHeight: 190)
-  }
-
-  private var entryCountLabel: String {
-    let count = controller.entries.count
-    return "\(count) \(count == 1 ? "entry" : "entries")"
-  }
-
-  private var pendingCountLabel: String {
-    let count = controller.pendingEntries.count
-    return "\(count) \(count == 1 ? "Entry" : "Entries") on this iPhone"
-  }
-
-  @MainActor
-  private func saveCapture() async {
-    let didSave = await controller.save(
-      title: captureTitle, note: captureNote, occurrenceDraft: captureOccurrence,
-      photos: capturePhotos)
-
-    if didSave {
-      captureTitle = ""
-      captureNote = NSAttributedString()
-      captureOccurrence = nil
-      capturePhotos = []
-      hasLocalDraft = false
-    }
-  }
-}
-
-struct InboxReviewSheet: View {
-  let client: SupabaseClient
-  let ownerID: UUID
-  let entry: InboxEntry
-  let requestSuggestions: @MainActor (Bool) async throws -> EntryAISuggestionResponse
-  let dismissSuggestion: @MainActor (UUID) async throws -> Void
-  let collectionOptions: [String]
-  let tagOptions: [String]
-  let extractionCompleted: @MainActor () async -> Void
-  let review:
-    @MainActor (
-      String,
-      String,
-      [String],
-      WikiItemKind,
-      String,
-      EntryOccurrence,
-      [String],
-      InboxController.ReviewIntent,
-      PhotoPlaceDraft?
-    ) async -> InboxController.ReviewResult
-
-  @Environment(\.dismiss) private var dismiss
-  @State private var title: String
-  @State private var note: String
-  @State private var collectionNames: [String]
-  private let itemKind = WikiItemKind.entry
-  private let itemSubtype = "entry"
-  @State private var photoPlace: PhotoPlaceDraft?
-  @State private var occurrence: OccurrenceDraft
-  @State private var isWorking = false
-  @State private var errorMessage: String?
-  @State private var tagNames: [String]
-  @State private var extractionRequest: CaptureExtractionRequest?
-  @State private var extractionDidComplete = false
-
-  init(
-    client: SupabaseClient,
-    ownerID: UUID,
-    entry: InboxEntry,
-    requestSuggestions: @escaping @MainActor (Bool) async throws -> EntryAISuggestionResponse,
-    dismissSuggestion: @escaping @MainActor (UUID) async throws -> Void,
-    collectionOptions: [String],
-    tagOptions: [String],
-    extractionCompleted: @escaping @MainActor () async -> Void = {},
-    review:
-      @escaping @MainActor (
-        String,
-        String,
-        [String],
-        WikiItemKind,
-        String,
-        EntryOccurrence,
-        [String],
-        InboxController.ReviewIntent,
-        PhotoPlaceDraft?
-      ) async -> InboxController.ReviewResult
-  ) {
-    self.client = client
-    self.ownerID = ownerID
-    self.entry = entry
-    self.requestSuggestions = requestSuggestions
-    self.dismissSuggestion = dismissSuggestion
-    self.collectionOptions = collectionOptions
-    self.tagOptions = tagOptions
-    self.extractionCompleted = extractionCompleted
-    self.review = review
-    _title = State(initialValue: entry.title ?? "")
-    _note = State(initialValue: entry.body)
-    _collectionNames = State(initialValue: entry.collectionNames)
-    _occurrence = State(initialValue: OccurrenceDraft(entry.occurrence))
-    _tagNames = State(initialValue: entry.tagNames)
-  }
-
-  var body: some View {
-    NavigationStack {
-      Form {
-        Section("Content") {
-          TextField("Title", text: $title, axis: .vertical)
-            .textInputAutocapitalization(.sentences)
-            .accessibilityIdentifier("review-title")
-
-          TextEditor(text: $note)
-            .frame(minHeight: 180)
-            .accessibilityLabel("Note")
-            .accessibilityIdentifier("review-body")
-        }
-
-        EntryPhotoDatesView(
-          client: client, ownerID: ownerID, entryID: entry.id, occurrence: $occurrence,
-          photoPlace: $photoPlace)
-        Section {
-          OccurrenceEditor(value: $occurrence)
-        } header: {
-          Text("When it happened")
-        }
-
-        Section {
-          MTOrganizationEditor(
-            kind: .collection, names: $collectionNames,
-            options: collectionOptions)
-          MTOrganizationEditor(
-            kind: .tag, names: $tagNames, options: tagOptions)
-        }
-
-        if let errorMessage {
-          Section {
-            Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
-              .font(MTTypography.caption)
-              .foregroundStyle(MTColor.warm)
-              .accessibilityIdentifier("review-error")
-          }
-        }
-
-        Section {
-          Button("Save changes") {
-            Task { await submit(.save) }
-          }
-          .frame(maxWidth: .infinity)
-          .disabled(isWorking)
-          .accessibilityIdentifier("save-entry-review")
-        }
-      }
-      .navigationTitle(entry.inboxStatus == "organized" ? "Edit Entry" : "Organize Entry")
-      .navigationBarTitleDisplayMode(.inline)
-      .disabled(isWorking)
-      .toolbar {
-        ToolbarItem(placement: .cancellationAction) {
-          Button("Cancel") {
-            dismiss()
-          }
-          .disabled(isWorking)
-        }
-
-        if entry.inboxStatus != "organized" {
-          ToolbarItem(placement: .confirmationAction) {
-            Button("Done") {
-              Task { await submit(.done) }
-            }
-            .fontWeight(.semibold)
-            .disabled(isWorking)
-            .accessibilityIdentifier("organize-entry")
-          }
-        }
-      }
-      .overlay {
-        if isWorking {
-          ProgressView()
-            .padding(MTSpacing.s4)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: MTRadius.medium))
-        }
-      }
-    }
-    .presentationDetents([.large])
-    .interactiveDismissDisabled(isWorking)
-    .sheet(
-      item: $extractionRequest,
-      onDismiss: {
-        guard extractionDidComplete else { return }
-        Task { await completeExtraction() }
-      },
-      content: { request in
-        switch request.kind {
-        case .home:
-          CaptureHomeExtractionView(
-            client: client, ownerID: ownerID, source: request.source,
-            onSaved: extractionSaved)
-        case .vehicle:
-          CaptureVehicleExtractionView(
-            client: client, ownerID: ownerID, source: request.source,
-            onSaved: extractionSaved)
-        case .goal:
-          CaptureGoalExtractionView(
-            client: client, ownerID: ownerID, source: request.source,
-            onSaved: extractionSaved)
-        }
-      }
-    )
-  }
-
-  @MainActor
-  private func prepareExtraction(_ kind: CaptureExtractionKind) {
-    do {
-      let resolved = try occurrence.resolve(original: entry.occurrence)
-      extractionRequest = CaptureExtractionRequest(
-        kind: kind,
-        source: CaptureExtractionSource(
-          entry: entry,
-          title: title,
-          body: note,
-          occurrence: resolved,
-          collectionNames: collectionNames,
-          tagNames: tagNames
-        ))
-      errorMessage = nil
-    } catch {
-      errorMessage = error.localizedDescription
-    }
-  }
-
-  @MainActor
-  private func extractionSaved() async {
-    extractionDidComplete = true
-    extractionRequest = nil
-  }
-
-  @MainActor
-  private func completeExtraction() async {
-    guard extractionDidComplete else { return }
-    extractionDidComplete = false
-    await extractionCompleted()
-    dismiss()
-  }
-
-  @MainActor
-  private func submit(_ intent: InboxController.ReviewIntent) async {
-    let resolved: EntryOccurrence
-    do {
-      try photoPlace?.validate()
-      resolved = try occurrence.resolve(original: entry.occurrence)
-    } catch {
-      errorMessage = error.localizedDescription
-      return
-    }
-    isWorking = true
-    errorMessage = nil
-
-    let result = await review(
-      title,
-      note,
-      collectionNames,
-      itemKind,
-      itemSubtype,
-      resolved,
-      tagNames,
-      intent,
-      photoPlace
-    )
-
-    isWorking = false
-
-    switch result.status {
-    case .done, .saved:
-      dismiss()
-    case .conflict, .error:
-      errorMessage = result.message
-    }
-  }
-}
-
-private enum CaptureExtractionKind: String, Identifiable {
-  case home
-  case vehicle
-  case goal
-
-  var id: String { rawValue }
-}
-
-private struct CaptureExtractionRequest: Identifiable {
-  let kind: CaptureExtractionKind
-  let source: CaptureExtractionSource
-
-  var id: String { "\(source.entryID.uuidString):\(kind.rawValue)" }
-}
-
-private struct CaptureHomeExtractionView: View {
-  @State private var controller: ResidenceController
-  let source: CaptureExtractionSource
-  let onSaved: @MainActor () async -> Void
-
-  init(
-    client: SupabaseClient,
-    ownerID: UUID,
-    source: CaptureExtractionSource,
-    onSaved: @escaping @MainActor () async -> Void
-  ) {
-    _controller = State(initialValue: ResidenceController(client: client, ownerID: ownerID))
-    self.source = source
-    self.onSaved = onSaved
-  }
-
-  var body: some View {
-    ResidenceEditorSheet(
-      controller: controller, entry: nil, sourceCapture: source, onSaved: onSaved
-    )
-    .task { if !controller.hasLoaded { await controller.load() } }
-  }
-}
-
-private struct CaptureVehicleExtractionView: View {
-  @State private var controller: VehicleController
-  let source: CaptureExtractionSource
-  let onSaved: @MainActor () async -> Void
-
-  init(
-    client: SupabaseClient,
-    ownerID: UUID,
-    source: CaptureExtractionSource,
-    onSaved: @escaping @MainActor () async -> Void
-  ) {
-    _controller = State(initialValue: VehicleController(client: client, ownerID: ownerID))
-    self.source = source
-    self.onSaved = onSaved
-  }
-
-  var body: some View {
-    VehicleEditorSheet(
-      controller: controller, entry: nil, sourceCapture: source, onSaved: onSaved
-    )
-    .task { if !controller.hasLoaded { await controller.load() } }
-  }
-}
-
-private struct CaptureGoalExtractionView: View {
-  @State private var controller: GoalController
-  let source: CaptureExtractionSource
-  let onSaved: @MainActor () async -> Void
-
-  init(
-    client: SupabaseClient,
-    ownerID: UUID,
-    source: CaptureExtractionSource,
-    onSaved: @escaping @MainActor () async -> Void
-  ) {
-    _controller = State(initialValue: GoalController(client: client, ownerID: ownerID))
-    self.source = source
-    self.onSaved = onSaved
-  }
-
-  var body: some View {
-    GoalEditorSheet(
-      controller: controller, entry: nil, sourceCapture: source, onSaved: onSaved
-    )
-    .task { if !controller.hasLoaded { await controller.load() } }
+    MTToastCenter.shared.info("Capture moved to Trash.")
+    return true
   }
 }

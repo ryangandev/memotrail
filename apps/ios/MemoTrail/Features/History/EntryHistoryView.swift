@@ -429,30 +429,12 @@ struct EntryHistoryDetailView: View {
         }
       }
       .sheet(item: $editingEntry) { entry in
-        InboxReviewSheet(
+        EntryReviewSheet(
           client: client, ownerID: ownerID, entry: entry,
-          requestSuggestions: { retry in
-            try await AIAPI.post(
-              "suggestions",
-              body: EntryAISuggestionInput(
-                entryID: entry.id, revision: entry.revision, retry: retry), client: client,
-              ownerID: ownerID)
-          },
-          dismissSuggestion: { id in
-            guard try await client.auth.session.user.id == ownerID else {
-              throw URLError(.userAuthenticationRequired)
-            }
-            let _: Bool = try await client.rpc(
-              "dismiss_ai_suggestion", params: ["p_id": id.uuidString]
-            ).execute().value
-          }, collectionOptions: entry.collectionNames, tagOptions: entry.tagNames
-        ) {
-          title, body, collections, itemKind, itemSubtype, occurrence, tags, intent,
-          photoPlace in
-          await saveEditedEntry(
-            entry, title: title, body: body, collections: collections, itemKind: itemKind,
-            itemSubtype: itemSubtype, occurrence: occurrence, tags: tags, intent: intent,
-            photoPlace: photoPlace)
+          collectionOptions: entry.collectionNames, tagOptions: entry.tagNames,
+          showsVersionHistory: false
+        ) { draft, intent in
+          await saveEditedEntry(entry, draft: draft, intent: intent)
         }
       }
       .confirmationDialog(
@@ -484,48 +466,16 @@ struct EntryHistoryDetailView: View {
     } catch { message = "This Entry cannot be edited right now. Refresh and try again." }
   }
   private func saveEditedEntry(
-    _ entry: InboxEntry, title: String, body: String, collections: [String],
-    itemKind: WikiItemKind, itemSubtype: String, occurrence: EntryOccurrence, tags: [String],
-    intent: InboxController.ReviewIntent, photoPlace: PhotoPlaceDraft?
+    _ entry: InboxEntry, draft: EntryReviewDraft, intent: InboxController.ReviewIntent
   ) async -> InboxController.ReviewResult {
-    do {
-      guard try await client.auth.session.user.id == ownerID else {
-        throw URLError(.userAuthenticationRequired)
-      }
-      try photoPlace?.validate()
-      let input = try InboxReviewInput.validate(
-        entryID: entry.id, revision: entry.revision, title: title, body: body,
-        collectionNames: collections, itemKind: itemKind, itemSubtype: itemSubtype,
-        occurredAt: occurrence.start,
-        occurredTimezone: occurrence.timezone, tagNames: tags, datePrecision: occurrence.precision,
-        occurredEnd: occurrence.end, occurredLabel: occurrence.label)
-      let parameters = ReviewEntryParameters(
-        entryID: entry.id, expectedRevision: entry.revision, title: input.title, body: input.body,
-        itemKind: input.itemKind, itemSubtype: input.itemSubtype,
-        occurredStart: input.occurredAt,
-        occurredTimezone: input.occurredTimezone, collectionNames: input.collectionNames,
-        tagNames: input.tagNames, markDone: intent == .done, datePrecision: occurrence.precision,
-        occurredEnd: occurrence.end, occurredLabel: occurrence.label, photoPlace: photoPlace,
-        occurredStartRaw: occurrence.start == entry.occurredStart ? entry.occurredStartRaw : nil,
-        occurredEndRaw: occurrence.end == entry.occurredEnd ? entry.occurredEndRaw : nil)
-      let rows: [ReviewedEntryResult] = try await client.rpc(
-        "review_wiki_item_with_photo_place", params: parameters
-      ).execute().value
-      guard rows.first?.entryID == entry.id else {
-        return .init(
-          message:
-            "This Entry changed on another device. Close, refresh, and review the latest version.",
-          status: .conflict)
-      }
+    switch await InboxController.submitReview(
+      client: client, ownerID: ownerID, entry: entry, draft: draft, intent: intent)
+    {
+    case .failed(let result):
+      return result
+    case .saved:
       await load(nextPage: 0)
-      return .init(message: "Changes saved.", status: intent == .done ? .done : .saved)
-    } catch let error as PostgrestError where error.code == "40001" {
-      return .init(
-        message: "The photo or Place changed. Close, refresh, and confirm the latest version.",
-        status: .conflict)
-    } catch {
-      return .init(
-        message: "Could not save these changes. Your draft is unchanged.", status: .error)
+      return .init(message: "Entry saved.", status: intent == .done ? .done : .saved)
     }
   }
   private func load(nextPage: Int) async {

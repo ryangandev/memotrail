@@ -39,10 +39,10 @@ final class LocalSessionUITests: XCTestCase {
 
     // Ready to organize opens that capture's review in Inbox.
     reveal(app.buttons["Organize Notes from the farmers market"], in: app).tap()
-    XCTAssertTrue(app.navigationBars["Organize Entry"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Review Entry"].waitForExistence(timeout: 10))
     XCTAssertTrue(text("Peaches, basil", in: app).exists)
     attach(app, "Review opened from Dashboard")
-    app.navigationBars["Organize Entry"].buttons["Cancel"].tap()
+    app.buttons["close-entry-review"].tap()
     app.tabBars.buttons["Dashboard"].tap()
     attach(app, "Dashboard Inbox and memory")
 
@@ -86,6 +86,58 @@ final class LocalSessionUITests: XCTestCase {
     XCTAssertTrue(row.waitForExistence(timeout: 15))
     XCTAssertEqual(editor.value as? String ?? "", "")
     attach(app, "Saved formatted capture")
+  }
+
+  func testInboxReviewSavesOrganizesAndMovesCapturesToTrash() throws {
+    let app = try launchLocalSession()
+    app.tabBars.buttons["Inbox"].tap()
+    let capture = app.buttons["Organize Notes from the farmers market"]
+    XCTAssertTrue(capture.waitForExistence(timeout: 20))
+    attach(app, "Inbox")
+
+    // Move to Trash asks first, then leaves a toast like Web.
+    app.buttons["Move Waiting for a little context to Trash"].tap()
+    XCTAssertTrue(app.buttons["Move to Trash"].waitForExistence(timeout: 5))
+    attach(app, "Trash confirmation")
+    app.buttons["Move to Trash"].tap()
+    XCTAssertTrue(text("Capture moved to Trash.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(
+      app.buttons["Organize Waiting for a little context"].waitForNonExistence(timeout: 5))
+
+    // Saving without editing a note keeps Web-only formatting, such as this list.
+    reveal(app.buttons["Organize Weekend packing list"], in: app).tap()
+    XCTAssertTrue(text("Lists, quotes, links, and code", in: app).waitForExistence(timeout: 10))
+    attach(app, "Review with Web formatting")
+    app.buttons["save-entry-review"].tap()
+    XCTAssertTrue(text("Entry saved.", in: app).waitForExistence(timeout: 10))
+
+    // Save changes keeps the capture in the Inbox with its formatted note.
+    capture.tap()
+    XCTAssertTrue(app.staticTexts["Review Entry"].waitForExistence(timeout: 10))
+    attach(app, "Review Entry")
+    let editor = app.textViews["review-body"]
+    editor.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.9)).tap()
+    app.buttons["rich-format-toggle"].tap()
+    app.buttons["rich-format-bold"].tap()
+    editor.typeText(" Sweet corn.")
+    app.buttons["rich-dismiss-keyboard"].tap()
+    app.swipeUp()
+    attach(app, "Review Entry fields")
+    app.buttons["save-entry-review"].tap()
+    XCTAssertTrue(text("Entry saved.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(text("Sweet corn.", in: app).waitForExistence(timeout: 5))
+
+    // Version history opens inside the review, and Save to Library organizes the capture.
+    capture.tap()
+    XCTAssertTrue(app.buttons["review-version-history"].waitForExistence(timeout: 10))
+    XCTAssertTrue((editor.value as? String ?? "").hasSuffix("Sweet corn."))
+    app.buttons["review-version-history"].tap()
+    XCTAssertTrue(app.navigationBars["Version history"].waitForExistence(timeout: 10))
+    app.navigationBars["Version history"].buttons.element(boundBy: 0).tap()
+    app.buttons["organize-entry"].tap()
+    XCTAssertTrue(text("Entry organized.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(capture.waitForNonExistence(timeout: 10))
+    attach(app, "Inbox organized")
   }
 
   private func launchLocalSession() throws -> XCUIApplication {

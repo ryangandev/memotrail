@@ -78,9 +78,12 @@ Pair it with the test file carrying the same feature name.
 - Older source extraction RPCs remain available for existing provenance links, but Web Inbox does not offer focused-form handoffs.
 - `capture_extraction_source` and specialized extraction RPCs retain their owner-scoped source revision checks and link provenance when invoked directly.
 - Web Goal extraction uses a caller-generated target UUID for idempotency, preserves the source revision and identity, and records `derived` plus `derived_from` provenance links so both items remain discoverable.
-- `review_wiki_item_with_photo_place` is the plaintext review boundary. It now accepts `entry:entry` for Inbox review and preserves rich-text metadata that the native editor does not author.
+- `review_wiki_item_with_photo_place_rich` is the review boundary for clients without a Location editor.
+  It writes plaintext and `body_rich` in one revision, clears formatting when `p_body_rich` is null, and leaves the primary Location unchanged.
+  The older plaintext `review_wiki_item_with_photo_place` preserves rich metadata it does not understand and has no current client caller.
 - Native iOS uses the canonical Entry, Entity, and Goal decoding and filter identities.
-  Its ordinary Entry editor uses the plaintext compatibility RPC; focused records keep their own editors and RPCs.
+  Its ordinary Entry editor, `Features/Inbox/EntryReviewSheet.swift`, serves Inbox review and the History Entry editor through `InboxController.submitReview`; focused records keep their own editors and RPCs.
+  Moving an Inbox capture to Trash sets `deleted_at` only at the reviewed revision, like Web `trashWikiItem`.
   The retired Place surface and saved-Location catalog are removed, and Home Location is optional.
 - Web and iOS create a separately editable Goal with `extract_goal_from_item` when an established Wiki Item inspires a Goal. The caller-generated Goal ID makes lost-response retries idempotent, and History exposes both provenance directions.
 - `convert_entry_to_goal` remains only as an administrative recovery function. Authenticated and anonymous clients have no execute grant because established items must never change Kind through a conversion.
@@ -94,7 +97,8 @@ Pair it with the test file carrying the same feature name.
   The Debug gallery exercises standalone and sheet presentation, plus an encode/decode save preview using `Models/EntryEmphasisContent.swift`.
   This codec authors the paragraph and emphasis subset of Web's versioned `body_rich` document and rejects unsupported blocks or marks rather than flattening them.
   Native Capture now writes through it like Web: `CaptureCard` edits one formatted note, `EntryEmphasisContent.capture` trims surrounding whitespace without dropping formatting, and drafts, the offline queue, and the Entry insert carry `body_rich` only when it matches the saved plaintext.
-  Native Inbox review still uses its plaintext compatibility path, which preserves rich metadata it does not understand.
+  Native review opens editable emphasis in the same editor and saves the editor's document when the note changes.
+  An untouched note resends its original `body_rich`, so Web-only lists, quotes, links, and code survive a review that does not edit the note.
 - Collections, tags, People, and Wiki Item links are owner-scoped reusable relationships. Locations are Entry-owned snapshots.
 - Focused forms own specialized structure, Collections own curated groupings, tags own descriptive labels, and Timeline tracks own presentation only.
 - Home and Vehicle are Entity subtypes whose occurrence range describes the user's relationship span.
@@ -184,6 +188,9 @@ Pair it with the test file carrying the same feature name.
 - The Web Dashboard route loads `getHomeWorkspace` on the server and renders `components/home-dashboard.tsx` with component-owned CSS.
   Dashboard composes the shared PageFrame, PageHeader, CaptureComposer, EmptyState, ProgressiveImage, and Badge; Memory and Recent Entries share one Entry card renderer.
   Native `Features/Home` mirrors it with `MTPage`, `MTPageHeader`, `CaptureCard`, `MTEmptyState`, `MTRemoteImage`, and `MTBadge`; `DashboardComponents.swift` owns the ribbon, rows, and cards.
+- The Web Inbox renders `components/entry-review-list.tsx` and its `EntryReviewDialog` inside the compact PageFrame.
+  Native `Features/Inbox` mirrors the list with `InboxCards.swift` and the dialog with `EntryReviewSheet.swift`: the same fields, sticky Save changes and Save to Library footer, confirmations anchored to Move to Trash, and toasts.
+  Neither Inbox embeds a composer; iOS captures from the Dashboard or the Quick capture button.
 - Button, Dialog, PageHeader, EmptyState, and the previously reviewed gallery components are approved migration targets.
 - Production actions use Button, IconButton, or ButtonLink without changing submit or navigation semantics; composite internals and navigation controls retain their distinct roles.
 - Dialog owns generic editor and confirmation shells, scroll containment, focus trapping/restoration, busy dismissal, and nested overlay containers.

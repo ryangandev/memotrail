@@ -18,6 +18,8 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
   var inboxStatus: String = "unreviewed"
   var occurredStartRaw: String?
   var occurredEndRaw: String?
+  /// The note's Web formatting from `metadata.body_rich`, kept only while it matches `body`.
+  var bodyRich: EntryRichText?
 
   init(
     id: UUID,
@@ -67,6 +69,7 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     case inboxStatus = "inbox_status"
     case collectionNames = "collection_names"
     case tagNames = "tag_names"
+    case metadata
   }
 
   init(from decoder: Decoder) throws {
@@ -91,6 +94,7 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     datePrecision = occurredStart == nil && precision == .exact ? .unknown : precision
     occurredEnd = try values.decodeIfPresent(Date.self, forKey: .occurredEnd)
     occurredLabel = try values.decodeIfPresent(String.self, forKey: .occurredLabel)
+    bodyRich = values.decodeEntryRichText(metadataKey: .metadata, body: body)
   }
 
   func withOrganization(collectionNames: [String], tagNames: [String]) -> InboxEntry {
@@ -113,11 +117,8 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
     result.inboxStatus = inboxStatus
     result.occurredStartRaw = occurredStartRaw
     result.occurredEndRaw = occurredEndRaw
+    result.bodyRich = bodyRich
     return result
-  }
-
-  var displayDate: String {
-    occurrence.displayLabel
   }
 
   var occurrence: EntryOccurrence {
@@ -138,7 +139,7 @@ struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
       .map(String.init)?
       .trimmed ?? ""
 
-    return firstLine.nonEmpty.map { $0.truncated(to: 90) } ?? "Untitled Entry"
+    return firstLine.nonEmpty.map { $0.truncated(to: 90) } ?? "Untitled capture"
   }
 
   var displayExcerpt: String? {
@@ -252,11 +253,23 @@ struct InboxCapture: Equatable, Sendable {
   }
 }
 
+/// The Review Entry sheet's values before validation, like Web's review form state.
+struct EntryReviewDraft: Equatable, Sendable {
+  var title: String
+  var body: String
+  var bodyRich: EntryRichText?
+  var collectionNames: [String]
+  var tagNames: [String]
+  var occurrence: EntryOccurrence
+  var photoPlace: PhotoPlaceDraft?
+}
+
 struct InboxReviewInput: Equatable, Sendable {
   let entryID: UUID
   let revision: Int
   let title: String?
   let body: String
+  var bodyRich: EntryRichText?
   let collectionNames: [String]
   let itemKind: WikiItemKind
   let itemSubtype: String
@@ -270,6 +283,7 @@ struct InboxReviewInput: Equatable, Sendable {
     revision: Int,
     title: String,
     body: String,
+    bodyRich: EntryRichText? = nil,
     collectionNames: [String],
     itemKind: WikiItemKind,
     itemSubtype: String,
@@ -284,7 +298,16 @@ struct InboxReviewInput: Equatable, Sendable {
       throw InboxReviewError.invalidRevision
     }
 
-    let capture = try InboxCapture.validate(title: title, body: body)
+    let capture: InboxCapture
+    do {
+      capture = try InboxCapture.validate(title: title, body: body)
+    } catch InboxCaptureError.empty {
+      throw InboxReviewError.empty
+    }
+    // Like Web, formatting must describe exactly the note that is saved.
+    if let bodyRich, !bodyRich.isValid(expectedText: capture.body) {
+      throw InboxReviewError.invalidRichText
+    }
 
     guard itemKind == .entry, itemSubtype == "entry"
     else {
@@ -326,6 +349,7 @@ struct InboxReviewInput: Equatable, Sendable {
       revision: revision,
       title: capture.title,
       body: capture.body,
+      bodyRich: bodyRich,
       collectionNames: normalizedCollections,
       itemKind: itemKind,
       itemSubtype: itemSubtype,
@@ -887,14 +911,20 @@ enum InboxCaptureError: LocalizedError, Equatable {
 }
 
 enum InboxReviewError: LocalizedError, Equatable {
+  case empty
   case invalidClassification
   case invalidCollections
   case invalidRevision
+  case invalidRichText
   case invalidTags
   case invalidTimezone
 
   var errorDescription: String? {
     switch self {
+    case .empty:
+      "Keep a title or note before saving."
+    case .invalidRichText:
+      "This Entry's rich text is invalid."
     case .invalidClassification:
       "Open this item in its focused view to edit it."
     case .invalidCollections:

@@ -1,5 +1,6 @@
 import Foundation
 @preconcurrency import Supabase
+import UIKit
 import XCTest
 
 @testable import MemoTrail
@@ -85,9 +86,11 @@ final class NativeContractTests: XCTestCase {
     XCTAssertFalse(library.items.contains { $0.id == id })
 
     let result = await inbox.review(
-      entry: entry, title: title, body: entry.body, collectionNames: ["Native contract"],
-      itemKind: .entry, itemSubtype: "entry", occurredAt: nil, occurredTimezone: "UTC",
-      tagNames: ["native-contract"], intent: .done, datePrecision: .unknown)
+      entry: entry,
+      draft: EntryReviewDraft(
+        title: title, body: entry.body, collectionNames: ["Native contract"],
+        tagNames: ["native-contract"], occurrence: entry.occurrence),
+      intent: .done)
     XCTAssertEqual(result.status, .done, result.message)
 
     await library.load()
@@ -105,10 +108,54 @@ final class NativeContractTests: XCTestCase {
     XCTAssertEqual(found.collectionNames, ["Native contract"])
 
     let stale = await inbox.review(
-      entry: entry, title: title, body: "A stale edit", collectionNames: [],
-      itemKind: .entry, itemSubtype: "entry", occurredAt: nil, occurredTimezone: "UTC",
-      tagNames: [], intent: .done, datePrecision: .unknown)
+      entry: entry,
+      draft: EntryReviewDraft(
+        title: title, body: "A stale edit", collectionNames: [], tagNames: [],
+        occurrence: entry.occurrence),
+      intent: .done)
     XCTAssertEqual(stale.status, .conflict)
+  }
+
+  func testInboxReviewKeepsFormattingAndTrashUsesTheCurrentRevision() async throws {
+    let (client, ownerID) = try await client()
+    let id = UUID()
+    try await client.from("entries").insert(
+      InboxEntryInsert(
+        id: id, ownerID: ownerID, title: nil, body: "Harbor lights", occurredStart: nil,
+        occurredTimezone: "UTC", datePrecision: "unknown", clientID: "native-contract:\(id)")
+    ).execute()
+    let inbox = InboxController(client: client, ownerID: ownerID)
+    await inbox.load()
+    let capture = try XCTUnwrap(inbox.entries.first { $0.id == id })
+    XCTAssertNil(capture.bodyRich)
+
+    let note = NSMutableAttributedString(
+      string: "Harbor", attributes: [.font: UIFont.boldSystemFont(ofSize: 17)])
+    note.append(
+      NSAttributedString(string: " lights", attributes: [.font: UIFont.systemFont(ofSize: 17)]))
+    let rich = try XCTUnwrap(EntryRichText(EntryEmphasisContent(attributedText: note)))
+    let saved = await inbox.review(
+      entry: capture,
+      draft: EntryReviewDraft(
+        title: "", body: "Harbor lights", bodyRich: rich, collectionNames: [], tagNames: [],
+        occurrence: capture.occurrence),
+      intent: .save)
+    XCTAssertEqual(saved.status, .saved, saved.message)
+    await inbox.load()
+    let formatted = try XCTUnwrap(inbox.entries.first { $0.id == id })
+    XCTAssertEqual(formatted.bodyRich, rich)
+    XCTAssertGreaterThan(formatted.revision, capture.revision)
+
+    // Like Web, a capture moves to Trash only at the revision the person reviewed.
+    let stale = await inbox.moveToTrash(capture)
+    XCTAssertNotNil(stale)
+    XCTAssertTrue(inbox.entries.contains { $0.id == id })
+    let trashed = await inbox.moveToTrash(formatted)
+    XCTAssertNil(trashed)
+    XCTAssertFalse(inbox.entries.contains { $0.id == id })
+    await inbox.load()
+    XCTAssertNil(inbox.loadErrorMessage)
+    XCTAssertFalse(inbox.entries.contains { $0.id == id })
   }
 
   func testTimelineCreatesMomentAndPeriodWithoutLegacyKinds() async throws {

@@ -61,15 +61,6 @@ struct EntryRichText: Codable, Equatable, Sendable {
   let text: String
   let document: Node
 
-  /// Decodes `body_rich` from Entry metadata when it is valid for `body`.
-  static func from(metadataJSON data: Data?, body: String) -> EntryRichText? {
-    guard let data,
-      let metadata = try? JSONDecoder().decode([String: EntryRichTextEnvelope].self, from: data),
-      let value = metadata[metadataKey]?.value, value.isValid(expectedText: body)
-    else { return nil }
-    return value
-  }
-
   func isValid(expectedText: String? = nil) -> Bool {
     guard version == 1, text.utf16.count <= Self.bodyLimit,
       expectedText == nil || expectedText == text,
@@ -167,11 +158,33 @@ struct EntryRichText: Codable, Equatable, Sendable {
   }
 }
 
+extension EntryRichText {
+  /// The editor's paragraph-and-emphasis document in the full contract's shape.
+  init?(_ content: EntryEmphasisContent) {
+    guard let data = try? JSONEncoder().encode(content),
+      let value = try? JSONDecoder().decode(Self.self, from: data),
+      value.isValid(expectedText: content.text)
+    else { return nil }
+    self = value
+  }
+}
+
 /// Decodes one metadata value without failing the whole metadata object.
 private struct EntryRichTextEnvelope: Decodable {
   let value: EntryRichText?
 
   init(from decoder: Decoder) throws {
     value = try? EntryRichText(from: decoder)
+  }
+}
+
+extension KeyedDecodingContainer {
+  /// Decodes `body_rich` from an Entry's `metadata` when it is valid for `body`, ignoring any
+  /// other metadata, like Web `parseEntryRichText`.
+  func decodeEntryRichText(metadataKey key: Key, body: String) -> EntryRichText? {
+    guard let metadata = try? decodeIfPresent([String: EntryRichTextEnvelope].self, forKey: key),
+      let value = metadata[EntryRichText.metadataKey]?.value, value.isValid(expectedText: body)
+    else { return nil }
+    return value
   }
 }

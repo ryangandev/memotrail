@@ -66,6 +66,8 @@ struct PhotoCameraMetadata: Decodable, Sendable {
   }
 }
 
+/// Web `EntryPhotoDates`: reads saved photos' camera metadata on request, then offers the
+/// calendar date or GPS position as explicit draft changes.
 struct EntryPhotoDatesView: View {
   let client: SupabaseClient
   let ownerID: UUID
@@ -75,76 +77,121 @@ struct EntryPhotoDatesView: View {
   @State private var photos: [EntryPhotoInfo]?
   @State private var metadata: [UUID: PhotoCameraMetadata] = [:]
   @State private var busy = false
-  @State private var message: String?
+  @State private var errorMessage: String?
+  @State private var notice: String?
 
   var body: some View {
-    Section("Photos & camera dates") {
-      Text("Read the original photo's camera metadata. No AI, no automatic changes.")
-        .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-      Button(photos == nil ? "Show photos" : "Refresh photos") { Task { await load() } }
+    VStack(alignment: .leading, spacing: MTSpacing.s2) {
+      HStack(alignment: .center, spacing: MTSpacing.s3) {
+        Text("Photos & camera dates")
+          .font(MTFont.label.weight(.semibold))
+          .foregroundStyle(MTColor.ink)
+          .accessibilityAddTraits(.isHeader)
+        Spacer(minLength: 0)
+        Button(
+          busy && photos == nil ? "Loading…" : photos == nil ? "Show photos" : "Refresh photos"
+        ) {
+          Task { await load() }
+        }
+        .mtButtonStyle(.secondary, size: .small)
         .disabled(busy)
+        .accessibilityIdentifier("review-show-photos")
+      }
+      caption("Read the original photo’s camera metadata. No AI, no automatic changes.")
       if photos?.isEmpty == true {
-        Text("No saved photos on this Entry.").foregroundStyle(MTColor.inkMuted)
+        caption("No saved photos on this Entry.")
       }
       ForEach(photos ?? []) { photo in
-        VStack(alignment: .leading, spacing: MTSpacing.s2) {
+        Divider().overlay(MTColor.border)
+        HStack(alignment: .top, spacing: MTSpacing.s3) {
           if let url = validImageURL(photo) {
-            AsyncImage(url: url) { image in
-              image.resizable().scaledToFill()
-            } placeholder: {
-              Color.clear
-            }
-            .frame(height: 160).clipped().clipShape(RoundedRectangle(cornerRadius: MTRadius.small))
-            .accessibilityLabel(photo.name)
+            MTRemoteImage(url: url, accessibilityLabel: photo.name)
+              .frame(width: 80, height: 100)
+              .clipShape(RoundedRectangle(cornerRadius: MTRadius.small))
           }
-          Text(photo.name).font(MTTypography.body).textSelection(.enabled)
-          Button(metadata[photo.id] == nil ? "Read camera date" : "Read metadata again") {
-            Task { await load(photo) }
-          }
-          .disabled(busy)
-          if let info = metadata[photo.id] {
-            if let local = info.capturedLocal {
-              Text(
-                "Camera time: \(local.replacingOccurrences(of: "T", with: " "))\(info.offset.map { " (UTC\($0))" } ?? " (time zone not recorded)")"
-              )
-              .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-            } else {
-              Text("No valid capture date in this photo.").font(MTTypography.caption)
+          VStack(alignment: .leading, spacing: MTSpacing.s2) {
+            Text(photo.name)
+              .font(MTFont.label)
+              .foregroundStyle(MTColor.ink)
+              .textSelection(.enabled)
+            Button(metadata[photo.id] == nil ? "Read camera date" : "Read metadata again") {
+              Task { await load(photo) }
             }
-            if let date = info.calendarDate {
-              Button("Use calendar date \(date)") {
-                do {
-                  occurrence = try info.calendarDraft(previous: occurrence)
-                  message =
-                    "Calendar date added to the draft. Review it below, then Save changes or Done."
-                } catch { message = "This camera date is invalid. Edit the date manually." }
-              }.disabled(busy)
-              Text(
-                "Uses Day precision and replaces the draft's date range. It does not infer a time zone or save until you confirm."
-              )
-              .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-            }
-            if let latitude = info.latitude, let longitude = info.longitude {
-              Text(
-                "Private GPS metadata is available. No Location is linked automatically."
-              )
-              .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted).textSelection(.enabled)
-              Button("Use GPS for a Location") {
-                photoPlace = PhotoPlaceDraft(
-                  attachmentId: photo.id, latitude: latitude, longitude: longitude)
-              }.disabled(
-                busy || (photoPlace?.attachmentId == photo.id && photoPlace?.kind == "new"))
+            .mtButtonStyle(.secondary, size: .small)
+            .disabled(busy)
+            if let info = metadata[photo.id] {
+              details(info, photo: photo)
             }
           }
-        }.padding(.vertical, MTSpacing.s2)
+          .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.vertical, MTSpacing.s1)
       }
-      if busy { ProgressView() }
+      if let errorMessage {
+        Text(errorMessage)
+          .font(MTFont.caption.weight(.regular))
+          .foregroundStyle(MTColor.warm)
+      }
       if photoPlace != nil {
         PhotoPlaceDraftEditor(value: $photoPlace)
-          .id("\(photoPlace?.attachmentId.uuidString ?? ""):\(photoPlace?.kind ?? "")")
+          .disabled(busy)
       }
-      if let message { Text(message).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted) }
+      if let notice { caption(notice) }
     }
+    .padding(MTSpacing.s4)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.medium))
+    .overlay {
+      RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(MTColor.border, lineWidth: 1)
+    }
+    .accessibilityElement(children: .contain)
+    .accessibilityLabel("Photo date suggestions")
+  }
+
+  @ViewBuilder
+  private func details(_ info: PhotoCameraMetadata, photo: EntryPhotoInfo) -> some View {
+    if let local = info.capturedLocal {
+      caption(
+        "Camera time: \(local.replacingOccurrences(of: "T", with: " "))\(info.offset.map { " (UTC\($0))" } ?? " (time zone not recorded)")"
+      )
+    } else {
+      caption("No valid capture date in this photo.")
+    }
+    if let date = info.calendarDate {
+      Button("Use calendar date \(date)") {
+        do {
+          occurrence = try info.calendarDraft(previous: occurrence)
+          errorMessage = nil
+          notice = "Calendar date added to the draft. Review the date, then save your changes."
+        } catch {
+          errorMessage = "This camera date is invalid. Edit the date manually."
+        }
+      }
+      .mtButtonStyle(.secondary, size: .small)
+      .disabled(busy)
+      caption(
+        "Uses Day precision and replaces the draft’s date range. It does not infer a time zone or save until you confirm."
+      )
+    }
+    if let latitude = info.latitude, let longitude = info.longitude {
+      caption("Private GPS metadata is available. No Location is linked automatically.")
+        .textSelection(.enabled)
+      Button("Use GPS for a Location") {
+        photoPlace = PhotoPlaceDraft(
+          attachmentId: photo.id, name: "Photo GPS location", latitude: latitude,
+          longitude: longitude)
+      }
+      .mtButtonStyle(.secondary, size: .small)
+      .disabled(busy || (photoPlace?.attachmentId == photo.id && photoPlace?.kind == "new"))
+    }
+  }
+
+  private func caption(_ text: String) -> some View {
+    Text(text)
+      .font(MTFont.caption.weight(.regular))
+      .foregroundStyle(MTColor.inkMuted)
+      .mtLineSpacing(MTLineHeight.body)
+      .fixedSize(horizontal: false, vertical: true)
   }
 
   private func validImageURL(_ photo: EntryPhotoInfo) -> URL? {
@@ -157,7 +204,8 @@ struct EntryPhotoDatesView: View {
   private func load(_ photo: EntryPhotoInfo? = nil) async {
     guard !busy else { return }
     busy = true
-    message = nil
+    errorMessage = nil
+    notice = nil
     defer { busy = false }
     do {
       if let photo {
@@ -173,29 +221,48 @@ struct EntryPhotoDatesView: View {
           client: client, ownerID: ownerID)
         photos = result.photos
         metadata = [:]
-        if result.hasMore { message = "Showing the first 100 photos." }
+        if result.hasMore { notice = "Showing the first 100 photos." }
       }
     } catch {
-      message = "Photos or camera metadata are unavailable. Try again. The originals are unchanged."
+      errorMessage =
+        photo == nil
+        ? "Photos could not be loaded. Try again."
+        : "Photo metadata is unavailable. The original is unchanged."
     }
   }
 }
 
+/// Web `PhotoPlaceEditor`: the photo's GPS position waiting to be saved as this Entry's Location.
 private struct PhotoPlaceDraftEditor: View {
   @Binding var value: PhotoPlaceDraft?
-  var body: some View {
-    VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      Text("Location to add when you save").font(MTTypography.body).bold()
-      Text("This creates a private Location snapshot for this Entry when you save.")
-        .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-      TextField(
-        "Location label", text: Binding(get: { value?.name ?? "" }, set: { value?.name = $0 }))
-      Text("Coordinates came from this photo. No address is inferred.")
-        .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-      Button("Remove Location from draft") { value = nil }
-    }
-  }
 
+  var body: some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s2) {
+      Text("Photo Location to add when you save")
+        .font(MTFont.label.weight(.semibold))
+        .foregroundStyle(MTColor.ink)
+      Text(
+        "The photo’s GPS position will be saved for this Entry after you confirm. No address or personal Location name is inferred."
+      )
+      .font(MTFont.caption.weight(.regular))
+      .foregroundStyle(MTColor.inkMuted)
+      .fixedSize(horizontal: false, vertical: true)
+      if let latitude = value?.latitude, let longitude = value?.longitude {
+        Text(String(format: "%.5f, %.5f", latitude, longitude))
+          .font(MTFont.caption.weight(.regular).monospacedDigit())
+          .foregroundStyle(MTColor.inkMuted)
+          .textSelection(.enabled)
+      }
+      Button("Remove Location from draft") { value = nil }
+        .mtButtonStyle(.secondary, size: .small)
+    }
+    .padding(MTSpacing.s3)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .overlay {
+      RoundedRectangle(cornerRadius: MTRadius.small).strokeBorder(MTColor.border, lineWidth: 1)
+    }
+    .padding(.top, MTSpacing.s1)
+  }
 }
 
 extension MediaDelivery {
