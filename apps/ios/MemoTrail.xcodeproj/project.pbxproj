@@ -122,6 +122,7 @@
 		E1000000000000000000001A /* DashboardComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001A /* DashboardComponents.swift */; };
 		E1000000000000000000001B /* InboxCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001B /* InboxCards.swift */; };
 		E1000000000000000000001C /* EntryReviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001C /* EntryReviewSheet.swift */; };
+		E1000000000000000000001D /* WorkspaceToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001D /* WorkspaceToolbar.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -253,6 +254,7 @@
 		E2000000000000000000001A /* DashboardComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardComponents.swift; sourceTree = "<group>"; };
 		E2000000000000000000001B /* InboxCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxCards.swift; sourceTree = "<group>"; };
 		E2000000000000000000001C /* EntryReviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryReviewSheet.swift; sourceTree = "<group>"; };
+		E2000000000000000000001D /* WorkspaceToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceToolbar.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -313,6 +315,7 @@
 		A10000000000000000000004 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000001D /* WorkspaceToolbar.swift */,
 				E20000000000000000000019 /* AppNavigator.swift */,
 				CD0000000000000000000008 /* NativeReview.swift */,
 				CD0000000000000000000007 /* WorkspaceRoute.swift */,
@@ -703,6 +706,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1000000000000000000001D /* WorkspaceToolbar.swift in Sources */,
 				E1000000000000000000001C /* EntryReviewSheet.swift in Sources */,
 				E1000000000000000000001B /* InboxCards.swift in Sources */,
 				E1000000000000000000001A /* DashboardComponents.swift in Sources */,

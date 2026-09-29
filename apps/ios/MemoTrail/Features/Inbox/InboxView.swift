@@ -10,7 +10,6 @@ struct InboxView: View {
   let signOut: @MainActor () async -> Void
   @Bindable var controller: InboxController
 
-  @State private var isShowingAccount = false
   @State private var selectedEntry: InboxEntry?
   @State private var trashingEntryID: UUID?
   @Environment(AppNavigator.self) private var navigator
@@ -34,38 +33,9 @@ struct InboxView: View {
         await controller.refresh()
       }
       .navigationTitle("Inbox")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .topBarLeading) {
-          HStack(spacing: MTSpacing.s2) {
-            MemoTrailMark()
-              .frame(width: 28, height: 28)
-            Text("MemoTrail")
-              .font(.system(size: 18, weight: .medium, design: .serif))
-              .foregroundStyle(MTColor.ink)
-          }
-        }
-        ToolbarItem(placement: .topBarTrailing) {
-          Button("Profile", systemImage: "person.crop.circle.fill") {
-            isShowingAccount = true
-          }
-          .accessibilityLabel("Open Settings for \(user.name)")
-        }
-      }
-      .toolbarBackground(MTColor.surface, for: .navigationBar)
-      .toolbarBackground(.visible, for: .navigationBar)
-      .sheet(isPresented: $isShowingAccount) {
-        NavigationStack {
-          NativeSettingsView(
-            client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
-          )
-          .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-              Button("Done") { isShowingAccount = false }
-            }
-          }
-        }
-      }
+      .workspaceToolbar(
+        client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
+      )
       .sheet(item: $selectedEntry) { entry in
         EntryReviewSheet(
           client: client,

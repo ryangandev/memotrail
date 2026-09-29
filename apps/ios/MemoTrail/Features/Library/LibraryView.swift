@@ -4,7 +4,10 @@ import SwiftUI
 /// Web `/library`: browse organized records, or search across the Life Wiki and Inbox.
 struct LibraryView: View {
   private let client: SupabaseClient
-  private let ownerID: UUID
+  private let user: AuthenticatedUser
+  private let isAuthenticationBusy: Bool
+  private let signOut: @MainActor () async -> Void
+  private var ownerID: UUID { user.id }
   @State private var controller: LibraryController
   @State private var path: [LibraryRoute] = []
   @State private var showsFilters = false
@@ -12,10 +15,15 @@ struct LibraryView: View {
   @State private var pendingSearch: Task<Void, Never>?
   @Environment(AppNavigator.self) private var navigator
 
-  init(client: SupabaseClient, ownerID: UUID) {
+  init(
+    client: SupabaseClient, user: AuthenticatedUser, isAuthenticationBusy: Bool,
+    signOut: @escaping @MainActor () async -> Void
+  ) {
     self.client = client
-    self.ownerID = ownerID
-    _controller = State(initialValue: LibraryController(client: client, ownerID: ownerID))
+    self.user = user
+    self.isAuthenticationBusy = isAuthenticationBusy
+    self.signOut = signOut
+    _controller = State(initialValue: LibraryController(client: client, ownerID: user.id))
   }
 
   var body: some View {
@@ -54,9 +62,9 @@ struct LibraryView: View {
       .scrollDismissesKeyboard(.immediately)
       .refreshable { await controller.load() }
       .navigationTitle("Library")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbarBackground(MTColor.surface, for: .navigationBar)
-      .toolbarBackground(.visible, for: .navigationBar)
+      .workspaceToolbar(
+        client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
+      )
       .navigationDestination(for: LibraryRoute.self) { route in
         switch route {
         case .item(let entryID, let kind, let subtype, let personID):

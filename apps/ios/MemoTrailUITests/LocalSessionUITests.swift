@@ -10,6 +10,11 @@ final class LocalSessionUITests: XCTestCase {
     let app = try launchLocalSession()
     XCTAssertTrue(text("Review", in: app).waitForExistence(timeout: 20))
     attach(app, "Dashboard")
+    // The avatar in the shared header opens Settings, like the Web header.
+    app.buttons["workspace-settings"].tap()
+    XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 10))
+    attach(app, "Settings from the header")
+    app.navigationBars["Settings"].buttons["Done"].tap()
     // Other tests organize or trash the remaining seeded captures, but none removes this one.
     for (tab, expected) in [
       ("Inbox", "Weekend packing list"), ("Timeline", "Finished the first marathon"),
@@ -144,8 +149,8 @@ final class LocalSessionUITests: XCTestCase {
   func testLibrarySearchFiltersAndOpensRecords() throws {
     let app = try launchLocalSession()
     // The Dashboard search action opens Library ready to type, over the browse list.
-    XCTAssertTrue(app.buttons["home-search"].waitForExistence(timeout: 20))
-    app.buttons["home-search"].tap()
+    XCTAssertTrue(app.buttons["workspace-search"].waitForExistence(timeout: 20))
+    app.buttons["workspace-search"].tap()
     let field = app.textFields["Search your Life Wiki"]
     XCTAssertTrue(field.waitForExistence(timeout: 10))
     XCTAssertTrue(element("library-items", in: app).waitForExistence(timeout: 15))

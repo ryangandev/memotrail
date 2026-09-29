@@ -16,7 +16,6 @@ struct HomeView: View {
   private let addCapturePhoto: @MainActor (FirstTimePhotoDraft) async throws -> Void
   private let removeCapturePhoto: @MainActor (UUID) async throws -> Void
   @Binding private var hasLocalDraft: Bool
-  @State private var isShowingAccount = false
   @Environment(AppNavigator.self) private var navigator
   @Environment(\.scenePhase) private var scenePhase
 
@@ -98,24 +97,9 @@ struct HomeView: View {
         }
       }
       .navigationTitle("Dashboard")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .topBarLeading) {
-          MemoTrailBrand()
-        }
-        ToolbarItemGroup(placement: .topBarTrailing) {
-          Button("Search your trail", systemImage: MTIcon.search.systemName) {
-            navigator.searchLibrary()
-          }
-          .accessibilityIdentifier("home-search")
-          Button("Profile", systemImage: "person.crop.circle.fill") {
-            isShowingAccount = true
-          }
-          .accessibilityLabel("Open Settings for \(user.name)")
-        }
-      }
-      .toolbarBackground(MTColor.surface, for: .navigationBar)
-      .toolbarBackground(.visible, for: .navigationBar)
+      .workspaceToolbar(
+        client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
+      )
       .navigationDestination(for: DashboardRecord.self) { record in
         WikiItemDestinationView(
           client: client, ownerID: user.id, entryID: record.id, kind: record.kind,
@@ -123,18 +107,6 @@ struct HomeView: View {
       }
       .refreshable {
         await refresh()
-      }
-      .sheet(isPresented: $isShowingAccount) {
-        NavigationStack {
-          NativeSettingsView(
-            client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
-          )
-          .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-              Button("Done") { isShowingAccount = false }
-            }
-          }
-        }
       }
       .task {
         if !controller.hasLoaded {
@@ -287,18 +259,5 @@ struct HomeView: View {
   private func refresh() async {
     _ = await captureController.synchronizePendingEntries()
     await controller.load()
-  }
-}
-
-private struct MemoTrailBrand: View {
-  var body: some View {
-    HStack(spacing: MTSpacing.s2) {
-      MemoTrailMark()
-        .frame(width: 28, height: 28)
-
-      Text("MemoTrail")
-        .font(.system(size: 18, weight: .medium, design: .serif))
-        .foregroundStyle(MTColor.ink)
-    }
   }
 }

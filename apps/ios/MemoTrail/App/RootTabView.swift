@@ -99,12 +99,14 @@ struct RootTabView: View {
         }
         .tag(RootTabDestination.timeline)
 
-      LibraryView(client: client, ownerID: user.id)
-        .tabItem {
-          Label(
-            RootTabDestination.library.title, systemImage: RootTabDestination.library.systemImage)
-        }
-        .tag(RootTabDestination.library)
+      LibraryView(
+        client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
+      )
+      .tabItem {
+        Label(
+          RootTabDestination.library.title, systemImage: RootTabDestination.library.systemImage)
+      }
+      .tag(RootTabDestination.library)
 
       MoreView(
         client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
