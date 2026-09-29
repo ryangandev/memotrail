@@ -33,10 +33,13 @@ enum TimelineDatePrecision: String, CaseIterable, Codable, Equatable, Hashable, 
   case range
   case unknown
 
+  /// The Date type label shared with the Web occurrence editor.
   var displayName: String {
     switch self {
-    case .exact, .day:
-      "Exact day"
+    case .exact:
+      "Exact date & time"
+    case .day:
+      "Day"
     case .month:
       "Month"
     case .year:
@@ -44,7 +47,7 @@ enum TimelineDatePrecision: String, CaseIterable, Codable, Equatable, Hashable, 
     case .approximate:
       "Approximate"
     case .age:
-      "Age-based"
+      "Age"
     case .range:
       "Date range"
     case .unknown:

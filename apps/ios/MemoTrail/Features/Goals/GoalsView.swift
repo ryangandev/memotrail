@@ -306,9 +306,7 @@ struct GoalEditorSheet: View {
   @State private var usesTargetDate: Bool
   @State private var targetDate: Date
   @State private var collectionNames: [String]
-  @State private var collectionInput = ""
   @State private var tagNames: [String]
-  @State private var tagInput = ""
   @State private var relatedEntryIDs: [UUID]
   @State private var attachments: [GoalAttachment]
   @State private var photoDrafts: [FirstTimePhotoDraft] = []
@@ -457,27 +455,13 @@ struct GoalEditorSheet: View {
     }
   }
 
-  @ViewBuilder
   private var organizationSections: some View {
-    Section("Collections") {
-      GoalNameEditor(
-        names: $collectionNames,
-        input: $collectionInput,
-        options: controller.collectionOptions,
-        placeholder: "Add a Collection",
-        maximumCount: GoalEntryInput.collectionLimit,
-        maximumNameLength: GoalEntryInput.collectionNameLimit
-      )
-    }
-    Section("Tags") {
-      GoalNameEditor(
-        names: $tagNames,
-        input: $tagInput,
-        options: controller.tagOptions,
-        placeholder: "Add a tag",
-        maximumCount: GoalEntryInput.tagLimit,
-        maximumNameLength: GoalEntryInput.tagNameLimit
-      )
+    Section {
+      MTOrganizationEditor(
+        kind: .collection, names: $collectionNames,
+        options: controller.collectionOptions)
+      MTOrganizationEditor(
+        kind: .tag, names: $tagNames, options: controller.tagOptions)
     }
   }
 
@@ -605,7 +589,11 @@ struct GoalEditorSheet: View {
       } header: {
         Text("Bucket List Milestone")
       }
-      OccurrenceEditor(value: $achievementOccurrence)
+      Section {
+        OccurrenceEditor(value: $achievementOccurrence)
+      } header: {
+        Text("When it happened")
+      }
       Section {
         if hasUnsavedChanges {
           Label(
@@ -655,7 +643,7 @@ struct GoalEditorSheet: View {
       || status != entry.status || selectedTargetDate != entry.targetDate
       || collectionNames != entry.collectionNames || tagNames != entry.tagNames
       || relatedEntryIDs != entry.editableRelatedEntries.map(\.id)
-      || !collectionInput.trimmed.isEmpty || !tagInput.trimmed.isEmpty || !photoDrafts.isEmpty
+      || !photoDrafts.isEmpty
   }
 
   private var selectedTargetDate: String? {
@@ -739,8 +727,8 @@ struct GoalEditorSheet: View {
       horizon: horizon,
       status: status,
       targetDate: selectedTargetDate,
-      collectionNames: namesIncludingDraft(collectionNames, collectionInput),
-      tagNames: namesIncludingDraft(tagNames, tagInput),
+      collectionNames: collectionNames,
+      tagNames: tagNames,
       relatedEntryIDs: relatedEntryIDs,
       sourceCapture: currentEntryID == nil ? sourceCapture : nil
     )
@@ -841,76 +829,5 @@ struct GoalEditorSheet: View {
     isWorking = false
     progressMessage = nil
     if result.status == .trashed { dismiss() } else { errorMessage = result.message }
-  }
-
-  private func namesIncludingDraft(_ names: [String], _ draft: String) -> [String] {
-    let name = draft.trimmed
-    return name.isEmpty ? names : names + [name]
-  }
-}
-
-private struct GoalNameEditor: View {
-  @Binding var names: [String]
-  @Binding var input: String
-  let options: [String]
-  let placeholder: String
-  let maximumCount: Int
-  let maximumNameLength: Int
-
-  private var selectedNames: Set<String> { Set(names.map { $0.lowercased() }) }
-  private var suggestions: [String] {
-    options.filter { !selectedNames.contains($0.lowercased()) }
-  }
-
-  var body: some View {
-    if !names.isEmpty {
-      ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: MTSpacing.s2) {
-          ForEach(names, id: \.self) { name in
-            Button {
-              names.removeAll { $0 == name }
-            } label: {
-              Label(name, systemImage: "xmark").font(MTTypography.caption)
-            }
-            .buttonStyle(.bordered)
-            .buttonBorderShape(.capsule)
-            .accessibilityLabel("Remove \(name)")
-          }
-        }
-      }
-    }
-    HStack {
-      TextField(placeholder, text: $input)
-        .textInputAutocapitalization(.words)
-        .submitLabel(.done)
-        .onSubmit(addInput)
-        .onChange(of: input) {
-          if input.count > maximumNameLength { input = String(input.prefix(maximumNameLength)) }
-        }
-      Button("Add", systemImage: "plus") { addInput() }
-        .labelStyle(.iconOnly)
-        .disabled(input.trimmed.isEmpty || names.count >= maximumCount)
-    }
-    if !suggestions.isEmpty, names.count < maximumCount {
-      Menu("Add existing", systemImage: "tag") {
-        ForEach(suggestions, id: \.self) { suggestion in
-          Button(suggestion) { add(suggestion) }
-        }
-      }
-      .font(MTTypography.caption)
-    }
-  }
-
-  private func addInput() {
-    add(input)
-    input = ""
-  }
-
-  private func add(_ value: String) {
-    let name = value.trimmed
-    guard !name.isEmpty, name.count <= maximumNameLength, names.count < maximumCount,
-      !selectedNames.contains(name.lowercased())
-    else { return }
-    names.append(name)
   }
 }

@@ -478,7 +478,11 @@ private struct TimelineEditorSheet: View {
           }
 
         }
-        OccurrenceEditor(value: $occurrence, span: kind == .stage, point: kind == .event)
+        Section {
+          OccurrenceEditor(value: $occurrence, span: kind == .stage, point: kind == .event)
+        } header: {
+          Text("When it happened")
+        }
 
         if let errorMessage {
           Section {

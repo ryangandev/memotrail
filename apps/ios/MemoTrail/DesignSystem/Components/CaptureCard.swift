@@ -237,10 +237,14 @@ struct CaptureCard: View {
     .sheet(isPresented: $showOccurrence) {
       NavigationStack {
         Form {
-          OccurrenceEditor(value: occurrenceBinding)
-          Button("Use capture time") {
-            occurrence = nil
-            showOccurrence = false
+          Section {
+            OccurrenceEditor(value: occurrenceBinding)
+          }
+          Section {
+            Button("Use capture time") {
+              occurrence = nil
+              showOccurrence = false
+            }
           }
         }
         .navigationTitle("Relevant date")

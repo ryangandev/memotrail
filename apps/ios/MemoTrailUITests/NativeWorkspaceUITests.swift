@@ -14,6 +14,7 @@ final class NativeWorkspaceUITests: XCTestCase {
     reveal(app.buttons["design-section-forms"], in: app).tap()
     app.buttons["design-open-editor"].tap()
     XCTAssertTrue(app.navigationBars["Sample editor"].waitForExistence(timeout: 3))
+    attach(app, "Sample editor")
     XCTAssertTrue(app.buttons["rich-format-toggle"].exists)
     app.buttons["Cancel"].tap()
     XCTAssertTrue(app.navigationBars["Forms"].waitForExistence(timeout: 3))
@@ -149,6 +150,60 @@ final class NativeWorkspaceUITests: XCTestCase {
     XCTAssertEqual(app.textViews["rich-editor"].value as? String, "")
   }
 
+  func testFormFieldsPickersAndOrganizationEditing() {
+    let app = XCUIApplication()
+    app.launchArguments = ["--review-design-system", "--review-design-section", "forms"]
+    app.launch()
+    XCTAssertTrue(app.staticTexts["design-preview-status"].waitForExistence(timeout: 5))
+
+    let emptyDate = reveal(app.buttons["Empty date"], in: app)
+    XCTAssertEqual(emptyDate.value as? String, "Not set")
+    emptyDate.tap()
+    XCTAssertTrue(app.buttons["date-picker-done"].waitForExistence(timeout: 3))
+    attach(app, "Date picker popover")
+    app.buttons["date-picker-done"].tap()
+    XCTAssertNotEqual(emptyDate.value as? String, "Not set")
+    app.buttons["Clear empty date"].tap()
+    XCTAssertEqual(emptyDate.value as? String, "Not set")
+
+    reveal(app.buttons["Default time zone"], in: app).tap()
+    let search = app.searchFields["Search city or region"]
+    XCTAssertTrue(search.waitForExistence(timeout: 3))
+    search.tap()
+    search.typeText("Kathmandu")
+    attach(app, "Time zone search")
+    app.buttons["(UTC+05:45) Kathmandu - Asia"].tap()
+    XCTAssertEqual(
+      app.buttons["Default time zone"].value as? String, "(UTC+05:45) Kathmandu - Asia")
+
+    reveal(app.buttons["organization-add-tag"], in: app).tap()
+    let tagSearch = app.textFields["organization-search-tag"]
+    XCTAssertTrue(tagSearch.waitForExistence(timeout: 3))
+    tagSearch.typeText("mile")
+    attach(app, "Tag picker")
+    app.buttons["milestone"].tap()
+    XCTAssertTrue(app.buttons["milestone"].isSelected)
+    tagSearch.typeText("road trip,")
+    XCTAssertTrue(app.buttons["road trip"].waitForExistence(timeout: 3))
+    tagSearch.typeText("sunrise")
+    app.buttons["organization-done"].tap()
+    XCTAssertTrue(app.buttons["Remove milestone from Tags"].waitForExistence(timeout: 3))
+    XCTAssertTrue(app.buttons["Remove road trip from Tags"].exists)
+    XCTAssertTrue(app.buttons["Remove sunrise from Tags"].exists)
+    XCTAssertTrue(app.staticTexts["5 of 50 Tags"].exists)
+    attach(app, "Added tags")
+
+    reveal(app.buttons["Date type, required"], in: app).tap()
+    app.buttons["Date range"].tap()
+    let present = reveal(
+      app.descendants(matching: .toggle)["Present, This period is still ongoing"], in: app)
+    XCTAssertTrue(app.buttons["End date"].exists)
+    present.tap()
+    XCTAssertEqual(present.value as? String, "On")
+    XCTAssertFalse(app.buttons["End date"].exists)
+    attach(app, "Ongoing date range")
+  }
+
   // Opens every gallery section directly and keeps full-page screenshots for visual review.
   func testGallerySectionsScreenshotTour() {
     let allSections = [
@@ -185,6 +240,13 @@ final class NativeWorkspaceUITests: XCTestCase {
   // Scrolls the current screen until the element can receive taps, independent of text size.
   private func reveal(_ element: XCUIElement, in app: XCUIApplication) -> XCUIElement {
     for _ in 0..<8 where !(element.exists && element.isHittable) { app.swipeUp() }
+    // Let scroll momentum settle, or the next tap only stops the scroll.
+    var frame = element.frame
+    for _ in 0..<10 {
+      Thread.sleep(forTimeInterval: 0.15)
+      guard element.frame != frame else { break }
+      frame = element.frame
+    }
     return element
   }
 

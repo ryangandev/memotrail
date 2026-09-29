@@ -407,7 +407,6 @@ struct InboxReviewSheet: View {
   @State private var title: String
   @State private var note: String
   @State private var collectionNames: [String]
-  @State private var collectionInput = ""
   private let itemKind = WikiItemKind.entry
   private let itemSubtype = "entry"
   @State private var photoPlace: PhotoPlaceDraft?
@@ -415,7 +414,6 @@ struct InboxReviewSheet: View {
   @State private var isWorking = false
   @State private var errorMessage: String?
   @State private var tagNames: [String]
-  @State private var tagInput = ""
   @State private var extractionRequest: CaptureExtractionRequest?
   @State private var extractionDidComplete = false
 
@@ -474,36 +472,18 @@ struct InboxReviewSheet: View {
         EntryPhotoDatesView(
           client: client, ownerID: ownerID, entryID: entry.id, occurrence: $occurrence,
           photoPlace: $photoPlace)
-        OccurrenceEditor(value: $occurrence)
-
         Section {
-          OrganizationNameEditor(
-            names: $collectionNames,
-            input: $collectionInput,
-            options: collectionOptions,
-            placeholder: "Add a Collection",
-            maximumCount: 20,
-            maximumNameLength: 80
-          )
+          OccurrenceEditor(value: $occurrence)
         } header: {
-          Text("Collections")
-        } footer: {
-          Text("\(collectionNames.count) of 20")
+          Text("When it happened")
         }
 
         Section {
-          OrganizationNameEditor(
-            names: $tagNames,
-            input: $tagInput,
-            options: tagOptions,
-            placeholder: "Add a tag",
-            maximumCount: 50,
-            maximumNameLength: 60
-          )
-        } header: {
-          Text("Tags")
-        } footer: {
-          Text("\(tagNames.count) of 50")
+          MTOrganizationEditor(
+            kind: .collection, names: $collectionNames,
+            options: collectionOptions)
+          MTOrganizationEditor(
+            kind: .tag, names: $tagNames, options: tagOptions)
         }
 
         if let errorMessage {
@@ -592,8 +572,8 @@ struct InboxReviewSheet: View {
           title: title,
           body: note,
           occurrence: resolved,
-          collectionNames: namesIncludingDraft(collectionNames, collectionInput),
-          tagNames: namesIncludingDraft(tagNames, tagInput)
+          collectionNames: collectionNames,
+          tagNames: tagNames
         ))
       errorMessage = nil
     } catch {
@@ -631,11 +611,11 @@ struct InboxReviewSheet: View {
     let result = await review(
       title,
       note,
-      namesIncludingDraft(collectionNames, collectionInput),
+      collectionNames,
       itemKind,
       itemSubtype,
       resolved,
-      namesIncludingDraft(tagNames, tagInput),
+      tagNames,
       intent,
       photoPlace
     )
@@ -648,11 +628,6 @@ struct InboxReviewSheet: View {
     case .conflict, .error:
       errorMessage = result.message
     }
-  }
-
-  private func namesIncludingDraft(_ names: [String], _ draft: String) -> [String] {
-    let name = draft.trimmed
-    return name.isEmpty ? names : names + [name]
   }
 }
 
@@ -740,89 +715,5 @@ private struct CaptureGoalExtractionView: View {
       controller: controller, entry: nil, sourceCapture: source, onSaved: onSaved
     )
     .task { if !controller.hasLoaded { await controller.load() } }
-  }
-}
-
-private struct OrganizationNameEditor: View {
-  @Binding var names: [String]
-  @Binding var input: String
-
-  let options: [String]
-  let placeholder: String
-  let maximumCount: Int
-  let maximumNameLength: Int
-
-  private var selectedNames: Set<String> {
-    Set(names.map { $0.lowercased() })
-  }
-
-  private var suggestions: [String] {
-    options.filter { !selectedNames.contains($0.lowercased()) }
-  }
-
-  var body: some View {
-    if !names.isEmpty {
-      ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: MTSpacing.s2) {
-          ForEach(names, id: \.self) { name in
-            Button {
-              names.removeAll { $0 == name }
-            } label: {
-              Label(name, systemImage: "xmark")
-                .font(MTTypography.caption)
-            }
-            .buttonStyle(.bordered)
-            .buttonBorderShape(.capsule)
-            .accessibilityLabel("Remove \(name)")
-          }
-        }
-      }
-    }
-
-    HStack {
-      TextField(placeholder, text: $input)
-        .textInputAutocapitalization(.words)
-        .submitLabel(.done)
-        .onSubmit(addInput)
-        .onChange(of: input) {
-          if input.count > maximumNameLength {
-            input = String(input.prefix(maximumNameLength))
-          }
-        }
-
-      Button("Add", systemImage: "plus") {
-        addInput()
-      }
-      .labelStyle(.iconOnly)
-      .disabled(input.trimmed.isEmpty || names.count >= maximumCount)
-    }
-
-    if !suggestions.isEmpty, names.count < maximumCount {
-      Menu("Add existing", systemImage: "tag") {
-        ForEach(suggestions, id: \.self) { suggestion in
-          Button(suggestion) {
-            add(suggestion)
-          }
-        }
-      }
-      .font(MTTypography.caption)
-    }
-  }
-
-  private func addInput() {
-    add(input)
-    input = ""
-  }
-
-  private func add(_ value: String) {
-    let name = value.trimmed
-
-    guard !name.isEmpty,
-      name.count <= maximumNameLength,
-      names.count < maximumCount,
-      !selectedNames.contains(name.lowercased())
-    else { return }
-
-    names.append(name)
   }
 }

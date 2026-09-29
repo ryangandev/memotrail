@@ -59,6 +59,7 @@ struct PhotoCameraMetadata: Decodable, Sendable {
     result.precision = .day
     result.start = calendarDate
     result.end = ""
+    result.endMode = .date
     result.label = ""
     _ = try result.resolve()
     return result

@@ -360,9 +360,7 @@ private struct FirstTimeEditorSheet: View {
   @State private var note: String
   @State private var occurrence: OccurrenceDraft
   @State private var collectionNames: [String]
-  @State private var collectionInput = ""
   @State private var tagNames: [String]
-  @State private var tagInput = ""
   @State private var attachments: [FirstTimeAttachment]
   @State private var photoDrafts: [FirstTimePhotoDraft] = []
   @State private var pickerItems: [PhotosPickerItem] = []
@@ -411,36 +409,18 @@ private struct FirstTimeEditorSheet: View {
             .accessibilityIdentifier("first-time-notes")
         }
 
-        OccurrenceEditor(value: $occurrence)
-
         Section {
-          FirstTimeNameEditor(
-            names: $collectionNames,
-            input: $collectionInput,
-            options: collectionOptions,
-            placeholder: "Add a Collection",
-            maximumCount: FirstTimeEntryInput.collectionLimit,
-            maximumNameLength: FirstTimeEntryInput.collectionNameLimit
-          )
+          OccurrenceEditor(value: $occurrence)
         } header: {
-          Text("Collections")
-        } footer: {
-          Text("\(collectionNames.count) of \(FirstTimeEntryInput.collectionLimit)")
+          Text("When it happened")
         }
 
         Section {
-          FirstTimeNameEditor(
-            names: $tagNames,
-            input: $tagInput,
-            options: tagOptions,
-            placeholder: "Add a tag",
-            maximumCount: FirstTimeEntryInput.tagLimit,
-            maximumNameLength: FirstTimeEntryInput.tagNameLimit
-          )
-        } header: {
-          Text("Tags")
-        } footer: {
-          Text("\(tagNames.count) of \(FirstTimeEntryInput.tagLimit)")
+          MTOrganizationEditor(
+            kind: .collection, names: $collectionNames,
+            options: collectionOptions)
+          MTOrganizationEditor(
+            kind: .tag, names: $tagNames, options: tagOptions)
         }
 
         photosSection
@@ -684,8 +664,8 @@ private struct FirstTimeEditorSheet: View {
       datePrecision: FirstTimeDatePrecision(rawValue: resolved.precision.rawValue) ?? .unknown,
       occurredLabel: resolved.label ?? "",
       occurredTimezone: resolved.start == nil ? nil : resolved.timezone,
-      collectionNames: namesIncludingDraft(collectionNames, collectionInput),
-      tagNames: namesIncludingDraft(tagNames, tagInput),
+      collectionNames: collectionNames,
+      tagNames: tagNames,
       occurredEnd: resolved.end,
       original: entry
     )
@@ -699,8 +679,6 @@ private struct FirstTimeEditorSheet: View {
 
     currentEntryID = identity.id
     currentRevision = identity.revision
-    collectionInput = ""
-    tagInput = ""
 
     var uploadedIDs: Set<UUID> = []
     var failedMessage: String?
@@ -769,94 +747,5 @@ private struct FirstTimeEditorSheet: View {
     } else {
       errorMessage = result.message
     }
-  }
-
-  private func namesIncludingDraft(_ names: [String], _ draft: String) -> [String] {
-    let name = draft.trimmed
-    return name.isEmpty ? names : names + [name]
-  }
-}
-
-private struct FirstTimeNameEditor: View {
-  @Binding var names: [String]
-  @Binding var input: String
-
-  let options: [String]
-  let placeholder: String
-  let maximumCount: Int
-  let maximumNameLength: Int
-
-  private var selectedNames: Set<String> {
-    Set(names.map { $0.lowercased() })
-  }
-
-  private var suggestions: [String] {
-    options.filter { !selectedNames.contains($0.lowercased()) }
-  }
-
-  var body: some View {
-    if !names.isEmpty {
-      ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: MTSpacing.s2) {
-          ForEach(names, id: \.self) { name in
-            Button {
-              names.removeAll { $0 == name }
-            } label: {
-              Label(name, systemImage: "xmark")
-                .font(MTTypography.caption)
-            }
-            .buttonStyle(.bordered)
-            .buttonBorderShape(.capsule)
-            .accessibilityLabel("Remove \(name)")
-          }
-        }
-      }
-    }
-
-    HStack {
-      TextField(placeholder, text: $input)
-        .textInputAutocapitalization(.words)
-        .submitLabel(.done)
-        .onSubmit(addInput)
-        .onChange(of: input) {
-          if input.count > maximumNameLength {
-            input = String(input.prefix(maximumNameLength))
-          }
-        }
-
-      Button("Add", systemImage: "plus") {
-        addInput()
-      }
-      .labelStyle(.iconOnly)
-      .disabled(input.trimmed.isEmpty || names.count >= maximumCount)
-    }
-
-    if !suggestions.isEmpty, names.count < maximumCount {
-      Menu("Add existing", systemImage: "tag") {
-        ForEach(suggestions, id: \.self) { suggestion in
-          Button(suggestion) {
-            add(suggestion)
-          }
-        }
-      }
-      .font(MTTypography.caption)
-    }
-  }
-
-  private func addInput() {
-    add(input)
-    input = ""
-  }
-
-  private func add(_ value: String) {
-    let name = value.trimmed
-
-    guard !name.isEmpty,
-      name.count <= maximumNameLength,
-      names.count < maximumCount,
-      !selectedNames.contains(name.lowercased())
-    else { return }
-
-    names.append(name)
   }
 }

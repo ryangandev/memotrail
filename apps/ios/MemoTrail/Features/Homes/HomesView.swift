@@ -350,9 +350,7 @@ struct ResidenceEditorSheet: View {
   @State private var moveInReason: String
   @State private var moveOutReason: String
   @State private var collectionNames: [String]
-  @State private var collectionInput = ""
   @State private var tagNames: [String]
-  @State private var tagInput = ""
   @State private var attachments: [ResidenceAttachment]
   @State private var photoDrafts: [FirstTimePhotoDraft] = []
   @State private var pickerItems: [PhotosPickerItem] = []
@@ -497,12 +495,14 @@ struct ResidenceEditorSheet: View {
 
   private var datesSection: some View {
     Group {
-      OccurrenceEditor(value: $occurrence, span: true)
+      Section {
+        OccurrenceEditor(value: $occurrence, span: true)
+      } header: {
+        Text("When it happened")
+      }
       Section {
         TextField("Why you moved in (optional)", text: $moveInReason, axis: .vertical)
         TextField("Why you moved out (optional)", text: $moveOutReason, axis: .vertical)
-      } footer: {
-        Text("Leave the end date empty for a current residence.")
       }
     }
   }
@@ -526,32 +526,13 @@ struct ResidenceEditorSheet: View {
     }
   }
 
-  @ViewBuilder
   private var organizationSections: some View {
     Section {
-      ResidenceNameEditor(
-        names: $collectionNames,
-        input: $collectionInput,
-        options: controller.collectionOptions,
-        placeholder: "Add a Collection",
-        maximumCount: ResidenceEntryInput.collectionLimit,
-        maximumNameLength: ResidenceEntryInput.collectionNameLimit
-      )
-    } header: {
-      Text("Collections")
-    }
-
-    Section {
-      ResidenceNameEditor(
-        names: $tagNames,
-        input: $tagInput,
-        options: controller.tagOptions,
-        placeholder: "Add a tag",
-        maximumCount: ResidenceEntryInput.tagLimit,
-        maximumNameLength: ResidenceEntryInput.tagNameLimit
-      )
-    } header: {
-      Text("Tags")
+      MTOrganizationEditor(
+        kind: .collection, names: $collectionNames,
+        options: controller.collectionOptions)
+      MTOrganizationEditor(
+        kind: .tag, names: $tagNames, options: controller.tagOptions)
     }
   }
 
@@ -726,8 +707,8 @@ struct ResidenceEditorSheet: View {
       placeNotes: placeNotes,
       moveInReason: moveInReason,
       moveOutReason: moveOutReason,
-      collectionNames: namesIncludingDraft(collectionNames, collectionInput),
-      tagNames: namesIncludingDraft(tagNames, tagInput),
+      collectionNames: collectionNames,
+      tagNames: tagNames,
       originalEntry: entry,
       sourceCapture: currentEntryID == nil ? sourceCapture : nil
     )
@@ -812,80 +793,5 @@ struct ResidenceEditorSheet: View {
     } else {
       errorMessage = result.message
     }
-  }
-
-  private func namesIncludingDraft(_ names: [String], _ draft: String) -> [String] {
-    let name = draft.trimmed
-    return name.isEmpty ? names : names + [name]
-  }
-}
-
-private struct ResidenceNameEditor: View {
-  @Binding var names: [String]
-  @Binding var input: String
-  let options: [String]
-  let placeholder: String
-  let maximumCount: Int
-  let maximumNameLength: Int
-
-  private var selectedNames: Set<String> { Set(names.map { $0.lowercased() }) }
-  private var suggestions: [String] {
-    options.filter { !selectedNames.contains($0.lowercased()) }
-  }
-
-  var body: some View {
-    if !names.isEmpty {
-      ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: MTSpacing.s2) {
-          ForEach(names, id: \.self) { name in
-            Button {
-              names.removeAll { $0 == name }
-            } label: {
-              Label(name, systemImage: "xmark").font(MTTypography.caption)
-            }
-            .buttonStyle(.bordered)
-            .buttonBorderShape(.capsule)
-            .accessibilityLabel("Remove \(name)")
-          }
-        }
-      }
-    }
-
-    HStack {
-      TextField(placeholder, text: $input)
-        .textInputAutocapitalization(.words)
-        .submitLabel(.done)
-        .onSubmit(addInput)
-        .onChange(of: input) {
-          if input.count > maximumNameLength {
-            input = String(input.prefix(maximumNameLength))
-          }
-        }
-      Button("Add", systemImage: "plus") { addInput() }
-        .labelStyle(.iconOnly)
-        .disabled(input.trimmed.isEmpty || names.count >= maximumCount)
-    }
-
-    if !suggestions.isEmpty, names.count < maximumCount {
-      Menu("Add existing", systemImage: "tag") {
-        ForEach(suggestions, id: \.self) { suggestion in
-          Button(suggestion) { add(suggestion) }
-        }
-      }
-      .font(MTTypography.caption)
-    }
-  }
-
-  private func addInput() {
-    add(input)
-    input = ""
-  }
-
-  private func add(_ value: String) {
-    let name = value.trimmed
-    guard !name.isEmpty, name.count <= maximumNameLength, names.count < maximumCount,
-      !selectedNames.contains(name.lowercased())
-    else { return }
-    names.append(name)
   }
 }

@@ -197,78 +197,6 @@
     }
   }
 
-  private struct FilterChipSpecimen: View {
-    @State private var selectedKind = "Entries"
-
-    var body: some View {
-      ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: MTSpacing.s2) {
-          ForEach(["All records", "Entries", "Entities", "Goals"], id: \.self) { title in
-            MTFilterChip(title: title, isSelected: selectedKind == title) { selectedKind = title }
-          }
-        }
-      }
-    }
-  }
-
-  private struct FormSpecimens: View {
-    @State private var query = ""
-    @State private var showingEditor = false
-
-    var body: some View {
-      VStack(alignment: .leading, spacing: MTSpacing.s4) {
-        GallerySpecimen(title: "Search field", api: "prompt · text") {
-          VStack(alignment: .leading, spacing: MTSpacing.s2) {
-            MTSearchField(prompt: "Find in your Life Wiki", text: $query)
-            Text(query.isEmpty ? "Search is empty." : "Search preview: \(query)").font(
-              MTFont.caption
-            )
-            .foregroundStyle(MTColor.inkMuted)
-          }
-        }
-        GallerySpecimen(
-          title: "Native form & presentation",
-          description: "Fields keep system focus, selection, keyboard, and date-picker behavior."
-        ) {
-          Button("Open sample editor", systemImage: "square.and.pencil") { showingEditor = true }
-            .mtButtonStyle().accessibilityIdentifier("design-open-editor")
-        }
-        GallerySpecimen(
-          title: "Badge",
-          api:
-            "micro | small | medium · accent, neutral, warm, success, outline, solidAccent, inverse · uppercase · one line"
-        ) {
-          VStack(alignment: .leading, spacing: MTSpacing.s3) {
-            MTFlowLayout(spacing: MTSpacing.s2) {
-              MTBadge(title: "Entry", size: .micro, uppercase: true)
-              MTBadge(title: "Home", tone: .neutral, uppercase: true)
-              MTBadge(title: "Keyword search", size: .medium)
-              MTBadge(title: "In Inbox", tone: .warm)
-              MTBadge(title: "Vehicle", tone: .outline)
-              MTBadge(title: "Saved", tone: .success)
-              MTBadge(title: "3 photos", tone: .inverse)
-              MTBadge(title: "Current", tone: .solidAccent)
-              MTBadge(title: "#learning", size: .medium)
-              MTBadge(title: "#旅行", size: .medium)
-            }
-            MTBadge(title: "A long label that stays on one line within the available width")
-            MTBadge(title: "#值得记住的那些很长很长的日常片段，一行之内保持完整的形状", size: .medium)
-            MTOrganizationBadges(
-              collectionNames: ["Early years"], tagNames: ["family", "travel", "milestone", "home"])
-          }
-        }
-        GallerySpecimen(title: "FilterChip", api: "title · isSelected · action") {
-          FilterChipSpecimen()
-        }
-        MTFeedback(
-          title: "Contextual validation",
-          message: "Keep date precision and validation close to the relevant field.", tone: .warm,
-          systemImage: "calendar.badge.exclamationmark")
-      }
-      .sheet(isPresented: $showingEditor) { DesignSystemEditor() }
-    }
-  }
-
   private struct ContainerSpecimens: View {
     @State private var chinese = false
 
@@ -320,52 +248,6 @@
           title: "Nothing here yet",
           message: "Capture something worth keeping, then organize it into Library.",
           icon: .library)
-      }
-    }
-  }
-
-  private struct DesignSystemEditor: View {
-    @State private var title = "A moment worth keeping"
-    @State private var note = NSAttributedString(string: "")
-    @State private var date = Date()
-    @State private var precision = "Day"
-    @State private var includeDate = true
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-      NavigationStack {
-        Form {
-          Section("Entry") {
-            TextField("Title", text: $title).accessibilityIdentifier("design-editor-title")
-            MTRichTextEditor(text: $note, accessibilityIdentifier: "design-editor-note")
-          }
-          Section("When it happened") {
-            Toggle("Include a date", isOn: $includeDate)
-            if includeDate {
-              Picker("Precision", selection: $precision) {
-                Text("Day").tag("Day")
-                Text("Exact time").tag("Exact time")
-              }
-              DatePicker(
-                "Occurred", selection: $date,
-                displayedComponents: precision == "Day" ? [.date] : [.date, .hourAndMinute])
-            }
-          }
-          Section {
-            MTBadge(title: "#personal", tone: .accent)
-            Button("Add photo", systemImage: "photo.badge.plus") {}.disabled(true)
-          } footer: {
-            Text("A form specimen with no backend writes.")
-          }
-        }
-        .scrollContentBackground(.hidden).background(MTColor.canvas)
-        .navigationTitle("Sample editor").navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-          ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-          ToolbarItem(placement: .confirmationAction) {
-            Button("Save") { dismiss() }.disabled(title.trimmed.isEmpty)
-          }
-        }
       }
     }
   }

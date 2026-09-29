@@ -16,34 +16,6 @@ struct MTCard<Content: View>: View {
   }
 }
 
-struct MTSearchField: View {
-  let prompt: String
-  @Binding var text: String
-
-  var body: some View {
-    HStack(spacing: MTSpacing.s2) {
-      Image(systemName: "magnifyingglass").foregroundStyle(MTColor.inkMuted)
-      TextField(prompt, text: $text)
-        .font(MTFont.body)
-        .textInputAutocapitalization(.never)
-        .autocorrectionDisabled()
-        .submitLabel(.search)
-        .accessibilityLabel(prompt)
-      if !text.isEmpty {
-        Button("Clear search", systemImage: "xmark.circle.fill") { text = "" }
-          .labelStyle(.iconOnly)
-          .frame(minWidth: 44, minHeight: 44)
-          .foregroundStyle(MTColor.inkMuted)
-      }
-    }
-    .padding(.leading, MTSpacing.s3)
-    .padding(.trailing, text.isEmpty ? MTSpacing.s3 : 0)
-    .frame(minHeight: 48)
-    .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.medium))
-    .overlay { RoundedRectangle(cornerRadius: MTRadius.medium).stroke(MTColor.border) }
-  }
-}
-
 struct MTRecordSummary: View {
   let title: String
   let subtitle: String
