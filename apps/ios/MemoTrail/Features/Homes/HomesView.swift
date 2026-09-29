@@ -200,9 +200,12 @@ private struct ResidenceArchiveCard: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       if let attachment = entry.attachments.first {
-        ResidenceRemoteImage(attachment: attachment)
-          .frame(height: 190)
-          .clipped()
+        MTRemoteImage(
+          url: attachment.signedURL,
+          accessibilityLabel: attachment.originalFilename ?? "Home photo"
+        )
+        .frame(height: 190)
+        .clipped()
       }
 
       VStack(alignment: .leading, spacing: MTSpacing.s3) {
@@ -271,38 +274,6 @@ private struct ResidenceArchiveCard: View {
     .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {
       RoundedRectangle(cornerRadius: MTRadius.large).stroke(MTColor.border, lineWidth: 1)
-    }
-  }
-}
-
-private struct ResidenceRemoteImage: View {
-  let attachment: ResidenceAttachment
-
-  var body: some View {
-    AsyncImage(url: attachment.signedURL) { phase in
-      switch phase {
-      case .success(let image):
-        image.resizable().scaledToFill()
-      case .failure:
-        placeholder(systemImage: "exclamationmark.triangle")
-      case .empty:
-        ZStack {
-          MTColor.surfaceSubtle
-          ProgressView()
-        }
-      @unknown default:
-        placeholder(systemImage: "photo")
-      }
-    }
-    .accessibilityLabel(attachment.originalFilename ?? "Home photo")
-  }
-
-  private func placeholder(systemImage: String) -> some View {
-    ZStack {
-      MTColor.surfaceSubtle
-      Image(systemName: systemImage)
-        .font(.system(size: 24))
-        .foregroundStyle(MTColor.inkFaint)
     }
   }
 }
@@ -547,9 +518,12 @@ struct ResidenceEditorSheet: View {
           HStack(spacing: MTSpacing.s3) {
             ForEach(attachments) { attachment in
               ZStack(alignment: .topTrailing) {
-                ResidenceRemoteImage(attachment: attachment)
-                  .frame(width: 132, height: 112)
-                  .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
+                MTRemoteImage(
+                  url: attachment.signedURL,
+                  accessibilityLabel: attachment.originalFilename ?? "Home photo"
+                )
+                .frame(width: 132, height: 112)
+                .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
                 removeButton(label: "Remove photo") { attachmentToRemove = attachment }
               }
             }

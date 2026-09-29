@@ -201,6 +201,9 @@ Pair it with the test file carrying the same feature name.
   `MTFields.swift` owns the labeled text, search, select, and checkbox fields on one shared surface; `MTDateField` edits optional wall-time text at day, month, or year granularity, and `MTTimeZoneField` lists offsets for the reference date.
   `OccurrenceEditor` and `MTOrganizationEditor` are the shared date and Collection/tag editors; adding a name opens a picker sheet so suggestions stay above the keyboard.
   `MTCards.swift` owns `MTRecordCard`, `MTCollectionCard`, and the shared `MTCardButtonStyle`; `MTRichTextContent` renders `Models/EntryRichText.swift`, which validates Web `body_rich` documents like `lib/data/rich-text.ts` and falls back to the plain body.
+  `MTToastCenter` shows Web-timed success, info, and error toasts in a pass-through window above sheets and the keyboard.
+  `MTMedia.swift` owns `MTRemoteImage`, the loading skeleton, `MTUploadProgress`, and `MTPhotoField`; feature editors use them instead of private image loaders.
+  Clipped media sets a matching content shape, because clipping does not limit hit testing and filled photos would otherwise take taps meant for neighboring controls.
 - The Debug-only `DesignSystem/DesignSystemGallery.swift` renders those real components with appearance and text-size controls, in the same section order as the Web gallery.
   It is reached from the signed-out screen, More, or Settings; broad existing-screen migration follows review.
 - Debug launch arguments in `App/NativeReview.swift` expose isolated gallery, synthetic Map, and navigation review modes; `--review-design-section <name>` opens one gallery section directly.

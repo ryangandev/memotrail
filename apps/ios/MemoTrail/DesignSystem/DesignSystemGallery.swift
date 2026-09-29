@@ -26,10 +26,10 @@
       case .foundations: "Semantic colors, type roles, spacing, radius, shadow, and motion."
       case .identity: "The MemoTrail mark, its motion, and the shared icon vocabulary."
       case .layout: "Page widths, gutters, and section rhythm."
-      case .forms: "Search, fields, pickers, dates, labels, and native presentation."
+      case .forms: "Text, search, select, and date fields, organization, photos, and labels."
       case .writing: "Rich text, a collapsible Aa toolbar, and saved note previews."
       case .containers: "Record and Collection cards, rich writing, and compact record summaries."
-      case .feedback: "Empty, loading, error, success, and local draft states."
+      case .feedback: "Toasts, upload progress, remote images, and inline states."
       }
     }
     var icon: MTIcon {
@@ -194,31 +194,6 @@
         }
       }
       .navigationTitle(section.title).navigationBarTitleDisplayMode(.inline)
-    }
-  }
-
-  private struct FeedbackSpecimens: View {
-    var body: some View {
-      VStack(alignment: .leading, spacing: MTSpacing.s4) {
-        MTFeedback(
-          title: "Saved to Library", message: "Your Entry is ready to revisit.", tone: .success,
-          systemImage: "checkmark.circle")
-        MTFeedback(
-          title: "Draft saved on this iPhone", message: "You can return to it before publishing.",
-          tone: .neutral, systemImage: "clock.arrow.circlepath")
-        MTFeedback(
-          title: "Connection unavailable",
-          message: "Your draft is safe. Try again when you are online.", tone: .warm,
-          systemImage: "wifi.slash")
-        MTCard {
-          ProgressView("Loading your records...").frame(maxWidth: .infinity).padding(
-            .vertical, MTSpacing.s4)
-        }
-        MTEmptyState(
-          title: "Nothing here yet",
-          message: "Capture something worth keeping, then organize it into Library.",
-          icon: .library)
-      }
     }
   }
 

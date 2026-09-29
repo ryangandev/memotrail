@@ -229,9 +229,12 @@ private struct FirstTimeArchiveCard: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       if let attachment = entry.attachments.first {
-        FirstTimeRemoteImage(attachment: attachment)
-          .frame(height: 190)
-          .clipped()
+        MTRemoteImage(
+          url: attachment.signedURL,
+          accessibilityLabel: attachment.originalFilename ?? "First Time photo"
+        )
+        .frame(height: 190)
+        .clipped()
       }
 
       VStack(alignment: .leading, spacing: MTSpacing.s3) {
@@ -290,40 +293,6 @@ private struct FirstTimeArchiveCard: View {
     .overlay {
       RoundedRectangle(cornerRadius: MTRadius.large)
         .stroke(MTColor.border, lineWidth: 1)
-    }
-  }
-}
-
-private struct FirstTimeRemoteImage: View {
-  let attachment: FirstTimeAttachment
-
-  var body: some View {
-    AsyncImage(url: attachment.signedURL) { phase in
-      switch phase {
-      case .success(let image):
-        image
-          .resizable()
-          .scaledToFill()
-      case .failure:
-        placeholder(systemImage: "exclamationmark.triangle")
-      case .empty:
-        ZStack {
-          MTColor.surfaceSubtle
-          ProgressView()
-        }
-      @unknown default:
-        placeholder(systemImage: "photo")
-      }
-    }
-    .accessibilityLabel(attachment.originalFilename ?? "First Time photo")
-  }
-
-  private func placeholder(systemImage: String) -> some View {
-    ZStack {
-      MTColor.surfaceSubtle
-      Image(systemName: systemImage)
-        .font(.system(size: 24))
-        .foregroundStyle(MTColor.inkFaint)
     }
   }
 }
@@ -542,9 +511,12 @@ private struct FirstTimeEditorSheet: View {
           HStack(spacing: MTSpacing.s3) {
             ForEach(attachments) { attachment in
               ZStack(alignment: .topTrailing) {
-                FirstTimeRemoteImage(attachment: attachment)
-                  .frame(width: 132, height: 112)
-                  .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
+                MTRemoteImage(
+                  url: attachment.signedURL,
+                  accessibilityLabel: attachment.originalFilename ?? "First Time photo"
+                )
+                .frame(width: 132, height: 112)
+                .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
 
                 Button {
                   attachmentToRemove = attachment

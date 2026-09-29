@@ -74,6 +74,7 @@ struct MTRecordCardVisual<Content: View>: View {
       .frame(height: height)
       .background(MTColor.surfaceSubtle)
       .clipped()
+      .contentShape(Rectangle())
       .overlay(alignment: .bottom) { Rectangle().fill(MTColor.border).frame(height: 1) }
   }
 }

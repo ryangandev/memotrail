@@ -6,6 +6,7 @@ import UIKit
 
 @MainActor
 struct EntryPhotoGalleryView: View {
+  static let unavailable = "Photo unavailable. Close the viewer and refresh photos to retry."
   let client: SupabaseClient
   let ownerID: UUID
   let entryID: UUID
@@ -69,7 +70,10 @@ struct EntryPhotoGalleryView: View {
               selected = photo
             } label: {
               VStack(alignment: .leading, spacing: MTSpacing.s2) {
-                EntryGalleryImage(photo: photo).frame(height: 160)
+                MTRemoteImage(
+                  url: photo.displayURL(base: AppConfiguration.apiURL), fit: .fit,
+                  accessibilityLabel: photo.name, fallback: Self.unavailable
+                ).frame(height: 160)
                 Text(photo.name).font(MTTypography.caption).foregroundStyle(MTColor.ink)
               }.padding(MTSpacing.s2).frame(maxWidth: .infinity)
                 .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.small))
@@ -205,25 +209,6 @@ struct EntryPhotoGalleryView: View {
 }
 
 @MainActor
-private struct EntryGalleryImage: View {
-  let photo: EntryPhotoInfo
-  var body: some View {
-    AsyncImage(url: photo.displayURL(base: AppConfiguration.apiURL)) { phase in
-      switch phase {
-      case .success(let image):
-        image.resizable().scaledToFit().accessibilityLabel(photo.name)
-      case .empty where photo.displayURL(base: AppConfiguration.apiURL) != nil:
-        ProgressView("Loading photo…").frame(maxWidth: .infinity, maxHeight: .infinity)
-      default:
-        Text("Photo unavailable. Close the viewer and refresh photos to retry.")
-          .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-          .multilineTextAlignment(.center).frame(maxWidth: .infinity, maxHeight: .infinity)
-      }
-    }
-  }
-}
-
-@MainActor
 private struct EntryPhotoViewer: View {
   let photos: [EntryPhotoInfo]
   @State private var index: Int
@@ -239,7 +224,10 @@ private struct EntryPhotoViewer: View {
       VStack(spacing: MTSpacing.s3) {
         if photos.indices.contains(index) {
           Text(photos[index].name).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-          EntryGalleryImage(photo: photos[index]).id(photos[index].id)
+          MTRemoteImage(
+            url: photos[index].displayURL(base: AppConfiguration.apiURL), fit: .fit,
+            accessibilityLabel: photos[index].name, fallback: EntryPhotoGalleryView.unavailable
+          ).id(photos[index].id)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
           HStack {
             Button("Previous") { index -= 1 }.disabled(index == 0).accessibilityLabel(

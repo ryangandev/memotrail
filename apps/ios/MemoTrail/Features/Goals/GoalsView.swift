@@ -177,7 +177,10 @@ private struct GoalArchiveCard: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       if let attachment = entry.attachments.first {
-        GoalRemoteImage(attachment: attachment).frame(height: 180).clipped()
+        MTRemoteImage(
+          url: attachment.signedURL,
+          accessibilityLabel: attachment.originalFilename ?? "Goal photo"
+        ).frame(height: 180).clipped()
       }
       VStack(alignment: .leading, spacing: MTSpacing.s3) {
         HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s3) {
@@ -241,33 +244,6 @@ private struct GoalArchiveCard: View {
     .background(MTColor.surfaceRaised)
     .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay { RoundedRectangle(cornerRadius: MTRadius.large).stroke(MTColor.border) }
-  }
-}
-
-private struct GoalRemoteImage: View {
-  let attachment: GoalAttachment
-
-  var body: some View {
-    AsyncImage(url: attachment.signedURL) { phase in
-      switch phase {
-      case .success(let image): image.resizable().scaledToFill()
-      case .failure: placeholder(systemImage: "exclamationmark.triangle")
-      case .empty:
-        ZStack {
-          MTColor.surfaceSubtle
-          ProgressView()
-        }
-      @unknown default: placeholder(systemImage: "photo")
-      }
-    }
-    .accessibilityLabel(attachment.originalFilename ?? "Goal photo")
-  }
-
-  private func placeholder(systemImage: String) -> some View {
-    ZStack {
-      MTColor.surfaceSubtle
-      Image(systemName: systemImage).font(.system(size: 24)).foregroundStyle(MTColor.inkFaint)
-    }
   }
 }
 
@@ -533,9 +509,12 @@ struct GoalEditorSheet: View {
           HStack(spacing: MTSpacing.s3) {
             ForEach(attachments) { attachment in
               ZStack(alignment: .topTrailing) {
-                GoalRemoteImage(attachment: attachment)
-                  .frame(width: 132, height: 112)
-                  .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
+                MTRemoteImage(
+                  url: attachment.signedURL,
+                  accessibilityLabel: attachment.originalFilename ?? "Goal photo"
+                )
+                .frame(width: 132, height: 112)
+                .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
                 removeButton(label: "Remove photo") { attachmentToRemove = attachment }
               }
             }

@@ -78,9 +78,11 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Four Simulator UI scenarios cover native editor actions, MapKit clustering and filters, More routing, and gallery appearance/text-size controls; screenshot review is separate from personal data acceptance.
   The shared API change passed the native API and existing AI-pause E2E scenarios, 445 Web unit tests, lint, type checking, and repository formatting.
   A signed Simulator build launches to the Google sign-in screen; personal login, physical-device flows, and deployed shared API acceptance remain pending.
-- Review the Debug-only native Design System gallery, including appearance, Dynamic Type, action states, forms, cards, media placeholders, and feedback.
+- Review the Debug-only native Design System gallery, including appearance, Dynamic Type, action states, forms, cards, media, toasts, and feedback.
   The new Map uses its shared presentation components; existing screens retain their layouts pending acceptance.
-  Native actions, badges, headers, empty states, form fields, record and Collection cards, and read-only rich writing now mirror the Web gallery specimens.
+  Native actions, badges, headers, empty states, form fields, record and Collection cards, read-only rich writing, toasts, remote images, upload progress, and the photo field now mirror the Web gallery specimens.
+  First Times, Homes, Vehicles, Goals, Collections, and the Entry photo viewer load photos through the shared remote image; Home and Trash follow with their screen syncs.
+  Ten Simulator UI scenarios pass, adding form pickers, organization editing, toasts, photo field removal, and a gallery screenshot tour; 215 unit tests pass, with the five local Supabase contract tests skipped without a local stack.
   One shared OccurrenceEditor and tag/Collection editor now serve Capture, Inbox review, Timeline, First Times, Homes, Vehicles, and Goals, with the Web Date types, Present end, and optional description.
 - The gallery's Writing & formatting page now previews a native Aa toolbar with bold, italic, underline, strikethrough, selection formatting, typing styles, undo/redo, and saved note reopening.
   The sample form uses the same reusable editor.

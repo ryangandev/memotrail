@@ -84,7 +84,6 @@
 		B1000000000000000000000C /* VehicleEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000D /* VehicleEntryTests.swift */; };
 		B1000000000000000000000D /* GoalEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000E /* GoalEntryTests.swift */; };
 		B00000000000000000000034 /* PeopleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003B /* PeopleView.swift */; };
-		BD0000000000000000000001 /* NativeComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000001 /* NativeComponents.swift */; };
 		BD0000000000000000000002 /* DesignSystemGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000002 /* DesignSystemGallery.swift */; };
 		BD0000000000000000000003 /* LocationMapModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000003 /* LocationMapModel.swift */; };
 		BD0000000000000000000004 /* LocationMapController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000004 /* LocationMapController.swift */; };
@@ -118,6 +117,9 @@
 		E10000000000000000000011 /* GalleryContainers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000011 /* GalleryContainers.swift */; };
 		E10000000000000000000012 /* EntryRichText.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000012 /* EntryRichText.swift */; };
 		E10000000000000000000013 /* EntryRichTextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000013 /* EntryRichTextTests.swift */; };
+		E10000000000000000000014 /* MTToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000014 /* MTToast.swift */; };
+		E10000000000000000000015 /* MTMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000015 /* MTMedia.swift */; };
+		E10000000000000000000016 /* GalleryFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000016 /* GalleryFeedback.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -210,7 +212,6 @@
 		C1000000000000000000000D /* VehicleEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleEntryTests.swift; sourceTree = "<group>"; };
 		C1000000000000000000000E /* GoalEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEntryTests.swift; sourceTree = "<group>"; };
 		C0000000000000000000003B /* PeopleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/PeopleView.swift; sourceTree = "<group>"; };
-		CD0000000000000000000001 /* NativeComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeComponents.swift; sourceTree = "<group>"; };
 		CD0000000000000000000002 /* DesignSystemGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystemGallery.swift; sourceTree = "<group>"; };
 		CD0000000000000000000003 /* LocationMapModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Map/LocationMapModel.swift; sourceTree = "<group>"; };
 		CD0000000000000000000004 /* LocationMapController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Map/LocationMapController.swift; sourceTree = "<group>"; };
@@ -245,6 +246,9 @@
 		E20000000000000000000011 /* GalleryContainers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryContainers.swift; sourceTree = "<group>"; };
 		E20000000000000000000012 /* EntryRichText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryRichText.swift; sourceTree = "<group>"; };
 		E20000000000000000000013 /* EntryRichTextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryRichTextTests.swift; sourceTree = "<group>"; };
+		E20000000000000000000014 /* MTToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTToast.swift; sourceTree = "<group>"; };
+		E20000000000000000000015 /* MTMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMedia.swift; sourceTree = "<group>"; };
+		E20000000000000000000016 /* GalleryFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryFeedback.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -362,6 +366,7 @@
 		A10000000000000000000007 /* DesignSystem */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000016 /* GalleryFeedback.swift */,
 				E20000000000000000000011 /* GalleryContainers.swift */,
 				E2000000000000000000000D /* GalleryForms.swift */,
 				E20000000000000000000007 /* GalleryPrimitives.swift */,
@@ -377,6 +382,8 @@
 		A10000000000000000000008 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000015 /* MTMedia.swift */,
+				E20000000000000000000014 /* MTToast.swift */,
 				E20000000000000000000010 /* MTRichTextContent.swift */,
 				E2000000000000000000000F /* MTCards.swift */,
 				E2000000000000000000000B /* MTOrganizationEditor.swift */,
@@ -390,7 +397,6 @@
 				E20000000000000000000003 /* MTActions.swift */,
 				E20000000000000000000001 /* MTFoundations.swift */,
 				CE0000000000000000000002 /* NativeRichTextEditor.swift */,
-				CD0000000000000000000001 /* NativeComponents.swift */,
 				C00000000000000000000004 /* CaptureCard.swift */,
 				C00000000000000000000005 /* EntryCard.swift */,
 				C80000000000000000000001 /* MemoTrailMark.swift */,
@@ -701,6 +707,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E10000000000000000000016 /* GalleryFeedback.swift in Sources */,
+				E10000000000000000000015 /* MTMedia.swift in Sources */,
+				E10000000000000000000014 /* MTToast.swift in Sources */,
 				E10000000000000000000012 /* EntryRichText.swift in Sources */,
 				E10000000000000000000011 /* GalleryContainers.swift in Sources */,
 				E10000000000000000000010 /* MTRichTextContent.swift in Sources */,
@@ -729,7 +738,6 @@
 				BD0000000000000000000004 /* LocationMapController.swift in Sources */,
 				BD0000000000000000000003 /* LocationMapModel.swift in Sources */,
 				BD0000000000000000000002 /* DesignSystemGallery.swift in Sources */,
-				BD0000000000000000000001 /* NativeComponents.swift in Sources */,
 				B00000000000000000000001 /* MemoTrailApp.swift in Sources */,
 				BA0000000000000000000001 /* SplashView.swift in Sources */,
 				B00000000000000000000002 /* RootTabView.swift in Sources */,

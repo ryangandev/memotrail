@@ -185,6 +185,13 @@
         }
 
         GallerySpecimen(
+          title: "PhotoField",
+          api: "recordLabel · saved · new · limit · selection · progress · remove actions"
+        ) {
+          PhotoFieldSpecimen()
+        }
+
+        GallerySpecimen(
           title: "Native form & presentation",
           description:
             "An editor sheet composed from these fields keeps system focus, keyboard, and dismissal behavior."

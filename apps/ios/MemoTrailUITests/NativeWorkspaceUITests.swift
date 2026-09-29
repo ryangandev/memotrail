@@ -153,11 +153,7 @@ final class NativeWorkspaceUITests: XCTestCase {
   }
 
   func testFormFieldsPickersAndOrganizationEditing() {
-    let app = XCUIApplication()
-    app.launchArguments = ["--review-design-system", "--review-design-section", "forms"]
-    app.launch()
-    XCTAssertTrue(app.staticTexts["design-preview-status"].waitForExistence(timeout: 5))
-
+    let app = launchSection("forms")
     let emptyDate = reveal(app.buttons["Empty date"], in: app)
     XCTAssertEqual(emptyDate.value as? String, "Not set")
     emptyDate.tap()
@@ -206,6 +202,50 @@ final class NativeWorkspaceUITests: XCTestCase {
     attach(app, "Ongoing date range")
   }
 
+  func testToastsStackPassTouchesThroughAndDismiss() {
+    let app = launchSection("feedback")
+    app.buttons["Show success"].tap()
+    XCTAssertTrue(app.staticTexts["Changes saved."].waitForExistence(timeout: 3))
+    // Touches outside the toast reach the page beneath its overlay window.
+    app.buttons["Show error"].tap()
+    XCTAssertTrue(app.staticTexts["Could not save. Try again."].waitForExistence(timeout: 3))
+    attach(app, "Stacked toasts")
+    app.buttons["Dismiss notification"].firstMatch.tap()
+    XCTAssertTrue(app.staticTexts["Changes saved."].waitForNonExistence(timeout: 3))
+    XCTAssertTrue(app.staticTexts["Could not save. Try again."].exists)
+    reveal(app.staticTexts["Failure"], in: app)
+    attach(app, "Media states")
+    XCTAssertTrue(app.staticTexts["Photo unavailable"].exists)
+    XCTAssertTrue(app.images["Coast"].exists)
+  }
+
+  func testPhotoFieldSamplesUploadProgressAndRemoval() {
+    let app = launchSection("forms")
+    reveal(app.buttons["Add sample"], in: app).tap()
+    app.buttons["Add sample"].tap()
+    XCTAssertTrue(app.buttons["Remove selected sample-2.png"].exists)
+    app.buttons["Simulate upload"].tap()
+    XCTAssertTrue(
+      app.descendants(matching: .any)["Photo upload progress"].waitForExistence(timeout: 3))
+    attach(app, "Photo upload progress")
+    XCTAssertTrue(
+      app.descendants(matching: .any)["Photo upload progress"].waitForNonExistence(timeout: 6))
+    let status = app.staticTexts["design-photo-status"]
+    XCTAssertEqual(status.label, "1 saved · 2 new")
+    app.buttons["Preview coast-memory.jpg"].tap()
+    XCTAssertTrue(app.navigationBars["coast-memory.jpg"].waitForExistence(timeout: 3))
+    XCTAssertTrue(app.images["coast-memory.jpg"].waitForExistence(timeout: 3))
+    attach(app, "Photo preview")
+    app.navigationBars["coast-memory.jpg"].buttons["Done"].tap()
+    XCTAssertTrue(app.navigationBars["coast-memory.jpg"].waitForNonExistence(timeout: 3))
+    app.buttons["Remove selected sample-1.png"].tap()
+    XCTAssertEqual(status.label, "1 saved · 1 new")
+    app.buttons["Remove coast-memory.jpg"].tap()
+    XCTAssertEqual(status.label, "0 saved · 1 new")
+    XCTAssertFalse(app.buttons["Preview coast-memory.jpg"].exists)
+    XCTAssertTrue(app.buttons["Remove selected sample-2.png"].exists)
+  }
+
   // Opens every gallery section directly and keeps full-page screenshots for visual review.
   func testGallerySectionsScreenshotTour() {
     let allSections = [
@@ -232,6 +272,14 @@ final class NativeWorkspaceUITests: XCTestCase {
     }
   }
 
+  private func launchSection(_ section: String) -> XCUIApplication {
+    let app = XCUIApplication()
+    app.launchArguments = ["--review-design-system", "--review-design-section", section]
+    app.launch()
+    XCTAssertTrue(app.staticTexts["design-preview-status"].waitForExistence(timeout: 5))
+    return app
+  }
+
   private func launch(_ mode: String) -> XCUIApplication {
     let app = XCUIApplication()
     app.launchArguments = [mode]
@@ -240,6 +288,7 @@ final class NativeWorkspaceUITests: XCTestCase {
   }
 
   // Scrolls the current screen until the element can receive taps, independent of text size.
+  @discardableResult
   private func reveal(_ element: XCUIElement, in app: XCUIApplication) -> XCUIElement {
     for _ in 0..<8 where !(element.exists && element.isHittable) { app.swipeUp() }
     // Let scroll momentum settle, or the next tap only stops the scroll.
