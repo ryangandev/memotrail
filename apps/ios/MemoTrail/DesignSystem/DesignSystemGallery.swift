@@ -197,65 +197,6 @@
     }
   }
 
-  private struct PrimitiveSpecimens: View {
-    @State private var isSaving = false
-    @State private var actionMessage = "Tap an action to preview its state."
-    @State private var showingConfirmation = false
-
-    var body: some View {
-      VStack(alignment: .leading, spacing: MTSpacing.s4) {
-        GallerySpecimen(title: "Actions", api: "primary · secondary · disabled · loading") {
-          VStack(alignment: .leading, spacing: MTSpacing.s3) {
-            Button {
-              saveSpecimen()
-            } label: {
-              HStack {
-                if isSaving { ProgressView().tint(MTColor.accentInk) }
-                Text(isSaving ? "Saving..." : "Save to Library")
-              }
-            }.buttonStyle(MTActionStyle()).disabled(isSaving).accessibilityIdentifier("design-save")
-            Button("Add photo", systemImage: "photo.badge.plus") {
-              actionMessage = "Photo action selected."
-            }
-            .buttonStyle(MTActionStyle(emphasis: .secondary))
-            Button("Add photo", systemImage: "photo.badge.plus") {}.buttonStyle(
-              MTActionStyle(emphasis: .secondary)
-            ).disabled(true)
-            Button("Move to Trash", role: .destructive) { showingConfirmation = true }.buttonStyle(
-              .bordered
-            ).tint(.red)
-            Text(actionMessage).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
-              .accessibilityIdentifier("design-action-status")
-          }
-        }
-        GallerySpecimen(title: "Filter chips", api: "title · isSelected · action") {
-          FilterChipSpecimen()
-        }
-      }
-      .confirmationDialog(
-        "Move this preview record to Trash?", isPresented: $showingConfirmation,
-        titleVisibility: .visible
-      ) {
-        Button("Move to Trash", role: .destructive) {
-          actionMessage = "Preview record moved to Trash."
-        }
-        Button("Cancel", role: .cancel) {}
-      } message: {
-        Text("This only changes the specimen. Your records are untouched.")
-      }
-    }
-
-    private func saveSpecimen() {
-      isSaving = true
-      actionMessage = "Saving preview..."
-      Task {
-        try? await Task.sleep(for: .seconds(1))
-        isSaving = false
-        actionMessage = "Preview saved to Library."
-      }
-    }
-  }
-
   private struct FilterChipSpecimen: View {
     @State private var selectedKind = "Entries"
 
@@ -290,16 +231,34 @@
           description: "Fields keep system focus, selection, keyboard, and date-picker behavior."
         ) {
           Button("Open sample editor", systemImage: "square.and.pencil") { showingEditor = true }
-            .buttonStyle(MTActionStyle()).accessibilityIdentifier("design-open-editor")
+            .mtButtonStyle().accessibilityIdentifier("design-open-editor")
         }
-        GallerySpecimen(title: "Status & organization labels", api: "title · tone") {
-          VStack(alignment: .leading, spacing: MTSpacing.s2) {
-            MTBadge(title: "Unreviewed")
-            MTBadge(title: "First Time", tone: .accent)
-            MTBadge(title: "On this iPhone", tone: .warm)
-            MTBadge(title: "Saved", tone: .success)
-            MTBadge(title: "#值得记住的那些很长很长的日常片段", tone: .accent)
+        GallerySpecimen(
+          title: "Badge",
+          api:
+            "micro | small | medium · accent, neutral, warm, success, outline, solidAccent, inverse · uppercase · one line"
+        ) {
+          VStack(alignment: .leading, spacing: MTSpacing.s3) {
+            MTFlowLayout(spacing: MTSpacing.s2) {
+              MTBadge(title: "Entry", size: .micro, uppercase: true)
+              MTBadge(title: "Home", tone: .neutral, uppercase: true)
+              MTBadge(title: "Keyword search", size: .medium)
+              MTBadge(title: "In Inbox", tone: .warm)
+              MTBadge(title: "Vehicle", tone: .outline)
+              MTBadge(title: "Saved", tone: .success)
+              MTBadge(title: "3 photos", tone: .inverse)
+              MTBadge(title: "Current", tone: .solidAccent)
+              MTBadge(title: "#learning", size: .medium)
+              MTBadge(title: "#旅行", size: .medium)
+            }
+            MTBadge(title: "A long label that stays on one line within the available width")
+            MTBadge(title: "#值得记住的那些很长很长的日常片段，一行之内保持完整的形状", size: .medium)
+            MTOrganizationBadges(
+              collectionNames: ["Early years"], tagNames: ["family", "travel", "milestone", "home"])
           }
+        }
+        GallerySpecimen(title: "FilterChip", api: "title · isSelected · action") {
+          FilterChipSpecimen()
         }
         MTFeedback(
           title: "Contextual validation",
@@ -357,12 +316,10 @@
           ProgressView("Loading your records...").frame(maxWidth: .infinity).padding(
             .vertical, MTSpacing.s4)
         }
-        MTCard {
-          MTEmptyState(
-            title: "Nothing here yet",
-            message: "Capture something worth keeping, then organize it into Library.",
-            systemImage: "books.vertical")
-        }
+        MTEmptyState(
+          title: "Nothing here yet",
+          message: "Capture something worth keeping, then organize it into Library.",
+          icon: .library)
       }
     }
   }

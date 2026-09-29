@@ -132,6 +132,58 @@ struct MTPage<Content: View>: View {
   }
 }
 
+/// Wraps children onto new lines like Web `flex-wrap`, for badges, chips, and compact actions.
+struct MTFlowLayout: Layout {
+  var spacing: CGFloat = MTSpacing.s2
+  var lineSpacing: CGFloat?
+
+  func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+    let rows = rows(for: proposal.width ?? .infinity, subviews: subviews)
+    let width = rows.map(\.width).max() ?? 0
+    let height = rows.map(\.height).reduce(0, +) + CGFloat(max(rows.count - 1, 0)) * rowGap
+    return CGSize(width: proposal.width ?? width, height: height)
+  }
+
+  func placeSubviews(
+    in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()
+  ) {
+    var y = bounds.minY
+    for row in rows(for: bounds.width, subviews: subviews) {
+      var x = bounds.minX
+      for index in row.indices {
+        let size = subviews[index].sizeThatFits(ProposedViewSize(width: bounds.width, height: nil))
+        subviews[index].place(
+          at: CGPoint(x: x, y: y + (row.height - size.height) / 2),
+          proposal: ProposedViewSize(width: min(size.width, bounds.width), height: size.height))
+        x += min(size.width, bounds.width) + spacing
+      }
+      y += row.height + rowGap
+    }
+  }
+
+  private var rowGap: CGFloat { lineSpacing ?? spacing }
+
+  private func rows(for width: CGFloat, subviews: Subviews) -> [(
+    indices: [Int], width: CGFloat, height: CGFloat
+  )] {
+    var rows: [(indices: [Int], width: CGFloat, height: CGFloat)] = []
+    var current: (indices: [Int], width: CGFloat, height: CGFloat) = ([], 0, 0)
+    for index in subviews.indices {
+      let size = subviews[index].sizeThatFits(ProposedViewSize(width: width, height: nil))
+      let itemWidth = min(size.width, width)
+      let proposed = current.indices.isEmpty ? itemWidth : current.width + spacing + itemWidth
+      if proposed > width, !current.indices.isEmpty {
+        rows.append(current)
+        current = ([index], itemWidth, size.height)
+      } else {
+        current = (current.indices + [index], proposed, max(current.height, size.height))
+      }
+    }
+    if !current.indices.isEmpty { rows.append(current) }
+    return rows
+  }
+}
+
 // SwiftUI line spacing is additive, so derive it from the Web multiplier and the current text size.
 private struct MTLineSpacingModifier: ViewModifier {
   let multiplier: CGFloat

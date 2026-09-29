@@ -196,6 +196,8 @@ Pair it with the test file carrying the same feature name.
 - Native `DesignSystem/Components` owns reusable presentation components.
   `MTFoundations.swift` maps each Web text role to the iOS Dynamic Type style with the same default size and defines the shared icon vocabulary, page widths, shadow, and line-height helpers.
   Generated Swift tokens supply semantic colors, spacing, radius, motion, line heights, shadow layers, and the catalogs the gallery lists.
+  Native actions use `mtButtonStyle` variants and sizes or `MTIconButton`; `MTBadge`, `MTPageHeader`, `MTSectionHeader`, and `MTEmptyState` mirror the Web Badge, PageHeader, and EmptyState.
+  Sheets and `confirmationDialog` stand in for the Web Dialog and confirmation shells.
 - The Debug-only `DesignSystem/DesignSystemGallery.swift` renders those real components with appearance and text-size controls, in the same section order as the Web gallery.
   It is reached from the signed-out screen, More, or Settings; broad existing-screen migration follows review.
 - Debug launch arguments in `App/NativeReview.swift` expose isolated gallery, synthetic Map, and navigation review modes; `--review-design-section <name>` opens one gallery section directly.

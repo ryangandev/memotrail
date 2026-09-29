@@ -55,7 +55,7 @@ struct LocationMapView: View {
                 resetFocus()
               }
             }
-            .buttonStyle(MTActionStyle())
+            .mtButtonStyle()
             .accessibilityIdentifier("map-retry")
           }
           .padding(MTSpacing.s4)

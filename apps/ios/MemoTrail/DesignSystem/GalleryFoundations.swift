@@ -215,7 +215,7 @@
             MemoTrailMark(animated: true).id(revealID).frame(width: 72, height: 72)
             VStack(alignment: .leading, spacing: MTSpacing.s2) {
               Button("Replay reveal", systemImage: "arrow.clockwise") { revealID += 1 }
-                .buttonStyle(MTActionStyle(emphasis: .secondary))
+                .mtButtonStyle(.secondary)
               Text("MemoTrail").font(MTFont.title).foregroundStyle(MTColor.ink)
             }
           }
@@ -231,7 +231,7 @@
               guard !reduceMotion else { return }
               // 320 ms matches the Web sidebar collapse.
               withAnimation(.easeInOut(duration: 0.32)) { markRotated.toggle() }
-            }.buttonStyle(MTActionStyle(emphasis: .secondary))
+            }.mtButtonStyle(.secondary)
             Text(
               reduceMotion
                 ? "Reduce Motion is on. The mark stays still."

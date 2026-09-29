@@ -101,6 +101,11 @@
 		BE0000000000000000000004 /* EntryEmphasisContentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0000000000000000000004 /* EntryEmphasisContentTests.swift */; };
 		E10000000000000000000001 /* MTFoundations.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000001 /* MTFoundations.swift */; };
 		E10000000000000000000002 /* GalleryFoundations.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000002 /* GalleryFoundations.swift */; };
+		E10000000000000000000003 /* MTActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000003 /* MTActions.swift */; };
+		E10000000000000000000004 /* MTLabels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000004 /* MTLabels.swift */; };
+		E10000000000000000000005 /* MTHeaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000005 /* MTHeaders.swift */; };
+		E10000000000000000000006 /* MTFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000006 /* MTFeedback.swift */; };
+		E10000000000000000000007 /* GalleryPrimitives.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000007 /* GalleryPrimitives.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -211,6 +216,11 @@
 		CE0000000000000000000004 /* EntryEmphasisContentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryEmphasisContentTests.swift; sourceTree = "<group>"; };
 		E20000000000000000000001 /* MTFoundations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTFoundations.swift; sourceTree = "<group>"; };
 		E20000000000000000000002 /* GalleryFoundations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryFoundations.swift; sourceTree = "<group>"; };
+		E20000000000000000000003 /* MTActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTActions.swift; sourceTree = "<group>"; };
+		E20000000000000000000004 /* MTLabels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTLabels.swift; sourceTree = "<group>"; };
+		E20000000000000000000005 /* MTHeaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTHeaders.swift; sourceTree = "<group>"; };
+		E20000000000000000000006 /* MTFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTFeedback.swift; sourceTree = "<group>"; };
+		E20000000000000000000007 /* GalleryPrimitives.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryPrimitives.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -329,6 +339,7 @@
 		A10000000000000000000007 /* DesignSystem */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000007 /* GalleryPrimitives.swift */,
 				E20000000000000000000002 /* GalleryFoundations.swift */,
 				CE0000000000000000000003 /* NativeWritingSpecimens.swift */,
 				CD0000000000000000000002 /* DesignSystemGallery.swift */,
@@ -341,6 +352,10 @@
 		A10000000000000000000008 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000006 /* MTFeedback.swift */,
+				E20000000000000000000005 /* MTHeaders.swift */,
+				E20000000000000000000004 /* MTLabels.swift */,
+				E20000000000000000000003 /* MTActions.swift */,
 				E20000000000000000000001 /* MTFoundations.swift */,
 				CE0000000000000000000002 /* NativeRichTextEditor.swift */,
 				CD0000000000000000000001 /* NativeComponents.swift */,
@@ -650,6 +665,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E10000000000000000000007 /* GalleryPrimitives.swift in Sources */,
+				E10000000000000000000006 /* MTFeedback.swift in Sources */,
+				E10000000000000000000005 /* MTHeaders.swift in Sources */,
+				E10000000000000000000004 /* MTLabels.swift in Sources */,
+				E10000000000000000000003 /* MTActions.swift in Sources */,
 				E10000000000000000000002 /* GalleryFoundations.swift in Sources */,
 				E10000000000000000000001 /* MTFoundations.swift in Sources */,
 				BE0000000000000000000003 /* NativeWritingSpecimens.swift in Sources */,

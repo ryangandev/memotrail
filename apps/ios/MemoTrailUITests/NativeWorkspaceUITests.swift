@@ -11,8 +11,7 @@ final class NativeWorkspaceUITests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Preview saved to Library."].waitForExistence(timeout: 4))
     attach(app, "Actions")
     app.navigationBars.buttons.element(boundBy: 0).tap()
-    app.swipeUp()
-    app.buttons["design-section-forms"].tap()
+    reveal(app.buttons["design-section-forms"], in: app).tap()
     app.buttons["design-open-editor"].tap()
     XCTAssertTrue(app.navigationBars["Sample editor"].waitForExistence(timeout: 3))
     XCTAssertTrue(app.buttons["rich-format-toggle"].exists)
@@ -84,9 +83,7 @@ final class NativeWorkspaceUITests: XCTestCase {
     attach(app, "Dark gallery")
     app.buttons["design-preview-settings"].tap()
     app.buttons["Accessibility text"].tap()
-    app.swipeUp()
-    app.swipeUp()
-    app.buttons["design-section-containers"].tap()
+    reveal(app.buttons["design-section-containers"], in: app).tap()
     XCTAssertTrue(app.navigationBars["Containers & data"].waitForExistence(timeout: 3))
     app.swipeUp()
     attach(app, "Dark records at accessibility text size")
@@ -95,8 +92,7 @@ final class NativeWorkspaceUITests: XCTestCase {
 
   func testRichWritingTypingFormattingUndoAndSavedPreview() {
     let app = launch("--review-design-system")
-    app.swipeUp()
-    app.buttons["design-section-writing"].tap()
+    reveal(app.buttons["design-section-writing"], in: app).tap()
     let editor = app.textViews["rich-editor"]
     XCTAssertTrue(editor.waitForExistence(timeout: 3))
     XCTAssertFalse(app.buttons["rich-format-bold"].exists)
@@ -140,13 +136,10 @@ final class NativeWorkspaceUITests: XCTestCase {
     app.buttons["Dark"].tap()
     app.buttons["design-preview-settings"].tap()
     app.buttons["Accessibility text"].tap()
-    app.swipeUp()
-    app.buttons["design-section-writing"].tap()
-    app.swipeUp()
-    app.buttons["rich-format-toggle"].tap()
+    reveal(app.buttons["design-section-writing"], in: app).tap()
+    reveal(app.buttons["rich-format-toggle"], in: app).tap()
     attach(app, "Dark rich text tools at accessibility size")
-    app.swipeUp()
-    app.buttons["design-open-writing-sheet"].tap()
+    reveal(app.buttons["design-open-writing-sheet"], in: app).tap()
     XCTAssertTrue(app.textViews["rich-sheet-editor"].waitForExistence(timeout: 3))
     app.textViews["rich-sheet-editor"].tap()
     app.textViews["rich-sheet-editor"].typeText("Cancelled draft")
@@ -158,11 +151,14 @@ final class NativeWorkspaceUITests: XCTestCase {
 
   // Opens every gallery section directly and keeps full-page screenshots for visual review.
   func testGallerySectionsScreenshotTour() {
-    let sections = [
+    let allSections = [
       "primitives", "foundations", "identity", "layout", "forms", "writing", "containers",
       "feedback",
     ]
-    for section in sections {
+    // Set TEST_RUNNER_GALLERY_SECTIONS=forms,feedback to review only some sections.
+    let requested = (ProcessInfo.processInfo.environment["GALLERY_SECTIONS"] ?? "")
+      .split(separator: ",").map(String.init)
+    for section in requested.isEmpty ? allSections : requested {
       let app = XCUIApplication()
       app.launchArguments = ["--review-design-system", "--review-design-section", section]
       app.launch()
@@ -184,6 +180,12 @@ final class NativeWorkspaceUITests: XCTestCase {
     app.launchArguments = [mode]
     app.launch()
     return app
+  }
+
+  // Scrolls the current screen until the element can receive taps, independent of text size.
+  private func reveal(_ element: XCUIElement, in app: XCUIApplication) -> XCUIElement {
+    for _ in 0..<8 where !(element.exists && element.isHittable) { app.swipeUp() }
+    return element
   }
 
   private func attach(_ app: XCUIApplication, _ name: String) {
