@@ -1,15 +1,5 @@
 import SwiftUI
 
-// Native text styles keep the shared hierarchy and follow Dynamic Type.
-enum MTFont {
-  static let display = Font.system(.largeTitle, design: .serif).weight(.medium)
-  static let title = Font.system(.title, design: .serif).weight(.medium)
-  static let heading = Font.headline
-  static let body = Font.body
-  static let label = Font.subheadline.weight(.medium)
-  static let caption = Font.caption
-}
-
 enum MTTone: CaseIterable {
   case neutral, accent, warm, success
 

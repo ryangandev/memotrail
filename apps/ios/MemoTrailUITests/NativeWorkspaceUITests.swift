@@ -6,17 +6,18 @@ final class NativeWorkspaceUITests: XCTestCase {
 
   func testGalleryActionsAndNativeEditor() {
     let app = launch("--review-design-system")
-    app.buttons["design-section-actions"].tap()
+    app.buttons["design-section-primitives"].tap()
     app.buttons["design-save"].tap()
     XCTAssertTrue(app.staticTexts["Preview saved to Library."].waitForExistence(timeout: 4))
     attach(app, "Actions")
     app.navigationBars.buttons.element(boundBy: 0).tap()
+    app.swipeUp()
     app.buttons["design-section-forms"].tap()
     app.buttons["design-open-editor"].tap()
     XCTAssertTrue(app.navigationBars["Sample editor"].waitForExistence(timeout: 3))
     XCTAssertTrue(app.buttons["rich-format-toggle"].exists)
     app.buttons["Cancel"].tap()
-    XCTAssertTrue(app.navigationBars["Forms & sheets"].waitForExistence(timeout: 3))
+    XCTAssertTrue(app.navigationBars["Forms"].waitForExistence(timeout: 3))
   }
 
   func testMapFiltersCitiesClusterAndRecordSelection() {
@@ -84,8 +85,9 @@ final class NativeWorkspaceUITests: XCTestCase {
     app.buttons["design-preview-settings"].tap()
     app.buttons["Accessibility text"].tap()
     app.swipeUp()
-    app.buttons["design-section-records"].tap()
-    XCTAssertTrue(app.navigationBars["Records & media"].waitForExistence(timeout: 3))
+    app.swipeUp()
+    app.buttons["design-section-containers"].tap()
+    XCTAssertTrue(app.navigationBars["Containers & data"].waitForExistence(timeout: 3))
     app.swipeUp()
     attach(app, "Dark records at accessibility text size")
     XCTAssertTrue(app.staticTexts["A quiet afternoon by the coast"].exists)
@@ -152,6 +154,29 @@ final class NativeWorkspaceUITests: XCTestCase {
     XCTAssertTrue(app.navigationBars["Writing & formatting"].waitForExistence(timeout: 3))
     app.swipeDown()
     XCTAssertEqual(app.textViews["rich-editor"].value as? String, "")
+  }
+
+  // Opens every gallery section directly and keeps full-page screenshots for visual review.
+  func testGallerySectionsScreenshotTour() {
+    let sections = [
+      "primitives", "foundations", "identity", "layout", "forms", "writing", "containers",
+      "feedback",
+    ]
+    for section in sections {
+      let app = XCUIApplication()
+      app.launchArguments = ["--review-design-system", "--review-design-section", section]
+      app.launch()
+      XCTAssertTrue(app.staticTexts["design-preview-status"].waitForExistence(timeout: 5))
+      var previous = app.screenshot().pngRepresentation
+      attach(app, "\(section) 1")
+      for page in 2...8 {
+        app.swipeUp()
+        let current = app.screenshot().pngRepresentation
+        guard current != previous else { break }
+        previous = current
+        attach(app, "\(section) \(page)")
+      }
+    }
   }
 
   private func launch(_ mode: String) -> XCUIApplication {

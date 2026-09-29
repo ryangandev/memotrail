@@ -32,9 +32,19 @@
           storageKey: "native-ui-review", autoRefreshToken: false,
           emitLocalSessionAsInitialSession: true)))
 
+    // `--review-design-section <name>` opens one gallery section directly for screenshot review.
+    @State private var galleryPath: [DesignSystemSection] = {
+      let arguments = ProcessInfo.processInfo.arguments
+      guard let index = arguments.firstIndex(of: "--review-design-section"),
+        arguments.indices.contains(index + 1),
+        let section = DesignSystemSection(rawValue: arguments[index + 1])
+      else { return [] }
+      return [section]
+    }()
+
     var body: some View {
       switch mode {
-      case .designSystem: NavigationStack { DesignSystemGallery() }
+      case .designSystem: NavigationStack(path: $galleryPath) { DesignSystemGallery() }
       case .map: NavigationStack { LocationMapView(preview: Self.mapSnapshot) }
       case .navigation:
         RootTabView(

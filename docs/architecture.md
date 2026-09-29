@@ -193,11 +193,12 @@ Pair it with the test file carrying the same feature name.
 - Inside a modal, date/time fields inherit its overlay container or accept an explicit `portalContainer` so their popovers stay inside its accessibility and theme boundary.
   Unnamed domain date fields retain the editor's contextual submit validation rather than introducing native custom-validity interception.
 - Cross-platform components preserve meaning and state while allowing native interaction differences.
-- Native `DesignSystem/Components/NativeComponents.swift` owns adaptive text styles and reusable presentation components.
-  Native text roles map to Dynamic Type styles; shared semantic colors, spacing, radius, and motion still come from generated tokens.
-- The Debug-only `DesignSystem/DesignSystemGallery.swift` renders those real components with appearance and text-size controls.
+- Native `DesignSystem/Components` owns reusable presentation components.
+  `MTFoundations.swift` maps each Web text role to the iOS Dynamic Type style with the same default size and defines the shared icon vocabulary, page widths, shadow, and line-height helpers.
+  Generated Swift tokens supply semantic colors, spacing, radius, motion, line heights, shadow layers, and the catalogs the gallery lists.
+- The Debug-only `DesignSystem/DesignSystemGallery.swift` renders those real components with appearance and text-size controls, in the same section order as the Web gallery.
   It is reached from the signed-out screen, More, or Settings; broad existing-screen migration follows review.
-- Debug launch arguments in `App/NativeReview.swift` expose isolated gallery, synthetic Map, and navigation review modes.
+- Debug launch arguments in `App/NativeReview.swift` expose isolated gallery, synthetic Map, and navigation review modes; `--review-design-section <name>` opens one gallery section directly.
   Release builds omit these modes and the gallery; `MemoTrailUI` runs their Simulator interaction tests.
 - Native app targets skip App Intents metadata extraction because they declare no App Intents.
   Enable extraction when native shortcuts are introduced.

@@ -86,6 +86,7 @@ The gallery uses real native components and includes appearance and Dynamic Type
 Existing screens keep their layouts pending component acceptance.
 
 Xcode launch arguments `--review-design-system`, `--review-map`, and `--review-navigation` open isolated review modes.
+Add `--review-design-section foundations` (or another section name) after `--review-design-system` to open one gallery section directly.
 The Map review uses clearly synthetic records; these modes do not sign in or write to the backend and are excluded from Release builds.
 The normal Map is available under More and reads the signed-in user's current Locations using MapKit.
 No Geoapify key is needed on iOS.

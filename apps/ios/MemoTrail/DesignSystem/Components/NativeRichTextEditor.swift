@@ -16,7 +16,7 @@ struct MTRichTextEditor: View {
         NativeAttributedTextView(text: $text, session: session, identifier: accessibilityIdentifier)
           .frame(height: min(editorHeight, 300))
         if text.length == 0 {
-          Text(placeholder).font(MTFont.body).foregroundStyle(MTColor.inkMuted)
+          Text(placeholder).font(MTFont.bodyLarge).foregroundStyle(MTColor.inkMuted)
             .padding(.horizontal, 12).padding(.top, 12).allowsHitTesting(false)
         }
       }
@@ -103,7 +103,7 @@ struct MTRichTextEditor: View {
 struct MTRichTextPreview: View {
   let text: NSAttributedString
   var body: some View {
-    Text(content).font(MTFont.body).foregroundStyle(MTColor.ink)
+    Text(content).font(MTFont.bodyLarge).foregroundStyle(MTColor.ink)
       .frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
   }
 

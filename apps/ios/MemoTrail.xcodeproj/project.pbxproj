@@ -99,6 +99,8 @@
 		BE0000000000000000000002 /* NativeRichTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0000000000000000000002 /* NativeRichTextEditor.swift */; };
 		BE0000000000000000000003 /* NativeWritingSpecimens.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0000000000000000000003 /* NativeWritingSpecimens.swift */; };
 		BE0000000000000000000004 /* EntryEmphasisContentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0000000000000000000004 /* EntryEmphasisContentTests.swift */; };
+		E10000000000000000000001 /* MTFoundations.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000001 /* MTFoundations.swift */; };
+		E10000000000000000000002 /* GalleryFoundations.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000002 /* GalleryFoundations.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -207,6 +209,8 @@
 		CE0000000000000000000002 /* NativeRichTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeRichTextEditor.swift; sourceTree = "<group>"; };
 		CE0000000000000000000003 /* NativeWritingSpecimens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWritingSpecimens.swift; sourceTree = "<group>"; };
 		CE0000000000000000000004 /* EntryEmphasisContentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryEmphasisContentTests.swift; sourceTree = "<group>"; };
+		E20000000000000000000001 /* MTFoundations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTFoundations.swift; sourceTree = "<group>"; };
+		E20000000000000000000002 /* GalleryFoundations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryFoundations.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -325,6 +329,7 @@
 		A10000000000000000000007 /* DesignSystem */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000002 /* GalleryFoundations.swift */,
 				CE0000000000000000000003 /* NativeWritingSpecimens.swift */,
 				CD0000000000000000000002 /* DesignSystemGallery.swift */,
 				A10000000000000000000008 /* Components */,
@@ -336,6 +341,7 @@
 		A10000000000000000000008 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000001 /* MTFoundations.swift */,
 				CE0000000000000000000002 /* NativeRichTextEditor.swift */,
 				CD0000000000000000000001 /* NativeComponents.swift */,
 				C00000000000000000000004 /* CaptureCard.swift */,
@@ -644,6 +650,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E10000000000000000000002 /* GalleryFoundations.swift in Sources */,
+				E10000000000000000000001 /* MTFoundations.swift in Sources */,
 				BE0000000000000000000003 /* NativeWritingSpecimens.swift in Sources */,
 				BE0000000000000000000002 /* NativeRichTextEditor.swift in Sources */,
 				BE0000000000000000000001 /* EntryEmphasisContent.swift in Sources */,
