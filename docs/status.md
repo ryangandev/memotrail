@@ -96,8 +96,9 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Native Capture now uses this editor as its single note, like the Web composer, and stores Web-compatible `body_rich` through drafts, the offline queue, and sync; a seeded local run confirmed the stored bold run.
   Native Inbox review now saves the same payload through `review_wiki_item_with_photo_place_rich` and keeps untouched Web-only formatting; a seeded local run confirmed a stored bold edit and an unchanged Web list.
   Native full-note rendering on focused record pages still needs to adopt the rich payload.
-- Native Settings routing includes Account, dates/timezone context, app-local appearance, Collections, Tags, organization settings, export, and the paused Beta AI state.
-  Web profile/date preference editing is not yet replicated on iOS.
+- Native Settings now follows Web `/settings`: the account card with Sign out, preferred name, birth date, and default time zone each save on their own with Web validation and toasts, then app-local appearance and the paused Beta AI, organization, and export rows.
+  The Dashboard greeting refreshes after a name save; a local contract run and a seeded Simulator UI run confirmed saving, clearing, and the greeting.
+  Web's browser-local Timeline style stays Web-only, and native Timeline editors do not yet default new exact times to the saved time zone.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
 - Refactor existing screens after component acceptance; native address search remains later work.
 

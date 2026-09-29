@@ -120,7 +120,7 @@ struct ExplorationView: View {
         HStack {
           Button("Refresh conversation") { Task { await load() } }.disabled(busy)
           Spacer()
-          NavigationLink("AI settings") { AISettingsView(client: client, ownerID: ownerID) }
+          NavigationLink("AI settings") { AISettingsView() }
         }
         Text(
           "Sending shares a bounded excerpt of this Entry and up to eight recent completed turns with Anthropic. No photos or other archive records are sent. AI may be wrong. Opening and refreshing are free."

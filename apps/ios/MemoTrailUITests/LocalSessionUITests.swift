@@ -188,6 +188,35 @@ final class LocalSessionUITests: XCTestCase {
     XCTAssertTrue(app.navigationBars["Version history"].waitForExistence(timeout: 10))
   }
 
+  func testSettingsSavesThePreferredNameForTheGreeting() throws {
+    let app = try launchLocalSession()
+    XCTAssertTrue(text("Review.", in: app).waitForExistence(timeout: 20))
+    app.buttons["workspace-settings"].tap()
+    let field = app.textFields["settings-preferred-name"]
+    XCTAssertTrue(field.waitForExistence(timeout: 15))
+    XCTAssertEqual(field.value as? String, "Review Tester")
+    XCTAssertFalse(app.buttons["Save name"].isEnabled)
+    attach(app, "Settings")
+
+    // Each setting saves on its own once it changes, like Web.
+    field.tap()
+    field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 13) + "  River  ")
+    app.buttons["Save name"].tap()
+    XCTAssertTrue(text("Preferred name saved.", in: app).waitForExistence(timeout: 10))
+    XCTAssertEqual(field.value as? String, "River")
+    XCTAssertFalse(app.buttons["Save name"].isEnabled)
+    attach(app, "Preferred name saved")
+
+    reveal(app.buttons["Save time zone"], in: app)
+    attach(app, "Settings preferences")
+    reveal(text("Private by default", in: app), in: app)
+    attach(app, "Settings end")
+
+    // The Dashboard greeting follows the saved name.
+    app.navigationBars["Settings"].buttons["Done"].tap()
+    XCTAssertTrue(text("River.", in: app).waitForExistence(timeout: 10))
+  }
+
   private func launchLocalSession() throws -> XCUIApplication {
     let path = ProcessInfo.processInfo.environment["MEMOTRAIL_REVIEW_SESSION"] ?? ""
     guard !path.isEmpty else {

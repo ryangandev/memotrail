@@ -113,6 +113,7 @@ struct HomeView: View {
           await refresh()
         }
       }
+      .onChange(of: navigator.profileRevision) { Task { await controller.load() } }
       .onChange(of: scenePhase) { _, newPhase in
         guard newPhase == .active, controller.hasLoaded else { return }
         Task { await refresh() }

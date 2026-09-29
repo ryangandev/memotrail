@@ -42,6 +42,7 @@ Native destinations and shared detail routing live in `App/WorkspaceRoute.swift`
 `App/AppNavigator.swift` carries cross-tab links that Web expresses as routes, such as `/inbox?entry=` and `/timeline?entry=`; the destination consumes a request once its data has loaded.
 `App/WorkspaceToolbar.swift` is the native form of the Web workspace header on each primary tab: the brand, search into Library, and the initial avatar that opens Settings.
 Map data and MapKit presentation live in `Features/Map`; native Settings live in `Features/Settings`.
+`Features/Settings/SettingsController.swift` reads and writes one `profiles` column per save, with the Web validation rules in `Models/ProfileSettings.swift`; `AppNavigator.profileRevision` tells the Dashboard to reload its greeting.
 
 For a database behavior, search migrations for the newest definition of the relevant RPC instead of assuming the first occurrence is current.
 Pair it with the test file carrying the same feature name.

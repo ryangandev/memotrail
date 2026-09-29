@@ -15,6 +15,8 @@ final class AppNavigator {
   var timelineEntryRequest: UUID?
   /// Library should focus its search field, like the Web header's search action.
   var librarySearchRequested = false
+  /// Increases when Settings saves the preferred name, so the Dashboard greeting refreshes.
+  var profileRevision = 0
 
   func show(_ tab: RootTabDestination) {
     selectedTab = tab

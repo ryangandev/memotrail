@@ -176,6 +176,37 @@ final class NativeContractTests: XCTestCase {
     XCTAssertFalse(inbox.entries.contains { $0.id == id })
   }
 
+  func testSettingsSaveAndClearTheProfileLikeWeb() async throws {
+    let (client, ownerID) = try await client()
+    let settings = SettingsController(client: client, ownerID: ownerID)
+    await settings.load()
+    XCTAssertNil(settings.loadErrorMessage)
+    XCTAssertNotNil(settings.profile)
+
+    let named = await settings.savePreferredName("  River  Gan ")
+    XCTAssertEqual(named, .init(isSaved: true, message: "Preferred name saved."))
+    let born = await settings.saveBirthDate("1994-04-18")
+    XCTAssertEqual(born, .init(isSaved: true, message: "Birth date saved."))
+    let zoned = await settings.saveTimezone("Asia/Tokyo")
+    XCTAssertEqual(zoned, .init(isSaved: true, message: "Default time zone saved."))
+    let future = await settings.saveBirthDate("2999-01-01")
+    XCTAssertFalse(future.isSaved)
+
+    let reloaded = SettingsController(client: client, ownerID: ownerID)
+    await reloaded.load()
+    XCTAssertEqual(
+      reloaded.profile,
+      ProfileSettings(preferredName: "River Gan", birthDate: "1994-04-18", timezone: "Asia/Tokyo"))
+
+    let cleared = await reloaded.savePreferredName("")
+    XCTAssertEqual(cleared, .init(isSaved: true, message: "Preferred name cleared."))
+    let removed = await reloaded.saveBirthDate("")
+    XCTAssertEqual(removed, .init(isSaved: true, message: "Birth date removed."))
+    await settings.load()
+    XCTAssertNil(settings.profile?.preferredName)
+    XCTAssertNil(settings.profile?.birthDate)
+  }
+
   func testTimelineCreatesMomentAndPeriodWithoutLegacyKinds() async throws {
     let (client, ownerID) = try await client()
     let timeline = TimelineController(client: client, ownerID: ownerID)

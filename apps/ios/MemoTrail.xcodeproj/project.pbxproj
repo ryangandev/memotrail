@@ -123,6 +123,9 @@
 		E1000000000000000000001B /* InboxCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001B /* InboxCards.swift */; };
 		E1000000000000000000001C /* EntryReviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001C /* EntryReviewSheet.swift */; };
 		E1000000000000000000001D /* WorkspaceToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001D /* WorkspaceToolbar.swift */; };
+		E1000000000000000000001E /* SettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001E /* SettingsController.swift */; };
+		E1000000000000000000001F /* ProfileSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001F /* ProfileSettings.swift */; };
+		E10000000000000000000020 /* ProfileSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000020 /* ProfileSettingsTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -255,6 +258,9 @@
 		E2000000000000000000001B /* InboxCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxCards.swift; sourceTree = "<group>"; };
 		E2000000000000000000001C /* EntryReviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryReviewSheet.swift; sourceTree = "<group>"; };
 		E2000000000000000000001D /* WorkspaceToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceToolbar.swift; sourceTree = "<group>"; };
+		E2000000000000000000001E /* SettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings/SettingsController.swift; sourceTree = "<group>"; };
+		E2000000000000000000001F /* ProfileSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettings.swift; sourceTree = "<group>"; };
+		E20000000000000000000020 /* ProfileSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -330,6 +336,7 @@
 		A10000000000000000000005 /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000001E /* SettingsController.swift */,
 				CD0000000000000000000009 /* NativeSettingsView.swift */,
 				CD0000000000000000000006 /* LocationMapView.swift */,
 				CD0000000000000000000005 /* NativeLocationMap.swift */,
@@ -424,6 +431,7 @@
 		A10000000000000000000010 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000001F /* ProfileSettings.swift */,
 				E20000000000000000000012 /* EntryRichText.swift */,
 				E2000000000000000000000C /* TimeZoneOptions.swift */,
 				CE0000000000000000000001 /* EntryEmphasisContent.swift */,
@@ -474,6 +482,7 @@
 		A10000000000000000000014 /* MemoTrailTests */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000020 /* ProfileSettingsTests.swift */,
 				E20000000000000000000013 /* EntryRichTextTests.swift */,
 				E2000000000000000000000E /* FormFieldTests.swift */,
 				CE0000000000000000000004 /* EntryEmphasisContentTests.swift */,
@@ -706,6 +715,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1000000000000000000001F /* ProfileSettings.swift in Sources */,
+				E1000000000000000000001E /* SettingsController.swift in Sources */,
 				E1000000000000000000001D /* WorkspaceToolbar.swift in Sources */,
 				E1000000000000000000001C /* EntryReviewSheet.swift in Sources */,
 				E1000000000000000000001B /* InboxCards.swift in Sources */,
@@ -804,6 +815,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E10000000000000000000020 /* ProfileSettingsTests.swift in Sources */,
 				E10000000000000000000013 /* EntryRichTextTests.swift in Sources */,
 				E1000000000000000000000E /* FormFieldTests.swift in Sources */,
 				BE0000000000000000000004 /* EntryEmphasisContentTests.swift in Sources */,
