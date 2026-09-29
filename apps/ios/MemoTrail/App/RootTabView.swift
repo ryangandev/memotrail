@@ -17,7 +17,7 @@ struct RootTabView: View {
   @State private var capturePhotos: [FirstTimePhotoDraft]
   @State private var hasLocalDraft: Bool
   @State private var hasLoadedCapturePhotos = false
-  @State private var selectedTab = RootTabDestination.home
+  @State private var navigator = AppNavigator()
   @State private var isShowingQuickCapture = false
 
   init(
@@ -56,13 +56,12 @@ struct RootTabView: View {
   }
 
   var body: some View {
-    TabView(selection: $selectedTab) {
+    TabView(selection: $navigator.selectedTab) {
       HomeView(
         client: client,
         user: user,
         isAuthenticationBusy: isAuthenticationBusy,
         signOut: signOut,
-        openLibrary: { selectedTab = .library },
         controller: homeController,
         captureController: inboxController,
         captureTitle: $captureTitle,
@@ -123,7 +122,7 @@ struct RootTabView: View {
       .tag(RootTabDestination.more)
     }
     .overlay(alignment: .bottomTrailing) {
-      if selectedTab.usesGlobalCaptureButton {
+      if navigator.selectedTab.usesGlobalCaptureButton {
         Button {
           isShowingQuickCapture = true
         } label: {
@@ -140,6 +139,7 @@ struct RootTabView: View {
         .accessibilityIdentifier("global-quick-capture")
       }
     }
+    .environment(navigator)
     .fullScreenCover(isPresented: $isShowingQuickCapture) {
       QuickCaptureView(
         controller: inboxController,
@@ -256,13 +256,14 @@ enum RootTabDestination: String, CaseIterable, Sendable {
     }
   }
 
+  /// The Web navigation icons: dashboard grid, inbox tray, timeline, archive box, and more.
   var systemImage: String {
     switch self {
-    case .home: "house"
-    case .inbox: "tray"
-    case .timeline: "point.bottomleft.forward.to.point.topright.scurvepath"
-    case .library: "books.vertical"
-    case .more: "ellipsis"
+    case .home: MTIcon.dashboard.systemName
+    case .inbox: MTIcon.inbox.systemName
+    case .timeline: MTIcon.timeline.systemName
+    case .library: MTIcon.archive.systemName
+    case .more: MTIcon.more.systemName
     }
   }
 

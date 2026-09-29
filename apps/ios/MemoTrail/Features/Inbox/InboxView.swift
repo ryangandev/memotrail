@@ -17,6 +17,7 @@ struct InboxView: View {
   @Binding private var hasLocalDraft: Bool
   @State private var isShowingAccount = false
   @State private var selectedEntry: InboxEntry?
+  @Environment(AppNavigator.self) private var navigator
   @FocusState private var isTitleFocused: Bool
   @Environment(\.scenePhase) private var scenePhase
 
@@ -158,11 +159,29 @@ struct InboxView: View {
           await controller.refresh()
         }
       }
+      .task(id: navigator.inboxReviewRequest) {
+        guard let id = navigator.inboxReviewRequest else { return }
+        if !controller.entries.contains(where: { $0.id == id }) { await controller.refresh() }
+        openRequestedReview()
+      }
+      .onChange(of: controller.isLoading) { openRequestedReview() }
       .onChange(of: scenePhase) { _, newPhase in
         guard newPhase == .active, controller.hasLoaded else { return }
         Task { await controller.refresh() }
       }
     }
+  }
+
+  /// Opens the capture a Dashboard link asked for, like Web `/inbox?entry=`.
+  private func openRequestedReview() {
+    guard let id = navigator.inboxReviewRequest, controller.hasLoaded, !controller.isLoading
+    else { return }
+    navigator.inboxReviewRequest = nil
+    guard let entry = controller.entries.first(where: { $0.id == id }) else {
+      MTToastCenter.shared.info("This capture is no longer waiting in the Inbox.")
+      return
+    }
+    selectedEntry = entry
   }
 
   private var pendingSection: some View {

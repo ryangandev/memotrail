@@ -50,8 +50,11 @@ struct MoreView: View {
   let isAuthenticationBusy: Bool
   let signOut: @MainActor () async -> Void
 
+  @Environment(AppNavigator.self) private var navigator
+
   var body: some View {
-    NavigationStack {
+    @Bindable var navigator = navigator
+    NavigationStack(path: $navigator.morePath) {
       List {
         ForEach(WorkspaceRoute.groups, id: \.title) { group in
           Section(group.title) {

@@ -137,15 +137,16 @@ The Homes, Vehicles, and First Times track shortcuts open their specialized edit
 Opening an existing Home, Vehicle, or First Time from Timeline navigates to its read-only focused detail page.
 Unanchored Age, Approximate, and Unknown moments remain visible without a fabricated calendar position.
 
-Web Dashboard is ordered around:
+Dashboard is ordered around:
 
 1. A personal greeting and compact archive counts linking to their destinations.
 2. Quick Capture alongside up to three captures ready to organize.
 3. A quiet resurfaced memory alongside current life chapters.
 4. Full-width Recent Entries with single-line titles and summaries, Collection prefixes, and optional tags.
 
-Narrow screens stack these sections in the same reading order.
-Search stays available in the shared workspace header.
+Narrow screens and iOS stack these sections in the same reading order.
+Search stays available in the shared workspace header, and in the iOS Dashboard toolbar as a shortcut to Library.
+Archive counts open Timeline, Library, First Times, Collections, or Inbox; a capture ready to organize opens its review, and a current chapter opens its Timeline record.
 
 Resurfacing uses organized, active, dated Entries only.
 It prefers the nearest prior On This Day match and otherwise uses a stable daily rotation of older Entries.

@@ -13,6 +13,7 @@ struct TimelineView: View {
   @State private var vehicleEditorSelection: VehicleEditorSelection?
   @State private var residenceErrorMessage: String?
   @State private var vehicleErrorMessage: String?
+  @Environment(AppNavigator.self) private var navigator
 
   init(client: SupabaseClient, ownerID: UUID) {
     self.client = client
@@ -124,6 +125,8 @@ struct TimelineView: View {
           await controller.load()
         }
       }
+      .task(id: navigator.timelineEntryRequest) { await openRequestedEntry() }
+      .onChange(of: controller.isLoading) { Task { await openRequestedEntry() } }
     }
   }
 
@@ -190,19 +193,7 @@ struct TimelineView: View {
           TimelineTrackCard(
             track: track,
             addMoment: { openEditor(trackID: track.id) },
-            selectEntry: { entry in
-              switch entry.specializedEditor {
-              case .home:
-                Task { await openResidence(entryID: entry.id) }
-              case .vehicle:
-                Task { await openVehicle(entryID: entry.id) }
-              case nil:
-                editorSelection = TimelineEditorSelection(
-                  entry: entry,
-                  initialTrackID: entry.trackID
-                )
-              }
-            }
+            selectEntry: select
           )
         }
       }
@@ -240,6 +231,31 @@ struct TimelineView: View {
       RoundedRectangle(cornerRadius: MTRadius.large)
         .stroke(MTColor.border, lineWidth: 1)
     }
+  }
+
+  private func select(_ entry: TimelineEntry) {
+    switch entry.specializedEditor {
+    case .home:
+      Task { await openResidence(entryID: entry.id) }
+    case .vehicle:
+      Task { await openVehicle(entryID: entry.id) }
+    case nil:
+      editorSelection = TimelineEditorSelection(entry: entry, initialTrackID: entry.trackID)
+    }
+  }
+
+  /// Opens the record a Dashboard chapter asked for, like Web `/timeline?entry=`.
+  private func openRequestedEntry() async {
+    guard let id = navigator.timelineEntryRequest, !controller.isLoading else { return }
+    let entries = { controller.tracks.flatMap(\.entries) }
+    if !entries().contains(where: { $0.id == id }) { await controller.load() }
+    guard navigator.timelineEntryRequest == id else { return }
+    navigator.timelineEntryRequest = nil
+    guard let entry = entries().first(where: { $0.id == id }) else {
+      MTToastCenter.shared.info("This record is no longer on your Timeline.")
+      return
+    }
+    select(entry)
   }
 
   private func openEditor(trackID: UUID?) {

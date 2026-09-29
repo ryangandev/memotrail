@@ -122,6 +122,8 @@
 		E10000000000000000000016 /* GalleryFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000016 /* GalleryFeedback.swift */; };
 		E10000000000000000000017 /* UITestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000017 /* UITestSupport.swift */; };
 		E10000000000000000000018 /* LocalSessionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000018 /* LocalSessionUITests.swift */; };
+		E10000000000000000000019 /* AppNavigator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000019 /* AppNavigator.swift */; };
+		E1000000000000000000001A /* DashboardComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001A /* DashboardComponents.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -253,6 +255,8 @@
 		E20000000000000000000016 /* GalleryFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryFeedback.swift; sourceTree = "<group>"; };
 		E20000000000000000000017 /* UITestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestSupport.swift; sourceTree = "<group>"; };
 		E20000000000000000000018 /* LocalSessionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalSessionUITests.swift; sourceTree = "<group>"; };
+		E20000000000000000000019 /* AppNavigator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigator.swift; sourceTree = "<group>"; };
+		E2000000000000000000001A /* DashboardComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardComponents.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -313,6 +317,7 @@
 		A10000000000000000000004 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000019 /* AppNavigator.swift */,
 				CD0000000000000000000008 /* NativeReview.swift */,
 				CD0000000000000000000007 /* WorkspaceRoute.swift */,
 				C00000000000000000000001 /* MemoTrailApp.swift */,
@@ -549,6 +554,7 @@
 		A10000000000000000000022 /* Home */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000001A /* DashboardComponents.swift */,
 				C0000000000000000000002C /* HomeController.swift */,
 				C0000000000000000000002D /* HomeView.swift */,
 			);
@@ -711,6 +717,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1000000000000000000001A /* DashboardComponents.swift in Sources */,
+				E10000000000000000000019 /* AppNavigator.swift in Sources */,
 				E10000000000000000000016 /* GalleryFeedback.swift in Sources */,
 				E10000000000000000000015 /* MTMedia.swift in Sources */,
 				E10000000000000000000014 /* MTToast.swift in Sources */,

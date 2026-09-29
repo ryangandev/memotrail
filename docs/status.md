@@ -18,7 +18,8 @@ The accepted Data Ribbon layout now replaces the Web Dashboard, using the signed
 The development preview routes and all 20 static Home mockups have been removed; Production deployment verification and browser acceptance remain pending.
 Native iOS now adopts the canonical Entry, Entity, and Goal contracts, optional Home Locations, and the paused AI state.
 The retired native Place surface and saved-Location catalog are removed; the existing screen layouts and accepted splash remain.
-Native navigation now uses Dashboard, Inbox, Timeline, Library, and More, with the active Web destinations grouped under More.
+Native navigation now uses Dashboard, Inbox, Timeline, Library, and More, with the active Web destinations grouped under More and the Web navigation icons.
+The native Dashboard now follows the Web Data Ribbon order and links, verified against a seeded local account.
 The native MapKit screen and Debug Design System gallery are implemented; personal acceptance and broad screen migration remain pending.
 The merged Web release still needs Production deployment verification and browser acceptance; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 
