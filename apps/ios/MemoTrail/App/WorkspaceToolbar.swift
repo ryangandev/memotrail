@@ -15,7 +15,16 @@ private struct WorkspaceToolbar: ViewModifier {
     content
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
-        ToolbarItem(placement: .topBarLeading) { MemoTrailBrand() }
+        ToolbarItem(placement: .topBarLeading) {
+          // Web's phone header shows only the mark, which links to the Dashboard.
+          Button {
+            navigator.show(.home)
+          } label: {
+            MemoTrailMark().frame(width: 28, height: 28)
+          }
+          .accessibilityLabel("MemoTrail dashboard")
+          .accessibilityIdentifier("workspace-brand")
+        }
         ToolbarItem(placement: .topBarTrailing) {
           Button("Search your trail", systemImage: MTIcon.search.systemName) {
             navigator.searchLibrary()
@@ -73,21 +82,6 @@ private struct WorkspaceToolbar: ViewModifier {
     .buttonStyle(.plain)
     .accessibilityLabel("Open Settings for \(user.name)")
     .accessibilityIdentifier("workspace-settings")
-  }
-}
-
-/// The MemoTrail mark and wordmark, like the Web header brand.
-private struct MemoTrailBrand: View {
-  var body: some View {
-    HStack(spacing: MTSpacing.s2) {
-      MemoTrailMark()
-        .frame(width: 28, height: 28)
-      Text("MemoTrail")
-        .font(.system(size: 18, weight: .medium, design: .serif))
-        .foregroundStyle(MTColor.ink)
-    }
-    .accessibilityElement(children: .ignore)
-    .accessibilityLabel("MemoTrail")
   }
 }
 

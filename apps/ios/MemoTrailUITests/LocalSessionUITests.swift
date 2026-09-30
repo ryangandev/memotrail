@@ -36,6 +36,10 @@ final class LocalSessionUITests: XCTestCase {
       XCTAssertTrue(app.staticTexts[group].waitForExistence(timeout: 5), group)
     }
     attach(app, "More")
+    // The header mark opens the Dashboard, like Web's brand link.
+    app.buttons["workspace-brand"].tap()
+    XCTAssertTrue(app.tabBars.buttons["Dashboard"].isSelected)
+    app.tabBars.buttons["More"].tap()
     for route in [
       "Map", "People", "Homes", "Vehicles", "First Times", "Goals", "Collections", "Tags",
       "Version history", "Trash", "Settings",
