@@ -84,7 +84,7 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - Review the Debug-only native Design System gallery, including appearance, Dynamic Type, action states, forms, cards, media, toasts, and feedback.
   The new Map uses its shared presentation components; existing screens retain their layouts pending acceptance.
   Native actions, badges, headers, empty states, form fields, record and Collection cards, read-only rich writing, toasts, remote images, upload progress, and the photo field now mirror the Web gallery specimens.
-  First Times, Homes, Vehicles, Goals, Collections, and the Entry photo viewer load photos through the shared remote image; Home and Trash follow with their screen syncs.
+  First Times, Homes, Vehicles, Goals, Collections, and an Item's Current photos load photos through the shared remote image; Home and Trash follow with their screen syncs.
   Twelve Simulator UI scenarios pass, adding form pickers, organization editing, toasts rising clear of the keyboard, photo field removal, and a gallery screenshot tour; all 245 native tests pass against local Supabase, including eleven contract tests.
   `review-local-session.py` now runs signed-in UI flows as a seeded, disposable local account, so screen syncs are checked against real local data rather than synthetic previews.
   One shared OccurrenceEditor and tag/Collection editor now serve Capture, Inbox review, Timeline, First Times, Homes, Vehicles, and Goals, with the Web Date types, Present end, and optional description.
