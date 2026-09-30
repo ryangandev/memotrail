@@ -32,10 +32,12 @@ export function SearchShortcutButton({
 
   return (
     <button
+      aria-keyshortcuts="Meta+K Control+K"
       aria-haspopup="dialog"
       aria-label="Search your trail"
       className={className}
       onClick={onOpen}
+      title="Search your trail (⌘ K / Ctrl+K)"
       type="button"
     >
       <Icon name="search" />

@@ -2,6 +2,7 @@
   --sidebar-motion: 240ms cubic-bezier(0.22, 1, 0.36, 1);
   --sidebar-compact-width: 64px;
   --sidebar-expanded-width: 224px;
+  --capture-workspace-left: var(--sidebar-expanded-width);
 
   min-height: 100dvh;
   background: var(--mt-color-canvas);
@@ -241,6 +242,7 @@
 
 .workspace {
   min-height: 100dvh;
+  padding-bottom: 100px;
   margin-left: var(--sidebar-expanded-width);
   transition: margin-left var(--sidebar-motion);
 }
@@ -253,6 +255,10 @@
   overflow: hidden;
   background: var(--mt-color-accent-subtle);
   transition: left var(--sidebar-motion);
+}
+
+.appShell[data-sidebar-collapsed="true"] {
+  --capture-workspace-left: var(--sidebar-compact-width);
 }
 
 .appShell[data-sidebar-collapsed="true"] .sidebar {
@@ -436,48 +442,6 @@
   font-size: 10px;
 }
 
-.newEntryTopAction {
-  border-color: color-mix(
-    in srgb,
-    var(--mt-color-accent) 32%,
-    var(--mt-color-border-strong)
-  );
-  color: var(--mt-color-accent);
-  background: color-mix(
-    in srgb,
-    var(--mt-color-accent-subtle) 72%,
-    transparent
-  );
-}
-
-.newEntryTopAction kbd {
-  border-color: color-mix(
-    in srgb,
-    var(--mt-color-accent) 24%,
-    var(--mt-color-border)
-  );
-  color: var(--mt-color-accent);
-  background: color-mix(
-    in srgb,
-    var(--mt-color-accent-subtle) 68%,
-    var(--mt-color-surface-raised)
-  );
-}
-
-.newEntryTopAction:hover,
-.newEntryTopAction:focus-visible {
-  border-color: color-mix(in srgb, var(--mt-color-accent) 58%, transparent);
-  color: var(--mt-color-accent-hover);
-  background: color-mix(
-    in srgb,
-    var(--mt-color-accent-subtle) 88%,
-    transparent
-  );
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--mt-color-accent) 12%, transparent),
-    0 0 16px color-mix(in srgb, var(--mt-color-accent) 16%, transparent);
-}
-
 .inboxTopAction {
   position: relative;
   width: 38px;
@@ -529,6 +493,11 @@
 }
 
 @media (max-width: 720px) {
+  .appShell,
+  .appShell[data-sidebar-collapsed="true"] {
+    --capture-workspace-left: 0px;
+  }
+
   .appShell {
     padding-bottom: calc(68px + env(safe-area-inset-bottom));
   }
@@ -601,10 +570,6 @@
   }
 
   .topActionButton kbd {
-    display: none;
-  }
-
-  .newEntryTopAction > span {
     display: none;
   }
 

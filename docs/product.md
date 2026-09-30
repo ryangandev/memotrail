@@ -52,7 +52,7 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 
 - Global capture starts with one flexible writing field and may include photos, voice-to-text, and a best-known date.
 - New captures remain untitled until Inbox review or later editing adds a title.
-- The New Entry modal is a compact single-surface composer whose writing field grows with its content and does not expose native resize controls.
+- The Web New Entry composer expands from a floating input-style control at the bottom center of the workspace; its writing field grows with its content and does not expose native resize controls.
 - Entry writing offers lightweight rich text for emphasis, links, lists, quotes, inline code, and code blocks without turning capture into a document editor.
   Formatting survives later edits and appears on full note surfaces.
 - Rich formatting never replaces the Entry's clean plaintext body, so search, AI, export, and clients that do not render formatting still receive readable writing.
@@ -217,12 +217,22 @@ Settings lets the user choose a preferred name for Dashboard greetings, or clear
 Desktop treats Library as a primary destination beside Dashboard, Timeline, and Map; Search is part of Library.
 Its sidebar omits Inbox, keeps optional focused views separate from Collections, tags, Trash, and the single Settings entry point.
 The desktop sidebar can collapse to a compact icon rail from the top-bar panel control; the width change animates, and the choice persists in this browser without changing mobile navigation.
+Command B (Control B on Windows) also toggles the desktop sidebar when focus is outside text inputs and editors; inside the rich-text editor it retains its Bold behavior.
 The collapsed rail shows the MemoTrail logo without its wordmark above square navigation targets and keeps keyboard focus indicators inside the controls.
 On collapse, the logo's outer ring and accent rotate 90 degrees together while the inner ring turns in the opposite direction over 320ms; expanding reverses the rotation, and reduced motion keeps the mark still.
-The persistent top bar places Back and Forward history controls, then the desktop sidebar panel control, before the accent-tinted `New` control; unavailable history directions are disabled.
-Neutral Search and an icon-only Inbox control sit at the far right; Inbox shows a notification count only when captures are waiting.
+The persistent top bar places Back and Forward history controls, then the desktop sidebar panel control; unavailable history directions are disabled.
+An icon-only Inbox control sits at the far right; Inbox shows a notification count only when captures are waiting.
 A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry and People results in place, supports keyboard navigation, and opens Library for full search with filters.
-New Entry opens from the top bar or Command J.
+On Web, the glass-effect bottom dock places the New Entry control labeled `What’s on your mind?` with a sparkle icon on the left and global Search on the right.
+The controls keep text and shortcut hints readable over page content, and hovering highlights the border with a subtle accent glow that fades back when the pointer leaves without changing the background color.
+New Entry also opens with Command J (Control J on Windows) when focus is outside a text input or editor.
+It expands into a bottom-anchored composer with the editor below the prompt, keeping rich text, photos, dates, local drafts, and Save to Inbox.
+The expanded composer uses one consistent frosted surface across its header, writing area, and action row.
+Web Capture saves to Inbox with Command Return (Control Enter on Windows), using the same validation and offline behavior as the Save button.
+Hovering or focusing Save to Inbox displays a tooltip with the Command Return shortcut.
+Enter starts a new paragraph, and Shift+Enter inserts a line break; input method composition and nested editing controls do not trigger the save shortcut.
+Escape or the close control collapses it and restores focus to the bottom control without discarding the draft.
+On mobile Web the collapsed control sits above navigation; the expanded composer stays within the visible viewport and scrolls when needed.
 Home, Vehicle, and First Time results share one reusable card shell while preserving subtype-specific content and responsive layouts.
 Specialized editors share one unboxed photo field with consistent previews, progress, limits, and controls.
 On Web, selecting a photo thumbnail in an editor or capture draft opens a single-photo dialog without removing it; the separate X control removes the photo.
