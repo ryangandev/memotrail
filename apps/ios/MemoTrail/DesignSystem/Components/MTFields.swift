@@ -273,10 +273,12 @@ struct MTSelectField<Value: Hashable>: View {
         }
       } label: {
         HStack(spacing: MTSpacing.s2) {
+          // A long choice wraps once rather than hiding its end, as at larger text sizes.
           Text(title(selection))
             .font(MTFont.body)
             .foregroundStyle(MTColor.ink)
-            .lineLimit(1)
+            .lineLimit(2)
+            .multilineTextAlignment(.leading)
           Spacer(minLength: 0)
           Image(.chevron)
             .font(.system(size: 11, weight: .semibold))
