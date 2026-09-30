@@ -19,6 +19,7 @@ import {
   collectionPageHref,
 } from "@/lib/data/collections-input";
 import { wikiEntryHref, wikiItemIdentityLabel } from "@/lib/data/wiki-item";
+import { countLabel } from "@/lib/count-label";
 
 export function CollectionsWorkspace({
   workspace,
@@ -433,10 +434,6 @@ function firstUsefulLine(value: string) {
     .split(/\r?\n/)
     .map((line) => line.trim())
     .find(Boolean);
-}
-
-function countLabel(count: number, singular: string) {
-  return `${count} ${count === 1 ? singular : `${singular}s`}`;
 }
 
 function shortDate(value: string) {

@@ -8,6 +8,7 @@ import { PageFrame } from "@/components/page-frame";
 import { SearchField } from "@/components/search-field";
 import { getOrganizationWorkspace } from "@/lib/data/organization-workspace";
 import styles from "./page.module.css";
+import { countLabel } from "@/lib/count-label";
 
 export const dynamic = "force-dynamic";
 
@@ -150,8 +151,4 @@ function Pagination({
       {hasNext ? <Link href={href(page + 1)}>Next</Link> : <span />}
     </nav>
   );
-}
-
-function countLabel(count: number, singular: string) {
-  return `${count} ${count === 1 ? singular : `${singular}s`}`;
 }

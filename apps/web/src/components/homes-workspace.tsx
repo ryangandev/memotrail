@@ -59,6 +59,7 @@ import {
   type PhotoUploadProgress as PhotoUploadProgressValue,
 } from "@/lib/media/upload";
 import type { CaptureExtractionSource } from "@/lib/data/capture-extraction-input";
+import { countLabel } from "@/lib/count-label";
 
 export function HomesWorkspace({
   collectionOptions,
@@ -967,10 +968,6 @@ function localTimezone() {
 
 function actionError(message: string): HomeActionResult {
   return { entry: null, message, status: "error" };
-}
-
-function countLabel(count: number, singular: string) {
-  return `${count} ${count === 1 ? singular : `${singular}s`}`;
 }
 
 function truncate(value: string, limit: number) {

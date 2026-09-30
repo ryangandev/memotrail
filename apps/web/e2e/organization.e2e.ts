@@ -169,6 +169,8 @@ test("Collections and Tags are first-class and organize generic Timeline moments
       .getByRole("button", { name: "Close organization editor" })
       .click();
     await expect(editCollectionDialog).not.toBeVisible();
+    await cityCollectionCard.getByRole("link").click();
+    await expect(page.getByLabel("Collection summary")).toHaveText("0 Entries");
 
     await page
       .getByRole("navigation", { name: "Primary navigation" })
@@ -399,6 +401,9 @@ test("Collections and Tags are first-class and organize generic Timeline moments
     await page.goto("/tags");
 
     const unusedRow = page.getByRole("article").filter({ hasText: "unused" });
+    await expect(unusedRow.getByLabel("0 Entries", { exact: true })).toHaveText(
+      "0",
+    );
     await unusedRow
       .getByRole("button", { name: "Manage tag unused, used by 0 Entries" })
       .click();
