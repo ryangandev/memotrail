@@ -31,7 +31,15 @@ final class LocalSessionUITests: XCTestCase {
       attach(app, tab)
     }
     app.tabBars.buttons["More"].tap()
-    for route in ["Homes", "Vehicles", "First Times", "Goals", "Collections", "Tags", "Settings"] {
+    // More groups its destinations like Web's mobile More menu.
+    for group in ["Explore", "Focused views", "Organize", "Archive and account"] {
+      XCTAssertTrue(app.staticTexts[group].waitForExistence(timeout: 5), group)
+    }
+    attach(app, "More")
+    for route in [
+      "Map", "People", "Homes", "Vehicles", "First Times", "Goals", "Collections", "Tags",
+      "Version history", "Trash", "Settings",
+    ] {
       reveal(app.buttons[route], in: app).tap()
       Thread.sleep(forTimeInterval: 1.5)
       attach(app, route)
