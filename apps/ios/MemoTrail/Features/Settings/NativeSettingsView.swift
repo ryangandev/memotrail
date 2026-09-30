@@ -399,6 +399,9 @@ private struct SettingsPreferenceLink<Destination: View>: View {
       .contentShape(Rectangle())
     }
     .buttonStyle(MTListRowButtonStyle())
+    // The row is named by its title; the detail line explains where it leads.
+    .accessibilityLabel(title)
+    .accessibilityHint(detail)
   }
 }
 
