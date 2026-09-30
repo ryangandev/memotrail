@@ -20,6 +20,18 @@ final class NativeWorkspaceUITests: XCTestCase {
     XCTAssertTrue(app.navigationBars["Forms"].waitForExistence(timeout: 3))
   }
 
+  func testSignInFollowsTheWebWelcome() {
+    let app = launch("--review-sign-in")
+    XCTAssertTrue(
+      app.staticTexts["A quiet place for everything worth keeping."].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Welcome to MemoTrail"].exists)
+    XCTAssertTrue(app.staticTexts["Sign in to continue to your private space."].exists)
+    XCTAssertTrue(app.buttons["google-sign-in"].exists)
+    attach(app, "Sign in")
+    app.swipeUp()
+    attach(app, "Sign in card")
+  }
+
   func testMapFiltersCitiesClusterAndRecordSelection() {
     let app = launch("--review-map")
     XCTAssertTrue(app.buttons["map-browse-records"].waitForExistence(timeout: 5))

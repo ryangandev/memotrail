@@ -1,42 +1,44 @@
-import GoogleSignInSwift
 import SwiftUI
 
+/// Web `AuthGate` at phone width: the brand header, the welcome story, and the sign-in card.
 struct AuthenticationView: View {
   let state: AuthenticationController.State
   let isBusy: Bool
   let errorMessage: String?
   let signIn: @MainActor () async -> Void
+  @ScaledMetric(relativeTo: .largeTitle) private var headlineSize = 50
   #if DEBUG
     @State private var showingDesignSystem = false
   #endif
 
   var body: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: MTSpacing.s10) {
-        brand
-        story
-        signInCard
-        #if DEBUG
-          Button("Design System", systemImage: "square.grid.2x2") { showingDesignSystem = true }
-            .font(MTFont.caption)
-            .accessibilityIdentifier("signed-out-design-system")
-        #endif
+      VStack(alignment: .leading, spacing: 0) {
+        header
+        VStack(alignment: .leading, spacing: MTSpacing.s8) {
+          story
+          signInCard
+          #if DEBUG
+            Button("Design System", systemImage: "square.grid.2x2") { showingDesignSystem = true }
+              .font(MTFont.caption)
+              .accessibilityIdentifier("signed-out-design-system")
+          #endif
+        }
+        .padding(.top, 44)
+        .padding(.bottom, MTSpacing.s16)
       }
-      .frame(maxWidth: 560, alignment: .leading)
-      .padding(.horizontal, MTSpacing.s6)
-      .padding(.top, MTSpacing.s6)
-      .padding(.bottom, MTSpacing.s12)
+      .frame(maxWidth: 460, alignment: .leading)
+      .padding(.horizontal, MTSpacing.s4)
+      .frame(maxWidth: .infinity)
     }
     .scrollBounceBehavior(.basedOnSize)
     .background {
-      ZStack(alignment: .topLeading) {
-        MTColor.canvas
-        Circle()
-          .fill(MTColor.warmSubtle.opacity(0.7))
-          .frame(width: 360, height: 360)
-          .blur(radius: 70)
-          .offset(x: -190, y: -160)
-      }
+      // Web's warm glow near the top leading corner.
+      RadialGradient(
+        colors: [MTColor.warmSubtle.opacity(0.78), MTColor.warmSubtle.opacity(0)],
+        center: UnitPoint(x: 0.08, y: 0.15), startRadius: 0, endRadius: 300
+      )
+      .background(MTColor.canvas)
       .ignoresSafeArea()
     }
     #if DEBUG
@@ -53,125 +55,166 @@ struct AuthenticationView: View {
     #endif
   }
 
-  private var brand: some View {
-    HStack(spacing: MTSpacing.s3) {
+  private var header: some View {
+    HStack(spacing: 11) {
       MemoTrailMark()
-        .frame(width: 32, height: 32)
-
+        .frame(width: 31, height: 31)
       Text("MemoTrail")
-        .font(.system(size: 20, weight: .medium, design: .serif))
+        .font(.system(size: 19, weight: .medium, design: .serif))
+        .tracking(-0.4)
         .foregroundStyle(MTColor.ink)
     }
-    .accessibilityElement(children: .combine)
+    .frame(maxWidth: .infinity, minHeight: 68, alignment: .leading)
+    .overlay(alignment: .bottom) { MTListDivider() }
+    .accessibilityElement(children: .ignore)
     .accessibilityLabel("MemoTrail")
+    .accessibilityAddTraits(.isHeader)
   }
 
   private var story: some View {
-    VStack(alignment: .leading, spacing: MTSpacing.s4) {
-      Text("YOUR LIFE, KEPT WITH CONTEXT")
-        .font(MTTypography.caption.weight(.semibold))
-        .tracking(1.25)
-        .foregroundStyle(MTColor.accent)
-
+    VStack(alignment: .leading, spacing: 0) {
+      eyebrow("Your life, kept with context")
       Text("A quiet place for everything worth keeping.")
-        .font(.system(size: 43, weight: .medium, design: .serif))
-        .tracking(-1.2)
+        .font(.system(size: headlineSize, weight: .medium, design: .serif))
+        .tracking(-0.045 * headlineSize)
         .foregroundStyle(MTColor.ink)
         .fixedSize(horizontal: false, vertical: true)
-
+        .padding(.top, MTSpacing.s4)
+        .accessibilityAddTraits(.isHeader)
       Text(
-        "Capture thoughts, first times, people, places, and the chapters that connect them."
+        "Capture thoughts, first times, places, and the chapters that connect them. MemoTrail keeps the archive private and leaves the organization in your hands."
       )
-      .font(MTTypography.body)
+      .font(MTFont.body)
       .foregroundStyle(MTColor.inkMuted)
-      .lineSpacing(4)
+      .mtLineSpacing(MTLineHeight.relaxed)
+      .fixedSize(horizontal: false, vertical: true)
+      .padding(.top, MTSpacing.s6)
     }
   }
 
   private var signInCard: some View {
-    VStack(alignment: .leading, spacing: MTSpacing.s4) {
-      Text("PERSONAL ARCHIVE")
-        .font(MTTypography.caption.weight(.semibold))
-        .tracking(1.2)
-        .foregroundStyle(MTColor.accent)
-
-      VStack(alignment: .leading, spacing: MTSpacing.s2) {
-        Text(cardTitle)
-          .font(.system(size: 27, weight: .medium, design: .serif))
-          .foregroundStyle(MTColor.ink)
-
-        Text(cardMessage)
-          .font(MTTypography.body)
-          .foregroundStyle(MTColor.inkMuted)
-          .fixedSize(horizontal: false, vertical: true)
-      }
-
-      if state == .checking {
-        HStack(spacing: MTSpacing.s3) {
-          ProgressView()
-            .tint(MTColor.accent)
-          Text("Opening your private space…")
-            .font(MTTypography.label)
-            .foregroundStyle(MTColor.inkMuted)
-        }
-        .frame(maxWidth: .infinity, minHeight: 50)
-      } else if state == .setupRequired {
-        Label {
-          Text(
-            "Add the Supabase URL, publishable key, Google iOS client ID, and URL scheme to Secrets.xcconfig."
-          )
-        } icon: {
-          Image(systemName: "wrench.and.screwdriver")
-        }
-        .font(MTTypography.label)
+    VStack(alignment: .leading, spacing: 0) {
+      MemoTrailMark()
+        .frame(width: 42, height: 42)
+        .accessibilityHidden(true)
+      eyebrow("Personal archive")
+        .padding(.top, MTSpacing.s8)
+      Text("Welcome to MemoTrail")
+        .font(MTFont.title)
+        .tracking(-0.6)
+        .foregroundStyle(MTColor.ink)
+        .padding(.top, 10)
+        .accessibilityAddTraits(.isHeader)
+      Text("Sign in to continue to your private space.")
+        .font(MTFont.body)
         .foregroundStyle(MTColor.inkMuted)
-        .padding(MTSpacing.s4)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(MTColor.warmSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
-      } else {
-        GoogleSignInButton {
-          Task { await signIn() }
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 50)
-        .disabled(isBusy)
-        .opacity(isBusy ? 0.7 : 1)
-      }
-
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(.top, MTSpacing.s2)
+      signInControl
+        .padding(.top, MTSpacing.s8)
       if let errorMessage {
         Text(errorMessage)
-          .font(MTTypography.caption)
+          .font(MTFont.caption.weight(.regular))
           .foregroundStyle(MTColor.warm)
           .fixedSize(horizontal: false, vertical: true)
+          .padding(.top, MTSpacing.s3)
           .accessibilityLabel("Sign-in error: \(errorMessage)")
       }
-
-      Text(
-        "Google verifies your identity. MemoTrail never receives your Google password."
-      )
-      .font(.system(size: 10))
-      .foregroundStyle(MTColor.inkFaint)
-      .frame(maxWidth: .infinity)
-      .multilineTextAlignment(.center)
-      .fixedSize(horizontal: false, vertical: true)
+      Text("Google verifies your identity. MemoTrail never receives your Google password.")
+        .font(.caption2)
+        .foregroundStyle(MTColor.inkFaint)
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity)
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(.top, MTSpacing.s6)
     }
     .padding(MTSpacing.s6)
-    .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.xlarge))
+    .background(
+      MTColor.surfaceRaised.opacity(0.94), in: RoundedRectangle(cornerRadius: MTRadius.xlarge)
+    )
     .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.xlarge)
-        .stroke(MTColor.borderStrong, lineWidth: 1)
+      RoundedRectangle(cornerRadius: MTRadius.xlarge).strokeBorder(MTColor.borderStrong)
     }
-    .shadow(color: MTColor.scrim.opacity(0.09), radius: 24, y: 12)
+    .mtShadow(MTShadow.floating)
   }
 
-  private var cardTitle: String {
-    state == .setupRequired ? "Finish app setup" : "Welcome to MemoTrail"
+  @ViewBuilder private var signInControl: some View {
+    switch state {
+    case .checking:
+      HStack(spacing: MTSpacing.s3) {
+        ProgressView().tint(MTColor.accent)
+        Text("Opening your private space…")
+          .font(MTFont.label)
+          .foregroundStyle(MTColor.inkMuted)
+      }
+      .frame(maxWidth: .infinity, minHeight: 48)
+    case .setupRequired:
+      // Web's Setup needed notice, naming the native configuration instead.
+      VStack(alignment: .leading, spacing: 5) {
+        Text("Setup needed")
+          .font(MTFont.label)
+          .foregroundStyle(MTColor.ink)
+        Text(
+          "Add the Supabase URL, publishable key, Google iOS client ID, and URL scheme to Secrets.xcconfig, then rebuild the app."
+        )
+        .font(MTFont.caption.weight(.regular))
+        .foregroundStyle(MTColor.inkMuted)
+        .fixedSize(horizontal: false, vertical: true)
+      }
+      .padding(MTSpacing.s4)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background(MTColor.warmSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
+      .overlay {
+        RoundedRectangle(cornerRadius: MTRadius.medium)
+          .strokeBorder(MTColor.warning.opacity(0.35))
+      }
+      .accessibilityElement(children: .combine)
+    case .signedOut, .signedIn:
+      // Web's own Google button: the G mark and "Continue with Google" on the card surface.
+      Button {
+        Task { await signIn() }
+      } label: {
+        HStack(spacing: MTSpacing.s3) {
+          Image("GoogleMark")
+            .resizable()
+            .frame(width: 18, height: 18)
+            .accessibilityHidden(true)
+          Text(isBusy ? "Opening Google…" : "Continue with Google")
+        }
+        .font(.subheadline.weight(.medium))
+        .foregroundStyle(MTColor.ink)
+        .frame(maxWidth: .infinity, minHeight: 48)
+      }
+      .buttonStyle(GoogleButtonStyle())
+      .disabled(isBusy)
+      .accessibilityIdentifier("google-sign-in")
+    }
   }
 
-  private var cardMessage: String {
-    state == .setupRequired
-      ? "Public configuration is incomplete. No server secret belongs in the iOS app."
-      : "Sign in to continue to your private space."
+  /// Web's `eyebrow` and `cardEyebrow`: small uppercase accent labels.
+  private func eyebrow(_ text: String) -> some View {
+    Text(text)
+      .font(.caption2.weight(.semibold))
+      .tracking(1.3)
+      .textCase(.uppercase)
+      .foregroundStyle(MTColor.accent)
+  }
+}
+
+/// Web `googleButton`: a bordered surface whose border takes the accent while pressed.
+private struct GoogleButtonStyle: ButtonStyle {
+  @Environment(\.isEnabled) private var isEnabled
+
+  func makeBody(configuration: Configuration) -> some View {
+    let shape = RoundedRectangle(cornerRadius: MTRadius.medium)
+    configuration.label
+      .background(configuration.isPressed ? MTColor.surface : MTColor.surfaceRaised, in: shape)
+      .overlay {
+        shape.strokeBorder(configuration.isPressed ? MTColor.accent : MTColor.borderStrong)
+      }
+      .contentShape(shape)
+      .opacity(isEnabled ? 1 : 0.7)
+      .animation(.easeOut(duration: MTMotion.quick), value: configuration.isPressed)
   }
 }
 

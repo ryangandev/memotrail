@@ -15,9 +15,10 @@
     case map = "--review-map"
     case navigation = "--review-navigation"
     case localSession = "--review-local-session"
+    case signIn = "--review-sign-in"
 
     static var current: Self? {
-      [Self.designSystem, .map, .navigation, .localSession].first {
+      [Self.designSystem, .map, .navigation, .localSession, .signIn].first {
         ProcessInfo.processInfo.arguments.contains($0.rawValue)
       }
     }
@@ -137,6 +138,8 @@
           user: AuthenticatedUser(id: ownerID, email: "preview@example.invalid", name: "Preview"),
           isAuthenticationBusy: false, signOut: {})
       case .localSession: NativeLocalSessionView()
+      case .signIn:
+        AuthenticationView(state: .signedOut, isBusy: false, errorMessage: nil, signIn: {})
       }
     }
 

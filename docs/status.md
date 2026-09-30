@@ -121,6 +121,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - Native Trash now follows Web `/trash`: the retention badge and note, Web's cards with the photo or mark, removal date, and restorable window, toasts for each result, and the Permanent action sheets for Delete forever and Empty Trash.
   A seeded Simulator run confirmed restoring a Collection, deleting one forever, and emptying Trash with its confirmation.
 - The native More tab now follows Web's mobile More menu: the shared workspace header, then Explore, Focused views, Organize, and Archive and account as two columns of destinations with Web's icons.
+- Native sign-in now follows Web `AuthGate` at phone width: the brand header, the welcome story, and the sign-in card with Web's own Continue with Google button and Setup needed notice.
+  A Debug `--review-sign-in` Simulator run confirmed the screen without contacting any Supabase project.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
 - Refactor existing screens after component acceptance; native address search remains later work.
 

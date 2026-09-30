@@ -34,7 +34,6 @@
 		B0000000000000000000000B /* AuthenticationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000014 /* AuthenticationView.swift */; };
 		B0000000000000000000000C /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = F20000000000000000000001 /* Supabase */; };
 		B0000000000000000000000D /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = F20000000000000000000002 /* GoogleSignIn */; };
-		B0000000000000000000000E /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = F20000000000000000000003 /* GoogleSignInSwift */; };
 		B0000000000000000000000F /* InboxController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000016 /* InboxController.swift */; };
 		B00000000000000000000010 /* SearchEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000017 /* SearchEntry.swift */; };
 		B00000000000000000000013 /* TimelineEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000001A /* TimelineEntry.swift */; };
@@ -332,7 +331,6 @@
 			files = (
 				B0000000000000000000000C /* Supabase in Frameworks */,
 				B0000000000000000000000D /* GoogleSignIn in Frameworks */,
-				B0000000000000000000000E /* GoogleSignInSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -716,7 +714,6 @@
 			packageProductDependencies = (
 				F20000000000000000000001 /* Supabase */,
 				F20000000000000000000002 /* GoogleSignIn */,
-				F20000000000000000000003 /* GoogleSignInSwift */,
 			);
 			productName = MemoTrail;
 			productReference = C00000000000000000000009 /* MemoTrail.app */;
@@ -1230,11 +1227,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F10000000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignIn;
-		};
-		F20000000000000000000003 /* GoogleSignInSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F10000000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
-			productName = GoogleSignInSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
