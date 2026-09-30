@@ -107,3 +107,29 @@ private struct MTEmptyStateButtonStyle: ButtonStyle {
       .animation(.easeOut(duration: MTMotion.quick), value: configuration.isPressed)
   }
 }
+
+/// Loads the next page when the end of a list comes into view, or offers a retry.
+struct MTLoadMore: View {
+  let isLoading: Bool
+  let message: String?
+  let load: @MainActor () async -> Void
+
+  var body: some View {
+    if let message, !isLoading {
+      HStack(spacing: MTSpacing.s3) {
+        Label(message, icon: .warning)
+          .font(MTFont.caption)
+          .foregroundStyle(MTColor.warm)
+        Spacer(minLength: 0)
+        Button("Try again") { Task { await load() } }
+          .mtButtonStyle(.secondary, size: .small)
+      }
+    } else {
+      ProgressView()
+        .tint(MTColor.accent)
+        .frame(maxWidth: .infinity, minHeight: 44)
+        .onAppear { Task { await load() } }
+        .accessibilityLabel("Loading more")
+    }
+  }
+}

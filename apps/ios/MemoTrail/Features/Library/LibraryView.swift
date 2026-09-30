@@ -41,7 +41,7 @@ struct LibraryView: View {
           if !controller.results.isEmpty,
             controller.hasMoreResults || controller.moreResultsErrorMessage != nil
           {
-            LibraryMore(
+            MTLoadMore(
               isLoading: controller.isLoadingMoreResults,
               message: controller.moreResultsErrorMessage
             ) { await controller.loadMoreResults() }
@@ -51,7 +51,7 @@ struct LibraryView: View {
           if !controller.items.isEmpty,
             controller.hasMoreItems || controller.moreItemsErrorMessage != nil
           {
-            LibraryMore(
+            MTLoadMore(
               isLoading: controller.isLoadingMoreItems,
               message: controller.moreItemsErrorMessage
             ) { await controller.loadMoreItems() }
@@ -532,32 +532,6 @@ private struct LibraryResultCard: View {
       var text = AttributedString(reason.element)
       text.foregroundColor = MTColor.accent
       result += text
-    }
-  }
-}
-
-/// Loads the next page when the end of a list comes into view, or offers a retry.
-private struct LibraryMore: View {
-  let isLoading: Bool
-  let message: String?
-  let load: @MainActor () async -> Void
-
-  var body: some View {
-    if let message, !isLoading {
-      HStack(spacing: MTSpacing.s3) {
-        Label(message, icon: .warning)
-          .font(MTFont.caption)
-          .foregroundStyle(MTColor.warm)
-        Spacer(minLength: 0)
-        Button("Try again") { Task { await load() } }
-          .mtButtonStyle(.secondary, size: .small)
-      }
-    } else {
-      ProgressView()
-        .tint(MTColor.accent)
-        .frame(maxWidth: .infinity, minHeight: 44)
-        .onAppear { Task { await load() } }
-        .accessibilityLabel("Loading more")
     }
   }
 }
