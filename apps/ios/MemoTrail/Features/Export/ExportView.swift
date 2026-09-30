@@ -35,8 +35,16 @@ struct ExportSnapshot: Decodable, Identifiable, Sendable {
   }
 }
 struct ExportInput: Encodable, Sendable {
+  enum CodingKeys: String, CodingKey { case action, id }
   let action: String
   var id: UUID?
+
+  /// Sends the canonical lowercase UUID that Web and Postgres return, not Foundation's uppercase.
+  func encode(to encoder: any Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(action, forKey: .action)
+    try container.encodeIfPresent(id?.uuidString.lowercased(), forKey: .id)
+  }
 }
 struct ExportWorkspace: Decodable, Sendable { let snapshots: [ExportSnapshot] }
 struct ExportMutation: Decodable, Sendable {

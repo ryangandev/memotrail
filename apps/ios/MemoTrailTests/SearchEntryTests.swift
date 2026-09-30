@@ -33,6 +33,15 @@ final class SearchEntryTests: XCTestCase {
     let request = try JSONEncoder().encode(ExportInput(action: "download", id: snapshot.id))
     let fields = try XCTUnwrap(JSONSerialization.jsonObject(with: request) as? [String: Any])
     XCTAssertEqual(Set(fields.keys), Set(["action", "id"]))
+    let id = try XCTUnwrap(UUID(uuidString: "4F8D0FE6-61D0-418A-8713-CF071AEEA450"))
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = .sortedKeys
+    let download = try encoder.encode(ExportInput(action: "download", id: id))
+    XCTAssertEqual(
+      String(decoding: download, as: UTF8.self),
+      #"{"action":"download","id":"4f8d0fe6-61d0-418a-8713-cf071aeea450"}"#)
+    let list = try encoder.encode(ExportInput(action: "list"))
+    XCTAssertEqual(String(decoding: list, as: UTF8.self), #"{"action":"list"}"#)
   }
 
   func testExportFooterRejectsTruncatedDownloadsAndFalseCompletionText() {
