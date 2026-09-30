@@ -151,6 +151,7 @@
 		E10000000000000000000037 /* WikiItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000037 /* WikiItemDetailView.swift */; };
 		E10000000000000000000038 /* LinkedGoalSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000038 /* LinkedGoalSheet.swift */; };
 		E10000000000000000000039 /* EntryHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000039 /* EntryHistory.swift */; };
+		E1000000000000000000003A /* WikiItemLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000003A /* WikiItemLink.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -311,6 +312,7 @@
 		E20000000000000000000037 /* WikiItemDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiItemDetailView.swift; sourceTree = "<group>"; };
 		E20000000000000000000038 /* LinkedGoalSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkedGoalSheet.swift; sourceTree = "<group>"; };
 		E20000000000000000000039 /* EntryHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryHistory.swift; sourceTree = "<group>"; };
+		E2000000000000000000003A /* WikiItemLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiItemLink.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -371,6 +373,7 @@
 		A10000000000000000000004 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000003A /* WikiItemLink.swift */,
 				E2000000000000000000002F /* ConnectedItemsSection.swift */,
 				E2000000000000000000001D /* WorkspaceToolbar.swift */,
 				E20000000000000000000019 /* AppNavigator.swift */,
@@ -806,6 +809,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1000000000000000000003A /* WikiItemLink.swift in Sources */,
 				E10000000000000000000039 /* EntryHistory.swift in Sources */,
 				E10000000000000000000038 /* LinkedGoalSheet.swift in Sources */,
 				E10000000000000000000037 /* WikiItemDetailView.swift in Sources */,

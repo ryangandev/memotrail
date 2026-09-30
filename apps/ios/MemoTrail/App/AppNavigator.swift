@@ -15,6 +15,8 @@ final class AppNavigator {
   var timelineEntryRequest: UUID?
   /// Library should focus its search field, like the Web header's search action.
   var librarySearchRequested = false
+  /// Library should show one Collection's or tag's items, like Web `/library?tag=`.
+  var libraryFilterRequest: LibraryFilterRequest?
   /// Increases when Settings saves the preferred name, so the Dashboard greeting refreshes.
   var profileRevision = 0
 
@@ -32,6 +34,16 @@ final class AppNavigator {
     selectedTab = .more
   }
 
+  func openLibrary(collection name: String) {
+    libraryFilterRequest = .collection(name)
+    selectedTab = .library
+  }
+
+  func openLibrary(tag name: String) {
+    libraryFilterRequest = .tag(name)
+    selectedTab = .library
+  }
+
   func reviewInboxEntry(_ id: UUID) {
     inboxReviewRequest = id
     selectedTab = .inbox
@@ -41,6 +53,12 @@ final class AppNavigator {
     timelineEntryRequest = id
     selectedTab = .timeline
   }
+}
+
+/// A Library filter another screen opens, like Web's `/library?collection=` and `?tag=` links.
+enum LibraryFilterRequest: Hashable {
+  case collection(String)
+  case tag(String)
 }
 
 extension View {

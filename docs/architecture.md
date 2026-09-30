@@ -63,6 +63,7 @@ Pair it with the test file carrying the same feature name.
   Native Library routes Homes, Vehicles, First Times, Goals, and People to their focused pages like Web, other typed records to their focused editors, and other canonical items to the Item page, like Web `/items/[entry]`.
   Like Web `wikiEntryHref`, only a Person row from People opens a Person page; a person Entry opens as an Item.
   Like Web, it sends Inbox captures to their review and Moments and Periods to the Timeline.
+  `App/WikiItemLink.swift` holds that routing for every native link to an Item, and `AppNavigator.openLibrary(collection:)` and `openLibrary(tag:)` open Library filtered to one Collection or tag, like Web `/library?tag=`.
 - `collection_wiki_items` composes the established paged Collection detail with canonical Kind, subtype, and specialized routing identity. Both clients use it so Collections remain organizational lenses rather than a second generic detail system.
 - `people.entry_id` is a required owner-scoped link to a canonical Entity Wiki Item. Triggers keep its name, notes, revision state, and Trash state synchronized.
 - The former authored `places` and `place_versions` tables and Place-only RPCs were removed by `202609240002_remove_authored_places.sql`.

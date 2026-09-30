@@ -67,10 +67,8 @@ struct LibraryView: View {
       )
       .navigationDestination(for: LibraryRoute.self) { route in
         switch route {
-        case .item(let entryID, let kind, let subtype, let personID):
-          WikiItemDestinationView(
-            client: client, ownerID: ownerID, entryID: entryID, kind: kind, subtype: subtype,
-            personID: personID)
+        case .item(let link):
+          WikiItemDestinationView(client: client, ownerID: ownerID, link: link)
         case .history:
           EntryHistoryIndexView(client: client, ownerID: ownerID)
         }
@@ -85,6 +83,17 @@ struct LibraryView: View {
         // Let the tab finish appearing before the keyboard rises.
         try? await Task.sleep(for: .milliseconds(250))
         searchFocus += 1
+      }
+      .task(id: navigator.libraryFilterRequest) {
+        guard let request = navigator.libraryFilterRequest else { return }
+        navigator.libraryFilterRequest = nil
+        path = []
+        // Like Web `/library?tag=`, the one filter replaces any search in progress.
+        controller.clearAll()
+        switch request {
+        case .collection(let name): controller.collectionName = name
+        case .tag(let name): controller.tagName = name
+        }
       }
       .onChange(of: controller.filterIdentity) {
         if controller.activeFilterCount > 0 { showsFilters = true }
@@ -234,54 +243,20 @@ struct LibraryView: View {
 
   /// Web `wikiEntryHref`: Inbox captures open their review, Moments and Periods open on the
   /// Timeline, and other records open their focused page.
-  private func open(_ target: LibraryTarget) {
-    if target.isInInbox {
-      navigator.reviewInboxEntry(target.entryID)
-    } else if target.kind == .entry, ["moment", "period"].contains(target.subtype) {
-      navigator.openTimelineEntry(target.entryID)
-    } else {
-      path.append(
-        .item(
-          entryID: target.entryID, kind: target.kind, subtype: target.subtype,
-          personID: target.personID))
-    }
+  private func open(_ link: WikiItemLink) {
+    navigator.open(link) { path.append(.item($0)) }
   }
 }
 
 private enum LibraryRoute: Hashable {
-  case item(entryID: UUID, kind: WikiItemKind, subtype: String, personID: UUID?)
+  case item(WikiItemLink)
   case history
-}
-
-/// The record a Library row opens.
-private struct LibraryTarget {
-  let entryID: UUID
-  let kind: WikiItemKind
-  let subtype: String
-  let isInInbox: Bool
-  let personID: UUID?
-
-  init(_ item: WikiItemSummary) {
-    entryID = item.id
-    kind = item.itemKind
-    subtype = item.itemSubtype
-    isInInbox = item.isInInbox
-    personID = item.recordSource == .person ? item.recordID : nil
-  }
-
-  init(_ entry: SearchEntry) {
-    entryID = entry.id
-    kind = entry.itemKind
-    subtype = entry.itemSubtype
-    isInInbox = entry.isInInbox
-    personID = entry.recordSource == .person ? entry.recordID : nil
-  }
 }
 
 /// Web `LibraryBrowse`: every organized record, newest change first.
 private struct LibraryBrowse: View {
   let controller: LibraryController
-  let open: (LibraryTarget) -> Void
+  let open: (WikiItemLink) -> Void
 
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
@@ -319,7 +294,7 @@ private struct LibraryBrowse: View {
       } else {
         VStack(spacing: 0) {
           ForEach(controller.items) { item in
-            LibraryItemRow(item: item) { open(LibraryTarget(item)) }
+            LibraryItemRow(item: item) { open(WikiItemLink(item)) }
             MTListDivider()
           }
         }
@@ -378,7 +353,7 @@ private struct LibraryItemRow: View {
 /// Web `SearchResults`: why a search could not run, no matches, or the matching records.
 private struct LibraryResults: View {
   let controller: LibraryController
-  let open: (LibraryTarget) -> Void
+  let open: (WikiItemLink) -> Void
 
   var body: some View {
     if let message = controller.searchErrorMessage, controller.results.isEmpty {
@@ -406,7 +381,7 @@ private struct LibraryResults: View {
         }
         MTListSurface {
           ForEach(controller.results) { entry in
-            LibraryResultCard(entry: entry) { open(LibraryTarget(entry)) }
+            LibraryResultCard(entry: entry) { open(WikiItemLink(entry)) }
             if entry.id != controller.results.last?.id { MTListDivider() }
           }
         }

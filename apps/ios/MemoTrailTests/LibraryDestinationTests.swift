@@ -320,4 +320,29 @@ final class LibraryDestinationTests: XCTestCase {
     XCTAssertEqual(values["p_limit"] as? Int, 36)
     XCTAssertEqual(values["p_offset"] as? Int, 72)
   }
+
+  @MainActor
+  func testWikiItemLinksFollowWebRoutingAndLibraryFilters() {
+    let navigator = AppNavigator()
+    var pushed: [WikiItemLink] = []
+    let capture = WikiItemLink(entryID: UUID(), kind: .entry, subtype: "entry", isInInbox: true)
+    navigator.open(capture) { pushed.append($0) }
+    XCTAssertEqual(navigator.selectedTab, .inbox)
+    XCTAssertEqual(navigator.inboxReviewRequest, capture.entryID)
+
+    let period = WikiItemLink(entryID: UUID(), kind: .entry, subtype: "period")
+    navigator.open(period) { pushed.append($0) }
+    XCTAssertEqual(navigator.selectedTab, .timeline)
+    XCTAssertEqual(navigator.timelineEntryRequest, period.entryID)
+
+    let person = WikiItemLink(entryID: UUID(), kind: .entity, subtype: "person", personID: UUID())
+    navigator.open(person) { pushed.append($0) }
+    XCTAssertEqual(pushed, [person])
+
+    navigator.openLibrary(tag: "coast")
+    XCTAssertEqual(navigator.selectedTab, .library)
+    XCTAssertEqual(navigator.libraryFilterRequest, .tag("coast"))
+    navigator.openLibrary(collection: "Summer 2025")
+    XCTAssertEqual(navigator.libraryFilterRequest, .collection("Summer 2025"))
+  }
 }

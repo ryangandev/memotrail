@@ -38,9 +38,7 @@ struct ConnectedItemsSection: View {
   }
 
   private func open(_ item: Item) {
-    if item.kind == .entry, ["moment", "period"].contains(item.subtype) {
-      navigator.openTimelineEntry(item.id)
-    } else {
+    navigator.open(WikiItemLink(entryID: item.id, kind: item.kind, subtype: item.subtype)) { _ in
       opened = item
     }
   }
