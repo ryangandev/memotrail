@@ -142,6 +142,10 @@
 		E1000000000000000000002E /* GoalEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002E /* GoalEditorSheet.swift */; };
 		E1000000000000000000002F /* ConnectedItemsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002F /* ConnectedItemsSection.swift */; };
 		E10000000000000000000030 /* ToastPlacementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000030 /* ToastPlacementTests.swift */; };
+		E10000000000000000000031 /* PeopleController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000031 /* PeopleController.swift */; };
+		E10000000000000000000032 /* PersonDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000032 /* PersonDetailView.swift */; };
+		E10000000000000000000033 /* PersonEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000033 /* PersonEditorSheet.swift */; };
+		E10000000000000000000034 /* PersonRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000034 /* PersonRecord.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -229,7 +233,7 @@
 		C1000000000000000000000C /* ResidenceEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResidenceEntryTests.swift; sourceTree = "<group>"; };
 		C1000000000000000000000D /* VehicleEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleEntryTests.swift; sourceTree = "<group>"; };
 		C1000000000000000000000E /* GoalEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEntryTests.swift; sourceTree = "<group>"; };
-		C0000000000000000000003B /* PeopleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/PeopleView.swift; sourceTree = "<group>"; };
+		C0000000000000000000003B /* PeopleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeopleView.swift; sourceTree = "<group>"; };
 		CD0000000000000000000002 /* DesignSystemGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystemGallery.swift; sourceTree = "<group>"; };
 		CD0000000000000000000003 /* LocationMapModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Map/LocationMapModel.swift; sourceTree = "<group>"; };
 		CD0000000000000000000004 /* LocationMapController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Map/LocationMapController.swift; sourceTree = "<group>"; };
@@ -293,6 +297,10 @@
 		E2000000000000000000002E /* GoalEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEditorSheet.swift; sourceTree = "<group>"; };
 		E2000000000000000000002F /* ConnectedItemsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectedItemsSection.swift; sourceTree = "<group>"; };
 		E20000000000000000000030 /* ToastPlacementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastPlacementTests.swift; sourceTree = "<group>"; };
+		E20000000000000000000031 /* PeopleController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeopleController.swift; sourceTree = "<group>"; };
+		E20000000000000000000032 /* PersonDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonDetailView.swift; sourceTree = "<group>"; };
+		E20000000000000000000033 /* PersonEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonEditorSheet.swift; sourceTree = "<group>"; };
+		E20000000000000000000034 /* PersonRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonRecord.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -380,7 +388,7 @@
 				A10000000000000000000023 /* Homes */,
 				A10000000000000000000024 /* Vehicles */,
 				A10000000000000000000025 /* Goals */,
-				C0000000000000000000003B /* PeopleView.swift */,
+				A10000000000000000000026 /* People */,
 				C0000000000000000000003C /* AISettingsView.swift */,
 				C00000000000000000000043 /* ExplorationView.swift */,
 				C00000000000000000000044 /* ExportView.swift */,
@@ -468,6 +476,7 @@
 		A10000000000000000000010 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000034 /* PersonRecord.swift */,
 				E2000000000000000000002A /* EntryLocation.swift */,
 				E20000000000000000000022 /* OrganizationNames.swift */,
 				E2000000000000000000001F /* ProfileSettings.swift */,
@@ -623,6 +632,17 @@
 			path = Vehicles;
 			sourceTree = "<group>";
 		};
+		A10000000000000000000026 /* People */ = {
+			isa = PBXGroup;
+			children = (
+				E20000000000000000000033 /* PersonEditorSheet.swift */,
+				E20000000000000000000032 /* PersonDetailView.swift */,
+				E20000000000000000000031 /* PeopleController.swift */,
+				C0000000000000000000003B /* PeopleView.swift */,
+			);
+			path = People;
+			sourceTree = "<group>";
+		};
 		A10000000000000000000025 /* Goals */ = {
 			isa = PBXGroup;
 			children = (
@@ -763,6 +783,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E10000000000000000000034 /* PersonRecord.swift in Sources */,
+				E10000000000000000000033 /* PersonEditorSheet.swift in Sources */,
+				E10000000000000000000032 /* PersonDetailView.swift in Sources */,
+				E10000000000000000000031 /* PeopleController.swift in Sources */,
 				E1000000000000000000002F /* ConnectedItemsSection.swift in Sources */,
 				E1000000000000000000002E /* GoalEditorSheet.swift in Sources */,
 				E1000000000000000000002D /* GoalDetailView.swift in Sources */,

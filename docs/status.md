@@ -85,7 +85,7 @@ Its marked account and Storage objects were confirmed removed without accessing 
   The new Map uses its shared presentation components; existing screens retain their layouts pending acceptance.
   Native actions, badges, headers, empty states, form fields, record and Collection cards, read-only rich writing, toasts, remote images, upload progress, and the photo field now mirror the Web gallery specimens.
   First Times, Homes, Vehicles, Goals, Collections, and the Entry photo viewer load photos through the shared remote image; Home and Trash follow with their screen syncs.
-  Twelve Simulator UI scenarios pass, adding form pickers, organization editing, toasts rising clear of the keyboard, photo field removal, and a gallery screenshot tour; all 244 native tests pass against local Supabase, including ten contract tests.
+  Twelve Simulator UI scenarios pass, adding form pickers, organization editing, toasts rising clear of the keyboard, photo field removal, and a gallery screenshot tour; all 245 native tests pass against local Supabase, including eleven contract tests.
   `review-local-session.py` now runs signed-in UI flows as a seeded, disposable local account, so screen syncs are checked against real local data rather than synthetic previews.
   One shared OccurrenceEditor and tag/Collection editor now serve Capture, Inbox review, Timeline, First Times, Homes, Vehicles, and Goals, with the Web Date types, Present end, and optional description.
 - The gallery's Writing & formatting page now previews a native Aa toolbar with bold, italic, underline, strikethrough, selection formatting, typing styles, undo/redo, and saved note reopening.
@@ -110,6 +110,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Local contract and seeded Simulator runs confirmed loading and removing a First Time's Location, opening a First Time from First Times and the Timeline, editing it, adding one, and moving it to Trash.
 - Native Goals now follow Web `/goals` and its focused Goal page: record cards grouped by reflective state, the Status, Horizon, and Target page with Connected Items, and the sectioned Web Goal editor with Related Items and the Bucket List milestone.
   Local contract and seeded Simulator runs confirmed recording a Bucket List achievement with its linked First Time, following connected Items to a Home page and the Timeline, replacing a related Item, adding a Goal, and moving it to Trash.
+- Native People now follow Web `/people` and its focused Person page: cards with the initial, relationship, a short note, and connected Item count; the Relationship, Notes, and Connected Items page; and the Web Person editor with its linked Item picker.
+  Local contract and seeded Simulator runs confirmed opening a Person from Library and People, following connected Items to the Timeline and a Home page, swapping a linked Item, keeping a linked Person out of Trash, moving them to Trash once unlinked, and adding one.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
 - Refactor existing screens after component acceptance; native address search remains later work.
 

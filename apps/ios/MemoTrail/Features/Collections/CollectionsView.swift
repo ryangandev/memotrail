@@ -78,7 +78,7 @@ struct CollectionsView: View {
   private func collectionEntryDestination(_ entry: CollectionEntry) -> some View {
     switch (entry.itemKind, entry.itemSubtype, entry.recordSource) {
     case (.entity, "person", .person):
-      PeopleView(client: client, ownerID: ownerID, focusedPersonID: entry.recordID)
+      PersonDetailView(client: client, ownerID: ownerID, personID: entry.recordID)
     case (.entity, "home", _):
       HomeDetailView(client: client, ownerID: ownerID, entryID: entry.id)
     case (.entity, "vehicle", _):

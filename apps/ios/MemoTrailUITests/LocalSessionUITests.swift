@@ -706,6 +706,116 @@ final class LocalSessionUITests: XCTestCase {
     attach(app, "Goals after Trash")
   }
 
+  func testPeopleOpenTheirPageAndLinksAndEditTheirItems() throws {
+    let app = try launchLocalSession()
+
+    // Library finds a Person from People and opens their page, like Web `/people/<id>`.
+    XCTAssertTrue(app.buttons["workspace-search"].waitForExistence(timeout: 20))
+    app.buttons["workspace-search"].tap()
+    let field = app.textFields["Search your Life Wiki"]
+    XCTAssertTrue(field.waitForExistence(timeout: 10))
+    field.typeText("Avery\n")
+    let result = app.buttons.matching(
+      NSPredicate(format: "label BEGINSWITH %@", "Person, Avery Lane")
+    ).firstMatch
+    XCTAssertTrue(result.waitForExistence(timeout: 15))
+    result.tap()
+    XCTAssertTrue(app.navigationBars["Person"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["edit-person"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Running partner"].exists)
+
+    // People lists each Person as a card that opens their page.
+    app.tabBars.buttons["More"].tap()
+    reveal(app.buttons["People"], in: app).tap()
+    let card = app.buttons["Avery Lane, Running partner"]
+    XCTAssertTrue(card.waitForExistence(timeout: 15))
+    XCTAssertTrue(text("1 person", in: app).exists)
+    XCTAssertTrue(text("1 connected Item", in: app).exists)
+    Thread.sleep(forTimeInterval: 1)
+    attach(app, "People")
+    card.tap()
+    XCTAssertTrue(app.staticTexts["Running partner"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Notes"].exists)
+    let marathon = reveal(app.buttons["Finished the first marathon"], in: app)
+    attach(app, "Person page")
+
+    // Like Web, a connected Moment opens on the Timeline.
+    marathon.tap()
+    XCTAssertTrue(app.staticTexts["Edit moment"].waitForExistence(timeout: 10))
+    app.buttons["close-timeline-editor"].tap()
+    app.tabBars.buttons["More"].tap()
+    XCTAssertTrue(app.buttons["edit-person"].waitForExistence(timeout: 10))
+
+    // Edit swaps the linked Item. A Person with links cannot move to Trash yet.
+    app.buttons["edit-person"].tap()
+    XCTAssertTrue(app.staticTexts["Edit Person"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["trash-person"].isEnabled)
+    // A linked Item opens to show its text, like Web `details`.
+    app.buttons.matching(
+      NSPredicate(format: "label == %@ AND value == %@", "Finished the first marathon", "Collapsed")
+    ).firstMatch.tap()
+    XCTAssertTrue(
+      app.staticTexts["Slow, happy, and soaked by the last mile."].waitForExistence(timeout: 5))
+    Thread.sleep(forTimeInterval: 0.6)
+    attach(app, "Person editor")
+    reveal(app.buttons["Unlink Finished the first marathon"], in: app).tap()
+    reveal(app.buttons["Link an Item"], in: app).tap()
+    let flat = app.buttons["Maple Street flat"]
+    XCTAssertTrue(flat.waitForExistence(timeout: 5))
+    flat.tap()
+    app.buttons["person-link-item-add"].tap()
+    XCTAssertTrue(app.buttons["Unlink Maple Street flat"].waitForExistence(timeout: 5))
+    XCTAssertTrue(
+      text("Unlink every Item and save before removing this Person.", in: app).exists)
+    attach(app, "Person editor connected Items")
+    app.buttons["save-person"].tap()
+    XCTAssertTrue(text("Person saved.", in: app).waitForExistence(timeout: 10))
+    let home = reveal(app.buttons["Maple Street flat"], in: app)
+    XCTAssertFalse(app.buttons["Finished the first marathon"].exists)
+    attach(app, "Person page after saving")
+
+    // A connected Home opens its own page.
+    home.tap()
+    XCTAssertTrue(app.buttons["edit-home"].waitForExistence(timeout: 10))
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+
+    // Once every link is removed and saved, the Person moves to Trash from their page.
+    XCTAssertTrue(app.buttons["edit-person"].waitForExistence(timeout: 10))
+    app.buttons["edit-person"].tap()
+    reveal(app.buttons["Unlink Maple Street flat"], in: app).tap()
+    app.buttons["save-person"].tap()
+    XCTAssertTrue(app.buttons["save-person"].waitForNonExistence(timeout: 10))
+    app.buttons["edit-person"].tap()
+    let trash = app.buttons["trash-person"]
+    XCTAssertTrue(trash.waitForExistence(timeout: 5))
+    XCTAssertTrue(trash.isEnabled)
+    trash.tap()
+    let confirm = app.buttons.matching(
+      NSPredicate(format: "label == %@ AND identifier != %@", "Move to Trash", "trash-person")
+    ).firstMatch
+    XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+    confirm.tap()
+    XCTAssertTrue(text("Person moved to Trash.", in: app).waitForExistence(timeout: 10))
+    let empty = text("Remember the first person in your story", in: app)
+    XCTAssertTrue(empty.waitForExistence(timeout: 10))
+    attach(app, "People after Trash")
+
+    // Add Person starts from a name alone.
+    app.buttons["add-person"].tap()
+    let name = app.textFields["person-name"]
+    XCTAssertTrue(name.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Keep someone in your story"].exists)
+    name.tap()
+    name.typeText("Jordan Reyes")
+    attach(app, "New Person")
+    app.buttons["save-person"].tap()
+    XCTAssertTrue(text("Person created.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(
+      app.buttons["Jordan Reyes, A person in your story"].waitForExistence(timeout: 10))
+    XCTAssertTrue(text("0 connected Items", in: app).exists)
+    attach(app, "People with the new Person")
+  }
+
   /// Timeline asks for the birth date on the first visit until one is saved, like Web. The
   /// Timeline test saves one for the shared seeded account, so later tests find no prompt.
   private func dismissBirthDatePrompt(once loaded: XCUIElement, in app: XCUIApplication) {

@@ -193,25 +193,32 @@ final class LibraryDestinationTests: XCTestCase {
     XCTAssertEqual(AIAPI.cost(29), "$0.000029")
   }
   func testPersonSavePreservesExplicitNewIdentityAndValidatesLimits() throws {
+    let linked = UUID()
     let input = PersonSaveInput(
-      p_person_id: nil, p_expected_revision: nil,
-      p_name: " Friend ", p_relationship_label: " Mentor ", p_notes: " Notes ",
-      p_related_entry_ids: [])
+      personID: nil, expectedRevision: nil, name: " Friend ", relationshipLabel: " Mentor ",
+      notes: " Notes ", relatedEntryIDs: [linked, linked])
     XCTAssertTrue(input.isValid)
     let json = try XCTUnwrap(
       JSONSerialization.jsonObject(with: JSONEncoder().encode(input)) as? [String: Any])
     XCTAssertTrue(json["p_person_id"] is NSNull)
     XCTAssertTrue(json["p_expected_revision"] is NSNull)
     XCTAssertEqual(json["p_name"] as? String, "Friend")
+    XCTAssertEqual(json["p_relationship_label"] as? String, "Mentor")
+    XCTAssertEqual(json["p_related_entry_ids"] as? [String], [linked.uuidString])
     XCTAssertFalse(
       PersonSaveInput(
-        p_person_id: UUID(), p_expected_revision: nil,
-        p_name: "Friend", p_relationship_label: "", p_notes: "", p_related_entry_ids: []
+        personID: UUID(), expectedRevision: nil, name: "Friend", relationshipLabel: "",
+        notes: "", relatedEntryIDs: []
       ).isValid)
     XCTAssertFalse(
       PersonSaveInput(
-        p_person_id: nil, p_expected_revision: nil,
-        p_name: " ", p_relationship_label: "", p_notes: "", p_related_entry_ids: []
+        personID: nil, expectedRevision: nil, name: " ", relationshipLabel: "", notes: "",
+        relatedEntryIDs: []
+      ).isValid)
+    XCTAssertFalse(
+      PersonSaveInput(
+        personID: nil, expectedRevision: nil, name: "Friend", relationshipLabel: "", notes: "",
+        relatedEntryIDs: (0...PersonSaveInput.linkLimit).map { _ in UUID() }
       ).isValid)
   }
 
@@ -224,8 +231,9 @@ final class LibraryDestinationTests: XCTestCase {
           "item_kind":"entry","item_subtype":"moment","is_deleted":true}]}]
       """.utf8)
     let row = try XCTUnwrap(JSONDecoder().decode([PersonRecord].self, from: data).first)
-    XCTAssertEqual(row.linked_entries.first?.displayTitle, "A shared memory")
-    XCTAssertEqual(row.linked_entries.first?.is_deleted, true)
+    XCTAssertEqual(row.relationshipLabel, "Mentor")
+    XCTAssertEqual(row.linkedEntries.first?.displayTitle, "A shared memory")
+    XCTAssertEqual(row.linkedEntries.first?.isDeleted, true)
     XCTAssertEqual(TrashItemKind(rawValue: "person")?.displayName, "Person")
   }
 

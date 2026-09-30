@@ -174,6 +174,10 @@ def seed(stack, user):
         p_horizon="short_term", p_status="active", p_target_date="2026-10-31",
         p_collection_names=[], p_tag_names=["walks"], p_related_entry_ids=[flat, marathon],
         p_entry_id=None, p_expected_revision=None)
+    rpc("save_person",
+        p_name="Avery Lane", p_relationship_label="Running partner",
+        p_notes="Paced the last ten miles of the marathon, then insisted on pancakes.",
+        p_related_entry_ids=[marathon], p_person_id=None, p_expected_revision=None)
 
 
 def port_open(port):

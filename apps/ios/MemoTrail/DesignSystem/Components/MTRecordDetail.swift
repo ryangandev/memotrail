@@ -116,6 +116,11 @@ struct MTFactList: View {
     }
   }
 
+  /// Whether any fact has a value; like Web `Fact`, empty ones are left out.
+  static func hasValues(_ facts: [(label: String, value: String?)]) -> Bool {
+    facts.contains { $0.value?.trimmed.nonEmpty != nil }
+  }
+
   private var visibleFacts: [(label: String, value: String)] {
     facts.compactMap { fact in fact.value?.trimmed.nonEmpty.map { (fact.label, $0) } }
   }
@@ -246,7 +251,9 @@ struct MTFocusedRecordPage<Extra: View>: View {
         if !photos.isEmpty {
           MTRecordPhotos(recordLabel: kind, photos: photos)
         }
-        MTFactList(facts: facts)
+        if MTFactList.hasValues(facts) {
+          MTFactList(facts: facts)
+        }
         if let story = story?.trimmed.nonEmpty {
           MTDetailSection(storyTitle) {
             Text(story)

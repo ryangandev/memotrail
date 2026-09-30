@@ -437,6 +437,67 @@ final class NativeContractTests: XCTestCase {
     XCTAssertNil(goals.entry(id: identity.id))
   }
 
+  func testPersonLinksItemsAndMovesToTrashOnlyOnceUnlinked() async throws {
+    let (client, ownerID) = try await client()
+    let goals = GoalController(client: client, ownerID: ownerID)
+    let goal = await goals.save(
+      entryID: nil, expectedRevision: nil, title: "Native Person link", body: "",
+      horizon: .someday, status: .considering, targetDate: nil, collectionNames: [],
+      tagNames: [], relatedEntryIDs: [])
+    let goalID = try XCTUnwrap(goal.identity?.id)
+
+    let people = PeopleController(client: client, ownerID: ownerID)
+    await people.load()
+    XCTAssertNil(people.loadErrorMessage)
+    XCTAssertTrue(people.linkOptions.contains { $0.id == goalID })
+    let created = await people.save(
+      PersonSaveInput(
+        personID: nil, expectedRevision: nil, name: "Native Friend", relationshipLabel: "Mentor",
+        notes: "Met on a synthetic trail.", relatedEntryIDs: [goalID]))
+    XCTAssertEqual(created.status, .created, created.message)
+    XCTAssertEqual(created.message, "Person created.")
+    let personID = try XCTUnwrap(created.personID)
+    let person = try XCTUnwrap(people.person(id: personID))
+    XCTAssertEqual(person.linkedEntries.map(\.id), [goalID])
+    XCTAssertEqual(person.linkedEntries.first?.itemKind, .goal)
+    XCTAssertEqual(people.people.first?.id, personID)
+
+    // Like Web, a Person keeps out of Trash while Items are linked.
+    let blocked = await people.moveToTrash(person)
+    XCTAssertEqual(blocked.status, .conflict, blocked.message)
+
+    // A Person's own page loads them by ID, whatever pages have loaded.
+    let focused = PeopleController(client: client, ownerID: ownerID)
+    let opened = await focused.loadPerson(id: personID)
+    XCTAssertEqual(opened, .loaded)
+    XCTAssertEqual(focused.person(id: personID)?.relationshipLabel, "Mentor")
+
+    let unlinked = await people.save(
+      PersonSaveInput(
+        personID: personID, expectedRevision: person.revision, name: "Native Friend",
+        relationshipLabel: " ", notes: "", relatedEntryIDs: []))
+    XCTAssertEqual(unlinked.status, .saved, unlinked.message)
+    XCTAssertEqual(unlinked.message, "Person saved.")
+    let saved = try XCTUnwrap(people.person(id: personID))
+    XCTAssertTrue(saved.linkedEntries.isEmpty)
+    XCTAssertNil(saved.relationshipLabel)
+
+    // A stale revision cannot overwrite the newer save.
+    let stale = await people.save(
+      PersonSaveInput(
+        personID: personID, expectedRevision: person.revision, name: "Stale Friend",
+        relationshipLabel: "", notes: "", relatedEntryIDs: []))
+    XCTAssertEqual(stale.status, .conflict, stale.message)
+
+    let trashed = await people.moveToTrash(saved)
+    XCTAssertEqual(trashed.status, .trashed, trashed.message)
+    XCTAssertEqual(trashed.message, "Person moved to Trash.")
+    XCTAssertNil(people.person(id: personID))
+    XCTAssertFalse(people.people.contains { $0.id == personID })
+    let reopened = await focused.loadPerson(id: personID)
+    XCTAssertEqual(reopened, .unavailable)
+  }
+
   func testFocusedRecordsDecodeInLibraryCollectionsAndHome() async throws {
     let (client, ownerID) = try await client()
     let collectionName = "Native focused \(UUID().uuidString)"
