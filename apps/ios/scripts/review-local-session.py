@@ -143,11 +143,22 @@ def seed(stack, user):
         p_move_in_reason="Closer to work", p_move_out_reason=None,
         p_collection_names=[], p_tag_names=["home"], p_entry_id=None,
         p_expected_revision=None, **occurrence("range", "2021-06-01"))
-    rpc("save_vehicle_entry_with_occurrence",
-        p_title="Blue hatchback", p_body="Road trips, groceries, and one flat tire.",
-        p_make="Honda", p_model="Fit", p_model_year=2015, p_color="Blue",
-        p_collection_names=[], p_tag_names=["car"], p_entry_id=None,
-        p_expected_revision=None, **occurrence("range", "2019-09-15"))
+    # A synthetic provider Location, submitted the way Web address search saves one.
+    hatchback = occurrence("range", "2019-09-15")
+    rpc("save_vehicle_with_location",
+        p_input={"title": "Blue hatchback", "body": "Road trips, groceries, and one flat tire.",
+                 "make": "Honda", "model": "Fit", "modelYear": 2015, "color": "Blue",
+                 "collectionNames": [], "tagNames": ["car"], "id": None, "revision": None,
+                 "datePrecision": hatchback["p_date_precision"],
+                 "occurredStart": hatchback["p_occurred_start"], "occurredEnd": None,
+                 "occurredLabel": None, "occurredTimezone": TIMEZONE},
+        p_source=None,
+        p_location={"kind": "provider", "provider": "geoapify",
+                    "providerLocationId": "review-seed-hawthorne",
+                    "formattedAddress": "Hawthorne Boulevard, Portland, OR, United States",
+                    "address": "Hawthorne Boulevard", "city": "Portland", "region": "Oregon",
+                    "country": "United States", "countryCode": "us",
+                    "latitude": 45.5120, "longitude": -122.6250})
     rpc("save_goal_entry",
         p_title="Hike the coast trail", p_body="All of it, in sections, before next autumn.",
         p_horizon="short_term", p_status="active", p_target_date="2026-10-31",

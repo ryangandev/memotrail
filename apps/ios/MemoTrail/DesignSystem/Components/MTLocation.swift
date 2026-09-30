@@ -107,6 +107,48 @@ struct MTLocationSnapshot<Fallback: View>: View {
   }
 }
 
+/// Web `LocationPicker`'s panel: the Location heading and its note above the saved Location.
+/// Native editors keep or remove a saved Location; address search stays on Web for now.
+struct MTLocationPanel<Content: View>: View {
+  let message: String
+  private let content: Content
+
+  init(message: String, @ViewBuilder content: () -> Content) {
+    self.message = message
+    self.content = content()
+  }
+
+  var body: some View {
+    let shape = RoundedRectangle(cornerRadius: MTRadius.large)
+    VStack(alignment: .leading, spacing: MTSpacing.s4) {
+      HStack(alignment: .top, spacing: MTSpacing.s3) {
+        Image(.map)
+          .font(.system(size: 17, weight: .medium))
+          .foregroundStyle(MTColor.accent)
+          .frame(width: 34, height: 34)
+          .background(MTColor.accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+          .accessibilityHidden(true)
+        VStack(alignment: .leading, spacing: 3) {
+          Text("Location")
+            .font(.system(.title3, design: .serif).weight(.medium))
+            .foregroundStyle(MTColor.ink)
+            .accessibilityAddTraits(.isHeader)
+          Text(message)
+            .font(MTFont.caption.weight(.regular))
+            .foregroundStyle(MTColor.inkFaint)
+            .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+      }
+      content
+    }
+    .padding(MTSpacing.s4)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(MTColor.surfaceSubtle, in: shape)
+    .overlay { shape.strokeBorder(MTColor.border, lineWidth: 1) }
+  }
+}
+
 /// Web `SelectedLocation`: a saved Location's map, formatted address, and coordinates, with an
 /// optional Remove action. Coordinates stay private to the record; Open map hands them to Maps.
 struct MTLocationPreview: View {

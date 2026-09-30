@@ -82,7 +82,7 @@ struct CollectionsView: View {
     case (.entity, "home", _):
       HomeDetailView(client: client, ownerID: ownerID, entryID: entry.id)
     case (.entity, "vehicle", _):
-      VehiclesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
+      VehicleDetailView(client: client, ownerID: ownerID, entryID: entry.id)
     case (.goal, _, _):
       GoalsView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
     case (.entry, "first_time", _):

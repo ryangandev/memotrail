@@ -51,7 +51,7 @@ struct HomeDetailView: View {
           }
         }
       } else {
-        unavailable
+        MTFocusedRecordUnavailable(kind: "Home", backTitle: "Back to homes") { dismiss() }
       }
     }
     .refreshable { await controller.load() }
@@ -77,65 +77,20 @@ struct HomeDetailView: View {
   }
 
   private func detail(_ entry: ResidenceEntry) -> some View {
-    MTPage(width: .compact, spacing: MTSpacing.s6) {
-      MTPageHeader(eyebrow: "Home", title: entry.title) {
-        Button {
-          isEditing = true
-        } label: {
-          Label("Edit", icon: .edit)
-        }
-        .mtButtonStyle(.ghost, size: .small)
-        .accessibilityLabel("Edit Home")
-        .accessibilityIdentifier("edit-home")
-      }
-      VStack(alignment: .leading, spacing: MTSpacing.s8) {
-        let photos = entry.attachments.map {
-          MTPhotoField.SavedPhoto(id: $0.id, url: $0.signedURL, name: $0.originalFilename)
-        }
-        if !photos.isEmpty {
-          MTRecordPhotos(recordLabel: "Home", photos: photos)
-        }
-        MTFactList(facts: [
-          ("When", entry.displayRange),
-          ("Location", entry.displayLocation),
-          ("Address", entry.address),
-          ("Why you moved in", entry.moveInReason),
-          ("Why you left", entry.moveOutReason),
-          ("Place notes", entry.placeNotes),
-        ])
-        if let story = entry.body.trimmed.nonEmpty {
-          MTDetailSection("Story") {
-            Text(story)
-              .font(MTFont.bodyLarge)
-              .foregroundStyle(MTColor.ink)
-              .mtLineSpacing(MTLineHeight.relaxed)
-              .textSelection(.enabled)
-              .fixedSize(horizontal: false, vertical: true)
-          }
-        }
-        if !entry.collectionNames.isEmpty || !entry.tagNames.isEmpty {
-          MTDetailSection("Organize") {
-            MTFlowLayout(spacing: MTSpacing.s2) {
-              ForEach(entry.collectionNames, id: \.self) { MTBadge(title: $0, tone: .neutral) }
-              ForEach(entry.tagNames, id: \.self) { MTBadge(title: "#\($0)", tone: .neutral) }
-            }
-          }
-        }
-      }
-      Button("Version history") { showsHistory = true }
-        .mtButtonStyle(.secondary)
-        .accessibilityIdentifier("home-version-history")
-    }
-  }
-
-  /// Web `FocusedDetailUnavailable`.
-  private var unavailable: some View {
-    MTPage(width: .compact, spacing: MTSpacing.s6) {
-      MTPageHeader(
-        eyebrow: "Home", title: "Home unavailable",
-        description: "This record may have moved to Trash or no longer be accessible.")
-      Button("Back to homes") { dismiss() }
-        .mtButtonStyle()
-    }
+    MTFocusedRecordPage(
+      kind: "Home", title: entry.title,
+      photos: entry.attachments.map {
+        MTPhotoField.SavedPhoto(id: $0.id, url: $0.signedURL, name: $0.originalFilename)
+      },
+      facts: [
+        ("When", entry.displayRange),
+        ("Location", entry.displayLocation),
+        ("Address", entry.address),
+        ("Why you moved in", entry.moveInReason),
+        ("Why you left", entry.moveOutReason),
+        ("Place notes", entry.placeNotes),
+      ],
+      story: entry.body, collectionNames: entry.collectionNames, tagNames: entry.tagNames,
+      edit: { isEditing = true }, history: { showsHistory = true })
   }
 }

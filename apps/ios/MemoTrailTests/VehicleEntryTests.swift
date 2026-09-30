@@ -157,6 +157,63 @@ final class VehicleEntryTests: XCTestCase {
     XCTAssertNil(json["p_entry_id"])
   }
 
+  func testLocationRemovalSendsWebInputWithNullSourceAndLocation() throws {
+    var input = try makeInput(
+      entryID: UUID(uuidString: "10000000-0000-4000-8000-000000000001"), expectedRevision: 4,
+      color: "", collectionNames: ["Cars"], tagNames: ["commute"])
+    input.occurredStartRaw = "2020-03-12T20:00:00.123456+00:00"
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(
+        with: encoder.encode(RemoveVehicleLocationParameters(input: input))) as? [String: Any])
+    let fields = try XCTUnwrap(json["p_input"] as? [String: Any])
+
+    XCTAssertTrue(json["p_source"] is NSNull)
+    XCTAssertTrue(json["p_location"] is NSNull)
+    XCTAssertEqual(fields["id"] as? String, "10000000-0000-4000-8000-000000000001")
+    XCTAssertEqual(fields["revision"] as? Int, 4)
+    XCTAssertEqual(fields["title"] as? String, "Blue Civic")
+    XCTAssertEqual(fields["occurredStart"] as? String, "2020-03-12T20:00:00.123456+00:00")
+    XCTAssertEqual(fields["occurredEnd"] as? String, "1970-01-01T00:03:20Z")
+    XCTAssertEqual(fields["datePrecision"] as? String, "range")
+    XCTAssertEqual(fields["occurredTimezone"] as? String, "America/Los_Angeles")
+    XCTAssertEqual(fields["modelYear"] as? Int, 2018)
+    XCTAssertEqual(fields["collectionNames"] as? [String], ["Cars"])
+    XCTAssertEqual(fields["tagNames"] as? [String], ["commute"])
+    XCTAssertNil(fields["color"])
+    XCTAssertNil(fields["occurredLabel"])
+  }
+
+  func testPrimaryLocationsDecodeEmbeddedRowsAndLabelLikeWeb() throws {
+    let rows = try JSONDecoder().decode(
+      [EntryPrimaryLocations.Row].self,
+      from: Data(
+        """
+        [{"entry_id":"10000000-0000-4000-8000-000000000001","location":{
+          "id":"50000000-0000-4000-8000-000000000001","revision":2,"name":"Pier 39",
+          "formatted_address":"Pier 39, San Francisco, CA","address":"Beach Street",
+          "city":"San Francisco","region":"CA","country":"United States",
+          "latitude":37.8087,"longitude":-122.4098}},
+         {"entry_id":"10000000-0000-4000-8000-000000000002","location":null}]
+        """.utf8))
+    let locations = EntryPrimaryLocations.assemble(rows)
+    let location = try XCTUnwrap(
+      locations[UUID(uuidString: "10000000-0000-4000-8000-000000000001")!])
+
+    XCTAssertEqual(locations.count, 1)
+    XCTAssertEqual(location.label, "Pier 39, San Francisco, CA")
+    XCTAssertEqual(location.latitude, 37.8087)
+    let manual = EntryLocation(
+      id: UUID(), revision: 1, name: "Home", formattedAddress: " ", address: nil,
+      city: "Oakland", region: "CA", country: nil, latitude: nil, longitude: nil)
+    XCTAssertEqual(manual.label, "Oakland, CA")
+    let empty = EntryLocation(
+      id: UUID(), revision: 1, name: "Home", formattedAddress: nil, address: nil, city: nil,
+      region: nil, country: nil, latitude: nil, longitude: nil)
+    XCTAssertEqual(empty.label, "Location not set")
+  }
+
   func testAllChapterPrecisionsValidateWithoutInventedDates() throws {
     for precision in TimelineDatePrecision.allCases {
       let unanchored = [.age, .approximate, .unknown].contains(precision)

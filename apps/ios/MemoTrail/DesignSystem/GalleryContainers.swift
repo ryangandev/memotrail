@@ -89,6 +89,35 @@
         }
 
         GallerySpecimen(
+          title: "Entity card",
+          api:
+            "MTRecordSection · title · detail; MTEntityCard · range · duration · isCurrent · coverURL · latitude · longitude · facts",
+          description:
+            "The Home and Vehicle archive: a section heading, then cards with a photo, map, or mark, the dates, facts, a short memory, and organization."
+        ) {
+          MTRecordSection(
+            "Vehicle archive", detail: "Current first, followed by earlier vehicles"
+          ) {
+            MTEntityCard(
+              title: "Blue hatchback", range: "Since Sep 15, 2019", duration: "7 years",
+              isCurrent: true, latitude: 45.512, longitude: -122.625, markIcon: .car,
+              markTitle: "2015 Honda Fit · Blue",
+              facts: [
+                MTEntityCard.Fact(icon: .car, text: "2015 Honda Fit · Blue"),
+                MTEntityCard.Fact(icon: .map, text: "Hawthorne Boulevard, Portland, OR"),
+              ],
+              memory: "Road trips, groceries, and one flat tire.", tagNames: ["car"]
+            ) { recordMessage = "Opened the current Vehicle." }
+            MTEntityCard(
+              title: "Red touring bike", range: "2012 - 2016", duration: "About 4 years",
+              isCurrent: false, markIcon: .car, markTitle: "Details not recorded",
+              facts: [MTEntityCard.Fact(icon: .car, text: "Details not recorded")],
+              collectionNames: ["Early years"]
+            ) { recordMessage = "Opened the earlier Vehicle." }
+          }
+        }
+
+        GallerySpecimen(
           title: "Record detail",
           api: "MTRecordPhotos · MTFactList · MTDetailSection",
           description:
@@ -121,19 +150,21 @@
 
         GallerySpecimen(
           title: "LocationPreview",
-          api: "label · latitude · longitude · remove",
+          api: "label · latitude · longitude · remove; MTLocationPanel · message",
           description:
-            "A saved Location in an editor. Remove clears it; editing the address by hand clears the coordinates."
+            "A saved Location in an editor, alone or in the Location panel. Remove clears it; editing the address by hand clears the coordinates."
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s3) {
-            if hasLocation {
-              MTLocationPreview(
-                label: "120 Maple Street, Portland, Oregon, United States", latitude: 45.5231,
-                longitude: -122.6765
-              ) { hasLocation = false }
-            } else {
-              Button("Restore sample Location") { hasLocation = true }
-                .mtButtonStyle(.secondary, size: .small)
+            MTLocationPanel(message: "This Vehicle keeps its own Location.") {
+              if hasLocation {
+                MTLocationPreview(
+                  label: "120 Maple Street, Portland, Oregon, United States", latitude: 45.5231,
+                  longitude: -122.6765
+                ) { hasLocation = false }
+              } else {
+                Button("Restore sample Location") { hasLocation = true }
+                  .mtButtonStyle(.secondary, size: .small)
+              }
             }
             MTLocationPreview(label: "Portland, Oregon", latitude: nil, longitude: nil)
           }

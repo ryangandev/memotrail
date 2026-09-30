@@ -132,6 +132,10 @@
 		E10000000000000000000024 /* MTLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000024 /* MTLocation.swift */; };
 		E10000000000000000000025 /* ResidenceEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000025 /* ResidenceEditorSheet.swift */; };
 		E10000000000000000000026 /* HomeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000026 /* HomeDetailView.swift */; };
+		E10000000000000000000027 /* MTRecordArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000027 /* MTRecordArchive.swift */; };
+		E10000000000000000000028 /* VehicleDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000028 /* VehicleDetailView.swift */; };
+		E10000000000000000000029 /* VehicleEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000029 /* VehicleEditorSheet.swift */; };
+		E1000000000000000000002A /* EntryLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002A /* EntryLocation.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -273,6 +277,10 @@
 		E20000000000000000000024 /* MTLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTLocation.swift; sourceTree = "<group>"; };
 		E20000000000000000000025 /* ResidenceEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResidenceEditorSheet.swift; sourceTree = "<group>"; };
 		E20000000000000000000026 /* HomeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDetailView.swift; sourceTree = "<group>"; };
+		E20000000000000000000027 /* MTRecordArchive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTRecordArchive.swift; sourceTree = "<group>"; };
+		E20000000000000000000028 /* VehicleDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleDetailView.swift; sourceTree = "<group>"; };
+		E20000000000000000000029 /* VehicleEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleEditorSheet.swift; sourceTree = "<group>"; };
+		E2000000000000000000002A /* EntryLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryLocation.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -410,6 +418,7 @@
 		A10000000000000000000008 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000027 /* MTRecordArchive.swift */,
 				E20000000000000000000024 /* MTLocation.swift */,
 				E20000000000000000000023 /* MTRecordDetail.swift */,
 				E20000000000000000000021 /* MTSheet.swift */,
@@ -446,6 +455,7 @@
 		A10000000000000000000010 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000002A /* EntryLocation.swift */,
 				E20000000000000000000022 /* OrganizationNames.swift */,
 				E2000000000000000000001F /* ProfileSettings.swift */,
 				E20000000000000000000012 /* EntryRichText.swift */,
@@ -589,6 +599,8 @@
 		A10000000000000000000024 /* Vehicles */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000029 /* VehicleEditorSheet.swift */,
+				E20000000000000000000028 /* VehicleDetailView.swift */,
 				C00000000000000000000033 /* VehicleController.swift */,
 				C00000000000000000000034 /* VehiclesView.swift */,
 			);
@@ -733,6 +745,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1000000000000000000002A /* EntryLocation.swift in Sources */,
+				E10000000000000000000029 /* VehicleEditorSheet.swift in Sources */,
+				E10000000000000000000028 /* VehicleDetailView.swift in Sources */,
+				E10000000000000000000027 /* MTRecordArchive.swift in Sources */,
 				E10000000000000000000026 /* HomeDetailView.swift in Sources */,
 				E10000000000000000000025 /* ResidenceEditorSheet.swift in Sources */,
 				E10000000000000000000024 /* MTLocation.swift in Sources */,

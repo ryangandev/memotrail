@@ -5,7 +5,7 @@ extension XCTestCase {
   @MainActor @discardableResult
   func reveal(_ element: XCUIElement, in app: XCUIApplication) -> XCUIElement {
     // Long gallery sections at accessibility text sizes can take many screens to reach.
-    for _ in 0..<16 where !(element.exists && element.isHittable) { app.swipeUp() }
+    for _ in 0..<24 where !(element.exists && element.isHittable) { app.swipeUp() }
     // Let scroll momentum settle, or the next tap only stops the scroll.
     var frame = element.frame
     for _ in 0..<10 {

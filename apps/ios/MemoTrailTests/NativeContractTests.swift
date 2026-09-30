@@ -305,6 +305,51 @@ final class NativeContractTests: XCTestCase {
     XCTAssertFalse(afterTrash.items.contains { $0.entryID == home.id })
   }
 
+  func testVehicleLoadsItsLocationAndRemovesItWithTheSave() async throws {
+    let (client, ownerID) = try await client()
+    let vehicles = VehicleController(client: client, ownerID: ownerID)
+    let created = await vehicles.save(
+      entryID: nil, expectedRevision: nil, title: "Native Location Vehicle", body: "",
+      occurredStart: nil, occurredEnd: nil, datePrecision: .unknown, occurredLabel: "",
+      occurredTimezone: "UTC", make: "Honda", model: "Civic", modelYear: 2018, color: "",
+      collectionNames: [], tagNames: [])
+    XCTAssertEqual(created.status, .created, created.message)
+    let identity = try XCTUnwrap(created.identity)
+
+    // Web's address search saves a provider Location through the same RPC.
+    let located: [SavedVehicleEntry] =
+      try await client.rpc(
+        "save_vehicle_with_location",
+        params: SyntheticVehicleLocation(entryID: identity.id, revision: identity.revision)
+      )
+      .execute().value
+    XCTAssertEqual(located.first?.entryID, identity.id)
+    await vehicles.load()
+    XCTAssertNil(vehicles.loadErrorMessage)
+    let vehicle = try XCTUnwrap(vehicles.entry(id: identity.id))
+    let location = try XCTUnwrap(vehicle.location)
+    XCTAssertEqual(location.label, "Pier 39, San Francisco, CA 94133, United States")
+    XCTAssertEqual(try XCTUnwrap(location.latitude), 37.8087, accuracy: 0.000001)
+
+    let removed = await vehicles.save(
+      entryID: vehicle.id, expectedRevision: vehicle.revision, title: vehicle.title,
+      body: "Kept without a Location.", occurredStart: nil, occurredEnd: nil,
+      datePrecision: .unknown, occurredLabel: "", occurredTimezone: "UTC", make: "Honda",
+      model: "Civic", modelYear: 2018, color: "", collectionNames: [], tagNames: [],
+      originalEntry: vehicle, removingLocation: true)
+    XCTAssertEqual(removed.status, .saved, removed.message)
+    XCTAssertEqual(removed.message, "Vehicle saved.")
+    await vehicles.load()
+    let saved = try XCTUnwrap(vehicles.entry(id: identity.id))
+    XCTAssertNil(saved.location)
+    XCTAssertEqual(saved.body, "Kept without a Location.")
+
+    let trashed = await vehicles.moveToTrash(entryID: saved.id, expectedRevision: saved.revision)
+    XCTAssertEqual(trashed.status, .trashed, trashed.message)
+    XCTAssertEqual(trashed.message, "Vehicle moved to Trash.")
+    XCTAssertNil(vehicles.entry(id: identity.id))
+  }
+
   func testFocusedRecordsDecodeInLibraryCollectionsAndHome() async throws {
     let (client, ownerID) = try await client()
     let collectionName = "Native focused \(UUID().uuidString)"
@@ -325,7 +370,7 @@ final class NativeContractTests: XCTestCase {
       occurredStart: nil, occurredEnd: nil, datePrecision: .unknown, occurredLabel: "",
       occurredTimezone: "UTC", make: "Native", model: "Fixture", modelYear: nil, color: "",
       collectionNames: [collectionName], tagNames: [])
-    XCTAssertEqual(vehicle.status, .saved, vehicle.message)
+    XCTAssertEqual(vehicle.status, .created, vehicle.message)
     let vehicleID = try XCTUnwrap(vehicle.identity?.id)
     await vehicles.load()
     XCTAssertNil(vehicles.loadErrorMessage)
@@ -363,5 +408,38 @@ final class NativeContractTests: XCTestCase {
     await home.load()
     XCTAssertNil(home.loadErrorMessage)
     XCTAssertNotNil(home.snapshot)
+  }
+}
+
+/// A provider Location as Web address search submits it, for a synthetic local Vehicle.
+private struct SyntheticVehicleLocation: Encodable {
+  let entryID: UUID
+  let revision: Int
+
+  private enum CodingKeys: String, CodingKey {
+    case input = "p_input"
+    case source = "p_source"
+    case location = "p_location"
+  }
+
+  func encode(to encoder: Encoder) throws {
+    var values = encoder.container(keyedBy: CodingKeys.self)
+    try values.encode(
+      [
+        "id": AnyJSON.string(entryID.uuidString), "revision": .integer(revision),
+        "title": "Native Location Vehicle", "body": "", "datePrecision": "unknown",
+        "occurredTimezone": "UTC", "make": "Honda", "model": "Civic", "modelYear": .integer(2018),
+        "collectionNames": [], "tagNames": [],
+      ] as [String: AnyJSON], forKey: .input)
+    try values.encodeNil(forKey: .source)
+    try values.encode(
+      [
+        "kind": "provider", "provider": "geoapify",
+        "providerLocationId": "native-contract-pier-39",
+        "formattedAddress": "Pier 39, San Francisco, CA 94133, United States",
+        "address": "Beach Street", "city": "San Francisco", "region": "CA",
+        "country": "United States", "countryCode": "us",
+        "latitude": .double(37.8087), "longitude": .double(-122.4098),
+      ] as [String: AnyJSON], forKey: .location)
   }
 }

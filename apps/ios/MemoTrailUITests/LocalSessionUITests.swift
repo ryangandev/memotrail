@@ -22,9 +22,10 @@ final class LocalSessionUITests: XCTestCase {
     ] {
       app.tabBars.buttons[tab].tap()
       if tab == "Timeline" {
-        // Timeline asks for the birth date on the first visit until one is saved, like Web.
-        XCTAssertTrue(app.buttons["Not now"].waitForExistence(timeout: 15))
-        app.buttons["Not now"].tap()
+        dismissBirthDatePrompt(
+          once: app.buttons.matching(
+            NSPredicate(format: "label BEGINSWITH %@", expected)
+          ).firstMatch, in: app)
       }
       XCTAssertTrue(text(expected, in: app).waitForExistence(timeout: 15), tab)
       attach(app, tab)
@@ -315,11 +316,10 @@ final class LocalSessionUITests: XCTestCase {
 
     // Like Web, a Home on the Timeline opens its own page.
     app.tabBars.buttons["Timeline"].tap()
-    XCTAssertTrue(app.buttons["Not now"].waitForExistence(timeout: 15))
-    app.buttons["Not now"].tap()
     let onTimeline = app.buttons.matching(
       NSPredicate(format: "label BEGINSWITH %@", "Maple Street flat")
     ).firstMatch
+    dismissBirthDatePrompt(once: onTimeline, in: app)
     reveal(onTimeline, in: app).tap()
     XCTAssertTrue(app.staticTexts["Closer to work"].waitForExistence(timeout: 10))
     XCTAssertTrue(app.buttons["edit-home"].exists)
@@ -400,6 +400,117 @@ final class LocalSessionUITests: XCTestCase {
     XCTAssertTrue(created.waitForNonExistence(timeout: 10))
     XCTAssertTrue(text("1 home", in: app).exists)
     attach(app, "Homes after Trash")
+  }
+
+  func testVehiclesOpenTheirPageAndAddEditAndTrashVehicles() throws {
+    let app = try launchLocalSession()
+    XCTAssertTrue(app.tabBars.buttons["Timeline"].waitForExistence(timeout: 20))
+
+    // Like Web, a Vehicle on the Timeline opens its own page.
+    app.tabBars.buttons["Timeline"].tap()
+    let onTimeline = app.buttons.matching(
+      NSPredicate(format: "label BEGINSWITH %@", "Blue hatchback")
+    ).firstMatch
+    dismissBirthDatePrompt(once: onTimeline, in: app)
+    reveal(onTimeline, in: app).tap()
+    XCTAssertTrue(app.staticTexts["2015 Honda Fit · Blue"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["edit-vehicle"].exists)
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+
+    app.tabBars.buttons["More"].tap()
+    reveal(app.buttons["Vehicles"], in: app).tap()
+    let seeded = app.buttons["Blue hatchback, Since Sep 15, 2019"]
+    XCTAssertTrue(seeded.waitForExistence(timeout: 15))
+    XCTAssertTrue(text("1 current vehicle", in: app).exists)
+    Thread.sleep(forTimeInterval: 1.5)
+    attach(app, "Vehicles")
+
+    // A card opens the Vehicle's page with its facts, Location, Story, and organization.
+    seeded.tap()
+    let location = "Hawthorne Boulevard, Portland, OR, United States"
+    XCTAssertTrue(app.staticTexts[location].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["2015 Honda Fit · Blue"].exists)
+    attach(app, "Vehicle page")
+    reveal(app.buttons["vehicle-version-history"], in: app)
+    attach(app, "Vehicle page Story and organization")
+
+    // Edit shows the saved Location, and removing it saves with the other changes.
+    app.buttons["edit-vehicle"].firstMatch.tap()
+    XCTAssertTrue(app.staticTexts["Edit Vehicle"].waitForExistence(timeout: 5))
+    Thread.sleep(forTimeInterval: 0.6)
+    attach(app, "Vehicle editor")
+    // Scroll the saved Location clear of the sheet footer before removing it.
+    app.swipeUp()
+    XCTAssertTrue(reveal(app.buttons["Remove Location"], in: app).exists)
+    XCTAssertTrue(app.staticTexts["45.51200, -122.62500"].exists)
+    attach(app, "Vehicle editor Location")
+    app.buttons["Remove Location"].tap()
+    XCTAssertTrue(app.buttons["Remove Location"].waitForNonExistence(timeout: 5))
+    let color = reveal(app.textFields["Color"], in: app)
+    color.tap()
+    color.typeText(" and silver\n")
+    attach(app, "Vehicle editor facts")
+    app.buttons["save-vehicle"].tap()
+    XCTAssertTrue(text("Vehicle saved.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(
+      app.staticTexts["2015 Honda Fit · Blue and silver"].waitForExistence(timeout: 10))
+    XCTAssertFalse(app.staticTexts[location].exists)
+    attach(app, "Vehicle page after saving")
+
+    // Version history opens this Vehicle's history.
+    reveal(app.buttons["vehicle-version-history"], in: app).tap()
+    XCTAssertTrue(app.navigationBars.buttons.element(boundBy: 0).waitForExistence(timeout: 5))
+    Thread.sleep(forTimeInterval: 1)
+    attach(app, "Vehicle version history")
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+
+    // Add Vehicle creates one with only a name, like Web.
+    XCTAssertTrue(app.buttons["add-vehicle"].waitForExistence(timeout: 5))
+    app.buttons["add-vehicle"].tap()
+    let name = app.textFields["vehicle-title"]
+    XCTAssertTrue(name.waitForExistence(timeout: 5))
+    name.tap()
+    name.typeText("Harbor ferry bike")
+    attach(app, "New Vehicle")
+    app.buttons["save-vehicle"].tap()
+    XCTAssertTrue(text("Vehicle created.", in: app).waitForExistence(timeout: 10))
+    let created = app.buttons.matching(
+      NSPredicate(format: "label BEGINSWITH %@", "Harbor ferry bike")
+    ).firstMatch
+    XCTAssertTrue(created.waitForExistence(timeout: 10))
+    XCTAssertTrue(text("2 vehicles", in: app).exists)
+    Thread.sleep(forTimeInterval: 1)
+    attach(app, "Vehicles with the new Vehicle")
+
+    // Moving it to Trash from its page returns to the list without it.
+    reveal(created, in: app).tap()
+    XCTAssertTrue(app.buttons["edit-vehicle"].firstMatch.waitForExistence(timeout: 10))
+    app.buttons["edit-vehicle"].firstMatch.tap()
+    reveal(app.buttons["trash-vehicle"], in: app).tap()
+    let confirm = app.buttons.matching(
+      NSPredicate(format: "label == %@ AND identifier != %@", "Move to Trash", "trash-vehicle")
+    ).firstMatch
+    XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+    confirm.tap()
+    XCTAssertTrue(text("Vehicle moved to Trash.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["add-vehicle"].waitForExistence(timeout: 10))
+    XCTAssertTrue(created.waitForNonExistence(timeout: 10))
+    XCTAssertTrue(text("1 vehicle", in: app).exists)
+    attach(app, "Vehicles after Trash")
+  }
+
+  /// Timeline asks for the birth date on the first visit until one is saved, like Web. The
+  /// Timeline test saves one for the shared seeded account, so later tests find no prompt.
+  private func dismissBirthDatePrompt(once loaded: XCUIElement, in app: XCUIApplication) {
+    let notNow = app.buttons["Not now"]
+    let deadline = Date().addingTimeInterval(15)
+    while !notNow.exists, !loaded.exists, Date() < deadline {
+      Thread.sleep(forTimeInterval: 0.25)
+    }
+    // The prompt opens once the profile and the Timeline have both loaded.
+    if notNow.exists || notNow.waitForExistence(timeout: 3) { notNow.tap() }
+    XCTAssertTrue(loaded.waitForExistence(timeout: 5))
   }
 
   private func launchLocalSession() throws -> XCUIApplication {

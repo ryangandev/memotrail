@@ -19,7 +19,7 @@ struct TimelineView: View {
   @State private var managingTracks = false
   @State private var hasOfferedBirthDate = false
   @State private var openingRecordID: UUID?
-  @State private var openedHomeID: UUID?
+  @State private var openedRecord: TimelineRecordPage?
   @Environment(AppNavigator.self) private var navigator
 
   init(
@@ -87,7 +87,9 @@ struct TimelineView: View {
             controller: residenceController, entry: entry,
             defaultTimezone: profile.profile?.timezone)
         case .vehicle(let entry):
-          VehicleEditorSheet(controller: vehicleController, entry: entry)
+          VehicleEditorSheet(
+            controller: vehicleController, entry: entry,
+            defaultTimezone: profile.profile?.timezone)
         case .firstTime(let entry):
           FirstTimeEditorSheet(
             controller: firstTimesController, entry: entry,
@@ -98,15 +100,21 @@ struct TimelineView: View {
       .navigationDestination(isPresented: $managingTracks) {
         TimelineTracksView(client: client, ownerID: user.id)
       }
-      .navigationDestination(item: $openedHomeID) { id in
-        HomeDetailView(
-          controller: residenceController, client: client, ownerID: user.id, entryID: id)
+      .navigationDestination(item: $openedRecord) { page in
+        switch page {
+        case .home(let id):
+          HomeDetailView(
+            controller: residenceController, client: client, ownerID: user.id, entryID: id)
+        case .vehicle(let id):
+          VehicleDetailView(
+            controller: vehicleController, client: client, ownerID: user.id, entryID: id)
+        }
       }
       .onChange(of: managingTracks) {
         if !managingTracks { Task { await controller.reloadAfterMutation() } }
       }
-      .onChange(of: openedHomeID) {
-        if openedHomeID == nil { Task { await controller.reloadAfterMutation() } }
+      .onChange(of: openedRecord) {
+        if openedRecord == nil { Task { await controller.reloadAfterMutation() } }
       }
       .task {
         guard !controller.hasLoaded else { return }
@@ -241,15 +249,18 @@ struct TimelineView: View {
     Task { await controller.reloadAfterMutation() }
   }
 
-  /// Web `openEntry`: a Home opens its own page, and Vehicles and First Times open their
-  /// editors. A Dashboard or Library link opens a Home's editor, like Web `/timeline?entry=`.
+  /// Web `openEntry`: Homes and Vehicles open their own pages, and First Times open their
+  /// editors. A Dashboard or Library link opens the record's editor, like Web
+  /// `/timeline?entry=`.
   private func select(_ entry: TimelineEntry, fromLink: Bool = false) {
     guard openingRecordID == nil else { return }
     switch entry.specializedEditor {
     case nil:
       sheet = .moment(entry, trackID: entry.trackID)
     case .home where !fromLink:
-      openedHomeID = entry.id
+      openedRecord = .home(entry.id)
+    case .vehicle where !fromLink:
+      openedRecord = .vehicle(entry.id)
     case .home:
       open(entry) {
         await residenceController.load()
@@ -330,6 +341,12 @@ private enum TimelineCreationType: CaseIterable {
     case .firstTime: "A beginning or milestone you want to remember."
     }
   }
+}
+
+/// A focused record page opened from a Timeline card.
+private enum TimelineRecordPage: Hashable {
+  case home(UUID)
+  case vehicle(UUID)
 }
 
 private enum TimelineSheet: Identifiable {
