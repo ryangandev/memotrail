@@ -25,13 +25,11 @@ export function QuickCaptureDialog({
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const wasOpenRef = useRef(false);
   const nativePhotoPickerOpenRef = useRef(false);
   const suppressEscapeUntilRef = useRef(0);
   const close = useCallback(() => {
     nativePhotoPickerOpenRef.current = false;
     suppressEscapeUntilRef.current = 0;
-    dialogRef.current?.close();
     onClose();
   }, [onClose]);
   const handleNativePhotoPickerChange = useCallback(
@@ -56,13 +54,31 @@ export function QuickCaptureDialog({
 
   useLayoutEffect(() => {
     const dialog = dialogRef.current;
+    if (!dialog) return;
 
-    if (open && dialog && !dialog.open) {
-      dialog.showModal();
-    } else if (!open && wasOpenRef.current) {
-      triggerRef.current?.focus();
+    if (open) {
+      if (!dialog.open) dialog.showModal();
+      return;
     }
-    wasOpenRef.current = open;
+    if (!dialog.open) return;
+
+    let canceled = false;
+    const finishClosing = () => {
+      if (canceled) return;
+      dialog.close();
+      triggerRef.current?.focus({ preventScroll: true });
+    };
+    const animations = dialog.getAnimations();
+    if (animations.length === 0) {
+      finishClosing();
+    } else {
+      void Promise.allSettled(
+        animations.map((animation) => animation.finished),
+      ).then(finishClosing);
+    }
+    return () => {
+      canceled = true;
+    };
   }, [open]);
 
   useEffect(() => {
@@ -187,82 +203,85 @@ export function QuickCaptureDialog({
         </button>
       </div>
 
-      {open ? (
-        <dialog
-          aria-labelledby={`${idPrefix}-heading`}
-          className={styles.dialog}
-          id={`${idPrefix}-dialog`}
-          onKeyDown={(event) => {
-            if (event.key !== "Tab" || event.defaultPrevented) return;
-            if (
-              !(event.target instanceof Element) ||
-              event.target.closest("dialog, [data-escape-layer]") !==
-                event.currentTarget
-            )
-              return;
-            const controls = Array.from(
-              event.currentTarget.querySelectorAll<HTMLElement>(
-                'a[href], button, input, select, textarea, [tabindex], [contenteditable="true"]',
-              ),
-            ).filter(
-              (element) =>
-                element.tabIndex >= 0 &&
-                !element.matches(":disabled") &&
-                element.getClientRects().length > 0,
-            );
-            const first = controls[0];
-            const last = controls.at(-1);
-            if (event.shiftKey && document.activeElement === first) {
-              event.preventDefault();
-              last?.focus();
-            } else if (!event.shiftKey && document.activeElement === last) {
-              event.preventDefault();
-              first?.focus();
-            }
-          }}
-          onCancel={(event) => {
-            if (event.target !== event.currentTarget) return;
+      <dialog
+        aria-labelledby={`${idPrefix}-heading`}
+        className={styles.dialog}
+        data-state={open ? "open" : "closing"}
+        id={`${idPrefix}-dialog`}
+        onKeyDown={(event) => {
+          if (event.key !== "Tab" || event.defaultPrevented) return;
+          if (
+            !(event.target instanceof Element) ||
+            event.target.closest("dialog, [data-escape-layer]") !==
+              event.currentTarget
+          )
+            return;
+          const controls = Array.from(
+            event.currentTarget.querySelectorAll<HTMLElement>(
+              'a[href], button, input, select, textarea, [tabindex], [contenteditable="true"]',
+            ),
+          ).filter(
+            (element) =>
+              element.tabIndex >= 0 &&
+              !element.matches(":disabled") &&
+              element.getClientRects().length > 0,
+          );
+          const first = controls[0];
+          const last = controls.at(-1);
+          if (event.shiftKey && document.activeElement === first) {
             event.preventDefault();
+            last?.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first?.focus();
+          }
+        }}
+        onCancel={(event) => {
+          if (event.target !== event.currentTarget) return;
+          event.preventDefault();
+          close();
+        }}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) {
             close();
-          }}
-          onClick={(event) => {
-            if (event.target === event.currentTarget) {
-              close();
-            }
-          }}
-          onClose={onClose}
-          ref={dialogRef}
-        >
-          <header className={styles.dialogHeader}>
-            <div className={styles.dialogTitle}>
-              <span className={styles.dialogMark} aria-hidden="true">
-                <Icon name="sparkle" size={15} />
-              </span>
-              <h2 id={`${idPrefix}-heading`}>What’s on your mind?</h2>
-            </div>
-            <IconButton
-              label="Close quick capture"
-              size="small"
-              variant="ghost"
-              onClick={close}
-              title="Collapse composer (Esc)"
-              type="button"
-            >
-              <Icon name="close" size={18} />
-            </IconButton>
-          </header>
-          <div className={styles.dialogBody}>
-            <OverlayContainerContext value={dialogRef}>
-              <CaptureComposer
-                idPrefix={idPrefix}
-                onNativePhotoPickerChange={handleNativePhotoPickerChange}
-                ownerId={ownerId}
-                variant="dialog"
-              />
-            </OverlayContainerContext>
+          }
+        }}
+        onClose={(event) => {
+          if (event.target === event.currentTarget && !event.currentTarget.open)
+            onClose();
+        }}
+        ref={dialogRef}
+      >
+        <header className={styles.dialogHeader}>
+          <div className={styles.dialogTitle}>
+            <span className={styles.dialogMark} aria-hidden="true">
+              <Icon name="sparkle" size={15} />
+            </span>
+            <h2 id={`${idPrefix}-heading`}>What’s on your mind?</h2>
           </div>
-        </dialog>
-      ) : null}
+          <IconButton
+            label="Close quick capture"
+            size="small"
+            variant="ghost"
+            onClick={close}
+            title="Collapse composer (Esc)"
+            type="button"
+          >
+            <Icon name="close" size={18} />
+          </IconButton>
+        </header>
+        <div className={styles.dialogBody}>
+          <OverlayContainerContext value={dialogRef}>
+            <CaptureComposer
+              active={open}
+              idPrefix={idPrefix}
+              onNativePhotoPickerChange={handleNativePhotoPickerChange}
+              ownerId={ownerId}
+              variant="dialog"
+            />
+          </OverlayContainerContext>
+        </div>
+      </dialog>
     </>
   );
 }

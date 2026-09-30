@@ -47,6 +47,10 @@
   min-height: 0;
 }
 
+.dialogCaptureCard .captureActions {
+  background: color-mix(in srgb, var(--mt-color-surface) 40%, transparent);
+}
+
 .captureComposerHeader {
   display: flex;
   align-items: center;

@@ -84,12 +84,14 @@ export type NativePhotoPickerState = "canceled" | "opened" | "selected";
 const idleFeedback: CaptureFeedback = { isError: false, message: "" };
 
 export function CaptureComposer({
+  active = true,
   embedded = false,
   idPrefix = "capture",
   onNativePhotoPickerChange,
   ownerId,
   variant = "page",
 }: {
+  active?: boolean;
   embedded?: boolean;
   idPrefix?: string;
   onNativePhotoPickerChange?: (state: NativePhotoPickerState) => void;
@@ -244,6 +246,7 @@ export function CaptureComposer({
   }, [ownerId, replacePendingEntries, router]);
 
   useLayoutEffect(() => {
+    if (!active) return;
     const draft = loadInboxDraft(window.localStorage, ownerId);
     const queue = loadInboxQueue(window.localStorage, ownerId);
     let isCanceled = false;
@@ -319,7 +322,7 @@ export function CaptureComposer({
       isCanceled = true;
       window.removeEventListener("online", handleOnline);
     };
-  }, [ownerId, replacePendingEntries, synchronizeQueue]);
+  }, [active, ownerId, replacePendingEntries, synchronizeQueue]);
 
   useEffect(() => {
     let isCanceled = false;
@@ -344,7 +347,7 @@ export function CaptureComposer({
         voiceRecognitionRef.current = null;
       }
     };
-  }, []);
+  }, [active]);
 
   function updateDraft(
     nextTitle: string,
@@ -658,7 +661,7 @@ export function CaptureComposer({
           <div className={captureComposerStyles.captureFields}>
             {isLocalStateReady ? (
               <RichTextEditor
-                autoFocus={variant === "dialog"}
+                autoFocus={variant === "dialog" && active}
                 disabled={isSaving || voiceState !== "idle"}
                 label="Entry text"
                 maxLength={entryBodyLimit}

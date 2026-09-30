@@ -166,6 +166,10 @@ export function RichTextEditor({
   }, [editor, richText, text]);
 
   useEffect(() => {
+    if (!autoFocus) {
+      didAutoFocusRef.current = false;
+      return;
+    }
     if (!editor || !autoFocus || disabled || didAutoFocusRef.current) return;
     didAutoFocusRef.current = true;
     editor.commands.focus("end");
