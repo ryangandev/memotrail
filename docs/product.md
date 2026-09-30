@@ -221,9 +221,10 @@ Command B (Control B on Windows) also toggles the desktop sidebar when focus is 
 The collapsed rail shows the MemoTrail logo without its wordmark above square navigation targets and keeps keyboard focus indicators inside the controls.
 On collapse, the logo's outer ring and accent rotate 90 degrees together while the inner ring turns in the opposite direction over 320ms; expanding reverses the rotation, and reduced motion keeps the mark still.
 The persistent top bar places Back and Forward history controls, then the desktop sidebar panel control; unavailable history directions are disabled.
-Neutral Search and an icon-only Inbox control sit at the far right; Inbox shows a notification count only when captures are waiting.
+An icon-only Inbox control sits at the far right; Inbox shows a notification count only when captures are waiting.
 A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry and People results in place, supports keyboard navigation, and opens Library for full search with filters.
-On Web, New Entry opens from the glass-effect bottom control labeled `What’s on your mind?` or Command J (Control J on Windows) when focus is outside a text input or editor.
+On Web, the glass-effect bottom dock places global Search on the left and the New Entry control labeled `What’s on your mind?` with a sparkle icon on the right.
+New Entry also opens with Command J (Control J on Windows) when focus is outside a text input or editor.
 It expands into a bottom-anchored composer with the editor below the prompt, keeping rich text, photos, dates, local drafts, and Save to Inbox.
 Escape or the close control collapses it and restores focus to the bottom control without discarding the draft.
 On mobile Web the collapsed control sits above navigation; the expanded composer stays within the visible viewport and scrolls when needed.

@@ -9,6 +9,7 @@ import { Icon } from "@/components/icon";
 import { IconButton } from "@/components/button";
 import { OverlayContainerContext } from "./overlay-container";
 import styles from "./quick-capture-dialog.module.css";
+import dockStyles from "./workspace-action-dock.module.css";
 
 export function QuickCaptureDialog({
   idPrefix,
@@ -182,26 +183,24 @@ export function QuickCaptureDialog({
 
   return (
     <>
-      <div className={styles.dock} data-capture-dock>
-        <button
-          aria-keyshortcuts="Meta+J Control+J"
-          aria-label="New entry"
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          aria-controls={open ? `${idPrefix}-dialog` : undefined}
-          className={styles.trigger}
-          onClick={onOpen}
-          ref={triggerRef}
-          title="New entry (⌘ J / Ctrl+J)"
-          type="button"
-        >
-          <span className={styles.triggerMark}>
-            <Icon name="plus" size={19} />
-          </span>
-          <span className={styles.triggerPrompt}>What’s on your mind?</span>
-          <kbd aria-hidden="true">⌘ J</kbd>
-        </button>
-      </div>
+      <button
+        aria-keyshortcuts="Meta+J Control+J"
+        aria-label="New entry"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-controls={open ? `${idPrefix}-dialog` : undefined}
+        className={`${dockStyles.control} ${styles.trigger}`}
+        onClick={onOpen}
+        ref={triggerRef}
+        title="New entry (⌘ J / Ctrl+J)"
+        type="button"
+      >
+        <span className={styles.triggerMark}>
+          <Icon name="sparkle" size={19} />
+        </span>
+        <span className={styles.triggerPrompt}>What’s on your mind?</span>
+        <kbd aria-hidden="true">⌘ J</kbd>
+      </button>
 
       <dialog
         aria-labelledby={`${idPrefix}-heading`}

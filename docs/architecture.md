@@ -186,6 +186,7 @@ Pair it with the test file carrying the same feature name.
 - Dialog owns generic editor and confirmation shells, scroll containment, focus trapping/restoration, busy dismissal, and nested overlay containers.
   Editor forms retain their handlers; footer submit actions use native form associations.
   Quick Capture uses a native HTML dialog anchored to the workspace bottom, preserving photo-picker cancellation, nested overlays, and focus restoration; its mobile geometry follows the visual viewport when the keyboard opens.
+  `WorkspaceActionDock` owns the shared bottom position and glass control styling for global Search and Quick Capture.
   PhotoViewer keeps native top-layer media geometry, and Command Palette keeps its search and keyboard-result interaction model.
 - Reusable components do not import `app/**.module.css`; Web lint enforces this boundary along with valid token references.
   Feature modules own composition, and `editor-fields.module.css` shares native field spacing and states while excluding the reviewed composites' internals.

@@ -315,12 +315,18 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       searchShortcut.boundingBox(),
       inboxShortcut.boundingBox(),
     ]);
-    expect(searchBox!.x).toBeLessThan(inboxBox!.x);
-    expect(dockBox!.y).toBeGreaterThan(searchBox!.y + searchBox!.height);
+    expect(searchBox!.x + searchBox!.width).toBeLessThan(dockBox!.x);
+    expect(dockBox!.y).toBeCloseTo(searchBox!.y, 0);
+    expect(searchBox!.y).toBeGreaterThan(inboxBox!.y + inboxBox!.height);
     await expect(
       page
         .locator("main > header")
         .getByRole("button", { name: "New entry", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page
+        .locator("main > header")
+        .getByRole("button", { name: "Search your trail", exact: true }),
     ).toHaveCount(0);
     await expect(newEntryShortcut).toHaveCSS("backdrop-filter", /blur/);
     await expect(shell.getByText(email, { exact: true })).toHaveCount(0);
@@ -505,7 +511,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.mouse.move(800, 100);
     await expandSidebar.focus();
     await page.keyboard.press("Tab");
-    await expect(searchShortcut).toBeFocused();
+    await expect(inboxShortcut).toBeFocused();
     await homeLink.focus();
     await expect(homeLink).toBeFocused();
     await expect(homeLink).toHaveCSS("outline-style", "none");
@@ -591,7 +597,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(page.locator("main")).toHaveCSS("margin-left", "224px");
     await page.getByRole("button", { name: "Collapse sidebar" }).focus();
     await page.keyboard.press("Tab");
-    await expect(searchShortcut).toBeFocused();
+    await expect(inboxShortcut).toBeFocused();
     await homeLink.focus();
     await expect(homeLink).toBeFocused();
     await expect(homeLink).toHaveCSS("outline-style", "none");

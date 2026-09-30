@@ -16,10 +16,10 @@ import { BrandMark } from "@/components/brand-mark";
 import { CommandPalette } from "@/components/command-palette";
 import { Icon, type IconName } from "@/components/icon";
 import { QuickCaptureDialog } from "@/components/quick-capture-dialog";
-import { SearchShortcutButton } from "@/components/search-shortcut-link";
 import { SyncStatus } from "@/components/sync-status";
 import { TimezoneSync } from "@/components/timezone-sync";
 import { WorkspaceHistoryControls } from "@/components/workspace-history-controls";
+import { WorkspaceActionDock } from "@/components/workspace-action-dock";
 import type { Viewer } from "@/lib/data/inbox";
 import { SIDEBAR_COOKIE_NAME } from "@/lib/sidebar-preference";
 
@@ -313,10 +313,6 @@ export function WorkspaceShell({
 
           <div className={workspaceShellStyles.topActions}>
             <SyncStatus ownerId={viewer.id} />
-            <SearchShortcutButton
-              className={workspaceShellStyles.topActionButton}
-              onOpen={openCommandPalette}
-            />
             <Link
               aria-current={activeDestination === "inbox" ? "page" : undefined}
               aria-label={
@@ -349,13 +345,15 @@ export function WorkspaceShell({
         {children}
       </main>
 
-      <QuickCaptureDialog
-        idPrefix="dock-capture"
-        onClose={closeQuickCapture}
-        onOpen={openQuickCapture}
-        open={quickCaptureOpen}
-        ownerId={viewer.id}
-      />
+      <WorkspaceActionDock onSearch={openCommandPalette}>
+        <QuickCaptureDialog
+          idPrefix="dock-capture"
+          onClose={closeQuickCapture}
+          onOpen={openQuickCapture}
+          open={quickCaptureOpen}
+          ownerId={viewer.id}
+        />
+      </WorkspaceActionDock>
 
       <nav
         className={workspaceShellStyles.mobileNavigation}
