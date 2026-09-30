@@ -184,6 +184,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
           caret: "initial",
           path: "/private/tmp/memotrail-capture-precision-mobile.png",
         });
+        await page.waitForLoadState("networkidle");
         await context.setOffline(true);
       }
       if (index === 0)
@@ -242,6 +243,9 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
           occurredLabel: "At age 17",
         });
         await context.setOffline(false);
+        // Let the online listener finish its retry/refresh before exercising
+        // reload recovery, rather than aborting its in-flight RSC stream.
+        await page.waitForLoadState("networkidle");
         await page.reload();
       }
       await expect

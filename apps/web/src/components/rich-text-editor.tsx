@@ -94,7 +94,6 @@ export function RichTextEditor({
           isAllowedUri: (url, context) =>
             context.defaultValidate(url) && Boolean(normalizedLink(url)),
           openOnClick: false,
-          protocols: ["mailto", "tel"],
         },
       }),
       CharacterCount.configure({ limit: maxLength }),

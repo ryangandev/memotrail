@@ -213,6 +213,8 @@ Pair it with the test file carrying the same feature name.
 - Web domain editors own label-to-control spacing in their shared field wrapper; route forms reuse that wrapper and the spacing tokens instead of compensating field by field.
 - Quick Capture restores local text and occurrence state before paint, keeps the loading and editor geometries equal, and loads IndexedDB photo drafts separately so editor initialization cannot move the open dialog.
   Its initialized editor remains mounted while the native dialog is closed; reopening refreshes the shared local draft, and closing stops voice capture and online retry listeners.
+  `CaptureComposer` handles Command/Control Return in the active form's capture phase before Tiptap's modified-Enter bindings, then uses native `requestSubmit` and the Save button's disabled state to retain validation and queue semantics.
+  Composition, held-key repeats, and nested editing layers cannot submit through that shortcut; shared editor bindings remain available outside Capture.
   The frosted surface uses a static backdrop blur and translucent reflection, while entrance and exit animate only opacity and translation and honor reduced motion.
 - Web appearance uses the existing light and dark semantic tokens, stores a per-browser System, Light, or Dark choice in a same-site cookie, and lets the server root layout apply explicit themes before first paint without adding a client-side flash.
 

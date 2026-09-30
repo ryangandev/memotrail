@@ -227,6 +227,8 @@ On Web, the glass-effect bottom dock places the New Entry control labeled `Whatâ
 The controls keep text and shortcut hints readable over page content, and hovering gives them a subtle accent background that fades back when the pointer leaves.
 New Entry also opens with Command J (Control J on Windows) when focus is outside a text input or editor.
 It expands into a bottom-anchored composer with the editor below the prompt, keeping rich text, photos, dates, local drafts, and Save to Inbox.
+Web Capture saves to Inbox with Command Return (Control Enter on Windows), using the same validation and offline behavior as the Save button.
+Enter starts a new paragraph, and Shift+Enter inserts a line break; input method composition and nested editing controls do not trigger the save shortcut.
 Escape or the close control collapses it and restores focus to the bottom control without discarding the draft.
 On mobile Web the collapsed control sits above navigation; the expanded composer stays within the visible viewport and scrolls when needed.
 Home, Vehicle, and First Time results share one reusable card shell while preserving subtype-specific content and responsive layouts.

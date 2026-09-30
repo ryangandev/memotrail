@@ -125,6 +125,7 @@ export function CaptureComposer({
   const pendingEntriesRef = useRef<QueuedInboxEntry[]>([]);
   const syncInFlightRef = useRef(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
   const voiceRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const voiceBaselineRef = useRef("");
   const voiceHadTranscriptRef = useRef(false);
@@ -644,6 +645,29 @@ export function CaptureComposer({
       <form
         className={`${captureComposerStyles.captureCard} ${variant === "dialog" ? captureComposerStyles.dialogCaptureCard : ""} ${embedded ? captureComposerStyles.embeddedCaptureCard : ""}`}
         aria-label="Quick capture"
+        onKeyDownCapture={(event) => {
+          if (
+            !active ||
+            event.defaultPrevented ||
+            event.key !== "Enter" ||
+            (!event.metaKey && !event.ctrlKey) ||
+            event.altKey ||
+            event.shiftKey ||
+            event.nativeEvent.isComposing ||
+            (event.target instanceof Element &&
+              event.target.closest("[data-escape-layer]"))
+          )
+            return;
+
+          // Capture before Tiptap's Mod-Enter hard-break/code-block bindings.
+          // Shift-Enter and ordinary Enter keep the editor's newline behavior.
+          event.preventDefault();
+          event.stopPropagation();
+          if (event.repeat) return;
+          const submitButton = submitButtonRef.current;
+          if (submitButton && !submitButton.disabled)
+            event.currentTarget.requestSubmit(submitButton);
+        }}
         onSubmit={handleSubmit}
       >
         {variant === "page" ? (
@@ -824,6 +848,7 @@ export function CaptureComposer({
               {composerFeedback.message}
             </p>
             <Button
+              aria-keyshortcuts="Meta+Enter Control+Enter"
               variant="primary"
               disabled={
                 isSaving ||
@@ -832,6 +857,8 @@ export function CaptureComposer({
                 !isPhotoStateReady ||
                 voiceState !== "idle"
               }
+              ref={submitButtonRef}
+              title="Save to Inbox (⌘ Return / Ctrl+Enter)"
               type="submit"
             >
               {isSaving || isSyncing ? "Saving…" : "Save to Inbox"}
