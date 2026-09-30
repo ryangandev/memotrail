@@ -242,6 +242,7 @@ Pair it with the test file carrying the same feature name.
   `MTToastCenter` shows Web-timed success, info, and error toasts in a pass-through window above sheets.
   Like Web, they rise from the bottom, clear of the tab bar, sheet actions, and the keyboard, so back and close buttons stay reachable.
   `MTMedia.swift` owns `MTRemoteImage`, the loading skeleton, `MTUploadProgress`, and `MTPhotoField`; feature editors use them instead of private image loaders.
+  `MTPhotoPreview` shows saved photos whole and pages between them with Previous, Next, and the position, like Web's photo viewer; `MTPhotoField` and `MTRecordPhotos` open it.
   `MTRecordDetail.swift` owns the focused-record parts: `MTFormSection` is the Web editor fieldset whose fields sit on the raised surface, with an accent tone for panels such as the Goal's Bucket List milestone, and `MTFactList`, `MTDetailSection`, and `MTRecordPhotos` lay out a record's facts, Story, Organize, and photos.
   `MTFocusedRecordPage` composes them into the Web `FocusedRecordDetail` page with Edit and Version history, and `MTFocusedRecordUnavailable` stands in for a missing record.
   `MTRecordArchive.swift` owns `MTRecordSection`, `MTEntityCard`, and `MTRecordCardFooter`: the Web record workspace section, the Home and Vehicle `RecordCard`, and the badge footer every record card shares.

@@ -226,7 +226,7 @@ struct MTPhotoField: View {
         .foregroundStyle(MTColor.inkFaint)
     }
     .sheet(item: $previewing) { photo in
-      MTPhotoPreview(url: photo.url, name: photo.name ?? "\(recordLabel) photo")
+      MTPhotoPreview(saved: saved, recordLabel: recordLabel, selectedID: photo.id)
     }
   }
 
@@ -260,25 +260,90 @@ struct MTPhotoField: View {
   }
 }
 
-/// A saved photo shown whole, for checking it before removing or keeping it.
+/// Saved photos shown whole, one at a time, like Web's photo viewer: swipe, or use Previous and
+/// Next beside the position, to check them before removing or keeping them.
 struct MTPhotoPreview: View {
-  let url: URL?
-  let name: String
+  struct Photo: Identifiable, Hashable {
+    let id: UUID
+    let url: URL?
+    let name: String
+  }
+
+  let photos: [Photo]
+  @State private var selectedID: UUID
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+  init(photos: [Photo], selectedID: UUID) {
+    self.photos = photos
+    _selectedID = State(initialValue: selectedID)
+  }
+
+  /// A saved photo list, named by its record when a photo has no name of its own.
+  init(saved: [MTPhotoField.SavedPhoto], recordLabel: String, selectedID: UUID) {
+    self.init(
+      photos: saved.enumerated().map { index, photo in
+        Photo(id: photo.id, url: photo.url, name: photo.name ?? "\(recordLabel) photo \(index + 1)")
+      }, selectedID: selectedID)
+  }
+
+  private var index: Int { photos.firstIndex { $0.id == selectedID } ?? 0 }
 
   var body: some View {
     NavigationStack {
-      MTRemoteImage(url: url, fit: .fit, accessibilityLabel: name, background: .black)
-        .ignoresSafeArea(edges: .bottom)
-        .navigationTitle(name)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.black, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarColorScheme(.dark, for: .navigationBar)
-        .toolbar {
-          ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+      TabView(selection: $selectedID) {
+        ForEach(photos) { photo in
+          MTRemoteImage(
+            url: photo.url, fit: .fit, accessibilityLabel: photo.name, background: .black
+          )
+          .tag(photo.id)
         }
+      }
+      .tabViewStyle(.page(indexDisplayMode: .never))
+      .background(Color.black.ignoresSafeArea())
+      .safeAreaInset(edge: .bottom, spacing: 0) {
+        if photos.count > 1 { navigation }
+      }
+      .environment(\.colorScheme, .dark)
+      .navigationTitle(photos.indices.contains(index) ? photos[index].name : "Photo")
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbarBackground(.black, for: .navigationBar)
+      .toolbarBackground(.visible, for: .navigationBar)
+      .toolbarColorScheme(.dark, for: .navigationBar)
+      .toolbar {
+        ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+      }
     }
     .presentationDetents([.large])
+  }
+
+  /// Web's viewer navigation: Previous, the position, and Next.
+  private var navigation: some View {
+    HStack(spacing: MTSpacing.s3) {
+      Button("Previous") { move(by: -1) }
+        .mtButtonStyle(.secondary, size: .small)
+        .disabled(index == 0)
+        .accessibilityLabel("Previous photo")
+      Spacer(minLength: 0)
+      Text("\(index + 1) of \(photos.count)")
+        .font(MTFont.caption)
+        .foregroundStyle(MTColor.inkMuted)
+        .monospacedDigit()
+      Spacer(minLength: 0)
+      Button("Next") { move(by: 1) }
+        .mtButtonStyle(.secondary, size: .small)
+        .disabled(index == photos.count - 1)
+        .accessibilityLabel("Next photo")
+    }
+    .padding(.horizontal, MTSpacing.s4)
+    .padding(.vertical, MTSpacing.s3)
+    .background(Color.black.ignoresSafeArea())
+  }
+
+  private func move(by offset: Int) {
+    guard photos.indices.contains(index + offset) else { return }
+    withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) {
+      selectedID = photos[index + offset].id
+    }
   }
 }

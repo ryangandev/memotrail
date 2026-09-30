@@ -108,11 +108,14 @@
     }
   }
 
-  /// The Web EntryPhotoField specimen: one saved photo, local selections, and simulated upload.
+  /// The Web EntryPhotoField specimen: two saved photos to page between in the preview, local
+  /// selections, and simulated upload.
   struct PhotoFieldSpecimen: View {
     @State private var saved = [
       MTPhotoField.SavedPhoto(
-        id: UUID(), url: GallerySamples.artworkURL, name: "coast-memory.jpg")
+        id: UUID(), url: GallerySamples.artworkURL, name: "coast-memory.jpg"),
+      MTPhotoField.SavedPhoto(
+        id: UUID(), url: GallerySamples.artworkURL, name: "harbor-walk.jpg"),
     ]
     @State private var new: [MTPhotoField.NewPhoto] = []
     @State private var selection: [PhotosPickerItem] = []

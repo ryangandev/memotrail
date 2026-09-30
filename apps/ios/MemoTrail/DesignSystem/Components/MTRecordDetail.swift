@@ -151,7 +151,7 @@ struct MTDetailSection<Content: View>: View {
 }
 
 /// Web focused-record `photos`: each saved photo at 4:3, one column on phones and 220 point
-/// columns on wider screens. Selecting one shows it whole.
+/// columns on wider screens. Selecting one shows it whole, with the others a swipe away.
 struct MTRecordPhotos: View {
   let recordLabel: String
   let photos: [MTPhotoField.SavedPhoto]
@@ -178,7 +178,7 @@ struct MTRecordPhotos: View {
       }
     }
     .sheet(item: $previewing) { photo in
-      MTPhotoPreview(url: photo.url, name: photo.name ?? "\(recordLabel) photo")
+      MTPhotoPreview(saved: photos, recordLabel: recordLabel, selectedID: photo.id)
     }
   }
 }
