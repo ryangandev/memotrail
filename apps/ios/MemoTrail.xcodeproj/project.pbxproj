@@ -128,6 +128,8 @@
 		E10000000000000000000020 /* ProfileSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000020 /* ProfileSettingsTests.swift */; };
 		E10000000000000000000021 /* MTSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000021 /* MTSheet.swift */; };
 		E10000000000000000000022 /* OrganizationNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000022 /* OrganizationNames.swift */; };
+		E10000000000000000000023 /* MTRecordDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000023 /* MTRecordDetail.swift */; };
+		E10000000000000000000024 /* MTLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000024 /* MTLocation.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -265,6 +267,8 @@
 		E20000000000000000000020 /* ProfileSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsTests.swift; sourceTree = "<group>"; };
 		E20000000000000000000021 /* MTSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTSheet.swift; sourceTree = "<group>"; };
 		E20000000000000000000022 /* OrganizationNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrganizationNames.swift; sourceTree = "<group>"; };
+		E20000000000000000000023 /* MTRecordDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTRecordDetail.swift; sourceTree = "<group>"; };
+		E20000000000000000000024 /* MTLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTLocation.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -402,6 +406,8 @@
 		A10000000000000000000008 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000024 /* MTLocation.swift */,
+				E20000000000000000000023 /* MTRecordDetail.swift */,
 				E20000000000000000000021 /* MTSheet.swift */,
 				E20000000000000000000015 /* MTMedia.swift */,
 				E20000000000000000000014 /* MTToast.swift */,
@@ -721,6 +727,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E10000000000000000000024 /* MTLocation.swift in Sources */,
+				E10000000000000000000023 /* MTRecordDetail.swift in Sources */,
 				E10000000000000000000022 /* OrganizationNames.swift in Sources */,
 				E10000000000000000000021 /* MTSheet.swift in Sources */,
 				E1000000000000000000001F /* ProfileSettings.swift in Sources */,

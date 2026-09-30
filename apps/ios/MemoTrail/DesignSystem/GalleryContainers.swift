@@ -5,6 +5,7 @@
     @State private var recordMessage = "Interactive state has not been activated."
     @State private var collectionMessage = "No Collection opened yet."
     @State private var chinese = false
+    @State private var hasLocation = true
 
     private let collections: [(name: String, entries: Int, inbox: Int, updated: String?)] = [
       ("Early years", 12, 0, "Latest Sep 18"),
@@ -39,6 +40,102 @@
             }
             Text(recordMessage).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
               .accessibilityIdentifier("design-record-status")
+          }
+        }
+
+        GallerySpecimen(
+          title: "Record card visuals",
+          api:
+            "MTLocationSnapshot · latitude · longitude · fallback; MTRecordMark · icon · title; glass badges",
+          description:
+            "Home, Vehicle, and First Time cards prefer a photo, then a map of their Location, then a mark. Glass badges stay legible over each."
+        ) {
+          VStack(alignment: .leading, spacing: MTSpacing.s3) {
+            MTRecordCard(accessibilityLabel: "Open sample Home with a map") {
+              recordMessage = "Opened the Home with a map."
+            } content: {
+              MTRecordCardVisual {
+                MTLocationSnapshot(latitude: 45.5231, longitude: -122.6765) {
+                  MTRecordMark(icon: .home, title: "Portland")
+                }
+              }
+              .overlay(alignment: .topLeading) {
+                MTBadge(title: "Current", tone: .glassAccent, size: .micro, uppercase: true)
+                  .padding(MTSpacing.s2)
+              }
+              MTRecordCardBody {
+                Text("Maple Street flat").font(MTFont.cardTitle).foregroundStyle(MTColor.ink)
+              }
+            }
+            MTRecordCard(accessibilityLabel: "Open sample Home without a Location") {
+              recordMessage = "Opened the Home without a Location."
+            } content: {
+              MTRecordCardVisual(height: 148) {
+                MTRecordMark(icon: .home, title: "A place in your trail")
+              }
+              .overlay(alignment: .topLeading) {
+                MTBadge(title: "Earlier", tone: .glassNeutral, size: .micro, uppercase: true)
+                  .padding(MTSpacing.s2)
+              }
+              .overlay(alignment: .bottomTrailing) {
+                MTBadge(title: "3 photos", tone: .inverse, size: .micro, uppercase: true)
+                  .padding(MTSpacing.s3)
+              }
+              MTRecordCardBody {
+                Text("Harbor Road cottage").font(MTFont.cardTitle).foregroundStyle(MTColor.ink)
+              }
+            }
+          }
+        }
+
+        GallerySpecimen(
+          title: "Record detail",
+          api: "MTRecordPhotos · MTFactList · MTDetailSection",
+          description:
+            "The focused Home, Vehicle, First Time, and Goal page: photos, labeled facts that skip empty values, then Story and Organize."
+        ) {
+          VStack(alignment: .leading, spacing: MTSpacing.s8) {
+            MTRecordPhotos(
+              recordLabel: "Home",
+              photos: [
+                MTPhotoField.SavedPhoto(
+                  id: UUID(), url: GallerySamples.artworkURL, name: "coast-memory.jpg")
+              ])
+            MTFactList(facts: [
+              ("When", "Since Jun 1, 2021"), ("Location", "Portland, Oregon, United States"),
+              ("Address", "120 Maple Street"), ("Why you moved in", "Closer to work"),
+              ("Why you left", nil),
+            ])
+            MTDetailSection("Story") {
+              Text("Sunny kitchen and a creaky staircase.")
+                .font(MTFont.bodyLarge).foregroundStyle(MTColor.ink)
+            }
+            MTDetailSection("Organize") {
+              MTFlowLayout(spacing: MTSpacing.s2) {
+                MTBadge(title: "Early years", tone: .neutral)
+                MTBadge(title: "#home", tone: .neutral)
+              }
+            }
+          }
+        }
+
+        GallerySpecimen(
+          title: "LocationPreview",
+          api: "label · latitude · longitude · remove",
+          description:
+            "A saved Location in an editor. Remove clears it; editing the address by hand clears the coordinates."
+        ) {
+          VStack(alignment: .leading, spacing: MTSpacing.s3) {
+            if hasLocation {
+              MTLocationPreview(
+                label: "120 Maple Street, Portland, Oregon, United States", latitude: 45.5231,
+                longitude: -122.6765
+              ) { hasLocation = false }
+            } else {
+              Button("Restore sample Location") { hasLocation = true }
+                .mtButtonStyle(.secondary, size: .small)
+            }
+            MTLocationPreview(label: "Portland, Oregon", latitude: nil, longitude: nil)
           }
         }
 

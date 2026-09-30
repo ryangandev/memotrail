@@ -223,6 +223,8 @@ Pair it with the test file carrying the same feature name.
   With a line limit it flows the writing into one clamped preview that keeps emphasis, list markers, and line breaks.
   `MTToastCenter` shows Web-timed success, info, and error toasts in a pass-through window above sheets and the keyboard.
   `MTMedia.swift` owns `MTRemoteImage`, the loading skeleton, `MTUploadProgress`, and `MTPhotoField`; feature editors use them instead of private image loaders.
+  `MTRecordDetail.swift` owns the focused-record parts: `MTFormSection` is the Web editor fieldset whose fields sit on the raised surface, and `MTFactList`, `MTDetailSection`, and `MTRecordPhotos` lay out a record's facts, Story, Organize, and photos.
+  `MTLocation.swift` owns `MTLocationSnapshot`, a MapKit still with a pin that stands in for the Web static map, and `MTLocationPreview`, the Web selected-Location card; record cards fall back from a photo to that map to `MTRecordMark`, with glass badges over the visual.
   Clipped media sets a matching content shape, because clipping does not limit hit testing and filled photos would otherwise take taps meant for neighboring controls.
 - The Debug-only `DesignSystem/DesignSystemGallery.swift` renders those real components with appearance and text-size controls, in the same section order as the Web gallery.
   It is reached from the signed-out screen, More, or Settings; broad existing-screen migration follows review.

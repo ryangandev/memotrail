@@ -48,6 +48,7 @@ private struct MTFieldSurface: ViewModifier {
   let isFocused: Bool
   var focus: (() -> Void)?
   @Environment(\.isEnabled) private var isEnabled
+  @Environment(\.mtFieldFill) private var fill
 
   func body(content: Content) -> some View {
     let shape = RoundedRectangle(cornerRadius: size.radius)
@@ -58,7 +59,7 @@ private struct MTFieldSurface: ViewModifier {
         let surface = ZStack {
           // The Web focus ring: a 3 point accent halo outside the border.
           if isFocused { shape.stroke(MTColor.accentSubtle, lineWidth: 6) }
-          shape.fill(isEnabled ? MTColor.surface : MTColor.surfaceSubtle)
+          shape.fill(isEnabled ? fill : MTColor.surfaceSubtle)
         }
         if let focus {
           // Taps around the text also focus it. The gesture stays on the decorative

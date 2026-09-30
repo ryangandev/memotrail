@@ -600,22 +600,13 @@ private struct TimelineEditorSheet: View {
     }
   }
 
-  /// Web's dialog footer: Move to Trash on the left, then Cancel and the save action.
   private var footer: some View {
-    ViewThatFits(in: .horizontal) {
-      HStack(spacing: MTSpacing.s2) {
-        trashButton
-        Spacer(minLength: 0)
-        cancelButton
-        saveButton
-      }
-      VStack(spacing: MTSpacing.s2) {
-        HStack(spacing: MTSpacing.s2) {
-          cancelButton.frame(maxWidth: .infinity)
-          saveButton.frame(maxWidth: .infinity)
-        }
-        trashButton
-      }
+    MTSheetFooter {
+      trashButton
+    } cancel: {
+      cancelButton
+    } primary: {
+      saveButton
     }
   }
 

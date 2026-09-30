@@ -66,7 +66,7 @@
 
         GallerySpecimen(
           title: "Sheets & confirmations",
-          api: "MTSheet · form · fitted · message · footer · MTSheetOption · confirmationDialog",
+          api: "MTSheet · form · fitted · message · footer · MTSheetFooter · MTSheetOption · confirmationDialog",
           description:
             "MTSheet is the Web Dialog: a form sheet for editors, a fitted sheet for short choices, and confirmations for destructive actions."
         ) {
@@ -229,11 +229,15 @@
         MTTextField(label: "Title", text: $title, prompt: "First ski day", isRequired: true)
         MTDateField(label: "Memory date", value: $date)
       } footer: {
-        HStack(spacing: MTSpacing.s2) {
+        MTSheetFooter {
+          Button("Move to Trash") { failure = "Preview only. Nothing was moved to Trash." }
+            .mtButtonStyle(.danger)
+        } cancel: {
           Button("Cancel") { dismiss() }
-            .mtButtonStyle(.secondary, fillsWidth: true)
+            .mtButtonStyle(.secondary)
+        } primary: {
           Button("Save memory") { save() }
-            .mtButtonStyle(isLoading: isSaving, fillsWidth: true)
+            .mtButtonStyle(isLoading: isSaving)
         }
       }
     }

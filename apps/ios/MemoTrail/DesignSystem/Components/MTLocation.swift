@@ -1,0 +1,189 @@
+import MapKit
+import SwiftUI
+
+/// A private coordinate pair that is valid on Earth, or nil.
+func mtCoordinate(latitude: Double?, longitude: Double?) -> CLLocationCoordinate2D? {
+  guard let latitude, let longitude, latitude.isFinite, longitude.isFinite,
+    (-90...90).contains(latitude), (-180...180).contains(longitude)
+  else { return nil }
+  return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+}
+
+/// Web `RecordCardMap`: a still map of a record's position with a pin, or the fallback when
+/// the record has no valid position or the map cannot load.
+struct MTLocationSnapshot<Fallback: View>: View {
+  let latitude: Double?
+  let longitude: Double?
+  /// Meters shown across the shorter side, around the pin.
+  var span: CLLocationDistance = 1_600
+  private let fallback: Fallback
+  @Environment(\.colorScheme) private var colorScheme
+  @State private var image: UIImage?
+  @State private var failed = false
+
+  init(
+    latitude: Double?, longitude: Double?, span: CLLocationDistance = 1_600,
+    @ViewBuilder fallback: () -> Fallback
+  ) {
+    self.latitude = latitude
+    self.longitude = longitude
+    self.span = span
+    self.fallback = fallback()
+  }
+
+  private var coordinate: CLLocationCoordinate2D? {
+    mtCoordinate(latitude: latitude, longitude: longitude)
+  }
+
+  var body: some View {
+    GeometryReader { proxy in
+      ZStack {
+        if let image {
+          Image(uiImage: image).resizable().scaledToFill()
+          Image(systemName: "mappin.circle.fill")
+            .font(.system(size: 30))
+            .symbolRenderingMode(.palette)
+            .foregroundStyle(MTColor.surfaceRaised, MTColor.accent)
+            .shadow(color: .black.opacity(0.18), radius: 3, y: 1)
+        } else if coordinate == nil || failed {
+          fallback
+        } else {
+          MTLoadingSkeleton()
+        }
+      }
+      .frame(width: proxy.size.width, height: proxy.size.height)
+      .clipped()
+      .task(id: SnapshotKey(size: proxy.size, scheme: colorScheme, latitude, longitude)) {
+        await render(size: proxy.size)
+      }
+    }
+    .accessibilityHidden(true)
+  }
+
+  private func render(size: CGSize) async {
+    guard let coordinate, size.width > 0, size.height > 0 else { return }
+    let options = MKMapSnapshotter.Options()
+    options.region = MKCoordinateRegion(
+      center: coordinate, latitudinalMeters: span, longitudinalMeters: span)
+    options.size = size
+    options.pointOfInterestFilter = .excludingAll
+    options.traitCollection = UITraitCollection(
+      userInterfaceStyle: colorScheme == .dark ? .dark : .light)
+    do {
+      let snapshot = try await MKMapSnapshotter(options: options).start()
+      guard !Task.isCancelled else { return }
+      image = snapshot.image
+      failed = false
+    } catch {
+      guard !Task.isCancelled else { return }
+      failed = true
+    }
+  }
+
+  private struct SnapshotKey: Equatable {
+    let width: CGFloat
+    let height: CGFloat
+    let scheme: ColorScheme
+    let latitude: Double?
+    let longitude: Double?
+
+    init(size: CGSize, scheme: ColorScheme, _ latitude: Double?, _ longitude: Double?) {
+      width = size.width
+      height = size.height
+      self.scheme = scheme
+      self.latitude = latitude
+      self.longitude = longitude
+    }
+  }
+}
+
+/// Web `SelectedLocation`: a saved Location's map, formatted address, and coordinates, with an
+/// optional Remove action. Coordinates stay private to the record; Open map hands them to Maps.
+struct MTLocationPreview: View {
+  let label: String
+  let latitude: Double?
+  let longitude: Double?
+  var remove: (() -> Void)?
+
+  private var coordinate: CLLocationCoordinate2D? {
+    mtCoordinate(latitude: latitude, longitude: longitude)
+  }
+
+  var body: some View {
+    let shape = RoundedRectangle(cornerRadius: MTRadius.medium)
+    VStack(alignment: .leading, spacing: 0) {
+      MTLocationSnapshot(latitude: latitude, longitude: longitude) { unavailable }
+        .frame(height: 160)
+        .overlay(alignment: .bottom) { MTListDivider() }
+        .accessibilityLabel("Map showing \(label)")
+
+      HStack(spacing: MTSpacing.s3) {
+        Text(label)
+          .font(MTFont.label.weight(.semibold))
+          .foregroundStyle(MTColor.ink)
+          .fixedSize(horizontal: false, vertical: true)
+          .frame(maxWidth: .infinity, alignment: .leading)
+        if let remove {
+          Button("Remove", action: remove)
+            .mtButtonStyle(.secondary, size: .small)
+            .accessibilityLabel("Remove Location")
+        }
+      }
+      .padding(.horizontal, MTSpacing.s4)
+      .padding(.top, MTSpacing.s3)
+      .padding(.bottom, MTSpacing.s2)
+
+      if let coordinate {
+        HStack(spacing: MTSpacing.s3) {
+          Text(
+            "\(coordinate.latitude.formatted(Self.coordinateFormat)), \(coordinate.longitude.formatted(Self.coordinateFormat))"
+          )
+          .textSelection(.enabled)
+          Spacer(minLength: 0)
+          if let url = mapsURL(coordinate) {
+            Link("Open map", destination: url)
+              .foregroundStyle(MTColor.accent)
+              .underline()
+          }
+        }
+        .font(MTFont.caption.weight(.regular))
+        .foregroundStyle(MTColor.inkFaint)
+        .padding(.horizontal, MTSpacing.s4)
+        .padding(.bottom, MTSpacing.s3)
+      }
+    }
+    .background(MTColor.surface, in: shape)
+    .clipShape(shape)
+    .overlay { shape.strokeBorder(MTColor.border, lineWidth: 1) }
+  }
+
+  private var unavailable: some View {
+    VStack(spacing: MTSpacing.s2) {
+      Image(.map).font(.system(size: 22))
+      if coordinate == nil {
+        Text("This Location does not have coordinates yet.")
+          .font(MTFont.caption.weight(.regular))
+          .multilineTextAlignment(.center)
+      }
+    }
+    .foregroundStyle(MTColor.inkFaint)
+    .padding(MTSpacing.s4)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(
+      LinearGradient(
+        colors: [MTColor.surfaceSubtle, MTColor.surface], startPoint: .topLeading,
+        endPoint: .bottomTrailing))
+  }
+
+  private static let coordinateFormat = FloatingPointFormatStyle<Double>.number
+    .precision(.fractionLength(5)).grouping(.never).locale(Locale(identifier: "en_US_POSIX"))
+
+  private func mapsURL(_ coordinate: CLLocationCoordinate2D) -> URL? {
+    var components = URLComponents(string: "https://maps.apple.com/")
+    components?.queryItems = [
+      URLQueryItem(name: "ll", value: "\(coordinate.latitude),\(coordinate.longitude)"),
+      URLQueryItem(name: "q", value: label),
+    ]
+    return components?.url
+  }
+}

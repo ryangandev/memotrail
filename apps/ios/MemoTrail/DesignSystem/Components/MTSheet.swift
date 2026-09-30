@@ -191,6 +191,42 @@ extension MTSheet where Accessory == EmptyView, Footer == EmptyView {
   }
 }
 
+/// Web's editor dialog footer: a destructive action at the leading edge, then Cancel and the
+/// primary action. When one row is too narrow, Cancel and the primary action share the width
+/// above the destructive action.
+struct MTSheetFooter<Destructive: View, Cancel: View, Primary: View>: View {
+  private let destructive: Destructive
+  private let cancel: Cancel
+  private let primary: Primary
+
+  init(
+    @ViewBuilder destructive: () -> Destructive, @ViewBuilder cancel: () -> Cancel,
+    @ViewBuilder primary: () -> Primary
+  ) {
+    self.destructive = destructive()
+    self.cancel = cancel()
+    self.primary = primary()
+  }
+
+  var body: some View {
+    ViewThatFits(in: .horizontal) {
+      HStack(spacing: MTSpacing.s2) {
+        destructive
+        Spacer(minLength: 0)
+        cancel
+        primary
+      }
+      VStack(spacing: MTSpacing.s2) {
+        HStack(spacing: MTSpacing.s2) {
+          cancel.frame(maxWidth: .infinity)
+          primary.frame(maxWidth: .infinity)
+        }
+        destructive
+      }
+    }
+  }
+}
+
 /// A Web dialog choice: an icon tile, a title and description, and a chevron.
 struct MTSheetOption: View {
   let icon: MTIcon

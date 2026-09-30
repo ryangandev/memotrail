@@ -23,7 +23,7 @@ enum MTTone: CaseIterable {
 }
 
 enum MTBadgeTone: CaseIterable, Sendable {
-  case accent, neutral, warm, success, outline, solidAccent, inverse
+  case accent, neutral, warm, success, outline, solidAccent, inverse, glassAccent, glassNeutral
 
   var title: String {
     switch self {
@@ -34,13 +34,15 @@ enum MTBadgeTone: CaseIterable, Sendable {
     case .outline: "outline"
     case .solidAccent: "solidAccent"
     case .inverse: "inverse"
+    case .glassAccent: "glassAccent"
+    case .glassNeutral: "glassNeutral"
     }
   }
 
   fileprivate var foreground: Color {
     switch self {
-    case .accent: MTColor.accent
-    case .neutral, .outline: MTColor.inkMuted
+    case .accent, .glassAccent: MTColor.accent
+    case .neutral, .outline, .glassNeutral: MTColor.inkMuted
     case .warm: MTColor.warm
     case .success: MTColor.success
     case .solidAccent: MTColor.accentInk
@@ -56,8 +58,12 @@ enum MTBadgeTone: CaseIterable, Sendable {
     case .outline: MTColor.surface
     case .solidAccent: MTColor.accent
     case .inverse: Color(red: 24 / 255, green: 24 / 255, blue: 20 / 255).opacity(0.72)
+    case .glassAccent, .glassNeutral: MTColor.surfaceRaised.opacity(0.86)
     }
   }
+
+  /// Glass tones sit on photos and maps, so they blur what is behind them like Web.
+  fileprivate var isGlass: Bool { self == .glassAccent || self == .glassNeutral }
 }
 
 enum MTBadgeSize: CaseIterable, Sendable {
@@ -90,6 +96,9 @@ struct MTBadge: View {
       .padding(.vertical, 3)
       .frame(minHeight: size == .medium ? 22 : nil)
       .background(tone.background, in: Capsule())
+      .background {
+        if tone.isGlass { Capsule().fill(.ultraThinMaterial) }
+      }
       .overlay {
         if tone == .outline { Capsule().stroke(MTColor.border, lineWidth: 1) }
       }

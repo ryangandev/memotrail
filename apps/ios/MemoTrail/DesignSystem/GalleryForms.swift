@@ -21,6 +21,8 @@
     @State private var collections = ["Early years"]
     @State private var occurrence = FormSpecimens.dayOccurrence
     @State private var showingEditor = false
+    @State private var moveInReason = "Closer to work"
+    @State private var city = "Portland"
 
     static var dayOccurrence: OccurrenceDraft {
       var draft = OccurrenceDraft(
@@ -143,7 +145,7 @@
         GallerySpecimen(
           title: "Badge",
           api:
-            "micro | small | medium · accent, neutral, warm, success, outline, solidAccent, inverse · uppercase · one line"
+            "micro | small | medium · accent, neutral, warm, success, outline, solidAccent, inverse, glassAccent, glassNeutral · uppercase · one line"
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s3) {
             MTFlowLayout(spacing: MTSpacing.s2) {
@@ -162,6 +164,16 @@
             MTBadge(title: "#值得记住的那些很长很长的日常片段，一行之内保持完整的形状", size: .medium)
             MTOrganizationBadges(
               collectionNames: ["Early years"], tagNames: ["family", "travel", "milestone", "home"])
+            GallerySampleArtwork()
+              .frame(height: 72)
+              .overlay(alignment: .topLeading) {
+                HStack(spacing: MTSpacing.s2) {
+                  MTBadge(title: "Current", tone: .glassAccent, size: .micro, uppercase: true)
+                  MTBadge(title: "Earlier", tone: .glassNeutral, size: .micro, uppercase: true)
+                }
+                .padding(MTSpacing.s2)
+              }
+              .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
           }
         }
 
@@ -199,6 +211,26 @@
           api: "recordLabel · saved · new · limit · selection · progress · remove actions"
         ) {
           PhotoFieldSpecimen()
+        }
+
+        GallerySpecimen(
+          title: "FormSection",
+          api: "title · content; MTFormNote",
+          description:
+            "The Web editor fieldset: the legend sits in a gap in the border, and fields inside rise onto the raised surface."
+        ) {
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            MTFormSection("Home details") {
+              MTTextField(label: "Why you moved in", text: $moveInReason)
+              MTDateField(label: "Start date", value: $date, isRequired: true)
+            }
+            MTFormSection("Location") {
+              MTFormNote(
+                "Save an address or position for this Home. It can appear on a future map alongside memories and events from the same area."
+              )
+              MTTextField(label: "City", text: $city)
+            }
+          }
         }
 
         GallerySpecimen(
