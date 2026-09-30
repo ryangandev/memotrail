@@ -49,7 +49,10 @@ final class TrashItemTests: XCTestCase {
     ]
     let result = await EmptyTrashOutcome.run(targets: targets, remove: { _ in }, progress: { _ in })
     XCTAssertTrue(result.complete)
+    XCTAssertTrue(result.message.hasPrefix("1 confirmed item permanently deleted."))
     XCTAssertTrue(result.message.contains("later was not included"))
+    XCTAssertTrue(
+      EmptyTrashOutcome(deleted: 0, total: 1).message.hasPrefix("0 of 1 item confirmed deleted."))
   }
 
   @MainActor func testCancelledEmptyTrashStartsNoDeletion() async {

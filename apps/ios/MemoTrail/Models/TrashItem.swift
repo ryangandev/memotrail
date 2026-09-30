@@ -277,8 +277,8 @@ struct EmptyTrashOutcome: Equatable, Sendable {
   var complete: Bool { deleted == total }
   var message: String {
     complete
-      ? "\(deleted) confirmed items permanently deleted. Anything added to Trash later was not included."
-      : "\(deleted) of \(total) items confirmed deleted. Stopped because an item changed or a request could not be confirmed. Refresh and review Trash before trying again."
+      ? "\(countLabel(deleted, "confirmed item")) permanently deleted. Anything added to Trash later was not included."
+      : "\(deleted) of \(countLabel(total, "item")) confirmed deleted. Stopped because an item changed or a request could not be confirmed. Refresh and review Trash before trying again."
   }
   @MainActor
   static func run(

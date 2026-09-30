@@ -104,4 +104,12 @@ describe("confirmed Empty Trash", () => {
       emptyTrashResultMessage({ deleted: 1, total: 2, complete: false }),
     ).toContain("could not be confirmed");
   });
+  it("counts a single item as one item", () => {
+    expect(
+      emptyTrashResultMessage({ deleted: 1, total: 1, complete: true }),
+    ).toMatch(/^1 confirmed item permanently deleted\./);
+    expect(
+      emptyTrashResultMessage({ deleted: 0, total: 1, complete: false }),
+    ).toMatch(/^0 of 1 item confirmed deleted\./);
+  });
 });

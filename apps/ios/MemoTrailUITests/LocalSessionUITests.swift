@@ -727,7 +727,7 @@ final class LocalSessionUITests: XCTestCase {
     attach(app, "Empty Trash confirmation")
     confirm.tap()
     let emptied = app.staticTexts.matching(
-      NSPredicate(format: "label CONTAINS %@", "confirmed items permanently deleted")
+      NSPredicate(format: "label MATCHES %@", "^[0-9]+ confirmed items? permanently deleted\\..*")
     ).firstMatch
     XCTAssertTrue(emptied.waitForExistence(timeout: 30))
     XCTAssertTrue(text("Nothing in Trash", in: app).waitForExistence(timeout: 10))

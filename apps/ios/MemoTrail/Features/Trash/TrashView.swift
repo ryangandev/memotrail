@@ -302,7 +302,7 @@ private struct EmptyTrashSheet: View {
   var body: some View {
     let count = controller.emptySnapshot?.count ?? controller.emptyTotal
     MTSheet(
-      eyebrow: "Permanent action", title: "Empty \(count) items from Trash?",
+      eyebrow: "Permanent action", title: "Empty \(countLabel(count, "item")) from Trash?",
       description:
         "This includes all Trash pages, not just the visible items. Their records, associated history and private photos will be permanently removed. Removing a Collection only removes its grouping, not active Entries. This cannot be undone.",
       closeLabel: "Close", closeIdentifier: "close-empty-trash", size: .fitted,
