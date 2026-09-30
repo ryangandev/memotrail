@@ -115,7 +115,7 @@ struct WorkspaceDestinationView: View {
     case .collections: CollectionsView(client: client, ownerID: user.id)
     case .tags: TagsView(client: client, ownerID: user.id)
     case .history: EntryHistoryIndexView(client: client, ownerID: user.id)
-    case .trash: TrashView(client: client, ownerID: user.id, embedded: true)
+    case .trash: TrashView(client: client, ownerID: user.id)
     case .settings:
       NativeSettingsView(
         client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut)

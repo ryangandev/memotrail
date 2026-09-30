@@ -97,15 +97,33 @@ final class TrashItemTests: XCTestCase {
     XCTAssertEqual(items[1].displayDetail, "Photo from First ski trip")
   }
 
-  func testRetentionLabelUsesExactRemainingDuration() throws {
+  func testRetentionUsesExactRemainingDuration() throws {
     let item = try decodeItems()[0]
     let referenceDate = try XCTUnwrap(
       TrashTimestamp.date(from: "2026-09-02T12:34:56.123456Z")
     )
     let expiredDate = try XCTUnwrap(TrashTimestamp.date(from: "2026-10-03T12:34:57Z"))
 
-    XCTAssertTrue(item.retentionLabel(referenceDate: referenceDate).hasPrefix("30 days to restore"))
-    XCTAssertTrue(item.retentionLabel(referenceDate: expiredDate).hasPrefix("Eligible for cleanup"))
+    let restorable = item.retention(referenceDate: referenceDate)
+    XCTAssertEqual(restorable.status, "30 days to restore · through")
+    XCTAssertEqual(restorable.date, item.expirationDateLabel)
+    let expired = item.retention(referenceDate: expiredDate)
+    XCTAssertEqual(expired.status, "Eligible for cleanup since")
+    XCTAssertEqual(expired.date, item.expirationDateLabel)
+  }
+
+  func testDeletionDescriptionsFollowWeb() throws {
+    let items = try decodeItems()
+
+    XCTAssertEqual(
+      items[0].deletionDescription,
+      "The Entry, private photos, relationships, specialized details, and version history will be removed."
+    )
+    XCTAssertEqual(
+      items[1].deletionDescription,
+      "The private photo file and its attachment record will be removed.")
+    XCTAssertEqual(
+      items[2].deletionDescription, "The Person and their version history will be removed.")
   }
 
   func testTimestampParserAcceptsPostgresPrecisionAndWholeSeconds() {

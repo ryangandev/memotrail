@@ -118,6 +118,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
   A seeded Simulator run confirmed searching tags, opening a tagged Entry from the editor, merging one tag into another, creating and deleting an unused tag, and opening Library filtered to a tag.
 - Native Collections now follow Web `/collections` and its Collection pages: compact cards with each Collection's editor, New Collection, and Entry cards with Web's rich notes, Read full note, and Collection and tag links into Library.
   A seeded Simulator run confirmed creating a Collection ahead of the others by display order, opening an Entry and a filtered Library from a Collection, opening Quick Capture from New entry, moving an empty Collection to Trash from its page, and reaching Collections from the Settings sheet.
+- Native Trash now follows Web `/trash`: the retention badge and note, Web's cards with the photo or mark, removal date, and restorable window, toasts for each result, and the Permanent action sheets for Delete forever and Empty Trash.
+  A seeded Simulator run confirmed restoring a Collection, deleting one forever, and emptying Trash with its confirmation.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
 - Refactor existing screens after component acceptance; native address search remains later work.
 

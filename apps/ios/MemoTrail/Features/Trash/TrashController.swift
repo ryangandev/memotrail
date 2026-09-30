@@ -10,13 +10,15 @@ final class TrashController {
   private(set) var hasLoaded = false
   private(set) var isLoading = false
   private(set) var pendingItemID: String?
-  private(set) var notice: Notice?
   private(set) var loadErrorMessage: String?
   private(set) var emptySnapshot: [EmptyTrashTarget]?
   private(set) var isEmptying = false
   private(set) var emptyProgress = 0
   private(set) var emptyTotal = 0
   var isBusy: Bool { pendingItemID != nil || emptySnapshot != nil }
+  var isPreparingEmptyTrash: Bool { pendingItemID == Self.preparingEmptyTrash }
+
+  private static let preparingEmptyTrash = "prepare-empty-trash"
 
   private let client: SupabaseClient
   private let ownerID: UUID
@@ -39,11 +41,11 @@ final class TrashController {
     await fetch(appending: true)
   }
 
-  func restore(_ item: TrashItem) async {
-    guard !isBusy else { return }
+  /// Web `restoreTrashItem`, at the revision and removal time shown.
+  func restore(_ item: TrashItem) async -> Notice? {
+    guard !isBusy else { return nil }
 
     pendingItemID = item.id
-    notice = nil
     defer { pendingItemID = nil }
 
     do {
@@ -55,64 +57,57 @@ final class TrashController {
         .value
 
       guard rows.first?.itemKind == item.kind, rows.first?.itemID == item.itemID else {
-        notice = Notice(
-          message: "This item changed on another device. Refresh before trying again.",
-          tone: .error
-        )
-        return
+        return .changedItem
       }
-
-      notice = Notice(message: "Item restored.", tone: .success)
       await reloadAfterMutation()
+      return Notice(message: "Item restored.", tone: .success)
     } catch let error as PostgrestError where error.code == "23505" {
-      notice = Notice(
+      return Notice(
         message:
           "An active Collection already has this name. Rename it in organization settings, then restore this one.",
         tone: .error)
     } catch {
-      notice = Notice(
-        message: "MemoTrail could not restore this item. Try again when online.",
-        tone: .error
-      )
+      return Notice(message: "MemoTrail could not restore this item. Try again.", tone: .error)
     }
   }
 
-  func deleteForever(_ item: TrashItem) async {
-    guard !isBusy else { return }
+  /// Web `deleteTrashItemForever`: the private photos first, then the item.
+  func deleteForever(_ item: TrashItem) async -> Notice {
+    guard !isBusy else {
+      return Notice(message: "Wait for the current Trash change to finish.", tone: .error)
+    }
 
     pendingItemID = item.id
-    notice = nil
     defer { pendingItemID = nil }
 
     do {
       try await performDeletion(TrashItemMutationParameters(item: item))
-      notice = Notice(message: "Item permanently deleted.", tone: .success)
       await reloadAfterMutation()
+      return Notice(message: "Item permanently deleted.", tone: .success)
     } catch TrashControllerError.changedItem {
-      notice = Notice(
-        message: "This item changed on another device. Refresh before trying again.", tone: .error)
+      return .changedItem
     } catch TrashControllerError.invalidMedia {
-      notice = Notice(
-        message: "MemoTrail could not verify this item's private photos.", tone: .error)
+      return Notice(message: "MemoTrail could not verify this item's private photos.", tone: .error)
+    } catch TrashControllerError.mediaRemoval {
+      return Notice(
+        message: "MemoTrail could not remove the private photos, so nothing else was deleted.",
+        tone: .error)
     } catch let error as PostgrestError where error.message == "media_cleanup_required" {
-      notice = Notice(
+      return Notice(
         message: "A photo preview finished while this item was being removed. "
           + "Refresh and try Delete forever again to remove the remaining files.",
         tone: .error
       )
     } catch {
-      notice = Notice(
-        message: "MemoTrail could not finish permanent deletion. The item remains in Trash. "
-          + "Refresh before trying again.",
-        tone: .error
-      )
+      return Notice(
+        message: "MemoTrail could not permanently delete this item. Try again.", tone: .error)
     }
   }
 
-  func prepareEmptyTrash() async {
-    guard !isBusy, !isLoading else { return }
-    pendingItemID = "prepare-empty-trash"
-    notice = nil
+  /// Web `prepareEmptyTrash`: the complete list Empty Trash may delete, or why there is none.
+  func prepareEmptyTrash() async -> Notice? {
+    guard !isBusy, !isLoading else { return nil }
+    pendingItemID = Self.preparingEmptyTrash
     defer { pendingItemID = nil }
     do {
       try await validateSessionOwner()
@@ -121,18 +116,18 @@ final class TrashController {
       try Task.checkCancellation()
       guard EmptyTrashTarget.isValid(targets) else { throw URLError(.badServerResponse) }
       if targets.isEmpty {
-        notice = Notice(message: "Nothing in Trash. No items were deleted.", tone: .success)
         await reloadAfterMutation()
-      } else {
-        emptySnapshot = targets
+        return Notice(message: "Nothing in Trash. No items were deleted.", tone: .success)
       }
+      emptySnapshot = targets
+      return nil
     } catch let error as PostgrestError where error.message == "trash_snapshot_too_large" {
-      notice = Notice(
+      return Notice(
         message:
           "Trash contains more than 10,000 items. Remove some individually before reviewing Empty Trash.",
         tone: .error)
     } catch {
-      notice = Notice(
+      return Notice(
         message:
           "Could not prepare the complete Trash list. Nothing was deleted. Refresh and try again.",
         tone: .error)
@@ -141,9 +136,10 @@ final class TrashController {
 
   func cancelEmptyTrash() { if !isEmptying { emptySnapshot = nil } }
 
-  func emptyTrash() async {
-    guard pendingItemID == nil, let targets = emptySnapshot, !isEmptying else { return }
-    emptySnapshot = nil
+  /// Deletes the prepared list one confirmed item at a time, stopping at the first item that
+  /// changed. The list stays shown with its progress until the run ends.
+  func emptyTrash() async -> Notice? {
+    guard pendingItemID == nil, let targets = emptySnapshot, !isEmptying else { return nil }
     pendingItemID = "empty-trash"
     isEmptying = true
     emptyProgress = 0
@@ -151,14 +147,15 @@ final class TrashController {
     defer {
       pendingItemID = nil
       isEmptying = false
+      emptySnapshot = nil
     }
     let outcome = await EmptyTrashOutcome.run(
       targets: targets,
       remove: { target in
         try await self.performDeletion(TrashItemMutationParameters(target: target))
       }, progress: { self.emptyProgress = $0 })
-    notice = Notice(message: outcome.message, tone: outcome.complete ? .success : .error)
     await reloadAfterMutation()
+    return Notice(message: outcome.message, tone: outcome.complete ? .success : .error)
   }
 
   private func performDeletion(_ parameters: TrashItemMutationParameters) async throws {
@@ -171,7 +168,13 @@ final class TrashController {
     guard paths.allSatisfy(isValidOwnedStoragePath) else { throw TrashControllerError.invalidMedia }
     try Task.checkCancellation()
     try await validateSessionOwner()
-    if !paths.isEmpty { _ = try await client.storage.from("entry-media").remove(paths: paths) }
+    if !paths.isEmpty {
+      do {
+        _ = try await client.storage.from("entry-media").remove(paths: paths)
+      } catch {
+        throw TrashControllerError.mediaRemoval
+      }
+    }
     let rows: [DeletedTrashItem] = try await client.rpc(
       "delete_trash_item_forever", params: parameters
     ).execute().value
@@ -179,10 +182,6 @@ final class TrashController {
     else {
       throw TrashControllerError.changedItem
     }
-  }
-
-  func clearNotice() {
-    notice = nil
   }
 
   private func fetch(appending: Bool) async {
@@ -270,11 +269,15 @@ extension TrashController {
 
     let message: String
     let tone: Tone
+
+    static let changedItem = Notice(
+      message: "This item changed on another device. Refresh before trying again.", tone: .error)
   }
 }
 
 private enum TrashControllerError: Error {
   case changedItem
   case invalidMedia
+  case mediaRemoval
   case ownerChanged
 }

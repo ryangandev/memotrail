@@ -1,430 +1,342 @@
 @preconcurrency import Supabase
 import SwiftUI
 
+/// Web `/trash`: removed Entries, People, Collections, and photos, newest first. Each restores
+/// or, after an explicit confirmation, is deleted forever; Empty Trash deletes a prepared list.
 struct TrashView: View {
   @State private var controller: TrashController
-  @State private var deleteConfirmation: TrashItem?
+  @State private var confirmation: TrashItem?
   @State private var batchTask: Task<Void, Never>?
 
-  private let embedded: Bool
-
-  init(client: SupabaseClient, ownerID: UUID, embedded: Bool = false) {
-    self.embedded = embedded
+  init(client: SupabaseClient, ownerID: UUID) {
     _controller = State(initialValue: TrashController(client: client, ownerID: ownerID))
   }
 
-  @ViewBuilder
   var body: some View {
-    if embedded {
-      archiveView
-    } else {
-      NavigationStack {
-        archiveView
+    MTPage(width: .standard, spacing: MTSpacing.s6) {
+      MTPageHeader(
+        eyebrow: "Recoverable by design", title: "Trash",
+        description:
+          "Restore something you still need, or permanently remove it with an explicit confirmation."
+      ) {
+        retentionBadge
       }
-    }
-  }
-
-  private var archiveView: some View {
-    ScrollView {
-      LazyVStack(alignment: .leading, spacing: MTSpacing.s5) {
-        header
-        retentionNote
-
-        Button("Empty Trash", role: .destructive) {
-          batchTask = Task { await controller.prepareEmptyTrash() }
+      retentionNote
+      if controller.loadErrorMessage == nil, controller.totalCount > 0 {
+        Button(controller.isPreparingEmptyTrash ? "Preparing Trash…" : "Empty Trash") {
+          batchTask = Task { announce(await controller.prepareEmptyTrash()) }
         }
-        .buttonStyle(.bordered)
-        .disabled(controller.isBusy || controller.isLoading || controller.totalCount == 0)
+        .mtButtonStyle(.danger)
+        .disabled(controller.isBusy || confirmation != nil)
+        .frame(maxWidth: .infinity, alignment: .trailing)
         .accessibilityIdentifier("empty-trash")
-
-        if controller.isEmptying {
-          ProgressView(
-            "\(controller.emptyProgress) of \(controller.emptyTotal) confirmed deleted. Keep this screen open."
-          )
-          .font(MTTypography.caption)
-        }
-
-        if let notice = controller.notice {
-          noticeView(notice)
-        }
-
-        content
       }
-      .padding(.horizontal, MTSpacing.s4)
-      .padding(.top, MTSpacing.s6)
-      .padding(.bottom, MTSpacing.s12)
+      content
     }
-    .background(MTColor.canvas)
+    .refreshable { await controller.load() }
     .navigationTitle("Trash")
     .navigationBarTitleDisplayMode(.inline)
-    .toolbarBackground(MTColor.surface, for: .navigationBar)
-    .toolbarBackground(.visible, for: .navigationBar)
-    .refreshable {
-      await controller.load()
-    }
     .task {
-      if !controller.hasLoaded {
-        await controller.load()
-      }
+      if !controller.hasLoaded { await controller.load() }
     }
     .onDisappear {
       batchTask?.cancel()
       controller.cancelEmptyTrash()
     }
+    .sheet(item: $confirmation) { item in
+      DeleteForeverSheet(item: item, controller: controller) { announce($0) }
+    }
     .sheet(
       isPresented: Binding(
         get: { controller.emptySnapshot != nil },
-        set: { if !$0 { controller.cancelEmptyTrash() } }
-      )
+        set: { if !$0 { controller.cancelEmptyTrash() } })
     ) {
-      if let targets = controller.emptySnapshot {
-        ScrollView {
-          VStack(alignment: .leading, spacing: MTSpacing.s4) {
-            Text("Empty \(targets.count) items from Trash?").font(MTTypography.title)
-            Text(
-              "This includes all Trash pages, not just visible items. Their records, associated history and private photos will be permanently removed. Removing a Collection only removes its grouping, not active Entries. This cannot be undone."
-            )
-            Text(
-              "Only this prepared list is included. Items added to Trash later are not deleted. If an item changes or a request cannot be confirmed, deletion stops for a fresh review."
-            )
-            .foregroundStyle(MTColor.inkMuted)
-            Button("Cancel", role: .cancel) { controller.cancelEmptyTrash() }
-              .buttonStyle(.bordered).frame(maxWidth: .infinity)
-            Button("Permanently delete confirmed items", role: .destructive) {
-              batchTask = Task { await controller.emptyTrash() }
-            }.buttonStyle(.bordered).frame(maxWidth: .infinity)
-          }
-          .font(MTTypography.body).foregroundStyle(MTColor.ink)
-          .padding(MTSpacing.s6).frame(maxWidth: .infinity)
-        }.background(MTColor.canvas)
+      EmptyTrashSheet(controller: controller) {
+        batchTask = Task { announce(await controller.emptyTrash()) }
       }
-    }
-    .alert(
-      deleteConfirmation.map { "Delete “\($0.title)” forever?" } ?? "Delete forever?",
-      isPresented: Binding(
-        get: { deleteConfirmation != nil },
-        set: { isPresented in
-          if !isPresented { deleteConfirmation = nil }
-        }
-      ),
-      presenting: deleteConfirmation
-    ) { item in
-      Button("Delete forever", role: .destructive) {
-        deleteConfirmation = nil
-        Task { await controller.deleteForever(item) }
-      }
-      Button("Cancel", role: .cancel) {
-        deleteConfirmation = nil
-      }
-    } message: { item in
-      Text("\(deletionDescription(item)) This cannot be undone.")
     }
   }
 
-  private var header: some View {
-    VStack(alignment: .leading, spacing: MTSpacing.s4) {
-      VStack(alignment: .leading, spacing: MTSpacing.s2) {
-        Text("RECOVERABLE BY DESIGN")
-          .font(MTTypography.caption)
-          .tracking(1.1)
-          .foregroundStyle(MTColor.warm)
-
-        Text("Trash")
-          .font(MTTypography.display)
+  /// Web's header badge: the retention window, with each item's own dates below.
+  private var retentionBadge: some View {
+    HStack(spacing: MTSpacing.s3) {
+      Image(.clock).font(.system(size: 17, weight: .medium))
+      VStack(alignment: .leading, spacing: 2) {
+        Text("30-day retention")
+          .font(MTFont.caption.weight(.medium))
           .foregroundStyle(MTColor.ink)
-
-        Text(
-          "Restore something you still need, or permanently remove it with an explicit confirmation."
-        )
-        .font(MTTypography.body)
-        .foregroundStyle(MTColor.inkMuted)
-        .lineSpacing(2)
+        Text("Dates are shown per item")
+          .font(.caption2)
+          .foregroundStyle(MTColor.inkFaint)
       }
-
-      HStack(spacing: MTSpacing.s3) {
-        Image(systemName: "clock")
-          .font(.system(size: 17, weight: .medium))
-
-        VStack(alignment: .leading, spacing: 2) {
-          Text("30-day retention")
-            .font(MTTypography.label)
-            .foregroundStyle(MTColor.ink)
-          Text("Dates are shown per item")
-            .font(.system(size: 10))
-            .foregroundStyle(MTColor.inkFaint)
-        }
-
-        Spacer()
-      }
-      .foregroundStyle(MTColor.warm)
-      .padding(MTSpacing.s4)
-      .background(MTColor.warmSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
     }
+    .foregroundStyle(MTColor.warm)
+    .padding(.vertical, MTSpacing.s3)
+    .padding(.horizontal, MTSpacing.s4)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(MTColor.warmSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
+    .overlay {
+      RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(MTColor.border)
+    }
+    .accessibilityElement(children: .combine)
   }
 
   private var retentionNote: some View {
     HStack(alignment: .top, spacing: MTSpacing.s3) {
-      Image(systemName: "archivebox")
+      Image(.archive)
         .font(.system(size: 17))
         .foregroundStyle(MTColor.warm)
-
+        .accessibilityHidden(true)
       Text(
-        "Items remain recoverable during their retention window. Reaching the shown date makes an item eligible for cleanup, but MemoTrail does not claim it was automatically deleted."
+        "Items remain recoverable during their retention window. Reaching the shown date makes an item eligible for cleanup, but this screen does not claim it was automatically deleted."
       )
-      .font(MTTypography.caption)
+      .font(MTFont.caption.weight(.regular))
       .foregroundStyle(MTColor.inkMuted)
-      .lineSpacing(2)
+      .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(MTSpacing.s4)
-    .background(MTColor.surface)
-    .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
+    .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large)
-        .stroke(MTColor.border, lineWidth: 1)
+      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border)
     }
   }
 
-  @ViewBuilder
-  private var content: some View {
-    if controller.isLoading, !controller.hasLoaded {
-      stateView(
-        title: "Loading Trash...",
-        message: "Checking the items that are still recoverable.",
-        systemImage: "arrow.clockwise"
-      )
-    } else if let loadErrorMessage = controller.loadErrorMessage,
-      controller.items.isEmpty
-    {
-      stateView(
-        title: "Trash unavailable",
-        message: loadErrorMessage,
-        systemImage: "exclamationmark.triangle"
-      )
+  @ViewBuilder private var content: some View {
+    if !controller.hasLoaded {
+      HStack(spacing: MTSpacing.s3) {
+        ProgressView().tint(MTColor.accent)
+        Text("Loading Trash...").font(MTFont.body).foregroundStyle(MTColor.inkMuted)
+      }
+      .frame(maxWidth: .infinity, minHeight: 180)
+    } else if let message = controller.loadErrorMessage, controller.items.isEmpty {
+      MTEmptyState(title: "Trash is unavailable", message: message, icon: .refresh) {
+        Button("Try again") { Task { await controller.load() } }
+          .mtButtonStyle(.secondary)
+      }
     } else if controller.items.isEmpty {
-      stateView(
+      MTEmptyState(
         title: "Nothing in Trash",
         message:
-          "Removed Entries, People, Places, Collections, and individual photos will appear here.",
-        systemImage: "trash"
-      )
+          "Removed Entries, People, and individual photos will appear here. Legacy records remain recoverable too.",
+        icon: .trash)
     } else {
-      HStack {
-        Text("\(controller.items.count) of \(controller.totalCount)")
-        Spacer()
-        Text("Newest removals first")
-      }
-      .font(.system(size: 10))
-      .foregroundStyle(MTColor.inkFaint)
-
-      LazyVStack(spacing: MTSpacing.s4) {
+      VStack(alignment: .leading, spacing: MTSpacing.s3) {
+        HStack {
+          Text("1-\(controller.items.count) of \(controller.totalCount)")
+            .foregroundStyle(MTColor.inkMuted)
+          Spacer(minLength: MTSpacing.s2)
+          Text("Newest removals first")
+            .foregroundStyle(MTColor.inkFaint)
+        }
+        .font(MTFont.caption.weight(.regular))
         ForEach(controller.items) { item in
           TrashItemCard(
-            item: item,
-            isBusy: controller.isBusy,
-            isPending: controller.pendingItemID == item.id,
-            onDelete: {
-              controller.clearNotice()
-              deleteConfirmation = item
-            },
-            onRestore: {
-              Task { await controller.restore(item) }
-            }
-          )
+            item: item, isDisabled: controller.isBusy || confirmation != nil,
+            isRestoring: controller.pendingItemID == item.id
+          ) {
+            Task { announce(await controller.restore(item)) }
+          } delete: {
+            confirmation = item
+          }
+        }
+        if controller.items.count < controller.totalCount || controller.loadErrorMessage != nil {
+          MTLoadMore(isLoading: controller.isLoading, message: controller.loadErrorMessage) {
+            await controller.loadMore()
+          }
         }
       }
-
-      if let loadErrorMessage = controller.loadErrorMessage {
-        Label(loadErrorMessage, systemImage: "exclamationmark.circle")
-          .font(MTTypography.caption)
-          .foregroundStyle(MTColor.warm)
-      }
-
-      if controller.canLoadMore {
-        Button("Load more", systemImage: "arrow.down") {
-          Task { await controller.loadMore() }
-        }
-        .buttonStyle(.bordered)
-        .frame(maxWidth: .infinity)
-        .accessibilityIdentifier("load-more-trash")
-      }
     }
   }
 
-  private func noticeView(_ notice: TrashController.Notice) -> some View {
-    HStack(alignment: .top, spacing: MTSpacing.s3) {
-      Image(systemName: notice.tone == .success ? "checkmark.circle" : "exclamationmark.circle")
-      Text(notice.message)
-        .frame(maxWidth: .infinity, alignment: .leading)
-      Button {
-        controller.clearNotice()
-      } label: {
-        Image(systemName: "xmark")
-      }
-      .buttonStyle(.plain)
-      .accessibilityLabel("Dismiss message")
-    }
-    .font(MTTypography.caption)
-    .foregroundStyle(notice.tone == .success ? MTColor.success : MTColor.warm)
-    .padding(MTSpacing.s3)
-    .background(
-      notice.tone == .success ? MTColor.accentSubtle : MTColor.warmSubtle,
-      in: RoundedRectangle(cornerRadius: MTRadius.medium)
-    )
-    .accessibilityElement(children: .combine)
-  }
-
-  private func stateView(title: String, message: String, systemImage: String) -> some View {
-    VStack(spacing: MTSpacing.s3) {
-      if controller.isLoading {
-        ProgressView()
-          .tint(MTColor.warm)
-      } else {
-        Image(systemName: systemImage)
-          .font(.system(size: 24))
-          .foregroundStyle(MTColor.warm)
-      }
-
-      Text(title)
-        .font(MTTypography.titleSmall)
-        .foregroundStyle(MTColor.ink)
-      Text(message)
-        .font(MTTypography.caption)
-        .foregroundStyle(MTColor.inkMuted)
-        .multilineTextAlignment(.center)
-    }
-    .frame(maxWidth: .infinity, minHeight: 240)
-    .padding(MTSpacing.s6)
-    .background(MTColor.surface)
-    .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
-    .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large)
-        .stroke(MTColor.border, style: StrokeStyle(lineWidth: 1, dash: [5]))
-    }
-  }
-
-  private func deletionDescription(_ item: TrashItem) -> String {
-    switch item.kind {
-    case .collection:
-      "Only the Collection and its grouping links will be removed. Your Entries and photos stay in the archive."
-    case .attachment:
-      "The private photo file and its attachment record will be removed."
-    case .person:
-      "The Person and their version history will be removed."
-    case .entry:
-      "The Entry, private photos, relationships, specialized details, and version history will be removed."
+  private func announce(_ notice: TrashController.Notice?) {
+    guard let notice else { return }
+    switch notice.tone {
+    case .success: MTToastCenter.shared.success(notice.message)
+    case .error: MTToastCenter.shared.error(notice.message)
     }
   }
 }
 
+/// Web's Trash card: the photo or the item's mark, its Kind, removal date, title, detail, and
+/// how long it stays restorable, then Restore and Delete forever.
 private struct TrashItemCard: View {
   let item: TrashItem
-  let isBusy: Bool
-  let isPending: Bool
-  let onDelete: () -> Void
-  let onRestore: () -> Void
+  let isDisabled: Bool
+  let isRestoring: Bool
+  let restore: () -> Void
+  let delete: () -> Void
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      if let signedURL = item.signedURL {
-        AsyncImage(url: signedURL) { phase in
-          switch phase {
-          case .success(let image):
-            image
-              .resizable()
-              .scaledToFill()
-          case .failure:
-            imagePlaceholder
-          case .empty:
-            ZStack {
-              MTColor.surfaceSubtle
-              ProgressView()
-                .tint(MTColor.warm)
-            }
-          @unknown default:
-            imagePlaceholder
+    VStack(spacing: 0) {
+      HStack(alignment: .top, spacing: 0) {
+        visual
+          .frame(width: 88)
+          .frame(maxHeight: .infinity)
+          .clipped()
+          .accessibilityHidden(true)
+        VStack(alignment: .leading, spacing: 0) {
+          MTFlowLayout(spacing: MTSpacing.s2) {
+            MTBadge(title: item.displayKind, tone: .warm)
+            Text("Removed \(item.deletionDateLabel)")
+              .font(.caption2)
+              .foregroundStyle(MTColor.inkFaint)
           }
+          Text(item.title)
+            .font(MTFont.cardTitle)
+            .foregroundStyle(MTColor.ink)
+            .lineLimit(1)
+            .truncationMode(.tail)
+            .padding(.top, MTSpacing.s3)
+          if let detail = item.displayDetail {
+            Text(detail)
+              .font(MTFont.caption.weight(.regular))
+              .foregroundStyle(MTColor.inkMuted)
+              .lineLimit(2)
+              .padding(.top, 5)
+          }
+          retention
+            .padding(.top, MTSpacing.s3)
         }
-        .frame(height: 170)
-        .clipped()
+        .padding(MTSpacing.s3)
+        .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
       }
-
-      VStack(alignment: .leading, spacing: MTSpacing.s3) {
-        HStack(spacing: MTSpacing.s2) {
-          Label(item.displayKind, systemImage: item.kind.systemImage)
-            .font(.system(size: 10, weight: .medium))
-            .foregroundStyle(MTColor.warm)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 5)
-            .background(MTColor.warmSubtle, in: Capsule())
-
-          Spacer()
-
-          Text("Removed \(item.deletionDateLabel)")
-            .font(.system(size: 10, design: .monospaced))
-            .foregroundStyle(MTColor.inkFaint)
-        }
-
-        Text(item.title)
-          .font(MTTypography.titleSmall)
-          .foregroundStyle(MTColor.ink)
-          .lineLimit(2)
-
-        if let detail = item.displayDetail {
-          Text(detail)
-            .font(MTTypography.caption)
-            .foregroundStyle(MTColor.inkMuted)
-            .lineSpacing(2)
-            .lineLimit(3)
-        }
-
-        Label(item.retentionLabel(), systemImage: "clock")
-          .font(.system(size: 10))
-          .foregroundStyle(MTColor.inkFaint)
-
-        Divider()
-          .overlay(MTColor.border)
-
-        HStack(spacing: MTSpacing.s3) {
-          Button(action: onRestore) {
-            if isPending {
-              ProgressView()
-                .controlSize(.small)
-                .frame(maxWidth: .infinity)
-            } else {
-              Text("Restore")
-                .frame(maxWidth: .infinity)
-            }
-          }
-          .buttonStyle(.bordered)
-          .tint(MTColor.accent)
-          .disabled(isBusy)
+      .fixedSize(horizontal: false, vertical: true)
+      HStack(spacing: MTSpacing.s2) {
+        Button(isRestoring ? "Restoring..." : "Restore", action: restore)
+          .mtButtonStyle(.secondary, fillsWidth: true)
           .accessibilityLabel("Restore \(item.title)")
-
-          Button("Delete forever", role: .destructive, action: onDelete)
-            .buttonStyle(.bordered)
-            .frame(maxWidth: .infinity)
-            .disabled(isBusy)
-            .accessibilityLabel("Delete \(item.title) forever")
-        }
+        Button("Delete forever", action: delete)
+          .mtButtonStyle(.danger, fillsWidth: true)
+          .accessibilityLabel("Delete \(item.title) forever")
       }
-      .padding(MTSpacing.s4)
+      .disabled(isDisabled)
+      .padding(MTSpacing.s3)
+      .overlay(alignment: .top) { MTListDivider() }
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .background(MTColor.surfaceRaised)
+    .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.large))
     .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large)
-        .stroke(MTColor.border, lineWidth: 1)
+      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border)
+    }
+    .accessibilityElement(children: .contain)
+  }
+
+  @ViewBuilder private var visual: some View {
+    ZStack {
+      Rectangle().fill(MTColor.surfaceSubtle)
+      Rectangle().fill(
+        LinearGradient(
+          colors: [MTColor.warmSubtle.opacity(0.65), .clear], startPoint: .topLeading,
+          endPoint: UnitPoint(x: 0.75, y: 0.9)))
+      if let url = item.signedURL {
+        MTRemoteImage(url: url, accessibilityLabel: "")
+      } else {
+        Image(item.kind == .attachment ? .photo : .timeline)
+          .font(.system(size: 23))
+          .foregroundStyle(MTColor.warm)
+      }
     }
   }
 
-  private var imagePlaceholder: some View {
-    ZStack {
-      MTColor.surfaceSubtle
-      Image(systemName: "photo")
-        .font(.system(size: 28))
-        .foregroundStyle(MTColor.warm)
+  /// Web's retention line: how long the item stays restorable, then the date.
+  private var retention: some View {
+    let retention = item.retention()
+    return HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
+      Image(.clock).font(.system(size: 11))
+      if let date = retention.date {
+        Text("\(retention.status) \(Text(date).foregroundStyle(MTColor.inkMuted))")
+      } else {
+        Text(retention.status)
+      }
+    }
+    .font(.caption2)
+    .foregroundStyle(MTColor.inkFaint)
+  }
+}
+
+/// Web's Delete forever dialog, which stays open until the deletion is confirmed.
+private struct DeleteForeverSheet: View {
+  let item: TrashItem
+  let controller: TrashController
+  let announce: (TrashController.Notice?) -> Void
+  @Environment(\.dismiss) private var dismiss
+  @State private var isDeleting = false
+
+  var body: some View {
+    MTSheet(
+      eyebrow: "Permanent action", title: "Delete “\(item.title)” forever?",
+      description: "\(item.deletionDescription) This cannot be undone.",
+      closeLabel: "Close", closeIdentifier: "close-delete-forever", size: .fitted,
+      isBusy: isDeleting
+    ) {
+      EmptyView()
+    } footer: {
+      MTSheetFooter {
+        EmptyView()
+      } cancel: {
+        Button("Cancel") { dismiss() }
+          .mtButtonStyle(.secondary)
+      } primary: {
+        Button(isDeleting ? "Deleting..." : "Delete forever") {
+          Task {
+            isDeleting = true
+            let notice = await controller.deleteForever(item)
+            isDeleting = false
+            announce(notice)
+            if notice.tone == .success { dismiss() }
+          }
+        }
+        .mtButtonStyle(.danger)
+        .accessibilityIdentifier("confirm-delete-forever")
+      }
+    }
+  }
+}
+
+/// Web's Empty Trash dialog: the prepared list only, with progress while it deletes.
+private struct EmptyTrashSheet: View {
+  let controller: TrashController
+  let confirm: () -> Void
+
+  var body: some View {
+    let count = controller.emptySnapshot?.count ?? controller.emptyTotal
+    MTSheet(
+      eyebrow: "Permanent action", title: "Empty \(count) items from Trash?",
+      description:
+        "This includes all Trash pages, not just the visible items. Their records, associated history and private photos will be permanently removed. Removing a Collection only removes its grouping, not active Entries. This cannot be undone.",
+      closeLabel: "Close", closeIdentifier: "close-empty-trash", size: .fitted,
+      isBusy: controller.isEmptying
+    ) {
+      VStack(alignment: .leading, spacing: MTSpacing.s3) {
+        Text(
+          "Only this prepared list is included. Items added to Trash later are not deleted. If an item changes or a request cannot be confirmed, deletion stops for a fresh review."
+        )
+        .font(MTFont.body)
+        .foregroundStyle(MTColor.inkMuted)
+        if controller.isEmptying {
+          Text(
+            "\(controller.emptyProgress) of \(controller.emptyTotal) confirmed deleted. Keep this page open."
+          )
+          .font(MTFont.caption.weight(.medium))
+          .foregroundStyle(MTColor.ink)
+          .accessibilityAddTraits(.updatesFrequently)
+        }
+      }
+    } footer: {
+      MTSheetFooter {
+        EmptyView()
+      } cancel: {
+        Button("Cancel") { controller.cancelEmptyTrash() }
+          .mtButtonStyle(.secondary)
+      } primary: {
+        Button(
+          controller.isEmptying ? "Emptying Trash…" : "Permanently delete confirmed items",
+          action: confirm
+        )
+        .mtButtonStyle(.danger)
+        .accessibilityIdentifier("confirm-empty-trash")
+      }
     }
   }
 }

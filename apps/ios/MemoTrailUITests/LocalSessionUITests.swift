@@ -685,6 +685,81 @@ final class LocalSessionUITests: XCTestCase {
     attach(app, "Homes after Trash")
   }
 
+  func testTrashRestoresDeletesForeverAndEmptiesTrash() throws {
+    let app = try launchLocalSession()
+    XCTAssertTrue(app.tabBars.buttons["More"].waitForExistence(timeout: 20))
+    app.tabBars.buttons["More"].tap()
+
+    // Two new Collections move to Trash, so Trash has its own items to restore and delete.
+    reveal(app.buttons["Collections"], in: app).tap()
+    for name in ["Old drafts", "Spare room"] { createAndTrashCollection(name, in: app) }
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    reveal(app.buttons["Trash"], in: app).tap()
+    let restore = app.buttons["Restore Old drafts"]
+    XCTAssertTrue(restore.waitForExistence(timeout: 15))
+    Thread.sleep(forTimeInterval: 1)
+    attach(app, "Trash")
+    reveal(restore, in: app).tap()
+    XCTAssertTrue(text("Item restored.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(restore.waitForNonExistence(timeout: 10))
+
+    // Delete forever asks first, then removes only that item.
+    let delete = app.buttons["Delete Spare room forever"]
+    reveal(delete, in: app).tap()
+    XCTAssertTrue(app.staticTexts["Delete “Spare room” forever?"].waitForExistence(timeout: 5))
+    attach(app, "Delete forever confirmation")
+    app.buttons["confirm-delete-forever"].tap()
+    XCTAssertTrue(text("Item permanently deleted.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(delete.waitForNonExistence(timeout: 10))
+
+    // The restored Collection is back, and Empty Trash removes it for good with the rest.
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    reveal(app.buttons["Collections"], in: app).tap()
+    XCTAssertTrue(app.buttons["Edit Old drafts"].waitForExistence(timeout: 15))
+    trashCollection("Old drafts", in: app)
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    reveal(app.buttons["Trash"], in: app).tap()
+    XCTAssertTrue(app.buttons["Restore Old drafts"].waitForExistence(timeout: 15))
+    while !app.buttons["empty-trash"].isHittable { app.swipeDown() }
+    app.buttons["empty-trash"].tap()
+    let confirm = app.buttons["confirm-empty-trash"]
+    XCTAssertTrue(confirm.waitForExistence(timeout: 10))
+    attach(app, "Empty Trash confirmation")
+    confirm.tap()
+    let emptied = app.staticTexts.matching(
+      NSPredicate(format: "label CONTAINS %@", "confirmed items permanently deleted")
+    ).firstMatch
+    XCTAssertTrue(emptied.waitForExistence(timeout: 30))
+    XCTAssertTrue(text("Nothing in Trash", in: app).waitForExistence(timeout: 10))
+    attach(app, "Empty Trash")
+  }
+
+  private func createAndTrashCollection(_ name: String, in app: XCUIApplication) {
+    XCTAssertTrue(app.buttons["new-collection"].waitForExistence(timeout: 15))
+    app.buttons["new-collection"].tap()
+    let field = app.textFields["organization-name"]
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    field.tap()
+    field.typeText(name)
+    app.buttons["save-organization"].tap()
+    XCTAssertTrue(text("Collection created.", in: app).waitForExistence(timeout: 10))
+    trashCollection(name, in: app)
+  }
+
+  private func trashCollection(_ name: String, in app: XCUIApplication) {
+    reveal(app.buttons["Edit \(name)"], in: app).tap()
+    app.buttons["remove-organization"].tap()
+    // The confirmation repeats the footer's label, so skip the footer button itself.
+    let trash = app.buttons.matching(
+      NSPredicate(
+        format: "label == %@ AND identifier != %@", "Move to Trash", "remove-organization")
+    ).firstMatch
+    XCTAssertTrue(trash.waitForExistence(timeout: 5))
+    trash.tap()
+    XCTAssertTrue(text("Collection moved to Trash.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["Edit \(name)"].waitForNonExistence(timeout: 10))
+  }
+
   func testVehiclesOpenTheirPageAndAddEditAndTrashVehicles() throws {
     let app = try launchLocalSession()
     XCTAssertTrue(app.tabBars.buttons["Timeline"].waitForExistence(timeout: 20))
