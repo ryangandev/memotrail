@@ -113,9 +113,12 @@ struct MTTextField: View {
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
       if !hidesLabel { MTFieldLabel(title: label, isRequired: isRequired, note: note) }
+      // Like a Web input, a labeled field stays empty without a prompt; a field that hides its
+      // label shows it as the placeholder instead.
       TextField(
         label, text: $text,
-        prompt: prompt.map { Text($0).foregroundStyle(MTColor.inkFaint) }, axis: axis
+        prompt: Text(prompt ?? (hidesLabel ? label : "")).foregroundStyle(MTColor.inkFaint),
+        axis: axis
       )
       .mtLineLimit(lines)
       .font(MTFont.body)
