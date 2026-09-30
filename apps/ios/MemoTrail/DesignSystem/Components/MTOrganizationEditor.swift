@@ -259,7 +259,9 @@ private struct MTOrganizationPicker: View {
         }
       }
     }
-    .presentationDetents([.medium, .large])
+    // Search takes focus at once, so the picker opens full height: a medium sheet would jump
+    // above the keyboard and leave room for only one row.
+    .presentationDetents([.large])
     .onAppear { isSearching = true }
   }
 
