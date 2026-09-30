@@ -395,6 +395,48 @@ final class NativeContractTests: XCTestCase {
     XCTAssertNil(firstTimes.entry(id: identity.id))
   }
 
+  func testBucketListGoalAchievementCreatesALinkedFirstTime() async throws {
+    let (client, ownerID) = try await client()
+    let goals = GoalController(client: client, ownerID: ownerID)
+    let created = await goals.save(
+      entryID: nil, expectedRevision: nil, title: "Native Bucket List Goal",
+      body: "A private reflection.", horizon: .someday, status: .considering,
+      targetDate: "2027-05-01", collectionNames: ["Bucket List"], tagNames: [],
+      relatedEntryIDs: [])
+    XCTAssertEqual(created.status, .created, created.message)
+    XCTAssertEqual(created.message, "Goal added.")
+    let identity = try XCTUnwrap(created.identity)
+    await goals.load(including: identity.id)
+    XCTAssertNil(goals.loadErrorMessage)
+    let goal = try XCTUnwrap(goals.entry(id: identity.id))
+    XCTAssertTrue(goal.isBucketList)
+    XCTAssertEqual(goal.targetLabel, "Target May 1, 2027")
+
+    let achieved = await goals.markAchieved(
+      entryID: goal.id, expectedRevision: goal.revision, occurredStart: nil,
+      datePrecision: .unknown, occurredLabel: "", occurredTimezone: "UTC")
+    XCTAssertEqual(achieved.status, .achieved, achieved.message)
+    XCTAssertEqual(achieved.message, "Achievement saved, with a linked First Time.")
+    let firstTimeID = try XCTUnwrap(achieved.identity?.relatedID)
+    await goals.load()
+    let saved = try XCTUnwrap(goals.entry(id: identity.id))
+    XCTAssertEqual(saved.status, .achieved)
+    XCTAssertEqual(saved.achievementEntries.map(\.id), [firstTimeID])
+    XCTAssertEqual(saved.achievementEntries.first?.itemSubtype, "first_time")
+    XCTAssertTrue(saved.editableRelatedEntries.isEmpty)
+
+    // A stale revision cannot record the achievement twice.
+    let repeated = await goals.markAchieved(
+      entryID: goal.id, expectedRevision: goal.revision, occurredStart: nil,
+      datePrecision: .unknown, occurredLabel: "", occurredTimezone: "UTC")
+    XCTAssertEqual(repeated.status, .conflict, repeated.message)
+
+    let trashed = await goals.moveToTrash(entryID: saved.id, expectedRevision: saved.revision)
+    XCTAssertEqual(trashed.status, .trashed, trashed.message)
+    XCTAssertEqual(trashed.message, "Goal moved to Trash.")
+    XCTAssertNil(goals.entry(id: identity.id))
+  }
+
   func testFocusedRecordsDecodeInLibraryCollectionsAndHome() async throws {
     let (client, ownerID) = try await client()
     let collectionName = "Native focused \(UUID().uuidString)"
@@ -426,7 +468,7 @@ final class NativeContractTests: XCTestCase {
       entryID: nil, expectedRevision: nil, title: "Native Goal", body: "Synthetic record.",
       horizon: .someday, status: .considering, targetDate: nil, collectionNames: [collectionName],
       tagNames: [], relatedEntryIDs: [firstID])
-    XCTAssertEqual(goal.status, .saved, goal.message)
+    XCTAssertEqual(goal.status, .created, goal.message)
     let goalID = try XCTUnwrap(goal.identity?.id)
     await goals.load()
     XCTAssertNil(goals.loadErrorMessage)

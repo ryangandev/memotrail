@@ -344,8 +344,8 @@ struct EntryHistoryDetailView: View {
             ) {
               Button("Create linked Goal") { showGoalExtraction = true }.disabled(busy)
             } else if record.current["item_kind"]?.text == "goal" {
-              NavigationLink("Open Goals") {
-                GoalsView(client: client, ownerID: ownerID, embedded: true)
+              NavigationLink("Open Goal") {
+                GoalDetailView(client: client, ownerID: ownerID, entryID: entryID)
               }
             }
           }

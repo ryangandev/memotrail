@@ -132,25 +132,27 @@ def seed(stack, user):
     tracks = stack.request(f"/rest/v1/timeline_tracks?select=id,system_key&order=sort_order",
                            method="GET", key=stack.anon_key, token=user["access_token"])
     track = next((t for t in tracks if t["system_key"] == "general"), tracks[0])["id"]
-    rpc("save_timeline_entry_with_organization",
+    marathon = rpc(
+        "save_timeline_entry_with_organization",
         p_track_id=track, p_timeline_kind="event", p_title="Finished the first marathon",
         p_body="Slow, happy, and soaked by the last mile.", p_collection_names=[],
         p_tag_names=["running"], p_entry_id=None, p_expected_revision=None,
-        **occurrence("day", "2023-10-08"))
+        **occurrence("day", "2023-10-08"))[0]["entry_id"]
     rpc("save_timeline_entry_with_organization",
         p_track_id=track, p_timeline_kind="stage", p_title="Living in Lisbon",
         p_body="Tiled streets, late dinners, and the tram up the hill.",
         p_collection_names=[], p_tag_names=[], p_entry_id=None, p_expected_revision=None,
         **occurrence("range", "2022-02-01", "2022-11-30"))
 
-    rpc("save_home_entry_with_occurrence",
+    flat = rpc(
+        "save_home_entry_with_occurrence",
         p_title="Maple Street flat", p_body="Sunny kitchen and a creaky staircase.",
         p_place_id=None, p_place_name="Maple Street flat", p_address="120 Maple Street",
         p_city="Portland", p_region="Oregon", p_country="United States",
         p_latitude=45.5231, p_longitude=-122.6765, p_place_notes=None,
         p_move_in_reason="Closer to work", p_move_out_reason=None,
         p_collection_names=[], p_tag_names=["home"], p_entry_id=None,
-        p_expected_revision=None, **occurrence("range", "2021-06-01"))
+        p_expected_revision=None, **occurrence("range", "2021-06-01"))[0]["entry_id"]
     # A synthetic provider Location, submitted the way Web address search saves one.
     hatchback = occurrence("range", "2019-09-15")
     rpc("save_vehicle_with_location",
@@ -170,7 +172,7 @@ def seed(stack, user):
     rpc("save_goal_entry",
         p_title="Hike the coast trail", p_body="All of it, in sections, before next autumn.",
         p_horizon="short_term", p_status="active", p_target_date="2026-10-31",
-        p_collection_names=[], p_tag_names=["walks"], p_related_entry_ids=[],
+        p_collection_names=[], p_tag_names=["walks"], p_related_entry_ids=[flat, marathon],
         p_entry_id=None, p_expected_revision=None)
 
 

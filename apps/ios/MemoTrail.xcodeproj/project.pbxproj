@@ -138,6 +138,9 @@
 		E1000000000000000000002A /* EntryLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002A /* EntryLocation.swift */; };
 		E1000000000000000000002B /* FirstTimeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002B /* FirstTimeDetailView.swift */; };
 		E1000000000000000000002C /* FirstTimeEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002C /* FirstTimeEditorSheet.swift */; };
+		E1000000000000000000002D /* GoalDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002D /* GoalDetailView.swift */; };
+		E1000000000000000000002E /* GoalEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002E /* GoalEditorSheet.swift */; };
+		E1000000000000000000002F /* ConnectedItemsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002F /* ConnectedItemsSection.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -285,6 +288,9 @@
 		E2000000000000000000002A /* EntryLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryLocation.swift; sourceTree = "<group>"; };
 		E2000000000000000000002B /* FirstTimeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstTimeDetailView.swift; sourceTree = "<group>"; };
 		E2000000000000000000002C /* FirstTimeEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstTimeEditorSheet.swift; sourceTree = "<group>"; };
+		E2000000000000000000002D /* GoalDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalDetailView.swift; sourceTree = "<group>"; };
+		E2000000000000000000002E /* GoalEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEditorSheet.swift; sourceTree = "<group>"; };
+		E2000000000000000000002F /* ConnectedItemsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectedItemsSection.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -345,6 +351,7 @@
 		A10000000000000000000004 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000002F /* ConnectedItemsSection.swift */,
 				E2000000000000000000001D /* WorkspaceToolbar.swift */,
 				E20000000000000000000019 /* AppNavigator.swift */,
 				CD0000000000000000000008 /* NativeReview.swift */,
@@ -616,6 +623,8 @@
 		A10000000000000000000025 /* Goals */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000002E /* GoalEditorSheet.swift */,
+				E2000000000000000000002D /* GoalDetailView.swift */,
 				C00000000000000000000036 /* GoalController.swift */,
 				C00000000000000000000037 /* GoalsView.swift */,
 			);
@@ -751,6 +760,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1000000000000000000002F /* ConnectedItemsSection.swift in Sources */,
+				E1000000000000000000002E /* GoalEditorSheet.swift in Sources */,
+				E1000000000000000000002D /* GoalDetailView.swift in Sources */,
 				E1000000000000000000002C /* FirstTimeEditorSheet.swift in Sources */,
 				E1000000000000000000002B /* FirstTimeDetailView.swift in Sources */,
 				E1000000000000000000002A /* EntryLocation.swift in Sources */,

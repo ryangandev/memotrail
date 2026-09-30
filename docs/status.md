@@ -108,6 +108,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Local contract and seeded Simulator runs confirmed loading and removing a Vehicle's Location, opening a Vehicle from Vehicles and the Timeline, editing it, adding one, and moving it to Trash.
 - Native First Times now follow Web `/first-times` and its focused First Time page: the archive of record cards with a photo, map, or number, the When and Location page, and the Web First Time editor with its Location panel.
   Local contract and seeded Simulator runs confirmed loading and removing a First Time's Location, opening a First Time from First Times and the Timeline, editing it, adding one, and moving it to Trash.
+- Native Goals now follow Web `/goals` and its focused Goal page: record cards grouped by reflective state, the Status, Horizon, and Target page with Connected Items, and the sectioned Web Goal editor with Related Items and the Bucket List milestone.
+  Local contract and seeded Simulator runs confirmed recording a Bucket List achievement with its linked First Time, following connected Items to a Home page and the Timeline, replacing a related Item, adding a Goal, and moving it to Trash.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
 - Refactor existing screens after component acceptance; native address search remains later work.
 

@@ -75,7 +75,8 @@ final class LocalSessionUITests: XCTestCase {
     reveal(goal, in: app)
     attach(app, "Dashboard recent Entries")
     goal.tap()
-    XCTAssertTrue(app.navigationBars["Goals"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.navigationBars["Goal"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["edit-goal"].exists)
     attach(app, "Recent Entry destination")
   }
 
@@ -184,8 +185,9 @@ final class LocalSessionUITests: XCTestCase {
     // A result opens its record, and Clear all returns to browsing.
     app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Goal, Hike the coast trail"))
       .firstMatch.tap()
-    XCTAssertTrue(app.navigationBars["Goals"].waitForExistence(timeout: 10))
-    app.navigationBars["Goals"].buttons.element(boundBy: 0).tap()
+    XCTAssertTrue(app.navigationBars["Goal"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["edit-goal"].waitForExistence(timeout: 10))
+    app.navigationBars["Goal"].buttons.element(boundBy: 0).tap()
     reveal(app.buttons["library-clear-search"], in: app).tap()
     XCTAssertTrue(element("library-items", in: app).waitForExistence(timeout: 10))
     XCTAssertEqual(field.value as? String, "A phrase, date, or question about your life...")
@@ -593,6 +595,115 @@ final class LocalSessionUITests: XCTestCase {
     XCTAssertTrue(created.waitForNonExistence(timeout: 10))
     XCTAssertTrue(text("1 First Time", in: app).exists)
     attach(app, "First Times after Trash")
+  }
+
+  func testGoalsOpenTheirPageAndLinksAndRecordABucketListAchievement() throws {
+    let app = try launchLocalSession()
+    XCTAssertTrue(app.tabBars.buttons["More"].waitForExistence(timeout: 20))
+    app.tabBars.buttons["More"].tap()
+    reveal(app.buttons["Goals"], in: app).tap()
+    let seeded = app.buttons["Hike the coast trail, Active"]
+    XCTAssertTrue(seeded.waitForExistence(timeout: 15))
+    XCTAssertTrue(text("1 goal", in: app).exists)
+    Thread.sleep(forTimeInterval: 1)
+    attach(app, "Goals")
+
+    // A card opens the Goal's page with its state, horizon, target, and connected Items.
+    seeded.tap()
+    XCTAssertTrue(app.staticTexts["Target Oct 31, 2026"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Short-term"].exists)
+    let home = reveal(app.buttons["Maple Street flat"], in: app)
+    XCTAssertTrue(app.buttons["Finished the first marathon"].exists)
+    attach(app, "Goal page")
+
+    // Like Web, a connected Home opens its own page and a Moment opens on the Timeline.
+    home.tap()
+    XCTAssertTrue(app.buttons["edit-home"].waitForExistence(timeout: 10))
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    reveal(app.buttons["Finished the first marathon"], in: app).tap()
+    XCTAssertTrue(app.staticTexts["Edit moment"].waitForExistence(timeout: 10))
+    attach(app, "Connected Moment on the Timeline")
+    app.buttons["close-timeline-editor"].tap()
+    app.tabBars.buttons["More"].tap()
+    XCTAssertTrue(app.buttons["edit-goal"].waitForExistence(timeout: 10))
+
+    // Edit replaces a related Item and saves, like Web.
+    app.buttons["edit-goal"].tap()
+    XCTAssertTrue(app.staticTexts["Edit Goal"].waitForExistence(timeout: 5))
+    Thread.sleep(forTimeInterval: 0.6)
+    attach(app, "Goal editor")
+    reveal(app.buttons["Remove related Item Finished the first marathon"], in: app).tap()
+    reveal(app.buttons["Choose a related Item"], in: app).tap()
+    let hatchback = app.buttons["Blue hatchback · Vehicle"]
+    XCTAssertTrue(hatchback.waitForExistence(timeout: 5))
+    hatchback.tap()
+    app.buttons["add-goal-related-item"].tap()
+    XCTAssertTrue(app.buttons["Remove related Item Blue hatchback"].waitForExistence(timeout: 5))
+    attach(app, "Goal editor related Items")
+    app.buttons["save-goal"].tap()
+    XCTAssertTrue(text("Goal saved.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(reveal(app.buttons["Blue hatchback"], in: app).exists)
+    XCTAssertFalse(app.buttons["Finished the first marathon"].exists)
+    attach(app, "Goal page after saving")
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+
+    // A new Goal in Bucket List can be marked achieved from its editor.
+    XCTAssertTrue(app.buttons["add-goal"].waitForExistence(timeout: 5))
+    app.buttons["add-goal"].tap()
+    let title = app.textFields["goal-title"]
+    XCTAssertTrue(title.waitForExistence(timeout: 5))
+    title.tap()
+    title.typeText("Learn to sail\n")
+    // Scroll Organization clear of the sheet footer before adding a Collection.
+    app.swipeUp()
+    reveal(app.buttons["organization-add-collection"], in: app).tap()
+    let collections = app.textFields["organization-search-collection"]
+    XCTAssertTrue(collections.waitForExistence(timeout: 3))
+    collections.typeText("Bucket List")
+    app.buttons["organization-done"].tap()
+    XCTAssertTrue(
+      app.buttons["Remove Bucket List from Collections"].waitForExistence(timeout: 3))
+    attach(app, "New Goal")
+    app.buttons["save-goal"].tap()
+    XCTAssertTrue(text("Goal created.", in: app).waitForExistence(timeout: 10))
+    let created = app.buttons["Learn to sail, Considering"]
+    XCTAssertTrue(created.waitForExistence(timeout: 10))
+    XCTAssertTrue(text("1 in Bucket List", in: app).exists)
+    attach(app, "Goals with the new Goal")
+
+    reveal(created, in: app).tap()
+    XCTAssertTrue(app.buttons["edit-goal"].waitForExistence(timeout: 10))
+    app.buttons["edit-goal"].tap()
+    let achieve = reveal(app.buttons["achieve-bucket-list-goal"], in: app)
+    XCTAssertTrue(app.staticTexts["Turn this achievement into a First Time"].exists)
+    attach(app, "Bucket List milestone")
+    achieve.tap()
+    let achieved = text("Achievement saved, with a linked First Time.", in: app)
+    XCTAssertTrue(achieved.waitForExistence(timeout: 10))
+    // The editor stays open on the achieved Goal, like Web.
+    XCTAssertTrue(app.buttons["achieve-bucket-list-goal"].waitForNonExistence(timeout: 5))
+    XCTAssertEqual(app.buttons["Reflective state"].value as? String, "Achieved")
+    attach(app, "Goal editor after the achievement")
+    XCTAssertTrue(achieved.waitForNonExistence(timeout: 10))
+    app.buttons["close-goal-editor"].tap()
+    XCTAssertTrue(app.buttons["save-goal"].waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Achieved"].waitForExistence(timeout: 10))
+    XCTAssertTrue(reveal(app.buttons["Learn to sail"], in: app).exists)
+    attach(app, "Achieved Goal page")
+
+    // Moving it to Trash from its page returns to the list without it.
+    app.buttons["edit-goal"].tap()
+    reveal(app.buttons["trash-goal"], in: app).tap()
+    let confirm = app.buttons.matching(
+      NSPredicate(format: "label == %@ AND identifier != %@", "Move to Trash", "trash-goal")
+    ).firstMatch
+    XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+    confirm.tap()
+    XCTAssertTrue(text("Goal moved to Trash.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["add-goal"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["Learn to sail, Achieved"].waitForNonExistence(timeout: 10))
+    XCTAssertTrue(text("1 goal", in: app).exists)
+    attach(app, "Goals after Trash")
   }
 
   /// Timeline asks for the birth date on the first visit until one is saved, like Web. The

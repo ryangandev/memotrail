@@ -215,9 +215,9 @@
 
         GallerySpecimen(
           title: "FormSection",
-          api: "title · content; MTFormNote",
+          api: "title · tone: neutral | accent · content; MTFormNote(color:)",
           description:
-            "The Web editor fieldset: the legend sits in a gap in the border, and fields inside rise onto the raised surface."
+            "The Web editor fieldset: the legend sits in a gap in the border, and fields inside rise onto the raised surface. The accent tone marks a panel that acts on the saved record."
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s5) {
             MTFormSection("Home details") {
@@ -229,6 +229,16 @@
                 "Save an address or position for this Home. It can appear on a future map alongside memories and events from the same area."
               )
               MTTextField(label: "City", text: $city)
+            }
+            MTFormSection("Bucket List milestone", tone: .accent) {
+              MTFormNote(
+                "MemoTrail will mark the Goal Achieved and create a linked First Time with the same title."
+              )
+              Button {
+              } label: {
+                Label("Mark achieved and create First Time", icon: .check)
+              }
+              .mtButtonStyle()
             }
           }
         }

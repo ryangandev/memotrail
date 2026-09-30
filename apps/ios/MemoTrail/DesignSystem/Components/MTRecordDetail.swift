@@ -7,28 +7,41 @@ extension EnvironmentValues {
 }
 
 /// Web `formSection`: a titled group of editor fields on its own surface, with the uppercase
-/// legend set into a gap in the top border.
+/// legend set into a gap in the top border. The accent tone marks a section that acts on the
+/// saved record, like the Goal editor's Bucket List milestone.
 struct MTFormSection<Content: View>: View {
+  enum Tone: Sendable { case neutral, accent }
+
   let title: String
+  let tone: Tone
   private let content: Content
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
-  init(_ title: String, @ViewBuilder content: () -> Content) {
+  init(_ title: String, tone: Tone = .neutral, @ViewBuilder content: () -> Content) {
     self.title = title
+    self.tone = tone
     self.content = content()
   }
 
   var body: some View {
     let shape = RoundedRectangle(cornerRadius: MTRadius.large)
+    // Opacity over the neutral colors matches Web's `color-mix` in sRGB.
+    let isAccent = tone == .accent
     VStack(alignment: .leading, spacing: MTSpacing.s4) { content }
       .environment(\.mtFieldFill, MTColor.surfaceRaised)
       .frame(maxWidth: .infinity, alignment: .leading)
       // Web pads sections by 16 px on phones and 20 px elsewhere.
       .padding(horizontalSizeClass == .regular ? MTSpacing.s5 : MTSpacing.s4)
       .padding(.top, MTSpacing.s1)
-      .background(MTColor.surface, in: shape)
+      .background {
+        shape.fill(MTColor.surface)
+          .overlay(shape.fill(MTColor.accentSubtle.opacity(isAccent ? 0.42 : 0)))
+      }
       .overlay {
         shape.strokeBorder(MTColor.border, lineWidth: 1)
+          .overlay(
+            shape.strokeBorder(MTColor.accent.opacity(isAccent ? 0.38 : 0), lineWidth: 1)
+          )
           .mask {
             Rectangle()
               .overlay(alignment: .topLeading) {
@@ -58,16 +71,21 @@ struct MTFormSection<Content: View>: View {
   }
 }
 
-/// A quiet explanation inside a form section, like Web `formSection > p`.
+/// A quiet explanation inside a form section, like Web `formSection > p`. Some sections set it
+/// fainter, like the Goal editor's Related Items.
 struct MTFormNote: View {
   let text: String
+  let color: Color
 
-  init(_ text: String) { self.text = text }
+  init(_ text: String, color: Color = MTColor.inkMuted) {
+    self.text = text
+    self.color = color
+  }
 
   var body: some View {
     Text(text)
       .font(MTFont.caption.weight(.regular))
-      .foregroundStyle(MTColor.inkMuted)
+      .foregroundStyle(color)
       .mtLineSpacing(MTLineHeight.body)
       .fixedSize(horizontal: false, vertical: true)
   }

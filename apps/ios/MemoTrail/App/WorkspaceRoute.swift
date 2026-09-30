@@ -111,7 +111,7 @@ struct WorkspaceDestinationView: View {
     case .homes: HomesView(client: client, ownerID: user.id)
     case .vehicles: VehiclesView(client: client, ownerID: user.id)
     case .firstTimes: FirstTimesView(client: client, ownerID: user.id)
-    case .goals: GoalsView(client: client, ownerID: user.id, embedded: true)
+    case .goals: GoalsView(client: client, ownerID: user.id)
     case .collections: CollectionsView(client: client, ownerID: user.id, embedded: true)
     case .tags: OrganizationView(client: client, ownerID: user.id, initialKind: .tag)
     case .history: EntryHistoryIndexView(client: client, ownerID: user.id)
@@ -141,7 +141,7 @@ struct WikiItemDestinationView: View {
     case (.entity, "person"):
       PeopleView(client: client, ownerID: ownerID, focusedPersonID: personID ?? entryID)
     case (.goal, _):
-      GoalsView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entryID)
+      GoalDetailView(client: client, ownerID: ownerID, entryID: entryID)
     case (.entry, "first_time"):
       FirstTimeDetailView(client: client, ownerID: ownerID, entryID: entryID)
     default:
