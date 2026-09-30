@@ -56,7 +56,39 @@ final class LibraryDestinationTests: XCTestCase {
     XCTAssertFalse(
       OrganizationSaveRequest(kind: .tag, name: " ", sortOrder: 0, id: nil, expectedRevision: nil)
         .isValid)
+    // Web `validOrganizationInput`: tags keep to 60 characters and Collections to 80.
+    let tag = { (name: String) in
+      OrganizationSaveRequest(kind: .tag, name: name, sortOrder: 0, id: nil, expectedRevision: nil)
+    }
+    XCTAssertTrue(tag(String(repeating: "界", count: 60)).isValid)
+    XCTAssertFalse(tag(String(repeating: "界", count: 61)).isValid)
+    XCTAssertTrue(
+      OrganizationSaveRequest(
+        kind: .collection, name: String(repeating: "a", count: 80), sortOrder: 0, id: nil,
+        expectedRevision: nil
+      ).isValid)
+    XCTAssertEqual(tag("").invalidMessage, "Use a tag name up to 60 characters.")
+    XCTAssertEqual(OrganizationKind.tag.label, "Tag")
     XCTAssertEqual(TrashItemKind(rawValue: "collection")?.displayName, "Collection")
+  }
+  func testTagMergeRequestKeepsBothRevisionsAndRejectsItself() throws {
+    let source = UUID()
+    let target = UUID()
+    let request = TagMergeRequest(
+      sourceID: source, sourceRevision: 2, targetID: target, targetRevision: 5)
+    XCTAssertTrue(request.isValid)
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as? [String: Any])
+    XCTAssertEqual(json["p_source_id"] as? String, source.uuidString)
+    XCTAssertEqual(json["p_source_revision"] as? Int, 2)
+    XCTAssertEqual(json["p_target_id"] as? String, target.uuidString)
+    XCTAssertEqual(json["p_target_revision"] as? Int, 5)
+    XCTAssertFalse(
+      TagMergeRequest(sourceID: source, sourceRevision: 2, targetID: source, targetRevision: 2)
+        .isValid)
+    XCTAssertEqual(countLabel(1, "Entry"), "1 Entry")
+    XCTAssertEqual(countLabel(3, "Entry"), "3 Entries")
+    XCTAssertEqual(countLabel(2, "tag"), "2 tags")
   }
   func testTrackSettingsPreserveVisibilityIdentityAndRevision() throws {
     let data = Data(

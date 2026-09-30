@@ -2,76 +2,6 @@ import Foundation
 @preconcurrency import Supabase
 import SwiftUI
 
-enum OrganizationKind: String, CaseIterable, Identifiable, Sendable {
-  case collection, tag
-  var id: String { rawValue }
-  var label: String { self == .collection ? "Collection" : "tag" }
-  var plural: String { self == .collection ? "Collections" : "Tags" }
-}
-struct OrganizationItem: Decodable, Identifiable, Sendable {
-  let id: UUID
-  let name: String
-  let systemKey: String?
-  let sortOrder: Int
-  let revision: Int
-  let entryCount: Int
-  let totalCount: Int
-  enum CodingKeys: String, CodingKey {
-    case id, name, revision
-    case systemKey = "system_key"
-    case sortOrder = "sort_order"
-    case entryCount = "entry_count"
-    case totalCount = "total_count"
-  }
-}
-struct OrganizationReadRequest: Encodable {
-  let kind: String
-  let query: String
-  let offset: Int
-  let limit = 50
-  enum CodingKeys: String, CodingKey {
-    case kind = "p_kind"
-    case query = "p_query"
-    case offset = "p_offset"
-    case limit = "p_limit"
-  }
-}
-struct OrganizationSaveRequest: Encodable {
-  let kind: OrganizationKind
-  let name: String
-  let sortOrder: Int
-  let id: UUID?
-  let expectedRevision: Int?
-  var isValid: Bool {
-    !name.trimmed.isEmpty && name.trimmed.unicodeScalars.count <= 80
-      && (-1_000_000...1_000_000).contains(sortOrder) && (kind != .tag || sortOrder == 0)
-      && (id == nil ? expectedRevision == nil : (expectedRevision ?? 0) > 0)
-  }
-  enum CodingKeys: String, CodingKey {
-    case kind = "p_kind"
-    case name = "p_name"
-    case sortOrder = "p_sort_order"
-    case id = "p_id"
-    case expectedRevision = "p_expected_revision"
-  }
-  func encode(to encoder: Encoder) throws {
-    var container = encoder.container(keyedBy: CodingKeys.self)
-    try container.encode(kind.rawValue, forKey: .kind)
-    try container.encode(name.trimmed, forKey: .name)
-    try container.encode(sortOrder, forKey: .sortOrder)
-    try container.encode(id, forKey: .id)
-    try container.encode(expectedRevision, forKey: .expectedRevision)
-  }
-}
-struct CollectionTrashRequest: Encodable {
-  let id: UUID
-  let expectedRevision: Int
-  enum CodingKeys: String, CodingKey {
-    case id = "p_id"
-    case expectedRevision = "p_expected_revision"
-  }
-}
-
 struct OrganizationView: View {
   let client: SupabaseClient
   let ownerID: UUID
@@ -95,7 +25,7 @@ struct OrganizationView: View {
           "Shape the Collections and tags that connect your Entries. Names change everywhere, without duplicating your writing."
         ).foregroundStyle(MTColor.inkMuted)
         Picker("Organization kind", selection: $kind) {
-          ForEach(OrganizationKind.allCases) { value in Text(value.plural).tag(value) }
+          ForEach(OrganizationKind.allCases) { value in Text(value == .collection ? "Collections" : "Tags").tag(value) }
         }.pickerStyle(.segmented).disabled(busy)
           .onChange(of: kind) { _, _ in
             rows = []
@@ -147,7 +77,7 @@ struct OrganizationView: View {
         }
         if busy { ProgressView() }
       }.padding()
-    }.background(MTColor.canvas).navigationTitle(kind.plural).navigationBarTitleDisplayMode(
+    }.background(MTColor.canvas).navigationTitle(kind == .collection ? "Collections" : "Tags").navigationBarTitleDisplayMode(
       .inline
     )
     .task { await load() }.refreshable { await load() }
@@ -176,7 +106,7 @@ struct OrganizationView: View {
       let next: [OrganizationItem] = try await client.rpc(
         "organization_workspace",
         params: OrganizationReadRequest(
-          kind: kind.rawValue, query: search, offset: more ? rows.count : 0)
+          kind: kind, query: search, offset: more ? rows.count : 0)
       ).execute().value
       if more {
         rows.append(contentsOf: next)

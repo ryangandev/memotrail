@@ -114,6 +114,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Local contract and seeded Simulator runs confirmed opening a Person from Library and People, following connected Items to the Timeline and a Home page, swapping a linked Item, keeping a linked Person out of Trash, moving them to Trash once unlinked, and adding one.
 - Native Item pages and version history now follow Web `/items/[entry]` and `/history`: the current writing and facts with Edit, Version history, Create linked Goal, and Move to Trash; Related Items with the Web views and search; Current photos in the shared photo field; and the version picker, differences, side-by-side snapshots, and Restore.
   Local contract and seeded Simulator runs confirmed opening an Entry from Library, linking and following another Item, restoring the version from before the link, loading current photos, creating a linked Goal, and moving the Entry to Trash at the revision shown.
+- Native Tags now follow Web `/tags`: tag badges with Entry counts, name search, New Tag, and the Web tag editor with its Entry previews, merge panel, and unused-tag deletion.
+  A seeded Simulator run confirmed searching tags, opening a tagged Entry from the editor, merging one tag into another, creating and deleting an unused tag, and opening Library filtered to a tag.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
 - Refactor existing screens after component acceptance; native address search remains later work.
 

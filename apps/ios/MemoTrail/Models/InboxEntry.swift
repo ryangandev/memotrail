@@ -954,3 +954,9 @@ extension String {
     return "\(self[..<endIndex].trimmingCharacters(in: .whitespacesAndNewlines))…"
   }
 }
+
+/// Web `countLabel`, such as "1 Entry" or "3 Entries".
+func countLabel(_ count: Int, _ singular: String) -> String {
+  let plural = singular.hasSuffix("y") ? "\(singular.dropLast())ies" : "\(singular)s"
+  return "\(count) \(count == 1 ? singular : plural)"
+}

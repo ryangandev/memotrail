@@ -319,6 +319,88 @@ final class LocalSessionUITests: XCTestCase {
     XCTAssertTrue(text("River.", in: app).waitForExistence(timeout: 10))
   }
 
+  func testTagsFindPreviewMergeAddAndDeleteTags() throws {
+    let app = try launchLocalSession()
+    XCTAssertTrue(app.tabBars.buttons["More"].waitForExistence(timeout: 20))
+    app.tabBars.buttons["More"].tap()
+    reveal(app.buttons["Tags"], in: app).tap()
+    let coast = app.buttons["Manage tag coast, used by 2 Entries"]
+    XCTAssertTrue(coast.waitForExistence(timeout: 15))
+    let family = app.buttons["Manage tag family, used by 2 Entries"]
+    XCTAssertTrue(family.exists)
+    Thread.sleep(forTimeInterval: 1)
+    attach(app, "Tags")
+
+    // Search narrows the badges by name.
+    let search = app.textFields["Find a tag"]
+    search.tap()
+    search.typeText("coa\n")
+    XCTAssertTrue(family.waitForNonExistence(timeout: 10))
+    XCTAssertTrue(coast.exists)
+    attach(app, "Tags search")
+    app.buttons["Clear find a tag"].tap()
+    app.buttons["Search"].tap()
+    XCTAssertTrue(family.waitForExistence(timeout: 10))
+
+    // A tag's editor lists the Entries using it, and each opens its Item.
+    coast.tap()
+    XCTAssertTrue(app.staticTexts["Edit Tag"].waitForExistence(timeout: 5))
+    XCTAssertTrue(text("Used by 2 Entries", in: app).exists)
+    let quiet = app.buttons.matching(
+      NSPredicate(format: "label BEGINSWITH %@", "A quiet afternoon by the coast")
+    ).firstMatch
+    XCTAssertTrue(quiet.waitForExistence(timeout: 10))
+    attach(app, "Tag editor")
+    quiet.tap()
+    XCTAssertTrue(app.navigationBars["Entry"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["edit-item"].waitForExistence(timeout: 10))
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+
+    // Merging keeps every assignment on the destination tag.
+    XCTAssertTrue(family.waitForExistence(timeout: 10))
+    family.tap()
+    reveal(app.buttons["Destination tag"], in: app).tap()
+    app.buttons["#coast (2)"].tap()
+    reveal(app.buttons["merge-tag"], in: app).tap()
+    let merge = app.buttons["Merge tags"]
+    XCTAssertTrue(merge.waitForExistence(timeout: 5))
+    attach(app, "Tag merge confirmation")
+    merge.tap()
+    XCTAssertTrue(text("Tags merged.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(family.waitForNonExistence(timeout: 10))
+    let merged = app.buttons["Manage tag coast, used by 3 Entries"]
+    XCTAssertTrue(merged.waitForExistence(timeout: 10))
+
+    // New Tag creates an unused tag, which can then be deleted.
+    app.buttons["new-tag"].tap()
+    let name = app.textFields["organization-name"]
+    XCTAssertTrue(name.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Create a Tag"].exists)
+    name.tap()
+    name.typeText("sunsets")
+    attach(app, "New Tag")
+    app.buttons["save-organization"].tap()
+    XCTAssertTrue(text("Tag created.", in: app).waitForExistence(timeout: 10))
+    let sunsets = app.buttons["Manage tag sunsets, used by 0 Entries"]
+    XCTAssertTrue(sunsets.waitForExistence(timeout: 10))
+    sunsets.tap()
+    XCTAssertTrue(text("No Entries use this tag yet.", in: app).waitForExistence(timeout: 5))
+    app.buttons["remove-organization"].tap()
+    let delete = app.buttons["Delete tag"]
+    XCTAssertTrue(delete.waitForExistence(timeout: 5))
+    delete.tap()
+    XCTAssertTrue(text("Tag deleted.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(sunsets.waitForNonExistence(timeout: 10))
+
+    // View all Entries opens Library filtered to the tag, like Web `/library?tag=`.
+    merged.tap()
+    reveal(app.buttons["view-tag-entries"], in: app, above: app.buttons["save-organization"]).tap()
+    XCTAssertTrue(element("library-results", in: app).waitForExistence(timeout: 15))
+    XCTAssertTrue(app.staticTexts["3 items"].waitForExistence(timeout: 10))
+    XCTAssertTrue(text("Filters · 1 active", in: app).exists)
+    attach(app, "Library filtered to a tag")
+  }
+
   func testTimelineStartsFromTheBirthDateAndAddsEditsAndTrashesMoments() throws {
     let app = try launchLocalSession()
     XCTAssertTrue(app.tabBars.buttons["Timeline"].waitForExistence(timeout: 20))

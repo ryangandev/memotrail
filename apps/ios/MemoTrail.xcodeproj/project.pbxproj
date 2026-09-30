@@ -152,6 +152,10 @@
 		E10000000000000000000038 /* LinkedGoalSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000038 /* LinkedGoalSheet.swift */; };
 		E10000000000000000000039 /* EntryHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000039 /* EntryHistory.swift */; };
 		E1000000000000000000003A /* WikiItemLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000003A /* WikiItemLink.swift */; };
+		E1000000000000000000003B /* OrganizationActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000003B /* OrganizationActions.swift */; };
+		E1000000000000000000003C /* OrganizationEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000003C /* OrganizationEditorSheet.swift */; };
+		E1000000000000000000003D /* TagsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000003D /* TagsView.swift */; };
+		E1000000000000000000003E /* Organization.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000003E /* Organization.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -313,6 +317,10 @@
 		E20000000000000000000038 /* LinkedGoalSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkedGoalSheet.swift; sourceTree = "<group>"; };
 		E20000000000000000000039 /* EntryHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryHistory.swift; sourceTree = "<group>"; };
 		E2000000000000000000003A /* WikiItemLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiItemLink.swift; sourceTree = "<group>"; };
+		E2000000000000000000003B /* OrganizationActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrganizationActions.swift; sourceTree = "<group>"; };
+		E2000000000000000000003C /* OrganizationEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrganizationEditorSheet.swift; sourceTree = "<group>"; };
+		E2000000000000000000003D /* TagsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsView.swift; sourceTree = "<group>"; };
+		E2000000000000000000003E /* Organization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Organization.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -488,6 +496,7 @@
 		A10000000000000000000010 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000003E /* Organization.swift */,
 				E20000000000000000000039 /* EntryHistory.swift */,
 				E20000000000000000000034 /* PersonRecord.swift */,
 				E2000000000000000000002A /* EntryLocation.swift */,
@@ -589,6 +598,9 @@
 		A10000000000000000000018 /* Collections */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000003D /* TagsView.swift */,
+				E2000000000000000000003C /* OrganizationEditorSheet.swift */,
+				E2000000000000000000003B /* OrganizationActions.swift */,
 				C00000000000000000000021 /* CollectionsController.swift */,
 				C00000000000000000000022 /* CollectionsView.swift */,
 			);
@@ -809,6 +821,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1000000000000000000003E /* Organization.swift in Sources */,
+				E1000000000000000000003D /* TagsView.swift in Sources */,
+				E1000000000000000000003C /* OrganizationEditorSheet.swift in Sources */,
+				E1000000000000000000003B /* OrganizationActions.swift in Sources */,
 				E1000000000000000000003A /* WikiItemLink.swift in Sources */,
 				E10000000000000000000039 /* EntryHistory.swift in Sources */,
 				E10000000000000000000038 /* LinkedGoalSheet.swift in Sources */,
