@@ -69,9 +69,13 @@ test("dock feedback stays readable over light and dark content and places Search
         }
       }
       for (const control of [capture, search]) {
-        const beforeHover = await control.evaluate(
-          (element) => getComputedStyle(element).backgroundColor,
-        );
+        const beforeHover = await control.evaluate((element) => {
+          const style = getComputedStyle(element);
+          return {
+            background: style.backgroundColor,
+            border: style.borderColor,
+          };
+        });
         await control.hover();
         await control.evaluate((element) =>
           Promise.allSettled(
@@ -80,17 +84,127 @@ test("dock feedback stays readable over light and dark content and places Search
         );
         await expect
           .soft(control)
-          .not.toHaveCSS("background-color", beforeHover);
+          .toHaveCSS("background-color", beforeHover.background);
+        await expect
+          .soft(control)
+          .not.toHaveCSS("border-color", beforeHover.border);
         await page.mouse.move(24, 100);
         await control.evaluate((element) =>
           Promise.allSettled(
             element.getAnimations().map((animation) => animation.finished),
           ),
         );
-        await expect(control).toHaveCSS("background-color", beforeHover);
+        await expect(control).toHaveCSS(
+          "background-color",
+          beforeHover.background,
+        );
+        await expect(control).toHaveCSS("border-color", beforeHover.border);
       }
     }
   }
+});
+
+test("expanded capture shares a glass surface and keeps its save hint inside narrow windows", async ({
+  page,
+  workspace,
+}) => {
+  expect(workspace.owner).toBeTruthy();
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await page.goto("/library");
+  const trigger = page.getByRole("button", { name: "New entry", exact: true });
+  const dialog = page.getByRole("dialog", { name: "What’s on your mind?" });
+  const save = dialog.getByRole("button", {
+    name: "Save to Inbox",
+    exact: true,
+  });
+  const hint = dialog.getByRole("tooltip", { name: "Save to Inbox ⌘ Return" });
+  for (const theme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme: theme });
+    await page.locator("main").evaluate((element) => {
+      element.style.backgroundColor = "#000000";
+      element.style.minHeight = "220vh";
+    });
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await trigger.click();
+    await expect(
+      dialog.getByRole("textbox", { name: "Entry text" }),
+    ).toBeFocused();
+    await dialog.evaluate((element) =>
+      Promise.allSettled(
+        element.getAnimations().map((animation) => animation.finished),
+      ),
+    );
+    const box = (await dialog.boundingBox())!;
+    const header = (await dialog.locator("header").boundingBox())!;
+    const actions = (await dialog
+      .locator("[data-capture-actions]")
+      .boundingBox())!;
+    const { data, info } = await sharp(
+      await page.screenshot({
+        path: `/private/tmp/memotrail-capture-glass-surface-${theme}.png`,
+      }),
+    )
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    // Sample blank areas beside the controls on the same solid background.
+    // Opaque header/footer overlays would make the panel look like three bands.
+    const samples = [
+      header.y + header.height / 2,
+      header.y + header.height + 24,
+      actions.y + actions.height / 2,
+    ].map((y) => {
+      const position =
+        (Math.round(y) * info.width + Math.round(box.x + box.width - 14)) *
+        info.channels;
+      return Array.from(data.subarray(position, position + 3));
+    });
+    for (const sample of [samples[0], samples[2]]) {
+      expect(
+        Math.max(
+          ...sample.map((value, channel) =>
+            Math.abs(value - samples[1][channel]),
+          ),
+        ),
+        `${theme} header and footer should not add opaque bands: ${JSON.stringify(samples)}`,
+      ).toBeLessThanOrEqual(12);
+    }
+    await page.locator("main").evaluate((element) => {
+      element.style.backgroundColor = "";
+      element.style.minHeight = "";
+    });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await save.hover();
+    await expect(hint).toBeVisible();
+    await page.screenshot({
+      animations: "disabled",
+      path: `/private/tmp/memotrail-capture-glass-unified-${theme}.png`,
+    });
+    await dialog.screenshot({
+      animations: "disabled",
+      path: `/private/tmp/memotrail-capture-save-tooltip-${theme}.png`,
+    });
+    await dialog.getByRole("button", { name: "Close quick capture" }).click();
+    await expect(dialog).not.toBeVisible();
+  }
+  await page.setViewportSize({ width: 320, height: 780 });
+  await page.emulateMedia({ colorScheme: "light" });
+  await trigger.click();
+  await save.hover();
+  await expect(hint).toBeVisible();
+  const hintBox = (await hint.boundingBox())!;
+  const dialogBox = (await dialog.boundingBox())!;
+  expect(hintBox.x).toBeGreaterThanOrEqual(dialogBox.x);
+  expect(hintBox.x + hintBox.width).toBeLessThanOrEqual(
+    dialogBox.x + dialogBox.width,
+  );
+  expect(hintBox.y).toBeGreaterThanOrEqual(dialogBox.y);
+  expect(hintBox.y + hintBox.height).toBeLessThanOrEqual(
+    dialogBox.y + dialogBox.height,
+  );
+  await page.screenshot({
+    animations: "disabled",
+    path: "/private/tmp/memotrail-capture-save-tooltip-mobile.png",
+  });
 });
 
 function contrast(first: number[], second: number[]) {

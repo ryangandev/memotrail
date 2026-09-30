@@ -224,10 +224,12 @@ The persistent top bar places Back and Forward history controls, then the deskto
 An icon-only Inbox control sits at the far right; Inbox shows a notification count only when captures are waiting.
 A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry and People results in place, supports keyboard navigation, and opens Library for full search with filters.
 On Web, the glass-effect bottom dock places the New Entry control labeled `What’s on your mind?` with a sparkle icon on the left and global Search on the right.
-The controls keep text and shortcut hints readable over page content, and hovering gives them a subtle accent background that fades back when the pointer leaves.
+The controls keep text and shortcut hints readable over page content, and hovering highlights the border with a subtle accent glow that fades back when the pointer leaves without changing the background color.
 New Entry also opens with Command J (Control J on Windows) when focus is outside a text input or editor.
 It expands into a bottom-anchored composer with the editor below the prompt, keeping rich text, photos, dates, local drafts, and Save to Inbox.
+The expanded composer uses one consistent frosted surface across its header, writing area, and action row.
 Web Capture saves to Inbox with Command Return (Control Enter on Windows), using the same validation and offline behavior as the Save button.
+Hovering or focusing Save to Inbox displays a tooltip with the Command Return shortcut.
 Enter starts a new paragraph, and Shift+Enter inserts a line break; input method composition and nested editing controls do not trigger the save shortcut.
 Escape or the close control collapses it and restores focus to the bottom control without discarding the draft.
 On mobile Web the collapsed control sits above navigation; the expanded composer stays within the visible viewport and scrolls when needed.

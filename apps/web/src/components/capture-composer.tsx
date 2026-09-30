@@ -847,23 +847,33 @@ export function CaptureComposer({
             >
               {composerFeedback.message}
             </p>
-            <Button
-              aria-keyshortcuts="Meta+Enter Control+Enter"
-              variant="primary"
-              disabled={
-                isSaving ||
-                isSyncing ||
-                !isLocalStateReady ||
-                !isPhotoStateReady ||
-                voiceState !== "idle"
-              }
-              ref={submitButtonRef}
-              title="Save to Inbox (⌘ Return / Ctrl+Enter)"
-              type="submit"
-            >
-              {isSaving || isSyncing ? "Saving…" : "Save to Inbox"}
-              <Icon name="chevron" size={16} />
-            </Button>
+            <span className={captureComposerStyles.saveButtonHelp}>
+              <Button
+                aria-describedby={`${idPrefix}-save-shortcut`}
+                aria-keyshortcuts="Meta+Enter Control+Enter"
+                variant="primary"
+                disabled={
+                  isSaving ||
+                  isSyncing ||
+                  !isLocalStateReady ||
+                  !isPhotoStateReady ||
+                  voiceState !== "idle"
+                }
+                ref={submitButtonRef}
+                type="submit"
+              >
+                {isSaving || isSyncing ? "Saving…" : "Save to Inbox"}
+                <Icon name="chevron" size={16} />
+              </Button>
+              <span
+                className={captureComposerStyles.saveShortcutTooltip}
+                id={`${idPrefix}-save-shortcut`}
+                role="tooltip"
+              >
+                <span>Save to Inbox</span>
+                <kbd>⌘ Return</kbd>
+              </span>
+            </span>
           </div>
         </div>
       </form>
