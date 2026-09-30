@@ -201,7 +201,7 @@ People remain reusable across Entries.
 Web Entry, Home, Vehicle, and First Time editors can search Geoapify for an address, preview its coordinates, and save it as that record's Location.
 Web address search supports keyboard selection and authenticated server-side usage limits.
 Provider-backed Location editing on native iOS remains deferred until the Web flow is accepted.
-Until then, native Home and Vehicle editors show the saved Location with its map and can remove it.
+Until then, native Home, Vehicle, and First Time editors show the saved Location with its map and can remove it.
 
 ## Experience and navigation
 

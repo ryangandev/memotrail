@@ -136,6 +136,8 @@
 		E10000000000000000000028 /* VehicleDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000028 /* VehicleDetailView.swift */; };
 		E10000000000000000000029 /* VehicleEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000029 /* VehicleEditorSheet.swift */; };
 		E1000000000000000000002A /* EntryLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002A /* EntryLocation.swift */; };
+		E1000000000000000000002B /* FirstTimeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002B /* FirstTimeDetailView.swift */; };
+		E1000000000000000000002C /* FirstTimeEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002C /* FirstTimeEditorSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -281,6 +283,8 @@
 		E20000000000000000000028 /* VehicleDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleDetailView.swift; sourceTree = "<group>"; };
 		E20000000000000000000029 /* VehicleEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleEditorSheet.swift; sourceTree = "<group>"; };
 		E2000000000000000000002A /* EntryLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryLocation.swift; sourceTree = "<group>"; };
+		E2000000000000000000002B /* FirstTimeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstTimeDetailView.swift; sourceTree = "<group>"; };
+		E2000000000000000000002C /* FirstTimeEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstTimeEditorSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -542,6 +546,8 @@
 		A10000000000000000000017 /* FirstTimes */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000002C /* FirstTimeEditorSheet.swift */,
+				E2000000000000000000002B /* FirstTimeDetailView.swift */,
 				C0000000000000000000001E /* FirstTimesController.swift */,
 				C0000000000000000000001F /* FirstTimesView.swift */,
 			);
@@ -745,6 +751,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1000000000000000000002C /* FirstTimeEditorSheet.swift in Sources */,
+				E1000000000000000000002B /* FirstTimeDetailView.swift in Sources */,
 				E1000000000000000000002A /* EntryLocation.swift in Sources */,
 				E10000000000000000000029 /* VehicleEditorSheet.swift in Sources */,
 				E10000000000000000000028 /* VehicleDetailView.swift in Sources */,

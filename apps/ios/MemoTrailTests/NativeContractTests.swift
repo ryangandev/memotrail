@@ -350,6 +350,51 @@ final class NativeContractTests: XCTestCase {
     XCTAssertNil(vehicles.entry(id: identity.id))
   }
 
+  func testFirstTimeLoadsItsLocationAndRemovesItWithTheSave() async throws {
+    let (client, ownerID) = try await client()
+    let firstTimes = FirstTimesController(client: client, ownerID: ownerID)
+    let created = await firstTimes.save(
+      entryID: nil, expectedRevision: nil, title: "Native Location First Time", body: "",
+      occurredStart: nil, datePrecision: .unknown, occurredLabel: "", occurredTimezone: nil,
+      collectionNames: [], tagNames: [])
+    XCTAssertEqual(created.status, .created, created.message)
+    XCTAssertEqual(created.message, "First Time added.")
+    let identity = try XCTUnwrap(created.identity)
+
+    // Web's address search saves a provider Location through the same RPC.
+    let located: [SavedFirstTimeEntry] =
+      try await client.rpc(
+        "save_first_time_with_location",
+        params: SyntheticFirstTimeLocation(entryID: identity.id, revision: identity.revision)
+      )
+      .execute().value
+    XCTAssertEqual(located.first?.entryID, identity.id)
+    await firstTimes.load()
+    XCTAssertNil(firstTimes.loadErrorMessage)
+    let firstTime = try XCTUnwrap(firstTimes.entry(id: identity.id))
+    let location = try XCTUnwrap(firstTime.location)
+    XCTAssertEqual(location.label, "Ferry Building, San Francisco, CA 94111, United States")
+    XCTAssertEqual(try XCTUnwrap(location.longitude), -122.3937, accuracy: 0.000001)
+
+    let removed = await firstTimes.save(
+      entryID: firstTime.id, expectedRevision: firstTime.revision, title: firstTime.title,
+      body: "Kept without a Location.", occurredStart: nil, datePrecision: .unknown,
+      occurredLabel: "", occurredTimezone: nil, collectionNames: [], tagNames: [],
+      original: firstTime, removingLocation: true)
+    XCTAssertEqual(removed.status, .saved, removed.message)
+    XCTAssertEqual(removed.message, "First Time saved.")
+    await firstTimes.load()
+    let saved = try XCTUnwrap(firstTimes.entry(id: identity.id))
+    XCTAssertNil(saved.location)
+    XCTAssertEqual(saved.body, "Kept without a Location.")
+
+    let trashed = await firstTimes.moveToTrash(
+      entryID: saved.id, expectedRevision: saved.revision)
+    XCTAssertEqual(trashed.status, .trashed, trashed.message)
+    XCTAssertEqual(trashed.message, "First Time moved to Trash.")
+    XCTAssertNil(firstTimes.entry(id: identity.id))
+  }
+
   func testFocusedRecordsDecodeInLibraryCollectionsAndHome() async throws {
     let (client, ownerID) = try await client()
     let collectionName = "Native focused \(UUID().uuidString)"
@@ -358,7 +403,7 @@ final class NativeContractTests: XCTestCase {
       entryID: nil, expectedRevision: nil, title: "Native First Time", body: "Synthetic record.",
       occurredStart: nil, datePrecision: .unknown, occurredLabel: "", occurredTimezone: nil,
       collectionNames: [collectionName], tagNames: [])
-    XCTAssertEqual(first.status, .saved, first.message)
+    XCTAssertEqual(first.status, .created, first.message)
     let firstID = try XCTUnwrap(first.identity?.id)
     await firstTimes.load()
     XCTAssertNil(firstTimes.loadErrorMessage)
@@ -440,6 +485,35 @@ private struct SyntheticVehicleLocation: Encodable {
         "address": "Beach Street", "city": "San Francisco", "region": "CA",
         "country": "United States", "countryCode": "us",
         "latitude": .double(37.8087), "longitude": .double(-122.4098),
+      ] as [String: AnyJSON], forKey: .location)
+  }
+}
+
+/// A provider Location as Web address search submits it, for a synthetic local First Time.
+private struct SyntheticFirstTimeLocation: Encodable {
+  let entryID: UUID
+  let revision: Int
+
+  private enum CodingKeys: String, CodingKey {
+    case input = "p_input"
+    case location = "p_location"
+  }
+
+  func encode(to encoder: Encoder) throws {
+    var values = encoder.container(keyedBy: CodingKeys.self)
+    try values.encode(
+      [
+        "id": AnyJSON.string(entryID.uuidString), "revision": .integer(revision),
+        "title": "Native Location First Time", "body": "", "datePrecision": "unknown",
+        "collectionNames": [], "tagNames": [],
+      ] as [String: AnyJSON], forKey: .input)
+    try values.encode(
+      [
+        "kind": "provider", "provider": "geoapify",
+        "providerLocationId": "native-contract-ferry-building",
+        "formattedAddress": "Ferry Building, San Francisco, CA 94111, United States",
+        "city": "San Francisco", "region": "CA", "country": "United States",
+        "countryCode": "us", "latitude": .double(37.7955), "longitude": .double(-122.3937),
       ] as [String: AnyJSON], forKey: .location)
   }
 }

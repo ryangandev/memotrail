@@ -107,7 +107,7 @@ struct MTEntityCard: View {
             .multilineTextAlignment(.leading)
             .padding(.top, MTSpacing.s1)
         }
-        footer
+        MTRecordCardFooter(collectionNames: collectionNames, tagNames: tagNames)
       }
     }
   }
@@ -143,16 +143,27 @@ struct MTEntityCard: View {
     .font(.caption2.monospaced())
     .tracking(0.25)
   }
+}
 
-  /// Phones show the first two badges, like Web below 480 px.
-  private var footer: some View {
-    let badges = collectionNames.prefix(2).map { $0 } + tagNames.prefix(2).map { "#\($0)" }
-    return HStack(alignment: .bottom, spacing: MTSpacing.s3) {
+/// Web `RecordCard` footer: any status badges, then up to two Collections and two tags, and
+/// the chevron. Phones show the first two badges, like Web below 480 px.
+struct MTRecordCardFooter: View {
+  var status: [(title: String, tone: MTBadgeTone)] = []
+  let collectionNames: [String]
+  let tagNames: [String]
+  @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+  var body: some View {
+    let badges =
+      status + collectionNames.prefix(2).map { ($0, MTBadgeTone.neutral) }
+      + tagNames.prefix(2).map { ("#\($0)", MTBadgeTone.neutral) }
+    HStack(alignment: .bottom, spacing: MTSpacing.s3) {
       MTFlowLayout(spacing: 5) {
         ForEach(
-          Array(badges.prefix(horizontalSizeClass == .regular ? 4 : 2).enumerated()), id: \.offset
-        ) { _, name in
-          MTBadge(title: name, tone: .neutral, size: .micro)
+          Array(badges.prefix(horizontalSizeClass == .regular ? badges.count : 2).enumerated()),
+          id: \.offset
+        ) { _, badge in
+          MTBadge(title: badge.title, tone: badge.tone, size: .micro)
         }
       }
       Spacer(minLength: 0)

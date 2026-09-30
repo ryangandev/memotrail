@@ -295,6 +295,29 @@ final class FirstTimeEntryTests: XCTestCase {
     XCTAssertEqual(entry.attachments.first?.byteSize, 2048)
     XCTAssertNil(entry.attachments.first?.signedURL)
     XCTAssertEqual(entry.occurredStartRaw, "2026-07-03T19:00:00Z")
+    XCTAssertEqual(entry.originalAttachments.map(\.objectPath), ["owner/entry/photo.jpg"])
+  }
+
+  func testOriginalPhotosLeaveOutGeneratedVariants() throws {
+    let original = """
+      {"id":"20000000-0000-4000-8000-000000000001","parentAttachmentId":null,
+       "variant":"original","bucketId":"entry-media","objectPath":"owner/entry/photo.jpg",
+       "originalFilename":"snow.jpg","mimeType":"image/jpeg","byteSize":2048,
+       "pixelWidth":1200,"pixelHeight":800,"createdAt":"2026-09-02T19:00:00Z"}
+      """
+    let thumbnail = """
+      {"id":"20000000-0000-4000-8000-000000000002",
+       "parentAttachmentId":"20000000-0000-4000-8000-000000000001",
+       "variant":"thumbnail","bucketId":"entry-media","objectPath":"owner/entry/photo-thumb.webp",
+       "originalFilename":null,"mimeType":"image/webp","byteSize":512,
+       "pixelWidth":320,"pixelHeight":213,"createdAt":"2026-09-02T19:00:01Z"}
+      """
+    let attachments = try decoder.decode(
+      [FirstTimeAttachment].self, from: Data("[\(original),\(thumbnail)]".utf8))
+    var entry = makeRow(title: "First ski trip", occurredStart: nil).entry
+    entry.attachments = attachments
+
+    XCTAssertEqual(entry.originalAttachments.map(\.variant), [.original])
   }
 
   func testWorkspaceSortsDatedEntriesBeforeUnknownDates() {
@@ -423,6 +446,29 @@ final class FirstTimeEntryTests: XCTestCase {
     XCTAssertTrue(json["p_occurred_start"] is NSNull)
     XCTAssertTrue(json["p_occurred_timezone"] is NSNull)
     XCTAssertEqual(json["p_date_precision"] as? String, "unknown")
+  }
+
+  func testLocationRemovalSendsWebInputWithANullLocation() throws {
+    let input = try makeInput(
+      entryID: UUID(uuidString: "10000000-0000-4000-8000-000000000001"), expectedRevision: 3,
+      occurredStart: nil, datePrecision: .unknown, occurredTimezone: nil,
+      collectionNames: ["Milestones"])
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(
+        with: encoder.encode(RemoveFirstTimeLocationParameters(input: input))) as? [String: Any])
+    let fields = try XCTUnwrap(json["p_input"] as? [String: Any])
+
+    XCTAssertTrue(json["p_location"] is NSNull)
+    XCTAssertNil(json["p_source"])
+    XCTAssertEqual(fields["id"] as? String, "10000000-0000-4000-8000-000000000001")
+    XCTAssertEqual(fields["revision"] as? Int, 3)
+    XCTAssertEqual(fields["title"] as? String, "First ski trip")
+    XCTAssertEqual(fields["datePrecision"] as? String, "unknown")
+    XCTAssertEqual(fields["collectionNames"] as? [String], ["Milestones"])
+    XCTAssertNil(fields["occurredStart"])
+    XCTAssertNil(fields["occurredTimezone"])
   }
 
   func testPhotoDraftValidatesSizeAndBuildsOwnerScopedPath() throws {

@@ -93,8 +93,7 @@ struct TimelineView: View {
         case .firstTime(let entry):
           FirstTimeEditorSheet(
             controller: firstTimesController, entry: entry,
-            collectionOptions: firstTimesController.collectionOptions,
-            tagOptions: firstTimesController.tagOptions)
+            defaultTimezone: profile.profile?.timezone)
         }
       }
       .navigationDestination(isPresented: $managingTracks) {
@@ -108,6 +107,9 @@ struct TimelineView: View {
         case .vehicle(let id):
           VehicleDetailView(
             controller: vehicleController, client: client, ownerID: user.id, entryID: id)
+        case .firstTime(let id):
+          FirstTimeDetailView(
+            controller: firstTimesController, client: client, ownerID: user.id, entryID: id)
         }
       }
       .onChange(of: managingTracks) {
@@ -249,9 +251,8 @@ struct TimelineView: View {
     Task { await controller.reloadAfterMutation() }
   }
 
-  /// Web `openEntry`: Homes and Vehicles open their own pages, and First Times open their
-  /// editors. A Dashboard or Library link opens the record's editor, like Web
-  /// `/timeline?entry=`.
+  /// Web `openEntry`: Homes, Vehicles, and First Times open their own pages. A Dashboard or
+  /// Library link opens the record's editor, like Web `/timeline?entry=`.
   private func select(_ entry: TimelineEntry, fromLink: Bool = false) {
     guard openingRecordID == nil else { return }
     switch entry.specializedEditor {
@@ -261,6 +262,8 @@ struct TimelineView: View {
       openedRecord = .home(entry.id)
     case .vehicle where !fromLink:
       openedRecord = .vehicle(entry.id)
+    case .firstTime where !fromLink:
+      openedRecord = .firstTime(entry.id)
     case .home:
       open(entry) {
         await residenceController.load()
@@ -274,7 +277,7 @@ struct TimelineView: View {
     case .firstTime:
       open(entry) {
         await firstTimesController.load()
-        return firstTimesController.entries.first { $0.id == entry.id }.map { .firstTime($0) }
+        return firstTimesController.entry(id: entry.id).map { .firstTime($0) }
       }
     }
   }
@@ -347,6 +350,7 @@ private enum TimelineCreationType: CaseIterable {
 private enum TimelineRecordPage: Hashable {
   case home(UUID)
   case vehicle(UUID)
+  case firstTime(UUID)
 }
 
 private enum TimelineSheet: Identifiable {

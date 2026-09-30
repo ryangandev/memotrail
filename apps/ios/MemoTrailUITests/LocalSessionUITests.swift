@@ -500,6 +500,101 @@ final class LocalSessionUITests: XCTestCase {
     attach(app, "Vehicles after Trash")
   }
 
+  func testFirstTimesOpenTheirPageAndAddEditAndTrashFirstTimes() throws {
+    let app = try launchLocalSession()
+    XCTAssertTrue(app.tabBars.buttons["Timeline"].waitForExistence(timeout: 20))
+
+    // Like Web, a First Time on the Timeline opens its own page.
+    app.tabBars.buttons["Timeline"].tap()
+    let onTimeline = app.buttons.matching(
+      NSPredicate(format: "label BEGINSWITH %@", "First sourdough loaf")
+    ).firstMatch
+    dismissBirthDatePrompt(once: onTimeline, in: app)
+    reveal(onTimeline, in: app).tap()
+    let location = "Alberta Street, Portland, OR, United States"
+    XCTAssertTrue(app.staticTexts[location].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["edit-first-time"].exists)
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+
+    app.tabBars.buttons["More"].tap()
+    reveal(app.buttons["First Times"], in: app).tap()
+    let seeded = app.buttons["First sourdough loaf, Mar 2, 2024"]
+    XCTAssertTrue(seeded.waitForExistence(timeout: 15))
+    XCTAssertTrue(text("1 First Time", in: app).exists)
+    Thread.sleep(forTimeInterval: 1.5)
+    attach(app, "First Times")
+
+    // A card opens the First Time's page with its date, Location, Story, and organization.
+    seeded.tap()
+    XCTAssertTrue(app.staticTexts[location].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Mar 2, 2024"].exists)
+    attach(app, "First Time page")
+
+    // Edit shows the saved Location, and removing it saves with the other changes.
+    app.buttons["edit-first-time"].firstMatch.tap()
+    XCTAssertTrue(app.staticTexts["Edit First Time"].waitForExistence(timeout: 5))
+    Thread.sleep(forTimeInterval: 0.6)
+    attach(app, "First Time editor")
+    let title = app.textFields["first-time-title"]
+    title.tap()
+    title.typeText(" at home\n")
+    // Scroll the saved Location clear of the sheet footer before removing it.
+    app.swipeUp()
+    XCTAssertTrue(reveal(app.buttons["Remove Location"], in: app).exists)
+    XCTAssertTrue(app.staticTexts["45.55900, -122.64500"].exists)
+    attach(app, "First Time editor Location")
+    app.buttons["Remove Location"].tap()
+    XCTAssertTrue(app.buttons["Remove Location"].waitForNonExistence(timeout: 5))
+    app.swipeUp()
+    attach(app, "First Time editor reflection and organization")
+    app.buttons["save-first-time"].tap()
+    XCTAssertTrue(text("First Time saved.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["First sourdough loaf at home"].waitForExistence(timeout: 10))
+    XCTAssertFalse(app.staticTexts[location].exists)
+    attach(app, "First Time page after saving")
+
+    // Version history opens this First Time's history.
+    reveal(app.buttons["first-time-version-history"], in: app).tap()
+    XCTAssertTrue(app.navigationBars.buttons.element(boundBy: 0).waitForExistence(timeout: 5))
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+
+    // Add First Time creates one with only a title, like Web.
+    XCTAssertTrue(app.buttons["add-first-time"].waitForExistence(timeout: 5))
+    app.buttons["add-first-time"].tap()
+    let name = app.textFields["first-time-title"]
+    XCTAssertTrue(name.waitForExistence(timeout: 5))
+    name.tap()
+    name.typeText("First ferry ride")
+    attach(app, "New First Time")
+    app.buttons["save-first-time"].tap()
+    XCTAssertTrue(text("First Time created.", in: app).waitForExistence(timeout: 10))
+    let created = app.buttons.matching(
+      NSPredicate(format: "label BEGINSWITH %@", "First ferry ride")
+    ).firstMatch
+    XCTAssertTrue(created.waitForExistence(timeout: 10))
+    XCTAssertTrue(text("2 First Times", in: app).exists)
+    Thread.sleep(forTimeInterval: 1)
+    attach(app, "First Times with the new First Time")
+
+    // Moving it to Trash from its page returns to the list without it.
+    reveal(created, in: app).tap()
+    XCTAssertTrue(app.buttons["edit-first-time"].firstMatch.waitForExistence(timeout: 10))
+    app.buttons["edit-first-time"].firstMatch.tap()
+    reveal(app.buttons["trash-first-time"], in: app).tap()
+    let confirm = app.buttons.matching(
+      NSPredicate(
+        format: "label == %@ AND identifier != %@", "Move to Trash", "trash-first-time")
+    ).firstMatch
+    XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+    confirm.tap()
+    XCTAssertTrue(text("First Time moved to Trash.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["add-first-time"].waitForExistence(timeout: 10))
+    XCTAssertTrue(created.waitForNonExistence(timeout: 10))
+    XCTAssertTrue(text("1 First Time", in: app).exists)
+    attach(app, "First Times after Trash")
+  }
+
   /// Timeline asks for the birth date on the first visit until one is saved, like Web. The
   /// Timeline test saves one for the shared seeded account, so later tests find no prompt.
   private func dismissBirthDatePrompt(once loaded: XCUIElement, in app: XCUIApplication) {

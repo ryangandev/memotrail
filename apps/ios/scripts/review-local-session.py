@@ -99,11 +99,19 @@ def seed(stack, user):
                          for item in packed]},
                      {"type": "paragraph", "content": [span(closing, "italic")]}]}})
     first_time = occurrence("day", "2024-03-02")
-    first_time.pop("p_occurred_end")
-    rpc("save_first_time_with_occurrence",
-        p_title="First sourdough loaf", p_body="Dense, a little sour, and completely ours.",
-        p_collection_names=["Kitchen"], p_tag_names=["baking"], p_entry_id=None,
-        p_expected_revision=None, p_occurred_end=None, **first_time)
+    rpc("save_first_time_with_location",
+        p_input={"title": "First sourdough loaf",
+                 "body": "Dense, a little sour, and completely ours.",
+                 "collectionNames": ["Kitchen"], "tagNames": ["baking"], "id": None,
+                 "revision": None, "datePrecision": first_time["p_date_precision"],
+                 "occurredStart": first_time["p_occurred_start"], "occurredEnd": None,
+                 "occurredLabel": None, "occurredTimezone": TIMEZONE},
+        p_location={"kind": "provider", "provider": "geoapify",
+                    "providerLocationId": "review-seed-alberta",
+                    "formattedAddress": "Alberta Street, Portland, OR, United States",
+                    "address": "Alberta Street", "city": "Portland", "region": "Oregon",
+                    "country": "United States", "countryCode": "us",
+                    "latitude": 45.5590, "longitude": -122.6450})
     organize("Evening walks along the river",
              "Most evenings that spring ended with the same loop past the boathouse.",
              collections=["Summer 2025"], tags=["walks"],

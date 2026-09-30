@@ -86,7 +86,7 @@ struct CollectionsView: View {
     case (.goal, _, _):
       GoalsView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
     case (.entry, "first_time", _):
-      FirstTimesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entry.id)
+      FirstTimeDetailView(client: client, ownerID: ownerID, entryID: entry.id)
     default:
       EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: entry.id)
     }

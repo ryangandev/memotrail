@@ -106,6 +106,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Local contract and seeded Simulator runs confirmed opening a Home from Homes and the Timeline, editing it, adding one, and moving it to Trash.
 - Native Vehicles now follow Web `/vehicles` and its focused Vehicle page: one Vehicle archive of record cards with a photo, map, or mark, the When, Vehicle, and Location facts page, and the sectioned Web Vehicle editor with its Location panel.
   Local contract and seeded Simulator runs confirmed loading and removing a Vehicle's Location, opening a Vehicle from Vehicles and the Timeline, editing it, adding one, and moving it to Trash.
+- Native First Times now follow Web `/first-times` and its focused First Time page: the archive of record cards with a photo, map, or number, the When and Location page, and the Web First Time editor with its Location panel.
+  Local contract and seeded Simulator runs confirmed loading and removing a First Time's Location, opening a First Time from First Times and the Timeline, editing it, adding one, and moving it to Trash.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
 - Refactor existing screens after component acceptance; native address search remains later work.
 
