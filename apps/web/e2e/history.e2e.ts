@@ -146,6 +146,8 @@ test("History restores and re-restores writing, relationships, and private photo
     await expect(earlier).toContainText("Original collection");
     await expect(earlier).toContainText("memory.png");
     await expect(current).toContainText("The newer words before restoration.");
+    // Every recorded version uses the current snapshot schema, so none is flagged as early.
+    await expect(page.getByText("This early snapshot")).toHaveCount(0);
     await page.screenshot({
       path: "/private/tmp/memotrail-history-desktop.png",
       fullPage: true,
