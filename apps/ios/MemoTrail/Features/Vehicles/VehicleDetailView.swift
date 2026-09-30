@@ -69,6 +69,7 @@ struct VehicleDetailView: View {
     .onChange(of: controller.entry(id: entryID), initial: true) { _, entry in
       if let entry { lastEntry = entry }
     }
+    .reloadOnReturn(from: showsHistory) { await controller.load() }
     .navigationDestination(isPresented: $showsHistory) {
       EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: entryID)
     }

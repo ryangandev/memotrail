@@ -74,6 +74,7 @@ struct PersonDetailView: View {
       if let person { lastPerson = person }
     }
     .connectedItemDestination($openedItem, client: client, ownerID: ownerID)
+    .reloadOnReturn(from: openedItem != nil) { await load() }
     .task {
       if controller.person(id: personID) == nil { await load() }
     }

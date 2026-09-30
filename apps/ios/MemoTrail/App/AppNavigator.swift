@@ -42,3 +42,15 @@ final class AppNavigator {
     selectedTab = .timeline
   }
 }
+
+extension View {
+  /// Reloads once a pushed page, such as version history or a linked Item, returns, so a change
+  /// made there shows at once.
+  func reloadOnReturn(from isPresented: Bool, _ reload: @escaping @MainActor () async -> Void)
+    -> some View
+  {
+    onChange(of: isPresented) { _, isPresented in
+      if !isPresented { Task { await reload() } }
+    }
+  }
+}

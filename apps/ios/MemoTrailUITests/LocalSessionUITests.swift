@@ -455,12 +455,23 @@ final class LocalSessionUITests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Closer to work and the park"].waitForExistence(timeout: 10))
     attach(app, "Home page after saving")
 
-    // Version history opens this Home's history.
+    // Version history restores the Home from before the edit, and its page shows it on return.
     reveal(app.buttons["home-version-history"], in: app).tap()
-    XCTAssertTrue(app.navigationBars.buttons.element(boundBy: 0).waitForExistence(timeout: 5))
+    XCTAssertTrue(app.navigationBars["Version history"].waitForExistence(timeout: 10))
+    XCTAssertTrue(
+      text("Differences from current version:", in: app).waitForExistence(timeout: 10))
     Thread.sleep(forTimeInterval: 1)
     attach(app, "Home version history")
+    reveal(app.buttons["restore-version"], in: app).tap()
+    let restore = app.buttons["Restore version"]
+    XCTAssertTrue(restore.waitForExistence(timeout: 5))
+    restore.tap()
+    XCTAssertTrue(text("Version restored.", in: app).waitForExistence(timeout: 10))
     app.navigationBars.buttons.element(boundBy: 0).tap()
+    XCTAssertTrue(app.staticTexts["Closer to work"].waitForExistence(timeout: 10))
+    XCTAssertTrue(
+      app.staticTexts["Closer to work and the park"].waitForNonExistence(timeout: 5))
+    attach(app, "Home page after restoring")
     app.navigationBars.buttons.element(boundBy: 0).tap()
 
     // Add Home creates one without a date or Location, like Web.

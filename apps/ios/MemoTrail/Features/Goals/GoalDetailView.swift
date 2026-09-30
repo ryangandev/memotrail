@@ -69,10 +69,12 @@ struct GoalDetailView: View {
     .onChange(of: controller.entry(id: entryID), initial: true) { _, entry in
       if let entry { lastEntry = entry }
     }
+    .reloadOnReturn(from: showsHistory) { await controller.load(including: entryID) }
     .navigationDestination(isPresented: $showsHistory) {
       EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: entryID)
     }
     .connectedItemDestination($openedItem, client: client, ownerID: ownerID)
+    .reloadOnReturn(from: openedItem != nil) { await controller.load(including: entryID) }
     .task {
       if controller.entry(id: entryID) == nil { await controller.load(including: entryID) }
     }

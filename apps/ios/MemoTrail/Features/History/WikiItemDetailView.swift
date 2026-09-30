@@ -67,10 +67,7 @@ struct WikiItemDetailView: View {
     .refreshable { await controller.reload() }
     .navigationTitle(controller.record?.identityLabel ?? "Item")
     .navigationBarTitleDisplayMode(.inline)
-    .onChange(of: destination) { previous, current in
-      // Returning from a linked page or version history shows what changed there.
-      if previous != nil, current == nil { Task { await controller.reload() } }
-    }
+    .reloadOnReturn(from: destination != nil) { await controller.reload() }
     .navigationDestination(item: $destination) { destination in
       switch destination {
       case .history:
