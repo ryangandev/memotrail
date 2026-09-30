@@ -102,6 +102,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - Native Timeline now follows the Web phone layout with the shared header, type chooser, birth date prompt, and a Timeline editor that uses the Settings time zone and saves Collections and tags.
   Local contract and seeded Simulator runs confirmed creating, editing, and trashing Moments and saving the birth date.
   Manage tracks opens the Web track page, where each track saves its own name, order, and visibility.
+- Native Homes now follow Web `/homes` and its focused Home page: record cards with a photo, map, or mark, the facts, Story, and Organize page with Edit and Version history, and the sectioned Web Home editor.
+  Local contract and seeded Simulator runs confirmed opening a Home from Homes and the Timeline, editing it, adding one, and moving it to Trash.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
 - Refactor existing screens after component acceptance; native address search remains later work.
 

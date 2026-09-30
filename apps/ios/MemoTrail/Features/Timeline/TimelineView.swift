@@ -19,6 +19,7 @@ struct TimelineView: View {
   @State private var managingTracks = false
   @State private var hasOfferedBirthDate = false
   @State private var openingRecordID: UUID?
+  @State private var openedHomeID: UUID?
   @Environment(AppNavigator.self) private var navigator
 
   init(
@@ -82,7 +83,9 @@ struct TimelineView: View {
             controller: controller, entry: entry, initialTrackID: trackID,
             defaultTimezone: profile.profile?.timezone)
         case .home(let entry):
-          ResidenceEditorSheet(controller: residenceController, entry: entry)
+          ResidenceEditorSheet(
+            controller: residenceController, entry: entry,
+            defaultTimezone: profile.profile?.timezone)
         case .vehicle(let entry):
           VehicleEditorSheet(controller: vehicleController, entry: entry)
         case .firstTime(let entry):
@@ -95,8 +98,15 @@ struct TimelineView: View {
       .navigationDestination(isPresented: $managingTracks) {
         TimelineTracksView(client: client, ownerID: user.id)
       }
+      .navigationDestination(item: $openedHomeID) { id in
+        HomeDetailView(
+          controller: residenceController, client: client, ownerID: user.id, entryID: id)
+      }
       .onChange(of: managingTracks) {
         if !managingTracks { Task { await controller.reloadAfterMutation() } }
+      }
+      .onChange(of: openedHomeID) {
+        if openedHomeID == nil { Task { await controller.reloadAfterMutation() } }
       }
       .task {
         guard !controller.hasLoaded else { return }
@@ -172,7 +182,7 @@ struct TimelineView: View {
       ForEach(controller.tracks) { track in
         TimelineTrackCard(
           track: track, openingRecordID: openingRecordID, add: { add(to: track) },
-          select: select)
+          select: { select($0) })
       }
     }
   }
@@ -231,12 +241,15 @@ struct TimelineView: View {
     Task { await controller.reloadAfterMutation() }
   }
 
-  /// Web `openEntry`: Homes, Vehicles, and First Times open their own editors.
-  private func select(_ entry: TimelineEntry) {
+  /// Web `openEntry`: a Home opens its own page, and Vehicles and First Times open their
+  /// editors. A Dashboard or Library link opens a Home's editor, like Web `/timeline?entry=`.
+  private func select(_ entry: TimelineEntry, fromLink: Bool = false) {
     guard openingRecordID == nil else { return }
     switch entry.specializedEditor {
     case nil:
       sheet = .moment(entry, trackID: entry.trackID)
+    case .home where !fromLink:
+      openedHomeID = entry.id
     case .home:
       open(entry) {
         await residenceController.load()
@@ -280,7 +293,7 @@ struct TimelineView: View {
       MTToastCenter.shared.info("This record is no longer on your Timeline.")
       return
     }
-    select(entry)
+    select(entry, fromLink: true)
   }
 
   private func count(_ value: Int, _ noun: String) -> String {
@@ -536,12 +549,13 @@ private struct TimelineEditorSheet: View {
     _kind = State(initialValue: entry?.kind ?? .event)
     _title = State(initialValue: entry?.title ?? "")
     _note = State(initialValue: entry?.body ?? "")
+    let timezone = defaultTimezone ?? TimeZone.current.identifier
     _occurrence = State(
       initialValue: OccurrenceDraft(
         entry?.occurrence
           ?? EntryOccurrence(
-            precision: .unknown, start: nil, end: nil, label: nil,
-            timezone: defaultTimezone ?? TimeZone.current.identifier)))
+            precision: .unknown, start: nil, end: nil, label: nil, timezone: timezone),
+        undatedTimezone: timezone))
     _collectionNames = State(initialValue: entry?.collectionNames ?? [])
     _tagNames = State(initialValue: entry?.tagNames ?? [])
   }

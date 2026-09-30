@@ -60,7 +60,7 @@ Pair it with the test file carrying the same feature name.
 - `wiki_items_workspace` supplies one owner-scoped Library row per organized canonical Wiki Item, excluding unreviewed Inbox Entries before filtering and pagination. Person rows expose both the canonical Entry ID and their specialized record ID so clients can preserve identity while opening the correct detail page.
 - Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace.
   Web routes typed records to focused detail pages with inline editing and general items to `/items/[entry]`, where current content and primary actions precede an explicit history link.
-  Native Library routes typed records to their focused editors and other canonical items to the shared History detail/edit boundary.
+  Native Library routes Homes to their focused page like Web, other typed records to their focused editors, and other canonical items to the shared History detail/edit boundary.
   Like Web, it sends Inbox captures to their review and Moments and Periods to the Timeline.
 - `collection_wiki_items` composes the established paged Collection detail with canonical Kind, subtype, and specialized routing identity. Both clients use it so Collections remain organizational lenses rather than a second generic detail system.
 - `people.entry_id` is a required owner-scoped link to a canonical Entity Wiki Item. Triggers keep its name, notes, revision state, and Trash state synchronized.
@@ -132,7 +132,10 @@ Pair it with the test file carrying the same feature name.
 - Timeline server data loads specialized records, Collection, and tag choices needed by its creation editors in parallel. Existing focused records navigate to their own pages.
 - Web Timeline projects dated First Times without an explicit Timeline placement onto the visible First Times system track. Already placed records remain on their chosen track, and unanchored records remain in the First Times archive only.
 - Native `Features/Timeline` follows the Web phone layout: track cards, the Moment, Home, Vehicle, and First Time chooser, the first-visit birth date prompt, and the Timeline editor with the Settings time zone, Collections, and tags through `save_timeline_entry_with_organization`.
-  `TimelineWorkspace` in `Models/TimelineEntry.swift` ports the First Times projection and the summary's year range; Homes, Vehicles, and First Times open their native editors until focused record pages exist.
+  `TimelineWorkspace` in `Models/TimelineEntry.swift` ports the First Times projection and the summary's year range.
+  Like Web, a Home opens its focused page from the Timeline and its editor from a Dashboard or Library link; Vehicles and First Times open their native editors until focused record pages exist.
+- Native `Features/Homes` follows Web `/homes` and `/homes/[id]`: `HomesView` lists current and earlier Homes as record cards, `HomeDetailView` is the focused page with Edit and Version history, and `ResidenceEditorSheet` is the Web Home editor on `MTSheet` with its Home details, Location, and Memories and organization sections.
+  Library, the Map, and Collections open the same focused page; like Web, native editors show a saved Location's preview and edit its address by hand, and provider address search stays Web-only.
 - Web Timeline style selection lives in Settings as an owner-scoped browser cookie. The existing track view remains the default; Vertical Spine and Sticky Year are presentation components under `apps/web/src/components/timeline` that share the Timeline workspace data and editor callbacks. The original 20 HTML design studies remain under `timeline-ideas/`.
 - Web occurrence and profile date forms use `components/date-picker-field.tsx`; domain editors map their precision into its generic granularity, time, editability, and size props instead of duplicating picker UI.
 

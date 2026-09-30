@@ -108,7 +108,7 @@ struct WorkspaceDestinationView: View {
         LocationMapView(client: client, ownerID: user.id)
       #endif
     case .people: PeopleView(client: client, ownerID: user.id)
-    case .homes: HomesView(client: client, ownerID: user.id, embedded: true)
+    case .homes: HomesView(client: client, ownerID: user.id)
     case .vehicles: VehiclesView(client: client, ownerID: user.id, embedded: true)
     case .firstTimes: FirstTimesView(client: client, ownerID: user.id, embedded: true)
     case .goals: GoalsView(client: client, ownerID: user.id, embedded: true)
@@ -135,7 +135,7 @@ struct WikiItemDestinationView: View {
   var body: some View {
     switch (kind, subtype) {
     case (.entity, "home"):
-      HomesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entryID)
+      HomeDetailView(client: client, ownerID: ownerID, entryID: entryID)
     case (.entity, "vehicle"):
       VehiclesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entryID)
     case (.entity, "person"):

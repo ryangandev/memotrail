@@ -62,8 +62,8 @@ final class LocalSessionUITests: XCTestCase {
       app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "HOMES")).firstMatch, in: app
     )
     .tap()
-    XCTAssertTrue(app.navigationBars["Edit Home"].waitForExistence(timeout: 10))
-    app.navigationBars["Edit Home"].buttons["Cancel"].tap()
+    XCTAssertTrue(app.staticTexts["Edit Home"].waitForExistence(timeout: 10))
+    app.buttons["close-home-editor"].tap()
     app.tabBars.buttons["Dashboard"].tap()
 
     // A recent Entry opens its canonical record.
@@ -307,6 +307,99 @@ final class LocalSessionUITests: XCTestCase {
     app.navigationBars.buttons.element(boundBy: 0).tap()
     XCTAssertTrue(reveal(app.staticTexts["Travel"], in: app).waitForExistence(timeout: 10))
     attach(app, "Timeline with the new track")
+  }
+
+  func testHomesOpenTheirPageAndAddEditAndTrashHomes() throws {
+    let app = try launchLocalSession()
+    XCTAssertTrue(app.tabBars.buttons["Timeline"].waitForExistence(timeout: 20))
+
+    // Like Web, a Home on the Timeline opens its own page.
+    app.tabBars.buttons["Timeline"].tap()
+    XCTAssertTrue(app.buttons["Not now"].waitForExistence(timeout: 15))
+    app.buttons["Not now"].tap()
+    let onTimeline = app.buttons.matching(
+      NSPredicate(format: "label BEGINSWITH %@", "Maple Street flat")
+    ).firstMatch
+    reveal(onTimeline, in: app).tap()
+    XCTAssertTrue(app.staticTexts["Closer to work"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["edit-home"].exists)
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+
+    app.tabBars.buttons["More"].tap()
+    reveal(app.buttons["Homes"], in: app).tap()
+    let seeded = app.buttons["Maple Street flat, Since Jun 1, 2021"]
+    XCTAssertTrue(seeded.waitForExistence(timeout: 15))
+    XCTAssertTrue(text("1 current residence", in: app).exists)
+    Thread.sleep(forTimeInterval: 1)
+    attach(app, "Homes")
+
+    // A card opens the Home's own page with its facts, Story, and organization.
+    seeded.tap()
+    XCTAssertTrue(app.staticTexts["Closer to work"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["120 Maple Street"].exists)
+    attach(app, "Home page")
+    reveal(app.buttons["home-version-history"], in: app)
+    attach(app, "Home page Story and organization")
+
+    // Edit saves through the Web editor sections and the page shows the change.
+    app.buttons["edit-home"].firstMatch.tap()
+    XCTAssertTrue(app.staticTexts["Edit Home"].waitForExistence(timeout: 5))
+    Thread.sleep(forTimeInterval: 0.6)
+    attach(app, "Home editor")
+    let movedIn = reveal(app.textFields["Why you moved in"], in: app)
+    movedIn.tap()
+    movedIn.typeText(" and the park\n")
+    // The saved Location shows its map, address, and coordinates above the address fields.
+    app.swipeUp()
+    XCTAssertTrue(reveal(app.buttons["Remove Location"], in: app).exists)
+    XCTAssertTrue(app.staticTexts["45.52310, -122.67650"].exists)
+    attach(app, "Home editor Location")
+    app.buttons["save-home"].tap()
+    XCTAssertTrue(text("Home saved.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Closer to work and the park"].waitForExistence(timeout: 10))
+    attach(app, "Home page after saving")
+
+    // Version history opens this Home's history.
+    reveal(app.buttons["home-version-history"], in: app).tap()
+    XCTAssertTrue(app.navigationBars.buttons.element(boundBy: 0).waitForExistence(timeout: 5))
+    Thread.sleep(forTimeInterval: 1)
+    attach(app, "Home version history")
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+
+    // Add Home creates one without a date or Location, like Web.
+    XCTAssertTrue(app.buttons["add-home"].waitForExistence(timeout: 5))
+    app.buttons["add-home"].tap()
+    let name = app.textFields["home-title"]
+    XCTAssertTrue(name.waitForExistence(timeout: 5))
+    name.tap()
+    name.typeText("Harbor Road cottage")
+    attach(app, "New Home")
+    app.buttons["save-home"].tap()
+    XCTAssertTrue(text("Home created.", in: app).waitForExistence(timeout: 10))
+    let created = app.buttons.matching(
+      NSPredicate(format: "label BEGINSWITH %@", "Harbor Road cottage")
+    ).firstMatch
+    XCTAssertTrue(created.waitForExistence(timeout: 10))
+    XCTAssertTrue(text("2 homes", in: app).exists)
+    attach(app, "Homes with the new Home")
+
+    // Moving it to Trash from its page returns to the list without it.
+    reveal(created, in: app).tap()
+    XCTAssertTrue(app.buttons["edit-home"].firstMatch.waitForExistence(timeout: 10))
+    app.buttons["edit-home"].firstMatch.tap()
+    reveal(app.buttons["trash-home"], in: app).tap()
+    let confirm = app.buttons.matching(
+      NSPredicate(format: "label == %@ AND identifier != %@", "Move to Trash", "trash-home")
+    ).firstMatch
+    XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+    attach(app, "Home trash confirmation")
+    confirm.tap()
+    XCTAssertTrue(text("Home moved to Trash.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["add-home"].waitForExistence(timeout: 10))
+    XCTAssertTrue(created.waitForNonExistence(timeout: 10))
+    XCTAssertTrue(text("1 home", in: app).exists)
+    attach(app, "Homes after Trash")
   }
 
   private func launchLocalSession() throws -> XCUIApplication {

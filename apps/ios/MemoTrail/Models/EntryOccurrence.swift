@@ -103,9 +103,11 @@ struct OccurrenceDraft: Codable, Equatable, Sendable {
   var label: String
   var timezone: String
 
-  init(_ value: EntryOccurrence) {
+  /// Undated records store no time zone, so `undatedTimezone` stands in for editing, like the
+  /// Web default of the Settings zone or this device's zone.
+  init(_ value: EntryOccurrence, undatedTimezone: String? = nil) {
     precision = value.precision
-    timezone = value.timezone
+    timezone = value.start == nil ? undatedTimezone ?? value.timezone : value.timezone
     label = value.label ?? ""
     // A saved start without an end is an ongoing period, as on the Web.
     endMode = value.start != nil && value.end == nil ? .present : .date
@@ -152,7 +154,7 @@ struct OccurrenceDraft: Codable, Equatable, Sendable {
 
   func resolve(original: EntryOccurrence? = nil, span: Bool = false) throws -> EntryOccurrence {
     guard TimeZone(identifier: timezone) != nil else { throw OccurrenceError.invalidTimezone }
-    let previous = original.map(OccurrenceDraft.init)
+    let previous = original.map { OccurrenceDraft($0) }
     func convert(_ text: String, isEnd: Bool) throws -> Date? {
       guard !text.isEmpty else { return nil }
       if let previous, previous.precision == precision, previous.timezone == timezone,

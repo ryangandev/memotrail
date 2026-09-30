@@ -254,7 +254,8 @@ final class NativeContractTests: XCTestCase {
       occurredTimezone: "UTC", placeID: nil, placeName: "", address: "", city: "", region: "",
       country: "", latitude: nil, longitude: nil, placeNotes: "", moveInReason: "",
       moveOutReason: "", collectionNames: [], tagNames: [])
-    XCTAssertEqual(result.status, .saved, result.message)
+    XCTAssertEqual(result.status, .created, result.message)
+    XCTAssertEqual(result.message, "Home created.")
     let identity = try XCTUnwrap(result.identity)
     XCTAssertNil(identity.placeID)
     await homes.load()
@@ -262,6 +263,19 @@ final class NativeContractTests: XCTestCase {
     let home = try XCTUnwrap(homes.entries.first { $0.id == identity.id })
     XCTAssertNil(home.placeID)
     XCTAssertEqual(home.displayLocation, "Location not added")
+
+    // Saving again reports Web's saved message and keeps the Home without a Location.
+    let edited = await homes.save(
+      entryID: home.id, expectedRevision: home.revision, title: home.title, body: "",
+      occurredStart: nil, occurredEnd: nil, datePrecision: .unknown, occurredLabel: "",
+      occurredTimezone: "America/Los_Angeles", placeID: nil, placeName: "", address: "",
+      city: "", region: "", country: "", latitude: nil, longitude: nil, placeNotes: "",
+      moveInReason: "Closer to the water", moveOutReason: "", collectionNames: [], tagNames: [],
+      originalEntry: home)
+    XCTAssertEqual(edited.status, .saved, edited.message)
+    XCTAssertEqual(edited.message, "Home saved.")
+    await homes.load()
+    XCTAssertEqual(homes.entry(id: home.id)?.moveInReason, "Closer to the water")
   }
 
   func testMapReadsCurrentOwnedLocationsAndExcludesTrashedRecords() async throws {
@@ -273,7 +287,7 @@ final class NativeContractTests: XCTestCase {
       occurredTimezone: "UTC", placeID: nil, placeName: "Austin", address: "Austin, Texas",
       city: "Austin", region: "Texas", country: "US", latitude: 30.2672, longitude: -97.7431,
       placeNotes: "", moveInReason: "", moveOutReason: "", collectionNames: [], tagNames: [])
-    XCTAssertEqual(result.status, .saved, result.message)
+    XCTAssertEqual(result.status, .created, result.message)
     let identity = try XCTUnwrap(result.identity)
     let snapshot = try await LocationMapRepository(client: client, ownerID: ownerID).load()
     let item = try XCTUnwrap(snapshot.items.first { $0.entryID == identity.id })
@@ -286,6 +300,7 @@ final class NativeContractTests: XCTestCase {
     let home = try XCTUnwrap(homes.entries.first { $0.id == identity.id })
     let removed = await homes.moveToTrash(entryID: home.id, expectedRevision: home.revision)
     XCTAssertEqual(removed.status, .trashed, removed.message)
+    XCTAssertEqual(removed.message, "Home moved to Trash.")
     let afterTrash = try await LocationMapRepository(client: client, ownerID: ownerID).load()
     XCTAssertFalse(afterTrash.items.contains { $0.entryID == home.id })
   }

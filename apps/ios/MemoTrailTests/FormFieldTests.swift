@@ -72,6 +72,20 @@ final class FormFieldTests: XCTestCase {
     XCTAssertEqual(OccurrenceDraft(ongoing).endMode, .present)
   }
 
+  func testUndatedRecordsEditInTheDefaultTimeZone() {
+    // Undated records store no zone and decode as UTC; editors start from the default instead.
+    let undated = EntryOccurrence(
+      precision: .unknown, start: nil, end: nil, label: nil, timezone: "UTC")
+    XCTAssertEqual(
+      OccurrenceDraft(undated, undatedTimezone: "America/Los_Angeles").timezone,
+      "America/Los_Angeles")
+    let dated = EntryOccurrence(
+      precision: .day, start: Date(timeIntervalSince1970: 0), end: nil, label: nil,
+      timezone: "Asia/Tokyo")
+    XCTAssertEqual(
+      OccurrenceDraft(dated, undatedTimezone: "America/Los_Angeles").timezone, "Asia/Tokyo")
+  }
+
   func testChangingDateTypeReplacesTheCalendarValues() {
     var draft = OccurrenceDraft(
       EntryOccurrence(
