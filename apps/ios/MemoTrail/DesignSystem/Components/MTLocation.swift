@@ -18,8 +18,10 @@ struct MTLocationSnapshot<Fallback: View>: View {
   var span: CLLocationDistance = 1_600
   private let fallback: Fallback
   @Environment(\.colorScheme) private var colorScheme
-  @State private var image: UIImage?
-  @State private var failed = false
+  /// Each snapshot and failure belongs to one position, so a moved or removed Location never
+  /// keeps showing the previous map.
+  @State private var rendered: (image: UIImage, position: Position)?
+  @State private var failedPosition: Position?
 
   init(
     latitude: Double?, longitude: Double?, span: CLLocationDistance = 1_600,
@@ -31,21 +33,23 @@ struct MTLocationSnapshot<Fallback: View>: View {
     self.fallback = fallback()
   }
 
-  private var coordinate: CLLocationCoordinate2D? {
-    mtCoordinate(latitude: latitude, longitude: longitude)
+  private var position: Position? {
+    mtCoordinate(latitude: latitude, longitude: longitude).map {
+      Position(latitude: $0.latitude, longitude: $0.longitude)
+    }
   }
 
   var body: some View {
     GeometryReader { proxy in
       ZStack {
-        if let image {
-          Image(uiImage: image).resizable().scaledToFill()
+        if let position, let rendered, rendered.position == position {
+          Image(uiImage: rendered.image).resizable().scaledToFill()
           Image(systemName: "mappin.circle.fill")
             .font(.system(size: 30))
             .symbolRenderingMode(.palette)
             .foregroundStyle(MTColor.surfaceRaised, MTColor.accent)
             .shadow(color: .black.opacity(0.18), radius: 3, y: 1)
-        } else if coordinate == nil || failed {
+        } else if position == nil || failedPosition == position {
           fallback
         } else {
           MTLoadingSkeleton()
@@ -61,10 +65,11 @@ struct MTLocationSnapshot<Fallback: View>: View {
   }
 
   private func render(size: CGSize) async {
-    guard let coordinate, size.width > 0, size.height > 0 else { return }
+    guard let position, size.width > 0, size.height > 0 else { return }
     let options = MKMapSnapshotter.Options()
     options.region = MKCoordinateRegion(
-      center: coordinate, latitudinalMeters: span, longitudinalMeters: span)
+      center: CLLocationCoordinate2D(latitude: position.latitude, longitude: position.longitude),
+      latitudinalMeters: span, longitudinalMeters: span)
     options.size = size
     options.pointOfInterestFilter = .excludingAll
     options.traitCollection = UITraitCollection(
@@ -72,12 +77,17 @@ struct MTLocationSnapshot<Fallback: View>: View {
     do {
       let snapshot = try await MKMapSnapshotter(options: options).start()
       guard !Task.isCancelled else { return }
-      image = snapshot.image
-      failed = false
+      rendered = (snapshot.image, position)
+      failedPosition = nil
     } catch {
       guard !Task.isCancelled else { return }
-      failed = true
+      failedPosition = position
     }
+  }
+
+  private struct Position: Equatable {
+    let latitude: Double
+    let longitude: Double
   }
 
   private struct SnapshotKey: Equatable {
