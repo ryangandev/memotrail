@@ -22,22 +22,60 @@ struct MTToast: Identifiable, Equatable, Sendable {
 }
 
 /// Transient action feedback matching the Web `notify` helpers: success and info stay for
-/// 4.5 seconds, errors for 8, and at most three are visible. Toasts appear at the top of a
-/// pass-through window so they stay above sheets and clear of the keyboard.
+/// 4.5 seconds, errors for 8, and at most three are visible. Like Web, toasts rise from the
+/// bottom, in a pass-through window above sheets. They sit clear of the tab bar, a sheet's
+/// actions, and the keyboard, and leave the top free for back and close buttons.
 @MainActor
 @Observable
 final class MTToastCenter {
   static let shared = MTToastCenter()
 
+  /// Space kept below toasts above the home indicator or keyboard, which clears the tab bar
+  /// and a sheet's action footer.
+  static let bottomClearance: CGFloat = 76
+
+  /// The distance from the window's bottom edge to the lowest toast: above the home indicator
+  /// or the keyboard, whichever reaches higher, plus `bottomClearance`.
+  static func bottomInset(windowMaxY: CGFloat, safeAreaBottom: CGFloat, keyboardTop: CGFloat?)
+    -> CGFloat
+  {
+    let keyboardOverlap = keyboardTop.map { max(0, windowMaxY - $0) } ?? 0
+    return max(safeAreaBottom, keyboardOverlap) + bottomClearance
+  }
+
   private(set) var toasts: [MTToast] = []
+  /// The keyboard's top edge in screen coordinates while it is shown.
+  fileprivate private(set) var keyboardTop: CGFloat?
   @ObservationIgnored fileprivate var frames: [UUID: CGRect] = [:]
   @ObservationIgnored private var window: MTToastWindow?
+  @ObservationIgnored private var keyboardObservers: [NSObjectProtocol] = []
+
+  /// Follows the keyboard from launch, so a first toast shown over it still sits above it.
+  func trackKeyboard() {
+    guard keyboardObservers.isEmpty else { return }
+    let notifications = NotificationCenter.default
+    keyboardObservers = [
+      notifications.addObserver(
+        forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main
+      ) { [weak self] notification in
+        let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect
+        let top = frame?.minY
+        MainActor.assumeIsolated { self?.keyboardTop = top }
+      },
+      notifications.addObserver(
+        forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main
+      ) { [weak self] _ in
+        MainActor.assumeIsolated { self?.keyboardTop = nil }
+      },
+    ]
+  }
 
   func success(_ message: String) { show(message, tone: .success) }
   func info(_ message: String) { show(message, tone: .info) }
   func error(_ message: String) { show(message, tone: .error) }
 
   func show(_ message: String, tone: MTToastTone) {
+    trackKeyboard()
     installWindow()
     let toast = MTToast(message: message, tone: tone)
     withAnimation(.snappy(duration: MTMotion.standard)) {
@@ -93,6 +131,20 @@ private struct MTToastStack: View {
   let center: MTToastCenter
 
   var body: some View {
+    GeometryReader { proxy in
+      let inset = MTToastCenter.bottomInset(
+        windowMaxY: proxy.frame(in: .global).maxY, safeAreaBottom: proxy.safeAreaInsets.bottom,
+        keyboardTop: center.keyboardTop)
+      stack
+        .padding(.bottom, inset)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+    }
+    // The center measures the keyboard, so this window ignores its own keyboard inset.
+    .ignoresSafeArea(.keyboard)
+    .animation(.snappy(duration: MTMotion.standard), value: center.keyboardTop)
+  }
+
+  private var stack: some View {
     VStack(spacing: MTSpacing.s2) {
       ForEach(center.toasts) { toast in
         MTToastView(toast: toast) { center.dismiss(toast.id) }
@@ -105,13 +157,11 @@ private struct MTToastStack: View {
                 }
             }
           }
-          .transition(.move(edge: .top).combined(with: .opacity))
+          .transition(.move(edge: .bottom).combined(with: .opacity))
       }
     }
     .frame(maxWidth: 420)
     .padding(.horizontal, MTSpacing.s4)
-    .padding(.top, MTSpacing.s2)
-    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
   }
 }
 
@@ -160,12 +210,12 @@ private struct MTToastView: View {
         MTColor.borderStrong, lineWidth: 1)
     }
     .mtShadow(MTShadow.floating)
-    .offset(y: min(0, drag))
+    .offset(y: max(0, drag))
     .gesture(
       DragGesture(minimumDistance: 8)
         .onChanged { drag = $0.translation.height }
         .onEnded { value in
-          if value.translation.height < -24 { dismiss() } else { withAnimation { drag = 0 } }
+          if value.translation.height > 24 { dismiss() } else { withAnimation { drag = 0 } }
         }
     )
     .accessibilityElement(children: .contain)

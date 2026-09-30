@@ -234,7 +234,8 @@ Pair it with the test file carrying the same feature name.
   `OccurrenceEditor` and `MTOrganizationEditor` are the shared date and Collection/tag editors; adding a name opens a picker sheet so suggestions stay above the keyboard.
   `MTCards.swift` owns `MTRecordCard`, `MTCollectionCard`, and the shared `MTCardButtonStyle`; `MTRichTextContent` renders `Models/EntryRichText.swift`, which validates Web `body_rich` documents like `lib/data/rich-text.ts` and falls back to the plain body.
   With a line limit it flows the writing into one clamped preview that keeps emphasis, list markers, and line breaks.
-  `MTToastCenter` shows Web-timed success, info, and error toasts in a pass-through window above sheets and the keyboard.
+  `MTToastCenter` shows Web-timed success, info, and error toasts in a pass-through window above sheets.
+  Like Web, they rise from the bottom, clear of the tab bar, sheet actions, and the keyboard, so back and close buttons stay reachable.
   `MTMedia.swift` owns `MTRemoteImage`, the loading skeleton, `MTUploadProgress`, and `MTPhotoField`; feature editors use them instead of private image loaders.
   `MTRecordDetail.swift` owns the focused-record parts: `MTFormSection` is the Web editor fieldset whose fields sit on the raised surface, with an accent tone for panels such as the Goal's Bucket List milestone, and `MTFactList`, `MTDetailSection`, and `MTRecordPhotos` lay out a record's facts, Story, Organize, and photos.
   `MTFocusedRecordPage` composes them into the Web `FocusedRecordDetail` page with Edit and Version history, and `MTFocusedRecordUnavailable` stands in for a missing record.

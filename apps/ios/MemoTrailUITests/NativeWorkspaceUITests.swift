@@ -249,6 +249,32 @@ final class NativeWorkspaceUITests: XCTestCase {
     XCTAssertTrue(app.images["Coast"].exists)
   }
 
+  func testToastsRiseFromTheBottomClearOfTheKeyboard() {
+    let app = launchSection("feedback")
+    let window = app.windows.firstMatch.frame
+    app.buttons["Show success"].tap()
+    let saved = app.staticTexts["Changes saved."]
+    XCTAssertTrue(saved.waitForExistence(timeout: 3))
+    // Like Web, a toast sits low, leaving the top free for back and close buttons.
+    XCTAssertGreaterThan(saved.frame.minY, window.midY)
+    XCTAssertLessThan(saved.frame.maxY, window.maxY - 100)
+    attach(app, "Toast at the bottom")
+    app.buttons["Dismiss notification"].firstMatch.tap()
+    XCTAssertTrue(saved.waitForNonExistence(timeout: 3))
+
+    let field = app.textFields["toast-message"]
+    field.tap()
+    field.typeText("Saved while typing")
+    let keyboard = app.keyboards.firstMatch
+    XCTAssertTrue(keyboard.waitForExistence(timeout: 3))
+    app.buttons["Show info"].tap()
+    let typed = app.staticTexts["Saved while typing"]
+    XCTAssertTrue(typed.waitForExistence(timeout: 3))
+    Thread.sleep(forTimeInterval: 0.5)
+    XCTAssertLessThan(typed.frame.maxY, keyboard.frame.minY)
+    attach(app, "Toast above the keyboard")
+  }
+
   func testPhotoFieldSamplesUploadProgressAndRemoval() {
     let app = launchSection("forms")
     reveal(app.buttons["Add sample"], in: app).tap()

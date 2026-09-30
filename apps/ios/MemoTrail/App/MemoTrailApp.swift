@@ -18,6 +18,10 @@ struct MemoTrailApp: App {
     #endif
   }
 
+  init() {
+    MTToastCenter.shared.trackKeyboard()
+  }
+
   // Let the mark finish even when the session resolves immediately.
   @State private var splashFloorElapsed = false
   // A slow session restore eventually yields to the existing loading UI.

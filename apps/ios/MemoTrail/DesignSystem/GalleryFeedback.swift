@@ -4,21 +4,33 @@
 
   struct FeedbackSpecimens: View {
     @State private var uploaded = 3
+    @State private var toastMessage = ""
+
+    private func message(_ sample: String) -> String { toastMessage.trimmed.nonEmpty ?? sample }
 
     var body: some View {
       VStack(alignment: .leading, spacing: MTSpacing.s4) {
         GallerySpecimen(
           title: "Toast", api: "MTToastCenter.shared · success · info · error",
           description:
-            "Toasts appear above sheets and clear of the keyboard. Errors stay longer, and swiping up dismisses one early."
+            "Like Web, toasts rise from the bottom, above sheets and clear of the tab bar, sheet actions, and keyboard. Errors stay longer, and swiping down dismisses one early."
         ) {
-          MTFlowLayout(spacing: MTSpacing.s2) {
-            Button("Show success") { MTToastCenter.shared.success("Changes saved.") }
-              .mtButtonStyle()
-            Button("Show info") { MTToastCenter.shared.info("Moved to Trash.") }
-              .mtButtonStyle(.secondary)
-            Button("Show error") { MTToastCenter.shared.error("Could not save. Try again.") }
+          VStack(alignment: .leading, spacing: MTSpacing.s3) {
+            // A custom message previews wrapping, and typing it shows toasts over the keyboard.
+            MTTextField(
+              label: "Message", text: $toastMessage, prompt: "Each button's sample message"
+            )
+            .accessibilityIdentifier("toast-message")
+            MTFlowLayout(spacing: MTSpacing.s2) {
+              Button("Show success") { MTToastCenter.shared.success(message("Changes saved.")) }
+                .mtButtonStyle()
+              Button("Show info") { MTToastCenter.shared.info(message("Moved to Trash.")) }
+                .mtButtonStyle(.secondary)
+              Button("Show error") {
+                MTToastCenter.shared.error(message("Could not save. Try again."))
+              }
               .mtButtonStyle(.danger)
+            }
           }
         }
 
