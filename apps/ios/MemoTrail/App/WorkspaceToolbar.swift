@@ -33,6 +33,12 @@ private struct WorkspaceToolbar: ViewModifier {
       .toolbarBackground(MTColor.surface, for: .navigationBar)
       .toolbarBackground(.visible, for: .navigationBar)
       .sheet(isPresented: $isShowingSettings) {
+        // Switching tabs while the sheet closes would cancel the dismissal.
+        if let route = navigator.routeAfterSettings {
+          navigator.routeAfterSettings = nil
+          navigator.show(route)
+        }
+      } content: {
         NavigationStack {
           NativeSettingsView(
             client: client, user: user, isAuthenticationBusy: isAuthenticationBusy,
@@ -44,6 +50,10 @@ private struct WorkspaceToolbar: ViewModifier {
             }
           }
         }
+        .environment(\.isSettingsSheet, true)
+      }
+      .onChange(of: navigator.routeAfterSettings) { _, route in
+        if route != nil, isShowingSettings { isShowingSettings = false }
       }
   }
 
@@ -91,4 +101,9 @@ extension View {
       WorkspaceToolbar(
         client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut))
   }
+}
+
+extension EnvironmentValues {
+  /// Settings is in the sheet the account avatar opens, rather than a page in the More tab.
+  @Entry var isSettingsSheet = false
 }

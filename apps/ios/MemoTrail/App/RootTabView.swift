@@ -18,7 +18,6 @@ struct RootTabView: View {
   @State private var hasLocalDraft: Bool
   @State private var hasLoadedCapturePhotos = false
   @State private var navigator = AppNavigator()
-  @State private var isShowingQuickCapture = false
 
   init(
     client: SupabaseClient,
@@ -119,7 +118,7 @@ struct RootTabView: View {
     .overlay(alignment: .bottomTrailing) {
       if navigator.selectedTab.usesGlobalCaptureButton {
         Button {
-          isShowingQuickCapture = true
+          navigator.isShowingQuickCapture = true
         } label: {
           Image(systemName: "plus")
             .font(.system(size: 19, weight: .semibold))
@@ -135,7 +134,7 @@ struct RootTabView: View {
       }
     }
     .environment(navigator)
-    .fullScreenCover(isPresented: $isShowingQuickCapture) {
+    .fullScreenCover(isPresented: $navigator.isShowingQuickCapture) {
       QuickCaptureView(
         controller: inboxController,
         title: $captureTitle,

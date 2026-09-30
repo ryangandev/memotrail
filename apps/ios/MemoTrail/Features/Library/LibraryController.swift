@@ -254,25 +254,11 @@ final class LibraryController {
       "search_wiki_items", params: request.parameters
     )
     .execute().value
-    let richTexts = await richTexts(for: page)
+    let richTexts = await EntryRichTextMap.load(
+      page.map { ($0.id, $0.body) }, client: client, ownerID: ownerID)
     try await validateSessionOwner()
     for index in page.indices { page[index].bodyRich = richTexts[page[index].id] }
     return page
-  }
-
-  /// Formatting is optional: results still show their plain notes when it cannot load.
-  private func richTexts(for entries: [SearchEntry]) async -> [UUID: EntryRichText] {
-    guard !entries.isEmpty else { return [:] }
-    let bodies = Dictionary(
-      entries.map { ($0.id, $0.body) }, uniquingKeysWith: { first, _ in first })
-    guard
-      let rows: [EntryRichTextRow] = try? await client.from("entries").select("id,body,metadata")
-        .eq("owner_id", value: ownerID.uuidString)
-        .in("id", values: bodies.keys.map { $0.uuidString.lowercased() }).execute().value
-    else { return [:] }
-    return rows.reduce(into: [:]) { values, row in
-      if bodies[row.id] == row.body, let richText = row.richText { values[row.id] = richText }
-    }
   }
 
   private func validateSessionOwner() async throws {
@@ -284,21 +270,4 @@ final class LibraryController {
 
 private struct OrganizationName: Decodable, Sendable {
   let name: String
-}
-
-private struct EntryRichTextRow: Decodable, Sendable {
-  let id: UUID
-  let body: String
-  let richText: EntryRichText?
-
-  enum CodingKeys: String, CodingKey {
-    case id, body, metadata
-  }
-
-  init(from decoder: Decoder) throws {
-    let values = try decoder.container(keyedBy: CodingKeys.self)
-    id = try values.decode(UUID.self, forKey: .id)
-    body = try values.decode(String.self, forKey: .body)
-    richText = values.decodeEntryRichText(metadataKey: .metadata, body: body)
-  }
 }

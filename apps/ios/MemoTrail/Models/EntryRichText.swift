@@ -1,4 +1,5 @@
 import Foundation
+@preconcurrency import Supabase
 
 /// Web's versioned `metadata.body_rich` document for read-only rendering: paragraphs, quotes,
 /// lists, code blocks, hard breaks, and bold, italic, underline, strike, code, and link marks.
@@ -186,5 +187,41 @@ extension KeyedDecodingContainer {
       let value = metadata[EntryRichText.metadataKey]?.value, value.isValid(expectedText: body)
     else { return nil }
     return value
+  }
+}
+
+/// Web `loadEntryRichTextMap`: each Entry's formatting, kept only while it still matches the
+/// body on screen. Formatting is optional, so Entries keep their plain notes when it cannot load.
+enum EntryRichTextMap {
+  static func load(
+    _ entries: [(id: UUID, body: String)], client: SupabaseClient, ownerID: UUID
+  ) async -> [UUID: EntryRichText] {
+    let bodies = Dictionary(
+      entries.map { ($0.id, $0.body) }, uniquingKeysWith: { first, _ in first })
+    guard !bodies.isEmpty,
+      let rows: [Row] = try? await client.from("entries").select("id,body,metadata")
+        .eq("owner_id", value: ownerID.uuidString)
+        .in("id", values: bodies.keys.map { $0.uuidString.lowercased() }).execute().value
+    else { return [:] }
+    return rows.reduce(into: [:]) { values, row in
+      if bodies[row.id] == row.body, let richText = row.richText { values[row.id] = richText }
+    }
+  }
+
+  private struct Row: Decodable, Sendable {
+    let id: UUID
+    let body: String
+    let richText: EntryRichText?
+
+    enum CodingKeys: String, CodingKey {
+      case id, body, metadata
+    }
+
+    init(from decoder: Decoder) throws {
+      let values = try decoder.container(keyedBy: CodingKeys.self)
+      id = try values.decode(UUID.self, forKey: .id)
+      body = try values.decode(String.self, forKey: .body)
+      richText = values.decodeEntryRichText(metadataKey: .metadata, body: body)
+    }
   }
 }

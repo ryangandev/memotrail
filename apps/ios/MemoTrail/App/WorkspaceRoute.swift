@@ -112,7 +112,7 @@ struct WorkspaceDestinationView: View {
     case .vehicles: VehiclesView(client: client, ownerID: user.id)
     case .firstTimes: FirstTimesView(client: client, ownerID: user.id)
     case .goals: GoalsView(client: client, ownerID: user.id)
-    case .collections: CollectionsView(client: client, ownerID: user.id, embedded: true)
+    case .collections: CollectionsView(client: client, ownerID: user.id)
     case .tags: TagsView(client: client, ownerID: user.id)
     case .history: EntryHistoryIndexView(client: client, ownerID: user.id)
     case .trash: TrashView(client: client, ownerID: user.id, embedded: true)

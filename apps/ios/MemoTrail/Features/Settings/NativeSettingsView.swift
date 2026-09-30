@@ -182,12 +182,10 @@ struct NativeSettingsView: View {
           AISettingsView()
         }
         MTListDivider()
-        SettingsPreferenceLink(
+        SettingsWorkspaceLink(
           icon: .archive, title: "Archive organization",
-          detail: "Manage Collections and tags across items."
-        ) {
-          CollectionsView(client: client, ownerID: user.id, embedded: true)
-        }
+          detail: "Open the Library to manage Collections and tags across items.",
+          route: .collections)
         MTListDivider()
         SettingsPreferenceLink(
           icon: .archive, title: "Export archive",
@@ -387,21 +385,58 @@ private struct SettingsPreferenceLink<Destination: View>: View {
 
   var body: some View {
     NavigationLink(destination: destination) {
-      HStack(spacing: MTSpacing.s3) {
-        SettingsPreferenceLabel(icon: icon, title: title, detail: detail)
-        Spacer(minLength: 0)
-        Image(.chevron)
-          .font(.system(size: 13, weight: .semibold))
-          .foregroundStyle(MTColor.ink)
-      }
-      .padding(MTSpacing.s4)
-      .frame(minHeight: 76)
-      .contentShape(Rectangle())
+      SettingsLinkRow(icon: icon, title: title, detail: detail)
     }
     .buttonStyle(MTListRowButtonStyle())
     // The row is named by its title; the detail line explains where it leads.
     .accessibilityLabel(title)
     .accessibilityHint(detail)
+  }
+}
+
+/// A preference row that leaves Settings for a workspace page, like Web's Settings links outside
+/// `/settings`. The Settings sheet closes first; Settings in the More tab pushes the page.
+private struct SettingsWorkspaceLink: View {
+  let icon: MTIcon
+  let title: String
+  let detail: String
+  let route: WorkspaceRoute
+  @Environment(AppNavigator.self) private var navigator
+  @Environment(\.isSettingsSheet) private var isSettingsSheet
+
+  var body: some View {
+    Button {
+      if isSettingsSheet {
+        navigator.routeAfterSettings = route
+      } else {
+        navigator.morePath.append(route)
+      }
+    } label: {
+      SettingsLinkRow(icon: icon, title: title, detail: detail)
+    }
+    .buttonStyle(MTListRowButtonStyle())
+    .accessibilityLabel(title)
+    .accessibilityHint(detail)
+  }
+}
+
+/// A link row: the label, then a chevron.
+private struct SettingsLinkRow: View {
+  let icon: MTIcon
+  let title: String
+  let detail: String
+
+  var body: some View {
+    HStack(spacing: MTSpacing.s3) {
+      SettingsPreferenceLabel(icon: icon, title: title, detail: detail)
+      Spacer(minLength: 0)
+      Image(.chevron)
+        .font(.system(size: 13, weight: .semibold))
+        .foregroundStyle(MTColor.ink)
+    }
+    .padding(MTSpacing.s4)
+    .frame(minHeight: 76)
+    .contentShape(Rectangle())
   }
 }
 

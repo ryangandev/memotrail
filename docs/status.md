@@ -116,6 +116,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Local contract and seeded Simulator runs confirmed opening an Entry from Library, linking and following another Item, restoring the version from before the link, loading current photos, creating a linked Goal, and moving the Entry to Trash at the revision shown.
 - Native Tags now follow Web `/tags`: tag badges with Entry counts, name search, New Tag, and the Web tag editor with its Entry previews, merge panel, and unused-tag deletion.
   A seeded Simulator run confirmed searching tags, opening a tagged Entry from the editor, merging one tag into another, creating and deleting an unused tag, and opening Library filtered to a tag.
+- Native Collections now follow Web `/collections` and its Collection pages: compact cards with each Collection's editor, New Collection, and Entry cards with Web's rich notes, Read full note, and Collection and tag links into Library.
+  A seeded Simulator run confirmed creating a Collection ahead of the others by display order, opening an Entry and a filtered Library from a Collection, opening Quick Capture from New entry, moving an empty Collection to Trash from its page, and reaching Collections from the Settings sheet.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
 - Refactor existing screens after component acceptance; native address search remains later work.
 

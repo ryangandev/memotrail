@@ -19,6 +19,10 @@ final class AppNavigator {
   var libraryFilterRequest: LibraryFilterRequest?
   /// Increases when Settings saves the preferred name, so the Dashboard greeting refreshes.
   var profileRevision = 0
+  /// Quick Capture covers the app, from the global button or a page's New entry action.
+  var isShowingQuickCapture = false
+  /// A page the Settings sheet opens once it has closed, like Web's Settings links elsewhere.
+  var routeAfterSettings: WorkspaceRoute?
 
   func show(_ tab: RootTabDestination) {
     selectedTab = tab
@@ -52,6 +56,11 @@ final class AppNavigator {
   func openTimelineEntry(_ id: UUID) {
     timelineEntryRequest = id
     selectedTab = .timeline
+  }
+
+  /// Opens Quick Capture over the current page, like Web's New entry link to the Inbox capture.
+  func startCapture() {
+    isShowingQuickCapture = true
   }
 }
 

@@ -16,7 +16,6 @@
 		B00000000000000000000037 /* EntryHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003E /* EntryHistoryView.swift */; };
 		B70000000000000000000001 /* EntryRelationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C70000000000000000000001 /* EntryRelationsView.swift */; };
 		B00000000000000000000038 /* TimelineTracksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003F /* TimelineTracksView.swift */; };
-		B00000000000000000000039 /* OrganizationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000040 /* OrganizationView.swift */; };
 		B00000000000000000000036 /* EntryAISuggestionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003D /* EntryAISuggestionsView.swift */; };
 		B00000000000000000000035 /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003C /* AISettingsView.swift */; };
 		B00000000000000000000001 /* MemoTrailApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000001 /* MemoTrailApp.swift */; };
@@ -156,6 +155,8 @@
 		E1000000000000000000003C /* OrganizationEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000003C /* OrganizationEditorSheet.swift */; };
 		E1000000000000000000003D /* TagsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000003D /* TagsView.swift */; };
 		E1000000000000000000003E /* Organization.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000003E /* Organization.swift */; };
+		E1000000000000000000003F /* CollectionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000003F /* CollectionDetailView.swift */; };
+		E10000000000000000000040 /* OpenInboxButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000040 /* OpenInboxButton.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -178,7 +179,6 @@
 		C0000000000000000000003E /* EntryHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryHistoryView.swift; sourceTree = "<group>"; };
 		C70000000000000000000001 /* EntryRelationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryRelationsView.swift; sourceTree = "<group>"; };
 		C0000000000000000000003F /* TimelineTracksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timeline/TimelineTracksView.swift; sourceTree = "<group>"; };
-		C00000000000000000000040 /* OrganizationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Collections/OrganizationView.swift; sourceTree = "<group>"; };
 		C0000000000000000000003D /* EntryAISuggestionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AI/EntryAISuggestionsView.swift; sourceTree = "<group>"; };
 		C0000000000000000000003C /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AI/AISettingsView.swift; sourceTree = "<group>"; };
 		C00000000000000000000001 /* MemoTrailApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoTrailApp.swift; sourceTree = "<group>"; };
@@ -321,6 +321,8 @@
 		E2000000000000000000003C /* OrganizationEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrganizationEditorSheet.swift; sourceTree = "<group>"; };
 		E2000000000000000000003D /* TagsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsView.swift; sourceTree = "<group>"; };
 		E2000000000000000000003E /* Organization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Organization.swift; sourceTree = "<group>"; };
+		E2000000000000000000003F /* CollectionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionDetailView.swift; sourceTree = "<group>"; };
+		E20000000000000000000040 /* OpenInboxButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenInboxButton.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -381,6 +383,7 @@
 		A10000000000000000000004 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000040 /* OpenInboxButton.swift */,
 				E2000000000000000000003A /* WikiItemLink.swift */,
 				E2000000000000000000002F /* ConnectedItemsSection.swift */,
 				E2000000000000000000001D /* WorkspaceToolbar.swift */,
@@ -416,7 +419,6 @@
 				C00000000000000000000044 /* ExportView.swift */,
 				C0000000000000000000003D /* EntryAISuggestionsView.swift */,
 				C0000000000000000000003F /* TimelineTracksView.swift */,
-				C00000000000000000000040 /* OrganizationView.swift */,
 				A10000000000000000000006 /* Inbox */,
 				A10000000000000000000016 /* Timeline */,
 				A10000000000000000000017 /* FirstTimes */,
@@ -598,6 +600,7 @@
 		A10000000000000000000018 /* Collections */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000003F /* CollectionDetailView.swift */,
 				E2000000000000000000003D /* TagsView.swift */,
 				E2000000000000000000003C /* OrganizationEditorSheet.swift */,
 				E2000000000000000000003B /* OrganizationActions.swift */,
@@ -821,6 +824,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E10000000000000000000040 /* OpenInboxButton.swift in Sources */,
+				E1000000000000000000003F /* CollectionDetailView.swift in Sources */,
 				E1000000000000000000003E /* Organization.swift in Sources */,
 				E1000000000000000000003D /* TagsView.swift in Sources */,
 				E1000000000000000000003C /* OrganizationEditorSheet.swift in Sources */,
@@ -942,7 +947,6 @@
 				B00000000000000000000037 /* EntryHistoryView.swift in Sources */,
 				B70000000000000000000001 /* EntryRelationsView.swift in Sources */,
 				B00000000000000000000038 /* TimelineTracksView.swift in Sources */,
-				B00000000000000000000039 /* OrganizationView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

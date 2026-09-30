@@ -158,6 +158,10 @@ Pair it with the test file carrying the same feature name.
 - Native `TagsView` in `Features/Collections` follows Web `/tags`: badges with each tag's Entry count, name search, and New Tag.
   `OrganizationEditorSheet` is the Web `OrganizationControl` dialog on `MTSheet` over `OrganizationActions`, which call `save_organization`, `trash_collection`, `merge_tags`, and `delete_unused_tag` with the Web failure messages.
   A saved tag's editor loads up to five of its Entries through `search_wiki_items` only when it opens, like Web, and View all opens Library filtered to the tag through `AppNavigator.openLibrary(tag:)`.
+- Native `CollectionsView` and `CollectionDetailView` follow Web `/collections` and `/collections/[id]` over `CollectionsController`, which loads `collections_workspace` with the editor identities from `organization_workspace`, like Web `getCollectionsWorkspace`.
+  A Collection's Entry cards render Web's rich notes through `EntryRichTextMap`, the shared Web `loadEntryRichTextMap` port Library also uses, and their Collection and tag links open Library filtered to them.
+  The same `OrganizationEditorSheet` creates, edits, and moves Collections to Trash; a Collection moved to Trash from its own page closes that page once the editor has closed.
+  New entry opens Quick Capture through `AppNavigator.startCapture()`, and Settings' Archive organization leaves the Settings sheet for Collections through `routeAfterSettings`, like Web's `/collections` link.
 - Web Timeline style selection lives in Settings as an owner-scoped browser cookie. The existing track view remains the default; Vertical Spine and Sticky Year are presentation components under `apps/web/src/components/timeline` that share the Timeline workspace data and editor callbacks. The original 20 HTML design studies remain under `timeline-ideas/`.
 - Web occurrence and profile date forms use `components/date-picker-field.tsx`; domain editors map their precision into its generic granularity, time, editability, and size props instead of duplicating picker UI.
 

@@ -39,6 +39,100 @@ final class LocalSessionUITests: XCTestCase {
     }
   }
 
+  func testCollectionsOpenEntriesFilterLibraryAndAddEditAndTrashCollections() throws {
+    let app = try launchLocalSession()
+    XCTAssertTrue(app.tabBars.buttons["More"].waitForExistence(timeout: 20))
+    app.tabBars.buttons["More"].tap()
+    reveal(app.buttons["Collections"], in: app).tap()
+    let summer = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Summer 2025"))
+      .firstMatch
+    XCTAssertTrue(summer.waitForExistence(timeout: 15))
+    XCTAssertTrue(text("2 Collections · 4 Entry placements", in: app).exists)
+    XCTAssertTrue(app.buttons["Edit Summer 2025"].exists)
+    Thread.sleep(forTimeInterval: 1)
+    attach(app, "Collections")
+
+    // New Collection creates one, and a lower display order places it first.
+    app.buttons["new-collection"].tap()
+    let name = app.textFields["organization-name"]
+    XCTAssertTrue(name.waitForExistence(timeout: 5))
+    name.tap()
+    name.typeText("Road trips")
+    let order = app.textFields["organization-order"]
+    order.tap()
+    order.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3) + "-5")
+    XCTAssertEqual(order.value as? String, "-5")
+    attach(app, "New Collection")
+    app.buttons["save-organization"].tap()
+    XCTAssertTrue(text("Collection created.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(text("3 Collections · 4 Entry placements", in: app).waitForExistence(timeout: 10))
+    let road = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Road trips"))
+      .firstMatch
+    XCTAssertTrue(road.exists)
+    XCTAssertLessThan(road.frame.minY, summer.frame.minY)
+
+    // A Collection lists its Entries with Web's rich notes and organization links.
+    summer.tap()
+    XCTAssertTrue(app.navigationBars["Summer 2025"].waitForExistence(timeout: 10))
+    XCTAssertTrue(text("3 Entries", in: app).exists)
+    let letters = app.buttons["Letters from the coast house"]
+    XCTAssertTrue(letters.waitForExistence(timeout: 15))
+    let fullNote = reveal(app.buttons["Read full note"], in: app)
+    fullNote.tap()
+    XCTAssertEqual(fullNote.value as? String, "Expanded")
+    attach(app, "Collection Entries")
+
+    // An Entry's tag opens Library filtered to it, like Web `/library?tag=`.
+    reveal(app.buttons["Tag walks"], in: app).tap()
+    XCTAssertTrue(element("library-results", in: app).waitForExistence(timeout: 15))
+    // The seeded Goal shares the tag with this Entry.
+    XCTAssertTrue(app.staticTexts["2 items"].waitForExistence(timeout: 10))
+    XCTAssertTrue(text("Filters · 1 active", in: app).exists)
+    app.tabBars.buttons["More"].tap()
+
+    // Its title opens the Entry, and New entry opens Quick Capture over the page.
+    let quiet = app.buttons["A quiet afternoon by the coast"]
+    reveal(quiet, in: app).tap()
+    XCTAssertTrue(app.buttons["edit-item"].waitForExistence(timeout: 10))
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    XCTAssertTrue(letters.waitForExistence(timeout: 10))
+    while !app.buttons["New entry"].isHittable { app.swipeDown() }
+    app.buttons["New entry"].tap()
+    XCTAssertTrue(app.navigationBars["New Entry"].waitForExistence(timeout: 10))
+    app.navigationBars["New Entry"].buttons["Close"].tap()
+    XCTAssertTrue(app.navigationBars["Summer 2025"].waitForExistence(timeout: 10))
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+
+    // An empty Collection moves to Trash from its own page, which then closes.
+    XCTAssertTrue(road.waitForExistence(timeout: 10))
+    road.tap()
+    XCTAssertTrue(text("This Collection is empty", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["Open Inbox"].exists)
+    attach(app, "Empty Collection")
+    app.buttons["Edit Road trips"].tap()
+    XCTAssertTrue(app.staticTexts["Edit Collection"].waitForExistence(timeout: 5))
+    app.buttons["remove-organization"].tap()
+    // The confirmation repeats the footer's label, so skip the footer button itself.
+    let trash = app.buttons.matching(
+      NSPredicate(
+        format: "label == %@ AND identifier != %@", "Move to Trash", "remove-organization")
+    ).firstMatch
+    XCTAssertTrue(trash.waitForExistence(timeout: 5))
+    attach(app, "Collection trash confirmation")
+    trash.tap()
+    XCTAssertTrue(text("Collection moved to Trash.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(text("2 Collections · 4 Entry placements", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(road.waitForNonExistence(timeout: 10))
+
+    // Settings' Archive organization leaves the sheet for Collections, like Web's link.
+    app.tabBars.buttons["Dashboard"].tap()
+    app.buttons["workspace-settings"].tap()
+    reveal(app.buttons["Archive organization"], in: app).tap()
+    XCTAssertTrue(app.buttons["new-collection"].waitForExistence(timeout: 10))
+    XCTAssertFalse(app.navigationBars["Settings"].exists)
+    XCTAssertTrue(app.tabBars.buttons["More"].isSelected)
+  }
+
   func testDashboardRibbonSectionsAndLinksOpenTheirRecords() throws {
     let app = try launchLocalSession()
     XCTAssertTrue(app.otherElements["home-data-ribbon"].waitForExistence(timeout: 20))
