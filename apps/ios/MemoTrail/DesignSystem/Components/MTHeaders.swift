@@ -33,16 +33,9 @@ struct MTPageHeader<Actions: View>: View {
   }
 
   var body: some View {
-    ViewThatFits(in: .horizontal) {
-      HStack(alignment: .top, spacing: MTSpacing.s5) {
-        copy
-        Spacer(minLength: 0)
-        actionRow
-      }
-      VStack(alignment: .leading, spacing: MTSpacing.s4) {
-        copy
-        actionRow
-      }
+    MTPageHeaderLayout {
+      copy
+      actionRow
     }
     .frame(maxWidth: .infinity, alignment: .leading)
   }
@@ -67,6 +60,63 @@ struct MTPageHeader<Actions: View>: View {
 
   private var actionRow: some View {
     HStack(spacing: MTSpacing.s2) { actions }
+  }
+}
+
+/// Web `PageHeader` wrapping: the copy keeps a 260 pt basis and its title wraps beside the
+/// actions while both fit, so a small Edit stays beside a long title; otherwise the actions
+/// move below the copy.
+private struct MTPageHeaderLayout: Layout {
+  private static let copyBasis: CGFloat = 260
+  private let spacing = MTSpacing.s5
+  private let wrapSpacing = MTSpacing.s4
+
+  func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+    let frames = arrange(width: proposal.width, subviews: subviews)
+    return CGSize(
+      width: frames.map(\.maxX).max() ?? 0, height: frames.map(\.maxY).max() ?? 0)
+  }
+
+  func placeSubviews(
+    in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()
+  ) {
+    for (subview, frame) in zip(subviews, arrange(width: bounds.width, subviews: subviews)) {
+      subview.place(
+        at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY + frame.minY),
+        proposal: ProposedViewSize(frame.size))
+    }
+  }
+
+  /// The copy's and the actions' frames for a width, or for their ideal sizes without one.
+  private func arrange(width: CGFloat?, subviews: Subviews) -> [CGRect] {
+    guard let copy = subviews.first else { return [] }
+    let actions = subviews.count > 1 ? subviews[1].sizeThatFits(.unspecified) : .zero
+    guard actions.width > 0 else {
+      return [
+        CGRect(origin: .zero, size: copy.sizeThatFits(ProposedViewSize(width: width, height: nil)))
+      ]
+    }
+    guard let width else {
+      let ideal = copy.sizeThatFits(.unspecified)
+      return [
+        CGRect(origin: .zero, size: ideal),
+        CGRect(origin: CGPoint(x: ideal.width + spacing, y: 0), size: actions),
+      ]
+    }
+    if Self.copyBasis + spacing + actions.width <= width {
+      let copyWidth = width - spacing - actions.width
+      let copySize = copy.sizeThatFits(ProposedViewSize(width: copyWidth, height: nil))
+      return [
+        CGRect(origin: .zero, size: CGSize(width: copyWidth, height: copySize.height)),
+        CGRect(origin: CGPoint(x: width - actions.width, y: 0), size: actions),
+      ]
+    }
+    let copySize = copy.sizeThatFits(ProposedViewSize(width: width, height: nil))
+    let wrapped = subviews[1].sizeThatFits(ProposedViewSize(width: width, height: nil))
+    return [
+      CGRect(origin: .zero, size: CGSize(width: width, height: copySize.height)),
+      CGRect(origin: CGPoint(x: 0, y: copySize.height + wrapSpacing), size: wrapped),
+    ]
   }
 }
 

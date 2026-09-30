@@ -66,7 +66,8 @@
 
         GallerySpecimen(
           title: "Sheets & confirmations",
-          api: "MTSheet · form · fitted · message · footer · MTSheetFooter · MTSheetOption · confirmationDialog",
+          api:
+            "MTSheet · form · fitted · message · footer · MTSheetFooter · MTSheetOption · confirmationDialog",
           description:
             "MTSheet is the Web Dialog: a form sheet for editors, a fitted sheet for short choices, and confirmations for destructive actions."
         ) {
@@ -78,7 +79,8 @@
 
         GallerySpecimen(
           title: "PageHeader",
-          api: "eyebrow · title · description · actions · compact title on phones"
+          api:
+            "eyebrow · title · description · actions · compact title on phones · actions wrap below a 260 pt copy basis"
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s5) {
             MTPageHeader(
@@ -89,6 +91,15 @@
                 .mtButtonStyle(.secondary)
               Button("Add memory", systemImage: MTIcon.plus.systemName) { sheet = .form }
                 .mtButtonStyle()
+            }
+            Rectangle().fill(MTColor.border).frame(height: 1)
+            MTPageHeader(eyebrow: "First Time", title: "First sourdough loaf at home") {
+              Button {
+                message = "Header edit activated."
+              } label: {
+                Label("Edit", icon: .edit)
+              }
+              .mtButtonStyle(.ghost, size: .small)
             }
             Rectangle().fill(MTColor.border).frame(height: 1)
             MTPageHeader(
