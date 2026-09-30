@@ -88,7 +88,7 @@ struct CollectionsView: View {
     case (.entry, "first_time", _):
       FirstTimeDetailView(client: client, ownerID: ownerID, entryID: entry.id)
     default:
-      EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: entry.id)
+      WikiItemDetailView(client: client, ownerID: ownerID, entryID: entry.id)
     }
   }
 

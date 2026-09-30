@@ -196,6 +196,100 @@ final class LocalSessionUITests: XCTestCase {
     XCTAssertTrue(app.navigationBars["Version history"].waitForExistence(timeout: 10))
   }
 
+  func testItemPageLinksItemsRestoresVersionsAndCreatesLinkedGoals() throws {
+    let app = try launchLocalSession()
+
+    // Library opens a plain Entry on its Item page, like Web `/items/<id>`.
+    XCTAssertTrue(app.buttons["workspace-search"].waitForExistence(timeout: 20))
+    app.buttons["workspace-search"].tap()
+    let field = app.textFields["Search your Life Wiki"]
+    XCTAssertTrue(field.waitForExistence(timeout: 10))
+    field.typeText("Evening walks\n")
+    let result = app.buttons.matching(
+      NSPredicate(format: "label CONTAINS %@", "Evening walks along the river")
+    ).firstMatch
+    XCTAssertTrue(result.waitForExistence(timeout: 15))
+    result.tap()
+    XCTAssertTrue(app.navigationBars["Entry"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["edit-item"].waitForExistence(timeout: 10))
+    XCTAssertTrue(
+      text("Most evenings that spring ended with the same loop", in: app).exists)
+    XCTAssertTrue(text("Summer 2025", in: app).exists)
+    attach(app, "Item page")
+
+    // Find Items links another Entry at once.
+    reveal(app.buttons["Find Items"], in: app).tap()
+    let search = app.textFields["Search related Items"]
+    reveal(search, in: app).tap()
+    search.typeText("recipe\n")
+    let link = app.buttons["Link Grandmother's recipe cards"]
+    XCTAssertTrue(link.waitForExistence(timeout: 10))
+    reveal(link, in: app).tap()
+    XCTAssertTrue(text("Item linked.", in: app).waitForExistence(timeout: 10))
+    let unlink = app.buttons["Unlink Grandmother's recipe cards"]
+    XCTAssertTrue(unlink.waitForExistence(timeout: 10))
+    reveal(unlink, in: app)
+    attach(app, "Item page Related Items")
+
+    // The linked Entry opens on its own Item page, which lists this one under Linked from.
+    app.buttons["Grandmother's recipe cards"].tap()
+    XCTAssertTrue(
+      app.staticTexts["A shoebox of index cards, most of them stained with butter."]
+        .waitForExistence(timeout: 10))
+    reveal(app.buttons["Linked from"], in: app).tap()
+    XCTAssertTrue(
+      reveal(app.buttons["Evening walks along the river"], in: app).waitForExistence(timeout: 10))
+    attach(app, "Linked Item page")
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+
+    // Version history compares the version before the link, and restoring it removes the link.
+    reveal(app.buttons["item-version-history"], in: app).tap()
+    XCTAssertTrue(app.navigationBars["Version history"].waitForExistence(timeout: 10))
+    XCTAssertTrue(
+      text("Differences from current version: Entry links.", in: app).waitForExistence(timeout: 10))
+    attach(app, "Item version history")
+    reveal(app.buttons["restore-version"], in: app).tap()
+    let restore = app.buttons["Restore version"]
+    XCTAssertTrue(restore.waitForExistence(timeout: 5))
+    restore.tap()
+    XCTAssertTrue(text("Version restored.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(
+      reveal(text("No matching linked Items.", in: app), in: app).waitForExistence(timeout: 10))
+    attach(app, "Item version history after restoring")
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    XCTAssertTrue(app.buttons["edit-item"].waitForExistence(timeout: 10))
+    XCTAssertTrue(
+      reveal(text("No matching linked Items.", in: app), in: app).waitForExistence(timeout: 10))
+
+    // Current photos load on request through the Web media API, when the review serves it.
+    reveal(app.buttons["entry-photos-load"], in: app).tap()
+    let photos = servesMediaAPI() ? "No saved photos on this Entry." : "Could not load photos."
+    XCTAssertTrue(reveal(text(photos, in: app), in: app).waitForExistence(timeout: 10))
+    attach(app, "Item page current photos")
+
+    // Create linked Goal starts from this Entry's title and opens the new Goal.
+    reveal(app.buttons["create-linked-goal"], in: app).tap()
+    let goalTitle = app.textFields["linked-goal-title"]
+    XCTAssertTrue(goalTitle.waitForExistence(timeout: 5))
+    XCTAssertEqual(goalTitle.value as? String, "Evening walks along the river")
+    attach(app, "Create linked Goal")
+    app.buttons["save-linked-goal"].tap()
+    XCTAssertTrue(text("Goal created.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["edit-goal"].waitForExistence(timeout: 10))
+    attach(app, "Linked Goal")
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+
+    // Move to Trash confirms, then returns to Library.
+    reveal(app.buttons["trash-item"], in: app).tap()
+    let confirm = app.buttons.matching(
+      NSPredicate(format: "label == %@ AND identifier != %@", "Move to Trash", "trash-item")
+    ).firstMatch
+    XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+    confirm.tap()
+    XCTAssertTrue(text("Entry moved to Trash.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(field.waitForExistence(timeout: 10))
+  }
+
   func testSettingsSavesThePreferredNameForTheGreeting() throws {
     let app = try launchLocalSession()
     XCTAssertTrue(text("Review.", in: app).waitForExistence(timeout: 20))
@@ -839,6 +933,15 @@ final class LocalSessionUITests: XCTestCase {
     app.launchEnvironment["MEMOTRAIL_REVIEW_SESSION"] = path
     app.launch()
     return app
+  }
+
+  /// Whether `review-local-session.py --web` serves the Web media API for this run.
+  private func servesMediaAPI() -> Bool {
+    let path = ProcessInfo.processInfo.environment["MEMOTRAIL_REVIEW_SESSION"] ?? ""
+    guard let data = FileManager.default.contents(atPath: path),
+      let session = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+    else { return false }
+    return session["apiURL"] is String
   }
 
   private func element(_ identifier: String, in app: XCUIApplication) -> XCUIElement {

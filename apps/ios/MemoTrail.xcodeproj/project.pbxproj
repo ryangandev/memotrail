@@ -146,6 +146,11 @@
 		E10000000000000000000032 /* PersonDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000032 /* PersonDetailView.swift */; };
 		E10000000000000000000033 /* PersonEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000033 /* PersonEditorSheet.swift */; };
 		E10000000000000000000034 /* PersonRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000034 /* PersonRecord.swift */; };
+		E10000000000000000000035 /* EntryHistoryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000035 /* EntryHistoryController.swift */; };
+		E10000000000000000000036 /* WikiItemParts.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000036 /* WikiItemParts.swift */; };
+		E10000000000000000000037 /* WikiItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000037 /* WikiItemDetailView.swift */; };
+		E10000000000000000000038 /* LinkedGoalSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000038 /* LinkedGoalSheet.swift */; };
+		E10000000000000000000039 /* EntryHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000039 /* EntryHistory.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -165,8 +170,8 @@
 		C00000000000000000000045 /* MediaDelivery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDelivery.swift; sourceTree = "<group>"; };
 		C00000000000000000000043 /* ExplorationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AI/ExplorationView.swift; sourceTree = "<group>"; };
 		C00000000000000000000044 /* ExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Export/ExportView.swift; sourceTree = "<group>"; };
-		C0000000000000000000003E /* EntryHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = History/EntryHistoryView.swift; sourceTree = "<group>"; };
-		C70000000000000000000001 /* EntryRelationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = History/EntryRelationsView.swift; sourceTree = "<group>"; };
+		C0000000000000000000003E /* EntryHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryHistoryView.swift; sourceTree = "<group>"; };
+		C70000000000000000000001 /* EntryRelationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryRelationsView.swift; sourceTree = "<group>"; };
 		C0000000000000000000003F /* TimelineTracksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timeline/TimelineTracksView.swift; sourceTree = "<group>"; };
 		C00000000000000000000040 /* OrganizationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Collections/OrganizationView.swift; sourceTree = "<group>"; };
 		C0000000000000000000003D /* EntryAISuggestionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AI/EntryAISuggestionsView.swift; sourceTree = "<group>"; };
@@ -301,6 +306,11 @@
 		E20000000000000000000032 /* PersonDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonDetailView.swift; sourceTree = "<group>"; };
 		E20000000000000000000033 /* PersonEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonEditorSheet.swift; sourceTree = "<group>"; };
 		E20000000000000000000034 /* PersonRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonRecord.swift; sourceTree = "<group>"; };
+		E20000000000000000000035 /* EntryHistoryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryHistoryController.swift; sourceTree = "<group>"; };
+		E20000000000000000000036 /* WikiItemParts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiItemParts.swift; sourceTree = "<group>"; };
+		E20000000000000000000037 /* WikiItemDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiItemDetailView.swift; sourceTree = "<group>"; };
+		E20000000000000000000038 /* LinkedGoalSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkedGoalSheet.swift; sourceTree = "<group>"; };
+		E20000000000000000000039 /* EntryHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryHistory.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -389,12 +399,11 @@
 				A10000000000000000000024 /* Vehicles */,
 				A10000000000000000000025 /* Goals */,
 				A10000000000000000000026 /* People */,
+				A10000000000000000000027 /* History */,
 				C0000000000000000000003C /* AISettingsView.swift */,
 				C00000000000000000000043 /* ExplorationView.swift */,
 				C00000000000000000000044 /* ExportView.swift */,
 				C0000000000000000000003D /* EntryAISuggestionsView.swift */,
-				C0000000000000000000003E /* EntryHistoryView.swift */,
-				C70000000000000000000001 /* EntryRelationsView.swift */,
 				C0000000000000000000003F /* TimelineTracksView.swift */,
 				C00000000000000000000040 /* OrganizationView.swift */,
 				A10000000000000000000006 /* Inbox */,
@@ -476,6 +485,7 @@
 		A10000000000000000000010 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000039 /* EntryHistory.swift */,
 				E20000000000000000000034 /* PersonRecord.swift */,
 				E2000000000000000000002A /* EntryLocation.swift */,
 				E20000000000000000000022 /* OrganizationNames.swift */,
@@ -643,6 +653,19 @@
 			path = People;
 			sourceTree = "<group>";
 		};
+		A10000000000000000000027 /* History */ = {
+			isa = PBXGroup;
+			children = (
+				E20000000000000000000038 /* LinkedGoalSheet.swift */,
+				E20000000000000000000037 /* WikiItemDetailView.swift */,
+				E20000000000000000000036 /* WikiItemParts.swift */,
+				E20000000000000000000035 /* EntryHistoryController.swift */,
+				C0000000000000000000003E /* EntryHistoryView.swift */,
+				C70000000000000000000001 /* EntryRelationsView.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
 		A10000000000000000000025 /* Goals */ = {
 			isa = PBXGroup;
 			children = (
@@ -783,6 +806,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E10000000000000000000039 /* EntryHistory.swift in Sources */,
+				E10000000000000000000038 /* LinkedGoalSheet.swift in Sources */,
+				E10000000000000000000037 /* WikiItemDetailView.swift in Sources */,
+				E10000000000000000000036 /* WikiItemParts.swift in Sources */,
+				E10000000000000000000035 /* EntryHistoryController.swift in Sources */,
 				E10000000000000000000034 /* PersonRecord.swift in Sources */,
 				E10000000000000000000033 /* PersonEditorSheet.swift in Sources */,
 				E10000000000000000000032 /* PersonDetailView.swift in Sources */,

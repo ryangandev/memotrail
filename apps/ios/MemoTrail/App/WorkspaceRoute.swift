@@ -124,8 +124,8 @@ struct WorkspaceDestinationView: View {
 }
 
 /// Canonical detail routing, shared by Library, the Map, the Dashboard, and Connected Items.
-/// Like Web `wikiEntryHref`, only a Person from People opens a Person page; a person Entry
-/// opens as an Item.
+/// Like Web `wikiEntryHref`, only a Person from People opens a Person page; a person Entry and
+/// any Item without a focused page open as an Item.
 struct WikiItemDestinationView: View {
   let client: SupabaseClient
   let ownerID: UUID
@@ -147,7 +147,7 @@ struct WikiItemDestinationView: View {
     case (.entry, "first_time", _):
       FirstTimeDetailView(client: client, ownerID: ownerID, entryID: entryID)
     default:
-      EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: entryID)
+      WikiItemDetailView(client: client, ownerID: ownerID, entryID: entryID)
     }
   }
 }

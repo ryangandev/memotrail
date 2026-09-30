@@ -107,7 +107,18 @@ final class LibraryDestinationTests: XCTestCase {
     XCTAssertEqual(HistoryPresentation.date(legacy), "Unknown")
     XCTAssertEqual(HistoryPresentation.differences(current: current, previous: legacy), [])
     current["body"] = .string("Changed")
-    XCTAssertEqual(HistoryPresentation.differences(current: current, previous: legacy), ["body"])
+    XCTAssertEqual(HistoryPresentation.differences(current: current, previous: legacy), ["Writing"])
+    XCTAssertEqual(HistoryPresentation.title(title: "  ", body: " \n "), "Untitled item")
+    XCTAssertEqual(
+      HistoryPresentation.date([
+        "occurred_start": .string("2021-01-01T15:30:00Z"), "occurred_end": .null,
+        "occurred_timezone": .string("Asia/Shanghai"), "date_precision": .string("exact"),
+      ]), "Jan 1, 2021, 11:30\u{202F}PM")
+    XCTAssertEqual(
+      HistoryPresentation.date([
+        "occurred_start": .string("2021-03-01T00:00:00Z"),
+        "occurred_end": .string("2021-04-01T00:00:00Z"), "date_precision": .string("month"),
+      ]), "Mar 2021 to Apr 2021")
     let id = UUID()
     let json = try XCTUnwrap(
       JSONSerialization.jsonObject(

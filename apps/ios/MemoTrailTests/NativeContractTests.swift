@@ -498,6 +498,106 @@ final class NativeContractTests: XCTestCase {
     XCTAssertEqual(reopened, .unavailable)
   }
 
+  func testItemHistoryRestoresLinksCreatesALinkedGoalAndMovesToTrash() async throws {
+    let (client, ownerID) = try await client()
+    let inbox = InboxController(client: client, ownerID: ownerID)
+    var ids: [UUID] = []
+    for body in ["Native item source", "Native item target"] {
+      let id = UUID()
+      try await client.from("entries").insert(
+        InboxEntryInsert(
+          id: id, ownerID: ownerID, title: nil, body: body, occurredStart: nil,
+          occurredTimezone: "UTC", datePrecision: "unknown", clientID: "native-contract:\(id)")
+      ).execute()
+      await inbox.load()
+      let capture = try XCTUnwrap(inbox.entries.first { $0.id == id })
+      let saved = await inbox.review(
+        entry: capture,
+        draft: EntryReviewDraft(
+          title: "", body: body, bodyRich: nil, collectionNames: [], tagNames: [],
+          occurrence: capture.occurrence),
+        intent: .done)
+      XCTAssertEqual(saved.status, .done, saved.message)
+      ids.append(id)
+    }
+    let (sourceID, targetID) = (ids[0], ids[1])
+
+    // The Item page loads the current snapshot and the version from before its review.
+    let item = EntryHistoryController(client: client, ownerID: ownerID, entryID: sourceID)
+    await item.load()
+    XCTAssertFalse(item.loadFailed)
+    let loaded = try XCTUnwrap(item.record)
+    XCTAssertEqual(loaded.title, "Native item source")
+    XCTAssertEqual(loaded.identityLabel, "Entry")
+    XCTAssertFalse(loaded.isDeleted)
+    XCTAssertFalse(loaded.versions.isEmpty)
+    let editable = await item.editableEntry()
+    XCTAssertEqual(editable?.id, sourceID)
+
+    // Linking another Item saves a revision whose earlier version lacks the link.
+    let linked: Int? = try await client.rpc(
+      "set_entry_relation",
+      params: EntryRelationChange(
+        entryID: sourceID, targetID: targetID, expectedRevision: loaded.revision, linked: true)
+    ).execute().value
+    XCTAssertEqual(linked, loaded.revision + 1)
+    await item.reload()
+    let withLink = try XCTUnwrap(item.record)
+    XCTAssertEqual(withLink.current["links"]?.array?.count, 1)
+    let beforeLink = try XCTUnwrap(withLink.versions.first)
+    XCTAssertEqual(
+      HistoryPresentation.differences(current: withLink.current, previous: beforeLink.snapshot),
+      ["Entry links"])
+
+    // Restoring that version removes the link; a page still showing the old revision cannot.
+    let stale = EntryHistoryController(client: client, ownerID: ownerID, entryID: sourceID)
+    await stale.load()
+    let restored = await item.restore(version: beforeLink.version)
+    XCTAssertNil(restored)
+    XCTAssertEqual(item.record?.current["links"]?.array?.count, 0)
+    let conflict = await stale.restore(version: beforeLink.version)
+    XCTAssertEqual(
+      conflict,
+      "This Entry changed on another device or is in Trash. Refresh or restore it from Trash first."
+    )
+
+    // A linked Goal starts from a valid title and links both ways.
+    let invalid = await item.extractGoal(
+      goalID: UUID(), title: " ", horizon: .someday, status: .considering, targetDate: nil)
+    XCTAssertEqual(
+      invalid,
+      .failure(
+        GoalExtractionFailure(
+          message: "Add a Goal title up to 200 characters and a valid optional target date.")))
+    let goalID = UUID()
+    let extracted = await item.extractGoal(
+      goalID: goalID, title: "Native linked Goal", horizon: .shortTerm, status: .active,
+      targetDate: nil)
+    XCTAssertEqual(extracted, .success(goalID))
+    await item.reload()
+    XCTAssertTrue(
+      item.record?.provenanceLinks.contains {
+        $0.targetID == goalID && $0.title == "Open extracted item"
+      } == true)
+    let goal = EntryHistoryController(client: client, ownerID: ownerID, entryID: goalID)
+    await goal.load()
+    XCTAssertEqual(goal.record?.itemKind, .goal)
+    XCTAssertTrue(
+      goal.record?.provenanceLinks.contains {
+        $0.targetID == sourceID && $0.title == "Open source item"
+      } == true)
+
+    // Like Web `trashWikiItem`, Move to Trash applies only at the revision shown.
+    let staleTrash = await stale.moveToTrash()
+    XCTAssertEqual(
+      staleTrash,
+      "This item changed on another device or is already in Trash. Refresh and try again.")
+    let trashed = await item.moveToTrash()
+    XCTAssertNil(trashed)
+    await item.reload()
+    XCTAssertEqual(item.record?.isDeleted, true)
+  }
+
   func testFocusedRecordsDecodeInLibraryCollectionsAndHome() async throws {
     let (client, ownerID) = try await client()
     let collectionName = "Native focused \(UUID().uuidString)"
