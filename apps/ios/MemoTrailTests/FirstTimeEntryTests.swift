@@ -6,7 +6,7 @@ final class FirstTimeEntryTests: XCTestCase {
   @MainActor
   func testWritingRevisionUsesTheOriginalGuardAndServerProof() async throws {
     let id = UUID()
-    let request = EntryPhotoUpload.WritingRevision(p_entry_id: id, p_expected_revision: 2)
+    let request = EntryPhotoUpload.WritingRevision(entryID: id, expectedRevision: 2)
     let body = try XCTUnwrap(
       JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as? [String: Any])
     XCTAssertEqual(body["p_entry_id"] as? String, id.uuidString)

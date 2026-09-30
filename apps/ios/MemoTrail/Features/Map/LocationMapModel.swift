@@ -87,29 +87,47 @@ struct LocationMapArea: Identifiable {
 }
 
 struct MapLocationLink: Decodable {
-  let entry_id: UUID
-  let place_id: UUID
+  let entryID: UUID
+  let placeID: UUID
+
+  enum CodingKeys: String, CodingKey {
+    case entryID = "entry_id"
+    case placeID = "place_id"
+  }
 }
 
 struct MapEntryRow: Decodable {
   let id: UUID
   let title: String
   let body: String?
-  let item_kind: WikiItemKind
-  let item_subtype: String
-  let inbox_status: String
-  let occurred_start: Date?
+  let itemKind: WikiItemKind
+  let itemSubtype: String
+  let inboxStatus: String
+  let occurredStart: Date?
+
+  enum CodingKeys: String, CodingKey {
+    case id, title, body
+    case itemKind = "item_kind"
+    case itemSubtype = "item_subtype"
+    case inboxStatus = "inbox_status"
+    case occurredStart = "occurred_start"
+  }
 }
 
 struct MapLocationRow: Decodable {
   let id: UUID
   let latitude: Double?
   let longitude: Double?
-  let formatted_address: String?
+  let formattedAddress: String?
   let name: String
   let city: String?
   let region: String?
   let country: String?
+
+  enum CodingKeys: String, CodingKey {
+    case id, latitude, longitude, name, city, region, country
+    case formattedAddress = "formatted_address"
+  }
 }
 
 enum LocationMapAssembly {
@@ -122,7 +140,7 @@ enum LocationMapAssembly {
       locations.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     var seen = Set<String>()
     return links.compactMap { link in
-      guard let entry = entriesByID[link.entry_id], let location = locationsByID[link.place_id],
+      guard let entry = entriesByID[link.entryID], let location = locationsByID[link.placeID],
         let latitude = location.latitude, let longitude = location.longitude,
         latitude.isFinite, longitude.isFinite,
         (-90...90).contains(latitude), (-180...180).contains(longitude)
@@ -132,9 +150,9 @@ enum LocationMapAssembly {
         title: entry.title.trimmed.nonEmpty ?? entry.body?.trimmed.nonEmpty.map {
           String($0.prefix(120))
         } ?? "Untitled record",
-        kind: entry.item_kind, subtype: entry.item_subtype, inboxStatus: entry.inbox_status,
-        occurredAt: entry.occurred_start, latitude: latitude, longitude: longitude,
-        address: location.formatted_address?.trimmed.nonEmpty ?? location.name,
+        kind: entry.itemKind, subtype: entry.itemSubtype, inboxStatus: entry.inboxStatus,
+        occurredAt: entry.occurredStart, latitude: latitude, longitude: longitude,
+        address: location.formattedAddress?.trimmed.nonEmpty ?? location.name,
         city: location.city, region: location.region, country: location.country
       )
       return seen.insert(item.id).inserted ? item : nil

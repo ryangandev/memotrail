@@ -288,8 +288,11 @@ struct EntryHistoryIndexView: View {
         }
         if busy { ProgressView() }
       }.padding()
-    }.background(MTColor.canvas).navigationTitle("Version history").task { await load() }.refreshable
-    { await load() }
+    }
+    .background(MTColor.canvas)
+    .navigationTitle("Version history")
+    .task { await load() }
+    .refreshable { await load() }
   }
   private func load(more: Bool = false) async {
     guard !busy, query.count <= 200 else { return }

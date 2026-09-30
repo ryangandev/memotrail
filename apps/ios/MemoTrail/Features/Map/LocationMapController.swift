@@ -35,8 +35,8 @@ struct LocationMapRepository {
     for offset in stride(from: 0, to: links.count, by: Self.pageSize) {
       try Task.checkCancellation()
       let batch = Array(links[offset..<min(offset + Self.pageSize, links.count)])
-      let entryIDs = Set(batch.map { $0.entry_id.uuidString }).sorted()
-      let locationIDs = Set(batch.map { $0.place_id.uuidString }).sorted()
+      let entryIDs = Set(batch.map { $0.entryID.uuidString }).sorted()
+      let locationIDs = Set(batch.map { $0.placeID.uuidString }).sorted()
       let entries: [MapEntryRow] = try await client.from("entries")
         .select("id,title,body,item_kind,item_subtype,inbox_status,occurred_start")
         .eq("owner_id", value: ownerID.uuidString).is("deleted_at", value: nil)

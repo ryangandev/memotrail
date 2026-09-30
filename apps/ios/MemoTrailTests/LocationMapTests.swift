@@ -55,19 +55,19 @@ final class LocationMapTests: XCTestCase {
     let locationID = UUID()
     let missing = UUID()
     let entry = MapEntryRow(
-      id: entryID, title: "Home", body: nil, item_kind: .entity, item_subtype: "home",
-      inbox_status: "organized", occurred_start: nil)
+      id: entryID, title: "Home", body: nil, itemKind: .entity, itemSubtype: "home",
+      inboxStatus: "organized", occurredStart: nil)
     func location(_ latitude: Double?, _ longitude: Double?) -> MapLocationRow {
       MapLocationRow(
         id: locationID, latitude: latitude, longitude: longitude,
-        formatted_address: "  Austin, Texas  ", name: "", city: "Austin", region: "Texas",
+        formattedAddress: "  Austin, Texas  ", name: "", city: "Austin", region: "Texas",
         country: "US")
     }
     let links = [
-      MapLocationLink(entry_id: entryID, place_id: locationID),
-      MapLocationLink(entry_id: entryID, place_id: locationID),
-      MapLocationLink(entry_id: missing, place_id: locationID),
-      MapLocationLink(entry_id: entryID, place_id: missing),
+      MapLocationLink(entryID: entryID, placeID: locationID),
+      MapLocationLink(entryID: entryID, placeID: locationID),
+      MapLocationLink(entryID: missing, placeID: locationID),
+      MapLocationLink(entryID: entryID, placeID: missing),
     ]
     let results = LocationMapAssembly.items(
       links: links, entries: [entry], locations: [location(0, 0)])
