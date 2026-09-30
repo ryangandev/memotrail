@@ -133,9 +133,13 @@ function makeSwift(value) {
     (name) =>
       `  static let ${name} = Color(lightHex: "${value.color.light[name]}", darkHex: "${value.color.dark[name]}")`,
   );
-  const colorCatalogLines = Object.keys(value.color.light).map(
-    (name) =>
-      `    MTColorToken(name: "${name}", lightHex: "${value.color.light[name]}", darkHex: "${value.color.dark[name]}", color: ${name}),`,
+  const colorCatalogLines = Object.keys(value.color.light).map((name) =>
+    swiftCall(4, "MTColorToken", [
+      `name: "${name}"`,
+      `lightHex: "${value.color.light[name]}"`,
+      `darkHex: "${value.color.dark[name]}"`,
+      `color: ${name}`,
+    ]),
   );
   const spacingLines = swiftNumberTokens("MTSpacing", value.space);
   const radiusLines = swiftNumberTokens("MTRadius", value.radius);
@@ -147,17 +151,37 @@ function makeSwift(value) {
     ([name, multiplier]) =>
       `  static let ${swiftName(name)}: CGFloat = ${multiplier}`,
   );
-  const shadowLines = Object.entries(value.shadow).flatMap(([name, shadow]) => [
-    `  static let ${swiftName(name)} = [`,
-    ...shadowLayers(name, shadow).map(
-      (layer) =>
-        `    MTShadowLayer(red: ${layer.red}, green: ${layer.green}, blue: ${layer.blue}, opacity: ${layer.opacity}, radius: ${layer.radius}, x: ${layer.x}, y: ${layer.y}),`,
-    ),
-    "  ]",
-  ]);
+  const shadowLines = Object.entries(value.shadow).flatMap(([name, shadow]) => {
+    const layers = shadowLayers(name, shadow);
+    return [
+      `  static let ${swiftName(name)} = [`,
+      ...layers.map((layer) =>
+        swiftCall(
+          4,
+          "MTShadowLayer",
+          [
+            `red: ${layer.red}`,
+            `green: ${layer.green}`,
+            `blue: ${layer.blue}`,
+            `opacity: ${layer.opacity}`,
+            `radius: ${layer.radius}`,
+            `x: ${layer.x}`,
+            `y: ${layer.y}`,
+          ],
+          // swift-format drops the trailing comma of a one-element array.
+          layers.length > 1 ? "," : "",
+        ),
+      ),
+      "  ]",
+    ];
+  });
   const shadowCatalogLines = Object.entries(value.shadow).map(
     ([name, shadow]) =>
-      `    MTShadowToken(name: "${name}", css: ${JSON.stringify(shadow)}, layers: ${swiftName(name)}),`,
+      swiftCall(4, "MTShadowToken", [
+        `name: "${name}"`,
+        `css: ${JSON.stringify(shadow)}`,
+        `layers: ${swiftName(name)}`,
+      ]),
   );
   const typographyLines = [
     `  static let display = Font.system(size: ${value.font.size.display}, weight: .medium, design: .serif)`,
@@ -227,7 +251,10 @@ struct MTShadowLayer: Sendable {
   let x: CGFloat
   let y: CGFloat
 
-  init(red: Double, green: Double, blue: Double, opacity: Double, radius: CGFloat, x: CGFloat, y: CGFloat) {
+  init(
+    red: Double, green: Double, blue: Double, opacity: Double, radius: CGFloat, x: CGFloat,
+    y: CGFloat
+  ) {
     color = Color(red: red / 255, green: green / 255, blue: blue / 255).opacity(opacity)
     self.radius = radius
     self.x = x
@@ -250,8 +277,8 @@ ${shadowCatalogLines.join("\n")}
   ]
 }
 
-private extension Color {
-  init(lightHex: String, darkHex: String) {
+extension Color {
+  fileprivate init(lightHex: String, darkHex: String) {
     self.init(
       uiColor: UIColor { traits in
         UIColor(hex: traits.userInterfaceStyle == .dark ? darkHex : lightHex)
@@ -260,8 +287,8 @@ private extension Color {
   }
 }
 
-private extension UIColor {
-  convenience init(hex: String) {
+extension UIColor {
+  fileprivate convenience init(hex: String) {
     var value: UInt64 = 0
     Scanner(string: hex.replacingOccurrences(of: "#", with: "")).scanHexInt64(&value)
     self.init(
@@ -296,6 +323,29 @@ function shadowLayers(name, shadow) {
       y: Number(y),
     };
   });
+}
+
+// Emits a call the way swift-format prints it: on one line when it fits in 100 columns,
+// otherwise with its arguments packed onto continuation lines two spaces deeper.
+function swiftCall(indentation, name, args, suffix = ",") {
+  const prefix = " ".repeat(indentation);
+  const single = `${prefix}${name}(${args.join(", ")})${suffix}`;
+  if (single.length <= 100) return single;
+
+  const continuation = " ".repeat(indentation + 2);
+  const lines = [`${prefix}${name}(`];
+  let packed = [];
+  args.forEach((arg, index) => {
+    const ending = index === args.length - 1 ? `)${suffix}` : ",";
+    const line = `${continuation}${[...packed, arg].join(", ")}${ending}`;
+    if (packed.length > 0 && line.length > 100) {
+      lines.push(`${continuation}${packed.join(", ")},`);
+      packed = [];
+    }
+    packed.push(arg);
+  });
+  lines.push(`${continuation}${packed.join(", ")})${suffix}`);
+  return lines.join("\n");
 }
 
 function swiftCatalog(entries, identifier) {
