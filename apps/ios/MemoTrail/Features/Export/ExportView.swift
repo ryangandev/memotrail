@@ -170,6 +170,8 @@ enum ExportAPI {
   }
 }
 
+/// Web `/settings/export`: what the ZIP holds, preparing a snapshot, and each snapshot's download
+/// and discard. Downloads stream to disk, then save or share through the system sheet.
 struct ExportView: View {
   let client: SupabaseClient
   let ownerID: UUID
@@ -184,87 +186,136 @@ struct ExportView: View {
   @State private var operation: Task<Void, Never>?
 
   var body: some View {
-    Form {
-      Section("Everything, in one ZIP") {
-        Text(
+    MTPage(width: .compact, spacing: MTSpacing.s5) {
+      MTPageHeader(
+        eyebrow: "Your archive, to keep", title: "Export archive",
+        description: "A portable copy of your story. No AI processing.")
+      ExportCard(title: "Everything, in one ZIP") {
+        paragraph(
           "Complete JSON, readable Entry Markdown, structured CSV tables, and original photos. Includes Trash, edit history, relationships, and AI conversations."
         )
-        Text(
-          "No AI processing. This ZIP is not encrypted; anyone you share it with can read it. Sync every device first: unsynced offline changes are not included."
-        )
-        .foregroundStyle(MTColor.inkMuted)
-      }
-      Section {
-        Button("Prepare snapshot") { run { await change("create") } }.disabled(
-          busy || snapshots.count >= 2)
-        Button("Refresh") { run { await load() } }.disabled(busy)
-      } header: {
-        Text("Prepare a snapshot")
-      } footer: {
-        Text(
-          "Capture one consistent moment across your devices. Keep up to two snapshots for 24 hours. Copies retain that content even after later edits or deletions. Discard a snapshot to remove its copied content sooner. Changed or missing original media stops the download."
+        paragraph(
+          "The ZIP is not encrypted. Anyone you share it with can read it. Unsynced offline changes are not included; sync every device first."
         )
       }
-      if let message { Section { Text(message).accessibilityIdentifier("export-message") } }
-      if downloading {
-        Section {
-          ProgressView("Downloading to disk…")
-          Button("Cancel download") { operation?.cancel() }
+      ExportCard(title: "Prepare a snapshot") {
+        paragraph(
+          "Capture one consistent moment across your devices. Temporary copies retain that content for 24 hours, even if you later edit or delete the originals. Discard a snapshot to remove its copied content sooner."
+        )
+        paragraph(
+          "Keep up to two snapshots. Original media is verified during download; changed or missing files stop the export."
+        )
+        MTFlowLayout(spacing: 10) {
+          Button("Prepare snapshot") { run { await change("create") } }
+            .mtButtonStyle(isLoading: busy && !downloading && pendingCreate != nil)
+            .disabled(busy || snapshots.count >= 2)
+          Button("Refresh") { run { await load() } }
+            .mtButtonStyle(.secondary)
+            .disabled(busy)
         }
-      } else if busy {
-        Section { ProgressView() }
+      }
+      if let message {
+        ExportNotice {
+          paragraph(message)
+        }
+        .accessibilityIdentifier("export-message")
+      }
+      if downloading {
+        ExportNotice {
+          HStack(spacing: MTSpacing.s3) {
+            ProgressView().tint(MTColor.accent)
+            paragraph("Downloading to disk…")
+          }
+          Button("Cancel download") { operation?.cancel() }
+            .mtButtonStyle(.secondary)
+        }
       }
       if file != nil {
-        Section("Complete ZIP ready") {
-          Button("Save or share ZIP") { sharing = true }
-          Button("Remove local copy") { clearFile() }
-          Text(
+        ExportCard(title: "Complete ZIP ready") {
+          paragraph(
             "This temporary download is removed when you leave this screen. Files you save or share are yours to manage."
-          ).foregroundStyle(MTColor.inkMuted)
+          )
+          MTFlowLayout(spacing: 10) {
+            Button("Save or share ZIP") { sharing = true }
+              .mtButtonStyle()
+            Button("Remove local copy") { clearFile() }
+              .mtButtonStyle(.secondary)
+          }
         }
       }
-      Section("Available snapshots") {
-        if snapshots.isEmpty { Text("No snapshots yet. Your archive is unchanged.") }
-        ForEach(snapshots) { snapshot in
-          VStack(alignment: .leading, spacing: 10) {
-            Text(ExportSnapshot.dateLabel(snapshot.capturedAt)).font(.headline)
-            Text(
-              "\(snapshot.rowCount) records · \(snapshot.datasets["entries"] ?? 0) Entries · \(snapshot.datasets["media_objects"] ?? 0) media files"
-            )
-            .font(.caption).foregroundStyle(MTColor.inkMuted)
-            Text("Expires \(ExportSnapshot.dateLabel(snapshot.expiresAt))").font(.caption)
-            Button("Download ZIP") { run { await download(snapshot) } }.disabled(busy)
-            Button("Discard snapshot", role: .destructive) { discard = snapshot }.disabled(busy)
-          }.padding(.vertical, 8)
-        }
-      }
-      Section {
-        Text(
-          "Downloads stream to disk. If the connection or server time limit interrupts the ZIP, it is not offered as a complete backup. Retry the same snapshot or prepare a new one."
-        ).foregroundStyle(MTColor.inkMuted)
-      }
+      snapshotList
+      Text(
+        "Downloads stream to disk. If the connection or server time limit interrupts the ZIP, it is not offered as a complete backup. Retry the same snapshot or prepare a new one."
+      )
+      .font(MTFont.caption.weight(.regular))
+      .foregroundStyle(MTColor.inkMuted)
+      .mtLineSpacing(MTLineHeight.relaxed, textStyle: .caption1)
     }
     .navigationTitle("Export archive")
+    .navigationBarTitleDisplayMode(.inline)
     .task { await load() }
     .onDisappear {
       operation?.cancel()
       clearFile()
     }
-    .confirmationDialog(
-      "Discard this temporary copy? Your records and downloaded files stay unchanged.",
-      isPresented: Binding(get: { discard != nil }, set: { if !$0 { discard = nil } }),
-      titleVisibility: .visible
-    ) {
-      if let discard {
-        Button("Discard snapshot", role: .destructive) {
-          run { await change("discard", id: discard.id) }
-          self.discard = nil
-        }
-      }
-      Button("Keep snapshot", role: .cancel) { discard = nil }
-    }
     .sheet(isPresented: $sharing) { if let file { ExportShareSheet(url: file) } }
   }
+
+  private var snapshotList: some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s4) {
+      Text("Available snapshots")
+        .font(.system(.headline, design: .serif).weight(.medium))
+        .foregroundStyle(MTColor.ink)
+        .accessibilityAddTraits(.isHeader)
+      if snapshots.isEmpty {
+        paragraph("No snapshots yet. Your archive is unchanged.")
+      }
+      ForEach(snapshots) { snapshot in
+        ExportCard(title: ExportSnapshot.dateLabel(snapshot.capturedAt), level: .item) {
+          paragraph(
+            "\(snapshot.rowCount.formatted()) records · \(snapshot.datasets["entries"] ?? 0) Entries · \(snapshot.datasets["media_objects"] ?? 0) media files"
+          )
+          paragraph("Expires \(ExportSnapshot.dateLabel(snapshot.expiresAt))")
+          MTFlowLayout(spacing: 10) {
+            Button("Download ZIP") { run { await download(snapshot) } }
+              .mtButtonStyle(.secondary)
+              .disabled(busy)
+            Button("Discard snapshot") { discard = snapshot }
+              .mtButtonStyle(.danger)
+              .disabled(busy)
+          }
+          if discard?.id == snapshot.id {
+            // Web's inline confirmation, which keeps the choice beside its snapshot.
+            ExportNotice {
+              paragraph(
+                "Discard this temporary copy? Your original records and downloaded ZIPs will stay unchanged."
+              )
+              MTFlowLayout(spacing: 10) {
+                Button("Confirm discard") {
+                  run { await change("discard", id: snapshot.id) }
+                }
+                .mtButtonStyle(.danger)
+                .disabled(busy)
+                Button("Keep snapshot") { discard = nil }
+                  .mtButtonStyle(.secondary)
+                  .disabled(busy)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private func paragraph(_ text: String) -> some View {
+    Text(text)
+      .font(MTFont.body)
+      .foregroundStyle(MTColor.inkMuted)
+      .mtLineSpacing(1.65)
+      .fixedSize(horizontal: false, vertical: true)
+      .frame(maxWidth: .infinity, alignment: .leading)
+  }
+
   private func run(_ action: @escaping @MainActor () async -> Void) {
     guard !busy else { return }
     busy = true
@@ -292,10 +343,11 @@ struct ExportView: View {
         ownerID: ownerID)
       if action == "create" { pendingCreate = nil }
       try Task.checkCancellation()
-      message =
+      if action == "discard" { discard = nil }
+      MTToastCenter.shared.success(
         action == "create"
-        ? "Snapshot prepared. Download it on either device within 24 hours."
-        : "Temporary copy discarded. Your records are unchanged."
+          ? "Snapshot prepared. Download it on either device within 24 hours."
+          : "Temporary copy discarded. Your records and downloaded files are unchanged.")
       await load()
     } catch {
       if let code = (error as NSError).userInfo["serverCode"] as? String,
@@ -318,7 +370,8 @@ struct ExportView: View {
         return
       }
       file = url
-      message = "Complete ZIP downloaded. Save or share it before leaving this screen."
+      MTToastCenter.shared.success(
+        "Complete ZIP downloaded. Save or share it before leaving this screen.")
     } catch {
       message =
         Task.isCancelled
@@ -331,6 +384,50 @@ struct ExportView: View {
     file = nil
   }
 }
+/// Web `export-settings` card: a serif heading over its paragraphs and actions.
+private struct ExportCard<Content: View>: View {
+  enum Level { case section, item }
+
+  let title: String
+  var level: Level = .section
+  @ViewBuilder let content: Content
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 14) {
+      Text(title)
+        .font(
+          level == .section
+            ? .system(.headline, design: .serif).weight(.medium)
+            : .system(.callout, design: .serif).weight(.medium)
+        )
+        .foregroundStyle(MTColor.ink)
+        .accessibilityAddTraits(.isHeader)
+      content
+    }
+    .padding(18)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.large))
+    .overlay {
+      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border)
+    }
+  }
+}
+
+/// Web `export-settings` notice: status, progress, or a confirmation on a subtle surface.
+private struct ExportNotice<Content: View>: View {
+  @ViewBuilder let content: Content
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s3) { content }
+      .padding(MTSpacing.s4)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background(MTColor.surfaceSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
+      .overlay {
+        RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(MTColor.border)
+      }
+  }
+}
+
 private struct ExportShareSheet: UIViewControllerRepresentable {
   let url: URL
   func makeUIViewController(context: Context) -> UIActivityViewController {

@@ -207,6 +207,40 @@ final class LocalSessionUITests: XCTestCase {
     attach(app, "Saved formatted capture")
   }
 
+  func testExportPreparesDownloadsAndDiscardsASnapshot() throws {
+    try XCTSkipUnless(servesMediaAPI(), "Export needs the local Web API; run with --web.")
+    let app = try launchLocalSession()
+    XCTAssertTrue(app.tabBars.buttons["More"].waitForExistence(timeout: 20))
+    app.tabBars.buttons["More"].tap()
+    reveal(app.buttons["Settings"], in: app).tap()
+    reveal(app.buttons["Export archive"], in: app).tap()
+    XCTAssertTrue(
+      text("No snapshots yet. Your archive is unchanged.", in: app).waitForExistence(timeout: 15))
+    attach(app, "Export")
+
+    // Prepare snapshot captures one consistent copy, which downloads as a complete ZIP.
+    app.buttons["Prepare snapshot"].tap()
+    XCTAssertTrue(text("Snapshot prepared.", in: app).waitForExistence(timeout: 30))
+    let download = app.buttons["Download ZIP"]
+    XCTAssertTrue(download.waitForExistence(timeout: 15))
+    reveal(download, in: app).tap()
+    let share = app.buttons["Save or share ZIP"]
+    XCTAssertTrue(share.waitForExistence(timeout: 60))
+    attach(app, "Export ZIP ready")
+    app.buttons["Remove local copy"].tap()
+    XCTAssertTrue(share.waitForNonExistence(timeout: 5))
+
+    // Discard asks beside the snapshot, then removes the temporary copy.
+    reveal(app.buttons["Discard snapshot"], in: app).tap()
+    let confirm = app.buttons["Confirm discard"]
+    XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+    attach(app, "Export discard confirmation")
+    confirm.tap()
+    XCTAssertTrue(text("Temporary copy discarded.", in: app).waitForExistence(timeout: 15))
+    XCTAssertTrue(
+      text("No snapshots yet. Your archive is unchanged.", in: app).waitForExistence(timeout: 15))
+  }
+
   func testInboxReviewSavesOrganizesAndMovesCapturesToTrash() throws {
     let app = try launchLocalSession()
     app.tabBars.buttons["Inbox"].tap()

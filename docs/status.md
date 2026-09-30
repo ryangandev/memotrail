@@ -123,6 +123,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - The native More tab now follows Web's mobile More menu: the shared workspace header, then Explore, Focused views, Organize, and Archive and account as two columns of destinations with Web's icons.
 - Native sign-in now follows Web `AuthGate` at phone width: the brand header, the welcome story, and the sign-in card with Web's own Continue with Google button and Setup needed notice.
   A Debug `--review-sign-in` Simulator run confirmed the screen without contacting any Supabase project.
+- Native Export now follows Web `/settings/export`: the page header, the Everything in one ZIP and Prepare a snapshot cards, snapshot cards with Download ZIP and an inline discard confirmation, and toasts for each result.
+  A seeded Simulator run against the local Web API confirmed preparing a snapshot, downloading a complete ZIP, removing the local copy, and discarding the snapshot.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
 - Refactor existing screens after component acceptance; native address search remains later work.
 
