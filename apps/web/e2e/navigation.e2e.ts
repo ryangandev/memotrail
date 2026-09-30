@@ -315,7 +315,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       searchShortcut.boundingBox(),
       inboxShortcut.boundingBox(),
     ]);
-    expect(searchBox!.x + searchBox!.width).toBeLessThan(dockBox!.x);
+    expect(dockBox!.x + dockBox!.width).toBeLessThan(searchBox!.x);
     expect(dockBox!.y).toBeCloseTo(searchBox!.y, 0);
     expect(searchBox!.y).toBeGreaterThan(inboxBox!.y + inboxBox!.height);
     await expect(

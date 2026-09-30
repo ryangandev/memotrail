@@ -13,11 +13,11 @@ export function WorkspaceActionDock({
 }) {
   return (
     <div className={styles.dock} data-capture-dock>
+      {children}
       <SearchShortcutButton
         className={`${styles.control} ${styles.search}`}
         onOpen={onSearch}
       />
-      {children}
     </div>
   );
 }

@@ -40,22 +40,22 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
   const triggerBox = (await trigger.boundingBox())!;
   const searchBox = (await search.boundingBox())!;
   expect(triggerBox.y + triggerBox.height).toBeCloseTo(936, 0);
-  expect(searchBox.x + searchBox.width).toBeLessThan(triggerBox.x);
+  expect(triggerBox.x + triggerBox.width).toBeLessThan(searchBox.x);
   expect(searchBox.y).toBeCloseTo(triggerBox.y, 0);
-  expect((searchBox.x + triggerBox.x + triggerBox.width) / 2).toBeCloseTo(
+  expect((triggerBox.x + searchBox.x + searchBox.width) / 2).toBeCloseTo(
     (1440 + 224) / 2,
     0,
   );
   await expect(search).toHaveCSS("backdrop-filter", /blur/);
-  await search.focus();
+  await trigger.focus();
   await page.keyboard.press("Tab");
-  await expect(trigger).toBeFocused();
+  await expect(search).toBeFocused();
   await page.screenshot({
     animations: "disabled",
     clip: {
-      x: searchBox.x - 16,
+      x: triggerBox.x - 16,
       y: triggerBox.y - 12,
-      width: triggerBox.x + triggerBox.width - searchBox.x + 32,
+      width: searchBox.x + searchBox.width - triggerBox.x + 32,
       height: triggerBox.height + 24,
     },
     path: "/private/tmp/memotrail-action-dock-desktop.png",
@@ -63,6 +63,18 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
   await page.screenshot({
     animations: "disabled",
     path: "/private/tmp/memotrail-capture-dock-desktop.png",
+  });
+  await page.mouse.click(1400, 130);
+  await trigger.hover();
+  await page.screenshot({
+    animations: "disabled",
+    clip: {
+      x: triggerBox.x - 16,
+      y: triggerBox.y - 12,
+      width: searchBox.x + searchBox.width - triggerBox.x + 32,
+      height: triggerBox.height + 24,
+    },
+    path: "/private/tmp/memotrail-action-dock-hover.png",
   });
 
   await trigger.click();
@@ -147,10 +159,12 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
     const dockBox = (await trigger.boundingBox())!;
     const mobileSearchBox = (await search.boundingBox())!;
     expect(dockBox.y + dockBox.height).toBeLessThan(navBox.y);
-    expect(mobileSearchBox.x).toBeGreaterThanOrEqual(12);
-    expect(mobileSearchBox.x + mobileSearchBox.width).toBeLessThan(dockBox.x);
+    expect(dockBox.x).toBeGreaterThanOrEqual(12);
+    expect(dockBox.x + dockBox.width).toBeLessThan(mobileSearchBox.x);
     expect(mobileSearchBox.y).toBeCloseTo(dockBox.y, 0);
-    expect(dockBox.x + dockBox.width).toBeLessThanOrEqual(width - 12);
+    expect(mobileSearchBox.x + mobileSearchBox.width).toBeLessThanOrEqual(
+      width - 12,
+    );
     await page.screenshot({
       animations: "disabled",
       path: `/private/tmp/memotrail-capture-dock-mobile-${width}.png`,

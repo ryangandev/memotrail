@@ -223,7 +223,8 @@ On collapse, the logo's outer ring and accent rotate 90 degrees together while t
 The persistent top bar places Back and Forward history controls, then the desktop sidebar panel control; unavailable history directions are disabled.
 An icon-only Inbox control sits at the far right; Inbox shows a notification count only when captures are waiting.
 A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry and People results in place, supports keyboard navigation, and opens Library for full search with filters.
-On Web, the glass-effect bottom dock places global Search on the left and the New Entry control labeled `What’s on your mind?` with a sparkle icon on the right.
+On Web, the glass-effect bottom dock places the New Entry control labeled `What’s on your mind?` with a sparkle icon on the left and global Search on the right.
+The controls keep text and shortcut hints readable over page content, and hovering gives them a subtle accent background that fades back when the pointer leaves.
 New Entry also opens with Command J (Control J on Windows) when focus is outside a text input or editor.
 It expands into a bottom-anchored composer with the editor below the prompt, keeping rich text, photos, dates, local drafts, and Save to Inbox.
 Escape or the close control collapses it and restores focus to the bottom control without discarding the draft.
