@@ -127,6 +127,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
   A seeded Simulator run against the local Web API confirmed preparing a snapshot, downloading a complete ZIP, removing the local copy, and discarding the snapshot.
 - Native Quick Capture now follows Web `QuickCaptureDialog` at phone width: the full-screen composer under Web's header and close button, the relevant date panel in place of a separate sheet, Web's photo and status strips, and a toast once the capture syncs.
   A seeded Simulator run confirmed saving formatted notes from the Dashboard and from Quick Capture, opening and clearing the relevant date, and the toast.
+- Native Map now follows Web `/map` at phone width: the page header, Category and year fields that filter as they change, Your areas shortcuts with View all, the map card, and the Entries here panel for the chosen pin or cluster, instead of a filter sheet and a record list sheet.
+  A Debug `--review-map` Simulator run confirmed filtering by Category and year, zooming to an area, listing a cluster's Entries newest first, and opening one.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
 - Refactor existing screens after component acceptance; native address search remains later work.
 

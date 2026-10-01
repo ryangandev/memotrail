@@ -294,6 +294,7 @@ Pair it with the test file carrying the same feature name.
 - Both maps read current Entry-Location links through owner-scoped RLS.
   Native Map reads page in stable order with a 5,000-link cap and publish only complete results; Kind/year filters apply to the loaded set.
   Native MapKit provides the base map and collision-based annotation clusters without a provider key or device-location permission.
+  Native `LocationMapView` lays out Web's map page, and a chosen pin or cluster lists its Entries in the panel below the map, like Web `selectedIds`.
   The Web Map proxies Geoapify raster tiles through an authenticated route.
   Its 5,000-link bound is ordered newest first and explicitly disclosed in the UI; filters apply to loaded results.
 - Interactive tiles and static Location previews accept only light or dark theme parameters; authenticated routes choose allowlisted Geoapify styles while keeping the provider key server-side.

@@ -32,9 +32,32 @@ final class NativeWorkspaceUITests: XCTestCase {
     attach(app, "Sign in card")
   }
 
-  func testMapFiltersCitiesClusterAndRecordSelection() {
+  func testMapFiltersAreasClustersAndRecords() {
     let app = launch("--review-map")
-    XCTAssertTrue(app.buttons["map-browse-records"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["5 Entry Locations"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Choose a map point"].exists)
+    attach(app, "Map")
+
+    // Category and years filter as they change, like Web.
+    app.buttons["Category"].tap()
+    app.buttons["Goals"].tap()
+    XCTAssertTrue(app.staticTexts["1 Entry Location"].waitForExistence(timeout: 3))
+    let fromYear = app.textFields["map-from-year"]
+    fromYear.tap()
+    fromYear.typeText("2027")
+    XCTAssertTrue(app.staticTexts["0 Entry Locations"].waitForExistence(timeout: 3))
+    XCTAssertTrue(
+      app.staticTexts[
+        "No current Entries match these filters. Add a Location in an Entry to place it on this map."
+      ].exists)
+    attach(app, "Filtered empty map")
+    fromYear.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 4) + "\n")
+    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 3))
+    app.buttons["Category"].tap()
+    app.buttons["All records"].tap()
+    XCTAssertTrue(app.staticTexts["5 Entry Locations"].waitForExistence(timeout: 3))
+
+    // An area zooms the map, and a cluster lists its Entries below it, newest first.
     app.buttons["map-city-Austin"].tap()
     // MapKit exposes marker views as buttons on some OS versions.
     let marker = app.descendants(matching: .any)["map-location-cluster"].firstMatch
@@ -42,20 +65,13 @@ final class NativeWorkspaceUITests: XCTestCase {
       marker.waitForExistence(timeout: 5),
       "MapKit should cluster the two overlapping Austin records.")
     marker.tap()
-    XCTAssertTrue(app.navigationBars["Mapped records"].waitForExistence(timeout: 3))
-    XCTAssertTrue(app.staticTexts["Our first home"].exists)
+    XCTAssertTrue(app.staticTexts["2 Entries here"].waitForExistence(timeout: 3))
     XCTAssertTrue(app.staticTexts["A new beginning"].exists)
+    XCTAssertTrue(app.staticTexts["First Time · Austin, Texas · Jun 1, 2022"].exists)
     attach(app, "Cluster records")
-    app.buttons["Done"].tap()
-    app.buttons["map-full-map"].tap()
-    app.buttons["map-kind-goal"].tap()
-    XCTAssertTrue(app.staticTexts["1 record · 1 Location"].exists)
-    app.buttons["map-filters"].tap()
-    app.textFields["map-from-year"].tap()
-    app.textFields["map-from-year"].typeText("2027")
-    app.buttons["Apply"].tap()
-    XCTAssertTrue(app.staticTexts["No matching Locations"].waitForExistence(timeout: 3))
-    attach(app, "Filtered empty map")
+    app.buttons["map-record-99000000-0000-4000-8000-000000000001"].tap()
+    XCTAssertTrue(
+      app.staticTexts["This is a synthetic preview record."].waitForExistence(timeout: 3))
   }
 
   func testPrimaryTabsMoreRoutesAndBackNavigation() {
@@ -74,7 +90,7 @@ final class NativeWorkspaceUITests: XCTestCase {
     attach(app, "More after leaving dark gallery preview")
     app.swipeDown()
     app.buttons["more-map"].tap()
-    XCTAssertTrue(app.buttons["map-browse-records"].waitForExistence(timeout: 3))
+    XCTAssertTrue(app.staticTexts["map-count"].waitForExistence(timeout: 3))
     attach(app, "Map")
     app.navigationBars.buttons["More"].tap()
     app.swipeUp()
