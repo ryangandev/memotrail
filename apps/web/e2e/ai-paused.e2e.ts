@@ -92,7 +92,9 @@ test("AI beta stays off, has no entry points, and blocks old clients without cha
     await expect(toggle).toBeDisabled();
     await expect(page.getByText("Beta", { exact: true })).toBeVisible();
     await expect(page.getByRole("switch")).toHaveCount(1);
+    // Preserve SSR input styles while React finishes hydration.
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-ai-paused-desktop.png",
       fullPage: true,
     });
@@ -102,6 +104,7 @@ test("AI beta stays off, has no entry points, and blocks old clients without cha
     await expect(toggle).toBeDisabled();
     await expect(toggle).not.toBeChecked();
     await page.screenshot({
+      caret: "initial",
       path: "/private/tmp/memotrail-ai-paused-mobile.png",
       fullPage: true,
     });

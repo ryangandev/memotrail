@@ -13,7 +13,7 @@ The Map also offers filtered shortcuts to the user's most recorded cities when r
 The desktop sidebar has a compact icon rail, panel control, and animated width change; its browser preference persists across reloads.
 The Web sidebar supports an editor-aware Command B shortcut, and the bottom glass dock groups sparkle-icon New Entry on the left with Search on the right, retaining Command J and Command K.
 The capture dock uses an inset focus ring, a consistent frosted composer surface, and a retained editor with entrance and exit motion; personal visual acceptance is pending.
-The changes pass 445 Web unit tests, lint, type checking, formatting, a local production build, and capture/search browser regression, including draft recovery, quick reopening, background contrast, border hover feedback, save shortcut tooltips, editor shortcuts, and narrow layouts.
+The capture dock passes local checks and browser regression, including draft recovery, quick reopening, background contrast, border hover feedback, save shortcut tooltips, editor shortcuts, and narrow layouts.
 Library now combines the organized all-items browser with keyword and filtered search; older `/search` URLs redirect to Library.
 Inbox review now hides AI suggestions and places photos after tags; the Library browser excludes unreviewed captures until Save to Library.
 Web AI capabilities are paused, with a disabled Beta setting and no active AI entry points.
@@ -57,7 +57,9 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - Verify the merged `main` deployment against the migrated hosted project, then check Quick Capture, Inbox review, Library routing, First Time, Moment, Period, Home, Vehicle, and Goal in a browser.
 - The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
 - Native compatibility is updated separately; complete personal native acceptance before treating it as a release.
-- The earlier Entry model passed 61 database files with 1,552 assertions and all 72 browser E2E tests. Place removal passed 59 database files with 1,497 assertions. The final Web typography pass passed 438 unit tests, 14 targeted browser E2E tests, lint, type checking, and a production build; the full browser suite has not been rerun for the merged head.
+- The shared history fix passes 452 Web unit tests, all 90 active browser E2E scenarios, and 61 database files with 1,567 assertions on local Supabase.
+  Four active-AI scenarios remain explicitly skipped while AI is paused.
+  Lint, type checking, formatting, the production build, and seven production-mode history/navigation scenarios also pass.
 - A seeded pre-migration local exercise converted Journal, Story, and Trip to tags; Timeline point and span to Moment and Period; and preserved Inbox state and revision numbers.
 
 ### 2. Accept Web Location
