@@ -5,14 +5,17 @@ import UIKit
 /// The Web CaptureComposer: one formatted note, an optional relevant date, voice, and photos,
 /// saved to the Inbox through the offline queue.
 struct CaptureCard: View {
+  /// Web's composer variants: a raised card on the Dashboard, or the open body of Quick Capture.
+  enum Style { case page, dialog }
+
   @Binding var note: NSAttributedString
   @Binding var occurrence: OccurrenceDraft?
-  @State private var showOccurrence = false
   @Binding var photos: [FirstTimePhotoDraft]
 
+  var style = Style.page
   let isSaving: Bool
   let hasLocalDraft: Bool
-  let message: InboxController.CaptureMessage?
+  let error: String?
   var focusRequest = 0
   let addPhoto: @MainActor (FirstTimePhotoDraft) async throws -> Void
   let removePhoto: @MainActor (UUID) async throws -> Void
@@ -24,86 +27,81 @@ struct CaptureCard: View {
   @State private var voiceController = VoiceTranscriptionController()
 
   private var isBusy: Bool { isSaving || isLoadingPhotos || voiceController.isActive }
+  /// Web `--capture-inline-padding` at phone width.
+  private var inlinePadding: CGFloat { style == .page ? MTSpacing.s5 : MTSpacing.s4 }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
-      HStack(spacing: MTSpacing.s3) {
-        Image(.sparkle)
-          .font(.system(size: 15, weight: .medium))
-          .foregroundStyle(MTColor.accent)
-          .frame(width: 32, height: 32)
-          .background(MTColor.accentSubtle, in: Circle())
-          .accessibilityHidden(true)
-        Text("What\u{2019}s on your mind?")
-          .font(MTFont.cardTitle)
-          .foregroundStyle(MTColor.ink)
-          .accessibilityAddTraits(.isHeader)
+      if style == .page {
+        HStack(spacing: MTSpacing.s3) {
+          CaptureSpark()
+          Text("What\u{2019}s on your mind?")
+            .font(MTFont.cardTitle)
+            .foregroundStyle(MTColor.ink)
+            .accessibilityAddTraits(.isHeader)
+        }
+        .padding(.horizontal, inlinePadding)
+        .padding(.top, MTSpacing.s5)
       }
-      .padding(.horizontal, MTSpacing.s5)
-      .padding(.top, MTSpacing.s5)
 
       MTRichTextEditor(
         text: $note, placeholder: "What is on your mind?", accessibilityIdentifier: "capture-body",
         isEmbedded: true, minimumHeight: 120, focusRequest: focusRequest
       )
       .disabled(isSaving || voiceController.isActive)
-      .padding(.horizontal, MTSpacing.s2)
+      .padding(.horizontal, inlinePadding - MTSpacing.s3)
       .padding(.top, MTSpacing.s2)
+      .padding(.bottom, MTSpacing.s2)
 
-      if let status {
-        Label(status.text, systemImage: status.systemImage)
-          .font(MTFont.caption)
-          .foregroundStyle(status.color)
-          .padding(.horizontal, MTSpacing.s5)
-          .padding(.bottom, MTSpacing.s3)
-          .accessibilityIdentifier(status.identifier)
-      }
-
-      if let occurrence {
-        HStack(spacing: MTSpacing.s3) {
-          Label(
-            (try? occurrence.resolve().displayLabel) ?? "Date needs attention", icon: .calendar
-          )
-          .font(MTFont.caption)
-          .foregroundStyle(MTColor.accent)
-          Spacer(minLength: 0)
-          Button("Edit date") { showOccurrence = true }
-            .mtButtonStyle(.ghost, size: .small)
+      if occurrence != nil {
+        // Web `captureOccurrencePanel`: the date fields open in place under the note.
+        VStack(alignment: .leading, spacing: MTSpacing.s4) {
+          OccurrenceEditor(value: occurrenceBinding)
+          Button("Use capture time") { occurrence = nil }
+            .mtButtonStyle(.secondary)
+            .accessibilityIdentifier("capture-use-capture-time")
         }
-        .padding(.horizontal, MTSpacing.s5)
-        .padding(.vertical, MTSpacing.s2)
-        .background(MTColor.accentSubtle.opacity(0.6))
+        .disabled(isBusy)
+        .padding(.horizontal, inlinePadding)
+        .padding(.vertical, MTSpacing.s4)
+        .overlay(alignment: .top) { MTListDivider() }
       }
 
       if !photos.isEmpty {
         ScrollView(.horizontal, showsIndicators: false) {
-          HStack(spacing: MTSpacing.s2) {
+          HStack(spacing: MTSpacing.s3) {
             ForEach(Array(photos.enumerated()), id: \.element.id) { index, photo in
               photoThumbnail(photo, index: index)
             }
           }
-          .padding(.horizontal, MTSpacing.s5)
-          .padding(.vertical, MTSpacing.s3)
+          .padding(.horizontal, inlinePadding)
+          .padding(.vertical, MTSpacing.s4)
         }
+        .background(MTColor.surfaceSubtle)
+        .overlay(alignment: .top) { MTListDivider() }
         .accessibilityLabel("Draft photos")
         .accessibilityIdentifier("capture-photo-preview")
       }
 
-      Divider().overlay(MTColor.border)
+      if let status {
+        // Web `captureVoiceStatus`: a tinted strip above the actions.
+        Label(status.text, systemImage: status.systemImage)
+          .font(MTFont.caption)
+          .foregroundStyle(status.color)
+          .fixedSize(horizontal: false, vertical: true)
+          .padding(.horizontal, inlinePadding)
+          .padding(.vertical, MTSpacing.s2)
+          .frame(maxWidth: .infinity, minHeight: 42, alignment: .leading)
+          .background(status.background)
+          .overlay(alignment: .top) { MTListDivider() }
+          .accessibilityIdentifier(status.identifier)
+      }
 
       HStack(spacing: MTSpacing.s1) {
         quietButton(
-          label: occurrence == nil ? "Add relevant date" : "Edit relevant date", icon: .calendar,
-          isActive: occurrence != nil, identifier: "capture-date"
-        ) {
-          if occurrence == nil {
-            occurrence = OccurrenceDraft(
-              EntryOccurrence(
-                precision: .exact, start: Date(), end: nil, label: nil,
-                timezone: TimeZone.current.identifier))
-          }
-          showOccurrence = true
-        }
+          label: occurrence == nil ? "Date" : "Custom date", icon: .calendar,
+          isActive: occurrence != nil, identifier: "capture-date", action: toggleRelevantDate
+        )
         .disabled(isBusy)
 
         voiceButton
@@ -123,16 +121,24 @@ struct CaptureCard: View {
         .disabled(isBusy)
         .accessibilityIdentifier("save-entry")
       }
-      .padding(.horizontal, MTSpacing.s3)
-      .padding(.vertical, MTSpacing.s3)
+      .padding(.leading, inlinePadding - MTSpacing.s2)
+      .padding(.trailing, inlinePadding)
+      .padding(.vertical, MTSpacing.s2)
+      .frame(minHeight: 58)
+      .background(MTColor.surface)
+      .overlay(alignment: .top) { MTListDivider() }
     }
-    .background(MTColor.surface)
-    .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
+    .background {
+      if style == .page { MTColor.surfaceRaised }
+    }
+    .clipShape(RoundedRectangle(cornerRadius: style == .page ? MTRadius.large : 0))
     .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(
-        MTColor.borderStrong, lineWidth: 1)
+      if style == .page {
+        RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(
+          MTColor.borderStrong, lineWidth: 1)
+      }
     }
-    .mtShadow(MTShadow.raised)
+    .mtShadow(style == .page ? MTShadow.raised : [])
     .accessibilityElement(children: .contain)
     .accessibilityLabel("Quick capture")
     .onChange(of: pickerItems) { _, items in
@@ -142,67 +148,70 @@ struct CaptureCard: View {
       // Like Web, dictated text replaces the draft note as plain text.
       if let transcribedText { note = NSAttributedString(string: transcribedText) }
     }
-    .sheet(isPresented: $showOccurrence) {
-      NavigationStack {
-        Form {
-          Section {
-            OccurrenceEditor(value: occurrenceBinding)
-          }
-          Section {
-            Button("Use capture time") {
-              occurrence = nil
-              showOccurrence = false
-            }
-          }
-        }
-        .navigationTitle("Relevant date")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-          ToolbarItem(placement: .confirmationAction) {
-            Button("Done") { showOccurrence = false }
-          }
-        }
-      }
-    }
     .onDisappear {
       voiceController.stop(silently: true)
     }
   }
 
+  /// Web `toggleRelevantDate`: starts from the capture moment, or returns to it.
+  private func toggleRelevantDate() {
+    occurrence =
+      occurrence == nil
+      ? OccurrenceDraft(
+        EntryOccurrence(
+          precision: .exact, start: Date(), end: nil, label: nil,
+          timezone: TimeZone.current.identifier))
+      : nil
+  }
+
   private struct Status {
+    enum Tone { case neutral, accent, warm }
+
     let text: String
     let systemImage: String
-    let color: Color
+    let tone: Tone
     let identifier: String
+
+    var color: Color {
+      switch tone {
+      case .neutral: MTColor.inkMuted
+      case .accent: MTColor.accent
+      case .warm: MTColor.warm
+      }
+    }
+    var background: Color {
+      switch tone {
+      case .neutral: MTColor.surfaceSubtle
+      case .accent: MTColor.accentSubtle
+      case .warm: MTColor.warmSubtle
+      }
+    }
   }
 
   private var status: Status? {
     if let photoError {
       return Status(
-        text: photoError, systemImage: "exclamationmark.circle.fill", color: MTColor.warm,
+        text: photoError, systemImage: "exclamationmark.circle.fill", tone: .warm,
         identifier: "capture-photo-error")
     }
     if let voiceMessage = voiceController.message {
       return Status(
         text: voiceMessage,
         systemImage: voiceController.hasError
-          ? "exclamationmark.circle.fill"
-          : (voiceController.isActive ? "waveform" : "checkmark.circle.fill"),
-        color: voiceController.hasError ? MTColor.warm : MTColor.inkMuted,
+          ? MTIcon.mic.systemName
+          : (voiceController.isActive ? "waveform" : MTIcon.sparkle.systemName),
+        tone: voiceController.hasError ? .warm : .accent,
         identifier: "capture-voice-message")
     }
-    if let message {
+    if let error {
       return Status(
-        text: message.text,
-        systemImage: message.style == .success
-          ? "checkmark.circle.fill" : "exclamationmark.circle.fill",
-        color: message.style == .success ? MTColor.success : MTColor.warm,
+        text: error, systemImage: "exclamationmark.circle.fill", tone: .warm,
         identifier: "capture-message")
     }
     if hasLocalDraft {
       return Status(
         text: "Draft saved on this iPhone.", systemImage: MTIcon.history.systemName,
-        color: MTColor.inkMuted, identifier: "draft-message")
+        tone: .neutral, identifier: "draft-message")
     }
     return nil
   }
@@ -231,8 +240,11 @@ struct CaptureCard: View {
             .background(MTColor.surfaceSubtle)
         }
       }
-      .frame(width: 80, height: 80)
+      .frame(width: 76, height: 76)
       .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
+      .overlay {
+        RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(MTColor.borderStrong)
+      }
       .contentShape(RoundedRectangle(cornerRadius: MTRadius.medium))
 
       Button {
@@ -354,6 +366,18 @@ struct CaptureCard: View {
     } catch {
       photoError = "MemoTrail could not remove that local photo. Try again."
     }
+  }
+}
+
+/// Web `captureSpark`: the sparkle on a soft accent circle beside the composer's question.
+struct CaptureSpark: View {
+  var body: some View {
+    Image(.sparkle)
+      .font(.system(size: 15, weight: .medium))
+      .foregroundStyle(MTColor.accent)
+      .frame(width: 32, height: 32)
+      .background(MTColor.accentSubtle, in: Circle())
+      .accessibilityHidden(true)
   }
 }
 

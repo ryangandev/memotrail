@@ -15,7 +15,8 @@ final class InboxController {
   private(set) var isSaving = false
   private(set) var isSyncing = false
   private(set) var loadErrorMessage: String?
-  private(set) var captureMessage: CaptureMessage?
+  /// The latest capture or sync problem, shown in the composer until the next attempt.
+  private(set) var captureError: String?
 
   private let client: SupabaseClient
   private let ownerID: UUID
@@ -144,15 +145,12 @@ final class InboxController {
         hasAttachments: !photos.isEmpty
       )
     } catch {
-      captureMessage = CaptureMessage(
-        text: error.localizedDescription,
-        style: .error
-      )
+      captureError = error.localizedDescription
       return false
     }
 
     isSaving = true
-    captureMessage = nil
+    captureError = nil
     defer { isSaving = false }
 
     var pendingEntry = QueuedInboxEntry(
@@ -169,18 +167,12 @@ final class InboxController {
     pendingEntry.bodyRich = bodyRich?.isValid(expectedText: capture.body) == true ? bodyRich : nil
 
     guard let nextQueue = queueStore.enqueue(pendingEntry, ownerID: ownerID) else {
-      captureMessage = CaptureMessage(
-        text: "MemoTrail could not store this Entry on this iPhone. Your draft is still here.",
-        style: .error
-      )
+      captureError =
+        "MemoTrail could not store this Entry on this iPhone. Your draft is still here."
       return false
     }
 
     pendingEntries = nextQueue
-    captureMessage = CaptureMessage(
-      text: "Saved on this iPhone. Syncing when connected.",
-      style: .success
-    )
 
     Task { @MainActor [weak self] in
       guard let self else { return }
@@ -375,10 +367,7 @@ final class InboxController {
         throw InboxControllerError.ownerChanged
       }
     } catch {
-      captureMessage = CaptureMessage(
-        text: "Your session expired. Sign in again to sync pending Entries.",
-        style: .error
-      )
+      captureError = "Your session expired. Sign in again to sync pending Entries."
       return false
     }
 
@@ -390,10 +379,7 @@ final class InboxController {
         try await insert(entry)
       } catch {
         guard await entryAlreadyExists(entry.id) else {
-          captureMessage = CaptureMessage(
-            text: "Saved on this iPhone. MemoTrail will retry when you are online.",
-            style: .error
-          )
+          captureError = "Saved on this iPhone. MemoTrail will retry when you are online."
           return didSyncEntry
         }
       }
@@ -401,18 +387,13 @@ final class InboxController {
       do {
         try await synchronizeAttachments(entry)
       } catch {
-        captureMessage = CaptureMessage(
-          text: attachmentSyncMessage(for: error),
-          style: .error
-        )
+        captureError = attachmentSyncMessage(for: error)
         return didSyncEntry
       }
 
       guard let nextQueue = queueStore.remove(entryID: entry.id, ownerID: ownerID) else {
-        captureMessage = CaptureMessage(
-          text: "This Entry reached MemoTrail, but its local pending copy could not be cleared.",
-          style: .error
-        )
+        captureError =
+          "This Entry reached MemoTrail, but its local pending copy could not be cleared."
         return didSyncEntry
       }
 
@@ -432,12 +413,12 @@ final class InboxController {
     }
 
     if didSyncEntry {
-      captureMessage = CaptureMessage(
-        text: lastSyncedPhotoCount > 0
-          ? "Saved to Inbox with \(lastSyncedPhotoCount) \(lastSyncedPhotoCount == 1 ? "photo" : "photos")."
-          : "Saved to Inbox.",
-        style: .success
-      )
+      // Like Web, a synced capture is announced once; only problems stay in the composer.
+      captureError = nil
+      MTToastCenter.shared.success(
+        lastSyncedPhotoCount > 0
+          ? "Saved to Inbox with \(countLabel(lastSyncedPhotoCount, "photo"))."
+          : "Saved to Inbox.")
     }
 
     return didSyncEntry
@@ -622,16 +603,6 @@ final class InboxController {
 }
 
 extension InboxController {
-  struct CaptureMessage: Equatable, Sendable {
-    enum Style: Sendable {
-      case error
-      case success
-    }
-
-    let text: String
-    let style: Style
-  }
-
   enum ReviewIntent: Sendable {
     case done
     case save

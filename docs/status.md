@@ -125,6 +125,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
   A Debug `--review-sign-in` Simulator run confirmed the screen without contacting any Supabase project.
 - Native Export now follows Web `/settings/export`: the page header, the Everything in one ZIP and Prepare a snapshot cards, snapshot cards with Download ZIP and an inline discard confirmation, and toasts for each result.
   A seeded Simulator run against the local Web API confirmed preparing a snapshot, downloading a complete ZIP, removing the local copy, and discarding the snapshot.
+- Native Quick Capture now follows Web `QuickCaptureDialog` at phone width: the full-screen composer under Web's header and close button, the relevant date panel in place of a separate sheet, Web's photo and status strips, and a toast once the capture syncs.
+  A seeded Simulator run confirmed saving formatted notes from the Dashboard and from Quick Capture, opening and clearing the relevant date, and the toast.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
 - Refactor existing screens after component acceptance; native address search remains later work.
 

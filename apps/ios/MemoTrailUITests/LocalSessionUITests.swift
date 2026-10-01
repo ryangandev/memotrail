@@ -110,8 +110,8 @@ final class LocalSessionUITests: XCTestCase {
     XCTAssertTrue(letters.waitForExistence(timeout: 10))
     while !app.buttons["New entry"].isHittable { app.swipeDown() }
     app.buttons["New entry"].tap()
-    XCTAssertTrue(app.navigationBars["New Entry"].waitForExistence(timeout: 10))
-    app.navigationBars["New Entry"].buttons["Close"].tap()
+    XCTAssertTrue(app.buttons["Close quick capture"].waitForExistence(timeout: 10))
+    app.buttons["Close quick capture"].tap()
     XCTAssertTrue(app.navigationBars["Summer 2025"].waitForExistence(timeout: 10))
     app.navigationBars.buttons.element(boundBy: 0).tap()
 
@@ -205,6 +205,36 @@ final class LocalSessionUITests: XCTestCase {
     XCTAssertTrue(row.waitForExistence(timeout: 15))
     XCTAssertEqual(editor.value as? String ?? "", "")
     attach(app, "Saved formatted capture")
+
+    // Quick Capture opens Web's full-screen composer, with the relevant date in place.
+    app.tabBars.buttons["Inbox"].tap()
+    app.buttons["global-quick-capture"].tap()
+    XCTAssertTrue(app.buttons["Close quick capture"].waitForExistence(timeout: 10))
+    let quick = app.textViews["capture-body"]
+    XCTAssertTrue(quick.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+    quick.typeText("Lanterns on the pier")
+    attach(app, "Quick Capture")
+    app.buttons["rich-dismiss-keyboard"].tap()
+    app.buttons["capture-date"].tap()
+    let captureTime = app.buttons["Use capture time"]
+    XCTAssertTrue(captureTime.waitForExistence(timeout: 5))
+    XCTAssertEqual(app.buttons["capture-date"].label, "Custom date")
+    attach(app, "Quick Capture relevant date")
+    captureTime.tap()
+    XCTAssertTrue(captureTime.waitForNonExistence(timeout: 5))
+
+    // Saving closes it and announces the capture, which lands in the Inbox.
+    app.buttons["save-entry"].tap()
+    XCTAssertTrue(app.buttons["Close quick capture"].waitForNonExistence(timeout: 10))
+    XCTAssertTrue(text("Saved to Inbox", in: app).waitForExistence(timeout: 15))
+    XCTAssertTrue(app.buttons["Organize Lanterns on the pier"].waitForExistence(timeout: 15))
+    attach(app, "Quick Capture saved")
+
+    // Keep the seeded captures as the Dashboard's newest three for the other tests.
+    app.buttons["Move Lanterns on the pier to Trash"].tap()
+    app.buttons["Move to Trash"].tap()
+    XCTAssertTrue(text("Capture moved to Trash.", in: app).waitForExistence(timeout: 10))
   }
 
   func testExportPreparesDownloadsAndDiscardsASnapshot() throws {

@@ -289,57 +289,61 @@ private struct QuickCaptureView: View {
   @Environment(\.dismiss) private var dismiss
 
   var body: some View {
-    NavigationStack {
-      ScrollView {
-        VStack(alignment: .leading, spacing: MTSpacing.s6) {
-          VStack(alignment: .leading, spacing: MTSpacing.s2) {
-            Text("QUICK CAPTURE")
-              .font(MTTypography.caption)
-              .tracking(1.1)
-              .foregroundStyle(MTColor.warm)
+    // Web `QuickCaptureDialog` at phone width: a full-screen composer under its own header.
+    ScrollView {
+      VStack(alignment: .leading, spacing: 0) {
+        CaptureCard(
+          note: $note,
+          occurrence: $occurrence,
+          photos: $photos,
+          style: .dialog,
+          isSaving: controller.isSaving,
+          hasLocalDraft: hasLocalDraft,
+          error: controller.captureError,
+          focusRequest: 1,
+          addPhoto: addPhoto,
+          removePhoto: removePhoto,
+          save: save
+        )
 
-            Text("Keep what is on your mind")
-              .font(MTTypography.title)
-              .foregroundStyle(MTColor.ink)
-          }
-
-          CaptureCard(
-            note: $note,
-            occurrence: $occurrence,
-            photos: $photos,
-            isSaving: controller.isSaving,
-            hasLocalDraft: hasLocalDraft,
-            message: controller.captureMessage,
-            focusRequest: 1,
-            addPhoto: addPhoto,
-            removePhoto: removePhoto,
-            save: save
+        if !controller.pendingEntries.isEmpty {
+          Label(
+            countLabel(controller.pendingEntries.count, "Entry") + " waiting to sync",
+            icon: .history
           )
-
-          if !controller.pendingEntries.isEmpty {
-            Label(
-              "\(controller.pendingEntries.count) \(controller.pendingEntries.count == 1 ? "Entry" : "Entries") waiting to sync",
-              systemImage: "clock.arrow.circlepath"
-            )
-            .font(MTTypography.caption)
-            .foregroundStyle(MTColor.inkMuted)
-          }
-
-          Spacer(minLength: MTSpacing.s8)
-        }
-        .padding(MTSpacing.s4)
-      }
-      .background(MTColor.canvas)
-      .navigationTitle("New Entry")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbarBackground(MTColor.surface, for: .navigationBar)
-      .toolbarBackground(.visible, for: .navigationBar)
-      .toolbar {
-        ToolbarItem(placement: .cancellationAction) {
-          Button("Close") { dismiss() }
+          .font(MTFont.caption)
+          .foregroundStyle(MTColor.inkMuted)
+          .padding(.horizontal, MTSpacing.s4)
+          .padding(.top, MTSpacing.s4)
         }
       }
     }
+    .scrollBounceBehavior(.basedOnSize)
+    .scrollDismissesKeyboard(.interactively)
+    .safeAreaInset(edge: .top, spacing: 0) { header }
+    .background(MTColor.surfaceRaised.ignoresSafeArea())
+  }
+
+  /// Web `dialogHeader`: the composer's question beside a quiet close button.
+  private var header: some View {
+    HStack(spacing: MTSpacing.s4) {
+      HStack(spacing: MTSpacing.s3) {
+        CaptureSpark()
+        Text("What\u{2019}s on your mind?")
+          .font(MTFont.cardTitle)
+          .foregroundStyle(MTColor.ink)
+          .lineLimit(2)
+          .accessibilityAddTraits(.isHeader)
+      }
+      Spacer(minLength: 0)
+      MTIconButton(label: "Close quick capture", icon: .close, size: .small) { dismiss() }
+        .accessibilityIdentifier("close-quick-capture")
+    }
+    .padding(.horizontal, MTSpacing.s4)
+    .padding(.vertical, MTSpacing.s4)
+    .frame(minHeight: 64)
+    .background(MTColor.surfaceRaised.opacity(0.94))
+    .background(.ultraThinMaterial)
   }
 
   @MainActor

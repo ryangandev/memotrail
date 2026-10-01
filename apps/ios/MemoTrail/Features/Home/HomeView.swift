@@ -74,7 +74,7 @@ struct HomeView: View {
           photos: $capturePhotos,
           isSaving: captureController.isSaving,
           hasLocalDraft: hasLocalDraft,
-          message: captureController.captureMessage,
+          error: captureController.captureError,
           addPhoto: addCapturePhoto,
           removePhoto: removeCapturePhoto,
           save: saveCapture
