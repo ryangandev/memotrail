@@ -145,7 +145,7 @@ Dashboard is ordered around:
 4. Full-width Recent Entries with single-line titles and summaries, Collection prefixes, and optional tags.
 
 Narrow screens and iOS stack these sections in the same reading order.
-Search stays available in the shared workspace header, and in the iOS Dashboard toolbar as a shortcut to Library.
+Search stays available in the Web bottom dock, and in the header of each iOS primary tab as a shortcut to Library.
 Archive counts open Timeline, Library, First Times, Collections, or Inbox; a capture ready to organize opens its review, and a current chapter opens its Timeline record.
 
 Resurfacing uses organized, active, dated Entries only.

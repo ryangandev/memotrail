@@ -42,6 +42,7 @@ Native destinations and shared detail routing live in `App/WorkspaceRoute.swift`
 The More tab lays out `WorkspaceRoute.groups` like Web's mobile More menu, with the same groups, order, and icons.
 `App/AppNavigator.swift` carries cross-tab links that Web expresses as routes, such as `/inbox?entry=` and `/timeline?entry=`; the destination consumes a request once its data has loaded.
 `App/WorkspaceToolbar.swift` is the native form of the Web phone workspace header on each primary tab: the brand mark that opens the Dashboard, New entry for Quick Capture, search into Library, and the initial avatar that opens Settings.
+It still carries New entry and search, which Web now places in its bottom `WorkspaceActionDock`.
 Map data and MapKit presentation live in `Features/Map`; native Settings live in `Features/Settings`.
 `Features/Settings/SettingsController.swift` reads and writes one `profiles` column per save, with the Web validation rules in `Models/ProfileSettings.swift`; `AppNavigator.profileRevision` tells the Dashboard to reload its greeting.
 
@@ -226,11 +227,11 @@ Pair it with the test file carrying the same feature name.
 - The Web Dashboard route loads `getHomeWorkspace` on the server and renders `components/home-dashboard.tsx` with component-owned CSS.
   Dashboard composes the shared PageFrame, PageHeader, CaptureComposer, EmptyState, ProgressiveImage, and Badge; Memory and Recent Entries share one Entry card renderer.
   Native `Features/Home` mirrors it with `MTPage`, `MTPageHeader`, `CaptureCard`, `MTEmptyState`, `MTRemoteImage`, and `MTBadge`; `DashboardComponents.swift` owns the ribbon, rows, and cards.
-  Web `QuickCaptureDialog` shows CaptureComposer's dialog variant under its own header; native `QuickCaptureView` mirrors it with `CaptureCard(style: .dialog)`.
+  Web `QuickCaptureDialog` shows CaptureComposer's dialog variant under its own header; native `QuickCaptureView` shows the same header over `CaptureCard(style: .dialog)` full screen, where Web now anchors the composer to its bottom dock.
   Both composers open the relevant date in place, keep only problems in the composer, and announce a synced capture with a toast.
 - The Web Inbox renders `components/entry-review-list.tsx` and its `EntryReviewDialog` inside the compact PageFrame.
   Native `Features/Inbox` mirrors the list with `InboxCards.swift` and the dialog with `EntryReviewSheet.swift`: the same fields, sticky Save changes and Save to Library footer, confirmations anchored to Move to Trash, and toasts.
-  Neither Inbox embeds a composer; both platforms capture from the Dashboard or New entry in the workspace header.
+  Neither Inbox embeds a composer; Web captures from the bottom dock, and iOS from the Dashboard or New entry in the workspace header.
 - Button, Dialog, PageHeader, EmptyState, and the previously reviewed gallery components are approved migration targets.
 - Production actions use Button, IconButton, or ButtonLink without changing submit or navigation semantics; composite internals and navigation controls retain their distinct roles.
 - Dialog owns generic editor and confirmation shells, scroll containment, focus trapping/restoration, busy dismissal, and nested overlay containers.
