@@ -104,7 +104,7 @@ struct LocationMapView: View {
         yearField("From year", text: $fromYear, identifier: "map-from-year")
         yearField("To year", text: $toYear, identifier: "map-to-year")
       }
-      Text("\(filtered.count) Entry \(filtered.count == 1 ? "Location" : "Locations")")
+      Text(countLabel(filtered.count, "Entry Location"))
         .font(MTFont.caption.weight(.regular))
         .foregroundStyle(MTColor.inkMuted)
         .accessibilityIdentifier("map-count")

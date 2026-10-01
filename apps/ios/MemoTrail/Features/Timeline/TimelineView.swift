@@ -160,7 +160,7 @@ struct TimelineView: View {
   private var summaryFacts: [String] {
     let entries = controller.entries
     return [
-      count(controller.tracks.count, "track"), count(entries.count, "moment"),
+      countLabel(controller.tracks.count, "track"), countLabel(entries.count, "moment"),
       TimelineWorkspace.rangeLabel(entries: entries, birthDate: birthDate, reference: .now),
     ].compactMap(\.self)
   }
@@ -309,10 +309,6 @@ struct TimelineView: View {
     }
     select(entry, fromLink: true)
   }
-
-  private func count(_ value: Int, _ noun: String) -> String {
-    "\(value) \(value == 1 ? noun : noun + "s")"
-  }
 }
 
 private enum TimelineCreationType: CaseIterable {
@@ -388,7 +384,7 @@ private struct TimelineTrackCard: View {
             .font(MTFont.cardTitle)
             .foregroundStyle(MTColor.ink)
             .accessibilityAddTraits(.isHeader)
-          Text("\(track.entries.count) \(track.entries.count == 1 ? "moment" : "moments")")
+          Text(countLabel(track.entries.count, "moment"))
             .font(.caption2)
             .foregroundStyle(MTColor.inkFaint)
         }

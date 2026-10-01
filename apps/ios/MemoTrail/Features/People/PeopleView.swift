@@ -52,9 +52,9 @@ struct PeopleView: View {
     let people = controller.people
     let connections = people.reduce(0) { $0 + $1.linkedEntries.count }
     return MTFlowLayout(spacing: MTSpacing.s2) {
-      Text("\(people.count) \(people.count == 1 ? "person" : "people")")
+      Text(countLabel(people.count, "person", plural: "people"))
       Text("·").accessibilityHidden(true)
-      Text("\(connections) connected \(connections == 1 ? "Item" : "Items")")
+      Text(countLabel(connections, "connected Item"))
       if controller.isLoading, controller.hasLoaded {
         ProgressView().controlSize(.small).tint(MTColor.accent)
       }
@@ -147,7 +147,7 @@ private struct PersonCard: View {
               .multilineTextAlignment(.leading)
           }
           Spacer(minLength: 0)
-          Text("\(connections) connected \(connections == 1 ? "Item" : "Items")")
+          Text(countLabel(connections, "connected Item"))
             .font(.caption2)
             .foregroundStyle(MTColor.inkFaint)
             .frame(maxWidth: .infinity, alignment: .leading)

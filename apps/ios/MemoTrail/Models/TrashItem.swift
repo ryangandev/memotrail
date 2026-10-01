@@ -101,8 +101,7 @@ struct TrashItem: Decodable, Equatable, Identifiable, Sendable {
     guard remainingDays > 0 else {
       return ("Eligible for cleanup since", expirationDateLabel)
     }
-    let unit = remainingDays == 1 ? "day" : "days"
-    return ("\(remainingDays) \(unit) to restore · through", expirationDateLabel)
+    return ("\(countLabel(remainingDays, "day")) to restore · through", expirationDateLabel)
   }
 
   /// Web `deletionDescription`: what Delete forever removes.

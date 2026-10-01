@@ -50,9 +50,9 @@ struct FirstTimesView: View {
 
   private var summary: some View {
     MTFlowLayout(spacing: MTSpacing.s2) {
-      Text(count(controller.entries.count, "First Time"))
+      Text(countLabel(controller.entries.count, "First Time"))
       Text("·").accessibilityHidden(true)
-      Text(count(controller.photoCount, "photo"))
+      Text(countLabel(controller.photoCount, "photo"))
       if controller.isLoading, controller.hasLoaded {
         ProgressView().controlSize(.small).tint(MTColor.accent)
       }
@@ -101,10 +101,6 @@ struct FirstTimesView: View {
       .accessibilityElement(children: .contain)
       .accessibilityLabel("First Times archive")
     }
-  }
-
-  private func count(_ value: Int, _ singular: String) -> String {
-    "\(value) \(value == 1 ? singular : "\(singular)s")"
   }
 }
 

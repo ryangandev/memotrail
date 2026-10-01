@@ -318,7 +318,7 @@ struct VehicleEditorSheet: View {
 
     guard failedCount == 0 else {
       errorMessage =
-        "The Vehicle was saved, but \(failedCount) \(failedCount == 1 ? "photo" : "photos") could not be attached. Select Save again to retry."
+        "The Vehicle was saved, but \(countLabel(failedCount, "photo")) could not be attached. Select Save again to retry."
       return
     }
 

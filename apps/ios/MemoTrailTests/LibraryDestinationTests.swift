@@ -89,6 +89,11 @@ final class LibraryDestinationTests: XCTestCase {
     XCTAssertEqual(countLabel(1, "Entry"), "1 Entry")
     XCTAssertEqual(countLabel(3, "Entry"), "3 Entries")
     XCTAssertEqual(countLabel(2, "tag"), "2 tags")
+    // Web pluralizes only a consonant and "y" as "ies", and takes irregular plurals explicitly.
+    XCTAssertEqual(countLabel(2, "journey"), "2 journeys")
+    XCTAssertEqual(countLabel(0, "Entry placement"), "0 Entry placements")
+    XCTAssertEqual(countLabel(2, "person", plural: "people"), "2 people")
+    XCTAssertEqual(countLabel(1, "person", plural: "people"), "1 person")
   }
   func testTrackSettingsPreserveVisibilityIdentityAndRevision() throws {
     let data = Data(

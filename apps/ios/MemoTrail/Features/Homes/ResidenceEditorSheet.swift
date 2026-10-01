@@ -353,7 +353,7 @@ struct ResidenceEditorSheet: View {
 
     guard failedCount == 0 else {
       errorMessage =
-        "The Home was saved, but \(failedCount) \(failedCount == 1 ? "photo" : "photos") could not be attached. Select Save again to retry."
+        "The Home was saved, but \(countLabel(failedCount, "photo")) could not be attached. Select Save again to retry."
       return
     }
 

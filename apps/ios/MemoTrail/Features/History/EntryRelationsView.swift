@@ -234,7 +234,7 @@ struct EntryRelationsView: View {
         .mtButtonStyle(.secondary, size: .small)
         .disabled(page == 0)
       Spacer(minLength: 0)
-      Text("Page \(page + 1) · \(result.totalCount) \(result.totalCount == 1 ? "Item" : "Items")")
+      Text("Page \(page + 1) · \(countLabel(result.totalCount, "Item"))")
         .font(MTFont.caption.weight(.regular))
         .foregroundStyle(MTColor.inkMuted)
       Spacer(minLength: 0)

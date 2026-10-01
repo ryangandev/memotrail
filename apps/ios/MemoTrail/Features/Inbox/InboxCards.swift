@@ -155,8 +155,7 @@ struct PendingCaptureRow: View {
         MTBadge(title: "On this iPhone")
         if !entry.attachments.isEmpty {
           MTBadge(
-            title:
-              "\(entry.attachments.count) \(entry.attachments.count == 1 ? "photo" : "photos")",
+            title: countLabel(entry.attachments.count, "photo"),
             tone: .neutral)
         }
       }

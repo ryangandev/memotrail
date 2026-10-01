@@ -131,7 +131,7 @@ private struct HistoryIndexRow: View {
   let row: HistoryIndexEntry
 
   var body: some View {
-    let versions = "\(row.versionCount) earlier \(row.versionCount == 1 ? "version" : "versions")"
+    let versions = countLabel(row.versionCount, "earlier version")
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
       Text(row.displayTitle)
         .font(MTFont.body.weight(.semibold))

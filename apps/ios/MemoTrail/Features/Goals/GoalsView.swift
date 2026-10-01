@@ -60,7 +60,7 @@ struct GoalsView: View {
   private var summary: some View {
     let open = controller.entries.filter { ![.achieved, .letGo].contains($0.status) }.count
     return MTFlowLayout(spacing: MTSpacing.s2) {
-      Text(count(controller.entries.count, "goal"))
+      Text(countLabel(controller.entries.count, "goal"))
       Text("·").accessibilityHidden(true)
       Text("\(open) open")
       Text("·").accessibilityHidden(true)
@@ -112,10 +112,6 @@ struct GoalsView: View {
         }
       }
     }
-  }
-
-  private func count(_ value: Int, _ singular: String) -> String {
-    "\(value) \(value == 1 ? singular : "\(singular)s")"
   }
 }
 
@@ -201,7 +197,7 @@ private struct GoalCard: View {
           Label("Bucket List", icon: .star).labelStyle(MTInlineIconLabelStyle())
         }
         if related > 0 {
-          Text("\(related) related \(related == 1 ? "Item" : "Items")")
+          Text(countLabel(related, "related Item"))
         }
         if hasAchievement {
           Text("First Time linked")

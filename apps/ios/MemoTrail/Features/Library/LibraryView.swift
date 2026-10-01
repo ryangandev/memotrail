@@ -263,7 +263,7 @@ private struct LibraryBrowse: View {
       MTListHeader(
         "All items",
         detail: controller.hasLoaded
-          ? "\(controller.totalCount) \(controller.totalCount == 1 ? "item" : "items")" : nil,
+          ? countLabel(controller.totalCount, "item") : nil,
         alignsDetailTrailing: true)
       if !controller.hasLoaded {
         ProgressView("Loading your Life Wiki...")
@@ -373,7 +373,7 @@ private struct LibraryResults: View {
       VStack(alignment: .leading, spacing: MTSpacing.s3) {
         MTListHeader(
           "Results",
-          detail: "\(controller.resultCount) \(controller.resultCount == 1 ? "item" : "items")"
+          detail: countLabel(controller.resultCount, "item")
         ) {
           if controller.isSearching {
             ProgressView().controlSize(.small).tint(MTColor.accent)

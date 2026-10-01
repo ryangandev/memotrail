@@ -31,7 +31,7 @@ struct EntryOccurrence: Codable, Equatable, Sendable {
     if precision == .year {
       let years = max(0, ey - sy)
       return years > 0
-        ? "About \(years) \(years == 1 ? "year" : "years")" : "Less than a year (approx.)"
+        ? "About \(countLabel(years, "year"))" : "Less than a year (approx.)"
     }
     var months = (ey - sy) * 12 + em - sm
     if precision != .month && ed < sd { months -= 1 }
@@ -43,8 +43,8 @@ struct EntryOccurrence: Codable, Equatable, Sendable {
     let years = months / 12
     let remainder = months % 12
     let label = [
-      years > 0 ? "\(years) \(years == 1 ? "year" : "years")" : "",
-      remainder > 0 ? "\(remainder) \(remainder == 1 ? "month" : "months")" : "",
+      years > 0 ? countLabel(years, "year") : "",
+      remainder > 0 ? countLabel(remainder, "month") : "",
     ].filter { !$0.isEmpty }.joined(separator: " ")
     return approximate ? "About \(label)" : label
   }

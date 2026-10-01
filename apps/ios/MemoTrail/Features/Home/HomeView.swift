@@ -123,7 +123,7 @@ struct HomeView: View {
 
   private var pendingCaptureSection: some View {
     Label(
-      "\(captureController.pendingEntries.count) \(captureController.pendingEntries.count == 1 ? "Entry" : "Entries") waiting to sync",
+      countLabel(captureController.pendingEntries.count, "Entry") + " waiting to sync",
       icon: .history
     )
     .font(MTFont.caption)

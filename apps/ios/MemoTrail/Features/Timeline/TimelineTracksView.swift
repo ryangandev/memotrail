@@ -281,7 +281,7 @@ private struct TimelineTrackForm: View {
 
   private var summary: String {
     guard let track else { return "A new dimension of your story" }
-    let moments = "\(track.entryCount) \(track.entryCount == 1 ? "moment" : "moments")"
+    let moments = countLabel(track.entryCount, "moment")
     let parts: [String?] = [
       track.systemKey == nil ? "Custom" : "Default", moments, track.isHidden ? "Hidden" : nil,
     ]

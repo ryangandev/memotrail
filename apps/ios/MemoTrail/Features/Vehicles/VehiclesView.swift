@@ -51,11 +51,11 @@ struct VehiclesView: View {
 
   private var summary: some View {
     MTFlowLayout(spacing: MTSpacing.s2) {
-      Text(count(controller.entries.count, "vehicle"))
+      Text(countLabel(controller.entries.count, "vehicle"))
       Text("·").accessibilityHidden(true)
-      Text(count(controller.currentEntries.count, "current vehicle"))
+      Text(countLabel(controller.currentEntries.count, "current vehicle"))
       Text("·").accessibilityHidden(true)
-      Text(count(controller.earlierEntries.count, "earlier vehicle"))
+      Text(countLabel(controller.earlierEntries.count, "earlier vehicle"))
       if controller.isLoading, controller.hasLoaded {
         ProgressView().controlSize(.small).tint(MTColor.accent)
       }
@@ -99,10 +99,6 @@ struct VehiclesView: View {
         }
       }
     }
-  }
-
-  private func count(_ value: Int, _ singular: String) -> String {
-    "\(value) \(value == 1 ? singular : "\(singular)s")"
   }
 }
 

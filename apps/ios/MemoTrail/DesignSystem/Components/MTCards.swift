@@ -157,7 +157,7 @@ struct MTCollectionCard<Manage: View>: View {
           .padding(.top, MTSpacing.s3)
         Spacer(minLength: MTSpacing.s3)
         HStack(spacing: MTSpacing.s2) {
-          Text(countLabel).lineLimit(1)
+          Text(countSummary).lineLimit(1)
           Spacer(minLength: 0)
           Image(.chevron).font(.system(size: 12, weight: .semibold))
         }
@@ -177,8 +177,8 @@ struct MTCollectionCard<Manage: View>: View {
     .overlay(alignment: .topTrailing) { manage.padding(MTSpacing.s2) }
   }
 
-  private var countLabel: String {
-    let entries = "\(entryCount) \(entryCount == 1 ? "Entry" : "Entries")"
+  private var countSummary: String {
+    let entries = countLabel(entryCount, "Entry")
     return inboxCount > 0 ? "\(entries) · \(inboxCount) in Inbox" : entries
   }
 }

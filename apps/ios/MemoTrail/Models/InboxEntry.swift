@@ -955,8 +955,11 @@ extension String {
   }
 }
 
-/// Web `countLabel`, such as "1 Entry" or "3 Entries".
-func countLabel(_ count: Int, _ singular: String) -> String {
-  let plural = singular.hasSuffix("y") ? "\(singular.dropLast())ies" : "\(singular)s"
-  return "\(count) \(count == 1 ? singular : plural)"
+/// Web `countLabel`, such as "1 Entry", "3 Entries", or "2 people".
+/// Nouns ending in a consonant and "y" take "ies"; pass `plural` for any other irregular form.
+func countLabel(_ count: Int, _ singular: String, plural: String? = nil) -> String {
+  let regular =
+    singular.range(of: "[^aeiou]y$", options: [.regularExpression, .caseInsensitive]) != nil
+    ? "\(singular.dropLast())ies" : "\(singular)s"
+  return "\(count) \(count == 1 ? singular : plural ?? regular)"
 }

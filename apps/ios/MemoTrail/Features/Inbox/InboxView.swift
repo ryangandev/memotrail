@@ -153,7 +153,7 @@ struct InboxView: View {
   }
 
   private func captureCount(_ count: Int) -> String {
-    "\(count) \(count == 1 ? "capture" : "captures")"
+    countLabel(count, "capture")
   }
 
   /// Web `moveEntryToTrash`: move the capture, close its review, and confirm with a toast.
