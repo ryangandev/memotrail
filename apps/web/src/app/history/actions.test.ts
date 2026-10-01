@@ -22,7 +22,7 @@ describe("history restore failure", () => {
     expect(
       await restoreHistoryVersion("94000000-0000-4000-8000-000000000001", 1, 2),
     ).toBe(
-      "This version uses an unsupported history format. You can review its recorded content, but it cannot be restored.",
+      "This version was saved in a format that cannot be restored. You can still review its recorded content.",
     );
     expect(revalidatePath).not.toHaveBeenCalled();
   });

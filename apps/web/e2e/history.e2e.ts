@@ -371,7 +371,7 @@ for (const schema of [3, 2, undefined]) {
         exact: true,
       });
       const unavailable = page.getByText(
-        "This version uses an unsupported history format. You can review its recorded content, but it cannot be restored.",
+        "This version was saved in a format that cannot be restored. You can still review its recorded content.",
         { exact: true },
       );
       if (schema !== 3) {

@@ -315,7 +315,7 @@ export function EntryHistoryView({
             <p
               id="history-restore-unavailable"
               role="status"
-              className={styles.notice}
+              className={styles.cautionNotice}
             >
               {UNSUPPORTED_HISTORY_RESTORE_MESSAGE}
             </p>
