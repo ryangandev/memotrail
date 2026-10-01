@@ -23,6 +23,9 @@ Native iOS now adopts the canonical Entry, Entity, and Goal contracts, optional 
 The retired native Place surface and saved-Location catalog are removed; the existing screen layouts and accepted splash remain.
 Native navigation now uses Dashboard, Inbox, Timeline, Library, and More, with the active Web destinations grouped under More.
 The native MapKit screen and Debug Design System gallery are implemented; personal acceptance and broad screen migration remain pending.
+The Home and Vehicle history comparison fix is verified on local Supabase, including old snapshots, unchanged relationship timestamps, and restoration.
+Migration `202610010001` is local only and has not been applied to the hosted project.
+The shared server contract fixes comparison for both clients; native history compatibility was inspected without changing iOS files.
 The merged Web release still needs Production deployment verification and browser acceptance; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 
 Use Git history for feature-level implementation and test evidence.

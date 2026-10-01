@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 test("History restores and re-restores writing, relationships, and private photo membership with conflict protection", async ({
   page,
@@ -224,3 +224,210 @@ test("History restores and re-restores writing, relationships, and private photo
       throw new Error("Could not clean up isolated history fixtures.");
   }
 });
+
+const focusedHistoryTest = test.extend<{
+  historyFixture: { client: SupabaseClient; admin: SupabaseClient };
+}>({
+  historyFixture: async ({ context }, provideFixture) => {
+    const local = JSON.parse(
+      execFileSync("supabase", ["status", "-o", "json"], {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }),
+    );
+    expect(local.API_URL).toBe("http://127.0.0.1:54321");
+    const admin = createClient(local.API_URL, local.SERVICE_ROLE_KEY, {
+      auth: { persistSession: false },
+    });
+    const email = `focused-history-${randomUUID()}@memotrail.local`;
+    const created = await admin.auth.admin.createUser({
+      email,
+      email_confirm: true,
+    });
+    expect(created.error).toBeNull();
+    const owner = created.data.user!.id;
+    try {
+      const cookies: { name: string; value: string }[] = [];
+      const client = createServerClient(local.API_URL, local.ANON_KEY, {
+        cookies: {
+          getAll: () => cookies,
+          setAll: (values) => {
+            cookies.push(...values.map(({ name, value }) => ({ name, value })));
+          },
+        },
+      });
+      const link = await admin.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+      });
+      expect(link.error).toBeNull();
+      expect(
+        (
+          await client.auth.verifyOtp({
+            type: "magiclink",
+            token_hash: link.data.properties!.hashed_token,
+          })
+        ).error,
+      ).toBeNull();
+      await context.addCookies(
+        cookies.map((cookie) => ({
+          ...cookie,
+          domain: "127.0.0.1",
+          path: "/",
+          sameSite: "Lax" as const,
+        })),
+      );
+      await provideFixture({ client, admin });
+    } finally {
+      expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
+    }
+  },
+});
+
+const focusedCases = [
+  {
+    kind: "Home",
+    field: "Why you moved in",
+    value: "Closer to work",
+    differences: "Home details",
+  },
+  {
+    kind: "Home",
+    field: "Home name",
+    value: "Maple Street home",
+    differences: "Title",
+  },
+  {
+    kind: "Vehicle",
+    field: "Color",
+    value: "Red",
+    differences: "Vehicle details",
+  },
+  {
+    kind: "Vehicle",
+    field: "Name or nickname",
+    value: "Road trip car",
+    differences: "Title",
+  },
+  {
+    kind: "Home",
+    field: "Why you moved in",
+    value: "Closer to work",
+    differences: "Home details",
+    legacy: true,
+  },
+] as const;
+
+for (const scenario of focusedCases) {
+  focusedHistoryTest(
+    `${scenario.kind} history compares only ${scenario.differences}${"legacy" in scenario ? " in a legacy snapshot" : ""}`,
+    async ({ page, historyFixture }) => {
+      const { client, admin } = historyFixture;
+      const common = {
+        p_entry_id: null,
+        p_expected_revision: null,
+        p_title: scenario.kind === "Home" ? "Maple Street flat" : "Blue Civic",
+        p_body: "A chapter to remember.",
+        p_occurred_start: "2021-04-12T12:00:00Z",
+        p_occurred_end: null,
+        p_date_precision: "day",
+        p_occurred_label: null,
+        p_occurred_timezone: "UTC",
+        p_collection_names: [],
+        p_tag_names: [],
+      };
+      const saved =
+        scenario.kind === "Home"
+          ? await client.rpc("save_home_entry_with_occurrence", {
+              ...common,
+              p_place_id: null,
+              p_place_name: "Maple Street",
+              p_address: "10 Maple Street",
+              p_city: "Philadelphia",
+              p_region: "Pennsylvania",
+              p_country: "United States",
+              p_latitude: 39.95,
+              p_longitude: -75.16,
+              p_place_notes: null,
+              p_move_in_reason: "Study",
+              p_move_out_reason: null,
+            })
+          : await client.rpc("save_vehicle_entry_with_occurrence", {
+              ...common,
+              p_make: "Honda",
+              p_model: "Civic",
+              p_model_year: 2018,
+              p_color: "Blue",
+            });
+      expect(saved.error).toBeNull();
+      const entryID = saved.data![0].entry_id as string;
+      const errors: string[] = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      await page.goto(
+        `/${scenario.kind === "Home" ? "homes" : "vehicles"}/${entryID}`,
+      );
+      await page.getByRole("button", { name: `Edit ${scenario.kind}` }).click();
+      await page
+        .getByRole("textbox", { name: scenario.field, exact: true })
+        .fill(scenario.value);
+      await page
+        .getByRole("button", { name: "Save changes", exact: true })
+        .click();
+      await expect(
+        page.getByRole("button", { name: `Edit ${scenario.kind}` }),
+      ).toBeVisible();
+      if ("legacy" in scenario) {
+        // Simulate a stored pre-migration snapshot without rewriting it on read.
+        const version = await admin
+          .from("entry_versions")
+          .select("snapshot")
+          .eq("entry_id", entryID)
+          .eq("version", 1)
+          .single();
+        expect(version.error).toBeNull();
+        const snapshot = version.data!.snapshot;
+        for (const key of [
+          "people",
+          "places",
+          "timeline_items",
+          "links",
+          "attachments",
+        ]) {
+          snapshot[key] = snapshot[key].map((row: Record<string, unknown>) => ({
+            ...row,
+            created_at: "2000-01-01T00:00:00Z",
+            updated_at: "2000-01-01T00:00:00Z",
+          }));
+        }
+        snapshot.home = {
+          ...snapshot.home,
+          created_at: "2000-01-01T00:00:00Z",
+          updated_at: "2000-01-01T00:00:00Z",
+        };
+        expect(
+          (
+            await admin
+              .from("entry_versions")
+              .update({ snapshot })
+              .eq("entry_id", entryID)
+              .eq("version", 1)
+          ).error,
+        ).toBeNull();
+      }
+      await page.goto(`/history?entry=${entryID}`);
+      const notice = page
+        .locator("p")
+        .filter({ hasText: "Differences from current version:" });
+      await expect(notice).toBeVisible();
+      await page.screenshot({
+        path: `/private/tmp/history-${scenario.kind.toLowerCase()}-${scenario.differences.toLowerCase().replaceAll(" ", "-")}${"legacy" in scenario ? "-legacy" : ""}.png`,
+        fullPage: true,
+        caret: "initial",
+      });
+      await expect(notice).toHaveText(
+        `Differences from current version: ${scenario.differences}. Your current version 2 will stay in history.`,
+      );
+      expect(errors).toEqual([]);
+    },
+  );
+}
