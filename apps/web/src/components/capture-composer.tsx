@@ -84,12 +84,14 @@ export type NativePhotoPickerState = "canceled" | "opened" | "selected";
 const idleFeedback: CaptureFeedback = { isError: false, message: "" };
 
 export function CaptureComposer({
+  active = true,
   embedded = false,
   idPrefix = "capture",
   onNativePhotoPickerChange,
   ownerId,
   variant = "page",
 }: {
+  active?: boolean;
   embedded?: boolean;
   idPrefix?: string;
   onNativePhotoPickerChange?: (state: NativePhotoPickerState) => void;
@@ -123,6 +125,7 @@ export function CaptureComposer({
   const pendingEntriesRef = useRef<QueuedInboxEntry[]>([]);
   const syncInFlightRef = useRef(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
   const voiceRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const voiceBaselineRef = useRef("");
   const voiceHadTranscriptRef = useRef(false);
@@ -244,6 +247,7 @@ export function CaptureComposer({
   }, [ownerId, replacePendingEntries, router]);
 
   useLayoutEffect(() => {
+    if (!active) return;
     const draft = loadInboxDraft(window.localStorage, ownerId);
     const queue = loadInboxQueue(window.localStorage, ownerId);
     let isCanceled = false;
@@ -319,7 +323,7 @@ export function CaptureComposer({
       isCanceled = true;
       window.removeEventListener("online", handleOnline);
     };
-  }, [ownerId, replacePendingEntries, synchronizeQueue]);
+  }, [active, ownerId, replacePendingEntries, synchronizeQueue]);
 
   useEffect(() => {
     let isCanceled = false;
@@ -344,7 +348,7 @@ export function CaptureComposer({
         voiceRecognitionRef.current = null;
       }
     };
-  }, []);
+  }, [active]);
 
   function updateDraft(
     nextTitle: string,
@@ -641,6 +645,29 @@ export function CaptureComposer({
       <form
         className={`${captureComposerStyles.captureCard} ${variant === "dialog" ? captureComposerStyles.dialogCaptureCard : ""} ${embedded ? captureComposerStyles.embeddedCaptureCard : ""}`}
         aria-label="Quick capture"
+        onKeyDownCapture={(event) => {
+          if (
+            !active ||
+            event.defaultPrevented ||
+            event.key !== "Enter" ||
+            (!event.metaKey && !event.ctrlKey) ||
+            event.altKey ||
+            event.shiftKey ||
+            event.nativeEvent.isComposing ||
+            (event.target instanceof Element &&
+              event.target.closest("[data-escape-layer]"))
+          )
+            return;
+
+          // Capture before Tiptap's Mod-Enter hard-break/code-block bindings.
+          // Shift-Enter and ordinary Enter keep the editor's newline behavior.
+          event.preventDefault();
+          event.stopPropagation();
+          if (event.repeat) return;
+          const submitButton = submitButtonRef.current;
+          if (submitButton && !submitButton.disabled)
+            event.currentTarget.requestSubmit(submitButton);
+        }}
         onSubmit={handleSubmit}
       >
         {variant === "page" ? (
@@ -658,7 +685,7 @@ export function CaptureComposer({
           <div className={captureComposerStyles.captureFields}>
             {isLocalStateReady ? (
               <RichTextEditor
-                autoFocus={variant === "dialog"}
+                autoFocus={variant === "dialog" && active}
                 disabled={isSaving || voiceState !== "idle"}
                 label="Entry text"
                 maxLength={entryBodyLimit}
@@ -820,20 +847,33 @@ export function CaptureComposer({
             >
               {composerFeedback.message}
             </p>
-            <Button
-              variant="primary"
-              disabled={
-                isSaving ||
-                isSyncing ||
-                !isLocalStateReady ||
-                !isPhotoStateReady ||
-                voiceState !== "idle"
-              }
-              type="submit"
-            >
-              {isSaving || isSyncing ? "Saving…" : "Save to Inbox"}
-              <Icon name="chevron" size={16} />
-            </Button>
+            <span className={captureComposerStyles.saveButtonHelp}>
+              <Button
+                aria-describedby={`${idPrefix}-save-shortcut`}
+                aria-keyshortcuts="Meta+Enter Control+Enter"
+                variant="primary"
+                disabled={
+                  isSaving ||
+                  isSyncing ||
+                  !isLocalStateReady ||
+                  !isPhotoStateReady ||
+                  voiceState !== "idle"
+                }
+                ref={submitButtonRef}
+                type="submit"
+              >
+                {isSaving || isSyncing ? "Saving…" : "Save to Inbox"}
+                <Icon name="chevron" size={16} />
+              </Button>
+              <span
+                className={captureComposerStyles.saveShortcutTooltip}
+                id={`${idPrefix}-save-shortcut`}
+                role="tooltip"
+              >
+                <span>Save to Inbox</span>
+                <kbd>⌘ Return</kbd>
+              </span>
+            </span>
           </div>
         </div>
       </form>

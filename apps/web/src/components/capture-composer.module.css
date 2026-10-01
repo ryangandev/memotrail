@@ -47,6 +47,10 @@
   min-height: 0;
 }
 
+.dialogCaptureCard .captureActions {
+  background: transparent;
+}
+
 .captureComposerHeader {
   display: flex;
   align-items: center;
@@ -187,6 +191,57 @@
   gap: var(--mt-space-3);
 }
 
+.saveButtonHelp {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+
+.saveShortcutTooltip {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--mt-space-2));
+  z-index: 5;
+  display: flex;
+  width: max-content;
+  align-items: center;
+  gap: var(--mt-space-2);
+  padding: 6px var(--mt-space-2);
+  border-radius: var(--mt-radius-small);
+  visibility: hidden;
+  color: var(--mt-color-surface-raised);
+  background: var(--mt-color-ink);
+  box-shadow: var(--mt-shadow-raised);
+  font-family: var(--mt-font-family-sans);
+  font-size: 11px;
+  font-weight: var(--mt-font-weight-medium);
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(3px);
+  transition:
+    opacity var(--mt-motion-quick),
+    transform var(--mt-motion-quick);
+}
+
+.saveShortcutTooltip kbd {
+  padding: 2px var(--mt-space-1);
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  border-radius: 4px;
+  color: inherit;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  font: inherit;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.saveButtonHelp:hover .saveShortcutTooltip,
+.saveButtonHelp:focus-within .saveShortcutTooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .captureStatus,
 .captureError {
   max-width: 250px;
@@ -307,6 +362,8 @@
 
   .dialogCaptureCard {
     --capture-inline-padding: var(--mt-space-4);
+
+    margin-top: 0;
   }
 
   .captureIntro {
@@ -346,6 +403,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .saveShortcutTooltip {
+    transition: none;
+  }
+
   .captureEditorLoading {
     animation: none;
   }

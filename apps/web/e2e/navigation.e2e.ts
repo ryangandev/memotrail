@@ -303,57 +303,32 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(searchShortcut).toContainText("⌘ K");
     await expect(searchShortcut).not.toContainText("Search your trail");
     await expect(newEntryShortcut).toContainText("⌘ J");
-    await expect(newEntryShortcut).toContainText("New");
+    await expect(newEntryShortcut).toContainText("What’s on your mind?");
     const inboxShortcut = page.getByRole("link", {
       name: "Open Inbox",
       exact: true,
     });
     await expect(inboxShortcut).toBeVisible();
     await expect(inboxShortcut).not.toContainText("Inbox");
-    const [newEntryBox, searchBox, inboxBox] = await Promise.all([
+    const [dockBox, searchBox, inboxBox] = await Promise.all([
       newEntryShortcut.boundingBox(),
       searchShortcut.boundingBox(),
       inboxShortcut.boundingBox(),
     ]);
-    expect(newEntryBox?.x).toBeLessThan(searchBox?.x ?? 0);
-    expect(searchBox?.x).toBeLessThan(inboxBox?.x ?? 0);
-    const topActionStyle = async (button: typeof searchShortcut) =>
-      button.evaluate((element) => {
-        const style = getComputedStyle(element);
-        return {
-          backgroundColor: style.backgroundColor,
-          borderColor: style.borderColor,
-          borderRadius: style.borderRadius,
-          boxShadow: style.boxShadow,
-          color: style.color,
-          height: style.height,
-        };
-      });
-    const searchActionStyle = await topActionStyle(searchShortcut);
-    const newEntryActionStyle = await topActionStyle(newEntryShortcut);
-    expect(newEntryActionStyle.height).toBe(searchActionStyle.height);
-    expect(newEntryActionStyle.borderRadius).toBe(
-      searchActionStyle.borderRadius,
-    );
-    expect(newEntryActionStyle.backgroundColor).not.toBe(
-      searchActionStyle.backgroundColor,
-    );
-    expect(newEntryActionStyle.borderColor).not.toBe(
-      searchActionStyle.borderColor,
-    );
-    expect(newEntryActionStyle.color).not.toBe(searchActionStyle.color);
-    await newEntryShortcut.hover();
-    await expect
-      .poll(async () => (await topActionStyle(newEntryShortcut)).boxShadow)
-      .not.toBe(newEntryActionStyle.boxShadow);
-    await page.screenshot({
-      caret: "initial",
-      path: "/private/tmp/memotrail-topbar-action-hover.png",
-    });
-    await page.mouse.move(500, 500);
-    await expect
-      .poll(async () => (await topActionStyle(newEntryShortcut)).boxShadow)
-      .toBe(newEntryActionStyle.boxShadow);
+    expect(dockBox!.x + dockBox!.width).toBeLessThan(searchBox!.x);
+    expect(dockBox!.y).toBeCloseTo(searchBox!.y, 0);
+    expect(searchBox!.y).toBeGreaterThan(inboxBox!.y + inboxBox!.height);
+    await expect(
+      page
+        .locator("main > header")
+        .getByRole("button", { name: "New entry", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page
+        .locator("main > header")
+        .getByRole("button", { name: "Search your trail", exact: true }),
+    ).toHaveCount(0);
+    await expect(newEntryShortcut).toHaveCSS("backdrop-filter", /blur/);
     await expect(shell.getByText(email, { exact: true })).toHaveCount(0);
     await expect(
       shell
@@ -506,18 +481,14 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(expandSidebar.locator("svg circle")).toHaveCount(3);
     await expect(expandSidebar.locator("svg")).toHaveAttribute("width", "18");
     await expect(expandSidebar.locator("svg")).toHaveAttribute("height", "18");
-    const [forwardBox, toggleBox, newBox] = await Promise.all([
+    const [forwardBox, toggleBox] = await Promise.all([
       goForward.boundingBox(),
       expandSidebar.boundingBox(),
-      newEntryShortcut.boundingBox(),
     ]);
     expect(toggleBox?.width).toBe(36);
     expect(toggleBox?.height).toBe(36);
     expect(toggleBox?.x).toBeGreaterThan(
       (forwardBox?.x ?? 0) + (forwardBox?.width ?? 0),
-    );
-    expect((toggleBox?.x ?? 0) + (toggleBox?.width ?? 0)).toBeLessThan(
-      newBox?.x ?? 0,
     );
     await expect(
       shell.getByRole("button", { name: "Expand sidebar" }),
@@ -540,7 +511,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.mouse.move(800, 100);
     await expandSidebar.focus();
     await page.keyboard.press("Tab");
-    await expect(newEntryShortcut).toBeFocused();
+    await expect(inboxShortcut).toBeFocused();
     await homeLink.focus();
     await expect(homeLink).toBeFocused();
     await expect(homeLink).toHaveCSS("outline-style", "none");
@@ -626,7 +597,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(page.locator("main")).toHaveCSS("margin-left", "224px");
     await page.getByRole("button", { name: "Collapse sidebar" }).focus();
     await page.keyboard.press("Tab");
-    await expect(newEntryShortcut).toBeFocused();
+    await expect(inboxShortcut).toBeFocused();
     await homeLink.focus();
     await expect(homeLink).toBeFocused();
     await expect(homeLink).toHaveCSS("outline-style", "none");

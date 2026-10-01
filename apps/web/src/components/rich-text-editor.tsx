@@ -94,7 +94,6 @@ export function RichTextEditor({
           isAllowedUri: (url, context) =>
             context.defaultValidate(url) && Boolean(normalizedLink(url)),
           openOnClick: false,
-          protocols: ["mailto", "tel"],
         },
       }),
       CharacterCount.configure({ limit: maxLength }),
@@ -166,6 +165,10 @@ export function RichTextEditor({
   }, [editor, richText, text]);
 
   useEffect(() => {
+    if (!autoFocus) {
+      didAutoFocusRef.current = false;
+      return;
+    }
     if (!editor || !autoFocus || disabled || didAutoFocusRef.current) return;
     didAutoFocusRef.current = true;
     editor.commands.focus("end");
