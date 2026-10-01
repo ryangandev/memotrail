@@ -2,13 +2,14 @@ import Foundation
 @preconcurrency import Supabase
 import SwiftUI
 
+/// Web `relationModes`: this Item's links, the Items that link here, and Items to link.
 enum EntryRelationMode: String, CaseIterable, Sendable {
   case outgoing, incoming, candidates
   var title: String {
     switch self {
-    case .outgoing: "Linked Entries"
+    case .outgoing: "Linked Items"
     case .incoming: "Linked from"
-    case .candidates: "Find Entries"
+    case .candidates: "Find Items"
     }
   }
 }
@@ -21,7 +22,7 @@ struct RelatedEntry: Decodable, Identifiable, Sendable {
   let isDeleted: Bool
   var id: UUID { entryID }
   var displayTitle: String {
-    title?.trimmed.nonEmpty ?? String(excerpt.prefix(80)).nonEmpty ?? "Untitled Entry"
+    HistoryPresentation.title(title: title, body: excerpt)
   }
   enum CodingKeys: String, CodingKey {
     case title, excerpt
@@ -77,128 +78,191 @@ struct EntryRelationChange: Encodable {
   }
 }
 
+/// Web `EntryRelationsPanel`: links between existing Items, saved as soon as they change and kept
+/// in this Item's history. The page that holds it opens a linked Item through `open`, since
+/// lazy pages ignore navigation destinations.
 struct EntryRelationsView: View {
   let client: SupabaseClient
   let ownerID: UUID
   let entryID: UUID
+  let open: (UUID) -> Void
   let onChanged: @MainActor () async -> Void
+
   @State private var mode: EntryRelationMode = .outgoing
   @State private var query = ""
   @State private var appliedQuery = ""
   @State private var page = 0
   @State private var result: EntryRelationsResult?
-  @State private var busy = false
+  @State private var isBusy = true
   @State private var message: String?
   @State private var unlinkTarget: RelatedEntry?
+  @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
-      Text("Related Entries").font(MTTypography.titleSmall)
-      Text(
-        "Connect existing writing without copying it. Link changes save immediately and stay in this Entry's history."
+      Text("Related Items")
+        .font(MTFont.heading)
+        .foregroundStyle(MTColor.ink)
+        .accessibilityAddTraits(.isHeader)
+      note(
+        "Connect existing Entries without copying them. Link changes save immediately and stay in this Item's history."
       )
-      .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-      ViewThatFits(in: .horizontal) {
-        HStack { modeButtons }
-        VStack(alignment: .leading) { modeButtons }
+      MTFlowLayout(spacing: MTSpacing.s2) {
+        ForEach(EntryRelationMode.allCases, id: \.self) { value in
+          MTFilterChip(title: value.title, isSelected: mode == value) {
+            query = ""
+            Task { await load(value, query: "", page: 0) }
+          }
+          .disabled(isBusy)
+        }
       }
-      HStack {
-        TextField("Search related Entries", text: $query).textFieldStyle(.roundedBorder)
-          .onSubmit { Task { await load(mode, query: query, page: 0) } }
+      .accessibilityElement(children: .contain)
+      .accessibilityLabel("Relationship views")
+      HStack(alignment: .bottom, spacing: MTSpacing.s2) {
+        MTSearchField(
+          "Search related Items", text: $query, prompt: "Title or words, including Chinese",
+          maxLength: 200
+        )
+        .onSubmit { Task { await load(mode, query: query, page: 0) } }
         Button("Search") { Task { await load(mode, query: query, page: 0) } }
-          .disabled(query.count > 200)
+          .mtButtonStyle()
       }
+      .disabled(isBusy)
       if mode == .incoming {
-        Text("These Entries link here. Open the source Entry to change its link.")
-          .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+        note("These Items link here. Open the source Item to change its link.")
       } else if mode == .candidates {
-        Text("Choose an active Entry to link. Existing outgoing links are omitted.")
-          .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+        note("Choose an active Item to link. Existing outgoing links are omitted.")
       }
-      if busy {
-        ProgressView("Loading links...")
+      if isBusy {
+        HStack(spacing: MTSpacing.s2) {
+          ProgressView().controlSize(.small).tint(MTColor.accent)
+          note("Loading links...")
+        }
       } else if let result {
         if result.items.isEmpty {
-          Text(mode == .candidates ? "No matching Entries to link." : "No matching linked Entries.")
-            .foregroundStyle(MTColor.inkMuted)
+          note(mode == .candidates ? "No matching Items to link." : "No matching linked Items.")
         }
-        ForEach(result.items) { row in
-          VStack(alignment: .leading, spacing: 8) {
-            NavigationLink(row.displayTitle) {
-              EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: row.entryID)
-            }
-            Text(
-              row.itemKind.displayName(subtype: row.itemSubtype)
-                + (row.isDeleted ? " · In Trash" : "")
-            )
-            .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-            Text(row.excerpt).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
-            if mode != .incoming {
-              Button(mode == .candidates ? "Link Entry" : "Unlink") {
-                if mode == .candidates {
-                  Task { await change(row, linked: true) }
-                } else {
-                  unlinkTarget = row
-                }
-              }.accessibilityLabel("\(mode == .candidates ? "Link" : "Unlink") \(row.displayTitle)")
-            }
-            Divider()
+        VStack(spacing: 0) {
+          ForEach(result.items) { row in
+            relationRow(row)
           }
         }
-        HStack {
-          Button("Previous links") {
-            Task { await load(mode, query: appliedQuery, page: page - 1) }
-          }.disabled(page == 0)
-          Spacer()
-          Text(
-            "Page \(page + 1) · \(result.totalCount) \(result.totalCount == 1 ? "Entry" : "Entries")"
-          ).font(MTTypography.caption)
-          Spacer()
-          Button("Next links") { Task { await load(mode, query: appliedQuery, page: page + 1) } }
-            .disabled((page + 1) * 20 >= result.totalCount)
-        }
+        pagination(result)
       }
-      if let message { Text(message).foregroundStyle(MTColor.warm) }
+      if let message {
+        Text(message)
+          .font(MTFont.label.weight(.regular))
+          .foregroundStyle(MTColor.warm)
+      }
       Button("Refresh links") { Task { await load(mode, query: appliedQuery, page: page) } }
-    }.padding().background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.large))
-      .disabled(busy).task { await load(.outgoing, query: "", page: 0) }
-      .confirmationDialog(
-        "Unlink Entry?",
-        isPresented: Binding(get: { unlinkTarget != nil }, set: { if !$0 { unlinkTarget = nil } })
-      ) {
-        if let target = unlinkTarget {
-          Button("Unlink \(target.displayTitle)") { Task { await change(target, linked: false) } }
-        }
-      } message: {
-        Text("Neither Entry is deleted. This change can be restored through this Entry's history.")
-      }
-  }
-  private var modeButtons: some View {
-    ForEach(EntryRelationMode.allCases, id: \.self) { value in
-      Button(value.title) {
-        query = ""
-        Task { await load(value, query: "", page: 0) }
-      }.buttonStyle(.bordered).tint(mode == value ? MTColor.accent : MTColor.inkMuted)
-        .accessibilityAddTraits(mode == value ? [.isSelected] : [])
+        .mtButtonStyle(.secondary)
+        .disabled(isBusy)
+    }
+    .padding(horizontalSizeClass == .regular ? MTSpacing.s5 : 14)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.large))
+    .overlay {
+      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border)
+    }
+    .accessibilityElement(children: .contain)
+    .accessibilityLabel("Related Items")
+    .task { await load(.outgoing, query: "", page: 0, force: true) }
+    .confirmationDialog(
+      "Unlink “\(unlinkTarget?.displayTitle ?? "this Item")”?",
+      isPresented: Binding(get: { unlinkTarget != nil }, set: { if !$0 { unlinkTarget = nil } }),
+      titleVisibility: .visible, presenting: unlinkTarget
+    ) { target in
+      Button("Unlink Item", role: .destructive) { Task { await change(target, linked: false) } }
+      Button("Cancel", role: .cancel) {}
+    } message: { _ in
+      Text("Neither Item is deleted. This change can be restored through this Item's history.")
     }
   }
+
+  private func note(_ text: String) -> some View {
+    Text(text)
+      .font(MTFont.label.weight(.regular))
+      .foregroundStyle(MTColor.inkMuted)
+      .fixedSize(horizontal: false, vertical: true)
+  }
+
+  /// Web's relation row: the Item, its Kind and excerpt, and Link Item or Unlink.
+  private func relationRow(_ row: RelatedEntry) -> some View {
+    let layout =
+      horizontalSizeClass == .regular
+      ? AnyLayout(HStackLayout(alignment: .center, spacing: MTSpacing.s3))
+      : AnyLayout(VStackLayout(alignment: .leading, spacing: MTSpacing.s3))
+    return layout {
+      VStack(alignment: .leading, spacing: 6) {
+        Button(row.displayTitle) { open(row.entryID) }
+          .buttonStyle(.plain)
+          .font(MTFont.body)
+          .foregroundStyle(MTColor.accent)
+          .multilineTextAlignment(.leading)
+        Text(
+          row.itemKind.displayName(subtype: row.itemSubtype) + (row.isDeleted ? " · In Trash" : "")
+        )
+        .font(MTFont.caption.weight(.regular))
+        .foregroundStyle(MTColor.inkMuted)
+        if let excerpt = row.excerpt.trimmed.nonEmpty {
+          Text(excerpt)
+            .font(MTFont.label.weight(.regular))
+            .foregroundStyle(MTColor.inkMuted)
+            .lineLimit(3)
+        }
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+      if mode != .incoming {
+        Button(mode == .candidates ? "Link Item" : "Unlink") {
+          if mode == .candidates {
+            Task { await change(row, linked: true) }
+          } else {
+            unlinkTarget = row
+          }
+        }
+        .mtButtonStyle(.secondary, size: .small)
+        .accessibilityLabel("\(mode == .candidates ? "Link" : "Unlink") \(row.displayTitle)")
+      }
+    }
+    .padding(.vertical, MTSpacing.s3)
+    .overlay(alignment: .bottom) { MTListDivider() }
+  }
+
+  private func pagination(_ result: EntryRelationsResult) -> some View {
+    HStack(spacing: MTSpacing.s2) {
+      Button("Previous links") { Task { await load(mode, query: appliedQuery, page: page - 1) } }
+        .mtButtonStyle(.secondary, size: .small)
+        .disabled(page == 0)
+      Spacer(minLength: 0)
+      Text("Page \(page + 1) · \(countLabel(result.totalCount, "Item"))")
+        .font(MTFont.caption.weight(.regular))
+        .foregroundStyle(MTColor.inkMuted)
+      Spacer(minLength: 0)
+      Button("Next links") { Task { await load(mode, query: appliedQuery, page: page + 1) } }
+        .mtButtonStyle(.secondary, size: .small)
+        .disabled((page + 1) * 20 >= result.totalCount)
+    }
+    .accessibilityElement(children: .contain)
+    .accessibilityLabel("Relationship pages")
+  }
+
   private func load(
-    _ requestedMode: EntryRelationMode, query search: String, page requestedPage: Int
+    _ requestedMode: EntryRelationMode, query search: String, page requestedPage: Int,
+    force: Bool = false
   ) async {
     let request = EntryRelationsRequest(
       entryID: entryID, mode: requestedMode, query: search, page: requestedPage)
-    guard !busy, request.isValid else { return }
-    busy = true
+    guard force || !isBusy, request.isValid else { return }
+    isBusy = true
     message = nil
-    defer { busy = false }
+    defer { isBusy = false }
     do {
       guard try await client.auth.session.user.id == ownerID else {
         throw URLError(.userAuthenticationRequired)
       }
       let value: EntryRelationsResult? = try await client.rpc("entry_relations", params: request)
         .execute().value
-      guard let value, try await client.auth.session.user.id == ownerID else {
-        throw URLError(.badServerResponse)
-      }
+      guard let value else { throw URLError(.badServerResponse) }
       mode = requestedMode
       page = requestedPage
       appliedQuery = search.trimmed
@@ -208,30 +272,42 @@ struct EntryRelationsView: View {
       message = "Links could not load. Refresh to try again."
     }
   }
+
   private func change(_ row: RelatedEntry, linked: Bool) async {
-    guard !busy, let result else { return }
+    guard !isBusy, let result else { return }
     let input = EntryRelationChange(
       entryID: entryID, targetID: row.entryID, expectedRevision: result.revision, linked: linked)
-    guard input.isValid else { return }
-    busy = true
-    message = nil
-    do {
-      guard try await client.auth.session.user.id == ownerID else {
-        throw URLError(.userAuthenticationRequired)
-      }
-      let revision: Int? = try await client.rpc("set_entry_relation", params: input).execute().value
-      guard revision != nil, try await client.auth.session.user.id == ownerID else {
-        throw URLError(.badServerResponse)
-      }
-      busy = false
-      query = ""
-      await load(.outgoing, query: "", page: 0)
-      await onChanged()
-    } catch let error as PostgrestError where error.message == "relation_limit" {
-      message = "This Entry already has 100 links. Remove a link before adding another."
-    } catch {
-      message = "This Entry changed or the link could not be confirmed. Refresh before retrying."
+    guard input.isValid else {
+      message = "Choose a different valid Item."
+      return
     }
-    busy = false
+    isBusy = true
+    message = nil
+    if let failure = await save(input) {
+      message = failure
+      isBusy = false
+      return
+    }
+    query = ""
+    MTToastCenter.shared.success(linked ? "Item linked." : "Item unlinked.")
+    await load(.outgoing, query: "", page: 0, force: true)
+    await onChanged()
+  }
+
+  /// Web `changeEntryRelation`; returns the failure message, if any.
+  private func save(_ input: EntryRelationChange) async -> String? {
+    guard (try? await client.auth.session.user.id) == ownerID else {
+      return "Sign in again to change links."
+    }
+    do {
+      let revision: Int? = try await client.rpc("set_entry_relation", params: input).execute()
+        .value
+      return revision == nil
+        ? "This Item changed or a linked Item is unavailable. Refresh before retrying." : nil
+    } catch let error as PostgrestError where error.message == "relation_limit" {
+      return "This Item already has 100 links. Remove a link before adding another."
+    } catch {
+      return "Could not confirm this link change. Refresh before retrying."
+    }
   }
 }

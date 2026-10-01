@@ -20,22 +20,24 @@ enum WorkspaceRoute: String, CaseIterable, Identifiable, Hashable {
     case .settings: "Settings"
     }
   }
-  var systemImage: String {
+  /// Web's navigation icon for the destination.
+  var icon: MTIcon {
     switch self {
-    case .map: "map"
-    case .people: "person.2"
-    case .homes: "house"
-    case .vehicles: "car"
-    case .firstTimes: "star"
-    case .goals: "target"
-    case .collections: "square.stack"
-    case .tags: "tag"
-    case .history: "clock.arrow.circlepath"
-    case .trash: "trash"
-    case .settings: "gearshape"
+    case .map: .map
+    case .people: .person
+    case .homes: .home
+    case .vehicles: .car
+    case .firstTimes: .star
+    case .goals: .target
+    case .collections: .archive
+    case .tags: .tag
+    case .history: .clock
+    case .trash: .trash
+    case .settings: .settings
     }
   }
 
+  /// Web's mobile More groups.
   static let groups: [(title: String, routes: [Self])] = [
     ("Explore", [.map]),
     ("Focused views", [.people, .homes, .vehicles, .firstTimes, .goals]),
@@ -44,44 +46,99 @@ enum WorkspaceRoute: String, CaseIterable, Identifiable, Hashable {
   ]
 }
 
+/// Web's mobile More menu as the More tab: each group's destinations as two columns of tiles.
 struct MoreView: View {
   let client: SupabaseClient
   let user: AuthenticatedUser
   let isAuthenticationBusy: Bool
   let signOut: @MainActor () async -> Void
 
+  @Environment(AppNavigator.self) private var navigator
+
   var body: some View {
-    NavigationStack {
-      List {
+    @Bindable var navigator = navigator
+    NavigationStack(path: $navigator.morePath) {
+      MTPage(width: .standard, spacing: MTSpacing.s5) {
         ForEach(WorkspaceRoute.groups, id: \.title) { group in
-          Section(group.title) {
+          MoreGroup(title: group.title) {
             ForEach(group.routes) { route in
               NavigationLink(value: route) {
-                Label(route.title, systemImage: route.systemImage)
+                MoreTile(title: route.title, icon: route.icon)
               }
+              .buttonStyle(MTCardButtonStyle(radius: MTRadius.medium))
               .accessibilityIdentifier("more-\(route.rawValue)")
             }
           }
         }
         #if DEBUG
-          Section("Development") {
+          MoreGroup(title: "Development") {
             NavigationLink {
               DesignSystemGallery()
             } label: {
-              Label("Design System", systemImage: "square.grid.2x2")
+              MoreTile(title: "Design System", icon: .dashboard)
             }
+            .buttonStyle(MTCardButtonStyle(radius: MTRadius.medium))
             .accessibilityIdentifier("more-design-system")
           }
         #endif
       }
-      .scrollContentBackground(.hidden).background(MTColor.canvas)
       .navigationTitle("More")
+      .workspaceToolbar(
+        client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
+      )
       .navigationDestination(for: WorkspaceRoute.self) { route in
         WorkspaceDestinationView(
           route: route, client: client, user: user, isAuthenticationBusy: isAuthenticationBusy,
           signOut: signOut)
       }
     }
+  }
+}
+
+/// Web `mobileMoreGroup`: an uppercase label above two columns of destinations.
+private struct MoreGroup<Content: View>: View {
+  let title: String
+  @ViewBuilder let content: Content
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s2) {
+      Text(title)
+        .font(.caption2.weight(.semibold))
+        .tracking(1.1)
+        .textCase(.uppercase)
+        .foregroundStyle(MTColor.inkFaint)
+        .accessibilityAddTraits(.isHeader)
+      LazyVGrid(
+        columns: Array(repeating: GridItem(.flexible(), spacing: MTSpacing.s2), count: 2),
+        spacing: MTSpacing.s2
+      ) {
+        content
+      }
+    }
+  }
+}
+
+/// Web `mobileMoreLinks a`: the destination's icon and name.
+private struct MoreTile: View {
+  let title: String
+  let icon: MTIcon
+
+  var body: some View {
+    HStack(spacing: MTSpacing.s2) {
+      Image(icon)
+        .font(.system(size: 17))
+        .foregroundStyle(MTColor.inkMuted)
+        .frame(width: 22)
+        .accessibilityHidden(true)
+      Text(title)
+        .font(MTFont.caption.weight(.medium))
+        .foregroundStyle(MTColor.ink)
+        .lineLimit(2)
+        .multilineTextAlignment(.leading)
+      Spacer(minLength: 0)
+    }
+    .padding(MTSpacing.s3)
+    .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
   }
 }
 
@@ -105,14 +162,14 @@ struct WorkspaceDestinationView: View {
         LocationMapView(client: client, ownerID: user.id)
       #endif
     case .people: PeopleView(client: client, ownerID: user.id)
-    case .homes: HomesView(client: client, ownerID: user.id, embedded: true)
-    case .vehicles: VehiclesView(client: client, ownerID: user.id, embedded: true)
-    case .firstTimes: FirstTimesView(client: client, ownerID: user.id, embedded: true)
-    case .goals: GoalsView(client: client, ownerID: user.id, embedded: true)
-    case .collections: CollectionsView(client: client, ownerID: user.id, embedded: true)
-    case .tags: OrganizationView(client: client, ownerID: user.id, initialKind: .tag)
+    case .homes: HomesView(client: client, ownerID: user.id)
+    case .vehicles: VehiclesView(client: client, ownerID: user.id)
+    case .firstTimes: FirstTimesView(client: client, ownerID: user.id)
+    case .goals: GoalsView(client: client, ownerID: user.id)
+    case .collections: CollectionsView(client: client, ownerID: user.id)
+    case .tags: TagsView(client: client, ownerID: user.id)
     case .history: EntryHistoryIndexView(client: client, ownerID: user.id)
-    case .trash: TrashView(client: client, ownerID: user.id, embedded: true)
+    case .trash: TrashView(client: client, ownerID: user.id)
     case .settings:
       NativeSettingsView(
         client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut)
@@ -120,7 +177,9 @@ struct WorkspaceDestinationView: View {
   }
 }
 
-// Canonical detail routing is shared by Library and the Map.
+/// Canonical detail routing, shared by Library, the Map, the Dashboard, and Connected Items.
+/// Like Web `wikiEntryHref`, only a Person from People opens a Person page; a person Entry and
+/// any Item without a focused page open as an Item.
 struct WikiItemDestinationView: View {
   let client: SupabaseClient
   let ownerID: UUID
@@ -130,19 +189,19 @@ struct WikiItemDestinationView: View {
   var personID: UUID? = nil
 
   var body: some View {
-    switch (kind, subtype) {
-    case (.entity, "home"):
-      HomesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entryID)
-    case (.entity, "vehicle"):
-      VehiclesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entryID)
-    case (.entity, "person"):
-      PeopleView(client: client, ownerID: ownerID, focusedPersonID: personID ?? entryID)
-    case (.goal, _):
-      GoalsView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entryID)
-    case (.entry, "first_time"):
-      FirstTimesView(client: client, ownerID: ownerID, embedded: true, focusedEntryID: entryID)
+    switch (kind, subtype, personID) {
+    case (.entity, "person", let personID?):
+      PersonDetailView(client: client, ownerID: ownerID, personID: personID)
+    case (.entity, "home", _):
+      HomeDetailView(client: client, ownerID: ownerID, entryID: entryID)
+    case (.entity, "vehicle", _):
+      VehicleDetailView(client: client, ownerID: ownerID, entryID: entryID)
+    case (.goal, _, _):
+      GoalDetailView(client: client, ownerID: ownerID, entryID: entryID)
+    case (.entry, "first_time", _):
+      FirstTimeDetailView(client: client, ownerID: ownerID, entryID: entryID)
     default:
-      EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: entryID)
+      WikiItemDetailView(client: client, ownerID: ownerID, entryID: entryID)
     }
   }
 }

@@ -105,86 +105,70 @@ enum AIAPI {
   }
 }
 
+/// Web `AIPausedSettings`: AI stays off and cannot be enabled while its next version is
+/// designed; manual features and previous AI data remain.
 struct AISettingsView: View {
-  let client: SupabaseClient
-  let ownerID: UUID
-  @State private var workspace: AIWorkspace?
-  @State private var preferences = AIPreferences()
-  @State private var budget = "1"
-  @State private var busy = false
-  @State private var message: String?
-
   var body: some View {
-    Form {
-      Section {
-        Toggle("AI assistance (Beta)", isOn: .constant(false))
-          .disabled(true)
-      } footer: {
+    MTPage(width: .compact) {
+      MTPageHeader(
+        eyebrow: "Beta · Paused", title: "AI capabilities",
+        description:
+          "AI capabilities are paused while we rethink how they can help. Manual features remain available."
+      )
+      VStack(alignment: .leading, spacing: MTSpacing.s5) {
+        HStack(alignment: .top, spacing: MTSpacing.s3) {
+          Image(.sparkle)
+            .font(.system(size: 19, weight: .medium))
+            .foregroundStyle(MTColor.accent)
+            .frame(width: 44, height: 44)
+            .background(MTColor.accentSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
+            .accessibilityHidden(true)
+          VStack(alignment: .leading, spacing: MTSpacing.s1) {
+            Text("AI capabilities")
+              .font(MTFont.cardTitle)
+              .foregroundStyle(MTColor.ink)
+              .accessibilityAddTraits(.isHeader)
+            Text("Currently off and unavailable to enable.")
+              .font(MTFont.caption.weight(.regular))
+              .foregroundStyle(MTColor.inkMuted)
+          }
+          Spacer(minLength: 0)
+          MTBadge(title: "Beta", tone: .neutral)
+        }
+        Toggle(isOn: .constant(false)) {
+          VStack(alignment: .leading, spacing: 2) {
+            Text("AI capabilities")
+              .font(MTFont.label)
+              .foregroundStyle(MTColor.ink)
+            Text("Capture, organize, and search your archive manually.")
+              .font(MTFont.caption.weight(.regular))
+              .foregroundStyle(MTColor.inkMuted)
+          }
+        }
+        .tint(MTColor.accent)
+        .disabled(true)
+        .padding(MTSpacing.s4)
+        .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.medium))
+        .overlay {
+          RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(MTColor.border, lineWidth: 1)
+        }
         Text(
-          "AI features are paused while their next version is being designed. Your saved preferences and history are preserved."
+          "No new AI requests will run while this beta is paused. Your Entries and previous AI data are preserved."
         )
+        .font(MTFont.caption.weight(.regular))
+        .foregroundStyle(MTColor.inkMuted)
+        .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
+        .fixedSize(horizontal: false, vertical: true)
       }
-    }
-    .scrollContentBackground(.hidden)
-    .background(MTColor.canvas)
-    .navigationTitle("AI settings")
-  }
-
-  private func checkOwner() async throws {
-    guard try await client.auth.session.user.id == ownerID else {
-      throw URLError(.userAuthenticationRequired)
-    }
-  }
-
-  private func load() async {
-    guard !busy else { return }
-    busy = true
-    defer { busy = false }
-    do {
-      try await checkOwner()
-      let data: AIWorkspace = try await client.rpc("ai_workspace").execute().value
-      workspace = data
-      preferences = data.preferences
-      budget = String(Double(preferences.monthlyBudgetMicros) / 1_000_000)
-      message = nil
-    } catch { message = "Could not load AI settings. Try again." }
-  }
-
-  private func save() async {
-    guard let amount = Double(budget), amount.isFinite, (0...100).contains(amount) else {
-      message = "Enter a monthly budget between $0 and $100."
-      return
-    }
-    preferences.monthlyBudgetMicros = Int((amount * 1_000_000).rounded())
-    guard preferences.isValid else { return }
-    busy = true
-    defer { busy = false }
-    do {
-      try await checkOwner()
-      let saved: AIWorkspace? = try await client.rpc(
-        "save_ai_preferences",
-        params: AISettingsInput(
-          preferences: preferences, expectedRevision: preferences.revision
-        )
-      ).execute().value
-      guard let saved else {
-        message = "Settings changed on another device. Reopen this screen before saving again."
-        return
+      .padding(MTSpacing.s5)
+      .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.large))
+      .overlay {
+        RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border, lineWidth: 1)
       }
-      workspace = saved
-      preferences = saved.preferences
-      message = "AI settings saved across your devices."
-    } catch { message = "Could not save AI settings. Your edits are still here." }
-  }
-
-  private func test() async {
-    busy = true
-    defer { busy = false }
-    do {
-      let response: AIConnectionResponse = try await AIAPI.post(
-        "connection", body: [String: String](), client: client, ownerID: ownerID)
-      message = response.message
-      workspace = try await client.rpc("ai_workspace").execute().value
-    } catch { message = error.localizedDescription }
+      .accessibilityElement(children: .contain)
+      .accessibilityLabel("AI availability")
+    }
+    .navigationTitle("AI capabilities")
+    .navigationBarTitleDisplayMode(.inline)
   }
 }

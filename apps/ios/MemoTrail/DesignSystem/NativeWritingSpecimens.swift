@@ -19,7 +19,7 @@
               .font(MTFont.body).foregroundStyle(MTColor.inkMuted)
             MTRichTextEditor(text: $text)
             Button("Save preview", systemImage: "checkmark") { save() }
-              .buttonStyle(MTActionStyle()).accessibilityIdentifier("design-save-writing")
+              .mtButtonStyle().accessibilityIdentifier("design-save-writing")
           }
         }
         if let savedText {
@@ -28,7 +28,7 @@
               MTBadge(title: "Saved preview", tone: .success)
               MTRichTextPreview(text: savedText).accessibilityIdentifier("design-saved-writing")
               Button("Reopen saved note", systemImage: "square.and.pencil") { reopen() }
-                .buttonStyle(MTActionStyle(emphasis: .secondary))
+                .mtButtonStyle(.secondary)
                 .accessibilityIdentifier("design-reopen-writing")
             }
           }
@@ -48,7 +48,7 @@
             Button("Open writing sheet", systemImage: "rectangle.and.pencil.and.ellipsis") {
               showsSheet = true
             }
-            .buttonStyle(MTActionStyle(emphasis: .secondary))
+            .mtButtonStyle(.secondary)
             .accessibilityIdentifier("design-open-writing-sheet")
           }
         }

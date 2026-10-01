@@ -22,25 +22,11 @@ final class GoalController {
     self.ownerID = ownerID
   }
 
-  var activeEntries: [GoalEntry] {
-    GoalWorkspace.entries(entries, matching: [.active])
-  }
+  func entry(id: UUID) -> GoalEntry? { entries.first { $0.id == id } }
 
-  var consideringEntries: [GoalEntry] {
-    GoalWorkspace.entries(entries, matching: [.considering])
-  }
-
-  var pausedEntries: [GoalEntry] {
-    GoalWorkspace.entries(entries, matching: [.paused])
-  }
-
-  var closedEntries: [GoalEntry] {
-    GoalWorkspace.entries(entries, matching: [.achieved, .letGo])
-  }
-
-  var photoCount: Int { entries.reduce(0) { $0 + $1.attachments.count } }
-
-  func load() async {
+  /// Loads the first page of Goals, like Web. A Goal's own page passes its ID so a Goal past
+  /// that page still loads, like Web `getGoalsWorkspace(targetId)`.
+  func load(including targetID: UUID? = nil) async {
     guard !isLoading else { return }
     isLoading = true
     loadErrorMessage = nil
@@ -51,16 +37,24 @@ final class GoalController {
 
     do {
       try await validateSessionOwner()
-      async let workspaceRequest: [GoalWorkspaceRow] =
-        client
-        .rpc("goals_workspace", params: GoalWorkspaceParameters(limit: 100, offset: 0))
-        .execute()
-        .value
+      async let workspaceRequest = loadPage(offset: 0)
       async let collectionsRequest: [GoalOrganizationName] = loadCollections()
       async let tagsRequest: [GoalOrganizationName] = loadTags()
       async let linksRequest: [GoalLinkOption] = loadLinkOptions()
 
-      var loadedEntries = GoalWorkspace.entries(from: try await workspaceRequest)
+      var rows = try await workspaceRequest
+      if let targetID, !rows.contains(where: { $0.entryID == targetID }) {
+        var offset = Self.pageSize
+        while rows.count >= offset {
+          let page = try await loadPage(offset: offset)
+          rows += page
+          if page.count < Self.pageSize || page.contains(where: { $0.entryID == targetID }) {
+            break
+          }
+          offset += Self.pageSize
+        }
+      }
+      var loadedEntries = GoalWorkspace.entries(from: rows)
       let paths = Array(Set(loadedEntries.flatMap { $0.attachments.map(\.objectPath) }))
       let signedURLs = await signedURLMap(paths: paths)
       for entryIndex in loadedEntries.indices {
@@ -71,9 +65,10 @@ final class GoalController {
       }
 
       entries = loadedEntries
-      collectionOptions = try await collectionsRequest.map(\.name)
-      tagOptions = try await tagsRequest.map(\.name)
-      linkOptions = try await linksRequest
+      // Like Web, the Goals load even when their options cannot.
+      collectionOptions = ((try? await collectionsRequest) ?? []).map(\.name)
+      tagOptions = ((try? await tagsRequest) ?? []).map(\.name)
+      linkOptions = (try? await linksRequest) ?? []
     } catch {
       loadErrorMessage = "MemoTrail could not load your Goals. Pull to refresh or try again."
     }
@@ -138,14 +133,14 @@ final class GoalController {
         guard let saved = results.first else {
           return MutationResult(
             identity: nil,
-            message: "This Capture changed on another device. Close it, refresh, and try again.",
+            message: "This Capture changed or was already organized. Return to Inbox and refresh.",
             status: .conflict)
         }
         return MutationResult(
           identity: SavedIdentity(
             id: saved.goalEntryID, revision: saved.goalRevision, relatedID: nil),
           message: "Goal created from Capture.",
-          status: .saved)
+          status: .created)
       }
       input.expectedRevision = try await EntryPhotoUpload.writingRevision(
         client: client, entryID: entryID, revision: expectedRevision)
@@ -166,7 +161,7 @@ final class GoalController {
       return MutationResult(
         identity: SavedIdentity(id: saved.entryID, revision: saved.revision, relatedID: nil),
         message: saved.wasCreated ? "Goal added." : "Goal saved.",
-        status: .saved
+        status: saved.wasCreated ? .created : .saved
       )
     } catch {
       return MutationResult(
@@ -224,7 +219,8 @@ final class GoalController {
       guard let achieved = results.first else {
         return MutationResult(
           identity: nil,
-          message: "This Goal changed or is no longer in Bucket List. Refresh and try again.",
+          message:
+            "This Goal changed or is no longer in Bucket List. Close it, refresh, and try again.",
           status: .conflict
         )
       }
@@ -234,7 +230,7 @@ final class GoalController {
           revision: achieved.goalRevision,
           relatedID: achieved.firstTimeEntryID
         ),
-        message: "Goal achieved and First Time created.",
+        message: "Achievement saved, with a linked First Time.",
         status: .achieved
       )
     } catch {
@@ -346,7 +342,7 @@ final class GoalController {
         )
       }
       await reloadAfterMutation()
-      return MutationResult(identity: nil, message: "Moved to Trash.", status: .trashed)
+      return MutationResult(identity: nil, message: "Goal moved to Trash.", status: .trashed)
     } catch {
       return MutationResult(
         identity: nil,
@@ -359,6 +355,15 @@ final class GoalController {
   func reloadAfterMutation() async {
     isLoading = false
     await load()
+  }
+
+  private static let pageSize = 100
+
+  private func loadPage(offset: Int) async throws -> [GoalWorkspaceRow] {
+    try await client
+      .rpc("goals_workspace", params: GoalWorkspaceParameters(limit: Self.pageSize, offset: offset))
+      .execute()
+      .value
   }
 
   private func loadCollections() async throws -> [GoalOrganizationName] {
@@ -401,10 +406,12 @@ extension GoalController {
   }
 
   struct MutationResult: Equatable, Sendable {
-    enum Status: Equatable, Sendable { case achieved, conflict, error, saved, trashed }
+    enum Status: Equatable, Sendable { case achieved, conflict, created, error, saved, trashed }
     let identity: SavedIdentity?
     let message: String
     let status: Status
+
+    var succeeded: Bool { [.achieved, .created, .saved, .trashed].contains(status) }
   }
 }
 

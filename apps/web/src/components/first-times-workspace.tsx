@@ -53,6 +53,7 @@ import {
   type PhotoUploadProgress as PhotoUploadProgressValue,
 } from "@/lib/media/upload";
 import type { LocationSelection } from "@/lib/locations/location";
+import { countLabel } from "@/lib/count-label";
 
 export function FirstTimesWorkspace({
   collectionOptions,
@@ -732,10 +733,6 @@ function localTimezone() {
 function namesIncludingDraft(names: string[], draft: string) {
   const name = draft.trim();
   return name ? [...names, name] : names;
-}
-
-function countLabel(count: number, singular: string) {
-  return `${count} ${count === 1 ? singular : `${singular}s`}`;
 }
 
 function truncate(value: string, limit: number) {

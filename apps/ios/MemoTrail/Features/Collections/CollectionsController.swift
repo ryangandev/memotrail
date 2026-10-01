@@ -2,10 +2,15 @@ import Foundation
 import Observation
 @preconcurrency import Supabase
 
+/// Web `getCollectionsWorkspace` without a selected Collection: the Collection summaries and,
+/// for each one's editor, its organization identity.
 @MainActor
 @Observable
 final class CollectionsController {
   private(set) var collections: [MemoCollection] = []
+  /// The Collections' editor identities, like Web `organizationItems`. A failure here only
+  /// hides the editors, as on Web.
+  private(set) var organizationItems: [OrganizationItem] = []
   private(set) var hasLoaded = false
   private(set) var isLoading = false
   private(set) var loadErrorMessage: String?
@@ -18,8 +23,14 @@ final class CollectionsController {
     self.ownerID = ownerID
   }
 
+  var actions: OrganizationActions { OrganizationActions(client: client, ownerID: ownerID) }
+
   var entryPlacementCount: Int {
     collections.reduce(0) { $0 + $1.entryCount }
+  }
+
+  func item(for collection: MemoCollection) -> OrganizationItem? {
+    organizationItems.first { $0.id == collection.id }
   }
 
   func load() async {
@@ -32,25 +43,23 @@ final class CollectionsController {
       hasLoaded = true
     }
 
+    async let items = actions.load(.collection, limit: 100)
     do {
-      try await validateSessionOwner()
-      let rows: [MemoCollection] =
-        try await client
-        .rpc("collections_workspace")
-        .execute()
-        .value
-
-      collections = CollectionsWorkspace.collections(from: rows)
+      collections = try await Self.summary(client: client, ownerID: ownerID)
     } catch {
+      collections = []
       loadErrorMessage = "MemoTrail could not load your Collections. Pull to refresh or try again."
     }
+    organizationItems = (try? await items) ?? []
   }
 
-  private func validateSessionOwner() async throws {
-    let session = try await client.auth.session
-    guard session.user.id == ownerID else {
+  /// Every Collection with its Entry and Inbox counts, in display order.
+  static func summary(client: SupabaseClient, ownerID: UUID) async throws -> [MemoCollection] {
+    guard try await client.auth.session.user.id == ownerID else {
       throw CollectionsControllerError.ownerChanged
     }
+    let rows: [MemoCollection] = try await client.rpc("collections_workspace").execute().value
+    return CollectionsWorkspace.collections(from: rows)
   }
 }
 
@@ -116,9 +125,13 @@ final class CollectionDetailController {
         .value
 
       let paths = Array(Set(rows.flatMap { $0.attachments.map(\.objectPath) }))
+      async let richTexts = EntryRichTextMap.load(
+        rows.map { ($0.id, $0.body) }, client: client, ownerID: ownerID)
       let signedURLs = await signedURLMap(paths: paths)
 
+      let bodies = await richTexts
       for entryIndex in rows.indices {
+        rows[entryIndex].bodyRich = bodies[rows[entryIndex].id]
         for attachmentIndex in rows[entryIndex].attachments.indices {
           let path = rows[entryIndex].attachments[attachmentIndex].objectPath
           rows[entryIndex].attachments[attachmentIndex].signedURL = signedURLs[path]

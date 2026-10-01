@@ -6,17 +6,26 @@ struct MTRichTextEditor: View {
   @Binding var text: NSAttributedString
   var placeholder = "Write a note..."
   var accessibilityIdentifier = "rich-editor"
+  /// Embedded editors sit inside a host card that already draws the surface and border.
+  var isEmbedded = false
+  var minimumHeight = 180.0
+  /// Each increase moves keyboard focus into the editor; a positive start focuses on appear.
+  var focusRequest = 0
   @State private var session = NativeRichTextSession()
   @State private var showsFormatting = false
-  @ScaledMetric private var editorHeight = 180.0
+  @ScaledMetric private var scale = 1.0
+  private var editorHeight: Double { minimumHeight * scale }
 
   var body: some View {
     VStack(spacing: 0) {
       ZStack(alignment: .topLeading) {
-        NativeAttributedTextView(text: $text, session: session, identifier: accessibilityIdentifier)
-          .frame(height: min(editorHeight, 300))
+        NativeAttributedTextView(
+          text: $text, session: session, identifier: accessibilityIdentifier,
+          focusRequest: focusRequest
+        )
+        .frame(height: min(editorHeight, 300))
         if text.length == 0 {
-          Text(placeholder).font(MTFont.body).foregroundStyle(MTColor.inkMuted)
+          Text(placeholder).font(MTFont.bodyLarge).foregroundStyle(MTColor.inkMuted)
             .padding(.horizontal, 12).padding(.top, 12).allowsHitTesting(false)
         }
       }
@@ -92,10 +101,12 @@ struct MTRichTextEditor: View {
       .font(.system(size: 18)).buttonStyle(.plain).foregroundStyle(MTColor.inkMuted)
       .padding(.horizontal, 8)
     }
-    .background(MTColor.surface)
-    .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
+    .background(isEmbedded ? Color.clear : MTColor.surface)
+    .clipShape(RoundedRectangle(cornerRadius: isEmbedded ? 0 : MTRadius.medium))
     .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.medium).stroke(MTColor.border, lineWidth: 1)
+      if !isEmbedded {
+        RoundedRectangle(cornerRadius: MTRadius.medium).stroke(MTColor.border, lineWidth: 1)
+      }
     }
   }
 }
@@ -103,7 +114,7 @@ struct MTRichTextEditor: View {
 struct MTRichTextPreview: View {
   let text: NSAttributedString
   var body: some View {
-    Text(content).font(MTFont.body).foregroundStyle(MTColor.ink)
+    Text(content).font(MTFont.bodyLarge).foregroundStyle(MTColor.ink)
       .frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
   }
 
@@ -237,6 +248,7 @@ private struct NativeAttributedTextView: UIViewRepresentable {
   @Binding var text: NSAttributedString
   let session: NativeRichTextSession
   let identifier: String
+  let focusRequest: Int
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
   func makeUIView(context: Context) -> UITextView {
@@ -254,12 +266,18 @@ private struct NativeAttributedTextView: UIViewRepresentable {
     session.view = view
     context.coordinator.parent = self
     session.onChange = { text = $0 }
+    context.coordinator.focusRequest = focusRequest
+    if focusRequest > 0 { DispatchQueue.main.async { view.becomeFirstResponder() } }
     return view
   }
 
   func updateUIView(_ view: UITextView, context: Context) {
     context.coordinator.parent = self
     session.onChange = { text = $0 }
+    if focusRequest != context.coordinator.focusRequest {
+      context.coordinator.focusRequest = focusRequest
+      view.becomeFirstResponder()
+    }
     // Do not replace marked text while an input method is composing Chinese or another language.
     guard view.markedTextRange == nil else { return }
     let font = context.coordinator.font(for: dynamicTypeSize)
@@ -285,6 +303,7 @@ private struct NativeAttributedTextView: UIViewRepresentable {
   final class Coordinator: NSObject, UITextViewDelegate {
     var parent: NativeAttributedTextView
     var isUpdating = false
+    var focusRequest = 0
     init(_ parent: NativeAttributedTextView) { self.parent = parent }
     func textViewDidChange(_ textView: UITextView) { parent.session.publish() }
     func textViewDidChangeSelection(_ textView: UITextView) {

@@ -64,24 +64,20 @@ struct HomeEntry: Decodable, Equatable, Identifiable, Sendable {
     case updatedAt = "updated_at"
   }
 
-  var displayDate: String {
-    if let occurredLabel = occurredLabel?.trimmed.nonEmpty {
-      return occurredLabel
-    }
+  var occurrence: EntryOccurrence {
+    EntryOccurrence(
+      precision: TimelineDatePrecision(rawValue: datePrecision) ?? .unknown,
+      start: occurredStart, end: occurredEnd, label: occurredLabel?.trimmed.nonEmpty,
+      timezone: occurredTimezone.flatMap { TimeZone(identifier: $0)?.identifier } ?? "UTC")
+  }
 
-    return HomeDateFormatter.entryDate(
-      occurredStart ?? createdAt,
-      precision: datePrecision,
-      timezone: occurredTimezone
-    )
+  /// The Web card title: the title, else the start of the note, else a neutral fallback.
+  var cardTitle: String {
+    title.trimmed.nonEmpty ?? body.trimmed.nonEmpty?.truncated(to: 72) ?? "Untitled Entry"
   }
 
   var displayType: String {
     itemKind.displayName(subtype: itemSubtype)
-  }
-
-  var displayExcerpt: String? {
-    body.trimmed.nonEmpty?.truncated(to: 170)
   }
 
   var coverAttachment: HomeAttachment? {
@@ -137,14 +133,6 @@ struct HomeResurfacedMemory: Decodable, Equatable, Sendable {
       }
     }
   }
-
-  var contextLabel: String {
-    if kind == .onThisDay, let yearsAgo {
-      return "On this day, \(yearsAgo) \(yearsAgo == 1 ? "year" : "years") ago"
-    }
-
-    return "A quiet note from your archive"
-  }
 }
 
 struct HomeAttachment: Decodable, Equatable, Identifiable, Sendable {
@@ -167,6 +155,30 @@ struct HomeAttachment: Decodable, Equatable, Identifiable, Sendable {
     case byteSize = "byte_size"
     case pixelWidth = "pixel_width"
     case pixelHeight = "pixel_height"
+  }
+}
+
+struct HomeInboxPreview: Decodable, Equatable, Identifiable, Sendable {
+  let id: UUID
+  let title: String?
+  let body: String
+  let createdAt: Date
+
+  enum CodingKeys: String, CodingKey {
+    case id, title, body
+    case createdAt = "created_at"
+  }
+
+  /// The title, else the note's first line, like Web's Ready to organize rows.
+  var displayTitle: String {
+    title?.trimmed.nonEmpty
+      ?? body.trimmed.split(whereSeparator: \.isNewline).first.map(String.init)
+      ?? "Untitled capture"
+  }
+
+  /// The note is shown under a title only when both exist.
+  var excerpt: String? {
+    title?.trimmed.nonEmpty == nil ? nil : body.trimmed.nonEmpty
   }
 }
 
@@ -195,23 +207,11 @@ struct HomeStage: Decodable, Equatable, Identifiable, Sendable {
     case trackName = "track_name"
   }
 
-  var displayDate: String {
-    if let occurredLabel = occurredLabel?.trimmed.nonEmpty {
-      return occurredLabel
-    }
-
-    let start = HomeDateFormatter.entryDate(
-      occurredStart,
-      precision: datePrecision,
-      timezone: occurredTimezone
-    )
-    guard let occurredEnd else { return "\(start) - Present" }
-    let end = HomeDateFormatter.entryDate(
-      occurredEnd,
-      precision: datePrecision,
-      timezone: occurredTimezone
-    )
-    return "\(start) - \(end)"
+  var occurrence: EntryOccurrence {
+    EntryOccurrence(
+      precision: TimelineDatePrecision(rawValue: datePrecision) ?? .unknown,
+      start: occurredStart, end: occurredEnd, label: occurredLabel?.trimmed.nonEmpty,
+      timezone: occurredTimezone.flatMap { TimeZone(identifier: $0)?.identifier } ?? "UTC")
   }
 }
 
@@ -303,7 +303,7 @@ enum HomeWorkspaceError: Error, Equatable {
 
 enum HomePresentation {
   static func firstName(_ value: String) -> String {
-    value.trimmed.split(whereSeparator: \.isWhitespace).first.map(String.init) ?? "MemoTrail"
+    value.trimmed.split(whereSeparator: \.isWhitespace).first.map(String.init) ?? "there"
   }
 
   static func greeting(at date: Date, timezone: TimeZone) -> String {
@@ -314,25 +314,5 @@ enum HomePresentation {
     if hour < 12 { return "Good morning" }
     if hour < 18 { return "Good afternoon" }
     return "Good evening"
-  }
-}
-
-private enum HomeDateFormatter {
-  static func entryDate(_ date: Date, precision: String, timezone: String?) -> String {
-    let formatter = DateFormatter()
-    formatter.calendar = Calendar(identifier: .gregorian)
-    formatter.locale = Locale(identifier: "en_US")
-    formatter.timeZone = timezone.flatMap(TimeZone.init(identifier:)) ?? .gmt
-
-    switch precision {
-    case "year":
-      formatter.setLocalizedDateFormatFromTemplate("yyyy")
-    case "month":
-      formatter.setLocalizedDateFormatFromTemplate("MMM yyyy")
-    default:
-      formatter.setLocalizedDateFormatFromTemplate("MMM d, yyyy")
-    }
-
-    return formatter.string(from: date)
   }
 }

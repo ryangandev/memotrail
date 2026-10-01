@@ -65,6 +65,7 @@ import {
 } from "@/lib/media/upload";
 import type { CaptureExtractionSource } from "@/lib/data/capture-extraction-input";
 import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
+import { countLabel } from "@/lib/count-label";
 
 const goalSections: Array<{
   detail: string;
@@ -1009,10 +1010,6 @@ function actionError(message: string): GoalActionResult {
     message,
     status: "error",
   };
-}
-
-function countLabel(count: number, singular: string) {
-  return `${count} ${count === 1 ? singular : `${singular}s`}`;
 }
 
 function truncate(value: string, limit: number) {

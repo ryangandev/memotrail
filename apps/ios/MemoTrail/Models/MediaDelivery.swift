@@ -5,8 +5,13 @@ import Foundation
 @MainActor
 enum EntryPhotoUpload {
   struct WritingRevision: Encodable {
-    let p_entry_id: UUID
-    let p_expected_revision: Int
+    let entryID: UUID
+    let expectedRevision: Int
+
+    enum CodingKeys: String, CodingKey {
+      case entryID = "p_entry_id"
+      case expectedRevision = "p_expected_revision"
+    }
   }
 
   /// Photo-only changes commute with writing. Never adopt an unseen writing revision.
@@ -17,7 +22,7 @@ enum EntryPhotoUpload {
     return try await confirmedWritingRevision(revision: revision) {
       try await client.rpc(
         "entry_writing_revision",
-        params: WritingRevision(p_entry_id: entryID, p_expected_revision: revision)
+        params: WritingRevision(entryID: entryID, expectedRevision: revision)
       ).execute().value
     }
   }

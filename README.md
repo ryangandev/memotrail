@@ -86,6 +86,7 @@ The gallery uses real native components and includes appearance and Dynamic Type
 Existing screens keep their layouts pending component acceptance.
 
 Xcode launch arguments `--review-design-system`, `--review-map`, and `--review-navigation` open isolated review modes.
+Add `--review-design-section foundations` (or another section name) after `--review-design-system` to open one gallery section directly.
 The Map review uses clearly synthetic records; these modes do not sign in or write to the backend and are excluded from Release builds.
 The normal Map is available under More and reads the signed-in user's current Locations using MapKit.
 No Geoapify key is needed on iOS.
@@ -162,6 +163,17 @@ python3 apps/ios/scripts/verify-local-contracts.py --simulator-id YOUR_SIMULATOR
 The script creates a temporary local account, runs XCTest, requires the contract tests to execute, and removes the account and its owned data afterward.
 It never uses the hosted Supabase project.
 Regular Xcode test runs skip the local integration tests when this temporary configuration is absent.
+
+Run signed-in native UI flows as a seeded, disposable local account:
+
+```bash
+python3 apps/ios/scripts/review-local-session.py --simulator-id YOUR_SIMULATOR_UDID \
+  --attachments /private/tmp/memotrail-native-review
+```
+
+The script seeds a small synthetic archive through the same database functions the apps use, opens the Debug `--review-local-session` mode, runs `LocalSessionUITests`, exports screenshots, and removes the account, its rows, and its media afterward.
+Add `--web` to serve the Web media API on `127.0.0.1:3100` for photo flows, and `--only-testing` to pick other UI tests.
+Both the stack and the Web API must answer on `127.0.0.1`; regular `MemoTrailUI` runs skip these tests.
 
 Green builds do not by themselves prove authenticated user flows, production configuration, private media delivery, or recovery.
 Use [docs/status.md](./docs/status.md) for the remaining acceptance gates.

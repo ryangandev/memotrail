@@ -31,7 +31,7 @@ struct EntryOccurrence: Codable, Equatable, Sendable {
     if precision == .year {
       let years = max(0, ey - sy)
       return years > 0
-        ? "About \(years) \(years == 1 ? "year" : "years")" : "Less than a year (approx.)"
+        ? "About \(countLabel(years, "year"))" : "Less than a year (approx.)"
     }
     var months = (ey - sy) * 12 + em - sm
     if precision != .month && ed < sd { months -= 1 }
@@ -43,8 +43,8 @@ struct EntryOccurrence: Codable, Equatable, Sendable {
     let years = months / 12
     let remainder = months % 12
     let label = [
-      years > 0 ? "\(years) \(years == 1 ? "year" : "years")" : "",
-      remainder > 0 ? "\(remainder) \(remainder == 1 ? "month" : "months")" : "",
+      years > 0 ? countLabel(years, "year") : "",
+      remainder > 0 ? countLabel(remainder, "month") : "",
     ].filter { !$0.isEmpty }.joined(separator: " ")
     return approximate ? "About \(label)" : label
   }
@@ -91,16 +91,26 @@ struct EntryOccurrence: Codable, Equatable, Sendable {
 }
 
 struct OccurrenceDraft: Codable, Equatable, Sendable {
+  /// Whether a bounded occurrence ends on a date or is still ongoing.
+  enum EndMode: String, Codable, Sendable {
+    case date, present
+  }
+
   var precision: TimelineDatePrecision
   var start: String
   var end: String
+  var endMode: EndMode
   var label: String
   var timezone: String
 
-  init(_ value: EntryOccurrence) {
+  /// Undated records store no time zone, so `undatedTimezone` stands in for editing, like the
+  /// Web default of the Settings zone or this device's zone.
+  init(_ value: EntryOccurrence, undatedTimezone: String? = nil) {
     precision = value.precision
-    timezone = value.timezone
+    timezone = value.start == nil ? undatedTimezone ?? value.timezone : value.timezone
     label = value.label ?? ""
+    // A saved start without an end is an ongoing period, as on the Web.
+    endMode = value.start != nil && value.end == nil ? .present : .date
     let format =
       precision == .exact
       ? "yyyy-MM-dd'T'HH:mm:ss"
@@ -110,16 +120,41 @@ struct OccurrenceDraft: Codable, Equatable, Sendable {
     end = value.end.map { formatter.string(from: $0) } ?? ""
   }
 
+  private enum CodingKeys: String, CodingKey {
+    case precision, start, end, endMode, label, timezone
+  }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    precision = try container.decode(TimelineDatePrecision.self, forKey: .precision)
+    start = try container.decode(String.self, forKey: .start)
+    end = try container.decode(String.self, forKey: .end)
+    // Capture drafts saved before the Present control have no end mode.
+    endMode = try container.decodeIfPresent(EndMode.self, forKey: .endMode) ?? .date
+    label = try container.decode(String.self, forKey: .label)
+    timezone = try container.decode(String.self, forKey: .timezone)
+  }
+
   mutating func useDateSuggestion(_ text: String) {
     precision = .approximate
     label = text
     start = ""
     end = ""
+    endMode = .date
+  }
+
+  /// Replaces the calendar interpretation when the Date type changes.
+  mutating func changePrecision(to precision: TimelineDatePrecision) {
+    guard precision != self.precision else { return }
+    self.precision = precision
+    start = ""
+    end = ""
+    endMode = .date
   }
 
   func resolve(original: EntryOccurrence? = nil, span: Bool = false) throws -> EntryOccurrence {
     guard TimeZone(identifier: timezone) != nil else { throw OccurrenceError.invalidTimezone }
-    let previous = original.map(OccurrenceDraft.init)
+    let previous = original.map { OccurrenceDraft($0) }
     func convert(_ text: String, isEnd: Bool) throws -> Date? {
       guard !text.isEmpty else { return nil }
       if let previous, previous.precision == precision, previous.timezone == timezone,
@@ -139,7 +174,8 @@ struct OccurrenceDraft: Codable, Equatable, Sendable {
     let value = EntryOccurrence(
       precision: precision,
       start: precision == .unknown ? nil : try convert(start, isEnd: false),
-      end: precision != .unknown && (span || [.range, .approximate, .age].contains(precision))
+      end: precision != .unknown && endMode != .present
+        && (span || [.range, .approximate, .age].contains(precision))
         ? try convert(end, isEnd: true) : nil,
       label: label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         ? nil : label.trimmingCharacters(in: .whitespacesAndNewlines),

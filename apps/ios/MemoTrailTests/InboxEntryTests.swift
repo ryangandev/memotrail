@@ -1,3 +1,4 @@
+import UIKit
 import XCTest
 
 @testable import MemoTrail
@@ -63,6 +64,82 @@ final class InboxEntryTests: XCTestCase {
       XCTAssertEqual(json["occurred_label"] as? String, occurrence.label)
     }
   }
+
+  @MainActor
+  func testCapturedNoteTrimsWhitespaceAndKeepsWebFormatting() throws {
+    let bold = UIFont.boldSystemFont(ofSize: 17)
+    let note = NSMutableAttributedString(string: "\n  ")
+    note.append(NSAttributedString(string: "Low tide", attributes: [.font: bold]))
+    note.append(NSAttributedString(string: " and tea\nSecond line\n\n"))
+    let captured = EntryEmphasisContent.capture(note)
+    XCTAssertEqual(captured.body, "Low tide and tea\nSecond line")
+    let rich = try XCTUnwrap(captured.rich)
+    XCTAssertTrue(rich.isValid(expectedText: captured.body))
+    let first = try XCTUnwrap(rich.document.content?.first?.content?.first)
+    XCTAssertEqual(first.text, "Low tide")
+    XCTAssertEqual(first.marks, [EntryEmphasisContent.Mark(type: "bold")])
+    // Web's validator accepts the same document as Entry metadata.
+    XCTAssertEqual(EntryRichText(rich)?.isValid(expectedText: captured.body), true)
+    XCTAssertEqual(EntryEmphasisContent.capture(NSAttributedString(string: " \n ")).body, "")
+    XCTAssertNil(EntryEmphasisContent.capture(NSAttributedString(string: " \n ")).rich)
+  }
+
+  @MainActor
+  func testDraftAndQueueKeepFormattingOnlyForTheirExactNote() throws {
+    let owner = UUID()
+    let drafts = InboxDraftStore(defaults: makeDefaults())
+    let note = NSAttributedString(
+      string: "Kept", attributes: [.font: UIFont.italicSystemFont(ofSize: 17)])
+    let rich = EntryEmphasisContent(attributedText: note)
+    XCTAssertTrue(drafts.save(title: "", body: "Kept", bodyRich: rich, ownerID: owner))
+    let draft = try XCTUnwrap(drafts.load(ownerID: owner))
+    XCTAssertEqual(draft.bodyRich, rich)
+    XCTAssertTrue(
+      EmphasisStyle.italic.isApplied(to: draft.note.attributes(at: 0, effectiveRange: nil)))
+    XCTAssertTrue(drafts.save(title: "", body: "Changed", bodyRich: rich, ownerID: owner))
+    XCTAssertNil(drafts.load(ownerID: owner)?.bodyRich)
+    XCTAssertEqual(drafts.load(ownerID: owner)?.note.string, "Changed")
+
+    let queue = InboxQueueStore(defaults: makeDefaults())
+    var entry = QueuedInboxEntry(
+      id: UUID(), title: nil, body: "Kept", occurredAt: Date(), occurredTimezone: "UTC",
+      queuedAt: Date())
+    entry.bodyRich = rich
+    XCTAssertTrue(entry.isValid)
+    XCTAssertEqual(queue.enqueue(entry, ownerID: owner)?.first?.bodyRich, rich)
+    var mismatched = entry
+    mismatched.bodyRich = EntryEmphasisContent(attributedText: NSAttributedString(string: "Other"))
+    XCTAssertFalse(mismatched.isValid)
+
+    // Drafts and queued Entries saved before formatting existed still load.
+    let legacy = Data(
+      #"{"id":"95000000-0000-4000-8000-000000000009","title":null,"body":"Old","occurredAt":null,"occurredTimezone":"UTC","queuedAt":0}"#
+        .utf8)
+    XCTAssertNil(try JSONDecoder().decode(QueuedInboxEntry.self, from: legacy).bodyRich)
+  }
+
+  func testCaptureInsertCarriesBodyRichMetadataLikeWeb() throws {
+    func json(_ payload: InboxEntryInsert) throws -> [String: Any] {
+      try XCTUnwrap(
+        JSONSerialization.jsonObject(with: JSONEncoder().encode(payload)) as? [String: Any])
+    }
+    let rich = try JSONDecoder().decode(
+      EntryEmphasisContent.self,
+      from: Data(
+        #"{"version":1,"text":"Hi","document":{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Hi","marks":[{"type":"bold"}]}]}]}}"#
+          .utf8))
+    let plain = InboxEntryInsert(
+      id: UUID(), ownerID: UUID(), title: nil, body: "Hi", occurredStart: nil,
+      occurredTimezone: "UTC", clientID: "ios:test")
+    XCTAssertEqual((try json(plain)["metadata"] as? [String: Any])?.isEmpty, true)
+    var formatted = plain
+    formatted.metadata = [EntryRichText.metadataKey: rich]
+    let metadata = try XCTUnwrap(try json(formatted)["metadata"] as? [String: Any])
+    let bodyRich = try XCTUnwrap(metadata["body_rich"] as? [String: Any])
+    XCTAssertEqual(bodyRich["text"] as? String, "Hi")
+    XCTAssertEqual(bodyRich["version"] as? Int, 1)
+  }
+
   func testCurrentEditorContextPreservesOrganizationStatusAndRawTimes() throws {
     let raw = "2017-07-08T12:34:56.123456+00:00"
     let data = Data(
@@ -731,6 +808,97 @@ final class InboxEntryTests: XCTestCase {
       try? FileManager.default.removeItem(at: url)
     }
     return url
+  }
+
+  func testInboxEntryKeepsOnlyBodyRichThatMatchesTheNote() throws {
+    func entry(body: String, metadata: String) throws -> InboxEntry {
+      let data = Data(
+        """
+        {"id":"95000000-0000-4000-8000-000000000003","title":null,"body":"\(body)",\
+        "metadata":\(metadata),"item_kind":"entry","item_subtype":"entry",\
+        "inbox_status":"unreviewed","revision":1,"created_at":"2026-09-16T12:00:00Z",\
+        "occurred_start":null,"date_precision":"unknown","occurred_timezone":"UTC"}
+        """.utf8)
+      let decoder = JSONDecoder()
+      decoder.dateDecodingStrategy = .iso8601
+      return try decoder.decode(InboxEntry.self, from: data)
+    }
+    let document = """
+      {"source":"web","body_rich":{"version":1,"text":"Harbor lights","document":{"type":"doc",\
+      "content":[{"type":"paragraph","content":[{"type":"text","text":"Harbor",\
+      "marks":[{"type":"bold"}]},{"type":"text","text":" lights"}]}]}}}
+      """
+
+    let formatted = try entry(body: "Harbor lights", metadata: document)
+    XCTAssertEqual(formatted.bodyRich?.text, "Harbor lights")
+    XCTAssertEqual(
+      formatted.withOrganization(collectionNames: [], tagNames: []).bodyRich,
+      formatted.bodyRich)
+    XCTAssertNil(try entry(body: "Harbor lights, edited", metadata: document).bodyRich)
+    XCTAssertNil(try entry(body: "Harbor lights", metadata: "{}").bodyRich)
+    XCTAssertNil(try entry(body: "Harbor lights", metadata: "null").bodyRich)
+  }
+
+  @MainActor
+  func testReviewEditorKeepsEmphasisButNotWebOnlyStructure() throws {
+    let note = NSMutableAttributedString(
+      string: "Harbor", attributes: [.font: UIFont.boldSystemFont(ofSize: 17)])
+    note.append(
+      NSAttributedString(string: " lights", attributes: [.font: UIFont.systemFont(ofSize: 17)]))
+    let emphasis = EntryEmphasisContent(attributedText: note)
+    let rich = try XCTUnwrap(EntryRichText(emphasis))
+    XCTAssertTrue(rich.isValid(expectedText: "Harbor lights"))
+    XCTAssertEqual(EntryEmphasisContent(rich), emphasis)
+
+    let list = try XCTUnwrap(GallerySamples.richText)
+    XCTAssertTrue(list.isValid())
+    XCTAssertNil(EntryEmphasisContent(list))
+  }
+
+  func testReviewRejectsEmptyNotesAndMismatchedFormattingLikeWeb() throws {
+    func validate(title: String, body: String, rich: EntryRichText? = nil) throws {
+      _ = try InboxReviewInput.validate(
+        entryID: UUID(), revision: 1, title: title, body: body, bodyRich: rich,
+        collectionNames: [], itemKind: .entry, itemSubtype: "entry", occurredAt: nil,
+        occurredTimezone: "UTC", tagNames: [], datePrecision: .unknown)
+    }
+    XCTAssertThrowsError(try validate(title: " ", body: " ")) { error in
+      XCTAssertEqual(error as? InboxReviewError, .empty)
+      XCTAssertEqual(error.localizedDescription, "Keep a title or note before saving.")
+    }
+    let rich = try JSONDecoder().decode(
+      EntryRichText.self,
+      from: Data(
+        """
+        {"version":1,"text":"Harbor lights","document":{"type":"doc","content":[\
+        {"type":"paragraph","content":[{"type":"text","text":"Harbor lights"}]}]}}
+        """.utf8))
+    XCTAssertNoThrow(try validate(title: "", body: "  Harbor lights ", rich: rich))
+    XCTAssertThrowsError(try validate(title: "", body: "Harbor lights tonight", rich: rich)) {
+      XCTAssertEqual($0 as? InboxReviewError, .invalidRichText)
+    }
+  }
+
+  func testReviewParametersSendBodyRichOrClearIt() throws {
+    var parameters = ReviewEntryParameters(
+      entryID: UUID(), expectedRevision: 1, title: nil, body: "Harbor lights",
+      itemKind: .entry, itemSubtype: "entry", occurredStart: nil, occurredTimezone: "UTC",
+      collectionNames: [], tagNames: [], markDone: true, datePrecision: .unknown)
+    func json() throws -> [String: Any] {
+      try XCTUnwrap(
+        JSONSerialization.jsonObject(with: JSONEncoder().encode(parameters)) as? [String: Any])
+    }
+    XCTAssertTrue(try json()["p_body_rich"] is NSNull)
+    parameters.bodyRich = try JSONDecoder().decode(
+      EntryRichText.self,
+      from: Data(
+        """
+        {"version":1,"text":"Harbor lights","document":{"type":"doc","content":[\
+        {"type":"paragraph","content":[{"type":"text","text":"Harbor lights"}]}]}}
+        """.utf8))
+    let rich = try XCTUnwrap(try json()["p_body_rich"] as? [String: Any])
+    XCTAssertEqual(rich["text"] as? String, "Harbor lights")
+    XCTAssertEqual(rich["version"] as? Int, 1)
   }
 
   private func makeDefaults() -> UserDefaults {

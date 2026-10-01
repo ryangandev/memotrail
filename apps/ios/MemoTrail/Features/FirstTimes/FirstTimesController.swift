@@ -21,9 +21,12 @@ final class FirstTimesController {
     self.ownerID = ownerID
   }
 
+  /// Web counts each uploaded photo once, not its generated variants.
   var photoCount: Int {
-    entries.reduce(0) { $0 + $1.attachments.count }
+    entries.reduce(0) { $0 + $1.originalAttachments.count }
   }
+
+  func entry(id: UUID) -> FirstTimeEntry? { entries.first { $0.id == id } }
 
   func load() async {
     guard !isLoading else { return }
@@ -44,6 +47,11 @@ final class FirstTimesController {
         .execute()
         .value
       var loadedEntries = FirstTimesWorkspace.entries(from: rows)
+      let locations = try await EntryPrimaryLocations.load(
+        client: client, ownerID: ownerID, entryIDs: loadedEntries.map(\.id))
+      for index in loadedEntries.indices {
+        loadedEntries[index].location = locations[loadedEntries[index].id]
+      }
       let paths = Array(Set(loadedEntries.flatMap { $0.attachments.map(\.objectPath) }))
       let signedURLs = await signedURLMap(paths: paths)
 
@@ -92,7 +100,8 @@ final class FirstTimesController {
     collectionNames: [String],
     tagNames: [String],
     occurredEnd: Date? = nil,
-    original: FirstTimeEntry? = nil
+    original: FirstTimeEntry? = nil,
+    removingLocation: Bool = false
   ) async -> MutationResult {
     var input: FirstTimeEntryInput
 
@@ -130,14 +139,23 @@ final class FirstTimesController {
       try await validateSessionOwner()
       input.expectedRevision = try await EntryPhotoUpload.writingRevision(
         client: client, entryID: entryID, revision: expectedRevision)
+      // Like Web, the Location RPC runs only when the Location changed.
       let results: [SavedFirstTimeEntry] =
-        try await client
-        .rpc(
-          "save_first_time_with_occurrence",
-          params: SaveFirstTimeEntryParameters(input: input)
-        )
-        .execute()
-        .value
+        removingLocation
+        ? try await client
+          .rpc(
+            "save_first_time_with_location",
+            params: RemoveFirstTimeLocationParameters(input: input)
+          )
+          .execute()
+          .value
+        : try await client
+          .rpc(
+            "save_first_time_with_occurrence",
+            params: SaveFirstTimeEntryParameters(input: input)
+          )
+          .execute()
+          .value
 
       guard let saved = results.first else {
         return MutationResult(
@@ -152,7 +170,7 @@ final class FirstTimesController {
       return MutationResult(
         identity: SavedIdentity(id: saved.entryID, revision: saved.revision),
         message: saved.wasCreated ? "First Time added." : "First Time saved.",
-        status: .saved
+        status: saved.wasCreated ? .created : .saved
       )
     } catch {
       return MutationResult(
@@ -272,7 +290,8 @@ final class FirstTimesController {
       }
 
       await reloadAfterMutation()
-      return MutationResult(identity: nil, message: "Moved to Trash.", status: .trashed)
+      return MutationResult(
+        identity: nil, message: "First Time moved to Trash.", status: .trashed)
     } catch {
       return MutationResult(
         identity: nil,
@@ -308,6 +327,7 @@ extension FirstTimesController {
   struct MutationResult: Equatable, Sendable {
     enum Status: Equatable, Sendable {
       case conflict
+      case created
       case error
       case saved
       case trashed
@@ -316,6 +336,8 @@ extension FirstTimesController {
     let identity: SavedIdentity?
     let message: String
     let status: Status
+
+    var succeeded: Bool { [.created, .saved, .trashed].contains(status) }
   }
 }
 

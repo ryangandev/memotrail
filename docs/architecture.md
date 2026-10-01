@@ -32,14 +32,19 @@ Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/Me
 | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | Authentication or environment                             | `app/auth`, `lib/auth`, `lib/supabase`, `src/proxy.ts`                                                                              | `Features/Authentication`, `App/AppConfiguration.swift`                               | foundation and security migrations, `0001_rls.test.sql`                          |
 | Capture, Inbox, drafts, dates, rich text, or offline sync | `app/inbox`, capture, rich-text and occurrence components, `lib/data/inbox*`, `lib/data/rich-text.ts`, `lib/data/occurrence.ts`     | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests               |
-| Library browsing, search, AI suggestions, or exploration  | `app/library`, `components/library-search`, `app/search` redirect, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`   | `Features/Library`, `Features/Search`, `Features/AI`                                  | AI, evidence, exploration, and search migrations and tests                       |
+| Library browsing, search, AI suggestions, or exploration  | `app/library`, `components/library-search`, `app/search` redirect, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`   | `Features/Library`, `Features/AI`                                                     | AI, evidence, exploration, and search migrations and tests                       |
 | Photos, metadata, or export                               | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                               | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, photo-history, cleanup, and export migrations and tests                   |
 | Timeline, Homes, Vehicles, Goals, or First Times          | matching `app` route, workspace component, and `lib/data` module                                                                    | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                            |
 | Collections, tags, People, links, history, or Trash       | matching `app` route and component, shared Entry organization editor, `lib/data` organization, relation, history, and Trash modules | matching directory under `Features`                                                   | organization, relationship, history, Trash, and Empty Trash migrations and tests |
 | Visual system                                             | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                        | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-tokens/tokens.json` and generator                               |
 
 Native destinations and shared detail routing live in `App/WorkspaceRoute.swift`; the primary tabs live in `App/RootTabView.swift`.
+The More tab lays out `WorkspaceRoute.groups` like Web's mobile More menu, with the same groups, order, and icons.
+`App/AppNavigator.swift` carries cross-tab links that Web expresses as routes, such as `/inbox?entry=` and `/timeline?entry=`; the destination consumes a request once its data has loaded.
+`App/WorkspaceToolbar.swift` is the native form of the Web phone workspace header on each primary tab: the brand mark that opens the Dashboard, New entry for Quick Capture, search into Library, and the initial avatar that opens Settings.
+It still carries New entry and search, which Web now places in its bottom `WorkspaceActionDock`.
 Map data and MapKit presentation live in `Features/Map`; native Settings live in `Features/Settings`.
+`Features/Settings/SettingsController.swift` reads and writes one `profiles` column per save, with the Web validation rules in `Models/ProfileSettings.swift`; `AppNavigator.profileRevision` tells the Dashboard to reload its greeting.
 
 For a database behavior, search migrations for the newest definition of the relevant RPC instead of assuming the first occurrence is current.
 Pair it with the test file carrying the same feature name.
@@ -57,7 +62,10 @@ Pair it with the test file carrying the same feature name.
 - `wiki_items_workspace` supplies one owner-scoped Library row per organized canonical Wiki Item, excluding unreviewed Inbox Entries before filtering and pagination. Person rows expose both the canonical Entry ID and their specialized record ID so clients can preserve identity while opening the correct detail page.
 - Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace.
   Web routes typed records to focused detail pages with inline editing and general items to `/items/[entry]`, where current content and primary actions precede an explicit history link.
-  Native Library routes typed records to their focused editors and other canonical items to the shared History detail/edit boundary.
+  Native Library routes Homes, Vehicles, First Times, Goals, and People to their focused pages like Web, other typed records to their focused editors, and other canonical items to the Item page, like Web `/items/[entry]`.
+  Like Web `wikiEntryHref`, only a Person row from People opens a Person page; a person Entry opens as an Item.
+  Like Web, it sends Inbox captures to their review and Moments and Periods to the Timeline.
+  `App/WikiItemLink.swift` holds that routing for every native link to an Item, and `AppNavigator.openLibrary(collection:)` and `openLibrary(tag:)` open Library filtered to one Collection or tag, like Web `/library?tag=`.
 - `collection_wiki_items` composes the established paged Collection detail with canonical Kind, subtype, and specialized routing identity. Both clients use it so Collections remain organizational lenses rather than a second generic detail system.
 - `people.entry_id` is a required owner-scoped link to a canonical Entity Wiki Item. Triggers keep its name, notes, revision state, and Trash state synchronized.
 - The former authored `places` and `place_versions` tables and Place-only RPCs were removed by `202609240002_remove_authored_places.sql`.
@@ -77,9 +85,12 @@ Pair it with the test file carrying the same feature name.
 - Older source extraction RPCs remain available for existing provenance links, but Web Inbox does not offer focused-form handoffs.
 - `capture_extraction_source` and specialized extraction RPCs retain their owner-scoped source revision checks and link provenance when invoked directly.
 - Web Goal extraction uses a caller-generated target UUID for idempotency, preserves the source revision and identity, and records `derived` plus `derived_from` provenance links so both items remain discoverable.
-- `review_wiki_item_with_photo_place` is the plaintext review boundary. It now accepts `entry:entry` for Inbox review and preserves rich-text metadata that the native editor does not author.
+- `review_wiki_item_with_photo_place_rich` is the review boundary for clients without a Location editor.
+  It writes plaintext and `body_rich` in one revision, clears formatting when `p_body_rich` is null, and leaves the primary Location unchanged.
+  The older plaintext `review_wiki_item_with_photo_place` preserves rich metadata it does not understand and has no current client caller.
 - Native iOS uses the canonical Entry, Entity, and Goal decoding and filter identities.
-  Its ordinary Entry editor uses the plaintext compatibility RPC; focused records keep their own editors and RPCs.
+  Its ordinary Entry editor, `Features/Inbox/EntryReviewSheet.swift`, serves Inbox review and Edit Entry on the Item page and in version history through `InboxController.submitReview`; focused records keep their own editors and RPCs.
+  Moving an Inbox capture to Trash sets `deleted_at` only at the reviewed revision, like Web `trashWikiItem`.
   The retired Place surface and saved-Location catalog are removed, and Home Location is optional.
 - Web and iOS create a separately editable Goal with `extract_goal_from_item` when an established Wiki Item inspires a Goal. The caller-generated Goal ID makes lost-response retries idempotent, and History exposes both provenance directions.
 - `convert_entry_to_goal` remains only as an administrative recovery function. Authenticated and anonymous clients have no execute grant because established items must never change Kind through a conversion.
@@ -92,7 +103,9 @@ Pair it with the test file carrying the same feature name.
 - Native `DesignSystem/Components/NativeRichTextEditor.swift` provides a reusable UIKit writing surface with an Aa formatting toggle, bold, italic, underline, strikethrough, selection formatting, typing styles, and undo/redo.
   The Debug gallery exercises standalone and sheet presentation, plus an encode/decode save preview using `Models/EntryEmphasisContent.swift`.
   This codec authors the paragraph and emphasis subset of Web's versioned `body_rich` document and rejects unsupported blocks or marks rather than flattening them.
-  Ordinary native Capture and Inbox review still use their existing plaintext compatibility path pending component acceptance and persistence adoption.
+  Native Capture now writes through it like Web: `CaptureCard` edits one formatted note, `EntryEmphasisContent.capture` trims surrounding whitespace without dropping formatting, and drafts, the offline queue, and the Entry insert carry `body_rich` only when it matches the saved plaintext.
+  Native review opens editable emphasis in the same editor and saves the editor's document when the note changes.
+  An untouched note resends its original `body_rich`, so Web-only lists, quotes, links, and code survive a review that does not edit the note.
 - Collections, tags, People, and Wiki Item links are owner-scoped reusable relationships. Locations are Entry-owned snapshots.
 - Focused forms own specialized structure, Collections own curated groupings, tags own descriptive labels, and Timeline tracks own presentation only.
 - Home and Vehicle are Entity subtypes whose occurrence range describes the user's relationship span.
@@ -128,6 +141,37 @@ Pair it with the test file carrying the same feature name.
 - Timeline creation routes by Entry type, not track name. Generic moments use the Timeline editor; Home, Vehicle, and First Time creation reuse the exported Records editors in a lazy-loaded Timeline modal. Existing focused records navigate to their detail pages and edit inline. System track shortcuts select the corresponding specialized type, while ordinary tracks preselect the generic editor's placement.
 - Timeline server data loads specialized records, Collection, and tag choices needed by its creation editors in parallel. Existing focused records navigate to their own pages.
 - Web Timeline projects dated First Times without an explicit Timeline placement onto the visible First Times system track. Already placed records remain on their chosen track, and unanchored records remain in the First Times archive only.
+- Native `Features/Timeline` follows the Web phone layout: track cards, the Moment, Home, Vehicle, and First Time chooser, the first-visit birth date prompt, and the Timeline editor with the Settings time zone, Collections, and tags through `save_timeline_entry_with_organization`.
+  `TimelineWorkspace` in `Models/TimelineEntry.swift` ports the First Times projection and the summary's year range.
+  Like Web, Homes, Vehicles, and First Times open their focused pages from the Timeline and their editors from a Dashboard or Library link.
+- Native `Features/Homes` follows Web `/homes` and `/homes/[id]`: `HomesView` lists current and earlier Homes as record cards, `HomeDetailView` is the focused page with Edit and Version history, and `ResidenceEditorSheet` is the Web Home editor on `MTSheet` with its Home details, Location, and Memories and organization sections.
+  Library, the Map, and Collections open the same focused page; like Web, native editors show a saved Location's preview and edit its address by hand, and provider address search stays Web-only.
+- Native `Features/Vehicles` follows Web `/vehicles` and `/vehicles/[id]` with `VehiclesView`, `VehicleDetailView`, and `VehicleEditorSheet`, sharing `MTRecordSection`, `MTEntityCard`, and `MTFocusedRecordPage` with Homes.
+  `EntryPrimaryLocations` in `Models/EntryLocation.swift` loads each Vehicle's primary Location like Web `getPrimaryEntryLocations`, and a failed load makes the workspace unavailable.
+  The editor's `MTLocationPanel` shows the saved Location with Remove, which saves through `save_vehicle_with_location` with a null Location.
+- Native `Features/FirstTimes` follows Web `/first-times` and `/first-times/[id]` with `FirstTimesView`, `FirstTimeDetailView`, and `FirstTimeEditorSheet` on the same shared parts.
+  Its cards keep the Web First Time visual, falling back from a photo to the Location map to the card's archive number, and count only original photos, not generated variants.
+  Its primary Location loads like a Vehicle's, and removing it saves through `save_first_time_with_location` with a null Location.
+- Native `Features/Goals` follows Web `/goals` and `/goals/[id]` with `GoalsView`, `GoalDetailView`, and `GoalEditorSheet`.
+  The list groups Goals by reflective state like Web `goalSections`, and a Goal's own page pages past the first 100 Goals to find it, like Web `getGoalsWorkspace(targetId)`.
+  The editor keeps the Web Related Items picker and, for a saved Bucket List Goal, the milestone panel, which records the achievement through `achieve_goal_with_occurrence` and stays open.
+  `App/ConnectedItemsSection.swift` lists a record's Connected Items and routes them like Web `wikiEntryHref`: Moments and Periods open on the Timeline, and other records open their own page through `WikiItemDestinationView`.
+- Native `Features/People` follows Web `/people` and `/people/[id]` with `PeopleView`, `PersonDetailView`, and `PersonEditorSheet` over `PeopleController`.
+  The list loads `people_workspace` in pages of 100 through `MTLoadMore`, and a Person's own page loads `person_record` by ID, so it opens the same way from People, Library, or a Collection.
+  Like Web, a Person has no version history, and Move to Trash stays disabled until every Item link is removed and saved, which `trash_person` also requires.
+- Native `Features/History` follows Web `/items/[entry]` and `/history` over `EntryHistoryController`: `WikiItemDetailView` is the Item page with the current writing and facts, the Kind's actions, Related Items, and Current photos, while `EntryHistoryIndexView` and `EntryHistoryDetailView` list Items with earlier versions and compare and restore one.
+  `EntryRelationsView` saves links as they change, `LinkedGoalSheet` creates a linked Goal through `extract_goal_from_item`, and Move to Trash applies only at the revision shown, like Web `trashWikiItem`.
+  `Models/EntryHistory.swift` holds the snapshot model and the Web `lib/data/history.ts` presentation rules.
+  `reloadOnReturn` in `App/AppNavigator.swift` reloads the Item page, version history, and each focused page when version history or a linked Item returns, so a restore or change made there shows at once.
+- Native `TagsView` in `Features/Collections` follows Web `/tags`: badges with each tag's Entry count, name search, and New Tag.
+  `OrganizationEditorSheet` is the Web `OrganizationControl` dialog on `MTSheet` over `OrganizationActions`, which call `save_organization`, `trash_collection`, `merge_tags`, and `delete_unused_tag` with the Web failure messages.
+  A saved tag's editor loads up to five of its Entries through `search_wiki_items` only when it opens, like Web, and View all opens Library filtered to the tag through `AppNavigator.openLibrary(tag:)`.
+- Native `CollectionsView` and `CollectionDetailView` follow Web `/collections` and `/collections/[id]` over `CollectionsController`, which loads `collections_workspace` with the editor identities from `organization_workspace`, like Web `getCollectionsWorkspace`.
+  A Collection's Entry cards render Web's rich notes through `EntryRichTextMap`, the shared Web `loadEntryRichTextMap` port Library also uses, and their Collection and tag links open Library filtered to them.
+  The same `OrganizationEditorSheet` creates, edits, and moves Collections to Trash; a Collection moved to Trash from its own page closes that page once the editor has closed.
+  New entry opens Quick Capture through `AppNavigator.startCapture()`, and Settings' Archive organization leaves the Settings sheet for Collections through `routeAfterSettings`, like Web's `/collections` link.
+- Native `Features/Trash` follows Web `/trash` over `TrashController`: the retention badge and note, Empty Trash, and cards that restore or delete forever through the Web RPCs and messages, with results as toasts.
+  Delete forever and Empty Trash confirm in Web's Permanent action sheets, and Empty Trash keeps its prepared list and progress on screen until the run ends, like Web `EmptyTrashControl`.
 - Web Timeline style selection lives in Settings as an owner-scoped browser cookie. The existing track view remains the default; Vertical Spine and Sticky Year are presentation components under `apps/web/src/components/timeline` that share the Timeline workspace data and editor callbacks. The original 20 HTML design studies remain under `timeline-ideas/`.
 - Web occurrence and profile date forms use `components/date-picker-field.tsx`; domain editors map their precision into its generic granularity, time, editability, and size props instead of duplicating picker UI.
 
@@ -166,6 +210,7 @@ Pair it with the test file carrying the same feature name.
 - Suggestion and search outputs are schema-validated and remain separate from original writing until explicit user action.
 - Search answers cite exact stored evidence; provenance does not imply that the model's conclusion is true.
 - `search_wiki_items` accepts canonical Kind and subtype classifications and returns Kind, subtype, record source, and specialized routing identity in one owner-scoped result stream for Web and iOS. Linked Location fields contribute searchable context.
+  Native `LibraryController` runs the same relevance-ordered search as Web Library, with the grouped Record filter, Collection, tag, and local date filters, and loads each result's `body_rich` separately like Web `loadEntryRichTextMap`.
 - The persistent Web Command Palette debounces input before calling the dynamic, private, no-store `app/api/search/quick` route. That route returns one bounded owner-scoped canonical result stream and opens the Library page for filtered search. Legacy `/search` URLs redirect there with their query parameters.
 
 ## Deletion, export, and recovery rules
@@ -187,6 +232,12 @@ Pair it with the test file carrying the same feature name.
 - The development-only `/design-system` route renders production Web components and current generated tokens for review; it is unavailable in Production.
 - The Web Dashboard route loads `getHomeWorkspace` on the server and renders `components/home-dashboard.tsx` with component-owned CSS.
   Dashboard composes the shared PageFrame, PageHeader, CaptureComposer, EmptyState, ProgressiveImage, and Badge; Memory and Recent Entries share one Entry card renderer.
+  Native `Features/Home` mirrors it with `MTPage`, `MTPageHeader`, `CaptureCard`, `MTEmptyState`, `MTRemoteImage`, and `MTBadge`; `DashboardComponents.swift` owns the ribbon, rows, and cards.
+  Web `QuickCaptureDialog` shows CaptureComposer's dialog variant under its own header; native `QuickCaptureView` shows the same header over `CaptureCard(style: .dialog)` full screen, where Web now anchors the composer to its bottom dock.
+  Both composers open the relevant date in place, keep only problems in the composer, and announce a synced capture with a toast.
+- The Web Inbox renders `components/entry-review-list.tsx` and its `EntryReviewDialog` inside the compact PageFrame.
+  Native `Features/Inbox` mirrors the list with `InboxCards.swift` and the dialog with `EntryReviewSheet.swift`: the same fields, sticky Save changes and Save to Library footer, confirmations anchored to Move to Trash, and toasts.
+  Neither Inbox embeds a composer; Web captures from the bottom dock, and iOS from the Dashboard or New entry in the workspace header.
 - Button, Dialog, PageHeader, EmptyState, and the previously reviewed gallery components are approved migration targets.
 - Production actions use Button, IconButton, or ButtonLink without changing submit or navigation semantics; composite internals and navigation controls retain their distinct roles.
 - Dialog owns generic editor and confirmation shells, scroll containment, focus trapping/restoration, busy dismissal, and nested overlay containers.
@@ -201,12 +252,34 @@ Pair it with the test file carrying the same feature name.
 - Inside a modal, date/time fields inherit its overlay container or accept an explicit `portalContainer` so their popovers stay inside its accessibility and theme boundary.
   Unnamed domain date fields retain the editor's contextual submit validation rather than introducing native custom-validity interception.
 - Cross-platform components preserve meaning and state while allowing native interaction differences.
-- Native `DesignSystem/Components/NativeComponents.swift` owns adaptive text styles and reusable presentation components.
-  Native text roles map to Dynamic Type styles; shared semantic colors, spacing, radius, and motion still come from generated tokens.
-- The Debug-only `DesignSystem/DesignSystemGallery.swift` renders those real components with appearance and text-size controls.
+- Native `DesignSystem/Components` owns reusable presentation components.
+  `MTFoundations.swift` maps each Web text role to the iOS Dynamic Type style with the same default size and defines the shared icon vocabulary, page widths, shadow, and line-height helpers.
+  Generated Swift tokens supply semantic colors, spacing, radius, motion, line heights, shadow layers, and the catalogs the gallery lists.
+  Native actions use `mtButtonStyle` variants and sizes or `MTIconButton`; `MTBadge`, `MTPageHeader`, `MTSectionHeader`, and `MTEmptyState` mirror the Web Badge, PageHeader, and EmptyState.
+  `MTLoadMore` loads a list's next page as its end scrolls into view, or offers a retry, for Library and People.
+  `MTListHeader` and `MTListSurface` are the uppercase list heading and bordered row surface that the Inbox and Library share, and `MTListRowButtonStyle` gives whole-row links their pressed surface.
+  `MTSheet` is the Web Dialog: its eyebrow, serif title, close action, scrolling content, failure message, and footer actions.
+  A form sheet opens at full height with room to push detail such as Version history, and a fitted sheet sizes itself to short content; `MTSheetOption` is the Web dialog's icon, title, and description choice.
+  `confirmationDialog` stands in for the Web confirmation shell.
+  `MTFields.swift` owns the labeled text, textarea, search, select, and checkbox fields on one shared surface; `MTSelectGroup` titles runs of select options like a Web `optgroup`, and `MTDateField` edits optional wall-time text at day, month, or year granularity, and `MTTimeZoneField` lists offsets for the reference date.
+  `OccurrenceEditor` and `MTOrganizationEditor` are the shared date and Collection/tag editors; adding a name opens a picker sheet so suggestions stay above the keyboard.
+  `MTCards.swift` owns `MTRecordCard`, `MTCollectionCard`, and the shared `MTCardButtonStyle`; `MTRichTextContent` renders `Models/EntryRichText.swift`, which validates Web `body_rich` documents like `lib/data/rich-text.ts` and falls back to the plain body.
+  With a line limit it flows the writing into one clamped preview that keeps emphasis, list markers, and line breaks.
+  `MTToastCenter` shows Web-timed success, info, and error toasts in a pass-through window above sheets.
+  Like Web, they rise from the bottom, clear of the tab bar, sheet actions, and the keyboard, so back and close buttons stay reachable.
+  `MTMedia.swift` owns `MTRemoteImage`, the loading skeleton, `MTUploadProgress`, and `MTPhotoField`; feature editors use them instead of private image loaders.
+  `MTPhotoPreview` shows saved photos whole and pages between them with Previous, Next, and the position, like Web's photo viewer; `MTPhotoField` and `MTRecordPhotos` open it.
+  `MTRecordDetail.swift` owns the focused-record parts: `MTFormSection` is the Web editor fieldset whose fields sit on the raised surface, with an accent tone for panels such as the Goal's Bucket List milestone, and `MTFactList`, `MTDetailSection`, and `MTRecordPhotos` lay out a record's facts, Story, Organize, and photos.
+  `MTFocusedRecordPage` composes them into the Web `FocusedRecordDetail` page with Edit and Version history, and `MTFocusedRecordUnavailable` stands in for a missing record.
+  `MTRecordArchive.swift` owns `MTRecordSection`, `MTEntityCard`, and `MTRecordCardFooter`: the Web record workspace section, the Home and Vehicle `RecordCard`, and the badge footer every record card shares.
+  `MTLocation.swift` owns `MTLocationSnapshot`, a MapKit still with a pin that stands in for the Web static map, `MTLocationPreview`, the Web selected-Location card, and `MTLocationPanel`, the Web Location picker's panel; record cards fall back from a photo to that map to `MTRecordMark`, with glass badges over the visual.
+  Clipped media sets a matching content shape, because clipping does not limit hit testing and filled photos would otherwise take taps meant for neighboring controls.
+- The Debug-only `DesignSystem/DesignSystemGallery.swift` renders those real components with appearance and text-size controls, in the same section order as the Web gallery.
   It is reached from the signed-out screen, More, or Settings; broad existing-screen migration follows review.
-- Debug launch arguments in `App/NativeReview.swift` expose isolated gallery, synthetic Map, and navigation review modes.
+- Debug launch arguments in `App/NativeReview.swift` expose isolated gallery, synthetic Map, and navigation review modes; `--review-design-section <name>` opens one gallery section directly.
+  `--review-local-session` signs in with a disposable local Supabase session from `scripts/review-local-session.py`, keeps it out of the Keychain, and accepts only 127.0.0.1 endpoints.
   Release builds omit these modes and the gallery; `MemoTrailUI` runs their Simulator interaction tests.
+  `scripts/local_supabase.py` owns disposable account creation and cleanup for both native local scripts.
 - Native app targets skip App Intents metadata extraction because they declare no App Intents.
   Enable extraction when native shortcuts are introduced.
 - Authenticated Web routes use `components/page-frame.tsx` for outer width, centering, responsive gutters, and vertical page rhythm.
@@ -234,6 +307,7 @@ Pair it with the test file carrying the same feature name.
 - Both maps read current Entry-Location links through owner-scoped RLS.
   Native Map reads page in stable order with a 5,000-link cap and publish only complete results; Kind/year filters apply to the loaded set.
   Native MapKit provides the base map and collision-based annotation clusters without a provider key or device-location permission.
+  Native `LocationMapView` lays out Web's map page, and a chosen pin or cluster lists its Entries in the panel below the map, like Web `selectedIds`.
   The Web Map proxies Geoapify raster tiles through an authenticated route.
   Its 5,000-link bound is ordered newest first and explicitly disclosed in the UI; filters apply to loaded results.
 - Interactive tiles and static Location previews accept only light or dark theme parameters; authenticated routes choose allowlisted Geoapify styles while keeping the provider key server-side.

@@ -22,6 +22,7 @@ import {
   type TagEntryPreviewResult,
 } from "@/lib/data/organization";
 import styles from "./organization-control.module.css";
+import { countLabel } from "@/lib/count-label";
 
 export function OrganizationControl({
   item,
@@ -413,11 +414,4 @@ function TagEntryList({
       ) : null}
     </section>
   );
-}
-
-function countLabel(count: number, singular: string) {
-  const plural = singular.endsWith("y")
-    ? `${singular.slice(0, -1)}ies`
-    : `${singular}s`;
-  return `${count} ${count === 1 ? singular : plural}`;
 }

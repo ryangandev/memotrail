@@ -170,7 +170,7 @@ final class ResidenceController {
           identity: SavedIdentity(
             id: saved.homeEntryID, revision: saved.homeRevision, placeID: saved.placeID),
           message: "Home created from Capture.",
-          status: .saved)
+          status: .created)
       }
       input.expectedRevision = try await EntryPhotoUpload.writingRevision(
         client: client, entryID: entryID, revision: expectedRevision)
@@ -196,8 +196,8 @@ final class ResidenceController {
           revision: saved.revision,
           placeID: saved.placeID
         ),
-        message: saved.wasCreated ? "Home added." : "Home saved.",
-        status: .saved
+        message: saved.wasCreated ? "Home created." : "Home saved.",
+        status: saved.wasCreated ? .created : .saved
       )
     } catch {
       return MutationResult(
@@ -315,7 +315,7 @@ final class ResidenceController {
       }
 
       await reloadAfterMutation()
-      return MutationResult(identity: nil, message: "Moved to Trash.", status: .trashed)
+      return MutationResult(identity: nil, message: "Home moved to Trash.", status: .trashed)
     } catch {
       return MutationResult(
         identity: nil,
@@ -371,6 +371,7 @@ extension ResidenceController {
   struct MutationResult: Equatable, Sendable {
     enum Status: Equatable, Sendable {
       case conflict
+      case created
       case error
       case saved
       case trashed
@@ -379,6 +380,8 @@ extension ResidenceController {
     let identity: SavedIdentity?
     let message: String
     let status: Status
+
+    var succeeded: Bool { [.created, .saved, .trashed].contains(status) }
   }
 }
 

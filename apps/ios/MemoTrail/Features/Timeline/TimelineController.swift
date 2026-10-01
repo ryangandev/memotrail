@@ -2,10 +2,14 @@ import Foundation
 import Observation
 @preconcurrency import Supabase
 
+/// Web `getTimelineWorkspace` and the Timeline actions: tracks with their records, dated First
+/// Times not yet placed, and the Collection and tag names editors suggest.
 @MainActor
 @Observable
 final class TimelineController {
   private(set) var tracks: [TimelineTrack] = []
+  private(set) var collectionOptions: [String] = []
+  private(set) var tagOptions: [String] = []
   private(set) var hasLoaded = false
   private(set) var isLoading = false
   private(set) var isSaving = false
@@ -19,15 +23,12 @@ final class TimelineController {
     self.ownerID = ownerID
   }
 
-  var entryCount: Int {
-    tracks.reduce(0) { $0 + $1.entries.count }
-  }
+  var entries: [TimelineEntry] { tracks.flatMap(\.entries) }
 
   func load() async {
     guard !isLoading else { return }
 
     isLoading = true
-    loadErrorMessage = nil
     defer {
       isLoading = false
       hasLoaded = true
@@ -35,17 +36,20 @@ final class TimelineController {
 
     do {
       try await validateSessionOwner()
-      let rows: [TimelineWorkspaceRow] =
-        try await client
-        .rpc(
-          "timeline_workspace_with_organization",
-          params: TimelineWorkspaceParameters(includeHidden: false)
-        )
-        .execute()
-        .value
-
-      tracks = TimelineWorkspace.tracks(from: rows)
+      async let rowsRequest = loadRows()
+      async let firstTimesRequest = loadFirstTimes()
+      async let collectionsRequest = loadNames(from: "collections")
+      async let tagsRequest = loadNames(from: "tags")
+      let rows = try await rowsRequest
+      // Like Web, optional First Times and suggestions never block the Timeline itself.
+      let firstTimes = (try? await firstTimesRequest) ?? []
+      collectionOptions = (try? await collectionsRequest) ?? collectionOptions
+      tagOptions = (try? await tagsRequest) ?? tagOptions
+      tracks = TimelineWorkspace.includingUnplacedFirstTimes(
+        TimelineWorkspace.tracks(from: rows), firstTimes: firstTimes)
+      loadErrorMessage = nil
     } catch {
+      guard !(error is CancellationError) else { return }
       loadErrorMessage = "MemoTrail could not load your Timeline. Pull to refresh or try again."
     }
   }
@@ -56,11 +60,9 @@ final class TimelineController {
     kind: TimelineKind,
     title: String,
     body: String,
-    occurredStart: Date?,
-    occurredEnd: Date?,
-    datePrecision: TimelineDatePrecision,
-    occurredLabel: String,
-    occurredTimezone: String
+    occurrence: EntryOccurrence,
+    collectionNames: [String],
+    tagNames: [String]
   ) async -> MutationResult {
     var input: TimelineEntryInput
 
@@ -72,11 +74,13 @@ final class TimelineController {
         kind: kind,
         title: title,
         body: body,
-        occurredStart: occurredStart,
-        occurredEnd: kind == .stage ? occurredEnd : nil,
-        datePrecision: datePrecision,
-        occurredLabel: occurredLabel,
-        occurredTimezone: occurredTimezone
+        occurredStart: occurrence.start,
+        occurredEnd: kind == .stage ? occurrence.end : nil,
+        datePrecision: occurrence.precision,
+        occurredLabel: occurrence.label ?? "",
+        occurredTimezone: occurrence.timezone,
+        collectionNames: collectionNames,
+        tagNames: tagNames
       )
     } catch {
       return MutationResult(message: error.localizedDescription, status: .error)
@@ -96,7 +100,7 @@ final class TimelineController {
       let results: [SavedTimelineEntry] =
         try await client
         .rpc(
-          "save_timeline_entry_with_occurrence",
+          "save_timeline_entry_with_organization",
           params: SaveTimelineEntryParameters(input: input)
         )
         .execute()
@@ -112,10 +116,9 @@ final class TimelineController {
       }
 
       await reloadAfterMutation()
-      return MutationResult(
-        message: entry == nil ? "Added to your Timeline." : "Timeline moment saved.",
-        status: .saved
-      )
+      return entry == nil
+        ? MutationResult(message: "Moment created.", status: .created)
+        : MutationResult(message: "Moment saved.", status: .saved)
     } catch {
       return MutationResult(
         message: "MemoTrail could not save this moment. Try again.",
@@ -154,7 +157,7 @@ final class TimelineController {
       }
 
       await reloadAfterMutation()
-      return MutationResult(message: "Moved to Trash.", status: .trashed)
+      return MutationResult(message: "Moment moved to Trash.", status: .trashed)
     } catch {
       return MutationResult(
         message: "MemoTrail could not move this moment to Trash. Try again.",
@@ -163,9 +166,35 @@ final class TimelineController {
     }
   }
 
-  private func reloadAfterMutation() async {
+  func reloadAfterMutation() async {
     isLoading = false
     await load()
+  }
+
+  private func loadRows() async throws -> [TimelineWorkspaceRow] {
+    try await client
+      .rpc(
+        "timeline_workspace_with_organization",
+        params: TimelineWorkspaceParameters(includeHidden: false)
+      )
+      .execute()
+      .value
+  }
+
+  private func loadFirstTimes() async throws -> [FirstTimeEntry] {
+    let rows: [FirstTimeWorkspaceRow] =
+      try await client
+      .rpc("first_times_workspace_with_occurrence")
+      .execute()
+      .value
+    return FirstTimesWorkspace.entries(from: rows)
+  }
+
+  private func loadNames(from table: String) async throws -> [String] {
+    var query = client.from(table).select("name").eq("owner_id", value: ownerID.uuidString)
+    if table == "collections" { query = query.is("archived_at", value: nil) }
+    let rows: [TimelineOrganizationName] = try await query.order("name").execute().value
+    return rows.map(\.name)
   }
 
   private func validateSessionOwner() async throws {
@@ -180,6 +209,7 @@ extension TimelineController {
   struct MutationResult: Equatable, Sendable {
     enum Status: Equatable, Sendable {
       case conflict
+      case created
       case error
       case saved
       case trashed
@@ -187,7 +217,13 @@ extension TimelineController {
 
     let message: String
     let status: Status
+
+    var succeeded: Bool { [.created, .saved, .trashed].contains(status) }
   }
+}
+
+private struct TimelineOrganizationName: Decodable, Sendable {
+  let name: String
 }
 
 private enum TimelineControllerError: Error {

@@ -21,7 +21,10 @@ The accepted Data Ribbon layout now replaces the Web Dashboard, using the signed
 The development preview routes and all 20 static Home mockups have been removed; Production deployment verification and browser acceptance remain pending.
 Native iOS now adopts the canonical Entry, Entity, and Goal contracts, optional Home Locations, and the paused AI state.
 The retired native Place surface and saved-Location catalog are removed; the existing screen layouts and accepted splash remain.
-Native navigation now uses Dashboard, Inbox, Timeline, Library, and More, with the active Web destinations grouped under More.
+Native navigation now uses Dashboard, Inbox, Timeline, Library, and More, with the active Web destinations grouped under More and the Web navigation icons.
+The native Dashboard now follows the Web Data Ribbon order and links, verified against a seeded local account.
+The native Inbox now matches the Web review list and Review Entry dialog, including Move to Trash and formatted note review, verified against a seeded local account.
+The native Library now matches Web Library, combining the all-items browser with keyword search, grouped filters, formatted result notes, and match reasons, verified against a seeded local account.
 The native MapKit screen and Debug Design System gallery are implemented; personal acceptance and broad screen migration remain pending.
 The Home and Vehicle history comparison fix is verified on local Supabase, including old snapshots, unchanged relationship timestamps, and restoration.
 Migration `202610010001` is local only and has not been applied to the hosted project.
@@ -91,16 +94,56 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Four Simulator UI scenarios cover native editor actions, MapKit clustering and filters, More routing, and gallery appearance/text-size controls; screenshot review is separate from personal data acceptance.
   The shared API change passed the native API and existing AI-pause E2E scenarios, 445 Web unit tests, lint, type checking, and repository formatting.
   A signed Simulator build launches to the Google sign-in screen; personal login, physical-device flows, and deployed shared API acceptance remain pending.
-- Review the Debug-only native Design System gallery, including appearance, Dynamic Type, action states, forms, cards, media placeholders, and feedback.
+- Review the Debug-only native Design System gallery, including appearance, Dynamic Type, action states, forms, cards, media, toasts, and feedback.
   The new Map uses its shared presentation components; existing screens retain their layouts pending acceptance.
+  Native actions, badges, headers, empty states, form fields, record and Collection cards, read-only rich writing, toasts, remote images, upload progress, and the photo field now mirror the Web gallery specimens.
+  First Times, Homes, Vehicles, Goals, Collections, and an Item's Current photos load photos through the shared remote image; Home and Trash follow with their screen syncs.
+  Thirteen workspace Simulator UI scenarios pass, including form pickers, organization editing, toasts rising clear of the keyboard, photo field removal, the Map, sign-in, and a gallery screenshot tour.
+  All seventeen seeded Simulator UI scenarios pass against a disposable local account and the local Web API, and all 249 native tests pass against local Supabase, including twelve contract tests.
+  `review-local-session.py` now runs signed-in UI flows as a seeded, disposable local account, so screen syncs are checked against real local data rather than synthetic previews.
+  One shared OccurrenceEditor and tag/Collection editor now serve Capture, Inbox review, Timeline, First Times, Homes, Vehicles, and Goals, with the Web Date types, Present end, and optional description.
 - The gallery's Writing & formatting page now previews a native Aa toolbar with bold, italic, underline, strikethrough, selection formatting, typing styles, undo/redo, and saved note reopening.
   The sample form uses the same reusable editor.
   Preview saves round-trip Web-compatible paragraph and emphasis JSON locally; they do not create an Entry.
   Six targeted native tests and three Simulator UI scenarios pass, with no runtime warnings.
   Web's actual validator accepts the Swift-encoded payload; light, dark, large-text, and native selection screenshots were reviewed.
-  After component acceptance, adopt the rich payload in native Capture drafts, offline queues, review saves, and full-note rendering before enabling it on those business screens.
-- Native Settings routing includes Account, dates/timezone context, app-local appearance, Collections, Tags, organization settings, export, and the paused Beta AI state.
-  Web profile/date preference editing is not yet replicated on iOS.
+  Native Capture now uses this editor as its single note, like the Web composer, and stores Web-compatible `body_rich` through drafts, the offline queue, and sync; a seeded local run confirmed the stored bold run.
+  Native Inbox review now saves the same payload through `review_wiki_item_with_photo_place_rich` and keeps untouched Web-only formatting; a seeded local run confirmed a stored bold edit and an unchanged Web list.
+  Native full-note rendering on focused record pages still needs to adopt the rich payload.
+- Native Settings now follows Web `/settings`: the account card with Sign out, preferred name, birth date, and default time zone each save on their own with Web validation and toasts, then app-local appearance and the paused Beta AI, organization, and export rows.
+  The Dashboard greeting refreshes after a name save; a local contract run and a seeded Simulator UI run confirmed saving, clearing, and the greeting.
+  Web's browser-local Timeline style stays Web-only.
+- Native Timeline now follows the Web phone layout with the shared header, type chooser, birth date prompt, and a Timeline editor that uses the Settings time zone and saves Collections and tags.
+  Local contract and seeded Simulator runs confirmed creating, editing, and trashing Moments and saving the birth date.
+  Manage tracks opens the Web track page, where each track saves its own name, order, and visibility.
+- Native Homes now follow Web `/homes` and its focused Home page: record cards with a photo, map, or mark, the facts, Story, and Organize page with Edit and Version history, and the sectioned Web Home editor.
+  Local contract and seeded Simulator runs confirmed opening a Home from Homes and the Timeline, editing it, adding one, and moving it to Trash.
+- Native Vehicles now follow Web `/vehicles` and its focused Vehicle page: one Vehicle archive of record cards with a photo, map, or mark, the When, Vehicle, and Location facts page, and the sectioned Web Vehicle editor with its Location panel.
+  Local contract and seeded Simulator runs confirmed loading and removing a Vehicle's Location, opening a Vehicle from Vehicles and the Timeline, editing it, adding one, and moving it to Trash.
+- Native First Times now follow Web `/first-times` and its focused First Time page: the archive of record cards with a photo, map, or number, the When and Location page, and the Web First Time editor with its Location panel.
+  Local contract and seeded Simulator runs confirmed loading and removing a First Time's Location, opening a First Time from First Times and the Timeline, editing it, adding one, and moving it to Trash.
+- Native Goals now follow Web `/goals` and its focused Goal page: record cards grouped by reflective state, the Status, Horizon, and Target page with Connected Items, and the sectioned Web Goal editor with Related Items and the Bucket List milestone.
+  Local contract and seeded Simulator runs confirmed recording a Bucket List achievement with its linked First Time, following connected Items to a Home page and the Timeline, replacing a related Item, adding a Goal, and moving it to Trash.
+- Native People now follow Web `/people` and its focused Person page: cards with the initial, relationship, a short note, and connected Item count; the Relationship, Notes, and Connected Items page; and the Web Person editor with its linked Item picker.
+  Local contract and seeded Simulator runs confirmed opening a Person from Library and People, following connected Items to the Timeline and a Home page, swapping a linked Item, keeping a linked Person out of Trash, moving them to Trash once unlinked, and adding one.
+- Native Item pages and version history now follow Web `/items/[entry]` and `/history`: the current writing and facts with Edit, Version history, Create linked Goal, and Move to Trash; Related Items with the Web views and search; Current photos in the shared photo field; and the version picker, differences, side-by-side snapshots, and Restore.
+  Local contract and seeded Simulator runs confirmed opening an Entry from Library, linking and following another Item, restoring the version from before the link, loading current photos, creating a linked Goal, and moving the Entry to Trash at the revision shown.
+- Native Tags now follow Web `/tags`: tag badges with Entry counts, name search, New Tag, and the Web tag editor with its Entry previews, merge panel, and unused-tag deletion.
+  A seeded Simulator run confirmed searching tags, opening a tagged Entry from the editor, merging one tag into another, creating and deleting an unused tag, and opening Library filtered to a tag.
+- Native Collections now follow Web `/collections` and its Collection pages: compact cards with each Collection's editor, New Collection, and Entry cards with Web's rich notes, Read full note, and Collection and tag links into Library.
+  A seeded Simulator run confirmed creating a Collection ahead of the others by display order, opening an Entry and a filtered Library from a Collection, opening Quick Capture from New entry, moving an empty Collection to Trash from its page, and reaching Collections from the Settings sheet.
+- Native Trash now follows Web `/trash`: the retention badge and note, Web's cards with the photo or mark, removal date, and restorable window, toasts for each result, and the Permanent action sheets for Delete forever and Empty Trash.
+  A seeded Simulator run confirmed restoring a Collection, deleting one forever, and emptying Trash with its confirmation.
+- The native More tab now follows Web's mobile More menu: the shared workspace header, then Explore, Focused views, Organize, and Archive and account as two columns of destinations with Web's icons.
+- Native sign-in now follows Web `AuthGate` at phone width: the brand header, the welcome story, and the sign-in card with Web's own Continue with Google button and Setup needed notice.
+  A Debug `--review-sign-in` Simulator run confirmed the screen without contacting any Supabase project.
+- Native Export now follows Web `/settings/export`: the page header, the Everything in one ZIP and Prepare a snapshot cards, snapshot cards with Download ZIP and an inline discard confirmation, and toasts for each result.
+  A seeded Simulator run against the local Web API confirmed preparing a snapshot, downloading a complete ZIP, removing the local copy, and discarding the snapshot.
+- Native Quick Capture now follows Web `QuickCaptureDialog` at phone width: the full-screen composer under Web's header and close button, the relevant date panel in place of a separate sheet, Web's photo and status strips, and a toast once the capture syncs.
+  A seeded Simulator run confirmed saving formatted notes from the Dashboard and from Quick Capture, opening and clearing the relevant date, and the toast.
+  Web's bottom capture dock landed after this sync, so native still opens New entry from the header and Quick Capture full screen; adopting the dock and its bottom-anchored composer remains native work.
+- Native Map now follows Web `/map` at phone width: the page header, Category and year fields that filter as they change, Your areas shortcuts with View all, the map card, and the Entries here panel for the chosen pin or cluster, instead of a filter sheet and a record list sheet.
+  A Debug `--review-map` Simulator run confirmed filtering by Category and year, zooming to an area, listing a cluster's Entries newest first, and opening one.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
 - Refactor existing screens after component acceptance; native address search remains later work.
 

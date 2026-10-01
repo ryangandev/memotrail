@@ -53,7 +53,7 @@ enum CollectionsWorkspace {
   }
 }
 
-struct CollectionEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
+struct CollectionEntry: Decodable, Equatable, Identifiable, Sendable {
   let collectionID: UUID
   let collectionName: String
   let totalCount: Int
@@ -76,6 +76,8 @@ struct CollectionEntry: Decodable, Equatable, Hashable, Identifiable, Sendable {
   let collectionNames: [String]
   let tagNames: [String]
   var attachments: [FirstTimeAttachment]
+  /// The note's Web formatting, which `EntryRichTextMap` loads after the page.
+  var bodyRich: EntryRichText?
 
   enum CodingKeys: String, CodingKey {
     case collectionID = "collection_id"

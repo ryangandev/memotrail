@@ -91,19 +91,31 @@ struct TrashItem: Decodable, Equatable, Identifiable, Sendable {
     Self.displayDate(expiresAt)
   }
 
-  func retentionLabel(referenceDate: Date = Date()) -> String {
+  /// Web `retentionLabel`: how long the item stays restorable, and the date it runs through.
+  func retention(referenceDate: Date = Date()) -> (status: String, date: String?) {
     guard let expirationDate = TrashTimestamp.date(from: expiresAt) else {
-      return "Retention date unavailable"
+      return ("Retention date unavailable", nil)
     }
 
-    let remainingSeconds = expirationDate.timeIntervalSince(referenceDate)
-    guard remainingSeconds > 0 else {
-      return "Eligible for cleanup since \(expirationDateLabel)"
+    let remainingDays = Int(ceil(expirationDate.timeIntervalSince(referenceDate) / 86_400))
+    guard remainingDays > 0 else {
+      return ("Eligible for cleanup since", expirationDateLabel)
     }
+    return ("\(countLabel(remainingDays, "day")) to restore · through", expirationDateLabel)
+  }
 
-    let remainingDays = Int(ceil(remainingSeconds / 86_400))
-    let unit = remainingDays == 1 ? "day" : "days"
-    return "\(remainingDays) \(unit) to restore · through \(expirationDateLabel)"
+  /// Web `deletionDescription`: what Delete forever removes.
+  var deletionDescription: String {
+    switch kind {
+    case .collection:
+      "Only the Collection and its grouping links will be removed. Your Entries and photos stay in the archive."
+    case .attachment:
+      "The private photo file and its attachment record will be removed."
+    case .person:
+      "The Person and their version history will be removed."
+    case .entry:
+      "The Entry, private photos, relationships, specialized details, and version history will be removed."
+    }
   }
 
   private static func displayDate(_ timestamp: String) -> String {
@@ -264,8 +276,8 @@ struct EmptyTrashOutcome: Equatable, Sendable {
   var complete: Bool { deleted == total }
   var message: String {
     complete
-      ? "\(deleted) confirmed items permanently deleted. Anything added to Trash later was not included."
-      : "\(deleted) of \(total) items confirmed deleted. Stopped because an item changed or a request could not be confirmed. Refresh and review Trash before trying again."
+      ? "\(countLabel(deleted, "confirmed item")) permanently deleted. Anything added to Trash later was not included."
+      : "\(deleted) of \(countLabel(total, "item")) confirmed deleted. Stopped because an item changed or a request could not be confirmed. Refresh and review Trash before trying again."
   }
   @MainActor
   static func run(

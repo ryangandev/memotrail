@@ -10,6 +10,7 @@ import {
 } from "@/app/trash/actions";
 import { emptyTrashResultMessage, runEmptyTrash } from "@/lib/data/empty-trash";
 import type { TrashItemInput } from "@/lib/data/trash-input";
+import { countLabel } from "@/lib/count-label";
 
 export function EmptyTrashControl({
   disabled,
@@ -117,7 +118,7 @@ export function EmptyTrashControl({
         <Dialog
           open
           size="compact"
-          title={<>Empty {snapshot.length} items from Trash?</>}
+          title={<>Empty {countLabel(snapshot.length, "item")} from Trash?</>}
           titleId="empty-trash-title"
           description={
             <>

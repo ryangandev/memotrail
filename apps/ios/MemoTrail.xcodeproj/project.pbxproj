@@ -16,7 +16,6 @@
 		B00000000000000000000037 /* EntryHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003E /* EntryHistoryView.swift */; };
 		B70000000000000000000001 /* EntryRelationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C70000000000000000000001 /* EntryRelationsView.swift */; };
 		B00000000000000000000038 /* TimelineTracksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003F /* TimelineTracksView.swift */; };
-		B00000000000000000000039 /* OrganizationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000040 /* OrganizationView.swift */; };
 		B00000000000000000000036 /* EntryAISuggestionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003D /* EntryAISuggestionsView.swift */; };
 		B00000000000000000000035 /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003C /* AISettingsView.swift */; };
 		B00000000000000000000001 /* MemoTrailApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000001 /* MemoTrailApp.swift */; };
@@ -24,7 +23,6 @@
 		B00000000000000000000002 /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000002 /* RootTabView.swift */; };
 		B00000000000000000000003 /* InboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000003 /* InboxView.swift */; };
 		B00000000000000000000004 /* CaptureCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000004 /* CaptureCard.swift */; };
-		B00000000000000000000005 /* EntryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000005 /* EntryCard.swift */; };
 		B80000000000000000000001 /* MemoTrailMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = C80000000000000000000001 /* MemoTrailMark.swift */; };
 		B00000000000000000000006 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000006 /* DesignTokens.swift */; };
 		B00000000000000000000007 /* InboxEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000007 /* InboxEntry.swift */; };
@@ -36,11 +34,8 @@
 		B0000000000000000000000B /* AuthenticationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000014 /* AuthenticationView.swift */; };
 		B0000000000000000000000C /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = F20000000000000000000001 /* Supabase */; };
 		B0000000000000000000000D /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = F20000000000000000000002 /* GoogleSignIn */; };
-		B0000000000000000000000E /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = F20000000000000000000003 /* GoogleSignInSwift */; };
 		B0000000000000000000000F /* InboxController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000016 /* InboxController.swift */; };
 		B00000000000000000000010 /* SearchEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000017 /* SearchEntry.swift */; };
-		B00000000000000000000011 /* SearchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000018 /* SearchController.swift */; };
-		B00000000000000000000012 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000019 /* SearchView.swift */; };
 		B00000000000000000000013 /* TimelineEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000001A /* TimelineEntry.swift */; };
 		B00000000000000000000014 /* TimelineController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000001B /* TimelineController.swift */; };
 		B00000000000000000000015 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000001C /* TimelineView.swift */; };
@@ -50,7 +45,6 @@
 		B00000000000000000000019 /* CollectionEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000020 /* CollectionEntry.swift */; };
 		B0000000000000000000001A /* CollectionsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000021 /* CollectionsController.swift */; };
 		B0000000000000000000001B /* CollectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000022 /* CollectionsView.swift */; };
-		B0000000000000000000001C /* LibraryDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000023 /* LibraryDestination.swift */; };
 		B0000000000000000000001D /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000024 /* LibraryView.swift */; };
 		B90000000000000000000001 /* WikiItemSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90000000000000000000001 /* WikiItemSummary.swift */; };
 		B90000000000000000000002 /* LibraryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90000000000000000000002 /* LibraryController.swift */; };
@@ -84,7 +78,6 @@
 		B1000000000000000000000C /* VehicleEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000D /* VehicleEntryTests.swift */; };
 		B1000000000000000000000D /* GoalEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000E /* GoalEntryTests.swift */; };
 		B00000000000000000000034 /* PeopleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003B /* PeopleView.swift */; };
-		BD0000000000000000000001 /* NativeComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000001 /* NativeComponents.swift */; };
 		BD0000000000000000000002 /* DesignSystemGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000002 /* DesignSystemGallery.swift */; };
 		BD0000000000000000000003 /* LocationMapModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000003 /* LocationMapModel.swift */; };
 		BD0000000000000000000004 /* LocationMapController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000004 /* LocationMapController.swift */; };
@@ -99,6 +92,70 @@
 		BE0000000000000000000002 /* NativeRichTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0000000000000000000002 /* NativeRichTextEditor.swift */; };
 		BE0000000000000000000003 /* NativeWritingSpecimens.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0000000000000000000003 /* NativeWritingSpecimens.swift */; };
 		BE0000000000000000000004 /* EntryEmphasisContentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0000000000000000000004 /* EntryEmphasisContentTests.swift */; };
+		E10000000000000000000001 /* MTFoundations.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000001 /* MTFoundations.swift */; };
+		E10000000000000000000002 /* GalleryFoundations.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000002 /* GalleryFoundations.swift */; };
+		E10000000000000000000003 /* MTActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000003 /* MTActions.swift */; };
+		E10000000000000000000004 /* MTLabels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000004 /* MTLabels.swift */; };
+		E10000000000000000000005 /* MTHeaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000005 /* MTHeaders.swift */; };
+		E10000000000000000000006 /* MTFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000006 /* MTFeedback.swift */; };
+		E10000000000000000000007 /* GalleryPrimitives.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000007 /* GalleryPrimitives.swift */; };
+		E10000000000000000000008 /* MTFields.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000008 /* MTFields.swift */; };
+		E10000000000000000000009 /* MTDateField.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000009 /* MTDateField.swift */; };
+		E1000000000000000000000A /* MTTimeZoneField.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000000A /* MTTimeZoneField.swift */; };
+		E1000000000000000000000B /* MTOrganizationEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000000B /* MTOrganizationEditor.swift */; };
+		E1000000000000000000000C /* TimeZoneOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000000C /* TimeZoneOptions.swift */; };
+		E1000000000000000000000D /* GalleryForms.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000000D /* GalleryForms.swift */; };
+		E1000000000000000000000E /* FormFieldTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000000E /* FormFieldTests.swift */; };
+		E1000000000000000000000F /* MTCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000000F /* MTCards.swift */; };
+		E10000000000000000000010 /* MTRichTextContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000010 /* MTRichTextContent.swift */; };
+		E10000000000000000000011 /* GalleryContainers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000011 /* GalleryContainers.swift */; };
+		E10000000000000000000012 /* EntryRichText.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000012 /* EntryRichText.swift */; };
+		E10000000000000000000013 /* EntryRichTextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000013 /* EntryRichTextTests.swift */; };
+		E10000000000000000000014 /* MTToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000014 /* MTToast.swift */; };
+		E10000000000000000000015 /* MTMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000015 /* MTMedia.swift */; };
+		E10000000000000000000016 /* GalleryFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000016 /* GalleryFeedback.swift */; };
+		E10000000000000000000017 /* UITestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000017 /* UITestSupport.swift */; };
+		E10000000000000000000018 /* LocalSessionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000018 /* LocalSessionUITests.swift */; };
+		E10000000000000000000019 /* AppNavigator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000019 /* AppNavigator.swift */; };
+		E1000000000000000000001A /* DashboardComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001A /* DashboardComponents.swift */; };
+		E1000000000000000000001B /* InboxCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001B /* InboxCards.swift */; };
+		E1000000000000000000001C /* EntryReviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001C /* EntryReviewSheet.swift */; };
+		E1000000000000000000001D /* WorkspaceToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001D /* WorkspaceToolbar.swift */; };
+		E1000000000000000000001E /* SettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001E /* SettingsController.swift */; };
+		E1000000000000000000001F /* ProfileSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000001F /* ProfileSettings.swift */; };
+		E10000000000000000000020 /* ProfileSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000020 /* ProfileSettingsTests.swift */; };
+		E10000000000000000000021 /* MTSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000021 /* MTSheet.swift */; };
+		E10000000000000000000022 /* OrganizationNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000022 /* OrganizationNames.swift */; };
+		E10000000000000000000023 /* MTRecordDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000023 /* MTRecordDetail.swift */; };
+		E10000000000000000000024 /* MTLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000024 /* MTLocation.swift */; };
+		E10000000000000000000025 /* ResidenceEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000025 /* ResidenceEditorSheet.swift */; };
+		E10000000000000000000026 /* HomeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000026 /* HomeDetailView.swift */; };
+		E10000000000000000000027 /* MTRecordArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000027 /* MTRecordArchive.swift */; };
+		E10000000000000000000028 /* VehicleDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000028 /* VehicleDetailView.swift */; };
+		E10000000000000000000029 /* VehicleEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000029 /* VehicleEditorSheet.swift */; };
+		E1000000000000000000002A /* EntryLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002A /* EntryLocation.swift */; };
+		E1000000000000000000002B /* FirstTimeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002B /* FirstTimeDetailView.swift */; };
+		E1000000000000000000002C /* FirstTimeEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002C /* FirstTimeEditorSheet.swift */; };
+		E1000000000000000000002D /* GoalDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002D /* GoalDetailView.swift */; };
+		E1000000000000000000002E /* GoalEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002E /* GoalEditorSheet.swift */; };
+		E1000000000000000000002F /* ConnectedItemsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002F /* ConnectedItemsSection.swift */; };
+		E10000000000000000000030 /* ToastPlacementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000030 /* ToastPlacementTests.swift */; };
+		E10000000000000000000031 /* PeopleController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000031 /* PeopleController.swift */; };
+		E10000000000000000000032 /* PersonDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000032 /* PersonDetailView.swift */; };
+		E10000000000000000000033 /* PersonEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000033 /* PersonEditorSheet.swift */; };
+		E10000000000000000000034 /* PersonRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000034 /* PersonRecord.swift */; };
+		E10000000000000000000035 /* EntryHistoryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000035 /* EntryHistoryController.swift */; };
+		E10000000000000000000036 /* WikiItemParts.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000036 /* WikiItemParts.swift */; };
+		E10000000000000000000037 /* WikiItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000037 /* WikiItemDetailView.swift */; };
+		E10000000000000000000038 /* LinkedGoalSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000038 /* LinkedGoalSheet.swift */; };
+		E10000000000000000000039 /* EntryHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000039 /* EntryHistory.swift */; };
+		E1000000000000000000003A /* WikiItemLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000003A /* WikiItemLink.swift */; };
+		E1000000000000000000003B /* OrganizationActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000003B /* OrganizationActions.swift */; };
+		E1000000000000000000003C /* OrganizationEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000003C /* OrganizationEditorSheet.swift */; };
+		E1000000000000000000003D /* TagsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000003D /* TagsView.swift */; };
+		E1000000000000000000003E /* Organization.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000003E /* Organization.swift */; };
+		E1000000000000000000003F /* CollectionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000003F /* CollectionDetailView.swift */; };
+		E10000000000000000000040 /* OpenInboxButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000040 /* OpenInboxButton.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -118,10 +175,9 @@
 		C00000000000000000000045 /* MediaDelivery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDelivery.swift; sourceTree = "<group>"; };
 		C00000000000000000000043 /* ExplorationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AI/ExplorationView.swift; sourceTree = "<group>"; };
 		C00000000000000000000044 /* ExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Export/ExportView.swift; sourceTree = "<group>"; };
-		C0000000000000000000003E /* EntryHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = History/EntryHistoryView.swift; sourceTree = "<group>"; };
-		C70000000000000000000001 /* EntryRelationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = History/EntryRelationsView.swift; sourceTree = "<group>"; };
+		C0000000000000000000003E /* EntryHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryHistoryView.swift; sourceTree = "<group>"; };
+		C70000000000000000000001 /* EntryRelationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryRelationsView.swift; sourceTree = "<group>"; };
 		C0000000000000000000003F /* TimelineTracksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timeline/TimelineTracksView.swift; sourceTree = "<group>"; };
-		C00000000000000000000040 /* OrganizationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Collections/OrganizationView.swift; sourceTree = "<group>"; };
 		C0000000000000000000003D /* EntryAISuggestionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AI/EntryAISuggestionsView.swift; sourceTree = "<group>"; };
 		C0000000000000000000003C /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AI/AISettingsView.swift; sourceTree = "<group>"; };
 		C00000000000000000000001 /* MemoTrailApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoTrailApp.swift; sourceTree = "<group>"; };
@@ -129,7 +185,6 @@
 		C00000000000000000000002 /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
 		C00000000000000000000003 /* InboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxView.swift; sourceTree = "<group>"; };
 		C00000000000000000000004 /* CaptureCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureCard.swift; sourceTree = "<group>"; };
-		C00000000000000000000005 /* EntryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryCard.swift; sourceTree = "<group>"; };
 		C80000000000000000000001 /* MemoTrailMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoTrailMark.swift; sourceTree = "<group>"; };
 		C00000000000000000000006 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 		C00000000000000000000007 /* InboxEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxEntry.swift; sourceTree = "<group>"; };
@@ -145,8 +200,6 @@
 		C00000000000000000000015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C00000000000000000000016 /* InboxController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxController.swift; sourceTree = "<group>"; };
 		C00000000000000000000017 /* SearchEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchEntry.swift; sourceTree = "<group>"; };
-		C00000000000000000000018 /* SearchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchController.swift; sourceTree = "<group>"; };
-		C00000000000000000000019 /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		C0000000000000000000001A /* TimelineEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineEntry.swift; sourceTree = "<group>"; };
 		C0000000000000000000001B /* TimelineController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineController.swift; sourceTree = "<group>"; };
 		C0000000000000000000001C /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
@@ -156,7 +209,6 @@
 		C00000000000000000000020 /* CollectionEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionEntry.swift; sourceTree = "<group>"; };
 		C00000000000000000000021 /* CollectionsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionsController.swift; sourceTree = "<group>"; };
 		C00000000000000000000022 /* CollectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionsView.swift; sourceTree = "<group>"; };
-		C00000000000000000000023 /* LibraryDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryDestination.swift; sourceTree = "<group>"; };
 		C00000000000000000000024 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		C90000000000000000000001 /* WikiItemSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiItemSummary.swift; sourceTree = "<group>"; };
 		C90000000000000000000002 /* LibraryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryController.swift; sourceTree = "<group>"; };
@@ -190,8 +242,7 @@
 		C1000000000000000000000C /* ResidenceEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResidenceEntryTests.swift; sourceTree = "<group>"; };
 		C1000000000000000000000D /* VehicleEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleEntryTests.swift; sourceTree = "<group>"; };
 		C1000000000000000000000E /* GoalEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEntryTests.swift; sourceTree = "<group>"; };
-		C0000000000000000000003B /* PeopleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/PeopleView.swift; sourceTree = "<group>"; };
-		CD0000000000000000000001 /* NativeComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeComponents.swift; sourceTree = "<group>"; };
+		C0000000000000000000003B /* PeopleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeopleView.swift; sourceTree = "<group>"; };
 		CD0000000000000000000002 /* DesignSystemGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystemGallery.swift; sourceTree = "<group>"; };
 		CD0000000000000000000003 /* LocationMapModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Map/LocationMapModel.swift; sourceTree = "<group>"; };
 		CD0000000000000000000004 /* LocationMapController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Map/LocationMapController.swift; sourceTree = "<group>"; };
@@ -207,6 +258,70 @@
 		CE0000000000000000000002 /* NativeRichTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeRichTextEditor.swift; sourceTree = "<group>"; };
 		CE0000000000000000000003 /* NativeWritingSpecimens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWritingSpecimens.swift; sourceTree = "<group>"; };
 		CE0000000000000000000004 /* EntryEmphasisContentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryEmphasisContentTests.swift; sourceTree = "<group>"; };
+		E20000000000000000000001 /* MTFoundations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTFoundations.swift; sourceTree = "<group>"; };
+		E20000000000000000000002 /* GalleryFoundations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryFoundations.swift; sourceTree = "<group>"; };
+		E20000000000000000000003 /* MTActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTActions.swift; sourceTree = "<group>"; };
+		E20000000000000000000004 /* MTLabels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTLabels.swift; sourceTree = "<group>"; };
+		E20000000000000000000005 /* MTHeaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTHeaders.swift; sourceTree = "<group>"; };
+		E20000000000000000000006 /* MTFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTFeedback.swift; sourceTree = "<group>"; };
+		E20000000000000000000007 /* GalleryPrimitives.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryPrimitives.swift; sourceTree = "<group>"; };
+		E20000000000000000000008 /* MTFields.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTFields.swift; sourceTree = "<group>"; };
+		E20000000000000000000009 /* MTDateField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTDateField.swift; sourceTree = "<group>"; };
+		E2000000000000000000000A /* MTTimeZoneField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTTimeZoneField.swift; sourceTree = "<group>"; };
+		E2000000000000000000000B /* MTOrganizationEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTOrganizationEditor.swift; sourceTree = "<group>"; };
+		E2000000000000000000000C /* TimeZoneOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeZoneOptions.swift; sourceTree = "<group>"; };
+		E2000000000000000000000D /* GalleryForms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryForms.swift; sourceTree = "<group>"; };
+		E2000000000000000000000E /* FormFieldTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormFieldTests.swift; sourceTree = "<group>"; };
+		E2000000000000000000000F /* MTCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTCards.swift; sourceTree = "<group>"; };
+		E20000000000000000000010 /* MTRichTextContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTRichTextContent.swift; sourceTree = "<group>"; };
+		E20000000000000000000011 /* GalleryContainers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryContainers.swift; sourceTree = "<group>"; };
+		E20000000000000000000012 /* EntryRichText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryRichText.swift; sourceTree = "<group>"; };
+		E20000000000000000000013 /* EntryRichTextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryRichTextTests.swift; sourceTree = "<group>"; };
+		E20000000000000000000014 /* MTToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTToast.swift; sourceTree = "<group>"; };
+		E20000000000000000000015 /* MTMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTMedia.swift; sourceTree = "<group>"; };
+		E20000000000000000000016 /* GalleryFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryFeedback.swift; sourceTree = "<group>"; };
+		E20000000000000000000017 /* UITestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestSupport.swift; sourceTree = "<group>"; };
+		E20000000000000000000018 /* LocalSessionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalSessionUITests.swift; sourceTree = "<group>"; };
+		E20000000000000000000019 /* AppNavigator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigator.swift; sourceTree = "<group>"; };
+		E2000000000000000000001A /* DashboardComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardComponents.swift; sourceTree = "<group>"; };
+		E2000000000000000000001B /* InboxCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxCards.swift; sourceTree = "<group>"; };
+		E2000000000000000000001C /* EntryReviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryReviewSheet.swift; sourceTree = "<group>"; };
+		E2000000000000000000001D /* WorkspaceToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceToolbar.swift; sourceTree = "<group>"; };
+		E2000000000000000000001E /* SettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings/SettingsController.swift; sourceTree = "<group>"; };
+		E2000000000000000000001F /* ProfileSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettings.swift; sourceTree = "<group>"; };
+		E20000000000000000000020 /* ProfileSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsTests.swift; sourceTree = "<group>"; };
+		E20000000000000000000021 /* MTSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTSheet.swift; sourceTree = "<group>"; };
+		E20000000000000000000022 /* OrganizationNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrganizationNames.swift; sourceTree = "<group>"; };
+		E20000000000000000000023 /* MTRecordDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTRecordDetail.swift; sourceTree = "<group>"; };
+		E20000000000000000000024 /* MTLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTLocation.swift; sourceTree = "<group>"; };
+		E20000000000000000000025 /* ResidenceEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResidenceEditorSheet.swift; sourceTree = "<group>"; };
+		E20000000000000000000026 /* HomeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDetailView.swift; sourceTree = "<group>"; };
+		E20000000000000000000027 /* MTRecordArchive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTRecordArchive.swift; sourceTree = "<group>"; };
+		E20000000000000000000028 /* VehicleDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleDetailView.swift; sourceTree = "<group>"; };
+		E20000000000000000000029 /* VehicleEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleEditorSheet.swift; sourceTree = "<group>"; };
+		E2000000000000000000002A /* EntryLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryLocation.swift; sourceTree = "<group>"; };
+		E2000000000000000000002B /* FirstTimeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstTimeDetailView.swift; sourceTree = "<group>"; };
+		E2000000000000000000002C /* FirstTimeEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstTimeEditorSheet.swift; sourceTree = "<group>"; };
+		E2000000000000000000002D /* GoalDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalDetailView.swift; sourceTree = "<group>"; };
+		E2000000000000000000002E /* GoalEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEditorSheet.swift; sourceTree = "<group>"; };
+		E2000000000000000000002F /* ConnectedItemsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectedItemsSection.swift; sourceTree = "<group>"; };
+		E20000000000000000000030 /* ToastPlacementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastPlacementTests.swift; sourceTree = "<group>"; };
+		E20000000000000000000031 /* PeopleController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeopleController.swift; sourceTree = "<group>"; };
+		E20000000000000000000032 /* PersonDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonDetailView.swift; sourceTree = "<group>"; };
+		E20000000000000000000033 /* PersonEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonEditorSheet.swift; sourceTree = "<group>"; };
+		E20000000000000000000034 /* PersonRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonRecord.swift; sourceTree = "<group>"; };
+		E20000000000000000000035 /* EntryHistoryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryHistoryController.swift; sourceTree = "<group>"; };
+		E20000000000000000000036 /* WikiItemParts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiItemParts.swift; sourceTree = "<group>"; };
+		E20000000000000000000037 /* WikiItemDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiItemDetailView.swift; sourceTree = "<group>"; };
+		E20000000000000000000038 /* LinkedGoalSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkedGoalSheet.swift; sourceTree = "<group>"; };
+		E20000000000000000000039 /* EntryHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryHistory.swift; sourceTree = "<group>"; };
+		E2000000000000000000003A /* WikiItemLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiItemLink.swift; sourceTree = "<group>"; };
+		E2000000000000000000003B /* OrganizationActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrganizationActions.swift; sourceTree = "<group>"; };
+		E2000000000000000000003C /* OrganizationEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrganizationEditorSheet.swift; sourceTree = "<group>"; };
+		E2000000000000000000003D /* TagsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsView.swift; sourceTree = "<group>"; };
+		E2000000000000000000003E /* Organization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Organization.swift; sourceTree = "<group>"; };
+		E2000000000000000000003F /* CollectionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionDetailView.swift; sourceTree = "<group>"; };
+		E20000000000000000000040 /* OpenInboxButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenInboxButton.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -216,7 +331,6 @@
 			files = (
 				B0000000000000000000000C /* Supabase in Frameworks */,
 				B0000000000000000000000D /* GoogleSignIn in Frameworks */,
-				B0000000000000000000000E /* GoogleSignInSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -267,6 +381,11 @@
 		A10000000000000000000004 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000040 /* OpenInboxButton.swift */,
+				E2000000000000000000003A /* WikiItemLink.swift */,
+				E2000000000000000000002F /* ConnectedItemsSection.swift */,
+				E2000000000000000000001D /* WorkspaceToolbar.swift */,
+				E20000000000000000000019 /* AppNavigator.swift */,
 				CD0000000000000000000008 /* NativeReview.swift */,
 				CD0000000000000000000007 /* WorkspaceRoute.swift */,
 				C00000000000000000000001 /* MemoTrailApp.swift */,
@@ -280,6 +399,7 @@
 		A10000000000000000000005 /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000001E /* SettingsController.swift */,
 				CD0000000000000000000009 /* NativeSettingsView.swift */,
 				CD0000000000000000000006 /* LocationMapView.swift */,
 				CD0000000000000000000005 /* NativeLocationMap.swift */,
@@ -290,17 +410,14 @@
 				A10000000000000000000023 /* Homes */,
 				A10000000000000000000024 /* Vehicles */,
 				A10000000000000000000025 /* Goals */,
-				C0000000000000000000003B /* PeopleView.swift */,
+				A10000000000000000000026 /* People */,
+				A10000000000000000000027 /* History */,
 				C0000000000000000000003C /* AISettingsView.swift */,
 				C00000000000000000000043 /* ExplorationView.swift */,
 				C00000000000000000000044 /* ExportView.swift */,
 				C0000000000000000000003D /* EntryAISuggestionsView.swift */,
-				C0000000000000000000003E /* EntryHistoryView.swift */,
-				C70000000000000000000001 /* EntryRelationsView.swift */,
 				C0000000000000000000003F /* TimelineTracksView.swift */,
-				C00000000000000000000040 /* OrganizationView.swift */,
 				A10000000000000000000006 /* Inbox */,
-				A10000000000000000000015 /* Search */,
 				A10000000000000000000016 /* Timeline */,
 				A10000000000000000000017 /* FirstTimes */,
 				A10000000000000000000018 /* Collections */,
@@ -313,9 +430,10 @@
 		A10000000000000000000006 /* Inbox */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000001C /* EntryReviewSheet.swift */,
+				E2000000000000000000001B /* InboxCards.swift */,
 				C00000000000000000000016 /* InboxController.swift */,
 				C00000000000000000000003 /* InboxView.swift */,
-				C00000000000000000000042 /* OccurrenceEditor.swift */,
 				C00000000000000000000046 /* EntryPhotoDatesView.swift */,
                 C00000000000000000000047 /* EntryPhotoGalleryView.swift */,
 			);
@@ -325,6 +443,11 @@
 		A10000000000000000000007 /* DesignSystem */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000016 /* GalleryFeedback.swift */,
+				E20000000000000000000011 /* GalleryContainers.swift */,
+				E2000000000000000000000D /* GalleryForms.swift */,
+				E20000000000000000000007 /* GalleryPrimitives.swift */,
+				E20000000000000000000002 /* GalleryFoundations.swift */,
 				CE0000000000000000000003 /* NativeWritingSpecimens.swift */,
 				CD0000000000000000000002 /* DesignSystemGallery.swift */,
 				A10000000000000000000008 /* Components */,
@@ -336,10 +459,26 @@
 		A10000000000000000000008 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000027 /* MTRecordArchive.swift */,
+				E20000000000000000000024 /* MTLocation.swift */,
+				E20000000000000000000023 /* MTRecordDetail.swift */,
+				E20000000000000000000021 /* MTSheet.swift */,
+				E20000000000000000000015 /* MTMedia.swift */,
+				E20000000000000000000014 /* MTToast.swift */,
+				E20000000000000000000010 /* MTRichTextContent.swift */,
+				E2000000000000000000000F /* MTCards.swift */,
+				E2000000000000000000000B /* MTOrganizationEditor.swift */,
+				E2000000000000000000000A /* MTTimeZoneField.swift */,
+				E20000000000000000000009 /* MTDateField.swift */,
+				E20000000000000000000008 /* MTFields.swift */,
+				C00000000000000000000042 /* OccurrenceEditor.swift */,
+				E20000000000000000000006 /* MTFeedback.swift */,
+				E20000000000000000000005 /* MTHeaders.swift */,
+				E20000000000000000000004 /* MTLabels.swift */,
+				E20000000000000000000003 /* MTActions.swift */,
+				E20000000000000000000001 /* MTFoundations.swift */,
 				CE0000000000000000000002 /* NativeRichTextEditor.swift */,
-				CD0000000000000000000001 /* NativeComponents.swift */,
 				C00000000000000000000004 /* CaptureCard.swift */,
-				C00000000000000000000005 /* EntryCard.swift */,
 				C80000000000000000000001 /* MemoTrailMark.swift */,
 				C0000000000000000000002E /* VoiceTranscriptionController.swift */,
 			);
@@ -357,6 +496,14 @@
 		A10000000000000000000010 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000003E /* Organization.swift */,
+				E20000000000000000000039 /* EntryHistory.swift */,
+				E20000000000000000000034 /* PersonRecord.swift */,
+				E2000000000000000000002A /* EntryLocation.swift */,
+				E20000000000000000000022 /* OrganizationNames.swift */,
+				E2000000000000000000001F /* ProfileSettings.swift */,
+				E20000000000000000000012 /* EntryRichText.swift */,
+				E2000000000000000000000C /* TimeZoneOptions.swift */,
 				CE0000000000000000000001 /* EntryEmphasisContent.swift */,
 				C0000000000000000000002B /* HomeEntry.swift */,
 				C00000000000000000000007 /* InboxEntry.swift */,
@@ -366,7 +513,6 @@
 				C0000000000000000000001A /* TimelineEntry.swift */,
 				C0000000000000000000001D /* FirstTimeEntry.swift */,
 				C00000000000000000000020 /* CollectionEntry.swift */,
-				C00000000000000000000023 /* LibraryDestination.swift */,
 				C90000000000000000000001 /* WikiItemSummary.swift */,
 				C00000000000000000000028 /* TrashItem.swift */,
 				C0000000000000000000002F /* ResidenceEntry.swift */,
@@ -406,6 +552,10 @@
 		A10000000000000000000014 /* MemoTrailTests */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000030 /* ToastPlacementTests.swift */,
+				E20000000000000000000020 /* ProfileSettingsTests.swift */,
+				E20000000000000000000013 /* EntryRichTextTests.swift */,
+				E2000000000000000000000E /* FormFieldTests.swift */,
 				CE0000000000000000000004 /* EntryEmphasisContentTests.swift */,
 				CD000000000000000000000A /* LocationMapTests.swift */,
 				C1000000000000000000000A /* HomeEntryTests.swift */,
@@ -425,15 +575,6 @@
 			path = MemoTrailTests;
 			sourceTree = "<group>";
 		};
-		A10000000000000000000015 /* Search */ = {
-			isa = PBXGroup;
-			children = (
-				C00000000000000000000018 /* SearchController.swift */,
-				C00000000000000000000019 /* SearchView.swift */,
-			);
-			path = Search;
-			sourceTree = "<group>";
-		};
 		A10000000000000000000016 /* Timeline */ = {
 			isa = PBXGroup;
 			children = (
@@ -446,6 +587,8 @@
 		A10000000000000000000017 /* FirstTimes */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000002C /* FirstTimeEditorSheet.swift */,
+				E2000000000000000000002B /* FirstTimeDetailView.swift */,
 				C0000000000000000000001E /* FirstTimesController.swift */,
 				C0000000000000000000001F /* FirstTimesView.swift */,
 			);
@@ -455,6 +598,10 @@
 		A10000000000000000000018 /* Collections */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000003F /* CollectionDetailView.swift */,
+				E2000000000000000000003D /* TagsView.swift */,
+				E2000000000000000000003C /* OrganizationEditorSheet.swift */,
+				E2000000000000000000003B /* OrganizationActions.swift */,
 				C00000000000000000000021 /* CollectionsController.swift */,
 				C00000000000000000000022 /* CollectionsView.swift */,
 			);
@@ -482,6 +629,7 @@
 		A10000000000000000000022 /* Home */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000001A /* DashboardComponents.swift */,
 				C0000000000000000000002C /* HomeController.swift */,
 				C0000000000000000000002D /* HomeView.swift */,
 			);
@@ -491,6 +639,8 @@
 		A10000000000000000000023 /* Homes */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000026 /* HomeDetailView.swift */,
+				E20000000000000000000025 /* ResidenceEditorSheet.swift */,
 				C00000000000000000000030 /* ResidenceController.swift */,
 				C00000000000000000000031 /* HomesView.swift */,
 			);
@@ -500,15 +650,43 @@
 		A10000000000000000000024 /* Vehicles */ = {
 			isa = PBXGroup;
 			children = (
+				E20000000000000000000029 /* VehicleEditorSheet.swift */,
+				E20000000000000000000028 /* VehicleDetailView.swift */,
 				C00000000000000000000033 /* VehicleController.swift */,
 				C00000000000000000000034 /* VehiclesView.swift */,
 			);
 			path = Vehicles;
 			sourceTree = "<group>";
 		};
+		A10000000000000000000026 /* People */ = {
+			isa = PBXGroup;
+			children = (
+				E20000000000000000000033 /* PersonEditorSheet.swift */,
+				E20000000000000000000032 /* PersonDetailView.swift */,
+				E20000000000000000000031 /* PeopleController.swift */,
+				C0000000000000000000003B /* PeopleView.swift */,
+			);
+			path = People;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000027 /* History */ = {
+			isa = PBXGroup;
+			children = (
+				E20000000000000000000038 /* LinkedGoalSheet.swift */,
+				E20000000000000000000037 /* WikiItemDetailView.swift */,
+				E20000000000000000000036 /* WikiItemParts.swift */,
+				E20000000000000000000035 /* EntryHistoryController.swift */,
+				C0000000000000000000003E /* EntryHistoryView.swift */,
+				C70000000000000000000001 /* EntryRelationsView.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
 		A10000000000000000000025 /* Goals */ = {
 			isa = PBXGroup;
 			children = (
+				E2000000000000000000002E /* GoalEditorSheet.swift */,
+				E2000000000000000000002D /* GoalDetailView.swift */,
 				C00000000000000000000036 /* GoalController.swift */,
 				C00000000000000000000037 /* GoalsView.swift */,
 			);
@@ -516,7 +694,7 @@
 			sourceTree = "<group>";
 		};
 
-		AF0000000000000000000007 = {isa = PBXGroup; children = (CF0000000000000000000002); path = MemoTrailUITests; sourceTree = "<group>"; };
+		AF0000000000000000000007 = {isa = PBXGroup; children = (E20000000000000000000018, E20000000000000000000017, CF0000000000000000000002); path = MemoTrailUITests; sourceTree = "<group>"; };
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -536,7 +714,6 @@
 			packageProductDependencies = (
 				F20000000000000000000001 /* Supabase */,
 				F20000000000000000000002 /* GoogleSignIn */,
-				F20000000000000000000003 /* GoogleSignInSwift */,
 			);
 			productName = MemoTrail;
 			productReference = C00000000000000000000009 /* MemoTrail.app */;
@@ -644,6 +821,64 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E10000000000000000000040 /* OpenInboxButton.swift in Sources */,
+				E1000000000000000000003F /* CollectionDetailView.swift in Sources */,
+				E1000000000000000000003E /* Organization.swift in Sources */,
+				E1000000000000000000003D /* TagsView.swift in Sources */,
+				E1000000000000000000003C /* OrganizationEditorSheet.swift in Sources */,
+				E1000000000000000000003B /* OrganizationActions.swift in Sources */,
+				E1000000000000000000003A /* WikiItemLink.swift in Sources */,
+				E10000000000000000000039 /* EntryHistory.swift in Sources */,
+				E10000000000000000000038 /* LinkedGoalSheet.swift in Sources */,
+				E10000000000000000000037 /* WikiItemDetailView.swift in Sources */,
+				E10000000000000000000036 /* WikiItemParts.swift in Sources */,
+				E10000000000000000000035 /* EntryHistoryController.swift in Sources */,
+				E10000000000000000000034 /* PersonRecord.swift in Sources */,
+				E10000000000000000000033 /* PersonEditorSheet.swift in Sources */,
+				E10000000000000000000032 /* PersonDetailView.swift in Sources */,
+				E10000000000000000000031 /* PeopleController.swift in Sources */,
+				E1000000000000000000002F /* ConnectedItemsSection.swift in Sources */,
+				E1000000000000000000002E /* GoalEditorSheet.swift in Sources */,
+				E1000000000000000000002D /* GoalDetailView.swift in Sources */,
+				E1000000000000000000002C /* FirstTimeEditorSheet.swift in Sources */,
+				E1000000000000000000002B /* FirstTimeDetailView.swift in Sources */,
+				E1000000000000000000002A /* EntryLocation.swift in Sources */,
+				E10000000000000000000029 /* VehicleEditorSheet.swift in Sources */,
+				E10000000000000000000028 /* VehicleDetailView.swift in Sources */,
+				E10000000000000000000027 /* MTRecordArchive.swift in Sources */,
+				E10000000000000000000026 /* HomeDetailView.swift in Sources */,
+				E10000000000000000000025 /* ResidenceEditorSheet.swift in Sources */,
+				E10000000000000000000024 /* MTLocation.swift in Sources */,
+				E10000000000000000000023 /* MTRecordDetail.swift in Sources */,
+				E10000000000000000000022 /* OrganizationNames.swift in Sources */,
+				E10000000000000000000021 /* MTSheet.swift in Sources */,
+				E1000000000000000000001F /* ProfileSettings.swift in Sources */,
+				E1000000000000000000001E /* SettingsController.swift in Sources */,
+				E1000000000000000000001D /* WorkspaceToolbar.swift in Sources */,
+				E1000000000000000000001C /* EntryReviewSheet.swift in Sources */,
+				E1000000000000000000001B /* InboxCards.swift in Sources */,
+				E1000000000000000000001A /* DashboardComponents.swift in Sources */,
+				E10000000000000000000019 /* AppNavigator.swift in Sources */,
+				E10000000000000000000016 /* GalleryFeedback.swift in Sources */,
+				E10000000000000000000015 /* MTMedia.swift in Sources */,
+				E10000000000000000000014 /* MTToast.swift in Sources */,
+				E10000000000000000000012 /* EntryRichText.swift in Sources */,
+				E10000000000000000000011 /* GalleryContainers.swift in Sources */,
+				E10000000000000000000010 /* MTRichTextContent.swift in Sources */,
+				E1000000000000000000000F /* MTCards.swift in Sources */,
+				E1000000000000000000000D /* GalleryForms.swift in Sources */,
+				E1000000000000000000000C /* TimeZoneOptions.swift in Sources */,
+				E1000000000000000000000B /* MTOrganizationEditor.swift in Sources */,
+				E1000000000000000000000A /* MTTimeZoneField.swift in Sources */,
+				E10000000000000000000009 /* MTDateField.swift in Sources */,
+				E10000000000000000000008 /* MTFields.swift in Sources */,
+				E10000000000000000000007 /* GalleryPrimitives.swift in Sources */,
+				E10000000000000000000006 /* MTFeedback.swift in Sources */,
+				E10000000000000000000005 /* MTHeaders.swift in Sources */,
+				E10000000000000000000004 /* MTLabels.swift in Sources */,
+				E10000000000000000000003 /* MTActions.swift in Sources */,
+				E10000000000000000000002 /* GalleryFoundations.swift in Sources */,
+				E10000000000000000000001 /* MTFoundations.swift in Sources */,
 				BE0000000000000000000003 /* NativeWritingSpecimens.swift in Sources */,
 				BE0000000000000000000002 /* NativeRichTextEditor.swift in Sources */,
 				BE0000000000000000000001 /* EntryEmphasisContent.swift in Sources */,
@@ -655,13 +890,11 @@
 				BD0000000000000000000004 /* LocationMapController.swift in Sources */,
 				BD0000000000000000000003 /* LocationMapModel.swift in Sources */,
 				BD0000000000000000000002 /* DesignSystemGallery.swift in Sources */,
-				BD0000000000000000000001 /* NativeComponents.swift in Sources */,
 				B00000000000000000000001 /* MemoTrailApp.swift in Sources */,
 				BA0000000000000000000001 /* SplashView.swift in Sources */,
 				B00000000000000000000002 /* RootTabView.swift in Sources */,
 				B00000000000000000000003 /* InboxView.swift in Sources */,
 				B00000000000000000000004 /* CaptureCard.swift in Sources */,
-				B00000000000000000000005 /* EntryCard.swift in Sources */,
 				B80000000000000000000001 /* MemoTrailMark.swift in Sources */,
 				B00000000000000000000006 /* DesignTokens.swift in Sources */,
 				B00000000000000000000007 /* InboxEntry.swift in Sources */,
@@ -675,8 +908,6 @@
 				B0000000000000000000000B /* AuthenticationView.swift in Sources */,
 				B0000000000000000000000F /* InboxController.swift in Sources */,
 				B00000000000000000000010 /* SearchEntry.swift in Sources */,
-				B00000000000000000000011 /* SearchController.swift in Sources */,
-				B00000000000000000000012 /* SearchView.swift in Sources */,
 				B00000000000000000000013 /* TimelineEntry.swift in Sources */,
 				B00000000000000000000014 /* TimelineController.swift in Sources */,
 				B00000000000000000000015 /* TimelineView.swift in Sources */,
@@ -686,7 +917,6 @@
 				B00000000000000000000019 /* CollectionEntry.swift in Sources */,
 				B0000000000000000000001A /* CollectionsController.swift in Sources */,
 				B0000000000000000000001B /* CollectionsView.swift in Sources */,
-				B0000000000000000000001C /* LibraryDestination.swift in Sources */,
 				B90000000000000000000001 /* WikiItemSummary.swift in Sources */,
 				B90000000000000000000002 /* LibraryController.swift in Sources */,
 				B0000000000000000000001D /* LibraryView.swift in Sources */,
@@ -714,7 +944,6 @@
 				B00000000000000000000037 /* EntryHistoryView.swift in Sources */,
 				B70000000000000000000001 /* EntryRelationsView.swift in Sources */,
 				B00000000000000000000038 /* TimelineTracksView.swift in Sources */,
-				B00000000000000000000039 /* OrganizationView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -722,6 +951,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E10000000000000000000030 /* ToastPlacementTests.swift in Sources */,
+				E10000000000000000000020 /* ProfileSettingsTests.swift in Sources */,
+				E10000000000000000000013 /* EntryRichTextTests.swift in Sources */,
+				E1000000000000000000000E /* FormFieldTests.swift in Sources */,
 				BE0000000000000000000004 /* EntryEmphasisContentTests.swift in Sources */,
 				BD000000000000000000000A /* LocationMapTests.swift in Sources */,
 				B10000000000000000000001 /* InboxEntryTests.swift in Sources */,
@@ -740,7 +973,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		AF0000000000000000000002 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (BF0000000000000000000001); runOnlyForDeploymentPostprocessing = 0; };
+		AF0000000000000000000002 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (E10000000000000000000018, E10000000000000000000017, BF0000000000000000000001); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -994,11 +1227,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F10000000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignIn;
-		};
-		F20000000000000000000003 /* GoogleSignInSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F10000000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
-			productName = GoogleSignInSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
