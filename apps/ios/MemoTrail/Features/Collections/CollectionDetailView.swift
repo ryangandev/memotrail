@@ -47,6 +47,7 @@ struct CollectionDetailView: View {
           Label("New entry", icon: .plus)
         }
         .mtButtonStyle()
+        .accessibilityIdentifier("collection-new-entry")
       }
       toolbar
       content

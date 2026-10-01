@@ -28,6 +28,8 @@ final class LocalSessionUITests: XCTestCase {
           ).firstMatch, in: app)
       }
       XCTAssertTrue(text(expected, in: app).waitForExistence(timeout: 15), tab)
+      // Each tab's header keeps New entry beside the mark, like Web's phone header.
+      XCTAssertTrue(app.buttons["workspace-new-entry"].isHittable, tab)
       attach(app, tab)
     }
     app.tabBars.buttons["More"].tap()
@@ -108,8 +110,9 @@ final class LocalSessionUITests: XCTestCase {
     XCTAssertTrue(app.buttons["edit-item"].waitForExistence(timeout: 10))
     app.navigationBars.buttons.element(boundBy: 0).tap()
     XCTAssertTrue(letters.waitForExistence(timeout: 10))
-    while !app.buttons["New entry"].isHittable { app.swipeDown() }
-    app.buttons["New entry"].tap()
+    let newEntry = app.buttons["collection-new-entry"]
+    while !newEntry.isHittable { app.swipeDown() }
+    newEntry.tap()
     XCTAssertTrue(app.buttons["Close quick capture"].waitForExistence(timeout: 10))
     app.buttons["Close quick capture"].tap()
     XCTAssertTrue(app.navigationBars["Summer 2025"].waitForExistence(timeout: 10))
@@ -208,7 +211,7 @@ final class LocalSessionUITests: XCTestCase {
 
     // Quick Capture opens Web's full-screen composer, with the relevant date in place.
     app.tabBars.buttons["Inbox"].tap()
-    app.buttons["global-quick-capture"].tap()
+    app.buttons["workspace-new-entry"].tap()
     XCTAssertTrue(app.buttons["Close quick capture"].waitForExistence(timeout: 10))
     let quick = app.textViews["capture-body"]
     XCTAssertTrue(quick.waitForExistence(timeout: 5))

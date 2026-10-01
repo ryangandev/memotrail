@@ -185,10 +185,6 @@ final class HomeEntryTests: XCTestCase {
         "Dashboard", "Inbox", "Timeline", "Library", "More",
       ])
     XCTAssertFalse(RootTabDestination.allCases.map(\.systemImage).contains(where: \.isEmpty))
-    XCTAssertEqual(
-      RootTabDestination.allCases.filter(\.usesGlobalCaptureButton),
-      [.inbox, .timeline, .library]
-    )
   }
 
   private var decoder: JSONDecoder {

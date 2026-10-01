@@ -115,24 +115,6 @@ struct RootTabView: View {
       }
       .tag(RootTabDestination.more)
     }
-    .overlay(alignment: .bottomTrailing) {
-      if navigator.selectedTab.usesGlobalCaptureButton {
-        Button {
-          navigator.isShowingQuickCapture = true
-        } label: {
-          Image(systemName: "plus")
-            .font(.system(size: 19, weight: .semibold))
-            .foregroundStyle(MTColor.accentInk)
-            .frame(width: 50, height: 50)
-            .background(MTColor.accent, in: Circle())
-            .shadow(color: MTColor.scrim.opacity(0.16), radius: 10, y: 5)
-        }
-        .padding(.trailing, MTSpacing.s4)
-        .padding(.bottom, 66)
-        .accessibilityLabel("Quick capture")
-        .accessibilityIdentifier("global-quick-capture")
-      }
-    }
     .environment(navigator)
     .fullScreenCover(isPresented: $navigator.isShowingQuickCapture) {
       QuickCaptureView(
@@ -267,12 +249,6 @@ enum RootTabDestination: String, CaseIterable, Sendable {
     case .library: MTIcon.archive.systemName
     case .more: MTIcon.more.systemName
     }
-  }
-
-  /// The Dashboard has its own composer; the other lists capture from this button, like the
-  /// Web header's capture action.
-  var usesGlobalCaptureButton: Bool {
-    self == .inbox || self == .timeline || self == .library
   }
 }
 

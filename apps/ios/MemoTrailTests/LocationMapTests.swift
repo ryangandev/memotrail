@@ -125,6 +125,5 @@ final class LocationMapTests: XCTestCase {
     XCTAssertEqual(
       RootTabDestination.allCases.map(\.title),
       ["Dashboard", "Inbox", "Timeline", "Library", "More"])
-    XCTAssertFalse(RootTabDestination.more.usesGlobalCaptureButton)
   }
 }

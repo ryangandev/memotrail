@@ -1,8 +1,8 @@
 @preconcurrency import Supabase
 import SwiftUI
 
-/// The Web workspace header on each primary tab: the MemoTrail brand, search, and the
-/// account avatar that opens Settings.
+/// The Web workspace header on each primary tab: the MemoTrail brand, New entry, search, and
+/// the account avatar that opens Settings.
 private struct WorkspaceToolbar: ViewModifier {
   let client: SupabaseClient
   let user: AuthenticatedUser
@@ -24,6 +24,17 @@ private struct WorkspaceToolbar: ViewModifier {
           }
           .accessibilityLabel("MemoTrail dashboard")
           .accessibilityIdentifier("workspace-brand")
+        }
+        if #available(iOS 26, *) {
+          ToolbarSpacer(.fixed, placement: .topBarLeading)
+        }
+        ToolbarItem(placement: .topBarLeading) {
+          // Web's phone header keeps New entry beside the mark, in the accent color.
+          Button("New entry", systemImage: MTIcon.plus.systemName) {
+            navigator.startCapture()
+          }
+          .foregroundStyle(MTColor.accent)
+          .accessibilityIdentifier("workspace-new-entry")
         }
         ToolbarItem(placement: .topBarTrailing) {
           Button("Search your trail", systemImage: MTIcon.search.systemName) {
