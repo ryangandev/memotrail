@@ -138,6 +138,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
   A seeded Simulator run against the local Web API confirmed preparing a snapshot, downloading a complete ZIP, removing the local copy, and discarding the snapshot.
 - Native Quick Capture now follows Web `QuickCaptureDialog` at phone width: the full-screen composer under Web's header and close button, the relevant date panel in place of a separate sheet, Web's photo and status strips, and a toast once the capture syncs.
   A seeded Simulator run confirmed saving formatted notes from the Dashboard and from Quick Capture, opening and clearing the relevant date, and the toast.
+  Like Web, a capture saved without a connection is confirmed once with an info toast that it is safe on this iPhone; later offline retries stay quiet until it syncs and announces Saved to Inbox.
+  A local Supabase contract test and a seeded `--review-offline` Simulator scenario cover this, but neither has run yet: the change was written without Xcode, so its build, tests, and Simulator check are pending.
   Web's bottom capture dock landed after this sync, so native still opens New entry from the header and Quick Capture full screen; adopting the dock and its bottom-anchored composer remains native work.
 - Native Map now follows Web `/map` at phone width: the page header, Category and year fields that filter as they change, Your areas shortcuts with View all, the map card, and the Entries here panel for the chosen pin or cluster, instead of a filter sheet and a record list sheet.
   A Debug `--review-map` Simulator run confirmed filtering by Category and year, zooming to an area, listing a cluster's Entries newest first, and opening one.

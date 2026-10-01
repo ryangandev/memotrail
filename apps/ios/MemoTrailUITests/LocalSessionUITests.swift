@@ -227,10 +227,11 @@ final class LocalSessionUITests: XCTestCase {
     captureTime.tap()
     XCTAssertTrue(captureTime.waitForNonExistence(timeout: 5))
 
-    // Saving closes it and announces the capture, which lands in the Inbox.
+    // Saving closes it and announces the capture once, after it lands in the Inbox.
     app.buttons["save-entry"].tap()
     XCTAssertTrue(app.buttons["Close quick capture"].waitForNonExistence(timeout: 10))
     XCTAssertTrue(text("Saved to Inbox", in: app).waitForExistence(timeout: 15))
+    XCTAssertFalse(text("Saved on this iPhone", in: app).exists)
     XCTAssertTrue(app.buttons["Organize Lanterns on the pier"].waitForExistence(timeout: 15))
     attach(app, "Quick Capture saved")
 
@@ -238,6 +239,55 @@ final class LocalSessionUITests: XCTestCase {
     app.buttons["Move Lanterns on the pier to Trash"].tap()
     app.buttons["Move to Trash"].tap()
     XCTAssertTrue(text("Capture moved to Trash.", in: app).waitForExistence(timeout: 10))
+  }
+
+  func testOfflineQuickCaptureIsConfirmedOnceAndSyncsWhenOnline() throws {
+    let app = try launchLocalSession(offline: true)
+    XCTAssertTrue(app.tabBars.buttons["Inbox"].waitForExistence(timeout: 20))
+    app.tabBars.buttons["Inbox"].tap()
+    app.buttons["workspace-new-entry"].tap()
+    let quick = app.textViews["capture-body"]
+    XCTAssertTrue(quick.waitForExistence(timeout: 10))
+    XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+    quick.typeText("Ferry tickets for Saturday")
+    app.buttons["rich-dismiss-keyboard"].tap()
+    app.buttons["save-entry"].tap()
+
+    // Without a connection, saving closes Quick Capture and confirms once that the capture is
+    // safe on this iPhone, then the Inbox shows it waiting to sync.
+    let stored = text("Saved on this iPhone. MemoTrail will sync when you are online.", in: app)
+    XCTAssertTrue(app.buttons["Close quick capture"].waitForNonExistence(timeout: 10))
+    XCTAssertTrue(stored.waitForExistence(timeout: 10))
+    XCTAssertFalse(text("Saved to Inbox", in: app).exists)
+    XCTAssertTrue(text("Ferry tickets for Saturday", in: app).waitForExistence(timeout: 5))
+    attach(app, "Offline capture confirmed")
+
+    // Retrying while still offline announces nothing again, as a toast or in the composer.
+    XCTAssertTrue(stored.waitForNonExistence(timeout: 10))
+    reveal(app.buttons["retry-pending-entries"], in: app).tap()
+    Thread.sleep(forTimeInterval: 2)
+    XCTAssertFalse(stored.exists)
+    app.buttons["workspace-new-entry"].tap()
+    XCTAssertTrue(text("1 Entry waiting to sync", in: app).waitForExistence(timeout: 10))
+    XCTAssertFalse(element("capture-message", in: app).exists)
+    attach(app, "Quick Capture while offline")
+    app.buttons["Close quick capture"].tap()
+    app.terminate()
+
+    // Back online, the capture kept on this iPhone syncs and is announced once as saved.
+    let online = try launchLocalSession()
+    XCTAssertTrue(text("Saved to Inbox", in: online).waitForExistence(timeout: 20))
+    XCTAssertFalse(text("Saved on this iPhone", in: online).exists)
+    online.tabBars.buttons["Inbox"].tap()
+    let row = online.buttons["Organize Ferry tickets for Saturday"]
+    XCTAssertTrue(row.waitForExistence(timeout: 15))
+    XCTAssertFalse(online.buttons["retry-pending-entries"].exists)
+    attach(online, "Offline capture synced")
+
+    // Keep the seeded captures as the Dashboard's newest three for the other tests.
+    online.buttons["Move Ferry tickets for Saturday to Trash"].tap()
+    online.buttons["Move to Trash"].tap()
+    XCTAssertTrue(text("Capture moved to Trash.", in: online).waitForExistence(timeout: 10))
   }
 
   func testExportPreparesDownloadsAndDiscardsASnapshot() throws {
@@ -1281,13 +1331,14 @@ final class LocalSessionUITests: XCTestCase {
     XCTAssertTrue(loaded.waitForExistence(timeout: 5))
   }
 
-  private func launchLocalSession() throws -> XCUIApplication {
+  /// `offline` fails every request once the session is open, like an iPhone with no network.
+  private func launchLocalSession(offline: Bool = false) throws -> XCUIApplication {
     let path = ProcessInfo.processInfo.environment["MEMOTRAIL_REVIEW_SESSION"] ?? ""
     guard !path.isEmpty else {
       throw XCTSkip("Run apps/ios/scripts/review-local-session.py with the local Supabase stack.")
     }
     let app = XCUIApplication()
-    app.launchArguments = ["--review-local-session"]
+    app.launchArguments = ["--review-local-session"] + (offline ? ["--review-offline"] : [])
     app.launchEnvironment["MEMOTRAIL_REVIEW_SESSION"] = path
     app.launch()
     return app

@@ -235,6 +235,7 @@ Pair it with the test file carrying the same feature name.
   Native `Features/Home` mirrors it with `MTPage`, `MTPageHeader`, `CaptureCard`, `MTEmptyState`, `MTRemoteImage`, and `MTBadge`; `DashboardComponents.swift` owns the ribbon, rows, and cards.
   Web `QuickCaptureDialog` shows CaptureComposer's dialog variant under its own header; native `QuickCaptureView` shows the same header over `CaptureCard(style: .dialog)` full screen, where Web now anchors the composer to its bottom dock.
   Both composers open the relevant date in place, keep only problems in the composer, and announce a synced capture with a toast.
+  A capture saved without a connection gets an info toast instead: Web checks the browser's connection before syncing, while `InboxController` confirms a capture once when its first sync cannot reach MemoTrail and keeps later offline retries quiet.
 - The Web Inbox renders `components/entry-review-list.tsx` and its `EntryReviewDialog` inside the compact PageFrame.
   Native `Features/Inbox` mirrors the list with `InboxCards.swift` and the dialog with `EntryReviewSheet.swift`: the same fields, sticky Save changes and Save to Library footer, confirmations anchored to Move to Trash, and toasts.
   Neither Inbox embeds a composer; Web captures from the bottom dock, and iOS from the Dashboard or New entry in the workspace header.
@@ -278,6 +279,7 @@ Pair it with the test file carrying the same feature name.
   It is reached from the signed-out screen, More, or Settings; broad existing-screen migration follows review.
 - Debug launch arguments in `App/NativeReview.swift` expose isolated gallery, synthetic Map, and navigation review modes; `--review-design-section <name>` opens one gallery section directly.
   `--review-local-session` signs in with a disposable local Supabase session from `scripts/review-local-session.py`, keeps it out of the Keychain, and accepts only 127.0.0.1 endpoints.
+  Adding `--review-offline` fails that session's requests like an iPhone with no network once it has signed in, through the `NativeReviewNetwork` switch the local contract tests also use.
   Release builds omit these modes and the gallery; `MemoTrailUI` runs their Simulator interaction tests.
   `scripts/local_supabase.py` owns disposable account creation and cleanup for both native local scripts.
 - Native app targets skip App Intents metadata extraction because they declare no App Intents.

@@ -1,5 +1,6 @@
 #if DEBUG
   import SwiftUI
+  import os
   @preconcurrency import Supabase
 
   struct NativeReviewAppearancePreference: PreferenceKey {
@@ -48,6 +49,35 @@
     }()
   }
 
+  /// Fails requests the way an iPhone with no network does while `isOffline` is set, so offline
+  /// capture runs against the local stack without changing the Simulator's network. A local
+  /// session opened with `--review-offline` goes offline once it has signed in.
+  final class NativeReviewNetwork: URLProtocol {
+    private static let offline = OSAllocatedUnfairLock(initialState: false)
+
+    static var isOffline: Bool {
+      get { offline.withLock { $0 } }
+      set { offline.withLock { $0 = newValue } }
+    }
+
+    /// A URL session whose requests pass through this switch.
+    static func session() -> URLSession {
+      let configuration = URLSessionConfiguration.default
+      let switches: [AnyClass] = [NativeReviewNetwork.self]
+      configuration.protocolClasses = switches + (configuration.protocolClasses ?? [])
+      return URLSession(configuration: configuration)
+    }
+
+    override class func canInit(with request: URLRequest) -> Bool { isOffline }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+
+    override func startLoading() {
+      client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet))
+    }
+
+    override func stopLoading() {}
+  }
+
   // Keeps the disposable session out of the Keychain.
   private final class NativeReviewSessionStorage: AuthLocalStorage, @unchecked Sendable {
     private let lock = NSLock()
@@ -87,12 +117,14 @@
           "Run apps/ios/scripts/review-local-session.py with the local Supabase stack.")
         return
       }
+      let offline = ProcessInfo.processInfo.arguments.contains("--review-offline")
       let client = SupabaseClient(
         supabaseURL: session.supabaseURL, supabaseKey: session.publishableKey,
         options: .init(
           auth: .init(
             storage: NativeReviewSessionStorage(), storageKey: "native-review-\(session.ownerID)",
-            emitLocalSessionAsInitialSession: true)))
+            emitLocalSessionAsInitialSession: true),
+          global: .init(session: offline ? NativeReviewNetwork.session() : .shared)))
       do {
         let restored = try await client.auth.setSession(
           accessToken: session.accessToken, refreshToken: session.refreshToken)
@@ -100,6 +132,7 @@
           phase = .failed("The local session belongs to a different account.")
           return
         }
+        NativeReviewNetwork.isOffline = offline
         phase = .ready(
           client, AuthenticatedUser(id: session.ownerID, email: session.email, name: session.name))
       } catch {
