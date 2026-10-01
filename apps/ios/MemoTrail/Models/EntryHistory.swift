@@ -160,6 +160,32 @@ struct EntryHistoryRecord: Decodable, Sendable {
 
 /// Web `lib/data/history.ts` presentation rules.
 enum HistoryPresentation {
+  /// Matches the snapshot contract accepted by `restore_entry_version`, like Web
+  /// `SUPPORTED_HISTORY_SCHEMA`.
+  static let supportedSchema = 3
+  /// Web `UNSUPPORTED_HISTORY_RESTORE_MESSAGE`.
+  static let unsupportedRestoreMessage =
+    "This version was saved in a format that cannot be restored. You can still review its recorded content."
+
+  /// Web `canRestoreHistorySnapshot`: only the schema the restore RPC accepts.
+  static func canRestore(_ snapshot: [String: HistoryJSON]?) -> Bool {
+    snapshot?["history_schema"] == .number(Double(supportedSchema))
+  }
+
+  /// Web `restoreHistoryVersion` messages for the restore RPC's named failures.
+  static func restoreFailureMessage(_ code: String) -> String {
+    switch code {
+    case "history_schema_unsupported": unsupportedRestoreMessage
+    case "history_reference_unavailable":
+      "A linked item is missing or in Trash. Restore it first; no part of this Entry was changed."
+    case "history_attachment_unavailable":
+      "An original photo is no longer available. Nothing was restored."
+    case "history_details_unavailable":
+      "This early version did not record the specialized details needed for a safe restore."
+    default: "Could not restore this version. Your current Entry is unchanged."
+    }
+  }
+
   /// Web `historyFields`, in order, with the names shown for differences.
   static let fields: [(key: String, label: String)] = [
     ("title", "Title"), ("body", "Writing"), ("item_kind", "Kind"), ("item_subtype", "Subtype"),

@@ -67,7 +67,7 @@ def seed(stack, user):
     def organize(title, body, collections=(), tags=(), rich=None, **when):
         """Saves a capture to the Library like Inbox review's Save to Library."""
         row = capture(title, body)
-        rpc("review_wiki_item_with_location_rich",
+        return rpc("review_wiki_item_with_location_rich",
             p_entry_id=row["id"], p_expected_revision=row["revision"], p_title=title,
             p_body=body, p_item_kind="entry", p_item_subtype="entry",
             p_collection_names=list(collections), p_tag_names=list(tags), p_mark_done=True,
@@ -116,10 +116,14 @@ def seed(stack, user):
              "Most evenings that spring ended with the same loop past the boathouse.",
              collections=["Summer 2025"], tags=["walks"],
              precision="range", start="2025-04-01", end="2025-06-30")
-    organize("Grandmother's recipe cards",
-             "A shoebox of index cards, most of them stained with butter.",
-             tags=["family"], precision="approximate", start="1998-01-01",
-             label="Late 1990s")
+    recipes = organize("Grandmother's recipe cards",
+                       "A shoebox of index cards, most of them stained with butter.",
+                       tags=["family"], precision="approximate", start="1998-01-01",
+                       label="Late 1990s")[0]["entry_id"]
+    # A version archived in an older history format, which can be reviewed but not restored.
+    versions = f"/rest/v1/entry_versions?entry_id=eq.{recipes}&version=eq.1"
+    legacy = stack.request(versions + "&select=snapshot", method="GET")[0]["snapshot"]
+    stack.request(versions, {"snapshot": {**legacy, "history_schema": 2}}, method="PATCH")
     capture(None, "Waiting for a little context")
     capture("Notes from the farmers market", "Peaches, basil, and a jar of local honey.")
     # A Web-formatted list that the native editor cannot author, so review must keep it.

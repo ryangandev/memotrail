@@ -73,18 +73,7 @@ final class EntryHistoryController {
           "This Entry changed on another device or is in Trash. Refresh or restore it from Trash first."
       }
     } catch let error as PostgrestError {
-      switch error.message {
-      case "history_reference_unavailable":
-        return
-          "A linked item is missing or in Trash. Restore it first; no part of this Entry was changed."
-      case "history_attachment_unavailable":
-        return "An original photo is no longer available. Nothing was restored."
-      case "history_details_unavailable":
-        return
-          "This early version did not record the specialized details needed for a safe restore."
-      default:
-        return "Could not restore this version. Your current Entry is unchanged."
-      }
+      return HistoryPresentation.restoreFailureMessage(error.message)
     } catch {
       return
         "Could not confirm restoration. Refresh to check the latest version before trying again."

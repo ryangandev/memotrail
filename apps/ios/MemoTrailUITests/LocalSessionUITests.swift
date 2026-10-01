@@ -413,6 +413,23 @@ final class LocalSessionUITests: XCTestCase {
     XCTAssertTrue(
       reveal(app.buttons["Evening walks along the river"], in: app).waitForExistence(timeout: 10))
     attach(app, "Linked Item page")
+
+    // Its version in an older history format stays reviewable, but Restore is unavailable.
+    reveal(app.buttons["item-version-history"], in: app).tap()
+    XCTAssertTrue(app.navigationBars["Version history"].waitForExistence(timeout: 10))
+    let unavailable = app.staticTexts["history-restore-unavailable"]
+    XCTAssertTrue(reveal(unavailable, in: app).waitForExistence(timeout: 10))
+    XCTAssertEqual(
+      unavailable.label,
+      "This version was saved in a format that cannot be restored. You can still review its recorded content."
+    )
+    XCTAssertFalse(app.buttons["restore-version"].isEnabled)
+    XCTAssertFalse(
+      text("Your current version", in: app).exists,
+      "An unrestorable version must not promise a restore")
+    attach(app, "Version history in an older format")
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    XCTAssertTrue(app.buttons["item-version-history"].waitForExistence(timeout: 10))
     app.navigationBars.buttons.element(boundBy: 0).tap()
 
     // Version history compares the version before the link, and restoring it removes the link.

@@ -27,10 +27,8 @@ The native Inbox now matches the Web review list and Review Entry dialog, includ
 The native Library now matches Web Library, combining the all-items browser with keyword search, grouped filters, formatted result notes, and match reasons, verified against a seeded local account.
 The native MapKit screen and Debug Design System gallery are implemented; personal acceptance and broad screen migration remain pending.
 The Home and Vehicle history comparison fix is verified on local Supabase, including old snapshots, unchanged relationship timestamps, and restoration.
-Migration `202610010001` is local only and has not been applied to the hosted project.
-The shared server contract fixes comparison for both clients; native history compatibility was inspected without changing iOS files.
-Web history now recognizes schema 3 snapshots as restorable and keeps unsupported snapshots viewable with a clear explanation and a disabled Restore action.
-The matching native schema check remains pending until the in-flight iOS PR lands.
+Migration `202610010001` is applied to the hosted project, so the shared server contract fixes comparison for both clients.
+Web and native history recognize schema 3 snapshots as restorable and keep unsupported snapshots viewable with a clear explanation and a disabled Restore action.
 The merged Web release still needs Production deployment verification and browser acceptance; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 
 Use Git history for feature-level implementation and test evidence.
@@ -46,7 +44,7 @@ Use Git history for feature-level implementation and test evidence.
 | Web Collections and tags                                                                        | Direct Library destinations and shared Entry organization editor implemented                                                                                         |
 | Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI               | Keyword search remains available. Web AI is paused behind an off/disabled Beta setting; provider logic and historical data are retained.                             |
 | Private media, Entry history, relationships, Trash, and complete export                         | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                   |
-| Hosted Supabase contracts                                                                       | `202609240004` is deployed to project `kaivkozeyuwzqrckmyqu`; the remote ledger matches the repository                                                               |
+| Hosted Supabase contracts                                                                       | `202610010001` is deployed to project `kaivkozeyuwzqrckmyqu`; the remote ledger matches the repository                                                               |
 | Entry-centered information model                                                                | Web, hosted database, and native iOS use Entry, focused records, and intentional Timeline Moment or Period; native personal acceptance remains                       |
 | Web design system                                                                               | Approved canonical components migrated across Web; component-owned CSS and token boundaries enforced; local regression passed; production browser acceptance pending |
 | Backup and restore                                                                              | Not ready                                                                                                                                                            |
@@ -64,13 +62,14 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - Native compatibility is updated separately; complete personal native acceptance before treating it as a release.
 - The Web history schema fix passes 462 unit tests and nine local history browser scenarios in both development and production mode, covering supported restoration, legacy rejection, and version selection.
   Lint, type checking, formatting, and the production build also pass.
+- The native history schema fix passes all 249 native tests, including local Supabase contract tests, and the seeded Simulator Item page scenario covering both restorable and unrestorable versions.
 - The broader comparison-fix baseline passed all 90 active Web browser E2E scenarios and 61 database files with 1,567 assertions on local Supabase.
   Four active-AI scenarios remain explicitly skipped while AI is paused.
 - A seeded pre-migration local exercise converted Journal, Story, and Trip to tags; Timeline point and span to Moment and Period; and preserved Inbox state and revision numbers.
 
 ### 2. Accept Web Location
 
-- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202609240004`; the linked migration ledger matches the repository. Home Location copy-on-write compares coordinates at the database's six-decimal storage precision.
+- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202610010001`; the linked migration ledger matches the repository. Home Location copy-on-write compares coordinates at the database's six-decimal storage precision.
 - Web now has optional Home Locations, address search that feeds Entry-owned Location snapshots on save, keyboard-accessible address suggestions, explicit photo GPS source identity, owner-scoped Geoapify quotas, and a clustered Map of current Entry coordinates with Kind and year filters.
 - Local Web and database validation for the merged changes is listed above.
 - `localhost:3000` points to the linked cloud Supabase project. Its health endpoint returned 200, and an authenticated browser loaded Geoapify address suggestions, a selected coordinate preview, and the Map's raster tiles after migration; the test form was canceled without saving.
@@ -82,8 +81,6 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 ### 3. Accept native foundations, Map, and navigation
 
-- After the in-flight iOS PR lands, align `Features/History/EntryHistoryView.swift` with the server's schema 3 restore contract and replace its obsolete schema 2 warning check.
-  This Web fix does not change `apps/ios`.
 - Native models, filters, Capture, and ordinary Inbox review now use the shared canonical identities; focused forms retain their existing RPCs.
 - Home Location IDs and labels decode as optional, and editing address facts clears stale coordinates.
 - Supabase public configuration matches Web locally. Media, metadata, and export use the Web API base URL; Geoapify, AI, and Supabase secret keys remain on the server.

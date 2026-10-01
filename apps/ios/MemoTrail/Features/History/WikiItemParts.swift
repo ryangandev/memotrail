@@ -253,9 +253,14 @@ struct HistorySnapshotCard: View {
 
 /// Web History `notice`: a quiet accent panel for what a restore will do.
 struct HistoryNotice: View {
+  /// Web `.notice` for information and `.cautionNotice` for what cannot happen.
+  enum Tone { case info, caution }
+
   let text: String
+  var tone: Tone = .info
 
   var body: some View {
+    let shape = RoundedRectangle(cornerRadius: MTRadius.medium)
     Text(text)
       .font(MTFont.body)
       .foregroundStyle(MTColor.inkMuted)
@@ -263,6 +268,10 @@ struct HistoryNotice: View {
       .fixedSize(horizontal: false, vertical: true)
       .frame(maxWidth: .infinity, alignment: .leading)
       .padding(MTSpacing.s5)
-      .background(MTColor.accentSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
+      .background(tone == .caution ? MTColor.warmSubtle : MTColor.accentSubtle, in: shape)
+      .overlay {
+        // Drawn inside the padding so both tones keep the same text alignment.
+        if tone == .caution { shape.strokeBorder(MTColor.warning.opacity(0.35), lineWidth: 1) }
+      }
   }
 }
