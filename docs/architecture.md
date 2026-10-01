@@ -104,6 +104,7 @@ Pair it with the test file carrying the same feature name.
 - Clients send the revision they read. A stale revision surfaces a conflict instead of silently merging or overwriting another device.
 - Important mutations snapshot prior state.
   Restoring history creates another revision rather than deleting subsequent history.
+  The restore RPC accepts history schema 3 only; Web centralizes that version in `lib/data/history.ts`, disables restoring unsupported snapshots, and explains the incompatibility while preserving their comparison view.
   `normalize_entry_history_snapshot` defines comparable history content for newly archived state and both stored and live snapshots returned by the history read RPC.
   Relationship and specialized-detail rows exclude bookkeeping timestamps; attachment rows also exclude their soft-delete bookkeeping.
   Stable identities, domain facts, array order, and authored metadata remain intact for comparison and restoration, and reading old versions never rewrites them.

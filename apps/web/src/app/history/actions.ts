@@ -1,8 +1,11 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedContext, entryFromRow } from "@/lib/data/inbox";
-import { validHistoryID } from "@/lib/data/history";
-import { validHistoryRestore } from "@/lib/data/history";
+import {
+  validHistoryID,
+  validHistoryRestore,
+  UNSUPPORTED_HISTORY_RESTORE_MESSAGE,
+} from "@/lib/data/history";
 import {
   parseGoalExtractionInput,
   type GoalExtractionInput,
@@ -79,6 +82,8 @@ export async function restoreHistoryVersion(
     p_version: version,
     p_expected_revision: revision,
   });
+  if (error?.message === "history_schema_unsupported")
+    return UNSUPPORTED_HISTORY_RESTORE_MESSAGE;
   if (error?.message === "history_reference_unavailable")
     return "A linked item is missing or in Trash. Restore it first; no part of this Entry was changed.";
   if (error?.message === "history_attachment_unavailable")

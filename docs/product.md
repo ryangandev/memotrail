@@ -103,6 +103,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - Reusable People are canonical Entity Wiki Items with typed detail records and may link to many other Wiki Items.
 - Important content, organization, relationship, specialized-field, and photo-membership changes remain recoverable through version history.
 - Restoring history creates a new revision and does not erase later history.
+- Historical versions with an unsupported format remain viewable, with an explanation that they cannot be restored.
 
 ## Retrieval and AI
 

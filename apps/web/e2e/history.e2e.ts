@@ -284,6 +284,173 @@ const focusedHistoryTest = test.extend<{
   },
 });
 
+for (const schema of [3, 2, undefined]) {
+  focusedHistoryTest(
+    `Home history handles ${schema === undefined ? "missing" : `schema ${schema}`} history format before restoration`,
+    async ({ page, historyFixture }) => {
+      const { client, admin } = historyFixture;
+      const saved = await client.rpc("save_home_entry_with_occurrence", {
+        p_entry_id: null,
+        p_expected_revision: null,
+        p_title: "Original home name",
+        p_body: "My first home.",
+        p_occurred_start: null,
+        p_occurred_end: null,
+        p_date_precision: "unknown",
+        p_occurred_label: null,
+        p_occurred_timezone: "UTC",
+        p_collection_names: [],
+        p_tag_names: [],
+        p_place_id: null,
+        p_place_name: null,
+        p_address: null,
+        p_city: null,
+        p_region: null,
+        p_country: null,
+        p_latitude: null,
+        p_longitude: null,
+        p_place_notes: null,
+        p_move_in_reason: null,
+        p_move_out_reason: null,
+      });
+      expect(saved.error).toBeNull();
+      const entryID = saved.data![0].entry_id as string;
+      const errors: string[] = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      await page.goto(`/homes/${entryID}`);
+      await page.getByRole("button", { name: "Edit Home" }).click();
+      await page
+        .getByRole("textbox", { name: "Home name", exact: true })
+        .fill("Renamed home");
+      await page
+        .getByRole("button", { name: "Save changes", exact: true })
+        .click();
+      await expect(
+        page.getByRole("button", { name: "Edit Home" }),
+      ).toBeVisible();
+      const version = await admin
+        .from("entry_versions")
+        .select("snapshot")
+        .eq("entry_id", entryID)
+        .eq("version", 1)
+        .single();
+      expect(version.error).toBeNull();
+      expect(version.data!.snapshot.history_schema).toBe(3);
+      if (schema !== 3) {
+        // Keep a supported newer version alongside the stored legacy version.
+        expect(
+          (
+            await client
+              .from("entries")
+              .update({ title: "Current home name" })
+              .eq("id", entryID)
+          ).error,
+        ).toBeNull();
+        const snapshot = version.data!.snapshot;
+        if (schema === undefined) delete snapshot.history_schema;
+        else snapshot.history_schema = schema;
+        expect(
+          (
+            await admin
+              .from("entry_versions")
+              .update({ snapshot })
+              .eq("entry_id", entryID)
+              .eq("version", 1)
+          ).error,
+        ).toBeNull();
+        const rejected = await client.rpc("restore_entry_version", {
+          p_entry_id: entryID,
+          p_version: 1,
+          p_expected_revision: 3,
+        });
+        expect(rejected.error?.message).toBe("history_schema_unsupported");
+      }
+      await page.goto(`/history?entry=${entryID}`);
+      const restore = page.getByRole("button", {
+        name: "Restore selected version",
+        exact: true,
+      });
+      const unavailable = page.getByText(
+        "This version uses an unsupported history format. You can review its recorded content, but it cannot be restored.",
+        { exact: true },
+      );
+      if (schema !== 3) {
+        await expect(restore).toBeEnabled();
+        await expect(unavailable).not.toBeVisible();
+        await page
+          .getByRole("combobox", { name: "Earlier version" })
+          .selectOption("1");
+        await expect(restore).toBeDisabled();
+        await expect(unavailable).toBeVisible();
+        await expect(restore).toHaveAccessibleDescription(
+          await unavailable.innerText(),
+        );
+        await expect(page.getByRole("dialog")).not.toBeVisible();
+        await expect(page.locator('p[role="alert"]')).not.toBeVisible();
+        await expect(
+          page.getByText(
+            "This early snapshot has incomplete relationship history.",
+            { exact: false },
+          ),
+        ).not.toBeVisible();
+        await page.screenshot({
+          path: `/private/tmp/history-schema-${schema ?? "missing"}-after.png`,
+          fullPage: true,
+          caret: "initial",
+        });
+        await expect(
+          page.getByRole("region", { name: "Earlier version", exact: true }),
+        ).toContainText("Original home name");
+        await page
+          .getByRole("combobox", { name: "Earlier version" })
+          .selectOption("2");
+        await expect(restore).toBeEnabled();
+        await expect(unavailable).not.toBeVisible();
+        const current = await client
+          .from("entries")
+          .select("title,revision")
+          .eq("id", entryID)
+          .single();
+        expect(current.data).toEqual({
+          title: "Current home name",
+          revision: 3,
+        });
+      } else {
+        await expect(restore).toBeEnabled();
+        await page.screenshot({
+          path: "/private/tmp/history-schema-3-after.png",
+          fullPage: true,
+          caret: "initial",
+        });
+        await expect(
+          page.getByText(
+            "This early snapshot has incomplete relationship history.",
+            { exact: false },
+          ),
+        ).not.toBeVisible();
+        await expect(unavailable).not.toBeVisible();
+        await restore.click();
+        await page
+          .getByRole("button", { name: "Restore version", exact: true })
+          .click();
+        await expect(
+          page.getByRole("region", { name: "Current version", exact: true }),
+        ).toContainText("Current · version 3");
+        const current = await client
+          .from("entries")
+          .select("title,revision")
+          .eq("id", entryID)
+          .single();
+        expect(current.data).toEqual({
+          title: "Original home name",
+          revision: 3,
+        });
+      }
+      expect(errors).toEqual([]);
+    },
+  );
+}
+
 const focusedCases = [
   {
     kind: "Home",

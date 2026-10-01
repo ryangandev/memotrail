@@ -1,5 +1,10 @@
 import type { WikiItemKind } from "./wiki-item";
 
+// Matches the snapshot contract accepted by restore_entry_version.
+export const SUPPORTED_HISTORY_SCHEMA = 3;
+export const UNSUPPORTED_HISTORY_RESTORE_MESSAGE =
+  "This version uses an unsupported history format. You can review its recorded content, but it cannot be restored.";
+
 export type HistoryIndexEntry = {
   entry_id: string;
   title: string | null;
@@ -40,6 +45,12 @@ export type EntryHistory = {
   versions: HistoryVersion[];
   total_count: number;
 };
+export function canRestoreHistorySnapshot(
+  snapshot: HistorySnapshot | undefined,
+) {
+  return snapshot?.history_schema === SUPPORTED_HISTORY_SCHEMA;
+}
+
 export const historyFields: Record<string, string> = {
   title: "Title",
   body: "Writing",

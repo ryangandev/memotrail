@@ -1,6 +1,6 @@
 # MemoTrail Status
 
-Last reviewed: 2026-09-30.
+Last reviewed: 2026-10-01.
 
 ## Current state
 
@@ -26,6 +26,8 @@ The native MapKit screen and Debug Design System gallery are implemented; person
 The Home and Vehicle history comparison fix is verified on local Supabase, including old snapshots, unchanged relationship timestamps, and restoration.
 Migration `202610010001` is local only and has not been applied to the hosted project.
 The shared server contract fixes comparison for both clients; native history compatibility was inspected without changing iOS files.
+Web history now recognizes schema 3 snapshots as restorable and keeps unsupported snapshots viewable with a clear explanation and a disabled Restore action.
+The matching native schema check remains pending until the in-flight iOS PR lands.
 The merged Web release still needs Production deployment verification and browser acceptance; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 
 Use Git history for feature-level implementation and test evidence.
@@ -57,9 +59,10 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - Verify the merged `main` deployment against the migrated hosted project, then check Quick Capture, Inbox review, Library routing, First Time, Moment, Period, Home, Vehicle, and Goal in a browser.
 - The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
 - Native compatibility is updated separately; complete personal native acceptance before treating it as a release.
-- The shared history fix passes 452 Web unit tests, all 90 active browser E2E scenarios, and 61 database files with 1,567 assertions on local Supabase.
+- The Web history schema fix passes 462 unit tests and nine local history browser scenarios in both development and production mode, covering supported restoration, legacy rejection, and version selection.
+  Lint, type checking, formatting, and the production build also pass.
+- The broader comparison-fix baseline passed all 90 active Web browser E2E scenarios and 61 database files with 1,567 assertions on local Supabase.
   Four active-AI scenarios remain explicitly skipped while AI is paused.
-  Lint, type checking, formatting, the production build, and seven production-mode history/navigation scenarios also pass.
 - A seeded pre-migration local exercise converted Journal, Story, and Trip to tags; Timeline point and span to Moment and Period; and preserved Inbox state and revision numbers.
 
 ### 2. Accept Web Location
@@ -76,6 +79,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 ### 3. Accept native foundations, Map, and navigation
 
+- After the in-flight iOS PR lands, align `Features/History/EntryHistoryView.swift` with the server's schema 3 restore contract and replace its obsolete schema 2 warning check.
+  This Web fix does not change `apps/ios`.
 - Native models, filters, Capture, and ordinary Inbox review now use the shared canonical identities; focused forms retain their existing RPCs.
 - Home Location IDs and labels decode as optional, and editing address facts clears stale coordinates.
 - Supabase public configuration matches Web locally. Media, metadata, and export use the Web API base URL; Geoapify, AI, and Supabase secret keys remain on the server.
