@@ -5,6 +5,7 @@ import {
   historyPage,
   historyTitle,
   validHistoryRestore,
+  canRestoreHistorySnapshot,
   type HistorySnapshot,
 } from "./history";
 const snapshot = {
@@ -23,6 +24,25 @@ const snapshot = {
   occurred_timezone: "UTC",
 } satisfies HistorySnapshot;
 describe("Entry history", () => {
+  it("allows the canonical schema 3 snapshot to be restored", () => {
+    expect(canRestoreHistorySnapshot({ ...snapshot, history_schema: 3 })).toBe(
+      true,
+    );
+  });
+  it.each([undefined, null, 0, 1, 2, 4, "3"])(
+    "blocks unsupported or missing history schema %s",
+    (history_schema) => {
+      expect(
+        canRestoreHistorySnapshot({
+          ...snapshot,
+          history_schema,
+        } as HistorySnapshot),
+      ).toBe(false);
+    },
+  );
+  it("does not allow restoration without a selected snapshot", () => {
+    expect(canRestoreHistorySnapshot(undefined)).toBe(false);
+  });
   it("formats only known date precision in the original timezone", () => {
     expect(
       historyDateLabel({

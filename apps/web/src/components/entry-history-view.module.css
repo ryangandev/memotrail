@@ -137,6 +137,13 @@
   background: var(--mt-color-accent-subtle);
   border-radius: var(--mt-radius-medium);
 }
+.cautionNotice {
+  /* The border sits inside .notice spacing so both notices align. */
+  padding: calc(var(--mt-space-5) - 1px);
+  border: 1px solid color-mix(in srgb, var(--mt-color-warning) 35%, transparent);
+  border-radius: var(--mt-radius-medium);
+  background: var(--mt-color-warm-subtle);
+}
 .controls {
   display: flex;
   align-items: end;

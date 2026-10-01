@@ -29,6 +29,8 @@ import {
   historyTitle,
   historyDifferences,
   historyDateLabel,
+  canRestoreHistorySnapshot,
+  UNSUPPORTED_HISTORY_RESTORE_MESSAGE,
   type EntryHistory,
   type HistorySnapshot,
 } from "@/lib/data/history";
@@ -70,8 +72,9 @@ export function EntryHistoryView({
   }
   const selected =
     history.versions.find((v) => v.version === version) ?? history.versions[0];
+  const canRestoreSelected = canRestoreHistorySnapshot(selected?.snapshot);
   async function restore() {
-    if (!selected) return;
+    if (!selected || !canRestoreSelected || busy) return;
     const confirmed = await requestConfirmation({
       title: <>Restore version {selected.version}?</>,
       description: (
@@ -273,7 +276,12 @@ export function EntryHistoryView({
           <Button
             variant="secondary"
             type="submit"
-            disabled={busy || !selected || Boolean(history.current.deleted_at)}
+            disabled={
+              busy || !canRestoreSelected || Boolean(history.current.deleted_at)
+            }
+            aria-describedby={
+              canRestoreSelected ? undefined : "history-restore-unavailable"
+            }
             onClick={restore}
           >
             {busy ? "Restoring…" : "Restore selected version"}
@@ -294,15 +302,32 @@ export function EntryHistoryView({
             {historyDifferences(history.current, selected.snapshot).join(
               ", ",
             ) || "No recorded content changes"}
-            . Your current version {history.current.revision} will stay in
-            history.
+            .
+            {canRestoreSelected && (
+              <>
+                {" "}
+                Your current version {history.current.revision} will stay in
+                history.
+              </>
+            )}
           </p>
-          <p className={styles.note}>
-            People, Collection, and track definitions stay current. Historical
-            Location links return to their original snapshots. Photo files are
-            not deleted. Missing historical links or originals stop the restore
-            safely.
-          </p>
+          {!canRestoreSelected && (
+            <p
+              id="history-restore-unavailable"
+              role="status"
+              className={styles.cautionNotice}
+            >
+              {UNSUPPORTED_HISTORY_RESTORE_MESSAGE}
+            </p>
+          )}
+          {canRestoreSelected && (
+            <p className={styles.note}>
+              People, Collection, and track definitions stay current. Historical
+              Location links return to their original snapshots. Photo files are
+              not deleted. Missing historical links or originals stop the
+              restore safely.
+            </p>
+          )}
           <div className={styles.comparison}>
             <section aria-label="Earlier version">
               <h3>Version {selected.version}</h3>
