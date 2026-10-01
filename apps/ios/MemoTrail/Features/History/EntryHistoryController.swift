@@ -20,6 +20,8 @@ final class EntryHistoryController {
   let entryID: UUID
   private let client: SupabaseClient
   private let ownerID: UUID
+  /// Only the newest load applies its result, so a slower earlier response cannot replace it.
+  private var loadGeneration = UUID()
 
   init(client: SupabaseClient, ownerID: UUID, entryID: UUID) {
     self.client = client
@@ -30,28 +32,35 @@ final class EntryHistoryController {
   var hasOlderVersions: Bool { (record?.totalCount ?? 0) > (page + 1) * Self.pageSize }
 
   func load(page requestedPage: Int = 0) async {
-    guard !isLoading else { return }
+    let generation = UUID()
+    loadGeneration = generation
     isLoading = true
     defer {
-      isLoading = false
-      hasLoaded = true
+      if loadGeneration == generation {
+        isLoading = false
+        hasLoaded = true
+      }
     }
     // Like Web, one quick retry covers a request that raced a fresh sign-in.
     for attempt in 0..<2 {
       do {
         try await validateSessionOwner()
-        record = try await client.rpc(
+        let loaded: EntryHistoryRecord? = try await client.rpc(
           "entry_history",
           params: HistoryReadRequest(
             entryID: entryID, limit: Self.pageSize, offset: requestedPage * Self.pageSize)
         ).execute().value
+        guard loadGeneration == generation else { return }
+        record = loaded
         page = requestedPage
         loadFailed = false
         return
       } catch {
+        guard loadGeneration == generation else { return }
         if attempt == 0 { try? await Task.sleep(for: .milliseconds(50)) }
       }
     }
+    guard loadGeneration == generation else { return }
     loadFailed = true
   }
 
@@ -172,9 +181,9 @@ final class EntryHistoryController {
     }
   }
 
-  /// Reloads the first page, like Web `router.refresh()` after a change.
+  /// Reloads the first page, like Web `router.refresh()` after a change. It replaces any load
+  /// still running, so the result reflects the change.
   func reload() async {
-    isLoading = false
     await load(page: 0)
   }
 

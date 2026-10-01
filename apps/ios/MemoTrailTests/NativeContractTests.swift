@@ -39,7 +39,7 @@ final class NativeContractTests: XCTestCase {
     let ownerID: UUID
   }
 
-  private func client() async throws -> (SupabaseClient, UUID) {
+  private func client(session: URLSession = .shared) async throws -> (SupabaseClient, UUID) {
     let path = ProcessInfo.processInfo.environment["MEMOTRAIL_NATIVE_CONTRACT_CONFIG"] ?? ""
     guard !path.isEmpty, !path.contains("$(") else {
       throw XCTSkip("Run apps/ios/scripts/verify-local-contracts.py with the local Supabase stack.")
@@ -53,7 +53,8 @@ final class NativeContractTests: XCTestCase {
       options: .init(
         auth: .init(
           storage: SessionStorage(), storageKey: "native-contract-\(config.ownerID)",
-          autoRefreshToken: false, emitLocalSessionAsInitialSession: true)))
+          autoRefreshToken: false, emitLocalSessionAsInitialSession: true),
+        global: .init(session: session)))
     let session = try await client.auth.setSession(
       accessToken: config.accessToken, refreshToken: config.refreshToken)
     XCTAssertEqual(session.user.id, config.ownerID)
@@ -600,6 +601,158 @@ final class NativeContractTests: XCTestCase {
     XCTAssertEqual(item.record?.isDeleted, true)
   }
 
+  func testItemHistoryKeepsARestoreWhenAnEarlierRefreshReturnsLast() async throws {
+    let (client, ownerID) = try await client(session: HeldResponseProtocol.session)
+    let sourceID = try await reviewedEntry(
+      "Native refresh source", client: client, ownerID: ownerID)
+    let targetID = try await reviewedEntry(
+      "Native refresh target", client: client, ownerID: ownerID)
+    let item = EntryHistoryController(client: client, ownerID: ownerID, entryID: sourceID)
+    await item.load()
+    let loaded = try XCTUnwrap(item.record)
+    let linked: Int? = try await client.rpc(
+      "set_entry_relation",
+      params: EntryRelationChange(
+        entryID: sourceID, targetID: targetID, expectedRevision: loaded.revision, linked: true)
+    ).execute().value
+    XCTAssertEqual(linked, loaded.revision + 1)
+    await item.reload()
+    let withLink = try XCTUnwrap(item.record)
+    XCTAssertEqual(withLink.current["links"]?.array?.count, 1)
+    let beforeLink = try XCTUnwrap(withLink.versions.first)
+
+    // Pull to refresh reads the linked revision, but its response arrives last.
+    HeldResponseProtocol.gate.holdNextResponse(toRPC: "entry_history")
+    defer { HeldResponseProtocol.gate.releaseHeldResponse() }
+    let refresh = Task { await item.load(page: item.page) }
+    try await waitForHeldResponse()
+
+    // The restore reloads first, and the slower refresh must not bring the link back.
+    let restored = await item.restore(version: beforeLink.version)
+    XCTAssertNil(restored)
+    XCTAssertEqual(item.record?.current["links"]?.array?.count, 0)
+    HeldResponseProtocol.gate.releaseHeldResponse()
+    await refresh.value
+    XCTAssertEqual(item.record?.current["links"]?.array?.count, 0)
+    XCTAssertGreaterThan(item.record?.revision ?? 0, withLink.revision)
+    XCTAssertFalse(item.isLoading)
+    XCTAssertFalse(item.loadFailed)
+  }
+
+  func testTimelineKeepsASavedMomentWhenAnEarlierRefreshReturnsLast() async throws {
+    let (client, ownerID) = try await client(session: HeldResponseProtocol.session)
+    let timeline = TimelineController(client: client, ownerID: ownerID)
+    await timeline.load()
+    XCTAssertNil(timeline.loadErrorMessage)
+    let track = try XCTUnwrap(timeline.tracks.first { $0.systemKey == "other_events" })
+
+    // Pull to refresh reads the Timeline before the save, but its response arrives last.
+    HeldResponseProtocol.gate.holdNextResponse(toRPC: "timeline_workspace_with_organization")
+    defer { HeldResponseProtocol.gate.releaseHeldResponse() }
+    let refresh = Task { await timeline.load() }
+    try await waitForHeldResponse()
+
+    let title = "Native refresh moment \(UUID().uuidString)"
+    let start = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-02-01T12:00:00Z"))
+    let created = await timeline.save(
+      entry: nil, trackID: track.id, kind: .event, title: title, body: "Synthetic Timeline record.",
+      occurrence: EntryOccurrence(
+        precision: .day, start: start, end: nil, label: nil, timezone: "UTC"),
+      collectionNames: [], tagNames: [])
+    XCTAssertEqual(created, .init(message: "Moment created.", status: .created))
+    XCTAssertTrue(timeline.entries.contains { $0.title == title })
+    HeldResponseProtocol.gate.releaseHeldResponse()
+    await refresh.value
+    XCTAssertTrue(timeline.entries.contains { $0.title == title })
+    XCTAssertFalse(timeline.isLoading)
+    XCTAssertNil(timeline.loadErrorMessage)
+  }
+
+  func testPeopleListIncludesAPersonSavedWhileTheFirstLoadRuns() async throws {
+    let (client, ownerID) = try await client(session: HeldResponseProtocol.session)
+    let people = PeopleController(client: client, ownerID: ownerID)
+
+    // The first load reads People before the save, but its response arrives last.
+    HeldResponseProtocol.gate.holdNextResponse(toRPC: "people_workspace")
+    defer { HeldResponseProtocol.gate.releaseHeldResponse() }
+    let firstLoad = Task { await people.load() }
+    try await waitForHeldResponse()
+
+    let created = await people.save(
+      PersonSaveInput(
+        personID: nil, expectedRevision: nil, name: "Native Refresh Friend",
+        relationshipLabel: "", notes: "", relatedEntryIDs: []))
+    XCTAssertEqual(created.status, .created, created.message)
+    let personID = try XCTUnwrap(created.personID)
+    XCTAssertTrue(people.people.contains { $0.id == personID })
+    HeldResponseProtocol.gate.releaseHeldResponse()
+    await firstLoad.value
+    XCTAssertTrue(people.people.contains { $0.id == personID })
+    XCTAssertTrue(people.hasLoaded)
+    XCTAssertFalse(people.isLoading)
+    XCTAssertNil(people.loadErrorMessage)
+  }
+
+  func testTrashKeepsARestoreWhenAnEarlierRefreshReturnsLast() async throws {
+    let (client, ownerID) = try await client(session: HeldResponseProtocol.session)
+    let entryID = try await reviewedEntry("Native refresh Trash", client: client, ownerID: ownerID)
+    let item = EntryHistoryController(client: client, ownerID: ownerID, entryID: entryID)
+    await item.load()
+    let movedToTrash = await item.moveToTrash()
+    XCTAssertNil(movedToTrash)
+    let trash = TrashController(client: client, ownerID: ownerID)
+    await trash.load()
+    let trashed = try XCTUnwrap(trash.items.first { $0.itemID == entryID })
+
+    // Pull to refresh reads Trash before the restore, but its response arrives last.
+    HeldResponseProtocol.gate.holdNextResponse(toRPC: "trash_workspace")
+    defer { HeldResponseProtocol.gate.releaseHeldResponse() }
+    let refresh = Task { await trash.load() }
+    try await waitForHeldResponse()
+
+    let restored = await trash.restore(trashed)
+    XCTAssertEqual(restored, .init(message: "Item restored.", tone: .success))
+    XCTAssertFalse(trash.items.contains { $0.itemID == entryID })
+    HeldResponseProtocol.gate.releaseHeldResponse()
+    await refresh.value
+    XCTAssertFalse(trash.items.contains { $0.itemID == entryID })
+    XCTAssertFalse(trash.isLoading)
+    XCTAssertNil(trash.loadErrorMessage)
+  }
+
+  /// A synthetic capture saved to the Library through Inbox review.
+  private func reviewedEntry(
+    _ body: String, client: SupabaseClient, ownerID: UUID
+  ) async throws -> UUID {
+    let id = UUID()
+    try await client.from("entries").insert(
+      InboxEntryInsert(
+        id: id, ownerID: ownerID, title: nil, body: body, occurredStart: nil,
+        occurredTimezone: "UTC", datePrecision: "unknown", clientID: "native-contract:\(id)")
+    ).execute()
+    let inbox = InboxController(client: client, ownerID: ownerID)
+    await inbox.load()
+    let capture = try XCTUnwrap(inbox.entries.first { $0.id == id })
+    let saved = await inbox.review(
+      entry: capture,
+      draft: EntryReviewDraft(
+        title: "", body: body, bodyRich: nil, collectionNames: [], tagNames: [],
+        occurrence: capture.occurrence),
+      intent: .done)
+    XCTAssertEqual(saved.status, .done, saved.message)
+    return id
+  }
+
+  /// Waits until the server has answered the held call, so it read the data before what follows.
+  private func waitForHeldResponse() async throws {
+    for _ in 0..<1_000 {
+      if HeldResponseProtocol.gate.hasHeldResponse { return }
+      try await Task.sleep(for: .milliseconds(10))
+    }
+    XCTFail("The held response never arrived.")
+    throw URLError(.timedOut)
+  }
+
   func testFocusedRecordsDecodeInLibraryCollectionsAndHome() async throws {
     let (client, ownerID) = try await client()
     let collectionName = "Native focused \(UUID().uuidString)"
@@ -720,5 +873,117 @@ private struct SyntheticFirstTimeLocation: Encodable {
         "city": "San Francisco", "region": "CA", "country": "United States",
         "countryCode": "us", "latitude": .double(37.7955), "longitude": .double(-122.3937),
       ] as [String: AnyJSON], forKey: .location)
+  }
+}
+
+/// Passes each request through to the local stack, but can hold the response to one RPC call
+/// until the test releases it, so an earlier load can return after a later one.
+private final class HeldResponseProtocol: URLProtocol {
+  static let gate = ResponseGate()
+  /// A session whose requests pass through this protocol.
+  static let session: URLSession = {
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.protocolClasses = [HeldResponseProtocol.self]
+    return URLSession(configuration: configuration)
+  }()
+  private static let upstream = URLSession(configuration: .ephemeral)
+  private var upstreamTask: URLSessionDataTask?
+
+  override class func canInit(with request: URLRequest) -> Bool { true }
+  override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+
+  override func startLoading() {
+    var forwarded = request
+    // URLSession hands a protocol the request body as a stream.
+    if forwarded.httpBody == nil, let stream = forwarded.httpBodyStream {
+      forwarded.httpBodyStream = nil
+      forwarded.httpBody = stream.readAll()
+    }
+    let isHeld = Self.gate.claims(forwarded)
+    let reference = LoaderReference(loader: self)
+    upstreamTask = Self.upstream.dataTask(with: forwarded) { data, response, error in
+      let deliver: @Sendable () -> Void = {
+        let loader = reference.loader
+        if let response {
+          loader.client?.urlProtocol(loader, didReceive: response, cacheStoragePolicy: .notAllowed)
+        }
+        if let data { loader.client?.urlProtocol(loader, didLoad: data) }
+        if let error {
+          loader.client?.urlProtocol(loader, didFailWithError: error)
+        } else {
+          loader.client?.urlProtocolDidFinishLoading(loader)
+        }
+      }
+      if isHeld {
+        HeldResponseProtocol.gate.hold(deliver)
+      } else {
+        DispatchQueue.global().async(execute: deliver)
+      }
+    }
+    upstreamTask?.resume()
+  }
+
+  override func stopLoading() { upstreamTask?.cancel() }
+}
+
+/// URLSession calls back on its own queue; this carries the loading protocol into those calls.
+private struct LoaderReference: @unchecked Sendable {
+  let loader: HeldResponseProtocol
+}
+
+/// The RPC whose next response waits, and that response once the server has answered.
+private final class ResponseGate: @unchecked Sendable {
+  private let lock = NSLock()
+  private var rpc: String?
+  private var heldDelivery: (@Sendable () -> Void)?
+
+  /// Holds the response to the next call of `rpc`, once the server has answered it.
+  func holdNextResponse(toRPC rpc: String) {
+    lock.withLock {
+      self.rpc = rpc
+      heldDelivery = nil
+    }
+  }
+
+  /// Whether the held call has been answered, so it read the data before anything that follows.
+  var hasHeldResponse: Bool { lock.withLock { heldDelivery != nil } }
+
+  /// Delivers the held response, and stops holding a call that has not started yet.
+  func releaseHeldResponse() {
+    let delivery = lock.withLock {
+      defer {
+        rpc = nil
+        heldDelivery = nil
+      }
+      return heldDelivery
+    }
+    if let delivery { DispatchQueue.global().async(execute: delivery) }
+  }
+
+  fileprivate func claims(_ request: URLRequest) -> Bool {
+    lock.withLock {
+      guard let rpc, request.url?.path.hasSuffix("/rpc/\(rpc)") == true else { return false }
+      self.rpc = nil
+      return true
+    }
+  }
+
+  fileprivate func hold(_ delivery: @escaping @Sendable () -> Void) {
+    lock.withLock { heldDelivery = delivery }
+  }
+}
+
+extension InputStream {
+  fileprivate func readAll() -> Data {
+    open()
+    defer { close() }
+    var data = Data()
+    var buffer = [UInt8](repeating: 0, count: 16_384)
+    while hasBytesAvailable {
+      let count = read(&buffer, maxLength: buffer.count)
+      guard count > 0 else { break }
+      data.append(buffer, count: count)
+    }
+    return data
   }
 }

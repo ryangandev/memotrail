@@ -17,6 +17,8 @@ final class TimelineController {
 
   private let client: SupabaseClient
   private let ownerID: UUID
+  /// Only the newest load applies its result, so a slower earlier response cannot replace it.
+  private var loadGeneration = UUID()
 
   init(client: SupabaseClient, ownerID: UUID) {
     self.client = client
@@ -26,12 +28,14 @@ final class TimelineController {
   var entries: [TimelineEntry] { tracks.flatMap(\.entries) }
 
   func load() async {
-    guard !isLoading else { return }
-
+    let generation = UUID()
+    loadGeneration = generation
     isLoading = true
     defer {
-      isLoading = false
-      hasLoaded = true
+      if loadGeneration == generation {
+        isLoading = false
+        hasLoaded = true
+      }
     }
 
     do {
@@ -43,13 +47,16 @@ final class TimelineController {
       let rows = try await rowsRequest
       // Like Web, optional First Times and suggestions never block the Timeline itself.
       let firstTimes = (try? await firstTimesRequest) ?? []
-      collectionOptions = (try? await collectionsRequest) ?? collectionOptions
-      tagOptions = (try? await tagsRequest) ?? tagOptions
+      let collections = try? await collectionsRequest
+      let tags = try? await tagsRequest
+      guard loadGeneration == generation else { return }
+      collectionOptions = collections ?? collectionOptions
+      tagOptions = tags ?? tagOptions
       tracks = TimelineWorkspace.includingUnplacedFirstTimes(
         TimelineWorkspace.tracks(from: rows), firstTimes: firstTimes)
       loadErrorMessage = nil
     } catch {
-      guard !(error is CancellationError) else { return }
+      guard loadGeneration == generation, !(error is CancellationError) else { return }
       loadErrorMessage = "MemoTrail could not load your Timeline. Pull to refresh or try again."
     }
   }
@@ -166,8 +173,8 @@ final class TimelineController {
     }
   }
 
+  /// Replaces any load still running, so the Timeline reflects the change.
   func reloadAfterMutation() async {
-    isLoading = false
     await load()
   }
 

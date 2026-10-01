@@ -22,6 +22,9 @@ final class TrashController {
 
   private let client: SupabaseClient
   private let ownerID: UUID
+  /// Only the newest load applies its result, so a slower earlier response cannot replace it.
+  /// A further page applies only to the list it extends.
+  private var loadGeneration = UUID()
 
   init(client: SupabaseClient, ownerID: UUID) {
     self.client = client
@@ -185,7 +188,7 @@ final class TrashController {
   }
 
   private func fetch(appending: Bool) async {
-    guard !isLoading else { return }
+    guard !appending || !isLoading else { return }
 
     let request: TrashPageRequest
     do {
@@ -195,11 +198,15 @@ final class TrashController {
       return
     }
 
+    let generation = appending ? loadGeneration : UUID()
+    loadGeneration = generation
     isLoading = true
     loadErrorMessage = nil
     defer {
-      isLoading = false
-      hasLoaded = true
+      if loadGeneration == generation {
+        isLoading = false
+        hasLoaded = true
+      }
     }
 
     do {
@@ -218,6 +225,7 @@ final class TrashController {
         }
       }
 
+      guard loadGeneration == generation else { return }
       if appending {
         let knownIDs = Set(items.map(\.id))
         items.append(contentsOf: rows.filter { !knownIDs.contains($0.id) })
@@ -226,6 +234,7 @@ final class TrashController {
       }
       totalCount = rows.first?.totalCount ?? (appending ? totalCount : 0)
     } catch {
+      guard loadGeneration == generation else { return }
       loadErrorMessage = "MemoTrail could not load Trash. Pull to refresh or try again."
       if !appending {
         items = []
@@ -234,8 +243,8 @@ final class TrashController {
     }
   }
 
+  /// Replaces any load still running, so Trash reflects the change.
   private func reloadAfterMutation() async {
-    isLoading = false
     await load()
   }
 
