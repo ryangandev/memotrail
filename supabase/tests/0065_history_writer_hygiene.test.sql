@@ -1,0 +1,120 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select no_plan();
+
+create function pg_temp.provider(p_name text default '10 Maple Street') returns jsonb language sql as $$
+  select jsonb_build_object('kind','provider','provider','geoapify',
+    'providerLocationId',p_name,'name',p_name,'formattedAddress',p_name,
+    'address',p_name,'city','Philadelphia','country','United States',
+    'latitude',39.95,'longitude',-75.16);
+$$;
+create temporary table writers(kind text primary key, id uuid);
+grant all on writers to authenticated;
+
+create function pg_temp.save_primary(p_kind text, p_id uuid, p_location jsonb) returns uuid language plpgsql as $$
+declare
+  result uuid;
+  input jsonb := jsonb_build_object('title','History ' || p_kind,'body','Memories',
+    'datePrecision','unknown','collectionNames','[]'::jsonb,'tagNames','[]'::jsonb,
+    'id',p_id,'revision',(select revision from public.entries where id = p_id));
+begin
+  if p_kind = 'first_time' then
+    select entry_id into result from public.save_first_time_with_location(input, p_location);
+  elsif p_kind = 'vehicle' then
+    select entry_id into result from public.save_vehicle_with_location(input, null, p_location);
+  else
+    select entry_id into result from public.review_wiki_item_with_location_rich(
+      p_id,(select revision from public.entries where id = p_id),'History entry','Memories',
+      'entry','entry',null,'UTC','{}','{}',false,null,null,'unknown',null,p_location,null);
+  end if;
+  return result;
+end;
+$$;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
+insert into writers values
+  ('first_time', pg_temp.save_primary('first_time',null,pg_temp.provider())),
+  ('vehicle', pg_temp.save_primary('vehicle',null,pg_temp.provider()));
+insert into public.entries(owner_id,title) values(auth.uid(),'History Entry') returning id \gset entry_
+insert into writers values('entry',pg_temp.save_primary('entry',:'entry_id',pg_temp.provider()));
+reset role;
+update public.entry_places set created_at = '2000-01-01' where entry_id in (select id from writers);
+set local role authenticated;
+select is(pg_temp.save_primary(kind,id,(
+  select jsonb_build_object('kind','existing','id',location.id,'revision',location.revision)
+  from public.entry_places as link join public.locations as location on location.id = link.place_id
+  where link.entry_id = writers.id and link.relationship = 'primary'
+)),id,'Saving the same ' || kind || ' Location succeeds') from writers;
+select is((select created_at from public.entry_places where entry_id = writers.id and relationship = 'primary'),
+  '2000-01-01'::timestamptz,kind || ' retains unchanged primary Location membership') from writers;
+select is(pg_temp.save_primary(kind,id,pg_temp.provider('20 Maple Street')),id,'Changing the ' || kind || ' Location succeeds') from writers;
+select is((select count(*) from public.entry_places where entry_id = writers.id and relationship = 'primary'),
+  1::bigint,kind || ' replaces the primary relationship rather than retaining both') from writers;
+select is((select name from public.locations where id = (select place_id from public.entry_places where entry_id = writers.id and relationship = 'primary')),
+  '20 Maple Street',kind || ' points at the changed Location') from writers;
+select is(pg_temp.save_primary(kind,id,null),id,'Removing the ' || kind || ' Location succeeds') from writers;
+select is((select count(*) from public.entry_places where entry_id = writers.id and relationship = 'primary'),
+  0::bigint,kind || ' removes only the active primary relationship') from writers;
+
+-- Goal links preserve unchanged rows but still remove explicitly omitted links.
+insert into writers
+select 'goal', entry_id from public.save_goal_entry('Goal','Memories','long_term','active',null,'{}','{}',
+  array[(select id from writers where kind = 'entry')],null,null);
+reset role;
+update public.entry_links set created_at = '2000-01-01' where source_entry_id = (select id from writers where kind = 'goal');
+alter table public.goals disable trigger goals_set_updated_at;
+update public.goals set updated_at = '2000-01-01' where entry_id = (select id from writers where kind = 'goal');
+alter table public.goals enable trigger goals_set_updated_at;
+set local role authenticated;
+select entry_id from public.save_goal_entry('Renamed Goal','Memories','long_term','active',null,'{}','{}',
+  array[(select id from writers where kind = 'entry')],(select id from writers where kind = 'goal'),1);
+select is((select created_at from public.entry_links where source_entry_id = (select id from writers where kind = 'goal')),
+  '2000-01-01'::timestamptz,'Goal saves retain unchanged Entry links');
+select is((select updated_at from public.goals where entry_id = (select id from writers where kind = 'goal')),
+  '2000-01-01'::timestamptz,'Title-only Goal saves do not update specialized details');
+select entry_id from public.save_goal_entry('Renamed Goal','Memories','long_term','active',null,'{}','{}','{}',
+  (select id from writers where kind = 'goal'),2);
+select is((select count(*) from public.entry_links where source_entry_id = (select id from writers where kind = 'goal')),
+  0::bigint,'Goal saves remove omitted Entry links');
+
+-- People preserve exactly the requested related memberships.
+insert into writers
+select 'person', person_id from public.save_person('Friend','Friend','Notes',array[(select id from writers where kind = 'entry')],null,null);
+reset role;
+update public.entry_people set created_at = '2000-01-01' where person_id = (select id from writers where kind = 'person');
+set local role authenticated;
+select person_id from public.save_person('Renamed Friend','Friend','Notes',array[(select id from writers where kind = 'entry')],
+  (select id from writers where kind = 'person'),1);
+select is((select created_at from public.entry_people where person_id = (select id from writers where kind = 'person')),
+  '2000-01-01'::timestamptz,'Person saves retain unchanged People memberships');
+select person_id from public.save_person('Renamed Friend','Friend','Notes','{}',(select id from writers where kind = 'person'),2);
+select is((select count(*) from public.entry_people where person_id = (select id from writers where kind = 'person')),
+  0::bigint,'Person saves remove omitted memberships');
+
+-- Timeline saves preserve presentation order when only writing changes.
+insert into writers
+select 'timeline', entry_id from public.save_timeline_entry_with_occurrence(
+  (select id from public.timeline_tracks where owner_id = auth.uid() and system_key = 'other_events'),
+  'event','Moment','Memories',null,null,'unknown',null,'UTC',null,null);
+reset role;
+update public.timeline_items set created_at = '2000-01-01', sort_order = 7 where entry_id = (select id from writers where kind = 'timeline');
+set local role authenticated;
+select entry_id from public.save_timeline_entry_with_occurrence(
+  (select id from public.timeline_tracks where owner_id = auth.uid() and system_key = 'other_events'),
+  'event','Renamed Moment','Memories',null,null,'unknown',null,'UTC',(select id from writers where kind = 'timeline'),1);
+select is((select created_at from public.timeline_items where entry_id = (select id from writers where kind = 'timeline')),
+  '2000-01-01'::timestamptz,'Moment saves retain unchanged Timeline created_at');
+select is((select sort_order from public.timeline_items where entry_id = (select id from writers where kind = 'timeline')),
+  7,'Moment saves preserve existing Timeline presentation order');
+select entry_id from public.save_timeline_entry_with_occurrence(
+  (select id from public.timeline_tracks where owner_id = auth.uid() and system_key = 'homes'),
+  'event','Renamed Moment','Memories',null,null,'unknown',null,'UTC',(select id from writers where kind = 'timeline'),2);
+select is((select count(*) from public.timeline_items where entry_id = (select id from writers where kind = 'timeline')),
+  1::bigint,'Changing a Moment track removes the old placement');
+select is((select track_id from public.timeline_items where entry_id = (select id from writers where kind = 'timeline')),
+  (select id from public.timeline_tracks where owner_id = auth.uid() and system_key = 'homes'),
+  'Changing a Moment track selects the requested track');
+reset role;
+select * from finish();
+rollback;

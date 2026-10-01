@@ -59,6 +59,59 @@ describe("Entry history", () => {
       ),
     ).toEqual(["Writing", "Collections"]);
   });
+  it("compares normalized Home and Vehicle content without client filtering", () => {
+    const previous = {
+      ...snapshot,
+      places: [{ place_id: "maple", relationship: "home", name: "Maple" }],
+      timeline_items: [
+        { track_id: "homes", timeline_kind: "stage", sort_order: 7 },
+      ],
+      home: {
+        entry_id: snapshot.id,
+        place_id: "maple",
+        move_in_reason: "Study",
+      },
+      vehicle: { entry_id: snapshot.id, color: "Blue" },
+    };
+    expect(
+      historyDifferences({ ...previous, title: "Renamed" }, previous),
+    ).toEqual(["Title"]);
+    expect(
+      historyDifferences(
+        { ...previous, home: { ...previous.home, move_in_reason: "Work" } },
+        previous,
+      ),
+    ).toEqual(["Home details"]);
+    expect(
+      historyDifferences(
+        { ...previous, vehicle: { ...previous.vehicle, color: "Red" } },
+        previous,
+      ),
+    ).toEqual(["Vehicle details"]);
+    expect(historyDifferences(previous, previous)).toEqual([]);
+  });
+  it.each([
+    ["people", "person_id", "People links"],
+    ["places", "place_id", "Location links"],
+    ["timeline_items", "track_id", "Timeline placement"],
+    ["links", "target_entry_id", "Entry links"],
+    ["attachments", "id", "Photos"],
+  ])("retains real membership differences for %s", (field, identity, label) => {
+    expect(
+      historyDifferences(
+        { ...snapshot, [field]: [{ [identity]: "new" }] },
+        { ...snapshot, [field]: [{ [identity]: "old" }] },
+      ),
+    ).toEqual([label]);
+  });
+  it("preserves authored metadata dates as comparable content", () => {
+    expect(
+      historyDifferences(
+        { ...snapshot, metadata: { created_at: "2026-10-01" } },
+        { ...snapshot, metadata: { created_at: "2026-09-30" } },
+      ),
+    ).toEqual(["Other metadata"]);
+  });
   it("handles body-only and empty titles", () => {
     expect(historyTitle({ title: null, body: "  学习记录 " })).toBe("学习记录");
     expect(historyTitle({ title: null })).toBe("Untitled item");
