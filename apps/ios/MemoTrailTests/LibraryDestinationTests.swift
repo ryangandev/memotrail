@@ -146,6 +146,20 @@ final class LibraryDestinationTests: XCTestCase {
     current["body"] = .string("Changed")
     XCTAssertEqual(HistoryPresentation.differences(current: current, previous: legacy), ["Writing"])
     XCTAssertEqual(HistoryPresentation.title(title: "  ", body: " \n "), "Untitled item")
+    // Only the schema the restore RPC accepts can be restored, as on Web.
+    XCTAssertTrue(HistoryPresentation.canRestore(["history_schema": .number(3)]))
+    for schema: HistoryJSON? in [nil, .null, .number(0), .number(2), .number(4), .string("3")] {
+      var snapshot = legacy
+      snapshot["history_schema"] = schema
+      XCTAssertFalse(HistoryPresentation.canRestore(snapshot), "\(String(describing: schema))")
+    }
+    XCTAssertFalse(HistoryPresentation.canRestore(nil))
+    XCTAssertEqual(
+      HistoryPresentation.restoreFailureMessage("history_schema_unsupported"),
+      HistoryPresentation.unsupportedRestoreMessage)
+    XCTAssertEqual(
+      HistoryPresentation.restoreFailureMessage("unexpected"),
+      "Could not restore this version. Your current Entry is unchanged.")
     XCTAssertEqual(
       HistoryPresentation.date([
         "occurred_start": .string("2021-01-01T15:30:00Z"), "occurred_end": .null,

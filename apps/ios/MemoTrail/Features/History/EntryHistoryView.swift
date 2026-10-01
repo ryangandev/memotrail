@@ -334,7 +334,9 @@ struct EntryHistoryDetailView: View {
           .secondary, isLoading: controller.isWorking,
           fillsWidth: horizontalSizeClass != .regular
         )
-        .disabled(selectedVersion == nil || record.isDeleted)
+        .disabled(!canRestoreSelected(record) || record.isDeleted)
+        .accessibilityHint(
+          canRestoreSelected(record) ? "" : HistoryPresentation.unsupportedRestoreMessage)
         .accessibilityIdentifier("restore-version")
         .confirmationDialog(
           "Restore version \(selectedVersion ?? 0)?", isPresented: $isConfirmingRestore,
@@ -356,17 +358,24 @@ struct EntryHistoryDetailView: View {
   {
     let differences = HistoryPresentation.differences(
       current: record.current, previous: version.snapshot)
+    let canRestore = HistoryPresentation.canRestore(version.snapshot)
     HistoryNotice(
       text:
-        "Differences from current version: \(differences.joined(separator: ", ").nonEmpty ?? "No recorded content changes"). Your current version \(record.revision) will stay in history."
+        "Differences from current version: \(differences.joined(separator: ", ").nonEmpty ?? "No recorded content changes")."
+        + (canRestore ? " Your current version \(record.revision) will stay in history." : "")
     )
-    Text(
-      "People, Collection, and track definitions stay current. Historical Location links return to their original snapshots. Photo files are not deleted. Missing historical links or originals stop the restore safely."
-    )
-    .font(MTFont.caption.weight(.regular))
-    .foregroundStyle(MTColor.inkMuted)
-    .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
-    .fixedSize(horizontal: false, vertical: true)
+    if canRestore {
+      Text(
+        "People, Collection, and track definitions stay current. Historical Location links return to their original snapshots. Photo files are not deleted. Missing historical links or originals stop the restore safely."
+      )
+      .font(MTFont.caption.weight(.regular))
+      .foregroundStyle(MTColor.inkMuted)
+      .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
+      .fixedSize(horizontal: false, vertical: true)
+    } else {
+      HistoryNotice(text: HistoryPresentation.unsupportedRestoreMessage, tone: .caution)
+        .accessibilityIdentifier("history-restore-unavailable")
+    }
     let layout =
       horizontalSizeClass == .regular
       ? AnyLayout(HStackLayout(alignment: .top, spacing: MTSpacing.s5))
@@ -421,8 +430,15 @@ struct EntryHistoryDetailView: View {
     }
   }
 
+  /// Web `canRestoreSelected`: a version is chosen and its snapshot uses the restorable schema.
+  private func canRestoreSelected(_ record: EntryHistoryRecord) -> Bool {
+    HistoryPresentation.canRestore(
+      record.versions.first { $0.version == selectedVersion }?.snapshot)
+  }
+
   private func restore() async {
-    guard let selectedVersion else { return }
+    guard let selectedVersion, let record = controller.record, canRestoreSelected(record)
+    else { return }
     errorMessage = nil
     if let message = await controller.restore(version: selectedVersion) {
       errorMessage = message

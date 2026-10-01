@@ -545,6 +545,8 @@ final class NativeContractTests: XCTestCase {
     let withLink = try XCTUnwrap(item.record)
     XCTAssertEqual(withLink.current["links"]?.array?.count, 1)
     let beforeLink = try XCTUnwrap(withLink.versions.first)
+    // The server still archives the schema this client restores.
+    XCTAssertTrue(HistoryPresentation.canRestore(beforeLink.snapshot))
     XCTAssertEqual(
       HistoryPresentation.differences(current: withLink.current, previous: beforeLink.snapshot),
       ["Entry links"])
