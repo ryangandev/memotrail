@@ -85,7 +85,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
   The new Map uses its shared presentation components; existing screens retain their layouts pending acceptance.
   Native actions, badges, headers, empty states, form fields, record and Collection cards, read-only rich writing, toasts, remote images, upload progress, and the photo field now mirror the Web gallery specimens.
   First Times, Homes, Vehicles, Goals, Collections, and an Item's Current photos load photos through the shared remote image; Home and Trash follow with their screen syncs.
-  Twelve Simulator UI scenarios pass, adding form pickers, organization editing, toasts rising clear of the keyboard, photo field removal, and a gallery screenshot tour; all 246 native tests pass against local Supabase, including twelve contract tests.
+  Thirteen workspace Simulator UI scenarios pass, including form pickers, organization editing, toasts rising clear of the keyboard, photo field removal, the Map, sign-in, and a gallery screenshot tour.
+  All seventeen seeded Simulator UI scenarios pass against a disposable local account and the local Web API, and all 249 native tests pass against local Supabase, including twelve contract tests.
   `review-local-session.py` now runs signed-in UI flows as a seeded, disposable local account, so screen syncs are checked against real local data rather than synthetic previews.
   One shared OccurrenceEditor and tag/Collection editor now serve Capture, Inbox review, Timeline, First Times, Homes, Vehicles, and Goals, with the Web Date types, Present end, and optional description.
 - The gallery's Writing & formatting page now previews a native Aa toolbar with bold, italic, underline, strikethrough, selection formatting, typing styles, undo/redo, and saved note reopening.
