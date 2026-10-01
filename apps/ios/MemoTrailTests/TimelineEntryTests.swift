@@ -34,6 +34,93 @@ final class TimelineEntryTests: XCTestCase {
     XCTAssertThrowsError(try draft.resolve(span: true))
   }
 
+  func testWorkspaceRowsCarryOrganizationAndOpenFirstTimesInTheirEditor() throws {
+    let json = """
+      [{"track_id":"10000000-0000-4000-8000-000000000001","track_name":"First Times","track_system_key":"first_times","track_sort_order":1,"track_is_hidden":false,"entry_id":"20000000-0000-4000-8000-000000000001","title":"First ski day","body":"","item_kind":"entry","item_subtype":"first_time","timeline_kind":"event","occurred_start":"2024-01-02T00:00:00Z","date_precision":"day","occurred_timezone":"UTC","revision":2,"updated_at":"2026-09-12T12:00:00Z","collection_names":["Winter"],"tag_names":["snow","firsts"]}]
+      """
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    let rows = try decoder.decode([TimelineWorkspaceRow].self, from: Data(json.utf8))
+    let entry = try XCTUnwrap(TimelineWorkspace.tracks(from: rows).first?.entries.first)
+    XCTAssertEqual(entry.collectionNames, ["Winter"])
+    XCTAssertEqual(entry.tagNames, ["snow", "firsts"])
+    XCTAssertEqual(entry.specializedEditor, .firstTime)
+    XCTAssertEqual(
+      makeRow(entryID: UUID(), title: "Moment", occurredStart: nil).entry?.tagNames, [])
+  }
+
+  func testUnplacedDatedFirstTimesJoinTheFirstTimesTrackInDateOrder() throws {
+    let placedID = UUID()
+    let rows = [
+      makeRow(
+        trackName: "Other_events", trackSortOrder: 1, entryID: nil, title: nil, occurredStart: nil),
+      makeRow(
+        trackID: UUID(), trackName: "First_times", trackSortOrder: 2, entryID: placedID,
+        title: "First apartment", occurredStart: Date(timeIntervalSince1970: 1_600_000_000),
+        itemSubtype: "first_time"),
+    ]
+    let tracks = TimelineWorkspace.tracks(from: rows)
+    let firstTimes = [
+      makeFirstTime(id: placedID, title: "First apartment", start: 1_600_000_000),
+      makeFirstTime(title: "First flight", start: 1_500_000_000),
+      makeFirstTime(title: "First words", start: nil),
+    ]
+    let placed = TimelineWorkspace.includingUnplacedFirstTimes(tracks, firstTimes: firstTimes)
+    let track = try XCTUnwrap(placed.first { $0.systemKey == "first_times" })
+    XCTAssertEqual(track.entries.map(\.title), ["First flight", "First apartment"])
+    let projected = try XCTUnwrap(track.entries.first)
+    XCTAssertEqual(projected.kind, .event)
+    XCTAssertEqual(projected.trackID, track.id)
+    XCTAssertEqual(projected.specializedEditor, .firstTime)
+    XCTAssertEqual(placed.first?.entries, [])
+    XCTAssertEqual(
+      TimelineWorkspace.includingUnplacedFirstTimes([tracks[0]], firstTimes: firstTimes),
+      [tracks[0]])
+  }
+
+  func testRangeLabelPadsLikeTheWebLayoutAndStartsAtTheBirthDate() throws {
+    let reference = try date("2026-09-29T12:00:00Z")
+    func label(_ entries: [TimelineEntry], birthDate: String? = nil) -> String? {
+      TimelineWorkspace.rangeLabel(entries: entries, birthDate: birthDate, reference: reference)
+    }
+    XCTAssertNil(label([makeEntry(start: nil)]))
+    XCTAssertEqual(label([makeEntry(start: try date("2019-06-01T00:00:00Z"))]), "2019 to 2026")
+    // Web pads earlier Timelines by 2.5 percent of their range.
+    XCTAssertEqual(label([makeEntry(start: try date("2019-01-10T00:00:00Z"))]), "2018 to 2026")
+    // A birth date starts the range unpadded; the far end still pads by 2.5 percent.
+    XCTAssertEqual(
+      label([makeEntry(start: try date("2019-01-10T00:00:00Z"))], birthDate: "1994-04-18"),
+      "1994 to 2027")
+    // An ongoing period reaches today, and a short Timeline still spans a year.
+    XCTAssertEqual(
+      label([makeEntry(kind: .stage, start: try date("2025-12-20T00:00:00Z"))]), "2025 to 2026")
+    XCTAssertEqual(label([makeEntry(start: try date("2026-12-20T00:00:00Z"))]), "2026 to 2027")
+  }
+
+  func testInputNormalizesOrganizationLikeWebAndSavesIt() throws {
+    func input(collections: [String], tags: [String]) throws -> TimelineEntryInput {
+      try TimelineEntryInput.validate(
+        entryID: nil, expectedRevision: nil, trackID: UUID(), kind: .event, title: "Moment",
+        body: "", occurredStart: nil, occurredEnd: nil, datePrecision: .unknown,
+        occurredLabel: "", occurredTimezone: "UTC", collectionNames: collections,
+        tagNames: tags)
+    }
+    let saved = try input(collections: [" Travel ", "travel", "", "Family"], tags: ["snow"])
+    XCTAssertEqual(saved.collectionNames, ["Travel", "Family"])
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(
+        with: JSONEncoder().encode(SaveTimelineEntryParameters(input: saved))) as? [String: Any])
+    XCTAssertEqual(json["p_collection_names"] as? [String], ["Travel", "Family"])
+    XCTAssertEqual(json["p_tag_names"] as? [String], ["snow"])
+    XCTAssertThrowsError(try input(collections: (0...20).map { "C\($0)" }, tags: [])) {
+      XCTAssertEqual(
+        $0.localizedDescription, "Use up to 20 Collections with 80 characters each.")
+    }
+    XCTAssertThrowsError(try input(collections: [], tags: [String(repeating: "t", count: 61)])) {
+      XCTAssertEqual($0.localizedDescription, "Use up to 50 tags with 60 characters each.")
+    }
+  }
+
   func testExactTimelineSerializationPreservesDatabaseMicroseconds() throws {
     let json = """
       {"track_id":"10000000-0000-4000-8000-000000000001","track_name":"Life","track_sort_order":1,"track_is_hidden":false,"entry_id":"20000000-0000-4000-8000-000000000001","title":"A moment","body":"Original","item_kind":"entry","item_subtype":"moment","timeline_kind":"event","occurred_start":"2026-11-01T09:30:00.123456Z","date_precision":"exact","occurred_timezone":"America/Los_Angeles","revision":1,"updated_at":"2026-09-12T12:00:00Z"}
@@ -310,6 +397,30 @@ final class TimelineEntryTests: XCTestCase {
       occurredLabel: occurredLabel,
       occurredTimezone: occurredTimezone
     )
+  }
+
+  private func date(_ text: String) throws -> Date {
+    try XCTUnwrap(ISO8601DateFormatter().date(from: text))
+  }
+
+  private func makeEntry(kind: TimelineKind = .event, start: Date?) -> TimelineEntry {
+    TimelineEntry(
+      id: UUID(), trackID: UUID(), title: "Entry", body: "", itemKind: .entry,
+      itemSubtype: kind == .stage ? "period" : "moment", kind: kind, occurredStart: start,
+      occurredEnd: nil, datePrecision: start == nil ? .unknown : .day, occurredLabel: nil,
+      occurredTimezone: "UTC", revision: 1, updatedAt: Date(timeIntervalSince1970: 0))
+  }
+
+  private func makeFirstTime(id: UUID = UUID(), title: String, start: TimeInterval?)
+    -> FirstTimeEntry
+  {
+    FirstTimeEntry(
+      id: id, title: title, body: "", inboxStatus: "organized",
+      occurredStart: start.map(Date.init(timeIntervalSince1970:)),
+      datePrecision: start == nil ? .unknown : .day, occurredLabel: nil,
+      occurredTimezone: start == nil ? nil : "UTC", revision: 1,
+      updatedAt: Date(timeIntervalSince1970: 0), collectionNames: [], tagNames: [],
+      attachments: [])
   }
 
   private func makeRow(

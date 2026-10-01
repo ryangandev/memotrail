@@ -3,9 +3,12 @@ import SwiftUI
 struct MemoTrailMark: View {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var revealed: Bool
+  private let turn: Double
 
-  init(animated: Bool = false) {
+  /// `turn` rotates the outer ring and accent while the inner ring counter-rotates, like the Web brand.
+  init(animated: Bool = false, turn: Double = 0) {
     _revealed = State(initialValue: !animated)
+    self.turn = turn
   }
 
   var body: some View {
@@ -20,6 +23,7 @@ struct MemoTrailMark: View {
             style: StrokeStyle(lineWidth: size * 0.109_375, lineCap: .round)
           )
           .frame(width: size * 0.605_469, height: size * 0.605_469)
+          .rotationEffect(.degrees(turn))
           .animation(reduceMotion ? nil : .easeInOut(duration: 0.58), value: revealed)
 
         Circle()
@@ -29,6 +33,7 @@ struct MemoTrailMark: View {
             style: StrokeStyle(lineWidth: size * 0.109_375, lineCap: .round)
           )
           .frame(width: size * 0.605_469, height: size * 0.605_469)
+          .rotationEffect(.degrees(turn))
           .animation(reduceMotion ? nil : .easeOut(duration: 0.34).delay(0.22), value: revealed)
 
         Circle()
@@ -38,6 +43,7 @@ struct MemoTrailMark: View {
             style: StrokeStyle(lineWidth: size * 0.066_406, lineCap: .round)
           )
           .frame(width: size * 0.361_328, height: size * 0.361_328)
+          .rotationEffect(.degrees(-turn))
           .animation(reduceMotion ? nil : .easeInOut(duration: 0.5).delay(0.12), value: revealed)
       }
       .frame(width: proxy.size.width, height: proxy.size.height)

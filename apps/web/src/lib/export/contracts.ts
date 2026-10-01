@@ -27,11 +27,15 @@ export function parseExportAction(value: unknown): ExportAction | null {
   if (Object.keys(v).some((key) => !["action", "id"].includes(key)))
     return null;
   if (v.action === "list" && v.id === undefined) return { action: "list" };
+  // UUIDs are case-insensitive; snapshots are compared in Postgres' lowercase form.
   if (
     ["create", "discard", "download"].includes(String(v.action)) &&
     isUUID(v.id)
   )
-    return { action: v.action as ExportAction["action"], id: v.id };
+    return {
+      action: v.action as ExportAction["action"],
+      id: v.id.toLowerCase(),
+    };
   return null;
 }
 export function exportFilename(snapshot: ExportSnapshot) {

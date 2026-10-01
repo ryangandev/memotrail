@@ -23,7 +23,6 @@ final class VehicleController {
 
   var currentEntries: [VehicleEntry] { entries.filter(\.isCurrent) }
   var earlierEntries: [VehicleEntry] { entries.filter { !$0.isCurrent } }
-  var photoCount: Int { entries.reduce(0) { $0 + $1.attachments.count } }
 
   func entry(id: UUID) -> VehicleEntry? { entries.first { $0.id == id } }
 
@@ -44,6 +43,11 @@ final class VehicleController {
         .execute()
         .value
       var loadedEntries = VehicleWorkspace.entries(from: rows)
+      let locations = try await EntryPrimaryLocations.load(
+        client: client, ownerID: ownerID, entryIDs: loadedEntries.map(\.id))
+      for index in loadedEntries.indices {
+        loadedEntries[index].location = locations[loadedEntries[index].id]
+      }
       let paths = Array(Set(loadedEntries.flatMap { $0.attachments.map(\.objectPath) }))
       let signedURLs = await signedURLMap(paths: paths)
       for entryIndex in loadedEntries.indices {
@@ -80,7 +84,8 @@ final class VehicleController {
     collectionNames: [String],
     tagNames: [String],
     originalEntry: VehicleEntry? = nil,
-    sourceCapture: CaptureExtractionSource? = nil
+    sourceCapture: CaptureExtractionSource? = nil,
+    removingLocation: Bool = false
   ) async -> MutationResult {
     var input: VehicleEntryInput
     do {
@@ -144,15 +149,23 @@ final class VehicleController {
         return MutationResult(
           identity: SavedIdentity(id: saved.vehicleEntryID, revision: saved.vehicleRevision),
           message: "Vehicle created from Capture.",
-          status: .saved)
+          status: .created)
       }
       input.expectedRevision = try await EntryPhotoUpload.writingRevision(
         client: client, entryID: entryID, revision: expectedRevision)
+      // Like Web, the Location RPC runs only when the Location changed.
       let results: [SavedVehicleEntry] =
-        try await client
-        .rpc("save_vehicle_entry_with_occurrence", params: SaveVehicleEntryParameters(input: input))
-        .execute()
-        .value
+        removingLocation
+        ? try await client
+          .rpc("save_vehicle_with_location", params: RemoveVehicleLocationParameters(input: input))
+          .execute()
+          .value
+        : try await client
+          .rpc(
+            "save_vehicle_entry_with_occurrence", params: SaveVehicleEntryParameters(input: input)
+          )
+          .execute()
+          .value
       guard let saved = results.first else {
         return MutationResult(
           identity: nil,
@@ -165,7 +178,7 @@ final class VehicleController {
       return MutationResult(
         identity: SavedIdentity(id: saved.entryID, revision: saved.revision),
         message: saved.wasCreated ? "Vehicle added." : "Vehicle saved.",
-        status: .saved
+        status: saved.wasCreated ? .created : .saved
       )
     } catch {
       return MutationResult(
@@ -276,7 +289,7 @@ final class VehicleController {
         )
       }
       await reloadAfterMutation()
-      return MutationResult(identity: nil, message: "Moved to Trash.", status: .trashed)
+      return MutationResult(identity: nil, message: "Vehicle moved to Trash.", status: .trashed)
     } catch {
       return MutationResult(
         identity: nil,
@@ -321,10 +334,12 @@ extension VehicleController {
   }
 
   struct MutationResult: Equatable, Sendable {
-    enum Status: Equatable, Sendable { case conflict, error, saved, trashed }
+    enum Status: Equatable, Sendable { case conflict, created, error, saved, trashed }
     let identity: SavedIdentity?
     let message: String
     let status: Status
+
+    var succeeded: Bool { [.created, .saved, .trashed].contains(status) }
   }
 }
 

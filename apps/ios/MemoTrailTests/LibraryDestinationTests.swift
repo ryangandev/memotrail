@@ -56,7 +56,44 @@ final class LibraryDestinationTests: XCTestCase {
     XCTAssertFalse(
       OrganizationSaveRequest(kind: .tag, name: " ", sortOrder: 0, id: nil, expectedRevision: nil)
         .isValid)
+    // Web `validOrganizationInput`: tags keep to 60 characters and Collections to 80.
+    let tag = { (name: String) in
+      OrganizationSaveRequest(kind: .tag, name: name, sortOrder: 0, id: nil, expectedRevision: nil)
+    }
+    XCTAssertTrue(tag(String(repeating: "界", count: 60)).isValid)
+    XCTAssertFalse(tag(String(repeating: "界", count: 61)).isValid)
+    XCTAssertTrue(
+      OrganizationSaveRequest(
+        kind: .collection, name: String(repeating: "a", count: 80), sortOrder: 0, id: nil,
+        expectedRevision: nil
+      ).isValid)
+    XCTAssertEqual(tag("").invalidMessage, "Use a tag name up to 60 characters.")
+    XCTAssertEqual(OrganizationKind.tag.label, "Tag")
     XCTAssertEqual(TrashItemKind(rawValue: "collection")?.displayName, "Collection")
+  }
+  func testTagMergeRequestKeepsBothRevisionsAndRejectsItself() throws {
+    let source = UUID()
+    let target = UUID()
+    let request = TagMergeRequest(
+      sourceID: source, sourceRevision: 2, targetID: target, targetRevision: 5)
+    XCTAssertTrue(request.isValid)
+    let json = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as? [String: Any])
+    XCTAssertEqual(json["p_source_id"] as? String, source.uuidString)
+    XCTAssertEqual(json["p_source_revision"] as? Int, 2)
+    XCTAssertEqual(json["p_target_id"] as? String, target.uuidString)
+    XCTAssertEqual(json["p_target_revision"] as? Int, 5)
+    XCTAssertFalse(
+      TagMergeRequest(sourceID: source, sourceRevision: 2, targetID: source, targetRevision: 2)
+        .isValid)
+    XCTAssertEqual(countLabel(1, "Entry"), "1 Entry")
+    XCTAssertEqual(countLabel(3, "Entry"), "3 Entries")
+    XCTAssertEqual(countLabel(2, "tag"), "2 tags")
+    // Web pluralizes only a consonant and "y" as "ies", and takes irregular plurals explicitly.
+    XCTAssertEqual(countLabel(2, "journey"), "2 journeys")
+    XCTAssertEqual(countLabel(0, "Entry placement"), "0 Entry placements")
+    XCTAssertEqual(countLabel(2, "person", plural: "people"), "2 people")
+    XCTAssertEqual(countLabel(1, "person", plural: "people"), "1 person")
   }
   func testTrackSettingsPreserveVisibilityIdentityAndRevision() throws {
     let data = Data(
@@ -107,7 +144,18 @@ final class LibraryDestinationTests: XCTestCase {
     XCTAssertEqual(HistoryPresentation.date(legacy), "Unknown")
     XCTAssertEqual(HistoryPresentation.differences(current: current, previous: legacy), [])
     current["body"] = .string("Changed")
-    XCTAssertEqual(HistoryPresentation.differences(current: current, previous: legacy), ["body"])
+    XCTAssertEqual(HistoryPresentation.differences(current: current, previous: legacy), ["Writing"])
+    XCTAssertEqual(HistoryPresentation.title(title: "  ", body: " \n "), "Untitled item")
+    XCTAssertEqual(
+      HistoryPresentation.date([
+        "occurred_start": .string("2021-01-01T15:30:00Z"), "occurred_end": .null,
+        "occurred_timezone": .string("Asia/Shanghai"), "date_precision": .string("exact"),
+      ]), "Jan 1, 2021, 11:30\u{202F}PM")
+    XCTAssertEqual(
+      HistoryPresentation.date([
+        "occurred_start": .string("2021-03-01T00:00:00Z"),
+        "occurred_end": .string("2021-04-01T00:00:00Z"), "date_precision": .string("month"),
+      ]), "Mar 2021 to Apr 2021")
     let id = UUID()
     let json = try XCTUnwrap(
       JSONSerialization.jsonObject(
@@ -193,25 +241,32 @@ final class LibraryDestinationTests: XCTestCase {
     XCTAssertEqual(AIAPI.cost(29), "$0.000029")
   }
   func testPersonSavePreservesExplicitNewIdentityAndValidatesLimits() throws {
+    let linked = UUID()
     let input = PersonSaveInput(
-      p_person_id: nil, p_expected_revision: nil,
-      p_name: " Friend ", p_relationship_label: " Mentor ", p_notes: " Notes ",
-      p_related_entry_ids: [])
+      personID: nil, expectedRevision: nil, name: " Friend ", relationshipLabel: " Mentor ",
+      notes: " Notes ", relatedEntryIDs: [linked, linked])
     XCTAssertTrue(input.isValid)
     let json = try XCTUnwrap(
       JSONSerialization.jsonObject(with: JSONEncoder().encode(input)) as? [String: Any])
     XCTAssertTrue(json["p_person_id"] is NSNull)
     XCTAssertTrue(json["p_expected_revision"] is NSNull)
     XCTAssertEqual(json["p_name"] as? String, "Friend")
+    XCTAssertEqual(json["p_relationship_label"] as? String, "Mentor")
+    XCTAssertEqual(json["p_related_entry_ids"] as? [String], [linked.uuidString])
     XCTAssertFalse(
       PersonSaveInput(
-        p_person_id: UUID(), p_expected_revision: nil,
-        p_name: "Friend", p_relationship_label: "", p_notes: "", p_related_entry_ids: []
+        personID: UUID(), expectedRevision: nil, name: "Friend", relationshipLabel: "",
+        notes: "", relatedEntryIDs: []
       ).isValid)
     XCTAssertFalse(
       PersonSaveInput(
-        p_person_id: nil, p_expected_revision: nil,
-        p_name: " ", p_relationship_label: "", p_notes: "", p_related_entry_ids: []
+        personID: nil, expectedRevision: nil, name: " ", relationshipLabel: "", notes: "",
+        relatedEntryIDs: []
+      ).isValid)
+    XCTAssertFalse(
+      PersonSaveInput(
+        personID: nil, expectedRevision: nil, name: "Friend", relationshipLabel: "", notes: "",
+        relatedEntryIDs: (0...PersonSaveInput.linkLimit).map { _ in UUID() }
       ).isValid)
   }
 
@@ -224,39 +279,10 @@ final class LibraryDestinationTests: XCTestCase {
           "item_kind":"entry","item_subtype":"moment","is_deleted":true}]}]
       """.utf8)
     let row = try XCTUnwrap(JSONDecoder().decode([PersonRecord].self, from: data).first)
-    XCTAssertEqual(row.linked_entries.first?.displayTitle, "A shared memory")
-    XCTAssertEqual(row.linked_entries.first?.is_deleted, true)
+    XCTAssertEqual(row.relationshipLabel, "Mentor")
+    XCTAssertEqual(row.linkedEntries.first?.displayTitle, "A shared memory")
+    XCTAssertEqual(row.linkedEntries.first?.isDeleted, true)
     XCTAssertEqual(TrashItemKind(rawValue: "person")?.displayName, "Person")
-  }
-
-  func testAvailableDestinationsContainOnlyImplementedArchives() {
-    XCTAssertEqual(
-      LibraryDestination.available,
-      [.collections, .firstTimes, .homes, .people, .vehicles, .goals, .trash]
-    )
-    XCTAssertTrue(LibraryDestination.available.allSatisfy(\.isAvailable))
-  }
-
-  func testPlannedDestinationsRemainVisibleButUnavailable() {
-    XCTAssertEqual(
-      LibraryDestination.planned,
-      []
-    )
-    XCTAssertTrue(LibraryDestination.planned.allSatisfy { !$0.isAvailable })
-  }
-
-  func testEveryDestinationHasDistinctStableIdentity() {
-    XCTAssertEqual(Set(LibraryDestination.allCases.map(\.id)).count, 7)
-    XCTAssertEqual(LibraryDestination.allCases.count, 7)
-    XCTAssertNil(LibraryDestination(rawValue: "places"))
-  }
-
-  func testEveryDestinationHasUserFacingMetadata() {
-    for destination in LibraryDestination.allCases {
-      XCTAssertFalse(destination.title.isEmpty)
-      XCTAssertFalse(destination.summary.isEmpty)
-      XCTAssertFalse(destination.systemImage.isEmpty)
-    }
   }
 
   func testWikiItemSummaryDecodesCanonicalAndSpecializedIdentity() throws {
@@ -286,6 +312,32 @@ final class LibraryDestinationTests: XCTestCase {
     XCTAssertEqual(item.itemKind, .entity)
     XCTAssertEqual(item.identityLabel, "Person")
     XCTAssertEqual(item.totalCount, 14)
+    XCTAssertEqual(item.dateLabel, "Updated Sep 15, 2026")
+  }
+
+  func testWikiItemDateLabelsReadStoredDatesInUTCLikeWeb() throws {
+    let json = """
+      {
+        "record_source": "entry",
+        "item_id": "98900000-0000-4000-8000-000000000002",
+        "canonical_item_id": "98900000-0000-4000-8000-000000000002",
+        "item_kind": "entry",
+        "item_subtype": "period",
+        "title": "Evening walks",
+        "excerpt": "",
+        "inbox_status": "organized",
+        "occurred_start": "2025-04-01T00:30:00Z",
+        "occurred_end": "2025-06-30T23:30:00Z",
+        "updated_at": "2026-09-15T12:00:00Z",
+        "total_count": 1
+      }
+      """
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    let item = try decoder.decode(WikiItemSummary.self, from: Data(json.utf8))
+
+    XCTAssertEqual(item.dateLabel, "Apr 1, 2025 to Jun 30, 2025")
+    XCTAssertEqual(item.subtypeLabel, "Period")
   }
 
   func testWikiItemsPageParametersUseTheBoundedRPCContract() throws {
@@ -304,5 +356,30 @@ final class LibraryDestinationTests: XCTestCase {
     XCTAssertEqual(values["p_item_subtypes"] as? [String], ["person"])
     XCTAssertEqual(values["p_limit"] as? Int, 36)
     XCTAssertEqual(values["p_offset"] as? Int, 72)
+  }
+
+  @MainActor
+  func testWikiItemLinksFollowWebRoutingAndLibraryFilters() {
+    let navigator = AppNavigator()
+    var pushed: [WikiItemLink] = []
+    let capture = WikiItemLink(entryID: UUID(), kind: .entry, subtype: "entry", isInInbox: true)
+    navigator.open(capture) { pushed.append($0) }
+    XCTAssertEqual(navigator.selectedTab, .inbox)
+    XCTAssertEqual(navigator.inboxReviewRequest, capture.entryID)
+
+    let period = WikiItemLink(entryID: UUID(), kind: .entry, subtype: "period")
+    navigator.open(period) { pushed.append($0) }
+    XCTAssertEqual(navigator.selectedTab, .timeline)
+    XCTAssertEqual(navigator.timelineEntryRequest, period.entryID)
+
+    let person = WikiItemLink(entryID: UUID(), kind: .entity, subtype: "person", personID: UUID())
+    navigator.open(person) { pushed.append($0) }
+    XCTAssertEqual(pushed, [person])
+
+    navigator.openLibrary(tag: "coast")
+    XCTAssertEqual(navigator.selectedTab, .library)
+    XCTAssertEqual(navigator.libraryFilterRequest, .tag("coast"))
+    navigator.openLibrary(collection: "Summer 2025")
+    XCTAssertEqual(navigator.libraryFilterRequest, .collection("Summer 2025"))
   }
 }

@@ -12,13 +12,12 @@ struct RootTabView: View {
   @State private var homeController: HomeController
   @State private var inboxController: InboxController
   @State private var captureTitle: String
-  @State private var captureBody: String
+  @State private var captureNote: NSAttributedString
   @State private var captureOccurrence: OccurrenceDraft?
   @State private var capturePhotos: [FirstTimePhotoDraft]
   @State private var hasLocalDraft: Bool
   @State private var hasLoadedCapturePhotos = false
-  @State private var selectedTab = RootTabDestination.home
-  @State private var isShowingQuickCapture = false
+  @State private var navigator = AppNavigator()
 
   init(
     client: SupabaseClient,
@@ -49,24 +48,23 @@ struct RootTabView: View {
       )
     )
     _captureTitle = State(initialValue: draft?.title ?? "")
-    _captureBody = State(initialValue: draft?.body ?? "")
+    _captureNote = State(initialValue: draft?.note ?? NSAttributedString())
     _captureOccurrence = State(initialValue: draft?.captureOccurrence)
     _capturePhotos = State(initialValue: [])
     _hasLocalDraft = State(initialValue: draft != nil)
   }
 
   var body: some View {
-    TabView(selection: $selectedTab) {
+    TabView(selection: $navigator.selectedTab) {
       HomeView(
         client: client,
         user: user,
         isAuthenticationBusy: isAuthenticationBusy,
         signOut: signOut,
-        openLibrary: { selectedTab = .library },
         controller: homeController,
         captureController: inboxController,
         captureTitle: $captureTitle,
-        captureBody: $captureBody,
+        captureNote: $captureNote,
         captureOccurrence: $captureOccurrence,
         capturePhotos: $capturePhotos,
         addCapturePhoto: addCapturePhoto,
@@ -83,14 +81,7 @@ struct RootTabView: View {
         user: user,
         isAuthenticationBusy: isAuthenticationBusy,
         signOut: signOut,
-        controller: inboxController,
-        captureTitle: $captureTitle,
-        captureBody: $captureBody,
-        captureOccurrence: $captureOccurrence,
-        capturePhotos: $capturePhotos,
-        addCapturePhoto: addCapturePhoto,
-        removeCapturePhoto: removeCapturePhoto,
-        hasLocalDraft: $hasLocalDraft
+        controller: inboxController
       )
       .tabItem {
         Label(RootTabDestination.inbox.title, systemImage: RootTabDestination.inbox.systemImage)
@@ -98,21 +89,23 @@ struct RootTabView: View {
       .tag(RootTabDestination.inbox)
       .badge(inboxBadgeCount)
 
-      TimelineView(client: client, ownerID: user.id)
-        .tabItem {
-          Label(
-            RootTabDestination.timeline.title,
-            systemImage: RootTabDestination.timeline.systemImage
-          )
-        }
-        .tag(RootTabDestination.timeline)
+      TimelineView(
+        client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
+      )
+      .tabItem {
+        Label(
+          RootTabDestination.timeline.title, systemImage: RootTabDestination.timeline.systemImage)
+      }
+      .tag(RootTabDestination.timeline)
 
-      LibraryView(client: client, ownerID: user.id)
-        .tabItem {
-          Label(
-            RootTabDestination.library.title, systemImage: RootTabDestination.library.systemImage)
-        }
-        .tag(RootTabDestination.library)
+      LibraryView(
+        client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
+      )
+      .tabItem {
+        Label(
+          RootTabDestination.library.title, systemImage: RootTabDestination.library.systemImage)
+      }
+      .tag(RootTabDestination.library)
 
       MoreView(
         client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
@@ -122,29 +115,12 @@ struct RootTabView: View {
       }
       .tag(RootTabDestination.more)
     }
-    .overlay(alignment: .bottomTrailing) {
-      if selectedTab.usesGlobalCaptureButton {
-        Button {
-          isShowingQuickCapture = true
-        } label: {
-          Image(systemName: "plus")
-            .font(.system(size: 19, weight: .semibold))
-            .foregroundStyle(MTColor.accentInk)
-            .frame(width: 50, height: 50)
-            .background(MTColor.accent, in: Circle())
-            .shadow(color: MTColor.scrim.opacity(0.16), radius: 10, y: 5)
-        }
-        .padding(.trailing, MTSpacing.s4)
-        .padding(.bottom, 66)
-        .accessibilityLabel("Quick capture")
-        .accessibilityIdentifier("global-quick-capture")
-      }
-    }
-    .fullScreenCover(isPresented: $isShowingQuickCapture) {
+    .environment(navigator)
+    .fullScreenCover(isPresented: $navigator.isShowingQuickCapture) {
       QuickCaptureView(
         controller: inboxController,
         title: $captureTitle,
-        draftBody: $captureBody,
+        note: $captureNote,
         occurrence: $captureOccurrence,
         photos: $capturePhotos,
         addPhoto: addCapturePhoto,
@@ -155,13 +131,18 @@ struct RootTabView: View {
     .onChange(of: captureTitle) {
       persistDraft()
     }
-    .onChange(of: captureBody) {
+    .onChange(of: captureNote) {
       persistDraft()
     }
     .onChange(of: captureOccurrence) {
       persistDraft()
     }
     .onChange(of: inboxController.pendingEntries.count) { previousCount, count in
+      guard count < previousCount else { return }
+      Task { await homeController.load() }
+    }
+    // Organizing or trashing a capture changes the Dashboard counts and Ready to organize.
+    .onChange(of: inboxController.entries.count) { previousCount, count in
       guard count < previousCount else { return }
       Task { await homeController.load() }
     }
@@ -175,14 +156,17 @@ struct RootTabView: View {
       captureTitle = String(captureTitle.prefix(InboxCapture.titleLimit))
     }
 
-    if captureBody.count > InboxCapture.bodyLimit {
-      captureBody = String(captureBody.prefix(InboxCapture.bodyLimit))
+    // Web counts the note limit in UTF-16 code units, like NSAttributedString.
+    if captureNote.length > InboxCapture.bodyLimit {
+      captureNote = captureNote.attributedSubstring(
+        from: NSRange(location: 0, length: InboxCapture.bodyLimit))
     }
 
     hasLocalDraft =
       draftStore.save(
         title: captureTitle,
-        body: captureBody,
+        body: captureNote.string,
+        bodyRich: captureNote.length > 0 ? EntryEmphasisContent(attributedText: captureNote) : nil,
         occurrenceDraft: captureOccurrence,
         ownerID: user.id
       ) || !capturePhotos.isEmpty
@@ -256,25 +240,22 @@ enum RootTabDestination: String, CaseIterable, Sendable {
     }
   }
 
+  /// The Web navigation icons: dashboard grid, inbox tray, timeline, archive box, and more.
   var systemImage: String {
     switch self {
-    case .home: "house"
-    case .inbox: "tray"
-    case .timeline: "point.bottomleft.forward.to.point.topright.scurvepath"
-    case .library: "books.vertical"
-    case .more: "ellipsis"
+    case .home: MTIcon.dashboard.systemName
+    case .inbox: MTIcon.inbox.systemName
+    case .timeline: MTIcon.timeline.systemName
+    case .library: MTIcon.archive.systemName
+    case .more: MTIcon.more.systemName
     }
-  }
-
-  var usesGlobalCaptureButton: Bool {
-    self == .timeline || self == .library
   }
 }
 
 private struct QuickCaptureView: View {
   @Bindable var controller: InboxController
   @Binding var title: String
-  @Binding var draftBody: String
+  @Binding var note: NSAttributedString
   @Binding var occurrence: OccurrenceDraft?
   @Binding var photos: [FirstTimePhotoDraft]
   let addPhoto: @MainActor (FirstTimePhotoDraft) async throws -> Void
@@ -282,78 +263,73 @@ private struct QuickCaptureView: View {
   @Binding var hasLocalDraft: Bool
 
   @Environment(\.dismiss) private var dismiss
-  @FocusState private var isTitleFocused: Bool
 
   var body: some View {
-    NavigationStack {
-      ScrollView {
-        VStack(alignment: .leading, spacing: MTSpacing.s6) {
-          VStack(alignment: .leading, spacing: MTSpacing.s2) {
-            Text("QUICK CAPTURE")
-              .font(MTTypography.caption)
-              .tracking(1.1)
-              .foregroundStyle(MTColor.warm)
+    // Web `QuickCaptureDialog` at phone width: a full-screen composer under its own header.
+    ScrollView {
+      VStack(alignment: .leading, spacing: 0) {
+        CaptureCard(
+          note: $note,
+          occurrence: $occurrence,
+          photos: $photos,
+          style: .dialog,
+          isSaving: controller.isSaving,
+          hasLocalDraft: hasLocalDraft,
+          error: controller.captureError,
+          focusRequest: 1,
+          addPhoto: addPhoto,
+          removePhoto: removePhoto,
+          save: save
+        )
 
-            Text("Keep what is on your mind")
-              .font(MTTypography.title)
-              .foregroundStyle(MTColor.ink)
-          }
-
-          CaptureCard(
-            title: $title,
-            note: $draftBody,
-            occurrence: $occurrence,
-            photos: $photos,
-            isSaving: controller.isSaving,
-            hasLocalDraft: hasLocalDraft,
-            message: controller.captureMessage,
-            titleFocus: $isTitleFocused,
-            addPhoto: addPhoto,
-            removePhoto: removePhoto,
-            save: save
+        if !controller.pendingEntries.isEmpty {
+          Label(
+            countLabel(controller.pendingEntries.count, "Entry") + " waiting to sync",
+            icon: .history
           )
-
-          if !controller.pendingEntries.isEmpty {
-            Label(
-              "\(controller.pendingEntries.count) \(controller.pendingEntries.count == 1 ? "Entry" : "Entries") waiting to sync",
-              systemImage: "clock.arrow.circlepath"
-            )
-            .font(MTTypography.caption)
-            .foregroundStyle(MTColor.inkMuted)
-          }
-
-          Spacer(minLength: MTSpacing.s8)
+          .font(MTFont.caption)
+          .foregroundStyle(MTColor.inkMuted)
+          .padding(.horizontal, MTSpacing.s4)
+          .padding(.top, MTSpacing.s4)
         }
-        .padding(MTSpacing.s4)
-      }
-      .background(MTColor.canvas)
-      .navigationTitle("New Entry")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbarBackground(MTColor.surface, for: .navigationBar)
-      .toolbarBackground(.visible, for: .navigationBar)
-      .toolbar {
-        ToolbarItem(placement: .cancellationAction) {
-          Button("Close") { dismiss() }
-        }
-      }
-      .task {
-        isTitleFocused = true
       }
     }
+    .scrollBounceBehavior(.basedOnSize)
+    .scrollDismissesKeyboard(.interactively)
+    .safeAreaInset(edge: .top, spacing: 0) { header }
+    .background(MTColor.surfaceRaised.ignoresSafeArea())
+  }
+
+  /// Web `dialogHeader`: the composer's question beside a quiet close button.
+  private var header: some View {
+    HStack(spacing: MTSpacing.s4) {
+      HStack(spacing: MTSpacing.s3) {
+        CaptureSpark()
+        Text("What\u{2019}s on your mind?")
+          .font(MTFont.cardTitle)
+          .foregroundStyle(MTColor.ink)
+          .lineLimit(2)
+          .accessibilityAddTraits(.isHeader)
+      }
+      Spacer(minLength: 0)
+      MTIconButton(label: "Close quick capture", icon: .close, size: .small) { dismiss() }
+        .accessibilityIdentifier("close-quick-capture")
+    }
+    .padding(.horizontal, MTSpacing.s4)
+    .padding(.vertical, MTSpacing.s4)
+    .frame(minHeight: 64)
+    .background(MTColor.surfaceRaised.opacity(0.94))
+    .background(.ultraThinMaterial)
   }
 
   @MainActor
   private func save() async {
     let didSave = await controller.save(
-      title: title,
-      body: draftBody,
-      occurrenceDraft: occurrence,
-      photos: photos
-    )
+      title: title, note: note, occurrenceDraft: occurrence, photos: photos)
 
     if didSave {
       title = ""
-      draftBody = ""
+      note = NSAttributedString()
       occurrence = nil
       photos = []
       hasLocalDraft = false

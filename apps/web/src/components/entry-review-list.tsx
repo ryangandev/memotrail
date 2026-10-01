@@ -313,7 +313,13 @@ export function EntryReviewDialog({
           ) : (
             <p>Review what you captured, then save it to your Library.</p>
           )}
-          <Link href={`/history?entry=${entry.id}`}>Version history</Link>
+          <Link
+            className={entryReviewListStyles.historyLink}
+            href={`/history?entry=${entry.id}`}
+          >
+            <Icon name="clock" size={14} />
+            Version history
+          </Link>
         </>
       }
       closeLabel={organized ? "Close item editor" : "Close Inbox review"}

@@ -19,6 +19,7 @@ import {
   type PersonEntry,
 } from "@/lib/data/person";
 import styles from "@/components/people-workspace.module.css";
+import { countLabel } from "@/lib/count-label";
 
 export function PeopleWorkspace({
   people,
@@ -367,8 +368,4 @@ export function PersonEditor({
       </form>
     </FocusedEditorSurface>
   );
-}
-
-function countLabel(count: number, singular: string, plural = `${singular}s`) {
-  return `${count} ${count === 1 ? singular : plural}`;
 }

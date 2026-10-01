@@ -15,7 +15,8 @@ final class InboxController {
   private(set) var isSaving = false
   private(set) var isSyncing = false
   private(set) var loadErrorMessage: String?
-  private(set) var captureMessage: CaptureMessage?
+  /// The latest capture or sync problem, shown in the composer until the next attempt.
+  private(set) var captureError: String?
 
   private let client: SupabaseClient
   private let ownerID: UUID
@@ -27,16 +28,6 @@ final class InboxController {
       "suggestions",
       body: EntryAISuggestionInput(entryID: entryID, revision: revision, retry: retry),
       client: client, ownerID: ownerID)
-  }
-
-  func dismissAISuggestion(_ id: UUID) async throws {
-    guard try await client.auth.session.user.id == ownerID else {
-      throw InboxControllerError.ownerChanged
-    }
-    let success: Bool = try await client.rpc(
-      "dismiss_ai_suggestion", params: ["p_id": id.uuidString]
-    ).execute().value
-    if !success { throw URLError(.cannotParseResponse) }
   }
   private let queueStore: InboxQueueStore
   private let photoStore: InboxPhotoStore
@@ -97,7 +88,7 @@ final class InboxController {
         try await client
         .from("entries")
         .select(
-          "id,title,body,item_kind,item_subtype,inbox_status,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision"
+          "id,title,body,metadata,item_kind,item_subtype,inbox_status,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision"
         )
         .eq("owner_id", value: ownerID.uuidString)
         .eq("inbox_status", value: "unreviewed")
@@ -131,6 +122,7 @@ final class InboxController {
   func save(
     title: String,
     body: String,
+    bodyRich: EntryEmphasisContent? = nil,
     occurredAt: Date? = nil,
     occurrenceDraft: OccurrenceDraft? = nil,
     photos: [FirstTimePhotoDraft] = []
@@ -153,15 +145,12 @@ final class InboxController {
         hasAttachments: !photos.isEmpty
       )
     } catch {
-      captureMessage = CaptureMessage(
-        text: error.localizedDescription,
-        style: .error
-      )
+      captureError = error.localizedDescription
       return false
     }
 
     isSaving = true
-    captureMessage = nil
+    captureError = nil
     defer { isSaving = false }
 
     var pendingEntry = QueuedInboxEntry(
@@ -174,20 +163,16 @@ final class InboxController {
       attachments: photos.map(QueuedInboxAttachment.init)
     )
     pendingEntry.occurrence = occurrence
+    // Like Web, keep formatting only when it describes exactly the saved note.
+    pendingEntry.bodyRich = bodyRich?.isValid(expectedText: capture.body) == true ? bodyRich : nil
 
     guard let nextQueue = queueStore.enqueue(pendingEntry, ownerID: ownerID) else {
-      captureMessage = CaptureMessage(
-        text: "MemoTrail could not store this Entry on this iPhone. Your draft is still here.",
-        style: .error
-      )
+      captureError =
+        "MemoTrail could not store this Entry on this iPhone. Your draft is still here."
       return false
     }
 
     pendingEntries = nextQueue
-    captureMessage = CaptureMessage(
-      text: "Saved on this iPhone. Syncing when connected.",
-      style: .success
-    )
 
     Task { @MainActor [weak self] in
       guard let self else { return }
@@ -200,52 +185,130 @@ final class InboxController {
     return true
   }
 
-  func review(
-    entry: InboxEntry,
-    title: String,
-    body: String,
-    collectionNames: [String],
-    itemKind: WikiItemKind,
-    itemSubtype: String,
-    occurredAt: Date?,
-    occurredTimezone: String,
-    tagNames: [String],
-    intent: ReviewIntent,
-    datePrecision: TimelineDatePrecision = .exact,
-    occurredEnd: Date? = nil,
-    occurredLabel: String? = nil,
-    photoPlace: PhotoPlaceDraft? = nil
-  ) async -> ReviewResult {
-    let input: InboxReviewInput
+  /// Saves the composer's note, keeping its Web-compatible formatting.
+  func save(
+    title: String, note: NSAttributedString, occurrenceDraft: OccurrenceDraft?,
+    photos: [FirstTimePhotoDraft]
+  ) async -> Bool {
+    let captured = EntryEmphasisContent.capture(note)
+    return await save(
+      title: title, body: captured.body, bodyRich: captured.rich,
+      occurrenceDraft: occurrenceDraft, photos: photos)
+  }
 
+  /// Saves the Review Entry sheet, keeping the Inbox list in step like Web `EntryReviewList`.
+  func review(entry: InboxEntry, draft: EntryReviewDraft, intent: ReviewIntent) async
+    -> ReviewResult
+  {
+    let input: InboxReviewInput
+    let revision: Int
+    switch await Self.submitReview(
+      client: client, ownerID: ownerID, entry: entry, draft: draft, intent: intent)
+    {
+    case .failed(let result):
+      return result
+    case .saved(let savedInput, let savedRevision):
+      input = savedInput
+      revision = savedRevision
+    }
+
+    if intent == .done {
+      entries.removeAll { $0.id == entry.id }
+      return ReviewResult(message: "Entry organized.", status: .done)
+    }
+
+    var updatedEntry = InboxEntry(
+      id: entry.id,
+      title: input.title,
+      body: input.body,
+      collectionNames: input.collectionNames,
+      itemKind: input.itemKind,
+      itemSubtype: input.itemSubtype,
+      createdAt: entry.createdAt,
+      occurredStart: input.occurredAt,
+      occurredTimezone: input.occurredTimezone,
+      revision: revision,
+      tagNames: input.tagNames,
+      datePrecision: input.occurrence.precision,
+      occurredEnd: input.occurrence.end,
+      occurredLabel: input.occurrence.label
+    )
+    updatedEntry.inboxStatus = entry.inboxStatus
+    updatedEntry.bodyRich = input.bodyRich
+
+    if let index = entries.firstIndex(where: { $0.id == entry.id }) {
+      entries[index] = updatedEntry
+    }
+    collectionOptions = mergedOptions(collectionOptions, input.collectionNames)
+    tagOptions = mergedOptions(tagOptions, input.tagNames)
+    return ReviewResult(message: "Entry saved.", status: .saved)
+  }
+
+  /// Moves a capture to Trash like Web `trashWikiItem`, only at the revision the person saw.
+  /// Returns a message when the capture could not be moved.
+  func moveToTrash(_ entry: InboxEntry) async -> String? {
     do {
-      try photoPlace?.validate()
+      guard try await client.auth.session.user.id == ownerID else {
+        throw InboxControllerError.ownerChanged
+      }
+      let rows: [ExistingEntry] =
+        try await client
+        .from("entries")
+        .update(EntryTrashUpdate(deletedAt: Date()))
+        .eq("id", value: entry.id.uuidString)
+        .eq("owner_id", value: ownerID.uuidString)
+        .eq("revision", value: entry.revision)
+        .is("deleted_at", value: nil)
+        .select("id")
+        .execute()
+        .value
+      guard rows.first?.id == entry.id else {
+        return "This item changed on another device or is already in Trash. Refresh and try again."
+      }
+      entries.removeAll { $0.id == entry.id }
+      return nil
+    } catch is PostgrestError {
+      return "MemoTrail could not move this item to Trash."
+    } catch {
+      return "Could not confirm the move to Trash. Refresh before trying again."
+    }
+  }
+
+  /// Web `reviewInboxEntry`: validates a Review Entry draft and saves it, with its formatting,
+  /// through the review function that leaves the Entry's Location unchanged.
+  static func submitReview(
+    client: SupabaseClient, ownerID: UUID, entry: InboxEntry, draft: EntryReviewDraft,
+    intent: ReviewIntent
+  ) async -> ReviewSubmission {
+    let input: InboxReviewInput
+    do {
+      try draft.photoPlace?.validate()
       input = try InboxReviewInput.validate(
         entryID: entry.id,
         revision: entry.revision,
-        title: title,
-        body: body,
-        collectionNames: collectionNames,
-        itemKind: itemKind,
-        itemSubtype: itemSubtype,
-        occurredAt: occurredAt,
-        occurredTimezone: occurredTimezone,
-        tagNames: tagNames,
-        datePrecision: datePrecision,
-        occurredEnd: occurredEnd,
-        occurredLabel: occurredLabel
+        title: draft.title,
+        body: draft.body,
+        bodyRich: draft.bodyRich,
+        collectionNames: draft.collectionNames,
+        itemKind: entry.itemKind,
+        itemSubtype: entry.itemSubtype,
+        occurredAt: draft.occurrence.start,
+        occurredTimezone: draft.occurrence.timezone,
+        tagNames: draft.tagNames,
+        datePrecision: draft.occurrence.precision,
+        occurredEnd: draft.occurrence.end,
+        occurredLabel: draft.occurrence.label
       )
     } catch {
-      return ReviewResult(message: error.localizedDescription, status: .error)
+      return .failed(ReviewResult(message: error.localizedDescription, status: .error))
     }
 
     do {
-      let session = try await client.auth.session
-      guard session.user.id == ownerID else {
+      guard try await client.auth.session.user.id == ownerID else {
         throw InboxControllerError.ownerChanged
       }
 
-      let parameters = ReviewEntryParameters(
+      var parameters = ReviewEntryParameters(
         entryID: input.entryID,
         expectedRevision: input.revision,
         title: input.title,
@@ -260,62 +323,34 @@ final class InboxController {
         datePrecision: input.occurrence.precision,
         occurredEnd: input.occurrence.end,
         occurredLabel: input.occurrence.label,
-        photoPlace: photoPlace,
+        photoPlace: draft.photoPlace,
         occurredStartRaw: input.occurredAt == entry.occurredStart ? entry.occurredStartRaw : nil,
         occurredEndRaw: input.occurrence.end == entry.occurredEnd ? entry.occurredEndRaw : nil
       )
-      let reviewResults: [ReviewedEntryResult] =
+      parameters.bodyRich = input.bodyRich
+      let results: [ReviewedEntryResult] =
         try await client
-        .rpc("review_wiki_item_with_photo_place", params: parameters)
+        .rpc("review_wiki_item_with_photo_place_rich", params: parameters)
         .execute()
         .value
 
-      guard let reviewResult = reviewResults.first else {
-        return ReviewResult(
-          message:
-            "This Entry changed on another device. Close it, refresh, and review the latest version.",
-          status: .conflict
-        )
+      guard let result = results.first, result.entryID == entry.id else {
+        return .failed(
+          ReviewResult(
+            message:
+              "This Entry changed on another device. Close it, refresh, and review the latest version.",
+            status: .conflict))
       }
-
-      if intent == .done {
-        entries.removeAll { $0.id == reviewResult.entryID }
-        return ReviewResult(message: "Entry organized.", status: .done)
-      }
-
-      let updatedEntry = InboxEntry(
-        id: entry.id,
-        title: input.title,
-        body: input.body,
-        collectionNames: input.collectionNames,
-        itemKind: input.itemKind,
-        itemSubtype: input.itemSubtype,
-        createdAt: entry.createdAt,
-        occurredStart: input.occurredAt,
-        occurredTimezone: input.occurredTimezone,
-        revision: reviewResult.revision,
-        tagNames: input.tagNames,
-        datePrecision: input.occurrence.precision,
-        occurredEnd: input.occurrence.end,
-        occurredLabel: input.occurrence.label
-      )
-
-      if let index = entries.firstIndex(where: { $0.id == reviewResult.entryID }) {
-        entries[index] = updatedEntry
-      }
-      collectionOptions = mergedOptions(collectionOptions, input.collectionNames)
-      tagOptions = mergedOptions(tagOptions, input.tagNames)
-      return ReviewResult(message: "Changes saved.", status: .saved)
+      return .saved(input, revision: result.revision)
     } catch let error as PostgrestError where error.code == "40001" {
-      return ReviewResult(
-        message:
-          "The photo or Place changed. Close this review, refresh, and confirm the latest version before saving.",
-        status: .conflict)
+      return .failed(
+        ReviewResult(
+          message:
+            "The photo or Location changed. Close this review, refresh, and confirm the latest version before saving.",
+          status: .conflict))
     } catch {
-      return ReviewResult(
-        message: "MemoTrail could not save these changes. Try again.",
-        status: .error
-      )
+      return .failed(
+        ReviewResult(message: "MemoTrail could not save these changes. Try again.", status: .error))
     }
   }
 
@@ -332,10 +367,7 @@ final class InboxController {
         throw InboxControllerError.ownerChanged
       }
     } catch {
-      captureMessage = CaptureMessage(
-        text: "Your session expired. Sign in again to sync pending Entries.",
-        style: .error
-      )
+      captureError = "Your session expired. Sign in again to sync pending Entries."
       return false
     }
 
@@ -347,10 +379,7 @@ final class InboxController {
         try await insert(entry)
       } catch {
         guard await entryAlreadyExists(entry.id) else {
-          captureMessage = CaptureMessage(
-            text: "Saved on this iPhone. MemoTrail will retry when you are online.",
-            style: .error
-          )
+          captureError = "Saved on this iPhone. MemoTrail will retry when you are online."
           return didSyncEntry
         }
       }
@@ -358,18 +387,13 @@ final class InboxController {
       do {
         try await synchronizeAttachments(entry)
       } catch {
-        captureMessage = CaptureMessage(
-          text: attachmentSyncMessage(for: error),
-          style: .error
-        )
+        captureError = attachmentSyncMessage(for: error)
         return didSyncEntry
       }
 
       guard let nextQueue = queueStore.remove(entryID: entry.id, ownerID: ownerID) else {
-        captureMessage = CaptureMessage(
-          text: "This Entry reached MemoTrail, but its local pending copy could not be cleared.",
-          style: .error
-        )
+        captureError =
+          "This Entry reached MemoTrail, but its local pending copy could not be cleared."
         return didSyncEntry
       }
 
@@ -389,12 +413,12 @@ final class InboxController {
     }
 
     if didSyncEntry {
-      captureMessage = CaptureMessage(
-        text: lastSyncedPhotoCount > 0
-          ? "Saved to Inbox with \(lastSyncedPhotoCount) \(lastSyncedPhotoCount == 1 ? "photo" : "photos")."
-          : "Saved to Inbox.",
-        style: .success
-      )
+      // Like Web, a synced capture is announced once; only problems stay in the composer.
+      captureError = nil
+      MTToastCenter.shared.success(
+        lastSyncedPhotoCount > 0
+          ? "Saved to Inbox with \(countLabel(lastSyncedPhotoCount, "photo"))."
+          : "Saved to Inbox.")
     }
 
     return didSyncEntry
@@ -411,7 +435,8 @@ final class InboxController {
       datePrecision: entry.effectiveOccurrence.precision.rawValue,
       occurredEnd: entry.effectiveOccurrence.end,
       occurredLabel: entry.effectiveOccurrence.label,
-      clientID: "ios:\(entry.id.uuidString.lowercased())"
+      clientID: "ios:\(entry.id.uuidString.lowercased())",
+      metadata: entry.bodyRich.map { [EntryRichText.metadataKey: $0] } ?? [:]
     )
 
     try await client
@@ -578,19 +603,14 @@ final class InboxController {
 }
 
 extension InboxController {
-  struct CaptureMessage: Equatable, Sendable {
-    enum Style: Sendable {
-      case error
-      case success
-    }
-
-    let text: String
-    let style: Style
-  }
-
   enum ReviewIntent: Sendable {
     case done
     case save
+  }
+
+  enum ReviewSubmission: Sendable {
+    case saved(InboxReviewInput, revision: Int)
+    case failed(ReviewResult)
   }
 
   struct ReviewResult: Equatable, Sendable {
@@ -610,6 +630,14 @@ private struct ExistingEntry: Decodable, Sendable {
   let id: UUID
 }
 
+private struct EntryTrashUpdate: Encodable, Sendable {
+  let deletedAt: Date
+
+  enum CodingKeys: String, CodingKey {
+    case deletedAt = "deleted_at"
+  }
+}
+
 struct InboxEntryInsert: Encodable, Sendable {
   let id: UUID
   let ownerID: UUID
@@ -624,6 +652,8 @@ struct InboxEntryInsert: Encodable, Sendable {
   var occurredEnd: Date? = nil
   var occurredLabel: String? = nil
   let clientID: String
+  /// Web's `metadataWithEntryRichText`: `body_rich` when present, otherwise empty.
+  var metadata: [String: EntryEmphasisContent] = [:]
 
   enum CodingKeys: String, CodingKey {
     case id
@@ -639,6 +669,7 @@ struct InboxEntryInsert: Encodable, Sendable {
     case occurredEnd = "occurred_end"
     case occurredLabel = "occurred_label"
     case clientID = "client_id"
+    case metadata
   }
 }
 
@@ -660,6 +691,8 @@ struct ReviewEntryParameters: Encodable, Sendable {
   var photoPlace: PhotoPlaceDraft? = nil
   var occurredStartRaw: String? = nil
   var occurredEndRaw: String? = nil
+  /// Web `p_body_rich`: the note's formatting, or null to clear formatting that no longer fits.
+  var bodyRich: EntryRichText? = nil
 
   enum CodingKeys: String, CodingKey {
     case entryID = "p_entry_id"
@@ -677,6 +710,7 @@ struct ReviewEntryParameters: Encodable, Sendable {
     case occurredEnd = "p_occurred_end"
     case occurredLabel = "p_occurred_label"
     case photoPlace = "p_photo_place"
+    case bodyRich = "p_body_rich"
   }
 
   func encode(to encoder: Encoder) throws {
@@ -709,6 +743,7 @@ struct ReviewEntryParameters: Encodable, Sendable {
     }
     try values.encode(occurredLabel, forKey: .occurredLabel)
     try values.encode(photoPlace, forKey: .photoPlace)
+    try values.encode(bodyRich, forKey: .bodyRich)
   }
 }
 

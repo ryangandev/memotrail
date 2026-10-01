@@ -251,6 +251,17 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     for (const table of ["people", "collections"] as const) {
       expect((await client.from(table).select("id")).data).toEqual([]);
     }
+    // The one item trashed after that list is counted as one item.
+    await open.click();
+    await expect(dialog).toContainText("Empty 1 item from Trash?");
+    await dialog
+      .getByRole("button", { name: "Permanently delete confirmed items" })
+      .click();
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: /(^|\s)1 confirmed item permanently deleted\./,
+      }),
+    ).toBeVisible({ timeout: 15000 });
   } finally {
     await page.close();
     // Clean only this test user's private fixture objects after assertions.

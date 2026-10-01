@@ -297,12 +297,6 @@ export function EntryHistoryView({
             . Your current version {history.current.revision} will stay in
             history.
           </p>
-          {selected.snapshot.history_schema !== 2 && (
-            <p className={styles.notice}>
-              This early snapshot has incomplete relationship history.
-              Relationships not recorded in it will stay as they are now.
-            </p>
-          )}
           <p className={styles.note}>
             People, Collection, and track definitions stay current. Historical
             Location links return to their original snapshots. Photo files are

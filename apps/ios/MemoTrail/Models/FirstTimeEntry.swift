@@ -143,6 +143,13 @@ struct FirstTimeEntry: Equatable, Hashable, Identifiable, Sendable {
   var occurredEnd: Date? = nil
   var occurredStartRaw: String? = nil
   var occurredEndRaw: String? = nil
+  /// The First Time's primary Location, loaded beside the workspace rows like Web.
+  var location: EntryLocation? = nil
+
+  /// The uploaded photos, without their generated display and thumbnail variants, like Web.
+  var originalAttachments: [FirstTimeAttachment] {
+    attachments.filter { $0.variant == .original }
+  }
 
   var occurrence: EntryOccurrence {
     EntryOccurrence(
@@ -434,6 +441,47 @@ struct SaveFirstTimeEntryParameters: Encodable, Equatable, Sendable {
     if input.entryID == nil { try values.encodeNil(forKey: .entryID) }
     try values.encodeIfPresent(input.expectedRevision, forKey: .expectedRevision)
     if input.expectedRevision == nil { try values.encodeNil(forKey: .expectedRevision) }
+  }
+}
+
+/// Web `save_first_time_with_location` with a null Location, which saves the First Time and
+/// removes its primary Location in one transaction.
+struct RemoveFirstTimeLocationParameters: Encodable, Equatable, Sendable {
+  let input: FirstTimeEntryInput
+
+  private enum CodingKeys: String, CodingKey {
+    case input = "p_input"
+    case location = "p_location"
+  }
+
+  private enum InputKeys: String, CodingKey {
+    case title, body, occurredStart, occurredEnd, datePrecision, occurredLabel, occurredTimezone
+    case collectionNames, tagNames, id, revision
+  }
+
+  func encode(to encoder: Encoder) throws {
+    var values = encoder.container(keyedBy: CodingKeys.self)
+    try values.encodeNil(forKey: .location)
+    var fields = values.nestedContainer(keyedBy: InputKeys.self, forKey: .input)
+    try fields.encode(input.title, forKey: .title)
+    try fields.encode(input.body, forKey: .body)
+    if let raw = input.occurredStartRaw {
+      try fields.encode(raw, forKey: .occurredStart)
+    } else {
+      try fields.encodeIfPresent(input.occurredStart, forKey: .occurredStart)
+    }
+    if let raw = input.occurredEndRaw {
+      try fields.encode(raw, forKey: .occurredEnd)
+    } else {
+      try fields.encodeIfPresent(input.occurredEnd, forKey: .occurredEnd)
+    }
+    try fields.encode(input.datePrecision, forKey: .datePrecision)
+    try fields.encodeIfPresent(input.occurredLabel, forKey: .occurredLabel)
+    try fields.encodeIfPresent(input.occurredTimezone, forKey: .occurredTimezone)
+    try fields.encode(input.collectionNames, forKey: .collectionNames)
+    try fields.encode(input.tagNames, forKey: .tagNames)
+    try fields.encodeIfPresent(input.entryID, forKey: .id)
+    try fields.encodeIfPresent(input.expectedRevision, forKey: .revision)
   }
 }
 

@@ -28,13 +28,16 @@ struct WikiItemSummary: Decodable, Equatable, Hashable, Identifiable, Sendable {
     itemKind.displayName(subtype: itemSubtype)
   }
 
+  /// Web `wikiItemDateLabel`: the stored dates in UTC, or when the item last changed.
   var dateLabel: String {
+    let format = Date.FormatStyle(date: .abbreviated, time: .omitted, timeZone: .gmt)
+      .locale(Locale(identifier: "en_US"))
     if let occurredStart {
-      let start = occurredStart.formatted(date: .abbreviated, time: .omitted)
+      let start = occurredStart.formatted(format)
       guard let occurredEnd else { return start }
-      return "\(start) to \(occurredEnd.formatted(date: .abbreviated, time: .omitted))"
+      return "\(start) to \(occurredEnd.formatted(format))"
     }
-    return "Updated \(updatedAt.formatted(date: .abbreviated, time: .omitted))"
+    return "Updated \(updatedAt.formatted(format))"
   }
 
   var isInInbox: Bool { inboxStatus == "unreviewed" }

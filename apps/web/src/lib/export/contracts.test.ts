@@ -25,6 +25,17 @@ describe("portable export contracts", () => {
     ])
       expect(parseExportAction(bad)).toBeNull();
   });
+  it("canonicalizes a native client's uppercase UUID", () => {
+    expect(
+      parseExportAction({
+        action: "download",
+        id: "4F8D0FE6-61D0-418A-8713-CF071AEEA450",
+      }),
+    ).toEqual({
+      action: "download",
+      id: "4f8d0fe6-61d0-418a-8713-cf071aeea450",
+    });
+  });
   it("preserves Unicode, precision and original writing in Markdown without title path injection", () => {
     const body = "我的记录\n\n# untouched\n[link](https://example.test)";
     const result = entryMarkdown({

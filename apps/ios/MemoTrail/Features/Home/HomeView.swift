@@ -5,20 +5,18 @@ struct HomeView: View {
   let user: AuthenticatedUser
   let isAuthenticationBusy: Bool
   let signOut: @MainActor () async -> Void
-  let openLibrary: () -> Void
 
   private let client: SupabaseClient
   @Bindable private var controller: HomeController
   @Bindable private var captureController: InboxController
   @Binding private var captureTitle: String
-  @Binding private var captureBody: String
+  @Binding private var captureNote: NSAttributedString
   @Binding private var captureOccurrence: OccurrenceDraft?
   @Binding private var capturePhotos: [FirstTimePhotoDraft]
   private let addCapturePhoto: @MainActor (FirstTimePhotoDraft) async throws -> Void
   private let removeCapturePhoto: @MainActor (UUID) async throws -> Void
   @Binding private var hasLocalDraft: Bool
-  @State private var isShowingAccount = false
-  @FocusState private var isTitleFocused: Bool
+  @Environment(AppNavigator.self) private var navigator
   @Environment(\.scenePhase) private var scenePhase
 
   init(
@@ -26,11 +24,10 @@ struct HomeView: View {
     user: AuthenticatedUser,
     isAuthenticationBusy: Bool,
     signOut: @escaping @MainActor () async -> Void,
-    openLibrary: @escaping () -> Void,
     controller: HomeController,
     captureController: InboxController,
     captureTitle: Binding<String>,
-    captureBody: Binding<String>,
+    captureNote: Binding<NSAttributedString>,
     captureOccurrence: Binding<OccurrenceDraft?>,
     capturePhotos: Binding<[FirstTimePhotoDraft]>,
     addCapturePhoto: @escaping @MainActor (FirstTimePhotoDraft) async throws -> Void,
@@ -41,11 +38,10 @@ struct HomeView: View {
     self.user = user
     self.isAuthenticationBusy = isAuthenticationBusy
     self.signOut = signOut
-    self.openLibrary = openLibrary
     self.controller = controller
     self.captureController = captureController
     _captureTitle = captureTitle
-    _captureBody = captureBody
+    _captureNote = captureNote
     _captureOccurrence = captureOccurrence
     _capturePhotos = capturePhotos
     self.addCapturePhoto = addCapturePhoto
@@ -55,70 +51,69 @@ struct HomeView: View {
 
   var body: some View {
     NavigationStack {
-      ScrollView {
-        LazyVStack(alignment: .leading, spacing: MTSpacing.s8) {
-          header
-          CaptureCard(
-            title: $captureTitle,
-            note: $captureBody,
-            occurrence: $captureOccurrence,
-            photos: $capturePhotos,
-            isSaving: captureController.isSaving,
-            hasLocalDraft: hasLocalDraft,
-            message: captureController.captureMessage,
-            titleFocus: $isTitleFocused,
-            addPhoto: addCapturePhoto,
-            removePhoto: removeCapturePhoto,
-            save: saveCapture
-          )
+      MTPage(width: .wide) {
+        MTPageHeader(
+          eyebrow: Date.now.formatted(.dateTime.weekday(.wide).month(.wide).day()),
+          title:
+            "\(HomePresentation.greeting(at: .now, timezone: .current)), \(HomePresentation.firstName(controller.snapshot?.profileDisplayName ?? user.name)).",
+          description: "A calm view of what is active, recent, and waiting for you.")
 
-          if !captureController.pendingEntries.isEmpty {
-            pendingCaptureSection
-          }
-
-          homeContent
+        if let snapshot = controller.snapshot {
+          DashboardRibbon(snapshot: snapshot, navigator: navigator)
         }
-        .padding(.horizontal, MTSpacing.s4)
-        .padding(.top, MTSpacing.s6)
-        .padding(.bottom, MTSpacing.s12)
+
+        if controller.snapshot == nil, let message = controller.loadErrorMessage {
+          MTFeedback(
+            title: "Home is taking a moment", message: message, tone: .warm,
+            systemImage: "clock")
+        }
+
+        CaptureCard(
+          note: $captureNote,
+          occurrence: $captureOccurrence,
+          photos: $capturePhotos,
+          isSaving: captureController.isSaving,
+          hasLocalDraft: hasLocalDraft,
+          error: captureController.captureError,
+          addPhoto: addCapturePhoto,
+          removePhoto: removeCapturePhoto,
+          save: saveCapture
+        )
+
+        if !captureController.pendingEntries.isEmpty {
+          pendingCaptureSection
+        }
+
+        if let snapshot = controller.snapshot {
+          readyToOrganize(snapshot)
+          memorySection
+          chaptersSection(snapshot.currentStages)
+          recentSection(snapshot.recentEntries)
+        } else if controller.isLoading {
+          ProgressView("Loading your Dashboard...")
+            .font(MTFont.caption)
+            .tint(MTColor.accent)
+            .frame(maxWidth: .infinity, minHeight: 150)
+        }
       }
-      .background(MTColor.canvas)
       .navigationTitle("Dashboard")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .topBarLeading) {
-          MemoTrailBrand()
-        }
-
-        ToolbarItem(placement: .topBarTrailing) {
-          Button("Profile", systemImage: "person.crop.circle.fill") {
-            isShowingAccount = true
-          }
-          .accessibilityLabel("Open Settings for \(user.name)")
-        }
+      .workspaceToolbar(
+        client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
+      )
+      .navigationDestination(for: DashboardRecord.self) { record in
+        WikiItemDestinationView(
+          client: client, ownerID: user.id, entryID: record.id, kind: record.kind,
+          subtype: record.subtype)
       }
-      .toolbarBackground(MTColor.surface, for: .navigationBar)
-      .toolbarBackground(.visible, for: .navigationBar)
       .refreshable {
         await refresh()
-      }
-      .sheet(isPresented: $isShowingAccount) {
-        NavigationStack {
-          NativeSettingsView(
-            client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
-          )
-          .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-              Button("Done") { isShowingAccount = false }
-            }
-          }
-        }
       }
       .task {
         if !controller.hasLoaded {
           await refresh()
         }
       }
+      .onChange(of: navigator.profileRevision) { Task { await controller.load() } }
       .onChange(of: scenePhase) { _, newPhase in
         guard newPhase == .active, controller.hasLoaded else { return }
         Task { await refresh() }
@@ -126,51 +121,12 @@ struct HomeView: View {
     }
   }
 
-  private var header: some View {
-    HStack(alignment: .bottom, spacing: MTSpacing.s4) {
-      VStack(alignment: .leading, spacing: MTSpacing.s2) {
-        Text(Date.now.formatted(.dateTime.weekday(.wide).month(.wide).day()).uppercased())
-          .font(MTTypography.caption)
-          .tracking(1.1)
-          .foregroundStyle(MTColor.warm)
-
-        Text(
-          "\(HomePresentation.greeting(at: .now, timezone: .current)), \(HomePresentation.firstName(controller.snapshot?.profileDisplayName ?? user.name))."
-        )
-        .font(MTTypography.display)
-        .foregroundStyle(MTColor.ink)
-        .fixedSize(horizontal: false, vertical: true)
-
-        Text("A calm view of what is active, recent, and waiting for you.")
-          .font(MTTypography.body)
-          .foregroundStyle(MTColor.inkMuted)
-          .lineSpacing(2)
-      }
-
-      Spacer(minLength: 0)
-
-      Button(action: openLibrary) {
-        Image(systemName: "magnifyingglass")
-          .font(.system(size: 17, weight: .medium))
-          .foregroundStyle(MTColor.accent)
-          .frame(width: 42, height: 42)
-          .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.medium))
-          .overlay {
-            RoundedRectangle(cornerRadius: MTRadius.medium)
-              .stroke(MTColor.borderStrong, lineWidth: 1)
-          }
-      }
-      .accessibilityLabel("Search your trail")
-      .accessibilityIdentifier("home-search")
-    }
-  }
-
   private var pendingCaptureSection: some View {
     Label(
-      "\(captureController.pendingEntries.count) \(captureController.pendingEntries.count == 1 ? "Entry" : "Entries") waiting to sync",
-      systemImage: "clock.arrow.circlepath"
+      countLabel(captureController.pendingEntries.count, "Entry") + " waiting to sync",
+      icon: .history
     )
-    .font(MTTypography.caption)
+    .font(MTFont.caption)
     .foregroundStyle(MTColor.inkMuted)
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(MTSpacing.s3)
@@ -180,137 +136,105 @@ struct HomeView: View {
     .accessibilityIdentifier("home-pending-entries")
   }
 
-  @ViewBuilder
-  private var homeContent: some View {
-    if controller.isLoading, !controller.hasLoaded {
-      HStack(spacing: MTSpacing.s3) {
-        ProgressView()
-        Text("Loading Home...")
-          .font(MTTypography.body)
-          .foregroundStyle(MTColor.inkMuted)
+  private func section<Content: View>(
+    _ title: String, action: String, open: @escaping () -> Void,
+    @ViewBuilder content: () -> Content
+  ) -> some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s3) {
+      MTSectionHeader(title) {
+        MTSectionLink(title: action, action: open)
       }
-      .frame(maxWidth: .infinity, minHeight: 150)
-    } else if let message = controller.loadErrorMessage, controller.snapshot == nil {
-      homeMessage(
-        title: "Home is taking a moment",
-        message: message,
-        systemImage: "clock"
-      )
-    } else if let snapshot = controller.snapshot {
-      todaySection(snapshot)
-
-      if !snapshot.currentStages.isEmpty {
-        currentStagesSection(snapshot.currentStages)
-      }
-
-      if let memory = controller.resurfacedMemory {
-        resurfacedMemorySection(memory)
-      }
-
-      recentEntriesSection(snapshot.recentEntries)
-
-      if let message = controller.loadErrorMessage {
-        Label(message, systemImage: "exclamationmark.circle.fill")
-          .font(MTTypography.caption)
-          .foregroundStyle(MTColor.warm)
-      }
+      content()
     }
   }
 
-  private func resurfacedMemorySection(_ memory: HomeResurfacedMemory) -> some View {
-    VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      sectionHeading("A memory for today", detail: memory.contextLabel)
-      HomeResurfacedMemoryCard(memory: memory)
-    }
-    .accessibilityIdentifier("home-resurfaced-memory")
-  }
-
-  private func todaySection(_ snapshot: HomeSnapshot) -> some View {
-    VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      sectionHeading("Today", detail: "The small signals that shape today")
-
-      LazyVGrid(
-        columns: [
-          GridItem(.flexible(), spacing: MTSpacing.s3),
-          GridItem(.flexible(), spacing: MTSpacing.s3),
-        ],
-        spacing: MTSpacing.s3
-      ) {
-        HomeStatCard(
-          value: "\(snapshot.inboxCount)",
-          title: "Waiting in Inbox",
-          detail: countLabel(snapshot.inboxCount, singular: "Entry"),
-          systemImage: "tray"
-        )
-        HomeStatCard(
-          value: "\(snapshot.currentStageCount)",
-          title: "Life in progress",
-          detail: countLabel(snapshot.currentStageCount, singular: "current chapter"),
-          systemImage: "point.bottomleft.forward.to.point.topright.scurvepath"
-        )
-        HomeStatCard(
-          value: "\(snapshot.entryCount)",
-          title: "Entries kept",
-          detail:
-            "\(snapshot.firstTimeCount) First Times · \(snapshot.collectionCount) Collections",
-          systemImage: "archivebox"
-        )
-      }
-      .accessibilityIdentifier("home-today-stats")
-    }
-  }
-
-  private func currentStagesSection(_ stages: [HomeStage]) -> some View {
-    VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      sectionHeading("Current chapters", detail: "The overlapping chapters you are living now")
-
-      ScrollView(.horizontal, showsIndicators: false) {
-        LazyHStack(spacing: MTSpacing.s3) {
-          ForEach(stages) { stage in
-            VStack(alignment: .leading, spacing: MTSpacing.s3) {
-              Text(stage.trackName.uppercased())
-                .font(.system(size: 10, weight: .semibold))
-                .tracking(0.8)
-                .foregroundStyle(MTColor.warm)
-
-              Text(stage.title)
-                .font(MTTypography.titleSmall)
-                .foregroundStyle(MTColor.ink)
-                .lineLimit(2)
-
-              Text(stage.displayDate)
-                .font(MTTypography.caption)
-                .foregroundStyle(MTColor.inkFaint)
-            }
-            .frame(width: 242)
-            .frame(minHeight: 116, alignment: .topLeading)
-            .padding(MTSpacing.s4)
-            .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.large))
-            .overlay {
-              RoundedRectangle(cornerRadius: MTRadius.large)
-                .stroke(MTColor.border, lineWidth: 1)
+  private func readyToOrganize(_ snapshot: HomeSnapshot) -> some View {
+    section("Ready to organize", action: "Inbox · \(snapshot.inboxCount)") {
+      navigator.show(.inbox)
+    } content: {
+      if controller.inboxPreview.isEmpty {
+        MTEmptyState(
+          title: "A little room to think",
+          message:
+            "Your Inbox is clear. New captures will wait here until you are ready to organize them.",
+          icon: .inbox)
+      } else {
+        VStack(spacing: 0) {
+          ForEach(controller.inboxPreview) { entry in
+            DashboardInboxRow(entry: entry) { navigator.reviewInboxEntry(entry.id) }
+            if entry.id != controller.inboxPreview.last?.id {
+              Divider().overlay(MTColor.border)
             }
           }
         }
       }
-      .accessibilityIdentifier("home-current-chapters")
     }
+    .padding(MTSpacing.s5)
+    .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.large))
+    .overlay {
+      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border, lineWidth: 1)
+    }
+    .accessibilityIdentifier("home-inbox-preview")
   }
 
-  private func recentEntriesSection(_ entries: [HomeEntry]) -> some View {
-    VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      sectionHeading("Recent Entries", detail: "The latest things added to your archive")
-
-      if entries.isEmpty {
-        homeMessage(
-          title: "Your trail starts here",
-          message: "Capture a thought above and it will become your first recent Entry.",
-          systemImage: "sparkles"
-        )
+  private var memorySection: some View {
+    section("A memory for today", action: "Library") {
+      navigator.show(.library)
+    } content: {
+      if let memory = controller.resurfacedMemory {
+        NavigationLink(value: DashboardRecord(memory.entry)) {
+          DashboardMemoryCard(entry: memory.entry)
+        }
+        .buttonStyle(MTCardButtonStyle(radius: MTRadius.large))
       } else {
-        LazyVStack(spacing: MTSpacing.s3) {
+        MTEmptyState(
+          title: "Room for a memory",
+          message: "As your archive grows, an older dated Entry will find its way back here.",
+          icon: .sparkle)
+      }
+    }
+    .accessibilityIdentifier("home-resurfaced-memory")
+  }
+
+  private func chaptersSection(_ stages: [HomeStage]) -> some View {
+    section("Current chapters", action: "Timeline") {
+      navigator.show(.timeline)
+    } content: {
+      if stages.isEmpty {
+        MTEmptyState(
+          title: "Life is still unfolding",
+          message: "Current periods and focused records from your Timeline will appear here.",
+          icon: .timeline)
+      } else {
+        VStack(spacing: MTSpacing.s3) {
+          ForEach(stages) { stage in
+            DashboardChapterCard(stage: stage) { navigator.openTimelineEntry(stage.id) }
+          }
+        }
+      }
+    }
+    .accessibilityIdentifier("home-current-chapters")
+  }
+
+  private func recentSection(_ entries: [HomeEntry]) -> some View {
+    section("Recent Entries", action: "View all") {
+      navigator.show(.library)
+    } content: {
+      if entries.isEmpty {
+        MTEmptyState(
+          title: "Your trail starts here",
+          message: "Entries you save to Library will appear here, ready to return to.",
+          icon: .archive)
+      } else {
+        VStack(spacing: 0) {
           ForEach(entries) { entry in
-            HomeRecentEntryCard(entry: entry)
+            NavigationLink(value: DashboardRecord(entry)) {
+              DashboardEntryRow(entry: entry)
+            }
+            .buttonStyle(.plain)
+            if entry.id != entries.last?.id {
+              Divider().overlay(MTColor.border)
+            }
           }
         }
       }
@@ -318,58 +242,15 @@ struct HomeView: View {
     .accessibilityIdentifier("home-recent-entries")
   }
 
-  private func sectionHeading(_ title: String, detail: String) -> some View {
-    VStack(alignment: .leading, spacing: 3) {
-      Text(title)
-        .font(MTTypography.title)
-        .foregroundStyle(MTColor.ink)
-
-      Text(detail)
-        .font(MTTypography.caption)
-        .foregroundStyle(MTColor.inkFaint)
-    }
-  }
-
-  private func homeMessage(title: String, message: String, systemImage: String) -> some View {
-    HStack(alignment: .top, spacing: MTSpacing.s3) {
-      Image(systemName: systemImage)
-        .font(.system(size: 20, weight: .medium))
-        .foregroundStyle(MTColor.accent)
-
-      VStack(alignment: .leading, spacing: MTSpacing.s1) {
-        Text(title)
-          .font(MTTypography.titleSmall)
-          .foregroundStyle(MTColor.ink)
-
-        Text(message)
-          .font(MTTypography.body)
-          .foregroundStyle(MTColor.inkMuted)
-      }
-
-      Spacer(minLength: 0)
-    }
-    .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
-    .padding(MTSpacing.s4)
-    .background(MTColor.surfaceSubtle.opacity(0.45))
-    .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
-    .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large)
-        .stroke(MTColor.borderStrong, style: StrokeStyle(lineWidth: 1, dash: [5, 5]))
-    }
-  }
-
   @MainActor
   private func saveCapture() async {
     let didSave = await captureController.save(
-      title: captureTitle,
-      body: captureBody,
-      occurrenceDraft: captureOccurrence,
-      photos: capturePhotos
-    )
+      title: captureTitle, note: captureNote, occurrenceDraft: captureOccurrence,
+      photos: capturePhotos)
 
     if didSave {
       captureTitle = ""
-      captureBody = ""
+      captureNote = NSAttributedString()
       captureOccurrence = nil
       capturePhotos = []
       hasLocalDraft = false
@@ -379,253 +260,5 @@ struct HomeView: View {
   private func refresh() async {
     _ = await captureController.synchronizePendingEntries()
     await controller.load()
-  }
-
-  private func countLabel(_ count: Int, singular: String) -> String {
-    "\(count) \(count == 1 ? singular : "\(singular)s")"
-  }
-}
-
-private struct MemoTrailBrand: View {
-  var body: some View {
-    HStack(spacing: MTSpacing.s2) {
-      MemoTrailMark()
-        .frame(width: 28, height: 28)
-
-      Text("MemoTrail")
-        .font(.system(size: 18, weight: .medium, design: .serif))
-        .foregroundStyle(MTColor.ink)
-    }
-  }
-}
-
-private struct HomeStatCard: View {
-  let value: String
-  let title: String
-  let detail: String
-  let systemImage: String
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: MTSpacing.s2) {
-      HStack(alignment: .top) {
-        Text(value)
-          .font(.system(size: 34, weight: .medium, design: .serif))
-          .foregroundStyle(MTColor.ink)
-
-        Spacer(minLength: MTSpacing.s2)
-
-        Image(systemName: systemImage)
-          .font(.system(size: 15, weight: .medium))
-          .foregroundStyle(MTColor.accent)
-          .frame(width: 32, height: 32)
-          .background(MTColor.accentSubtle, in: Circle())
-      }
-
-      Spacer(minLength: MTSpacing.s2)
-
-      Text(title)
-        .font(MTTypography.label)
-        .foregroundStyle(MTColor.ink)
-
-      Text(detail)
-        .font(.system(size: 10))
-        .foregroundStyle(MTColor.inkFaint)
-        .lineLimit(2)
-    }
-    .frame(maxWidth: .infinity, minHeight: 126, alignment: .topLeading)
-    .padding(MTSpacing.s4)
-    .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.large))
-    .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large)
-        .stroke(MTColor.border, lineWidth: 1)
-    }
-  }
-}
-
-private struct HomeRecentEntryCard: View {
-  let entry: HomeEntry
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      if let imageURL = entry.coverAttachment?.signedURL {
-        AsyncImage(url: imageURL) { phase in
-          switch phase {
-          case .success(let image):
-            image
-              .resizable()
-              .scaledToFill()
-          case .failure:
-            imagePlaceholder
-          case .empty:
-            ProgressView()
-              .frame(maxWidth: .infinity, maxHeight: .infinity)
-          @unknown default:
-            imagePlaceholder
-          }
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 172)
-        .clipped()
-      }
-
-      VStack(alignment: .leading, spacing: MTSpacing.s2) {
-        HStack(alignment: .firstTextBaseline) {
-          Text(entry.displayType.uppercased())
-            .font(.system(size: 10, weight: .semibold))
-            .tracking(0.7)
-            .foregroundStyle(MTColor.warm)
-
-          Spacer()
-
-          Text(entry.displayDate)
-            .font(.system(size: 10))
-            .foregroundStyle(MTColor.inkFaint)
-        }
-
-        Text(entry.title)
-          .font(MTTypography.titleSmall)
-          .foregroundStyle(MTColor.ink)
-          .lineLimit(2)
-
-        if let excerpt = entry.displayExcerpt {
-          Text(excerpt)
-            .font(MTTypography.body)
-            .foregroundStyle(MTColor.inkMuted)
-            .lineLimit(3)
-            .lineSpacing(2)
-        }
-
-        if !organizationLabels.isEmpty {
-          ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: MTSpacing.s1) {
-              ForEach(organizationLabels.prefix(3), id: \.self) { label in
-                Text(label)
-                  .font(.system(size: 10, weight: .medium))
-                  .foregroundStyle(MTColor.accent)
-                  .padding(.horizontal, MTSpacing.s2)
-                  .padding(.vertical, 4)
-                  .background(MTColor.accentSubtle, in: Capsule())
-              }
-            }
-          }
-        }
-      }
-      .padding(MTSpacing.s4)
-    }
-    .background(MTColor.surfaceRaised)
-    .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
-    .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large)
-        .stroke(MTColor.border, lineWidth: 1)
-    }
-  }
-
-  private var organizationLabels: [String] {
-    entry.collectionNames + entry.tagNames.map { "#\($0)" }
-  }
-
-  private var imagePlaceholder: some View {
-    ZStack {
-      MTColor.surfaceSubtle
-      Image(systemName: "photo")
-        .foregroundStyle(MTColor.inkFaint)
-    }
-  }
-}
-
-private struct HomeResurfacedMemoryCard: View {
-  let memory: HomeResurfacedMemory
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      if let imageURL = memory.entry.coverAttachment?.signedURL {
-        AsyncImage(url: imageURL) { phase in
-          switch phase {
-          case .success(let image):
-            image
-              .resizable()
-              .scaledToFill()
-          case .failure:
-            imagePlaceholder
-          case .empty:
-            ProgressView()
-              .frame(maxWidth: .infinity, maxHeight: .infinity)
-          @unknown default:
-            imagePlaceholder
-          }
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 210)
-        .clipped()
-      }
-
-      VStack(alignment: .leading, spacing: MTSpacing.s3) {
-        HStack(alignment: .firstTextBaseline) {
-          Text(memory.entry.displayType.uppercased())
-            .font(.system(size: 10, weight: .semibold))
-            .tracking(0.8)
-            .foregroundStyle(MTColor.warm)
-
-          Spacer()
-
-          Text(memory.entry.displayDate)
-            .font(.system(size: 10))
-            .foregroundStyle(MTColor.inkFaint)
-        }
-
-        Text(memory.entry.title)
-          .font(MTTypography.title)
-          .foregroundStyle(MTColor.ink)
-          .fixedSize(horizontal: false, vertical: true)
-
-        if let excerpt = memory.entry.body.trimmed.nonEmpty?.truncated(to: 240) {
-          Text(excerpt)
-            .font(MTTypography.body)
-            .foregroundStyle(MTColor.inkMuted)
-            .lineLimit(5)
-            .lineSpacing(2)
-        }
-
-        if !organizationLabels.isEmpty {
-          ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: MTSpacing.s1) {
-              ForEach(organizationLabels.prefix(4), id: \.self) { label in
-                Text(label)
-                  .font(.system(size: 10, weight: .medium))
-                  .foregroundStyle(MTColor.accent)
-                  .padding(.horizontal, MTSpacing.s2)
-                  .padding(.vertical, 4)
-                  .background(MTColor.surface, in: Capsule())
-              }
-            }
-          }
-        }
-      }
-      .padding(MTSpacing.s5)
-      .background(
-        LinearGradient(
-          colors: [MTColor.accentSubtle.opacity(0.56), MTColor.surfaceRaised],
-          startPoint: .topLeading,
-          endPoint: .bottomTrailing
-        )
-      )
-    }
-    .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
-    .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large)
-        .stroke(MTColor.border, lineWidth: 1)
-    }
-  }
-
-  private var organizationLabels: [String] {
-    memory.entry.collectionNames + memory.entry.tagNames.map { "#\($0)" }
-  }
-
-  private var imagePlaceholder: some View {
-    ZStack {
-      MTColor.surfaceSubtle
-      Image(systemName: "photo")
-        .foregroundStyle(MTColor.inkFaint)
-    }
   }
 }

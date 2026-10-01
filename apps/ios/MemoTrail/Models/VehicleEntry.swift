@@ -28,6 +28,9 @@ struct VehicleEntry: Equatable, Hashable, Identifiable, Sendable {
 
   var occurredStartRaw: String? = nil
   var occurredEndRaw: String? = nil
+  /// The Vehicle's primary Location, loaded beside the workspace rows like Web.
+  var location: EntryLocation? = nil
+
   var occurrence: EntryOccurrence {
     EntryOccurrence(
       precision: datePrecision, start: occurredStart, end: occurredEnd, label: occurredLabel,
@@ -354,6 +357,53 @@ struct SaveVehicleEntryParameters: Encodable, Equatable, Sendable {
     } else {
       try values.encodeNil(forKey: key)
     }
+  }
+}
+
+/// Web `save_vehicle_with_location` with no source Capture and a null Location, which saves the
+/// Vehicle and removes its primary Location in one transaction.
+struct RemoveVehicleLocationParameters: Encodable, Equatable, Sendable {
+  let input: VehicleEntryInput
+
+  private enum CodingKeys: String, CodingKey {
+    case input = "p_input"
+    case source = "p_source"
+    case location = "p_location"
+  }
+
+  private enum InputKeys: String, CodingKey {
+    case title, body, occurredStart, occurredEnd, datePrecision, occurredLabel, occurredTimezone
+    case make, model, modelYear, color, collectionNames, tagNames, id, revision
+  }
+
+  func encode(to encoder: Encoder) throws {
+    var values = encoder.container(keyedBy: CodingKeys.self)
+    try values.encodeNil(forKey: .source)
+    try values.encodeNil(forKey: .location)
+    var fields = values.nestedContainer(keyedBy: InputKeys.self, forKey: .input)
+    try fields.encode(input.title, forKey: .title)
+    try fields.encode(input.body, forKey: .body)
+    if let raw = input.occurredStartRaw {
+      try fields.encode(raw, forKey: .occurredStart)
+    } else {
+      try fields.encodeIfPresent(input.occurredStart, forKey: .occurredStart)
+    }
+    if let raw = input.occurredEndRaw {
+      try fields.encode(raw, forKey: .occurredEnd)
+    } else {
+      try fields.encodeIfPresent(input.occurredEnd, forKey: .occurredEnd)
+    }
+    try fields.encode(input.datePrecision, forKey: .datePrecision)
+    try fields.encodeIfPresent(input.occurredLabel, forKey: .occurredLabel)
+    try fields.encode(input.occurredTimezone, forKey: .occurredTimezone)
+    try fields.encodeIfPresent(input.make, forKey: .make)
+    try fields.encodeIfPresent(input.model, forKey: .model)
+    try fields.encodeIfPresent(input.modelYear, forKey: .modelYear)
+    try fields.encodeIfPresent(input.color, forKey: .color)
+    try fields.encode(input.collectionNames, forKey: .collectionNames)
+    try fields.encode(input.tagNames, forKey: .tagNames)
+    try fields.encodeIfPresent(input.entryID, forKey: .id)
+    try fields.encodeIfPresent(input.expectedRevision, forKey: .revision)
   }
 }
 

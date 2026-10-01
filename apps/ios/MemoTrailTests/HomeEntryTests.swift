@@ -19,21 +19,18 @@ final class HomeEntryTests: XCTestCase {
     XCTAssertNil(snapshot.recentEntries.first?.coverAttachment?.signedURL)
   }
 
-  func testRecentEntryPresentsTypeDateExcerptAndOrganization() throws {
+  func testRecentEntryPresentsWebTypeDateAndTitle() throws {
     let entry = try XCTUnwrap(decodeSnapshot().recentEntries.first)
 
     XCTAssertEqual(entry.displayType, "Entry")
-    XCTAssertEqual(entry.displayDate, "Sep 3, 2026")
-    XCTAssertEqual(
-      entry.displayExcerpt,
-      "A steady, gentle force encourages bone to remodel around a tooth over time."
-    )
+    XCTAssertEqual(entry.occurrence.displayLabel, "Sep 3, 2026")
+    XCTAssertEqual(entry.cardTitle, entry.title)
   }
 
-  func testStagePresentsOpenRangeInOccurrenceTimezone() throws {
+  func testStagePresentsOngoingSpanInOccurrenceTimezone() throws {
     let stage = try XCTUnwrap(decodeSnapshot().currentStages.first)
 
-    XCTAssertEqual(stage.displayDate, "2025 - Present")
+    XCTAssertEqual(stage.occurrence.spanLabel, "Since 2025")
   }
 
   func testHumanLabelsTakePriorityOverDates() throws {
@@ -42,8 +39,9 @@ final class HomeEntryTests: XCTestCase {
       stageOccurredLabel: "My California chapter"
     )
 
-    XCTAssertEqual(snapshot.recentEntries.first?.displayDate, "The first warm weekend")
-    XCTAssertEqual(snapshot.currentStages.first?.displayDate, "My California chapter")
+    XCTAssertEqual(
+      snapshot.recentEntries.first?.occurrence.displayLabel, "The first warm weekend")
+    XCTAssertEqual(snapshot.currentStages.first?.occurrence.spanLabel, "My California chapter")
   }
 
   func testRequestUsesTheSelectedTimezoneCalendarDate() throws {
@@ -108,7 +106,6 @@ final class HomeEntryTests: XCTestCase {
 
     XCTAssertEqual(memory.kind, .onThisDay)
     XCTAssertEqual(memory.yearsAgo, 1)
-    XCTAssertEqual(memory.contextLabel, "On this day, 1 year ago")
     XCTAssertEqual(memory.entry.title, "First coastal train ride")
     XCTAssertEqual(memory.entry.displayType, "First Time")
     XCTAssertEqual(memory.entry.collectionNames, ["Journeys"])
@@ -116,12 +113,11 @@ final class HomeEntryTests: XCTestCase {
     XCTAssertEqual(memory.entry.coverAttachment?.objectPath, "owner/entry/coast.png")
   }
 
-  func testArchiveMemoryUsesQuietFallbackContext() throws {
+  func testArchiveMemoryDecodesWithoutAnniversary() throws {
     let memory = try decodeMemory(kind: "from_your_archive", yearsAgo: nil)
 
     XCTAssertEqual(memory.kind, .fromArchive)
     XCTAssertNil(memory.yearsAgo)
-    XCTAssertEqual(memory.contextLabel, "A quiet note from your archive")
   }
 
   func testMemoryRejectsInvalidSelectionCombinations() throws {
@@ -140,7 +136,42 @@ final class HomeEntryTests: XCTestCase {
     XCTAssertEqual(HomePresentation.greeting(at: date, timezone: losAngeles), "Good morning")
     XCTAssertEqual(HomePresentation.greeting(at: date, timezone: london), "Good afternoon")
     XCTAssertEqual(HomePresentation.firstName("  Ryan Gan  "), "Ryan")
-    XCTAssertEqual(HomePresentation.firstName("   "), "MemoTrail")
+    XCTAssertEqual(HomePresentation.firstName("   "), "there")
+  }
+
+  func testInboxPreviewUsesTitleOrFirstNoteLineLikeWeb() throws {
+    func preview(_ title: String?, _ body: String) throws -> HomeInboxPreview {
+      let object: [String: Any?] = [
+        "id": UUID().uuidString, "title": title, "body": body,
+        "created_at": "2026-09-03T15:00:00Z",
+      ]
+      let data = try JSONSerialization.data(withJSONObject: object.mapValues { $0 ?? NSNull() })
+      return try decoder.decode(HomeInboxPreview.self, from: data)
+    }
+    let titled = try preview("Market notes", "Peaches and basil")
+    XCTAssertEqual(titled.displayTitle, "Market notes")
+    XCTAssertEqual(titled.excerpt, "Peaches and basil")
+    let untitled = try preview(nil, "  First line\nSecond line")
+    XCTAssertEqual(untitled.displayTitle, "First line")
+    XCTAssertNil(untitled.excerpt)
+    XCTAssertEqual(try preview(" ", " ").displayTitle, "Untitled capture")
+  }
+
+  @MainActor
+  func testNavigatorOpensTabsRoutesAndRecordRequests() {
+    let navigator = AppNavigator()
+    navigator.show(.collections)
+    XCTAssertEqual(navigator.selectedTab, .more)
+    XCTAssertEqual(navigator.morePath, [.collections])
+    let entry = UUID()
+    navigator.reviewInboxEntry(entry)
+    XCTAssertEqual(navigator.selectedTab, .inbox)
+    XCTAssertEqual(navigator.inboxReviewRequest, entry)
+    navigator.openTimelineEntry(entry)
+    XCTAssertEqual(navigator.selectedTab, .timeline)
+    XCTAssertEqual(navigator.timelineEntryRequest, entry)
+    navigator.show(.library)
+    XCTAssertEqual(navigator.selectedTab, .library)
   }
 
   func testRootTabsMatchTheFiveDestinationProductContract() {
@@ -154,10 +185,6 @@ final class HomeEntryTests: XCTestCase {
         "Dashboard", "Inbox", "Timeline", "Library", "More",
       ])
     XCTAssertFalse(RootTabDestination.allCases.map(\.systemImage).contains(where: \.isEmpty))
-    XCTAssertEqual(
-      RootTabDestination.allCases.filter(\.usesGlobalCaptureButton),
-      [.timeline, .library]
-    )
   }
 
   private var decoder: JSONDecoder {
