@@ -144,6 +144,9 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - Native Map now follows Web `/map` at phone width: the page header, Category and year fields that filter as they change, Your areas shortcuts with View all, the map card, and the Entries here panel for the chosen pin or cluster, instead of a filter sheet and a record list sheet.
   A Debug `--review-map` Simulator run confirmed filtering by Category and year, zooming to an area, listing a cluster's Entries newest first, and opening one.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
+- Native History, Timeline, Homes, Vehicles, First Times, Goals, People, and Trash now apply only their newest load, so a slower refresh can no longer replace the reload after a restore or save.
+  Four new contract tests hold an earlier response for History, Timeline, People, and Trash; in a Linux harness against local Supabase they fail with the previous controllers and pass with the fix, alongside eleven existing contract tests.
+  The Xcode build and a `verify-local-contracts.py` Simulator run have not covered this change yet.
 - Refactor existing screens after component acceptance; native address search remains later work.
 
 ### 4. AI capabilities paused

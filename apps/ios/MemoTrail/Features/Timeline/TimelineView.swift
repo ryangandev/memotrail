@@ -301,7 +301,8 @@ struct TimelineView: View {
   private func openRequestedEntry() async {
     guard let id = navigator.timelineEntryRequest, !controller.isLoading else { return }
     if !controller.entries.contains(where: { $0.id == id }) { await controller.load() }
-    guard navigator.timelineEntryRequest == id else { return }
+    // A newer load may have replaced this one; this runs again once it finishes.
+    guard navigator.timelineEntryRequest == id, !controller.isLoading else { return }
     navigator.timelineEntryRequest = nil
     guard let entry = controller.entries.first(where: { $0.id == id }) else {
       MTToastCenter.shared.info("This record is no longer on your Timeline.")

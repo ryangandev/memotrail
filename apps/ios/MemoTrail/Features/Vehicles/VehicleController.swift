@@ -15,6 +15,8 @@ final class VehicleController {
 
   private let client: SupabaseClient
   private let ownerID: UUID
+  /// Only the newest load applies its result, so a slower earlier response cannot replace it.
+  private var loadGeneration = UUID()
 
   init(client: SupabaseClient, ownerID: UUID) {
     self.client = client
@@ -27,12 +29,15 @@ final class VehicleController {
   func entry(id: UUID) -> VehicleEntry? { entries.first { $0.id == id } }
 
   func load() async {
-    guard !isLoading else { return }
+    let generation = UUID()
+    loadGeneration = generation
     isLoading = true
     loadErrorMessage = nil
     defer {
-      isLoading = false
-      hasLoaded = true
+      if loadGeneration == generation {
+        isLoading = false
+        hasLoaded = true
+      }
     }
 
     do {
@@ -57,12 +62,17 @@ final class VehicleController {
         }
       }
 
+      guard loadGeneration == generation else { return }
       async let collectionsRequest: [VehicleOrganizationName] = loadCollections()
       async let tagsRequest: [VehicleOrganizationName] = loadTags()
       entries = loadedEntries
-      collectionOptions = try await collectionsRequest.map(\.name)
-      tagOptions = try await tagsRequest.map(\.name)
+      let collections = try await collectionsRequest
+      let tags = try await tagsRequest
+      guard loadGeneration == generation else { return }
+      collectionOptions = collections.map(\.name)
+      tagOptions = tags.map(\.name)
     } catch {
+      guard loadGeneration == generation else { return }
       loadErrorMessage = "MemoTrail could not load your Vehicles. Pull to refresh or try again."
     }
   }
@@ -299,8 +309,8 @@ final class VehicleController {
     }
   }
 
+  /// Replaces any load still running, so the Vehicles reflect the change.
   func reloadAfterMutation() async {
-    isLoading = false
     await load()
   }
 

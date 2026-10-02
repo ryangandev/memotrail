@@ -15,6 +15,8 @@ final class FirstTimesController {
 
   private let client: SupabaseClient
   private let ownerID: UUID
+  /// Only the newest load applies its result, so a slower earlier response cannot replace it.
+  private var loadGeneration = UUID()
 
   init(client: SupabaseClient, ownerID: UUID) {
     self.client = client
@@ -29,13 +31,15 @@ final class FirstTimesController {
   func entry(id: UUID) -> FirstTimeEntry? { entries.first { $0.id == id } }
 
   func load() async {
-    guard !isLoading else { return }
-
+    let generation = UUID()
+    loadGeneration = generation
     isLoading = true
     loadErrorMessage = nil
     defer {
-      isLoading = false
-      hasLoaded = true
+      if loadGeneration == generation {
+        isLoading = false
+        hasLoaded = true
+      }
     }
 
     do {
@@ -80,10 +84,12 @@ final class FirstTimesController {
           .execute()
           .value) ?? []
 
+      guard loadGeneration == generation else { return }
       entries = loadedEntries
       collectionOptions = collections.map(\.name)
       tagOptions = tags.map(\.name)
     } catch {
+      guard loadGeneration == generation else { return }
       loadErrorMessage = "MemoTrail could not load your First Times. Pull to refresh or try again."
     }
   }
@@ -301,8 +307,8 @@ final class FirstTimesController {
     }
   }
 
+  /// Replaces any load still running, so the First Times reflect the change.
   func reloadAfterMutation() async {
-    isLoading = false
     await load()
   }
 
