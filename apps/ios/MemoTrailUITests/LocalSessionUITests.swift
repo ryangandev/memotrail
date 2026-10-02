@@ -264,7 +264,9 @@ final class LocalSessionUITests: XCTestCase {
 
     // Retrying while still offline announces nothing again, as a toast or in the composer.
     XCTAssertTrue(stored.waitForNonExistence(timeout: 10))
-    reveal(app.buttons["retry-pending-entries"], in: app).tap()
+    // SwiftUI propagates the pending section's identifier to its children; use the visible
+    // action label to find the retry button and to confirm it disappears after sync.
+    reveal(app.buttons["Retry now"], in: app).tap()
     Thread.sleep(forTimeInterval: 2)
     XCTAssertFalse(stored.exists)
     app.buttons["workspace-new-entry"].tap()
@@ -281,7 +283,7 @@ final class LocalSessionUITests: XCTestCase {
     online.tabBars.buttons["Inbox"].tap()
     let row = online.buttons["Organize Ferry tickets for Saturday"]
     XCTAssertTrue(row.waitForExistence(timeout: 15))
-    XCTAssertFalse(online.buttons["retry-pending-entries"].exists)
+    XCTAssertFalse(online.buttons["Retry now"].exists)
     attach(online, "Offline capture synced")
 
     // Keep the seeded captures as the Dashboard's newest three for the other tests.
