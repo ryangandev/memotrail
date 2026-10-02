@@ -120,7 +120,11 @@ test("Home previews the Inbox while Inbox remains a focused organization workspa
     await expect(
       page.getByRole("heading", { name: "Recent Entries", exact: true }),
     ).toBeVisible();
-    await expect(page.getByText("Your trail starts here")).toBeVisible();
+    await expect(
+      page
+        .getByRole("region", { name: "Recent Entries", exact: true })
+        .getByRole("heading", { name: "Your trail starts here", exact: true }),
+    ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Newest thought", exact: true }),
     ).toHaveCount(0);

@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 
 test("AI beta stays off, has no entry points, and blocks old clients without changing saved consent", async ({
+  baseURL,
   page,
   context,
 }) => {
@@ -139,7 +140,7 @@ test("AI beta stays off, has no entry points, and blocks old clients without cha
     expect(automaticRequests).toEqual([]);
 
     const requestHeaders: Record<string, string>[] = [
-      { Origin: "http://127.0.0.1:3100" },
+      { Origin: baseURL! },
       { Authorization: `Bearer ${signed.data.session!.access_token}` },
     ];
     for (const endpoint of ["connection", "suggestions", "search", "explore"]) {

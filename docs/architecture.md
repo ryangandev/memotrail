@@ -320,6 +320,17 @@ Pair it with the test file carrying the same feature name.
   AI routes add their own pause gate before shared authentication, and native AI entry points remain paused as well.
 - Shared behavior should be implemented and tested across Web, iOS, and Supabase in the same product slice.
 - Validation should cover the narrow unit or SQL contract first, then builds, then the closest real browser or native interaction.
+- Web unit collection includes both `.test.ts` and `.test.tsx`; synchronous rendering assertions belong in this fast layer.
+- Multi-client RPC, Storage, and database-locking tests belong in `apps/web/contracts` and run independently of Next.js and Chrome.
+  Browser interactions and Web HTTP route acceptance remain in `apps/web/e2e`.
+  The development-only design gallery has its own browser runner and is excluded from product acceptance.
+  Test servers isolate Next.js build output and generated TypeScript configuration by port.
+- Native unit and backend contracts use `MemoTrail`, while Simulator UI interactions use `MemoTrailUI`.
+  The local account wrappers support explicit XCTest selection without reducing the default full-suite coverage.
+  Build caches are isolated per checkout, logs are unique per run, and concurrent use of one build directory fails immediately.
+- Keep regression cases that protect distinct behavior, even when unit, SQL, and UI coverage overlap.
+  Delete a test when its product surface has been retired and current behavior is covered; do not keep permanently skipped tests for removed UI.
+  The retired active-AI browser flows are removed, while the pause flow, retained provider unit tests, SQL tests, and multi-client exploration contracts remain.
 - Hosted configuration, destructive behavior, media integrity, and recovery require their own end-to-end evidence.
 
 Commands live in the root [README.md](../README.md).

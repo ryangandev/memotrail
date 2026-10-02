@@ -1,5 +1,7 @@
 import { execFileSync, spawn } from "node:child_process";
+import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { e2ePort, e2eURL } from "./e2e-runtime.mjs";
 
 const local = JSON.parse(
   execFileSync("supabase", ["status", "-o", "json"], {
@@ -9,10 +11,30 @@ const local = JSON.parse(
 );
 if (local.API_URL !== "http://127.0.0.1:54321")
   throw new Error("E2E requires the local Supabase instance.");
+const distDir = process.env.MEMOTRAIL_NEXT_DIST_DIR || `.next-e2e-${e2ePort}`;
+const tsconfig = `tsconfig.e2e-${e2ePort}.json`;
+// Next adds generated type paths to its configured file. Keep test paths out of the
+// tracked editor configuration, including when independent ports run concurrently.
+writeFileSync(
+  tsconfig,
+  JSON.stringify({
+    extends: "./tsconfig.json",
+    include: [
+      "next-env.d.ts",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      `${distDir}/types/**/*.ts`,
+      `${distDir}/dev/types/**/*.ts`,
+    ],
+    exclude: ["node_modules"],
+  }),
+);
 const env = {
   ...process.env,
-  MEMOTRAIL_NEXT_DIST_DIR: ".next-e2e",
-  NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3100",
+  MEMOTRAIL_NEXT_DIST_DIR: distDir,
+  MEMOTRAIL_NEXT_TSCONFIG: tsconfig,
+  NEXT_PUBLIC_APP_URL: e2eURL,
   NEXT_PUBLIC_SUPABASE_URL: local.API_URL,
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: local.PUBLISHABLE_KEY || local.ANON_KEY,
   SUPABASE_SECRET_KEY: local.SECRET_KEY || local.SERVICE_ROLE_KEY,
@@ -37,7 +59,7 @@ const server = spawn(
     "--hostname",
     "127.0.0.1",
     "--port",
-    "3100",
+    String(e2ePort),
   ],
   { stdio: "inherit", env },
 );

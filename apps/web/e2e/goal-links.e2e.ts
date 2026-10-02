@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
+import { saveAtCurrentRevision } from "./helpers/mutations";
 
 test("Goal edits retain links to Entries in Trash until they are restored", async ({
   page,
@@ -107,9 +108,7 @@ test("Goal edits retain links to Entries in Trash until they are restored", asyn
     await dialog
       .getByRole("button", { name: "Save changes", exact: true })
       .click();
-    await expect(
-      dialog.getByRole("button", { name: "Save changes" }),
-    ).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "Edit Goal" })).toBeVisible();
     expect(
       (
         await client
@@ -119,19 +118,10 @@ test("Goal edits retain links to Entries in Trash until they are restored", asyn
           .eq("target_entry_id", hiddenID)
       ).data,
     ).toHaveLength(1);
-    const revision = (
-      await client.from("entries").select("revision").eq("id", id).single()
-    ).data!.revision;
-    expect(
-      (
-        await client.rpc("save_goal_entry", {
-          ...args,
-          p_entry_id: id,
-          p_expected_revision: revision,
-          p_related_entry_ids: [],
-        })
-      ).error,
-    ).toBeNull();
+    await saveAtCurrentRevision(client, "save_goal_entry", id, {
+      ...args,
+      p_related_entry_ids: [],
+    });
     expect(
       (
         await client
@@ -169,9 +159,7 @@ test("Goal edits retain links to Entries in Trash until they are restored", asyn
     await dialog
       .getByRole("button", { name: "Save changes", exact: true })
       .click();
-    await expect(
-      dialog.getByRole("button", { name: "Save changes" }),
-    ).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "Edit Goal" })).toBeVisible();
     await expect
       .poll(
         async () =>

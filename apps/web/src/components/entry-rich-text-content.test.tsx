@@ -6,7 +6,7 @@ describe("EntryRichTextContent", () => {
   it("renders validated formatting without using HTML from storage", () => {
     const html = renderToStaticMarkup(
       <EntryRichTextContent
-        body="Remember this\nOne item"
+        body={"Remember this\nOne item"}
         richText={{
           document: {
             content: [

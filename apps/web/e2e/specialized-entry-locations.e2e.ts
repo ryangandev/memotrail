@@ -225,7 +225,11 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
     );
 
     await page.goto("/first-times");
-    await page.getByRole("button", { name: /First hike/ }).click();
+    // The map appears after the client theme has mounted, before opening the editor.
+    await expect(
+      firstTimeCard.locator('[data-record-card-map="true"]'),
+    ).toBeVisible();
+    await firstTimeCard.click();
     await page.getByRole("button", { name: "Edit First Time" }).click();
     const editDialog = page.getByRole("main");
     await expect(
@@ -234,8 +238,8 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
     await editDialog.getByRole("button", { name: "Remove" }).click();
     await editDialog.getByRole("button", { name: "Save changes" }).click();
     await expect(
-      editDialog.getByRole("button", { name: "Save changes" }),
-    ).not.toBeVisible();
+      page.getByRole("button", { name: "Edit First Time" }),
+    ).toBeVisible();
     await page.goto("/first-times");
     await expect(
       page

@@ -148,9 +148,7 @@ test("Home keeps Location optional and never pairs edited addresses with old coo
       .fill("Pine Street");
     await providerEdit.getByRole("option", { name: /10 Pine Street/ }).click();
     await providerEdit.getByRole("button", { name: "Save changes" }).click();
-    await expect(
-      providerEdit.getByRole("button", { name: "Save changes" }),
-    ).not.toBeVisible();
+    await expect(editHome).toBeVisible();
     await page.goto("/homes");
     await expect(
       mappedCard.locator('[data-record-card-map="true"]'),

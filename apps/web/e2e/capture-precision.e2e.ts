@@ -194,17 +194,17 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
         });
       let delayedSync = false;
       if (index === 0) {
-        await page.evaluate(() => {
+        await capture.evaluate((dialog) => {
           sessionStorage.setItem("pending-sync-seen", "no");
           new MutationObserver(() => {
             if (
-              [...document.querySelectorAll("h2")].some(
+              [...dialog.querySelectorAll("h2")].some(
                 (heading) => heading.textContent === "Pending sync",
               )
             ) {
               sessionStorage.setItem("pending-sync-seen", "yes");
             }
-          }).observe(document.body, { childList: true, subtree: true });
+          }).observe(dialog, { childList: true, subtree: true });
         });
         await page.route("**/*", async (route) => {
           if (
@@ -348,17 +348,17 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
     await newCapture
       .getByRole("textbox", { name: "Entry text" })
       .fill("Capture from New");
-    await page.evaluate(() => {
+    await newCapture.evaluate((dialog) => {
       sessionStorage.setItem("pending-sync-seen", "no");
       new MutationObserver(() => {
         if (
-          [...document.querySelectorAll("h2")].some(
+          [...dialog.querySelectorAll("h2")].some(
             (heading) => heading.textContent === "Pending sync",
           )
         ) {
           sessionStorage.setItem("pending-sync-seen", "yes");
         }
-      }).observe(document.body, { childList: true, subtree: true });
+      }).observe(dialog, { childList: true, subtree: true });
     });
     let delayedModalSync = false;
     await page.route("**/*", async (route) => {

@@ -6,6 +6,7 @@ import sharp from "sharp";
 import { createServerClient } from "@supabase/ssr";
 
 test("native bearer and Web cookie media/export work while AI remains paused", async ({
+  baseURL,
   request,
   context,
 }) => {
@@ -165,7 +166,7 @@ test("native bearer and Web cookie media/export work while AI remains paused", a
     expect(
       (
         await context.request.post("/api/export", {
-          headers: { Origin: "http://127.0.0.1:3100" },
+          headers: { Origin: baseURL! },
           data: { action: "list" },
         })
       ).status(),
