@@ -116,6 +116,10 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
   });
   expect(created.error).toBeNull();
   const owner = created.data.user!.id;
+  let releaseMapNavigation = () => {};
+  const mapNavigationGate = new Promise<void>((resolve) => {
+    releaseMapNavigation = resolve;
+  });
 
   try {
     const cookies: { name: string; value: string }[] = [];
@@ -166,7 +170,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       }
 
       if (isRscRequest) {
-        await new Promise((resolve) => setTimeout(resolve, 800));
+        await mapNavigationGate;
       }
 
       await route.continue();
@@ -650,14 +654,15 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       .getByRole("link", { name: "Map", exact: true })
       .click({ noWaitAfter: true });
 
-    await expect(page.getByRole("status", { name: "Opening Map" })).toBeVisible(
-      { timeout: 500 },
-    );
+    await expect(
+      page.getByRole("status", { name: "Opening Map" }),
+    ).toBeVisible();
     await page.screenshot({
       caret: "initial",
       path: "/private/tmp/memotrail-navigation-loading.png",
     });
     await expect(shell).toHaveAttribute("data-shell-instance", "kept");
+    releaseMapNavigation();
     await expect(page).toHaveURL(/\/map$/);
     await expect(
       page.getByRole("heading", { name: "Map", exact: true }),
@@ -1045,6 +1050,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.goBack();
     await expect(page).toHaveURL(/\/library$/);
   } finally {
+    releaseMapNavigation();
     await page.close();
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }

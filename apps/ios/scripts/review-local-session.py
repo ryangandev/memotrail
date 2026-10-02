@@ -20,10 +20,15 @@ import time
 from urllib.request import urlopen
 from zoneinfo import ZoneInfo
 
-from local_supabase import ROOT, LocalStack, summarize
+from local_supabase import (
+    ROOT, LocalStack, default_derived_data, exclusive_build_directory, summarize,
+)
 
 TIMEZONE = "America/Los_Angeles"
-WEB_URL = "http://127.0.0.1:3100"
+WEB_PORT = int(os.environ.get("MEMOTRAIL_E2E_PORT", "3100"))
+if not 1 <= WEB_PORT <= 65535:
+    raise ValueError("MEMOTRAIL_E2E_PORT must be a port from 1 to 65535.")
+WEB_URL = f"http://127.0.0.1:{WEB_PORT}"
 
 
 def wall_time(text, timezone=TIMEZONE):
@@ -190,12 +195,14 @@ def port_open(port):
 
 
 def start_web():
-    if port_open(3100):
-        raise RuntimeError("Port 3100 is in use; stop the other local Web server first.")
+    if port_open(WEB_PORT):
+        raise RuntimeError(f"Port {WEB_PORT} is in use; choose another MEMOTRAIL_E2E_PORT.")
     server = subprocess.Popen(
         ["node", "scripts/e2e-server.mjs"], cwd=ROOT / "apps/web",
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
     for _ in range(90):
+        if server.poll() is not None:
+            raise RuntimeError("The local Web server exited before becoming healthy.")
         try:
             with urlopen(WEB_URL + "/api/health", timeout=5):
                 return server
@@ -210,7 +217,7 @@ def main():
     parser.add_argument("--simulator-id", required=True)
     parser.add_argument("--only-testing", action="append",
                         help="Test identifier; defaults to MemoTrailUITests/LocalSessionUITests")
-    parser.add_argument("--derived-data", default="/private/tmp/memotrail-ios-review-build")
+    parser.add_argument("--derived-data", default=default_derived_data())
     parser.add_argument("--attachments", help="Export screenshots and recordings here")
     parser.add_argument("--web", action="store_true", help="Serve the Web media API locally")
     parser.add_argument("--dump-entries", action="store_true",
@@ -219,7 +226,8 @@ def main():
     stack = LocalStack()
     web = start_web() if args.web else None
     try:
-        with stack.disposable_user("native-review") as user, \
+        with exclusive_build_directory(args.derived_data), \
+                stack.disposable_user("native-review") as user, \
                 tempfile.TemporaryDirectory(prefix="memotrail-native-review-") as folder:
             seed(stack, user)
             config = Path(folder) / "session.json"
@@ -242,7 +250,7 @@ def main():
             ]
             for test in args.only_testing or ["MemoTrailUITests/LocalSessionUITests"]:
                 command.append("-only-testing:" + test)
-            log = Path(args.derived_data) / "native-review.log"
+            log = result_bundle.with_suffix(".log")
             log.parent.mkdir(parents=True, exist_ok=True)
             print("Running native UI tests as a seeded disposable local account.", flush=True)
             env = dict(os.environ, TEST_RUNNER_MEMOTRAIL_REVIEW_SESSION=str(config))
@@ -263,7 +271,7 @@ def main():
                 ], check=False, stdout=subprocess.DEVNULL)
                 print("Attachments:", args.attachments, flush=True)
             print("Native UI test exit code:", result.returncode, "Log:", log, flush=True)
-            return result.returncode or (1 if summary["skippedTests"] else 0)
+            return result.returncode or (1 if summary["skippedTests"] or not summary["passedTests"] else 0)
     finally:
         if web:
             os.killpg(web.pid, 15)

@@ -5,6 +5,8 @@ accounts and seed data never reach a hosted project.
 """
 
 from contextlib import contextmanager
+import fcntl
+import hashlib
 import json
 from pathlib import Path
 import secrets
@@ -15,6 +17,26 @@ from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[3]
 MEDIA_BUCKET = "entry-media"
+
+
+def default_derived_data():
+    workspace = hashlib.sha256(str(ROOT).encode()).hexdigest()[:12]
+    return f"/private/tmp/memotrail-ios-{workspace}"
+
+
+@contextmanager
+def exclusive_build_directory(directory):
+    """Keep simultaneous local test runs from sharing Xcode's build database."""
+    folder = Path(directory)
+    folder.mkdir(parents=True, exist_ok=True)
+    with (folder / ".memotrail-test.lock").open("w") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise RuntimeError(
+                "Another native test run uses this build directory; choose a different --derived-data."
+            ) from None
+        yield
 
 
 class LocalStack:

@@ -8,17 +8,22 @@ import secrets
 import subprocess
 import tempfile
 
-from local_supabase import ROOT, LocalStack, summarize
+from local_supabase import (
+    ROOT, LocalStack, default_derived_data, exclusive_build_directory, summarize,
+)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--simulator-id", required=True)
-    parser.add_argument("--derived-data", default="/private/tmp/memotrail-ios-adoption-build")
+    parser.add_argument("--only-testing", action="append",
+                        help="XCTest identifier; repeat to select tests instead of the full suite")
+    parser.add_argument("--derived-data", default=default_derived_data())
     parser.add_argument("--source-packages", help="Optional existing Xcode SourcePackages directory")
     args = parser.parse_args()
     stack = LocalStack()
-    with stack.disposable_user("native-contract") as user, \
+    with exclusive_build_directory(args.derived_data), \
+            stack.disposable_user("native-contract") as user, \
             tempfile.TemporaryDirectory(prefix="memotrail-native-contract-") as folder:
         config = Path(folder) / "config.json"
         config.write_text(json.dumps({
@@ -39,15 +44,18 @@ def main():
             "CODE_SIGNING_ALLOWED=NO", "MEMOTRAIL_NATIVE_CONTRACT_CONFIG=" + str(config),
             "test",
         ]
+        for test in args.only_testing or []:
+            command.append("-only-testing:" + test)
         if args.source_packages:
             command.extend(["-clonedSourcePackagesDirPath", args.source_packages])
-        log = Path("/private/tmp/memotrail-native-contract-tests.log")
+        log = result_bundle.with_suffix(".log")
+        log.parent.mkdir(parents=True, exist_ok=True)
         print("Running native tests against local Supabase with a disposable account.", flush=True)
         with log.open("w") as output:
             result = subprocess.run(command, cwd=ROOT, stdout=output, stderr=subprocess.STDOUT)
         summary = summarize(result_bundle)
         print("Native test exit code:", result.returncode, "Log:", log, flush=True)
-        return result.returncode or (1 if summary["skippedTests"] else 0)
+        return result.returncode or (1 if summary["skippedTests"] or not summary["passedTests"] else 0)
 
 
 if __name__ == "__main__":

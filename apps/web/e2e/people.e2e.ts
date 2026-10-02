@@ -121,8 +121,8 @@ test("People saves, links, protects, edits, trashes, and restores on desktop and
       .click();
     await editor.getByRole("button", { name: "Save changes" }).click();
     await expect(
-      editor.getByRole("button", { name: "Save changes" }),
-    ).not.toBeVisible();
+      page.getByRole("button", { name: "Edit Person" }),
+    ).toBeVisible();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.goto("/people");

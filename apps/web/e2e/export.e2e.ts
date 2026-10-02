@@ -7,6 +7,7 @@ import { createServerClient } from "@supabase/ssr";
 import { hasCompleteExport } from "../src/lib/export/contracts";
 
 test("Complete ZIP is portable, byte-identical, shared with native auth, and recoverable after missing media", async ({
+  baseURL,
   page,
   context,
 }, testInfo) => {
@@ -45,7 +46,7 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
     expect(
       (
         await page.request.post("/api/export", {
-          headers: { Origin: "http://127.0.0.1:3100" },
+          headers: { Origin: baseURL! },
           data: { action: "list" },
         })
       ).status(),

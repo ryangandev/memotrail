@@ -63,8 +63,11 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - The Web history schema fix passes 462 unit tests and nine local history browser scenarios in both development and production mode, covering supported restoration, legacy rejection, and version selection.
   Lint, type checking, formatting, and the production build also pass.
 - The native history schema fix passes all 249 native tests, including local Supabase contract tests, and the seeded Simulator Item page scenario covering both restorable and unrestorable versions.
-- The broader comparison-fix baseline passed all 90 active Web browser E2E scenarios and 61 database files with 1,567 assertions on local Supabase.
-  Four active-AI scenarios remain explicitly skipped while AI is paused.
+- The current test-layer check passes 469 Web unit/rendering tests, four multi-client data contracts, and 12 development-gallery scenarios.
+  All 77 product browser/HTTP scenarios are verified through a complete run and passing focused reruns of corrected assertions; no failures or skips remain unresolved.
+  Native validation passes all 254 unit/backend tests, including 17 local Supabase contracts, plus three signed-in UI flows covering Capture, offline replay, and Export.
+  Database validation passes 61 files with 1,567 assertions on local Supabase.
+  The retired active-AI browser scenarios have been removed, and current AI pause behavior remains covered; commands and layer-selection rules live in the root README.
 - A seeded pre-migration local exercise converted Journal, Story, and Trip to tags; Timeline point and span to Moment and Period; and preserved Inbox state and revision numbers.
 
 ### 2. Accept Web Location
@@ -161,7 +164,7 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - Do not install a local model or enable Production AI as part of this work.
 - Resume only after worthwhile use cases and redesigned entry points are accepted; decision-model actions remain exploratory.
 - Branch validation passed 445 unit tests, lint, type checking, a production build, and targeted AI-pause, Settings, page-frame, and navigation browser tests.
-- The AI-pause flow also passed against a local production build; four retained active-AI E2E scenarios are explicitly skipped while paused, while provider unit tests still run.
+- The AI-pause flow also passed against a local production build; provider unit tests and retained data contracts still run.
 - A development navigation run logged a client-aborted request; the production-build AI-pause check passed without that diagnostic.
 - Production deployment and live acceptance remain unverified; native AI entry points now follow the same pause.
 

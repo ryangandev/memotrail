@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
+import { saveAtCurrentRevision } from "./helpers/mutations";
 
 for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
   test(`${kind} editing preserves trashed Collection membership`, async ({
@@ -158,8 +159,8 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
         .getByRole("button", { name: "Save changes", exact: true })
         .click();
       await expect(
-        dialog.getByRole("button", { name: "Save changes" }),
-      ).not.toBeVisible();
+        page.getByRole("button", { name: `Edit ${label}` }),
+      ).toBeVisible();
       await expect
         .poll(
           async () =>
@@ -190,22 +191,10 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
         ).data,
       ).toHaveLength(1);
       // The same authenticated RPC is the native client's mutation boundary.
-      let native;
-      for (let attempt = 0; attempt < 3; attempt += 1) {
-        const revision = (
-          await client.from("entries").select("revision").eq("id", id).single()
-        ).data!.revision;
-        native = await client.rpc(config.rpc, {
-          ...config.args,
-          p_entry_id: id,
-          p_expected_revision: revision,
-          p_collection_names: [],
-        });
-        if (native.error || native.data?.length) break;
-      }
-      if (!native) throw new Error("Native mutation was not attempted.");
-      expect(native.error).toBeNull();
-      expect(native.data).toHaveLength(1);
+      await saveAtCurrentRevision(client, config.rpc, id, {
+        ...config.args,
+        p_collection_names: [],
+      });
       const memberships = (
         await client
           .from("entry_collections")

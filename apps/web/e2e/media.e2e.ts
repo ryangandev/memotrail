@@ -8,6 +8,7 @@ import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
 test("Private photo previews preserve originals across Web, native bearer access, caching, and Trash", async ({
+  baseURL,
   page,
   context,
 }) => {
@@ -34,7 +35,7 @@ test("Private photo previews preserve originals across Web, native bearer access
     expect(
       (
         await page.request.post("/api/media/urls", {
-          headers: { Origin: "http://127.0.0.1:3100" },
+          headers: { Origin: baseURL! },
           data: { paths: [] },
         })
       ).status(),

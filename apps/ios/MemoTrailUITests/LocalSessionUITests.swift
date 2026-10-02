@@ -213,22 +213,23 @@ final class LocalSessionUITests: XCTestCase {
     app.tabBars.buttons["Inbox"].tap()
     app.buttons["workspace-new-entry"].tap()
     XCTAssertTrue(app.buttons["Close quick capture"].waitForExistence(timeout: 10))
-    let quick = app.textViews["capture-body"]
+    let composer = try quickCapture(in: app)
+    let quick = composer.textViews["capture-body"]
     XCTAssertTrue(quick.waitForExistence(timeout: 5))
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
     quick.typeText("Lanterns on the pier")
     attach(app, "Quick Capture")
-    app.buttons["rich-dismiss-keyboard"].tap()
-    app.buttons["capture-date"].tap()
-    let captureTime = app.buttons["Use capture time"]
+    composer.buttons["rich-dismiss-keyboard"].tap()
+    composer.buttons["capture-date"].tap()
+    let captureTime = composer.buttons["Use capture time"]
     XCTAssertTrue(captureTime.waitForExistence(timeout: 5))
-    XCTAssertEqual(app.buttons["capture-date"].label, "Custom date")
+    XCTAssertEqual(composer.buttons["capture-date"].label, "Custom date")
     attach(app, "Quick Capture relevant date")
     captureTime.tap()
     XCTAssertTrue(captureTime.waitForNonExistence(timeout: 5))
 
     // Saving closes it and announces the capture once, after it lands in the Inbox.
-    app.buttons["save-entry"].tap()
+    composer.buttons["save-entry"].tap()
     XCTAssertTrue(app.buttons["Close quick capture"].waitForNonExistence(timeout: 10))
     XCTAssertTrue(text("Saved to Inbox", in: app).waitForExistence(timeout: 15))
     XCTAssertFalse(text("Saved on this iPhone", in: app).exists)
@@ -246,12 +247,13 @@ final class LocalSessionUITests: XCTestCase {
     XCTAssertTrue(app.tabBars.buttons["Inbox"].waitForExistence(timeout: 20))
     app.tabBars.buttons["Inbox"].tap()
     app.buttons["workspace-new-entry"].tap()
-    let quick = app.textViews["capture-body"]
+    let composer = try quickCapture(in: app)
+    let quick = composer.textViews["capture-body"]
     XCTAssertTrue(quick.waitForExistence(timeout: 10))
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
     quick.typeText("Ferry tickets for Saturday")
-    app.buttons["rich-dismiss-keyboard"].tap()
-    app.buttons["save-entry"].tap()
+    composer.buttons["rich-dismiss-keyboard"].tap()
+    composer.buttons["save-entry"].tap()
 
     // Without a connection, saving closes Quick Capture and confirms once that the capture is
     // safe on this iPhone, then the Inbox shows it waiting to sync.
@@ -1353,6 +1355,18 @@ final class LocalSessionUITests: XCTestCase {
       let session = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
     else { return false }
     return session["apiURL"] is String
+  }
+
+  // A retained Dashboard composer can remain in the accessibility tree under the cover.
+  // Select the smallest container with both the modal close action and its note editor.
+  private func quickCapture(in app: XCUIApplication) throws -> XCUIElement {
+    let containers = app.otherElements
+      .containing(.button, identifier: "close-quick-capture")
+      .containing(.textView, identifier: "capture-body")
+      .allElementsBoundByIndex
+    let composer = try XCTUnwrap(containers.last)
+    XCTAssertEqual(composer.textViews.matching(identifier: "capture-body").count, 1)
+    return composer
   }
 
   private func element(_ identifier: String, in app: XCUIApplication) -> XCUIElement {

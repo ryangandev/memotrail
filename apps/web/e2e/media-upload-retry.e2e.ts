@@ -261,8 +261,8 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
           }
         }
         await expect(
-          dialog.getByRole("button", { name: "Save changes", exact: true }),
-        ).not.toBeVisible();
+          page.getByRole("button", { name: `Edit ${label}` }),
+        ).toBeVisible();
         const registeredPhotos = () =>
           client
             .from("attachments")

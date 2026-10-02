@@ -124,9 +124,7 @@ for (const kind of ["home", "vehicle"] as const) {
       await dialog
         .getByRole("button", { name: "Save changes", exact: true })
         .click();
-      await expect(
-        dialog.getByRole("button", { name: "Save changes" }),
-      ).not.toBeVisible();
+      await expect(page.getByRole("button", { name: editLabel })).toBeVisible();
       const entry = (
         await client
           .from("entries")

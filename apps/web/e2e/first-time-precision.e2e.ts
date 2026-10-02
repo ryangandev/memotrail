@@ -123,8 +123,8 @@ test("Editing a First Time keeps its original date range", async ({
     await page.emulateMedia({ colorScheme: "light" });
     await dialog.getByRole("button", { name: "Save changes" }).click();
     await expect(
-      dialog.getByRole("button", { name: "Save changes" }),
-    ).not.toBeVisible();
+      page.getByRole("button", { name: "Edit First Time" }),
+    ).toBeVisible();
     await expect(page).toHaveURL(`/first-times/${id}`);
     await expect
       .poll(
@@ -174,8 +174,8 @@ test("Editing a First Time keeps its original date range", async ({
     ).toHaveValue("exact");
     await dialog.getByRole("button", { name: "Save changes" }).click();
     await expect(
-      dialog.getByRole("button", { name: "Save changes" }),
-    ).not.toBeVisible();
+      page.getByRole("button", { name: "Edit First Time" }),
+    ).toBeVisible();
     expect(
       (
         await client
@@ -208,8 +208,8 @@ test("Editing a First Time keeps its original date range", async ({
       await setDateDescription(dialog, sample.label);
       await dialog.getByRole("button", { name: "Save changes" }).click();
       await expect(
-        dialog.getByRole("button", { name: "Save changes" }),
-      ).not.toBeVisible();
+        page.getByRole("button", { name: "Edit First Time" }),
+      ).toBeVisible();
       await expect
         .poll(
           async () =>

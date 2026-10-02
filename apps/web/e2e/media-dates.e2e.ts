@@ -11,6 +11,7 @@ import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
 test("Camera dates are private, read-only suggestions until explicit Inbox save", async ({
+  baseURL,
   page,
   context,
 }) => {
@@ -32,7 +33,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     entry = randomUUID(),
     attachment = randomUUID();
   const path = `${owner}/${entry}/${attachment}.jpg`;
-  const origin = { Origin: "http://127.0.0.1:3100" };
+  const origin = { Origin: baseURL! };
   let otherOwner: string | undefined;
   try {
     expect(

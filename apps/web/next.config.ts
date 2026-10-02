@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   devIndicators: false,
   distDir: process.env.MEMOTRAIL_NEXT_DIST_DIR ?? ".next",
+  typescript: {
+    tsconfigPath: process.env.MEMOTRAIL_NEXT_TSCONFIG ?? "tsconfig.json",
+  },
   serverExternalPackages: [
     "@memotrail/media-runtime",
     "sharp",
