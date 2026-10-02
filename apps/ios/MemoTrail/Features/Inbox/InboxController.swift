@@ -17,6 +17,10 @@ final class InboxController {
   private(set) var loadErrorMessage: String?
   /// The latest capture or sync problem, shown in the composer until the next attempt.
   private(set) var captureError: String?
+  /// Captures saved since the last sync attempt began; that attempt decides how each is announced.
+  private var unattemptedCaptureIDs: Set<UUID> = []
+  /// Waiting captures already confirmed as safe on this iPhone, which retries do not announce.
+  private var confirmedOfflineCaptureIDs: Set<UUID> = []
 
   private let client: SupabaseClient
   private let ownerID: UUID
@@ -173,6 +177,7 @@ final class InboxController {
     }
 
     pendingEntries = nextQueue
+    unattemptedCaptureIDs.insert(pendingEntry.id)
 
     Task { @MainActor [weak self] in
       guard let self else { return }
@@ -360,12 +365,18 @@ final class InboxController {
 
     isSyncing = true
     defer { isSyncing = false }
+    let firstAttemptIDs = unattemptedCaptureIDs
+    unattemptedCaptureIDs = []
 
     do {
       let session = try await client.auth.session
       guard session.user.id == ownerID else {
         throw InboxControllerError.ownerChanged
       }
+    } catch is URLError {
+      // An expired access token cannot be refreshed offline; the capture still waits safely.
+      announceUnreachable(firstAttemptIDs: firstAttemptIDs)
+      return false
     } catch {
       captureError = "Your session expired. Sign in again to sync pending Entries."
       return false
@@ -379,7 +390,7 @@ final class InboxController {
         try await insert(entry)
       } catch {
         guard await entryAlreadyExists(entry.id) else {
-          captureError = "Saved on this iPhone. MemoTrail will retry when you are online."
+          announceUnreachable(firstAttemptIDs: firstAttemptIDs)
           return didSyncEntry
         }
       }
@@ -398,6 +409,7 @@ final class InboxController {
       }
 
       pendingEntries = nextQueue
+      confirmedOfflineCaptureIDs.remove(entry.id)
       if AppConfiguration.aiEnabled {
         Task { [weak self] in
           // Optional suggestions cannot delay capture or requeue a successfully saved Entry.
@@ -422,6 +434,23 @@ final class InboxController {
     }
 
     return didSyncEntry
+  }
+
+  /// When MemoTrail cannot be reached, like Web's offline save, captures on their first sync
+  /// attempt are confirmed once with a toast instead of in the composer, which may already be
+  /// closed. The composer keeps the retry note only while a waiting capture has had no toast,
+  /// such as one saved before the app relaunched.
+  private func announceUnreachable(firstAttemptIDs: Set<UUID>) {
+    let waitingIDs = Set(pendingEntries.map(\.id))
+    let newlyWaitingIDs = firstAttemptIDs.intersection(waitingIDs)
+    if !newlyWaitingIDs.isEmpty {
+      MTToastCenter.shared.info("Saved on this iPhone. MemoTrail will sync when you are online.")
+    }
+    confirmedOfflineCaptureIDs.formUnion(newlyWaitingIDs)
+    confirmedOfflineCaptureIDs.formIntersection(waitingIDs)
+    captureError =
+      waitingIDs.isSubset(of: confirmedOfflineCaptureIDs)
+      ? nil : "Saved on this iPhone. MemoTrail will retry when you are online."
   }
 
   private func insert(_ entry: QueuedInboxEntry) async throws {
@@ -454,6 +483,9 @@ final class InboxController {
         .eq("id", value: entryID.uuidString)
         .eq("owner_id", value: ownerID.uuidString)
         .limit(1)
+        // Offline, backoff retries would hold the capture's confirmation for seconds; an
+        // unconfirmed check only leaves the capture queued for the next sync.
+        .retry(enabled: false)
         .execute()
         .value
 

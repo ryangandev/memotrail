@@ -138,13 +138,17 @@ Its marked account and Storage objects were confirmed removed without accessing 
   A seeded Simulator run against the local Web API confirmed preparing a snapshot, downloading a complete ZIP, removing the local copy, and discarding the snapshot.
 - Native Quick Capture now follows Web `QuickCaptureDialog` at phone width: the full-screen composer under Web's header and close button, the relevant date panel in place of a separate sheet, Web's photo and status strips, and a toast once the capture syncs.
   A seeded Simulator run confirmed saving formatted notes from the Dashboard and from Quick Capture, opening and clearing the relevant date, and the toast.
+  Like Web, a capture saved without a connection is confirmed once with an info toast that it is safe on this iPhone; later offline retries stay quiet until it syncs and announces Saved to Inbox.
+  The original missing offline confirmation was reproduced on `main` in an isolated iPhone Simulator.
+  Debug and Release Simulator builds pass, along with all 254 native tests against local Supabase without skips.
+  Three seeded Simulator UI scenarios pass, covering offline confirmation, quiet retries, reopening, synchronization after an online relaunch, online formatted capture, and Inbox review.
   Web's bottom capture dock landed after this sync, so native still opens New entry from the header and Quick Capture full screen; adopting the dock and its bottom-anchored composer remains native work.
 - Native Map now follows Web `/map` at phone width: the page header, Category and year fields that filter as they change, Your areas shortcuts with View all, the map card, and the Entries here panel for the chosen pin or cluster, instead of a filter sheet and a record list sheet.
   A Debug `--review-map` Simulator run confirmed filtering by Category and year, zooming to an area, listing a cluster's Entries newest first, and opening one.
 - Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
 - Native History, Timeline, Homes, Vehicles, First Times, Goals, People, and Trash now apply only their newest load, so a slower refresh can no longer replace the reload after a restore or save.
   Four new contract tests hold an earlier response for History, Timeline, People, and Trash; in a Linux harness against local Supabase they fail with the previous controllers and pass with the fix, alongside eleven existing contract tests.
-  The Xcode build and a `verify-local-contracts.py` Simulator run have not covered this change yet.
+  Debug and Release Simulator builds and the full local Supabase native test run now cover this change, including all four load-order contract tests.
 - Refactor existing screens after component acceptance; native address search remains later work.
 
 ### 4. AI capabilities paused

@@ -177,6 +177,80 @@ final class NativeContractTests: XCTestCase {
     XCTAssertFalse(inbox.entries.contains { $0.id == id })
   }
 
+  #if DEBUG
+    func testOfflineCaptureIsConfirmedOnceAndAnnouncedAgainOnlyWhenItSyncs() async throws {
+      let (client, ownerID) = try await client(session: NativeReviewNetwork.session())
+      defer { NativeReviewNetwork.isOffline = false }
+      let suiteName = "NativeContractTests.\(UUID().uuidString)"
+      addTeardownBlock {
+        UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName)
+      }
+      let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+      let inbox = InboxController(
+        client: client, ownerID: ownerID, queueStore: InboxQueueStore(defaults: defaults))
+      // Let the connectivity monitor's first update pass, so each save starts its own sync.
+      try await Task.sleep(for: .milliseconds(500))
+      let center = MTToastCenter.shared
+
+      // Without a connection the capture stays on this iPhone, confirmed by one toast rather
+      // than a problem in the composer.
+      NativeReviewNetwork.isOffline = true
+      let note = "Offline capture \(UUID().uuidString)"
+      var shown = Set(center.toasts.map(\.id))
+      let didSave = await inbox.save(title: "", body: note)
+      XCTAssertTrue(didSave)
+      var announced = try await toasts(after: shown, from: inbox)
+      XCTAssertEqual(
+        announced.map(\.message),
+        ["Saved on this iPhone. MemoTrail will sync when you are online."])
+      XCTAssertEqual(announced.map(\.tone), [.info])
+      XCTAssertNil(inbox.captureError)
+      XCTAssertEqual(inbox.pendingEntries.map(\.body), [note])
+
+      // Retrying while still offline announces it nowhere again.
+      shown = Set(center.toasts.map(\.id))
+      let retried = await inbox.synchronizePendingEntries()
+      XCTAssertFalse(retried)
+      XCTAssertTrue(center.toasts.allSatisfy { shown.contains($0.id) })
+      XCTAssertNil(inbox.captureError)
+      XCTAssertEqual(inbox.pendingEntries.map(\.body), [note])
+
+      // Back online, the waiting capture syncs and is announced as saved.
+      NativeReviewNetwork.isOffline = false
+      shown = Set(center.toasts.map(\.id))
+      let synced = await inbox.synchronizePendingEntries()
+      XCTAssertTrue(synced)
+      announced = center.toasts.filter { !shown.contains($0.id) }
+      XCTAssertEqual(announced.map(\.message), ["Saved to Inbox."])
+      XCTAssertTrue(inbox.pendingEntries.isEmpty)
+      await inbox.load()
+      XCTAssertTrue(inbox.entries.contains { $0.body == note })
+
+      // An online save is announced once, after it syncs, without an offline confirmation.
+      let onlineNote = "Online capture \(UUID().uuidString)"
+      shown = Set(center.toasts.map(\.id))
+      let didSaveOnline = await inbox.save(title: "", body: onlineNote)
+      XCTAssertTrue(didSaveOnline)
+      announced = try await toasts(after: shown, from: inbox)
+      XCTAssertEqual(announced.map(\.message), ["Saved to Inbox."])
+      XCTAssertNil(inbox.captureError)
+      XCTAssertTrue(inbox.pendingEntries.isEmpty)
+    }
+
+    /// Waits for the sync a save starts, then returns the toasts shown since `shown`.
+    private func toasts(after shown: Set<UUID>, from inbox: InboxController) async throws
+      -> [MTToast]
+    {
+      let deadline = Date().addingTimeInterval(15)
+      while Date() < deadline,
+        inbox.isSyncing || MTToastCenter.shared.toasts.allSatisfy({ shown.contains($0.id) })
+      {
+        try await Task.sleep(for: .milliseconds(100))
+      }
+      return MTToastCenter.shared.toasts.filter { !shown.contains($0.id) }
+    }
+  #endif
+
   func testSettingsSaveAndClearTheProfileLikeWeb() async throws {
     let (client, ownerID) = try await client()
     let settings = SettingsController(client: client, ownerID: ownerID)
