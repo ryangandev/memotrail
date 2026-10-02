@@ -18,6 +18,8 @@ Agents should also follow the repository-wide instructions in [AGENTS.md](./AGEN
 apps/
   ios/                  Native SwiftUI app
   web/                  Next.js Web app
+assets/
+  brand/                Brand mark and app icon SVG sources
 docs/                   Product contract, architecture map, and current status
 packages/
   design-tokens/        Cross-platform Soft Ledger token source and generator
@@ -119,6 +121,12 @@ After changing `packages/design-tokens/tokens.json`, regenerate both platform ou
 
 ```bash
 pnpm tokens:generate
+```
+
+After changing an `assets/brand/memotrail-app-icon-*.svg` source, regenerate the iOS app icon PNGs with the macOS SVG renderer:
+
+```bash
+swift apps/ios/scripts/render-app-icon.swift
 ```
 
 Run the Web and shared checks:

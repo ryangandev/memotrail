@@ -77,6 +77,7 @@
 		B1000000000000000000000B /* ResidenceEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000C /* ResidenceEntryTests.swift */; };
 		B1000000000000000000000C /* VehicleEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000D /* VehicleEntryTests.swift */; };
 		B1000000000000000000000D /* GoalEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000E /* GoalEntryTests.swift */; };
+		B1000000000000000000000E /* AppIconTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1000000000000000000000F /* AppIconTests.swift */; };
 		B00000000000000000000034 /* PeopleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000003B /* PeopleView.swift */; };
 		BD0000000000000000000002 /* DesignSystemGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000002 /* DesignSystemGallery.swift */; };
 		BD0000000000000000000003 /* LocationMapModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0000000000000000000003 /* LocationMapModel.swift */; };
@@ -242,6 +243,7 @@
 		C1000000000000000000000C /* ResidenceEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResidenceEntryTests.swift; sourceTree = "<group>"; };
 		C1000000000000000000000D /* VehicleEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleEntryTests.swift; sourceTree = "<group>"; };
 		C1000000000000000000000E /* GoalEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEntryTests.swift; sourceTree = "<group>"; };
+		C1000000000000000000000F /* AppIconTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconTests.swift; sourceTree = "<group>"; };
 		C0000000000000000000003B /* PeopleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeopleView.swift; sourceTree = "<group>"; };
 		CD0000000000000000000002 /* DesignSystemGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystemGallery.swift; sourceTree = "<group>"; };
 		CD0000000000000000000003 /* LocationMapModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Map/LocationMapModel.swift; sourceTree = "<group>"; };
@@ -571,6 +573,7 @@
 				C10000000000000000000006 /* CollectionEntryTests.swift */,
 				C10000000000000000000007 /* LibraryDestinationTests.swift */,
 				C10000000000000000000009 /* TrashItemTests.swift */,
+				C1000000000000000000000F /* AppIconTests.swift */,
 			);
 			path = MemoTrailTests;
 			sourceTree = "<group>";
@@ -970,6 +973,7 @@
 				B1000000000000000000000B /* ResidenceEntryTests.swift in Sources */,
 				B1000000000000000000000C /* VehicleEntryTests.swift in Sources */,
 				B1000000000000000000000D /* GoalEntryTests.swift in Sources */,
+				B1000000000000000000000E /* AppIconTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
