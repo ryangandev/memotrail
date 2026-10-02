@@ -16,6 +16,8 @@ final class GoalController {
 
   private let client: SupabaseClient
   private let ownerID: UUID
+  /// Only the newest load applies its result, so a slower earlier response cannot replace it.
+  private var loadGeneration = UUID()
 
   init(client: SupabaseClient, ownerID: UUID) {
     self.client = client
@@ -27,12 +29,15 @@ final class GoalController {
   /// Loads the first page of Goals, like Web. A Goal's own page passes its ID so a Goal past
   /// that page still loads, like Web `getGoalsWorkspace(targetId)`.
   func load(including targetID: UUID? = nil) async {
-    guard !isLoading else { return }
+    let generation = UUID()
+    loadGeneration = generation
     isLoading = true
     loadErrorMessage = nil
     defer {
-      isLoading = false
-      hasLoaded = true
+      if loadGeneration == generation {
+        isLoading = false
+        hasLoaded = true
+      }
     }
 
     do {
@@ -64,12 +69,17 @@ final class GoalController {
         }
       }
 
-      entries = loadedEntries
       // Like Web, the Goals load even when their options cannot.
-      collectionOptions = ((try? await collectionsRequest) ?? []).map(\.name)
-      tagOptions = ((try? await tagsRequest) ?? []).map(\.name)
-      linkOptions = (try? await linksRequest) ?? []
+      let collections = (try? await collectionsRequest) ?? []
+      let tags = (try? await tagsRequest) ?? []
+      let links = (try? await linksRequest) ?? []
+      guard loadGeneration == generation else { return }
+      entries = loadedEntries
+      collectionOptions = collections.map(\.name)
+      tagOptions = tags.map(\.name)
+      linkOptions = links
     } catch {
+      guard loadGeneration == generation else { return }
       loadErrorMessage = "MemoTrail could not load your Goals. Pull to refresh or try again."
     }
   }
@@ -352,8 +362,8 @@ final class GoalController {
     }
   }
 
+  /// Replaces any load still running, so the Goals reflect the change.
   func reloadAfterMutation() async {
-    isLoading = false
     await load()
   }
 

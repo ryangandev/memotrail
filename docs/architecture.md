@@ -45,6 +45,7 @@ The More tab lays out `WorkspaceRoute.groups` like Web's mobile More menu, with 
 It still carries New entry and search, which Web now places in its bottom `WorkspaceActionDock`.
 Map data and MapKit presentation live in `Features/Map`; native Settings live in `Features/Settings`.
 `Features/Settings/SettingsController.swift` reads and writes one `profiles` column per save, with the Web validation rules in `Models/ProfileSettings.swift`; `AppNavigator.profileRevision` tells the Dashboard to reload its greeting.
+Native controllers that reload after a change (History, Timeline, Homes, Vehicles, First Times, Goals, People, and Trash) give each load a generation token, like `LibraryController`: a reload replaces any load still running, and only the newest response applies.
 
 For a database behavior, search migrations for the newest definition of the relevant RPC instead of assuming the first occurrence is current.
 Pair it with the test file carrying the same feature name.

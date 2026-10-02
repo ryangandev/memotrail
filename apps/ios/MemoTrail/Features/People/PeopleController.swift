@@ -25,6 +25,9 @@ final class PeopleController {
   private let client: SupabaseClient
   private let ownerID: UUID
   private static let pageSize = 100
+  /// Only the newest list load applies its result, so a slower earlier response cannot replace
+  /// it. Loading more pages applies only to the list it extends.
+  private var loadGeneration = UUID()
 
   init(client: SupabaseClient, ownerID: UUID) {
     self.client = client
@@ -38,42 +41,52 @@ final class PeopleController {
 
   /// Loads the first page of People and the Items offered for linking.
   func load() async {
-    guard !isLoading else { return }
+    let generation = UUID()
+    loadGeneration = generation
     isLoading = true
+    isLoadingMore = false
     loadErrorMessage = nil
     moreErrorMessage = nil
     defer {
-      isLoading = false
-      hasLoaded = true
+      if loadGeneration == generation {
+        isLoading = false
+        hasLoaded = true
+      }
     }
     do {
       try await validateSessionOwner()
       async let page = loadPage(offset: 0)
       async let options = loadLinkOptions()
       let rows = try await page
-      linkOptions = try await options
+      let loadedOptions = try await options
+      guard loadGeneration == generation else { return }
+      linkOptions = loadedOptions
       for row in rows { records[row.id] = row }
       peopleIDs = rows.map(\.id)
       totalCount = rows.first?.totalCount ?? 0
     } catch {
+      guard loadGeneration == generation else { return }
       loadErrorMessage = "Could not load People and Item choices. Refresh to try again."
     }
   }
 
   func loadMore() async {
     guard hasMore, !isLoading, !isLoadingMore else { return }
+    let generation = loadGeneration
     isLoadingMore = true
     moreErrorMessage = nil
-    defer { isLoadingMore = false }
+    defer { if loadGeneration == generation { isLoadingMore = false } }
     do {
       try await validateSessionOwner()
       let rows = try await loadPage(offset: peopleIDs.count)
+      guard loadGeneration == generation else { return }
       for row in rows { records[row.id] = row }
       // A change elsewhere can shift a Person onto the next page, so each appears once.
       let known = Set(peopleIDs)
       peopleIDs += rows.map(\.id).filter { !known.contains($0) }
       totalCount = rows.isEmpty ? peopleIDs.count : rows[0].totalCount
     } catch {
+      guard loadGeneration == generation else { return }
       moreErrorMessage = "Could not load more People."
     }
   }
@@ -176,7 +189,7 @@ final class PeopleController {
       records[person.id] = nil
       peopleIDs.removeAll { $0 == person.id }
       totalCount = max(0, totalCount - 1)
-      if hasLoaded { await reloadList() }
+      await reloadList()
       return MutationResult(
         personID: person.id, message: "Person moved to Trash.", status: .trashed)
     } catch PeopleControllerError.ownerChanged {
@@ -198,11 +211,13 @@ final class PeopleController {
   /// Refreshes the saved Person, and the list when it has loaded, like Web `router.refresh()`.
   private func reload(after personID: UUID) async {
     await loadPerson(id: personID)
-    if hasLoaded { await reloadList() }
+    await reloadList()
   }
 
+  /// Reloads the list once it has loaded or started loading. The new load replaces any still
+  /// running, so the list reflects the change.
   private func reloadList() async {
-    isLoading = false
+    guard hasLoaded || isLoading else { return }
     await load()
   }
 
