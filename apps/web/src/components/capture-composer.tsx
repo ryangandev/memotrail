@@ -7,22 +7,15 @@ import { notify } from "@/components/app-toast";
 
 import {
   type ChangeEvent,
-  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
   type FormEvent,
 } from "react";
-import { useRouter } from "next/navigation";
-import {
-  registerEntryAttachment,
-  finishInboxCapture,
-  syncInboxEntry,
-  type SyncInboxEntryResult,
-} from "@/app/inbox/actions";
+import { useCaptureQueue } from "@/components/capture-provider";
 import { Icon } from "@/components/icon";
-import { Badge } from "@/components/badge";
+import { PendingCaptureList } from "@/components/pending-captures";
 import { PhotoUploadProgress } from "@/components/photo-upload-progress";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { SelectedPhotoPreview } from "@/components/selected-photo-preview";
@@ -34,23 +27,13 @@ import {
 import { OccurrenceEditor } from "./occurrence-editor";
 import {
   occurrenceDraft,
-  occurrenceLabel,
   resolveOccurrenceDraft,
   type OccurrenceDraft,
 } from "@/lib/data/occurrence";
 import { entryBodyLimit, parseInboxEntryValues } from "@/lib/data/inbox-input";
-import {
-  createFirstTimeObjectPath,
-  type FirstTimeAttachmentInput,
-} from "@/lib/data/first-time-input";
-import {
-  enqueueInboxEntry,
-  inboxQueueChangedEvent,
-  loadInboxQueue,
-  removeInboxQueueEntry,
-  type QueuedInboxEntry,
-  queuedOccurrence,
-} from "@/lib/data/inbox-queue";
+import { countLabel } from "@/lib/count-label";
+import type { QueuedInboxEntry } from "@/lib/data/inbox-queue";
+import { hasWaitingCaptures } from "@/lib/data/inbox-sync";
 import {
   queuedInboxAttachment,
   validateInboxPhotoFiles,
@@ -68,9 +51,7 @@ import {
   voiceRecognitionErrorMessage,
   type BrowserSpeechRecognition,
 } from "@/lib/data/voice-transcript";
-import { createClient } from "@/lib/supabase/client";
 import type { EntryRichText } from "@/lib/data/rich-text";
-import type { PhotoUploadProgress as PhotoUploadProgressValue } from "@/lib/media/upload";
 
 type CaptureFeedback = {
   isError: boolean;
@@ -98,7 +79,8 @@ export function CaptureComposer({
   ownerId: string;
   variant?: "dialog" | "page";
 }) {
-  const router = useRouter();
+  const captureQueue = useCaptureQueue();
+  const { getSnapshot: readCaptureQueue, isSyncing } = captureQueue;
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [bodyRich, setBodyRich] = useState<EntryRichText | null>(null);
@@ -106,15 +88,12 @@ export function CaptureComposer({
   const [isLocalStateReady, setIsLocalStateReady] = useState(false);
   const [hasLocalDraft, setHasLocalDraft] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [photoUploadProgress, setPhotoUploadProgress] =
-    useState<PhotoUploadProgressValue | null>(null);
   const [feedback, setFeedback] = useState<CaptureFeedback>(idleFeedback);
+  // The shared queue keeps its latest problem; editing here dismisses it.
+  const [dismissedSyncRun, setDismissedSyncRun] = useState(0);
   const [photos, setPhotos] = useState<InboxPhotoDraft[]>([]);
   const [isPhotoStateReady, setIsPhotoStateReady] = useState(false);
   const [isPhotoStorageAvailable, setIsPhotoStorageAvailable] = useState(true);
-  const [pendingEntries, setPendingEntries] = useState<QueuedInboxEntry[]>([]);
-  const [showPendingEntries, setShowPendingEntries] = useState(false);
   const [isVoiceSupported, setIsVoiceSupported] = useState<boolean | null>(
     null,
   );
@@ -122,8 +101,6 @@ export function CaptureComposer({
   const [voiceFeedback, setVoiceFeedback] = useState<CaptureFeedback | null>(
     null,
   );
-  const pendingEntriesRef = useRef<QueuedInboxEntry[]>([]);
-  const syncInFlightRef = useRef(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const submitButtonRef = useRef<HTMLButtonElement>(null);
   const voiceRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
@@ -146,110 +123,10 @@ export function CaptureComposer({
     return () => input.removeEventListener("cancel", handlePhotoPickerCancel);
   }, [onNativePhotoPickerChange]);
 
-  const replacePendingEntries = useCallback(
-    (entries: QueuedInboxEntry[]) => {
-      pendingEntriesRef.current = entries;
-      setPendingEntries(entries);
-      window.dispatchEvent(
-        new CustomEvent(inboxQueueChangedEvent, {
-          detail: { count: entries.length, ownerId },
-        }),
-      );
-    },
-    [ownerId],
-  );
-
-  const synchronizeQueue = useCallback(async () => {
-    if (syncInFlightRef.current || pendingEntriesRef.current.length === 0) {
-      return;
-    }
-
-    syncInFlightRef.current = true;
-    setIsSyncing(true);
-    let latestResult: SyncInboxEntryResult | null = null;
-    let didSyncEntry = false;
-
-    for (const entry of [...pendingEntriesRef.current]) {
-      try {
-        const { bodyRich: queuedBodyRich, ...syncInput } = entry;
-        latestResult = await syncInboxEntry(
-          syncInput,
-          queuedBodyRich ? JSON.stringify(queuedBodyRich) : null,
-        );
-      } catch {
-        latestResult = {
-          message:
-            "Saved on this device. MemoTrail will retry when you are online.",
-          status: "retry",
-        };
-      }
-
-      if (latestResult.status === "retry") {
-        break;
-      }
-
-      if (entry.attachments.length > 0) {
-        try {
-          latestResult = await synchronizeAttachments(
-            ownerId,
-            entry,
-            setPhotoUploadProgress,
-          );
-        } catch {
-          latestResult = {
-            message:
-              "Photos are saved on this device. MemoTrail will retry when you are online.",
-            status: "retry",
-          };
-        }
-
-        if (latestResult.status === "retry") {
-          break;
-        }
-      }
-
-      const nextQueue = removeInboxQueueEntry(
-        window.localStorage,
-        ownerId,
-        entry.id,
-      );
-
-      if (nextQueue === null) {
-        latestResult = {
-          message:
-            "This Entry reached MemoTrail, but its local pending copy could not be cleared.",
-          status: "retry",
-        };
-        break;
-      }
-
-      didSyncEntry = true;
-      replacePendingEntries(nextQueue);
-      if (entry.attachments.length > 0)
-        void finishInboxCapture(entry.id).catch(() => undefined);
-    }
-
-    syncInFlightRef.current = false;
-    setPhotoUploadProgress(null);
-    setIsSyncing(false);
-    setShowPendingEntries(pendingEntriesRef.current.length > 0);
-
-    if (latestResult?.status === "synced") {
-      setFeedback(idleFeedback);
-      notify.success(latestResult.message);
-    } else if (latestResult) {
-      setFeedback({ isError: true, message: latestResult.message });
-    }
-
-    if (didSyncEntry) {
-      router.refresh();
-    }
-  }, [ownerId, replacePendingEntries, router]);
-
   useLayoutEffect(() => {
     if (!active) return;
     const draft = loadInboxDraft(window.localStorage, ownerId);
-    const queue = loadInboxQueue(window.localStorage, ownerId);
+    const queue = readCaptureQueue().items.map((item) => item.entry);
     let isCanceled = false;
 
     queueMicrotask(() => {
@@ -275,13 +152,7 @@ export function CaptureComposer({
       titleRef.current = draft?.title ?? "";
       occurrenceRef.current = savedOccurrence;
       setHasLocalDraft(Boolean(draft));
-      replacePendingEntries(queue);
-      setShowPendingEntries(queue.length > 0);
       setIsLocalStateReady(true);
-
-      if (queue.length > 0 && navigator.onLine) {
-        void synchronizeQueue();
-      }
 
       void (async () => {
         try {
@@ -313,17 +184,10 @@ export function CaptureComposer({
       })();
     });
 
-    function handleOnline() {
-      void synchronizeQueue();
-    }
-
-    window.addEventListener("online", handleOnline);
-
     return () => {
       isCanceled = true;
-      window.removeEventListener("online", handleOnline);
     };
-  }, [active, ownerId, replacePendingEntries, synchronizeQueue]);
+  }, [active, ownerId, readCaptureQueue]);
 
   useEffect(() => {
     let isCanceled = false;
@@ -373,6 +237,7 @@ export function CaptureComposer({
       }) || photos.length > 0,
     );
     setFeedback(idleFeedback);
+    setDismissedSyncRun(captureQueue.runCount);
     if (!preserveVoiceFeedback) {
       setVoiceFeedback(null);
     }
@@ -525,6 +390,7 @@ export function CaptureComposer({
       await persistInboxPhotoDrafts(ownerId, selection.accepted);
       setPhotos((current) => [...current, ...selection.accepted]);
       setHasLocalDraft(true);
+      setDismissedSyncRun(captureQueue.runCount);
       setFeedback({
         isError: Boolean(selection.message),
         message: selection.message ?? "Photos saved in this draft.",
@@ -550,6 +416,7 @@ export function CaptureComposer({
           nextPhotos.length > 0,
       );
       setFeedback(idleFeedback);
+      setDismissedSyncRun(captureQueue.runCount);
     } catch {
       setFeedback({
         isError: true,
@@ -602,7 +469,7 @@ export function CaptureComposer({
       bodyRich: bodyRich?.text === parsedInput.data.body ? bodyRich : null,
       version: 3,
     };
-    const nextQueue = enqueueInboxEntry(window.localStorage, ownerId, entry);
+    const nextQueue = captureQueue.enqueue(entry);
 
     if (!nextQueue) {
       setFeedback({
@@ -614,7 +481,6 @@ export function CaptureComposer({
       return;
     }
 
-    replacePendingEntries(nextQueue);
     clearInboxDraft(window.localStorage, ownerId);
     setTitle("");
     setBody("");
@@ -626,19 +492,23 @@ export function CaptureComposer({
     setHasLocalDraft(false);
     setVoiceFeedback(null);
     setFeedback(idleFeedback);
+    setDismissedSyncRun(captureQueue.runCount);
     if (!navigator.onLine) {
-      setShowPendingEntries(true);
       notify.info("Saved on this device. Waiting for a connection.");
     }
     setIsSaving(false);
-    await synchronizeQueue();
   }
 
+  const syncFeedback: CaptureFeedback | null =
+    captureQueue.lastError && captureQueue.runCount !== dismissedSyncRun
+      ? { isError: true, message: captureQueue.lastError }
+      : null;
   const composerFeedback = feedback.isError
     ? feedback
-    : hasLocalDraft
-      ? { isError: false, message: "Draft saved on this device." }
-      : feedback;
+    : (syncFeedback ??
+      (hasLocalDraft
+        ? { isError: false, message: "Draft saved on this device." }
+        : feedback));
 
   return (
     <>
@@ -834,8 +704,10 @@ export function CaptureComposer({
             />
           </div>
           <div className={captureComposerStyles.captureSubmitGroup}>
-            {photoUploadProgress ? (
-              <PhotoUploadProgress progress={photoUploadProgress} />
+            {captureQueue.photoUploadProgress ? (
+              <PhotoUploadProgress
+                progress={captureQueue.photoUploadProgress}
+              />
             ) : null}
             <p
               className={
@@ -878,7 +750,7 @@ export function CaptureComposer({
         </div>
       </form>
 
-      {showPendingEntries && pendingEntries.length > 0 ? (
+      {hasWaitingCaptures(captureQueue) ? (
         <section
           className={captureComposerStyles.pendingSection}
           aria-labelledby={`${idPrefix}-pending-heading`}
@@ -886,41 +758,19 @@ export function CaptureComposer({
           <div className={entryListStyles.sectionHeader}>
             <div>
               <h2 id={`${idPrefix}-pending-heading`}>Pending sync</h2>
-              <span>{pendingCountLabel(pendingEntries.length)}</span>
+              <span>{countLabel(captureQueue.items.length, "Entry")}</span>
             </div>
             <Button
               variant="secondary"
               disabled={isSyncing}
-              onClick={() => void synchronizeQueue()}
+              onClick={() => void captureQueue.synchronize()}
               type="button"
             >
               <Icon name="refresh" size={14} />
               {isSyncing ? "Syncing…" : "Retry now"}
             </Button>
           </div>
-          <div className={entryListStyles.entryList}>
-            {pendingEntries.map((entry) => (
-              <article
-                className={captureComposerStyles.pendingEntryCard}
-                key={entry.id}
-              >
-                <div className={entryFormStyles.entryMeta}>
-                  <time dateTime={entry.occurredAt ?? undefined}>
-                    {occurrenceLabel(queuedOccurrence(entry))}
-                  </time>
-                  <Badge>On this device</Badge>
-                </div>
-                <h3>{entry.title ?? "Untitled Entry"}</h3>
-                {entry.body ? <p>{entry.body}</p> : null}
-                {entry.attachments.length > 0 ? (
-                  <span className={captureComposerStyles.pendingPhotoCount}>
-                    <Icon name="photo" size={14} />
-                    {photoCountLabel(entry.attachments.length)}
-                  </span>
-                ) : null}
-              </article>
-            ))}
-          </div>
+          <PendingCaptureList items={captureQueue.items} />
         </section>
       ) : null}
     </>
@@ -950,108 +800,4 @@ function CapturePhoto({
       </button>
     </div>
   );
-}
-
-async function synchronizeAttachments(
-  ownerId: string,
-  entry: QueuedInboxEntry,
-  onProgress?: (progress: PhotoUploadProgressValue) => void,
-): Promise<SyncInboxEntryResult> {
-  const storedPhotos = await loadInboxPhotoDrafts(ownerId);
-  const photosById = new Map(storedPhotos.map((photo) => [photo.id, photo]));
-  const client = createClient();
-
-  let completed = 0;
-  onProgress?.({ completed, total: entry.attachments.length });
-  for (const attachment of entry.attachments) {
-    const photo = photosById.get(attachment.id);
-    const objectPath = createFirstTimeObjectPath(
-      ownerId,
-      entry.id,
-      attachment.id,
-      attachment.mimeType,
-    );
-
-    if (!objectPath) {
-      return {
-        message:
-          "A pending photo reference is invalid and needs your attention.",
-        status: "retry",
-      };
-    }
-
-    const attachmentInput: FirstTimeAttachmentInput = {
-      attachmentId: attachment.id,
-      byteSize: attachment.size,
-      entryId: entry.id,
-      mimeType: attachment.mimeType,
-      objectPath,
-      originalFilename: attachment.name || null,
-      pixelHeight: null,
-      pixelWidth: null,
-    };
-
-    if (!photo) {
-      const registered = await registerEntryAttachment(attachmentInput);
-
-      if (registered.status === "synced") {
-        continue;
-      }
-
-      return {
-        message:
-          "A pending photo is missing from this device. Keep this page open and select the photo again if needed.",
-        status: "retry",
-      };
-    }
-
-    if (
-      photo.file.name !== attachment.name ||
-      photo.file.size !== attachment.size ||
-      photo.file.lastModified !== attachment.lastModified ||
-      photo.mimeType !== attachment.mimeType
-    ) {
-      return {
-        message: "A pending photo changed on this device and cannot be synced.",
-        status: "retry",
-      };
-    }
-
-    await client.storage.from("entry-media").upload(objectPath, photo.file, {
-      cacheControl: "3600",
-      contentType: attachment.mimeType,
-      upsert: false,
-    });
-
-    const registered = await registerEntryAttachment(attachmentInput);
-
-    if (registered.status === "retry") {
-      return registered;
-    }
-
-    try {
-      await removeInboxPhotoDrafts(ownerId, [attachment.id]);
-    } catch {
-      return {
-        message:
-          "This photo reached MemoTrail, but its local pending copy could not be cleared. Retry to finish.",
-        status: "retry",
-      };
-    }
-    completed += 1;
-    onProgress?.({ completed, total: entry.attachments.length });
-  }
-
-  return {
-    message: `Saved to Inbox with ${photoCountLabel(entry.attachments.length)}.`,
-    status: "synced",
-  };
-}
-
-function pendingCountLabel(count: number) {
-  return count === 1 ? "1 Entry" : `${count} Entries`;
-}
-
-function photoCountLabel(count: number) {
-  return count === 1 ? "1 photo" : `${count} photos`;
 }

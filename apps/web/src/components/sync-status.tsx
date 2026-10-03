@@ -1,54 +1,66 @@
 "use client";
 import syncStatusStyles from "@/components/sync-status.module.css";
 
-import { useEffect, useState } from "react";
-import { inboxQueueChangedEvent, loadInboxQueue } from "@/lib/data/inbox-queue";
+import { useState } from "react";
+import { Button } from "@/components/button";
+import { useCaptureQueue } from "@/components/capture-provider";
+import { Dialog } from "@/components/dialog";
+import { Icon } from "@/components/icon";
+import { PendingCaptureList } from "@/components/pending-captures";
+import { countLabel } from "@/lib/count-label";
+import { hasWaitingCaptures } from "@/lib/data/inbox-sync";
 
-type QueueChangedDetail = {
-  count: number;
-  ownerId: string;
-};
+/** The workspace's pending captures: syncs them and lists what is waiting. */
+export function SyncStatus() {
+  const captureQueue = useCaptureQueue();
+  const { isSyncing, items, lastError, synchronize } = captureQueue;
+  const [isOpen, setIsOpen] = useState(false);
+  const isVisible = hasWaitingCaptures(captureQueue);
 
-export function SyncStatus({ ownerId }: { ownerId: string }) {
-  const [pendingCount, setPendingCount] = useState(0);
+  // Once everything syncs, the list closes with its indicator.
+  if (isOpen && items.length === 0) setIsOpen(false);
 
-  useEffect(() => {
-    let isCanceled = false;
-
-    queueMicrotask(() => {
-      if (!isCanceled) {
-        setPendingCount(loadInboxQueue(window.localStorage, ownerId).length);
-      }
-    });
-
-    function handleQueueChanged(event: Event) {
-      const detail = (event as CustomEvent<QueueChangedDetail>).detail;
-
-      if (detail?.ownerId === ownerId) {
-        setPendingCount(detail.count);
-      }
-    }
-
-    window.addEventListener(inboxQueueChangedEvent, handleQueueChanged);
-
-    return () => {
-      isCanceled = true;
-      window.removeEventListener(inboxQueueChangedEvent, handleQueueChanged);
-    };
-  }, [ownerId]);
-
-  if (!pendingCount) {
+  if (!isVisible && !isOpen) {
     return null;
   }
 
   return (
-    <span
-      aria-live="polite"
-      className={syncStatusStyles.syncStatus}
-      role="status"
+    <Dialog
+      description={`${countLabel(items.length, "Entry")} saved on this device will sync when MemoTrail can be reached.`}
+      footer={
+        <Button
+          disabled={isSyncing}
+          onClick={() => void synchronize()}
+          type="button"
+          variant="secondary"
+        >
+          <Icon name="refresh" size={14} />
+          {isSyncing ? "Syncing…" : "Retry now"}
+        </Button>
+      }
+      onOpenChange={setIsOpen}
+      open={isOpen}
+      size="compact"
+      title="Pending sync"
+      trigger={
+        <button
+          aria-busy={isSyncing}
+          className={syncStatusStyles.syncStatus}
+          onClick={() => void synchronize()}
+          title="Sync now and review captures waiting on this device"
+          type="button"
+        >
+          <span aria-hidden="true" />
+          {items.length} pending
+        </button>
+      }
     >
-      <span />
-      {pendingCount} pending
-    </span>
+      {lastError ? (
+        <p className={syncStatusStyles.syncError} role="alert">
+          {lastError}
+        </p>
+      ) : null}
+      <PendingCaptureList items={items} />
+    </Dialog>
   );
 }

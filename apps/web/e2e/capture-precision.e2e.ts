@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
@@ -194,18 +194,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
         });
       let delayedSync = false;
       if (index === 0) {
-        await capture.evaluate((dialog) => {
-          sessionStorage.setItem("pending-sync-seen", "no");
-          new MutationObserver(() => {
-            if (
-              [...dialog.querySelectorAll("h2")].some(
-                (heading) => heading.textContent === "Pending sync",
-              )
-            ) {
-              sessionStorage.setItem("pending-sync-seen", "yes");
-            }
-          }).observe(dialog, { childList: true, subtree: true });
-        });
+        await watchPendingSyncSurfaces(page);
         await page.route("**/*", async (route) => {
           if (
             !delayedSync &&
@@ -225,8 +214,9 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
         await expect(
           page.getByRole("heading", { name: "Pending sync", exact: true }),
         ).toBeVisible();
+        // The closed Quick Capture mirrors the same shared queue.
         await expect(
-          page.locator("article").filter({
+          page.locator("main article").filter({
             hasText: "Capture age",
           }),
         ).toContainText("At age 17");
@@ -348,18 +338,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
     await newCapture
       .getByRole("textbox", { name: "Entry text" })
       .fill("Capture from New");
-    await newCapture.evaluate((dialog) => {
-      sessionStorage.setItem("pending-sync-seen", "no");
-      new MutationObserver(() => {
-        if (
-          [...dialog.querySelectorAll("h2")].some(
-            (heading) => heading.textContent === "Pending sync",
-          )
-        ) {
-          sessionStorage.setItem("pending-sync-seen", "yes");
-        }
-      }).observe(dialog, { childList: true, subtree: true });
-    });
+    await watchPendingSyncSurfaces(page);
     let delayedModalSync = false;
     await page.route("**/*", async (route) => {
       if (
@@ -447,3 +426,26 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }
 });
+
+// Records whether any pending list or the header pending indicator appears,
+// because an online save's first attempt must not surface either.
+async function watchPendingSyncSurfaces(page: Page) {
+  await page.evaluate(() => {
+    sessionStorage.setItem("pending-sync-seen", "no");
+    new MutationObserver(() => {
+      const listed = [...document.querySelectorAll("h2")].some(
+        (heading) => heading.textContent === "Pending sync",
+      );
+      const indicated = [
+        ...document.querySelectorAll("main > header button"),
+      ].some((button) => /^\d+ pending$/.test(button.textContent ?? ""));
+      if (listed || indicated) {
+        sessionStorage.setItem("pending-sync-seen", "yes");
+      }
+    }).observe(document.body, {
+      characterData: true,
+      childList: true,
+      subtree: true,
+    });
+  });
+}
