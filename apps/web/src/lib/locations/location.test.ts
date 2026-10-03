@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   existingLocationFromRow,
   locationDisplayLabel,
+  savedLocationSelection,
   validLocationSelection,
+  type ProviderLocation,
 } from "./location";
 
 describe("Location selections", () => {
@@ -71,5 +73,71 @@ describe("Location selections", () => {
     expect(locationDisplayLabel({ ...location!, formattedAddress: null })).toBe(
       "10 Pine Street, Philadelphia",
     );
+  });
+
+  it("holds a saved provider choice as the record's own Location", () => {
+    const provider: ProviderLocation = {
+      kind: "provider",
+      provider: "geoapify",
+      providerLocationId: "provider-id",
+      name: "10 Pine Street, Philadelphia, PA",
+      formattedAddress: "10 Pine Street, Philadelphia, PA",
+      address: "10 Pine Street",
+      city: "Philadelphia",
+      region: "Pennsylvania",
+      postalCode: "19107",
+      country: "United States",
+      countryCode: "us",
+      latitude: 39.95261234,
+      longitude: -75.16529876,
+      timezone: "America/New_York",
+      resultType: "building",
+      confidence: 0.99,
+      matchType: "full_match",
+      dataSource: "openstreetmap",
+    };
+    const saved = savedLocationSelection(
+      provider,
+      "95000000-0000-4000-8000-000000000002",
+    );
+
+    expect(saved).toEqual({
+      kind: "existing",
+      id: "95000000-0000-4000-8000-000000000002",
+      revision: 1,
+      name: "10 Pine Street, Philadelphia, PA",
+      formattedAddress: "10 Pine Street, Philadelphia, PA",
+      address: "10 Pine Street",
+      city: "Philadelphia",
+      region: "Pennsylvania",
+      postalCode: "19107",
+      country: "United States",
+      countryCode: "us",
+      latitude: 39.95261234,
+      longitude: -75.16529876,
+      timezone: "America/New_York",
+      resultType: "building",
+    });
+    expect(validLocationSelection(saved)).toBe(true);
+    expect(locationDisplayLabel(saved!)).toBe(locationDisplayLabel(provider));
+  });
+
+  it("follows the saved snapshot identity and clears an unsaved Location", () => {
+    const existing = existingLocationFromRow({
+      id: "95000000-0000-4000-8000-000000000001",
+      revision: 2,
+      name: "10 Pine Street",
+      address: "10 Pine Street",
+      latitude: null,
+      longitude: null,
+    })!;
+
+    expect(
+      savedLocationSelection(existing, "95000000-0000-4000-8000-000000000003"),
+    ).toEqual({ ...existing, id: "95000000-0000-4000-8000-000000000003" });
+    expect(savedLocationSelection(existing, null)).toBeNull();
+    expect(
+      savedLocationSelection(null, "95000000-0000-4000-8000-000000000003"),
+    ).toBeNull();
   });
 });

@@ -47,7 +47,10 @@ import {
 } from "@/lib/data/home-record";
 import { OccurrenceEditor } from "@/components/occurrence-editor";
 import { LocationPicker } from "@/components/location-picker";
-import type { LocationSelection } from "@/lib/locations/location";
+import {
+  savedLocationSelection,
+  type LocationSelection,
+} from "@/lib/locations/location";
 import {
   occurrenceDraft,
   resolveOccurrenceDraft,
@@ -58,7 +61,10 @@ import {
   uploadEntryPhotos,
   type PhotoUploadProgress as PhotoUploadProgressValue,
 } from "@/lib/media/upload";
-import type { CaptureExtractionSource } from "@/lib/data/capture-extraction-input";
+import {
+  pendingCaptureReference,
+  type CaptureExtractionSource,
+} from "@/lib/data/capture-extraction-input";
 import { countLabel } from "@/lib/count-label";
 
 export function HomesWorkspace({
@@ -84,6 +90,9 @@ export function HomesWorkspace({
     confirm,
     forget,
   } = useConfirmedRecords(serverRecords);
+  // Creating the Home organizes the Capture, so the revalidated page no longer
+  // returns it. The open editor keeps the handoff it started with.
+  const [captureHandoff, setCaptureHandoff] = useState(sourceCapture);
   const [selectedHome, setSelectedHome] = useState<
     HomeRecord | null | undefined
   >(sourceCapture ? null : homes.find((home) => home.id === initialHomeId));
@@ -177,12 +186,13 @@ export function HomesWorkspace({
           onTrashed={forget}
           onClose={() => {
             setSelectedHome(undefined);
-            if (initialHomeId || sourceCapture)
+            setCaptureHandoff(null);
+            if (initialHomeId || captureHandoff)
               router.replace("/homes", { scroll: false });
             else router.refresh();
           }}
           ownerId={ownerId}
-          sourceCapture={selectedHome === null ? sourceCapture : null}
+          sourceCapture={selectedHome === null ? captureHandoff : null}
           tagOptions={tagOptions}
         />
       ) : null}
@@ -396,6 +406,7 @@ export function HomeEditor({
     home?.tagNames ?? sourceCapture?.tagNames ?? [],
   );
   const [title, setTitle] = useState(home?.title ?? sourceCapture?.title ?? "");
+  const captureReference = pendingCaptureReference(sourceCapture, currentId);
 
   useEffect(() => {
     titleRef.current?.focus();
@@ -503,9 +514,7 @@ export function HomeEditor({
     try {
       const saved = await saveHomeEntry(
         parsed.data,
-        sourceCapture
-          ? { id: sourceCapture.id, revision: sourceCapture.revision }
-          : null,
+        captureReference,
         locationPreview?.kind === "provider" ? locationPreview : null,
       );
       if (
@@ -528,6 +537,9 @@ export function HomeEditor({
       setCurrentId(saved.entry.id);
       setCurrentRevision(saved.entry.revision);
       setPlaceId(saved.entry.placeId);
+      setLocationPreview(
+        savedLocationSelection(locationPreview, saved.entry.placeId),
+      );
       const failedPhotos = await uploadPhotos(
         ownerId,
         saved.entry.id,
@@ -697,7 +709,7 @@ export function HomeEditor({
       {" "}
       <form id="homes-workspace-form" onSubmit={handleSubmit}>
         <div className={styles.formGrid}>
-          {sourceCapture ? (
+          {captureReference ? (
             <div className={styles.extractionNotice}>
               <Icon name="inbox" size={18} />
               <div>
