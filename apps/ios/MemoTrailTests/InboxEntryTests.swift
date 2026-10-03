@@ -876,6 +876,9 @@ final class InboxEntryTests: XCTestCase {
     XCTAssertNoThrow(try validate(title: "", body: "  Harbor lights ", rich: rich))
     XCTAssertThrowsError(try validate(title: "", body: "Harbor lights tonight", rich: rich)) {
       XCTAssertEqual($0 as? InboxReviewError, .invalidRichText)
+      XCTAssertEqual(
+        $0.localizedDescription,
+        "MemoTrail could not keep this note's formatting. Edit the note, then save again.")
     }
   }
 

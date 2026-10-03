@@ -81,6 +81,10 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - The photo revision fix passes 118 database assertions covering each focused Trash RPC, Goal achievement, and the legacy achievement path, plus two lock-ordering data contracts.
   Seven local browser scenarios cover Move to Trash after removing a photo for all four focused types, Goal achievement, a partial upload failure, and a retained writing conflict.
   Two native contract tests cover the same Trash and achievement paths, and the full native run passes 258 tests.
+- Web Capture and Inbox review now trim spaces and blank lines around a formatted note without losing its formatting, like native Capture and review.
+  Before the fix, a bold capture ending in a new line saved with empty metadata, and a review with a trailing new line stopped at revision 1 with "This Entry's rich text is invalid."
+  Unit tests for `trimEntryNote`, including 500 generated documents checked against the editor schema, and both `rich-text-whitespace.e2e.ts` browser scenarios now pass.
+  A mismatched note now asks the person to edit it on Web and native; the database review functions were already strict and need no change.
 
 ### 2. Accept Web Location
 

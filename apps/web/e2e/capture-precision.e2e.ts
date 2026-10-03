@@ -68,6 +68,10 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       name: "Quick capture",
       exact: true,
     });
+    // The editor mounts only after hydration; a photo chosen before it would be ignored.
+    await expect(
+      capture.getByRole("textbox", { name: "Entry text", exact: true }),
+    ).toBeVisible({ timeout: 30_000 });
     await capture.locator('input[type="file"]').setInputFiles({
       name: "quick-preview.png",
       mimeType: "image/png",

@@ -35,6 +35,7 @@ import {
   parseInboxReviewInput,
   type InboxReviewInput,
 } from "@/lib/data/inbox-review";
+import { trimEntryNote } from "@/lib/data/rich-text";
 import { wikiItemKindLabel, wikiItemSubtypeLabel } from "@/lib/data/wiki-item";
 
 export function EntryReviewList({
@@ -237,12 +238,13 @@ export function EntryReviewDialog({
       setResult({ message: resolved.error, status: "error" });
       return;
     }
+    const note = trimEntryNote(body, bodyRich);
     const input: InboxReviewInput = {
       location,
       photoPlace,
       ...resolved.value!,
-      body,
-      bodyRich: bodyRich?.text === body ? bodyRich : null,
+      body: note.body,
+      bodyRich: note.bodyRich,
       collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       id: entry.id,
       revision: entry.revision,

@@ -924,7 +924,7 @@ enum InboxReviewError: LocalizedError, Equatable {
     case .empty:
       "Keep a title or note before saving."
     case .invalidRichText:
-      "This Entry's rich text is invalid."
+      "MemoTrail could not keep this note's formatting. Edit the note, then save again."
     case .invalidClassification:
       "Open this item in its focused view to edit it."
     case .invalidCollections:

@@ -65,7 +65,11 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
   }
 
   if (bodyRich === undefined) {
-    return invalidReview("This Entry's rich text is invalid.");
+    // `trimEntryNote` sends formatting for exactly the trimmed note, so only a stale or
+    // malformed document reaches this. Editing the note produces a matching one.
+    return invalidReview(
+      "MemoTrail could not keep this note's formatting. Edit the note, then save again.",
+    );
   }
 
   if (!collectionNames) {
