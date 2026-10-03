@@ -200,6 +200,7 @@ Pair it with the test file carrying the same feature name.
 - `lib/ai/availability.ts` is the Web product pause gate, separate from provider configuration and saved consent.
 - Old AI feature components and their CSS have been removed; `ai-paused-settings` is only a status placeholder, and `/explore` is a redirect-only compatibility route.
 - While paused, Settings renders an off/disabled Beta status, Explore redirects to Library, and AI API requests and generation fail with `ai_paused` before provider calls or budget reservations.
+- Capture completion in `app/inbox/actions.ts` returns before authentication or revision lookups while paused, and `suggestForEntry` fails with `ai_paused` before reading preferences, preparing photo previews, or claiming a suggestion row.
 - Stored preferences and historical AI records are preserved, not bulk-reset; native requests through this server are also blocked, but native UI is unchanged.
 - The Next.js server is the only AI provider boundary.
 - Native requests reuse the user's Supabase bearer session and never receive provider credentials.
