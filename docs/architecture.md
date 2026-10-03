@@ -198,7 +198,15 @@ Pair it with the test file carrying the same feature name.
 - A per-owner Web Lock serializes runs across tabs, and each capture is reread from storage before it is sent, so a tab skips captures another tab already synced.
   `storage` events refresh the pending lists of other tabs, and a tab whose captures another tab synced refreshes its route so Inbox counts stay current.
   Browsers without Web Locks fall back to per-tab runs, where the stable Entry ID still keeps a repeated send from creating a second Entry.
+- The same provider owns the capture draft through the framework-free store in `lib/data/inbox-draft-store.ts`, read with `useCaptureDraft()`.
+  Every `CaptureComposer` renders and edits that one draft: writing, `body_rich`, occurrence, photo drafts, and the voice capture in progress.
+  A save clears it for every composer once the capture is queued; the queued capture keeps its photos in IndexedDB, and a photo removed from the draft is deleted there.
+  Composer messages are tagged with the draft revision, so a change from any composer dismisses them.
+  Leaving the Dashboard or closing Quick Capture ends a voice capture, whichever composer started it.
+- Drafts follow other tabs: `storage` events for the draft key reload the writing and date, and a per-owner `BroadcastChannel` announces photo changes, after which a tab rereads IndexedDB without the photos of queued captures.
+  A tab restored from the back-forward cache rereads both, and a dictating tab stops voice capture rather than overwrite another tab's edit.
 - Native `InboxController` belongs to the root tab view and retries on network-path changes, so iOS sync is already independent of any composer.
+  Native `RootTabView` also owns the draft and binds it into both `CaptureCard`s, so the Dashboard and Quick Capture already share it.
 
 ## Media rules
 
@@ -318,8 +326,9 @@ Pair it with the test file carrying the same feature name.
   Noninteractive history, Collection, and Trash surfaces retain their distinct link or multi-action semantics instead of nesting actions inside a button card.
 - Specialized record editors reuse `components/entry-photo-field.tsx` for selected and existing previews, removal controls, limits, and upload progress.
 - Web domain editors own label-to-control spacing in their shared field wrapper; route forms reuse that wrapper and the spacing tokens instead of compensating field by field.
-- Quick Capture restores local text and occurrence state before paint, keeps the loading and editor geometries equal, and loads IndexedDB photo drafts separately so editor initialization cannot move the open dialog.
-  Its initialized editor remains mounted while the native dialog is closed; reopening refreshes the shared local draft, and closing stops voice capture while pending captures keep syncing through `CaptureProvider`.
+- Quick Capture renders the shared draft from `CaptureProvider`, so its editor is ready before the dialog first opens and photo drafts load without moving it; its loading and editor geometries stay equal.
+  Its editor remains mounted while the native dialog is closed and follows edits from the Dashboard composer; closing stops voice capture while pending captures keep syncing.
+  `RichTextEditor` applies outside changes without emitting an update and toggles editability silently, so a mirrored or disabled editor never writes its text back as a new edit.
   `CaptureComposer` handles Command/Control Return in the active form's capture phase before Tiptap's modified-Enter bindings, then uses native `requestSubmit` and the Save button's disabled state to retain validation and queue semantics.
   Composition, held-key repeats, and nested editing layers cannot submit through that shortcut; shared editor bindings remain available outside Capture.
   The frosted surface uses a static backdrop blur and translucent reflection, while entrance and exit animate only opacity and translation and honor reduced motion.

@@ -59,6 +59,8 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - Rich formatting never replaces the Entry's clean plaintext body, so search, AI, export, and clients that do not render formatting still receive readable writing.
 - Saving a note trims the spaces and blank lines around it while keeping its formatting and the blank lines inside it.
 - The composer keeps a recoverable local draft.
+- The Dashboard composer and Quick Capture edit one shared draft, including its date and photos, so saving or clearing it in either empties both and a draft is saved once.
+- On Web, a voice capture in progress belongs to that draft too, and every open tab in a browser follows the same draft.
 - Offline captures remain visible and retryable until synchronization is confirmed.
 - Pending captures sync from any signed-in page once MemoTrail can be reached, whether or not a composer is open.
 - On Web, the workspace header counts the captures waiting on this device on desktop and mobile; selecting it retries now and lists them with the latest sync problem.
