@@ -104,6 +104,8 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - Entries may link to other Entries and expose incoming backlinks without copying writing.
 - Reusable People are canonical Entity Wiki Items with typed detail records and may link to many other Wiki Items.
 - Important content, organization, relationship, specialized-field, and photo-membership changes remain recoverable through version history.
+- Adding or removing photos never makes an open First Time, Home, Vehicle, or Goal editor stale: its Save, Move to Trash, and Bucket List achievement still apply.
+  Writing or other content changed elsewhere since the editor opened still reports a conflict instead of being overwritten.
 - Restoring history creates a new revision and does not erase later history.
 - Historical versions with an unsupported format remain viewable, with an explanation that they cannot be restored.
 

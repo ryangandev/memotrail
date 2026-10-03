@@ -29,6 +29,8 @@ The native MapKit screen and Debug Design System gallery are implemented; person
 The Home and Vehicle history comparison fix is verified on local Supabase, including old snapshots, unchanged relationship timestamps, and restoration.
 Migration `202610010001` is applied to the hosted project, so the shared server contract fixes comparison for both clients.
 Web and native history recognize schema 3 snapshots as restorable and keep unsupported snapshots viewable with a clear explanation and a disabled Restore action.
+Adding or removing a photo in a focused First Time, Home, Vehicle, or Goal editor no longer makes Move to Trash or Mark achieved report a false conflict on Web or native.
+Migration `202610030002` applies the existing photo-only revision rule inside the focused Trash RPCs and Goal achievement, so deployed clients need no update; it is verified locally and still needs to be applied to the hosted project.
 The merged Web release still needs Production deployment verification and browser acceptance; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 
 Use Git history for feature-level implementation and test evidence.
@@ -44,7 +46,7 @@ Use Git history for feature-level implementation and test evidence.
 | Web Collections and tags                                                                        | Direct Library destinations and shared Entry organization editor implemented                                                                                         |
 | Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI               | Keyword search remains available. Web AI is paused behind an off/disabled Beta setting; provider logic and historical data are retained.                             |
 | Private media, Entry history, relationships, Trash, and complete export                         | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                   |
-| Hosted Supabase contracts                                                                       | `202610010001` is deployed to project `kaivkozeyuwzqrckmyqu`; the remote ledger matches the repository                                                               |
+| Hosted Supabase contracts                                                                       | `202610010001` is deployed to project `kaivkozeyuwzqrckmyqu`; later repository migrations, including `202610030002`, await hosted application                        |
 | Entry-centered information model                                                                | Web, hosted database, and native iOS use Entry, focused records, and intentional Timeline Moment or Period; native personal acceptance remains                       |
 | Web design system                                                                               | Approved canonical components migrated across Web; component-owned CSS and token boundaries enforced; local regression passed; production browser acceptance pending |
 | Backup and restore                                                                              | Not ready                                                                                                                                                            |
@@ -72,10 +74,13 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Database validation passes 61 files with 1,567 assertions on local Supabase.
   The retired active-AI browser scenarios have been removed, and current AI pause behavior remains covered; commands and layer-selection rules live in the root README.
 - A seeded pre-migration local exercise converted Journal, Story, and Trip to tags; Timeline point and span to Moment and Period; and preserved Inbox state and revision numbers.
+- The photo revision fix passes 118 database assertions covering each focused Trash RPC, Goal achievement, and the legacy achievement path, plus two lock-ordering data contracts.
+  Seven local browser scenarios cover Move to Trash after removing a photo for all four focused types, Goal achievement, a partial upload failure, and a retained writing conflict.
+  Two native contract tests cover the same Trash and achievement paths, and the full native run passes 258 tests.
 
 ### 2. Accept Web Location
 
-- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202610010001`; the linked migration ledger matches the repository. Home Location copy-on-write compares coordinates at the database's six-decimal storage precision.
+- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202610010001`, which includes every Location migration. Home Location copy-on-write compares coordinates at the database's six-decimal storage precision.
 - Web now has optional Home Locations, address search that feeds Entry-owned Location snapshots on save, keyboard-accessible address suggestions, explicit photo GPS source identity, owner-scoped Geoapify quotas, and a clustered Map of current Entry coordinates with Kind and year filters.
 - Local Web and database validation for the merged changes is listed above.
 - `localhost:3000` points to the linked cloud Supabase project. Its health endpoint returned 200, and an authenticated browser loaded Geoapify address suggestions, a selected coordinate preview, and the Map's raster tiles after migration; the test form was canceled without saving.
