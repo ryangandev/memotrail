@@ -101,6 +101,35 @@ export function existingLocationFromRow(
   return validLocationSelection(location) ? location : null;
 }
 
+/**
+ * Once a save stores the chosen Location, the editor holds that saved snapshot.
+ * A later save then keeps it instead of choosing the provider result again.
+ */
+export function savedLocationSelection(
+  selection: LocationSelection | null,
+  savedId: string | null,
+): ExistingLocation | null {
+  if (!selection || !savedId) return null;
+  if (selection.kind === "existing") return { ...selection, id: savedId };
+  return {
+    kind: "existing",
+    id: savedId,
+    revision: 1,
+    name: selection.name,
+    formattedAddress: selection.formattedAddress,
+    address: selection.address,
+    city: selection.city,
+    region: selection.region,
+    postalCode: selection.postalCode,
+    country: selection.country,
+    countryCode: selection.countryCode,
+    latitude: selection.latitude,
+    longitude: selection.longitude,
+    timezone: selection.timezone,
+    resultType: selection.resultType,
+  };
+}
+
 export function locationDisplayLabel(location: LocationSelection) {
   return (
     location.formattedAddress ||

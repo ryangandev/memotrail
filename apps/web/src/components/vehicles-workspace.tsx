@@ -60,7 +60,10 @@ import {
   uploadEntryPhotos,
   type PhotoUploadProgress as PhotoUploadProgressValue,
 } from "@/lib/media/upload";
-import type { CaptureExtractionSource } from "@/lib/data/capture-extraction-input";
+import {
+  pendingCaptureReference,
+  type CaptureExtractionSource,
+} from "@/lib/data/capture-extraction-input";
 import type { LocationSelection } from "@/lib/locations/location";
 import { countLabel } from "@/lib/count-label";
 
@@ -87,6 +90,9 @@ export function VehiclesWorkspace({
     confirm,
     forget,
   } = useConfirmedRecords(serverRecords);
+  // Creating the Vehicle organizes the Capture, so the revalidated page no
+  // longer returns it. The open editor keeps the handoff it started with.
+  const [captureHandoff, setCaptureHandoff] = useState(sourceCapture);
   const [selectedVehicle, setSelectedVehicle] = useState<
     VehicleRecord | null | undefined
   >(
@@ -175,12 +181,13 @@ export function VehiclesWorkspace({
           onTrashed={forget}
           onClose={() => {
             setSelectedVehicle(undefined);
-            if (initialVehicleId || sourceCapture)
+            setCaptureHandoff(null);
+            if (initialVehicleId || captureHandoff)
               router.replace("/vehicles", { scroll: false });
             else router.refresh();
           }}
           ownerId={ownerId}
-          sourceCapture={selectedVehicle === null ? sourceCapture : null}
+          sourceCapture={selectedVehicle === null ? captureHandoff : null}
           tagOptions={tagOptions}
           vehicle={selectedVehicle}
         />
@@ -404,6 +411,7 @@ export function VehicleEditor({
   const [title, setTitle] = useState(
     vehicle?.title ?? sourceCapture?.title ?? "",
   );
+  const captureReference = pendingCaptureReference(sourceCapture, currentId);
 
   useEffect(() => {
     titleRef.current?.focus();
@@ -473,9 +481,7 @@ export function VehicleEditor({
     try {
       const saved = await saveVehicleEntry(
         parsed.data,
-        sourceCapture
-          ? { id: sourceCapture.id, revision: sourceCapture.revision }
-          : null,
+        captureReference,
         locationDirty ? location : undefined,
       );
       if (
@@ -655,7 +661,7 @@ export function VehicleEditor({
       {" "}
       <form id="vehicles-workspace-form" onSubmit={handleSubmit}>
         <div className={styles.formGrid}>
-          {sourceCapture ? (
+          {captureReference ? (
             <div className={styles.extractionNotice}>
               <Icon name="inbox" size={18} />
               <div>

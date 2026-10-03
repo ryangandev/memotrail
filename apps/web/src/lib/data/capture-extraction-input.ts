@@ -23,3 +23,13 @@ export function parseCaptureExtractionReference(
     ? { id: reference.id, revision: reference.revision }
     : null;
 }
+
+/** A Capture hands off only the create call. Once its record exists, Save is an ordinary update. */
+export function pendingCaptureReference(
+  source: CaptureExtractionReference | null,
+  recordId: string | null,
+): CaptureExtractionReference | null {
+  return source && recordId === null
+    ? { id: source.id, revision: source.revision }
+    : null;
+}

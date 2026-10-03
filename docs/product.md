@@ -246,6 +246,7 @@ Escape or the close control collapses it and restores focus to the bottom contro
 On mobile Web the collapsed control sits above navigation; the expanded composer stays within the visible viewport and scrolls when needed.
 Home, Vehicle, and First Time results share one reusable card shell while preserving subtype-specific content and responsive layouts.
 Specialized editors share one unboxed photo field with consistent previews, progress, limits, and controls.
+When a record saves but some photos do not attach, the editor stays open with those photos selected, and Save again updates that record and retries them, even when it was created from a Capture or with a chosen address.
 On Web, selecting a photo thumbnail in an editor or capture draft opens a single-photo dialog without removing it; the separate X control removes the photo.
 Form labels mark required fields with `*` and leave optional fields unmarked.
 
