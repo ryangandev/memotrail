@@ -33,7 +33,7 @@ select has_function(
   'public',
   'trash_item_storage_paths',
   array['text', 'uuid', 'integer', 'timestamp with time zone'],
-  'The pre-deletion Storage path contract exists'
+  'The deployed-client Storage path contract is kept'
 );
 select has_function(
   'public',
@@ -175,6 +175,16 @@ values
     300,
     '2026-08-01T13:00:00Z'
   );
+
+-- Restore requires each original it makes visible to exist in Storage.
+insert into storage.objects (bucket_id, name)
+select bucket_id, object_path
+from public.attachments
+where id in (
+  '73000000-0000-0000-0000-000000000001',
+  '73000000-0000-0000-0000-000000000002',
+  '73000000-0000-0000-0000-000000000003'
+);
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
@@ -405,12 +415,12 @@ select is(
       '2026-08-05T12:00:00Z'
     )
   ),
-  2,
-  'Permanent Entry deletion can first retrieve every private object path'
+  0,
+  'Deployed clients remove no Entry photos before the Entry is deleted'
 );
 select is(
   (
-    select object_path
+    select count(*)::integer
     from public.trash_item_storage_paths(
       'attachment',
       '73000000-0000-0000-0000-000000000002',
@@ -418,8 +428,8 @@ select is(
       '2026-08-06T12:00:00Z'
     )
   ),
-  '10000000-0000-0000-0000-000000000001/71000000-0000-0000-0000-000000000002/two.jpg',
-  'Permanent attachment deletion retrieves its private object path'
+  0,
+  'Deployed clients remove no photo before its record is deleted'
 );
 select is(
   (
@@ -520,6 +530,15 @@ select ok(
     where id = '73000000-0000-0000-0000-000000000002'
   ),
   'Permanent attachment deletion removes its metadata'
+);
+select is(
+  (select array_agg(object_path order by object_path) from public.pending_media_purge_paths()),
+  array[
+    '10000000-0000-0000-0000-000000000001/71000000-0000-0000-0000-000000000001/one.jpg',
+    '10000000-0000-0000-0000-000000000001/71000000-0000-0000-0000-000000000001/three.jpg',
+    '10000000-0000-0000-0000-000000000001/71000000-0000-0000-0000-000000000002/two.jpg'
+  ],
+  'Permanent deletion records every private object for removal afterwards'
 );
 reset role;
 
