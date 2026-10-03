@@ -222,6 +222,21 @@ struct TrashStoragePath: Decodable, Equatable, Sendable {
   }
 }
 
+/// Web `media-purge`: the private photo files of items already deleted forever.
+enum MediaPurge {
+  static let batchSize = 100
+  static let pendingMessage =
+    "MemoTrail will finish removing private photo files the next time you open Trash."
+
+  struct Request: Encodable, Sendable {
+    let limit: Int
+
+    enum CodingKeys: String, CodingKey {
+      case limit = "p_limit"
+    }
+  }
+}
+
 struct RestoredTrashItem: Decodable, Equatable, Sendable {
   let itemKind: TrashItemKind
   let itemID: UUID
@@ -273,11 +288,15 @@ struct EmptyTrashTarget: Decodable, Equatable, Sendable {
 struct EmptyTrashOutcome: Equatable, Sendable {
   let deleted: Int
   let total: Int
+  /// Whether the private photo files of the deleted items are already removed.
+  var filesRemoved = true
   var complete: Bool { deleted == total }
   var message: String {
-    complete
+    let message =
+      complete
       ? "\(countLabel(deleted, "confirmed item")) permanently deleted. Anything added to Trash later was not included."
       : "\(deleted) of \(countLabel(total, "item")) confirmed deleted. Stopped because an item changed or a request could not be confirmed. Refresh and review Trash before trying again."
+    return filesRemoved ? message : "\(message) \(MediaPurge.pendingMessage)"
   }
   @MainActor
   static func run(

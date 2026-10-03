@@ -38,6 +38,8 @@ struct TrashView: View {
     .navigationBarTitleDisplayMode(.inline)
     .task {
       if !controller.hasLoaded { await controller.load() }
+      // Like Web, opening Trash finishes removing the files of anything deleted forever.
+      await controller.finishPendingMediaRemoval()
     }
     .onDisappear {
       batchTask?.cancel()

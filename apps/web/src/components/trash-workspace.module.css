@@ -165,12 +165,13 @@
 
 .itemActions {
   display: flex;
-  width: 126px;
+  min-width: 126px;
   flex-direction: column;
   justify-content: center;
   gap: var(--mt-space-2);
   padding: var(--mt-space-4);
   border-left: 1px solid var(--mt-color-border);
+  white-space: nowrap;
 }
 
 .pagination {
@@ -209,7 +210,7 @@
   }
 
   .itemActions {
-    width: auto;
+    min-width: 0;
     grid-column: 1 / -1;
     flex-direction: row;
     padding: var(--mt-space-3);

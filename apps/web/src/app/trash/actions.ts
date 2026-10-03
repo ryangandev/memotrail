@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { parseEmptyTrashSnapshot } from "@/lib/data/empty-trash";
 import {
+  finishMediaPurges,
+  PENDING_MEDIA_PURGE_MESSAGE,
+} from "@/lib/data/media-purge";
+import {
   parseTrashItemInput,
   type TrashItemInput,
 } from "@/lib/data/trash-input";
@@ -58,7 +62,9 @@ export async function restoreTrashItem(
       message:
         error.code === "23505"
           ? "An active Collection already has this name. Rename it in organization settings, then restore this one."
-          : "MemoTrail could not restore this item. Try again.",
+          : error.message === "trash_media_unavailable"
+            ? "This item's original photos are missing, so it cannot be restored. You can still delete it forever."
+            : "MemoTrail could not restore this item. Try again.",
       status: "error",
     };
   }
@@ -71,8 +77,14 @@ export async function restoreTrashItem(
   return { message: "Item restored.", status: "restored" };
 }
 
+/**
+ * Deletes the record first, which records its private photo files for removal in
+ * the same transaction. The files are removed next; anything left is retried the
+ * next time Trash opens. Empty Trash finishes the files once after its batch.
+ */
 export async function deleteTrashItemForever(
   input: TrashItemInput,
+  options: { finishCleanup?: boolean } = {},
 ): Promise<TrashActionResult> {
   const parsed = parseTrashItemInput(input);
 
@@ -86,60 +98,19 @@ export async function deleteTrashItemForever(
     return expiredSession();
   }
 
-  const rpcInput = {
-    p_expected_deleted_at: parsed.data.deletedAt,
-    p_expected_revision: parsed.data.revision,
-    p_item_id: parsed.data.itemId,
-    p_item_kind: parsed.data.itemKind,
-  };
-  const pathResult = await context.client.rpc(
-    "trash_item_storage_paths",
-    rpcInput,
-  );
-
-  if (pathResult.error || !Array.isArray(pathResult.data)) {
-    return {
-      message: "MemoTrail could not verify this item's private photos.",
-      status: "error",
-    };
-  }
-
-  if (!pathResult.data.every(isObjectPathRow)) {
-    return {
-      message: "MemoTrail could not verify this item's private photos.",
-      status: "error",
-    };
-  }
-
-  const storagePaths = [
-    ...new Set(pathResult.data.map((row) => row.object_path)),
-  ];
-
-  if (storagePaths.length > 0) {
-    const { error } = await context.client.storage
-      .from("entry-media")
-      .remove(storagePaths);
-
-    if (error) {
-      return {
-        message:
-          "MemoTrail could not remove the private photos, so nothing else was deleted.",
-        status: "error",
-      };
-    }
-  }
-
   const { data, error } = await context.client.rpc(
     "delete_trash_item_forever",
-    rpcInput,
+    {
+      p_expected_deleted_at: parsed.data.deletedAt,
+      p_expected_revision: parsed.data.revision,
+      p_item_id: parsed.data.itemId,
+      p_item_kind: parsed.data.itemKind,
+    },
   );
 
   if (error) {
     return {
-      message:
-        error.message === "media_cleanup_required"
-          ? "A photo preview finished while this item was being removed. Refresh and try Delete forever again to remove the remaining files."
-          : "MemoTrail could not permanently delete this item. Try again.",
+      message: "MemoTrail could not permanently delete this item. Try again.",
       status: "error",
     };
   }
@@ -149,15 +120,23 @@ export async function deleteTrashItemForever(
   }
 
   refreshTrashPaths();
-  return { message: "Item permanently deleted.", status: "deleted" };
+  const finished =
+    options.finishCleanup === false ||
+    (await finishMediaPurges(context.client, context.userId));
+  return {
+    message: finished
+      ? "Item permanently deleted."
+      : `Item permanently deleted. ${PENDING_MEDIA_PURGE_MESSAGE}`,
+    status: "deleted",
+  };
 }
 
-function isObjectPathRow(value: unknown): value is { object_path: string } {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    typeof (value as { object_path?: unknown }).object_path === "string"
-  );
+/** Removes the private photo files of everything already deleted forever. */
+export async function finishTrashCleanup(): Promise<boolean> {
+  const context = await getAuthenticatedContext();
+  return context
+    ? finishMediaPurges(context.client, context.userId, 100)
+    : false;
 }
 
 function changedItem(): TrashActionResult {

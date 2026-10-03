@@ -5,6 +5,7 @@ import { Button } from "@/components/button";
 import { useEffect, useRef, useState } from "react";
 import {
   deleteTrashItemForever,
+  finishTrashCleanup,
   prepareEmptyTrash,
   type TrashActionResult,
 } from "@/app/trash/actions";
@@ -86,21 +87,26 @@ export function EmptyTrashControl({
     if (!snapshot || deleting.current) return;
     deleting.current = true;
     setRunning(true);
+    // Records are deleted one at a time; their private photo files go once at the end.
     const result = await runEmptyTrash(
       snapshot,
-      async (item) => (await deleteTrashItemForever(item)).status === "deleted",
+      async (item) =>
+        (await deleteTrashItemForever(item, { finishCleanup: false }))
+          .status === "deleted",
       (count) => {
         if (alive.current) setDeleted(count);
       },
       () => alive.current,
     );
+    const filesRemoved =
+      result.deleted === 0 || (await finishTrashCleanup().catch(() => false));
     if (!alive.current) return;
     deleting.current = false;
     setRunning(false);
     close();
     onResult({
       status: result.complete ? "deleted" : "error",
-      message: emptyTrashResultMessage(result),
+      message: emptyTrashResultMessage(result, filesRemoved),
     });
     onFinish();
   }

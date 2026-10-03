@@ -6,10 +6,11 @@ import { Button } from "@/components/button";
 import { notify } from "@/components/app-toast";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   deleteTrashItemForever,
+  finishTrashCleanup,
   restoreTrashItem,
   type TrashActionResult,
 } from "@/app/trash/actions";
@@ -46,6 +47,12 @@ export function TrashWorkspace({
     workspace.totalCount,
   );
   const totalPages = Math.ceil(workspace.totalCount / TRASH_PAGE_SIZE);
+
+  useEffect(() => {
+    // Finish removing the files of anything already deleted forever, including a
+    // removal that another device or an interrupted request left unfinished.
+    void finishTrashCleanup().catch(() => undefined);
+  }, []);
 
   async function runAction(item: TrashItem, action: "delete" | "restore") {
     setPending({ action, itemId: item.id });
