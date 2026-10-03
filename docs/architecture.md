@@ -85,6 +85,9 @@ Pair it with the test file carrying the same feature name.
 - First Time, Home, Vehicle, Goal, Moment, and Period creation starts in Timeline or a focused view.
 - Older source extraction RPCs remain available for existing provenance links, but Web Inbox does not offer focused-form handoffs.
 - `capture_extraction_source` and specialized extraction RPCs retain their owner-scoped source revision checks and link provenance when invoked directly.
+- Web Goal, Home, and Vehicle workspaces keep a `?source=` Capture handoff for the open editor, because creating the record organizes the Capture and the revalidated page no longer returns it.
+  Only the create call sends the Capture; once the record exists, later saves, including photo retries, are ordinary updates, as in the native editors.
+  After a Home save, its provider choice is held as the saved Location, so a retry keeps that snapshot instead of choosing the provider result again.
 - Web Goal extraction uses a caller-generated target UUID for idempotency, preserves the source revision and identity, and records `derived` plus `derived_from` provenance links so both items remain discoverable.
 - `review_wiki_item_with_photo_place_rich` is the review boundary for clients without a Location editor.
   It writes plaintext and `body_rich` in one revision, clears formatting when `p_body_rich` is null, and leaves the primary Location unchanged.

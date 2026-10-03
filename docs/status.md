@@ -85,6 +85,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Before the fix, a bold capture ending in a new line saved with empty metadata, and a review with a trailing new line stopped at revision 1 with "This Entry's rich text is invalid."
   Unit tests for `trimEntryNote`, including 500 generated documents checked against the editor schema, and both `rich-text-whitespace.e2e.ts` browser scenarios now pass.
   A mismatched note now asks the person to edit it on Web and native; the database review functions were already strict and need no change.
+- Save again after a partial photo upload failure updates the new Goal, Home, or Vehicle and attaches the remaining photos, including records created from a Capture or with a provider address.
+  Six local browser scenarios cover Goal, Home, and Vehicle from a Capture, a Home with a provider address, and Home and Vehicle from a Capture with a provider address; all six pass and fail against the previous editors.
 
 ### 2. Accept Web Location
 
