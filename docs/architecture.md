@@ -101,6 +101,8 @@ Pair it with the test file carrying the same feature name.
 - Web capture and Entry review use `components/rich-text-editor.tsx` for the reusable headless editor surface, with page, dialog, and form variants instead of separate editors.
   `components/entry-rich-text-content.tsx` safely renders validated formatting on note surfaces and falls back to canonical plaintext when rich metadata is absent, invalid, or stale.
   Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while the compatibility RPC `review_entry_with_photo_place_rich` writes plaintext, formatting, organization, occurrence, and photo Location adoption in one revision.
+  Drafts keep the editor's untrimmed note; on Capture and review save, `trimEntryNote` in `lib/data/rich-text.ts` trims surrounding whitespace from the document and derives the plaintext from the result, like native `EntryEmphasisContent.capture`.
+  The review parser and RPCs still reject formatting whose text differs from the trimmed body.
   Older review RPCs preserve rich metadata they do not understand while the writing is unchanged.
 - Native `DesignSystem/Components/NativeRichTextEditor.swift` provides a reusable UIKit writing surface with an Aa formatting toggle, bold, italic, underline, strikethrough, selection formatting, typing styles, and undo/redo.
   The Debug gallery exercises standalone and sheet presentation, plus an encode/decode save preview using `Models/EntryEmphasisContent.swift`.

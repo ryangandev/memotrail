@@ -57,6 +57,7 @@ Changing the default never rewrites an existing Entry's recorded timezone.
   Formatting survives later edits in the rich Entry editor and appears on full note surfaces.
   Focused record editors edit plain text: keeping the writing keeps its formatting, while changing it removes the formatting rather than keeping an outdated formatted copy.
 - Rich formatting never replaces the Entry's clean plaintext body, so search, AI, export, and clients that do not render formatting still receive readable writing.
+- Saving a note trims the spaces and blank lines around it while keeping its formatting and the blank lines inside it.
 - The composer keeps a recoverable local draft.
 - Offline captures remain visible and retryable until synchronization is confirmed.
 - Pending captures sync from any signed-in page once MemoTrail can be reached, whether or not a composer is open.
