@@ -64,17 +64,13 @@ final class TrashController {
       }
       await reloadAfterMutation()
       return Notice(message: "Item restored.", tone: .success)
-    } catch let error as PostgrestError where error.code == "23505" {
-      return Notice(
-        message:
-          "An active Collection already has this name. Rename it in organization settings, then restore this one.",
-        tone: .error)
     } catch {
-      return Notice(message: "MemoTrail could not restore this item. Try again.", tone: .error)
+      return .restoreFailure(error)
     }
   }
 
-  /// Web `deleteTrashItemForever`: the private photos first, then the item.
+  /// Web `deleteTrashItemForever`: the item first, which records its private photo files in the
+  /// same transaction, then those files. Anything left is removed the next time Trash opens.
   func deleteForever(_ item: TrashItem) async -> Notice {
     guard !isBusy else {
       return Notice(message: "Wait for the current Trash change to finish.", tone: .error)
@@ -85,26 +81,45 @@ final class TrashController {
 
     do {
       try await performDeletion(TrashItemMutationParameters(item: item))
-      await reloadAfterMutation()
-      return Notice(message: "Item permanently deleted.", tone: .success)
     } catch TrashControllerError.changedItem {
       return .changedItem
-    } catch TrashControllerError.invalidMedia {
-      return Notice(message: "MemoTrail could not verify this item's private photos.", tone: .error)
-    } catch TrashControllerError.mediaRemoval {
-      return Notice(
-        message: "MemoTrail could not remove the private photos, so nothing else was deleted.",
-        tone: .error)
-    } catch let error as PostgrestError where error.message == "media_cleanup_required" {
-      return Notice(
-        message: "A photo preview finished while this item was being removed. "
-          + "Refresh and try Delete forever again to remove the remaining files.",
-        tone: .error
-      )
     } catch {
       return Notice(
         message: "MemoTrail could not permanently delete this item. Try again.", tone: .error)
     }
+    let filesRemoved = await finishPendingMediaRemoval()
+    await reloadAfterMutation()
+    return Notice(
+      message: filesRemoved
+        ? "Item permanently deleted." : "Item permanently deleted. \(MediaPurge.pendingMessage)",
+      tone: .success)
+  }
+
+  /// Web `finishMediaPurges`: removes the private photo files of everything already deleted
+  /// forever, including a removal that another device or an interrupted request left unfinished.
+  /// Any failure leaves them recorded for the next attempt. Returns whether nothing remains.
+  @discardableResult
+  func finishPendingMediaRemoval(maxRounds: Int = 10) async -> Bool {
+    do {
+      for _ in 0..<maxRounds {
+        try await validateSessionOwner()
+        let rows: [TrashStoragePath] = try await client.rpc(
+          "pending_media_purge_paths", params: MediaPurge.Request(limit: MediaPurge.batchSize)
+        ).execute().value
+        let paths = Array(Set(rows.map(\.objectPath))).sorted()
+        guard paths.allSatisfy(isValidOwnedStoragePath) else { return false }
+        if !paths.isEmpty {
+          _ = try await client.storage.from("entry-media").remove(paths: paths)
+        }
+        let remaining: Int = try await client.rpc("complete_media_purges").execute().value
+        if remaining == 0 { return true }
+        // Recorded files that cannot be listed would never finish here.
+        if paths.isEmpty { return false }
+      }
+    } catch {
+      return false
+    }
+    return false
   }
 
   /// Web `prepareEmptyTrash`: the complete list Empty Trash may delete, or why there is none.
@@ -152,32 +167,23 @@ final class TrashController {
       isEmptying = false
       emptySnapshot = nil
     }
-    let outcome = await EmptyTrashOutcome.run(
+    var outcome = await EmptyTrashOutcome.run(
       targets: targets,
       remove: { target in
         try await self.performDeletion(TrashItemMutationParameters(target: target))
       }, progress: { self.emptyProgress = $0 })
+    // Records are deleted one at a time; their private photo files go once at the end.
+    if outcome.deleted > 0 {
+      outcome.filesRemoved = await finishPendingMediaRemoval(maxRounds: 100)
+    }
     await reloadAfterMutation()
     return Notice(message: outcome.message, tone: outcome.complete ? .success : .error)
   }
 
+  /// Deletes only the record. The server records its private photo files for removal.
   private func performDeletion(_ parameters: TrashItemMutationParameters) async throws {
     try Task.checkCancellation()
     try await validateSessionOwner()
-    let pathRows: [TrashStoragePath] = try await client.rpc(
-      "trash_item_storage_paths", params: parameters
-    ).execute().value
-    let paths = Array(Set(pathRows.map(\.objectPath))).sorted()
-    guard paths.allSatisfy(isValidOwnedStoragePath) else { throw TrashControllerError.invalidMedia }
-    try Task.checkCancellation()
-    try await validateSessionOwner()
-    if !paths.isEmpty {
-      do {
-        _ = try await client.storage.from("entry-media").remove(paths: paths)
-      } catch {
-        throw TrashControllerError.mediaRemoval
-      }
-    }
     let rows: [DeletedTrashItem] = try await client.rpc(
       "delete_trash_item_forever", params: parameters
     ).execute().value
@@ -281,12 +287,29 @@ extension TrashController {
 
     static let changedItem = Notice(
       message: "This item changed on another device. Refresh before trying again.", tone: .error)
+
+    /// Web `restoreTrashItem` error messages.
+    static func restoreFailure(_ error: Error) -> Notice {
+      if let error = error as? PostgrestError {
+        if error.code == "23505" {
+          return Notice(
+            message:
+              "An active Collection already has this name. Rename it in organization settings, then restore this one.",
+            tone: .error)
+        }
+        if error.message == "trash_media_unavailable" {
+          return Notice(
+            message:
+              "This item's original photos are missing, so it cannot be restored. You can still delete it forever.",
+            tone: .error)
+        }
+      }
+      return Notice(message: "MemoTrail could not restore this item. Try again.", tone: .error)
+    }
   }
 }
 
 private enum TrashControllerError: Error {
   case changedItem
-  case invalidMedia
-  case mediaRemoval
   case ownerChanged
 }

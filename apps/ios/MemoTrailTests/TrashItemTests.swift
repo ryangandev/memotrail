@@ -1,3 +1,4 @@
+@preconcurrency import Supabase
 import XCTest
 
 @testable import MemoTrail
@@ -53,6 +54,39 @@ final class TrashItemTests: XCTestCase {
     XCTAssertTrue(result.message.contains("later was not included"))
     XCTAssertTrue(
       EmptyTrashOutcome(deleted: 0, total: 1).message.hasPrefix("0 of 1 item confirmed deleted."))
+  }
+
+  func testEmptyTrashSaysWhenPhotoFilesFinishRemovingLater() {
+    let removed = EmptyTrashOutcome(deleted: 2, total: 2)
+    XCTAssertFalse(removed.message.contains(MediaPurge.pendingMessage))
+    let pending = EmptyTrashOutcome(deleted: 2, total: 2, filesRemoved: false)
+    XCTAssertEqual(pending.message, "\(removed.message) \(MediaPurge.pendingMessage)")
+    XCTAssertEqual(
+      MediaPurge.pendingMessage,
+      "MemoTrail will finish removing private photo files the next time you open Trash.")
+    let object = try? JSONSerialization.jsonObject(
+      with: JSONEncoder().encode(MediaPurge.Request(limit: MediaPurge.batchSize)))
+    XCTAssertEqual(object as? [String: Int], ["p_limit": 100])
+  }
+
+  @MainActor func testRestoreFailuresMatchWeb() {
+    XCTAssertEqual(
+      TrashController.Notice.restoreFailure(
+        PostgrestError(code: "P0001", message: "trash_media_unavailable")),
+      .init(
+        message:
+          "This item's original photos are missing, so it cannot be restored. You can still delete it forever.",
+        tone: .error))
+    XCTAssertEqual(
+      TrashController.Notice.restoreFailure(
+        PostgrestError(code: "23505", message: "duplicate key value")),
+      .init(
+        message:
+          "An active Collection already has this name. Rename it in organization settings, then restore this one.",
+        tone: .error))
+    XCTAssertEqual(
+      TrashController.Notice.restoreFailure(URLError(.notConnectedToInternet)),
+      .init(message: "MemoTrail could not restore this item. Try again.", tone: .error))
   }
 
   @MainActor func testCancelledEmptyTrashStartsNoDeletion() async {

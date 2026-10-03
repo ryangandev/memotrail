@@ -928,6 +928,102 @@ final class NativeContractTests: XCTestCase {
     XCTAssertNil(trash.loadErrorMessage)
   }
 
+  // Delete forever removes the record first; a file removal it could not finish is finished
+  // the next time Trash opens, and nothing deleted can be restored in between.
+  func testTrashDeletesTheRecordBeforeItsPhotoFilesAndFinishesAnInterruptedRemoval() async throws {
+    let (client, ownerID) = try await client(session: HeldResponseProtocol.session)
+    let (entryID, path) = try await trashedPhotoEntry(
+      "Native Delete Forever Photo", client: client, ownerID: ownerID)
+    let folder = (path as NSString).deletingLastPathComponent
+    let file = (path as NSString).lastPathComponent
+    let trash = TrashController(client: client, ownerID: ownerID)
+    await trash.load()
+    let item = try XCTUnwrap(trash.items.first { $0.itemID == entryID })
+    let parameters = TrashItemMutationParameters(item: item)
+
+    // A deployed client's removal manifest is empty, and Storage keeps a restorable original.
+    let manifest: [TrashStoragePath] = try await client.rpc(
+      "trash_item_storage_paths", params: parameters
+    ).execute().value
+    XCTAssertEqual(manifest, [])
+    let early = try await client.storage.from("entry-media").remove(paths: [path])
+    XCTAssertTrue(early.isEmpty)
+    let kept = try await storedNames(in: folder, client: client)
+    XCTAssertTrue(kept.contains(file))
+
+    HeldResponseProtocol.gate.failNextStorageRemoval()
+    defer { HeldResponseProtocol.gate.failNextStorageRemoval(false) }
+    let deleted = await trash.deleteForever(item)
+    XCTAssertEqual(
+      deleted,
+      .init(message: "Item permanently deleted. \(MediaPurge.pendingMessage)", tone: .success))
+    XCTAssertFalse(trash.items.contains { $0.itemID == entryID })
+    let restored: [RestoredTrashItem] = try await client.rpc(
+      "restore_trash_item", params: parameters
+    ).execute().value
+    XCTAssertEqual(restored, [])
+    let recorded = try await storedNames(in: folder, client: client)
+    XCTAssertTrue(recorded.contains(file))
+    let pending: [TrashStoragePath] = try await client.rpc(
+      "pending_media_purge_paths", params: MediaPurge.Request(limit: MediaPurge.batchSize)
+    ).execute().value
+    XCTAssertTrue(pending.contains(TrashStoragePath(objectPath: path)))
+
+    let finished = await trash.finishPendingMediaRemoval()
+    XCTAssertTrue(finished)
+    let removed = try await storedNames(in: folder, client: client)
+    XCTAssertFalse(removed.contains(file))
+    let finishedAgain = await trash.finishPendingMediaRemoval()
+    XCTAssertTrue(finishedAgain)
+  }
+
+  func testEmptyTrashRemovesPhotoFilesOnceAfterItsRecords() async throws {
+    let (client, ownerID) = try await client()
+    let (entryID, path) = try await trashedPhotoEntry(
+      "Native Empty Trash Photo", client: client, ownerID: ownerID)
+    let folder = (path as NSString).deletingLastPathComponent
+    let trash = TrashController(client: client, ownerID: ownerID)
+    await trash.load()
+    let prepared = await trash.prepareEmptyTrash()
+    XCTAssertNil(prepared)
+    XCTAssertTrue(trash.emptySnapshot?.contains { $0.itemID == entryID } == true)
+    let emptied = await trash.emptyTrash()
+    let notice = try XCTUnwrap(emptied)
+    XCTAssertEqual(notice.tone, .success, notice.message)
+    XCTAssertTrue(
+      notice.message.hasSuffix("Anything added to Trash later was not included."), notice.message)
+    let remaining = try await storedNames(in: folder, client: client)
+    XCTAssertFalse(remaining.contains((path as NSString).lastPathComponent))
+    let pending: [TrashStoragePath] = try await client.rpc(
+      "pending_media_purge_paths", params: MediaPurge.Request(limit: MediaPurge.batchSize)
+    ).execute().value
+    XCTAssertEqual(pending, [])
+  }
+
+  /// A synthetic First Time with one photo, moved to Trash. Returns its id and original path.
+  private func trashedPhotoEntry(
+    _ title: String, client: SupabaseClient, ownerID: UUID
+  ) async throws -> (UUID, String) {
+    let firstTimes = FirstTimesController(client: client, ownerID: ownerID)
+    let created = await firstTimes.save(
+      entryID: nil, expectedRevision: nil, title: title, body: "",
+      occurredStart: nil, datePrecision: .unknown, occurredLabel: "", occurredTimezone: nil,
+      collectionNames: [], tagNames: [])
+    let entryID = try XCTUnwrap(created.identity?.id, created.message)
+    let upload = try await firstTimes.upload(photoDraft(), entryID: entryID)
+    XCTAssertEqual(upload.status, .saved, upload.message)
+    await firstTimes.load()
+    let entry = try XCTUnwrap(firstTimes.entry(id: entryID))
+    let original = try XCTUnwrap(entry.attachments.first { $0.variant == .original })
+    let trashed = await firstTimes.moveToTrash(entryID: entry.id, expectedRevision: entry.revision)
+    XCTAssertEqual(trashed.status, .trashed, trashed.message)
+    return (entryID, original.objectPath)
+  }
+
+  private func storedNames(in folder: String, client: SupabaseClient) async throws -> [String] {
+    try await client.storage.from("entry-media").list(path: folder).map(\.name)
+  }
+
   /// A synthetic capture saved to the Library through Inbox review.
   private func reviewedEntry(
     _ body: String, client: SupabaseClient, ownerID: UUID
@@ -1085,7 +1181,8 @@ private struct SyntheticFirstTimeLocation: Encodable {
 }
 
 /// Passes each request through to the local stack, but can hold the response to one RPC call
-/// until the test releases it, so an earlier load can return after a later one.
+/// until the test releases it, so an earlier load can return after a later one. It can also
+/// fail one Storage removal, like a connection lost between two steps.
 private final class HeldResponseProtocol: URLProtocol {
   static let gate = ResponseGate()
   /// A session whose requests pass through this protocol.
@@ -1106,6 +1203,10 @@ private final class HeldResponseProtocol: URLProtocol {
     if forwarded.httpBody == nil, let stream = forwarded.httpBodyStream {
       forwarded.httpBodyStream = nil
       forwarded.httpBody = stream.readAll()
+    }
+    if Self.gate.failsStorageRemoval(forwarded) {
+      client?.urlProtocol(self, didFailWithError: URLError(.networkConnectionLost))
+      return
     }
     let isHeld = Self.gate.claims(forwarded)
     let reference = LoaderReference(loader: self)
@@ -1144,6 +1245,22 @@ private final class ResponseGate: @unchecked Sendable {
   private let lock = NSLock()
   private var rpc: String?
   private var heldDelivery: (@Sendable () -> Void)?
+  private var failsNextStorageRemoval = false
+
+  /// Fails the next Storage object removal as a lost connection, without sending it.
+  func failNextStorageRemoval(_ enabled: Bool = true) {
+    lock.withLock { failsNextStorageRemoval = enabled }
+  }
+
+  fileprivate func failsStorageRemoval(_ request: URLRequest) -> Bool {
+    lock.withLock {
+      guard failsNextStorageRemoval, request.httpMethod == "DELETE",
+        request.url?.path.contains("/storage/v1/object/") == true
+      else { return false }
+      failsNextStorageRemoval = false
+      return true
+    }
+  }
 
   /// Holds the response to the next call of `rpc`, once the server has answered it.
   func holdNextResponse(toRPC rpc: String) {
