@@ -132,6 +132,39 @@ describe("Entry history", () => {
       ),
     ).toEqual(["Other metadata"]);
   });
+  it("compares formatting as part of the writing, not other metadata", () => {
+    const bold = {
+      document: {
+        content: [
+          {
+            content: [
+              { marks: [{ type: "bold" }], text: "Writing", type: "text" },
+            ],
+            type: "paragraph",
+          },
+        ],
+        type: "doc",
+      },
+      text: "Writing",
+      version: 1,
+    };
+    const formatted = {
+      ...snapshot,
+      metadata: { body_rich: bold, source: "web" },
+    };
+    const plain = { ...snapshot, metadata: { source: "web" } };
+    expect(historyDifferences(plain, formatted)).toEqual(["Writing"]);
+    expect(historyDifferences({ ...plain, body: "Edited" }, formatted)).toEqual(
+      ["Writing"],
+    );
+    expect(
+      historyDifferences(
+        { ...formatted, metadata: { body_rich: bold, source: "ios" } },
+        formatted,
+      ),
+    ).toEqual(["Other metadata"]);
+    expect(historyDifferences(formatted, formatted)).toEqual([]);
+  });
   it("handles body-only and empty titles", () => {
     expect(historyTitle({ title: null, body: "  学习记录 " })).toBe("学习记录");
     expect(historyTitle({ title: null })).toBe("Untitled item");

@@ -88,7 +88,7 @@ Pair it with the test file carrying the same feature name.
 - Web Goal extraction uses a caller-generated target UUID for idempotency, preserves the source revision and identity, and records `derived` plus `derived_from` provenance links so both items remain discoverable.
 - `review_wiki_item_with_photo_place_rich` is the review boundary for clients without a Location editor.
   It writes plaintext and `body_rich` in one revision, clears formatting when `p_body_rich` is null, and leaves the primary Location unchanged.
-  The older plaintext `review_wiki_item_with_photo_place` preserves rich metadata it does not understand and has no current client caller.
+  The older plaintext `review_wiki_item_with_photo_place` preserves rich metadata it does not understand while the writing is unchanged and has no current client caller.
 - Native iOS uses the canonical Entry, Entity, and Goal decoding and filter identities.
   Its ordinary Entry editor, `Features/Inbox/EntryReviewSheet.swift`, serves Inbox review and Edit Entry on the Item page and in version history through `InboxController.submitReview`; focused records keep their own editors and RPCs.
   Moving an Inbox capture to Trash sets `deleted_at` only at the reviewed revision, like Web `trashWikiItem`.
@@ -96,11 +96,12 @@ Pair it with the test file carrying the same feature name.
 - Web and iOS create a separately editable Goal with `extract_goal_from_item` when an established Wiki Item inspires a Goal. The caller-generated Goal ID makes lost-response retries idempotent, and History exposes both provenance directions.
 - `convert_entry_to_goal` remains only as an administrative recovery function. Authenticated and anonymous clients have no execute grant because established items must never change Kind through a conversion.
 - Specialized tables add typed facts without duplicating common writing, organization, dates, media, or history.
-- `entries.body` remains canonical plaintext. Optional validated rich content is versioned under `entries.metadata.body_rich`, carries the exact matching plaintext, and is ignored when another client changes the body without updating the rich document.
+- `entries.body` remains canonical plaintext. Optional validated rich content is versioned under `entries.metadata.body_rich` and carries the exact matching plaintext.
+  The `discard_stale_entry_rich_text` trigger removes `body_rich` whenever a write leaves its text different from `body`, so plaintext focused editors, direct client writes, and restores cannot keep outdated formatted text for search or export.
 - Web capture and Entry review use `components/rich-text-editor.tsx` for the reusable headless editor surface, with page, dialog, and form variants instead of separate editors.
   `components/entry-rich-text-content.tsx` safely renders validated formatting on note surfaces and falls back to canonical plaintext when rich metadata is absent, invalid, or stale.
   Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while the compatibility RPC `review_entry_with_photo_place_rich` writes plaintext, formatting, organization, occurrence, and photo Location adoption in one revision.
-  Older review RPCs preserve rich metadata they do not understand.
+  Older review RPCs preserve rich metadata they do not understand while the writing is unchanged.
 - Native `DesignSystem/Components/NativeRichTextEditor.swift` provides a reusable UIKit writing surface with an Aa formatting toggle, bold, italic, underline, strikethrough, selection formatting, typing styles, and undo/redo.
   The Debug gallery exercises standalone and sheet presentation, plus an encode/decode save preview using `Models/EntryEmphasisContent.swift`.
   This codec authors the paragraph and emphasis subset of Web's versioned `body_rich` document and rejects unsupported blocks or marks rather than flattening them.
@@ -122,6 +123,7 @@ Pair it with the test file carrying the same feature name.
   `normalize_entry_history_snapshot` defines comparable history content for newly archived state and both stored and live snapshots returned by the history read RPC.
   Relationship and specialized-detail rows exclude bookkeeping timestamps; attachment rows also exclude their soft-delete bookkeeping.
   Stable identities, domain facts, array order, and authored metadata remain intact for comparison and restoration, and reading old versions never rewrites them.
+  Web and native comparisons treat `body_rich` as part of Writing, matching the metadata details that hide it.
   Save RPCs retain unchanged Location, Timeline, People, and Entry-link memberships and skip unchanged Home, Vehicle, and Goal detail updates.
 - Older clients must preserve fields they cannot represent or reject the write safely.
 - AI organization payloads offer optional title, tags, Collections, and occurrence suggestions without structural classification.

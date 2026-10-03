@@ -54,7 +54,8 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - New captures remain untitled until Inbox review or later editing adds a title.
 - The Web New Entry composer expands from a floating input-style control at the bottom center of the workspace; its writing field grows with its content and does not expose native resize controls.
 - Entry writing offers lightweight rich text for emphasis, links, lists, quotes, inline code, and code blocks without turning capture into a document editor.
-  Formatting survives later edits and appears on full note surfaces.
+  Formatting survives later edits in the rich Entry editor and appears on full note surfaces.
+  Focused record editors edit plain text: keeping the writing keeps its formatting, while changing it removes the formatting rather than keeping an outdated formatted copy.
 - Rich formatting never replaces the Entry's clean plaintext body, so search, AI, export, and clients that do not render formatting still receive readable writing.
 - The composer keeps a recoverable local draft.
 - Offline captures remain visible and retryable until synchronization is confirmed.

@@ -1,3 +1,4 @@
+import { entryRichTextMetadataKey } from "./rich-text";
 import type { WikiItemKind } from "./wiki-item";
 
 // Matches the snapshot contract accepted by restore_entry_version.
@@ -83,9 +84,27 @@ export function historyDifferences(
     .filter(
       ([key]) =>
         key in previous &&
-        JSON.stringify(current[key]) !== JSON.stringify(previous[key]),
+        JSON.stringify(comparableHistoryValue(current, key)) !==
+          JSON.stringify(comparableHistoryValue(previous, key)),
     )
     .map(([, label]) => label);
+}
+// Formatting is shown as part of the writing and hidden from the metadata details,
+// so a formatting change is a Writing difference rather than Other metadata.
+function comparableHistoryValue(snapshot: HistorySnapshot, key: string) {
+  const metadata = isRecord(snapshot.metadata) ? snapshot.metadata : null;
+  if (key === "body") {
+    return [snapshot.body, metadata?.[entryRichTextMetadataKey] ?? null];
+  }
+  if (key === "metadata" && metadata) {
+    const otherMetadata = { ...metadata };
+    delete otherMetadata[entryRichTextMetadataKey];
+    return otherMetadata;
+  }
+  return snapshot[key];
+}
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 export function historyTitle(value: {
   title: string | null;

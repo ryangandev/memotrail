@@ -244,7 +244,26 @@ enum HistoryPresentation {
   static func differences(current: [String: HistoryJSON], previous: [String: HistoryJSON])
     -> [String]
   {
-    fields.filter { previous[$0.key] != nil && current[$0.key] != previous[$0.key] }.map(\.label)
+    fields.filter {
+      previous[$0.key] != nil && comparable(current, $0.key) != comparable(previous, $0.key)
+    }.map(\.label)
+  }
+
+  /// Web `comparableHistoryValue`: formatting is shown as part of the writing and hidden from
+  /// the metadata details, so a formatting change is a Writing difference, not Other metadata.
+  private static func comparable(_ snapshot: [String: HistoryJSON], _ key: String)
+    -> [HistoryJSON?]
+  {
+    switch key {
+    case "body":
+      return [snapshot["body"], snapshot["metadata"]?.object?[EntryRichText.metadataKey] ?? .null]
+    case "metadata":
+      guard case .object(var values)? = snapshot["metadata"] else { return [snapshot["metadata"]] }
+      values[EntryRichText.metadataKey] = nil
+      return [.object(values)]
+    default:
+      return [snapshot[key]]
+    }
   }
 
   /// The names in a snapshot's relationship list, like Web's snapshot facts.
