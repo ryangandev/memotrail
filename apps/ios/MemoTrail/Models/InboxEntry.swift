@@ -1,4 +1,5 @@
 import Foundation
+@preconcurrency import Supabase
 
 struct InboxEntry: Decodable, Equatable, Identifiable, Sendable {
   let id: UUID
@@ -487,6 +488,9 @@ struct QueuedInboxEntry: Codable, Equatable, Identifiable, Sendable {
   var occurrence: EntryOccurrence? = nil
   /// Web's `metadata.body_rich` for the note, when it was written with formatting.
   var bodyRich: EntryEmphasisContent? = nil
+  /// Set when MemoTrail permanently refused this capture, which then never syncs again and
+  /// waits on this iPhone until the person copies what they need and discards it.
+  var rejection: QueuedInboxRejection? = nil
 
   var effectiveOccurrence: EntryOccurrence {
     occurrence
@@ -514,7 +518,7 @@ struct QueuedInboxEntry: Codable, Equatable, Identifiable, Sendable {
 
   private enum CodingKeys: String, CodingKey {
     case id, title, body, occurredAt, occurredTimezone, queuedAt, attachments, occurrence
-    case bodyRich
+    case bodyRich, rejection
   }
 
   init(from decoder: Decoder) throws {
@@ -529,6 +533,15 @@ struct QueuedInboxEntry: Codable, Equatable, Identifiable, Sendable {
       try values.decodeIfPresent([QueuedInboxAttachment].self, forKey: .attachments) ?? []
     occurrence = try values.decodeIfPresent(EntryOccurrence.self, forKey: .occurrence)
     bodyRich = try values.decodeIfPresent(EntryEmphasisContent.self, forKey: .bodyRich)
+    // Like Web, a malformed marker never costs the capture: it only becomes sendable again.
+    rejection = (try? values.decodeIfPresent(QueuedInboxRejection.self, forKey: .rejection))
+      .flatMap { $0 }
+      .flatMap { $0.isValid ? $0 : nil }
+  }
+
+  /// The note text to keep before discarding: the title and note, like Web's Copy text.
+  var copyableText: String {
+    [title, body.nonEmpty].compactMap { $0 }.joined(separator: "\n\n")
   }
 
   var presentedEntry: InboxEntry {
@@ -616,6 +629,63 @@ struct QueuedInboxAttachment: Codable, Equatable, Identifiable, Sendable {
   }
 }
 
+/// Why MemoTrail refused a queued capture, kept with it like Web's queue `rejection`.
+struct QueuedInboxRejection: Codable, Equatable, Sendable {
+  static let maximumMessageLength = 500
+
+  let message: String
+  let rejectedAt: Date
+
+  var isValid: Bool {
+    !message.trimmed.isEmpty && message.count <= Self.maximumMessageLength
+  }
+}
+
+/// How a capture sync failed, classified from PostgREST and Postgres error codes like Web
+/// `classifySyncFailure`, never from message text.
+enum CaptureSyncFailure: Equatable, Sendable {
+  /// MemoTrail refused this capture, and sending it again cannot change the answer.
+  case rejected
+  /// The session can no longer write, so the person needs to sign in again.
+  case session
+  /// MemoTrail could not be reached or answer now; a later attempt can succeed.
+  case unavailable
+
+  private static let sessionCodes: Set<String> = ["PGRST301", "PGRST302", "PGRST303"]
+  // Invalid data, integrity constraints, and program limits are the capture's own content.
+  private static let rejectedSQLStateClasses: Set<Substring> = ["22", "23", "54"]
+
+  init(_ error: Error) {
+    // Network failures, gateway pages, and undecodable responses carry no PostgREST code.
+    guard let error = error as? PostgrestError, let code = error.code, !code.isEmpty else {
+      self = .unavailable
+      return
+    }
+    self.init(code: code)
+  }
+
+  init(code: String) {
+    if Self.sessionCodes.contains(code) {
+      self = .session
+    } else if code.count == 8, code.hasPrefix("PGRST1"),
+      code.dropFirst(6).allSatisfy({ $0.isASCII && $0.isNumber })
+    {
+      // PostgREST could not read the request itself.
+      self = .rejected
+    } else if code == "42501" {
+      // Row-level security refused the signed-in person's own write. The session is checked
+      // before each sync, and an expired token answers with PGRST303 instead.
+      self = .rejected
+    } else if code.count == 5, code.allSatisfy({ $0.isASCII && ($0.isNumber || $0.isUppercase) }),
+      Self.rejectedSQLStateClasses.contains(code.prefix(2))
+    {
+      self = .rejected
+    } else {
+      self = .unavailable
+    }
+  }
+}
+
 struct InboxQueueStore {
   static let maximumEntryCount = 100
 
@@ -665,6 +735,23 @@ struct InboxQueueStore {
       return []
     }
 
+    return save(nextQueue, ownerID: ownerID) ? nextQueue : nil
+  }
+
+  /// Marks one capture as refused in place, keeping its content and position, like Web
+  /// `rejectInboxQueueEntry`. A capture that is no longer queued is not brought back.
+  func markRejected(
+    entryID: UUID, rejection: QueuedInboxRejection, ownerID: UUID
+  ) -> [QueuedInboxEntry]? {
+    let currentQueue = load(ownerID: ownerID)
+    guard currentQueue.contains(where: { $0.id == entryID }) else { return currentQueue }
+
+    let nextQueue = currentQueue.map { entry in
+      guard entry.id == entryID else { return entry }
+      var rejected = entry
+      rejected.rejection = rejection
+      return rejected
+    }
     return save(nextQueue, ownerID: ownerID) ? nextQueue : nil
   }
 

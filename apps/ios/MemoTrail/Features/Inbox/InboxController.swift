@@ -359,9 +359,29 @@ final class InboxController {
     }
   }
 
+  /// Pending captures that still try to reach MemoTrail.
+  var waitingEntryCount: Int { pendingEntries.count { $0.rejection == nil } }
+
+  /// Pending captures MemoTrail refused, kept until the person discards them.
+  var rejectedEntryCount: Int { pendingEntries.count { $0.rejection != nil } }
+
+  /// Like Web's pending indicator, tells waiting captures apart from refused ones.
+  var pendingSummary: String {
+    let waiting = waitingEntryCount
+    let rejected = rejectedEntryCount
+    guard waiting > 0 else { return countLabel(rejected, "Entry") + " not accepted" }
+    let summary = countLabel(waiting, "Entry") + " waiting to sync"
+    return rejected > 0 ? summary + " · \(rejected) not accepted" : summary
+  }
+
+  /// Sends waiting captures in order, like Web's sync store. A capture MemoTrail refuses is
+  /// marked and skipped so later captures still sync; an unreachable MemoTrail stops the run.
+  /// Returns whether an Entry reached the Inbox.
   @discardableResult
   func synchronizePendingEntries() async -> Bool {
-    guard !isSyncing, !pendingEntries.isEmpty else { return false }
+    guard !isSyncing, pendingEntries.contains(where: { $0.rejection == nil }) else {
+      return false
+    }
 
     isSyncing = true
     defer { isSyncing = false }
@@ -378,34 +398,74 @@ final class InboxController {
       announceUnreachable(firstAttemptIDs: firstAttemptIDs)
       return false
     } catch {
-      captureError = "Your session expired. Sign in again to sync pending Entries."
+      captureError = Self.sessionMessage
       return false
     }
 
+    var didReachInbox = false
     var didSyncEntry = false
     var lastSyncedPhotoCount = 0
+    var rejectedCount = 0
+    var didStop = false
 
-    for entry in pendingEntries {
+    sending: for entry in pendingEntries where entry.rejection == nil {
       do {
         try await insert(entry)
       } catch {
-        guard await entryAlreadyExists(entry.id) else {
-          announceUnreachable(firstAttemptIDs: firstAttemptIDs)
-          return didSyncEntry
+        let exists = await entryAlreadyExists(entry.id)
+        if exists != true {
+          var failure = CaptureSyncFailure(error)
+          // Only a confirmed absence makes a refusal final; an unanswered lookup could hide an
+          // Entry an earlier attempt already created.
+          if exists == nil, failure == .rejected { failure = .unavailable }
+          switch failure {
+          case .rejected:
+            guard reject(entry, message: Self.rejectedEntryMessage) else {
+              didStop = true
+              break sending
+            }
+            rejectedCount += 1
+            continue sending
+          case .session:
+            captureError = Self.sessionMessage
+          case .unavailable:
+            announceUnreachable(firstAttemptIDs: firstAttemptIDs)
+          }
+          didStop = true
+          break sending
         }
       }
 
       do {
         try await synchronizeAttachments(entry)
       } catch {
-        captureError = attachmentSyncMessage(for: error)
-        return didSyncEntry
+        switch Self.attachmentFailure(error) {
+        case .rejected:
+          let message =
+            (error as? InboxControllerError) == .photoChanged
+            ? Self.changedPhotoMessage : Self.rejectedPhotoMessage
+          guard reject(entry, message: message) else {
+            didStop = true
+            break sending
+          }
+          // The Entry itself is in the Inbox; only its photos stay behind.
+          didReachInbox = true
+          rejectedCount += 1
+          continue sending
+        case .session:
+          captureError = Self.sessionMessage
+        case .unavailable:
+          captureError = attachmentSyncMessage(for: error)
+        }
+        didStop = true
+        break sending
       }
 
       guard let nextQueue = queueStore.remove(entryID: entry.id, ownerID: ownerID) else {
         captureError =
           "This Entry reached MemoTrail, but its local pending copy could not be cleared."
-        return didSyncEntry
+        didStop = true
+        break sending
       }
 
       pendingEntries = nextQueue
@@ -420,20 +480,106 @@ final class InboxController {
           _ = try? await self.aiSuggestions(entryID: entry.id, revision: revision)
         }
       }
+      didReachInbox = true
       didSyncEntry = true
       lastSyncedPhotoCount = entry.attachments.count
     }
 
+    if rejectedCount > 0 {
+      // A refused capture may come from a Quick Capture that is already closed.
+      MTToastCenter.shared.error(
+        "MemoTrail did not accept \(countLabel(rejectedCount, "Entry")). "
+          + "Review \(rejectedCount == 1 ? "it" : "them") in your Inbox.")
+    }
+
+    guard !didStop else { return didReachInbox }
+
+    // Every capture that can still sync did, so no problem waits in the composer.
+    captureError = nil
     if didSyncEntry {
       // Like Web, a synced capture is announced once; only problems stay in the composer.
-      captureError = nil
       MTToastCenter.shared.success(
         lastSyncedPhotoCount > 0
           ? "Saved to Inbox with \(countLabel(lastSyncedPhotoCount, "photo"))."
           : "Saved to Inbox.")
     }
 
-    return didSyncEntry
+    return didReachInbox
+  }
+
+  /// Removes a capture MemoTrail refused, like Web's Discard in Pending sync. Its photo files
+  /// go first, so a failure cannot leave them to reappear in the composer without their Entry.
+  func discardRejected(_ entryID: UUID) async -> Bool {
+    guard let entry = queueStore.load(ownerID: ownerID).first(where: { $0.id == entryID })
+    else {
+      pendingEntries = queueStore.load(ownerID: ownerID)
+      return true
+    }
+    // A capture that may still sync is never discarded.
+    guard entry.rejection != nil else { return false }
+
+    let photoStore = photoStore
+    let ownerID = ownerID
+    let photoIDs = entry.attachments.map(\.id)
+    do {
+      try await Task.detached {
+        for photoID in photoIDs {
+          try photoStore.remove(photoID: photoID, ownerID: ownerID)
+        }
+      }.value
+    } catch {
+      return false
+    }
+
+    guard let nextQueue = queueStore.remove(entryID: entryID, ownerID: ownerID) else {
+      return false
+    }
+    pendingEntries = nextQueue
+    return true
+  }
+
+  private static let sessionMessage = "Your session expired. Sign in again to sync pending Entries."
+  private static let rejectedEntryMessage =
+    "MemoTrail cannot accept this Entry, so it will not sync. "
+    + "Copy its text to keep it, then discard it."
+  private static let rejectedPhotoMessage =
+    "This Entry is in your Inbox, but MemoTrail cannot accept one of its photos, "
+    + "so they will not sync. Discard to remove them from this iPhone."
+  private static let changedPhotoMessage =
+    "This Entry is in your Inbox, but one of its photos changed on this iPhone, "
+    + "so they will not sync. Discard to remove them from this iPhone."
+  /// `register_entry_attachment` reports an original that is not in Storage yet. Upload errors
+  /// are not reported, so like Web this stays retryable rather than refusing the photo.
+  private static let pendingOriginalError = "attachment_object_missing"
+
+  /// Keeps a refused capture on this iPhone, marked so no later sync sends it again.
+  private func reject(_ entry: QueuedInboxEntry, message: String) -> Bool {
+    let rejection = QueuedInboxRejection(message: message, rejectedAt: Date())
+    guard
+      let nextQueue = queueStore.markRejected(
+        entryID: entry.id, rejection: rejection, ownerID: ownerID)
+    else {
+      // Unmarked, the capture would be sent again, so like Web the run stops here instead.
+      captureError = message
+      return false
+    }
+    pendingEntries = nextQueue
+    confirmedOfflineCaptureIDs.remove(entry.id)
+    return true
+  }
+
+  /// Classifies a photo failure like Web `registerEntryAttachment`.
+  private static func attachmentFailure(_ error: Error) -> CaptureSyncFailure {
+    switch error {
+    case InboxControllerError.photoChanged:
+      return .rejected
+    case is InboxControllerError:
+      return .unavailable
+    case let error as PostgrestError where error.message == pendingOriginalError:
+      return .unavailable
+    default:
+      return CaptureSyncFailure(error)
+    }
   }
 
   /// When MemoTrail cannot be reached, like Web's offline save, captures on their first sync
@@ -441,7 +587,7 @@ final class InboxController {
   /// closed. The composer keeps the retry note only while a waiting capture has had no toast,
   /// such as one saved before the app relaunched.
   private func announceUnreachable(firstAttemptIDs: Set<UUID>) {
-    let waitingIDs = Set(pendingEntries.map(\.id))
+    let waitingIDs = Set(pendingEntries.filter { $0.rejection == nil }.map(\.id))
     let newlyWaitingIDs = firstAttemptIDs.intersection(waitingIDs)
     if !newlyWaitingIDs.isEmpty {
       MTToastCenter.shared.info("Saved on this iPhone. MemoTrail will sync when you are online.")
@@ -474,7 +620,8 @@ final class InboxController {
       .execute()
   }
 
-  private func entryAlreadyExists(_ entryID: UUID) async -> Bool {
+  /// Whether the Entry exists, or nil when MemoTrail could not answer.
+  private func entryAlreadyExists(_ entryID: UUID) async -> Bool? {
     do {
       let matchingEntries: [ExistingEntry] =
         try await client
@@ -491,7 +638,7 @@ final class InboxController {
 
       return matchingEntries.first?.id == entryID
     } catch {
-      return false
+      return nil
     }
   }
 
@@ -546,7 +693,8 @@ final class InboxController {
           .execute()
           .value
       } catch {
-        if draft == nil {
+        // Like Web, a refusal stands even when the photo is gone from this iPhone.
+        if draft == nil, Self.attachmentFailure(error) != .rejected {
           throw InboxControllerError.photoMissing
         }
         throw error
@@ -570,8 +718,6 @@ final class InboxController {
       switch error {
       case .photoMissing:
         return "A pending photo is missing from this iPhone and needs your attention."
-      case .photoChanged:
-        return "A pending photo changed on this iPhone and cannot be synced."
       default:
         break
       }

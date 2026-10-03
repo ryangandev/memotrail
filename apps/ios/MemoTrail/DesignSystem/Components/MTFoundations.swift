@@ -37,6 +37,7 @@ enum MTIcon: String, CaseIterable, Sendable {
   case code = "chevron.left.forwardslash.chevron.right"
   case codeBlock = "curlybraces.square"
   case collection = "square.stack"
+  case copy = "doc.on.doc"
   case dashboard = "square.grid.2x2"
   case edit = "square.and.pencil"
   case export = "square.and.arrow.up"

@@ -283,14 +283,12 @@ private struct QuickCaptureView: View {
         )
 
         if !controller.pendingEntries.isEmpty {
-          Label(
-            countLabel(controller.pendingEntries.count, "Entry") + " waiting to sync",
-            icon: .history
-          )
-          .font(MTFont.caption)
-          .foregroundStyle(MTColor.inkMuted)
-          .padding(.horizontal, MTSpacing.s4)
-          .padding(.top, MTSpacing.s4)
+          let hasRejected = controller.rejectedEntryCount > 0
+          Label(controller.pendingSummary, icon: hasRejected ? .warning : .history)
+            .font(MTFont.caption)
+            .foregroundStyle(hasRejected ? MTColor.warm : MTColor.inkMuted)
+            .padding(.horizontal, MTSpacing.s4)
+            .padding(.top, MTSpacing.s4)
         }
       }
     }

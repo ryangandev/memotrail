@@ -237,6 +237,117 @@ final class NativeContractTests: XCTestCase {
       XCTAssertTrue(inbox.pendingEntries.isEmpty)
     }
 
+    func testRefusedCapturesStayOnThisIPhoneWithoutBlockingLaterCaptures() async throws {
+      let (client, ownerID) = try await client(session: NativeReviewNetwork.session())
+      defer { NativeReviewNetwork.isOffline = false }
+      let suiteName = "NativeContractTests.\(UUID().uuidString)"
+      let photoRoot = FileManager.default.temporaryDirectory.appending(
+        path: "NativeContractTests.\(UUID().uuidString)", directoryHint: .isDirectory)
+      addTeardownBlock {
+        UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName)
+        try? FileManager.default.removeItem(at: photoRoot)
+      }
+      let queueStore = InboxQueueStore(defaults: try XCTUnwrap(UserDefaults(suiteName: suiteName)))
+      let photoStore = InboxPhotoStore(rootURL: photoRoot)
+      let inbox = InboxController(
+        client: client, ownerID: ownerID, queueStore: queueStore, photoStore: photoStore)
+      // Let the connectivity monitor's first update pass, so each save starts its own sync.
+      try await Task.sleep(for: .milliseconds(500))
+      let center = MTToastCenter.shared
+
+      // Offline, queue a note Postgres text cannot store, a photo capture whose photo then
+      // changes on this iPhone, and a valid capture saved after both.
+      NativeReviewNetwork.isOffline = true
+      let marker = UUID().uuidString
+      let refusedNote = "Pasted from a terminal \u{0000} log \(marker)"
+      let photo = try photoDraft()
+      try photoStore.save(photo, ownerID: ownerID)
+      for (title, body, photos) in [
+        ("", refusedNote, []), ("Harbor photo \(marker)", "", [photo]),
+        ("", "A later capture \(marker)", []),
+      ] as [(String, String, [FirstTimePhotoDraft])] {
+        let shown = Set(center.toasts.map(\.id))
+        let didSave = await inbox.save(title: title, body: body, photos: photos)
+        XCTAssertTrue(didSave)
+        _ = try await toasts(after: shown, from: inbox)
+      }
+      let queued = inbox.pendingEntries
+      XCTAssertEqual(queued.count, 3)
+      XCTAssertEqual(inbox.waitingEntryCount, 3)
+      // A capture that may still sync is never discarded.
+      let keptWaiting = await inbox.discardRejected(queued[0].id)
+      XCTAssertFalse(keptWaiting)
+      XCTAssertEqual(inbox.pendingEntries.map(\.id), queued.map(\.id))
+      let format = UIGraphicsImageRendererFormat()
+      format.scale = 1
+      let changedData = UIGraphicsImageRenderer(size: CGSize(width: 6, height: 6), format: format)
+        .pngData { context in
+          UIColor.systemOrange.setFill()
+          context.fill(CGRect(x: 0, y: 0, width: 6, height: 6))
+        }
+      try photoStore.save(
+        try FirstTimePhotoDraft.validate(
+          id: photo.id, data: changedData, mimeType: .png, originalFilename: "kept.png",
+          pixelWidth: 6, pixelHeight: 6),
+        ownerID: ownerID)
+
+      // Online, MemoTrail refuses the first two once, each kept with why, while the later
+      // capture still syncs. Neither is reported as offline.
+      NativeReviewNetwork.isOffline = false
+      let shown = Set(center.toasts.map(\.id))
+      let synced = await inbox.synchronizePendingEntries()
+      XCTAssertTrue(synced)
+      let announced = center.toasts.filter { !shown.contains($0.id) }
+      XCTAssertEqual(
+        announced.map(\.message),
+        ["MemoTrail did not accept 2 Entries. Review them in your Inbox.", "Saved to Inbox."])
+      XCTAssertEqual(announced.map(\.tone), [.error, .success])
+      XCTAssertNil(inbox.captureError)
+      XCTAssertEqual(inbox.pendingEntries.map(\.id), Array(queued.map(\.id).prefix(2)))
+      XCTAssertEqual(inbox.pendingEntries.map(\.body), [refusedNote, ""])
+      XCTAssertEqual(
+        inbox.pendingEntries.map { $0.rejection?.message },
+        [
+          "MemoTrail cannot accept this Entry, so it will not sync. "
+            + "Copy its text to keep it, then discard it.",
+          "This Entry is in your Inbox, but one of its photos changed on this iPhone, "
+            + "so they will not sync. Discard to remove them from this iPhone.",
+        ])
+      XCTAssertEqual(inbox.waitingEntryCount, 0)
+      XCTAssertEqual(inbox.pendingSummary, "2 Entries not accepted")
+
+      // The refused note never reached MemoTrail, while the photo capture's Entry did.
+      struct StoredEntry: Decodable { let id: UUID }
+      let stored: [StoredEntry] =
+        try await client.from("entries").select("id")
+        .in("id", values: queued.map { $0.id.uuidString })
+        .execute().value
+      XCTAssertEqual(Set(stored.map(\.id)), Set(queued.map(\.id).suffix(2)))
+      await inbox.load()
+      XCTAssertTrue(inbox.entries.contains { $0.id == queued[1].id })
+
+      // After a relaunch, refused captures are still marked and are never sent again.
+      let relaunched = InboxController(
+        client: client, ownerID: ownerID, queueStore: queueStore, photoStore: photoStore)
+      XCTAssertEqual(relaunched.pendingEntries, inbox.pendingEntries)
+      NativeReviewNetwork.isOffline = true
+      let quiet = Set(center.toasts.map(\.id))
+      let resent = await relaunched.synchronizePendingEntries()
+      XCTAssertFalse(resent)
+      XCTAssertTrue(center.toasts.allSatisfy { quiet.contains($0.id) })
+      XCTAssertNil(relaunched.captureError)
+      NativeReviewNetwork.isOffline = false
+
+      // Discarding removes the capture's photo files first, then the capture itself.
+      let discardedPhoto = await relaunched.discardRejected(queued[1].id)
+      XCTAssertTrue(discardedPhoto)
+      XCTAssertFalse(try photoStore.load(ownerID: ownerID).contains { $0.id == photo.id })
+      let discardedNote = await relaunched.discardRejected(queued[0].id)
+      XCTAssertTrue(discardedNote)
+      XCTAssertTrue(relaunched.pendingEntries.isEmpty)
+      XCTAssertTrue(queueStore.load(ownerID: ownerID).isEmpty)
+    }
+
     /// Waits for the sync a save starts, then returns the toasts shown since `shown`.
     private func toasts(after shown: Set<UUID>, from inbox: InboxController) async throws
       -> [MTToast]
