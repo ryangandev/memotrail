@@ -98,6 +98,10 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Before the fix, the Dashboard kept the writing after a Quick Capture save and saving it again created a second Entry, a photo removed in one composer was still queued from the other, and dictation and other tabs did not follow the draft.
   The six `capture-shared-draft.e2e.ts` scenarios cover saving, typing in either composer, discarding, photos, a second tab, and voice capture; all six fail against the previous composers and pass with 20 related browser scenarios.
   `inbox-draft-store.test.ts` adds 13 unit tests, and iOS already shares one draft through `RootTabView`, so it needed no change.
+- A capture MemoTrail refuses is now kept as Not accepted with Copy text and Discard on Web and iOS, while later captures still sync and transient failures still report offline.
+  Before the fix, a note with a NUL character was reported as offline on both clients, retried on every sync, and held every later capture behind it.
+  The two `capture-rejected-sync.e2e.ts` scenarios pass with 22 related browser scenarios, beside unit tests for code classification, both server actions, the queue marker, and the sync store; 593 Web unit tests pass.
+  Native unit tests cover the classification and queue marker, a local Supabase contract covers a refused note, a changed photo, relaunch, and Discard, and the signed-in Simulator flow covers paste, Copy text, and Discard; the full native run passes 268 tests.
 
 ### 2. Accept Web Location
 
