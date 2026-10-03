@@ -51,7 +51,7 @@ import {
   voiceRecognitionErrorMessage,
   type BrowserSpeechRecognition,
 } from "@/lib/data/voice-transcript";
-import type { EntryRichText } from "@/lib/data/rich-text";
+import { trimEntryNote, type EntryRichText } from "@/lib/data/rich-text";
 
 type CaptureFeedback = {
   isError: boolean;
@@ -427,8 +427,9 @@ export function CaptureComposer({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const note = trimEntryNote(body, bodyRich);
     const parsedInput = parseInboxEntryValues({
-      body,
+      body: note.body,
       hasAttachments: photos.length > 0,
       title,
     });
@@ -466,7 +467,7 @@ export function CaptureComposer({
       ...parsedDate.value!,
       queuedAt,
       title: parsedInput.data.title,
-      bodyRich: bodyRich?.text === parsedInput.data.body ? bodyRich : null,
+      bodyRich: note.bodyRich,
       version: 3,
     };
     const nextQueue = captureQueue.enqueue(entry);

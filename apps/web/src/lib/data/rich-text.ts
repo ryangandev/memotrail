@@ -100,6 +100,40 @@ export function isEntryRichText(
   return plainTextFromDocument(document) === value.text;
 }
 
+/**
+ * The note as it is saved, like native `EntryEmphasisContent.capture`: surrounding
+ * whitespace is trimmed from the editor's document and the plaintext body is derived from
+ * the trimmed document, so the two always match. A blank note saves no formatting, and
+ * formatting that does not describe `body` is dropped.
+ */
+export function trimEntryNote(
+  body: string,
+  richText: EntryRichText | null,
+): { body: string; bodyRich: EntryRichText | null } {
+  if (richText?.text !== body) return { body: body.trim(), bodyRich: null };
+
+  const document = trimRichTextDocument(richText.document);
+  const bodyRich = document ? createEntryRichText(document) : null;
+  return bodyRich
+    ? { body: bodyRich.text, bodyRich }
+    : { body: body.trim(), bodyRich: null };
+}
+
+/**
+ * Removes the whitespace that `String.prototype.trim` removes from the document's
+ * plaintext: blank blocks and hard breaks at either edge, and leading or trailing
+ * whitespace in the first and last text. Inner blank lines and all marks stay. Returns
+ * null when nothing but whitespace remains.
+ */
+function trimRichTextDocument(
+  document: RichTextDocument,
+): RichTextDocument | null {
+  const [trimmed] = trimNodeEdge(document, "start").flatMap((node) =>
+    trimNodeEdge(node, "end"),
+  );
+  return trimmed ? (trimmed as RichTextDocument) : null;
+}
+
 export function entryRichTextFromMetadata(
   metadata: unknown,
   body: string,
@@ -280,6 +314,57 @@ function nodeText(node: RichTextNode): string {
     ? "\n"
     : "";
   return children.map(nodeText).join(separator);
+}
+
+/**
+ * Trims one edge of a node's plaintext and returns the nodes that replace it. Every block
+ * container joins its children with a line break, so blank children at the edge and their
+ * separators go together, and only the first non-blank child needs trimming inside. A
+ * list item must start with a paragraph, so one whose leading paragraph was blank hands
+ * its remaining blocks to the list's parent, which keeps the plaintext unchanged.
+ */
+function trimNodeEdge(
+  node: RichTextNode,
+  edge: "end" | "start",
+): RichTextNode[] {
+  if (isBlankNode(node)) return [];
+  if (node.type === "text") {
+    const text = node.text ?? "";
+    return [
+      { ...node, text: edge === "start" ? text.trimStart() : text.trimEnd() },
+    ];
+  }
+
+  const children = node.content ?? [];
+  let content: RichTextNode[];
+  if (edge === "start") {
+    const index = children.findIndex((child) => !isBlankNode(child));
+    content = [
+      ...trimNodeEdge(children[index], edge),
+      ...children.slice(index + 1),
+    ];
+  } else {
+    const index = children.findLastIndex((child) => !isBlankNode(child));
+    content = [
+      ...children.slice(0, index),
+      ...trimNodeEdge(children[index], edge),
+    ];
+  }
+
+  if (node.type === "listItem" && content[0]?.type !== "paragraph") {
+    return content;
+  }
+  if (node.type === "bulletList" || node.type === "orderedList") {
+    const items = content.filter((child) => child.type === "listItem");
+    const lifted = content.filter((child) => child.type !== "listItem");
+    const list = items.length > 0 ? [{ ...node, content: items }] : [];
+    return edge === "start" ? [...lifted, ...list] : [...list, ...lifted];
+  }
+  return [{ ...node, content }];
+}
+
+function isBlankNode(node: RichTextNode) {
+  return nodeText(node).trim() === "";
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

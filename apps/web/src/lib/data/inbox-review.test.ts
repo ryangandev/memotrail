@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { parseInboxReviewInput } from "./inbox-review";
-import { createEntryRichText, plainTextDocument } from "./rich-text";
+import {
+  createEntryRichText,
+  plainTextDocument,
+  trimEntryNote,
+} from "./rich-text";
 
 const validInput = {
   body: "Small forces trigger bone remodeling.",
@@ -48,11 +52,37 @@ describe("Inbox Entry review", () => {
   });
 
   it("rejects rich text that does not match the canonical note", () => {
-    const bodyRich = createEntryRichText(plainTextDocument("Different note"));
+    const message =
+      "MemoTrail could not keep this note's formatting. Edit the note, then save again.";
+    const different = createEntryRichText(plainTextDocument("Different note"));
+    const untrimmed = createEntryRichText(
+      plainTextDocument(`${validInput.body}\n`),
+    );
 
-    expect(parseInboxReviewInput({ ...validInput, bodyRich })).toEqual({
-      message: "This Entry's rich text is invalid.",
-      success: false,
+    expect(
+      parseInboxReviewInput({ ...validInput, bodyRich: different }),
+    ).toEqual({ message, success: false });
+    expect(
+      parseInboxReviewInput({
+        ...validInput,
+        body: untrimmed!.text,
+        bodyRich: untrimmed,
+      }),
+    ).toEqual({ message, success: false });
+  });
+
+  it("accepts a formatted note trimmed before review", () => {
+    const edited = createEntryRichText(
+      plainTextDocument(`  ${validInput.body}\n\n`),
+    );
+    const note = trimEntryNote(edited!.text, edited);
+
+    expect(parseInboxReviewInput({ ...validInput, ...note })).toEqual({
+      data: {
+        ...validInput,
+        bodyRich: createEntryRichText(plainTextDocument(validInput.body)),
+      },
+      success: true,
     });
   });
 
