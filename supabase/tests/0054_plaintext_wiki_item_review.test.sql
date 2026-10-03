@@ -42,11 +42,10 @@ select is(
   'entry:entry:organized',
   'The semantic Kind and subtype are saved atomically'
 );
-select is(
-  (select metadata->'body_rich'->>'text'
+select ok(
+  not (select metadata ? 'body_rich'
    from public.entries where id='98700000-0000-4000-8000-000000000001'),
-  'A quiet start.',
-  'Rich metadata is preserved for a plaintext client even when plaintext changes'
+  'A plaintext client edit drops formatting for the writing it replaced'
 );
 select is(
   (select count(*)
