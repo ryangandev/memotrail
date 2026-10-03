@@ -145,6 +145,21 @@ final class LibraryDestinationTests: XCTestCase {
     XCTAssertEqual(HistoryPresentation.differences(current: current, previous: legacy), [])
     current["body"] = .string("Changed")
     XCTAssertEqual(HistoryPresentation.differences(current: current, previous: legacy), ["Writing"])
+    // Formatting is part of the writing, like Web, rather than unexplained Other metadata.
+    let bold: HistoryJSON = .object([
+      "version": .number(1), "text": .string("学习记录"),
+      "document": .object(["type": .string("doc"), "content": .array([])]),
+    ])
+    var formatted = legacy
+    formatted["metadata"] = .object([EntryRichText.metadataKey: bold, "source": .string("web")])
+    var plain = legacy
+    plain["metadata"] = .object(["source": .string("web")])
+    XCTAssertEqual(HistoryPresentation.differences(current: plain, previous: formatted), ["Writing"])
+    plain["metadata"] = .object(["source": .string("ios")])
+    XCTAssertEqual(
+      HistoryPresentation.differences(current: plain, previous: formatted),
+      ["Writing", "Other metadata"])
+    XCTAssertEqual(HistoryPresentation.differences(current: formatted, previous: formatted), [])
     XCTAssertEqual(HistoryPresentation.title(title: "  ", body: " \n "), "Untitled item")
     // Only the schema the restore RPC accepts can be restored, as on Web.
     XCTAssertTrue(HistoryPresentation.canRestore(["history_schema": .number(3)]))
