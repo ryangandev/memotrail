@@ -256,6 +256,8 @@ Form labels mark required fields with `*` and leave optional fields unmarked.
 - All personal data and media are private to the authenticated owner.
 - Deletion first moves supported content to Trash for 30 days.
 - `Delete forever` and `Empty Trash` require explicit confirmation.
+- A permanently deleted item can never be restored, and its private photo files are removed right after; if that removal cannot finish, MemoTrail says so and finishes it the next time Trash opens.
+- An item whose original photos are missing cannot be restored, and MemoTrail explains why; it can still be deleted forever.
 - Complete export includes canonical JSON, readable Markdown, structured CSV, relationships, and original media.
 
 ## Product boundaries

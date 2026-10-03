@@ -211,6 +211,10 @@ Pair it with the test file carrying the same feature name.
 - Generation validates source identity and bounded output before registration.
 - Database rows coordinate deletion, but Storage objects are removed through the Storage API.
 - Permanent deletion includes registered and interrupted-generation artifacts and must remain retryable after uncertain cleanup.
+- The database delete is the commit point: deleting an attachment row records its remaining Storage objects in `media_purges` in the same transaction, so nothing deleted is restorable and no file is forgotten.
+  Clients then remove only the paths from `pending_media_purge_paths` and confirm with `complete_media_purges`, through Web `lib/data/media-purge.ts` and native `TrashController.finishPendingMediaRemoval`; opening Trash retries anything left.
+- The Storage delete policy refuses a client removal of a registered original, and restoring an Entry or photo, by RPC or direct update, fails with `trash_media_unavailable` while an original it would show is missing.
+- `trash_item_storage_paths` is kept for deployed clients and always returns nothing; account deletion still requires generated previews to be removed first (`media_cleanup_required`).
 
 ## AI rules
 

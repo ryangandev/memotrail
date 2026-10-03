@@ -31,6 +31,9 @@ Migration `202610010001` is applied to the hosted project, so the shared server 
 Web and native history recognize schema 3 snapshots as restorable and keep unsupported snapshots viewable with a clear explanation and a disabled Restore action.
 Adding or removing a photo in a focused First Time, Home, Vehicle, or Goal editor no longer makes Move to Trash or Mark achieved report a false conflict on Web or native.
 Migration `202610030002` applies the existing photo-only revision rule inside the focused Trash RPCs and Goal achievement, so deployed clients need no update; it is verified locally and still needs to be applied to the hosted project.
+Delete forever and Empty Trash now delete an item's record before its private photo files on Web and native, so an interrupted request or a Restore from another device can no longer leave a restorable item without its originals.
+Restore refuses an item whose originals are missing, and opening Trash finishes any file removal left unfinished.
+Migration `202610030003` enforces this order on the server for every client, including deployed ones; it is verified locally and must be applied to the hosted project before this Web or native release, because the new clients call its RPCs.
 The merged Web release still needs Production deployment verification and browser acceptance; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 
 Use Git history for feature-level implementation and test evidence.
@@ -87,6 +90,10 @@ Its marked account and Storage objects were confirmed removed without accessing 
   A mismatched note now asks the person to edit it on Web and native; the database review functions were already strict and need no change.
 - Save again after a partial photo upload failure updates the new Goal, Home, or Vehicle and attaches the remaining photos, including records created from a Capture or with a provider address.
   Six local browser scenarios cover Goal, Home, and Vehicle from a Capture, a Home with a provider address, and Home and Vehicle from a Capture with a provider address; all six pass and fail against the previous editors.
+- The Trash deletion order fix passes 64 database files with 1,835 assertions, including 53 for the new order, restore refusal, interrupted and repeated removal, Restore racing Delete forever, and account deletion.
+  Five new data contracts cover a deployed client's old sequence, an interrupted removal, a missing original, and Restore racing Delete forever with real row locks in both orders.
+  Two new local browser scenarios cover the same failures through Trash, alongside the Empty Trash, media cleanup, media, and export scenarios.
+  Two native contract tests cover an interrupted removal and Empty Trash, and the full native run passes 262 tests.
 
 ### 2. Accept Web Location
 
