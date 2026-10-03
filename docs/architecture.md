@@ -117,6 +117,9 @@ Pair it with the test file carrying the same feature name.
 - Tag management loads at most five linked Entry previews on demand through a server action, so the Tags page stays lightweight and never creates a per-tag data waterfall during its initial render.
 - Multi-record changes use authenticated RPCs so content, relationships, history, and specialized facts commit atomically.
 - Clients send the revision they read. A stale revision surfaces a conflict instead of silently merging or overwriting another device.
+  Registering, trashing, or restoring a photo creates an Entry revision recorded in `entry_photo_changes`, and `entry_writing_revision` adopts only an unbroken run of those after the revision a client read.
+  Focused-record saves call it before their save RPC, while the focused Trash RPCs and `achieve_goal_with_occurrence` lock the Entry and apply it themselves, so an editor's own photo action never reads as another device's change on Web or native.
+  History restoration and every writing, organization, or lifecycle change still conflict.
 - Important mutations snapshot prior state.
   Restoring history creates another revision rather than deleting subsequent history.
   The restore RPC accepts history schema 3 only; Web `lib/data/history.ts` and native `HistoryPresentation` in `Models/EntryHistory.swift` each name that version once, disable restoring unsupported snapshots, and explain the incompatibility while preserving their comparison view.
