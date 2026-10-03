@@ -27,6 +27,8 @@ test("Editing a formatted Goal's writing removes its outdated formatted copy", a
   page,
   workspace: { owner, client },
 }) => {
+  // Several pages and server actions may compile for the first time in this scenario.
+  test.setTimeout(120_000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   const itemID = randomUUID();
@@ -49,10 +51,16 @@ test("Editing a formatted Goal's writing removes its outdated formatted copy", a
   await expect(
     page.getByRole("main").locator("strong", { hasText: original }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Create linked Goal", exact: true })
-    .click();
   const createForm = page.getByRole("form", { name: "Create linked Goal" });
+  // The Item page is server rendered, so a click before hydration opens nothing.
+  await expect(async () => {
+    if (!(await createForm.isVisible())) {
+      await page
+        .getByRole("button", { name: "Create linked Goal", exact: true })
+        .click();
+    }
+    await expect(createForm).toBeVisible({ timeout: 2_000 });
+  }).toPass(firstCompile);
   await createForm.getByLabel("Goal title").fill("Marathon goal");
   await createForm
     .getByRole("button", { name: "Create linked Goal", exact: true })
