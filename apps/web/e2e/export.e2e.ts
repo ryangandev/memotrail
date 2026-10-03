@@ -285,8 +285,9 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
         () => document.documentElement.scrollWidth <= window.innerWidth,
       ),
     ).toBe(true);
+    // Storage refuses a signed-in removal of a registered original.
     expect(
-      (await client.storage.from("entry-media").remove([path])).error,
+      (await admin.storage.from("entry-media").remove([path])).error,
     ).toBeNull();
     await page.evaluate(() => {
       Object.assign(

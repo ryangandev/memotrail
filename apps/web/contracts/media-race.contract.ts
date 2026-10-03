@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import sharp from "sharp";
+import { finishMediaPurges } from "../src/lib/data/media-purge";
 import { query, transaction } from "./helpers/local-sql";
 
 for (const first of ["deletion", "generation"] as const) {
@@ -134,26 +135,24 @@ for (const first of ["deletion", "generation"] as const) {
           )
           .toBe("1");
         await tx.run("commit;");
-        expect((await removal).error?.message).toBe("media_cleanup_required");
-        const manifest = await client.rpc("trash_item_storage_paths", params);
-        expect(manifest.error).toBeNull();
+        // The deletion waited for the preview, so it records it with the original.
+        expect((await removal).error).toBeNull();
+        expect((await removal).data).toHaveLength(1);
+        const pending = await client.rpc("pending_media_purge_paths", {
+          p_limit: 100,
+        });
+        expect(pending.error).toBeNull();
         expect(
-          manifest.data.map((v: { object_path: string }) => v.object_path),
-        ).toContain(derived);
+          pending.data
+            .map((v: { object_path: string }) => v.object_path)
+            .sort(),
+        ).toEqual([derived, path].sort());
+        expect(await finishMediaPurges(client, owner)).toBe(true);
         expect(
-          (
-            await client.storage
-              .from("entry-media")
-              .remove(
-                manifest.data.map(
-                  (v: { object_path: string }) => v.object_path,
-                ),
-              )
-          ).error,
-        ).toBeNull();
-        expect(
-          (await client.rpc("delete_trash_item_forever", params)).error,
-        ).toBeNull();
+          query(
+            `select count(*) from storage.objects where bucket_id='entry-media' and split_part(name,'/',1)='${owner}'`,
+          ),
+        ).toBe("0");
       }
       expect(
         (await client.from("attachments").select("id").eq("id", original)).data,

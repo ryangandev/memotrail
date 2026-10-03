@@ -4,6 +4,7 @@ import {
   parseEmptyTrashSnapshot,
   runEmptyTrash,
 } from "./empty-trash";
+import { PENDING_MEDIA_PURGE_MESSAGE } from "./media-purge";
 const row = {
   item_kind: "entry",
   item_id: "95000000-0000-4000-8000-000000000001",
@@ -111,5 +112,14 @@ describe("confirmed Empty Trash", () => {
     expect(
       emptyTrashResultMessage({ deleted: 0, total: 1, complete: false }),
     ).toMatch(/^0 of 1 item confirmed deleted\./);
+  });
+  it("says when photo files will finish removing later", () => {
+    const result = { deleted: 2, total: 2, complete: true };
+    expect(emptyTrashResultMessage(result)).not.toContain(
+      PENDING_MEDIA_PURGE_MESSAGE,
+    );
+    expect(emptyTrashResultMessage(result, false)).toBe(
+      `${emptyTrashResultMessage(result)} ${PENDING_MEDIA_PURGE_MESSAGE}`,
+    );
   });
 });

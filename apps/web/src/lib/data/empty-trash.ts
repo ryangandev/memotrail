@@ -1,5 +1,6 @@
 import { parseTrashItemInput, type TrashItemInput } from "./trash-input";
 import { countLabel } from "@/lib/count-label";
+import { PENDING_MEDIA_PURGE_MESSAGE } from "./media-purge";
 
 export function parseEmptyTrashSnapshot(
   value: unknown,
@@ -55,8 +56,12 @@ export async function runEmptyTrash(
   };
 }
 
-export function emptyTrashResultMessage(result: EmptyTrashResult) {
-  return result.complete
+export function emptyTrashResultMessage(
+  result: EmptyTrashResult,
+  filesRemoved = true,
+) {
+  const message = result.complete
     ? `${countLabel(result.deleted, "confirmed item")} permanently deleted. Anything added to Trash later was not included.`
     : `${result.deleted} of ${countLabel(result.total, "item")} confirmed deleted. Stopped because an item changed or a request could not be confirmed. Refresh and review Trash before trying again.`;
+  return filesRemoved ? message : `${message} ${PENDING_MEDIA_PURGE_MESSAGE}`;
 }
