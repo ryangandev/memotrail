@@ -25,6 +25,8 @@ vi.mock("./server", () => ({
     }
   },
   aiProviderConfigured: () => true,
+  // Keep exercising the retained suggestion logic independently of the product pause.
+  assertAIAvailable: () => undefined,
   generateAI: vi.fn(),
 }));
 vi.mock("./suggestion-photos", () => ({ suggestionPhotos: vi.fn() }));
