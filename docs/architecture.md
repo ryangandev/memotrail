@@ -187,6 +187,13 @@ Pair it with the test file carrying the same feature name.
 - Native drafts and pending captures live in the app sandbox.
 - A pending item keeps a stable Entry ID and is removed only after the server confirms synchronization.
 - Clearing browser data or deleting the app can remove unsynchronized local work, so the UI must expose pending state.
+- Web `components/capture-provider.tsx` mounts once in the signed-in workspace and owns pending-capture sync through the framework-free store in `lib/data/inbox-sync.ts`.
+  Composers enqueue captures and render its items, run problem, and photo progress, so synchronization never depends on a mounted composer.
+- The store syncs on load, on `online`, and after each new capture, with one run at a time per tab; a run sends the oldest capture first and stops at the first retryable failure.
+- A per-owner Web Lock serializes runs across tabs, and each capture is reread from storage before it is sent, so a tab skips captures another tab already synced.
+  `storage` events refresh the pending lists of other tabs, and a tab whose captures another tab synced refreshes its route so Inbox counts stay current.
+  Browsers without Web Locks fall back to per-tab runs, where the stable Entry ID still keeps a repeated send from creating a second Entry.
+- Native `InboxController` belongs to the root tab view and retries on network-path changes, so iOS sync is already independent of any composer.
 
 ## Media rules
 
@@ -245,6 +252,7 @@ Pair it with the test file carrying the same feature name.
   Web `QuickCaptureDialog` shows CaptureComposer's dialog variant under its own header; native `QuickCaptureView` shows the same header over `CaptureCard(style: .dialog)` full screen, where Web now anchors the composer to its bottom dock.
   Both composers open the relevant date in place, keep only problems in the composer, and announce a synced capture with a toast.
   A capture saved without a connection gets an info toast instead: Web checks the browser's connection before syncing, while `InboxController` confirms a capture once when its first sync cannot reach MemoTrail and keeps later offline retries quiet.
+  Web `SyncStatus` in the workspace header counts waiting captures; selecting it retries now and opens a compact Dialog with the same `PendingCaptureList` both composers render.
 - The Web Inbox renders `components/entry-review-list.tsx` and its `EntryReviewDialog` inside the compact PageFrame.
   Native `Features/Inbox` mirrors the list with `InboxCards.swift` and the dialog with `EntryReviewSheet.swift`: the same fields, sticky Save changes and Save to Library footer, confirmations anchored to Move to Trash, and toasts.
   Neither Inbox embeds a composer; Web captures from the bottom dock, and iOS from the Dashboard or New entry in the workspace header.
@@ -302,7 +310,7 @@ Pair it with the test file carrying the same feature name.
 - Specialized record editors reuse `components/entry-photo-field.tsx` for selected and existing previews, removal controls, limits, and upload progress.
 - Web domain editors own label-to-control spacing in their shared field wrapper; route forms reuse that wrapper and the spacing tokens instead of compensating field by field.
 - Quick Capture restores local text and occurrence state before paint, keeps the loading and editor geometries equal, and loads IndexedDB photo drafts separately so editor initialization cannot move the open dialog.
-  Its initialized editor remains mounted while the native dialog is closed; reopening refreshes the shared local draft, and closing stops voice capture and online retry listeners.
+  Its initialized editor remains mounted while the native dialog is closed; reopening refreshes the shared local draft, and closing stops voice capture while pending captures keep syncing through `CaptureProvider`.
   `CaptureComposer` handles Command/Control Return in the active form's capture phase before Tiptap's modified-Enter bindings, then uses native `requestSubmit` and the Save button's disabled state to retain validation and queue semantics.
   Composition, held-key repeats, and nested editing layers cannot submit through that shortcut; shared editor bindings remain available outside Capture.
   The frosted surface uses a static backdrop blur and translucent reflection, while entrance and exit animate only opacity and translation and honor reduced motion.
