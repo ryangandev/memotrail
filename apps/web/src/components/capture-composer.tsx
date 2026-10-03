@@ -752,7 +752,7 @@ export function CaptureComposer({
 
       {hasWaitingCaptures(captureQueue) ? (
         <section
-          className={captureComposerStyles.pendingSection}
+          className={`${captureComposerStyles.pendingSection} ${variant === "dialog" ? captureComposerStyles.dialogPendingSection : ""}`}
           aria-labelledby={`${idPrefix}-pending-heading`}
         >
           <div className={entryListStyles.sectionHeader}>

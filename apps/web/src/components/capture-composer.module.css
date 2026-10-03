@@ -296,6 +296,12 @@
   margin-top: var(--mt-space-8);
 }
 
+/* Inside Quick Capture, the list aligns with the composer's inline padding. */
+.pendingSection.dialogPendingSection {
+  margin-top: var(--mt-space-2);
+  padding: 0 var(--capture-inline-padding) var(--capture-inline-padding);
+}
+
 .visuallyHidden {
   position: absolute;
   width: 1px;
