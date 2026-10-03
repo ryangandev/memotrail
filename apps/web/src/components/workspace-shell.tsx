@@ -13,6 +13,7 @@ import {
 
 import { AuthGate } from "@/components/auth-gate";
 import { BrandMark } from "@/components/brand-mark";
+import { CaptureProvider } from "@/components/capture-provider";
 import { CommandPalette } from "@/components/command-palette";
 import { Icon, type IconName } from "@/components/icon";
 import { QuickCaptureDialog } from "@/components/quick-capture-dialog";
@@ -180,13 +181,15 @@ export function WorkspaceBoundary({
   }
 
   return (
-    <WorkspaceShell
-      inboxCount={inboxCount}
-      initialSidebarCollapsed={initialSidebarCollapsed}
-      viewer={viewer}
-    >
-      {children}
-    </WorkspaceShell>
+    <CaptureProvider ownerId={viewer.id}>
+      <WorkspaceShell
+        inboxCount={inboxCount}
+        initialSidebarCollapsed={initialSidebarCollapsed}
+        viewer={viewer}
+      >
+        {children}
+      </WorkspaceShell>
+    </CaptureProvider>
   );
 }
 
@@ -312,7 +315,7 @@ export function WorkspaceShell({
           </div>
 
           <div className={workspaceShellStyles.topActions}>
-            <SyncStatus ownerId={viewer.id} />
+            <SyncStatus />
             <Link
               aria-current={activeDestination === "inbox" ? "page" : undefined}
               aria-label={

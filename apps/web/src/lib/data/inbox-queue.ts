@@ -41,8 +41,6 @@ type LegacyQueuedInboxEntry = Omit<
 
 export type QueueStorage = Pick<Storage, "getItem" | "removeItem" | "setItem">;
 
-export const inboxQueueChangedEvent = "memotrail:inbox-queue-changed";
-
 const maximumQueueSize = 100;
 const maximumTimezoneLength = 100;
 const uuidPattern =

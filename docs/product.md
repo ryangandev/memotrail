@@ -59,7 +59,10 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - Rich formatting never replaces the Entry's clean plaintext body, so search, AI, export, and clients that do not render formatting still receive readable writing.
 - The composer keeps a recoverable local draft.
 - Offline captures remain visible and retryable until synchronization is confirmed.
-- An ordinary online save shows progress in the composer; its brief local queue stage does not open a Pending sync list.
+- Pending captures sync from any signed-in page once MemoTrail can be reached, whether or not a composer is open.
+- On Web, the workspace header counts the captures waiting on this device on desktop and mobile; selecting it retries now and lists them with the latest sync problem.
+- Every open tab in a browser shows the same pending captures, and each capture is saved once.
+- An ordinary online save shows progress in the composer; its brief local queue stage does not open a Pending sync list or the header count.
 - Voice capture produces editable text and never retains the original audio.
 - Every new free-form Capture enters Inbox, even when AI suggestions are available.
 - Inbox review keeps AI suggestions hidden for now; people organize the Entry manually.

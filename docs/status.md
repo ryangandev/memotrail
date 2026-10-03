@@ -73,6 +73,10 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Native validation passes all 254 unit/backend tests, including 17 local Supabase contracts, plus three signed-in UI flows covering Capture, offline replay, and Export.
   Database validation passes 61 files with 1,567 assertions on local Supabase.
   The retired active-AI browser scenarios have been removed, and current AI pause behavior remains covered; commands and layer-selection rules live in the root README.
+- Web pending captures now sync from any signed-in page through one app-level `CaptureProvider`, and the header pending count retries and lists them.
+  Before the fix, a capture queued offline on the Dashboard stayed local after moving to Library, a closed Quick Capture never synced, the header count was inert, and the Dashboard composer and Quick Capture both sent the same queued capture.
+  `capture-sync.e2e.ts` covers those paths and two open tabs, and `inbox-sync.test.ts` covers single flight, reruns, break-on-retry, and cross-tab skipping.
+  iOS already syncs from the root-owned `InboxController` and needed no change.
 - A seeded pre-migration local exercise converted Journal, Story, and Trip to tags; Timeline point and span to Moment and Period; and preserved Inbox state and revision numbers.
 - The photo revision fix passes 118 database assertions covering each focused Trash RPC, Goal achievement, and the legacy achievement path, plus two lock-ordering data contracts.
   Seven local browser scenarios cover Move to Trash after removing a photo for all four focused types, Goal achievement, a partial upload failure, and a retained writing conflict.
