@@ -94,6 +94,10 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Five new data contracts cover a deployed client's old sequence, an interrupted removal, a missing original, and Restore racing Delete forever with real row locks in both orders.
   Two new local browser scenarios cover the same failures through Trash, alongside the Empty Trash, media cleanup, media, and export scenarios.
   Two native contract tests cover an interrupted removal and Empty Trash, and the full native run passes 262 tests.
+- The Web Dashboard composer and Quick Capture now edit one shared draft, so saving or clearing it in either empties both and a draft is queued once.
+  Before the fix, the Dashboard kept the writing after a Quick Capture save and saving it again created a second Entry, a photo removed in one composer was still queued from the other, and dictation and other tabs did not follow the draft.
+  The six `capture-shared-draft.e2e.ts` scenarios cover saving, typing in either composer, discarding, photos, a second tab, and voice capture; all six fail against the previous composers and pass with 20 related browser scenarios.
+  `inbox-draft-store.test.ts` adds 13 unit tests, and iOS already shares one draft through `RootTabView`, so it needed no change.
 
 ### 2. Accept Web Location
 

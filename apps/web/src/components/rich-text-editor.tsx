@@ -152,7 +152,9 @@ export function RichTextEditor({
   }, [text]);
 
   useEffect(() => {
-    editor?.setEditable(!disabled);
+    // Tiptap reports an update by default even though the writing is
+    // unchanged; that would send this editor's text back as a new edit.
+    editor?.setEditable(!disabled, false);
   }, [disabled, editor]);
 
   useEffect(() => {
