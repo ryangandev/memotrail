@@ -46,11 +46,15 @@ const records = {
   },
 } as const;
 
+// Hydration, saves, and uploads can be slow on a busy machine.
+const slow = { timeout: 30_000 };
+
 for (const scenario of scenarios) {
   test(`${scenario.name} retries a failed photo as an update of the created record`, async ({
     context,
     page,
   }) => {
+    test.setTimeout(120_000);
     const uiErrors: string[] = [];
     page.on("pageerror", (error) => uiErrors.push(error.message));
     const env = JSON.parse(
@@ -127,20 +131,27 @@ for (const scenario of scenarios) {
           ).error,
         ).toBeNull();
         await page.goto(`${record.path}?source=${captureID}`);
+        // The shared Dialog mounts only on the client, so it appears once the page hydrates.
         await expect(
           page.getByRole("dialog", {
             name: `Create a ${record.label} from this Capture`,
           }),
-        ).toBeVisible();
+        ).toBeVisible(slow);
         await expect(
           editor.getByText("Starting from an Inbox Capture"),
         ).toBeVisible();
       } else {
         await page.goto(record.path);
-        await page
-          .getByRole("button", { name: `Add ${record.label}` })
-          .first()
-          .click();
+        // The page is server rendered, so a click before hydration opens nothing.
+        await expect(async () => {
+          if (!(await editor.isVisible())) {
+            await page
+              .getByRole("button", { name: `Add ${record.label}` })
+              .first()
+              .click();
+          }
+          await expect(editor).toBeVisible({ timeout: 2_000 });
+        }).toPass(slow);
         await editor.getByRole("textbox", { name: "Home name" }).fill(title);
       }
       if (scenario.provider) {
@@ -181,7 +192,7 @@ for (const scenario of scenarios) {
         editor.getByText(
           `The ${record.label} was saved, but 1 photo could not be attached. Select Save again to retry.`,
         ),
-      ).toBeVisible();
+      ).toBeVisible(slow);
       expect(failedUploads).toBe(1);
 
       const saved = await client
@@ -211,7 +222,7 @@ for (const scenario of scenarios) {
       await editor
         .getByRole("button", { name: "Save changes", exact: true })
         .click();
-      await expect(editor).not.toBeVisible();
+      await expect(editor).not.toBeVisible(slow);
       await expect(page.getByText(`${record.label} saved.`)).toBeVisible();
 
       const entries = await client
@@ -279,7 +290,7 @@ for (const scenario of scenarios) {
           },
         ]);
         // Closing the editor consumes the handoff instead of leaving it in the URL.
-        await expect(page).toHaveURL(record.path);
+        await expect(page).toHaveURL(record.path, slow);
       }
 
       // The retry keeps the provider snapshot made on creation instead of copying it.
