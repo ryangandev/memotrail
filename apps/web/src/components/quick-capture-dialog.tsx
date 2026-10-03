@@ -16,13 +16,11 @@ export function QuickCaptureDialog({
   onClose,
   onOpen,
   open,
-  ownerId,
 }: {
   idPrefix: string;
   onClose: () => void;
   onOpen: () => void;
   open: boolean;
-  ownerId: string;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -275,7 +273,6 @@ export function QuickCaptureDialog({
               active={open}
               idPrefix={idPrefix}
               onNativePhotoPickerChange={handleNativePhotoPickerChange}
-              ownerId={ownerId}
               variant="dialog"
             />
           </OverlayContainerContext>

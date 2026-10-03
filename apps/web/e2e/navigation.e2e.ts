@@ -709,7 +709,10 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
           recordHeight();
         },
       );
+      // The composer renders while the dialog is closed, so opening it may
+      // change only the dialog's open attribute.
       captureWindow.__quickCaptureMutationObserver.observe(document.body, {
+        attributeFilter: ["open"],
         childList: true,
         subtree: true,
       });

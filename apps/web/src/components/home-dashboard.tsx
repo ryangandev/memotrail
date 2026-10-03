@@ -47,9 +47,7 @@ export function HomeDashboard({ workspace }: { workspace: HomeWorkspace }) {
       description="A calm view of what is active, recent, and waiting for you."
     />
   );
-  const capture = (
-    <CaptureComposer embedded ownerId={viewer.id} idPrefix="capture" />
-  );
+  const capture = <CaptureComposer embedded idPrefix="capture" />;
   const inbox = <Inbox workspace={workspace} />;
   const chapters = snapshot ? (
     <Chapters stages={snapshot.currentStages} />

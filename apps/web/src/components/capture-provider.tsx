@@ -20,12 +20,20 @@ import {
   createFirstTimeObjectPath,
   type FirstTimeAttachmentInput,
 } from "@/lib/data/first-time-input";
+import { inboxDraftKey } from "@/lib/data/inbox-draft";
+import {
+  createInboxDraftStore,
+  type InboxDraftSnapshot,
+  type InboxDraftStore,
+} from "@/lib/data/inbox-draft-store";
 import {
   loadInboxPhotoDrafts,
+  persistInboxPhotoDrafts,
   removeInboxPhotoDrafts,
 } from "@/lib/data/inbox-photo-store";
 import {
   inboxQueueKey,
+  loadInboxQueue,
   type QueueStorage,
   type QueuedInboxEntry,
 } from "@/lib/data/inbox-queue";
@@ -35,17 +43,27 @@ import {
   type InboxSyncSnapshot,
   type InboxSyncStore,
 } from "@/lib/data/inbox-sync";
+import { browserSpeechRecognitionConstructor } from "@/lib/data/voice-transcript";
 import type { PhotoUploadProgress } from "@/lib/media/upload";
 import { createClient } from "@/lib/supabase/client";
 
-const CaptureContext = createContext<InboxSyncStore | null>(null);
+/** The capture being composed and the captures waiting to sync. */
+type WorkspaceCapture = {
+  draft: InboxDraftStore;
+  queue: InboxSyncStore;
+};
 
-// One store per person per tab, however many shells or composers mount.
-const stores = new Map<string, InboxSyncStore>();
+const CaptureContext = createContext<WorkspaceCapture | null>(null);
+
+// One draft and one queue per person per tab, however many shells or
+// composers mount.
+const workspaces = new Map<string, WorkspaceCapture>();
 
 /**
- * Owns the signed-in person's pending captures for the whole workspace, so
- * they sync on load, on reconnection, and when queued, from any page.
+ * Owns the signed-in person's capture draft and pending captures for the
+ * whole workspace. Every composer edits the same draft, which follows other
+ * tabs, and pending captures sync on load, on reconnection, and when queued,
+ * from any page.
  */
 export function CaptureProvider({
   children,
@@ -55,34 +73,69 @@ export function CaptureProvider({
   ownerId: string;
 }) {
   const router = useRouter();
-  const store = useMemo(() => inboxSyncStoreFor(ownerId), [ownerId]);
+  const capture = useMemo(() => workspaceCaptureFor(ownerId), [ownerId]);
 
   useEffect(() => {
-    const stopWatchingRuns = store.onRunFinished(({ result, synced }) => {
+    const { draft, queue } = capture;
+    const stopWatchingRuns = queue.onRunFinished(({ result, synced }) => {
       if (result?.status === "synced") notify.success(result.message);
       if (synced > 0) router.refresh();
     });
     function handleOnline() {
-      void store.synchronize();
+      void queue.synchronize();
     }
     function handleStorage(event: StorageEvent) {
+      if (event.key === null || event.key === inboxDraftKey(ownerId))
+        draft.reload();
       if (event.key !== null && event.key !== inboxQueueKey(ownerId)) return;
       // Another tab synced captures, so this page's Inbox counts are stale.
-      if (store.reload() > 0) router.refresh();
+      if (queue.reload() > 0) router.refresh();
     }
+    function handlePageShow(event: PageTransitionEvent) {
+      // A page restored from the back-forward cache missed other tabs' edits.
+      if (!event.persisted) return;
+      draft.reload();
+      void draft.reloadPhotos();
+    }
+    // Photo drafts live in IndexedDB, which tells other tabs nothing, so tabs
+    // announce their photo changes to each other.
+    const photoChannel =
+      typeof BroadcastChannel === "undefined"
+        ? null
+        : new BroadcastChannel(
+            `memotrail:inbox-draft-photos:${encodeURIComponent(ownerId)}`,
+          );
+    if (photoChannel)
+      photoChannel.onmessage = () => {
+        void draft.reloadPhotos();
+      };
+    const stopAnnouncingPhotos = draft.onPhotosChanged(() =>
+      photoChannel?.postMessage("changed"),
+    );
 
     window.addEventListener("online", handleOnline);
+    window.addEventListener("pageshow", handlePageShow);
     window.addEventListener("storage", handleStorage);
-    if (navigator.onLine) void store.synchronize();
+    void draft.loadPhotos();
+    if (navigator.onLine) void queue.synchronize();
 
     return () => {
       stopWatchingRuns();
+      stopAnnouncingPhotos();
+      photoChannel?.close();
       window.removeEventListener("online", handleOnline);
+      window.removeEventListener("pageshow", handlePageShow);
       window.removeEventListener("storage", handleStorage);
     };
-  }, [ownerId, router, store]);
+  }, [capture, ownerId, router]);
 
-  return <CaptureContext value={store}>{children}</CaptureContext>;
+  return <CaptureContext value={capture}>{children}</CaptureContext>;
+}
+
+function useWorkspaceCapture(hook: string) {
+  const capture = useContext(CaptureContext);
+  if (!capture) throw new Error(`${hook} must be used inside CaptureProvider.`);
+  return capture;
 }
 
 export type CaptureQueue = InboxSyncSnapshot &
@@ -93,32 +146,68 @@ export type CaptureQueue = InboxSyncSnapshot &
  * `getSnapshot` reads the current queue outside rendering, such as in an effect.
  */
 export function useCaptureQueue(): CaptureQueue {
-  const store = useContext(CaptureContext);
-  if (!store)
-    throw new Error("useCaptureQueue must be used inside CaptureProvider.");
+  const { queue } = useWorkspaceCapture("useCaptureQueue");
   const snapshot = useSyncExternalStore(
-    store.subscribe,
-    store.getSnapshot,
-    store.getServerSnapshot,
+    queue.subscribe,
+    queue.getSnapshot,
+    queue.getServerSnapshot,
   );
   return {
     ...snapshot,
-    enqueue: store.enqueue,
-    getSnapshot: store.getSnapshot,
-    synchronize: store.synchronize,
+    enqueue: queue.enqueue,
+    getSnapshot: queue.getSnapshot,
+    synchronize: queue.synchronize,
   };
 }
 
-function inboxSyncStoreFor(ownerId: string) {
-  const existing = typeof window === "undefined" ? null : stores.get(ownerId);
+export type CaptureDraft = InboxDraftSnapshot &
+  Pick<
+    InboxDraftStore,
+    | "addPhotos"
+    | "cancelVoice"
+    | "clear"
+    | "getSnapshot"
+    | "removePhoto"
+    | "startVoice"
+    | "stopVoice"
+    | "update"
+  >;
+
+/**
+ * The capture draft every composer in this tab shows and edits, and the
+ * actions that change it. `getSnapshot` reads the latest draft after an await.
+ */
+export function useCaptureDraft(): CaptureDraft {
+  const { draft } = useWorkspaceCapture("useCaptureDraft");
+  const snapshot = useSyncExternalStore(
+    draft.subscribe,
+    draft.getSnapshot,
+    draft.getServerSnapshot,
+  );
+  return {
+    ...snapshot,
+    addPhotos: draft.addPhotos,
+    cancelVoice: draft.cancelVoice,
+    clear: draft.clear,
+    getSnapshot: draft.getSnapshot,
+    removePhoto: draft.removePhoto,
+    startVoice: draft.startVoice,
+    stopVoice: draft.stopVoice,
+    update: draft.update,
+  };
+}
+
+function workspaceCaptureFor(ownerId: string): WorkspaceCapture {
+  const existing =
+    typeof window === "undefined" ? null : workspaces.get(ownerId);
   if (existing) return existing;
 
   const lockName = `memotrail:inbox-sync:${encodeURIComponent(ownerId)}`;
-  const store = createInboxSyncStore({
+  const queue = createInboxSyncStore({
     isOnline: () => navigator.onLine,
     ownerId,
     runExclusive: (task) => runAcrossTabs(lockName, task),
-    storage: browserQueueStorage,
+    storage: browserStorage,
     transport: {
       finishCapture: finishInboxCapture,
       syncAttachments: (entry, onProgress) =>
@@ -132,14 +221,34 @@ function inboxSyncStoreFor(ownerId: string) {
       },
     },
   });
-  // Only a browser tab keeps its store; a server render reads nothing from it.
-  if (typeof window !== "undefined") stores.set(ownerId, store);
-  return store;
+  const draft = createInboxDraftStore({
+    language: () => navigator.language || "en-US",
+    ownerId,
+    photoStorage: {
+      load: loadInboxPhotoDrafts,
+      persist: persistInboxPhotoDrafts,
+      remove: removeInboxPhotoDrafts,
+    },
+    // Read from storage, since another tab may have queued photos just now.
+    queuedPhotoIds: () =>
+      new Set(
+        loadInboxQueue(browserStorage, ownerId).flatMap((entry) =>
+          entry.attachments.map(({ id }) => id),
+        ),
+      ),
+    speechRecognition: () => browserSpeechRecognitionConstructor(window),
+    storage: browserStorage,
+    timezone: () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+  });
+  const capture = { draft, queue };
+  // Only a browser tab keeps its stores; a server render reads nothing from them.
+  if (typeof window !== "undefined") workspaces.set(ownerId, capture);
+  return capture;
 }
 
-// Resolved on use, so a blocked browser storage API reaches the queue's own
-// error handling instead of failing while the workspace renders.
-const browserQueueStorage: QueueStorage = {
+// Resolved on use, so a blocked browser storage API reaches the draft's and
+// the queue's own error handling instead of failing while the workspace renders.
+const browserStorage: QueueStorage = {
   getItem: (key) => window.localStorage.getItem(key),
   removeItem: (key) => window.localStorage.removeItem(key),
   setItem: (key, value) => window.localStorage.setItem(key, value),

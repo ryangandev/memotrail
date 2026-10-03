@@ -8,28 +8,21 @@ import { notify } from "@/components/app-toast";
 import {
   type ChangeEvent,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   type FormEvent,
 } from "react";
-import { useCaptureQueue } from "@/components/capture-provider";
+import {
+  useCaptureDraft,
+  useCaptureQueue,
+} from "@/components/capture-provider";
 import { Icon } from "@/components/icon";
 import { PendingCaptureList } from "@/components/pending-captures";
 import { PhotoUploadProgress } from "@/components/photo-upload-progress";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { SelectedPhotoPreview } from "@/components/selected-photo-preview";
-import {
-  clearInboxDraft,
-  loadInboxDraft,
-  persistInboxDraft,
-} from "@/lib/data/inbox-draft";
 import { OccurrenceEditor } from "./occurrence-editor";
-import {
-  occurrenceDraft,
-  resolveOccurrenceDraft,
-  type OccurrenceDraft,
-} from "@/lib/data/occurrence";
+import { occurrenceDraft, resolveOccurrenceDraft } from "@/lib/data/occurrence";
 import { entryBodyLimit, parseInboxEntryValues } from "@/lib/data/inbox-input";
 import { countLabel } from "@/lib/count-label";
 import type { QueuedInboxEntry } from "@/lib/data/inbox-queue";
@@ -39,19 +32,8 @@ import {
   validateInboxPhotoFiles,
   type InboxPhotoDraft,
 } from "@/lib/data/inbox-photo";
-import {
-  loadInboxPhotoDrafts,
-  persistInboxPhotoDrafts,
-  removeInboxPhotoDrafts,
-} from "@/lib/data/inbox-photo-store";
-import {
-  browserSpeechRecognitionConstructor,
-  browserVoiceTranscript,
-  mergeVoiceTranscript,
-  voiceRecognitionErrorMessage,
-  type BrowserSpeechRecognition,
-} from "@/lib/data/voice-transcript";
-import { trimEntryNote, type EntryRichText } from "@/lib/data/rich-text";
+import { browserSpeechRecognitionConstructor } from "@/lib/data/voice-transcript";
+import { trimEntryNote } from "@/lib/data/rich-text";
 
 type CaptureFeedback = {
   isError: boolean;
@@ -64,52 +46,50 @@ export type NativePhotoPickerState = "canceled" | "opened" | "selected";
 
 const idleFeedback: CaptureFeedback = { isError: false, message: "" };
 
+/**
+ * Composes a capture in the workspace's shared draft: every composer in the
+ * tab shows the same writing, date, photos, and voice capture, so a save or a
+ * discard in one is reflected in all of them.
+ */
 export function CaptureComposer({
   active = true,
   embedded = false,
   idPrefix = "capture",
   onNativePhotoPickerChange,
-  ownerId,
   variant = "page",
 }: {
   active?: boolean;
   embedded?: boolean;
   idPrefix?: string;
   onNativePhotoPickerChange?: (state: NativePhotoPickerState) => void;
-  ownerId: string;
   variant?: "dialog" | "page";
 }) {
   const captureQueue = useCaptureQueue();
-  const { getSnapshot: readCaptureQueue, isSyncing } = captureQueue;
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [bodyRich, setBodyRich] = useState<EntryRichText | null>(null);
-  const [occurrence, setOccurrence] = useState<OccurrenceDraft | null>(null);
-  const [isLocalStateReady, setIsLocalStateReady] = useState(false);
-  const [hasLocalDraft, setHasLocalDraft] = useState(false);
+  const { isSyncing } = captureQueue;
+  const draft = useCaptureDraft();
+  const { body, bodyRich, cancelVoice, occurrence, photos, title } = draft;
   const [isSaving, setIsSaving] = useState(false);
-  const [feedback, setFeedback] = useState<CaptureFeedback>(idleFeedback);
-  // The shared queue keeps its latest problem; editing here dismisses it.
+  // A message about this composer's own action, shown until the draft changes.
+  const [feedback, setFeedback] = useState<
+    (CaptureFeedback & { revision: number }) | null
+  >(null);
+  // The shared queue keeps its latest problem; any change to the draft, here
+  // or in another composer, dismisses it.
+  const [draftRevision, setDraftRevision] = useState(draft.revision);
   const [dismissedSyncRun, setDismissedSyncRun] = useState(0);
-  const [photos, setPhotos] = useState<InboxPhotoDraft[]>([]);
-  const [isPhotoStateReady, setIsPhotoStateReady] = useState(false);
-  const [isPhotoStorageAvailable, setIsPhotoStorageAvailable] = useState(true);
+  if (draft.revision !== draftRevision) {
+    setDraftRevision(draft.revision);
+    setDismissedSyncRun(captureQueue.runCount);
+  }
   const [isVoiceSupported, setIsVoiceSupported] = useState<boolean | null>(
     null,
   );
-  const [voiceState, setVoiceState] = useState<VoiceCaptureState>("checking");
-  const [voiceFeedback, setVoiceFeedback] = useState<CaptureFeedback | null>(
-    null,
-  );
+  const voiceState: VoiceCaptureState =
+    isVoiceSupported === null ? "checking" : draft.voice;
+  const isPhotoStateReady = draft.photoState !== "loading";
+  const isPhotoStorageAvailable = draft.photoState !== "unavailable";
   const photoInputRef = useRef<HTMLInputElement>(null);
   const submitButtonRef = useRef<HTMLButtonElement>(null);
-  const voiceRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
-  const voiceBaselineRef = useRef("");
-  const voiceHadTranscriptRef = useRef(false);
-  const voiceFailedRef = useRef(false);
-  const voiceRequestedStopRef = useRef(false);
-  const titleRef = useRef("");
-  const occurrenceRef = useRef<OccurrenceDraft | null>(null);
 
   useEffect(() => {
     const input = photoInputRef.current;
@@ -123,241 +103,42 @@ export function CaptureComposer({
     return () => input.removeEventListener("cancel", handlePhotoPickerCancel);
   }, [onNativePhotoPickerChange]);
 
-  useLayoutEffect(() => {
-    if (!active) return;
-    const draft = loadInboxDraft(window.localStorage, ownerId);
-    const queue = readCaptureQueue().items.map((item) => item.entry);
-    let isCanceled = false;
-
-    queueMicrotask(() => {
-      if (isCanceled) return;
-
-      const savedOccurrence =
-        draft?.occurrence ??
-        (draft?.occurredAt
-          ? occurrenceDraft({
-              datePrecision: "exact",
-              occurredAt: new Date(draft.occurredAt).toISOString(),
-              occurredEnd: null,
-              occurredLabel: null,
-              occurredTimezone:
-                Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
-            })
-          : null);
-
-      setTitle(draft?.title ?? "");
-      setBody(draft?.body ?? "");
-      setBodyRich(draft?.bodyRich ?? null);
-      setOccurrence(savedOccurrence);
-      titleRef.current = draft?.title ?? "";
-      occurrenceRef.current = savedOccurrence;
-      setHasLocalDraft(Boolean(draft));
-      setIsLocalStateReady(true);
-
-      void (async () => {
-        try {
-          const storedPhotos = await loadInboxPhotoDrafts(ownerId);
-          if (isCanceled) return;
-
-          const queuedPhotoIds = new Set(
-            queue.flatMap((entry) =>
-              entry.attachments.map((attachment) => attachment.id),
-            ),
-          );
-          const draftPhotos = storedPhotos.filter(
-            (photo) => !queuedPhotoIds.has(photo.id),
-          );
-
-          setPhotos(draftPhotos);
-          setHasLocalDraft(Boolean(draft) || draftPhotos.length > 0);
-        } catch {
-          if (isCanceled) return;
-          setIsPhotoStorageAvailable(false);
-          setFeedback({
-            isError: true,
-            message:
-              "Photo drafts are unavailable in this browser. Text capture still works.",
-          });
-        } finally {
-          if (!isCanceled) setIsPhotoStateReady(true);
-        }
-      })();
-    });
-
-    return () => {
-      isCanceled = true;
-    };
-  }, [active, ownerId, readCaptureQueue]);
-
   useEffect(() => {
     let isCanceled = false;
 
     queueMicrotask(() => {
-      if (!isCanceled) {
+      if (!isCanceled)
         setIsVoiceSupported(
           Boolean(browserSpeechRecognitionConstructor(window)),
         );
-        setVoiceState("idle");
-      }
     });
 
     return () => {
       isCanceled = true;
-      const recognition = voiceRecognitionRef.current;
-      if (recognition) {
-        recognition.onend = null;
-        recognition.onerror = null;
-        recognition.onresult = null;
-        recognition.abort();
-        voiceRecognitionRef.current = null;
-      }
     };
-  }, [active]);
+  }, []);
 
-  function updateDraft(
-    nextTitle: string,
-    nextBody: string,
-    nextOccurrence: OccurrenceDraft | null,
-    preserveVoiceFeedback = false,
-    nextBodyRich: EntryRichText | null = nextBody === body ? bodyRich : null,
-  ) {
-    titleRef.current = nextTitle;
-    occurrenceRef.current = nextOccurrence;
-    setTitle(nextTitle);
-    setBody(nextBody);
-    setBodyRich(nextBodyRich);
-    setOccurrence(nextOccurrence);
-    setHasLocalDraft(
-      persistInboxDraft(window.localStorage, ownerId, {
-        body: nextBody,
-        bodyRich: nextBodyRich,
-        occurredAt: null,
-        occurrence: nextOccurrence,
-        title: nextTitle,
-      }) || photos.length > 0,
-    );
-    setFeedback(idleFeedback);
-    setDismissedSyncRun(captureQueue.runCount);
-    if (!preserveVoiceFeedback) {
-      setVoiceFeedback(null);
-    }
+  // Closing Quick Capture or leaving the Dashboard ends voice capture, even
+  // when another composer started it.
+  useEffect(() => {
+    if (!active) return;
+    return cancelVoice;
+  }, [active, cancelVoice]);
+
+  /** Shows a message about this composer's action until the draft changes. */
+  function showFeedback(message: CaptureFeedback) {
+    setFeedback({ ...message, revision: draft.getSnapshot().revision });
   }
 
   function startVoiceCapture() {
-    const Recognition = browserSpeechRecognitionConstructor(window);
-
-    if (!Recognition) {
+    if (!browserSpeechRecognitionConstructor(window))
       setIsVoiceSupported(false);
-      setVoiceFeedback({
-        isError: true,
-        message:
-          "Voice capture is unavailable in this browser. Text and photo capture still work.",
-      });
-      return;
-    }
-
-    if (voiceRecognitionRef.current || body.length >= entryBodyLimit) {
-      if (body.length >= entryBodyLimit) {
-        setVoiceFeedback({
-          isError: true,
-          message: "This note has reached the 50,000 character limit.",
-        });
-      }
-      return;
-    }
-
-    const recognition = new Recognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = navigator.language || "en-US";
-    voiceBaselineRef.current = body;
-    voiceHadTranscriptRef.current = false;
-    voiceFailedRef.current = false;
-    voiceRequestedStopRef.current = false;
-
-    recognition.onresult = (event) => {
-      const transcript = browserVoiceTranscript(event.results);
-      if (!transcript) {
-        return;
-      }
-
-      voiceHadTranscriptRef.current = true;
-      updateDraft(
-        titleRef.current,
-        mergeVoiceTranscript(voiceBaselineRef.current, transcript),
-        occurrenceRef.current,
-        true,
-      );
-    };
-
-    recognition.onerror = (event) => {
-      const message = voiceRecognitionErrorMessage(event.error);
-      if (!message && voiceRequestedStopRef.current) {
-        return;
-      }
-
-      voiceFailedRef.current = Boolean(message);
-      if (message) {
-        setVoiceFeedback({ isError: true, message });
-      }
-    };
-
-    recognition.onend = () => {
-      if (voiceRecognitionRef.current === recognition) {
-        voiceRecognitionRef.current = null;
-      }
-      setVoiceState("idle");
-
-      if (!voiceFailedRef.current) {
-        setVoiceFeedback({
-          isError: false,
-          message: voiceHadTranscriptRef.current
-            ? "Transcription added to this draft."
-            : "Voice capture stopped before any words were recognized.",
-        });
-      }
-    };
-
-    voiceRecognitionRef.current = recognition;
-
-    try {
-      recognition.start();
-      setVoiceState("listening");
-      setVoiceFeedback({
-        isError: false,
-        message: "Listening… Tap Stop when done. Audio is not saved.",
-      });
-    } catch {
-      voiceRecognitionRef.current = null;
-      setVoiceState("idle");
-      setVoiceFeedback({
-        isError: true,
-        message:
-          "Voice capture could not start. Check browser permissions and try again.",
-      });
-    }
-  }
-
-  function stopVoiceCapture() {
-    const recognition = voiceRecognitionRef.current;
-    if (!recognition) {
-      return;
-    }
-
-    voiceRequestedStopRef.current = true;
-    setVoiceState("stopping");
-    setVoiceFeedback({
-      isError: false,
-      message: "Finishing transcription… Audio was not saved.",
-    });
-    recognition.stop();
+    draft.startVoice();
   }
 
   function toggleRelevantDate() {
-    updateDraft(
-      title,
-      body,
-      occurrence
+    draft.update({
+      occurrence: occurrence
         ? null
         : occurrenceDraft({
             datePrecision: "exact",
@@ -367,12 +148,11 @@ export function CaptureComposer({
             occurredTimezone:
               Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
           }),
-    );
+    });
   }
 
   async function handlePhotoSelection(event: ChangeEvent<HTMLInputElement>) {
     onNativePhotoPickerChange?.("selected");
-    setVoiceFeedback(null);
     const selection = validateInboxPhotoFiles(
       Array.from(event.target.files ?? []),
       photos.length,
@@ -381,23 +161,19 @@ export function CaptureComposer({
 
     if (selection.accepted.length === 0) {
       if (selection.message) {
-        setFeedback({ isError: true, message: selection.message });
+        showFeedback({ isError: true, message: selection.message });
       }
       return;
     }
 
     try {
-      await persistInboxPhotoDrafts(ownerId, selection.accepted);
-      setPhotos((current) => [...current, ...selection.accepted]);
-      setHasLocalDraft(true);
-      setDismissedSyncRun(captureQueue.runCount);
-      setFeedback({
+      await draft.addPhotos(selection.accepted);
+      showFeedback({
         isError: Boolean(selection.message),
         message: selection.message ?? "Photos saved in this draft.",
       });
     } catch {
-      setIsPhotoStorageAvailable(false);
-      setFeedback({
+      showFeedback({
         isError: true,
         message:
           "This browser could not keep those photos safely. Try another browser or device.",
@@ -407,18 +183,9 @@ export function CaptureComposer({
 
   async function removePhoto(photoId: string) {
     try {
-      await removeInboxPhotoDrafts(ownerId, [photoId]);
-      setVoiceFeedback(null);
-      const nextPhotos = photos.filter((photo) => photo.id !== photoId);
-      setPhotos(nextPhotos);
-      setHasLocalDraft(
-        Boolean(loadInboxDraft(window.localStorage, ownerId)) ||
-          nextPhotos.length > 0,
-      );
-      setFeedback(idleFeedback);
-      setDismissedSyncRun(captureQueue.runCount);
+      await draft.removePhoto(photoId);
     } catch {
-      setFeedback({
+      showFeedback({
         isError: true,
         message: "MemoTrail could not remove that local photo. Try again.",
       });
@@ -435,7 +202,7 @@ export function CaptureComposer({
     });
 
     if (!parsedInput.success) {
-      setFeedback({ isError: true, message: parsedInput.message });
+      showFeedback({ isError: true, message: parsedInput.message });
       return;
     }
 
@@ -454,7 +221,7 @@ export function CaptureComposer({
         };
 
     if (parsedDate.error) {
-      setFeedback({ isError: true, message: parsedDate.error });
+      showFeedback({ isError: true, message: parsedDate.error });
       return;
     }
 
@@ -473,7 +240,7 @@ export function CaptureComposer({
     const nextQueue = captureQueue.enqueue(entry);
 
     if (!nextQueue) {
-      setFeedback({
+      showFeedback({
         isError: true,
         message:
           "MemoTrail could not store this Entry on this device. Your draft is still here.",
@@ -482,18 +249,8 @@ export function CaptureComposer({
       return;
     }
 
-    clearInboxDraft(window.localStorage, ownerId);
-    setTitle("");
-    setBody("");
-    setBodyRich(null);
-    setOccurrence(null);
-    titleRef.current = "";
-    occurrenceRef.current = null;
-    setPhotos([]);
-    setHasLocalDraft(false);
-    setVoiceFeedback(null);
-    setFeedback(idleFeedback);
-    setDismissedSyncRun(captureQueue.runCount);
+    // Every composer empties together, so none can save this capture again.
+    draft.clear();
     if (!navigator.onLine) {
       notify.info("Saved on this device. Waiting for a connection.");
     }
@@ -504,12 +261,17 @@ export function CaptureComposer({
     captureQueue.lastError && captureQueue.runCount !== dismissedSyncRun
       ? { isError: true, message: captureQueue.lastError }
       : null;
-  const composerFeedback = feedback.isError
-    ? feedback
+  const currentFeedback =
+    (feedback?.revision === draft.revision ? feedback : null) ??
+    (draft.notice?.revision === draft.revision ? draft.notice : null) ??
+    idleFeedback;
+  const composerFeedback = currentFeedback.isError
+    ? currentFeedback
     : (syncFeedback ??
-      (hasLocalDraft
+      (draft.hasLocalDraft
         ? { isError: false, message: "Draft saved on this device." }
-        : feedback));
+        : currentFeedback));
+  const voiceFeedback = draft.voiceNotice;
 
   return (
     <>
@@ -554,14 +316,14 @@ export function CaptureComposer({
         ) : null}
         <div className={captureComposerStyles.captureIntro}>
           <div className={captureComposerStyles.captureFields}>
-            {isLocalStateReady ? (
+            {draft.isReady ? (
               <RichTextEditor
                 autoFocus={variant === "dialog" && active}
                 disabled={isSaving || voiceState !== "idle"}
                 label="Entry text"
                 maxLength={entryBodyLimit}
                 onChange={(value) =>
-                  updateDraft(title, value.text, occurrence, false, value)
+                  draft.update({ body: value.text, bodyRich: value })
                 }
                 placeholder="What is on your mind?"
                 richText={bodyRich}
@@ -583,13 +345,13 @@ export function CaptureComposer({
           >
             <OccurrenceEditor
               value={occurrence}
-              onChange={(value) => updateDraft(title, body, value)}
-              disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
+              onChange={(value) => draft.update({ occurrence: value })}
+              disabled={isSaving || !draft.isReady || voiceState !== "idle"}
             />
             <Button
               variant="secondary"
-              disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
-              onClick={() => updateDraft(title, body, null)}
+              disabled={isSaving || !draft.isReady || voiceState !== "idle"}
+              onClick={() => draft.update({ occurrence: null })}
               type="button"
             >
               Use capture time
@@ -628,7 +390,7 @@ export function CaptureComposer({
             <button
               aria-pressed={Boolean(occurrence)}
               className={`${captureComposerStyles.quietButton} ${occurrence ? captureComposerStyles.activeQuietButton : ""}`}
-              disabled={isSaving || !isLocalStateReady || voiceState !== "idle"}
+              disabled={isSaving || !draft.isReady || voiceState !== "idle"}
               onClick={toggleRelevantDate}
               type="button"
             >
@@ -647,14 +409,12 @@ export function CaptureComposer({
               className={`${captureComposerStyles.quietButton} ${voiceState === "listening" ? captureComposerStyles.listeningQuietButton : ""}`}
               disabled={
                 isSaving ||
-                !isLocalStateReady ||
+                !draft.isReady ||
                 voiceState === "checking" ||
                 voiceState === "stopping"
               }
               onClick={
-                voiceState === "listening"
-                  ? stopVoiceCapture
-                  : startVoiceCapture
+                voiceState === "listening" ? draft.stopVoice : startVoiceCapture
               }
               title={
                 isVoiceSupported === false
@@ -672,7 +432,7 @@ export function CaptureComposer({
               className={`${captureComposerStyles.quietButton} ${photos.length > 0 ? captureComposerStyles.activeQuietButton : ""}`}
               disabled={
                 isSaving ||
-                !isLocalStateReady ||
+                !draft.isReady ||
                 !isPhotoStateReady ||
                 !isPhotoStorageAvailable ||
                 voiceState !== "idle"
@@ -693,7 +453,7 @@ export function CaptureComposer({
               className={captureComposerStyles.visuallyHidden}
               disabled={
                 isSaving ||
-                !isLocalStateReady ||
+                !draft.isReady ||
                 !isPhotoStateReady ||
                 !isPhotoStorageAvailable ||
                 voiceState !== "idle"
@@ -728,7 +488,7 @@ export function CaptureComposer({
                 disabled={
                   isSaving ||
                   isSyncing ||
-                  !isLocalStateReady ||
+                  !draft.isReady ||
                   !isPhotoStateReady ||
                   voiceState !== "idle"
                 }

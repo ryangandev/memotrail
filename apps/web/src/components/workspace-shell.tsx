@@ -354,7 +354,6 @@ export function WorkspaceShell({
           onClose={closeQuickCapture}
           onOpen={openQuickCapture}
           open={quickCaptureOpen}
-          ownerId={viewer.id}
         />
       </WorkspaceActionDock>
 
