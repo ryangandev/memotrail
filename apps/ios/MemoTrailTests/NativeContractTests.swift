@@ -512,6 +512,140 @@ final class NativeContractTests: XCTestCase {
     XCTAssertNil(goals.entry(id: identity.id))
   }
 
+  // Each editor keeps the revision it opened with, while removing a photo creates a revision.
+  func testFocusedEditorsMoveToTrashAfterRemovingAPhotoAtTheOpenedRevision() async throws {
+    let (client, ownerID) = try await client()
+
+    let goals = GoalController(client: client, ownerID: ownerID)
+    let createdGoal = await goals.save(
+      entryID: nil, expectedRevision: nil, title: "Native Photo Goal", body: "",
+      horizon: .someday, status: .considering, targetDate: nil, collectionNames: [],
+      tagNames: [], relatedEntryIDs: [])
+    let goalID = try XCTUnwrap(createdGoal.identity?.id, createdGoal.message)
+    let goalUpload = try await goals.upload(photoDraft(), entryID: goalID)
+    XCTAssertEqual(goalUpload.status, .saved, goalUpload.message)
+    await goals.load(including: goalID)
+    let goal = try XCTUnwrap(goals.entry(id: goalID))
+    let goalPhoto = try await goals.removeAttachment(XCTUnwrap(goal.attachments.first))
+    XCTAssertEqual(goalPhoto.status, .trashed, goalPhoto.message)
+    await goals.reloadAfterMutation()
+    XCTAssertEqual(goals.entry(id: goalID)?.revision, goal.revision + 1)
+    let trashedGoal = await goals.moveToTrash(entryID: goal.id, expectedRevision: goal.revision)
+    XCTAssertEqual(trashedGoal.status, .trashed, trashedGoal.message)
+
+    let homes = ResidenceController(client: client, ownerID: ownerID)
+    let createdHome = await homes.save(
+      entryID: nil, expectedRevision: nil, title: "Native Photo Home", body: "",
+      occurredStart: nil, occurredEnd: nil, datePrecision: .unknown, occurredLabel: "",
+      occurredTimezone: "UTC", placeID: nil, placeName: "", address: "", city: "", region: "",
+      country: "", latitude: nil, longitude: nil, placeNotes: "", moveInReason: "",
+      moveOutReason: "", collectionNames: [], tagNames: [])
+    let homeID = try XCTUnwrap(createdHome.identity?.id, createdHome.message)
+    let homeUpload = try await homes.upload(photoDraft(), entryID: homeID)
+    XCTAssertEqual(homeUpload.status, .saved, homeUpload.message)
+    await homes.load()
+    let home = try XCTUnwrap(homes.entry(id: homeID))
+    let homePhoto = try await homes.removeAttachment(XCTUnwrap(home.attachments.first))
+    XCTAssertEqual(homePhoto.status, .trashed, homePhoto.message)
+    let trashedHome = await homes.moveToTrash(entryID: home.id, expectedRevision: home.revision)
+    XCTAssertEqual(trashedHome.status, .trashed, trashedHome.message)
+
+    let vehicles = VehicleController(client: client, ownerID: ownerID)
+    let createdVehicle = await vehicles.save(
+      entryID: nil, expectedRevision: nil, title: "Native Photo Vehicle", body: "",
+      occurredStart: nil, occurredEnd: nil, datePrecision: .unknown, occurredLabel: "",
+      occurredTimezone: "UTC", make: "Honda", model: "Civic", modelYear: 2018, color: "",
+      collectionNames: [], tagNames: [])
+    let vehicleID = try XCTUnwrap(createdVehicle.identity?.id, createdVehicle.message)
+    let vehicleUpload = try await vehicles.upload(photoDraft(), entryID: vehicleID)
+    XCTAssertEqual(vehicleUpload.status, .saved, vehicleUpload.message)
+    await vehicles.load()
+    let vehicle = try XCTUnwrap(vehicles.entry(id: vehicleID))
+    let vehiclePhoto = try await vehicles.removeAttachment(XCTUnwrap(vehicle.attachments.first))
+    XCTAssertEqual(vehiclePhoto.status, .trashed, vehiclePhoto.message)
+    let trashedVehicle = await vehicles.moveToTrash(
+      entryID: vehicle.id, expectedRevision: vehicle.revision)
+    XCTAssertEqual(trashedVehicle.status, .trashed, trashedVehicle.message)
+
+    let firstTimes = FirstTimesController(client: client, ownerID: ownerID)
+    let createdFirstTime = await firstTimes.save(
+      entryID: nil, expectedRevision: nil, title: "Native Photo First Time", body: "",
+      occurredStart: nil, datePrecision: .unknown, occurredLabel: "", occurredTimezone: nil,
+      collectionNames: [], tagNames: [])
+    let firstTimeID = try XCTUnwrap(createdFirstTime.identity?.id, createdFirstTime.message)
+    let firstTimeUpload = try await firstTimes.upload(photoDraft(), entryID: firstTimeID)
+    XCTAssertEqual(firstTimeUpload.status, .saved, firstTimeUpload.message)
+    await firstTimes.load()
+    let firstTime = try XCTUnwrap(firstTimes.entry(id: firstTimeID))
+    let firstTimePhoto = try await firstTimes.removeAttachment(
+      XCTUnwrap(firstTime.attachments.first))
+    XCTAssertEqual(firstTimePhoto.status, .trashed, firstTimePhoto.message)
+    let trashedFirstTime = await firstTimes.moveToTrash(
+      entryID: firstTime.id, expectedRevision: firstTime.revision)
+    XCTAssertEqual(trashedFirstTime.status, .trashed, trashedFirstTime.message)
+
+    // Writing from another device is still never adopted.
+    let createdConflict = await goals.save(
+      entryID: nil, expectedRevision: nil, title: "Native Photo Conflict", body: "",
+      horizon: .someday, status: .considering, targetDate: nil, collectionNames: [],
+      tagNames: [], relatedEntryIDs: [])
+    let conflictID = try XCTUnwrap(createdConflict.identity?.id, createdConflict.message)
+    let conflictUpload = try await goals.upload(photoDraft(), entryID: conflictID)
+    XCTAssertEqual(conflictUpload.status, .saved, conflictUpload.message)
+    await goals.load(including: conflictID)
+    let conflict = try XCTUnwrap(goals.entry(id: conflictID))
+    let conflictPhoto = try await goals.removeAttachment(XCTUnwrap(conflict.attachments.first))
+    XCTAssertEqual(conflictPhoto.status, .trashed, conflictPhoto.message)
+    try await client.from("entries").update(["body": "Other device writing"])
+      .eq("id", value: conflictID.uuidString).execute()
+    let refused = await goals.moveToTrash(entryID: conflict.id, expectedRevision: conflict.revision)
+    XCTAssertEqual(refused.status, .conflict, refused.message)
+    XCTAssertEqual(
+      refused.message, "This Goal changed on another device. Close it, refresh, and try again.")
+    await goals.load(including: conflictID)
+    XCTAssertEqual(goals.entry(id: conflictID)?.body, "Other device writing")
+  }
+
+  func testBucketListGoalIsAchievedAfterRemovingAPhotoAtTheOpenedRevision() async throws {
+    let (client, ownerID) = try await client()
+    let goals = GoalController(client: client, ownerID: ownerID)
+    let created = await goals.save(
+      entryID: nil, expectedRevision: nil, title: "Native Photo Bucket List Goal", body: "",
+      horizon: .someday, status: .considering, targetDate: nil,
+      collectionNames: ["Bucket List"], tagNames: [], relatedEntryIDs: [])
+    let goalID = try XCTUnwrap(created.identity?.id, created.message)
+    let upload = try await goals.upload(photoDraft(), entryID: goalID)
+    XCTAssertEqual(upload.status, .saved, upload.message)
+    await goals.load(including: goalID)
+    let goal = try XCTUnwrap(goals.entry(id: goalID))
+    XCTAssertTrue(goal.isBucketList)
+    let removed = try await goals.removeAttachment(XCTUnwrap(goal.attachments.first))
+    XCTAssertEqual(removed.status, .trashed, removed.message)
+
+    let achieved = await goals.markAchieved(
+      entryID: goal.id, expectedRevision: goal.revision, occurredStart: nil,
+      datePrecision: .unknown, occurredLabel: "", occurredTimezone: "UTC")
+    XCTAssertEqual(achieved.status, .achieved, achieved.message)
+    let firstTimeID = try XCTUnwrap(achieved.identity?.relatedID)
+    await goals.load(including: goalID)
+    let saved = try XCTUnwrap(goals.entry(id: goalID))
+    XCTAssertEqual(saved.status, .achieved)
+    XCTAssertEqual(saved.achievementEntries.map(\.id), [firstTimeID])
+    XCTAssertTrue(saved.attachments.isEmpty)
+  }
+
+  private func photoDraft() throws -> FirstTimePhotoDraft {
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = 1
+    let data = UIGraphicsImageRenderer(size: CGSize(width: 4, height: 4), format: format)
+      .pngData { context in
+        UIColor.systemGreen.setFill()
+        context.fill(CGRect(x: 0, y: 0, width: 4, height: 4))
+      }
+    return try FirstTimePhotoDraft.validate(
+      data: data, mimeType: .png, originalFilename: "kept.png", pixelWidth: 4, pixelHeight: 4)
+  }
+
   func testPersonLinksItemsAndMovesToTrashOnlyOnceUnlinked() async throws {
     let (client, ownerID) = try await client()
     let goals = GoalController(client: client, ownerID: ownerID)
