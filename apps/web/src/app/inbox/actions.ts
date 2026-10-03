@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
+import { AI_CAPABILITIES_AVAILABLE } from "@/lib/ai/availability";
 import { suggestForEntry } from "@/lib/ai/suggestions-server";
 import { writingRevision } from "@/lib/media/writing-revision";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
@@ -146,6 +147,8 @@ export async function syncInboxEntry(
 
 /** Runs once the capture's originals are registered, never once per photo. */
 export async function finishInboxCapture(entryId: string) {
+  // Suggestions are this step's only work, so a paused capture ends here.
+  if (!AI_CAPABILITIES_AVAILABLE) return;
   const context = await getAuthenticatedContext();
   if (!context) return;
   const revision = await writingRevision(context.client, entryId, 1);

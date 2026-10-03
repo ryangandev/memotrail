@@ -1,7 +1,12 @@
 import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabasePublicConfig } from "@/lib/supabase/config";
-import { AIError, aiProviderConfigured, generateAI } from "./server";
+import {
+  AIError,
+  aiProviderConfigured,
+  assertAIAvailable,
+  generateAI,
+} from "./server";
 import { suggestionPhotos } from "./suggestion-photos";
 import {
   parseEntryAISuggestions,
@@ -15,6 +20,8 @@ export async function suggestForEntry(
   revision: number,
   retry = false,
 ): Promise<EntryAISuggestionResponse> {
+  // Paused AI reads, prepares, and claims nothing, even with saved consent.
+  assertAIAvailable();
   if (!aiProviderConfigured()) return { suggestion: null, disabled: true };
   const { data: preferences, error: preferencesError } = await client
     .from("ai_preferences")

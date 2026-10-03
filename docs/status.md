@@ -159,6 +159,10 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - Web AI entry points are removed; Settings shows an off, disabled Beta status.
 - Earlier AI narrative, requirements, and decision-model exploration are preserved in the [AI direction record](./ai-direction-record.md), not discarded with the UI.
 - Existing AI business logic, saved preferences, and historical records remain intact behind a server pause gate.
+- Web captures no longer start suggestion work while paused.
+  Before the fix, a local server configured like Production left one failed suggestion row per text or photo capture for a user with saved consent, and photo captures rendered previews first.
+  Pause unit tests now prove capture and `suggestForEntry` stop before any read, photo work, or claim.
+  The browser capture scenario in `ai-paused.e2e.ts` reaches that path only with `MEMOTRAIL_E2E_LIVE_AI=1` and a synthetic `AI_API_KEY`, because the default E2E server disables the provider; both modes pass.
 - The old AI settings, search form, Entry suggestions panel, and exploration UI components and their dedicated styles are deleted, not merely unmounted.
 - The Beta pause page has its own minimal styles; old Explore URLs retain only a redirect, and future AI UI must be designed anew.
 - Do not install a local model or enable Production AI as part of this work.

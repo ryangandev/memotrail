@@ -63,6 +63,7 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - Every new free-form Capture enters Inbox, even when AI suggestions are available.
 - Inbox review keeps AI suggestions hidden for now; people organize the Entry manually.
 - AI suggestions are paused; retained implementation may suggest title, Collections, tags, date, and photo-derived date or Location context when the product is re-enabled.
+- While paused, new Captures and their photos are not processed for suggestions, even when earlier AI consent remains saved.
 - Suggestions remain editable and require explicit adoption.
 - AI may propose a Collection but cannot create it without confirmation.
 - The Capture remains in Inbox until the user selects `Save to Library`, completes another explicit organization action, or moves it to Trash.
