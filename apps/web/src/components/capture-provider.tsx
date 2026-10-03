@@ -77,10 +77,17 @@ export function CaptureProvider({
 
   useEffect(() => {
     const { draft, queue } = capture;
-    const stopWatchingRuns = queue.onRunFinished(({ result, synced }) => {
-      if (result?.status === "synced") notify.success(result.message);
-      if (synced > 0) router.refresh();
-    });
+    const stopWatchingRuns = queue.onRunFinished(
+      ({ rejected, result, synced }) => {
+        if (result?.status === "synced") notify.success(result.message);
+        // A rejected capture may come from a composer that is already closed.
+        if (rejected > 0)
+          notify.error(
+            `MemoTrail did not accept ${countLabel(rejected, "Entry")}. Review ${rejected === 1 ? "it" : "them"} in Pending sync.`,
+          );
+        if (synced > 0) router.refresh();
+      },
+    );
     function handleOnline() {
       void queue.synchronize();
     }
@@ -139,7 +146,7 @@ function useWorkspaceCapture(hook: string) {
 }
 
 export type CaptureQueue = InboxSyncSnapshot &
-  Pick<InboxSyncStore, "enqueue" | "getSnapshot" | "synchronize">;
+  Pick<InboxSyncStore, "discard" | "enqueue" | "getSnapshot" | "synchronize">;
 
 /**
  * The workspace's pending captures and the actions that change them.
@@ -154,6 +161,7 @@ export function useCaptureQueue(): CaptureQueue {
   );
   return {
     ...snapshot,
+    discard: queue.discard,
     enqueue: queue.enqueue,
     getSnapshot: queue.getSnapshot,
     synchronize: queue.synchronize,
@@ -206,6 +214,8 @@ function workspaceCaptureFor(ownerId: string): WorkspaceCapture {
   const queue = createInboxSyncStore({
     isOnline: () => navigator.onLine,
     ownerId,
+    removePhotoDrafts: (attachmentIds) =>
+      removeInboxPhotoDrafts(ownerId, attachmentIds),
     runExclusive: (task) => runAcrossTabs(lockName, task),
     storage: browserStorage,
     transport: {
@@ -298,8 +308,8 @@ async function synchronizeAttachments(
     if (!objectPath) {
       return {
         message:
-          "A pending photo reference is invalid and needs your attention.",
-        status: "retry",
+          "This Entry is in your Inbox, but one of its photos is invalid on this device, so they will not sync. Discard to remove them from this device.",
+        status: "rejected",
       };
     }
 
@@ -321,6 +331,10 @@ async function synchronizeAttachments(
         continue;
       }
 
+      if (registered.status === "rejected") {
+        return registered;
+      }
+
       return {
         message:
           "A pending photo is missing from this device. Keep this page open and select the photo again if needed.",
@@ -335,8 +349,9 @@ async function synchronizeAttachments(
       photo.mimeType !== attachment.mimeType
     ) {
       return {
-        message: "A pending photo changed on this device and cannot be synced.",
-        status: "retry",
+        message:
+          "This Entry is in your Inbox, but one of its photos changed on this device, so they will not sync. Discard to remove them from this device.",
+        status: "rejected",
       };
     }
 
@@ -348,7 +363,7 @@ async function synchronizeAttachments(
 
     const registered = await registerEntryAttachment(attachmentInput);
 
-    if (registered.status === "retry") {
+    if (registered.status !== "synced") {
       return registered;
     }
 

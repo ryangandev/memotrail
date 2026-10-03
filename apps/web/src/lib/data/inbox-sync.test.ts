@@ -19,6 +19,10 @@ const synced: InboxSyncResult = {
   message: "Saved to Inbox.",
   status: "synced",
 };
+const rejected: InboxSyncResult = {
+  message: "MemoTrail cannot accept this Entry, so it will not sync.",
+  status: "rejected",
+};
 
 describe("Workspace capture synchronization", () => {
   it("reads the browser queue lazily and keeps server rendering empty", () => {
@@ -62,7 +66,7 @@ describe("Workspace capture synchronization", () => {
       lastError: null,
       runCount: 1,
     });
-    expect(runs).toEqual([{ result: synced, synced: 1 }]);
+    expect(runs).toEqual([{ rejected: 0, result: synced, synced: 1 }]);
   });
 
   it("lists a capture saved offline immediately", () => {
@@ -126,8 +130,12 @@ describe("Workspace capture synchronization", () => {
       runCount: 2,
     });
     expect(runs).toEqual([
-      { result: { message: offlineSyncMessage, status: "retry" }, synced: 0 },
-      { result: synced, synced: 2 },
+      {
+        rejected: 0,
+        result: { message: offlineSyncMessage, status: "retry" },
+        synced: 0,
+      },
+      { rejected: 0, result: synced, synced: 2 },
     ]);
   });
 
@@ -151,7 +159,11 @@ describe("Workspace capture synchronization", () => {
       lastError: offlineSyncMessage,
     });
     expect(runs).toEqual([
-      { result: { message: offlineSyncMessage, status: "retry" }, synced: 0 },
+      {
+        rejected: 0,
+        result: { message: offlineSyncMessage, status: "retry" },
+        synced: 0,
+      },
     ]);
 
     await store.synchronize();
@@ -260,6 +272,179 @@ describe("Workspace capture synchronization", () => {
     expect(runs).toEqual([]);
   });
 
+  it("keeps a rejected capture with its content and syncs the captures after it", async () => {
+    const { runs, storage, store, transport } = setup();
+    transport.syncEntry.mockResolvedValueOnce(rejected);
+    enqueueInboxEntry(storage, ownerId, queuedEntry(1));
+    enqueueInboxEntry(storage, ownerId, queuedEntry(2));
+    await store.synchronize();
+
+    expect(transport.syncEntry.mock.calls.map(([entry]) => entry.id)).toEqual([
+      queuedEntry(1).id,
+      queuedEntry(2).id,
+    ]);
+    const rejection = {
+      message: rejected.message,
+      rejectedAt: expect.any(String),
+    };
+    expect(loadInboxQueue(storage, ownerId)).toEqual([
+      { ...queuedEntry(1), rejection },
+    ]);
+    expect(store.getSnapshot()).toMatchObject({
+      isSyncing: false,
+      items: [
+        {
+          entry: { id: queuedEntry(1).id },
+          firstAttempt: false,
+          rejection,
+          status: "rejected",
+        },
+      ],
+      // A rejection is the capture's own problem, not one that ended the run.
+      lastError: null,
+    });
+    expect(hasWaitingCaptures(store.getSnapshot())).toBe(true);
+    expect(runs).toEqual([{ rejected: 1, result: synced, synced: 1 }]);
+  });
+
+  it("never sends a rejected capture again, even after a reload", async () => {
+    const storage = memoryStorage();
+    const first = setup({ storage });
+    first.transport.syncEntry.mockResolvedValueOnce(rejected);
+    first.store.enqueue(queuedEntry(1));
+    await first.store.synchronize();
+    await first.store.synchronize();
+    expect(first.transport.syncEntry).toHaveBeenCalledTimes(1);
+
+    const { runs, store, transport } = setup({ storage });
+    expect(store.getSnapshot().items).toMatchObject([
+      { rejection: { message: rejected.message }, status: "rejected" },
+    ]);
+    await store.synchronize();
+    expect(transport.syncEntry).not.toHaveBeenCalled();
+    expect(runs).toEqual([]);
+
+    store.enqueue(queuedEntry(2));
+    await store.synchronize();
+    expect(transport.syncEntry.mock.calls.map(([entry]) => entry.id)).toEqual([
+      queuedEntry(2).id,
+    ]);
+    expect(store.getSnapshot().items).toMatchObject([
+      { entry: { id: queuedEntry(1).id }, status: "rejected" },
+    ]);
+  });
+
+  it("still stops at a retryable failure after a rejected capture", async () => {
+    const { runs, storage, store, transport } = setup();
+    transport.syncEntry
+      .mockResolvedValueOnce(rejected)
+      .mockResolvedValueOnce({ message: offlineSyncMessage, status: "retry" });
+    for (const index of [1, 2, 3])
+      enqueueInboxEntry(storage, ownerId, queuedEntry(index));
+    await store.synchronize();
+
+    expect(transport.syncEntry).toHaveBeenCalledTimes(2);
+    expect(store.getSnapshot()).toMatchObject({
+      items: [
+        { status: "rejected" },
+        { status: "waiting" },
+        { status: "waiting" },
+      ],
+      lastError: offlineSyncMessage,
+    });
+    expect(runs).toEqual([
+      {
+        rejected: 1,
+        result: { message: offlineSyncMessage, status: "retry" },
+        synced: 0,
+      },
+    ]);
+  });
+
+  it("rejects a capture whose photos MemoTrail refuses, without finishing it", async () => {
+    const { storage, store, transport } = setup();
+    transport.syncAttachments.mockResolvedValueOnce(rejected);
+    enqueueInboxEntry(storage, ownerId, queuedEntry(1, { withPhoto: true }));
+    enqueueInboxEntry(storage, ownerId, queuedEntry(2));
+    await store.synchronize();
+
+    expect(transport.finishCapture).not.toHaveBeenCalled();
+    expect(store.getSnapshot()).toMatchObject({
+      items: [{ entry: { id: queuedEntry(1).id }, status: "rejected" }],
+      photoUploadProgress: null,
+    });
+  });
+
+  it("keeps a rejected capture waiting when this browser cannot record the rejection", async () => {
+    const { storage, store, transport } = setup();
+    transport.syncEntry.mockResolvedValueOnce(rejected);
+    enqueueInboxEntry(storage, ownerId, queuedEntry(1));
+    enqueueInboxEntry(storage, ownerId, queuedEntry(2));
+    storage.setItem.mockImplementationOnce(() => {
+      throw new Error("quota");
+    });
+    await store.synchronize();
+
+    expect(transport.syncEntry).toHaveBeenCalledTimes(1);
+    expect(store.getSnapshot()).toMatchObject({
+      items: [{ status: "waiting" }, { status: "waiting" }],
+      lastError: rejected.message,
+    });
+  });
+
+  it("discards a rejected capture and its photos, photos first", async () => {
+    const { removePhotoDrafts, storage, store, transport } = setup();
+    transport.syncEntry.mockResolvedValueOnce(rejected);
+    store.enqueue(queuedEntry(1, { withPhoto: true }));
+    await store.synchronize();
+    removePhotoDrafts.mockImplementationOnce(async () => {
+      // The capture is still stored while its photos are removed.
+      expect(loadInboxQueue(storage, ownerId)).toHaveLength(1);
+    });
+
+    await expect(store.discard(queuedEntry(1).id)).resolves.toBe(true);
+    expect(removePhotoDrafts).toHaveBeenCalledWith([
+      queuedEntry(1, { withPhoto: true }).attachments[0].id,
+    ]);
+    expect(loadInboxQueue(storage, ownerId)).toEqual([]);
+    expect(store.getSnapshot().items).toEqual([]);
+    expect(hasWaitingCaptures(store.getSnapshot())).toBe(false);
+  });
+
+  it("keeps a rejected capture whose photos could not be discarded", async () => {
+    const { removePhotoDrafts, storage, store, transport } = setup();
+    transport.syncEntry.mockResolvedValueOnce(rejected);
+    store.enqueue(queuedEntry(1, { withPhoto: true }));
+    await store.synchronize();
+    removePhotoDrafts.mockRejectedValueOnce(new Error("blocked"));
+
+    await expect(store.discard(queuedEntry(1).id)).resolves.toBe(false);
+    expect(loadInboxQueue(storage, ownerId)).toHaveLength(1);
+    expect(store.getSnapshot().items).toMatchObject([{ status: "rejected" }]);
+  });
+
+  it("never discards a capture that is still waiting to sync", async () => {
+    const { removePhotoDrafts, storage, store } = setup();
+    enqueueInboxEntry(storage, ownerId, queuedEntry(1, { withPhoto: true }));
+
+    await expect(store.discard(queuedEntry(1).id)).resolves.toBe(false);
+    expect(removePhotoDrafts).not.toHaveBeenCalled();
+    expect(loadInboxQueue(storage, ownerId)).toHaveLength(1);
+  });
+
+  it("does not count a capture another tab discarded as synced", async () => {
+    const storage = memoryStorage();
+    const { store, transport } = setup({ storage });
+    transport.syncEntry.mockResolvedValueOnce(rejected);
+    store.enqueue(queuedEntry(1));
+    await store.synchronize();
+
+    const other = setup({ storage });
+    await other.store.discard(queuedEntry(1).id);
+    expect(store.reload()).toBe(0);
+    expect(store.getSnapshot().items).toEqual([]);
+  });
+
   it("refuses a capture this browser cannot store", () => {
     const { storage, store, transport } = setup();
     storage.setItem.mockImplementationOnce(() => {
@@ -290,16 +475,20 @@ function setup({
     ),
     syncEntry: vi.fn<InboxSyncTransport["syncEntry"]>(async () => synced),
   };
+  const removePhotoDrafts = vi.fn(async (attachmentIds: string[]) => {
+    void attachmentIds;
+  });
   const store = createInboxSyncStore({
     isOnline: () => isOnline,
     ownerId,
+    removePhotoDrafts,
     runExclusive,
     storage,
     transport,
   });
   const runs: InboxSyncRun[] = [];
   store.onRunFinished((run) => runs.push(run));
-  return { runs, storage, store, transport };
+  return { removePhotoDrafts, runs, storage, store, transport };
 }
 
 function queuedEntry(

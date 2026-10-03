@@ -5,8 +5,10 @@ import {
   loadInboxQueue,
   parseInboxQueue,
   type QueuedInboxEntry,
+  rejectInboxQueueEntry,
   removeInboxQueueEntry,
   queuedOccurrence,
+  queuedRejection,
   isQueuedInboxEntry,
 } from "./inbox-queue";
 import { occurrencePrecisions, resolveOccurrenceDraft } from "./occurrence";
@@ -237,5 +239,77 @@ describe("Inbox synchronization queue", () => {
     expect(storage.removeItem).not.toHaveBeenCalledWith(
       inboxQueueKey("owner-a"),
     );
+  });
+});
+
+describe("Rejected captures in the queue", () => {
+  const rejection = {
+    message: "MemoTrail cannot accept this Entry, so it will not sync.",
+    rejectedAt: "2026-10-03T12:00:00.000Z",
+  };
+
+  it("marks a rejected capture in place and keeps its content and order", () => {
+    const storage = memoryStorage();
+    const bodyRich = createEntryRichText(
+      plainTextDocument("A thought worth keeping."),
+    );
+    const first = queuedEntry({ bodyRich });
+    const second = queuedEntry({
+      id: "a220e8e7-1228-4490-9a66-4e71e35879d8",
+      title: "Second thought",
+    });
+    enqueueInboxEntry(storage, "owner-a", first);
+    enqueueInboxEntry(storage, "owner-a", second);
+
+    expect(
+      rejectInboxQueueEntry(storage, "owner-a", first.id, rejection),
+    ).toEqual([{ ...first, rejection }, second]);
+
+    // The marker survives a reload, so a later page never sends it again.
+    const stored = loadInboxQueue(storage, "owner-a");
+    expect(stored).toEqual([{ ...first, rejection }, second]);
+    expect(queuedRejection(stored[0])).toEqual(rejection);
+    expect(queuedRejection(stored[1])).toBeNull();
+  });
+
+  it("does not bring back a capture another tab already removed", () => {
+    const storage = memoryStorage();
+    const entry = queuedEntry();
+
+    expect(
+      rejectInboxQueueEntry(storage, "owner-a", entry.id, rejection),
+    ).toEqual([]);
+    expect(storage.setItem).not.toHaveBeenCalled();
+  });
+
+  it("reports a rejection browser storage cannot keep", () => {
+    const storage = memoryStorage();
+    const entry = queuedEntry();
+    enqueueInboxEntry(storage, "owner-a", entry);
+    storage.setItem.mockImplementationOnce(() => {
+      throw new Error("Quota exceeded");
+    });
+
+    expect(
+      rejectInboxQueueEntry(storage, "owner-a", entry.id, rejection),
+    ).toBeNull();
+    expect(loadInboxQueue(storage, "owner-a")).toEqual([entry]);
+  });
+
+  it("keeps a capture whose rejection marker is malformed, so it can sync again", () => {
+    for (const malformed of [
+      null,
+      "rejected",
+      { message: "", rejectedAt: rejection.rejectedAt },
+      { message: "x".repeat(501), rejectedAt: rejection.rejectedAt },
+      { message: rejection.message, rejectedAt: "yesterday" },
+      { message: rejection.message },
+    ]) {
+      const [stored] = parseInboxQueue(
+        JSON.stringify([{ ...queuedEntry(), rejection: malformed }]),
+      );
+      expect(stored.id).toBe(queuedEntry().id);
+      expect(queuedRejection(stored)).toBeNull();
+    }
   });
 });

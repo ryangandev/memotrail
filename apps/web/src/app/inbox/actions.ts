@@ -23,11 +23,26 @@ import {
   metadataWithEntryRichText,
   parseEntryRichTextJson,
 } from "@/lib/data/rich-text";
+import { classifySyncFailure, type SyncFailure } from "@/lib/data/sync-failure";
 
+/**
+ * `retry` keeps a capture waiting for a later attempt; `rejected` means
+ * MemoTrail will never accept it, so it waits for the person instead.
+ */
 export type SyncInboxEntryResult = {
   message: string;
-  status: "retry" | "synced";
+  status: "rejected" | "retry" | "synced";
 };
+
+const invalidEntryMessage =
+  "This Entry is invalid on this device, so it will not sync. Copy its text to keep it, then discard it.";
+const rejectedEntryMessage =
+  "MemoTrail cannot accept this Entry, so it will not sync. Copy its text to keep it, then discard it.";
+const rejectedPhotoMessage =
+  "This Entry is in your Inbox, but MemoTrail cannot accept one of its photos, so they will not sync. Discard to remove them from this device.";
+// The attachment RPC raises this for an original that has not reached Storage
+// yet; uploading it again on a later attempt can still succeed.
+const pendingOriginalError = "attachment_object_missing";
 
 export type ReviewInboxEntryResult =
   | { message: string; status: "conflict" | "error" }
@@ -39,19 +54,16 @@ export async function registerEntryAttachment(
   const parsed = parseFirstTimeAttachmentInput(input);
 
   if (!parsed.success) {
-    return { message: parsed.message, status: "retry" };
+    return { message: rejectedPhotoMessage, status: "rejected" };
   }
 
   const context = await getAuthenticatedContext();
 
   if (!context) {
-    return {
-      message: "Your session expired before the photo could be attached.",
-      status: "retry",
-    };
+    return photoSyncFailure("session");
   }
 
-  const { data, error } = await context.client.rpc(
+  const { data, error, status } = await context.client.rpc(
     "register_entry_attachment",
     {
       p_attachment_id: parsed.data.attachmentId,
@@ -65,12 +77,16 @@ export async function registerEntryAttachment(
     },
   );
 
-  if (error || !Array.isArray(data) || data.length === 0) {
-    return {
-      message:
-        "The photo is saved on this device. MemoTrail will retry attaching it.",
-      status: "retry",
-    };
+  if (error) {
+    return photoSyncFailure(
+      error.message === pendingOriginalError
+        ? "unavailable"
+        : classifySyncFailure({ code: error.code, status }),
+    );
+  }
+
+  if (!Array.isArray(data) || data.length === 0) {
+    return photoSyncFailure("unavailable");
   }
 
   revalidatePath("/");
@@ -85,33 +101,24 @@ export async function syncInboxEntry(
   bodyRichJson: string | null = null,
 ): Promise<SyncInboxEntryResult> {
   if (!isQueuedInboxEntry(input)) {
-    return {
-      message: "This queued Entry is invalid and needs your attention.",
-      status: "retry",
-    };
+    return { message: invalidEntryMessage, status: "rejected" };
   }
 
   const bodyRich = parseEntryRichTextJson(bodyRichJson, input.body);
   const entry: QueuedInboxEntry = { ...input, bodyRich };
 
   if (bodyRichJson !== null && bodyRich === null) {
-    return {
-      message: "This queued Entry is invalid and needs your attention.",
-      status: "retry",
-    };
+    return { message: invalidEntryMessage, status: "rejected" };
   }
 
   const context = await getAuthenticatedContext();
 
   if (!context) {
-    return {
-      message: "Your session expired. Sign in again to sync this Entry.",
-      status: "retry",
-    };
+    return entrySyncFailure("session");
   }
 
   const occurrence = queuedOccurrence(entry);
-  const { error } = await context.client.from("entries").insert({
+  const { error, status } = await context.client.from("entries").insert({
     body: entry.body,
     client_id: `web:${entry.id}`,
     date_precision: occurrence.datePrecision,
@@ -128,12 +135,18 @@ export async function syncInboxEntry(
     title: entry.title,
   });
 
-  if (error && !(await entryAlreadyExists(entry.id, context))) {
-    return {
-      message:
-        "Saved on this device. MemoTrail will retry when you are online.",
-      status: "retry",
-    };
+  // A lost response may hide an insert that succeeded, so an existing Entry
+  // counts as synced whatever the error was.
+  if (error) {
+    const exists = await entryAlreadyExists(entry.id, context);
+    if (!exists) {
+      const failure = classifySyncFailure({ code: error.code, status });
+      // Only a confirmed absence makes a refusal final; an unanswered lookup
+      // could hide an Entry an earlier attempt already created.
+      return entrySyncFailure(
+        exists === null && failure === "rejected" ? "unavailable" : failure,
+      );
+    }
   }
 
   revalidatePath("/");
@@ -252,10 +265,42 @@ export async function reviewInboxEntry(
       };
 }
 
+function entrySyncFailure(failure: SyncFailure): SyncInboxEntryResult {
+  if (failure === "rejected")
+    return { message: rejectedEntryMessage, status: "rejected" };
+  // Signing in again fixes every waiting capture, so it still waits in order.
+  if (failure === "session")
+    return {
+      message: "Your session expired. Sign in again to sync this Entry.",
+      status: "retry",
+    };
+  return {
+    message: "Saved on this device. MemoTrail will retry when you are online.",
+    status: "retry",
+  };
+}
+
+function photoSyncFailure(failure: SyncFailure): SyncInboxEntryResult {
+  if (failure === "rejected")
+    return { message: rejectedPhotoMessage, status: "rejected" };
+  if (failure === "session")
+    return {
+      message:
+        "Your session expired. Sign in again to sync this Entry's photos.",
+      status: "retry",
+    };
+  return {
+    message:
+      "The photo is saved on this device. MemoTrail will retry attaching it.",
+    status: "retry",
+  };
+}
+
+/** Whether the Entry exists, or null when MemoTrail could not answer. */
 async function entryAlreadyExists(
   entryId: string,
   context: NonNullable<Awaited<ReturnType<typeof getAuthenticatedContext>>>,
-) {
+): Promise<boolean | null> {
   const { data, error } = await context.client
     .from("entries")
     .select("id")
@@ -263,5 +308,5 @@ async function entryAlreadyExists(
     .eq("owner_id", context.userId)
     .maybeSingle<{ id: string }>();
 
-  return !error && data?.id === entryId;
+  return error ? null : data?.id === entryId;
 }

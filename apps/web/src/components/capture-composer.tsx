@@ -26,7 +26,10 @@ import { occurrenceDraft, resolveOccurrenceDraft } from "@/lib/data/occurrence";
 import { entryBodyLimit, parseInboxEntryValues } from "@/lib/data/inbox-input";
 import { countLabel } from "@/lib/count-label";
 import type { QueuedInboxEntry } from "@/lib/data/inbox-queue";
-import { hasWaitingCaptures } from "@/lib/data/inbox-sync";
+import {
+  countPendingCaptures,
+  hasWaitingCaptures,
+} from "@/lib/data/inbox-sync";
 import {
   queuedInboxAttachment,
   validateInboxPhotoFiles,
@@ -521,15 +524,18 @@ export function CaptureComposer({
               <h2 id={`${idPrefix}-pending-heading`}>Pending sync</h2>
               <span>{countLabel(captureQueue.items.length, "Entry")}</span>
             </div>
-            <Button
-              variant="secondary"
-              disabled={isSyncing}
-              onClick={() => void captureQueue.synchronize()}
-              type="button"
-            >
-              <Icon name="refresh" size={14} />
-              {isSyncing ? "Syncing…" : "Retry now"}
-            </Button>
+            {/* Captures MemoTrail did not accept are never retried. */}
+            {countPendingCaptures(captureQueue.items).waiting > 0 ? (
+              <Button
+                variant="secondary"
+                disabled={isSyncing}
+                onClick={() => void captureQueue.synchronize()}
+                type="button"
+              >
+                <Icon name="refresh" size={14} />
+                {isSyncing ? "Syncing…" : "Retry now"}
+              </Button>
+            ) : null}
           </div>
           <PendingCaptureList items={captureQueue.items} />
         </section>
