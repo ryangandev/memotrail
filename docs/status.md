@@ -60,6 +60,9 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - Verify the merged `main` deployment against the migrated hosted project, then check Quick Capture, Inbox review, Library routing, First Time, Moment, Period, Home, Vehicle, and Goal in a browser.
 - The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
 - Native compatibility is updated separately; complete personal native acceptance before treating it as a release.
+- Editing a formatted note in a focused editor no longer leaves an outdated `body_rich` copy that search and export still see.
+  Migration `202610030001` enforces the matching-text rule for every Entry write and removes existing outdated copies from Entries and history without new revisions; it still needs to be applied to the hosted project.
+  It passes 62 database files with 1,663 assertions, 473 Web unit tests, a formatted Goal browser regression with 23 related browser scenarios, and all 256 native tests against local Supabase.
 - The Web history schema fix passes 462 unit tests and nine local history browser scenarios in both development and production mode, covering supported restoration, legacy rejection, and version selection.
   Lint, type checking, formatting, and the production build also pass.
 - The native history schema fix passes all 249 native tests, including local Supabase contract tests, and the seeded Simulator Item page scenario covering both restorable and unrestorable versions.
