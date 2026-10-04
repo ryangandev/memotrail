@@ -348,6 +348,239 @@ final class NativeContractTests: XCTestCase {
       XCTAssertTrue(queueStore.load(ownerID: ownerID).isEmpty)
     }
 
+    func testCapturesWhoseEntryIsInTrashOrDeletedForeverStopInsteadOfRetrying() async throws {
+      let (client, ownerID) = try await client(session: NativeReviewNetwork.session())
+      defer { NativeReviewNetwork.isOffline = false }
+      let (inbox, photoStore) = try await isolatedInbox(client: client, ownerID: ownerID)
+      let center = MTToastCenter.shared
+
+      // Offline, queue a note, a photo capture, and a note that will be deleted forever.
+      NativeReviewNetwork.isOffline = true
+      let marker = UUID().uuidString
+      let photo = try photoDraft()
+      try photoStore.save(photo, ownerID: ownerID)
+      for (body, photos) in [
+        ("Trashed note \(marker)", []), ("Trashed photo \(marker)", [photo]),
+        ("Deleted forever \(marker)", []),
+      ] as [(String, [FirstTimePhotoDraft])] {
+        let shown = Set(center.toasts.map(\.id))
+        let didSave = await inbox.save(title: "", body: body, photos: photos)
+        XCTAssertTrue(didSave)
+        _ = try await toasts(after: shown, from: inbox)
+      }
+      let queued = inbox.pendingEntries
+      XCTAssertEqual(queued.count, 3)
+
+      // Each Entry reached MemoTrail on an attempt whose answer never came back, then went to
+      // Trash on another device, where the last one was deleted forever.
+      NativeReviewNetwork.isOffline = false
+      for capture in queued {
+        try await client.from("entries").insert(
+          InboxEntryInsert(
+            id: capture.id, ownerID: ownerID, title: nil, body: capture.body, occurredStart: nil,
+            occurredTimezone: "UTC", clientID: "ios:\(capture.id.uuidString.lowercased())")
+        ).execute()
+        try await moveToTrashElsewhere(capture.id, client: client)
+      }
+      let trash = TrashController(client: client, ownerID: ownerID)
+      await trash.load()
+      let deletedNote = try XCTUnwrap(trash.items.first { $0.itemID == queued[2].id })
+      let deleted = await trash.deleteForever(deletedNote)
+      XCTAssertEqual(deleted, .init(message: "Item permanently deleted.", tone: .success))
+
+      // Each stops for good with why instead of retrying, and a later capture still syncs.
+      let shown = Set(center.toasts.map(\.id))
+      let didSave = await inbox.save(title: "", body: "A later capture \(marker)")
+      XCTAssertTrue(didSave)
+      let announced = try await toasts(after: shown, from: inbox)
+      XCTAssertEqual(
+        announced.map(\.message),
+        ["MemoTrail did not accept 3 Entries. Review them in your Inbox.", "Saved to Inbox."])
+      XCTAssertNil(inbox.captureError)
+      XCTAssertEqual(inbox.pendingEntries.map(\.id), queued.map(\.id))
+      XCTAssertEqual(
+        inbox.pendingEntries.map { $0.rejection?.message },
+        [
+          "This Entry is already in Trash, so it will not sync again. "
+            + "Restore it from Trash to keep it, then discard this copy.",
+          "This Entry is in Trash, so its photos will not be attached. "
+            + "Discard to remove them from this iPhone.",
+          "This Entry was deleted forever, so MemoTrail will not create it again. "
+            + "Copy its text to keep it, then discard it.",
+        ])
+      XCTAssertEqual(inbox.pendingSummary, "3 Entries not accepted")
+
+      // The Entry deleted forever never came back, and no photo went to the one in Trash.
+      struct StoredEntry: Decodable {
+        let id: UUID
+        let deleted_at: String?
+      }
+      let stored: [StoredEntry] =
+        try await client.from("entries").select("id,deleted_at")
+        .in("id", values: queued.map { $0.id.uuidString })
+        .execute().value
+      XCTAssertEqual(Set(stored.map(\.id)), Set(queued.prefix(2).map(\.id)))
+      XCTAssertTrue(stored.allSatisfy { $0.deleted_at != nil })
+      let photoFolder = "\(ownerID.uuidString.lowercased())/\(queued[1].id.uuidString.lowercased())"
+      let uploaded = try await storedNames(in: photoFolder, client: client)
+      XCTAssertEqual(uploaded, [])
+
+      // Discard keeps working for these, like any refused capture.
+      for capture in queued {
+        let discarded = await inbox.discardRejected(capture.id)
+        XCTAssertTrue(discarded)
+      }
+      XCTAssertTrue(inbox.pendingEntries.isEmpty)
+    }
+
+    func testRefusedPhotoUploadsStopWhileOneWhoseAnswerWasLostAttaches() async throws {
+      let (client, ownerID) = try await client(session: HeldResponseProtocol.session)
+      defer { HeldResponseProtocol.gate.answerNextUpload(nil) }
+      let (inbox, photoStore) = try await isolatedInbox(client: client, ownerID: ownerID)
+      let center = MTToastCenter.shared
+      let marker = UUID().uuidString
+
+      // Storage refuses one photo as too large, and denies another for a person still signed
+      // in, which the session check confirms is a refusal rather than an expired session.
+      for (body, statusCode) in [("Too large \(marker)", "413"), ("Denied \(marker)", "403")] {
+        let photo = try photoDraft()
+        try photoStore.save(photo, ownerID: ownerID)
+        HeldResponseProtocol.gate.answerNextUpload(.refuse(statusCode: statusCode))
+        let shown = Set(center.toasts.map(\.id))
+        let didSave = await inbox.save(title: "", body: body, photos: [photo])
+        XCTAssertTrue(didSave)
+        let announced = try await toasts(after: shown, from: inbox)
+        XCTAssertEqual(
+          announced.map(\.message), ["MemoTrail did not accept 1 Entry. Review it in your Inbox."])
+      }
+      XCTAssertEqual(
+        inbox.pendingEntries.map { $0.rejection?.message },
+        [
+          "This Entry is in your Inbox, but one of its photos is too large for MemoTrail, "
+            + "so they will not sync. Discard to remove them from this iPhone.",
+          "This Entry is in your Inbox, but MemoTrail cannot accept one of its photos, "
+            + "so they will not sync. Discard to remove them from this iPhone.",
+        ])
+      let refusedEntries = inbox.pendingEntries.map(\.id)
+      await inbox.load()
+      XCTAssertEqual(Set(inbox.entries.map(\.id)).intersection(refusedEntries), Set(refusedEntries))
+      let refusedPhotos = try await attachmentCount(entryIDs: refusedEntries, client: client)
+      XCTAssertEqual(refusedPhotos, 0)
+
+      // The next photo reaches Storage, but its answer is lost, so it waits on this iPhone.
+      let photo = try photoDraft()
+      try photoStore.save(photo, ownerID: ownerID)
+      HeldResponseProtocol.gate.answerNextUpload(.loseResponse)
+      let didSave = await inbox.save(title: "", body: "Lost upload \(marker)", photos: [photo])
+      XCTAssertTrue(didSave)
+      let offline = "Photos are saved on this iPhone. MemoTrail will retry when you are online."
+      for _ in 0..<150 where inbox.isSyncing || inbox.captureError != offline {
+        try await Task.sleep(for: .milliseconds(100))
+      }
+      XCTAssertEqual(inbox.captureError, offline)
+      XCTAssertEqual(inbox.waitingEntryCount, 1)
+      let waiting = try XCTUnwrap(inbox.pendingEntries.last)
+      let waitingPhotos = try await attachmentCount(entryIDs: [waiting.id], client: client)
+      XCTAssertEqual(waitingPhotos, 0)
+
+      // A retry finds the stored original in Storage and attaches it.
+      let shown = Set(center.toasts.map(\.id))
+      let synced = await inbox.synchronizePendingEntries()
+      XCTAssertTrue(synced)
+      XCTAssertEqual(
+        center.toasts.filter { !shown.contains($0.id) }.map(\.message),
+        ["Saved to Inbox with 1 photo."])
+      XCTAssertNil(inbox.captureError)
+      XCTAssertEqual(inbox.waitingEntryCount, 0)
+      let attached = try await attachmentCount(entryIDs: [waiting.id], client: client)
+      XCTAssertEqual(attached, 1)
+      XCTAssertFalse(try photoStore.load(ownerID: ownerID).contains { $0.id == photo.id })
+    }
+
+    func testPhotoThatArrivesAfterDeleteForeverIsRefusedAndItsUploadRemoved() async throws {
+      let (client, ownerID) = try await client(session: HeldResponseProtocol.session)
+      defer {
+        HeldResponseProtocol.gate.answerNextUpload(nil)
+        HeldResponseProtocol.gate.releaseHeldResponse()
+      }
+      let (inbox, photoStore) = try await isolatedInbox(client: client, ownerID: ownerID)
+      let center = MTToastCenter.shared
+
+      // The original is stored, and its answer waits while another device deletes the Entry
+      // forever.
+      let photo = try photoDraft()
+      try photoStore.save(photo, ownerID: ownerID)
+      HeldResponseProtocol.gate.answerNextUpload(.hold)
+      let shown = Set(center.toasts.map(\.id))
+      let didSave = await inbox.save(
+        title: "", body: "Deleted forever during its upload \(UUID().uuidString)",
+        photos: [photo])
+      XCTAssertTrue(didSave)
+      try await waitForHeldResponse()
+      let capture = try XCTUnwrap(inbox.pendingEntries.first)
+      try await moveToTrashElsewhere(capture.id, client: client)
+      let trash = TrashController(client: client, ownerID: ownerID)
+      await trash.load()
+      let trashed = try XCTUnwrap(trash.items.first { $0.itemID == capture.id })
+      let deleted = await trash.deleteForever(trashed)
+      XCTAssertEqual(deleted, .init(message: "Item permanently deleted.", tone: .success))
+      HeldResponseProtocol.gate.releaseHeldResponse()
+
+      let announced = try await toasts(after: shown, from: inbox)
+      XCTAssertEqual(
+        announced.map(\.message), ["MemoTrail did not accept 1 Entry. Review it in your Inbox."])
+      XCTAssertEqual(
+        inbox.pendingEntries.map { $0.rejection?.message },
+        [
+          "This Entry was deleted forever, so MemoTrail will not create it again. "
+            + "Copy its text to keep it, then discard it."
+        ])
+      let stored: [ExistingRow] =
+        try await client.from("entries").select("id")
+        .eq("id", value: capture.id.uuidString).execute().value
+      XCTAssertEqual(stored.count, 0)
+      // The unregistered original does not outlive its Entry.
+      let folder = "\(ownerID.uuidString.lowercased())/\(capture.id.uuidString.lowercased())"
+      let remaining = try await storedNames(in: folder, client: client)
+      XCTAssertEqual(remaining, [])
+    }
+
+    /// An Inbox with its own queue and photo files, past its first connectivity update so each
+    /// save starts its own sync.
+    private func isolatedInbox(client: SupabaseClient, ownerID: UUID) async throws
+      -> (InboxController, InboxPhotoStore)
+    {
+      let suiteName = "NativeContractTests.\(UUID().uuidString)"
+      let photoRoot = FileManager.default.temporaryDirectory.appending(
+        path: "NativeContractTests.\(UUID().uuidString)", directoryHint: .isDirectory)
+      addTeardownBlock {
+        UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName)
+        try? FileManager.default.removeItem(at: photoRoot)
+      }
+      let queueStore = InboxQueueStore(defaults: try XCTUnwrap(UserDefaults(suiteName: suiteName)))
+      let photoStore = InboxPhotoStore(rootURL: photoRoot)
+      let inbox = InboxController(
+        client: client, ownerID: ownerID, queueStore: queueStore, photoStore: photoStore)
+      try await Task.sleep(for: .milliseconds(500))
+      return (inbox, photoStore)
+    }
+
+    /// Moves an Entry to Trash the way another device does.
+    private func moveToTrashElsewhere(_ entryID: UUID, client: SupabaseClient) async throws {
+      try await client.from("entries")
+        .update(["deleted_at": ISO8601DateFormatter().string(from: Date())])
+        .eq("id", value: entryID.uuidString)
+        .execute()
+    }
+
+    private func attachmentCount(entryIDs: [UUID], client: SupabaseClient) async throws -> Int {
+      let rows: [ExistingRow] =
+        try await client.from("attachments").select("id")
+        .in("entry_id", values: entryIDs.map(\.uuidString))
+        .execute().value
+      return rows.count
+    }
+
     /// Waits for the sync a save starts, then returns the toasts shown since `shown`.
     private func toasts(after shown: Set<UUID>, from inbox: InboxController) async throws
       -> [MTToast]
@@ -1293,7 +1526,8 @@ private struct SyntheticFirstTimeLocation: Encodable {
 
 /// Passes each request through to the local stack, but can hold the response to one RPC call
 /// until the test releases it, so an earlier load can return after a later one. It can also
-/// fail one Storage removal, like a connection lost between two steps.
+/// fail one Storage removal, like a connection lost between two steps, and answer one capture
+/// photo upload as `UploadAnswer` describes.
 private final class HeldResponseProtocol: URLProtocol {
   static let gate = ResponseGate()
   /// A session whose requests pass through this protocol.
@@ -1319,11 +1553,31 @@ private final class HeldResponseProtocol: URLProtocol {
       client?.urlProtocol(self, didFailWithError: URLError(.networkConnectionLost))
       return
     }
-    let isHeld = Self.gate.claims(forwarded)
+    let uploadAnswer = Self.gate.claimsUpload(forwarded)
+    if case .refuse(let statusCode)? = uploadAnswer, let url = forwarded.url,
+      let response = HTTPURLResponse(
+        url: url, statusCode: 400, httpVersion: "HTTP/1.1",
+        headerFields: ["Content-Type": "application/json"])
+    {
+      client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+      client?.urlProtocol(
+        self,
+        didLoad: Data(
+          #"{"statusCode":"\#(statusCode)","error":"Refused","message":"Refused by the test"}"#
+            .utf8))
+      client?.urlProtocolDidFinishLoading(self)
+      return
+    }
+    let isHeld = Self.gate.claims(forwarded) || uploadAnswer == .hold
+    let losesResponse = uploadAnswer == .loseResponse
     let reference = LoaderReference(loader: self)
     upstreamTask = Self.upstream.dataTask(with: forwarded) { data, response, error in
       let deliver: @Sendable () -> Void = {
         let loader = reference.loader
+        if losesResponse {
+          loader.client?.urlProtocol(loader, didFailWithError: URLError(.networkConnectionLost))
+          return
+        }
         if let response {
           loader.client?.urlProtocol(loader, didReceive: response, cacheStoragePolicy: .notAllowed)
         }
@@ -1346,6 +1600,21 @@ private final class HeldResponseProtocol: URLProtocol {
   override func stopLoading() { upstreamTask?.cancel() }
 }
 
+/// A row whose identity is all a check needs.
+private struct ExistingRow: Decodable {
+  let id: UUID
+}
+
+/// How the next capture photo upload is answered.
+private enum UploadAnswer: Equatable, Sendable {
+  /// Storage refuses it with this status in its error body, beside HTTP 400 like the real one.
+  case refuse(statusCode: String)
+  /// It reaches Storage, but the answer is lost on the way back.
+  case loseResponse
+  /// It reaches Storage, and the answer waits until the test releases it.
+  case hold
+}
+
 /// URLSession calls back on its own queue; this carries the loading protocol into those calls.
 private struct LoaderReference: @unchecked Sendable {
   let loader: HeldResponseProtocol
@@ -1357,6 +1626,22 @@ private final class ResponseGate: @unchecked Sendable {
   private var rpc: String?
   private var heldDelivery: (@Sendable () -> Void)?
   private var failsNextStorageRemoval = false
+  private var uploadAnswer: UploadAnswer?
+
+  /// Answers the next capture photo upload this way, or stops doing so with nil.
+  func answerNextUpload(_ answer: UploadAnswer?) {
+    lock.withLock { uploadAnswer = answer }
+  }
+
+  fileprivate func claimsUpload(_ request: URLRequest) -> UploadAnswer? {
+    lock.withLock {
+      guard let answer = uploadAnswer, request.httpMethod == "POST",
+        request.url?.path.contains("/storage/v1/object/entry-media/") == true
+      else { return nil }
+      uploadAnswer = nil
+      return answer
+    }
+  }
 
   /// Fails the next Storage object removal as a lost connection, without sending it.
   func failNextStorageRemoval(_ enabled: Bool = true) {

@@ -412,25 +412,22 @@ final class InboxController {
       do {
         try await insert(entry)
       } catch {
-        let exists = await entryAlreadyExists(entry.id)
-        if exists != true {
-          var failure = CaptureSyncFailure(error)
-          // Only a confirmed absence makes a refusal final; an unanswered lookup could hide an
-          // Entry an earlier attempt already created.
-          if exists == nil, failure == .rejected { failure = .unavailable }
-          switch failure {
-          case .rejected:
-            guard reject(entry, message: Self.rejectedEntryMessage) else {
-              didStop = true
-              break sending
-            }
-            rejectedCount += 1
-            continue sending
-          case .session:
-            captureError = Self.sessionMessage
-          case .unavailable:
-            announceUnreachable(firstAttemptIDs: firstAttemptIDs)
+        switch await insertFailure(error, for: entry) {
+        case .alreadySynced:
+          break
+        case .rejected(let message):
+          guard reject(entry, message: message) else {
+            didStop = true
+            break sending
           }
+          rejectedCount += 1
+          continue sending
+        case .session:
+          captureError = Self.sessionMessage
+          didStop = true
+          break sending
+        case .unavailable:
+          announceUnreachable(firstAttemptIDs: firstAttemptIDs)
           didStop = true
           break sending
         }
@@ -439,23 +436,21 @@ final class InboxController {
       do {
         try await synchronizeAttachments(entry)
       } catch {
-        switch Self.attachmentFailure(error) {
+        let stop = Self.photoSyncStop(error)
+        switch stop.failure {
         case .rejected:
-          let message =
-            (error as? InboxControllerError) == .photoChanged
-            ? Self.changedPhotoMessage : Self.rejectedPhotoMessage
-          guard reject(entry, message: message) else {
+          guard reject(entry, message: stop.message) else {
             didStop = true
             break sending
           }
-          // The Entry itself is in the Inbox; only its photos stay behind.
+          // The Entry itself reached MemoTrail; only its photos stay behind.
           didReachInbox = true
           rejectedCount += 1
           continue sending
         case .session:
           captureError = Self.sessionMessage
         case .unavailable:
-          captureError = attachmentSyncMessage(for: error)
+          captureError = stop.message
         }
         didStop = true
         break sending
@@ -538,19 +533,51 @@ final class InboxController {
     return true
   }
 
+  // Web `capture-sync-messages.ts` keeps the same wording for a browser.
   private static let sessionMessage = "Your session expired. Sign in again to sync pending Entries."
   private static let rejectedEntryMessage =
     "MemoTrail cannot accept this Entry, so it will not sync. "
     + "Copy its text to keep it, then discard it."
+  private static let deletedForeverMessage =
+    "This Entry was deleted forever, so MemoTrail will not create it again. "
+    + "Copy its text to keep it, then discard it."
+  private static let trashedEntryMessage =
+    "This Entry is already in Trash, so it will not sync again. "
+    + "Restore it from Trash to keep it, then discard this copy."
   private static let rejectedPhotoMessage =
     "This Entry is in your Inbox, but MemoTrail cannot accept one of its photos, "
     + "so they will not sync. Discard to remove them from this iPhone."
   private static let changedPhotoMessage =
     "This Entry is in your Inbox, but one of its photos changed on this iPhone, "
     + "so they will not sync. Discard to remove them from this iPhone."
-  /// `register_entry_attachment` reports an original that is not in Storage yet. Upload errors
-  /// are not reported, so like Web this stays retryable rather than refusing the photo.
-  private static let pendingOriginalError = "attachment_object_missing"
+  private static let tooLargePhotoMessage =
+    "This Entry is in your Inbox, but one of its photos is too large for MemoTrail, "
+    + "so they will not sync. Discard to remove them from this iPhone."
+  private static let unsupportedPhotoMessage =
+    "This Entry is in your Inbox, but one of its photos is a file type MemoTrail does not "
+    + "accept, so they will not sync. Discard to remove them from this iPhone."
+  private static let missingPhotoMessage =
+    "This Entry is in your Inbox, but one of its photos is no longer on this iPhone, "
+    + "so they will not sync. Discard to remove them from this iPhone."
+  private static let trashedPhotoMessage =
+    "This Entry is in Trash, so its photos will not be attached. "
+    + "Discard to remove them from this iPhone."
+  private static let offlinePhotoMessage =
+    "Photos are saved on this iPhone. MemoTrail will retry when you are online."
+  private static let photosElsewhereMessage =
+    "MemoTrail will retry attaching this Entry's photos when you are online."
+
+  /// MemoTrail names its own refusals in the error message, beside a standard SQLSTATE that
+  /// deployed clients already classify, like Web `app/inbox/actions.ts`.
+  private static func isRefusal(_ error: Error, code: String, named name: String) -> Bool {
+    guard let error = error as? PostgrestError else { return false }
+    return error.code == code && error.message == name
+  }
+
+  /// The Entry was deleted forever, so its ID can never be created again.
+  private static func isDeletedForever(_ error: Error) -> Bool {
+    isRefusal(error, code: "23505", named: "entry_deleted_forever")
+  }
 
   /// Keeps a refused capture on this iPhone, marked so no later sync sends it again.
   private func reject(_ entry: QueuedInboxEntry, message: String) -> Bool {
@@ -568,18 +595,106 @@ final class InboxController {
     return true
   }
 
-  /// Classifies a photo failure like Web `registerEntryAttachment`.
-  private static func attachmentFailure(_ error: Error) -> CaptureSyncFailure {
-    switch error {
-    case InboxControllerError.photoChanged:
-      return .rejected
-    case is InboxControllerError:
-      return .unavailable
-    case let error as PostgrestError where error.message == pendingOriginalError:
-      return .unavailable
-    default:
-      return CaptureSyncFailure(error)
+  /// Like Web `syncInboxEntry`, decides what a failed insert means for the capture.
+  private func insertFailure(_ error: Error, for entry: QueuedInboxEntry) async -> InsertFailure {
+    if Self.isDeletedForever(error) { return .rejected(Self.deletedForeverMessage) }
+
+    // A lost response may hide an insert that succeeded, so an existing Entry counts as synced
+    // whatever the error was, unless it is now in Trash, where sending it again only repeats the
+    // duplicate-key refusal.
+    let existing = await existingEntry(entry.id)
+    switch existing {
+    case .active:
+      return .alreadySynced
+    case .trashed:
+      return .rejected(
+        entry.attachments.isEmpty ? Self.trashedEntryMessage : Self.trashedPhotoMessage)
+    case .absent, nil:
+      var failure = CaptureSyncFailure(error)
+      // Only a confirmed absence makes a refusal final; an unanswered lookup could hide an Entry
+      // an earlier attempt already created.
+      if existing == nil, failure == .rejected { failure = .unavailable }
+      switch failure {
+      case .rejected: return .rejected(Self.rejectedEntryMessage)
+      case .session: return .session
+      case .unavailable: return .unavailable
+      }
     }
+  }
+
+  /// Why a capture's photos stopped syncing; anything this iPhone could not read or clear in its
+  /// own photo files waits for a later attempt.
+  private static func photoSyncStop(_ error: Error) -> PhotoSyncStop {
+    error as? PhotoSyncStop ?? PhotoSyncStop(failure: .unavailable, message: offlinePhotoMessage)
+  }
+
+  /// Like Web `synchronizeCapturePhotos`, turns a refused upload into a final or waiting state.
+  private static func uploadStop(_ failure: CaptureUploadFailure) -> PhotoSyncStop {
+    switch failure {
+    case .tooLarge:
+      return PhotoSyncStop(failure: .rejected, message: tooLargePhotoMessage)
+    case .unsupportedType:
+      return PhotoSyncStop(failure: .rejected, message: unsupportedPhotoMessage)
+    case .rejected:
+      return PhotoSyncStop(failure: .rejected, message: rejectedPhotoMessage)
+    case .session:
+      return PhotoSyncStop(failure: .session, message: sessionMessage)
+    case .unavailable, .denied, .exists:
+      return PhotoSyncStop(failure: .unavailable, message: offlinePhotoMessage)
+    }
+  }
+
+  /// Like Web `registerEntryAttachment`, turns a failed registration into a final or waiting
+  /// state. An original that never reached Storage waits only while this iPhone can upload it.
+  private static func registrationStop(_ error: Error, originalOnDevice: Bool) -> PhotoSyncStop {
+    if isRefusal(error, code: "22023", named: "entry_in_trash") {
+      return PhotoSyncStop(failure: .rejected, message: trashedPhotoMessage)
+    }
+    if isDeletedForever(error) {
+      return PhotoSyncStop(failure: .rejected, message: deletedForeverMessage)
+    }
+    if isRefusal(error, code: "22023", named: "attachment_object_missing") {
+      return originalOnDevice
+        ? PhotoSyncStop(failure: .unavailable, message: offlinePhotoMessage)
+        : PhotoSyncStop(failure: .rejected, message: missingPhotoMessage)
+    }
+    switch CaptureSyncFailure(error) {
+    case .rejected:
+      return PhotoSyncStop(failure: .rejected, message: rejectedPhotoMessage)
+    case .session:
+      return PhotoSyncStop(failure: .session, message: sessionMessage)
+    case .unavailable:
+      return waitingRegistration(originalOnDevice: originalOnDevice)
+    }
+  }
+
+  private static func waitingRegistration(originalOnDevice: Bool) -> PhotoSyncStop {
+    PhotoSyncStop(
+      failure: .unavailable,
+      message: originalOnDevice ? offlinePhotoMessage : photosElsewhereMessage)
+  }
+
+  /// Storage answers an expired session like a policy denial, so a denied upload is a refusal
+  /// only while MemoTrail still confirms this owner's session.
+  private func deniedUploadFailure() async -> CaptureUploadFailure {
+    do {
+      return try await client.auth.user().id == ownerID ? .rejected : .session
+    } catch is URLError {
+      return .unavailable
+    } catch is CancellationError {
+      return .unavailable
+    } catch AuthError.api(_, _, _, let response) where response.statusCode >= 500 {
+      return .unavailable
+    } catch {
+      return .session
+    }
+  }
+
+  /// Deletes an original MemoTrail refused to register, such as one for an Entry that went to
+  /// Trash or was deleted forever on its way. Storage keeps a registered original, so this only
+  /// clears an unused upload; if it fails, the refusal stands and the file stays.
+  private func removeUnusedUpload(_ path: String) async {
+    _ = try? await client.storage.from("entry-media").remove(paths: [path])
   }
 
   /// When MemoTrail cannot be reached, like Web's offline save, captures on their first sync
@@ -620,13 +735,13 @@ final class InboxController {
       .execute()
   }
 
-  /// Whether the Entry exists, or nil when MemoTrail could not answer.
-  private func entryAlreadyExists(_ entryID: UUID) async -> Bool? {
+  /// Where the Entry is, or nil when MemoTrail could not answer.
+  private func existingEntry(_ entryID: UUID) async -> ExistingEntryState? {
     do {
       let matchingEntries: [ExistingEntry] =
         try await client
         .from("entries")
-        .select("id")
+        .select("id,deleted_at")
         .eq("id", value: entryID.uuidString)
         .eq("owner_id", value: ownerID.uuidString)
         .limit(1)
@@ -636,7 +751,8 @@ final class InboxController {
         .execute()
         .value
 
-      return matchingEntries.first?.id == entryID
+      guard let entry = matchingEntries.first, entry.id == entryID else { return .absent }
+      return entry.deletedAt == nil ? .active : .trashed
     } catch {
       return nil
     }
@@ -658,7 +774,7 @@ final class InboxController {
 
       if let draft {
         guard attachment.matches(draft) else {
-          throw InboxControllerError.photoChanged
+          throw PhotoSyncStop(failure: .rejected, message: Self.changedPhotoMessage)
         }
 
         do {
@@ -672,9 +788,12 @@ final class InboxController {
             )
           )
         } catch {
-          // A lost upload response may already have persisted the immutable original.
-          // Registration below validates its existence without overwriting its bytes.
           try Task.checkCancellation()
+          var failure = CaptureUploadFailure(error)
+          if failure == .denied { failure = await deniedUploadFailure() }
+          // A stored original, perhaps from an attempt whose response was lost, continues to
+          // registration, which verifies it without overwriting its bytes.
+          if failure != .exists { throw Self.uploadStop(failure) }
         }
       }
 
@@ -693,17 +812,14 @@ final class InboxController {
           .execute()
           .value
       } catch {
-        // Like Web, a refusal stands even when the photo is gone from this iPhone.
-        if draft == nil, Self.attachmentFailure(error) != .rejected {
-          throw InboxControllerError.photoMissing
-        }
-        throw error
+        // Without its photo, this iPhone can only register an original already in Storage.
+        let stop = Self.registrationStop(error, originalOnDevice: draft != nil)
+        if stop.failure == .rejected { await removeUnusedUpload(path) }
+        throw stop
       }
 
       guard registered.first?.attachmentID == attachment.id else {
-        throw draft == nil
-          ? InboxControllerError.photoMissing
-          : InboxControllerError.photoRegistrationFailed
+        throw Self.waitingRegistration(originalOnDevice: draft != nil)
       }
 
       let attachmentID = attachment.id
@@ -711,19 +827,6 @@ final class InboxController {
         try photoStore.remove(photoID: attachmentID, ownerID: ownerID)
       }.value
     }
-  }
-
-  private func attachmentSyncMessage(for error: Error) -> String {
-    if let error = error as? InboxControllerError {
-      switch error {
-      case .photoMissing:
-        return "A pending photo is missing from this iPhone and needs your attention."
-      default:
-        break
-      }
-    }
-
-    return "Photos are saved on this iPhone. MemoTrail will retry when you are online."
   }
 
   private func loadOrganization(entryIDs: [UUID]) async throws -> OrganizationSnapshot {
@@ -806,6 +909,34 @@ extension InboxController {
 
 private struct ExistingEntry: Decodable, Sendable {
   let id: UUID
+  /// Absent when the lookup selected only `id`.
+  let deletedAt: String?
+
+  enum CodingKeys: String, CodingKey {
+    case id
+    case deletedAt = "deleted_at"
+  }
+}
+
+private enum ExistingEntryState: Equatable {
+  case absent
+  case active
+  case trashed
+}
+
+/// What a failed Entry insert means for its capture.
+private enum InsertFailure {
+  /// An earlier attempt already created the Entry, perhaps before its response was lost.
+  case alreadySynced
+  case rejected(String)
+  case session
+  case unavailable
+}
+
+/// Why a capture's photos stopped syncing, with what the person sees.
+private struct PhotoSyncStop: Error {
+  let failure: CaptureSyncFailure
+  let message: String
 }
 
 private struct EntryTrashUpdate: Encodable, Sendable {
@@ -1014,7 +1145,4 @@ extension Array where Element == String {
 
 private enum InboxControllerError: Error {
   case ownerChanged
-  case photoChanged
-  case photoMissing
-  case photoRegistrationFailed
 }

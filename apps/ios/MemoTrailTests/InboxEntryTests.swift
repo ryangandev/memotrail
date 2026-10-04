@@ -828,6 +828,41 @@ final class InboxEntryTests: XCTestCase {
     XCTAssertEqual(CaptureSyncFailure(CancellationError()), .unavailable)
   }
 
+  func testCaptureUploadFailuresAreClassifiedByStatusLikeWeb() {
+    // Storage answers with HTTP 400 and reports the real status in its error body.
+    func failure(_ statusCode: String?) -> CaptureUploadFailure {
+      CaptureUploadFailure(StorageError(statusCode: statusCode, message: "Any message"))
+    }
+
+    let expected: [(String, CaptureUploadFailure)] = [
+      ("409", .exists), ("403", .denied), ("413", .tooLarge), ("415", .unsupportedType),
+      ("400", .rejected), ("404", .rejected), ("422", .rejected), ("401", .session),
+      ("408", .unavailable), ("423", .unavailable), ("429", .unavailable),
+      ("500", .unavailable), ("503", .unavailable),
+    ]
+    for (statusCode, classification) in expected {
+      XCTAssertEqual(failure(statusCode), classification, statusCode)
+    }
+    // Without a status Storage did not say why, so the photo keeps waiting.
+    XCTAssertEqual(failure(nil), .unavailable)
+    XCTAssertEqual(failure("EntityTooLarge"), .unavailable)
+
+    // A body Storage did not write keeps only the HTTP status.
+    func page(_ statusCode: Int) -> CaptureUploadFailure {
+      let response = HTTPURLResponse(
+        url: URL(string: "http://127.0.0.1:54321/storage/v1/object/entry-media/a.png")!,
+        statusCode: statusCode, httpVersion: nil, headerFields: nil)!
+      return CaptureUploadFailure(HTTPError(data: Data("Gateway page".utf8), response: response))
+    }
+    XCTAssertEqual(page(502), .unavailable)
+    XCTAssertEqual(page(413), .tooLarge)
+    XCTAssertEqual(page(400), .rejected)
+
+    XCTAssertEqual(CaptureUploadFailure(URLError(.notConnectedToInternet)), .unavailable)
+    XCTAssertEqual(CaptureUploadFailure(URLError(.networkConnectionLost)), .unavailable)
+    XCTAssertEqual(CaptureUploadFailure(CancellationError()), .unavailable)
+  }
+
   func testPhotoStorePersistsPrivateDraftsByOwnerAndRemovesThem() throws {
     let rootURL = makePhotoRoot()
     let store = InboxPhotoStore(rootURL: rootURL)
