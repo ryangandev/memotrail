@@ -143,8 +143,8 @@ struct TimelineView: View {
         Text("·").accessibilityHidden(true)
         Text(fact)
       }
+      // Its border sets the button apart, so no separator dangles when it wraps.
       if needsBirthDate {
-        Text("·").accessibilityHidden(true)
         Button("Set birth date") { sheet = .birthDate }
           .mtButtonStyle(.secondary, size: .small)
           .accessibilityIdentifier("timeline-set-birth-date")

@@ -312,17 +312,16 @@ export function TimelineWorkspace({
             <span>{rangeLabel(layout.start, layout.end)}</span>
           </>
         ) : null}
+        {/* Its border sets the button apart, so no separator is left at the
+            end of a line when it wraps. */}
         {birthDateAvailable && !birthDate && !loadError ? (
-          <>
-            <span aria-hidden="true">·</span>
-            <Button
-              variant="secondary"
-              onClick={() => setShowBirthDatePrompt(true)}
-              type="button"
-            >
-              Set birth date
-            </Button>
-          </>
+          <Button
+            variant="secondary"
+            onClick={() => setShowBirthDatePrompt(true)}
+            type="button"
+          >
+            Set birth date
+          </Button>
         ) : null}
       </div>
 
