@@ -96,7 +96,9 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
 
     await page.goto("/first-times");
     await page.getByRole("button", { name: "Add First Time" }).first().click();
-    const firstTimeEditor = page.getByRole("dialog");
+    const firstTimeEditor = page.getByRole("dialog", {
+      name: "Add a First Time",
+    });
     await firstTimeEditor
       .getByRole("textbox", { name: "Title" })
       .fill("First hike");
@@ -129,7 +131,7 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
       path: "/private/tmp/memotrail-first-time-location-form.png",
     });
     await firstTimeEditor
-      .getByRole("button", { name: "Add First Time" })
+      .getByRole("button", { name: "Add", exact: true })
       .click();
     await expect(firstTimeEditor).not.toBeVisible();
     const firstTimeCard = page.getByRole("button", { name: /First hike/ });
@@ -229,16 +231,15 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
       firstTimeCard.locator('[data-record-card-map="true"]'),
     ).toBeVisible();
     await firstTimeCard.click();
-    await page.getByRole("button", { name: "Edit First Time" }).click();
-    const editDialog = page.getByRole("main");
+    await expect(page).toHaveURL(`/items/${firstTimeId}`);
+    await page.getByRole("button", { name: "Edit Entry" }).click();
+    const editDialog = page.getByRole("dialog", { name: "Edit Entry" });
     await expect(
       editDialog.getByRole("img", { name: /Map showing 10 Pine Street/ }),
     ).toBeVisible();
     await editDialog.getByRole("button", { name: "Remove" }).click();
     await editDialog.getByRole("button", { name: "Save changes" }).click();
-    await expect(
-      page.getByRole("button", { name: "Edit First Time" }),
-    ).toBeVisible();
+    await expect(editDialog).not.toBeVisible();
     await page.goto("/first-times");
     await expect(
       page

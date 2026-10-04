@@ -16,7 +16,7 @@ $$;
 create function pg_temp.save(photo_location jsonb, rev integer default null) returns bigint language sql as $$
  select count(*) from public.save_entry(
  '93000000-0000-4000-8000-000000000001',coalesce(rev,(select revision from public.entries where id='93000000-0000-4000-8000-000000000001'),1),
- 'Photo memory','My edited words',null,null,null,'UTC',null,'unknown','{}',null,photo_location);
+ 'Photo memory','My edited words',null,null,null,'UTC',null,'unknown','{}',null,photo_location, null);
 $$;
 create function pg_temp.photo_locations() returns bigint language sql as $$
  select count(*) from public.entry_locations
@@ -48,7 +48,7 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000094'
 select ok(not public.lock_photo_place_source('93000000-0000-4000-8000-000000000001','93000000-0000-4000-8000-000000000002'),'The source helper never exposes another owner''s photo');
 select is(pg_temp.save(pg_temp.photo_location()),0::bigint,'Another owner cannot change the Entry or create a Location');
 reset role;
-select ok(not has_function_privilege('anon','public.save_entry(uuid,integer,text,text,jsonb,timestamptz,timestamptz,text,text,text,text[],jsonb,jsonb)','execute'),'Signed-out visitors cannot save an Entry');
+select ok(not has_function_privilege('anon','public.save_entry(uuid,integer,text,text,jsonb,timestamptz,timestamptz,text,text,text,text[],jsonb,jsonb,jsonb)','execute'),'Signed-out visitors cannot save an Entry');
 select ok(not has_function_privilege('anon','public.lock_photo_place_source(uuid,uuid)','execute'),'Signed-out visitors cannot lock photos');
 select * from finish();
 rollback;

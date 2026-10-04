@@ -29,10 +29,10 @@ import {
   RecordCardVisual,
 } from "@/components/record-card";
 import {
-  firstTimePhotoLimit,
-  firstTimePhotoSizeLimit,
-  inferFirstTimeImageMimeType,
-} from "@/lib/data/first-time-input";
+  entryPhotoLimit,
+  entryPhotoSizeLimit,
+  inferEntryImageMimeType,
+} from "@/lib/data/entry-photo-input";
 import {
   homeBodyLimit,
   homeTitleLimit,
@@ -392,15 +392,15 @@ export function HomeEditor({
   function handlePhotoSelection(selected: File[]) {
     const available = Math.max(
       0,
-      firstTimePhotoLimit - existingPhotos.length - pendingPhotos.length,
+      entryPhotoLimit - existingPhotos.length - pendingPhotos.length,
     );
     const accepted: File[] = [];
     let errorMessage = "";
 
     for (const file of selected.slice(0, available)) {
-      if (!inferFirstTimeImageMimeType(file.name, file.type)) {
+      if (!inferEntryImageMimeType(file.name, file.type)) {
         errorMessage = "Use JPEG, PNG, WebP, HEIC, or HEIF photos.";
-      } else if (file.size < 1 || file.size > firstTimePhotoSizeLimit) {
+      } else if (file.size < 1 || file.size > entryPhotoSizeLimit) {
         errorMessage = "Each photo must be no larger than 50 MB.";
       } else {
         accepted.push(file);
@@ -408,7 +408,7 @@ export function HomeEditor({
     }
 
     if (selected.length > available) {
-      errorMessage = `Keep up to ${firstTimePhotoLimit} photos on a Home.`;
+      errorMessage = `Keep up to ${entryPhotoLimit} photos on a Home.`;
     }
 
     setPendingPhotos((current) => [...current, ...accepted]);
@@ -473,8 +473,6 @@ export function HomeEditor({
         revision: saved.entry.revision,
         attachments: existingPhotos,
         location: savedLocation,
-        timelineTrackId: home?.timelineTrackId ?? null,
-        timelineTrackName: home?.timelineTrackName ?? "Homes",
         totalCount: home?.totalCount ?? 1,
         updatedAt: new Date().toISOString(),
       });
@@ -770,7 +768,7 @@ export function HomeEditor({
           <EntryPhotoField
             disabled={isPending}
             existingPhotos={existingPhotos}
-            limit={firstTimePhotoLimit}
+            limit={entryPhotoLimit}
             onRemoveExisting={(photo) => void handleRemovePhoto(photo)}
             onRemovePending={(index) =>
               setPendingPhotos((current) =>

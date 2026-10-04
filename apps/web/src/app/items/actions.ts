@@ -7,6 +7,7 @@ import {
   type GoalExtractionInput,
 } from "@/lib/data/goal-record-input";
 import { existingLocationFromRow } from "@/lib/locations/location";
+import { milestoneFromRow } from "@/lib/data/milestone";
 
 export async function loadEditableEntry(id: string) {
   if (!validEntryID(id)) return null;
@@ -22,11 +23,14 @@ export async function loadEditableEntry(id: string) {
   ]);
   if (error || !data) return null;
   return {
-    entry: entryFromRow(
-      data,
-      data.tag_names,
-      existingLocationFromRow(data.primary_location),
-    ),
+    entry: {
+      ...entryFromRow(
+        data,
+        data.tag_names,
+        existingLocationFromRow(data.primary_location),
+      ),
+      milestone: milestoneFromRow(data.milestone),
+    },
     tagOptions: tags.error
       ? data.tag_names
       : (tags.data ?? []).map((tag) => tag.name),

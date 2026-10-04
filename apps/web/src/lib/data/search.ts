@@ -27,13 +27,17 @@ import {
   type WikiItemKind,
 } from "@/lib/data/wiki-item";
 
+import { isMilestoneShape, type MilestoneShape } from "@/lib/data/milestone";
+
 export type SearchEntry = {
   body: string;
   bodyRich: EntryRichText | null;
   id: string;
   itemKind: WikiItemKind;
   itemSubtype: string;
+  isFirstTime: boolean;
   matchReasons: string[];
+  milestoneShape: MilestoneShape | null;
   occurredAt: string | null;
   occurredEnd: string | null;
   datePrecision: OccurrencePrecision;
@@ -59,7 +63,9 @@ type SearchRow = {
   entry_id: string;
   item_kind: WikiItemKind;
   item_subtype: string;
+  is_first_time: boolean;
   match_reasons: string[] | null;
+  milestone_shape: MilestoneShape | null;
   occurred_label: string | null;
   occurred_start: string | null;
   occurred_end: string | null;
@@ -76,8 +82,10 @@ type NameRow = {
 };
 
 type ItemIdentity = {
+  isFirstTime: boolean;
   itemKind: WikiItemKind;
   itemSubtype: string;
+  milestoneShape: MilestoneShape | null;
 };
 
 export async function getSearchWorkspace(
@@ -226,7 +234,7 @@ function quickEntryItem(
       ...identity,
     }),
     id: row.entry_id,
-    label: wikiItemIdentityLabel(identity.itemKind, identity.itemSubtype),
+    label: identityLabel(identity),
     subtitle: compactText(row.body) || "Saved Entry",
     title,
   };
@@ -253,7 +261,7 @@ function tagEntryPreview(
     id: row.entry_id,
     title:
       stringValue(row.title) ?? firstUsefulLine(row.body) ?? "Untitled Entry",
-    type: wikiItemIdentityLabel(identity.itemKind, identity.itemSubtype),
+    type: identityLabel(identity),
   };
 }
 
@@ -280,7 +288,9 @@ function entryFromRow(
     id: row.entry_id,
     itemKind: identity.itemKind,
     itemSubtype: identity.itemSubtype,
+    isFirstTime: identity.isFirstTime,
     matchReasons: strings(row.match_reasons),
+    milestoneShape: identity.milestoneShape,
     occurredAt: stringValue(row.occurred_start),
     occurredEnd: stringValue(row.occurred_end),
     datePrecision: row.date_precision,
@@ -294,9 +304,21 @@ function entryFromRow(
 
 function identityFromSearchRow(row: SearchRow): ItemIdentity {
   return {
+    isFirstTime: row.is_first_time,
     itemKind: row.item_kind,
     itemSubtype: row.item_subtype,
+    milestoneShape: row.milestone_shape,
   };
+}
+
+function identityLabel(identity: ItemIdentity) {
+  return wikiItemIdentityLabel(
+    identity.itemKind,
+    identity.itemSubtype,
+    identity.milestoneShape
+      ? { isFirstTime: identity.isFirstTime, shape: identity.milestoneShape }
+      : null,
+  );
 }
 
 function countFromRows(rows: SearchRow[]) {
@@ -333,6 +355,9 @@ function isSearchRow(value: unknown): value is SearchRow {
     typeof value.entry_id === "string" &&
     isWikiItemKind(value.item_kind) &&
     typeof value.item_subtype === "string" &&
+    (value.milestone_shape === null ||
+      isMilestoneShape(value.milestone_shape)) &&
+    typeof value.is_first_time === "boolean" &&
     typeof value.updated_at === "string" &&
     nullableString(value.title) &&
     nullableString(value.occurred_label) &&

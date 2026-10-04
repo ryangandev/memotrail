@@ -5,7 +5,9 @@ insert into auth.users(id,email,raw_user_meta_data) values
  ('10000000-0000-0000-0000-000000000091','media-owner@memotrail.local','{}'),
  ('10000000-0000-0000-0000-000000000092','media-other@memotrail.local','{}');
 insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,date_precision) values
- ('91000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000091','Photos','Original writing','entry','first_time','unknown');
+ ('91000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000091','Photos','Original writing','entry','entry','unknown');
+insert into public.milestones(entry_id,owner_id,shape,lane,is_first_time) values
+ ('91000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000091','moment','other',true);
 insert into public.attachments(id,owner_id,entry_id,object_path,mime_type,byte_size) values
  ('91000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000091','91000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000091/91000000-0000-4000-8000-000000000001/91000000-0000-4000-8000-000000000002.jpg','image/jpeg',1000);
 create temporary table fixture as select '10000000-0000-0000-0000-000000000091'::uuid owner,'91000000-0000-4000-8000-000000000002'::uuid original,
@@ -35,8 +37,7 @@ reset role;
 select is(count(*),3::bigint,'Invalid registration leaves rows unchanged') from public.attachments where owner_id='10000000-0000-0000-0000-000000000091';
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000091',true);
-select is(jsonb_array_length(attachments),1,'Current First Times projects original photos only') from public.first_times_workspace_with_occurrence();
-select is(jsonb_array_length(attachments),1,'Legacy First Times also counts originals only') from public.first_times_workspace_with_occurrence();
+select is(jsonb_array_length(attachments),1,'First Times lists original photos only') from public.first_times_workspace();
 select throws_ok($$select public.media_source(owner,original) from fixture$$,'42501',null,'Clients cannot call the privileged source resolver');
 select throws_ok($$insert into storage.objects(bucket_id,name) select 'entry-media',prefix||'spoof.webp' from fixture$$,'42501',null,'Clients cannot upload into the derived namespace');
 with changed as (update storage.objects set metadata='{"size":1}' where split_part(name,'/',3)='derived' returning name)

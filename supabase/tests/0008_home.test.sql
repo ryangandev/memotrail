@@ -105,7 +105,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'First long drive',
     'A First Time.',
-    'entry','first_time',
+    'entry','entry',
     '2026-09-02T18:00:00Z',
     null,
     'day',
@@ -118,7 +118,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Current California chapter',
     'A current stage.',
-    'entry','period',
+    'entry','entry',
     '2025-01-01T08:00:00Z',
     null,
     'year',
@@ -131,7 +131,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Past chapter',
     'An ended stage.',
-    'entry','period',
+    'entry','entry',
     '2020-01-01T08:00:00Z',
     '2021-01-01T08:00:00Z',
     'range',
@@ -144,7 +144,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Future chapter',
     'A stage that has not started.',
-    'entry','period',
+    'entry','entry',
     '2027-01-01T08:00:00Z',
     null,
     'year',
@@ -212,26 +212,12 @@ values (
   512
 );
 
-insert into public.timeline_items (entry_id, track_id, owner_id, timeline_kind, sort_order)
-select
-  entry_id,
-  timeline_tracks.id,
-  '10000000-0000-0000-0000-000000000001',
-  'stage',
-  item_order
-from (
-  values
-    ('81000000-0000-0000-0000-000000000003'::uuid, 1),
-    ('81000000-0000-0000-0000-000000000004'::uuid, 2),
-    ('81000000-0000-0000-0000-000000000005'::uuid, 3)
-) as staged_entries(entry_id, item_order)
-cross join lateral (
-  select id
-  from public.timeline_tracks
-  where owner_id = '10000000-0000-0000-0000-000000000001'
-    and system_key = 'other_events'
-  limit 1
-) as timeline_tracks;
+insert into public.milestones (entry_id, owner_id, shape, lane, is_first_time)
+values
+  ('81000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', 'moment', 'other', true),
+  ('81000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'period', 'work_study', false),
+  ('81000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000001', 'period', 'other', false),
+  ('81000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000001', 'period', 'other', false);
 
 set local role authenticated;
 set local request.jwt.claim.sub = '10000000-0000-0000-0000-000000000001';
@@ -268,9 +254,9 @@ select is(
   'Tag count includes only the owner''s tags'
 );
 select is(
-  (select current_stage_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  (select now_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
   1::bigint,
-  'Current stage count excludes ended and future stages'
+  'Now counts only Periods that have started and not ended'
 );
 select is(
   (select jsonb_array_length(recent_entries) from public.home_workspace('2026-09-03', 'America/Los_Angeles', 2)),
@@ -312,19 +298,19 @@ select is(
   'Recent Entries include active private attachment metadata'
 );
 select is(
-  (select jsonb_array_length(current_stages) from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  (select jsonb_array_length(now_items) from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
   1,
-  'Current stages contain only active visible ranges'
+  'Now lists only Periods that have started and not ended'
 );
 select is(
-  (select current_stages -> 0 ->> 'title' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  (select now_items -> 0 ->> 'title' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
   'Current California chapter',
-  'Current stages retain their Entry title'
+  'Now items keep their Entry title'
 );
 select is(
-  (select current_stages -> 0 ->> 'track_name' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  'Other Events',
-  'Current stages retain their Timeline track'
+  (select now_items -> 0 ->> 'lane' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  'work_study',
+  'Now items say which Timeline lane they belong to'
 );
 select is(
   pg_temp.capture_sqlstate(
@@ -363,11 +349,11 @@ select is(
 );
 select is(
   (
-    select current_stage_count
+    select now_count
     from public.home_workspace('2026-09-02', 'Pacific/Kiritimati', 5)
   ),
   1::bigint,
-  'Current stage boundaries use the requested local timezone'
+  'Now uses the requested local timezone'
 );
 
 reset role;

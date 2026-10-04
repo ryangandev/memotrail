@@ -35,7 +35,7 @@ as $$
     entry_id,expected_revision,
     (select title from public.entries where id=entry_id),
     (select body from public.entries where id=entry_id),null,null,
-    null,'UTC',null,'unknown',array[]::text[],location,null);
+    null,'UTC',null,'unknown',array[]::text[],location,null, null);
 $$;
 
 set local role authenticated;

@@ -2,14 +2,14 @@ import "server-only";
 import { displayImageURLs } from "@/lib/media/urls";
 
 import { getAuthenticatedContext, type Viewer } from "./inbox";
+import { storedProfileTimezone } from "./profile-input";
 import { getPrimaryEntryLocations } from "./entry-locations";
 import type { LocationSelection } from "@/lib/locations/location";
 import {
-  firstTimeDatePrecisions,
-  firstTimeImageMimeTypes,
-  type FirstTimeDatePrecision,
-  type FirstTimeImageMimeType,
-} from "./first-time-input";
+  entryImageMimeTypes,
+  type EntryImageMimeType,
+} from "./entry-photo-input";
+import { occurrencePrecisions, type OccurrencePrecision } from "./occurrence";
 
 export type FirstTimeAttachment = {
   bucketId: string;
@@ -17,7 +17,7 @@ export type FirstTimeAttachment = {
   createdAt: string;
   id: string;
   imageUrl: string | null;
-  mimeType: FirstTimeImageMimeType;
+  mimeType: EntryImageMimeType;
   objectPath: string;
   originalFilename: string | null;
   parentAttachmentId: string | null;
@@ -29,7 +29,7 @@ export type FirstTimeAttachment = {
 export type FirstTimeEntry = {
   attachments: FirstTimeAttachment[];
   body: string;
-  datePrecision: FirstTimeDatePrecision;
+  datePrecision: OccurrencePrecision;
   id: string;
   location?: LocationSelection | null;
   occurredLabel: string | null;
@@ -43,16 +43,19 @@ export type FirstTimeEntry = {
 };
 
 export type FirstTimesWorkspace = {
+  defaultTimezone: string;
   entries: FirstTimeEntry[];
   loadError: string | null;
   tagOptions: string[];
   viewer: Viewer;
 };
 
+type NameRow = { name: string };
+
 type FirstTimeRow = {
   attachments: unknown;
   body: string;
-  date_precision: FirstTimeDatePrecision;
+  date_precision: OccurrencePrecision;
   entry_id: string;
   occurred_label: string | null;
   occurred_start: string | null;
@@ -64,19 +67,21 @@ type FirstTimeRow = {
   updated_at: string;
 };
 
-type NameRow = { name: string };
-
-export async function getFirstTimesWorkspace(
-  targetId?: string,
-): Promise<FirstTimesWorkspace | null> {
+// First Times are the milestones marked as a First Time.
+export async function getFirstTimesWorkspace(): Promise<FirstTimesWorkspace | null> {
   const context = await getAuthenticatedContext();
 
   if (!context) {
     return null;
   }
 
-  const [firstTimes, tags] = await Promise.all([
-    context.client.rpc("first_times_workspace_with_occurrence"),
+  const [firstTimes, profile, tags] = await Promise.all([
+    context.client.rpc("first_times_workspace"),
+    context.client
+      .from("profiles")
+      .select("*")
+      .eq("user_id", context.userId)
+      .single(),
     context.client
       .from("tags")
       .select("name")
@@ -90,35 +95,21 @@ export async function getFirstTimesWorkspace(
     return unavailableWorkspace(context.viewer);
   }
 
-  if (targetId && !rows.some((row) => row.entry_id === targetId)) {
-    for (let offset = 1000; rows.length >= offset; offset += 1000) {
-      const page = await context.client
-        .rpc("first_times_workspace_with_occurrence")
-        .range(offset, offset + 999);
-      const more = page.error ? null : parseFirstTimeRows(page.data);
-      if (!more) return unavailableWorkspace(context.viewer);
-      rows.push(...more);
-      if (more.length < 1000 || more.some((row) => row.entry_id === targetId))
-        break;
-    }
-  }
-  const visibleRows = targetId
-    ? rows.filter((row) => row.entry_id === targetId)
-    : rows;
-
   const locations = await getPrimaryEntryLocations(
     context,
-    visibleRows.map((row) => row.entry_id),
+    rows.map((row) => row.entry_id),
   );
   if (!locations) {
     return unavailableWorkspace(context.viewer);
   }
 
-  const attachments = visibleRows.flatMap((row) => row.attachments);
+  const attachments = rows.flatMap((row) => row.attachments);
   const signedUrls = await signedImageUrls(context.client, attachments);
 
   return {
-    entries: visibleRows.map((row) => ({
+    defaultTimezone: storedProfileTimezone(profile.error ? null : profile.data)
+      .timezone,
+    entries: rows.map((row) => ({
       attachments: row.attachments.map((attachment) => ({
         ...attachment,
         imageUrl: signedUrls.get(attachment.objectPath) ?? null,
@@ -176,8 +167,8 @@ export function parseFirstTimeRows(value: unknown):
       typeof item.title !== "string" ||
       typeof item.body !== "string" ||
       typeof item.date_precision !== "string" ||
-      !firstTimeDatePrecisions.includes(
-        item.date_precision as FirstTimeDatePrecision,
+      !occurrencePrecisions.includes(
+        item.date_precision as OccurrencePrecision,
       ) ||
       !nullableString(item.occurred_start) ||
       !nullableString(item.occurred_end) ||
@@ -193,7 +184,7 @@ export function parseFirstTimeRows(value: unknown):
     rows.push({
       attachments,
       body: item.body,
-      date_precision: item.date_precision as FirstTimeDatePrecision,
+      date_precision: item.date_precision as OccurrencePrecision,
       entry_id: item.entry_id,
       occurred_label: item.occurred_label,
       occurred_start: item.occurred_start,
@@ -223,9 +214,7 @@ function parseAttachments(value: unknown): FirstTimeAttachment[] | null {
       typeof item.bucketId !== "string" ||
       typeof item.objectPath !== "string" ||
       typeof item.mimeType !== "string" ||
-      !firstTimeImageMimeTypes.includes(
-        item.mimeType as FirstTimeImageMimeType,
-      ) ||
+      !entryImageMimeTypes.includes(item.mimeType as EntryImageMimeType) ||
       typeof item.byteSize !== "number" ||
       typeof item.createdAt !== "string" ||
       !nullableString(item.parentAttachmentId) ||
@@ -245,7 +234,7 @@ function parseAttachments(value: unknown): FirstTimeAttachment[] | null {
       createdAt: item.createdAt,
       id: item.id,
       imageUrl: null,
-      mimeType: item.mimeType as FirstTimeImageMimeType,
+      mimeType: item.mimeType as EntryImageMimeType,
       objectPath: item.objectPath,
       originalFilename: item.originalFilename,
       parentAttachmentId: item.parentAttachmentId,
@@ -260,6 +249,7 @@ function parseAttachments(value: unknown): FirstTimeAttachment[] | null {
 
 function unavailableWorkspace(viewer: Viewer): FirstTimesWorkspace {
   return {
+    defaultTimezone: "UTC",
     entries: [],
     loadError:
       "MemoTrail could not load your First Times. Refresh to try again.",

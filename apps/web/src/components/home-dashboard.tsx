@@ -11,7 +11,7 @@ import type {
   HomeEntry,
   HomeResurfacedMemory,
   HomeSnapshot,
-  HomeStage,
+  HomeNowItem,
   HomeWorkspace,
 } from "@/lib/data/home";
 import { greetingInTimezone } from "@/lib/data/home-input";
@@ -22,6 +22,7 @@ import {
   validTimezone,
   type Occurrence,
 } from "@/lib/data/occurrence";
+import { timelineLaneLabels } from "@/lib/data/milestone";
 import { wikiEntryHref, wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 import styles from "./home-dashboard.module.css";
 
@@ -54,9 +55,7 @@ export function HomeDashboard({ workspace }: { workspace: HomeWorkspace }) {
       timezone={workspace.timezone}
     />
   );
-  const chapters = snapshot ? (
-    <Chapters stages={snapshot.currentStages} />
-  ) : null;
+  const nowItems = snapshot ? <Now items={snapshot.nowItems} /> : null;
   const memory = snapshot ? (
     <Memory memory={workspace.resurfacedMemory} />
   ) : null;
@@ -83,7 +82,7 @@ export function HomeDashboard({ workspace }: { workspace: HomeWorkspace }) {
           <div className={styles.capturePanel}>{capture}</div>
           <div className={styles.organizePanel}>{needsOrganizing}</div>
           <div className={styles.memoryColumn}>{memory}</div>
-          <div className={styles.chaptersColumn}>{chapters}</div>
+          <div className={styles.nowColumn}>{nowItems}</div>
           <div className={styles.recentRow}>{recent}</div>
         </div>
       )}
@@ -188,8 +187,8 @@ function Stats({
 }) {
   const items = [
     {
-      value: snapshot.currentStageCount,
-      label: "Life in progress",
+      value: snapshot.nowCount,
+      label: "Going on now",
       href: "/timeline",
       icon: "timeline",
     },
@@ -235,22 +234,28 @@ function Stats({
   );
 }
 
-function Chapters({ stages }: { stages: HomeStage[] }) {
+function Now({ items }: { items: HomeNowItem[] }) {
   return (
-    <Section title="Current chapters" href="/timeline" action="Timeline">
-      {stages.length ? (
-        <div className={styles.chapters}>
-          {stages.map((stage) => (
+    <Section title="Now" href="/timeline" action="Timeline">
+      {items.length ? (
+        <div className={styles.nowItems}>
+          {items.map((item) => (
             <Link
-              className={styles.chapter}
-              key={`${stage.trackId}:${stage.entryId}`}
-              href={`/timeline?entry=${stage.entryId}`}
+              className={styles.nowItem}
+              key={item.entryId}
+              href={wikiEntryHref({
+                id: item.entryId,
+                itemKind: item.itemKind,
+                itemSubtype: item.itemSubtype,
+              })}
             >
               <div>
-                <span className={styles.eyebrow}>{stage.trackName}</span>
-                <h3>{stage.title}</h3>
+                <span className={styles.eyebrow}>
+                  {timelineLaneLabels[item.lane]}
+                </span>
+                <h3>{item.title}</h3>
               </div>
-              <p>{occurrenceSpanLabel(entryOccurrence(stage))}</p>
+              <p>{occurrenceSpanLabel(entryOccurrence(item))}</p>
             </Link>
           ))}
         </div>
@@ -258,7 +263,7 @@ function Chapters({ stages }: { stages: HomeStage[] }) {
         <Empty
           icon="timeline"
           title="Life is still unfolding"
-          text="Current periods and focused records from your Timeline will appear here."
+          text="The home you live in, the vehicle you drive, and the Periods still going on will appear here."
         />
       )}
     </Section>
@@ -393,7 +398,7 @@ function dateLabel(value: string, timezone: string | null, year = true) {
   }).format(new Date(value));
 }
 
-function entryOccurrence(entry: HomeEntry | HomeStage): Occurrence {
+function entryOccurrence(entry: HomeEntry | HomeNowItem): Occurrence {
   return {
     occurredAt: entry.occurredStart,
     occurredEnd: entry.occurredEnd,

@@ -1,17 +1,17 @@
 import { tagNamesLimitMessage } from "./organization";
 import { parseTagNames } from "./inbox-review";
 import {
-  parseFirstTimeEntryInput,
-  firstTimeDatePrecisions,
-} from "./first-time-input";
-import { validTimezone } from "./occurrence";
+  occurrencePrecisions,
+  validTimezone,
+  validateOccurrence,
+} from "./occurrence";
 
 export const goalBodyLimit = 50_000;
 export const goalLabelLimit = 200;
 export const goalTitleLimit = 200;
 
 export const goalStatuses = ["active", "achieved", "let_go"] as const;
-export const goalAchievementPrecisions = firstTimeDatePrecisions;
+export const goalAchievementPrecisions = occurrencePrecisions;
 
 export type GoalStatus = (typeof goalStatuses)[number];
 export type GoalAchievementPrecision =
@@ -148,27 +148,70 @@ export function parseGoalAchievementInput(
   if (!validTimezone(occurredTimezone)) {
     return invalid("Choose a valid occurrence time zone.");
   }
-  const parsed = parseFirstTimeEntryInput({
-    ...input,
-    title: "Achievement",
-    body: "",
-    tagNames: [],
-    occurredTimezone: input.occurredStart ? occurredTimezone : null,
+  if (
+    !goalAchievementPrecisions.includes(
+      input.datePrecision as GoalAchievementPrecision,
+    )
+  ) {
+    return invalid("Choose a valid date precision.");
+  }
+  const datePrecision = input.datePrecision as GoalAchievementPrecision;
+  const occurredLabel = normalizedString(input.occurredLabel) || null;
+  if (occurredLabel && occurredLabel.length > goalLabelLimit) {
+    return invalid(
+      `Human date labels can be up to ${goalLabelLimit} characters.`,
+    );
+  }
+  const occurredStart = optionalInstant(input.occurredStart);
+  const occurredEnd = optionalInstant(input.occurredEnd);
+  if (occurredStart === undefined) {
+    return invalid("Choose a valid date or leave it empty.");
+  }
+  if (occurredEnd === undefined) return invalid("Choose a valid end date.");
+  const occurrenceError = validateOccurrence({
+    datePrecision,
+    occurredAt: occurredStart,
+    occurredEnd,
+    occurredLabel,
+    occurredTimezone,
   });
-  if (!parsed.success) return parsed;
+  if (occurrenceError) return invalid(occurrenceError);
 
   return {
     data: {
-      datePrecision: parsed.data.datePrecision,
+      datePrecision,
       id: input.id as string,
-      occurredLabel: parsed.data.occurredLabel,
-      occurredStart: parsed.data.occurredStart,
-      occurredEnd: parsed.data.occurredEnd ?? null,
+      occurredLabel,
+      occurredStart,
+      occurredEnd,
       occurredTimezone,
       revision: input.revision as number,
     },
     success: true,
   };
+}
+
+// An ISO instant, kept as sent when it has more than millisecond precision.
+function optionalInstant(value: unknown): string | null | undefined {
+  if (value === null || value === undefined || value === "") return null;
+  if (
+    typeof value !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}T/.test(value) ||
+    value.startsWith("0000-")
+  )
+    return undefined;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return undefined;
+  const day = new Date(`${value.slice(0, 10)}T12:00:00Z`);
+  if (
+    !Number.isFinite(day.getTime()) ||
+    day.toISOString().slice(0, 10) !== value.slice(0, 10)
+  )
+    return undefined;
+  // Do not round a database instant to JavaScript's millisecond precision.
+  return /\.\d{4,}(Z|[+-]\d{2}:\d{2})$/.test(value)
+    ? value
+    : date.toISOString();
 }
 
 export function isGoalEntryIdentity(id: unknown, revision: unknown) {

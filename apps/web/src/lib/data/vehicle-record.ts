@@ -4,9 +4,9 @@ import {
   type Occurrence,
 } from "./occurrence";
 import {
-  firstTimeImageMimeTypes,
-  type FirstTimeImageMimeType,
-} from "./first-time-input";
+  entryImageMimeTypes,
+  type EntryImageMimeType,
+} from "./entry-photo-input";
 import {
   vehicleDatePrecisions,
   type VehicleDatePrecision,
@@ -19,7 +19,7 @@ export type VehicleAttachment = {
   createdAt: string;
   id: string;
   imageUrl: string | null;
-  mimeType: FirstTimeImageMimeType;
+  mimeType: EntryImageMimeType;
   objectPath: string;
   originalFilename: string | null;
   pixelHeight: number | null;
@@ -42,8 +42,6 @@ export type VehicleRecord = {
   occurredTimezone: string;
   revision: number;
   tagNames: string[];
-  timelineTrackId: string | null;
-  timelineTrackName: string | null;
   title: string;
   totalCount: number;
   updatedAt: string;
@@ -111,8 +109,6 @@ function parseVehicleRow(value: unknown): VehicleRecord | null {
     !nullableString(value.model) ||
     !nullableInteger(value.model_year) ||
     !nullableString(value.color) ||
-    !nullableString(value.timeline_track_id) ||
-    !nullableString(value.timeline_track_name) ||
     !stringArray(value.tag_names) ||
     typeof value.total_count !== "number"
   ) {
@@ -137,8 +133,6 @@ function parseVehicleRow(value: unknown): VehicleRecord | null {
     occurredTimezone: value.occurred_timezone ?? "UTC",
     revision: value.revision,
     tagNames: value.tag_names,
-    timelineTrackId: value.timeline_track_id,
-    timelineTrackName: value.timeline_track_name,
     title: value.title,
     totalCount: value.total_count,
     updatedAt: value.updated_at,
@@ -157,9 +151,7 @@ function parseAttachments(value: unknown): VehicleAttachment[] | null {
       typeof item.object_path !== "string" ||
       !nullableString(item.original_filename) ||
       typeof item.mime_type !== "string" ||
-      !firstTimeImageMimeTypes.includes(
-        item.mime_type as FirstTimeImageMimeType,
-      ) ||
+      !entryImageMimeTypes.includes(item.mime_type as EntryImageMimeType) ||
       !nullableNumber(item.byte_size) ||
       !nullableNumber(item.pixel_width) ||
       !nullableNumber(item.pixel_height) ||
@@ -174,7 +166,7 @@ function parseAttachments(value: unknown): VehicleAttachment[] | null {
       createdAt: item.created_at,
       id: item.id,
       imageUrl: null,
-      mimeType: item.mime_type as FirstTimeImageMimeType,
+      mimeType: item.mime_type as EntryImageMimeType,
       objectPath: item.object_path,
       originalFilename: item.original_filename,
       pixelHeight: item.pixel_height,

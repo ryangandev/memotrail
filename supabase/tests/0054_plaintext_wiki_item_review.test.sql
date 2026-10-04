@@ -31,7 +31,7 @@ select is(
   (select revision from public.save_entry(
     '98700000-0000-4000-8000-000000000001',1,
     'Morning pages','Edited without formatting.', null,
-    null,null,'UTC',null,'unknown',array['Morning'],null, null)),
+    null,null,'UTC',null,'unknown',array['Morning'],null, null, null)),
   2,
   'An edit without formatting saves the Entry'
 );
@@ -56,7 +56,7 @@ select is(
   (select count(*) from public.save_entry(
     '98700000-0000-4000-8000-000000000001',2,
     'Foreign','No access', null,
-    null,null,'UTC',null,'unknown','{}',null, null)),
+    null,null,'UTC',null,'unknown','{}',null, null, null)),
   0::bigint,
   'Another owner cannot review the Wiki Item'
 );
@@ -65,7 +65,7 @@ reset role;
 select ok(
   not has_function_privilege(
     'anon',
-    'public.save_entry(uuid,integer,text,text,jsonb,timestamptz,timestamptz,text,text,text,text[],jsonb,jsonb)',
+    'public.save_entry(uuid,integer,text,text,jsonb,timestamptz,timestamptz,text,text,text,text[],jsonb,jsonb,jsonb)',
     'execute'
   ),
   'Anonymous review is denied'

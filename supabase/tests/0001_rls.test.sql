@@ -78,11 +78,11 @@ select ok(
 select is(
   (
     select count(*)::integer
-    from public.timeline_tracks
-    where owner_id = '10000000-0000-0000-0000-000000000001'
+    from public.milestones
+    where owner_id = '10000000-0000-0000-0000-000000000002'
   ),
-  8,
-  'New users receive the eight default timeline tracks'
+  0,
+  'New users start with an empty Timeline'
 );
 
 select is(
@@ -164,7 +164,7 @@ select lives_ok(
       null,
       'exact',
       array['skiing', 'learning', 'Skiing'],
-      null, null)
+      null, null, null)
   $$,
   'An owner can atomically review an Entry with tags'
 );
@@ -213,7 +213,7 @@ select is(
       null,
       'exact',
       array['wrong-tag'],
-      null, null)
+      null, null, null)
   ),
   0,
   'A stale review returns no row'
@@ -243,7 +243,7 @@ select is(
       null,
       'exact',
       array['skiing', 'learning'],
-      null, null)
+      null, null, null)
   ),
   1,
   'The current revision can be reviewed'
@@ -310,7 +310,7 @@ select is(
       null,
       'exact',
       '{}'::text[],
-      null, null)
+      null, null, null)
   ),
   0,
   'Another authenticated user cannot review the first user''s Entry'

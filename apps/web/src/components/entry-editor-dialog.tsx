@@ -17,6 +17,8 @@ import { OccurrenceEditor } from "@/components/occurrence-editor";
 import { EntryPhotoDates } from "@/components/entry-photo-dates";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { LocationPicker } from "@/components/location-picker";
+import { MilestoneFields } from "@/components/milestone-fields";
+import type { Milestone } from "@/lib/data/milestone";
 import type { LocationSelection } from "@/lib/locations/location";
 import { photoCalendarDateDraft } from "@/lib/media/photo-metadata";
 import { occurrenceDraft, resolveOccurrenceDraft } from "@/lib/data/occurrence";
@@ -28,13 +30,72 @@ import {
 } from "@/lib/data/inbox-review";
 import { trimEntryNote } from "@/lib/data/rich-text";
 
+// A new Entry for the editor's create mode, such as a milestone added from Timeline.
+// Adds a new Entry. Its id is drafted once, so a retried save cannot add it twice.
+export function NewEntryDialog({
+  milestone,
+  onClose,
+  tagOptions,
+  timezone,
+}: {
+  milestone: Milestone | null;
+  onClose: () => void;
+  tagOptions: string[];
+  timezone: string;
+}) {
+  const [entry] = useState(() => newEntryDraft({ milestone, timezone }));
+  return (
+    <EntryEditorDialog
+      defaultTimezone={timezone}
+      entry={entry}
+      isNew
+      onClose={onClose}
+      onSaved={onClose}
+      tagOptions={tagOptions}
+    />
+  );
+}
+
+function newEntryDraft({
+  milestone,
+  timezone,
+}: {
+  milestone: Milestone | null;
+  timezone: string;
+}): InboxEntry {
+  return {
+    body: "",
+    bodyRich: null,
+    createdAt: new Date().toISOString(),
+    datePrecision: "unknown",
+    id: crypto.randomUUID(),
+    itemKind: "entry",
+    itemSubtype: "entry",
+    location: null,
+    milestone,
+    occurredAt: null,
+    occurredEnd: null,
+    occurredLabel: null,
+    occurredTimezone: timezone,
+    revision: 0,
+    tagNames: [],
+    title: null,
+  };
+}
+
 export function EntryEditorDialog({
+  defaultTimezone,
   entry,
+  isNew = false,
   onClose,
   onSaved,
   tagOptions,
 }: {
+  // The time zone from Settings, shown as the default for a new Entry.
+  defaultTimezone?: string;
   entry: InboxEntry;
+  // Saves `entry` as a new Entry. Use `NewEntryDialog` to add one.
+  isNew?: boolean;
   onClose: () => void;
   onSaved: (entry: InboxEntry) => void;
   tagOptions: string[];
@@ -47,6 +108,9 @@ export function EntryEditorDialog({
     entry.location ?? null,
   );
   const [occurrence, setOccurrence] = useState(() => occurrenceDraft(entry));
+  const [milestone, setMilestone] = useState<Milestone | null>(
+    entry.milestone ?? null,
+  );
   const [photoLocation, setPhotoLocation] = useState<PhotoLocationDraft | null>(
     null,
   );
@@ -55,8 +119,30 @@ export function EntryEditorDialog({
   const [tagNames, setTagNames] = useState(entry.tagNames);
   const [tagInput, setTagInput] = useState("");
 
+  function changeMilestone(next: Milestone | null) {
+    // Only a Period can be still going on or end on a calendar date, and a Moment is one
+    // point in time, so leaving a Period drops its end. A plain Entry keeps a date range.
+    if (next?.shape !== "period")
+      setOccurrence((value) =>
+        !next && value.precision === "range"
+          ? value
+          : {
+              ...value,
+              end: "",
+              endMode: "date",
+              precision: value.precision === "range" ? "day" : value.precision,
+            },
+      );
+    setMilestone(next);
+    setResult(null);
+  }
+
   async function save() {
-    const resolved = resolveOccurrenceDraft(occurrence, entry);
+    const resolved = resolveOccurrenceDraft(
+      occurrence,
+      isNew ? undefined : entry,
+      milestone?.shape === "period",
+    );
     if (resolved.error) {
       setResult({ message: resolved.error, status: "error" });
       return;
@@ -69,7 +155,8 @@ export function EntryEditorDialog({
       body: note.body,
       bodyRich: note.bodyRich,
       id: entry.id,
-      revision: entry.revision,
+      milestone,
+      revision: isNew ? null : entry.revision,
       tagNames: namesIncludingDraft(tagNames, tagInput),
       title: title || null,
     };
@@ -96,7 +183,15 @@ export function EntryEditorDialog({
           revision: nextResult.revision,
         });
         router.refresh();
-        notify.success("Entry saved.");
+        notify.success(
+          !isNew
+            ? "Entry saved."
+            : milestone?.isFirstTime
+              ? "First Time added."
+              : milestone
+                ? "Added to Timeline."
+                : "Entry added.",
+        );
         return;
       }
 
@@ -122,9 +217,19 @@ export function EntryEditorDialog({
       onOpenChange={(nextOpen) => {
         if (!nextOpen) onClose();
       }}
-      title={<>Edit Entry</>}
+      title={
+        isNew ? (
+          <>
+            {entry.milestone?.isFirstTime
+              ? "Add a First Time"
+              : "Add a milestone"}
+          </>
+        ) : (
+          <>Edit Entry</>
+        )
+      }
       titleId="entry-editor-heading"
-      eyebrow={<>Life Wiki editor</>}
+      eyebrow={isNew ? <>New Entry</> : <>Life Wiki editor</>}
       closeLabel="Close Entry editor"
       busy={isPending}
       size="wide"
@@ -144,7 +249,7 @@ export function EntryEditorDialog({
             disabled={isPending}
             type="submit"
           >
-            {isPending ? "Saving…" : "Save changes"}
+            {isPending ? "Saving…" : isNew ? "Add" : "Save changes"}
           </Button>
         </div>
       }
@@ -184,10 +289,19 @@ export function EntryEditorDialog({
           />
         </div>
 
+        <MilestoneFields
+          disabled={isPending}
+          onChange={changeMilestone}
+          value={milestone}
+        />
+
         <OccurrenceEditor
+          defaultTimezone={defaultTimezone}
           value={occurrence}
           onChange={setOccurrence}
           disabled={isPending}
+          span={milestone?.shape === "period"}
+          point={milestone?.shape === "moment"}
         />
 
         <LocationPicker
@@ -205,15 +319,17 @@ export function EntryEditorDialog({
           options={tagOptions}
         />
 
-        <EntryPhotoDates
-          photoLocation={photoLocation}
-          onPhotoLocationChange={setPhotoLocation}
-          entryId={entry.id}
-          disabled={isPending}
-          onUseDate={(date) =>
-            setOccurrence((current) => photoCalendarDateDraft(date, current))
-          }
-        />
+        {isNew ? null : (
+          <EntryPhotoDates
+            photoLocation={photoLocation}
+            onPhotoLocationChange={setPhotoLocation}
+            entryId={entry.id}
+            disabled={isPending}
+            onUseDate={(date) =>
+              setOccurrence((current) => photoCalendarDateDraft(date, current))
+            }
+          />
+        )}
 
         {result ? (
           <p className={styles.error} role="alert">

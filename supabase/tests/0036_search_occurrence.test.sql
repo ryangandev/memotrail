@@ -2,19 +2,20 @@ begin;
 create extension if not exists pgtap with schema extensions;
 select no_plan();
 
-select is(public.wiki_item_occurrence_window('2017-01-01Z',null,'year','UTC','entry','entry')::text,'[2017-01-01,2018-01-01)','Year covers all possible days');
-select is(public.wiki_item_occurrence_window('2024-02-01Z',null,'month','UTC','entry','entry')::text,'[2024-02-01,2024-03-01)','Month includes leap day');
-select is(public.wiki_item_occurrence_window('2017-07-10T00:15:00Z',null,'exact','America/Los_Angeles','entry','entry')::text,'[2017-07-09,2017-07-10)','Exact time uses recorded calendar zone');
-select is(public.wiki_item_occurrence_window('2017-07-10Z',null,'day','UTC','entry','entry')::text,'[2017-07-10,2017-07-11)','Day is inclusive');
-select is(public.wiki_item_occurrence_window('2017-01-01Z','2019-02-03Z','range','UTC','entry','entry')::text,'[2017-01-01,2019-02-04)','Closed range includes its final day');
-select is(public.wiki_item_occurrence_window('2017-01-01Z',null,'range','UTC','entry','entry')::text,'[2017-01-01,)','Explicit open range continues');
-select is(public.wiki_item_occurrence_window('2017-01-01Z',null,'day','UTC','entity','home')::text,'[2017-01-01,)','Current Home remains ongoing');
-select is(public.wiki_item_occurrence_window('2017-01-01Z',null,'day','UTC','entity','vehicle')::text,'[2017-01-01,)','Current Vehicle remains ongoing');
-select is(public.wiki_item_occurrence_window('2017-01-01Z','2020-01-01Z','year','UTC','entry','period')::text,'[2017-01-01,2021-01-01)','Partial stage end covers its recorded year');
-select is(public.wiki_item_occurrence_window(null,null,'age','UTC','entry','entry'),null::daterange,'Description-only age has no guessed anchor');
-select is(public.wiki_item_occurrence_window(null,null,'approximate','UTC','entry','entry'),null::daterange,'Description-only approximate period has no guessed anchor');
-select is(public.wiki_item_occurrence_window('2017-01-01Z',null,'unknown','UTC','entry','entry'),null::daterange,'Unknown never exposes a stale anchor');
-select is(public.wiki_item_occurrence_window('2017-01-01Z','2017-02-01Z','approximate','UTC','entry','entry')::text,'[2017-01-01,2017-02-02)','Known approximate bounds overlap normally');
+select is(public.wiki_item_occurrence_window('2017-01-01Z',null,'year','UTC',false)::text,'[2017-01-01,2018-01-01)','Year covers all possible days');
+select is(public.wiki_item_occurrence_window('2024-02-01Z',null,'month','UTC',false)::text,'[2024-02-01,2024-03-01)','Month includes leap day');
+select is(public.wiki_item_occurrence_window('2017-07-10T00:15:00Z',null,'exact','America/Los_Angeles',false)::text,'[2017-07-09,2017-07-10)','Exact time uses recorded calendar zone');
+select is(public.wiki_item_occurrence_window('2017-07-10Z',null,'day','UTC',false)::text,'[2017-07-10,2017-07-11)','Day is inclusive');
+select is(public.wiki_item_occurrence_window('2017-01-01Z','2019-02-03Z','range','UTC',false)::text,'[2017-01-01,2019-02-04)','Closed range includes its final day');
+select is(public.wiki_item_occurrence_window('2017-01-01Z',null,'range','UTC',false)::text,'[2017-01-01,)','Explicit open range continues');
+select is(public.wiki_item_occurrence_window('2017-01-01Z',null,'day','UTC',true)::text,'[2017-01-01,)','Current Home remains ongoing');
+select is(public.wiki_item_occurrence_window('2017-01-01Z',null,'day','UTC',true)::text,'[2017-01-01,)','Current Vehicle remains ongoing');
+select is(public.wiki_item_occurrence_window('2017-01-01Z','2020-01-01Z','year','UTC',true)::text,'[2017-01-01,2021-01-01)','Partial Period end covers its recorded year');
+select is(public.wiki_item_occurrence_window('2017-01-01Z',null,'year','UTC',true)::text,'[2017-01-01,)','A Period with no end is still going on');
+select is(public.wiki_item_occurrence_window(null,null,'age','UTC',false),null::daterange,'Description-only age has no guessed anchor');
+select is(public.wiki_item_occurrence_window(null,null,'approximate','UTC',false),null::daterange,'Description-only approximate period has no guessed anchor');
+select is(public.wiki_item_occurrence_window('2017-01-01Z',null,'unknown','UTC',false),null::daterange,'Unknown never exposes a stale anchor');
+select is(public.wiki_item_occurrence_window('2017-01-01Z','2017-02-01Z','approximate','UTC',false)::text,'[2017-01-01,2017-02-02)','Known approximate bounds overlap normally');
 select is(public.entry_occurrence_date_text('2017-01-01Z','year','UTC'),'2017','Year indexing never invents January or a day');
 select is(public.entry_occurrence_date_text('2017-07-01Z','month','UTC'),'2017-07 July      2017','Month indexing never invents a day');
 select is(public.entry_occurrence_date_text('2017-01-01Z','unknown','UTC'),null::text,'Unknown indexing never exposes stale anchor');
@@ -25,8 +26,10 @@ insert into public.entries(id,owner_id,title,body,date_precision,occurred_start,
  ('96000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','Precision month','','month','2017-07-01Z',null,'UTC','entry','entry'),
  ('96000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000001','Precision range','','range','2016-01-01Z','2019-02-03Z','UTC','entry','entry'),
  ('96000000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000001','Precision unknown','','unknown',null,null,'UTC','entry','entry'),
- ('96000000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000001','Precision stage','','year','2015-01-01Z','2020-01-01Z','UTC','entry','period'),
+ ('96000000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000001','Precision stage','','year','2015-01-01Z','2020-01-01Z','UTC','entry','entry'),
  ('96000000-0000-4000-8000-000000000006','10000000-0000-0000-0000-000000000099','Precision foreign','','year','2017-01-01Z',null,'UTC','entry','entry');
+insert into public.milestones(entry_id,owner_id,shape,lane) values
+ ('96000000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000001','period','other');
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
 select is((select count(*) from public.search_wiki_items('Precision','{}','{}','2017-07-10','2017-07-10')),4::bigint,'Canonical search includes overlapping partial dates and ranges');

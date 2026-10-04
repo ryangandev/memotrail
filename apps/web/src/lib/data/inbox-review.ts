@@ -8,6 +8,7 @@ import {
   type PhotoLocationDraft,
 } from "@/lib/media/photo-location";
 import { validateOccurrence, type OccurrencePrecision } from "./occurrence";
+import { isMilestone, type Milestone } from "./milestone";
 import { isEntryRichText, type EntryRichText } from "./rich-text";
 import {
   tagNameCountLimit,
@@ -21,12 +22,14 @@ export type InboxReviewInput = {
   body: string;
   bodyRich?: EntryRichText | null;
   id: string;
+  milestone?: Milestone | null;
   occurredAt: string | null;
   occurredEnd?: string | null;
   occurredLabel?: string | null;
   datePrecision?: OccurrencePrecision;
   occurredTimezone: string;
-  revision: number;
+  // Null saves a new Entry with `id`.
+  revision: number | null;
   tagNames: string[];
   title: string | null;
 };
@@ -52,6 +55,9 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
     return invalidReview(
       "Choose the photo's GPS position again, or remove it from this draft.",
     );
+  if (values.milestone != null && !isMilestone(values.milestone))
+    return invalidReview("Choose how this Entry appears on Timeline.");
+  const milestone = (values.milestone ?? null) as Milestone | null;
   const title = typeof values.title === "string" ? values.title.trim() : "";
   const body = typeof values.body === "string" ? values.body.trim() : "";
   const bodyRich =
@@ -88,12 +94,16 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
     );
   }
 
+  const revision = values.revision;
   if (
     typeof values.id !== "string" ||
     !uuidPattern.test(values.id) ||
-    typeof values.revision !== "number" ||
-    !Number.isInteger(values.revision) ||
-    values.revision < 1
+    (revision !== null &&
+      (typeof revision !== "number" ||
+        !Number.isInteger(revision) ||
+        revision < 1)) ||
+    // A new Entry has no photos yet.
+    (revision === null && values.photoLocation != null)
   ) {
     return invalidReview("This Entry review is invalid.");
   }
@@ -105,8 +115,18 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
     occurredTimezone: values.occurredTimezone as string,
     datePrecision: (values.datePrecision ?? "exact") as OccurrencePrecision,
   };
-  const occurrenceError = validateOccurrence(occurrence);
+  const occurrenceError = validateOccurrence(
+    occurrence,
+    milestone?.shape === "period",
+  );
   if (occurrenceError) return invalidReview(occurrenceError);
+  if (
+    milestone?.shape === "moment" &&
+    (occurrence.occurredEnd || occurrence.datePrecision === "range")
+  )
+    return invalidReview(
+      "A Moment is one point in time. Remove the end date, or make it a Period.",
+    );
 
   return {
     data: {
@@ -117,11 +137,12 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
       bodyRich,
       id: values.id,
       location: (values.location ?? null) as LocationSelection | null,
+      milestone,
       ...occurrence,
       occurredAt: occurrence.occurredAt,
       occurredEnd: occurrence.occurredEnd,
       occurredLabel: occurrence.occurredLabel?.trim() || null,
-      revision: values.revision,
+      revision: revision as number | null,
       tagNames,
       title: title || null,
     },

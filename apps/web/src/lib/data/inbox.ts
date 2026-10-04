@@ -9,6 +9,7 @@ import {
 } from "./occurrence";
 import { entryRichTextFromMetadata, type EntryRichText } from "./rich-text";
 import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
+import type { Milestone } from "./milestone";
 import type {
   ExistingLocation,
   LocationSelection,
@@ -22,6 +23,7 @@ export type InboxEntry = Occurrence & {
   itemKind: WikiItemKind;
   itemSubtype: string;
   location?: LocationSelection | null;
+  milestone?: Milestone | null;
   revision: number;
   tagNames: string[];
   title: string | null;

@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import {
-  isFirstTimeUuid,
-  parseFirstTimeAttachmentInput,
-  type FirstTimeAttachmentInput,
-} from "@/lib/data/first-time-input";
+  isEntryUuid,
+  parseEntryAttachmentInput,
+  type EntryAttachmentInput,
+} from "@/lib/data/entry-photo-input";
 import {
   isHomeEntryIdentity,
   parseHomeEntryInput,
@@ -94,9 +94,9 @@ export async function saveHomeEntry(
 }
 
 export async function registerHomeAttachment(
-  input: FirstTimeAttachmentInput,
+  input: EntryAttachmentInput,
 ): Promise<HomeActionResult> {
-  const parsed = parseFirstTimeAttachmentInput(input);
+  const parsed = parseEntryAttachmentInput(input);
 
   if (!parsed.success) {
     return result("error", parsed.message);
@@ -138,7 +138,7 @@ export async function registerHomeAttachment(
 export async function trashHomeAttachment(input: {
   attachmentId: string;
 }): Promise<HomeActionResult> {
-  if (!isFirstTimeUuid(input.attachmentId)) {
+  if (!isEntryUuid(input.attachmentId)) {
     return result(
       "error",
       "This photo reference is invalid. Refresh and try again.",

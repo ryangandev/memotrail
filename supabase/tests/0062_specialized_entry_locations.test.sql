@@ -21,15 +21,22 @@ as $$
   );
 $$;
 
+create function pg_temp.save_first_time(p_id uuid, p_revision integer, p_title text, p_body text, p_location jsonb)
+returns table(entry_id uuid, revision integer)
+language sql
+as $$
+  select * from public.save_entry(
+    p_id, p_revision, p_title, p_body, null, null, null, 'UTC', null, 'unknown', '{}',
+    p_location, null, '{"shape":"moment","lane":"other","isFirstTime":true}'
+  );
+$$;
+
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000125',true);
 
 select is(
-  (select count(*) from public.save_first_time_with_location(
-    jsonb_build_object(
-      'title','First hike','body','A memory','datePrecision','unknown',
-      'tagNames',jsonb_build_array()
-    ),
+  (select count(*) from pg_temp.save_first_time(
+    '99620000-0000-4000-8000-000000000001', null, 'First hike', 'A memory',
     pg_temp.provider('specialized-pine-10','10 Pine Street, Philadelphia')
   )),
   1::bigint,
@@ -70,14 +77,10 @@ select is(
 );
 
 select is(
-  (select count(*) from public.save_first_time_with_location(
-    jsonb_build_object(
-      'title','First hike','body','A changed memory',
-      'datePrecision','unknown',
-      'tagNames',jsonb_build_array(),
-      'id',(select id from public.entries where title='First hike'),
-      'revision',(select revision from public.entries where title='First hike')
-    ),
+  (select count(*) from pg_temp.save_first_time(
+    (select id from public.entries where title='First hike'),
+    (select revision from public.entries where title='First hike'),
+    'First hike', 'A changed memory',
     pg_temp.provider('specialized-market-1','Market Street, Philadelphia')
   )),
   1::bigint,
@@ -138,11 +141,8 @@ select is(
 
 select throws_ok(
   $sql$
-    select * from public.save_first_time_with_location(
-      jsonb_build_object(
-        'title','Should roll back','body','','datePrecision','unknown',
-        'tagNames',jsonb_build_array()
-      ),
+    select * from pg_temp.save_first_time(
+      '99620000-0000-4000-8000-000000000002', null, 'Should roll back', '',
       jsonb_build_object(
         'kind','existing','id','99200000-0000-4000-8000-000000000099',
         'revision',1

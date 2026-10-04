@@ -120,14 +120,12 @@ select is(
 
 select is(
   (
-    select concat(timeline_tracks.system_key, '|', timeline_items.timeline_kind)
-    from public.timeline_items
-    join public.timeline_tracks on timeline_tracks.id = timeline_items.track_id
-    join public.entries on entries.id = timeline_items.entry_id
-    where entries.title = 'Bluebird'
+    select concat(lane, '|', shape)
+    from public.timeline_workspace()
+    where title = 'Bluebird'
   ),
-  'vehicles|stage',
-  'A Vehicle appears as a Stage on the Vehicles Timeline track'
+  'vehicles|period',
+  'A Vehicle appears on Timeline as a Period in the Vehicles lane'
 );
 
 select is(
@@ -478,13 +476,13 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.timeline_workspace_with_organization()
+    from public.timeline_workspace()
     where title = 'Bluebird EV'
-      and track_system_key = 'vehicles'
-      and timeline_kind = 'stage'
+      and lane = 'vehicles'
+      and shape = 'period'
   ),
   1,
-  'A restored Vehicle reappears on the Vehicles Timeline track'
+  'A restored Vehicle reappears in the Vehicles lane on Timeline'
 );
 
 reset role;

@@ -71,7 +71,7 @@ test("Editing a First Time keeps its original date range", async ({
           title: "First trip to Japan",
           body: "Original travel memory",
           item_kind: "entry",
-          item_subtype: "first_time",
+          item_subtype: "entry",
           occurred_start: start,
           occurred_end: end,
           occurred_timezone: "UTC",
@@ -79,21 +79,32 @@ test("Editing a First Time keeps its original date range", async ({
         })
       ).error,
     ).toBeNull();
+    expect(
+      (
+        await client.from("milestones").insert({
+          entry_id: id,
+          owner_id: owner,
+          shape: "period",
+          lane: "other",
+          is_first_time: true,
+        })
+      ).error,
+    ).toBeNull();
     await page.goto("/library");
     await page.getByRole("link", { name: /First trip to Japan/ }).click();
-    await expect(page).toHaveURL(`/first-times/${id}`);
+    await expect(page).toHaveURL(`/items/${id}`);
     await expect(
-      page.getByRole("button", { name: "Edit First Time" }),
+      page.getByText("First Time · Period · Other milestones"),
     ).toBeVisible();
     await expect(page.getByRole("textbox", { name: "Title" })).toHaveCount(0);
-    await page.getByRole("button", { name: "Edit First Time" }).click();
-    const dialog = page.getByRole("main");
+    await page.getByRole("button", { name: "Edit Entry" }).click();
+    const dialog = page.getByRole("dialog", { name: "Edit Entry" });
     await expect(
-      dialog.getByText("Add this item to a larger story or chapter."),
-    ).toHaveCount(0);
+      dialog.getByRole("checkbox", { name: /First Time/ }),
+    ).toBeChecked();
     await expect(
-      dialog.getByText("Add specific descriptors for filtering and discovery."),
-    ).toHaveCount(0);
+      dialog.getByRole("button", { name: "Period", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
     await expect
       .poll(() =>
         dialog
@@ -104,12 +115,14 @@ test("Editing a First Time keeps its original date range", async ({
       )
       .toBe("4px");
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       path: "/private/tmp/memotrail-first-time-precision-desktop.png",
     });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       path: "/private/tmp/memotrail-first-time-precision-mobile.png",
     });
@@ -121,10 +134,8 @@ test("Editing a First Time keeps its original date range", async ({
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.emulateMedia({ colorScheme: "light" });
     await dialog.getByRole("button", { name: "Save changes" }).click();
-    await expect(
-      page.getByRole("button", { name: "Edit First Time" }),
-    ).toBeVisible();
-    await expect(page).toHaveURL(`/first-times/${id}`);
+    await expect(dialog).not.toBeVisible();
+    await expect(page).toHaveURL(`/items/${id}`);
     await expect
       .poll(
         async () =>
@@ -167,14 +178,12 @@ test("Editing a First Time keeps its original date range", async ({
       ).error,
     ).toBeNull();
     await page.reload();
-    await page.getByRole("button", { name: "Edit First Time" }).click();
+    await page.getByRole("button", { name: "Edit Entry" }).click();
     await expect(
       dialog.getByRole("combobox", { name: "Date type", exact: true }),
     ).toHaveValue("exact");
     await dialog.getByRole("button", { name: "Save changes" }).click();
-    await expect(
-      page.getByRole("button", { name: "Edit First Time" }),
-    ).toBeVisible();
+    await expect(dialog).not.toBeVisible();
     expect(
       (
         await client
@@ -198,7 +207,7 @@ test("Editing a First Time keeps its original date range", async ({
       { precision: "range", start: "2017-07-08", label: "", end: "2017-07-15" },
       { precision: "unknown", start: "", label: "", end: "" },
     ]) {
-      await page.getByRole("button", { name: "Edit First Time" }).click();
+      await page.getByRole("button", { name: "Edit Entry" }).click();
       await dialog
         .getByRole("combobox", { name: "Date type", exact: true })
         .selectOption(sample.precision);
@@ -206,9 +215,7 @@ test("Editing a First Time keeps its original date range", async ({
       if (sample.end) await fillOccurrenceEnd(dialog, sample.end);
       await setDateDescription(dialog, sample.label);
       await dialog.getByRole("button", { name: "Save changes" }).click();
-      await expect(
-        page.getByRole("button", { name: "Edit First Time" }),
-      ).toBeVisible();
+      await expect(dialog).not.toBeVisible();
       await expect
         .poll(
           async () =>
@@ -232,6 +239,15 @@ test("Editing a First Time keeps its original date range", async ({
       if (!sample.start) expect(value.occurred_start).toBeNull();
       if (sample.end) expect(value.occurred_end).not.toBeNull();
     }
+    expect(
+      (
+        await client
+          .from("milestones")
+          .select("shape,lane,is_first_time")
+          .eq("entry_id", id)
+          .single()
+      ).data,
+    ).toEqual({ shape: "period", lane: "other", is_first_time: true });
     expect(uiErrors).toEqual([]);
   } finally {
     await admin.auth.admin.deleteUser(owner);

@@ -174,14 +174,12 @@ select is(
 
 select is(
   (
-    select concat(timeline_tracks.system_key, '|', timeline_items.timeline_kind)
-    from public.timeline_items
-    join public.timeline_tracks on timeline_tracks.id = timeline_items.track_id
-    join public.entries on entries.id = timeline_items.entry_id
-    where entries.title = 'California apartment'
+    select concat(lane, '|', shape)
+    from public.timeline_workspace()
+    where title = 'California apartment'
   ),
-  'homes|stage',
-  'The Home appears as a Stage on the Homes Timeline track'
+  'homes|period',
+  'The Home appears on Timeline as a Period in the Homes lane'
 );
 
 select is(
@@ -667,13 +665,13 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.timeline_workspace_with_organization()
+    from public.timeline_workspace()
     where title = 'California home'
-      and track_system_key = 'homes'
-      and timeline_kind = 'stage'
+      and lane = 'homes'
+      and shape = 'period'
   ),
   1,
-  'A restored Home reappears on the Homes Timeline track'
+  'A restored Home reappears in the Homes lane on Timeline'
 );
 
 reset role;

@@ -30,10 +30,10 @@ Notes, journals, reflections, lessons, ideas, stories, memories, milestones, and
 They do not change the Entry's structure.
 
 Focused records keep structure only when the experience needs specific fields or actions.
-Home and Vehicle are Entities; a Want to Do item (a Goal in data) has its own lifecycle; First Time has a focused Entry form.
-Timeline has an intentional point Moment and an interval Period, plus spans from focused records.
+Home and Vehicle are Entities, and a Want to Do item (a Goal in data) has its own lifecycle.
+A milestone is a mark on an ordinary Entry, not a record type: it puts that Entry on Timeline as a Moment or a Period.
+First Time is a flag on a milestone, so a First Time is an Entry like any other.
 An Entry's date alone does not put it on Timeline.
-Timeline tracks control presentation, not the record's identity.
 
 Every Entry may have writing, best-known time, media, tags, links, and retrieval behavior where those capabilities make sense.
 Focused forms add typed facts to the same record without duplicating its common content.
@@ -92,6 +92,7 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - Editing an Entry saves the same Entry without a Kind or subtype choice.
 - Links saved before Inbox was retired still work: an Inbox link opens Needs organizing, and an Inbox review link opens that Entry's Item page.
 - Focused forms are reached from Timeline or their focused views rather than the Quick Capture chooser.
+- Any Entry's editor can mark it as a milestone, unmark it, or change its shape, lane, and First Time flag.
 - An existing Entry may still be linked as source material for a new focused record through an explicit action.
 
 Original photos remain private and unchanged.
@@ -126,7 +127,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - MemoTrail keeps only the current version of each Entry.
   It has no version history: an edit replaces the earlier writing, and Trash is the only way to undo, for a whole Entry or one photo.
   Earlier versions saved before this change were deleted, and older version history links open the Item page or Library.
-- Adding or removing photos never makes an open First Time, Home, Vehicle, or Want to Do editor stale: its Save, Move to Trash, and Mark done still apply.
+- Adding or removing photos never makes an open Entry, Home, Vehicle, or Want to Do editor stale: its Save, Move to Trash, and Mark done still apply.
   Writing or other content changed elsewhere since the editor opened still reports a conflict instead of being overwritten.
 
 ## Retrieval and AI
@@ -151,46 +152,51 @@ Earlier AI requirements and exploratory directions remain in the [AI direction r
 
 ## Timeline and Dashboard
 
-Timeline shows deliberately created Moments and Periods, plus contextual focused-record spans, on customizable tracks.
-Web Timeline opens in the existing track view by default and offers Vertical Spine and Sticky Year styles through Settings; the chosen style is remembered for the signed-in account in that browser.
+Timeline shows the milestones of the user's life: Entries marked as milestones, every Home, and every Vehicle.
+A milestone is a Moment, one point in time, or a Period, a stretch of time that may still be going on.
+Homes and Vehicles appear as Periods without being marked, from when they became part of the user's life.
+Timeline has four fixed lanes, in this order: Places lived, Vehicles, Work and study, and Other milestones.
+Homes fill Places lived and Vehicles fill Vehicles; each milestone chooses Work and study or Other milestones.
+There are no custom tracks, and lanes cannot be renamed, reordered, or hidden.
+Web Timeline opens in the lane view by default and offers Vertical Spine and Sticky Year styles through Settings; the chosen style is remembered for the signed-in account in that browser.
 The first Timeline visit asks for a private birth date, uses it as the story's starting point, and keeps it editable in Settings.
-Default tracks cover Education, Career, Homes, Vehicles, Relationships, Health, First Times, and Other Moments.
-The user can create, order, rename, hide, and restore tracks without deleting content.
-Timeline's global Add moment flow asks what the user is recording before opening the matching focused editor.
-The record form determines its fields, while Track only determines presentation.
-The Homes, Vehicles, and First Times track shortcuts open their specialized editors directly; other track shortcuts open the generic Moment editor with that track preselected.
-Opening an existing Home, Vehicle, or First Time from Timeline navigates to its read-only focused detail page.
-Unanchored Age, Approximate, and Unknown moments remain visible without a fabricated calendar position.
+Add to Timeline asks whether the user is adding a milestone, a First Time, a Home, or a Vehicle.
+A milestone or First Time opens the Entry editor with the milestone already marked; a Home or Vehicle opens its focused editor.
+Each lane's add shortcut does the same for that lane, and a milestone added to Work and study starts as a Period.
+Selecting anything on Timeline opens its Item page.
+Unanchored Age, Approximate, and Unknown milestones remain visible without a fabricated calendar position.
 
 Dashboard is ordered around:
 
 1. A personal greeting and compact archive counts linking to their destinations.
 2. Quick Capture alongside up to three Entries that need organizing.
-3. A quiet resurfaced memory alongside current life chapters.
+3. A quiet resurfaced memory alongside Now.
 4. Full-width Recent Entries with single-line titles and summaries and optional tags.
 
 Narrow screens and iOS stack these sections in the same reading order.
 Search stays available in the Web bottom dock, and in the header of each iOS primary tab as a shortcut to Library.
-Archive counts open Timeline, Library, First Times, Tags, or Needs organizing; an Entry that needs organizing opens its Item page, and a current chapter opens its Timeline record.
+Archive counts open Timeline, Library, First Times, Tags, or Needs organizing; an Entry that needs organizing opens its Item page.
+Now lists what is still going on: Periods, Homes, and Vehicles that have started and have no end.
+Each shows its lane and how long it has been going on, opens its Item page, and Now links to Timeline.
 
 Resurfacing uses active, dated Entries only.
 It prefers the nearest prior On This Day match and otherwise uses a stable daily rotation of older Entries.
-Trash and Life Stages do not appear as resurfaced memory cards.
+Trashed Entries and Periods do not appear as resurfaced memory cards.
 
 ## Specialized areas
 
 ### First Times
 
-A First Time is a focused Entry form.
-It requires only a title and accepts the full date-precision model, optional writing, photos, Location, Goal, tags, and Timeline context.
-It is created intentionally from Timeline or the First Times view.
-An existing Entry may be linked as source material without changing that Entry.
+A First Time is an Entry whose milestone is flagged as a First Time.
+The First Times view lists those Entries, and adding one there opens the Entry editor as a First Time Moment in Other milestones.
+Unchecking First Time, or removing the milestone, takes the Entry out of First Times without changing anything else about it.
+Older First Time links open the Entry's Item page.
 
 ### Homes and Vehicles
 
 Homes and Vehicles are Entity presets with the full date-precision model, optional facts, writing, photos, Location, relationships, and Timeline context.
 Their dates describe when the Entity was part of the user's life.
-An absent end means that relationship is current, not that the Entity is automatically a Chapter.
+An absent end means that relationship is current, so the Home or Vehicle appears in Now.
 Duration labels must not imply more precision than the recorded dates.
 Property operations, vehicle maintenance, fuel, expenses, insurance, and document storage are outside the current scope.
 
@@ -227,7 +233,7 @@ When records span several cities, both maps offer shortcuts to the most recorded
 The Web Map and Location previews follow the effective Web appearance, including System mode and changes while a map is open.
 The iOS Map follows the app's System, Light, or Dark appearance.
 Photo GPS Locations retain their source photo identity as provenance after explicit adoption.
-Web Entry, Home, Vehicle, and First Time editors can search Geoapify for an address, preview its coordinates, and save it as that record's Location.
+Web Entry, Home, and Vehicle editors can search Geoapify for an address, preview its coordinates, and save it as that record's Location.
 Web address search supports keyboard selection and authenticated server-side usage limits.
 Provider-backed Location editing on native iOS remains deferred until the Web flow is accepted.
 Until then, native Home, Vehicle, and First Time editors show the saved Location with its map and can remove it.

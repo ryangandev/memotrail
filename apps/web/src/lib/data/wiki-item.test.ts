@@ -9,13 +9,28 @@ describe("Entry identity and routing", () => {
   it("shows a general Entry without a forced subtype label", () => {
     expect(wikiItemSubtypeLabel("entry", "entry")).toBe("Entry");
     expect(wikiItemIdentityLabel("entry", "entry")).toBe("Entry");
-    expect(wikiItemIdentityLabel("entry", "first_time")).toBe("First Time");
-    expect(wikiItemIdentityLabel("entry", "moment")).toBe("Moment");
-    expect(wikiItemIdentityLabel("entry", "period")).toBe("Period");
+    expect(
+      wikiItemIdentityLabel("entry", "entry", {
+        isFirstTime: true,
+        shape: "moment",
+      }),
+    ).toBe("First Time");
+    expect(
+      wikiItemIdentityLabel("entry", "entry", {
+        isFirstTime: false,
+        shape: "moment",
+      }),
+    ).toBe("Moment");
+    expect(
+      wikiItemIdentityLabel("entry", "entry", {
+        isFirstTime: false,
+        shape: "period",
+      }),
+    ).toBe("Period");
     expect(wikiItemSubtypeLabel("entity", "vehicle")).toBe("Vehicle");
   });
 
-  it("routes Entries to their detail and focused records to their views", () => {
+  it("routes Entries, milestones included, to their detail and focused records to their views", () => {
     expect(
       wikiEntryHref({
         id: "1",
@@ -30,26 +45,5 @@ describe("Entry identity and routing", () => {
         itemSubtype: "entry",
       }),
     ).toBe("/items/2");
-    expect(
-      wikiEntryHref({
-        id: "5",
-        itemKind: "entry",
-        itemSubtype: "first_time",
-      }),
-    ).toBe("/first-times/5");
-    expect(
-      wikiEntryHref({
-        id: "6",
-        itemKind: "entry",
-        itemSubtype: "moment",
-      }),
-    ).toBe("/timeline?entry=6");
-    expect(
-      wikiEntryHref({
-        id: "7",
-        itemKind: "entry",
-        itemSubtype: "period",
-      }),
-    ).toBe("/timeline?entry=7");
   });
 });

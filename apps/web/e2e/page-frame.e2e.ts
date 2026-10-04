@@ -12,7 +12,6 @@ const pageFamilies = [
   { path: "/search", variant: "standard", width: 960 },
   { path: "/tags", variant: "standard", width: 960 },
   { path: "/trash", variant: "standard", width: 960 },
-  { path: "/timeline/tracks", variant: "standard", width: 960 },
   { path: "/", variant: "wide", width: 1080 },
   { path: "/first-times", variant: "wide", width: 1080 },
   { path: "/goals", variant: "wide", width: 1080 },

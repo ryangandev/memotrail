@@ -71,7 +71,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'First time skiing',
     'A cold and brilliant day in the mountains.',
-    'entry','first_time',
+    'entry','entry',
     '2026-07-04T02:00:00Z',
     'America/Los_Angeles',
     '{"weather":"snowy"}'::jsonb,
@@ -162,6 +162,15 @@ values (
   'Blue'
 )
 on conflict (entry_id) do nothing;
+
+insert into public.milestones (entry_id, owner_id, shape, lane, is_first_time)
+values (
+  '50000000-0000-0000-0000-000000000001',
+  '10000000-0000-0000-0000-000000000001',
+  'moment',
+  'other',
+  true
+);
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);

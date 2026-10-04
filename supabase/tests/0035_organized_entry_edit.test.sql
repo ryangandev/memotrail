@@ -5,7 +5,7 @@ insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,date_pr
  ('95000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Organized memory','Keep original','entry','entry','exact','2017-07-08T12:34:56.123456Z','Asia/Kathmandu'),
  ('95000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','Specialized Goal','Goal facts','goal','goal','unknown',null,'UTC');
 create function pg_temp.edit(id uuid default '95000000-0000-4000-8000-000000000001',rev integer default 1) returns bigint language sql as $$
- select count(*) from public.save_entry(id,rev,'Edited title','Edited words', null,'2017-07-08T12:34:56.123456Z',null,'Asia/Kathmandu',null,'exact',array['kept'],null, null);
+ select count(*) from public.save_entry(id,rev,'Edited title','Edited words', null,'2017-07-08T12:34:56.123456Z',null,'Asia/Kathmandu',null,'exact',array['kept'],null, null, null);
 $$;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);

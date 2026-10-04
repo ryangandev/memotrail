@@ -6,9 +6,9 @@ import { AI_CAPABILITIES_AVAILABLE } from "@/lib/ai/availability";
 import { suggestForEntry } from "@/lib/ai/suggestions-server";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
-  parseFirstTimeAttachmentInput,
-  type FirstTimeAttachmentInput,
-} from "@/lib/data/first-time-input";
+  parseEntryAttachmentInput,
+  type EntryAttachmentInput,
+} from "@/lib/data/entry-photo-input";
 import {
   isQueuedInboxEntry,
   queuedOccurrence,
@@ -32,6 +32,7 @@ import {
   trashedPhotoMessage,
 } from "@/lib/data/capture-sync-messages";
 import { classifySyncFailure, type SyncFailure } from "@/lib/data/sync-failure";
+import { milestoneRow } from "@/lib/data/milestone";
 
 /**
  * `retry` keeps a capture waiting for a later attempt; `rejected` means
@@ -68,11 +69,11 @@ export type ReviewInboxEntryResult =
  * is final instead of waiting for an upload that cannot happen.
  */
 export async function registerEntryAttachment(
-  input: FirstTimeAttachmentInput,
+  input: EntryAttachmentInput,
   options?: { originalOnDevice?: boolean },
 ): Promise<SyncInboxEntryResult> {
   const originalOnDevice = options?.originalOnDevice !== false;
-  const parsed = parseFirstTimeAttachmentInput(input);
+  const parsed = parseEntryAttachmentInput(input);
 
   if (!parsed.success) {
     return { message: rejectedPhotoMessage, status: "rejected" };
@@ -244,6 +245,7 @@ export async function reviewInboxEntry(
     p_occurred_timezone: parsedInput.data.occurredTimezone,
     p_tag_names: parsedInput.data.tagNames,
     p_title: parsedInput.data.title,
+    p_milestone: milestoneRow(parsedInput.data.milestone ?? null),
   });
 
   if (error?.code === "40001")
@@ -265,11 +267,18 @@ export async function reviewInboxEntry(
     data.length === 0 ||
     typeof data[0]?.revision !== "number"
   ) {
-    return {
-      message:
-        "This Entry changed on another device. Close it, refresh, and edit the latest version.",
-      status: "conflict",
-    };
+    return parsedInput.data.revision === null
+      ? {
+          // The create may have landed before its response was lost.
+          message:
+            "MemoTrail could not confirm this Entry was added. Refresh to check before adding it again.",
+          status: "conflict",
+        }
+      : {
+          message:
+            "This Entry changed on another device. Close it, refresh, and edit the latest version.",
+          status: "conflict",
+        };
   }
 
   revalidatePath("/");

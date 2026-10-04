@@ -8,9 +8,9 @@ import {
   unsupportedPhotoMessage,
 } from "./capture-sync-messages";
 import {
-  createFirstTimeObjectPath,
-  type FirstTimeAttachmentInput,
-} from "./first-time-input";
+  createEntryObjectPath,
+  type EntryAttachmentInput,
+} from "./entry-photo-input";
 import type { InboxPhotoDraft } from "./inbox-photo";
 import type { QueuedInboxEntry } from "./inbox-queue";
 import type { InboxSyncResult } from "./inbox-sync";
@@ -30,7 +30,7 @@ export type CapturePhotoOperations = {
     photo: InboxPhotoDraft,
   ) => Promise<{ error: StorageFailure | null }>;
   register: (
-    input: FirstTimeAttachmentInput,
+    input: EntryAttachmentInput,
     options: { originalOnDevice: boolean },
   ) => Promise<InboxSyncResult>;
   /** Deletes this device's copy of a photo that reached MemoTrail. */
@@ -65,7 +65,7 @@ export async function synchronizeCapturePhotos(
   onProgress?.({ completed, total: entry.attachments.length });
   for (const attachment of entry.attachments) {
     const photo = photosById.get(attachment.id);
-    const objectPath = createFirstTimeObjectPath(
+    const objectPath = createEntryObjectPath(
       ownerId,
       entry.id,
       attachment.id,
@@ -80,7 +80,7 @@ export async function synchronizeCapturePhotos(
       };
     }
 
-    const attachmentInput: FirstTimeAttachmentInput = {
+    const attachmentInput: EntryAttachmentInput = {
       attachmentId: attachment.id,
       byteSize: attachment.size,
       entryId: entry.id,

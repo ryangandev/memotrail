@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import {
-  isFirstTimeUuid,
-  parseFirstTimeAttachmentInput,
-  type FirstTimeAttachmentInput,
-} from "@/lib/data/first-time-input";
+  isEntryUuid,
+  parseEntryAttachmentInput,
+  type EntryAttachmentInput,
+} from "@/lib/data/entry-photo-input";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
   validLocationSelection,
@@ -85,9 +85,9 @@ export async function saveVehicleEntry(
 }
 
 export async function registerVehicleAttachment(
-  input: FirstTimeAttachmentInput,
+  input: EntryAttachmentInput,
 ): Promise<VehicleActionResult> {
-  const parsed = parseFirstTimeAttachmentInput(input);
+  const parsed = parseEntryAttachmentInput(input);
   if (!parsed.success) return result("error", parsed.message);
 
   const context = await getAuthenticatedContext();
@@ -126,7 +126,7 @@ export async function registerVehicleAttachment(
 export async function trashVehicleAttachment(input: {
   attachmentId: string;
 }): Promise<VehicleActionResult> {
-  if (!isFirstTimeUuid(input.attachmentId)) {
+  if (!isEntryUuid(input.attachmentId)) {
     return result(
       "error",
       "This photo reference is invalid. Refresh and try again.",

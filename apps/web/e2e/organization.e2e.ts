@@ -169,13 +169,13 @@ test("Tags are first-class and organize generic Timeline moments", async ({
       ).error,
     ).toBeNull();
     await page.goto("/timeline");
-    await page.getByRole("button", { name: "Add moment", exact: true }).click();
+    await page.getByRole("button", { name: "Add to Timeline" }).click();
     await page
       .getByRole("dialog", { name: "What are you adding?" })
-      .getByRole("button", { name: "Add Moment", exact: true })
+      .getByRole("button", { name: "Add Milestone", exact: true })
       .click();
     const momentDialog = page.getByRole("dialog", {
-      name: "Add to your story",
+      name: "Add a milestone",
     });
     await momentDialog
       .getByLabel("Title", { exact: true })
@@ -193,7 +193,9 @@ test("Tags are first-class and organize generic Timeline moments", async ({
     await momentDialog
       .getByRole("combobox", { name: "Search or create a tag" })
       .press("Enter");
-    await momentDialog.getByRole("button", { name: "Add moment" }).click();
+    await momentDialog
+      .getByRole("button", { name: "Add", exact: true })
+      .click();
     await expect(momentDialog).not.toBeVisible();
 
     const entry = await client

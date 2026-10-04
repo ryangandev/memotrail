@@ -89,12 +89,12 @@
   -webkit-line-clamp: 2;
 }
 
-.chapters {
+.nowItems {
   display: grid;
   gap: var(--mt-space-3);
 }
 
-.chapter {
+.nowItem {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -109,14 +109,14 @@
   overflow-wrap: anywhere;
 }
 
-.chapter h3 {
+.nowItem h3 {
   margin-top: var(--mt-space-1);
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-body-large);
   font-weight: var(--mt-font-weight-medium);
 }
 
-.chapter p {
+.nowItem p {
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
 }
@@ -359,7 +359,7 @@
 .columns {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  grid-template-areas: "capture organize" "memories chapters" "recent recent";
+  grid-template-areas: "capture organize" "memories now" "recent recent";
   gap: var(--mt-space-8);
   align-items: start;
 }
@@ -371,8 +371,8 @@
 .memoryColumn {
   grid-area: memories;
 }
-.chaptersColumn {
-  grid-area: chapters;
+.nowColumn {
+  grid-area: now;
   min-width: 0;
 }
 
@@ -427,7 +427,7 @@
 @media (max-width: 900px) {
   .columns {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "capture" "organize" "memories" "chapters" "recent";
+    grid-template-areas: "capture" "organize" "memories" "now" "recent";
   }
   .organizePanel {
     contain: none;
@@ -462,27 +462,27 @@
 
 @media (min-width: 901px) {
   .memoryColumn,
-  .chaptersColumn {
+  .nowColumn {
     display: flex;
     min-width: 0;
     align-self: stretch;
   }
   .memoryColumn > .section,
-  .chaptersColumn > .section {
+  .nowColumn > .section {
     display: flex;
     flex: 1;
     flex-direction: column;
   }
   .memoryColumn .sectionHeading,
-  .chaptersColumn .sectionHeading {
+  .nowColumn .sectionHeading {
     flex: none;
   }
-  .chaptersColumn .chapters {
+  .nowColumn .nowItems {
     flex: 1;
     grid-auto-rows: minmax(min-content, 1fr);
   }
   .memoryColumn .empty,
-  .chaptersColumn .empty {
+  .nowColumn .empty {
     flex: 1;
   }
   .memoryColumn .memoryCard {

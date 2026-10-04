@@ -1,23 +1,23 @@
 import {
-  firstTimePhotoLimit,
-  firstTimePhotoSizeLimit,
-  inferFirstTimeImageMimeType,
-  type FirstTimeImageMimeType,
-} from "./first-time-input";
+  entryPhotoLimit,
+  entryPhotoSizeLimit,
+  inferEntryImageMimeType,
+  type EntryImageMimeType,
+} from "./entry-photo-input";
 
-export const inboxPhotoLimit = firstTimePhotoLimit;
-export const inboxPhotoSizeLimit = firstTimePhotoSizeLimit;
+export const inboxPhotoLimit = entryPhotoLimit;
+export const inboxPhotoSizeLimit = entryPhotoSizeLimit;
 
 export type InboxPhotoDraft = {
   file: File;
   id: string;
-  mimeType: FirstTimeImageMimeType;
+  mimeType: EntryImageMimeType;
 };
 
 export type QueuedInboxAttachment = {
   id: string;
   lastModified: number;
-  mimeType: FirstTimeImageMimeType;
+  mimeType: EntryImageMimeType;
   name: string;
   size: number;
 };
@@ -39,7 +39,7 @@ export function validateInboxPhotoFiles(
   let message: string | null = null;
 
   for (const file of files.slice(0, availableCount)) {
-    const mimeType = inferFirstTimeImageMimeType(file.name, file.type);
+    const mimeType = inferEntryImageMimeType(file.name, file.type);
 
     if (!mimeType) {
       message ??= "Use JPEG, PNG, WebP, HEIC, or HEIF photos.";
@@ -93,8 +93,7 @@ export function isQueuedInboxAttachment(
     typeof photo.name === "string" &&
     photo.name.length <= 255 &&
     typeof photo.mimeType === "string" &&
-    inferFirstTimeImageMimeType(photo.name, photo.mimeType) ===
-      photo.mimeType &&
+    inferEntryImageMimeType(photo.name, photo.mimeType) === photo.mimeType &&
     typeof photo.size === "number" &&
     Number.isSafeInteger(photo.size) &&
     photo.size >= 1 &&

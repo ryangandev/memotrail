@@ -1,7 +1,7 @@
 import {
-  firstTimeImageMimeTypes,
-  type FirstTimeImageMimeType,
-} from "./first-time-input";
+  entryImageMimeTypes,
+  type EntryImageMimeType,
+} from "./entry-photo-input";
 import { goalStatuses, type GoalStatus } from "./goal-record-input";
 import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
 
@@ -11,7 +11,7 @@ export type GoalAttachment = {
   createdAt: string;
   id: string;
   imageUrl: string | null;
-  mimeType: FirstTimeImageMimeType;
+  mimeType: EntryImageMimeType;
   objectPath: string;
   originalFilename: string | null;
   pixelHeight: number | null;
@@ -168,9 +168,7 @@ function parseAttachments(value: unknown): GoalAttachment[] | null {
       typeof item.object_path !== "string" ||
       !nullableString(item.original_filename) ||
       typeof item.mime_type !== "string" ||
-      !firstTimeImageMimeTypes.includes(
-        item.mime_type as FirstTimeImageMimeType,
-      ) ||
+      !entryImageMimeTypes.includes(item.mime_type as EntryImageMimeType) ||
       !nullableNumber(item.byte_size) ||
       !nullableNumber(item.pixel_width) ||
       !nullableNumber(item.pixel_height) ||
@@ -184,7 +182,7 @@ function parseAttachments(value: unknown): GoalAttachment[] | null {
       createdAt: item.created_at,
       id: item.id,
       imageUrl: null,
-      mimeType: item.mime_type as FirstTimeImageMimeType,
+      mimeType: item.mime_type as EntryImageMimeType,
       objectPath: item.object_path,
       originalFilename: item.original_filename,
       pixelHeight: item.pixel_height,

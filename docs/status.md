@@ -29,8 +29,11 @@ Version history is removed: migration `202610040007` deletes every stored versio
 It is not yet applied to the hosted project.
 Database leftovers are dropped: migration `202610040008` links Home Locations through `entry_locations` like every other Entry, turns `related` Location links into `photo` links and `source_capture` Entries into plain Entries, drops unused Location columns and functions no client calls, and replaces the Entry review chain with one `save_entry`.
 It is not yet applied to the hosted project.
-Open product questions: Timeline structure and current chapters.
-UI questions held until then: Item page photos, date precision controls, the two export choices, and Timeline styles.
+Timeline shows life milestones: any Entry can be marked as a Moment or a Period in Work and study or Other milestones, and a First Time is a flag on a milestone.
+Homes and Vehicles appear on Timeline in their own lanes, custom tracks are gone, First Times is a filtered view of Entries, and the Dashboard Now block replaces current chapters.
+Migration `202610040009` converts existing Moments, Periods, First Times, and track placements into milestones and turns custom track names into tags.
+It is not yet applied to the hosted project; native iOS still calls the retired Timeline and First Time functions until it follows Web.
+UI questions still held: Item page photos, date precision controls, the two export choices, and Timeline styles.
 Open `audit-2026-10` issues stay tracked in GitHub.
 
 ## Current state
@@ -70,7 +73,7 @@ Use Git history for feature-level implementation and test evidence.
 | Area                                                                              | State                                                                                                                                                                                            |
 | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Capture, organization, dates, drafts, and offline queues                          | Implemented on Web and iOS; Web retired Inbox for Needs organizing in Library, while native still shows Inbox                                                                                    |
-| Timeline, Home (Dashboard on Web), First Times, Homes, Vehicles, and Want to Do   | Implemented on Web and iOS; Web simplified Goals into Want to Do, and the retired Place and People surfaces are removed from Web                                                                 |
+| Timeline, Home (Dashboard on Web), First Times, Homes, Vehicles, and Want to Do   | Implemented on Web and iOS; Web simplified Goals into Want to Do and turned Timeline into fixed-lane milestones, and the retired Place and People surfaces are removed from Web                  |
 | Location data layer                                                               | Web and native Map, optional Home Location, photo GPS provenance, and Web provider quotas are implemented; personal acceptance remains.                                                          |
 | Habits                                                                            | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                                               |
 | Web navigation shell                                                              | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                                                |

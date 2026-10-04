@@ -95,7 +95,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'First ski trip',
     'A First Time with private photos.',
-    'entry','first_time',
+    'entry','entry',
     '2026-08-01T12:00:00Z'
   ),
   (
@@ -103,7 +103,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Photo parent',
     'An active First Time with one removed photo.',
-    'entry','first_time',
+    'entry','entry',
     null
   ),
   (

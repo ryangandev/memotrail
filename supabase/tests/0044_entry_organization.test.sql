@@ -11,23 +11,25 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000101'
 
 create temporary table organized_moment as
 select entry_id
-from public.save_timeline_entry_with_organization(
-  (select id from public.timeline_tracks where owner_id=auth.uid() order by sort_order limit 1),
-  'event',
+from public.save_entry(
+  '99440000-0000-4000-8000-000000000001',
+  null,
   'Graduation day',
   'A chapter worth finding again.',
+  null,
   '2023-06-15 12:00:00Z',
   null,
-  'day',
-  null,
   'America/Los_Angeles',
+  null,
+  'day',
   array['Milestone','College'],
   null,
-  null
+  null,
+  '{"shape":"moment","lane":"work_study","isFirstTime":false}'
 );
 
 select is(
-  (select tag_names from public.timeline_workspace_with_organization(false) where entry_id=(select entry_id from organized_moment)),
+  (select tag_names from public.timeline_workspace() where entry_id=(select entry_id from organized_moment)),
   array['College','Milestone']::text[],
   'Timeline workspace returns tag membership'
 );
@@ -82,7 +84,7 @@ select is(
 
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000102',true);
 select is(
-  (select count(*) from public.timeline_workspace_with_organization(false) where entry_id is not null),
+  (select count(*) from public.timeline_workspace()),
   0::bigint,
   'Another owner cannot read organized Timeline Entries'
 );
@@ -98,10 +100,6 @@ select is(
 );
 
 reset role;
-select ok(
-  not has_function_privilege('anon','public.save_timeline_entry_with_organization(uuid,text,text,text,timestamptz,timestamptz,text,text,text,text[],uuid,integer)','execute'),
-  'Anonymous Timeline organization writes are denied'
-);
 select ok(
   not has_function_privilege('anon','public.merge_tags(uuid,integer,uuid,integer)','execute'),
   'Anonymous tag merges are denied'

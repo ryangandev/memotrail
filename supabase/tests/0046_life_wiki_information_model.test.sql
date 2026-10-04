@@ -13,8 +13,7 @@ select hasnt_column('public','entries','entry_type','Entries no longer expose th
 insert into public.entries(id,owner_id,body,item_kind,item_subtype,date_precision) values
   ('97000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000103','A raw thought','entry','entry','unknown'),
   ('97000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000103','An organized note','entry','entry','unknown'),
-  ('97000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000103','Home facts','entity','home','unknown'),
-  ('97000000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000103','A first','entry','first_time','unknown');
+  ('97000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000103','Home facts','entity','home','unknown');
 
 select is(
   (select item_kind || ':' || item_subtype from public.entries where id='97000000-0000-4000-8000-000000000001'),
@@ -31,10 +30,9 @@ select is(
   'entity:home',
   'A Home keeps a focused Entity form'
 );
-select is(
-  (select item_kind || ':' || item_subtype from public.entries where id='97000000-0000-4000-8000-000000000004'),
-  'entry:first_time',
-  'A First Time keeps a focused Entry form'
+select throws_ok(
+  $$update public.entries set item_subtype = 'first_time' where id = '97000000-0000-4000-8000-000000000001'$$,
+  '23514', null, 'A First Time is an Entry with a milestone, not a separate form'
 );
 
 insert into public.homes(entry_id,owner_id)

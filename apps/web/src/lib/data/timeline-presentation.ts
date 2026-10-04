@@ -1,10 +1,10 @@
 import { occurrenceLabel } from "@/lib/data/occurrence";
-import type { TimelineEntry, TimelineTrack } from "@/lib/data/timeline";
+import type { TimelineEntry, TimelineLaneGroup } from "@/lib/data/timeline";
 
 export type TimelineDisplayItem = {
   entry: TimelineEntry;
   dateLabel: string;
-  trackName: string;
+  laneName: string;
   year: number | null;
 };
 
@@ -21,7 +21,7 @@ export function timelineEntryDateLabel(entry: TimelineEntry) {
     occurredLabel: entry.occurredLabel,
     occurredTimezone: entry.occurredTimezone,
   });
-  return entry.kind === "stage" &&
+  return entry.shape === "period" &&
     entry.occurredStart &&
     !entry.occurredEnd &&
     !entry.occurredLabel &&
@@ -31,16 +31,12 @@ export function timelineEntryDateLabel(entry: TimelineEntry) {
 }
 
 export function timelineEntryTypeLabel(entry: TimelineEntry) {
-  switch (entry.itemSubtype) {
-    case "home":
-      return "Home";
-    case "vehicle":
-      return "Vehicle";
-    case "first_time":
-      return "First Time";
-    default:
-      return entry.kind === "stage" ? "Period" : "Moment";
-  }
+  if (entry.itemKind === "entity" && entry.itemSubtype === "home")
+    return "Home";
+  if (entry.itemKind === "entity" && entry.itemSubtype === "vehicle")
+    return "Vehicle";
+  if (entry.isFirstTime) return "First Time";
+  return entry.shape === "period" ? "Period" : "Moment";
 }
 
 export function timelineRecordedYear(entry: TimelineEntry): number | null {
@@ -60,14 +56,14 @@ export function timelineRecordedYear(entry: TimelineEntry): number | null {
 }
 
 export function createTimelineDisplayModel(
-  tracks: TimelineTrack[],
+  lanes: TimelineLaneGroup[],
 ): TimelineDisplayModel {
-  const items = tracks
-    .flatMap((track) =>
-      track.items.map((entry) => ({
+  const items = lanes
+    .flatMap((lane) =>
+      lane.items.map((entry) => ({
         entry,
         dateLabel: timelineEntryDateLabel(entry),
-        trackName: track.name,
+        laneName: lane.name,
         year: timelineRecordedYear(entry),
       })),
     )
@@ -80,7 +76,7 @@ export function createTimelineDisplayModel(
         : Infinity;
       return (
         first - second ||
-        a.trackName.localeCompare(b.trackName) ||
+        a.laneName.localeCompare(b.laneName) ||
         a.entry.title.localeCompare(b.entry.title)
       );
     });

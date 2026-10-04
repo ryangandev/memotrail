@@ -229,7 +229,16 @@ function SearchResultCard({ entry }: { entry: SearchEntry }) {
       <header>
         <div className={styles.resultMeta}>
           <Badge tone="neutral">
-            {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
+            {wikiItemIdentityLabel(
+              entry.itemKind,
+              entry.itemSubtype,
+              entry.milestoneShape
+                ? {
+                    isFirstTime: entry.isFirstTime,
+                    shape: entry.milestoneShape,
+                  }
+                : null,
+            )}
           </Badge>
           <time dateTime={entry.occurredAt ?? undefined}>
             {resultDateLabel(entry)}
@@ -329,7 +338,7 @@ function resultDateLabel(entry: SearchEntry) {
   };
   return (entry.itemKind === "entity" &&
     ["home", "vehicle"].includes(entry.itemSubtype)) ||
-    entry.itemSubtype === "period"
+    entry.milestoneShape === "period"
     ? occurrenceSpanLabel(occurrence)
     : occurrenceLabel(occurrence);
 }

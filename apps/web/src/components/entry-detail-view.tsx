@@ -23,6 +23,7 @@ import {
 } from "@/lib/data/entry-detail";
 import { wikiItemIdentityLabel, wikiItemKindLabel } from "@/lib/data/wiki-item";
 import { locationDisplayLabel } from "@/lib/locations/location";
+import { timelineLaneLabels } from "@/lib/data/milestone";
 import styles from "@/components/entry-detail-view.module.css";
 
 const sourceLinkLabels: Record<string, string> = {
@@ -95,32 +96,16 @@ export function EntryDetailView({
       </Link>
       <PageHeader title={<>{entryTitle(entry)}</>} />
       <div className={styles.itemActions}>
-        {active &&
-          entry.item_kind === "entry" &&
-          entry.item_subtype === "entry" && (
-            <Button
-              variant="secondary"
-              type="submit"
-              disabled={busy}
-              onClick={() => void edit()}
-            >
-              Edit {wikiItemKindLabel(entry.item_kind)}
-            </Button>
-          )}
-        {active &&
-          entry.item_kind === "entry" &&
-          entry.item_subtype === "first_time" && (
-            <ButtonLink href={`/first-times/${entry.id}`}>
-              Open First Time
-            </ButtonLink>
-          )}
-        {active &&
-          entry.item_kind === "entry" &&
-          ["moment", "period"].includes(entry.item_subtype) && (
-            <ButtonLink href={`/timeline?entry=${entry.id}`}>
-              Edit {entry.item_subtype === "period" ? "Period" : "Moment"}
-            </ButtonLink>
-          )}
+        {active && entry.item_kind === "entry" && (
+          <Button
+            variant="secondary"
+            type="submit"
+            disabled={busy}
+            onClick={() => void edit()}
+          >
+            Edit {wikiItemKindLabel(entry.item_kind)}
+          </Button>
+        )}
         {editing && (
           <EntryEditorDialog
             entry={editing.entry}
@@ -202,9 +187,19 @@ function CurrentItem({ value }: { value: EntryDetail }) {
       ),
     },
     {
-      key: "timeline_items",
-      label: "timeline items",
-      names: value.timeline_items.map((item) => item.track_name),
+      key: "timeline",
+      label: "timeline",
+      names: value.milestone
+        ? [
+            [
+              value.milestone.is_first_time ? "First Time" : null,
+              value.milestone.shape === "period" ? "Period" : "Moment",
+              timelineLaneLabels[value.milestone.lane],
+            ]
+              .filter(Boolean)
+              .join(" · "),
+          ]
+        : [],
     },
   ]
     .filter((group) => group.names.length > 0)

@@ -29,7 +29,6 @@ create function pg_temp.save(p_kind text, p_id uuid, p_body text) returns uuid l
 declare
   result uuid;
   current_revision integer := (select revision from public.entries where id = p_id);
-  track uuid := (select id from public.timeline_tracks where owner_id = auth.uid() and system_key = 'other_events');
   input jsonb := jsonb_build_object('title','Rich ' || p_kind,'body',p_body,
     'datePrecision','unknown',
     'tagNames','[]'::jsonb,'id',p_id,'revision',current_revision);
@@ -37,17 +36,6 @@ begin
   if p_kind = 'goal' then
     select entry_id into result from public.save_goal_entry(
       'Rich goal',p_body,'active',null,'{}',p_id,current_revision);
-  elsif p_kind = 'moment' then
-    select entry_id into result from public.save_timeline_entry_with_organization(
-      track,'event','Rich moment',p_body,null,null,'unknown',null,'UTC','{}',p_id,current_revision);
-  elsif p_kind = 'period' then
-    select entry_id into result from public.save_timeline_entry_with_occurrence(
-      track,'stage','Rich period',p_body,null,null,'unknown',null,'UTC',p_id,current_revision);
-  elsif p_kind = 'first_time' then
-    select entry_id into result from public.save_first_time_with_occurrence(
-      'Rich first time',p_body,null,'unknown',null,null,'{}',p_id,current_revision,null);
-  elsif p_kind = 'first_time_location' then
-    select entry_id into result from public.save_first_time_with_location(input,null);
   elsif p_kind = 'home' then
     select entry_id into result from public.save_home_entry_with_occurrence(
       'Rich home',p_body,null,null,'unknown',null,'UTC',null,null,'{}',p_id,current_revision);
@@ -117,8 +105,7 @@ select is(
 -- Each focused writer keeps matching formatting and drops it once the writing changes.
 insert into writers
 select kind, pg_temp.save(kind,null,'Original words')
-from unnest(array['goal','moment','period','first_time','first_time_location','home','home_location',
-  'vehicle','vehicle_location']) as kind;
+from unnest(array['goal','home','home_location','vehicle','vehicle_location']) as kind;
 select isnt(id,null,kind || ' is created') from writers;
 -- Record formatting the way Capture and Inbox review store it.
 update public.entries
@@ -157,7 +144,7 @@ values ('96600000-0000-4000-8000-000000000005',auth.uid(),'Review','Review words
   'unknown','UTC',jsonb_build_object('body_rich',pg_temp.rich('Review words')));
 select is(
   (select revision from public.save_entry('96600000-0000-4000-8000-000000000005',1,
-    'Reviewed','Review words', pg_temp.rich('Review words'),null,null,'UTC',null,'unknown','{}',null, null)),
+    'Reviewed','Review words', pg_temp.rich('Review words'),null,null,'UTC',null,'unknown','{}',null, null, null)),
   2,
   'A review with unchanged writing succeeds'
 );
@@ -165,7 +152,7 @@ select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000005'),'Review word
   'A review with unchanged writing keeps its formatting');
 select is(
   (select revision from public.save_entry('96600000-0000-4000-8000-000000000005',2,
-    'Reviewed','Formatted words', pg_temp.rich('Formatted words'),null,null,'UTC',null,'unknown','{}',null, null)),
+    'Reviewed','Formatted words', pg_temp.rich('Formatted words'),null,null,'UTC',null,'unknown','{}',null, null, null)),
   3,
   'A rich review saves new writing with its formatting'
 );
@@ -173,7 +160,7 @@ select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000005'),'Formatted w
   'A rich review stores formatting for its new writing');
 select is(
   (select revision from public.save_entry('96600000-0000-4000-8000-000000000005',3,
-    'Reviewed','Plain edit', null,null,null,'UTC',null,'unknown','{}',null, null)),
+    'Reviewed','Plain edit', null,null,null,'UTC',null,'unknown','{}',null, null, null)),
   4,
   'A review without formatting saves new writing'
 );

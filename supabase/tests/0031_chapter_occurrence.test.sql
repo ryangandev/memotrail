@@ -65,7 +65,7 @@ select throws_ok($$select pg_temp.save_vehicle('exact','infinity')$$,'22023','in
 select throws_ok($$select pg_temp.save_vehicle('year','2023-01-01','2017-01-01')$$,'22023','invalid_vehicle_range','vehicle: reversed chapter rejected');
 select throws_ok($$select pg_temp.save_vehicle(null)$$,'22023','invalid_date_precision','vehicle: null precision rejected');
 select is(count(*),8::bigint,'vehicle: rejected writes create no orphan entries') from public.entries where item_kind='entity' and item_subtype='vehicle';
-select is(count(*),16::bigint,'Timeline retains every specialized chapter') from public.timeline_workspace_with_organization(false) where item_kind = 'entity' and item_subtype in ('home','vehicle');
+select is(count(*),16::bigint,'Timeline retains every specialized chapter') from public.timeline_workspace() where item_kind = 'entity' and item_subtype in ('home','vehicle') and shape = 'period';
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000090',true);
 select is(pg_temp.save_home('unknown',null,null,null,id,2),null::uuid,'home: cross-owner mutation denied') from home_fixture;
 select is(count(*),0::bigint,'home: cross-owner read denied') from public.homes_workspace();

@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import {
-  isFirstTimeUuid,
-  parseFirstTimeAttachmentInput,
-  type FirstTimeAttachmentInput,
-} from "@/lib/data/first-time-input";
+  isEntryUuid,
+  parseEntryAttachmentInput,
+  type EntryAttachmentInput,
+} from "@/lib/data/entry-photo-input";
 import {
   isGoalEntryIdentity,
   parseGoalAchievementInput,
@@ -105,9 +105,9 @@ export async function markGoalAchieved(
 }
 
 export async function registerGoalAttachment(
-  input: FirstTimeAttachmentInput,
+  input: EntryAttachmentInput,
 ): Promise<GoalActionResult> {
-  const parsed = parseFirstTimeAttachmentInput(input);
+  const parsed = parseEntryAttachmentInput(input);
   if (!parsed.success) return result("error", parsed.message);
 
   const context = await getAuthenticatedContext();
@@ -145,7 +145,7 @@ export async function registerGoalAttachment(
 export async function trashGoalAttachment(input: {
   attachmentId: string;
 }): Promise<GoalActionResult> {
-  if (!isFirstTimeUuid(input.attachmentId)) {
+  if (!isEntryUuid(input.attachmentId)) {
     return result(
       "error",
       "This photo reference is invalid. Refresh and try again.",

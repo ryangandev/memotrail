@@ -118,12 +118,6 @@ const records = {
       p_model_year: null,
     },
   },
-  first_time: {
-    label: "First Time",
-    path: "/first-times",
-    rpc: "save_first_time_with_occurrence",
-    args: { ...common, ...dates },
-  },
 } as const;
 type RecordKind = keyof typeof records;
 

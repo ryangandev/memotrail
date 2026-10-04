@@ -7,7 +7,7 @@ import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
-for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
+for (const kind of ["home", "vehicle", "goal"] as const) {
   for (const interrupted of [
     "registration",
     "upload",
@@ -75,11 +75,6 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
           p_occurred_timezone: "UTC",
         };
         const configs = {
-          first_time: {
-            path: "/first-times",
-            rpc: "save_first_time_with_occurrence",
-            args: { ...common, ...dates },
-          },
           home: {
             path: "/homes",
             rpc: "save_home_entry_with_occurrence",
@@ -121,8 +116,7 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
         })
           .png()
           .toBuffer();
-        const previewCase =
-          kind === "first_time" && interrupted === "registration";
+        const previewCase = kind === "home" && interrupted === "registration";
         const selectedBytes = previewCase
           ? Buffer.from(
               readFileSync(
@@ -157,7 +151,6 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
           .click();
         await expect(page).toHaveURL(`${config.path}/${entry}`);
         const label = {
-          first_time: "First Time",
           home: "Home",
           vehicle: "Vehicle",
           goal: "Want to Do",

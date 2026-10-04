@@ -18,29 +18,33 @@ import {
 } from "./home-resurfacing";
 import { getAuthenticatedContext, type Viewer } from "./inbox";
 import { parseWikiItemRows, type WikiItemSummary } from "./wiki-items";
+import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
+import { isTimelineLane, type TimelineLane } from "./milestone";
 
 export type { HomeAttachment, HomeEntry } from "./home-entry";
 export type { HomeResurfacedMemory } from "./home-resurfacing";
 
-export type HomeStage = {
-  body: string;
+/** A Home, Vehicle, or Period that has started and has no end yet. */
+export type HomeNowItem = {
   datePrecision: string;
   entryId: string;
+  isFirstTime: boolean;
+  itemKind: WikiItemKind;
+  itemSubtype: string;
+  lane: TimelineLane;
   occurredEnd: string | null;
   occurredLabel: string | null;
   occurredStart: string;
   occurredTimezone: string | null;
   title: string;
-  trackId: string;
-  trackName: string;
 };
 
 export type HomeSnapshot = {
   tagCount: number;
-  currentStageCount: number;
-  currentStages: HomeStage[];
   entryCount: number;
   firstTimeCount: number;
+  nowCount: number;
+  nowItems: HomeNowItem[];
   profileDisplayName: string | null;
   recentEntries: HomeEntry[];
   snapshotDate: string;
@@ -147,9 +151,9 @@ function parseHomeRow(value: unknown): HomeSnapshot | null {
 
   const row = value[0];
   const recentEntries = parseHomeEntries(row.recent_entries);
-  const currentStages = parseCurrentStages(row.current_stages);
+  const nowItems = parseNowItems(row.now_items);
   const counts = [
-    row.current_stage_count,
+    row.now_count,
     row.entry_count,
     row.first_time_count,
     row.tag_count,
@@ -158,7 +162,7 @@ function parseHomeRow(value: unknown): HomeSnapshot | null {
   if (
     counts.some((count) => count === null) ||
     !recentEntries ||
-    !currentStages ||
+    !nowItems ||
     typeof row.snapshot_date !== "string" ||
     !nullableString(row.profile_display_name)
   ) {
@@ -166,10 +170,10 @@ function parseHomeRow(value: unknown): HomeSnapshot | null {
   }
 
   return {
-    currentStageCount: counts[0]!,
-    currentStages,
     entryCount: counts[1]!,
     firstTimeCount: counts[2]!,
+    nowCount: counts[0]!,
+    nowItems,
     profileDisplayName: row.profile_display_name,
     recentEntries,
     snapshotDate: row.snapshot_date,
@@ -177,21 +181,22 @@ function parseHomeRow(value: unknown): HomeSnapshot | null {
   };
 }
 
-function parseCurrentStages(value: unknown): HomeStage[] | null {
+function parseNowItems(value: unknown): HomeNowItem[] | null {
   if (!Array.isArray(value)) {
     return null;
   }
 
-  const stages: HomeStage[] = [];
+  const items: HomeNowItem[] = [];
 
   for (const item of value) {
     if (
       !isRecord(item) ||
       typeof item.entry_id !== "string" ||
       typeof item.title !== "string" ||
-      typeof item.body !== "string" ||
-      typeof item.track_id !== "string" ||
-      typeof item.track_name !== "string" ||
+      !isWikiItemKind(item.item_kind) ||
+      typeof item.item_subtype !== "string" ||
+      !isTimelineLane(item.lane) ||
+      typeof item.is_first_time !== "boolean" ||
       typeof item.occurred_start !== "string" ||
       !nullableString(item.occurred_end) ||
       typeof item.date_precision !== "string" ||
@@ -201,21 +206,22 @@ function parseCurrentStages(value: unknown): HomeStage[] | null {
       return null;
     }
 
-    stages.push({
-      body: item.body,
+    items.push({
       datePrecision: item.date_precision,
       entryId: item.entry_id,
+      isFirstTime: item.is_first_time,
+      itemKind: item.item_kind,
+      itemSubtype: item.item_subtype,
+      lane: item.lane,
       occurredEnd: item.occurred_end,
       occurredLabel: item.occurred_label,
       occurredStart: item.occurred_start,
       occurredTimezone: item.occurred_timezone,
       title: item.title,
-      trackId: item.track_id,
-      trackName: item.track_name,
     });
   }
 
-  return stages;
+  return items;
 }
 
 async function signedImageUrls(

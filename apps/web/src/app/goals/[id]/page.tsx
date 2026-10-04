@@ -1,7 +1,7 @@
 import { FocusedDetailUnavailable } from "@/components/focused-detail-unavailable";
 import { FocusedRecordDetail } from "@/components/focused-record-detail";
 import { getGoalsWorkspace } from "@/lib/data/goal-records";
-import { isFirstTimeUuid } from "@/lib/data/first-time-input";
+import { isEntryUuid } from "@/lib/data/entry-photo-input";
 
 export const dynamic = "force-dynamic";
 export default async function GoalDetailPage({
@@ -10,7 +10,7 @@ export default async function GoalDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  if (!isFirstTimeUuid(id))
+  if (!isEntryUuid(id))
     return <FocusedDetailUnavailable label="Want to Do" back="/goals" />;
   const workspace = await getGoalsWorkspace(id);
   if (!workspace) return null;

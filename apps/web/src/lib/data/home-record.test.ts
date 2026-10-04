@@ -32,8 +32,6 @@ const row = {
   occurred_timezone: "America/Los_Angeles",
   revision: 2,
   tag_names: ["California"],
-  timeline_track_id: "70000000-0000-4000-8000-000000000001",
-  timeline_track_name: "Homes",
   title: "California home",
   total_count: 1,
   updated_at: "2026-09-03T10:00:00Z",
@@ -82,7 +80,6 @@ describe("Home records", () => {
     expect(records?.[0]).toMatchObject({
       attachments: [{ imageUrl: null, mimeType: "image/jpeg" }],
       location: null,
-      timelineTrackName: "Homes",
     });
   });
 

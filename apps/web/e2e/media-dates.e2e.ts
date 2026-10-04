@@ -387,6 +387,7 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
       },
       p_primary_location: null,
       p_body_rich: null,
+      p_milestone: null,
     };
     const race = await Promise.all([
       client.rpc("save_entry", raceInput),

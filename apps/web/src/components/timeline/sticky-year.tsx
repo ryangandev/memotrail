@@ -1,5 +1,5 @@
 import { SeparatedList } from "@/components/separated-list";
-import type { TimelineEntry } from "@/lib/data/timeline";
+import Link from "next/link";
 import type {
   TimelineDisplayItem,
   TimelineDisplayModel,
@@ -8,24 +8,18 @@ import {
   groupTimelineYears,
   timelineEntryTypeLabel,
 } from "@/lib/data/timeline-presentation";
+import { wikiEntryHref } from "@/lib/data/wiki-item";
 import styles from "./sticky-year.module.css";
 
-function FeedCard({
-  item,
-  onSelect,
-}: {
-  item: TimelineDisplayItem;
-  onSelect: (entry: TimelineEntry) => void;
-}) {
+function FeedCard({ item }: { item: TimelineDisplayItem }) {
   return (
-    <button
-      aria-label={`${item.entry.title}, ${item.dateLabel}, ${item.trackName}`}
-      className={`${styles.card} ${item.entry.kind === "stage" ? styles.period : ""}`}
-      onClick={() => onSelect(item.entry)}
-      type="button"
+    <Link
+      aria-label={`${item.entry.title}, ${item.dateLabel}, ${item.laneName}`}
+      className={`${styles.card} ${item.entry.shape === "period" ? styles.period : ""}`}
+      href={wikiEntryHref(item.entry)}
     >
       <SeparatedList className={styles.cardMeta}>
-        <span className={styles.trackName}>{item.trackName}</span>
+        <span className={styles.laneName}>{item.laneName}</span>
         <span>{item.dateLabel}</span>
       </SeparatedList>
       <strong>{item.entry.title}</strong>
@@ -35,17 +29,11 @@ function FeedCard({
       <span className={styles.cardBottom}>
         <span>{timelineEntryTypeLabel(item.entry)}</span>
       </span>
-    </button>
+    </Link>
   );
 }
 
-export function StickyYear({
-  model,
-  onSelect,
-}: {
-  model: TimelineDisplayModel;
-  onSelect: (entry: TimelineEntry) => void;
-}) {
+export function StickyYear({ model }: { model: TimelineDisplayModel }) {
   return (
     <div aria-label="Timeline by year" className={styles.feed} role="region">
       {groupTimelineYears(model).map(([year, items]) => (
@@ -62,7 +50,7 @@ export function StickyYear({
           </div>
           <div className={styles.cards}>
             {items.map((item) => (
-              <FeedCard item={item} key={item.entry.id} onSelect={onSelect} />
+              <FeedCard item={item} key={item.entry.id} />
             ))}
           </div>
         </section>
@@ -78,7 +66,7 @@ export function StickyYear({
           </div>
           <div className={styles.cards}>
             {model.undated.map((item) => (
-              <FeedCard item={item} key={item.entry.id} onSelect={onSelect} />
+              <FeedCard item={item} key={item.entry.id} />
             ))}
           </div>
         </section>

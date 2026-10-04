@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { TimelineEntry, TimelineTrack } from "./timeline";
+import type { TimelineEntry, TimelineLaneGroup } from "./timeline";
 import {
   createTimelineDisplayModel,
   groupTimelineYears,
@@ -12,36 +12,30 @@ function entry(overrides: Partial<TimelineEntry>): TimelineEntry {
     datePrecision: "unknown",
     id: "entry-1",
     itemKind: "entry",
-    itemSubtype: "moment",
-    kind: "event",
+    isFirstTime: false,
+    itemSubtype: "entry",
+    lane: "other",
     occurredEnd: null,
     occurredLabel: null,
     occurredStart: null,
     occurredTimezone: "UTC",
     revision: 1,
+    shape: "moment",
     tagNames: [],
     title: "Moment",
-    trackId: "track-1",
     updatedAt: "2026-09-24T00:00:00Z",
     ...overrides,
   };
 }
 
-function track(items: TimelineEntry[]): TimelineTrack {
-  return {
-    id: "track-1",
-    isHidden: false,
-    items,
-    name: "Life",
-    sortOrder: 0,
-    systemKey: null,
-  };
+function lane(items: TimelineEntry[]): TimelineLaneGroup {
+  return { items, key: "other", name: "Other milestones" };
 }
 
 describe("Timeline presentation", () => {
   it("keeps unanchored approximate and unknown dates outside year groups", () => {
     const model = createTimelineDisplayModel([
-      track([
+      lane([
         entry({
           id: "approximate",
           datePrecision: "approximate",
@@ -59,7 +53,7 @@ describe("Timeline presentation", () => {
 
   it("groups an exact date in the recorded timezone", () => {
     const model = createTimelineDisplayModel([
-      track([
+      lane([
         entry({
           datePrecision: "exact",
           occurredStart: "2025-01-01T01:00:00.000Z",
@@ -73,12 +67,13 @@ describe("Timeline presentation", () => {
 
   it("retains focused record identity and the full period date range", () => {
     const model = createTimelineDisplayModel([
-      track([
+      lane([
         entry({
           datePrecision: "range",
           itemKind: "entity",
           itemSubtype: "home",
-          kind: "stage",
+          lane: "homes",
+          shape: "period",
           occurredStart: "2008-09-01T12:00:00Z",
           occurredEnd: "2012-06-01T12:00:00Z",
         }),
@@ -86,5 +81,12 @@ describe("Timeline presentation", () => {
     ]);
     expect(model.dated[0]?.dateLabel).toContain("2012");
     expect(timelineEntryTypeLabel(model.dated[0].entry)).toBe("Home");
+  });
+
+  it("labels a First Time milestone before its shape", () => {
+    expect(timelineEntryTypeLabel(entry({ isFirstTime: true }))).toBe(
+      "First Time",
+    );
+    expect(timelineEntryTypeLabel(entry({ shape: "period" }))).toBe("Period");
   });
 });

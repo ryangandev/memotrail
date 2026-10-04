@@ -24,13 +24,11 @@ begin
       select entry_id into created from public.save_vehicle_entry_with_occurrence(
         'Revision vehicle', 'Original writing', '2021-04-12T12:00:00Z', null, 'day', null, 'UTC',
         'Honda', 'Civic', 2018, 'Blue', '{}', null, null);
-    when 'first time' then
-      select entry_id into created from public.save_first_time_with_occurrence(
-        'Revision first time', 'Original writing', '2021-04-12T12:00:00Z', 'day', null, 'UTC', '{}', null, null, null);
-    when 'moment' then
-      select entry_id into created from public.save_timeline_entry_with_occurrence(
-        (select id from public.timeline_tracks where owner_id = auth.uid() and system_key = 'other_events'),
-        'event', 'Revision moment', 'Original writing', null, null, 'unknown', null, 'UTC', null, null);
+    when 'milestone' then
+      select entry_id into created from public.save_entry(
+        gen_random_uuid(), null, 'Revision milestone', 'Original writing', null,
+        '2021-04-12T12:00:00Z', null, 'UTC', null, 'day', '{}', null, null,
+        '{"shape":"moment","lane":"other","isFirstTime":true}');
   end case;
   return created;
 end;
@@ -48,10 +46,11 @@ begin
       select revision into written from public.trash_home_entry(p_entry_id, p_revision);
     when 'vehicle' then
       select revision into written from public.trash_vehicle_entry(p_entry_id, p_revision);
-    when 'first time' then
-      select revision into written from public.trash_first_time_entry(p_entry_id, p_revision);
-    when 'moment' then
-      select revision into written from public.trash_timeline_entry(p_entry_id, p_revision);
+    when 'milestone' then
+      -- The Item page moves an Entry to Trash with a revision-checked update.
+      update public.entries set deleted_at = now()
+      where id = p_entry_id and revision = p_revision and deleted_at is null
+      returning revision into written;
     when 'achieve' then
       select goal_revision into written from public.achieve_goal_with_occurrence(
         p_entry_id, p_revision, null, 'unknown', null, null, null);
@@ -88,9 +87,9 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
 insert into fixtures(kind, outcome, id)
 select kind, outcome, pg_temp.create_record(kind)
-from unnest(array['goal', 'home', 'vehicle', 'first time', 'moment', 'achieve']) as kind,
+from unnest(array['goal', 'home', 'vehicle', 'milestone', 'achieve']) as kind,
   unnest(array['adopt', 'conflict']) as outcome;
-select is((select count(*) from fixtures where id is not null), 12::bigint, 'Every lifecycle writer has two fresh records');
+select is((select count(*) from fixtures where id is not null), 10::bigint, 'Every lifecycle writer has two fresh records');
 
 reset role;
 update fixtures set photo_id = pg_temp.add_photo(id);
@@ -137,9 +136,7 @@ from (values
   ('achieve', 'public.achieve_goal_with_occurrence(uuid,integer,timestamptz,text,text,text,timestamptz)'::regprocedure),
   ('goal', 'public.trash_goal_entry(uuid,integer)'::regprocedure),
   ('home', 'public.trash_home_entry(uuid,integer)'::regprocedure),
-  ('vehicle', 'public.trash_vehicle_entry(uuid,integer)'::regprocedure),
-  ('first time', 'public.trash_first_time_entry(uuid,integer)'::regprocedure),
-  ('moment', 'public.trash_timeline_entry(uuid,integer)'::regprocedure)
+  ('vehicle', 'public.trash_vehicle_entry(uuid,integer)'::regprocedure)
 ) as writers(kind, writer) join pg_proc on pg_proc.oid = writers.writer order by kind;
 select ok(not has_function_privilege('anon', writer, 'execute')
     and has_function_privilege('authenticated', writer, 'execute'),
@@ -148,9 +145,7 @@ from unnest(array[
   'public.achieve_goal_with_occurrence(uuid,integer,timestamptz,text,text,text,timestamptz)',
   'public.trash_goal_entry(uuid,integer)',
   'public.trash_home_entry(uuid,integer)',
-  'public.trash_vehicle_entry(uuid,integer)',
-  'public.trash_first_time_entry(uuid,integer)',
-  'public.trash_timeline_entry(uuid,integer)'
+  'public.trash_vehicle_entry(uuid,integer)'
 ]) as writer order by writer;
 select * from finish();
 rollback;

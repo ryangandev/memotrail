@@ -68,11 +68,6 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
       ).error,
     ).toBeNull();
     // Each record is saved the way its editor saves it.
-    const { data: track } = await client
-      .from("timeline_tracks")
-      .select("id")
-      .limit(1)
-      .single();
     const saves = await Promise.all([
       client.rpc("save_home_entry_with_occurrence", {
         p_body: "",
@@ -113,31 +108,21 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
         p_target_date: null,
         p_title: "Hike the coast trail",
       }),
-      client.rpc("save_first_time_with_occurrence", {
+      client.rpc("save_entry", {
         p_body: "",
-        p_date_precision: "day",
-        p_entry_id: null,
-        p_expected_revision: null,
-        p_occurred_end: null,
-        p_occurred_label: null,
-        p_occurred_start: "2024-03-02T12:00:00+00:00",
-        p_occurred_timezone: "UTC",
-        p_tag_names: [],
-        p_title: "First sourdough loaf",
-      }),
-      client.rpc("save_timeline_entry_with_organization", {
-        p_body: "",
+        p_body_rich: null,
         p_date_precision: "range",
-        p_entry_id: null,
+        p_entry_id: randomUUID(),
         p_expected_revision: null,
+        p_milestone: { isFirstTime: true, lane: "other", shape: "period" },
         p_occurred_end: "2017-07-15T12:00:00+00:00",
         p_occurred_label: null,
         p_occurred_start: "2017-07-08T12:00:00+00:00",
         p_occurred_timezone: "UTC",
+        p_photo_location: null,
+        p_primary_location: null,
         p_tag_names: [],
-        p_timeline_kind: "stage",
         p_title: "First trip to Japan",
-        p_track_id: track!.id,
       }),
     ]);
     for (const saved of saves) expect(saved.error).toBeNull();
@@ -155,7 +140,6 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
         [`/homes/${idFor("Maple Street flat")}`, "Edit Home"],
         [`/vehicles/${idFor("Blue hatchback")}`, "Edit Vehicle"],
         [`/goals/${idFor("Hike the coast trail")}`, "Edit Want to Do"],
-        [`/first-times/${idFor("First sourdough loaf")}`, "Edit First Time"],
       ]) {
         await page.goto(path);
         await openEditor(
@@ -165,13 +149,13 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
         await expectFooterApartAndReachable(page, `${edit} at ${width}`);
       }
 
-      await page.goto("/timeline");
+      // A First Time is edited as its Entry, which moves to Trash from its page.
+      await page.goto(`/items/${idFor("First trip to Japan")}`);
       await openEditor(
         page,
-        page.getByRole("button", { name: /First trip to Japan/ }),
+        page.getByRole("button", { name: "Edit Entry", exact: true }),
       );
-      const dialog = page.getByRole("dialog");
-      await expectFooterApartAndReachable(page, `Edit moment at ${width}`);
+      const dialog = page.getByRole("dialog", { name: "Edit Entry" });
       // The footer lines up with the form above it, like every other editor.
       const title = await dialog
         .getByRole("textbox", { name: "Title" })

@@ -19,14 +19,16 @@ declare
     'id',p_id,'revision',(select revision from public.entries where id = p_id));
 begin
   if p_kind = 'first_time' then
-    select entry_id into result from public.save_first_time_with_location(input, p_location);
+    select entry_id into result from public.save_entry(
+      coalesce(p_id, gen_random_uuid()),(select revision from public.entries where id = p_id),'Writer first time','Memories',
+      null,null,null,'UTC',null,'unknown','{}',p_location,null,'{"shape":"moment","lane":"other","isFirstTime":true}');
   elsif p_kind = 'vehicle' then
     select entry_id into result from public.save_vehicle_with_location(input, p_location);
   elsif p_kind = 'home' then
     select entry_id into result from public.save_home_with_location(input, p_location);
   else
     select entry_id into result from public.save_entry(
-      p_id,(select revision from public.entries where id = p_id),'Writer entry','Memories',null,null,null,'UTC',null,'unknown','{}',p_location,null);
+      p_id,(select revision from public.entries where id = p_id),'Writer entry','Memories',null,null,null,'UTC',null,'unknown','{}',p_location,null, null);
   end if;
   return result;
 end;
@@ -77,29 +79,25 @@ select is((select created_at from public.entry_links where source_entry_id = (se
 select is((select updated_at from public.goals where entry_id = (select id from writers where kind = 'goal')),
   '2000-01-01'::timestamptz,'Title-only Goal saves do not update specialized details');
 
--- Timeline saves preserve presentation order when only writing changes.
-insert into writers
-select 'timeline', entry_id from public.save_timeline_entry_with_occurrence(
-  (select id from public.timeline_tracks where owner_id = auth.uid() and system_key = 'other_events'),
-  'event','Moment','Memories',null,null,'unknown',null,'UTC',null,null);
+-- Entry saves skip an unchanged milestone.
 reset role;
-update public.timeline_items set created_at = '2000-01-01', sort_order = 7 where entry_id = (select id from writers where kind = 'timeline');
+alter table public.milestones disable trigger milestones_set_updated_at;
+update public.milestones set updated_at = '2000-01-01' where entry_id = (select id from writers where kind = 'first_time');
+alter table public.milestones enable trigger milestones_set_updated_at;
 set local role authenticated;
-select entry_id from public.save_timeline_entry_with_occurrence(
-  (select id from public.timeline_tracks where owner_id = auth.uid() and system_key = 'other_events'),
-  'event','Renamed Moment','Memories',null,null,'unknown',null,'UTC',(select id from writers where kind = 'timeline'),1);
-select is((select created_at from public.timeline_items where entry_id = (select id from writers where kind = 'timeline')),
-  '2000-01-01'::timestamptz,'Moment saves retain unchanged Timeline created_at');
-select is((select sort_order from public.timeline_items where entry_id = (select id from writers where kind = 'timeline')),
-  7,'Moment saves preserve existing Timeline presentation order');
-select entry_id from public.save_timeline_entry_with_occurrence(
-  (select id from public.timeline_tracks where owner_id = auth.uid() and system_key = 'homes'),
-  'event','Renamed Moment','Memories',null,null,'unknown',null,'UTC',(select id from writers where kind = 'timeline'),2);
-select is((select count(*) from public.timeline_items where entry_id = (select id from writers where kind = 'timeline')),
-  1::bigint,'Changing a Moment track removes the old placement');
-select is((select track_id from public.timeline_items where entry_id = (select id from writers where kind = 'timeline')),
-  (select id from public.timeline_tracks where owner_id = auth.uid() and system_key = 'homes'),
-  'Changing a Moment track selects the requested track');
+select is(pg_temp.save_primary('first_time',(select id from writers where kind = 'first_time'),null),
+  (select id from writers where kind = 'first_time'),'An Entry with an unchanged milestone saves');
+select is((select updated_at from public.milestones where entry_id = (select id from writers where kind = 'first_time')),
+  '2000-01-01'::timestamptz,'Saving an unchanged milestone does not rewrite it');
+select entry_id from public.save_entry(
+  (select id from writers where kind = 'first_time'),
+  (select revision from public.entries where id = (select id from writers where kind = 'first_time')),
+  'Writer first time','Memories',null,null,null,'UTC',null,'unknown','{}',null,null,
+  '{"shape":"moment","lane":"work_study","isFirstTime":true}');
+select is((select lane from public.milestones where entry_id = (select id from writers where kind = 'first_time')),
+  'work_study','Changing the lane updates the milestone');
+select isnt((select updated_at from public.milestones where entry_id = (select id from writers where kind = 'first_time')),
+  '2000-01-01'::timestamptz,'A changed milestone records its update');
 reset role;
 select * from finish();
 rollback;

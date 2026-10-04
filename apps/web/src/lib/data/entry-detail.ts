@@ -1,4 +1,5 @@
 import type { WikiItemKind } from "./wiki-item";
+import type { MilestoneLane, MilestoneShape } from "./milestone";
 
 /** The current Entry the Item page shows, as `entry_detail` returns it. */
 export type EntryDetail = {
@@ -23,11 +24,11 @@ export type EntryDetail = {
     latitude: number | null;
     longitude: number | null;
   }[];
-  timeline_items: {
-    track_id: string;
-    timeline_kind: string;
-    track_name: string;
-  }[];
+  milestone: {
+    shape: MilestoneShape;
+    lane: MilestoneLane;
+    is_first_time: boolean;
+  } | null;
   links: { target_entry_id: string; relationship: string }[];
 };
 

@@ -56,7 +56,7 @@
   background: var(--mt-color-surface-raised);
   box-shadow: var(--mt-shadow-raised);
   text-align: left;
-  cursor: pointer;
+  text-decoration: none;
   transition: border-color var(--mt-motion-quick);
 }
 
@@ -86,7 +86,7 @@
   gap: var(--mt-space-2);
 }
 
-.trackName {
+.laneName {
   color: var(--mt-color-accent);
   font-weight: var(--mt-font-weight-semibold);
 }

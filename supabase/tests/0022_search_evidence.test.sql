@@ -30,7 +30,9 @@ select throws_ok($$select public.archive_wiki_search_evidence('{}','{}','{}','20
 select throws_ok($$select public.archive_wiki_search_evidence('{}','{}','{}',null,null,false,'invalid')$$,'22023','invalid_evidence_request','Sort contract validated');
 reset role;
 insert into public.entries(owner_id,title,body,item_kind,item_subtype,occurred_start)
- select '10000000-0000-0000-0000-000000000001','Chronological skiing evidence','Unique skiing stress fixture','entry','first_time',('2000-01-01'::date+n)::timestamptz from generate_series(0,110) n;
+ select '10000000-0000-0000-0000-000000000001','Chronological skiing evidence','Unique skiing stress fixture','entry','entry',('2000-01-01'::date+n)::timestamptz from generate_series(0,110) n;
+insert into public.milestones(entry_id,owner_id,shape,lane,is_first_time)
+ select id,owner_id,'moment','other',true from public.entries where body='Unique skiing stress fixture';
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
 select is((public.archive_wiki_search_evidence(array['Unique skiing stress fixture'],array['first_time'],'{}',null,null,false,'oldest')->'entries'->0->>'occurred_start')::timestamptz,'2000-01-01'::timestamptz,'Earliest result is selected before limiting even with over 100 matches');

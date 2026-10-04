@@ -90,8 +90,8 @@ const types = [
   "entry",
   "entity",
   "goal",
+  "milestone",
   "first_time",
-  "period",
   "home",
   "vehicle",
 ];

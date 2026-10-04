@@ -9,7 +9,6 @@ import { PageHeader } from "@/components/page-header";
 import { ProgressiveImage } from "@/components/progressive-image";
 import { HomeEditor } from "@/components/homes-workspace";
 import { VehicleEditor } from "@/components/vehicles-workspace";
-import { FirstTimeEditor } from "@/components/first-times-workspace";
 import { GoalEditor } from "@/components/goals-workspace";
 import {
   homeLocationLabel,
@@ -26,8 +25,6 @@ import {
   goalTargetDate,
   type GoalRecord,
 } from "@/lib/data/goal-record";
-import { occurrenceLabel } from "@/lib/data/occurrence";
-import type { FirstTimeEntry } from "@/lib/data/first-times";
 import { wikiEntryHref } from "@/lib/data/wiki-item";
 import {
   locationDisplayLabel,
@@ -42,19 +39,16 @@ type Shared = {
 type Props =
   | ({ kind: "home"; record: HomeRecord } & Shared)
   | ({ kind: "vehicle"; record: VehicleRecord } & Shared)
-  | ({ kind: "first-time"; record: FirstTimeEntry } & Shared)
   | ({ kind: "goal"; record: GoalRecord } & Shared);
 
 const paths = {
   home: "/homes",
   vehicle: "/vehicles",
-  "first-time": "/first-times",
   goal: "/goals",
 };
 const labels = {
   home: "Home",
   vehicle: "Vehicle",
-  "first-time": "First Time",
   goal: "Want to Do",
 };
 
@@ -99,13 +93,6 @@ export function FocusedRecordDetail(props: Props) {
           <VehicleEditor
             {...sharedEditorProps}
             vehicle={record as VehicleRecord}
-            onSaved={setSaved}
-            onTrashed={() => router.push(back)}
-          />
-        ) : props.kind === "first-time" ? (
-          <FirstTimeEditor
-            {...sharedEditorProps}
-            entry={record as FirstTimeEntry}
             onSaved={setSaved}
             onTrashed={() => router.push(back)}
           />
@@ -224,25 +211,6 @@ function RecordContent({
             <Fact
               label="Location"
               value={optionalLocationLabel((record as VehicleRecord).location)}
-            />
-          </>
-        ) : null}
-        {kind === "first-time" ? (
-          <>
-            <Fact
-              label="When"
-              value={occurrenceLabel({
-                occurredAt: (record as FirstTimeEntry).occurredStart,
-                occurredEnd: (record as FirstTimeEntry).occurredEnd,
-                occurredLabel: (record as FirstTimeEntry).occurredLabel,
-                occurredTimezone:
-                  (record as FirstTimeEntry).occurredTimezone ?? "UTC",
-                datePrecision: (record as FirstTimeEntry).datePrecision,
-              })}
-            />
-            <Fact
-              label="Location"
-              value={optionalLocationLabel((record as FirstTimeEntry).location)}
             />
           </>
         ) : null}

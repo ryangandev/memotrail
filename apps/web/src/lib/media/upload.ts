@@ -1,15 +1,15 @@
 import { createClient } from "@/lib/supabase/client";
 import {
-  createFirstTimeObjectPath,
-  inferFirstTimeImageMimeType,
-  type FirstTimeAttachmentInput,
-} from "@/lib/data/first-time-input";
+  createEntryObjectPath,
+  inferEntryImageMimeType,
+  type EntryAttachmentInput,
+} from "@/lib/data/entry-photo-input";
 
 type RegisterPhoto = (
-  input: FirstTimeAttachmentInput,
+  input: EntryAttachmentInput,
 ) => Promise<{ status: string }>;
 type Operations = {
-  upload: (input: FirstTimeAttachmentInput, file: File) => Promise<boolean>;
+  upload: (input: EntryAttachmentInput, file: File) => Promise<boolean>;
   register: RegisterPhoto;
 };
 
@@ -53,15 +53,15 @@ export function createPhotoUploadBatch() {
           state = { id: crypto.randomUUID(), uploaded: false };
           scopes.set(scope, state);
         }
-        const mimeType = inferFirstTimeImageMimeType(file.name, file.type);
+        const mimeType = inferEntryImageMimeType(file.name, file.type);
         const objectPath = mimeType
-          ? createFirstTimeObjectPath(ownerId, entryId, state.id, mimeType)
+          ? createEntryObjectPath(ownerId, entryId, state.id, mimeType)
           : null;
         if (!mimeType || !objectPath) {
           failed[index] = true;
           return;
         }
-        const input: FirstTimeAttachmentInput = {
+        const input: EntryAttachmentInput = {
           attachmentId: state.id,
           entryId,
           objectPath,

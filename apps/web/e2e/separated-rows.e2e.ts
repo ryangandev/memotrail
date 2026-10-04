@@ -5,7 +5,7 @@ import {
 } from "./helpers/separators";
 import { expect, test } from "./helpers/workspace-test";
 
-test("Timeline summary keeps its separators between facts as it wraps", async ({
+test("Timeline summary keeps its separators between facts on phones", async ({
   page,
   workspace: { client, owner },
 }) => {
@@ -17,23 +17,20 @@ test("Timeline summary keeps its separators between facts as it wraps", async ({
         owner_id: owner,
         title: "Moved across the country",
         item_kind: "entry",
-        item_subtype: "moment",
+        item_subtype: "entry",
         occurred_start: "2017-06-01T12:00:00Z",
         occurred_timezone: "America/Los_Angeles",
         date_precision: "day",
       })
     ).error,
   ).toBeNull();
-  const track = (
-    await client.from("timeline_tracks").select("id").limit(1).single()
-  ).data;
   expect(
     (
-      await client.from("timeline_items").insert({
+      await client.from("milestones").insert({
         entry_id: momentId,
         owner_id: owner,
-        track_id: track!.id,
-        timeline_kind: "event",
+        shape: "moment",
+        lane: "other",
       })
     ).error,
   ).toBeNull();
@@ -46,18 +43,18 @@ test("Timeline summary keeps its separators between facts as it wraps", async ({
     .getByRole("button", { name: "Not now", exact: true })
     .click();
   const summary = page.getByLabel("Timeline summary");
-  await expect(summary).toContainText("1 moment");
+  await expect(summary).toContainText("1 item");
+  await expect(summary).toContainText("2017 to 2026");
   await expect(
     summary.getByRole("button", { name: "Set birth date" }),
   ).toBeVisible();
 
   for (const width of [320, 390]) {
     await page.setViewportSize({ width, height: 720 });
-    const lines = await expectSeparatorsBetweenWords(summary);
-    expect(lines.length, JSON.stringify(lines)).toBeGreaterThan(1);
+    await expectSeparatorsBetweenWords(summary);
     // The clip that hides a line's leading separator leaves its focus ring whole.
     await expectUnclippedFocusRing(
-      summary.getByRole("link", { name: "Manage tracks" }),
+      summary.getByRole("button", { name: "Set birth date" }),
     );
     await summary.screenshot({
       path: `/private/tmp/memotrail-timeline-summary-${width}.png`,
@@ -83,31 +80,20 @@ test("Dot-separated rows across the workspace keep their separators between fact
         title: "Lantern festival by the river",
         body: "Paper lanterns drifting down the river.",
         item_kind: "entry",
-        item_subtype: "moment",
+        item_subtype: "entry",
         occurred_start: "2017-06-01T12:00:00Z",
         occurred_timezone: "America/New_York",
         date_precision: "day",
       })
     ).error,
   ).toBeNull();
-  const track = (
-    await client.from("timeline_tracks").select("id").limit(1).single()
-  ).data;
   expect(
     (
-      await client
-        .from("timeline_tracks")
-        .update({ name: "Neighborhood friendships and community life" })
-        .eq("id", track!.id)
-    ).error,
-  ).toBeNull();
-  expect(
-    (
-      await client.from("timeline_items").insert({
+      await client.from("milestones").insert({
         entry_id: entryId,
         owner_id: owner,
-        track_id: track!.id,
-        timeline_kind: "event",
+        shape: "moment",
+        lane: "other",
       })
     ).error,
   ).toBeNull();
@@ -160,7 +146,6 @@ test("Dot-separated rows across the workspace keep their separators between fact
           .getByRole("button", { name: "Not now", exact: true })
           .click(),
       rows: 2,
-      wrapping: "Neighborhood friendships and community life",
     },
     {
       path: "/map",

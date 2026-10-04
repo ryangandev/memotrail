@@ -24,7 +24,7 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000175','leftovers-other@memotrail.local');
 insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,date_precision,occurred_timezone) values
   ('99740000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000174','Walk','Words','entry','entry','unknown','UTC'),
-  ('99740000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000174','First swim','Words','entry','first_time','unknown','UTC');
+  ('99740000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000174','Corner flat','Words','entity','home','unknown','UTC');
 
 select throws_ok(
   $$update public.entries set item_subtype = 'source_capture' where id = '99740000-0000-4000-8000-000000000001'$$,
@@ -34,17 +34,17 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000174',true);
 
 select is(
-  (select count(*) from public.save_entry('99740000-0000-4000-8000-000000000002',1,'First swim','Edited',null,
-    null,null,'UTC',null,'unknown','{}',null,null)),
+  (select count(*) from public.save_entry('99740000-0000-4000-8000-000000000002',1,'Corner flat','Edited',null,
+    null,null,'UTC',null,'unknown','{}',null,null, null)),
   0::bigint,
-  'The Entry editor saves plain Entries only'
+  'The Entry editor does not save a Home'
 );
 select is(
   (select revision from public.save_entry('99740000-0000-4000-8000-000000000001',1,'Walk','Edited',null,
     null,null,'UTC',null,'unknown','{}',
     jsonb_build_object('kind','provider','provider','geoapify','providerLocationId','corner',
       'formattedAddress','1 Corner Street','latitude',1.5,'longitude',2.5),
-    null)),
+    null, null)),
   2,
   'The Entry editor saves the writing and its primary Location together'
 );

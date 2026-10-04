@@ -75,7 +75,7 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
             title: "A day at Pine Street",
             body: "An event",
             item_kind: "entry",
-            item_subtype: "first_time",
+            item_subtype: "entry",
             date_precision: "day",
             occurred_start: "2020-06-01T00:00:00Z",
           },
@@ -100,6 +100,17 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
             deleted_at: new Date().toISOString(),
           },
         ])
+      ).error,
+    ).toBeNull();
+    expect(
+      (
+        await client.from("milestones").insert({
+          entry_id: eventId,
+          owner_id: owner,
+          shape: "moment",
+          lane: "other",
+          is_first_time: true,
+        })
       ).error,
     ).toBeNull();
     expect(

@@ -1,3 +1,5 @@
+import { milestoneLabel, type Milestone } from "./milestone";
+
 export const wikiItemKinds = ["entry", "entity", "goal"] as const;
 
 export type WikiItemKind = (typeof wikiItemKinds)[number];
@@ -22,6 +24,7 @@ export const wikiItemSearchGroups: readonly WikiItemSearchGroup[] = [
   {
     label: "Focused records",
     options: [
+      { label: "Timeline milestones", value: "milestone" },
       { label: "First Times", value: "first_time" },
       { label: "Homes", value: "home" },
       { label: "Vehicles", value: "vehicle" },
@@ -47,12 +50,7 @@ export function wikiItemKindLabel(kind: WikiItemKind) {
 }
 
 export function wikiItemSubtypeLabel(kind: WikiItemKind, subtype: string) {
-  if (kind === "entry") {
-    if (subtype === "first_time") return "First Time";
-    if (subtype === "moment") return "Moment";
-    if (subtype === "period") return "Period";
-    return "Entry";
-  }
+  if (kind === "entry") return "Entry";
   if (kind === "entity" && subtype === "home") return "Home";
   if (kind === "entity" && subtype === "vehicle") return "Vehicle";
   if (kind === "goal") return "Want to Do";
@@ -62,7 +60,13 @@ export function wikiItemSubtypeLabel(kind: WikiItemKind, subtype: string) {
     .join(" ");
 }
 
-export function wikiItemIdentityLabel(kind: WikiItemKind, subtype: string) {
+// A milestone Entry reads as what it is on Timeline: a First Time, a Period, or a Moment.
+export function wikiItemIdentityLabel(
+  kind: WikiItemKind,
+  subtype: string,
+  milestone: Pick<Milestone, "isFirstTime" | "shape"> | null = null,
+) {
+  if (kind === "entry" && milestone) return milestoneLabel(milestone);
   const kindLabel = wikiItemKindLabel(kind);
   const subtypeLabel = wikiItemSubtypeLabel(kind, subtype);
   return kindLabel.toLocaleLowerCase() === subtypeLabel.toLocaleLowerCase()
@@ -83,15 +87,6 @@ export function wikiEntryHref(item: {
   }
   if (item.itemKind === "goal") {
     return `/goals/${item.id}`;
-  }
-  if (item.itemKind === "entry" && item.itemSubtype === "first_time") {
-    return `/first-times/${item.id}`;
-  }
-  if (
-    item.itemKind === "entry" &&
-    (item.itemSubtype === "moment" || item.itemSubtype === "period")
-  ) {
-    return `/timeline?entry=${item.id}`;
   }
   return `/items/${item.id}`;
 }

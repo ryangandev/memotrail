@@ -128,23 +128,6 @@ test("specialized forms share photo fields and required-label conventions", asyn
     await goalDialog
       .getByRole("button", { name: "Close Want to Do editor", exact: true })
       .click();
-
-    await page.goto("/first-times");
-    await page
-      .getByRole("button", { name: "Add First Time", exact: true })
-      .click();
-    const firstTimeDialog = page.getByRole("dialog", {
-      name: "Keep a beginning",
-      exact: true,
-    });
-    const firstTimePhotos = firstTimeDialog.locator(
-      '[data-entry-photo-field="true"]',
-    );
-    await expect(firstTimePhotos).toBeVisible();
-    expect(await photoFieldStyle(firstTimePhotos)).toEqual(goalPhotoStyle);
-    await firstTimeDialog
-      .getByRole("button", { name: "Close First Time editor", exact: true })
-      .click();
   } finally {
     await admin.auth.admin.deleteUser(owner);
   }

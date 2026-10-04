@@ -1,16 +1,17 @@
 export type TimelineLayoutSource = {
   id: string;
-  kind: "event" | "stage";
+  lane: string;
   occurredEnd: string | null;
   occurredStart: string | null;
-  trackId: string;
+  shape: "moment" | "period";
 };
 
+// Overlapping items in one lane stack on separate rows.
 export type TimelinePosition = {
   id: string;
-  lane: number;
   leftPercent: number;
-  stageLabelOffsetPixels: number;
+  row: number;
+  periodLabelOffsetPixels: number;
   widthPixels: number;
   widthPercent: number;
 };
@@ -24,8 +25,8 @@ export type TimelineYearMarker = {
 export type TimelineLayout = {
   canvasWidth: number;
   end: string;
-  laneCountByTrack: Record<string, number>;
   positions: TimelinePosition[];
+  rowCountByLane: Record<string, number>;
   start: string;
   todayPercent: number;
   yearMarkers: TimelineYearMarker[];
@@ -34,10 +35,10 @@ export type TimelineLayout = {
 const minimumRangeMilliseconds = 365 * 24 * 60 * 60 * 1_000;
 const minimumCanvasWidthPixels = 840;
 const yearWidthPixels = 112;
-const minimumStageWidthPixels = 54;
-const eventWidthPixels = 126;
-const eventLeadingOffsetPixels = 6;
-const endAlignedEventThresholdPercent = 90;
+const minimumPeriodWidthPixels = 54;
+const momentWidthPixels = 126;
+const momentLeadingOffsetPixels = 6;
+const endAlignedMomentThresholdPercent = 90;
 
 export function createTimelineLayout(
   items: TimelineLayoutSource[],
@@ -51,7 +52,7 @@ export function createTimelineLayout(
       const start = validTime(item.occurredStart);
       const explicitEnd = item.occurredEnd ? validTime(item.occurredEnd) : null;
       const end =
-        item.kind === "stage"
+        item.shape === "period"
           ? Math.max(start ?? validReference, explicitEnd ?? validReference)
           : start;
 
@@ -112,99 +113,99 @@ export function createTimelineLayout(
     yearMarkers.length * yearWidthPixels,
   );
   const positions: TimelinePosition[] = [];
-  const laneCountByTrack: Record<string, number> = {};
+  const rowCountByLane: Record<string, number> = {};
   const renderedItems = normalized.map((item) => {
     const leftPercent = clamp(((item.start - earliest) / range) * 100);
     const widthPercent =
-      item.kind === "event"
+      item.shape === "moment"
         ? 0
         : clamp(((item.end - item.start) / range) * 100);
     const anchor = (leftPercent / 100) * canvasWidth;
     const widthPixels = (widthPercent / 100) * canvasWidth;
-    const stageLabelOffsetPixels =
-      item.kind === "stage" && item.occurredEnd === null
-        ? Math.min(0, widthPixels - minimumStageWidthPixels)
+    const periodLabelOffsetPixels =
+      item.shape === "period" && item.occurredEnd === null
+        ? Math.min(0, widthPixels - minimumPeriodWidthPixels)
         : 0;
     const visualStart =
-      item.kind === "event"
+      item.shape === "moment"
         ? Math.max(
             0,
             anchor -
-              (leftPercent > endAlignedEventThresholdPercent
-                ? eventWidthPixels - eventLeadingOffsetPixels
-                : eventLeadingOffsetPixels),
+              (leftPercent > endAlignedMomentThresholdPercent
+                ? momentWidthPixels - momentLeadingOffsetPixels
+                : momentLeadingOffsetPixels),
           )
-        : anchor + stageLabelOffsetPixels;
+        : anchor + periodLabelOffsetPixels;
     const visualEnd =
-      item.kind === "event"
+      item.shape === "moment"
         ? Math.min(
             canvasWidth,
             anchor +
-              (leftPercent > endAlignedEventThresholdPercent
-                ? eventLeadingOffsetPixels
-                : eventWidthPixels - eventLeadingOffsetPixels),
+              (leftPercent > endAlignedMomentThresholdPercent
+                ? momentLeadingOffsetPixels
+                : momentWidthPixels - momentLeadingOffsetPixels),
           )
         : Math.min(
             canvasWidth,
             anchor +
-              stageLabelOffsetPixels +
-              Math.max(widthPixels, minimumStageWidthPixels),
+              periodLabelOffsetPixels +
+              Math.max(widthPixels, minimumPeriodWidthPixels),
           );
 
     return {
       ...item,
       leftPercent,
-      stageLabelOffsetPixels,
+      periodLabelOffsetPixels,
       visualEnd,
       visualStart,
       widthPixels,
       widthPercent,
     };
   });
-  const itemsByTrack = new Map<string, typeof renderedItems>();
+  const itemsByLane = new Map<string, typeof renderedItems>();
 
   for (const item of renderedItems) {
-    const trackItems = itemsByTrack.get(item.trackId) ?? [];
-    trackItems.push(item);
-    itemsByTrack.set(item.trackId, trackItems);
+    const laneItems = itemsByLane.get(item.lane) ?? [];
+    laneItems.push(item);
+    itemsByLane.set(item.lane, laneItems);
   }
 
-  for (const [trackId, trackItems] of itemsByTrack) {
-    const laneEnds: number[] = [];
+  for (const [lane, laneItems] of itemsByLane) {
+    const rowEnds: number[] = [];
 
-    trackItems.sort(
+    laneItems.sort(
       (a, b) =>
         a.visualStart - b.visualStart ||
         a.visualEnd - b.visualEnd ||
         a.start - b.start,
     );
 
-    for (const item of trackItems) {
-      let lane = laneEnds.findIndex((laneEnd) => laneEnd <= item.visualStart);
+    for (const item of laneItems) {
+      let row = rowEnds.findIndex((rowEnd) => rowEnd <= item.visualStart);
 
-      if (lane === -1) {
-        lane = laneEnds.length;
+      if (row === -1) {
+        row = rowEnds.length;
       }
 
-      laneEnds[lane] = item.visualEnd;
+      rowEnds[row] = item.visualEnd;
       positions.push({
         id: item.id,
-        lane,
         leftPercent: item.leftPercent,
-        stageLabelOffsetPixels: item.stageLabelOffsetPixels,
+        row,
+        periodLabelOffsetPixels: item.periodLabelOffsetPixels,
         widthPixels: item.widthPixels,
         widthPercent: item.widthPercent,
       });
     }
 
-    laneCountByTrack[trackId] = Math.max(1, laneEnds.length);
+    rowCountByLane[lane] = Math.max(1, rowEnds.length);
   }
 
   return {
     canvasWidth,
     end: new Date(latest).toISOString(),
-    laneCountByTrack,
     positions,
+    rowCountByLane,
     start: new Date(earliest).toISOString(),
     todayPercent: clamp(((validReference - earliest) / range) * 100),
     yearMarkers,
