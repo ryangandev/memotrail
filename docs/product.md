@@ -67,6 +67,11 @@ Changing the default never rewrites an existing Entry's recorded timezone.
   It stays in Pending sync on that device with its original content, marked Not accepted with a reason, and later captures still sync.
   Copy text keeps its title and note, and Discard asks for confirmation before removing it and its photos from the device.
   If only its photos were refused, the Entry is already in the Inbox and Discard removes only the local copy.
+- A capture is also not accepted when its Entry was moved to Trash or deleted forever on another device.
+  An Entry in Trash is never overwritten or given new photos; restoring it from Trash keeps it, and Discard removes only this device's copy.
+  An Entry deleted forever is never created again, so Copy text is the way to keep its writing.
+- A photo is not accepted when MemoTrail refuses it, such as one that is too large, a file type it does not accept, or one that left the device before it was uploaded.
+  A photo whose upload reached MemoTrail but whose answer was lost keeps waiting and attaches on the next retry.
 - An expired session keeps captures waiting and asks the person to sign in again instead of reporting them as offline.
 - On Web, the workspace header counts the captures waiting on this device and, separately, the ones not accepted, on desktop and mobile; selecting it retries now and lists them with the latest sync problem.
 - On iOS, the Inbox lists the same Pending sync captures, and the Dashboard and Quick Capture say how many wait and how many were not accepted.
@@ -266,6 +271,9 @@ Form labels mark required fields with `*` and leave optional fields unmarked.
 - `Delete forever` and `Empty Trash` require explicit confirmation.
 - A permanently deleted item can never be restored, and its private photo files are removed right after; if that removal cannot finish, MemoTrail says so and finishes it the next time Trash opens.
 - An item whose original photos are missing cannot be restored, and MemoTrail explains why; it can still be deleted forever.
+- An Entry deleted forever cannot be brought back by a capture still waiting on another device.
+  To enforce this, MemoTrail keeps only the deleted Entry's ID and deletion time, with no writing, photos, or other content, until the account is deleted.
+  This record is not visible in the app and is not part of an export.
 - Complete export includes canonical JSON, readable Markdown, structured CSV, relationships, and original media.
 
 ## Product boundaries
