@@ -510,8 +510,11 @@
     display: none;
   }
 
+  /* Without the sidebar the workspace takes the full width at once; easing
+     its margin here would push the page sideways as the window narrows. */
   .workspace {
     margin-left: 0;
+    transition: none;
   }
 
   .appShell[data-sidebar-collapsed="true"] .workspace {
@@ -521,6 +524,7 @@
   .navigationProgress {
     top: 57px;
     left: 0;
+    transition: none;
   }
 
   .appShell[data-sidebar-collapsed="true"] .navigationProgress {
