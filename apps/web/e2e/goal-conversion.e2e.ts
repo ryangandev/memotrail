@@ -218,7 +218,6 @@ test("An Idea creates a linked Goal without changing the source", async ({
       "date_precision",
       "occurred_timezone",
       "tags",
-      "people",
       "places",
       "attachments",
       "metadata",

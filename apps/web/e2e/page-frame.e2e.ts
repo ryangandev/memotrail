@@ -20,7 +20,6 @@ const pageFamilies = [
   { path: "/history", variant: "wide", width: 1080 },
   { path: "/homes", variant: "wide", width: 1080 },
   { path: "/vehicles", variant: "wide", width: 1080 },
-  { path: "/people", variant: "wide", width: 1080 },
   { path: "/timeline", variant: "canvas", width: 1180 },
 ] as const;
 
@@ -28,7 +27,6 @@ const focusedViewPaths = new Set([
   "/first-times",
   "/goals",
   "/homes",
-  "/people",
   "/vehicles",
 ]);
 

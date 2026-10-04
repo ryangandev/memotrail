@@ -560,7 +560,6 @@ for (const scenario of focusedCases) {
         expect(version.error).toBeNull();
         const snapshot = version.data!.snapshot;
         for (const key of [
-          "people",
           "places",
           "timeline_items",
           "links",

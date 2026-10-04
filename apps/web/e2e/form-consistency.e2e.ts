@@ -143,33 +143,6 @@ test("specialized forms share photo fields and required-label conventions", asyn
     await firstTimeDialog
       .getByRole("button", { name: "Close First Time editor", exact: true })
       .click();
-
-    await page.goto("/people");
-    await page.getByRole("button", { name: "Add Person", exact: true }).click();
-    const personDialog = page.getByRole("dialog", {
-      name: "Keep someone in your story",
-      exact: true,
-    });
-    await expect(
-      personDialog.getByText("Name *", { exact: true }),
-    ).toBeVisible();
-    await expect(personDialog.getByText(/Optional/i)).toHaveCount(0);
-    const close = personDialog.getByRole("button", {
-      name: "Close Person editor",
-      exact: true,
-    });
-    await expect(close.locator("svg")).toHaveCount(1);
-    const personPanel = personDialog.locator(":scope > div");
-    await expect
-      .poll(() => personPanel.evaluate((element) => element.scrollLeft))
-      .toBe(0);
-    await page.screenshot({
-      caret: "initial",
-      path: "/private/tmp/memotrail-person-editor.png",
-      animations: "disabled",
-    });
-    await close.click();
-    await expect(personDialog).not.toBeVisible();
   } finally {
     await admin.auth.admin.deleteUser(owner);
   }

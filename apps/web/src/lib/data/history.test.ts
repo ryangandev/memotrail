@@ -108,7 +108,6 @@ describe("Entry history", () => {
     expect(historyDifferences(previous, previous)).toEqual([]);
   });
   it.each([
-    ["people", "person_id", "People links"],
     ["places", "place_id", "Location links"],
     ["timeline_items", "track_id", "Timeline placement"],
     ["links", "target_entry_id", "Entry links"],

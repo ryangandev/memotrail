@@ -97,7 +97,7 @@ export function CommandPalette({
     (item) => ({
       description: `${item.label} · ${item.subtitle}`,
       href: item.href,
-      icon: quickResultIcon(item.kind),
+      icon: "timeline",
       key: `${item.kind}:${item.id}`,
       label: item.title,
     }),
@@ -343,9 +343,4 @@ function filterCommands(query: string) {
       `${command.label} ${command.description} ${command.keywords}`.toLocaleLowerCase();
     return terms.every((term) => searchValue.includes(term));
   });
-}
-
-function quickResultIcon(kind: "entry" | "person"): IconName {
-  if (kind === "person") return "archive";
-  return "timeline";
 }

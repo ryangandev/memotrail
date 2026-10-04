@@ -101,7 +101,8 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - Tags are the one organization label: they group related Entries, such as travel, family, or a trip, for browsing, filtering, and discovery.
 - MemoTrail has no separate Collections.
   Each earlier Collection became a tag with the same name and kept its Entries; older Collection links open Tags, and an older Library Collection filter reads as a tag filter.
-- People are reusable Entities linked to other Wiki Items, not alternate tags.
+- MemoTrail does not keep People records.
+  Maintaining people as structured records cost more than it gave back, so earlier People and their links were deleted; older People links open Library.
 - Locations are private address and coordinate snapshots owned by individual Entries, not Library items or reusable personal records.
 - A Location does not require a personal name; an Entry, Home, Vehicle, or First Time can carry its address or coordinates.
 - Inbox, Timeline, Dashboard, and Library are views or workflow states, not organization labels.
@@ -118,10 +119,9 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - Tag management opens in viewport-level dialogs. The Tags Library uses compact usage-count badges that open tag management, recent linked Entries, and a path to the complete filtered result set.
 - Renaming a tag preserves its identity and linked Wiki Items.
 - A used tag must be merged into another tag or removed from its Entries before deletion, so organization is never silently lost.
-- Web does not offer general links between Entries, because tags, People, and Goals already connect related records.
-  Entries stay connected through purpose-specific links: a Person's Connected Items, a Goal's Related Items, and source links such as Create linked Goal or the First Time a Goal achievement creates.
+- Web does not offer general links between Entries, because tags and Goals already connect related records.
+  Entries stay connected through purpose-specific links: a Goal's Related Items and source links such as Create linked Goal or the First Time a Goal achievement creates.
   General links saved earlier remain in the data, version history, and export, but the Item page no longer lists them.
-- Reusable People are canonical Entity Wiki Items with typed detail records and may link to many other Wiki Items.
 - Important content, organization, relationship, specialized-field, and photo-membership changes remain recoverable through version history.
 - Adding or removing photos never makes an open First Time, Home, Vehicle, or Goal editor stale: its Save, Move to Trash, and Goal achievement still apply.
   Writing or other content changed elsewhere since the editor opened still reports a conflict instead of being overwritten.
@@ -133,7 +133,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 Earlier AI requirements and exploratory directions remain in the [AI direction record](./ai-direction-record.md) for future reconsideration; they do not reactivate the retired UI.
 
 - One search experience supports literal keyword search; the AI question action is paused.
-- Keyword search covers canonical Wiki Items, including People, and uses linked Location data as searchable context.
+- Keyword search covers canonical Wiki Items and uses linked Location data as searchable context.
 - Filters include date, record category, focused form, and tag where each applies.
 - Search results explain matches and open the original source.
 - AI answers are grounded in bounded source evidence and cite the Entries used.
@@ -181,7 +181,7 @@ Inbox content, Trash, and Life Stages do not appear as resurfaced memory cards.
 ### First Times
 
 A First Time is a focused Entry form.
-It requires only a title and accepts the full date-precision model, optional writing, photos, Location, People, Goal, tags, and Timeline context.
+It requires only a title and accepts the full date-precision model, optional writing, photos, Location, Goal, tags, and Timeline context.
 It is created intentionally from Timeline or the First Times view.
 An existing Entry may be linked as source material without changing that Entry.
 
@@ -203,7 +203,7 @@ The Entry remains intact as the source.
 
 An explicit achievement action may atomically mark any Goal that is not yet Achieved as Achieved and create a linked First Time using the best-known date without copying the Goal writing.
 
-### Locations and People
+### Locations
 
 On Web, First Time, Home, and Vehicle cards prefer a photo, then a map when their Location has coordinates, then their original fallback.
 
@@ -219,8 +219,6 @@ When records span several cities, both maps offer shortcuts to the most recorded
 The Web Map and Location previews follow the effective Web appearance, including System mode and changes while a map is open.
 The iOS Map follows the app's System, Light, or Dark appearance.
 Photo GPS Locations retain their source photo identity as provenance after explicit adoption.
-People contain a name plus optional relationship label and notes.
-People remain reusable across Entries.
 Web Entry, Home, Vehicle, and First Time editors can search Geoapify for an address, preview its coordinates, and save it as that record's Location.
 Web address search supports keyboard selection and authenticated server-side usage limits.
 Provider-backed Location editing on native iOS remains deferred until the Web flow is accepted.
@@ -247,7 +245,7 @@ The collapsed rail shows the MemoTrail logo without its wordmark above square na
 On collapse, the logo's outer ring and accent rotate 90 degrees together while the inner ring turns in the opposite direction over 320ms; expanding reverses the rotation, and reduced motion keeps the mark still.
 The persistent top bar places Back and Forward history controls, then the desktop sidebar panel control; unavailable history directions are disabled.
 An icon-only Inbox control sits at the far right; Inbox shows a notification count only when captures are waiting.
-A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry and People results in place, supports keyboard navigation, and opens Library for full search with filters.
+A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry results in place, supports keyboard navigation, and opens Library for full search with filters.
 On Web, the glass-effect bottom dock places the New Entry control labeled `What’s on your mind?` with a sparkle icon on the left and global Search on the right.
 The controls keep text and shortcut hints readable over page content, and hovering highlights the border with a subtle accent glow that fades back when the pointer leaves without changing the background color.
 New Entry also opens with Command J (Control J on Windows) when focus is outside a text input or editor.

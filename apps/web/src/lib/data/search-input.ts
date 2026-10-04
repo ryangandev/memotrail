@@ -24,7 +24,7 @@ export type ParsedSearchRequest = {
 export type QuickSearchItem = {
   href: string;
   id: string;
-  kind: "entry" | "person";
+  kind: "entry";
   label: string;
   subtitle: string;
   title: string;
@@ -53,7 +53,7 @@ export function parseQuickSearchResult(
     (item) =>
       item &&
       typeof item.id === "string" &&
-      ["entry", "person"].includes(item.kind) &&
+      item.kind === "entry" &&
       typeof item.href === "string" &&
       item.href.startsWith("/") &&
       !item.href.startsWith("//") &&

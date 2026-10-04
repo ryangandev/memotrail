@@ -23,7 +23,6 @@ export const wikiItemSearchGroups: readonly WikiItemSearchGroup[] = [
     label: "Focused records",
     options: [
       { label: "First Times", value: "first_time" },
-      { label: "People", value: "person" },
       { label: "Homes", value: "home" },
       { label: "Vehicles", value: "vehicle" },
     ],
@@ -77,19 +76,9 @@ export function wikiEntryHref(item: {
   inboxStatus: "organized" | "unreviewed";
   itemKind: WikiItemKind;
   itemSubtype: string;
-  recordId?: string;
-  recordSource?: "entry" | "person";
 }) {
   if (item.inboxStatus === "unreviewed") {
     return `/inbox?entry=${item.id}`;
-  }
-  if (
-    item.itemKind === "entity" &&
-    item.itemSubtype === "person" &&
-    item.recordSource === "person" &&
-    item.recordId
-  ) {
-    return `/people/${item.recordId}`;
   }
   if (item.itemKind === "entity" && item.itemSubtype === "home") {
     return `/homes/${item.id}`;

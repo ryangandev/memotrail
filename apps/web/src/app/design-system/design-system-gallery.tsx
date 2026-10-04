@@ -418,7 +418,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
             <SelectField defaultValue="all" label="Show records">
               <option value="all">All records</option>
               <option value="entries">Entries</option>
-              <option value="entities">People, homes & vehicles</option>
+              <option value="entities">Homes & vehicles</option>
             </SelectField>
             <SelectField disabled label="Unavailable filter" size="small">
               <option>Unavailable</option>

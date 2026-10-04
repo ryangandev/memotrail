@@ -34,16 +34,6 @@ describe("Entry identity and routing", () => {
     ).toBe("/items/2");
     expect(
       wikiEntryHref({
-        id: "3",
-        inboxStatus: "organized",
-        itemKind: "entity",
-        itemSubtype: "person",
-        recordId: "30",
-        recordSource: "person",
-      }),
-    ).toBe("/people/30");
-    expect(
-      wikiEntryHref({
         id: "4",
         inboxStatus: "unreviewed",
         itemKind: "entry",

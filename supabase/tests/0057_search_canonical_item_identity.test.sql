@@ -5,8 +5,10 @@ select no_plan();
 insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000121','canonical-search@memotrail.local');
 
-insert into public.people(id,owner_id,name,notes) values
-  ('98900000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000121','Marina','Met at the harbor');
+insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,inbox_status) values
+  ('98900000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000121','Marina','Lived by the harbor','entity','home','organized');
+insert into public.homes(entry_id,owner_id) values
+  ('98900000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000121');
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000121',true);
@@ -16,14 +18,14 @@ select is(
     select concat_ws('|',item_kind,item_subtype,record_source,record_id::text)
     from public.search_wiki_items('Marina')
   ),
-  'entity|person|person|98900000-0000-4000-8000-000000000001',
-  'Canonical search returns Person semantic and specialized routing identities'
+  'entity|home|entry|98900000-0000-4000-8000-000000000001',
+  'Canonical search returns Entity semantic and routing identities'
 );
 
 select is(
   (select count(*) from public.search_wiki_items('',array['entity'])),
   1::bigint,
-  'Entity Kind filtering returns canonical People'
+  'Entity Kind filtering returns canonical Entities'
 );
 
 reset role;

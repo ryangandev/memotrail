@@ -4,7 +4,7 @@ import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 
-test("Canonical keyword search finds People", async ({ page, context }) => {
+test("Canonical keyword search finds Entities", async ({ page, context }) => {
   const env = JSON.parse(
     execFileSync("supabase", ["status", "-o", "json"], {
       encoding: "utf8",
@@ -49,20 +49,28 @@ test("Canonical keyword search finds People", async ({ page, context }) => {
         sameSite: "Lax" as const,
       })),
     );
-    const person = randomUUID();
+    const home = randomUUID();
     expect(
       (
-        await client.from("people").insert({
-          id: person,
+        await client.from("entries").insert({
+          id: home,
           owner_id: owner,
-          name: "Learning 学习 partner",
-          notes: "A standalone Person",
+          title: "Learning 学习 flat",
+          body: "A standalone Home",
+          item_kind: "entity",
+          item_subtype: "home",
+          date_precision: "unknown",
+          inbox_status: "organized",
         })
       ).error,
     ).toBeNull();
+    expect(
+      (await client.from("homes").insert({ entry_id: home, owner_id: owner }))
+        .error,
+    ).toBeNull();
     await page.goto("/search?q=" + encodeURIComponent("学习"));
     await expect(
-      page.getByRole("link", { name: "Learning 学习 partner", exact: true }),
+      page.getByRole("link", { name: "Learning 学习 flat", exact: true }),
     ).toBeVisible();
     await page.screenshot({
       path: "/private/tmp/memotrail-library-keyword-desktop.png",
@@ -71,28 +79,29 @@ test("Canonical keyword search finds People", async ({ page, context }) => {
     });
     expect(
       (
-        await client.from("people").insert(
+        await client.from("entries").insert(
           Array.from({ length: 105 }, (_, index) => ({
             owner_id: owner,
-            name: `Paged Person ${String(index).padStart(3, "0")}`,
+            title: `Paged Memory ${String(index).padStart(3, "0")}`,
+            inbox_status: "organized",
           })),
         )
       ).error,
     ).toBeNull();
     await page
-      .getByRole("link", { name: "Learning 学习 partner", exact: true })
+      .getByRole("link", { name: "Learning 学习 flat", exact: true })
       .click();
-    await expect(page).toHaveURL(new RegExp(`/people/${person}$`));
-    await expect(page.getByRole("main")).toContainText("A standalone Person");
-    await expect(page.getByRole("textbox", { name: /^Notes/ })).toHaveCount(0);
-    await page.goto("/search?q=" + encodeURIComponent("Paged Person"));
+    await expect(page).toHaveURL(new RegExp(`/homes/${home}$`));
+    await expect(page.getByRole("main")).toContainText("A standalone Home");
+    await expect(page.getByRole("textbox", { name: /^Story/ })).toHaveCount(0);
+    await page.goto("/search?q=" + encodeURIComponent("Paged Memory"));
     const results = page.getByRole("region", { name: "Results", exact: true });
     await expect(results).toContainText("105 items");
     await expect(results.locator("article")).toHaveCount(25);
     await results.getByRole("link", { name: "Next", exact: true }).click();
     await expect(page).toHaveURL(/page=2/);
     await expect(
-      results.getByRole("link", { name: /Paged Person/ }).first(),
+      results.getByRole("link", { name: /Paged Memory/ }).first(),
     ).toBeVisible();
     await page.goto(
       "/search?q=" + encodeURIComponent("学习") + "&type=writing",
@@ -101,7 +110,7 @@ test("Canonical keyword search finds People", async ({ page, context }) => {
       page.getByText("No matching items", { exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Learning 学习 partner", exact: true }),
+      page.getByRole("link", { name: "Learning 学习 flat", exact: true }),
     ).toHaveCount(0);
     await expect(
       page.getByRole("link", { name: "Learning 学习 library", exact: true }),
@@ -143,41 +152,41 @@ test("Canonical keyword search finds People", async ({ page, context }) => {
       response.data
         .map((item: { record_source: string }) => item.record_source)
         .sort(),
-    ).toEqual(["person"]);
+    ).toEqual(["entry"]);
     expect(
       response.data.map((item: { item_kind: string }) => item.item_kind),
     ).toEqual(["entity"]);
-    const personScope = await native.rpc("search_wiki_items", {
+    const homeScope = await native.rpc("search_wiki_items", {
       p_date_from: null,
       p_date_to: null,
-      p_item_classifications: ["person"],
+      p_item_classifications: ["home"],
       p_query: "学习",
       p_tag_names: [],
       p_limit: 20,
       p_offset: 0,
     });
-    expect(personScope.error).toBeNull();
-    expect(personScope.data).toHaveLength(1);
-    expect(personScope.data[0]).toMatchObject({
+    expect(homeScope.error).toBeNull();
+    expect(homeScope.data).toHaveLength(1);
+    expect(homeScope.data[0]).toMatchObject({
       item_kind: "entity",
-      item_subtype: "person",
-      record_source: "person",
+      item_subtype: "home",
+      record_source: "entry",
     });
     expect(
       (
         await client
-          .from("people")
+          .from("entries")
           .update({ deleted_at: new Date().toISOString() })
-          .eq("id", person)
+          .eq("id", home)
       ).error,
     ).toBeNull();
-    await page.goto(`/people/${person}`);
+    await page.goto(`/homes/${home}`);
     await expect(
-      page.getByRole("heading", { name: "Person unavailable" }),
+      page.getByRole("heading", { name: "Home unavailable" }),
     ).toBeVisible();
     await page.goto("/search?q=" + encodeURIComponent("学习"));
     await expect(
-      page.getByRole("link", { name: "Learning 学习 partner", exact: true }),
+      page.getByRole("link", { name: "Learning 学习 flat", exact: true }),
     ).toHaveCount(0);
   } finally {
     await page.close();

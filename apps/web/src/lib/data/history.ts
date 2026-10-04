@@ -64,7 +64,6 @@ export const historyFields: Record<string, string> = {
   occurred_label: "Date description",
   occurred_timezone: "Time zone",
   tags: "Tags",
-  people: "People links",
   places: "Location links",
   timeline_items: "Timeline placement",
   home: "Home details",

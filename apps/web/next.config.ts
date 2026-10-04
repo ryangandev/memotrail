@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/search", destination: "/library", permanent: false },
       { source: "/collections/:path*", destination: "/tags", permanent: false },
+      { source: "/people/:path*", destination: "/library", permanent: false },
       {
         source: "/settings/organization",
         destination: "/tags",

@@ -78,20 +78,6 @@ select entry_id from public.save_goal_entry('Renamed Goal','Memories','long_term
 select is((select count(*) from public.entry_links where source_entry_id = (select id from writers where kind = 'goal')),
   0::bigint,'Goal saves remove omitted Entry links');
 
--- People preserve exactly the requested related memberships.
-insert into writers
-select 'person', person_id from public.save_person('Friend','Friend','Notes',array[(select id from writers where kind = 'entry')],null,null);
-reset role;
-update public.entry_people set created_at = '2000-01-01' where person_id = (select id from writers where kind = 'person');
-set local role authenticated;
-select person_id from public.save_person('Renamed Friend','Friend','Notes',array[(select id from writers where kind = 'entry')],
-  (select id from writers where kind = 'person'),1);
-select is((select created_at from public.entry_people where person_id = (select id from writers where kind = 'person')),
-  '2000-01-01'::timestamptz,'Person saves retain unchanged People memberships');
-select person_id from public.save_person('Renamed Friend','Friend','Notes','{}',(select id from writers where kind = 'person'),2);
-select is((select count(*) from public.entry_people where person_id = (select id from writers where kind = 'person')),
-  0::bigint,'Person saves remove omitted memberships');
-
 -- Timeline saves preserve presentation order when only writing changes.
 insert into writers
 select 'timeline', entry_id from public.save_timeline_entry_with_occurrence(

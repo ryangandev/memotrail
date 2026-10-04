@@ -12,7 +12,6 @@ import { HomeEditor } from "@/components/homes-workspace";
 import { VehicleEditor } from "@/components/vehicles-workspace";
 import { FirstTimeEditor } from "@/components/first-times-workspace";
 import { GoalEditor } from "@/components/goals-workspace";
-import { PersonEditor } from "@/components/people-workspace";
 import {
   homeLocationLabel,
   homeRangeLabel,
@@ -32,11 +31,6 @@ import {
 } from "@/lib/data/goal-record";
 import { occurrenceLabel } from "@/lib/data/occurrence";
 import type { FirstTimeEntry } from "@/lib/data/first-times";
-import {
-  personEntryTitle,
-  type Person,
-  type PersonEntry,
-} from "@/lib/data/person";
 import { wikiEntryHref } from "@/lib/data/wiki-item";
 import styles from "./focused-record-detail.module.css";
 
@@ -52,22 +46,19 @@ type Props =
       kind: "goal";
       record: GoalRecord;
       linkOptions: GoalLinkOption[];
-    } & Shared)
-  | ({ kind: "person"; record: Person; entries: PersonEntry[] } & Shared);
+    } & Shared);
 
 const paths = {
   home: "/homes",
   vehicle: "/vehicles",
   "first-time": "/first-times",
   goal: "/goals",
-  person: "/people",
 };
 const labels = {
   home: "Home",
   vehicle: "Vehicle",
   "first-time": "First Time",
   goal: "Goal",
-  person: "Person",
 };
 
 export function FocusedRecordDetail(props: Props) {
@@ -118,19 +109,11 @@ export function FocusedRecordDetail(props: Props) {
             onSaved={setSaved}
             onTrashed={() => router.push(back)}
           />
-        ) : props.kind === "goal" ? (
+        ) : (
           <GoalEditor
             {...sharedEditorProps}
             goal={record as GoalRecord}
             linkOptions={props.linkOptions}
-            onTrashed={() => router.push(back)}
-          />
-        ) : (
-          <PersonEditor
-            entries={props.entries}
-            person={record as Person}
-            onClose={closeEdit}
-            presentation="page"
             onTrashed={() => router.push(back)}
           />
         )
@@ -138,11 +121,7 @@ export function FocusedRecordDetail(props: Props) {
         <>
           <PageHeader
             eyebrow={label}
-            title={
-              props.kind === "person"
-                ? (record as Person).name
-                : (record as HomeRecord).title
-            }
+            title={record.title}
             actions={
               <button
                 aria-label={`Edit ${label}`}
@@ -156,14 +135,9 @@ export function FocusedRecordDetail(props: Props) {
             }
           />
           <RecordContent kind={props.kind} record={record} />
-          {props.kind !== "person" ? (
-            <ButtonLink
-              href={`/history?entry=${record.id}`}
-              variant="secondary"
-            >
-              Version history
-            </ButtonLink>
-          ) : null}
+          <ButtonLink href={`/history?entry=${record.id}`} variant="secondary">
+            Version history
+          </ButtonLink>
         </>
       )}
     </PageFrame>
@@ -193,16 +167,11 @@ function RecordContent({
   kind: Props["kind"];
   record: Props["record"];
 }) {
-  const common =
-    kind === "person"
-      ? null
-      : (record as HomeRecord | VehicleRecord | FirstTimeEntry | GoalRecord);
-  const photos =
-    common?.attachments.filter((photo) =>
-      "variant" in photo ? photo.variant === "original" : true,
-    ) ?? [];
-  const body = kind === "person" ? (record as Person).notes : common?.body;
-  const tags = common?.tagNames ?? [];
+  const photos = record.attachments.filter((photo) =>
+    "variant" in photo ? photo.variant === "original" : true,
+  );
+  const body = record.body;
+  const tags = record.tagNames;
   return (
     <article className={styles.content}>
       {photos.length > 0 ? (
@@ -294,16 +263,10 @@ function RecordContent({
             />
           </>
         ) : null}
-        {kind === "person" ? (
-          <Fact
-            label="Relationship"
-            value={(record as Person).relationship_label}
-          />
-        ) : null}
       </dl>
       {body ? (
         <section className={styles.section}>
-          <h2>{kind === "person" ? "Notes" : "Story"}</h2>
+          <h2>Story</h2>
           <p className={styles.prose}>{body}</p>
         </section>
       ) : null}
@@ -317,27 +280,6 @@ function RecordContent({
               </Badge>
             ))}
           </div>
-        </section>
-      ) : null}
-      {kind === "person" && (record as Person).linked_entries.length ? (
-        <section className={styles.section}>
-          <h2>Connected Items</h2>
-          <ul>
-            {(record as Person).linked_entries.map((entry) => (
-              <li key={entry.id}>
-                <a
-                  href={wikiEntryHref({
-                    id: entry.id,
-                    inboxStatus: "organized",
-                    itemKind: entry.item_kind,
-                    itemSubtype: entry.item_subtype,
-                  })}
-                >
-                  {personEntryTitle(entry)}
-                </a>
-              </li>
-            ))}
-          </ul>
         </section>
       ) : null}
       {kind === "goal" && (record as GoalRecord).relatedEntries.length ? (

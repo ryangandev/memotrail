@@ -267,14 +267,9 @@ export function createExportArchive(
         jsonRows(datasetRows(client, snapshot, name, signal)),
       );
       if (
-        [
-          "homes",
-          "vehicles",
-          "goals",
-          "locations",
-          "people",
-          "timeline_items",
-        ].includes(name)
+        ["homes", "vehicles", "goals", "locations", "timeline_items"].includes(
+          name,
+        )
       )
         await add(
           `tables/${name}.csv`,

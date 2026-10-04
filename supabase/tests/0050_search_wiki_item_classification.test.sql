@@ -23,8 +23,10 @@ insert into public.entry_tags(entry_id,tag_id,owner_id) values
   ('98300000-0000-4000-8000-000000000003','98300000-0000-4000-8000-000000000013','10000000-0000-0000-0000-000000000111'),
   ('98300000-0000-4000-8000-000000000004','98300000-0000-4000-8000-000000000014','10000000-0000-0000-0000-000000000112');
 
-insert into public.people(id,owner_id,name,notes) values
-  ('98300000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000111','Marina mentor','Helped at the marina.');
+insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,inbox_status) values
+  ('98300000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000111','Harbor flat','Lived by the marina.','entity','home','organized');
+insert into public.homes(entry_id,owner_id) values
+  ('98300000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000111');
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000111',true);
@@ -55,9 +57,9 @@ select is(
   'Keyword search indexes descriptive tags'
 );
 select is(
-  jsonb_array_length(public.archive_wiki_search_evidence(array['marina'],array['entity'])->'people'),
-  1,
-  'AI Entity evidence includes matching People'
+  public.archive_wiki_search_evidence(array['marina'],array['entity'])->'entries'->0->>'title',
+  'Harbor flat',
+  'AI Entity evidence includes matching Entities'
 );
 select ok(
   not (public.archive_wiki_search_evidence(array['marina'],array['entity']) ? 'places'),

@@ -185,7 +185,6 @@ test("Dot-separated rows across the workspace keep their separators between fact
     { path: "/homes", rows: 1 },
     { path: "/vehicles", rows: 1 },
     { path: "/goals", rows: 1 },
-    { path: "/people", rows: 1 },
     { path: "/first-times", rows: 1 },
   ];
   for (const { path, open, rows, wrapping } of pages) {

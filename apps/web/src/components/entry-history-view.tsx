@@ -321,10 +321,9 @@ export function EntryHistoryView({
           )}
           {canRestoreSelected && (
             <p className={styles.note}>
-              People, tag, and track definitions stay current. Historical
-              Location links return to their original snapshots. Photo files are
-              not deleted. Missing historical links or originals stop the
-              restore safely.
+              Tag and track definitions stay current. Historical Location links
+              return to their original snapshots. Photo files are not deleted.
+              Missing historical links or originals stop the restore safely.
             </p>
           )}
           <div className={styles.comparison}>
@@ -382,30 +381,27 @@ export function EntryHistoryView({
 }
 
 function CurrentItem({ value }: { value: HistorySnapshot }) {
-  const groups = ["tags", "people", "places", "timeline_items"].flatMap(
-    (key) => {
-      const items = value[key];
-      if (!Array.isArray(items) || items.length === 0) return [];
-      return [
-        {
-          key,
-          label: key.replaceAll("_", " "),
-          value: (items as Record<string, unknown>[])
-            .map((item) =>
-              String(
-                item.name ??
-                  item.track_name ??
-                  item.original_filename ??
-                  item.id ??
-                  item.person_id ??
-                  item.place_id,
-              ),
-            )
-            .join(", "),
-        },
-      ];
-    },
-  );
+  const groups = ["tags", "places", "timeline_items"].flatMap((key) => {
+    const items = value[key];
+    if (!Array.isArray(items) || items.length === 0) return [];
+    return [
+      {
+        key,
+        label: key.replaceAll("_", " "),
+        value: (items as Record<string, unknown>[])
+          .map((item) =>
+            String(
+              item.name ??
+                item.track_name ??
+                item.original_filename ??
+                item.id ??
+                item.place_id,
+            ),
+          )
+          .join(", "),
+      },
+    ];
+  });
 
   return (
     <article className={styles.currentItem} aria-label="Current item">
@@ -592,27 +588,25 @@ function Snapshot({ value }: { value: HistorySnapshot }) {
         <dt>Time zone</dt>
         <dd>{value.occurred_timezone ?? "Unknown"}</dd>
       </dl>
-      {["tags", "people", "places", "timeline_items", "attachments"].map(
-        (key) =>
-          Array.isArray(value[key]) ? (
-            <div key={key} className={styles.relationships}>
-              <strong>{key.replaceAll("_", " ")}</strong>
-              <p>
-                {(value[key] as Record<string, unknown>[])
-                  .map((item) =>
-                    String(
-                      item.name ??
-                        item.track_name ??
-                        item.original_filename ??
-                        item.id ??
-                        item.person_id ??
-                        item.place_id,
-                    ),
-                  )
-                  .join(", ") || "None"}
-              </p>
-            </div>
-          ) : null,
+      {["tags", "places", "timeline_items", "attachments"].map((key) =>
+        Array.isArray(value[key]) ? (
+          <div key={key} className={styles.relationships}>
+            <strong>{key.replaceAll("_", " ")}</strong>
+            <p>
+              {(value[key] as Record<string, unknown>[])
+                .map((item) =>
+                  String(
+                    item.name ??
+                      item.track_name ??
+                      item.original_filename ??
+                      item.id ??
+                      item.place_id,
+                  ),
+                )
+                .join(", ") || "None"}
+            </p>
+          </div>
+        ) : null,
       )}
       {["home", "vehicle", "goal", "metadata", "links"].map((key) => {
         const detail = snapshotDetail(value, key);

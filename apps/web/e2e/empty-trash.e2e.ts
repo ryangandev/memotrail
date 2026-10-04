@@ -75,15 +75,6 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     ).toBeNull();
     expect(
       (
-        await client.from("people").insert({
-          owner_id: owner,
-          name: "Removed people",
-          deleted_at: "2026-09-01T12:00:00Z",
-        })
-      ).error,
-    ).toBeNull();
-    expect(
-      (
         await client.from("entries").insert({
           id: photoParent,
           owner_id: owner,
@@ -141,14 +132,14 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     const open = page.getByRole("button", { name: "Empty Trash", exact: true });
     const dialog = page.getByRole("dialog");
     await open.click();
-    await expect(dialog).toContainText("Empty 32 items from Trash?");
+    await expect(dialog).toContainText("Empty 31 items from Trash?");
     await page.screenshot({
       caret: "initial",
       animations: "disabled",
       path: "/private/tmp/memotrail-empty-trash-desktop.png",
     });
     await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
-    expect((await client.rpc("prepare_empty_trash")).data).toHaveLength(32);
+    expect((await client.rpc("prepare_empty_trash")).data).toHaveLength(31);
     await open.click();
     await expect(dialog).toBeVisible();
     // A second device restores the first confirmed target. The batch must stop,
@@ -165,13 +156,13 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
       .getByRole("button", { name: "Permanently delete confirmed items" })
       .click();
     await expect(
-      page.getByText(/0 of 32 items confirmed deleted/),
+      page.getByText(/0 of 31 items confirmed deleted/),
     ).toBeVisible();
-    expect((await client.rpc("prepare_empty_trash")).data).toHaveLength(31);
+    expect((await client.rpc("prepare_empty_trash")).data).toHaveLength(30);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await open.click();
-    await expect(dialog).toContainText("Empty 31 items from Trash?");
+    await expect(dialog).toContainText("Empty 30 items from Trash?");
     await page.screenshot({
       caret: "initial",
       animations: "disabled",
@@ -198,7 +189,7 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
       .click();
     await expect(
       page.locator("[data-sonner-toast]").filter({
-        hasText: /31 confirmed items permanently deleted/,
+        hasText: /30 confirmed items permanently deleted/,
       }),
     ).toBeVisible({ timeout: 45000 });
     const remaining = await client.rpc("prepare_empty_trash");
@@ -233,7 +224,6 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     expect(
       (await admin.storage.from("entry-media").download(photoPath)).error,
     ).not.toBeNull();
-    expect((await client.from("people").select("id")).data).toEqual([]);
     // The one item trashed after that list is counted as one item.
     await open.click();
     await expect(dialog).toContainText("Empty 1 item from Trash?");

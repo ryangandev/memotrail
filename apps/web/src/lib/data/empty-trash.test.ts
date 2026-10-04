@@ -68,7 +68,7 @@ describe("confirmed Empty Trash", () => {
       const targets = parseEmptyTrashSnapshot([
         row,
         { ...row, item_kind: "attachment", revision: null },
-        { ...row, item_kind: "person" },
+        { ...row, item_id: "95000000-0000-4000-8000-000000000002" },
       ])!;
       const remove = vi
         .fn()

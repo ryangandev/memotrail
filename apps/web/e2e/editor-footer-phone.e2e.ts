@@ -113,14 +113,6 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
         p_tag_names: [],
         p_title: "Blue hatchback",
       }),
-      client.rpc("save_person", {
-        p_expected_revision: null,
-        p_name: "Avery Quinn",
-        p_notes: "",
-        p_person_id: null,
-        p_related_entry_ids: [],
-        p_relationship_label: "Friend",
-      }),
       client.rpc("save_goal_entry", {
         p_body: "",
         p_entry_id: null,
@@ -173,7 +165,6 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
       for (const [path, edit] of [
         [`/homes/${idFor("Maple Street flat")}`, "Edit Home"],
         [`/vehicles/${idFor("Blue hatchback")}`, "Edit Vehicle"],
-        [`/people/${idFor("Avery Quinn")}`, "Edit Person"],
         [`/goals/${idFor("Hike the coast trail")}`, "Edit Goal"],
         [`/first-times/${idFor("First sourdough loaf")}`, "Edit First Time"],
       ]) {

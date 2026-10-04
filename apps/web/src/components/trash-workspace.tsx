@@ -153,8 +153,8 @@ export function TrashWorkspace({
             title={<>Nothing in Trash</>}
             description={
               <>
-                Removed Entries, People, and individual photos will appear here.
-                Legacy records remain recoverable too.
+                Removed Entries and individual photos will appear here. Legacy
+                records remain recoverable too.
               </>
             }
             icon={
@@ -315,7 +315,6 @@ function iconForKind(kind: TrashItem["kind"]): "photo" | "timeline" {
 }
 
 function labelForItem(item: TrashItem) {
-  if (item.kind === "person") return "Person";
   if (item.kind === "attachment") {
     return "Photo";
   }
@@ -344,8 +343,6 @@ function retentionLabel(value: string) {
 }
 
 function deletionDescription(item: TrashItem) {
-  if (item.kind === "person")
-    return "The Person and their version history will be removed.";
   if (item.kind === "attachment") {
     return "The private photo file and its attachment record will be removed.";
   }

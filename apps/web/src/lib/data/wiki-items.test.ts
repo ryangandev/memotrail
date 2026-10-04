@@ -51,15 +51,6 @@ describe("Life Wiki workspace data", () => {
         itemSubtype: "vehicle",
       }),
     ).toBe(`/vehicles/${parsed.id}`);
-    expect(
-      wikiItemHref({
-        ...parsed,
-        itemKind: "entity",
-        itemSubtype: "person",
-        recordId: "40000000-0000-4000-8000-000000000002",
-        recordSource: "person",
-      }),
-    ).toBe("/people/40000000-0000-4000-8000-000000000002");
   });
 
   it("bounds pagination", () => {

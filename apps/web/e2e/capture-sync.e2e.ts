@@ -93,7 +93,7 @@ test("the header pending indicator syncs and lists captures waiting on this devi
   workspace,
 }) => {
   test.setTimeout(120_000);
-  await page.goto("/people");
+  await page.goto("/homes");
   await page.waitForLoadState("networkidle");
   const attempts = countCaptureSyncAttempts(page);
 
@@ -223,7 +223,7 @@ test("two tabs send each queued capture once", async ({
   test.setTimeout(120_000);
   const other = await context.newPage();
   await page.goto("/library");
-  await other.goto("/people");
+  await other.goto("/homes");
   await page.waitForLoadState("networkidle");
   await other.waitForLoadState("networkidle");
   const attempts = [
