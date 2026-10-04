@@ -7,30 +7,13 @@ import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
 const scenarios = [
-  { name: "Goal from a Capture", kind: "goal", capture: true, provider: false },
-  { name: "Home from a Capture", kind: "home", capture: true, provider: false },
+  { name: "Want to Do item", kind: "goal", provider: false },
+  { name: "Home", kind: "home", provider: false },
+  { name: "Vehicle", kind: "vehicle", provider: false },
+  { name: "Home with a provider address", kind: "home", provider: true },
   {
-    name: "Vehicle from a Capture",
+    name: "Vehicle with a provider Location",
     kind: "vehicle",
-    capture: true,
-    provider: false,
-  },
-  {
-    name: "Home with a provider address",
-    kind: "home",
-    capture: false,
-    provider: true,
-  },
-  {
-    name: "Home from a Capture with a provider address",
-    kind: "home",
-    capture: true,
-    provider: true,
-  },
-  {
-    name: "Vehicle from a Capture with a provider Location",
-    kind: "vehicle",
-    capture: true,
     provider: true,
   },
 ] as const;
@@ -38,7 +21,7 @@ const scenarios = [
 const records = {
   goal: {
     add: "Add to Want to Do",
-    captureDialog: "Add this Capture to Want to Do",
+    nameField: "Title",
     partial: "Saved",
     saved: "Changes saved.",
     path: "/goals",
@@ -47,7 +30,7 @@ const records = {
   },
   home: {
     add: "Add Home",
-    captureDialog: "Create a Home from this Capture",
+    nameField: "Home name",
     partial: "The Home was saved",
     saved: "Home saved.",
     path: "/homes",
@@ -56,7 +39,7 @@ const records = {
   },
   vehicle: {
     add: "Add Vehicle",
-    captureDialog: "Create a Vehicle from this Capture",
+    nameField: "Name or nickname",
     partial: "The Vehicle was saved",
     saved: "Vehicle saved.",
     path: "/vehicles",
@@ -128,51 +111,18 @@ for (const scenario of scenarios) {
       );
       if (scenario.provider) await mockProviderSearch(page);
 
-      const captureID = randomUUID();
-      const capturedAt = "2024-03-05T08:31:00+00:00";
       const editor = page.getByRole("dialog");
-      if (scenario.capture) {
-        expect(
-          (
-            await client.from("entries").insert({
-              id: captureID,
-              owner_id: owner,
-              title,
-              body: "Started as an Inbox Capture.",
-              item_kind: "entry",
-              item_subtype: "entry",
-              inbox_status: "unreviewed",
-              // A day-precision date keeps its captured time unless it is edited.
-              date_precision: "day",
-              occurred_start: capturedAt,
-              occurred_timezone: "UTC",
-            })
-          ).error,
-        ).toBeNull();
-        await page.goto(`${record.path}?source=${captureID}`);
-        // The shared Dialog mounts only on the client, so it appears once the page hydrates.
-        await expect(
-          page.getByRole("dialog", {
-            name: record.captureDialog,
-          }),
-        ).toBeVisible(slow);
-        await expect(
-          editor.getByText("Starting from an Inbox Capture"),
-        ).toBeVisible();
-      } else {
-        await page.goto(record.path);
-        // The page is server rendered, so a click before hydration opens nothing.
-        await expect(async () => {
-          if (!(await editor.isVisible())) {
-            await page
-              .getByRole("button", { name: record.add })
-              .first()
-              .click();
-          }
-          await expect(editor).toBeVisible({ timeout: 2_000 });
-        }).toPass(slow);
-        await editor.getByRole("textbox", { name: "Home name" }).fill(title);
-      }
+      await page.goto(record.path);
+      // The page is server rendered, so a click before hydration opens nothing.
+      await expect(async () => {
+        if (!(await editor.isVisible())) {
+          await page.getByRole("button", { name: record.add }).first().click();
+        }
+        await expect(editor).toBeVisible({ timeout: 2_000 });
+      }).toPass(slow);
+      await editor
+        .getByRole("textbox", { name: record.nameField, exact: true })
+        .fill(title);
       if (scenario.provider) {
         await editor
           .getByRole("combobox", { name: "Find a Location" })
@@ -230,13 +180,10 @@ for (const scenario of scenarios) {
       );
       expect(createdLocations).toHaveLength(scenario.provider ? 1 : 0);
 
-      // A record that exists is updated; the Capture handoff and provider choice belong only to creation.
+      // A record that exists is updated; the provider choice belongs only to creation.
       await expect(
         editor.getByRole("heading", { name: title, exact: true }),
       ).toBeVisible();
-      await expect(
-        editor.getByText("Starting from an Inbox Capture"),
-      ).toHaveCount(0);
       await expect(editor.locator('img[alt^="Selected "]')).toHaveCount(1);
       await editor
         .getByRole("button", { name: "Save changes", exact: true })
@@ -251,12 +198,7 @@ for (const scenario of scenarios) {
         .eq("item_kind", record.itemKind)
         .eq("item_subtype", record.subtype);
       expect(entries.data).toEqual([
-        {
-          id: entryID,
-          title,
-          occurred_start:
-            scenario.capture && scenario.kind !== "goal" ? capturedAt : null,
-        },
+        { id: entryID, title, occurred_start: null },
       ]);
       const attached = await client
         .from("attachments")
@@ -278,38 +220,6 @@ for (const scenario of scenarios) {
         expect(Buffer.from(await original.data!.arrayBuffer())).toEqual(
           photos.find((item) => item.name === photo.original_filename)!.buffer,
         );
-      }
-
-      if (scenario.capture) {
-        const capture = await client
-          .from("entries")
-          .select("inbox_status,item_subtype")
-          .eq("id", captureID)
-          .single();
-        expect(capture.data).toEqual({
-          inbox_status: "organized",
-          item_subtype: "source_capture",
-        });
-        const provenance = await client
-          .from("entry_links")
-          .select("source_entry_id,target_entry_id,relationship")
-          .eq("owner_id", owner)
-          .in("relationship", ["derived", "derived_from"])
-          .order("relationship");
-        expect(provenance.data).toEqual([
-          {
-            source_entry_id: captureID,
-            target_entry_id: entryID,
-            relationship: "derived",
-          },
-          {
-            source_entry_id: entryID,
-            target_entry_id: captureID,
-            relationship: "derived_from",
-          },
-        ]);
-        // Closing the editor consumes the handoff instead of leaving it in the URL.
-        await expect(page).toHaveURL(record.path, slow);
       }
 
       // The retry keeps the provider snapshot made on creation instead of copying it.

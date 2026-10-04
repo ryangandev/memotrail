@@ -14,10 +14,6 @@ import {
   type GoalAchievementInput,
   type GoalEntryInput,
 } from "@/lib/data/goal-record-input";
-import {
-  parseCaptureExtractionReference,
-  type CaptureExtractionReference,
-} from "@/lib/data/capture-extraction-input";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 
 export type GoalActionResult = {
@@ -29,7 +25,6 @@ export type GoalActionResult = {
 
 export async function saveGoalEntry(
   input: GoalEntryInput,
-  sourceCapture: CaptureExtractionReference | null = null,
 ): Promise<GoalActionResult> {
   const parsed = parseGoalEntryInput(input);
   if (!parsed.success) return result("error", parsed.message);
@@ -37,51 +32,30 @@ export async function saveGoalEntry(
   const context = await getAuthenticatedContext();
   if (!context) return expiredSession();
 
-  const source = sourceCapture
-    ? parseCaptureExtractionReference(sourceCapture)
-    : null;
-  if (sourceCapture && (!source || parsed.data.id !== null)) {
-    return result(
-      "error",
-      "This Capture handoff is invalid. Return to Inbox and try again.",
-    );
-  }
-
-  const parameters = {
+  const { data, error } = await context.client.rpc("save_goal_entry", {
     p_body: parsed.data.body,
+    p_entry_id: parsed.data.id,
+    p_expected_revision: await writingRevision(
+      context.client,
+      parsed.data.id,
+      parsed.data.revision,
+    ),
     p_status: parsed.data.status,
     p_tag_names: parsed.data.tagNames,
     p_target_date: parsed.data.targetDate,
     p_title: parsed.data.title,
-  };
-  const { data, error } = source
-    ? await context.client.rpc("extract_capture_to_goal", {
-        ...parameters,
-        p_capture_id: source.id,
-        p_capture_revision: source.revision,
-      })
-    : await context.client.rpc("save_goal_entry", {
-        ...parameters,
-        p_entry_id: parsed.data.id,
-        p_expected_revision: await writingRevision(
-          context.client,
-          parsed.data.id,
-          parsed.data.revision,
-        ),
-      });
+  });
   if (error) {
     return result("error", "MemoTrail could not save this item. Try again.");
   }
 
-  const saved = source ? extractedGoal(data) : savedGoal(data);
+  const saved = savedGoal(data);
   if (!saved) {
     return result(
       "conflict",
       parsed.data.id
         ? "This item changed on another device. Close it, refresh, and try again."
-        : source
-          ? "This Capture changed or was already organized. Return to Inbox and refresh."
-          : "MemoTrail could not add this item. Refresh and try again.",
+        : "MemoTrail could not add this item. Refresh and try again.",
     );
   }
 
@@ -89,11 +63,7 @@ export async function saveGoalEntry(
   return {
     entry: saved,
     firstTimeEntryId: null,
-    message: parsed.data.id
-      ? "Changes saved."
-      : source
-        ? "Capture added to Want to Do."
-        : "Added to Want to Do.",
+    message: parsed.data.id ? "Changes saved." : "Added to Want to Do.",
     status: parsed.data.id ? "saved" : "created",
   };
 }
@@ -252,19 +222,6 @@ function savedGoal(value: unknown) {
     : null;
 }
 
-function extractedGoal(value: unknown) {
-  if (!Array.isArray(value) || value.length === 0) return null;
-  const item = value[0];
-  return typeof item === "object" &&
-    item !== null &&
-    "goal_entry_id" in item &&
-    "goal_revision" in item &&
-    typeof item.goal_entry_id === "string" &&
-    typeof item.goal_revision === "number"
-    ? { id: item.goal_entry_id, revision: item.goal_revision }
-    : null;
-}
-
 function achievedGoal(value: unknown) {
   if (!Array.isArray(value) || value.length === 0) return null;
   const item = value[0];
@@ -302,7 +259,6 @@ function refreshGoalPaths() {
   revalidatePath("/");
   revalidatePath("/first-times");
   revalidatePath("/goals");
-  revalidatePath("/inbox");
   revalidatePath("/library");
   revalidatePath("/search");
   revalidatePath("/trash");

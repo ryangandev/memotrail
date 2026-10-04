@@ -48,7 +48,12 @@ export function HomeDashboard({ workspace }: { workspace: HomeWorkspace }) {
     />
   );
   const capture = <CaptureComposer embedded idPrefix="capture" />;
-  const inbox = <Inbox workspace={workspace} />;
+  const needsOrganizing = (
+    <NeedsOrganizing
+      needsOrganizing={workspace.needsOrganizing}
+      timezone={workspace.timezone}
+    />
+  );
   const chapters = snapshot ? (
     <Chapters stages={snapshot.currentStages} />
   ) : null;
@@ -59,7 +64,12 @@ export function HomeDashboard({ workspace }: { workspace: HomeWorkspace }) {
   const content = (
     <div className={styles.dashboard}>
       {greeting}
-      {snapshot ? <Stats snapshot={snapshot} /> : null}
+      {snapshot ? (
+        <Stats
+          needsOrganizingCount={workspace.needsOrganizing?.count ?? null}
+          snapshot={snapshot}
+        />
+      ) : null}
       {workspace.loadError || !snapshot ? (
         <>
           <div className={styles.loadError} role="alert">
@@ -71,7 +81,7 @@ export function HomeDashboard({ workspace }: { workspace: HomeWorkspace }) {
       ) : (
         <div className={styles.columns}>
           <div className={styles.capturePanel}>{capture}</div>
-          <div className={styles.inboxPanel}>{inbox}</div>
+          <div className={styles.organizePanel}>{needsOrganizing}</div>
           <div className={styles.memoryColumn}>{memory}</div>
           <div className={styles.chaptersColumn}>{chapters}</div>
           <div className={styles.recentRow}>{recent}</div>
@@ -114,56 +124,68 @@ function Section({
   );
 }
 
-function Inbox({ workspace }: { workspace: HomeWorkspace }) {
+function NeedsOrganizing({
+  needsOrganizing,
+  timezone,
+}: {
+  needsOrganizing: HomeWorkspace["needsOrganizing"];
+  timezone: string;
+}) {
   return (
     <Section
-      title="Ready to organize"
-      href="/inbox"
+      title="Needs organizing"
+      href={needsOrganizingHref}
       action={
-        workspace.snapshot
-          ? `Inbox · ${workspace.snapshot.inboxCount}`
-          : "Open Inbox"
+        needsOrganizing?.count
+          ? `Library · ${needsOrganizing.count}`
+          : "Library"
       }
     >
-      {workspace.inboxPreview.length ? (
-        <div className={styles.inboxList}>
-          {workspace.inboxPreview.map((entry) => {
-            const title =
-              entry.title?.trim() ||
-              entry.body.trim().split(/\r?\n/)[0] ||
-              "Untitled capture";
-            const hasBody = Boolean(entry.title?.trim() && entry.body.trim());
-            return (
-              <Link
-                className={`${styles.inboxItem} ${hasBody ? styles.inboxItemWithBody : ""}`}
-                href={`/inbox?entry=${entry.id}`}
-                aria-label={`Organize ${truncate(title, 90)}`}
-                key={entry.id}
-              >
-                <time dateTime={entry.createdAt}>
-                  {dateLabel(entry.createdAt, workspace.timezone, false)}
-                </time>
-                <div>
-                  <strong>{title}</strong>
-                  {hasBody ? <p>{entry.body.trim()}</p> : null}
-                </div>
-                <Icon name="chevron" size={14} />
-              </Link>
-            );
-          })}
+      {needsOrganizing?.items.length ? (
+        <div className={styles.organizeList}>
+          {needsOrganizing.items.map((item) => (
+            <Link
+              className={styles.organizeItem}
+              href={wikiEntryHref(item)}
+              aria-label={`Organize ${truncate(item.title, 90)}`}
+              key={item.id}
+            >
+              <time dateTime={item.updatedAt}>
+                {dateLabel(item.updatedAt, timezone, false)}
+              </time>
+              <div>
+                <strong>{item.title}</strong>
+              </div>
+              <Icon name="chevron" size={14} />
+            </Link>
+          ))}
         </div>
+      ) : needsOrganizing ? (
+        <Empty
+          icon="check"
+          title="Everything has a place"
+          text="Captures without a title or tag show up here, so you can sort them when you are ready."
+        />
       ) : (
         <Empty
-          icon="inbox"
-          title="A little room to think"
-          text="Your Inbox is clear. New captures will wait here until you are ready to organize them."
+          icon="clock"
+          title="Not available right now"
+          text="MemoTrail could not check what needs organizing. Refresh to try again."
         />
       )}
     </Section>
   );
 }
 
-function Stats({ snapshot }: { snapshot: HomeSnapshot }) {
+const needsOrganizingHref = "/library?show=needs-organizing";
+
+function Stats({
+  needsOrganizingCount,
+  snapshot,
+}: {
+  needsOrganizingCount: number | null;
+  snapshot: HomeSnapshot;
+}) {
   const items = [
     {
       value: snapshot.currentStageCount,
@@ -189,12 +211,16 @@ function Stats({ snapshot }: { snapshot: HomeSnapshot }) {
       href: "/tags",
       icon: "tag",
     },
-    {
-      value: snapshot.inboxCount,
-      label: "To organize",
-      href: "/inbox",
-      icon: "inbox",
-    },
+    ...(needsOrganizingCount === null
+      ? []
+      : [
+          {
+            value: needsOrganizingCount,
+            label: "To organize",
+            href: needsOrganizingHref,
+            icon: "inbox",
+          } as const,
+        ]),
   ] as const;
   return (
     <nav className={styles.metrics} aria-label="Your archive at a glance">
@@ -283,6 +309,8 @@ function EntryCard({
   memory?: boolean;
 }) {
   const cover = entry.attachments.find((attachment) => attachment.imageUrl);
+  const title = entry.title || truncate(entry.body, 72) || "Untitled Entry";
+  const excerpt = excerptAfterTitle(entry.title, entry.body);
   return (
     <Link
       href={wikiEntryHref(entry)}
@@ -319,10 +347,8 @@ function EntryCard({
             </>
           )}
         </header>
-        <h3>{entry.title || truncate(entry.body, 72) || "Untitled Entry"}</h3>
-        {entry.body.trim() ? (
-          <p>{truncate(entry.body.trim(), memory ? 260 : 170)}</p>
-        ) : null}
+        <h3>{title}</h3>
+        {excerpt ? <p>{truncate(excerpt, memory ? 260 : 170)}</p> : null}
         {entry.tagNames.length ? (
           <footer className={styles.tags}>
             {entry.tagNames.slice(0, 3).map((name) => (
@@ -380,6 +406,14 @@ function entryOccurrence(entry: HomeEntry | HomeStage): Occurrence {
         (precision) => precision === entry.datePrecision,
       ) || "unknown",
   };
+}
+
+// An Entry without a title is shown by its first line, so the excerpt starts
+// after that line instead of repeating it.
+function excerptAfterTitle(title: string, body: string) {
+  const text = body.trim();
+  const [firstLine = "", ...rest] = text.split(/\r?\n/);
+  return firstLine.trim() === title.trim() ? rest.join("\n").trim() : text;
 }
 
 function truncate(value: string, length: number) {

@@ -10,7 +10,6 @@ import {
 } from "./vehicle-record";
 
 export type VehiclesWorkspace = {
-  inboxCount: number | undefined;
   loadError: string | null;
   tagOptions: string[];
   vehicles: VehicleRecord[];
@@ -25,7 +24,7 @@ export async function getVehiclesWorkspace(
   const context = await getAuthenticatedContext();
   if (!context) return null;
 
-  const [vehicles, tags, inbox] = await Promise.all([
+  const [vehicles, tags] = await Promise.all([
     context.client.rpc("vehicles_workspace", { p_limit: 100, p_offset: 0 }),
     context.client
       .from("tags")
@@ -33,16 +32,10 @@ export async function getVehiclesWorkspace(
       .eq("owner_id", context.userId)
       .order("name")
       .returns<NameRow[]>(),
-    context.client
-      .from("entries")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", context.userId)
-      .eq("inbox_status", "unreviewed")
-      .is("deleted_at", null),
   ]);
   const rows = vehicles.error ? null : parseVehicleRows(vehicles.data);
   if (!rows) {
-    return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+    return unavailableWorkspace(context.viewer);
   }
 
   if (targetId && !rows.some((record) => record.id === targetId)) {
@@ -52,8 +45,7 @@ export async function getVehiclesWorkspace(
         p_offset: offset,
       });
       const more = page.error ? null : parseVehicleRows(page.data);
-      if (!more)
-        return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+      if (!more) return unavailableWorkspace(context.viewer);
       rows.push(...more);
       if (more.length < 100 || more.some((record) => record.id === targetId))
         break;
@@ -68,14 +60,13 @@ export async function getVehiclesWorkspace(
     visibleRows.map((row) => row.id),
   );
   if (!locations) {
-    return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+    return unavailableWorkspace(context.viewer);
   }
 
   const attachments = visibleRows.flatMap((vehicle) => vehicle.attachments);
   const signedUrls = await signedImageUrls(context.client, attachments);
 
   return {
-    inboxCount: inbox.error ? undefined : (inbox.count ?? 0),
     loadError: null,
     tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
     vehicles: visibleRows.map((vehicle) => ({
@@ -100,12 +91,8 @@ async function signedImageUrls(
   return displayImageURLs(client, paths);
 }
 
-function unavailableWorkspace(
-  viewer: Viewer,
-  inboxCount: number | undefined,
-): VehiclesWorkspace {
+function unavailableWorkspace(viewer: Viewer): VehiclesWorkspace {
   return {
-    inboxCount,
     loadError: "MemoTrail could not load your Vehicles. Refresh to try again.",
     tagOptions: [],
     vehicles: [],

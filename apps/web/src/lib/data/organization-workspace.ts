@@ -4,7 +4,6 @@ import { getAuthenticatedContext, type Viewer } from "./inbox";
 import { parseTagItems, type TagItem } from "./organization";
 
 export type TagsWorkspace = {
-  inboxCount: number | undefined;
   items: TagItem[];
   loadError: string | null;
   page: number;
@@ -23,24 +22,17 @@ export async function getTagsWorkspace({
   const context = await getAuthenticatedContext();
   if (!context) return null;
 
-  const [tags, inbox] = await Promise.all([
+  const [tags] = await Promise.all([
     context.client.rpc("tags_workspace", {
       p_limit: 50,
       p_offset: (page - 1) * 50,
       p_query: query,
     }),
-    context.client
-      .from("entries")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", context.userId)
-      .eq("inbox_status", "unreviewed")
-      .is("deleted_at", null),
   ]);
   const parsed = tags.error ? null : parseTagItems(tags.data);
   const items = (parsed ?? []).map(normalizeCounts);
 
   return {
-    inboxCount: inbox.error ? undefined : (inbox.count ?? 0),
     items,
     loadError: parsed
       ? null

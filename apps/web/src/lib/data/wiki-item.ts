@@ -72,13 +72,9 @@ export function wikiItemIdentityLabel(kind: WikiItemKind, subtype: string) {
 
 export function wikiEntryHref(item: {
   id: string;
-  inboxStatus: "organized" | "unreviewed";
   itemKind: WikiItemKind;
   itemSubtype: string;
 }) {
-  if (item.inboxStatus === "unreviewed") {
-    return `/inbox?entry=${item.id}`;
-  }
   if (item.itemKind === "entity" && item.itemSubtype === "home") {
     return `/homes/${item.id}`;
   }

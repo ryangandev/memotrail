@@ -57,7 +57,6 @@ export const historyFields: Record<string, string> = {
   body: "Writing",
   item_kind: "Kind",
   item_subtype: "Subtype",
-  inbox_status: "Inbox status",
   occurred_start: "Start date",
   occurred_end: "End date",
   date_precision: "Date precision",

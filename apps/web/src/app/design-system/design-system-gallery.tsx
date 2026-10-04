@@ -520,7 +520,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
             </Badge>
             <Badge size="medium">Keyword search</Badge>
             <Badge size="small" tone="warm">
-              In Inbox
+              Needs organizing
             </Badge>
             <Badge size="small" tone="outline">
               Vehicle

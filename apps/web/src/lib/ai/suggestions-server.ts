@@ -45,7 +45,6 @@ export async function suggestForEntry(
     .eq("id", entryID)
     .eq("owner_id", ownerID)
     .eq("revision", revision)
-    .eq("inbox_status", "unreviewed")
     .is("deleted_at", null)
     .maybeSingle();
   if (error || !entry)
@@ -107,7 +106,6 @@ export async function suggestForEntry(
       .eq("id", entryID)
       .eq("owner_id", ownerID)
       .eq("revision", revision)
-      .eq("inbox_status", "unreviewed")
       .is("deleted_at", null)
       .maybeSingle();
     if (

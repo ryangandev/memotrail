@@ -8,7 +8,6 @@ const firstTime: FirstTimeEntry = {
   body: "A beginning",
   datePrecision: "day",
   id: "first-1",
-  inboxStatus: "organized",
   occurredEnd: null,
   occurredLabel: null,
   occurredStart: "2020-05-01T12:00:00Z",

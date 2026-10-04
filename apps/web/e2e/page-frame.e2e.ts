@@ -5,7 +5,6 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
 const pageFamilies = [
-  { path: "/inbox", variant: "compact", width: 880 },
   { path: "/library", variant: "standard", width: 960 },
   { path: "/settings", variant: "compact", width: 880 },
   { path: "/settings/ai", variant: "compact", width: 880 },

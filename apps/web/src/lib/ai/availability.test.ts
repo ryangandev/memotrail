@@ -99,7 +99,7 @@ it("refuses Entry suggestions before reading settings, preparing photos, or clai
   expect(admin.from).not.toHaveBeenCalled();
 });
 
-it("saves a capture to Inbox without scheduling paused suggestion work", async () => {
+it("saves a capture to Library without scheduling paused suggestion work", async () => {
   const insert = vi.fn(async () => ({ error: null }));
   const rpc = vi.fn();
   capture.context.mockResolvedValue({
@@ -117,7 +117,7 @@ it("saves a capture to Inbox without scheduling paused suggestion work", async (
       title: null,
       version: 2,
     }),
-  ).toEqual({ message: "Saved to Inbox.", status: "synced" });
+  ).toEqual({ message: "Saved to Library.", status: "synced" });
   expect(insert).toHaveBeenCalledOnce();
   expect(capture.context).toHaveBeenCalledOnce();
   expect(capture.revision).not.toHaveBeenCalled();

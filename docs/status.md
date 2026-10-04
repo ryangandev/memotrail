@@ -16,7 +16,10 @@ It is not yet applied to the hosted project; native iOS still calls the retired 
 Goals became Want to Do: migration `202610040003` maps Considering and Paused to Want to do, drops horizons, and stops Goal saves from touching related links; the former Bucket List Collection is already an ordinary tag.
 It is not yet applied to the hosted project; native iOS still sends horizons and related links and fails against it until it follows Web.
 The English name "Want to Do" is a working name and may change.
-Open product questions: Timeline structure and current chapters, and the Inbox review step.
+Inbox is retired: captures save straight to Library, and Library and the Dashboard show Entries without a title or tag under Needs organizing.
+Migration `202610040004` marks every Entry organized, keeps new ones organized, and drops the Inbox organize and capture-handoff functions.
+It is not yet applied to the hosted project; native iOS still opens Inbox review and calls the retired functions until it follows Web.
+Open product questions: Timeline structure and current chapters.
 UI questions held until then: how prominent version history is, Item page photos, date precision controls, the two export choices, and Timeline styles.
 Open `audit-2026-10` issues stay tracked in GitHub.
 
@@ -32,7 +35,7 @@ The Web sidebar supports an editor-aware Command B shortcut, and the bottom glas
 The capture dock uses an inset focus ring, a consistent frosted composer surface, and a retained editor with entrance and exit motion; personal visual acceptance is pending.
 The capture dock passes local checks and browser regression, including draft recovery, quick reopening, background contrast, border hover feedback, save shortcut tooltips, editor shortcuts, and narrow layouts.
 Library now combines the organized all-items browser with keyword and filtered search; older `/search` URLs redirect to Library.
-Inbox review now hides AI suggestions and places photos after tags; the Library browser excludes unreviewed captures until Save to Library.
+The Entry editor hides AI suggestions and places photos after tags; the Library browser includes every capture as soon as it is saved.
 Web AI capabilities are paused, with a disabled Beta setting and no active AI entry points.
 The accepted Data Ribbon layout now replaces the Web Dashboard, using the signed-in user's data and the shared capture, page, image, empty-state, and tag components.
 The development preview routes and all 20 static Home mockups have been removed; Production deployment verification and browser acceptance remain pending.
@@ -60,7 +63,7 @@ Use Git history for feature-level implementation and test evidence.
 
 | Area                                                                              | State                                                                                                                                                                                            |
 | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Capture, Inbox, organization, dates, drafts, and offline queues                   | Implemented on Web and iOS                                                                                                                                                                       |
+| Capture, organization, dates, drafts, and offline queues                          | Implemented on Web and iOS; Web retired Inbox for Needs organizing in Library, while native still shows Inbox                                                                                    |
 | Timeline, Home (Dashboard on Web), First Times, Homes, Vehicles, and Want to Do   | Implemented on Web and iOS; Web simplified Goals into Want to Do, and the retired Place and People surfaces are removed from Web                                                                 |
 | Location data layer                                                               | Web and native Map, optional Home Location, photo GPS provenance, and Web provider quotas are implemented; personal acceptance remains.                                                          |
 | Habits                                                                            | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                                               |
@@ -82,7 +85,7 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 ### 1. Release and accept the Entry-centered Web flow
 
-- Verify the merged `main` deployment against the migrated hosted project, then check Quick Capture, Inbox review, Library routing, First Time, Moment, Period, Home, Vehicle, and Goal in a browser.
+- Verify the merged `main` deployment against the migrated hosted project, then check Quick Capture, Needs organizing, Library routing, First Time, Moment, Period, Home, Vehicle, and Goal in a browser.
 - The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
 - Native compatibility is updated separately; complete personal native acceptance before treating it as a release.
 - The hosted schema matches the migrations except for platform privilege defaults that `supabase db diff --linked` reports.

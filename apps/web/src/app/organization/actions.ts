@@ -97,7 +97,6 @@ function validTagIdentity(value: TagIdentity) {
 }
 
 function refreshOrganizationPaths() {
-  revalidatePath("/inbox");
   revalidatePath("/search");
   revalidatePath("/tags");
   revalidatePath("/timeline");

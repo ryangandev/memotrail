@@ -75,7 +75,7 @@ export async function synchronizeCapturePhotos(
     if (!objectPath) {
       return {
         message:
-          "This Entry is in your Inbox, but one of its photos is invalid on this device, so they will not sync. Discard to remove them from this device.",
+          "This Entry is in your Library, but one of its photos is invalid on this device, so they will not sync. Discard to remove them from this device.",
         status: "rejected",
       };
     }
@@ -112,7 +112,7 @@ export async function synchronizeCapturePhotos(
     ) {
       return {
         message:
-          "This Entry is in your Inbox, but one of its photos changed on this device, so they will not sync. Discard to remove them from this device.",
+          "This Entry is in your Library, but one of its photos changed on this device, so they will not sync. Discard to remove them from this device.",
         status: "rejected",
       };
     }
@@ -148,7 +148,7 @@ export async function synchronizeCapturePhotos(
   }
 
   return {
-    message: `Saved to Inbox with ${countLabel(entry.attachments.length, "photo")}.`,
+    message: `Saved to Library with ${countLabel(entry.attachments.length, "photo")}.`,
     status: "synced",
   };
 }

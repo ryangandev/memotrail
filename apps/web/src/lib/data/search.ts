@@ -31,7 +31,6 @@ export type SearchEntry = {
   body: string;
   bodyRich: EntryRichText | null;
   id: string;
-  inboxStatus: "organized" | "unreviewed";
   itemKind: WikiItemKind;
   itemSubtype: string;
   matchReasons: string[];
@@ -50,7 +49,6 @@ export type SearchEntry = {
 export type SearchWorkspace = {
   entries: SearchEntry[];
   filtersError: string | null;
-  inboxCount: number | undefined;
   loadError: string | null;
   request: SearchRequest;
   tagOptions: string[];
@@ -61,7 +59,6 @@ export type SearchWorkspace = {
 type SearchRow = {
   body: string;
   entry_id: string;
-  inbox_status: "organized" | "unreviewed";
   item_kind: WikiItemKind;
   item_subtype: string;
   match_reasons: string[] | null;
@@ -112,7 +109,7 @@ export async function getSearchWorkspace(
       })
     : Promise.resolve({ data: [] as SearchRow[], error: null });
 
-  const [search, tags, inbox] = await Promise.all([
+  const [search, tags] = await Promise.all([
     searchRequest,
     context.client
       .from("tags")
@@ -120,12 +117,6 @@ export async function getSearchWorkspace(
       .eq("owner_id", context.userId)
       .order("name")
       .returns<NameRow[]>(),
-    context.client
-      .from("entries")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", context.userId)
-      .eq("inbox_status", "unreviewed")
-      .is("deleted_at", null),
   ]);
 
   const parsedRows = search.error ? [] : searchRows(search.data);
@@ -144,7 +135,6 @@ export async function getSearchWorkspace(
     filtersError: filtersUnavailable
       ? "Tag filters are temporarily unavailable. Keyword search still works."
       : null,
-    inboxCount: inbox.error ? undefined : (inbox.count ?? 0),
     loadError:
       parsed.error ??
       (search.error || malformedSearchResponse
@@ -239,7 +229,6 @@ function quickEntryItem(
   return {
     href: wikiEntryHref({
       id: row.entry_id,
-      inboxStatus: row.inbox_status,
       ...identity,
     }),
     id: row.entry_id,
@@ -266,7 +255,6 @@ function tagEntryPreview(
     }),
     href: wikiEntryHref({
       id: row.entry_id,
-      inboxStatus: row.inbox_status,
       ...identity,
     }),
     id: row.entry_id,
@@ -297,7 +285,6 @@ function entryFromRow(
     body: row.body,
     bodyRich,
     id: row.entry_id,
-    inboxStatus: row.inbox_status,
     itemKind: identity.itemKind,
     itemSubtype: identity.itemSubtype,
     matchReasons: strings(row.match_reasons),
@@ -357,8 +344,6 @@ function isSearchRow(value: unknown): value is SearchRow {
     typeof value.entry_id === "string" &&
     isWikiItemKind(value.item_kind) &&
     typeof value.item_subtype === "string" &&
-    (value.inbox_status === "organized" ||
-      value.inbox_status === "unreviewed") &&
     typeof value.updated_at === "string" &&
     nullableString(value.title) &&
     nullableString(value.occurred_label) &&

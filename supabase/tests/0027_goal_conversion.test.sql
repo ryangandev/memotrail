@@ -14,7 +14,7 @@ insert into public.entries(
   'An idea',
   E'  Original\nwriting  ',
   'entry','entry',
-  'unreviewed',
+  'organized',
   'age',
   '17岁',
   '{"original":true,"body_rich":{"version":1,"text":"  Original\nwriting  ","document":{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"  Original\nwriting  "}]}]}}}'
@@ -45,11 +45,6 @@ select is(
   (select body from public.entries where id='20000000-0000-0000-0000-000000000093'),
   E'  Original\nwriting  ',
   'The source keeps its exact writing'
-);
-select is(
-  (select inbox_status from public.entries where id='20000000-0000-0000-0000-000000000093'),
-  'unreviewed',
-  'Extraction does not silently file the source Capture'
 );
 select is(
   (select occurred_label from public.entries where id='20000000-0000-0000-0000-000000000093'),

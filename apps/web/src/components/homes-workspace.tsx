@@ -62,25 +62,17 @@ import {
   uploadEntryPhotos,
   type PhotoUploadProgress as PhotoUploadProgressValue,
 } from "@/lib/media/upload";
-import {
-  pendingCaptureReference,
-  type CaptureExtractionSource,
-} from "@/lib/data/capture-extraction-input";
 import { countLabel } from "@/lib/count-label";
 
 export function HomesWorkspace({
   homes: serverRecords,
-  initialHomeId,
   loadError,
   ownerId,
-  sourceCapture,
   tagOptions,
 }: {
   homes: HomeRecord[];
-  initialHomeId: string | null;
   loadError: string | null;
   ownerId: string;
-  sourceCapture: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
   const router = useRouter();
@@ -89,12 +81,9 @@ export function HomesWorkspace({
     confirm,
     forget,
   } = useConfirmedRecords(serverRecords);
-  // Creating the Home organizes the Capture, so the revalidated page no longer
-  // returns it. The open editor keeps the handoff it started with.
-  const [captureHandoff, setCaptureHandoff] = useState(sourceCapture);
   const [selectedHome, setSelectedHome] = useState<
     HomeRecord | null | undefined
-  >(sourceCapture ? null : homes.find((home) => home.id === initialHomeId));
+  >();
   const currentHomes = homes.filter((home) => !home.occurredEnd);
   const earlierHomes = homes.filter((home) => home.occurredEnd);
 
@@ -182,13 +171,9 @@ export function HomesWorkspace({
           onTrashed={forget}
           onClose={() => {
             setSelectedHome(undefined);
-            setCaptureHandoff(null);
-            if (initialHomeId || captureHandoff)
-              router.replace("/homes", { scroll: false });
-            else router.refresh();
+            router.refresh();
           }}
           ownerId={ownerId}
-          sourceCapture={selectedHome === null ? captureHandoff : null}
           tagOptions={tagOptions}
         />
       ) : null}
@@ -322,7 +307,6 @@ export function HomeEditor({
   onTrashed,
   ownerId,
   presentation = "dialog",
-  sourceCapture = null,
   tagOptions,
 }: {
   defaultTimezone?: string;
@@ -332,7 +316,6 @@ export function HomeEditor({
   onTrashed: (id: string) => void;
   ownerId: string;
   presentation?: "dialog" | "page";
-  sourceCapture?: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
   const router = useRouter();
@@ -348,7 +331,7 @@ export function HomeEditor({
         occurredTimezone: initialTimezone,
         datePrecision: home.datePrecision,
       }
-    : (sourceCapture ?? undefined);
+    : undefined;
   const [occurrence, setOccurrence] = useState(() =>
     occurrenceDraft(
       originalOccurrence ?? {
@@ -361,7 +344,7 @@ export function HomeEditor({
     ),
   );
   const [address, setAddress] = useState(home?.address ?? "");
-  const [body, setBody] = useState(home?.body ?? sourceCapture?.body ?? "");
+  const [body, setBody] = useState(home?.body ?? "");
   const [city, setCity] = useState(home?.city ?? "");
   const [country, setCountry] = useState(home?.country ?? "");
   const [currentId, setCurrentId] = useState(home?.id ?? null);
@@ -383,11 +366,8 @@ export function HomeEditor({
   const [region, setRegion] = useState(home?.region ?? "");
   const [result, setResult] = useState<HomeActionResult | null>(null);
   const [tagInput, setTagInput] = useState("");
-  const [tagNames, setTagNames] = useState(
-    home?.tagNames ?? sourceCapture?.tagNames ?? [],
-  );
-  const [title, setTitle] = useState(home?.title ?? sourceCapture?.title ?? "");
-  const captureReference = pendingCaptureReference(sourceCapture, currentId);
+  const [tagNames, setTagNames] = useState(home?.tagNames ?? []);
+  const [title, setTitle] = useState(home?.title ?? "");
 
   useEffect(() => {
     titleRef.current?.focus();
@@ -494,7 +474,6 @@ export function HomeEditor({
     try {
       const saved = await saveHomeEntry(
         parsed.data,
-        captureReference,
         locationPreview?.kind === "provider" ? locationPreview : null,
       );
       if (
@@ -625,13 +604,7 @@ export function HomeEditor({
       onClose={onClose}
       presentation={presentation}
       title={
-        <>
-          {currentId
-            ? title || "Home"
-            : sourceCapture
-              ? "Create a Home from this Capture"
-              : "Keep a Home in your Life Wiki"}
-        </>
+        <>{currentId ? title || "Home" : "Keep a Home in your Life Wiki"}</>
       }
       titleId="home-editor-title"
       eyebrow={<>{currentId ? "Edit Home" : "New Home"}</>}
@@ -684,21 +657,8 @@ export function HomeEditor({
         </div>
       }
     >
-      {" "}
       <form id="homes-workspace-form" onSubmit={handleSubmit}>
         <div className={styles.formGrid}>
-          {captureReference ? (
-            <div className={styles.extractionNotice}>
-              <Icon name="inbox" size={18} />
-              <div>
-                <strong>Starting from an Inbox Capture</strong>
-                <p>
-                  Saving creates a separate Home and links it to the preserved
-                  source Capture.
-                </p>
-              </div>
-            </div>
-          ) : null}
           <fieldset className={styles.formSection}>
             <legend>Home details</legend>
             <label className={styles.fullField}>

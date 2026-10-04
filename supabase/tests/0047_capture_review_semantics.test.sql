@@ -7,9 +7,9 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000106','capture-review-other@memotrail.local');
 
 insert into public.entries(id,owner_id,title,body,inbox_status,date_precision,occurred_timezone) values
-  ('98000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000105','Morning pages','A quiet start.','unreviewed','unknown','UTC'),
-  ('98000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000105','A bright day','I felt happy today.','unreviewed','unknown','UTC'),
-  ('98000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000105','Draft chapter','A longer arc.','unreviewed','unknown','UTC');
+  ('98000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000105','Morning pages','A quiet start.','organized','unknown','UTC'),
+  ('98000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000105','A bright day','I felt happy today.','organized','unknown','UTC'),
+  ('98000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000105','Draft chapter','A longer arc.','organized','unknown','UTC');
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000105',true);
@@ -20,13 +20,13 @@ select is(
     null,'UTC','{}',false,null,null,'unknown',null,null
   )),
   2,
-  'Saving an Inbox Capture classifies it atomically as Writing'
+  'Saving a Capture classifies it atomically as Writing'
 );
 select is(
   (select item_kind || ':' || item_subtype || ':' || inbox_status
    from public.entries where id='98000000-0000-4000-8000-000000000001'),
-  'entry:entry:unreviewed',
-  'A classified Writing can remain in Inbox until Done'
+  'entry:entry:organized',
+  'A classified Writing stays in Library'
 );
 
 select throws_ok(
@@ -36,7 +36,7 @@ select throws_ok(
   )$$,
   '22023',
   'invalid_item_classification',
-  'Inbox review cannot turn an Entry into a First Time'
+  'Editing cannot turn an Entry into a First Time'
 );
 
 select is(
@@ -45,13 +45,13 @@ select is(
     null,'UTC','{}',true,null,null,'unknown',null,null
   )),
   3,
-  'A Writing may change to a compatible Writing subtype and finish review'
+  'A Writing may change to a compatible Writing subtype'
 );
 select is(
   (select item_kind || ':' || item_subtype || ':' || inbox_status
    from public.entries where id='98000000-0000-4000-8000-000000000001'),
   'entry:entry:organized',
-  'Done preserves Kind while applying the compatible subtype'
+  'Saving preserves Kind while applying the compatible subtype'
 );
 
 select is(
@@ -60,7 +60,7 @@ select is(
     null,'UTC','{}',true,null,null,'unknown',null,null
   )),
   2,
-  'A raw Capture can be finalized directly as a Memory Event'
+  'A Capture can be saved directly as a Memory Event'
 );
 select is(
   (select item_kind || ':' || item_subtype
@@ -81,7 +81,7 @@ select is(
     null,'UTC','{}',true,null,null,'unknown',null,null
   )),
   2,
-  'A raw Capture can be finalized as an explicit Story Chapter'
+  'A Capture can be saved as an explicit Story Chapter'
 );
 select is(
   (select item_kind || ':' || item_subtype

@@ -30,13 +30,6 @@ const commands: Command[] = [
     label: "Dashboard",
   },
   {
-    description: "Review newly captured Entries",
-    href: "/inbox",
-    icon: "inbox",
-    keywords: "review capture entries",
-    label: "Inbox",
-  },
-  {
     description: "Move through your story over time",
     href: "/timeline",
     icon: "timeline",
@@ -49,6 +42,13 @@ const commands: Command[] = [
     icon: "archive",
     keywords: "records archive search find filter",
     label: "Library",
+  },
+  {
+    description: "Entries without a title or tag",
+    href: "/library?show=needs-organizing",
+    icon: "inbox",
+    keywords: "organize review capture inbox untitled",
+    label: "Needs organizing",
   },
   {
     description: "Browse groups across your archive",
@@ -111,7 +111,7 @@ export function CommandPalette({
   }));
   const fullSearchItem: PaletteItem | null = normalizedQuery
     ? {
-        description: "Search the Library and Inbox with filters",
+        description: "Search the Library with filters",
         href: `/library?q=${encodeURIComponent(normalizedQuery)}`,
         icon: "search",
         key: "full-search",

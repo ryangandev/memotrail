@@ -55,7 +55,6 @@ export type TimelineWorkspace = {
   defaultTimezone: string;
   firstTimes: FirstTimeEntry[];
   homes: HomeRecord[];
-  inboxCount: number | undefined;
   loadError: string | null;
   tagOptions: string[];
   tracks: TimelineTrack[];
@@ -95,17 +94,11 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
     return null;
   }
 
-  const [timeline, inbox, profile, homes, vehicles, firstTimes, tags] =
+  const [timeline, profile, homes, vehicles, firstTimes, tags] =
     await Promise.all([
       context.client.rpc("timeline_workspace_with_organization", {
         p_include_hidden: false,
       }),
-      context.client
-        .from("entries")
-        .select("id", { count: "exact", head: true })
-        .eq("owner_id", context.userId)
-        .eq("inbox_status", "unreviewed")
-        .is("deleted_at", null),
       context.client
         .from("profiles")
         .select("*")
@@ -161,7 +154,6 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
     body: entry.body,
     datePrecision: entry.date_precision,
     id: entry.entry_id,
-    inboxStatus: entry.inbox_status,
     occurredEnd: entry.occurred_end,
     occurredLabel: entry.occurred_label,
     occurredStart: entry.occurred_start,
@@ -184,7 +176,6 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
         imageUrl: imageUrls.get(attachment.objectPath) ?? null,
       })),
     })),
-    inboxCount: inbox.error ? undefined : (inbox.count ?? 0),
     loadError:
       timeline.error || !rows
         ? "MemoTrail could not load your Timeline. Refresh to try again."

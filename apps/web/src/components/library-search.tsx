@@ -231,9 +231,6 @@ function SearchResultCard({ entry }: { entry: SearchEntry }) {
           <Badge tone="neutral">
             {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
           </Badge>
-          {entry.inboxStatus === "unreviewed" ? (
-            <Badge tone="warm">In Inbox</Badge>
-          ) : null}
           <time dateTime={entry.occurredAt ?? undefined}>
             {resultDateLabel(entry)}
           </time>

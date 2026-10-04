@@ -85,12 +85,12 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
           title: "Ocean memory",
         },
         {
-          body: "Only saved to Inbox so far.",
-          inbox_status: "unreviewed",
+          body: "Saved straight from the capture dock.",
+          inbox_status: "organized",
           item_kind: "entry",
           item_subtype: "entry",
           owner_id: ownerID,
-          title: "Inbox-only thought",
+          title: "Fresh thought",
         },
       ])
       .select("id,title");
@@ -98,11 +98,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     const reflectionID = inserted.data?.find(
       (entry) => entry.title === "Morning reflection",
     )?.id;
-    const inboxOnlyID = inserted.data?.find(
-      (entry) => entry.title === "Inbox-only thought",
-    )?.id;
     expect(reflectionID).toBeTruthy();
-    expect(inboxOnlyID).toBeTruthy();
     expect(
       (
         await client
@@ -210,33 +206,25 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       "href",
       `/items/${reflectionID}`,
     );
+    // A capture belongs to the Library as soon as it is saved.
     await expect(
-      page.getByRole("link", { name: /Entry.*Inbox-only thought/ }),
-    ).toHaveCount(0);
+      page.getByRole("link", { name: /Entry.*Fresh thought/ }),
+    ).toBeVisible();
     await expect(
       page.getByRole("link", { name: /Entity.*Home.*Avery Street flat/ }),
     ).toBeVisible();
     await expect(
-      page.getByRole("main").getByText("3 items", { exact: true }),
+      page.getByRole("main").getByText("4 items", { exact: true }),
     ).toBeVisible();
 
-    await page.goto("/library?q=Inbox-only");
+    await page.goto("/library?q=Fresh");
     await expect(
       page.getByRole("main").getByText("1 item", { exact: true }),
     ).toBeVisible();
-    await expect(page.getByText("In Inbox", { exact: true })).toBeVisible();
-    await page.goto(`/inbox?entry=${inboxOnlyID}`);
-    const inboxReview = page.getByRole("dialog", { name: "Review Entry" });
-    await expect(inboxReview).toBeVisible();
-    await inboxReview.getByRole("button", { name: "Save to Library" }).click();
-    await expect(inboxReview).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "Fresh thought", exact: true }),
+    ).toBeVisible();
     await page.goto("/library");
-    await expect(
-      page.getByRole("link", { name: /Entry.*Inbox-only thought/ }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("main").getByText("4 items", { exact: true }),
-    ).toBeVisible();
 
     await reflectionLink.click();
     await expect(page).toHaveURL(`/items/${reflectionID}`);

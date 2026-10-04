@@ -10,7 +10,6 @@ import {
 
 export type GoalsWorkspace = {
   goals: GoalRecord[];
-  inboxCount: number | undefined;
   loadError: string | null;
   tagOptions: string[];
   viewer: Viewer;
@@ -24,7 +23,7 @@ export async function getGoalsWorkspace(
   const context = await getAuthenticatedContext();
   if (!context) return null;
 
-  const [goals, tags, inbox] = await Promise.all([
+  const [goals, tags] = await Promise.all([
     context.client.rpc("goals_workspace", { p_limit: 100, p_offset: 0 }),
     context.client
       .from("tags")
@@ -32,17 +31,11 @@ export async function getGoalsWorkspace(
       .eq("owner_id", context.userId)
       .order("name")
       .returns<NameRow[]>(),
-    context.client
-      .from("entries")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", context.userId)
-      .eq("inbox_status", "unreviewed")
-      .is("deleted_at", null),
   ]);
 
   const rows = goals.error ? null : parseGoalRows(goals.data);
   if (!rows) {
-    return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+    return unavailableWorkspace(context.viewer);
   }
 
   if (targetId && !rows.some((record) => record.id === targetId)) {
@@ -52,8 +45,7 @@ export async function getGoalsWorkspace(
         p_offset: offset,
       });
       const more = page.error ? null : parseGoalRows(page.data);
-      if (!more)
-        return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+      if (!more) return unavailableWorkspace(context.viewer);
       rows.push(...more);
       if (more.length < 100 || more.some((record) => record.id === targetId))
         break;
@@ -74,7 +66,6 @@ export async function getGoalsWorkspace(
         imageUrl: signedUrls.get(attachment.objectPath) ?? null,
       })),
     })),
-    inboxCount: inbox.error ? undefined : (inbox.count ?? 0),
     loadError: null,
     tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
     viewer: context.viewer,
@@ -91,13 +82,9 @@ async function signedImageUrls(
   return displayImageURLs(client, paths);
 }
 
-function unavailableWorkspace(
-  viewer: Viewer,
-  inboxCount: number | undefined,
-): GoalsWorkspace {
+function unavailableWorkspace(viewer: Viewer): GoalsWorkspace {
   return {
     goals: [],
-    inboxCount,
     loadError: "MemoTrail could not load Want to Do. Refresh to try again.",
     tagOptions: [],
     viewer,

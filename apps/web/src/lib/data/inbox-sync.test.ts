@@ -16,7 +16,7 @@ import {
 
 const ownerId = "owner-a";
 const synced: InboxSyncResult = {
-  message: "Saved to Inbox.",
+  message: "Saved to Library.",
   status: "synced",
 };
 const rejected: InboxSyncResult = {
@@ -188,7 +188,7 @@ describe("Workspace capture synchronization", () => {
       onProgress({ completed: 0, total: 1 });
       progress.push(store.getSnapshot().photoUploadProgress);
       onProgress({ completed: 1, total: 1 });
-      return { message: "Saved to Inbox with 1 photo.", status: "synced" };
+      return { message: "Saved to Library with 1 photo.", status: "synced" };
     });
     enqueueInboxEntry(storage, ownerId, queuedEntry(1, { withPhoto: true }));
     await store.synchronize();

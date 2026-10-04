@@ -10,7 +10,7 @@ import {
 import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
-test("Camera dates are private, read-only suggestions until explicit Inbox save", async ({
+test("Camera dates are private, read-only suggestions until an explicit Entry save", async ({
   baseURL,
   page,
   context,
@@ -205,11 +205,8 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       ).status(),
     ).toBe(404);
     expect(await snapshot()).toEqual(before);
-    await page.goto("/inbox");
-    await page
-      .getByRole("button", { name: "Organize", exact: true })
-      .first()
-      .click();
+    await page.goto(`/history?entry=${entry}`);
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await dialog
       .getByRole("button", { name: "Show photos", exact: true })
@@ -251,12 +248,9 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       path: "/private/tmp/memotrail-photo-dates-mobile.png",
       fullPage: true,
     });
-    await dialog.getByRole("button", { name: "Close Inbox review" }).click();
+    await dialog.getByRole("button", { name: "Close Entry editor" }).click();
     expect(await snapshot()).toEqual(before);
-    await page
-      .getByRole("button", { name: "Organize", exact: true })
-      .first()
-      .click();
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     await expect(dialog.getByLabel("Date type")).toHaveValue("range");
     await dialog
       .getByRole("button", { name: "Show photos", exact: true })
@@ -282,10 +276,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     expect(saved.body).toBe(before.body);
     expect(saved.occurred_timezone).toBe(before.occurred_timezone);
     await expect(dialog).not.toBeVisible();
-    await page
-      .getByRole("button", { name: "Organize", exact: true })
-      .first()
-      .click();
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     await fillOccurrenceStart(dialog, "2018-02-03");
     await dialog
       .getByRole("button", { name: "Save changes", exact: true })
@@ -304,8 +295,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     async function openPlaceDraft() {
       await expect(dialog).not.toBeVisible();
       await page
-        .getByRole("button", { name: "Organize", exact: true })
-        .first()
+        .getByRole("button", { name: "Edit Entry", exact: true })
         .click();
       await dialog
         .getByRole("button", { name: "Show photos", exact: true })
@@ -323,7 +313,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     expect(
       (await client.from("locations").select("id").eq("owner_id", owner)).data,
     ).toEqual([]);
-    await dialog.getByRole("button", { name: "Close Inbox review" }).click();
+    await dialog.getByRole("button", { name: "Close Entry editor" }).click();
     expect(
       (await client.from("locations").select("id").eq("owner_id", owner)).data,
     ).toEqual([]);

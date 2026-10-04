@@ -42,7 +42,7 @@ describe("Capture sync failures", () => {
   it("syncs a capture MemoTrail accepts", async () => {
     const { insert } = signedIn({ insert: { error: null, status: 201 } });
     expect(await syncInboxEntry(capture())).toEqual({
-      message: "Saved to Inbox.",
+      message: "Saved to Library.",
       status: "synced",
     });
     expect(insert).toHaveBeenCalledOnce();
@@ -173,7 +173,7 @@ describe("Capture photo sync failures", () => {
   beforeEach(() => vi.resetAllMocks());
   const rejectedPhoto = {
     message:
-      "This Entry is in your Inbox, but MemoTrail cannot accept one of its photos, so they will not sync. Discard to remove them from this device.",
+      "This Entry is in your Library, but MemoTrail cannot accept one of its photos, so they will not sync. Discard to remove them from this device.",
     status: "rejected",
   };
   const waitingPhoto = {
@@ -221,7 +221,7 @@ describe("Capture photo sync failures", () => {
       await registerEntryAttachment(photo(), { originalOnDevice: false }),
     ).toEqual({
       message:
-        "This Entry is in your Inbox, but one of its photos is no longer on this device, so they will not sync. Discard to remove them from this device.",
+        "This Entry is in your Library, but one of its photos is no longer on this device, so they will not sync. Discard to remove them from this device.",
       status: "rejected",
     });
   });

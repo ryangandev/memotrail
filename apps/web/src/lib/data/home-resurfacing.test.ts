@@ -20,7 +20,6 @@ const entry = {
   entry_id: "87000000-0000-0000-0000-000000000001",
   item_kind: "entry",
   item_subtype: "first_time",
-  inbox_status: "organized",
   occurred_end: null,
   occurred_label: null,
   occurred_start: "2025-09-03T17:00:00Z",
@@ -82,17 +81,7 @@ describe("Home resurfacing response", () => {
     ).toBeNull();
   });
 
-  it("rejects unreviewed or undated Entries", () => {
-    expect(
-      parseHomeResurfacedMemory([
-        {
-          ...entry,
-          inbox_status: "unreviewed",
-          resurfacing_kind: "on_this_day",
-          years_ago: 1,
-        },
-      ]),
-    ).toBeNull();
+  it("rejects undated Entries", () => {
     expect(
       parseHomeResurfacedMemory([
         {

@@ -280,7 +280,6 @@ function RecordContent({
                 <a
                   href={wikiEntryHref({
                     id: entry.id,
-                    inboxStatus: "organized",
                     itemKind: entry.itemKind,
                     itemSubtype: entry.itemSubtype,
                   })}

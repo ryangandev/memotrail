@@ -3,12 +3,17 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 vi.mock("./inbox", () => ({ getAuthenticatedContext: vi.fn() }));
 
-import { parseWikiItemRows, wikiItemHref, wikiItemsPage } from "./wiki-items";
+import { getAuthenticatedContext } from "./inbox";
+import {
+  getWikiItemsWorkspace,
+  parseWikiItemRows,
+  wikiItemHref,
+  wikiItemsPage,
+} from "./wiki-items";
 
 const item = {
   canonical_item_id: "40000000-0000-4000-8000-000000000001",
   excerpt: "A reflection",
-  inbox_status: "organized",
   item_id: "40000000-0000-4000-8000-000000000001",
   item_kind: "entry",
   item_subtype: "entry",
@@ -51,6 +56,50 @@ describe("Life Wiki workspace data", () => {
         itemSubtype: "vehicle",
       }),
     ).toBe(`/vehicles/${parsed.id}`);
+  });
+
+  it("counts the Entries that still need organizing beside the full list", async () => {
+    const rpc = vi.fn((_name: string, parameters: Record<string, unknown>) =>
+      Promise.resolve({
+        data: parameters.p_needs_organizing
+          ? [{ ...item, total_count: 2 }]
+          : [item],
+        error: null,
+      }),
+    );
+    vi.mocked(getAuthenticatedContext).mockResolvedValue({
+      client: { rpc },
+    } as never);
+
+    const all = await getWikiItemsWorkspace({
+      itemKind: null,
+      needsOrganizing: false,
+      page: 2,
+      query: "",
+    });
+    expect(all).toMatchObject({ error: null, needsOrganizingCount: 2 });
+    expect(rpc).toHaveBeenCalledWith(
+      "wiki_items_workspace",
+      expect.objectContaining({
+        p_limit: 12,
+        p_needs_organizing: false,
+        p_offset: 12,
+      }),
+    );
+    expect(rpc).toHaveBeenCalledWith(
+      "wiki_items_workspace",
+      expect.objectContaining({ p_limit: 1, p_needs_organizing: true }),
+    );
+
+    rpc.mockClear();
+    const needsOrganizing = await getWikiItemsWorkspace({
+      itemKind: null,
+      needsOrganizing: true,
+      page: 1,
+      query: "",
+    });
+    expect(needsOrganizing).toMatchObject({ needsOrganizingCount: 2 });
+    expect(rpc).toHaveBeenCalledTimes(1);
   });
 
   it("bounds pagination", () => {

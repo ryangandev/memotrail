@@ -59,10 +59,6 @@ import {
   uploadEntryPhotos,
   type PhotoUploadProgress as PhotoUploadProgressValue,
 } from "@/lib/media/upload";
-import {
-  pendingCaptureReference,
-  type CaptureExtractionSource,
-} from "@/lib/data/capture-extraction-input";
 import { countLabel } from "@/lib/count-label";
 
 const goalSections: Array<{
@@ -89,26 +85,19 @@ const goalSections: Array<{
 
 export function GoalsWorkspace({
   goals,
-  initialGoalId,
   loadError,
   ownerId,
-  sourceCapture,
   tagOptions,
 }: {
   goals: GoalRecord[];
-  initialGoalId: string | null;
   loadError: string | null;
   ownerId: string;
-  sourceCapture: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
   const router = useRouter();
-  // Adding the item organizes the Capture, so the revalidated page no longer
-  // returns it. The open editor keeps the handoff it started with.
-  const [captureHandoff, setCaptureHandoff] = useState(sourceCapture);
   const [selectedGoal, setSelectedGoal] = useState<
     GoalRecord | null | undefined
-  >(sourceCapture ? null : goals.find((goal) => goal.id === initialGoalId));
+  >();
   const openCount = goals.filter((goal) => goal.status === "active").length;
 
   return (
@@ -185,15 +174,9 @@ export function GoalsWorkspace({
       {selectedGoal !== undefined ? (
         <GoalEditor
           goal={selectedGoal}
-          key={selectedGoal?.id ?? captureHandoff?.id ?? "new-goal"}
-          onClose={() => {
-            setSelectedGoal(undefined);
-            setCaptureHandoff(null);
-            if (initialGoalId || captureHandoff)
-              router.replace("/goals", { scroll: false });
-          }}
+          key={selectedGoal?.id ?? "new-goal"}
+          onClose={() => setSelectedGoal(undefined)}
           ownerId={ownerId}
-          sourceCapture={selectedGoal === null ? captureHandoff : null}
           tagOptions={tagOptions}
         />
       ) : null}
@@ -295,7 +278,6 @@ export function GoalEditor({
   onTrashed,
   ownerId,
   presentation = "dialog",
-  sourceCapture = null,
   tagOptions,
 }: {
   goal: GoalRecord | null;
@@ -303,13 +285,12 @@ export function GoalEditor({
   onTrashed?: () => void;
   ownerId: string;
   presentation?: "dialog" | "page";
-  sourceCapture?: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
   const router = useRouter();
   const requestConfirmation = useConfirmationDialog();
   const titleRef = useRef<HTMLInputElement>(null);
-  const [body, setBody] = useState(goal?.body ?? sourceCapture?.body ?? "");
+  const [body, setBody] = useState(goal?.body ?? "");
   const [currentId, setCurrentId] = useState(goal?.id ?? null);
   const [currentRevision, setCurrentRevision] = useState(
     goal?.revision ?? null,
@@ -322,12 +303,9 @@ export function GoalEditor({
   const [result, setResult] = useState<GoalActionResult | null>(null);
   const [status, setStatus] = useState<GoalStatus>(goal?.status ?? "active");
   const [tagInput, setTagInput] = useState("");
-  const [tagNames, setTagNames] = useState(
-    goal?.tagNames ?? sourceCapture?.tagNames ?? [],
-  );
+  const [tagNames, setTagNames] = useState(goal?.tagNames ?? []);
   const [targetDate, setTargetDate] = useState(goal?.targetDate ?? "");
-  const [title, setTitle] = useState(goal?.title ?? sourceCapture?.title ?? "");
-  const captureReference = pendingCaptureReference(sourceCapture, currentId);
+  const [title, setTitle] = useState(goal?.title ?? "");
 
   useEffect(() => {
     titleRef.current?.focus();
@@ -388,7 +366,7 @@ export function GoalEditor({
     setIsPending(true);
     setResult(null);
     try {
-      const saved = await saveGoalEntry(parsed.data, captureReference);
+      const saved = await saveGoalEntry(parsed.data);
       if (
         (saved.status !== "created" && saved.status !== "saved") ||
         !saved.entry
@@ -499,13 +477,7 @@ export function GoalEditor({
       onClose={onClose}
       presentation={presentation}
       title={
-        <>
-          {currentId
-            ? title || "Want to Do"
-            : sourceCapture
-              ? "Add this Capture to Want to Do"
-              : "What do you want to do?"}
-        </>
+        <>{currentId ? title || "Want to Do" : "What do you want to do?"}</>
       }
       titleId="goal-editor-title"
       eyebrow={<>{currentId ? "Edit Want to Do" : "Want to Do"}</>}
@@ -552,18 +524,6 @@ export function GoalEditor({
     >
       <form id="goals-workspace-form" onSubmit={handleSubmit}>
         <div className={common.formGrid}>
-          {captureReference ? (
-            <div className={common.extractionNotice}>
-              <Icon name="inbox" size={18} />
-              <div>
-                <strong>Starting from an Inbox Capture</strong>
-                <p>
-                  Saving adds a separate Want to Do item and links it to the
-                  preserved source Capture.
-                </p>
-              </div>
-            </div>
-          ) : null}
           <fieldset className={common.formSection}>
             <legend>What you want to do</legend>
             <label className={common.fullField}>

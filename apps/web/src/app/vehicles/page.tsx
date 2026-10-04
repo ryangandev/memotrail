@@ -1,5 +1,4 @@
 import { VehiclesWorkspace } from "@/components/vehicles-workspace";
-import { getCaptureExtractionSource } from "@/lib/data/capture-extraction";
 import { getVehiclesWorkspace } from "@/lib/data/vehicle-records";
 import { redirect } from "next/navigation";
 
@@ -8,33 +7,18 @@ export const dynamic = "force-dynamic";
 export default async function VehiclesPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    entry?: string | string[];
-    source?: string | string[];
-  }>;
+  searchParams: Promise<{ entry?: string | string[] }>;
 }) {
-  const params = await searchParams;
-  const requestedEntry = params.entry;
-  const requestedSource = params.source;
-  if (typeof requestedEntry === "string" && !requestedSource)
+  const requestedEntry = (await searchParams).entry;
+  if (typeof requestedEntry === "string")
     redirect(`/vehicles/${requestedEntry}`);
-  const [workspace, sourceCapture] = await Promise.all([
-    getVehiclesWorkspace(),
-    getCaptureExtractionSource(
-      typeof requestedSource === "string" ? requestedSource : null,
-    ),
-  ]);
+  const workspace = await getVehiclesWorkspace();
   if (!workspace) return null;
-
-  const initialVehicleId =
-    typeof requestedEntry === "string" ? requestedEntry : null;
 
   return (
     <VehiclesWorkspace
-      initialVehicleId={initialVehicleId}
       loadError={workspace.loadError}
       ownerId={workspace.viewer.id}
-      sourceCapture={sourceCapture}
       tagOptions={workspace.tagOptions}
       vehicles={workspace.vehicles}
     />

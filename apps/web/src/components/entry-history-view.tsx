@@ -6,7 +6,7 @@ import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { EntryReviewDialog } from "./entry-review-list";
+import { EntryEditorDialog } from "./entry-editor-dialog";
 import { EntryPhotoGallery } from "./entry-photo-gallery";
 import { EntryRichTextContent } from "./entry-rich-text-content";
 import { Icon } from "./icon";
@@ -185,10 +185,9 @@ export function EntryHistoryView({
           </ButtonLink>
         ) : null}
         {editing && (
-          <EntryReviewDialog
+          <EntryEditorDialog
             entry={editing.entry}
-            organized={editing.organized}
-            tagOptions={editing.entry.tagNames}
+            tagOptions={editing.tagOptions}
             onClose={() => setEditing(null)}
             onSaved={() => {
               setEditing(null);
@@ -546,8 +545,6 @@ function Snapshot({ value }: { value: HistorySnapshot }) {
       <dl className={styles.facts}>
         <dt>Type</dt>
         <dd>{wikiItemIdentityLabel(value.item_kind, value.item_subtype)}</dd>
-        <dt>Inbox</dt>
-        <dd>{value.inbox_status}</dd>
         <dt>Date</dt>
         <dd>{historyDateLabel(value)}</dd>
         <dt>Time zone</dt>

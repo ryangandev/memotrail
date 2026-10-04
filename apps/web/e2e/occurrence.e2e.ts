@@ -10,7 +10,7 @@ import {
   setDateDescription,
 } from "./helpers/occurrence";
 
-test("Inbox preserves uncertain dates and edits calendar precision without inventing dates", async ({
+test("Entry editing preserves uncertain dates and edits calendar precision without inventing dates", async ({
   page,
   context,
 }) => {
@@ -79,12 +79,10 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
         })
       ).error,
     ).toBeNull();
-    await page.goto("/inbox");
-    const card = page.locator("article").filter({
-      has: page.getByRole("heading", { name: "A memory without a date" }),
-    });
-    await expect(card).toContainText("Date unknown");
-    await card.getByRole("button", { name: "Organize", exact: true }).click();
+    await page.goto(`/items/${entryID}`);
+    const card = page.getByRole("article", { name: "Current item" });
+    await expect(card).toContainText("Unknown");
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     await page
       .getByRole("textbox", { name: "Note", exact: true })
       .fill("The feeling is still vivid.");
@@ -111,7 +109,9 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
       ["month", "2017-07", "Jul 2017"],
       ["day", "2017-07-08", "Jul 8, 2017"],
     ]) {
-      await card.getByRole("button", { name: "Organize", exact: true }).click();
+      await page
+        .getByRole("button", { name: "Edit Entry", exact: true })
+        .click();
       await page
         .getByRole("combobox", { name: "Date type", exact: true })
         .selectOption(precision);
@@ -134,7 +134,7 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
         occurred_timezone: "Asia/Kathmandu",
       });
     }
-    await card.getByRole("button", { name: "Organize", exact: true }).click();
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     await page
       .getByRole("combobox", { name: "Date type", exact: true })
       .selectOption("range");
@@ -161,7 +161,7 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
     expect(range.data?.date_precision).toBe("range");
     expect(range.data?.occurred_end).not.toBeNull();
 
-    await card.getByRole("button", { name: "Organize", exact: true }).click();
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     await page
       .getByRole("combobox", { name: "Date type", exact: true })
       .selectOption("approximate");
@@ -214,7 +214,7 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
       occurred_start: null,
       occurred_end: null,
       occurred_label: "17岁，第一次去日本",
-      inbox_status: "unreviewed",
+      inbox_status: "organized",
     });
 
     expect(
@@ -231,7 +231,7 @@ test("Inbox preserves uncertain dates and edits calendar precision without inven
       ).error,
     ).toBeNull();
     await page.reload();
-    await card.getByRole("button", { name: "Organize", exact: true }).click();
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     await expect(occurrenceStartField(page)).toHaveValue("2026-11-01");
     await expect(
       page.getByRole("button", {

@@ -61,7 +61,7 @@ const isOriginalMissing = (error: MemoTrailError) =>
 
 export type ReviewInboxEntryResult =
   | { message: string; status: "conflict" | "error" }
-  | { message: string; status: "done" | "saved"; revision: number };
+  | { message: string; status: "saved"; revision: number };
 
 /**
  * Registers an uploaded original. Pass `originalOnDevice: false` when this
@@ -120,7 +120,7 @@ export async function registerEntryAttachment(
   }
 
   revalidatePath("/");
-  revalidatePath("/inbox");
+  revalidatePath("/library");
   revalidatePath("/search");
 
   return { message: "Photo attached.", status: "synced" };
@@ -157,7 +157,7 @@ export async function syncInboxEntry(
     item_kind: "entry",
     item_subtype: "entry",
     id: entry.id,
-    inbox_status: "unreviewed",
+    inbox_status: "organized",
     occurred_start: entry.occurredAt,
     occurred_timezone: entry.occurredTimezone,
     owner_id: context.userId,
@@ -191,10 +191,11 @@ export async function syncInboxEntry(
   }
 
   revalidatePath("/");
+  revalidatePath("/library");
 
   if (entry.attachments.length === 0) await finishInboxCapture(entry.id);
   return {
-    message: "Saved to Inbox.",
+    message: "Saved to Library.",
     status: "synced",
   };
 }
@@ -218,17 +219,11 @@ export async function finishInboxCapture(entryId: string) {
 
 export async function reviewInboxEntry(
   input: InboxReviewInput,
-  intent: "done" | "save",
 ): Promise<ReviewInboxEntryResult> {
   const parsedInput = parseInboxReviewInput(input);
 
-  if (!parsedInput.success || (intent !== "save" && intent !== "done")) {
-    return {
-      message: parsedInput.success
-        ? "Choose a valid review action."
-        : parsedInput.message,
-      status: "error",
-    };
+  if (!parsedInput.success) {
+    return { message: parsedInput.message, status: "error" };
   }
 
   const context = await getAuthenticatedContext();
@@ -251,7 +246,7 @@ export async function reviewInboxEntry(
       p_item_kind: "entry",
       p_item_subtype: "entry",
       p_expected_revision: parsedInput.data.revision,
-      p_mark_done: intent === "done",
+      p_mark_done: false,
       p_occurred_start: parsedInput.data.occurredAt,
       p_occurred_end: parsedInput.data.occurredEnd ?? null,
       p_occurred_label: parsedInput.data.occurredLabel ?? null,
@@ -266,7 +261,7 @@ export async function reviewInboxEntry(
     return {
       status: "conflict",
       message:
-        "The photo or Location changed. Close this review, refresh, and confirm the latest version before saving.",
+        "The photo or Location changed. Close this editor, refresh, and confirm the latest version before saving.",
     };
 
   if (error) {
@@ -283,26 +278,19 @@ export async function reviewInboxEntry(
   ) {
     return {
       message:
-        "This Entry changed on another device. Close it, refresh, and review the latest version.",
+        "This Entry changed on another device. Close it, refresh, and edit the latest version.",
       status: "conflict",
     };
   }
 
   revalidatePath("/");
-
-  revalidatePath("/inbox");
+  revalidatePath("/library");
   revalidatePath("/search");
-  return intent === "done"
-    ? {
-        message: "Entry organized.",
-        status: "done",
-        revision: data[0].revision,
-      }
-    : {
-        message: "Changes saved.",
-        status: "saved",
-        revision: data[0].revision,
-      };
+  return {
+    message: "Changes saved.",
+    status: "saved",
+    revision: data[0].revision,
+  };
 }
 
 function entrySyncFailure(failure: SyncFailure): SyncInboxEntryResult {

@@ -247,11 +247,6 @@ function FirstTimeCard({
         {entry.body ? <p>{truncate(entry.body, 180)}</p> : null}
         <footer>
           <div>
-            {entry.inboxStatus === "unreviewed" ? (
-              <Badge size="micro" tone="warm">
-                In Inbox
-              </Badge>
-            ) : null}
             {entry.tagNames.slice(0, 2).map((name) => (
               <Badge
                 key={`tag:${name.toLocaleLowerCase()}`}

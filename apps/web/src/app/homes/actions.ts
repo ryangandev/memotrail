@@ -12,10 +12,6 @@ import {
   parseHomeEntryInput,
   type HomeEntryInput,
 } from "@/lib/data/home-record-input";
-import {
-  parseCaptureExtractionReference,
-  type CaptureExtractionReference,
-} from "@/lib/data/capture-extraction-input";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
   validLocationSelection,
@@ -30,7 +26,6 @@ export type HomeActionResult = {
 
 export async function saveHomeEntry(
   input: HomeEntryInput,
-  sourceCapture: CaptureExtractionReference | null = null,
   providerLocation: ProviderLocation | null = null,
 ): Promise<HomeActionResult> {
   const parsed = parseHomeEntryInput(input);
@@ -43,16 +38,6 @@ export async function saveHomeEntry(
 
   if (!context) {
     return expiredSession();
-  }
-
-  const source = sourceCapture
-    ? parseCaptureExtractionReference(sourceCapture)
-    : null;
-  if (sourceCapture && (!source || parsed.data.id !== null)) {
-    return result(
-      "error",
-      "This Capture handoff is invalid. Return to Inbox and try again.",
-    );
   }
 
   if (providerLocation) {
@@ -96,30 +81,22 @@ export async function saveHomeEntry(
     p_tag_names: parsed.data.tagNames,
     p_title: parsed.data.title,
   };
-  const expectedRevision = source
-    ? null
-    : await writingRevision(
-        context.client,
-        parsed.data.id,
-        parsed.data.revision,
-      );
+  const expectedRevision = await writingRevision(
+    context.client,
+    parsed.data.id,
+    parsed.data.revision,
+  );
   const { data, error } = providerLocation
     ? await context.client.rpc("save_home_entry_with_geoapify", {
         p_input: { ...parsed.data, revision: expectedRevision },
-        p_source: source,
+        p_source: null,
         p_provider_location: providerLocation,
       })
-    : source
-      ? await context.client.rpc("extract_capture_to_home", {
-          ...parameters,
-          p_capture_id: source.id,
-          p_capture_revision: source.revision,
-        })
-      : await context.client.rpc("save_home_entry_with_occurrence", {
-          ...parameters,
-          p_entry_id: parsed.data.id,
-          p_expected_revision: expectedRevision,
-        });
+    : await context.client.rpc("save_home_entry_with_occurrence", {
+        ...parameters,
+        p_entry_id: parsed.data.id,
+        p_expected_revision: expectedRevision,
+      });
 
   if (error?.code === "40001") {
     return result(
@@ -132,26 +109,20 @@ export async function saveHomeEntry(
   }
 
   const payload = providerLocation ? [data] : data;
-  const saved = source ? extractedHome(payload) : savedHome(payload);
+  const saved = savedHome(payload);
   if (!saved) {
     return result(
       "conflict",
       parsed.data.id
         ? "This Home changed on another device. Close it, refresh, and try again."
-        : source
-          ? "This Capture changed or was already organized. Return to Inbox and refresh."
-          : "MemoTrail could not create this Home. Refresh and try again.",
+        : "MemoTrail could not create this Home. Refresh and try again.",
     );
   }
 
   refreshHomePaths();
   return {
     entry: saved,
-    message: parsed.data.id
-      ? "Home saved."
-      : source
-        ? "Home created from Capture."
-        : "Home added.",
+    message: parsed.data.id ? "Home saved." : "Home added.",
     status: parsed.data.id ? "saved" : "created",
   };
 }
@@ -289,25 +260,6 @@ function savedHome(value: unknown) {
     : null;
 }
 
-function extractedHome(value: unknown) {
-  if (!Array.isArray(value) || value.length === 0) return null;
-  const item = value[0];
-  return typeof item === "object" &&
-    item !== null &&
-    "home_entry_id" in item &&
-    "home_revision" in item &&
-    "place_id" in item &&
-    typeof item.home_entry_id === "string" &&
-    typeof item.home_revision === "number" &&
-    (item.place_id === null || typeof item.place_id === "string")
-    ? {
-        id: item.home_entry_id,
-        placeId: item.place_id,
-        revision: item.home_revision,
-      }
-    : null;
-}
-
 function result(
   status: HomeActionResult["status"],
   message: string,
@@ -325,7 +277,6 @@ function expiredSession(): HomeActionResult {
 function refreshHomePaths() {
   revalidatePath("/");
   revalidatePath("/homes");
-  revalidatePath("/inbox");
   revalidatePath("/library");
   revalidatePath("/search");
   revalidatePath("/timeline");

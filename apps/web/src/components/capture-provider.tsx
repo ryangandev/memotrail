@@ -93,7 +93,7 @@ export function CaptureProvider({
       if (event.key === null || event.key === inboxDraftKey(ownerId))
         draft.reload();
       if (event.key !== null && event.key !== inboxQueueKey(ownerId)) return;
-      // Another tab synced captures, so this page's Inbox counts are stale.
+      // Another tab synced captures, so this page's Library is stale.
       if (queue.reload() > 0) router.refresh();
     }
     function handlePageShow(event: PageTransitionEvent) {

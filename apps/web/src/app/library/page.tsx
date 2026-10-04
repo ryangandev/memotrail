@@ -32,11 +32,18 @@ export default async function LibraryPage({
     type: parameters.type ?? parameters.kind,
   });
   const page = wikiItemsPage(firstParameter(parameters.page));
+  const needsOrganizing =
+    firstParameter(parameters.show) === needsOrganizingView;
   const [searchWorkspace, browseWorkspace] = await Promise.all([
     getSearchWorkspace(parsed),
     parsed.request.hasCriteria
       ? Promise.resolve(null)
-      : getWikiItemsWorkspace({ itemKind: null, page, query: "" }),
+      : getWikiItemsWorkspace({
+          itemKind: null,
+          needsOrganizing,
+          page,
+          query: "",
+        }),
   ]);
   if (!searchWorkspace || (!parsed.request.hasCriteria && !browseWorkspace))
     return null;
@@ -46,7 +53,7 @@ export default async function LibraryPage({
     page > 1 &&
     browseWorkspace.items.length === 0
   ) {
-    redirect("/library");
+    redirect(libraryPageHref(1, needsOrganizing));
   }
 
   return (
@@ -56,8 +63,7 @@ export default async function LibraryPage({
         eyebrow={<>Your Life Wiki</>}
         description={
           <>
-            Browse your organized records, or search across your Life Wiki and
-            Inbox.
+            Browse everything you have saved, or search across your Life Wiki.
           </>
         }
       />
@@ -65,7 +71,11 @@ export default async function LibraryPage({
       <LibrarySearch
         browse={
           browseWorkspace ? (
-            <LibraryBrowse page={page} workspace={browseWorkspace} />
+            <LibraryBrowse
+              needsOrganizing={needsOrganizing}
+              page={page}
+              workspace={browseWorkspace}
+            />
           ) : null
         }
         workspace={searchWorkspace}
@@ -83,9 +93,11 @@ export default async function LibraryPage({
 }
 
 function LibraryBrowse({
+  needsOrganizing,
   page,
   workspace,
 }: {
+  needsOrganizing: boolean;
   page: number;
   workspace: NonNullable<Awaited<ReturnType<typeof getWikiItemsWorkspace>>>;
 }) {
@@ -93,19 +105,45 @@ function LibraryBrowse({
   const pageCount = Math.max(1, Math.ceil(totalCount / wikiItemsPageSize));
 
   return (
-    <section aria-labelledby="all-items-heading">
+    <section aria-labelledby="library-items-heading">
       <div className={styles.sectionHeading}>
-        <h2 id="all-items-heading">All items</h2>
-        <span>
-          {totalCount} {totalCount === 1 ? "item" : "items"}
-        </span>
+        <h2 id="library-items-heading">
+          {needsOrganizing ? "Needs organizing" : "All items"}
+        </h2>
+        <div className={styles.sectionMeta}>
+          <span>
+            {totalCount} {totalCount === 1 ? "item" : "items"}
+          </span>
+          {needsOrganizing ? (
+            <Link href={libraryPageHref(1, false)}>Show all items</Link>
+          ) : workspace.needsOrganizingCount > 0 ? (
+            <Link href={libraryPageHref(1, true)}>
+              {workspace.needsOrganizingCount} need organizing
+            </Link>
+          ) : null}
+        </div>
       </div>
+      {needsOrganizing ? (
+        <p className={styles.sectionNote}>
+          Entries without a title or a tag. Give one either and it leaves this
+          list.
+        </p>
+      ) : null}
       {workspace.error ? (
         <p role="alert">{workspace.error}</p>
       ) : workspace.items.length === 0 ? (
         <div className={styles.wikiEmpty}>
-          <strong>No matching items</strong>
-          <p>Try another phrase or category, or capture something new.</p>
+          {needsOrganizing ? (
+            <>
+              <strong>Everything has a place</strong>
+              <p>New captures without a title or tag will show up here.</p>
+            </>
+          ) : (
+            <>
+              <strong>No matching items</strong>
+              <p>Try another phrase or category, or capture something new.</p>
+            </>
+          )}
         </div>
       ) : (
         <ul aria-label="Library items" className={styles.wikiList}>
@@ -125,7 +163,9 @@ function LibraryBrowse({
                 </div>
                 <small>{wikiItemDateLabel(item)}</small>
                 <strong>{item.title}</strong>
-                {item.excerpt ? <p>{item.excerpt}</p> : null}
+                {excerptAfterTitle(item) ? (
+                  <p>{excerptAfterTitle(item)}</p>
+                ) : null}
               </Link>
             </li>
           ))}
@@ -135,7 +175,9 @@ function LibraryBrowse({
       {pageCount > 1 ? (
         <nav className={styles.pagination} aria-label="Life Wiki pages">
           {page > 1 ? (
-            <Link href={libraryPageHref(page - 1)}>Previous</Link>
+            <Link href={libraryPageHref(page - 1, needsOrganizing)}>
+              Previous
+            </Link>
           ) : (
             <span />
           )}
@@ -143,7 +185,7 @@ function LibraryBrowse({
             Page {page} of {pageCount}
           </span>
           {page < pageCount ? (
-            <Link href={libraryPageHref(page + 1)}>Next</Link>
+            <Link href={libraryPageHref(page + 1, needsOrganizing)}>Next</Link>
           ) : (
             <span />
           )}
@@ -157,8 +199,22 @@ function firstParameter(value: string | string[] | undefined) {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
 }
 
-function libraryPageHref(page: number) {
-  return page > 1 ? `/library?page=${page}` : "/library";
+const needsOrganizingView = "needs-organizing";
+
+function libraryPageHref(page: number, needsOrganizing: boolean) {
+  const parameters = new URLSearchParams();
+  if (needsOrganizing) parameters.set("show", needsOrganizingView);
+  if (page > 1) parameters.set("page", String(page));
+  const query = parameters.toString();
+  return query ? `/library?${query}` : "/library";
+}
+
+// An Entry without a title is listed by the start of its writing, so the
+// excerpt continues after that start instead of repeating it.
+function excerptAfterTitle(item: { excerpt: string; title: string }) {
+  return item.excerpt.startsWith(item.title)
+    ? item.excerpt.slice(item.title.length).trim()
+    : item.excerpt;
 }
 
 function wikiItemDateLabel(item: {

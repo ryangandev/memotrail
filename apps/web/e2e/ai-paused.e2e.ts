@@ -130,8 +130,7 @@ test("AI beta stays off, has no entry points, and blocks old clients without cha
     await expect(
       page.getByRole("link", { name: "Explore with AI" }),
     ).toHaveCount(0);
-    await page.goto("/inbox");
-    await page.getByRole("button", { name: "Organize", exact: true }).click();
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Explore with AI" }),
@@ -260,13 +259,13 @@ test("Captures with saved AI consent start no paused suggestion work", async ({
       exact: true,
     });
     const save = capture.getByRole("button", {
-      name: "Save to Inbox",
+      name: "Save to Library",
       exact: true,
     });
     const toast = page.locator("[data-sonner-toast]");
     await text.fill("A quiet afternoon by the lake.");
     await save.click();
-    await expect(toast.filter({ hasText: "Saved to Inbox." })).toBeVisible();
+    await expect(toast.filter({ hasText: "Saved to Library." })).toBeVisible();
 
     await capture.locator('input[type="file"]').setInputFiles({
       name: "lake.png",
@@ -280,7 +279,7 @@ test("Captures with saved AI consent start no paused suggestion work", async ({
     await text.fill("The lake at dusk.");
     await save.click();
     await expect(
-      toast.filter({ hasText: "Saved to Inbox with 1 photo." }),
+      toast.filter({ hasText: "Saved to Library with 1 photo." }),
     ).toBeVisible();
 
     const entries = await client
@@ -289,8 +288,8 @@ test("Captures with saved AI consent start no paused suggestion work", async ({
       .order("created_at");
     expect(entries.error).toBeNull();
     expect(entries.data).toEqual([
-      { body: "A quiet afternoon by the lake.", inbox_status: "unreviewed" },
-      { body: "The lake at dusk.", inbox_status: "unreviewed" },
+      { body: "A quiet afternoon by the lake.", inbox_status: "organized" },
+      { body: "The lake at dusk.", inbox_status: "organized" },
     ]);
     // Suggestion work used to start after each action responded, so watch a short window.
     await expect.poll(() => pendingActions.size).toBe(0);

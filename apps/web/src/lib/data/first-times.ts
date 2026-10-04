@@ -31,7 +31,6 @@ export type FirstTimeEntry = {
   body: string;
   datePrecision: FirstTimeDatePrecision;
   id: string;
-  inboxStatus: "organized" | "unreviewed";
   location?: LocationSelection | null;
   occurredLabel: string | null;
   occurredStart: string | null;
@@ -45,7 +44,6 @@ export type FirstTimeEntry = {
 
 export type FirstTimesWorkspace = {
   entries: FirstTimeEntry[];
-  inboxCount: number | undefined;
   loadError: string | null;
   tagOptions: string[];
   viewer: Viewer;
@@ -56,7 +54,6 @@ type FirstTimeRow = {
   body: string;
   date_precision: FirstTimeDatePrecision;
   entry_id: string;
-  inbox_status: "organized" | "unreviewed";
   occurred_label: string | null;
   occurred_start: string | null;
   occurred_end: string | null;
@@ -78,7 +75,7 @@ export async function getFirstTimesWorkspace(
     return null;
   }
 
-  const [firstTimes, tags, inbox] = await Promise.all([
+  const [firstTimes, tags] = await Promise.all([
     context.client.rpc("first_times_workspace_with_occurrence"),
     context.client
       .from("tags")
@@ -86,17 +83,11 @@ export async function getFirstTimesWorkspace(
       .eq("owner_id", context.userId)
       .order("name")
       .returns<NameRow[]>(),
-    context.client
-      .from("entries")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", context.userId)
-      .eq("inbox_status", "unreviewed")
-      .is("deleted_at", null),
   ]);
   const rows = firstTimes.error ? null : parseFirstTimeRows(firstTimes.data);
 
   if (!rows) {
-    return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+    return unavailableWorkspace(context.viewer);
   }
 
   if (targetId && !rows.some((row) => row.entry_id === targetId)) {
@@ -105,8 +96,7 @@ export async function getFirstTimesWorkspace(
         .rpc("first_times_workspace_with_occurrence")
         .range(offset, offset + 999);
       const more = page.error ? null : parseFirstTimeRows(page.data);
-      if (!more)
-        return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+      if (!more) return unavailableWorkspace(context.viewer);
       rows.push(...more);
       if (more.length < 1000 || more.some((row) => row.entry_id === targetId))
         break;
@@ -121,7 +111,7 @@ export async function getFirstTimesWorkspace(
     visibleRows.map((row) => row.entry_id),
   );
   if (!locations) {
-    return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+    return unavailableWorkspace(context.viewer);
   }
 
   const attachments = visibleRows.flatMap((row) => row.attachments);
@@ -136,7 +126,6 @@ export async function getFirstTimesWorkspace(
       body: row.body,
       datePrecision: row.date_precision,
       id: row.entry_id,
-      inboxStatus: row.inbox_status,
       location: locations.get(row.entry_id) ?? null,
       occurredLabel: row.occurred_label,
       occurredStart: row.occurred_start,
@@ -147,7 +136,6 @@ export async function getFirstTimesWorkspace(
       title: row.title,
       updatedAt: row.updated_at,
     })),
-    inboxCount: inbox.error ? undefined : (inbox.count ?? 0),
     loadError: null,
     tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
     viewer: context.viewer,
@@ -187,8 +175,6 @@ export function parseFirstTimeRows(value: unknown):
       typeof item.entry_id !== "string" ||
       typeof item.title !== "string" ||
       typeof item.body !== "string" ||
-      (item.inbox_status !== "organized" &&
-        item.inbox_status !== "unreviewed") ||
       typeof item.date_precision !== "string" ||
       !firstTimeDatePrecisions.includes(
         item.date_precision as FirstTimeDatePrecision,
@@ -209,7 +195,6 @@ export function parseFirstTimeRows(value: unknown):
       body: item.body,
       date_precision: item.date_precision as FirstTimeDatePrecision,
       entry_id: item.entry_id,
-      inbox_status: item.inbox_status,
       occurred_label: item.occurred_label,
       occurred_start: item.occurred_start,
       occurred_end: item.occurred_end,
@@ -273,13 +258,9 @@ function parseAttachments(value: unknown): FirstTimeAttachment[] | null {
   return attachments;
 }
 
-function unavailableWorkspace(
-  viewer: Viewer,
-  inboxCount: number | undefined,
-): FirstTimesWorkspace {
+function unavailableWorkspace(viewer: Viewer): FirstTimesWorkspace {
   return {
     entries: [],
-    inboxCount,
     loadError:
       "MemoTrail could not load your First Times. Refresh to try again.",
     tagOptions: [],

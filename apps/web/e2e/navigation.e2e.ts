@@ -308,20 +308,14 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(searchShortcut).not.toContainText("Search your trail");
     await expect(newEntryShortcut).toContainText("⌘ J");
     await expect(newEntryShortcut).toContainText("What’s on your mind?");
-    const inboxShortcut = page.getByRole("link", {
-      name: "Open Inbox",
-      exact: true,
-    });
-    await expect(inboxShortcut).toBeVisible();
-    await expect(inboxShortcut).not.toContainText("Inbox");
-    const [dockBox, searchBox, inboxBox] = await Promise.all([
+    // Captures land in Library, so the top bar keeps no Inbox control.
+    await expect(page.getByRole("link", { name: /Inbox/ })).toHaveCount(0);
+    const [dockBox, searchBox] = await Promise.all([
       newEntryShortcut.boundingBox(),
       searchShortcut.boundingBox(),
-      inboxShortcut.boundingBox(),
     ]);
     expect(dockBox!.x + dockBox!.width).toBeLessThan(searchBox!.x);
     expect(dockBox!.y).toBeCloseTo(searchBox!.y, 0);
-    expect(searchBox!.y).toBeGreaterThan(inboxBox!.y + inboxBox!.height);
     await expect(
       page
         .locator("main > header")
@@ -513,10 +507,10 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       path: "/private/tmp/memotrail-sidebar-collapsed.png",
     });
     await page.mouse.move(800, 100);
-    await expandSidebar.focus();
-    await page.keyboard.press("Tab");
-    await expect(inboxShortcut).toBeFocused();
+    // Reach the link by keyboard so it shows its keyboard focus ring.
     await homeLink.focus();
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Tab");
     await expect(homeLink).toBeFocused();
     await expect(homeLink).toHaveCSS("outline-style", "none");
     await expect(homeLink).toHaveCSS("box-shadow", /inset/);
@@ -557,7 +551,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(
       page.getByRole("navigation", { name: "Mobile navigation" }),
     ).toBeVisible();
-    for (const label of ["Dashboard", "Inbox", "Timeline", "Library"]) {
+    for (const label of ["Dashboard", "Timeline", "Library", "Map"]) {
       await expect(
         page
           .getByRole("navigation", { name: "Mobile navigation" })
@@ -577,17 +571,17 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       name: "More destinations",
     });
     await expect(moreDestinations).toBeVisible();
-    await moreDestinations.getByRole("link", { name: "Map" }).click();
-    await expect(page).toHaveURL(/\/map$/);
+    await moreDestinations.getByRole("link", { name: "Tags" }).click();
+    await expect(page).toHaveURL(/\/tags$/);
     await expect(
-      page.getByRole("heading", { name: "Map", exact: true }),
+      page.getByRole("heading", { name: "Tags", exact: true }),
     ).toBeVisible();
     await expect(moreDestinations).toBeHidden();
     await page.waitForLoadState("networkidle");
     await moreButton.click();
     await expect(moreDestinations).toBeVisible();
     await expect(
-      moreDestinations.getByRole("link", { name: "Map" }),
+      moreDestinations.getByRole("link", { name: "Tags" }),
     ).toHaveAttribute("aria-current", "page");
     await page.keyboard.press("Escape");
     await expect(moreDestinations).toBeHidden();
@@ -599,10 +593,10 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     );
     await expect(shell).toHaveCSS("width", "224px");
     await expect(page.locator("main")).toHaveCSS("margin-left", "224px");
-    await page.getByRole("button", { name: "Collapse sidebar" }).focus();
-    await page.keyboard.press("Tab");
-    await expect(inboxShortcut).toBeFocused();
+    // Reach the link by keyboard so it shows its keyboard focus ring.
     await homeLink.focus();
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Tab");
     await expect(homeLink).toBeFocused();
     await expect(homeLink).toHaveCSS("outline-style", "none");
     await expect(homeLink).toHaveCSS("box-shadow", /inset/);
@@ -668,8 +662,11 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       page.getByRole("heading", { name: "Map", exact: true }),
     ).toBeVisible();
 
-    await page.getByRole("link", { name: "Open Inbox", exact: true }).click();
-    await expect(page).toHaveURL(/\/inbox$/);
+    await shell
+      .getByRole("navigation", { name: "Settings navigation" })
+      .getByRole("link", { name: "Settings", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/settings$/);
     await expect(shell).toHaveAttribute("data-shell-instance", "kept");
 
     await page
@@ -866,7 +863,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       .getByRole("button", { name: "Close quick capture", exact: true })
       .evaluate((element) => element.getBoundingClientRect().right);
     const saveRight = await quickCapture
-      .getByRole("button", { name: "Save to Inbox", exact: true })
+      .getByRole("button", { name: "Save to Library", exact: true })
       .evaluate((element) => element.getBoundingClientRect().right);
     expect(Math.round(dialogRight - closeRight)).toBe(21);
     expect(Math.round(dialogRight - saveRight)).toBe(21);
@@ -992,7 +989,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       path: "/private/tmp/memotrail-quick-capture-typing.png",
     });
     await quickCapture
-      .getByRole("button", { name: "Save to Inbox", exact: true })
+      .getByRole("button", { name: "Save to Library", exact: true })
       .click();
     await expect(quickCaptureForm).not.toContainText(
       "MemoTrail could not store this Entry",
@@ -1000,7 +997,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(
       page
         .locator("[data-sonner-toast]")
-        .filter({ hasText: "Saved to Inbox." }),
+        .filter({ hasText: "Saved to Library." }),
     ).toBeVisible();
     await expect
       .poll(async () => {

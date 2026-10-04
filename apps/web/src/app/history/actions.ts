@@ -16,9 +16,14 @@ export async function loadEditableEntry(id: string) {
   if (!validHistoryID(id)) return null;
   const context = await getAuthenticatedContext();
   if (!context) return null;
-  const { data, error } = await context.client.rpc("editable_entry", {
-    p_entry_id: id,
-  });
+  const [{ data, error }, tags] = await Promise.all([
+    context.client.rpc("editable_entry", { p_entry_id: id }),
+    context.client
+      .from("tags")
+      .select("name")
+      .eq("owner_id", context.userId)
+      .order("name"),
+  ]);
   if (error || !data) return null;
   return {
     entry: entryFromRow(
@@ -26,7 +31,9 @@ export async function loadEditableEntry(id: string) {
       data.tag_names,
       existingLocationFromRow(data.primary_location),
     ),
-    organized: data.inbox_status === "organized",
+    tagOptions: tags.error
+      ? data.tag_names
+      : (tags.data ?? []).map((tag) => tag.name),
   };
 }
 

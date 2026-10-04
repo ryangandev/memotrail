@@ -15,11 +15,10 @@ describe("Entry identity and routing", () => {
     expect(wikiItemSubtypeLabel("entity", "vehicle")).toBe("Vehicle");
   });
 
-  it("routes unreviewed Entries to Inbox and focused records to their views", () => {
+  it("routes Entries to their detail and focused records to their views", () => {
     expect(
       wikiEntryHref({
         id: "1",
-        inboxStatus: "organized",
         itemKind: "entity",
         itemSubtype: "vehicle",
       }),
@@ -27,23 +26,13 @@ describe("Entry identity and routing", () => {
     expect(
       wikiEntryHref({
         id: "2",
-        inboxStatus: "organized",
         itemKind: "entry",
         itemSubtype: "entry",
       }),
     ).toBe("/items/2");
     expect(
       wikiEntryHref({
-        id: "4",
-        inboxStatus: "unreviewed",
-        itemKind: "entry",
-        itemSubtype: "entry",
-      }),
-    ).toBe("/inbox?entry=4");
-    expect(
-      wikiEntryHref({
         id: "5",
-        inboxStatus: "organized",
         itemKind: "entry",
         itemSubtype: "first_time",
       }),
@@ -51,7 +40,6 @@ describe("Entry identity and routing", () => {
     expect(
       wikiEntryHref({
         id: "6",
-        inboxStatus: "organized",
         itemKind: "entry",
         itemSubtype: "moment",
       }),
@@ -59,7 +47,6 @@ describe("Entry identity and routing", () => {
     expect(
       wikiEntryHref({
         id: "7",
-        inboxStatus: "organized",
         itemKind: "entry",
         itemSubtype: "period",
       }),

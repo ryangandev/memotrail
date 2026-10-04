@@ -29,7 +29,7 @@ const signIn: InboxSyncResult = {
 };
 const refused: InboxSyncResult = {
   message:
-    "This Entry is in your Inbox, but MemoTrail cannot accept one of its photos, so they will not sync. Discard to remove them from this device.",
+    "This Entry is in your Library, but MemoTrail cannot accept one of its photos, so they will not sync. Discard to remove them from this device.",
   status: "rejected",
 };
 const trashed: InboxSyncResult = {
@@ -55,7 +55,7 @@ describe("Capture photo synchronization", () => {
         operations,
         (step) => progress.push(step),
       ),
-    ).toEqual({ message: "Saved to Inbox with 2 photos.", status: "synced" });
+    ).toEqual({ message: "Saved to Library with 2 photos.", status: "synced" });
     expect(operations.upload).toHaveBeenCalledTimes(2);
     expect(operations.upload).toHaveBeenNthCalledWith(
       1,
@@ -89,15 +89,15 @@ describe("Capture photo synchronization", () => {
   it.each([
     [
       "413",
-      "This Entry is in your Inbox, but one of its photos is too large for MemoTrail, so they will not sync. Discard to remove them from this device.",
+      "This Entry is in your Library, but one of its photos is too large for MemoTrail, so they will not sync. Discard to remove them from this device.",
     ],
     [
       "415",
-      "This Entry is in your Inbox, but one of its photos is a file type MemoTrail does not accept, so they will not sync. Discard to remove them from this device.",
+      "This Entry is in your Library, but one of its photos is a file type MemoTrail does not accept, so they will not sync. Discard to remove them from this device.",
     ],
     [
       "400",
-      "This Entry is in your Inbox, but MemoTrail cannot accept one of its photos, so they will not sync. Discard to remove them from this device.",
+      "This Entry is in your Library, but MemoTrail cannot accept one of its photos, so they will not sync. Discard to remove them from this device.",
     ],
   ])(
     "stops a photo Storage refuses with %s and never registers it",
@@ -223,7 +223,7 @@ describe("Capture photo synchronization", () => {
   it("passes on why a photo this device no longer has cannot be registered", async () => {
     const missing: InboxSyncResult = {
       message:
-        "This Entry is in your Inbox, but one of its photos is no longer on this device, so they will not sync. Discard to remove them from this device.",
+        "This Entry is in your Library, but one of its photos is no longer on this device, so they will not sync. Discard to remove them from this device.",
       status: "rejected",
     };
     const { operations } = setup({ photos: [], register: missing });

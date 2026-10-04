@@ -29,7 +29,6 @@ type EntryRow = {
   title: string;
   item_kind: string;
   item_subtype: string;
-  inbox_status: string;
   occurred_start: string | null;
 };
 type LocationRow = {
@@ -82,7 +81,7 @@ export async function getLocationMapWorkspace() {
     const [entriesResult, locationsResult] = await Promise.all([
       context.client
         .from("entries")
-        .select("id,title,item_kind,item_subtype,inbox_status,occurred_start")
+        .select("id,title,item_kind,item_subtype,occurred_start")
         .eq("owner_id", context.userId)
         .is("deleted_at", null)
         .in("id", entryIds)
@@ -141,8 +140,6 @@ export async function getLocationMapWorkspace() {
           id: entry.id,
           itemKind: entry.item_kind,
           itemSubtype: entry.item_subtype,
-          inboxStatus:
-            entry.inbox_status === "unreviewed" ? "unreviewed" : "organized",
         }),
       });
     }

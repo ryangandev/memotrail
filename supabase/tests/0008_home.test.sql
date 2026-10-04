@@ -92,9 +92,9 @@ values
     '81000000-0000-0000-0000-000000000001',
     '10000000-0000-0000-0000-000000000001',
     'Newest home thought',
-    'A recent Inbox thought.',
+    'A Capture saved straight to Library.',
     'entry','entry',
-    'unreviewed',
+    'organized',
     '2026-09-03T16:00:00Z',
     null,
     'exact',
@@ -164,7 +164,7 @@ values
     'Removed thought',
     'This must stay out of Home.',
     'entry','entry',
-    'unreviewed',
+    'organized',
     '2026-09-03T17:00:00Z',
     null,
     'exact',
@@ -178,7 +178,7 @@ values
     'Other owner thought',
     'This must remain private.',
     'entry','entry',
-    'unreviewed',
+    'organized',
     '2026-09-03T19:00:00Z',
     null,
     'exact',
@@ -262,13 +262,13 @@ select is(
 );
 select is(
   (select inbox_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  1::bigint,
-  'Inbox count includes only active owner Entries awaiting review'
+  0::bigint,
+  'The retired Inbox count stays empty for deployed clients'
 );
 select is(
   (select entry_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  4::bigint,
-  'Entry count includes organized active owner Entries'
+  5::bigint,
+  'Entry count includes active owner Entries'
 );
 select is(
   (select first_time_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
@@ -292,15 +292,13 @@ select is(
 );
 select is(
   (select recent_entries -> 0 ->> 'title' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  'First long drive',
-  'Recent Entries use stable newest-organized ordering'
+  'Newest home thought',
+  'Recent Entries start with the newest Capture'
 );
-select ok(
-  not (
-    select recent_entries @> '[{"title":"Newest home thought"}]'::jsonb
-    from public.home_workspace('2026-09-03', 'America/Los_Angeles', 10)
-  ),
-  'Recent Entries exclude unreviewed Inbox Captures'
+select is(
+  (select recent_entries -> 1 ->> 'title' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  'First long drive',
+  'Recent Entries use stable newest-first ordering'
 );
 select ok(
   not (
@@ -317,12 +315,12 @@ select ok(
   'Recent Entries exclude other owners'
 );
 select is(
-  (select recent_entries -> 0 -> 'tag_names' ->> 0 from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  (select recent_entries -> 1 -> 'tag_names' ->> 0 from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
   'home-test',
   'Recent Entries include tag names'
 );
 select is(
-  (select recent_entries -> 0 -> 'attachments' -> 0 ->> 'mime_type' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  (select recent_entries -> 1 -> 'attachments' -> 0 ->> 'mime_type' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
   'image/jpeg',
   'Recent Entries include active private attachment metadata'
 );

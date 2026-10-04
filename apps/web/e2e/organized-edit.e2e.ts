@@ -3,10 +3,7 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
-test("Organized Entries stay editable without returning to Inbox", async ({
-  page,
-  context,
-}) => {
+test("Organized Entries stay editable in place", async ({ page, context }) => {
   const env = JSON.parse(
     execFileSync("supabase", ["status", "-o", "json"], {
       encoding: "utf8",
@@ -214,10 +211,14 @@ test("Organized Entries stay editable without returning to Inbox", async ({
         .locator("[data-entry-rich-text] em")
         .filter({ hasText: /^Updated after organizing$/ }),
     ).toHaveText("Updated after organizing");
-    await page.goto("/inbox");
+    // A tagged Entry already has a place, so it never needs organizing.
+    await page.goto("/library?show=needs-organizing");
     await expect(
-      page.getByRole("heading", { name: "Finished organizing", exact: true }),
-    ).toHaveCount(0);
+      page.getByRole("heading", { name: "Needs organizing", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Everything has a place", { exact: true }),
+    ).toBeVisible();
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }

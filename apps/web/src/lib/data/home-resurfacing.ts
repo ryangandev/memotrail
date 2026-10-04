@@ -2,11 +2,7 @@ import { parseHomeEntry, type HomeEntry } from "./home-entry";
 
 export type HomeResurfacingKind = "from_your_archive" | "on_this_day";
 
-export type HomeResurfacedMemory = Omit<
-  HomeEntry,
-  "inboxStatus" | "occurredStart"
-> & {
-  inboxStatus: "organized";
+export type HomeResurfacedMemory = Omit<HomeEntry, "occurredStart"> & {
   occurredStart: string;
   resurfacingKind: HomeResurfacingKind;
   yearsAgo: number | null;
@@ -29,7 +25,6 @@ export function parseHomeResurfacedMemory(
   if (
     !entry ||
     !isRecord(item) ||
-    entry.inboxStatus !== "organized" ||
     entry.occurredStart === null ||
     (item.resurfacing_kind !== "on_this_day" &&
       item.resurfacing_kind !== "from_your_archive")
@@ -58,7 +53,6 @@ export function parseHomeResurfacedMemory(
 
   return {
     ...entry,
-    inboxStatus: "organized",
     occurredStart: entry.occurredStart,
     resurfacingKind: item.resurfacing_kind,
     yearsAgo: normalizedYearsAgo,

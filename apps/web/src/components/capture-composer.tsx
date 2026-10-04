@@ -498,7 +498,7 @@ export function CaptureComposer({
                 ref={submitButtonRef}
                 type="submit"
               >
-                {isSaving || isSyncing ? "Saving…" : "Save to Inbox"}
+                {isSaving || isSyncing ? "Saving…" : "Save to Library"}
                 <Icon name="chevron" size={16} />
               </Button>
               <span
@@ -506,7 +506,7 @@ export function CaptureComposer({
                 id={`${idPrefix}-save-shortcut`}
                 role="tooltip"
               >
-                <span>Save to Inbox</span>
+                <span>Save to Library</span>
                 <kbd>⌘ Return</kbd>
               </span>
             </span>

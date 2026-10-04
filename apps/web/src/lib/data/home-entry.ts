@@ -16,7 +16,6 @@ export type HomeEntry = {
   createdAt: string;
   datePrecision: string;
   id: string;
-  inboxStatus: "organized" | "unreviewed";
   itemKind: WikiItemKind;
   itemSubtype: string;
   occurredEnd: string | null;
@@ -63,8 +62,6 @@ export function parseHomeEntry(value: unknown): HomeEntry | null {
     typeof value.body !== "string" ||
     !isWikiItemKind(value.item_kind) ||
     typeof value.item_subtype !== "string" ||
-    (value.inbox_status !== "organized" &&
-      value.inbox_status !== "unreviewed") ||
     !nullableString(value.occurred_start) ||
     !nullableString(value.occurred_end) ||
     typeof value.date_precision !== "string" ||
@@ -86,7 +83,6 @@ export function parseHomeEntry(value: unknown): HomeEntry | null {
     createdAt: value.created_at,
     datePrecision: value.date_precision,
     id: value.entry_id,
-    inboxStatus: value.inbox_status,
     itemKind: value.item_kind,
     itemSubtype: value.item_subtype,
     occurredEnd: value.occurred_end,

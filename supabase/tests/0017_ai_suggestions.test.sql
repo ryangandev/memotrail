@@ -19,7 +19,7 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001'
 select is((select count(*) from public.ai_suggestions where entry_id='93000000-0000-4000-8000-000000000001'),1::bigint,'Owner can read persisted suggestion');
 select is(public.dismiss_ai_suggestion((select id from public.ai_suggestions where entry_id='93000000-0000-4000-8000-000000000001')),true,'Owner can dismiss');
 select is((select title from public.entries where id='93000000-0000-4000-8000-000000000001'),null::text,'Suggestion never overwrites original title');
-select is((select inbox_status from public.entries where id='93000000-0000-4000-8000-000000000001'),'unreviewed','Suggestion never marks Done');
+select is((select revision from public.entries where id='93000000-0000-4000-8000-000000000001'),1,'Suggestion never edits the Entry');
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000099',true);
 select is((select count(*) from public.ai_suggestions where entry_id='93000000-0000-4000-8000-000000000001'),0::bigint,'Other owner cannot read suggestions');
 reset role;
