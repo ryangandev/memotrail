@@ -42,7 +42,6 @@ select is(
       'title','Blue Civic','body','A memory','datePrecision','unknown',
       'tagNames',jsonb_build_array()
     ),
-    null,
     pg_temp.provider('specialized-pine-10','10 Pine Street, Philadelphia')
   )),
   1::bigint,
@@ -112,7 +111,6 @@ select is(
       'id',(select id from public.entries where title='Blue Civic'),
       'revision',(select revision from public.entries where title='Blue Civic')
     ),
-    null,
     null
   )),
   1::bigint,

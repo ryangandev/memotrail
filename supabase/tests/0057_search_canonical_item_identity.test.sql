@@ -5,8 +5,8 @@ select no_plan();
 insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000121','canonical-search@memotrail.local');
 
-insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,inbox_status) values
-  ('98900000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000121','Marina','Lived by the harbor','entity','home','organized');
+insert into public.entries(id,owner_id,title,body,item_kind,item_subtype) values
+  ('98900000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000121','Marina','Lived by the harbor','entity','home');
 insert into public.homes(entry_id,owner_id) values
   ('98900000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000121');
 
@@ -15,10 +15,10 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000121'
 
 select is(
   (
-    select concat_ws('|',item_kind,item_subtype,record_source,record_id::text)
+    select concat_ws('|',item_kind,item_subtype,entry_id::text)
     from public.search_wiki_items('Marina')
   ),
-  'entity|home|entry|98900000-0000-4000-8000-000000000001',
+  'entity|home|98900000-0000-4000-8000-000000000001',
   'Canonical search returns Entity semantic and routing identities'
 );
 

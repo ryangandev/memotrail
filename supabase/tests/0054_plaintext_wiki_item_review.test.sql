@@ -7,7 +7,7 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000118','plaintext-review-other@memotrail.local');
 
 insert into public.entries(
-  id,owner_id,title,body,metadata,inbox_status,date_precision,occurred_timezone
+  id,owner_id,title,body,metadata,date_precision,occurred_timezone
 ) values (
   '98700000-0000-4000-8000-000000000001',
   '10000000-0000-0000-0000-000000000117',
@@ -21,31 +21,31 @@ insert into public.entries(
       'document',jsonb_build_object('type','doc','content',jsonb_build_array())
     )
   ),
-  'unreviewed','unknown','UTC'
+  'unknown','UTC'
 );
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000117',true);
 
 select is(
-  (select revision from public.review_wiki_item_with_photo_place(
+  (select revision from public.review_wiki_item_with_location_rich(
     '98700000-0000-4000-8000-000000000001',1,
-    'Morning pages','Edited on iPhone.','entry','entry',
-    null,'UTC',array['Morning'],true,null,null,'unknown',null
+    'Morning pages','Edited without formatting.','entry','entry',
+    null,'UTC',array['Morning'],null,null,'unknown',null,null,null
   )),
   2,
-  'A plaintext client classifies and reviews a raw Capture'
+  'An edit without formatting saves the Entry'
 );
 select is(
-  (select item_kind || ':' || item_subtype || ':' || inbox_status
+  (select item_kind || ':' || item_subtype
    from public.entries where id='98700000-0000-4000-8000-000000000001'),
-  'entry:entry:organized',
+  'entry:entry',
   'The semantic Kind and subtype are saved atomically'
 );
 select ok(
   not (select metadata ? 'body_rich'
    from public.entries where id='98700000-0000-4000-8000-000000000001'),
-  'A plaintext client edit drops formatting for the writing it replaced'
+  'An edit without formatting drops formatting for the writing it replaced'
 );
 select is(
   (select count(*)
@@ -59,22 +59,22 @@ select is(
 );
 
 select throws_ok(
-  $$select * from public.review_wiki_item_with_photo_place(
+  $$select * from public.review_wiki_item_with_location_rich(
     '98700000-0000-4000-8000-000000000001',2,
     'Morning pages','Try to change Kind','entry','first_time',
-    null,'UTC','{}',true,null,null,'unknown',null
+    null,'UTC','{}',null,null,'unknown',null,null,null
   )$$,
   '22023',
   'invalid_item_classification',
-  'A plaintext client cannot turn an Entry into a First Time'
+  'An edit cannot turn an Entry into a First Time'
 );
 
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000118',true);
 select is(
-  (select count(*) from public.review_wiki_item_with_photo_place(
+  (select count(*) from public.review_wiki_item_with_location_rich(
     '98700000-0000-4000-8000-000000000001',2,
     'Foreign','No access','entry','entry',
-    null,'UTC','{}',true,null,null,'unknown',null
+    null,'UTC','{}',null,null,'unknown',null,null,null
   )),
   0::bigint,
   'Another owner cannot review the Wiki Item'
@@ -84,10 +84,10 @@ reset role;
 select ok(
   not has_function_privilege(
     'anon',
-    'public.review_wiki_item_with_photo_place(uuid,integer,text,text,text,text,timestamp with time zone,text,text[],boolean,timestamp with time zone,text,text,jsonb)',
+    'public.review_wiki_item_with_location_rich(uuid,integer,text,text,text,text,timestamptz,text,text[],timestamptz,text,text,jsonb,jsonb,jsonb)',
     'execute'
   ),
-  'Anonymous plaintext semantic review is denied'
+  'Anonymous review is denied'
 );
 
 select * from finish();

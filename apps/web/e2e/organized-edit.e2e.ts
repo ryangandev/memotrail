@@ -62,7 +62,6 @@ test("Organized Entries stay editable in place", async ({ page, context }) => {
           body: "Original words",
           item_kind: "entry",
           item_subtype: "entry",
-          inbox_status: "organized",
           date_precision: "exact",
           metadata: {
             body_rich: {
@@ -175,7 +174,6 @@ test("Organized Entries stay editable in place", async ({ page, context }) => {
     ).data!;
     expect(saved).toMatchObject({
       body: "Updated after organizing",
-      inbox_status: "organized",
       date_precision: "exact",
       metadata: {
         body_rich: {

@@ -7,7 +7,7 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000108','goal-extraction-other@memotrail.local');
 
 insert into public.entries(
-  id,owner_id,title,body,metadata,source_language,item_kind,item_subtype,inbox_status
+  id,owner_id,title,body,metadata,source_language,item_kind,item_subtype
 ) values (
   '98100000-0000-4000-8000-000000000001',
   '10000000-0000-0000-0000-000000000107',
@@ -15,8 +15,7 @@ insert into public.entries(
   'I want to spend more time on the water.',
   '{"body_rich":{"version":1,"text":"I want to spend more time on the water.","document":{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"I want to spend more time on the water."}]}]}},"private_draft":"do not copy"}',
   'en',
-  'entry','entry',
-  'organized'
+  'entry','entry'
 );
 
 set local role authenticated;

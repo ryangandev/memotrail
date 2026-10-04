@@ -76,7 +76,6 @@ test("An Idea creates a linked Goal without changing the source", async ({
           owner_id: ownerID,
           title: "Original chapter",
           body: "The original words I want to keep.",
-          inbox_status: "organized",
           item_kind: "entry",
           item_subtype: "entry",
         })
@@ -206,7 +205,6 @@ test("An Idea creates a linked Goal without changing the source", async ({
     for (const key of [
       "id",
       "body",
-      "inbox_status",
       "created_at",
       "occurred_start",
       "occurred_end",

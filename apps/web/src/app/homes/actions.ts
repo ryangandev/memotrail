@@ -89,7 +89,6 @@ export async function saveHomeEntry(
   const { data, error } = providerLocation
     ? await context.client.rpc("save_home_entry_with_geoapify", {
         p_input: { ...parsed.data, revision: expectedRevision },
-        p_source: null,
         p_provider_location: providerLocation,
       })
     : await context.client.rpc("save_home_entry_with_occurrence", {

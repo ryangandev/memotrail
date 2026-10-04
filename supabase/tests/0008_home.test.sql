@@ -79,7 +79,6 @@ insert into public.entries (
   body,
   item_kind,
   item_subtype,
-  inbox_status,
   occurred_start,
   occurred_end,
   date_precision,
@@ -94,7 +93,6 @@ values
     'Newest home thought',
     'A Capture saved straight to Library.',
     'entry','entry',
-    'organized',
     '2026-09-03T16:00:00Z',
     null,
     'exact',
@@ -108,7 +106,6 @@ values
     'First long drive',
     'A First Time.',
     'entry','first_time',
-    'organized',
     '2026-09-02T18:00:00Z',
     null,
     'day',
@@ -122,7 +119,6 @@ values
     'Current California chapter',
     'A current stage.',
     'entry','period',
-    'organized',
     '2025-01-01T08:00:00Z',
     null,
     'year',
@@ -136,7 +132,6 @@ values
     'Past chapter',
     'An ended stage.',
     'entry','period',
-    'organized',
     '2020-01-01T08:00:00Z',
     '2021-01-01T08:00:00Z',
     'range',
@@ -150,7 +145,6 @@ values
     'Future chapter',
     'A stage that has not started.',
     'entry','period',
-    'organized',
     '2027-01-01T08:00:00Z',
     null,
     'year',
@@ -164,7 +158,6 @@ values
     'Removed thought',
     'This must stay out of Home.',
     'entry','entry',
-    'organized',
     '2026-09-03T17:00:00Z',
     null,
     'exact',
@@ -178,7 +171,6 @@ values
     'Other owner thought',
     'This must remain private.',
     'entry','entry',
-    'organized',
     '2026-09-03T19:00:00Z',
     null,
     'exact',
@@ -259,11 +251,6 @@ select is(
   (select profile_display_name from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
   'MemoTrail Home',
   'The Home snapshot returns the owner profile name'
-);
-select is(
-  (select inbox_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  0::bigint,
-  'The retired Inbox count stays empty for deployed clients'
 );
 select is(
   (select entry_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),

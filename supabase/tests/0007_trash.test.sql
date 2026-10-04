@@ -31,12 +31,6 @@ select has_function(
 );
 select has_function(
   'public',
-  'trash_item_storage_paths',
-  array['text', 'uuid', 'integer', 'timestamp with time zone'],
-  'The deployed-client Storage path contract is kept'
-);
-select has_function(
-  'public',
   'delete_trash_item_forever',
   array['text', 'uuid', 'integer', 'timestamp with time zone'],
   'The permanent Trash deletion mutation exists'
@@ -93,7 +87,6 @@ insert into public.entries (
   body,
   item_kind,
   item_subtype,
-  inbox_status,
   deleted_at
 )
 values
@@ -103,7 +96,6 @@ values
     'First ski trip',
     'A First Time with private photos.',
     'entry','first_time',
-    'organized',
     '2026-08-01T12:00:00Z'
   ),
   (
@@ -112,7 +104,6 @@ values
     'Photo parent',
     'An active First Time with one removed photo.',
     'entry','first_time',
-    'organized',
     null
   ),
   (
@@ -121,7 +112,6 @@ values
     'Other owner Trash',
     'Private.',
     'entry','entry',
-    'organized',
     '2026-08-04T12:00:00Z'
   ),
   (
@@ -130,7 +120,6 @@ values
     null,
     '  A body-only deleted thought.  ',
     'entry','entry',
-    'unreviewed',
     '2026-07-30T12:00:00Z'
   );
 
@@ -405,59 +394,6 @@ where id = '73000000-0000-0000-0000-000000000002';
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
 
-select is(
-  (
-    select count(*)::integer
-    from public.trash_item_storage_paths(
-      'entry',
-      '71000000-0000-0000-0000-000000000001',
-      3,
-      '2026-08-05T12:00:00Z'
-    )
-  ),
-  0,
-  'Deployed clients remove no Entry photos before the Entry is deleted'
-);
-select is(
-  (
-    select count(*)::integer
-    from public.trash_item_storage_paths(
-      'attachment',
-      '73000000-0000-0000-0000-000000000002',
-      null,
-      '2026-08-06T12:00:00Z'
-    )
-  ),
-  0,
-  'Deployed clients remove no photo before its record is deleted'
-);
-select is(
-  (
-    select count(*)::integer
-    from public.trash_item_storage_paths(
-      'entry',
-      '71000000-0000-0000-0000-000000000003',
-      1,
-      '2026-08-04T12:00:00Z'
-    )
-  ),
-  0,
-  'An owner cannot retrieve another owner''s private object paths'
-);
-select is(
-  pg_temp.capture_sqlstate(
-    $$
-      select * from public.trash_item_storage_paths(
-        'unknown',
-        '71000000-0000-0000-0000-000000000001',
-        3,
-        '2026-08-05T12:00:00Z'
-      )
-    $$
-  ),
-  '22023',
-  'Storage path lookup rejects an unknown Trash kind'
-);
 select is(
   (
     select count(*)::integer

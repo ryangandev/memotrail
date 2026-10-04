@@ -154,7 +154,6 @@ insert into public.entries (
   body,
   item_kind,
   item_subtype,
-  inbox_status,
   occurred_start,
   date_precision,
   occurred_timezone
@@ -166,7 +165,6 @@ values
     'Universal photo capture',
     '',
     'entry','entry',
-    'unreviewed',
     '2026-09-03T16:00:00Z',
     'exact',
     'America/Los_Angeles'
@@ -177,7 +175,6 @@ values
     'Other owner media',
     '',
     'entry','entry',
-    'unreviewed',
     '2026-09-03T16:00:00Z',
     'exact',
     'America/Los_Angeles'

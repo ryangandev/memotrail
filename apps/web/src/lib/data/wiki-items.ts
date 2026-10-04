@@ -12,8 +12,6 @@ export type WikiItemSummary = {
   itemSubtype: string;
   occurredEnd: string | null;
   occurredStart: string | null;
-  recordId: string;
-  recordSource: "entry";
   title: string;
   totalCount: number;
   updatedAt: string;
@@ -27,7 +25,6 @@ type WikiItemRow = {
   item_subtype: string;
   occurred_end: string | null;
   occurred_start: string | null;
-  record_source: "entry";
   title: string;
   total_count: number | string;
   updated_at: string;
@@ -91,8 +88,6 @@ export function parseWikiItemRows(value: unknown): WikiItemSummary[] | null {
       itemSubtype: candidate.item_subtype,
       occurredEnd: candidate.occurred_end,
       occurredStart: candidate.occurred_start,
-      recordId: candidate.item_id,
-      recordSource: candidate.record_source,
       title: candidate.title,
       totalCount: Number(candidate.total_count),
       updatedAt: candidate.updated_at,
@@ -116,7 +111,6 @@ function isWikiItemRow(value: unknown): value is WikiItemRow {
   return (
     typeof row.canonical_item_id === "string" &&
     typeof row.item_id === "string" &&
-    row.record_source === "entry" &&
     isWikiItemKind(row.item_kind) &&
     typeof row.item_subtype === "string" &&
     typeof row.title === "string" &&

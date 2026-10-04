@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(56);
+select plan(55);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -95,12 +95,6 @@ select is(
   (select item_subtype from public.entries where title = 'Bluebird'),
   'vehicle',
   'A Vehicle is stored as a specialized Entity'
-);
-
-select is(
-  (select inbox_status from public.entries where title = 'Bluebird'),
-  'organized',
-  'Direct Vehicle creation produces an organized Entry'
 );
 
 select is(

@@ -98,7 +98,7 @@ export function CommandPalette({
       description: `${item.label} · ${item.subtitle}`,
       href: item.href,
       icon: "timeline",
-      key: `${item.kind}:${item.id}`,
+      key: `entry:${item.id}`,
       label: item.title,
     }),
   );

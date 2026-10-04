@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(31);
+select plan(30);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -163,7 +163,7 @@ select is(
 select lives_ok(
   $$
     select *
-    from public.review_wiki_item_with_photo_place(
+    from public.review_wiki_item_with_location_rich(
       '40000000-0000-0000-0000-000000000002',
       2,
       'First time skiing',
@@ -172,10 +172,11 @@ select lives_ok(
       '2026-07-03T18:30:00Z',
       'America/Los_Angeles',
       array['skiing', 'learning', 'Skiing'],
-      false,
       null,
       null,
       'exact',
+      null,
+      null,
       null
     )
   $$,
@@ -225,7 +226,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.review_wiki_item_with_photo_place(
+    from public.review_wiki_item_with_location_rich(
       '40000000-0000-0000-0000-000000000002',
       2,
       'Stale overwrite',
@@ -234,10 +235,11 @@ select is(
       '2026-07-03T18:30:00Z',
       'UTC',
       array['wrong-tag'],
-      true,
       null,
       null,
       'exact',
+      null,
+      null,
       null
     )
   ),
@@ -258,7 +260,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.review_wiki_item_with_photo_place(
+    from public.review_wiki_item_with_location_rich(
       '40000000-0000-0000-0000-000000000002',
       3,
       'First time skiing',
@@ -267,25 +269,16 @@ select is(
       '2026-07-03T18:30:00Z',
       'America/Los_Angeles',
       array['skiing', 'learning'],
-      true,
       null,
       null,
       'exact',
+      null,
+      null,
       null
     )
   ),
   1,
-  'The current revision can be explicitly marked Done'
-);
-
-select is(
-  (
-    select inbox_status
-    from public.entries
-    where id = '40000000-0000-0000-0000-000000000002'
-  ),
-  'organized',
-  'Done marks the Entry organized'
+  'The current revision can be reviewed'
 );
 
 select is(
@@ -338,7 +331,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.review_wiki_item_with_photo_place(
+    from public.review_wiki_item_with_location_rich(
       '40000000-0000-0000-0000-000000000001',
       1,
       'Changed by another user',
@@ -347,10 +340,11 @@ select is(
       '2026-07-03T18:30:00Z',
       'UTC',
       '{}'::text[],
-      false,
       null,
       null,
       'exact',
+      null,
+      null,
       null
     )
   ),

@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(34);
+select plan(33);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -132,16 +132,6 @@ select is(
   ),
   'entry:period',
   'A stage is stored as a Life Stage Event'
-);
-
-select is(
-  (
-    select inbox_status
-    from public.entries
-    where title = 'Lived in Philadelphia'
-  ),
-  'organized',
-  'Direct Timeline creation produces an organized Entry'
 );
 
 select is(

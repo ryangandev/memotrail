@@ -107,7 +107,6 @@ describe("parseQuickSearchResult", () => {
           {
             href: "/history?entry=123",
             id: "123",
-            kind: "entry",
             label: "Entry",
             subtitle: "A saved note",
             title: "Remember this",
@@ -125,7 +124,6 @@ describe("parseQuickSearchResult", () => {
           {
             href: "https://example.com",
             id: "123",
-            kind: "entry",
             label: "Entry",
             subtitle: "A saved note",
             title: "Remember this",

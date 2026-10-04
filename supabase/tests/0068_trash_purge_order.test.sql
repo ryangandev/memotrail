@@ -74,24 +74,6 @@ select lives_ok(
   'Single photos move to Trash'
 );
 
--- Deployed clients removed this manifest before deleting. It is now always empty.
-select is(
-  (select count(*) from pg_temp.entry_params('deleted') p
-   cross join lateral public.trash_item_storage_paths(p.kind, p.id, p.revision, p.deleted)),
-  0::bigint,
-  'Deployed clients receive nothing to remove before the record is deleted'
-);
-select is(
-  (select count(*) from fixtures f cross join lateral public.trash_item_storage_paths(
-    'attachment', f.attachment_id, null, (select deleted_at from public.attachments where id = f.attachment_id))
-   where f.name = 'photo'),
-  0::bigint,
-  'A Trash photo also has no early removal manifest'
-);
-select throws_ok(
-  $$select * from public.trash_item_storage_paths('unknown', gen_random_uuid(), null, now())$$,
-  '22023', 'invalid_trash_item_kind', 'The kept manifest still rejects an unknown kind'
-);
 
 -- Storage refuses a client delete of any registered original, in Trash or not.
 select set_config('storage.allow_delete_query', 'true', true);

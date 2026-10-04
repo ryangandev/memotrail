@@ -7,14 +7,13 @@ insert into auth.users(id,email,raw_user_meta_data) values
   ('10000000-0000-0000-0000-000000000094','goal-extraction-other@memotrail.local','{}');
 
 insert into public.entries(
-  id,owner_id,title,body,item_kind,item_subtype,inbox_status,date_precision,occurred_label,metadata
+  id,owner_id,title,body,item_kind,item_subtype,date_precision,occurred_label,metadata
 ) values (
   '20000000-0000-0000-0000-000000000093',
   '10000000-0000-0000-0000-000000000093',
   'An idea',
   E'  Original\nwriting  ',
   'entry','entry',
-  'organized',
   'age',
   '17岁',
   '{"original":true,"body_rich":{"version":1,"text":"  Original\nwriting  ","document":{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"  Original\nwriting  "}]}]}}}'

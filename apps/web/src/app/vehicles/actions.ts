@@ -61,7 +61,6 @@ export async function saveVehicleEntry(
       ? await context.client.rpc("save_vehicle_with_location", {
           p_input: { ...parsed.data, revision: expectedRevision },
           p_location: location,
-          p_source: null,
         })
       : await context.client.rpc("save_vehicle_entry_with_occurrence", {
           ...parameters,

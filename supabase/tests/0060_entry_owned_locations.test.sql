@@ -33,7 +33,7 @@ insert into public.locations(
 );
 
 insert into public.entries(
-  id,owner_id,title,body,item_kind,item_subtype,inbox_status,date_precision
+  id,owner_id,title,body,item_kind,item_subtype,date_precision
 ) values (
   '99000000-0000-4000-8000-000000000003',
   '10000000-0000-0000-0000-000000000122',
@@ -41,7 +41,6 @@ insert into public.entries(
   'A remembered residence.',
   'entity',
   'home',
-  'organized',
   'unknown'
 );
 insert into public.homes(entry_id,owner_id,place_id) values (

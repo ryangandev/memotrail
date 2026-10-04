@@ -377,7 +377,6 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
       p_occurred_start: raceBefore.occurred_start,
       p_occurred_timezone: raceBefore.occurred_timezone,
       p_tag_names: [],
-      p_mark_done: false,
       p_occurred_end: null,
       p_occurred_label: null,
       p_date_precision: "day",
@@ -388,10 +387,12 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
         latitude: 30,
         longitude: 40,
       },
+      p_primary_location: null,
+      p_body_rich: null,
     };
     const race = await Promise.all([
-      client.rpc("review_wiki_item_with_photo_place", raceInput),
-      client.rpc("review_wiki_item_with_photo_place", raceInput),
+      client.rpc("review_wiki_item_with_location_rich", raceInput),
+      client.rpc("review_wiki_item_with_location_rich", raceInput),
     ]);
     expect(race.map((v) => v.error)).toEqual([null, null]);
     expect(race.map((v) => v.data.length).sort()).toEqual([0, 1]);

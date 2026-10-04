@@ -39,8 +39,6 @@ export type SearchEntry = {
   datePrecision: OccurrencePrecision;
   occurredLabel: string | null;
   occurredTimezone: string | null;
-  recordId: string;
-  recordSource: "entry";
   tagNames: string[];
   title: string | null;
   updatedAt: string;
@@ -67,8 +65,6 @@ type SearchRow = {
   occurred_end: string | null;
   date_precision: OccurrencePrecision;
   occurred_timezone: string | null;
-  record_id: string;
-  record_source: "entry";
   tag_names: string[] | null;
   title: string | null;
   total_count: number | string;
@@ -82,8 +78,6 @@ type NameRow = {
 type ItemIdentity = {
   itemKind: WikiItemKind;
   itemSubtype: string;
-  recordId: string;
-  recordSource: "entry";
 };
 
 export async function getSearchWorkspace(
@@ -232,7 +226,6 @@ function quickEntryItem(
       ...identity,
     }),
     id: row.entry_id,
-    kind: identity.recordSource,
     label: wikiItemIdentityLabel(identity.itemKind, identity.itemSubtype),
     subtitle: compactText(row.body) || "Saved Entry",
     title,
@@ -293,8 +286,6 @@ function entryFromRow(
     datePrecision: row.date_precision,
     occurredLabel: stringValue(row.occurred_label),
     occurredTimezone: stringValue(row.occurred_timezone),
-    recordId: identity.recordId,
-    recordSource: identity.recordSource,
     tagNames: strings(row.tag_names),
     title: stringValue(row.title),
     updatedAt: row.updated_at,
@@ -305,8 +296,6 @@ function identityFromSearchRow(row: SearchRow): ItemIdentity {
   return {
     itemKind: row.item_kind,
     itemSubtype: row.item_subtype,
-    recordId: row.record_id,
-    recordSource: row.record_source,
   };
 }
 
@@ -349,8 +338,6 @@ function isSearchRow(value: unknown): value is SearchRow {
     nullableString(value.occurred_label) &&
     nullableString(value.occurred_start) &&
     nullableString(value.occurred_end) &&
-    typeof value.record_id === "string" &&
-    value.record_source === "entry" &&
     occurrencePrecisions.includes(
       value.date_precision as OccurrencePrecision,
     ) &&

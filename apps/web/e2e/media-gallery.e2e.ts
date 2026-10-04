@@ -61,7 +61,6 @@ test("Current Entry photos are browsable without changing history", async ({
           owner_id: owner,
           title: "Gallery acceptance",
           body: "Preserve this writing",
-          inbox_status: "organized",
         })
       ).error,
     ).toBeNull();

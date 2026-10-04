@@ -71,7 +71,6 @@ test("repeating an address creates independent Entry and Home Locations", async 
             body: "First memory",
             item_kind: "entry",
             item_subtype: "entry",
-            inbox_status: "organized",
             date_precision: "unknown",
           },
           {
@@ -81,7 +80,6 @@ test("repeating an address creates independent Entry and Home Locations", async 
             body: "Second memory",
             item_kind: "entry",
             item_subtype: "entry",
-            inbox_status: "organized",
             date_precision: "unknown",
           },
         ])

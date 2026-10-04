@@ -49,7 +49,7 @@ test("capture saves with Command Return while Enter still writes another line", 
     .poll(async () => {
       const saved = await workspace.client
         .from("entries")
-        .select("body,inbox_status")
+        .select("body")
         .eq("owner_id", workspace.owner);
       expect(saved.error).toBeNull();
       return saved.data;
@@ -59,7 +59,6 @@ test("capture saves with Command Return while Enter still writes another line", 
         body: expect.stringMatching(
           /First line\.\s+Second line\.\s+A continuation\./,
         ),
-        inbox_status: "organized",
       }),
     ]);
   await expect(editor).toBeEmpty();

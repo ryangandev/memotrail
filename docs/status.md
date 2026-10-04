@@ -19,6 +19,9 @@ The English name "Want to Do" is a working name and may change.
 Inbox is retired: captures save straight to Library, and Library and the Dashboard show Entries without a title or tag under Needs organizing.
 Migration `202610040004` marks every Entry organized, keeps new ones organized, and drops the Inbox organize and capture-handoff functions.
 It is not yet applied to the hosted project; native iOS still opens Inbox review and calls the retired functions until it follows Web.
+Native iOS is not in use and will be rewritten, so the database keeps no compatibility window for it.
+Migration `202610040005` drops `entries.inbox_status`, the Dashboard Inbox count, the organize flag on Entry review, the Capture source on Home and Vehicle saves, the constant record source in Library and search, the empty Trash storage path helper, and the native-only review functions.
+It is not yet applied to the hosted project.
 Open product questions: Timeline structure and current chapters.
 UI questions held until then: how prominent version history is, Item page photos, date precision controls, the two export choices, and Timeline styles.
 Open `audit-2026-10` issues stay tracked in GitHub.
@@ -87,7 +90,7 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 - Verify the merged `main` deployment against the migrated hosted project, then check Quick Capture, Needs organizing, Library routing, First Time, Moment, Period, Home, Vehicle, and Goal in a browser.
 - The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
-- Native compatibility is updated separately; complete personal native acceptance before treating it as a release.
+- Native iOS is rewritten to follow Web once Web is complete; complete personal native acceptance before treating it as a release.
 - The hosted schema matches the migrations except for platform privilege defaults that `supabase db diff --linked` reports.
   Hosted `service_role` and `anon` get no table access or function execution unless a migration grants it, and new public tables get row level security automatically.
   Local Supabase grants both roles by default, so a missing explicit grant can pass every local suite and fail only on the hosted project.

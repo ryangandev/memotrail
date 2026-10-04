@@ -113,7 +113,7 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
     .poll(async () => {
       const result = await workspace.client
         .from("entries")
-        .select("body,inbox_status")
+        .select("body")
         .eq("owner_id", workspace.owner);
       expect(result.error).toBeNull();
       return result.data;
@@ -121,7 +121,6 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
     .toEqual([
       expect.objectContaining({
         body: "A quiet moment worth keeping.",
-        inbox_status: "organized",
       }),
     ]);
   await dialog.getByRole("button", { name: "Close quick capture" }).click();

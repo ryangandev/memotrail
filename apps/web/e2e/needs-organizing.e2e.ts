@@ -88,11 +88,8 @@ test("captures land in Library and wait under Needs organizing until they have a
           title: "A titled memory",
         },
       ])
-      .select("id,body,inbox_status");
+      .select("id,body");
     expect(inserted.error).toBeNull();
-    expect(new Set(inserted.data!.map((entry) => entry.inbox_status))).toEqual(
-      new Set(["organized"]),
-    );
     const idFor = (body: string) =>
       inserted.data!.find((entry) => entry.body === body)!.id;
     const newestID = idFor("Newest thought");

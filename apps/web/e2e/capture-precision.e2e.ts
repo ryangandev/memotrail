@@ -272,7 +272,6 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       expect(saved).toMatchObject({
         body: `Capture ${item.precision}`,
         date_precision: item.precision,
-        inbox_status: "organized",
         occurred_timezone: "Asia/Kathmandu",
         occurred_label: item.label || null,
         title: null,

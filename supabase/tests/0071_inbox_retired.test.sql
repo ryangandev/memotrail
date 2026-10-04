@@ -5,77 +5,61 @@ select no_plan();
 insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000171','inbox-retired-owner@memotrail.local');
 
-select is(
-  (select column_default from information_schema.columns
-   where table_schema='public' and table_name='entries' and column_name='inbox_status'),
-  '''organized''::text',
-  'New Entries default to Library'
-);
+select hasnt_column('public','entries','inbox_status','Entries have no Inbox state');
+select hasnt_index('public','entries','entries_owner_inbox_idx','The Inbox index is gone');
+select hasnt_function('public','keep_entries_in_library','The Library trigger is gone with the column');
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000171',true);
 
-insert into public.entries(id,owner_id,body,inbox_status,date_precision) values
-  ('99710000-0000-4000-8000-000000000001',auth.uid(),'Saved by a client that still knows Inbox.','unreviewed','unknown');
+insert into public.entries(id,owner_id,body,date_precision) values
+  ('99710000-0000-4000-8000-000000000001',auth.uid(),'Saved straight to Library.','unknown');
 select is(
-  (select inbox_status from public.entries where id='99710000-0000-4000-8000-000000000001'),
-  'organized',
-  'A Capture saved to Inbox by an older client lands in Library'
-);
-
-update public.entries set inbox_status='unreviewed'
-where id='99710000-0000-4000-8000-000000000001';
-select is(
-  (select inbox_status from public.entries where id='99710000-0000-4000-8000-000000000001'),
-  'organized',
-  'An Entry cannot be moved back to Inbox'
-);
-
-select throws_ok(
-  $$select public.save_home_entry_with_geoapify(
-    '{"title":"Harbor flat","tagNames":[]}'::jsonb,
-    '{"entryId":"99710000-0000-4000-8000-000000000001","revision":2}'::jsonb,
-    '{}'::jsonb
-  )$$,
-  '22023',
-  'capture_handoff_retired',
-  'A Home can no longer start from a Capture'
+  (select count(*) from public.entries where id='99710000-0000-4000-8000-000000000001'),
+  1::bigint,
+  'A Capture saves straight to Library'
 );
 select throws_ok(
-  $$select * from public.save_vehicle_with_location(
-    '{"title":"Blue hatchback","tagNames":[]}'::jsonb,
-    '{"entryId":"99710000-0000-4000-8000-000000000001","revision":2}'::jsonb,
-    null
-  )$$,
-  '22023',
-  'capture_handoff_retired',
-  'A Vehicle can no longer start from a Capture'
+  $$insert into public.entries(owner_id,body,date_precision,inbox_status)
+    values (auth.uid(),'From an old client.','unknown','unreviewed')$$,
+  '42703',
+  null,
+  'A client that still sends an Inbox state is refused'
 );
 
 reset role;
-alter table public.entries disable trigger keep_entries_in_library;
-select throws_ok(
-  $$update public.entries set inbox_status='unreviewed'
-    where id='99710000-0000-4000-8000-000000000001'$$,
-  '23514',
-  null,
-  'Only Library is a valid Entry state'
-);
-alter table public.entries enable trigger keep_entries_in_library;
-
 select is(
-  (select count(*) from public.entry_versions where snapshot->>'inbox_status'='unreviewed'),
+  (select count(*) from public.entry_versions where snapshot ? 'inbox_status'),
   0::bigint,
-  'No history version can restore an Entry to Inbox'
+  'No history version carries an Inbox state'
 );
-select ok(
-  not has_function_privilege('authenticated','public.keep_entries_in_library()','execute'),
-  'The Library trigger function is not callable by clients'
-);
+
 select hasnt_function('public','capture_extraction_source','Capture handoff lookup is retired');
 select hasnt_function('public','extract_capture_to_goal','Want to Do no longer starts from a Capture');
 select hasnt_function('public','extract_capture_to_home','A Home no longer starts from a Capture');
 select hasnt_function('public','extract_capture_to_vehicle','A Vehicle no longer starts from a Capture');
+select hasnt_function('public','save_home_entry_with_geoapify',array['jsonb','jsonb','jsonb'],'Home saves take no Capture source');
+select hasnt_function('public','save_vehicle_with_location',array['jsonb','jsonb','jsonb'],'Vehicle saves take no Capture source');
+select has_function('public','save_home_entry_with_geoapify',array['jsonb','jsonb'],'Home saves take the record and its Location');
+select has_function('public','save_vehicle_with_location',array['jsonb','jsonb'],'Vehicle saves take the record and its Location');
+select hasnt_function('public','review_wiki_item_with_photo_place','The plain-text review without a Location is retired');
+select hasnt_function('public','review_wiki_item_with_photo_place_rich','The rich-text review without a Location is retired');
+select hasnt_function('public','trash_item_storage_paths','The per-record deletion manifest is retired');
+select ok(
+  not exists (
+    select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and 'p_mark_done' = any(p.proargnames)
+  ),
+  'No function takes a mark-done flag'
+);
+select ok(
+  not exists (
+    select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and pg_get_function_result(p.oid) ~ '(inbox_status|inbox_count|record_source|record_id)'
+  ),
+  'No function returns an Inbox state or a record source'
+);
 
 select * from finish();
 rollback;

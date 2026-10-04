@@ -70,7 +70,6 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       .insert([
         {
           body: "The quiet helped me notice what mattered.",
-          inbox_status: "organized",
           item_kind: "entry",
           item_subtype: "entry",
           owner_id: ownerID,
@@ -78,7 +77,6 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
         },
         {
           body: "A first glimpse of the Pacific.",
-          inbox_status: "organized",
           item_kind: "entry",
           item_subtype: "entry",
           owner_id: ownerID,
@@ -86,7 +84,6 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
         },
         {
           body: "Saved straight from the capture dock.",
-          inbox_status: "organized",
           item_kind: "entry",
           item_subtype: "entry",
           owner_id: ownerID,
@@ -116,7 +113,6 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
           item_kind: "entity",
           item_subtype: "home",
           date_precision: "unknown",
-          inbox_status: "organized",
           owner_id: ownerID,
         })
       ).error,
@@ -322,7 +318,6 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
 
     const pageRows = Array.from({ length: 13 }, (_, index) => ({
       body: `A saved page item ${index + 1}.`,
-      inbox_status: "organized" as const,
       item_kind: "entry" as const,
       item_subtype: "entry",
       owner_id: ownerID,

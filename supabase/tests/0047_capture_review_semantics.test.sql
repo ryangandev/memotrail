@@ -6,33 +6,33 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000105','capture-review-owner@memotrail.local'),
   ('10000000-0000-0000-0000-000000000106','capture-review-other@memotrail.local');
 
-insert into public.entries(id,owner_id,title,body,inbox_status,date_precision,occurred_timezone) values
-  ('98000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000105','Morning pages','A quiet start.','organized','unknown','UTC'),
-  ('98000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000105','A bright day','I felt happy today.','organized','unknown','UTC'),
-  ('98000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000105','Draft chapter','A longer arc.','organized','unknown','UTC');
+insert into public.entries(id,owner_id,title,body,date_precision,occurred_timezone) values
+  ('98000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000105','Morning pages','A quiet start.','unknown','UTC'),
+  ('98000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000105','A bright day','I felt happy today.','unknown','UTC'),
+  ('98000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000105','Draft chapter','A longer arc.','unknown','UTC');
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000105',true);
 
 select is(
-  (select revision from public.review_wiki_item_with_photo_place_rich(
+  (select revision from public.review_wiki_item_with_location_rich(
     '98000000-0000-4000-8000-000000000001',1,'Morning pages','A quiet start.','entry','entry',
-    null,'UTC','{}',false,null,null,'unknown',null,null
+    null,'UTC','{}',null,null,'unknown',null,null,null
   )),
   2,
   'Saving a Capture classifies it atomically as Writing'
 );
 select is(
-  (select item_kind || ':' || item_subtype || ':' || inbox_status
+  (select item_kind || ':' || item_subtype
    from public.entries where id='98000000-0000-4000-8000-000000000001'),
-  'entry:entry:organized',
+  'entry:entry',
   'A classified Writing stays in Library'
 );
 
 select throws_ok(
-  $$select * from public.review_wiki_item_with_photo_place_rich(
+  $$select * from public.review_wiki_item_with_location_rich(
     '98000000-0000-4000-8000-000000000001',2,'Morning pages','A quiet start.','entry','first_time',
-    null,'UTC','{}',true,null,null,'unknown',null,null
+    null,'UTC','{}',null,null,'unknown',null,null,null
   )$$,
   '22023',
   'invalid_item_classification',
@@ -40,24 +40,24 @@ select throws_ok(
 );
 
 select is(
-  (select revision from public.review_wiki_item_with_photo_place_rich(
+  (select revision from public.review_wiki_item_with_location_rich(
     '98000000-0000-4000-8000-000000000001',2,'Morning pages','A quiet start.','entry','entry',
-    null,'UTC','{}',true,null,null,'unknown',null,null
+    null,'UTC','{}',null,null,'unknown',null,null,null
   )),
   3,
   'A Writing may change to a compatible Writing subtype'
 );
 select is(
-  (select item_kind || ':' || item_subtype || ':' || inbox_status
+  (select item_kind || ':' || item_subtype
    from public.entries where id='98000000-0000-4000-8000-000000000001'),
-  'entry:entry:organized',
+  'entry:entry',
   'Saving preserves Kind while applying the compatible subtype'
 );
 
 select is(
-  (select revision from public.review_wiki_item_with_photo_place_rich(
+  (select revision from public.review_wiki_item_with_location_rich(
     '98000000-0000-4000-8000-000000000002',1,'A bright day','I felt happy today.','entry','entry',
-    null,'UTC','{}',true,null,null,'unknown',null,null
+    null,'UTC','{}',null,null,'unknown',null,null,null
   )),
   2,
   'A Capture can be saved directly as a Memory Event'
@@ -76,9 +76,9 @@ select is(
 );
 
 select is(
-  (select revision from public.review_wiki_item_with_photo_place_rich(
+  (select revision from public.review_wiki_item_with_location_rich(
     '98000000-0000-4000-8000-000000000003',1,'Draft chapter','A longer arc.','entry','entry',
-    null,'UTC','{}',true,null,null,'unknown',null,null
+    null,'UTC','{}',null,null,'unknown',null,null,null
   )),
   2,
   'A Capture can be saved as an explicit Story Chapter'
@@ -92,9 +92,9 @@ select is(
 
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000106',true);
 select is(
-  (select count(*) from public.review_wiki_item_with_photo_place_rich(
+  (select count(*) from public.review_wiki_item_with_location_rich(
     '98000000-0000-4000-8000-000000000002',2,'Foreign','Foreign','entry','entry',
-    null,'UTC','{}',true,null,null,'unknown',null,null
+    null,'UTC','{}',null,null,'unknown',null,null,null
   )),
   0::bigint,
   'Another owner cannot review or reclassify a Wiki Item'
@@ -104,7 +104,7 @@ reset role;
 select ok(
   not has_function_privilege(
     'anon',
-    'public.review_wiki_item_with_photo_place_rich(uuid,integer,text,text,text,text,timestamptz,text,text[],boolean,timestamptz,text,text,jsonb,jsonb)',
+    'public.review_wiki_item_with_location_rich(uuid,integer,text,text,text,text,timestamptz,text,text[],timestamptz,text,text,jsonb,jsonb,jsonb)',
     'execute'
   ),
   'Anonymous Wiki Item review is denied'

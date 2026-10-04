@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(58);
+select plan(57);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -107,17 +107,6 @@ select is(
   ),
   'home',
   'A Home is stored as a specialized Home Entity'
-);
-
-select is(
-  (
-    select inbox_status
-    from public.entries
-    where title = 'California apartment'
-      and item_kind = 'entity' and item_subtype = 'home'
-  ),
-  'organized',
-  'Direct Home creation produces an organized Entry'
 );
 
 select ok(

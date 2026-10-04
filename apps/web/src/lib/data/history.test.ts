@@ -14,7 +14,6 @@ const snapshot = {
   body: "Writing",
   item_kind: "entry" as const,
   item_subtype: "note",
-  inbox_status: "organized",
   revision: 1,
   deleted_at: null,
   occurred_start: null,

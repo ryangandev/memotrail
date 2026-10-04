@@ -59,7 +59,6 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
           owner_id: owner,
           title: "Organized photo memory",
           body: "Original thoughts",
-          inbox_status: "organized",
           date_precision: "unknown",
         })
       ).error,
@@ -242,13 +241,12 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
       (
         await client
           .from("entries")
-          .select("body,inbox_status,date_precision")
+          .select("body,date_precision")
           .eq("id", entry)
           .single()
       ).data,
     ).toEqual({
       body: "Original thoughts",
-      inbox_status: "organized",
       date_precision: "unknown",
     });
     await page.reload();

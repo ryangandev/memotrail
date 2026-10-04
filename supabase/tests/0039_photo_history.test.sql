@@ -1,8 +1,8 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 select no_plan();
-insert into public.entries(id,owner_id,title,body,inbox_status,date_precision) values
-('93900000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Photos','Original words','organized','unknown');
+insert into public.entries(id,owner_id,title,body,date_precision) values
+('93900000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Photos','Original words','unknown');
 create temporary table fixture as select '93900000-0000-4000-8000-000000000001'::uuid entry_id,
  '93900000-0000-4000-8000-000000000002'::uuid attachment_id,
  '10000000-0000-0000-0000-000000000001/93900000-0000-4000-8000-000000000001/93900000-0000-4000-8000-000000000002.png' path;

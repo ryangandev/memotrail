@@ -101,7 +101,6 @@ test("Entry editing saves a formatted note with surrounding whitespace", async (
     body: "Bold review note",
     date_precision: "exact",
     id,
-    inbox_status: "organized",
     item_kind: "entry",
     item_subtype: "entry",
     metadata: {
@@ -141,13 +140,12 @@ test("Entry editing saves a formatted note with surrounding whitespace", async (
   ).toBeVisible();
   const saved = await workspace.client
     .from("entries")
-    .select("body,inbox_status,metadata,revision")
+    .select("body,metadata,revision")
     .eq("id", id)
     .single();
   expect(saved.error).toBeNull();
   expect(saved.data).toEqual({
     body: "Bold review note",
-    inbox_status: "organized",
     metadata: {
       body_rich: {
         document: boldDocument("Bold review note"),

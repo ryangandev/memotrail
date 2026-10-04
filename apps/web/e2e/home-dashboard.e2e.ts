@@ -80,7 +80,6 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
           owner_id: owner,
           title: "A kept memory",
           body: "A quiet afternoon worth returning to.",
-          inbox_status: "organized",
           item_kind: "entry",
           item_subtype: "entry",
           date_precision: "day",
@@ -90,7 +89,6 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
           owner_id: owner,
           title: "A longer kept entry ".repeat(6),
           body: "Long content that must not expand the recent row. ".repeat(30),
-          inbox_status: "organized",
           item_kind: "entry",
           item_subtype: "entry",
           date_precision: "unknown",
@@ -99,7 +97,6 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
           owner_id: owner,
           title: null,
           body: "Waiting for a little context",
-          inbox_status: "organized",
           item_kind: "entry",
           item_subtype: "entry",
           date_precision: "unknown",
@@ -108,7 +105,6 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
           owner_id: owners[1],
           title: "Other owner private memory",
           body: "Must never appear",
-          inbox_status: "organized",
           item_kind: "entry",
           item_subtype: "entry",
           date_precision: "day",
@@ -344,14 +340,6 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
     await expect(
       page.getByRole("region", { name: "Recent Entries", exact: true }),
     ).toContainText("Captured from Home");
-    const captured = await client
-      .from("entries")
-      .select("inbox_status")
-      .eq("owner_id", owner)
-      .eq("body", "Captured from Home")
-      .single();
-    expect(captured.error).toBeNull();
-    expect(captured.data!.inbox_status).toBe("organized");
 
     await page
       .getByRole("link", {

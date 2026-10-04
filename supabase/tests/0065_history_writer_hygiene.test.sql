@@ -21,11 +21,11 @@ begin
   if p_kind = 'first_time' then
     select entry_id into result from public.save_first_time_with_location(input, p_location);
   elsif p_kind = 'vehicle' then
-    select entry_id into result from public.save_vehicle_with_location(input, null, p_location);
+    select entry_id into result from public.save_vehicle_with_location(input, p_location);
   else
     select entry_id into result from public.review_wiki_item_with_location_rich(
       p_id,(select revision from public.entries where id = p_id),'History entry','Memories',
-      'entry','entry',null,'UTC','{}',false,null,null,'unknown',null,p_location,null);
+      'entry','entry',null,'UTC','{}',null,null,'unknown',null,p_location,null);
   end if;
   return result;
 end;

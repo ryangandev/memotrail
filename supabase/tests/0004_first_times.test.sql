@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(41);
+select plan(40);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -98,16 +98,6 @@ select is(
   ),
   'entry:first_time',
   'Direct creation stores the specialized First Time Event identity'
-);
-
-select is(
-  (
-    select inbox_status
-    from public.entries
-    where title = 'First time seeing the ocean'
-  ),
-  'organized',
-  'Direct First Time creation bypasses the Inbox'
 );
 
 select lives_ok(

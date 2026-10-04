@@ -1,12 +1,12 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(43);
+select plan(42);
 insert into auth.users(id,aud,role,email) values('10000000-0000-0000-0000-000000000099','authenticated','authenticated','relation-foreign@memotrail.local') on conflict(id) do nothing;
-insert into public.entries(id,owner_id,title,body,inbox_status,date_precision) values
-('93800000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Source','Keep my words','organized','unknown'),
-('93800000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','牙套','Learning','organized','unknown'),
-('93800000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000001','Percent % note','Other','organized','unknown'),
-('93800000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000099','Private foreign','Hidden','organized','unknown');
+insert into public.entries(id,owner_id,title,body,date_precision) values
+('93800000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Source','Keep my words','unknown'),
+('93800000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','牙套','Learning','unknown'),
+('93800000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000001','Percent % note','Other','unknown'),
+('93800000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000099','Private foreign','Hidden','unknown');
 update public.entries set item_kind='goal' where id='93800000-0000-4000-8000-000000000004';
 insert into public.goals(entry_id,owner_id,status) values('93800000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000099','active');
 set local role authenticated;
@@ -20,7 +20,6 @@ select is(public.entry_relations('93800000-0000-4000-8000-000000000004'),null::j
 select is(public.set_entry_relation('93800000-0000-4000-8000-000000000001','93800000-0000-4000-8000-000000000002',1,true),2,'Link increments source revision');
 select is(jsonb_array_length((select snapshot->'links' from public.entry_versions where entry_id='93800000-0000-4000-8000-000000000001' and version=1)),0,'Old link state archived before mutation');
 select is((select body from public.entries where id='93800000-0000-4000-8000-000000000001'),'Keep my words','Writing unchanged');
-select is((select inbox_status from public.entries where id='93800000-0000-4000-8000-000000000001'),'organized','Done state unchanged');
 select is(public.set_entry_relation('93800000-0000-4000-8000-000000000001','93800000-0000-4000-8000-000000000002',2,true),2,'No-op link is idempotent');
 select is((select count(*) from public.entry_versions where entry_id='93800000-0000-4000-8000-000000000001'),1::bigint,'No-op does not add artificial history');
 select is(public.entry_relations('93800000-0000-4000-8000-000000000002','incoming')->'items'->0->>'entry_id','93800000-0000-4000-8000-000000000001','Target sees source backlink');

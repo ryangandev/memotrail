@@ -204,9 +204,7 @@ test("Entry editing preserves uncertain dates and edits calendar precision witho
     await expect(page.getByRole("dialog")).toHaveCount(0);
     const age = await client
       .from("entries")
-      .select(
-        "date_precision,occurred_start,occurred_end,occurred_label,inbox_status",
-      )
+      .select("date_precision,occurred_start,occurred_end,occurred_label")
       .eq("id", entryID)
       .single();
     expect(age.data).toEqual({
@@ -214,7 +212,6 @@ test("Entry editing preserves uncertain dates and edits calendar precision witho
       occurred_start: null,
       occurred_end: null,
       occurred_label: "17岁，第一次去日本",
-      inbox_status: "organized",
     });
 
     expect(

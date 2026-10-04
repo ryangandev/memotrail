@@ -148,7 +148,7 @@ function LibraryBrowse({
       ) : (
         <ul aria-label="Library items" className={styles.wikiList}>
           {workspace.items.map((item) => (
-            <li key={`${item.recordSource}:${item.id}`}>
+            <li key={item.id}>
               <Link href={wikiItemHref(item)}>
                 <div className={styles.wikiBadges}>
                   <Badge size="micro" uppercase>

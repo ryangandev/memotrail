@@ -117,7 +117,7 @@ test("History restores and re-restores writing, relationships, and private photo
     ).toBeNull();
     expect(
       (
-        await client.rpc("review_wiki_item_with_photo_place", {
+        await client.rpc("review_wiki_item_with_location_rich", {
           p_entry_id: entryID,
           p_expected_revision: 2,
           p_title: "Revised chapter",
@@ -127,11 +127,12 @@ test("History restores and re-restores writing, relationships, and private photo
           p_occurred_start: "2024-01-01T12:00:00Z",
           p_occurred_timezone: "UTC",
           p_tag_names: [],
-          p_mark_done: false,
           p_occurred_end: null,
           p_occurred_label: null,
           p_date_precision: "day",
           p_photo_place: null,
+          p_primary_location: null,
+          p_body_rich: null,
         })
       ).error,
     ).toBeNull();

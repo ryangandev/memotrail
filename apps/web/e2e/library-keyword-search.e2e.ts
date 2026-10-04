@@ -60,7 +60,6 @@ test("Canonical keyword search finds Entities", async ({ page, context }) => {
           item_kind: "entity",
           item_subtype: "home",
           date_precision: "unknown",
-          inbox_status: "organized",
         })
       ).error,
     ).toBeNull();
@@ -83,7 +82,6 @@ test("Canonical keyword search finds Entities", async ({ page, context }) => {
           Array.from({ length: 105 }, (_, index) => ({
             owner_id: owner,
             title: `Paged Memory ${String(index).padStart(3, "0")}`,
-            inbox_status: "organized",
           })),
         )
       ).error,
@@ -149,11 +147,6 @@ test("Canonical keyword search finds Entities", async ({ page, context }) => {
     expect(response.data).toHaveLength(1);
     expect(response.data[0].total_count).toBe(1);
     expect(
-      response.data
-        .map((item: { record_source: string }) => item.record_source)
-        .sort(),
-    ).toEqual(["entry"]);
-    expect(
       response.data.map((item: { item_kind: string }) => item.item_kind),
     ).toEqual(["entity"]);
     const homeScope = await native.rpc("search_wiki_items", {
@@ -170,7 +163,6 @@ test("Canonical keyword search finds Entities", async ({ page, context }) => {
     expect(homeScope.data[0]).toMatchObject({
       item_kind: "entity",
       item_subtype: "home",
-      record_source: "entry",
     });
     expect(
       (

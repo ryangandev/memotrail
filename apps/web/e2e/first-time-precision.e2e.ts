@@ -70,7 +70,6 @@ test("Editing a First Time keeps its original date range", async ({
           owner_id: owner,
           title: "First trip to Japan",
           body: "Original travel memory",
-          inbox_status: "organized",
           item_kind: "entry",
           item_subtype: "first_time",
           occurred_start: start,

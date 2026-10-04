@@ -24,7 +24,6 @@ export type HistorySnapshot = {
   body: string;
   item_kind: WikiItemKind;
   item_subtype: string;
-  inbox_status: string;
   revision: number;
   deleted_at: string | null;
   history_schema?: number;

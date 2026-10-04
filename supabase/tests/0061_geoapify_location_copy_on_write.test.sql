@@ -6,10 +6,10 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000124','entry-owned-locations@memotrail.local');
 
 insert into public.entries(
-  id,owner_id,title,body,item_kind,item_subtype,inbox_status,date_precision
+  id,owner_id,title,body,item_kind,item_subtype,date_precision
 ) values
-  ('99100000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000124','First memory','One','entry','entry','organized','unknown'),
-  ('99100000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000124','Second memory','Two','entry','entry','organized','unknown');
+  ('99100000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000124','First memory','One','entry','entry','unknown'),
+  ('99100000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000124','Second memory','Two','entry','entry','unknown');
 
 create function pg_temp.provider(provider_id text, formatted text, latitude numeric, longitude numeric)
 returns jsonb
@@ -35,7 +35,7 @@ as $$
     entry_id,expected_revision,
     (select title from public.entries where id=entry_id),
     (select body from public.entries where id=entry_id),
-    'entry','entry',null,'UTC',array[]::text[],false,
+    'entry','entry',null,'UTC',array[]::text[],
     null,null,'unknown',null,location,null
   );
 $$;
@@ -178,7 +178,6 @@ as $$
       'id', entry_id,
       'revision', expected_revision
     ),
-    null,
     pg_temp.provider(
       'geoapify-high-precision-home',
       '10 Pine Street, Philadelphia, PA 19107, USA',

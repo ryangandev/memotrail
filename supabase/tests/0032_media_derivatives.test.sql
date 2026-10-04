@@ -44,8 +44,6 @@ with changed as (update storage.objects set metadata='{"size":1}' where split_pa
 select is(count(*),0::bigint,'Client cannot update derived Storage objects') from changed;
 select lives_ok($$select public.trash_entry_attachment(original) from fixture$$,'Original photo moves to Trash');
 select is(count(*),1::bigint,'Trash lists one original, not generated artifacts') from public.trash_workspace();
-select is(count(*),0::bigint,'Nothing is removed before the record is permanently deleted') from public.trash_item_storage_paths('attachment',
- '91000000-0000-4000-8000-000000000002',null,(select deleted_at from public.attachments where id='91000000-0000-4000-8000-000000000002'));
 set local role service_role;
 select is(public.media_source(owner,original),null::jsonb,'Normal grants stop reading trashed originals') from fixture;
 select isnt(public.media_source(owner,original,true),null::jsonb,'Explicit Trash grant may preview an owned original') from fixture;
@@ -63,7 +61,6 @@ select is(public.restore_entry_version('91000000-0000-4000-8000-000000000001',3,
 select is(body,'Original writing','History restores original writing') from public.entries where id='91000000-0000-4000-8000-000000000001';
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000092',true);
 select is(count(*),0::bigint,'Other owner cannot read originals or derivatives') from public.attachments;
-select is(count(*),0::bigint,'Other owner cannot resolve a deletion manifest') from public.trash_item_storage_paths('attachment','91000000-0000-4000-8000-000000000002',null,now());
 reset role;
 select * from finish();
 rollback;

@@ -39,7 +39,6 @@ test("Editing a formatted Goal's writing removes its outdated formatted copy", a
         owner_id: owner,
         title: "Marathon plan",
         body: original,
-        inbox_status: "organized",
         item_kind: "entry",
         item_subtype: "entry",
         metadata: { body_rich: boldNote(original) },

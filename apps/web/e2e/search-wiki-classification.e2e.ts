@@ -72,7 +72,6 @@ test("Search filters Entries by record and descriptive tag", async ({
           .insert([
             {
               body: "I noticed how quiet the room felt.",
-              inbox_status: "organized",
               item_kind: "entry",
               item_subtype: "entry",
               owner_id: ownerID,
@@ -80,7 +79,6 @@ test("Search filters Entries by record and descriptive tag", async ({
             },
             {
               body: "A very good day at the water.",
-              inbox_status: "organized",
               item_kind: "entry",
               item_subtype: "entry",
               owner_id: ownerID,
@@ -121,7 +119,6 @@ test("Search filters Entries by record and descriptive tag", async ({
           item_kind: "entity",
           item_subtype: "home",
           date_precision: "unknown",
-          inbox_status: "organized",
           owner_id: ownerID,
         })
       ).error,

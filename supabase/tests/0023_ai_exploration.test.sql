@@ -69,7 +69,6 @@ select is(pg_temp.save('99000000-0000-4000-8000-000000000021')->>'created','true
 select is(pg_temp.save('99000000-0000-4000-8000-000000000021')->>'created','false','Save retry creates no duplicate');
 select throws_ok($$select pg_temp.save('99000000-0000-4000-8000-000000000021','Different body')$$,'22023','request_id_conflict','Save request cannot change its payload');
 select is((select body from public.entries where id=(pg_temp.save('99000000-0000-4000-8000-000000000021')->>'entry_id')::uuid),'My edited conclusion.','User-edited conclusion is preserved');
-select is((select inbox_status from public.entries where id=(pg_temp.save('99000000-0000-4000-8000-000000000021')->>'entry_id')::uuid),'organized','Saved conclusion lands in Library');
 select is((select date_precision from public.entries where id=(pg_temp.save('99000000-0000-4000-8000-000000000021')->>'entry_id')::uuid),'unknown','Saving does not invent an occurrence date');
 select is((select count(*) from public.entry_links where source_entry_id='99000000-0000-4000-8000-000000000001' and relationship='exploration_conclusion'),1::bigint,'Source links to conclusion');
 select is((select count(*) from public.entry_links where target_entry_id='99000000-0000-4000-8000-000000000001' and relationship='exploration_source'),1::bigint,'Conclusion links back to source');

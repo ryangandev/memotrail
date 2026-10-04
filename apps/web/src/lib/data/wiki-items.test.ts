@@ -19,7 +19,6 @@ const item = {
   item_subtype: "entry",
   occurred_end: null,
   occurred_start: null,
-  record_source: "entry",
   title: "Morning pages",
   total_count: 3,
   updated_at: "2026-09-16T00:00:00Z",
@@ -31,8 +30,6 @@ describe("Life Wiki workspace data", () => {
       expect.objectContaining({
         itemKind: "entry",
         itemSubtype: "entry",
-        recordId: item.item_id,
-        recordSource: "entry",
         totalCount: 3,
       }),
     ]);

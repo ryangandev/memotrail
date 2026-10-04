@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(65);
+select plan(64);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -47,13 +47,12 @@ select is(
   'The Goals workspace rejects an invalid page'
 );
 
-insert into public.entries (title, body, owner_id, item_kind, item_subtype, inbox_status)
+insert into public.entries (title, body, owner_id, item_kind, item_subtype)
 values (
   'Learning journal',
   'Notes from language practice.',
   '10000000-0000-0000-0000-000000000001',
-  'entry','entry',
-  'organized'
+  'entry','entry'
 );
 
 select lives_ok(
@@ -76,12 +75,6 @@ select is(
   (select item_kind from public.entries where title = 'Learn Japanese'),
   'goal',
   'A Goal is stored as a specialized Entry'
-);
-
-select is(
-  (select inbox_status from public.entries where title = 'Learn Japanese'),
-  'organized',
-  'Direct Goal creation produces an organized Entry'
 );
 
 select is(
@@ -352,11 +345,11 @@ select is(
 
 select is(
   (
-    select concat_ws('|', item_kind, item_subtype, inbox_status, date_precision, occurred_label)
+    select concat_ws('|', item_kind, item_subtype, date_precision, occurred_label)
     from public.entries
     where title = 'Visit Iceland' and item_kind = 'entry' and item_subtype = 'first_time'
   ),
-  'entry|first_time|organized|day|First Iceland trip',
+  'entry|first_time|day|First Iceland trip',
   'The created First Time preserves organized occurrence context'
 );
 

@@ -58,13 +58,12 @@ Pair it with the test file carrying the same feature name.
 - `entries` is the canonical content table.
 - `entries.item_kind` distinguishes ordinary Entries, focused Entities, and Goals.
 - `entries.item_subtype` retains focused forms such as `first_time`, `moment`, `period`, `home`, and `vehicle`; descriptive writing and event labels are tags.
-- `entries.inbox_status` is always `organized` since migration `202610040004` retired Inbox.
-  The column stays for native wire compatibility; a check constraint and the `keep_entries_in_library` trigger coerce any other value a deployed client sends.
+- Entries have no Inbox state.
+  Migration `202610040004` retired Inbox, and `202610040005` dropped `entries.inbox_status`, `home_workspace.inbox_count`, and the organize flag on Entry review.
   Web `app/inbox/actions.ts` and the `lib/data/inbox*` modules keep their names but now serve capture, sync, and the Entry editor.
 - `timeline_items` is intentional Timeline placement. A date on an ordinary Entry does not create placement.
-- `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item before filtering and pagination. Its `record_source` column is always `entry` now that People are removed.
+- `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item before filtering and pagination.
   `p_needs_organizing` limits it to ordinary Entries with a blank title and no tag, which Web `/library?show=needs-organizing` and the Dashboard Needs organizing panel read.
-  `home_workspace.inbox_count` remains for deployed native clients and is always 0.
 - Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace.
   Web routes typed records to focused detail pages with inline editing and general items to `/items/[entry]`, where current content and primary actions precede an explicit history link.
   Native Library routes Homes, Vehicles, First Times, Goals, and People to their focused pages like Web, other typed records to their focused editors, and other canonical items to the Item page, like Web `/items/[entry]`.
@@ -86,17 +85,18 @@ Pair it with the test file carrying the same feature name.
 - Quick Capture creates an organized `entry:entry` in Library; the Web Entry editor and iOS Inbox review save that same Entry without a Kind selector.
 - First Time, Home, Vehicle, Goal, Moment, and Period creation starts in Timeline or a focused view.
 - Migration `202610040004` drops `organize_capture`, `extract_capture_item`, `capture_extraction_source`, and `extract_capture_to_goal`, `_home`, and `_vehicle`, so Captures no longer hand off to focused records.
-  `save_home_entry_with_geoapify` and `save_vehicle_with_location` keep their signatures and refuse a non-null `p_source` with `capture_handoff_retired`.
+  Migration `202610040005` removed the Capture source parameter from `save_home_entry_with_geoapify` and `save_vehicle_with_location`.
   Existing `derived` and `derived_from` provenance links stay in the data and history.
 - A focused-record save that leaves some photos unattached keeps its editor open; later saves, including photo retries, are ordinary updates.
   After a Home save, its provider choice is held as the saved Location, so a retry keeps that snapshot instead of choosing the provider result again.
 - Web shows Goals as Want to Do. `goals.status` is `active`, `achieved`, or `let_go`, there is no horizon, and `save_goal_entry` and `extract_goal_from_item` take no related links and never change them.
   `goals_workspace` returns only `achievement` links, so related links from older Goals stay in the data and history without appearing on Web.
 - Web Goal extraction uses a caller-generated target UUID for idempotency, preserves the source revision and identity, and records `derived` plus `derived_from` provenance links so both items remain discoverable.
-- `review_wiki_item_with_photo_place_rich` is the review boundary for clients without a Location editor.
-  It writes plaintext and `body_rich` in one revision, clears formatting when `p_body_rich` is null, and leaves the primary Location unchanged.
-  The older plaintext `review_wiki_item_with_photo_place` preserves rich metadata it does not understand while the writing is unchanged and has no current client caller.
+- `review_wiki_item_with_location_rich` is the only Entry review boundary, and the Web Entry editor is its caller.
+  It writes plaintext and `body_rich` in one revision, and clears formatting when `p_body_rich` is null and the primary Location when `p_primary_location` is null.
+  Migration `202610040005` dropped the native-only `review_wiki_item_with_photo_place` and `_rich` wrappers and the plain-text path that kept formatting it did not see.
 - Native iOS uses the canonical Entry, Entity, and Goal decoding and filter identities.
+  It still sends and reads the columns, parameters, and functions that migrations `202610040001` through `202610040005` removed, so it fails against them until it is rewritten to follow Web.
   Its ordinary Entry editor, `Features/Inbox/EntryReviewSheet.swift`, serves Inbox review and Edit Entry on the Item page and in version history through `InboxController.submitReview`; focused records keep their own editors and RPCs.
   Moving an Inbox capture to Trash sets `deleted_at` only at the reviewed revision, like Web `trashWikiItem`.
   The retired Place surface and saved-Location catalog are removed, and Home Location is optional.
@@ -107,10 +107,9 @@ Pair it with the test file carrying the same feature name.
   The `discard_stale_entry_rich_text` trigger removes `body_rich` whenever a write leaves its text different from `body`, so plaintext focused editors, direct client writes, and restores cannot keep outdated formatted text for search or export.
 - Web capture and Entry review use `components/rich-text-editor.tsx` for the reusable headless editor surface, with page, dialog, and form variants instead of separate editors.
   `components/entry-rich-text-content.tsx` safely renders validated formatting on note surfaces and falls back to canonical plaintext when rich metadata is absent, invalid, or stale.
-  Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while the compatibility RPC `review_entry_with_photo_place_rich` writes plaintext, formatting, organization, occurrence, and photo Location adoption in one revision.
+  Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while `review_wiki_item_with_location_rich` writes plaintext, formatting, organization, occurrence, photo Location adoption, and the primary Location in one revision.
   Drafts keep the editor's untrimmed note; on Capture and review save, `trimEntryNote` in `lib/data/rich-text.ts` trims surrounding whitespace from the document and derives the plaintext from the result, like native `EntryEmphasisContent.capture`.
   The review parser and RPCs still reject formatting whose text differs from the trimmed body.
-  Older review RPCs preserve rich metadata they do not understand while the writing is unchanged.
 - Native `DesignSystem/Components/NativeRichTextEditor.swift` provides a reusable UIKit writing surface with an Aa formatting toggle, bold, italic, underline, strikethrough, selection formatting, typing styles, and undo/redo.
   The Debug gallery exercises standalone and sheet presentation, plus an encode/decode save preview using `Models/EntryEmphasisContent.swift`.
   This codec authors the paragraph and emphasis subset of Web's versioned `body_rich` document and rejects unsupported blocks or marks rather than flattening them.
@@ -246,7 +245,7 @@ Pair it with the test file carrying the same feature name.
 - The database delete is the commit point: deleting an attachment row records its remaining Storage objects in `media_purges` in the same transaction, so nothing deleted is restorable and no file is forgotten.
   Clients then remove only the paths from `pending_media_purge_paths` and confirm with `complete_media_purges`, through Web `lib/data/media-purge.ts` and native `TrashController.finishPendingMediaRemoval`; opening Trash retries anything left.
 - The Storage delete policy refuses a client removal of a registered original, and restoring an Entry or photo, by RPC or direct update, fails with `trash_media_unavailable` while an original it would show is missing.
-- `trash_item_storage_paths` is kept for deployed clients and always returns nothing; account deletion still requires generated previews to be removed first (`media_cleanup_required`).
+- Account deletion requires generated previews to be removed first (`media_cleanup_required`).
 
 ## AI rules
 

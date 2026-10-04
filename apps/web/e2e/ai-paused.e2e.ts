@@ -284,12 +284,12 @@ test("Captures with saved AI consent start no paused suggestion work", async ({
 
     const entries = await client
       .from("entries")
-      .select("body,inbox_status")
+      .select("body")
       .order("created_at");
     expect(entries.error).toBeNull();
     expect(entries.data).toEqual([
-      { body: "A quiet afternoon by the lake.", inbox_status: "organized" },
-      { body: "The lake at dusk.", inbox_status: "organized" },
+      { body: "A quiet afternoon by the lake." },
+      { body: "The lake at dusk." },
     ]);
     // Suggestion work used to start after each action responded, so watch a short window.
     await expect.poll(() => pendingActions.size).toBe(0);
