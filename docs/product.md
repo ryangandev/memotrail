@@ -1,6 +1,6 @@
 # MemoTrail Product Contract
 
-Last reviewed: 2026-09-24.
+Last reviewed: 2026-10-04.
 
 ## Product in one minute
 
@@ -118,7 +118,9 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - Renaming a Collection or tag preserves its identity and linked Wiki Items.
 - Moving a Collection to Trash never deletes its Wiki Items or photos.
 - A used tag must be merged into another tag or removed from its Entries before deletion, so organization is never silently lost.
-- Entries may link to other Entries and expose incoming backlinks without copying writing.
+- Web does not offer general links between Entries, because tags, Collections, People, and Goals already connect related records.
+  Entries stay connected through purpose-specific links: a Person's Connected Items, a Goal's Related Items, and source links such as Create linked Goal or the First Time a Goal achievement creates.
+  General links saved earlier remain in the data, version history, and export, but the Item page no longer lists them.
 - Reusable People are canonical Entity Wiki Items with typed detail records and may link to many other Wiki Items.
 - Important content, organization, relationship, specialized-field, and photo-membership changes remain recoverable through version history.
 - Adding or removing photos never makes an open First Time, Home, Vehicle, or Goal editor stale: its Save, Move to Trash, and Bucket List achievement still apply.

@@ -8,7 +8,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EntryReviewDialog } from "./entry-review-list";
 import { EntryPhotoGallery } from "./entry-photo-gallery";
-import { EntryRelationsPanel } from "./entry-relations";
 import { EntryRichTextContent } from "./entry-rich-text-content";
 import { Icon } from "./icon";
 import { DatePickerField } from "./date-picker-field";
@@ -350,12 +349,6 @@ export function EntryHistoryView({
             </section>
           </div>
         </>
-      )}
-      {!history.current.deleted_at && (
-        <EntryRelationsPanel
-          key={`relations:${history.current.id}:${history.current.revision}`}
-          entryID={history.current.id}
-        />
       )}
       {!history.current.deleted_at && (
         <EntryPhotoGallery

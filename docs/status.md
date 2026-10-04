@@ -1,6 +1,14 @@
 # MemoTrail Status
 
-Last reviewed: 2026-10-01.
+Last reviewed: 2026-10-04.
+
+## Focus
+
+Web is the client Ryan uses most, so work now focuses on finishing Web before returning to native iOS.
+Native iOS work, including the acceptance items in section 3, is paused until Web is complete; native then follows the finished Web behavior.
+Before more Web building, unclear features and requirements are reviewed with Ryan and settled in [product.md](./product.md).
+The first review removed general links between Entries from Web; Goal, Person, and source links remain.
+Open `audit-2026-10` issues stay tracked in GitHub.
 
 ## Current state
 
@@ -121,12 +129,16 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - Local Web and database validation for the merged changes is listed above.
 - `localhost:3000` points to the linked cloud Supabase project. Its health endpoint returned 200, and an authenticated browser loaded Geoapify address suggestions, a selected coordinate preview, and the Map's raster tiles after migration; the test form was canceled without saving.
 - Accept the revised UI with a personal `localhost:3000` record, including retrying a provider-backed Home Location save after the precision migration, Home removal/manual address edits, and Entry map points. Map clustering is locally browser-tested but not yet personally accepted against hosted data.
-- The accepted shared SearchField is now used across Web search surfaces, including Location, Library search, Tags, related Items, organization pickers, and Command Palette.
+- The accepted shared SearchField is now used across Web search surfaces, including Location, Library search, Tags, organization pickers, and Command Palette.
 - The server-only Production `GEOAPIFY_API_KEY` is configured in Vercel. The local key and provider-backed `localhost:3000` browser flow are verified; Production browser acceptance remains pending.
 - Native MapKit now reads current Entry-owned Locations and supports native clustering, Kind/year filters, city shortcuts, and associated record navigation.
   Native address-provider search remains deferred; manual Home addresses follow the Entry-owned, optional Location contract.
 
 ### 3. Accept native foundations, Map, and navigation
+
+Paused until Web is complete; see Focus.
+When native resumes, remove the general Related Items panel from the native Item page to match Web.
+The `entry_relations` and `set_entry_relation` functions stay deployed until then because the current native client still calls them; retire them in a migration afterward.
 
 - Native models, filters, Capture, and ordinary Inbox review now use the shared canonical identities; focused forms retain their existing RPCs.
 - Home Location IDs and labels decode as optional, and editing address facts clears stale coordinates.
