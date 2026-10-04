@@ -131,15 +131,20 @@ private struct HistoryIndexRow: View {
   let row: HistoryIndexEntry
 
   var body: some View {
-    let versions = countLabel(row.versionCount, "earlier version")
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
       Text(row.displayTitle)
         .font(MTFont.body.weight(.semibold))
         .foregroundStyle(MTColor.ink)
         .multilineTextAlignment(.leading)
-      Text(
-        "\(row.itemKind.displayName(subtype: row.itemSubtype)) · \(versions)\(row.isDeleted ? " · In Trash" : "")"
-      )
+      MTWordFlow(.caption1) {
+        Text(row.itemKind.displayName(subtype: row.itemSubtype))
+        MTFlowSeparator()
+        Text(countLabel(row.versionCount, "earlier version"))
+        if row.isDeleted {
+          MTFlowSeparator()
+          Text("In Trash")
+        }
+      }
       .font(MTFont.caption.weight(.regular))
       .foregroundStyle(MTColor.inkMuted)
       if let excerpt = row.excerpt.trimmed.nonEmpty {
@@ -336,7 +341,8 @@ struct EntryHistoryDetailView: View {
         )
         .disabled(!canRestoreSelected(record) || record.isDeleted)
         .accessibilityHint(
-          canRestoreSelected(record) ? "" : HistoryPresentation.unsupportedRestoreMessage)
+          canRestoreSelected(record) ? "" : HistoryPresentation.unsupportedRestoreMessage
+        )
         .accessibilityIdentifier("restore-version")
         .confirmationDialog(
           "Restore version \(selectedVersion ?? 0)?", isPresented: $isConfirmingRestore,

@@ -11,6 +11,7 @@ import { EntryRichTextContent } from "@/components/entry-rich-text-content";
 import { Icon } from "@/components/icon";
 import { DatePickerField } from "@/components/date-picker-field";
 import { SearchField } from "@/components/search-field";
+import { SeparatedList } from "@/components/separated-list";
 import {
   SEARCH_PAGE_SIZE,
   librarySearchHref,
@@ -309,12 +310,12 @@ function SearchResultCard({ entry }: { entry: SearchEntry }) {
       ) : null}
 
       <footer>
-        <span>Matched in</span>
-        <div>
+        <span className={styles.matchLabel}>Matched in</span>
+        <SeparatedList className={styles.matchReasons}>
           {entry.matchReasons.map((reason) => (
             <span key={reason}>{reason}</span>
           ))}
-        </div>
+        </SeparatedList>
       </footer>
     </article>
   );

@@ -3,6 +3,7 @@ import { Button } from "@/components/button";
 import Link from "next/link";
 import { EntryHistoryView } from "@/components/entry-history-view";
 import { PageFrame } from "@/components/page-frame";
+import { SeparatedList } from "@/components/separated-list";
 import { countLabel } from "@/lib/count-label";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
@@ -103,11 +104,15 @@ export default async function HistoryPage({
                   key={row.entry_id}
                 >
                   <strong>{historyTitle(row)}</strong>
-                  <span>
-                    {wikiItemIdentityLabel(row.item_kind, row.item_subtype)} ·{" "}
-                    {countLabel(row.version_count, "earlier version")}
-                    {row.is_deleted ? " · In Trash" : ""}
-                  </span>
+                  <SeparatedList spacing="word">
+                    <span>
+                      {wikiItemIdentityLabel(row.item_kind, row.item_subtype)}
+                    </span>
+                    <span>
+                      {countLabel(row.version_count, "earlier version")}
+                    </span>
+                    {row.is_deleted ? <span>In Trash</span> : null}
+                  </SeparatedList>
                   <p>{row.excerpt}</p>
                 </Link>
               ))}

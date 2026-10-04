@@ -5,6 +5,7 @@ import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { RecordCard, RecordCardBody } from "@/components/record-card";
 import { EmptyState } from "@/components/empty-state";
 import { FocusedViewLayout } from "@/components/focused-view-layout";
+import { SeparatedList } from "@/components/separated-list";
 import { Button } from "@/components/button";
 
 import Link from "next/link";
@@ -60,11 +61,10 @@ export function PeopleWorkspace({
       }
       eyebrow={<>The people in your story</>}
       summary={
-        <>
+        <SeparatedList>
           <span>{countLabel(people.length, "person", "people")}</span>
-          <span aria-hidden="true">·</span>
           <span>{countLabel(connectionCount, "connected Item")}</span>
-        </>
+        </SeparatedList>
       }
       summaryLabel="People summary"
       title={<>People</>}

@@ -26,6 +26,7 @@ import { Icon } from "@/components/icon";
 import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { PageFrame } from "@/components/page-frame";
+import { SeparatedList } from "@/components/separated-list";
 import { StickyYear } from "@/components/timeline/sticky-year";
 import { VerticalSpine } from "@/components/timeline/vertical-spine";
 import type { FirstTimeEntry } from "@/lib/data/first-times";
@@ -302,19 +303,15 @@ export function TimelineWorkspace({
         }
       />
       <div className={styles.summary} aria-label="Timeline summary">
-        <Link href="/timeline/tracks">Manage tracks</Link>
-        <span aria-hidden="true">·</span>
-        <span>{trackCountLabel(tracks.length)}</span>
-        <span aria-hidden="true">·</span>
-        <span>{entryCountLabel(items.length)}</span>
-        {items.some((item) => item.occurredStart) ? (
-          <>
-            <span aria-hidden="true">·</span>
+        <SeparatedList>
+          <Link href="/timeline/tracks">Manage tracks</Link>
+          <span>{trackCountLabel(tracks.length)}</span>
+          <span>{entryCountLabel(items.length)}</span>
+          {items.some((item) => item.occurredStart) ? (
             <span>{rangeLabel(layout.start, layout.end)}</span>
-          </>
-        ) : null}
-        {/* Its border sets the button apart, so no separator is left at the
-            end of a line when it wraps. */}
+          ) : null}
+        </SeparatedList>
+        {/* Its border sets the button apart, so it needs no separator. */}
         {birthDateAvailable && !birthDate && !loadError ? (
           <Button
             variant="secondary"

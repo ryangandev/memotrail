@@ -302,6 +302,10 @@ Pair it with the test file carrying the same feature name.
 - Reusable components do not import `app/**.module.css`; Web lint enforces this boundary along with valid token references.
   Feature modules own composition, and `editor-fields.module.css` shares native field spacing and states while excluding the reviewed composites' internals.
 - Noninteractive status, type, collection, and tag labels use `components/badge.tsx` with tone and size variants, single-line truncation, and Design System specimens.
+- Dot-separated summary and metadata rows use Web `components/separated-list.tsx` and native `MTFlowLayout` with `MTFlowSeparator`, or `MTWordFlow` for facts that read like a sentence.
+  Facts wrap whole, and a "·" shows only between two facts on the same line, hidden from assistive technology.
+  Web clips the separator of a fact that starts a line one gap outside the list, so focus rings stay whole; native line breaking leaves that separator out.
+  `e2e/separated-rows.e2e.ts` and the native large-text summary test check the drawn lines.
 - DatePickerField and OccurrenceEditor own `components/date-fields.module.css`; named date fields preserve native form validation and GET serialization without importing route styling.
 - Inside a modal, date/time fields inherit its overlay container or accept an explicit `portalContainer` so their popovers stay inside its accessibility and theme boundary.
   Unnamed domain date fields retain the editor's contextual submit validation rather than introducing native custom-validity interception.

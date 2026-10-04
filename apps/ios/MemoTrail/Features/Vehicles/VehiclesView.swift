@@ -52,9 +52,9 @@ struct VehiclesView: View {
   private var summary: some View {
     MTFlowLayout(spacing: MTSpacing.s2) {
       Text(countLabel(controller.entries.count, "vehicle"))
-      Text("·").accessibilityHidden(true)
+      MTFlowSeparator()
       Text(countLabel(controller.currentEntries.count, "current vehicle"))
-      Text("·").accessibilityHidden(true)
+      MTFlowSeparator()
       Text(countLabel(controller.earlierEntries.count, "earlier vehicle"))
       if controller.isLoading, controller.hasLoaded {
         ProgressView().controlSize(.small).tint(MTColor.accent)

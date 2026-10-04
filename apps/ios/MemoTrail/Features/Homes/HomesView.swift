@@ -52,9 +52,9 @@ struct HomesView: View {
   private var summary: some View {
     MTFlowLayout(spacing: MTSpacing.s2) {
       Text(countLabel(controller.entries.count, "home"))
-      Text("·").accessibilityHidden(true)
+      MTFlowSeparator()
       Text(countLabel(controller.currentEntries.count, "current residence"))
-      Text("·").accessibilityHidden(true)
+      MTFlowSeparator()
       Text(countLabel(controller.earlierEntries.count, "earlier home"))
       if controller.isLoading, controller.hasLoaded {
         ProgressView().controlSize(.small).tint(MTColor.accent)

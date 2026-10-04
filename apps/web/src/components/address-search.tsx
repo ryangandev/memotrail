@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
 import { SearchField } from "@/components/search-field";
+import { SeparatedList } from "@/components/separated-list";
 import {
   locationDisplayLabel,
   type ProviderLocation,
@@ -209,18 +210,25 @@ export function AddressSearch({
       ) : null}
       {locations.length ? (
         <p className={styles.attribution}>
-          Powered by{" "}
-          <a href="https://www.geoapify.com/" rel="noreferrer" target="_blank">
-            Geoapify
-          </a>
-          {" · "}
-          <a
-            href="https://www.openstreetmap.org/copyright"
-            rel="noreferrer"
-            target="_blank"
-          >
-            © OpenStreetMap contributors
-          </a>
+          <SeparatedList align="end" className={styles.attributionLinks}>
+            <span>
+              Powered by{" "}
+              <a
+                href="https://www.geoapify.com/"
+                rel="noreferrer"
+                target="_blank"
+              >
+                Geoapify
+              </a>
+            </span>
+            <a
+              href="https://www.openstreetmap.org/copyright"
+              rel="noreferrer"
+              target="_blank"
+            >
+              © OpenStreetMap contributors
+            </a>
+          </SeparatedList>
         </p>
       ) : null}
       {message ? (

@@ -741,11 +741,11 @@
   font-size: var(--mt-font-size-caption);
   color: var(--mt-color-ink-muted);
 }
-.summary > a {
+.summary a {
   color: var(--mt-color-accent);
   text-decoration: none;
 }
-.summary > a:hover {
+.summary a:hover {
   text-decoration: underline;
 }
 .undatedMoments div {

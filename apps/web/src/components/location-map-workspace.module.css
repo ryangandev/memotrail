@@ -165,6 +165,16 @@
   color: inherit;
 }
 
+/* The map clips at its edge, so keep the ring within the 3px padding below. */
+.attribution a:focus-visible {
+  outline-offset: 1px;
+}
+
+.attributionLinks {
+  --separated-list-gap: 5px;
+  --separated-list-row-gap: 0px;
+}
+
 .pin,
 .cluster {
   display: grid;

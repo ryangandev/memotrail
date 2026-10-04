@@ -4,6 +4,7 @@ import { FocusedEditorSurface } from "@/components/focused-editor-surface";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { FocusedViewLayout } from "@/components/focused-view-layout";
+import { SeparatedList } from "@/components/separated-list";
 import { Button } from "@/components/button";
 import { Badge } from "@/components/badge";
 
@@ -109,11 +110,10 @@ export function FirstTimesWorkspace({
       }
       eyebrow={<>A record of beginnings</>}
       summary={
-        <>
+        <SeparatedList>
           <span>{countLabel(entries.length, "First Time")}</span>
-          <span aria-hidden="true">·</span>
           <span>{countLabel(photoCount, "photo")}</span>
-        </>
+        </SeparatedList>
       }
       summaryLabel="First Times summary"
       title={<>First Times</>}

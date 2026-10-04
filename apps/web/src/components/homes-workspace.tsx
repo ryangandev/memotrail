@@ -4,6 +4,7 @@ import { FocusedEditorSurface } from "@/components/focused-editor-surface";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { FocusedViewLayout } from "@/components/focused-view-layout";
+import { SeparatedList } from "@/components/separated-list";
 import { Button } from "@/components/button";
 import { Badge } from "@/components/badge";
 
@@ -120,13 +121,11 @@ export function HomesWorkspace({
       }
       eyebrow={<>The places that held your life</>}
       summary={
-        <>
+        <SeparatedList>
           <span>{countLabel(homes.length, "home")}</span>
-          <span aria-hidden="true">·</span>
           <span>{countLabel(currentHomes.length, "current residence")}</span>
-          <span aria-hidden="true">·</span>
           <span>{countLabel(earlierHomes.length, "earlier home")}</span>
-        </>
+        </SeparatedList>
       }
       summaryLabel="Homes summary"
       title={<>Homes</>}

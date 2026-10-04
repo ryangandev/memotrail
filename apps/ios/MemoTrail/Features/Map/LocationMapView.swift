@@ -270,27 +270,27 @@ private struct MapAreaPill: View {
 private struct MapRecordRow: View {
   let item: LocationMapItem
 
-  private var details: String {
-    var parts = [item.kind.displayName(subtype: item.subtype), item.address]
-    if let occurredAt = item.occurredAt {
-      // Like Web, the stored UTC calendar date.
-      parts.append(
-        occurredAt.formatted(
-          Date.FormatStyle(date: .abbreviated, time: .omitted, timeZone: .gmt)))
-    }
-    return parts.joined(separator: " · ")
-  }
-
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s1) {
       Text(item.title)
         .font(MTFont.label)
         .foregroundStyle(MTColor.ink)
         .multilineTextAlignment(.leading)
-      Text(details)
-        .font(MTFont.caption.weight(.regular))
-        .foregroundStyle(MTColor.inkMuted)
-        .multilineTextAlignment(.leading)
+      MTWordFlow(.caption1) {
+        Text(item.kind.displayName(subtype: item.subtype))
+        MTFlowSeparator()
+        Text(item.address)
+        if let occurredAt = item.occurredAt {
+          MTFlowSeparator()
+          // Like Web, the stored UTC calendar date.
+          Text(
+            occurredAt.formatted(
+              Date.FormatStyle(date: .abbreviated, time: .omitted, timeZone: .gmt)))
+        }
+      }
+      .font(MTFont.caption.weight(.regular))
+      .foregroundStyle(MTColor.inkMuted)
+      .multilineTextAlignment(.leading)
     }
     .padding(MTSpacing.s3)
     .frame(maxWidth: .infinity, alignment: .leading)

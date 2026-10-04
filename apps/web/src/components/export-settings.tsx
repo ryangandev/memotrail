@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/button";
 import { useEffect, useRef, useState } from "react";
 import { PageFrame } from "@/components/page-frame";
+import { SeparatedList } from "@/components/separated-list";
 import {
   appendExportTail,
   exportFilename,
@@ -279,9 +280,13 @@ export function ExportSettings({
             <article className={styles.card} key={snapshot.id}>
               <h3>{new Date(snapshot.captured_at).toLocaleString()}</h3>
               <p>
-                {snapshot.row_count.toLocaleString()} records ·{" "}
-                {snapshot.datasets.entries ?? 0} Entries ·{" "}
-                {snapshot.datasets.media_objects ?? 0} media files
+                <SeparatedList spacing="word">
+                  <span>{snapshot.row_count.toLocaleString()} records</span>
+                  <span>{snapshot.datasets.entries ?? 0} Entries</span>
+                  <span>
+                    {snapshot.datasets.media_objects ?? 0} media files
+                  </span>
+                </SeparatedList>
               </p>
               <p>Expires {new Date(snapshot.expires_at).toLocaleString()}</p>
               <div className={styles.actions}>

@@ -9,6 +9,7 @@ import {
 } from "@/components/record-card";
 import { EmptyState } from "@/components/empty-state";
 import { FocusedViewLayout } from "@/components/focused-view-layout";
+import { SeparatedList } from "@/components/separated-list";
 import { Button } from "@/components/button";
 import { Badge } from "@/components/badge";
 
@@ -149,13 +150,11 @@ export function GoalsWorkspace({
       }
       eyebrow={<>Intentions without pressure</>}
       summary={
-        <>
+        <SeparatedList>
           <span>{countLabel(goals.length, "goal")}</span>
-          <span aria-hidden="true">·</span>
           <span>{openCount} open</span>
-          <span aria-hidden="true">·</span>
           <span>{bucketCount} in Bucket List</span>
-        </>
+        </SeparatedList>
       }
       summaryLabel="Goals summary"
       title={<>Goals</>}

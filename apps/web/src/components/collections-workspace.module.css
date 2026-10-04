@@ -1,7 +1,4 @@
 .summary {
-  display: flex;
-  align-items: center;
-  gap: var(--mt-space-2);
   margin-top: var(--mt-space-5);
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
@@ -36,16 +33,8 @@
 }
 
 .detailToolbar > div {
-  display: flex;
-  align-items: center;
-  gap: var(--mt-space-2);
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
-}
-
-.detailToolbar > div span + span::before {
-  margin-right: var(--mt-space-2);
-  content: "·";
 }
 
 .entryList {

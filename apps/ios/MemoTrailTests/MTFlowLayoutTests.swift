@@ -1,0 +1,53 @@
+import XCTest
+
+@testable import MemoTrail
+
+final class MTFlowLayoutTests: XCTestCase {
+  private let fact = MTFlowLayout.Item(size: CGSize(width: 60, height: 16))
+  private let separator = MTFlowLayout.Item(size: CGSize(width: 4, height: 16), isSeparator: true)
+
+  private func lines(_ items: [MTFlowLayout.Item], width: CGFloat) -> [MTFlowLayout.Line] {
+    MTFlowLayout.lines(for: items, width: width, spacing: 8)
+  }
+
+  func testSeparatorsShowBetweenFactsOnOneLine() {
+    // Each separator sits one gap from the facts on either side.
+    XCTAssertEqual(
+      lines([fact, separator, fact, separator, fact], width: 400),
+      [MTFlowLayout.Line(indices: [0, 1, 2, 3, 4], width: 220, height: 16)])
+  }
+
+  func testAWrappedFactLeavesItsSeparatorOffBothLines() {
+    // The last separator still fits on the first line, but the fact after it does not.
+    XCTAssertEqual(
+      lines([fact, separator, fact, separator, fact], width: 160),
+      [
+        MTFlowLayout.Line(indices: [0, 1, 2], width: 140, height: 16),
+        MTFlowLayout.Line(indices: [4], width: 60, height: 16),
+      ])
+    // On the narrowest rows every fact starts a line, so no separator shows.
+    XCTAssertEqual(
+      lines([fact, separator, fact, separator, fact], width: 100).map(\.indices), [[0], [2], [4]])
+  }
+
+  func testSeparatorsWithoutAFactOnBothSidesNeverShow() {
+    // Leading and trailing separators, and all but the first of a run, are left out.
+    XCTAssertEqual(
+      lines([separator, fact, separator, separator, fact, separator], width: 400).map(\.indices),
+      [[1, 2, 4]])
+    XCTAssertEqual(lines([separator, separator], width: 400), [])
+  }
+
+  func testItemsWithoutSeparatorsWrapLikeFlexWrap() {
+    let button = MTFlowLayout.Item(size: CGSize(width: 90, height: 32))
+    let wide = MTFlowLayout.Item(size: CGSize(width: 300, height: 40))
+    // A taller item sets its line's height, and one wider than the row is fitted to it.
+    XCTAssertEqual(
+      lines([fact, separator, fact, button, wide], width: 230),
+      [
+        MTFlowLayout.Line(indices: [0, 1, 2], width: 140, height: 16),
+        MTFlowLayout.Line(indices: [3], width: 90, height: 32),
+        MTFlowLayout.Line(indices: [4], width: 230, height: 40),
+      ])
+  }
+}

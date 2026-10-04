@@ -1,0 +1,61 @@
+/*
+ * Each separator is centered in the gap beside the fact that owns it: before
+ * it when lines start-align, after it when they end-align. Every line shares
+ * that aligned edge, so the separator of a fact at a line's edge falls outside
+ * the list, where the clip hides it, and one only ever shows between two facts.
+ */
+.list {
+  --separated-list-slot: calc(
+    2 * var(--separated-list-gap, var(--mt-space-2)) + 0.3em
+  );
+  display: block;
+  /* The clip edge sits one gap outside the facts: room for their focus rings,
+     yet short of a hidden separator, which starts one gap further out. */
+  margin-inline: calc(-1 * var(--separated-list-gap, var(--mt-space-2)));
+  padding-inline: var(--separated-list-gap, var(--mt-space-2));
+  overflow-x: clip;
+}
+
+.list[data-spacing="word"] {
+  /* About one word space in the system sans. */
+  --separated-list-gap: 0.28em;
+  --separated-list-row-gap: 0px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--separated-list-slot);
+  row-gap: var(
+    --separated-list-row-gap,
+    var(--separated-list-gap, var(--mt-space-2))
+  );
+}
+
+.list[data-align="end"] .row {
+  justify-content: flex-end;
+  text-align: end;
+}
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.separator {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--separated-list-slot);
+  color: var(--separated-list-separator-color, currentColor);
+}
+
+.list[data-align="end"] .separator {
+  inset-inline-start: 100%;
+  inset-inline-end: auto;
+}

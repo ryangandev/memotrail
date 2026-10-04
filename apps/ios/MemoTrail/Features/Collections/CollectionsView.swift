@@ -80,11 +80,15 @@ struct CollectionsView: View {
         OpenInboxButton()
       }
     } else {
-      Text(
-        "\(countLabel(controller.collections.count, "Collection")) · \(countLabel(controller.entryPlacementCount, "Entry placement"))"
-      )
+      MTFlowLayout(spacing: MTSpacing.s2) {
+        Text(countLabel(controller.collections.count, "Collection"))
+        MTFlowSeparator()
+        Text(countLabel(controller.entryPlacementCount, "Entry placement"))
+      }
       .font(MTFont.caption.weight(.regular))
       .foregroundStyle(MTColor.inkFaint)
+      .accessibilityElement(children: .contain)
+      .accessibilityLabel("Collections summary")
       // Web's grid: one column on phones, up to four on wide screens.
       LazyVGrid(
         columns: [GridItem(.adaptive(minimum: 200), spacing: MTSpacing.s3)],

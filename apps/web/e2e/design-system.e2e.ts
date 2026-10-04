@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
+import {
+  expectSeparatorsBetweenWords,
+  expectUnclippedFocusRing,
+} from "./helpers/separators";
 
 test("selected brand motion previews both panel directions and respects reduced motion", async ({
   page,
@@ -102,6 +106,35 @@ test("shared badges keep long labels on one line across sizes", async ({
     "data-ui-badge",
     "true",
   );
+});
+
+test("SeparatedList keeps its separators between facts as its frame narrows", async ({
+  page,
+}) => {
+  await page.goto("/design-system");
+  const specimen = page.locator("#separated-list");
+  await specimen.scrollIntoViewIfNeeded();
+  for (const width of [1280, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const frame of ["wide", "medium", "narrow"]) {
+      const lists = specimen.locator(
+        `[data-frame="${frame}"] [data-ui-separated-list]`,
+      );
+      await expect(lists).toHaveCount(3);
+      for (const list of await lists.all()) {
+        const lines = await expectSeparatorsBetweenWords(list);
+        if (frame === "narrow")
+          expect(lines.length, JSON.stringify(lines)).toBeGreaterThan(1);
+        if (frame === "wide" && width === 1280)
+          expect(lines, JSON.stringify(lines)).toHaveLength(1);
+        for (const link of await list.getByRole("link").all())
+          await expectUnclippedFocusRing(link);
+      }
+    }
+  }
+  await specimen.screenshot({
+    path: "/private/tmp/memotrail-separated-list-gallery.png",
+  });
 });
 
 test("shared Collection card fits four cards across on desktop", async ({

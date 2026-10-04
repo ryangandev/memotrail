@@ -10,6 +10,7 @@ import { OrganizationControl } from "@/components/organization-control";
 import { PageFrame } from "@/components/page-frame";
 import { CollectionCard } from "@/components/collection-card";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { SeparatedList } from "@/components/separated-list";
 import type {
   CollectionEntry,
   CollectionsWorkspace as CollectionsWorkspaceData,
@@ -114,9 +115,10 @@ function CollectionOverview({
   return (
     <>
       <div className={styles.summary} aria-label="Collections summary">
-        <span>{countLabel(workspace.collections.length, "Collection")}</span>
-        <span aria-hidden="true">·</span>
-        <span>{countLabel(placementCount, "Entry placement")}</span>
+        <SeparatedList>
+          <span>{countLabel(workspace.collections.length, "Collection")}</span>
+          <span>{countLabel(placementCount, "Entry placement")}</span>
+        </SeparatedList>
       </div>
 
       <section className={styles.collectionGrid} aria-label="Collections">
@@ -177,10 +179,12 @@ function CollectionDetail({
           All Collections
         </Link>
         <div aria-label="Collection summary">
-          <span>{countLabel(collection.entryCount, "Entry")}</span>
-          {collection.unreviewedCount ? (
-            <span>{collection.unreviewedCount} still in Inbox</span>
-          ) : null}
+          <SeparatedList>
+            <span>{countLabel(collection.entryCount, "Entry")}</span>
+            {collection.unreviewedCount ? (
+              <span>{collection.unreviewedCount} still in Inbox</span>
+            ) : null}
+          </SeparatedList>
         </div>
         {workspace.organizationItems.find(
           (item) => item.id === collection.id,
