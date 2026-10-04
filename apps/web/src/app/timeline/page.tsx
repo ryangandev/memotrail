@@ -31,7 +31,6 @@ export default async function TimelinePage({
     <TimelineWorkspace
       birthDate={workspace.birthDate}
       birthDateAvailable={workspace.birthDateAvailable}
-      collectionOptions={workspace.collectionOptions}
       defaultTimezone={workspace.defaultTimezone}
       firstTimes={workspace.firstTimes}
       homes={workspace.homes}

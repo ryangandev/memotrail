@@ -29,7 +29,6 @@ export type FirstTimeAttachment = {
 export type FirstTimeEntry = {
   attachments: FirstTimeAttachment[];
   body: string;
-  collectionNames: string[];
   datePrecision: FirstTimeDatePrecision;
   id: string;
   inboxStatus: "organized" | "unreviewed";
@@ -45,7 +44,6 @@ export type FirstTimeEntry = {
 };
 
 export type FirstTimesWorkspace = {
-  collectionOptions: string[];
   entries: FirstTimeEntry[];
   inboxCount: number | undefined;
   loadError: string | null;
@@ -56,7 +54,6 @@ export type FirstTimesWorkspace = {
 type FirstTimeRow = {
   attachments: unknown;
   body: string;
-  collection_names: string[];
   date_precision: FirstTimeDatePrecision;
   entry_id: string;
   inbox_status: "organized" | "unreviewed";
@@ -81,15 +78,8 @@ export async function getFirstTimesWorkspace(
     return null;
   }
 
-  const [firstTimes, collections, tags, inbox] = await Promise.all([
+  const [firstTimes, tags, inbox] = await Promise.all([
     context.client.rpc("first_times_workspace_with_occurrence"),
-    context.client
-      .from("collections")
-      .select("name")
-      .eq("owner_id", context.userId)
-      .is("archived_at", null)
-      .order("name")
-      .returns<NameRow[]>(),
     context.client
       .from("tags")
       .select("name")
@@ -138,16 +128,12 @@ export async function getFirstTimesWorkspace(
   const signedUrls = await signedImageUrls(context.client, attachments);
 
   return {
-    collectionOptions: collections.error
-      ? []
-      : (collections.data ?? []).map((item) => item.name),
     entries: visibleRows.map((row) => ({
       attachments: row.attachments.map((attachment) => ({
         ...attachment,
         imageUrl: signedUrls.get(attachment.objectPath) ?? null,
       })),
       body: row.body,
-      collectionNames: row.collection_names,
       datePrecision: row.date_precision,
       id: row.entry_id,
       inboxStatus: row.inbox_status,
@@ -213,7 +199,6 @@ export function parseFirstTimeRows(value: unknown):
       !nullableString(item.occurred_timezone) ||
       typeof item.revision !== "number" ||
       typeof item.updated_at !== "string" ||
-      !stringArray(item.collection_names) ||
       !stringArray(item.tag_names)
     ) {
       return null;
@@ -222,7 +207,6 @@ export function parseFirstTimeRows(value: unknown):
     rows.push({
       attachments,
       body: item.body,
-      collection_names: item.collection_names,
       date_precision: item.date_precision as FirstTimeDatePrecision,
       entry_id: item.entry_id,
       inbox_status: item.inbox_status,
@@ -294,7 +278,6 @@ function unavailableWorkspace(
   inboxCount: number | undefined,
 ): FirstTimesWorkspace {
   return {
-    collectionOptions: [],
     entries: [],
     inboxCount,
     loadError:

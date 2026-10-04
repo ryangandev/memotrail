@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(59);
+select plan(58);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -90,7 +90,6 @@ select lives_ok(
       'Near the coast.',
       'Moved for a new chapter.',
       null,
-      array['Homes', 'Reflection', 'homes'],
       array['California', 'home', 'HOME'],
       null,
       null
@@ -187,16 +186,6 @@ select is(
   ),
   'homes|stage',
   'The Home appears as a Stage on the Homes Timeline track'
-);
-
-select is(
-  (
-    select collection_names::text
-    from public.homes_workspace()
-    where title = 'California apartment'
-  ),
-  '{homes,Reflection}',
-  'Home Collections are normalized and de-duplicated case-insensitively'
 );
 
 select is(
@@ -304,7 +293,6 @@ select lives_ok(
       null,
       'Moved with family.',
       'Moved to California.',
-      array['Homes'],
       array['Philadelphia'],
       null,
       null
@@ -352,8 +340,7 @@ select is(
     $$
       select * from public.save_home_entry(
         ' ', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC', null,
-        'Place', null, null, null, null, null, null, null, null, null,
-        array[]::text[], array[]::text[], null, null
+        'Place', null, null, null, null, null, null, null, null, null, array[]::text[], null, null
       )
     $$
   ),
@@ -367,8 +354,7 @@ select is(
     $$
       select * from public.save_home_entry(
         'Home', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC', null,
-        ' ', null, null, null, null, null, null, null, null, null,
-        array[]::text[], array[]::text[], null, null
+        ' ', null, null, null, null, null, null, null, null, null, array[]::text[], null, null
       )
     $$
   ),
@@ -382,8 +368,7 @@ select is(
     $$
       select * from public.save_home_entry(
         'Home', '', '2020-01-01T00:00:00Z', null, 'year', null, 'Not/AZone', null,
-        'Place', null, null, null, null, null, null, null, null, null,
-        array[]::text[], array[]::text[], null, null
+        'Place', null, null, null, null, null, null, null, null, null, array[]::text[], null, null
       )
     $$
   ),
@@ -396,8 +381,7 @@ select is(
     $$
       select * from public.save_home_entry(
         'Home', '', '2020-01-02T00:00:00Z', '2020-01-01T00:00:00Z', 'range', null, 'UTC', null,
-        'Place', null, null, null, null, null, null, null, null, null,
-        array[]::text[], array[]::text[], null, null
+        'Place', null, null, null, null, null, null, null, null, null, array[]::text[], null, null
       )
     $$
   ),
@@ -410,8 +394,7 @@ select is(
     $$
       select * from public.save_home_entry(
         'Home', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC', null,
-        'Place', null, null, null, null, 34, null, null, null, null,
-        array[]::text[], array[]::text[], null, null
+        'Place', null, null, null, null, 34, null, null, null, null, array[]::text[], null, null
       )
     $$
   ),
@@ -424,8 +407,7 @@ select is(
     $$
       select * from public.save_home_entry(
         'Home', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC', null,
-        'Place', null, null, null, null, null, null, null, null, 'Already left',
-        array[]::text[], array[]::text[], null, null
+        'Place', null, null, null, null, null, null, null, null, 'Already left', array[]::text[], null, null
       )
     $$
   ),
@@ -460,7 +442,6 @@ select is(
       'Walkable and quiet.',
       'Moved for a new chapter.',
       'Needed more space.',
-      array['Homes', 'Milestones'],
       array['California', 'favorite'],
       (select id from public.entries where title = 'California apartment' and item_kind = 'entity' and item_subtype = 'home'),
       (select revision from public.entries where title = 'California apartment' and item_kind = 'entity' and item_subtype = 'home')
@@ -532,12 +513,12 @@ select is(
 
 select is(
   (
-    select concat(collection_names::text, '|', tag_names::text)
+    select tag_names::text
     from public.homes_workspace()
     where title = 'California home'
   ),
-  '{homes,Milestones}|{California,favorite}',
-  'A Home update atomically replaces Collections and tags'
+  '{California,favorite}',
+  'A Home update atomically replaces tags'
 );
 
 select is(
@@ -558,8 +539,7 @@ select is(
       'Stale overwrite', '', '2025-06-01T19:00:00Z', null, 'month', null,
       'America/Los_Angeles',
       (select homes.place_id from public.homes join public.entries on entries.id = homes.entry_id where entries.title = 'California home'),
-      'Changed by stale write', null, null, null, null, null, null, null, null, null,
-      array[]::text[], array[]::text[],
+      'Changed by stale write', null, null, null, null, null, null, null, null, null, array[]::text[],
       (select id from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home'), 1
     )
   ),
@@ -601,8 +581,7 @@ select is(
     from public.save_home_entry(
       'Cross-owner place', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC',
       '50000000-0000-0000-0000-000000000011',
-      'Other place', null, null, null, null, null, null, null, null, null,
-      array[]::text[], array[]::text[], null, null
+      'Other place', null, null, null, null, null, null, null, null, null, array[]::text[], null, null
     )
   ),
   0,
@@ -614,8 +593,7 @@ select is(
     select count(*)::integer
     from public.save_home_entry(
       'Cross-owner update', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC', null,
-      'Other place', null, null, null, null, null, null, null, null, null,
-      array[]::text[], array[]::text[],
+      'Other place', null, null, null, null, null, null, null, null, null, array[]::text[],
       current_setting('app.test_home_entry_id')::uuid, 2
     )
   ),
@@ -738,7 +716,7 @@ select ok(
 select ok(
   has_function_privilege(
     'authenticated',
-    'public.save_home_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,uuid,text,text,text,text,text,numeric,numeric,text,text,text,text[],text[],uuid,integer)',
+    'public.save_home_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,uuid,text,text,text,text,text,numeric,numeric,text,text,text,text[],uuid,integer)',
     'execute'
   ),
   'Authenticated users can execute the Home mutation contract'
@@ -747,7 +725,7 @@ select ok(
 select ok(
   not has_function_privilege(
     'public',
-    'public.save_home_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,uuid,text,text,text,text,text,numeric,numeric,text,text,text,text[],text[],uuid,integer)',
+    'public.save_home_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,uuid,text,text,text,text,text,numeric,numeric,text,text,text,text[],uuid,integer)',
     'execute'
   ),
   'PUBLIC cannot execute the Home mutation contract'
@@ -767,7 +745,7 @@ select is(
   (
     select proconfig
     from pg_proc
-    where oid = 'public.save_home_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,uuid,text,text,text,text,text,numeric,numeric,text,text,text,text[],text[],uuid,integer)'::regprocedure
+    where oid = 'public.save_home_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,uuid,text,text,text,text,text,numeric,numeric,text,text,text,text[],uuid,integer)'::regprocedure
   ),
   array['search_path=""']::text[],
   'The Home mutation contract uses an empty search path'
@@ -777,7 +755,7 @@ select is(
   (
     select prosecdef
     from pg_proc
-    where oid = 'public.save_home_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,uuid,text,text,text,text,text,numeric,numeric,text,text,text,text[],text[],uuid,integer)'::regprocedure
+    where oid = 'public.save_home_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,uuid,text,text,text,text,text,numeric,numeric,text,text,text,text[],uuid,integer)'::regprocedure
   ),
   false,
   'The Home mutation contract remains security invoker'

@@ -1,15 +1,11 @@
 import "server-only";
 
 import { getAuthenticatedContext, type Viewer } from "./inbox";
-import {
-  parseOrganizationItems,
-  type OrganizationItem,
-  type OrganizationKind,
-} from "./organization";
+import { parseTagItems, type TagItem } from "./organization";
 
-export type OrganizationWorkspace = {
+export type TagsWorkspace = {
   inboxCount: number | undefined;
-  items: OrganizationItem[];
+  items: TagItem[];
   loadError: string | null;
   page: number;
   query: string;
@@ -17,21 +13,18 @@ export type OrganizationWorkspace = {
   viewer: Viewer;
 };
 
-export async function getOrganizationWorkspace({
-  kind,
+export async function getTagsWorkspace({
   page = 1,
   query = "",
 }: {
-  kind: OrganizationKind;
   page?: number;
   query?: string;
-}): Promise<OrganizationWorkspace | null> {
+}): Promise<TagsWorkspace | null> {
   const context = await getAuthenticatedContext();
   if (!context) return null;
 
-  const [organization, inbox] = await Promise.all([
-    context.client.rpc("organization_workspace", {
-      p_kind: kind,
+  const [tags, inbox] = await Promise.all([
+    context.client.rpc("tags_workspace", {
       p_limit: 50,
       p_offset: (page - 1) * 50,
       p_query: query,
@@ -43,9 +36,7 @@ export async function getOrganizationWorkspace({
       .eq("inbox_status", "unreviewed")
       .is("deleted_at", null),
   ]);
-  const parsed = organization.error
-    ? null
-    : parseOrganizationItems(organization.data);
+  const parsed = tags.error ? null : parseTagItems(tags.data);
   const items = (parsed ?? []).map(normalizeCounts);
 
   return {
@@ -53,7 +44,7 @@ export async function getOrganizationWorkspace({
     items,
     loadError: parsed
       ? null
-      : `MemoTrail could not load your ${kind === "tag" ? "tags" : "Collections"}. Refresh to try again.`,
+      : "MemoTrail could not load your tags. Refresh to try again.",
     page,
     query,
     totalCount: items[0]?.total_count ?? 0,
@@ -61,7 +52,7 @@ export async function getOrganizationWorkspace({
   };
 }
 
-export function normalizeCounts(item: OrganizationItem): OrganizationItem {
+function normalizeCounts(item: TagItem): TagItem {
   return {
     ...item,
     entry_count: Number(item.entry_count),

@@ -78,7 +78,6 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
         p_address: null,
         p_body: "",
         p_city: null,
-        p_collection_names: [],
         p_country: null,
         p_date_precision: "day",
         p_entry_id: null,
@@ -100,7 +99,6 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
       }),
       client.rpc("save_vehicle_entry", {
         p_body: "",
-        p_collection_names: [],
         p_color: "Blue",
         p_date_precision: "day",
         p_entry_id: null,
@@ -125,7 +123,6 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
       }),
       client.rpc("save_goal_entry", {
         p_body: "",
-        p_collection_names: [],
         p_entry_id: null,
         p_expected_revision: null,
         p_horizon: "short_term",
@@ -137,7 +134,6 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
       }),
       client.rpc("save_first_time_with_occurrence", {
         p_body: "",
-        p_collection_names: [],
         p_date_precision: "day",
         p_entry_id: null,
         p_expected_revision: null,
@@ -150,7 +146,6 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
       }),
       client.rpc("save_timeline_entry_with_organization", {
         p_body: "",
-        p_collection_names: [],
         p_date_precision: "range",
         p_entry_id: null,
         p_expected_revision: null,

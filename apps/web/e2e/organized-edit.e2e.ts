@@ -22,7 +22,7 @@ test("Organized Entries stay editable without returning to Inbox", async ({
   });
   const owner = created.data.user!.id,
     id = randomUUID(),
-    collectionId = randomUUID();
+    tagId = randomUUID();
   try {
     const cookies: { name: string; value: string }[] = [];
     const client = createServerClient(env.API_URL, env.ANON_KEY, {
@@ -95,8 +95,8 @@ test("Organized Entries stay editable without returning to Inbox", async ({
     ).toBeNull();
     expect(
       (
-        await client.from("collections").insert({
-          id: collectionId,
+        await client.from("tags").insert({
+          id: tagId,
           owner_id: owner,
           name: "Rich notes",
         })
@@ -104,8 +104,8 @@ test("Organized Entries stay editable without returning to Inbox", async ({
     ).toBeNull();
     expect(
       (
-        await client.from("entry_collections").insert({
-          collection_id: collectionId,
+        await client.from("entry_tags").insert({
+          tag_id: tagId,
           entry_id: id,
           owner_id: owner,
         })
@@ -202,7 +202,7 @@ test("Organized Entries stay editable without returning to Inbox", async ({
           .single()
       ).data!.snapshot.body,
     ).toBe("Original words");
-    await page.goto(`/collections/${collectionId}`);
+    await page.goto("/search?tag=Rich%20notes");
     await expect(
       page
         .locator("[data-entry-rich-text] em")

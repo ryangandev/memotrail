@@ -60,11 +60,9 @@ export async function restoreTrashItem(
   if (error) {
     return {
       message:
-        error.code === "23505"
-          ? "An active Collection already has this name. Rename it in organization settings, then restore this one."
-          : error.message === "trash_media_unavailable"
-            ? "This item's original photos are missing, so it cannot be restored. You can still delete it forever."
-            : "MemoTrail could not restore this item. Try again.",
+        error.message === "trash_media_unavailable"
+          ? "This item's original photos are missing, so it cannot be restored. You can still delete it forever."
+          : "MemoTrail could not restore this item. Try again.",
       status: "error",
     };
   }
@@ -157,7 +155,6 @@ function expiredSession(): TrashActionResult {
 function refreshTrashPaths() {
   for (const path of [
     "/",
-    "/collections",
     "/tags",
     "/goals",
     "/first-times",

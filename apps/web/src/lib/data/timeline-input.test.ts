@@ -13,7 +13,6 @@ function input(
 ): TimelineEntryInput {
   return {
     body: "  A formative stretch.  ",
-    collectionNames: ["  College years  ", "college YEARS", ""],
     datePrecision: "range",
     id: null,
     kind: "stage",
@@ -79,7 +78,6 @@ describe("parseTimelineEntryInput", () => {
     expect(parsed).toMatchObject({
       data: {
         body: "A formative stretch.",
-        collectionNames: ["College years"],
         occurredLabel: "Ages 18 to 22",
         tagNames: ["formative"],
         title: "College years",
@@ -90,10 +88,12 @@ describe("parseTimelineEntryInput", () => {
 
   it("rejects organization limits", () => {
     expect(
-      parseTimelineEntryInput(input({ collectionNames: ["x".repeat(81)] })),
+      parseTimelineEntryInput(input({ tagNames: ["x".repeat(81)] })),
     ).toMatchObject({ success: false });
     expect(
-      parseTimelineEntryInput(input({ tagNames: ["x".repeat(61)] })),
+      parseTimelineEntryInput(
+        input({ tagNames: Array.from({ length: 71 }, (_, i) => `T${i}`) }),
+      ),
     ).toMatchObject({ success: false });
   });
 

@@ -30,7 +30,6 @@ import {
 export type SearchEntry = {
   body: string;
   bodyRich: EntryRichText | null;
-  collectionNames: string[];
   id: string;
   inboxStatus: "organized" | "unreviewed";
   itemKind: WikiItemKind;
@@ -49,7 +48,6 @@ export type SearchEntry = {
 };
 
 export type SearchWorkspace = {
-  collectionOptions: string[];
   entries: SearchEntry[];
   filtersError: string | null;
   inboxCount: number | undefined;
@@ -62,7 +60,6 @@ export type SearchWorkspace = {
 
 type SearchRow = {
   body: string;
-  collection_names: string[] | null;
   entry_id: string;
   inbox_status: "organized" | "unreviewed";
   item_kind: WikiItemKind;
@@ -104,7 +101,6 @@ export async function getSearchWorkspace(
   const shouldSearch = parsed.request.hasCriteria && !parsed.error;
   const searchRequest = shouldSearch
     ? context.client.rpc("search_wiki_items", {
-        p_collection_names: parsed.request.collectionNames,
         p_date_from: parsed.request.dateFrom,
         p_date_to: parsed.request.dateTo,
         p_item_classifications: parsed.request.itemClassifications,
@@ -116,15 +112,8 @@ export async function getSearchWorkspace(
       })
     : Promise.resolve({ data: [] as SearchRow[], error: null });
 
-  const [search, collections, tags, inbox] = await Promise.all([
+  const [search, tags, inbox] = await Promise.all([
     searchRequest,
-    context.client
-      .from("collections")
-      .select("name")
-      .eq("owner_id", context.userId)
-      .is("archived_at", null)
-      .order("name")
-      .returns<NameRow[]>(),
     context.client
       .from("tags")
       .select("name")
@@ -146,17 +135,14 @@ export async function getSearchWorkspace(
     context,
     rows.map((row) => ({ body: row.body, id: row.entry_id })),
   );
-  const filtersUnavailable = collections.error || tags.error;
+  const filtersUnavailable = tags.error;
 
   return {
-    collectionOptions: collections.error
-      ? []
-      : (collections.data ?? []).map((collection) => collection.name),
     entries: search.error
       ? []
       : rows.map((row) => entryFromRow(row, bodyRichByEntry.get(row.entry_id))),
     filtersError: filtersUnavailable
-      ? "Collection and tag filters are temporarily unavailable. Keyword search still works."
+      ? "Tag filters are temporarily unavailable. Keyword search still works."
       : null,
     inboxCount: inbox.error ? undefined : (inbox.count ?? 0),
     loadError:
@@ -181,7 +167,6 @@ export async function getQuickSearchResults(
   if (!normalizedQuery) return { error: null, items: [] };
 
   const entrySearch = await context.client.rpc("search_wiki_items", {
-    p_collection_names: [],
     p_date_from: null,
     p_date_to: null,
     p_item_classifications: [],
@@ -220,7 +205,6 @@ export async function getTagEntryPreviews(
   }
 
   const result = await context.client.rpc("search_wiki_items", {
-    p_collection_names: [],
     p_date_from: null,
     p_date_to: null,
     p_item_classifications: [],
@@ -312,7 +296,6 @@ function entryFromRow(
   return {
     body: row.body,
     bodyRich,
-    collectionNames: strings(row.collection_names),
     id: row.entry_id,
     inboxStatus: row.inbox_status,
     itemKind: identity.itemKind,
@@ -387,7 +370,6 @@ function isSearchRow(value: unknown): value is SearchRow {
       value.date_precision as OccurrencePrecision,
     ) &&
     nullableString(value.occurred_timezone) &&
-    nullableStringArray(value.collection_names) &&
     nullableStringArray(value.match_reasons) &&
     nullableStringArray(value.tag_names) &&
     (typeof value.total_count === "number" ||

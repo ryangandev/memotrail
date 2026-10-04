@@ -19,13 +19,12 @@ export async function getCaptureExtractionSource(
   );
   if (error || !isSourceRow(data)) return null;
 
-  return entryFromRow(data, data.collection_names, data.tag_names);
+  return entryFromRow(data, data.tag_names);
 }
 
 function isSourceRow(value: unknown): value is Parameters<
   typeof entryFromRow
 >[0] & {
-  collection_names: string[];
   tag_names: string[];
 } {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
@@ -38,8 +37,6 @@ function isSourceRow(value: unknown): value is Parameters<
     row.item_subtype === "entry" &&
     row.inbox_status === "unreviewed" &&
     typeof row.revision === "number" &&
-    Array.isArray(row.collection_names) &&
-    row.collection_names.every((name) => typeof name === "string") &&
     Array.isArray(row.tag_names) &&
     row.tag_names.every((name) => typeof name === "string")
   );

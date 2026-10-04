@@ -28,7 +28,7 @@ select is(
   (select count(*) from public.save_first_time_with_location(
     jsonb_build_object(
       'title','First hike','body','A memory','datePrecision','unknown',
-      'collectionNames',jsonb_build_array(),'tagNames',jsonb_build_array()
+      'tagNames',jsonb_build_array()
     ),
     pg_temp.provider('specialized-pine-10','10 Pine Street, Philadelphia')
   )),
@@ -40,7 +40,7 @@ select is(
   (select count(*) from public.save_vehicle_with_location(
     jsonb_build_object(
       'title','Blue Civic','body','A memory','datePrecision','unknown',
-      'collectionNames',jsonb_build_array(),'tagNames',jsonb_build_array()
+      'tagNames',jsonb_build_array()
     ),
     null,
     pg_temp.provider('specialized-pine-10','10 Pine Street, Philadelphia')
@@ -75,7 +75,7 @@ select is(
     jsonb_build_object(
       'title','First hike','body','A changed memory',
       'datePrecision','unknown',
-      'collectionNames',jsonb_build_array(),'tagNames',jsonb_build_array(),
+      'tagNames',jsonb_build_array(),
       'id',(select id from public.entries where title='First hike'),
       'revision',(select revision from public.entries where title='First hike')
     ),
@@ -108,7 +108,7 @@ select is(
   (select count(*) from public.save_vehicle_with_location(
     jsonb_build_object(
       'title','Blue Civic','body','A later memory','datePrecision','unknown',
-      'collectionNames',jsonb_build_array(),'tagNames',jsonb_build_array(),
+      'tagNames',jsonb_build_array(),
       'id',(select id from public.entries where title='Blue Civic'),
       'revision',(select revision from public.entries where title='Blue Civic')
     ),
@@ -139,7 +139,7 @@ select throws_ok(
     select * from public.save_first_time_with_location(
       jsonb_build_object(
         'title','Should roll back','body','','datePrecision','unknown',
-        'collectionNames',jsonb_build_array(),'tagNames',jsonb_build_array()
+        'tagNames',jsonb_build_array()
       ),
       jsonb_build_object(
         'kind','existing','id','99200000-0000-4000-8000-000000000099',

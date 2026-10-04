@@ -18,7 +18,6 @@ import {
 export type InboxEntry = Occurrence & {
   body: string;
   bodyRich: EntryRichText | null;
-  collectionNames: string[];
   createdAt: string;
   id: string;
   itemKind: WikiItemKind;
@@ -37,7 +36,6 @@ export type Viewer = {
 };
 
 export type InboxWorkspace = {
-  collectionOptions: string[];
   entries: InboxEntry[];
   loadError: string | null;
   tagOptions: string[];
@@ -60,11 +58,6 @@ type EntryRow = {
   occurred_timezone: string | null;
   revision: number;
   title: string | null;
-};
-
-type EntryCollectionRow = {
-  collection: { name: string; archived_at: string | null } | null;
-  entry_id: string;
 };
 
 type EntryTagRow = {
@@ -178,35 +171,22 @@ export async function getInboxWorkspace(
       values.findIndex((candidate) => candidate.id === entry.id) === index,
   );
   const entryIds = rows.map((entry) => entry.id);
-  const [entryCollections, entryTags, entryLocations, collections, tags] =
-    await Promise.all([
-      loadEntryCollections(context, entryIds),
-      loadEntryTags(context, entryIds),
-      loadEntryLocations(context, entryIds),
-      context.client
-        .from("collections")
-        .select("name")
-        .eq("owner_id", context.userId)
-        .is("archived_at", null)
-        .order("name")
-        .returns<NameRow[]>(),
-      context.client
-        .from("tags")
-        .select("name")
-        .eq("owner_id", context.userId)
-        .order("name")
-        .returns<NameRow[]>(),
-    ]);
+  const [entryTags, entryLocations, tags] = await Promise.all([
+    loadEntryTags(context, entryIds),
+    loadEntryLocations(context, entryIds),
+    context.client
+      .from("tags")
+      .select("name")
+      .eq("owner_id", context.userId)
+      .order("name")
+      .returns<NameRow[]>(),
+  ]);
 
-  if (entryCollections.error || entryTags.error || entryLocations.error) {
+  if (entryTags.error || entryLocations.error) {
     return unavailableWorkspace(context.viewer);
   }
 
-  const collectionNamesByEntry = namesByEntry(
-    entryCollections.data ?? [],
-    "collection",
-  );
-  const tagNamesByEntry = namesByEntry(entryTags.data ?? [], "tag");
+  const tagNamesByEntry = namesByEntry(entryTags.data ?? []);
   const locationsByEntry = new Map(
     (entryLocations.data ?? []).flatMap((row) => {
       const location = existingLocationFromRow(row.location);
@@ -215,13 +195,9 @@ export async function getInboxWorkspace(
   );
 
   return {
-    collectionOptions: collections.error
-      ? []
-      : (collections.data ?? []).map((collection) => collection.name),
     entries: rows.map((row) =>
       entryFromRow(
         row,
-        collectionNamesByEntry.get(row.id) ?? [],
         tagNamesByEntry.get(row.id) ?? [],
         locationsByEntry.get(row.id) ?? null,
       ),
@@ -234,14 +210,12 @@ export async function getInboxWorkspace(
 
 export function entryFromRow(
   row: EntryRow,
-  collectionNames: string[],
   tagNames: string[],
   location: ExistingLocation | null = null,
 ): InboxEntry {
   return {
     body: row.body,
     bodyRich: entryRichTextFromMetadata(row.metadata, row.body),
-    collectionNames,
     createdAt: row.created_at,
     id: row.id,
     itemKind: isWikiItemKind(row.item_kind) ? row.item_kind : "entry",
@@ -284,22 +258,6 @@ function loadEntryLocations(
     .returns<EntryLocationRow[]>();
 }
 
-function loadEntryCollections(
-  context: NonNullable<Awaited<ReturnType<typeof getAuthenticatedContext>>>,
-  entryIds: string[],
-) {
-  if (entryIds.length === 0) {
-    return Promise.resolve({ data: [] as EntryCollectionRow[], error: null });
-  }
-
-  return context.client
-    .from("entry_collections")
-    .select("entry_id,collection:collections(name,archived_at)")
-    .eq("owner_id", context.userId)
-    .in("entry_id", entryIds)
-    .returns<EntryCollectionRow[]>();
-}
-
 function loadEntryTags(
   context: NonNullable<Awaited<ReturnType<typeof getAuthenticatedContext>>>,
   entryIds: string[],
@@ -316,24 +274,16 @@ function loadEntryTags(
     .returns<EntryTagRow[]>();
 }
 
-function namesByEntry(
-  rows: EntryCollectionRow[] | EntryTagRow[],
-  relationship: "collection" | "tag",
-) {
+function namesByEntry(rows: EntryTagRow[]) {
   const names = new Map<string, string[]>();
 
   for (const row of rows) {
-    const item =
-      relationship === "collection"
-        ? (row as EntryCollectionRow).collection
-        : (row as EntryTagRow).tag;
-
-    if (!item || ("archived_at" in item && item.archived_at)) {
+    if (!row.tag) {
       continue;
     }
 
     const currentNames = names.get(row.entry_id) ?? [];
-    currentNames.push(item.name);
+    currentNames.push(row.tag.name);
     names.set(row.entry_id, currentNames);
   }
 
@@ -342,7 +292,6 @@ function namesByEntry(
 
 function unavailableWorkspace(viewer: Viewer): InboxWorkspace {
   return {
-    collectionOptions: [],
     entries: [],
     loadError: "MemoTrail could not load your Inbox. Refresh to try again.",
     tagOptions: [],

@@ -79,7 +79,6 @@ export async function saveHomeEntry(
     p_address: parsed.data.address,
     p_body: parsed.data.body,
     p_city: parsed.data.city,
-    p_collection_names: parsed.data.collectionNames,
     p_country: parsed.data.country,
     p_date_precision: parsed.data.datePrecision,
     p_latitude: parsed.data.latitude,
@@ -325,7 +324,6 @@ function expiredSession(): HomeActionResult {
 
 function refreshHomePaths() {
   revalidatePath("/");
-  revalidatePath("/collections");
   revalidatePath("/homes");
   revalidatePath("/inbox");
   revalidatePath("/library");

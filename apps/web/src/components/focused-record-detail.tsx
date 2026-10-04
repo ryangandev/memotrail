@@ -41,7 +41,6 @@ import { wikiEntryHref } from "@/lib/data/wiki-item";
 import styles from "./focused-record-detail.module.css";
 
 type Shared = {
-  collectionOptions: string[];
   ownerId: string;
   tagOptions: string[];
 };
@@ -89,7 +88,6 @@ export function FocusedRecordDetail(props: Props) {
   }
 
   const sharedEditorProps = {
-    collectionOptions: props.collectionOptions,
     onClose: closeEdit,
     ownerId: props.ownerId,
     presentation: "page" as const,
@@ -204,7 +202,6 @@ function RecordContent({
       "variant" in photo ? photo.variant === "original" : true,
     ) ?? [];
   const body = kind === "person" ? (record as Person).notes : common?.body;
-  const collections = common?.collectionNames ?? [];
   const tags = common?.tagNames ?? [];
   return (
     <article className={styles.content}>
@@ -310,15 +307,10 @@ function RecordContent({
           <p className={styles.prose}>{body}</p>
         </section>
       ) : null}
-      {collections.length || tags.length ? (
+      {tags.length ? (
         <section className={styles.section}>
           <h2>Organize</h2>
           <div className={styles.chips}>
-            {collections.map((name) => (
-              <Badge key={`collection:${name}`} tone="neutral">
-                {name}
-              </Badge>
-            ))}
             {tags.map((name) => (
               <Badge key={`tag:${name}`} tone="neutral">
                 #{name}

@@ -8,7 +8,6 @@ import {
 
 const validInput = {
   body: "Small forces trigger bone remodeling.",
-  collectionNames: ["Learning", "Health"],
   id: "f4d2df16-a506-4be6-a63e-b7b18afe3468",
   location: null,
   occurredAt: "2026-09-01T15:00:00.000Z",
@@ -141,16 +140,14 @@ describe("Inbox Entry review", () => {
     ).toBe(false);
   });
 
-  it("trims and de-duplicates Collections and tags case-insensitively", () => {
+  it("trims and de-duplicates tags case-insensitively", () => {
     expect(
       parseInboxReviewInput({
         ...validInput,
-        collectionNames: [" Learning ", "learning", "Health"],
         tagNames: [" Teeth ", "teeth", "science"],
       }),
     ).toMatchObject({
       data: {
-        collectionNames: ["Learning", "Health"],
         tagNames: ["Teeth", "science"],
       },
       success: true,
@@ -159,16 +156,16 @@ describe("Inbox Entry review", () => {
 
   it("rejects blank, oversized, and excessive organization names", () => {
     expect(
-      parseInboxReviewInput({ ...validInput, collectionNames: [" "] }).success,
+      parseInboxReviewInput({ ...validInput, tagNames: [" "] }).success,
     ).toBe(false);
     expect(
-      parseInboxReviewInput({ ...validInput, tagNames: ["t".repeat(61)] })
+      parseInboxReviewInput({ ...validInput, tagNames: ["t".repeat(81)] })
         .success,
     ).toBe(false);
     expect(
       parseInboxReviewInput({
         ...validInput,
-        collectionNames: Array.from({ length: 21 }, (_, index) => `C${index}`),
+        tagNames: Array.from({ length: 71 }, (_, index) => `T${index}`),
       }).success,
     ).toBe(false);
   });

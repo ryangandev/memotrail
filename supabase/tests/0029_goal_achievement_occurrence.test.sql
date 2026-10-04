@@ -7,7 +7,7 @@ insert into auth.users(id,email,raw_user_meta_data) values
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000089',true);
 create function pg_temp.new_goal() returns uuid language sql as $$
- select entry_id from public.save_goal_entry('First adventure','Original intention','someday','active',null,array['Bucket List'],'{}','{}',null,null);
+ select entry_id from public.save_goal_entry('First adventure','Original intention','someday','active',null,'{}','{}',null,null);
 $$;
 create function pg_temp.achieve(id uuid,p_precision text,start_at timestamptz default null,end_at timestamptz default null,label text default null,revision integer default 1)
 returns uuid language sql as $$

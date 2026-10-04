@@ -21,17 +21,11 @@ from public.save_timeline_entry_with_organization(
   'day',
   null,
   'America/Los_Angeles',
-  array['Drexel Years'],
   array['Milestone','College'],
   null,
   null
 );
 
-select is(
-  (select collection_names from public.timeline_workspace_with_organization(false) where entry_id=(select entry_id from organized_moment)),
-  array['Drexel Years']::text[],
-  'Timeline workspace returns Collection membership'
-);
 select is(
   (select tag_names from public.timeline_workspace_with_organization(false) where entry_id=(select entry_id from organized_moment)),
   array['College','Milestone']::text[],
@@ -105,7 +99,7 @@ select is(
 
 reset role;
 select ok(
-  not has_function_privilege('anon','public.save_timeline_entry_with_organization(uuid,text,text,text,timestamptz,timestamptz,text,text,text,text[],text[],uuid,integer)','execute'),
+  not has_function_privilege('anon','public.save_timeline_entry_with_organization(uuid,text,text,text,timestamptz,timestamptz,text,text,text,text[],uuid,integer)','execute'),
   'Anonymous Timeline organization writes are denied'
 );
 select ok(

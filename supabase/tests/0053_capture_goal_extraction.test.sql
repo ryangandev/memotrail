@@ -35,7 +35,7 @@ select ok(
   (select goal_entry_id is not null from public.extract_capture_to_goal(
     '98600000-0000-4000-8000-000000000001',1,
     'Learn to sail','A wish I want to make concrete.',
-    'long_term','active','2028-06-01',array['Life plans'],array['Ocean'],
+    'long_term','active','2028-06-01',array['Ocean'],
     array['98600000-0000-4000-8000-000000000002'::uuid]
   )),
   'Extraction creates a Goal through the specialized contract'
@@ -67,20 +67,6 @@ select is(
    )),
   'long_term:active:2028-06-01',
   'Goal-specific intent fields are saved'
-);
-select is(
-  (select count(*)
-   from public.entry_collections as membership
-   join public.collections as collection
-     on collection.id = membership.collection_id
-     and collection.owner_id = membership.owner_id
-   where membership.entry_id = (
-     select target_entry_id from public.entry_links
-     where source_entry_id='98600000-0000-4000-8000-000000000001'
-       and relationship='derived'
-   ) and collection.name='Life plans'),
-  1::bigint,
-  'Goal Collections are saved'
 );
 select is(
   (select count(*)
@@ -121,7 +107,7 @@ select ok(
   (select goal_entry_id is not null from public.extract_capture_to_goal(
     '98600000-0000-4000-8000-000000000001',1,
     'Learn to sail','A wish I want to make concrete.',
-    'long_term','active','2028-06-01',array['Life plans'],array['Ocean'],
+    'long_term','active','2028-06-01',array['Ocean'],
     array['98600000-0000-4000-8000-000000000002'::uuid]
   )),
   'A lost-response retry finds the existing Goal'
@@ -136,7 +122,7 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000116'
 select is(
   (select count(*) from public.extract_capture_to_goal(
     '98600000-0000-4000-8000-000000000001',1,
-    'Foreign Goal','No access','someday','considering',null,'{}','{}','{}'
+    'Foreign Goal','No access','someday','considering',null,'{}','{}'
   )),
   0::bigint,
   'Another owner cannot extract from the Capture'
@@ -146,7 +132,7 @@ reset role;
 select ok(
   not has_function_privilege(
     'anon',
-    'public.extract_capture_to_goal(uuid,integer,text,text,text,text,date,text[],text[],uuid[])',
+    'public.extract_capture_to_goal(uuid,integer,text,text,text,text,date,text[],uuid[])',
     'execute'
   ),
   'Anonymous Goal extraction is denied'

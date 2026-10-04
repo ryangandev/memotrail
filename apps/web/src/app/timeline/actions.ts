@@ -37,7 +37,6 @@ export async function saveTimelineEntry(
     "save_timeline_entry_with_organization",
     {
       p_body: parsed.data.body,
-      p_collection_names: parsed.data.collectionNames,
       p_date_precision: parsed.data.datePrecision,
       p_entry_id: parsed.data.id,
       p_expected_revision: parsed.data.revision,
@@ -131,7 +130,6 @@ export async function trashTimelineEntry(input: {
 }
 
 function refreshTimelinePaths() {
-  revalidatePath("/collections");
   revalidatePath("/timeline");
   revalidatePath("/tags");
   revalidatePath("/search");

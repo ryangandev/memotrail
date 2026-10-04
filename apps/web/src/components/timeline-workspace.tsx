@@ -104,7 +104,6 @@ type GridStyle = CSSProperties & {
 export function TimelineWorkspace({
   birthDate: serverBirthDate,
   birthDateAvailable,
-  collectionOptions,
   defaultTimezone,
   firstTimes,
   homes,
@@ -120,7 +119,6 @@ export function TimelineWorkspace({
 }: {
   birthDate: string | null;
   birthDateAvailable: boolean;
-  collectionOptions: string[];
   defaultTimezone: string;
   firstTimes: FirstTimeEntry[];
   homes: HomeRecord[];
@@ -501,7 +499,6 @@ export function TimelineWorkspace({
 
       {selection?.type === "timeline" ? (
         <TimelineEditor
-          collectionOptions={collectionOptions}
           onTrashed={(id) =>
             setConfirmed((current) => {
               const next = new Map(current);
@@ -524,7 +521,6 @@ export function TimelineWorkspace({
 
       {selection?.type === "home" ? (
         <HomeEditor
-          collectionOptions={collectionOptions}
           defaultTimezone={defaultTimezone}
           home={selection.entry}
           key={selection.entry?.id ?? "new-home-from-timeline"}
@@ -538,7 +534,6 @@ export function TimelineWorkspace({
 
       {selection?.type === "vehicle" ? (
         <VehicleEditor
-          collectionOptions={collectionOptions}
           defaultTimezone={defaultTimezone}
           key={selection.entry?.id ?? "new-vehicle-from-timeline"}
           onClose={closeSelection}
@@ -552,7 +547,6 @@ export function TimelineWorkspace({
 
       {selection?.type === "first-time" ? (
         <FirstTimeEditor
-          collectionOptions={collectionOptions}
           defaultTimezone={defaultTimezone}
           entry={selection.entry}
           key={selection.entry?.id ?? "new-first-time-from-timeline"}
@@ -866,7 +860,6 @@ function TrackRow({
 }
 
 function TimelineEditor({
-  collectionOptions,
   defaultTimezone,
   onTrashed,
   onSaved,
@@ -876,7 +869,6 @@ function TimelineEditor({
   tracks,
   tagOptions,
 }: {
-  collectionOptions: string[];
   defaultTimezone: string;
   onTrashed: (id: string) => void;
   onSaved: (entry: TimelineEntry) => void;
@@ -891,10 +883,6 @@ function TimelineEditor({
   const titleRef = useRef<HTMLInputElement>(null);
   const initialTimezone = entry?.occurredTimezone ?? defaultTimezone;
   const [body, setBody] = useState(entry?.body ?? "");
-  const [collectionInput, setCollectionInput] = useState("");
-  const [collectionNames, setCollectionNames] = useState(
-    entry?.collectionNames ?? [],
-  );
   const originalOccurrence = entry ? entryOccurrence(entry) : undefined;
   const [occurrence, setOccurrence] = useState(() =>
     occurrenceDraft(
@@ -946,7 +934,6 @@ function TimelineEditor({
     }
     const input: TimelineEntryInput = {
       body,
-      collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       datePrecision: resolved.value.datePrecision,
       id: entry?.id ?? null,
       kind,
@@ -1189,18 +1176,7 @@ function TimelineEditor({
 
           <EntryOrganizationEditor
             disabled={isPending}
-            input={collectionInput}
-            kind="collection"
-            names={collectionNames}
-            onChange={setCollectionNames}
-            onInputChange={setCollectionInput}
-            options={collectionOptions}
-          />
-
-          <EntryOrganizationEditor
-            disabled={isPending}
             input={tagInput}
-            kind="tag"
             names={tagNames}
             onChange={setTagNames}
             onInputChange={setTagInput}

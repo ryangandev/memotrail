@@ -28,7 +28,7 @@ test("An Idea creates a linked Goal without changing the source", async ({
   const ownerID = created.data.user.id,
     entryID = randomUUID(),
     photoID = randomUUID(),
-    collectionID = randomUUID();
+    tagID = randomUUID();
   const path = `${ownerID}/${entryID}/${photoID}.png`;
   const bytes = await sharp({
     create: { width: 1, height: 1, channels: 3, background: "#316652" },
@@ -84,8 +84,8 @@ test("An Idea creates a linked Goal without changing the source", async ({
     ).toBeNull();
     expect(
       (
-        await client.from("collections").insert({
-          id: collectionID,
+        await client.from("tags").insert({
+          id: tagID,
           owner_id: ownerID,
           name: "Ideas",
         })
@@ -93,9 +93,9 @@ test("An Idea creates a linked Goal without changing the source", async ({
     ).toBeNull();
     expect(
       (
-        await client.from("entry_collections").insert({
+        await client.from("entry_tags").insert({
           entry_id: entryID,
-          collection_id: collectionID,
+          tag_id: tagID,
           owner_id: ownerID,
         })
       ).error,
@@ -217,7 +217,6 @@ test("An Idea creates a linked Goal without changing the source", async ({
       "occurred_end",
       "date_precision",
       "occurred_timezone",
-      "collections",
       "tags",
       "people",
       "places",

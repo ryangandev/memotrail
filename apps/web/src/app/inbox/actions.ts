@@ -247,7 +247,6 @@ export async function reviewInboxEntry(
       p_photo_place: parsedInput.data.photoPlace ?? null,
       p_primary_location: parsedInput.data.location,
       p_body: parsedInput.data.body,
-      p_collection_names: parsedInput.data.collectionNames,
       p_entry_id: parsedInput.data.id,
       p_item_kind: "entry",
       p_item_subtype: "entry",

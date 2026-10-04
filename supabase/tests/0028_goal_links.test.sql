@@ -11,7 +11,7 @@ insert into public.entries(id,owner_id,title) values
  ('20000000-0000-0000-0000-000000000092',auth.uid(),'Visible progress');
 create function pg_temp.save_goal(links uuid[], id uuid default null, revision integer default null)
 returns uuid language sql as $$
- select entry_id from public.save_goal_entry('Patient learning','Original intention','long_term','active',null,'{}','{}',links,id,revision);
+ select entry_id from public.save_goal_entry('Patient learning','Original intention','long_term','active',null,'{}',links,id,revision);
 $$;
 create temporary table fixture as select pg_temp.save_goal(array[
  '20000000-0000-0000-0000-000000000091'::uuid,'20000000-0000-0000-0000-000000000092'::uuid]) id;

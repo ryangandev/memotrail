@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { Badge } from "@/components/badge";
-import { Button, IconButton } from "@/components/button";
-import { CollectionCard } from "@/components/collection-card";
+import { Button } from "@/components/button";
 import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { EntryPhotoField } from "@/components/entry-photo-field";
@@ -119,8 +118,6 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
   const [editorText, setEditorText] = useState("");
   const [tags, setTags] = useState(["family", "travel"]);
   const [tagInput, setTagInput] = useState("");
-  const [collections, setCollections] = useState(["Early years"]);
-  const [collectionInput, setCollectionInput] = useState("");
   const [searchSample, setSearchSample] = useState("");
   const [searchMessage, setSearchMessage] = useState(
     "Type a query to try this local-only preview.",
@@ -550,27 +547,17 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
         </Specimen>
 
         <Specimen
-          api="kind: collection | tag · names · options · disabled"
+          api="names · input · options · disabled"
           title="EntryOrganizationEditor"
         >
           <div className={styles.formGrid}>
             <EntryOrganizationEditor
               disabled={false}
               input={tagInput}
-              kind="tag"
               names={tags}
               onChange={setTags}
               onInputChange={setTagInput}
               options={["family", "travel", "milestone", "home"]}
-            />
-            <EntryOrganizationEditor
-              disabled={false}
-              input={collectionInput}
-              kind="collection"
-              names={collections}
-              onChange={setCollections}
-              onInputChange={setCollectionInput}
-              options={["Early years", "Family archive", "Travel journals"]}
             />
           </div>
         </Specimen>
@@ -640,7 +627,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="RecordCard is the shared interactive record surface used by Homes, Vehicles, and First Times. Collections use the compact card shown below."
+        description="RecordCard is the shared interactive record surface used by Homes, Vehicles, and First Times."
         id="containers"
         index="05"
         title="Containers and data display"
@@ -665,73 +652,6 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
             </RecordCard>
             <small role="status">{recordMessage}</small>
           </div>
-        </Specimen>
-
-        <Specimen
-          description="Four cards fit in the 1080px Collections content width. Compare occupied, empty, Inbox, and long-title states. Management stays a separate action."
-          id="collection-card-concept"
-          title="Collection card"
-        >
-          <div className={styles.collectionCardGrid}>
-            {[
-              {
-                name: "Early years",
-                entryCount: 12,
-                updatedLabel: "Latest Sep 18",
-              },
-              {
-                name: "Homes and neighborhoods",
-                entryCount: 7,
-                updatedLabel: "Latest Aug 30",
-              },
-              {
-                name: "First times",
-                entryCount: 19,
-                inboxCount: 2,
-                updatedLabel: "Latest Sep 22",
-              },
-              { name: "Family", entryCount: 8, updatedLabel: "Latest Sep 14" },
-              {
-                name: "Notes from my travels",
-                entryCount: 24,
-                updatedLabel: "Latest Sep 12",
-              },
-              {
-                name: "Things I learned",
-                entryCount: 5,
-                updatedLabel: "Latest Aug 08",
-              },
-              {
-                name: "Small good moments",
-                entryCount: 3,
-                updatedLabel: "Latest Sep 02",
-              },
-              { name: "To revisit", entryCount: 0 },
-            ].map((collection) => (
-              <CollectionCard
-                {...collection}
-                href="#collection-card-concept"
-                headingLevel="h4"
-                key={collection.name}
-                manageAction={
-                  <IconButton
-                    label={`Manage ${collection.name}`}
-                    onClick={() =>
-                      notify.info(`Manage ${collection.name}: preview only.`)
-                    }
-                    size="small"
-                    variant="ghost"
-                  >
-                    <Icon name="more" size={17} />
-                  </IconButton>
-                }
-              />
-            ))}
-          </div>
-          <p className={styles.stateNote}>
-            This shared card is also used on the Collections page. Management
-            remains a separate action.
-          </p>
         </Specimen>
 
         <Specimen

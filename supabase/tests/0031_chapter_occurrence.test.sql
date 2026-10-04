@@ -11,9 +11,9 @@ returns uuid language plpgsql as $$
 declare result uuid;
 begin
  if p_legacy then
-  select entry_id into result from public.save_home_entry('Chapter','Original memory',p_start,p_end,p_precision,p_label,'America/Los_Angeles',null,'Test home',null,null,null,null,null,null,'','',p_reason,'{}','{}',p_id,p_revision);
+  select entry_id into result from public.save_home_entry('Chapter','Original memory',p_start,p_end,p_precision,p_label,'America/Los_Angeles',null,'Test home',null,null,null,null,null,null,'','',p_reason,'{}',p_id,p_revision);
  else
-  select entry_id into result from public.save_home_entry_with_occurrence('Chapter','Original memory',p_start,p_end,p_precision,p_label,'America/Los_Angeles',null,'Test home',null,null,null,null,null,null,'','',p_reason,'{}','{}',p_id,p_revision);
+  select entry_id into result from public.save_home_entry_with_occurrence('Chapter','Original memory',p_start,p_end,p_precision,p_label,'America/Los_Angeles',null,'Test home',null,null,null,null,null,null,'','',p_reason,'{}',p_id,p_revision);
  end if;
  return result;
 end; $$;
@@ -47,9 +47,9 @@ returns uuid language plpgsql as $$
 declare result uuid;
 begin
  if p_legacy then
-  select entry_id into result from public.save_vehicle_entry('Chapter','Original memory',p_start,p_end,p_precision,p_label,'America/Los_Angeles','Test make','Test model',2020,'Blue','{}','{}',p_id,p_revision);
+  select entry_id into result from public.save_vehicle_entry('Chapter','Original memory',p_start,p_end,p_precision,p_label,'America/Los_Angeles','Test make','Test model',2020,'Blue','{}',p_id,p_revision);
  else
-  select entry_id into result from public.save_vehicle_entry_with_occurrence('Chapter','Original memory',p_start,p_end,p_precision,p_label,'America/Los_Angeles','Test make','Test model',2020,'Blue','{}','{}',p_id,p_revision);
+  select entry_id into result from public.save_vehicle_entry_with_occurrence('Chapter','Original memory',p_start,p_end,p_precision,p_label,'America/Los_Angeles','Test make','Test model',2020,'Blue','{}',p_id,p_revision);
  end if;
  return result;
 end; $$;

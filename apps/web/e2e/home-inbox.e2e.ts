@@ -189,7 +189,7 @@ test("Home previews the Inbox while Inbox remains a focused organization workspa
     await expect(
       review.getByRole("complementary", { name: "AI suggestions" }),
     ).toHaveCount(0);
-    const tags = review.locator('fieldset[data-kind="tag"]');
+    const tags = review.getByRole("group", { name: "Tags", exact: true });
     const photos = review.getByRole("region", {
       name: "Photo date suggestions",
     });

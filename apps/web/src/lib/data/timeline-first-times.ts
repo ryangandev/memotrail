@@ -20,7 +20,6 @@ export function includeUnplacedFirstTimes(
     .filter((entry) => entry.occurredStart && !placedIds.has(entry.id))
     .map((entry) => ({
       body: entry.body,
-      collectionNames: entry.collectionNames,
       datePrecision: entry.datePrecision,
       id: entry.id,
       itemKind: "entry",

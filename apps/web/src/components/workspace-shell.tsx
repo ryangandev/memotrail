@@ -25,7 +25,6 @@ import type { Viewer } from "@/lib/data/inbox";
 import { SIDEBAR_COOKIE_NAME } from "@/lib/sidebar-preference";
 
 export type WorkspaceDestination =
-  | "collections"
   | "explore"
   | "history"
   | "home"
@@ -92,12 +91,6 @@ const recordNavigation: NavigationItem[] = [
 ];
 
 const organizationNavigation: NavigationItem[] = [
-  {
-    destination: "collections",
-    href: "/collections",
-    icon: "archive",
-    label: "Collections",
-  },
   { destination: "tags", href: "/tags", icon: "tag", label: "Tags" },
   { destination: "trash", href: "/trash", icon: "trash", label: "Trash" },
 ];
@@ -125,7 +118,7 @@ const mobileMoreGroups: { label: string; items: NavigationItem[] }[] = [
     items: [mapNavigation],
   },
   { label: "Focused views", items: recordNavigation },
-  { label: "Organize", items: organizationNavigation.slice(0, 2) },
+  { label: "Organize", items: organizationNavigation.slice(0, 1) },
   {
     label: "Archive and account",
     items: [
@@ -135,7 +128,7 @@ const mobileMoreGroups: { label: string; items: NavigationItem[] }[] = [
         icon: "clock",
         label: "Version history",
       },
-      organizationNavigation[2],
+      organizationNavigation[1],
       {
         destination: "settings",
         href: "/settings",
@@ -459,7 +452,6 @@ function destinationForPathname(pathname: string): WorkspaceDestination {
   if (pathname.startsWith("/people")) return "people";
   if (pathname.startsWith("/vehicles")) return "vehicles";
   if (pathname.startsWith("/first-times")) return "first-times";
-  if (pathname.startsWith("/collections")) return "collections";
   if (pathname.startsWith("/tags")) return "tags";
   if (pathname.startsWith("/trash")) return "trash";
   return "library";

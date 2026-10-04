@@ -35,7 +35,7 @@ export type HomeStage = {
 };
 
 export type HomeSnapshot = {
-  collectionCount: number;
+  tagCount: number;
   currentStageCount: number;
   currentStages: HomeStage[];
   entryCount: number;
@@ -159,11 +159,11 @@ function parseHomeRow(value: unknown): HomeSnapshot | null {
   const recentEntries = parseHomeEntries(row.recent_entries);
   const currentStages = parseCurrentStages(row.current_stages);
   const counts = [
-    row.collection_count,
     row.current_stage_count,
     row.entry_count,
     row.first_time_count,
     row.inbox_count,
+    row.tag_count,
   ].map(safeCount);
 
   if (
@@ -177,15 +177,15 @@ function parseHomeRow(value: unknown): HomeSnapshot | null {
   }
 
   return {
-    collectionCount: counts[0]!,
-    currentStageCount: counts[1]!,
+    currentStageCount: counts[0]!,
     currentStages,
-    entryCount: counts[2]!,
-    firstTimeCount: counts[3]!,
-    inboxCount: counts[4]!,
+    entryCount: counts[1]!,
+    firstTimeCount: counts[2]!,
+    inboxCount: counts[3]!,
     profileDisplayName: row.profile_display_name,
     recentEntries,
     snapshotDate: row.snapshot_date,
+    tagCount: counts[4]!,
   };
 }
 

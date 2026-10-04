@@ -26,7 +26,7 @@ The interface is initially English, while Entry content and search support Engli
 
 MemoTrail centers on Entries.
 Quick Capture creates an unreviewed Entry in Inbox; organizing it saves that Entry to Library without asking for a type.
-Notes, journals, reflections, lessons, ideas, stories, memories, milestones, and trips are descriptive tags or Collections when the user wants them.
+Notes, journals, reflections, lessons, ideas, stories, memories, milestones, and trips are descriptive tags when the user wants them.
 They do not change the Entry's structure.
 
 Focused records keep structure only when the experience needs specific fields or actions.
@@ -35,7 +35,7 @@ Timeline has an intentional point Moment and an interval Period, plus spans from
 An Entry's date alone does not put it on Timeline.
 Timeline tracks control presentation, not the record's identity.
 
-Every Entry may have writing, best-known time, media, Collections, tags, links, history, and retrieval behavior where those capabilities make sense.
+Every Entry may have writing, best-known time, media, tags, links, history, and retrieval behavior where those capabilities make sense.
 Focused forms add typed facts to the same record without duplicating its common content.
 Cross-form actions create and link another record rather than silently changing an existing record's identity.
 
@@ -80,10 +80,10 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - Voice capture produces editable text and never retains the original audio.
 - Every new free-form Capture enters Inbox, even when AI suggestions are available.
 - Inbox review keeps AI suggestions hidden for now; people organize the Entry manually.
-- AI suggestions are paused; retained implementation may suggest title, Collections, tags, date, and photo-derived date or Location context when the product is re-enabled.
+- AI suggestions are paused; retained implementation may suggest title, tags, date, and photo-derived date or Location context when the product is re-enabled.
 - While paused, new Captures and their photos are not processed for suggestions, even when earlier AI consent remains saved.
 - Suggestions remain editable and require explicit adoption.
-- AI may propose a Collection but cannot create it without confirmation.
+- AI may propose a tag but cannot add it without confirmation.
 - The Capture remains in Inbox until the user selects `Save to Library`, completes another explicit organization action, or moves it to Trash.
 - An unwanted Capture can move directly from Inbox review to Trash before it is organized, with confirmation and the normal restore path.
 - Dashboard owns the persistent Quick Capture surface and shows up to three recent captures waiting for organization. Inbox is the dedicated review workspace and relies on the global New Entry action for additional capture.
@@ -97,9 +97,10 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 
 ## Organization, history, and relationships
 
-- An Entry may belong to several Collections and tags.
-- Collections are curated, browsable groupings of records.
-- Tags are lightweight descriptors for filtering and discovery.
+- An Entry may have several tags.
+- Tags are the one organization label: they group related Entries, such as travel, family, or a trip, for browsing, filtering, and discovery.
+- MemoTrail has no separate Collections.
+  Each earlier Collection became a tag with the same name and kept its Entries; older Collection links open Tags, and an older Library Collection filter reads as a tag filter.
 - People are reusable Entities linked to other Wiki Items, not alternate tags.
 - Locations are private address and coordinate snapshots owned by individual Entries, not Library items or reusable personal records.
 - A Location does not require a personal name; an Entry, Home, Vehicle, or First Time can carry its address or coordinates.
@@ -107,23 +108,22 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - Library is the primary all-items entry point for the Life Wiki.
   Its default browser presents organized Entries, Entities, and Goals as paginated rows and opens focused records in their own views.
   Unreviewed captures remain in Inbox and do not appear in the default Library browser or its item count until `Save to Library`.
-  Library search also finds Inbox captures, labels them clearly, and supports record, date, Collection, and tag filters with match context.
+  Library search also finds Inbox captures, labels them clearly, and supports record, date, and tag filters with match context.
   Library avoids duplicating the sidebar's focused and organizing destinations; the global Version history index has a link below Library results.
 - Opening a general Wiki Item shows its current content and primary actions first.
   Version history is an explicit secondary action, while focused records open their own read-only detail pages.
   A pencil-and-Edit action changes the fields on that detail page into an inline form; Add remains a modal creation flow.
 - Current Wiki Item detail supports moving the item to Trash, where it remains restorable.
-- Collections and tags are created and managed from separate Library destinations without a second in-page switcher, and remain available in every compatible Wiki Item editor.
-- Collection and tag management opens in viewport-level dialogs. The Tags Library uses compact usage-count badges that open tag management, recent linked Entries, and a path to the complete filtered result set.
-- Renaming a Collection or tag preserves its identity and linked Wiki Items.
-- Moving a Collection to Trash never deletes its Wiki Items or photos.
+- Tags are created and managed from the Tags destination and remain available in every compatible Wiki Item editor.
+- Tag management opens in viewport-level dialogs. The Tags Library uses compact usage-count badges that open tag management, recent linked Entries, and a path to the complete filtered result set.
+- Renaming a tag preserves its identity and linked Wiki Items.
 - A used tag must be merged into another tag or removed from its Entries before deletion, so organization is never silently lost.
-- Web does not offer general links between Entries, because tags, Collections, People, and Goals already connect related records.
+- Web does not offer general links between Entries, because tags, People, and Goals already connect related records.
   Entries stay connected through purpose-specific links: a Person's Connected Items, a Goal's Related Items, and source links such as Create linked Goal or the First Time a Goal achievement creates.
   General links saved earlier remain in the data, version history, and export, but the Item page no longer lists them.
 - Reusable People are canonical Entity Wiki Items with typed detail records and may link to many other Wiki Items.
 - Important content, organization, relationship, specialized-field, and photo-membership changes remain recoverable through version history.
-- Adding or removing photos never makes an open First Time, Home, Vehicle, or Goal editor stale: its Save, Move to Trash, and Bucket List achievement still apply.
+- Adding or removing photos never makes an open First Time, Home, Vehicle, or Goal editor stale: its Save, Move to Trash, and Goal achievement still apply.
   Writing or other content changed elsewhere since the editor opened still reports a conflict instead of being overwritten.
 - Restoring history creates a new revision and does not erase later history.
 - Historical versions with an unsupported format remain viewable, with an explanation that they cannot be restored.
@@ -134,7 +134,7 @@ Earlier AI requirements and exploratory directions remain in the [AI direction r
 
 - One search experience supports literal keyword search; the AI question action is paused.
 - Keyword search covers canonical Wiki Items, including People, and uses linked Location data as searchable context.
-- Filters include date, record category, focused form, Collection, and tag where each applies.
+- Filters include date, record category, focused form, and tag where each applies.
 - Search results explain matches and open the original source.
 - AI answers are grounded in bounded source evidence and cite the Entries used.
 - The original Entry is never changed by an AI answer.
@@ -166,11 +166,11 @@ Dashboard is ordered around:
 1. A personal greeting and compact archive counts linking to their destinations.
 2. Quick Capture alongside up to three captures ready to organize.
 3. A quiet resurfaced memory alongside current life chapters.
-4. Full-width Recent Entries with single-line titles and summaries, Collection prefixes, and optional tags.
+4. Full-width Recent Entries with single-line titles and summaries and optional tags.
 
 Narrow screens and iOS stack these sections in the same reading order.
 Search stays available in the Web bottom dock, and in the header of each iOS primary tab as a shortcut to Library.
-Archive counts open Timeline, Library, First Times, Collections, or Inbox; a capture ready to organize opens its review, and a current chapter opens its Timeline record.
+Archive counts open Timeline, Library, First Times, Tags, or Inbox; a capture ready to organize opens its review, and a current chapter opens its Timeline record.
 
 Resurfacing uses organized, active, dated Entries only.
 It prefers the nearest prior On This Day match and otherwise uses a stable daily rotation of older Entries.
@@ -181,7 +181,7 @@ Inbox content, Trash, and Life Stages do not appear as resurfaced memory cards.
 ### First Times
 
 A First Time is a focused Entry form.
-It requires only a title and accepts the full date-precision model, optional writing, photos, Location, People, Goal, Collections, tags, and Timeline context.
+It requires only a title and accepts the full date-precision model, optional writing, photos, Location, People, Goal, tags, and Timeline context.
 It is created intentionally from Timeline or the First Times view.
 An existing Entry may be linked as source material without changing that Entry.
 
@@ -193,7 +193,7 @@ An absent end means that relationship is current, not that the Entity is automat
 Duration labels must not imply more precision than the recorded dates.
 Property operations, vehicle maintenance, fuel, expenses, insurance, and document storage are outside the current scope.
 
-### Goals, Bucket List, and Ideas
+### Goals and Ideas
 
 Goals are low-pressure Entries with Short-term, Long-term, or Someday horizons and Considering, Active, Paused, Achieved, or Let Go states.
 They may have a target date, progress notes, and related Entries, but never require a percentage, subtasks, deadlines, overdue warnings, or productivity scores.
@@ -201,8 +201,7 @@ They may have a target date, progress notes, and related Entries, but never requ
 An idea remains an Entry until the user explicitly creates a linked Goal from it.
 The Entry remains intact as the source.
 
-Bucket List items are Goals with a stable Collection role and Someday default.
-An explicit achievement action may atomically mark one Achieved and create a linked First Time using the best-known date without copying the Goal writing.
+An explicit achievement action may atomically mark any Goal that is not yet Achieved as Achieved and create a linked First Time using the best-known date without copying the Goal writing.
 
 ### Locations and People
 
@@ -236,12 +235,12 @@ iOS appearance is an app-local choice with the same three options.
 
 Mobile uses Dashboard, Inbox, Timeline, Library, and More in its bottom navigation.
 Library opens with the same all-items Life Wiki browser as Web, including debounced keyword search and Kind filters.
-More opens a compact menu for Map, focused record views, Collections, tags, archive tools, and Settings.
+More opens a compact menu for Map, focused record views, Tags, archive tools, and Settings.
 Settings is also reached from the profile control.
 Settings lets the user choose a preferred name for Dashboard greetings, or clear it to use the Google account name.
 
 Desktop treats Library as a primary destination beside Dashboard, Timeline, and Map; Search is part of Library.
-Its sidebar omits Inbox, keeps optional focused views separate from Collections, tags, Trash, and the single Settings entry point.
+Its sidebar omits Inbox, keeps optional focused views separate from Tags, Trash, and the single Settings entry point.
 The desktop sidebar can collapse to a compact icon rail from the top-bar panel control; the width change animates, and the choice persists in this browser without changing mobile navigation.
 Command B (Control B on Windows) also toggles the desktop sidebar when focus is outside text inputs and editors; inside the rich-text editor it retains its Bold behavior.
 The collapsed rail shows the MemoTrail logo without its wordmark above square navigation targets and keeps keyboard focus indicators inside the controls.
@@ -292,4 +291,4 @@ Deferred or undecided work includes:
 - Chinese interface localization;
 - Sign in with Apple and App Store distribution;
 - a native macOS client;
-- the default Collection set, which should evolve from real use rather than an invented taxonomy.
+- a starter tag set, which should evolve from real use rather than an invented taxonomy.

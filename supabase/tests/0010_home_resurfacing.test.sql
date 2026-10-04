@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(28);
+select plan(27);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -220,26 +220,11 @@ values
     null
   );
 
-insert into public.collections (id, owner_id, name, sort_order)
-values (
-  '88000000-0000-0000-0000-000000000001',
-  '10000000-0000-0000-0000-000000000001',
-  'Anniversaries',
-  90
-);
-
 insert into public.tags (id, owner_id, name)
 values (
   '89000000-0000-0000-0000-000000000001',
   '10000000-0000-0000-0000-000000000001',
   'remember-this'
-);
-
-insert into public.entry_collections (entry_id, collection_id, owner_id)
-values (
-  '87000000-0000-0000-0000-000000000001',
-  '88000000-0000-0000-0000-000000000001',
-  '10000000-0000-0000-0000-000000000001'
 );
 
 insert into public.entry_tags (entry_id, tag_id, owner_id)
@@ -296,11 +281,6 @@ select is(
   (select item_subtype from public.home_resurfaced_memory('2026-09-03', 'America/Los_Angeles')),
   'first_time',
   'The selected memory preserves its Wiki Item subtype'
-);
-select is(
-  (select collection_names ->> 0 from public.home_resurfaced_memory('2026-09-03', 'America/Los_Angeles')),
-  'Anniversaries',
-  'The selected memory includes active Collections'
 );
 select is(
   (select tag_names ->> 0 from public.home_resurfaced_memory('2026-09-03', 'America/Los_Angeles')),

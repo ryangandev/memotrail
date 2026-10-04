@@ -202,10 +202,6 @@
   text-overflow: ellipsis;
 }
 
-.collectionPrefix {
-  color: var(--mt-color-ink-muted);
-}
-
 .recent .entryCard p {
   display: block;
   margin: 0;

@@ -58,14 +58,12 @@ import type { LocationSelection } from "@/lib/locations/location";
 import { countLabel } from "@/lib/count-label";
 
 export function FirstTimesWorkspace({
-  collectionOptions,
   entries,
   initialEntryId = null,
   loadError,
   ownerId,
   tagOptions,
 }: {
-  collectionOptions: string[];
   entries: FirstTimeEntry[];
   initialEntryId?: string | null;
   loadError: string | null;
@@ -160,7 +158,6 @@ export function FirstTimesWorkspace({
 
       {selectedEntry !== undefined ? (
         <FirstTimeEditor
-          collectionOptions={collectionOptions}
           entry={selectedEntry}
           key={selectedEntry?.id ?? "new-first-time"}
           onClose={() => {
@@ -255,15 +252,6 @@ function FirstTimeCard({
                 In Inbox
               </Badge>
             ) : null}
-            {entry.collectionNames.slice(0, 2).map((name) => (
-              <Badge
-                key={`collection:${name.toLocaleLowerCase()}`}
-                size="micro"
-                tone="neutral"
-              >
-                {name}
-              </Badge>
-            ))}
             {entry.tagNames.slice(0, 2).map((name) => (
               <Badge
                 key={`tag:${name.toLocaleLowerCase()}`}
@@ -282,7 +270,6 @@ function FirstTimeCard({
 }
 
 export function FirstTimeEditor({
-  collectionOptions,
   defaultTimezone,
   entry,
   onClose,
@@ -292,7 +279,6 @@ export function FirstTimeEditor({
   presentation = "dialog",
   tagOptions,
 }: {
-  collectionOptions: string[];
   defaultTimezone?: string;
   entry: FirstTimeEntry | null;
   onClose: () => void;
@@ -306,10 +292,6 @@ export function FirstTimeEditor({
   const requestConfirmation = useConfirmationDialog();
   const titleRef = useRef<HTMLInputElement>(null);
   const [body, setBody] = useState(entry?.body ?? "");
-  const [collectionInput, setCollectionInput] = useState("");
-  const [collectionNames, setCollectionNames] = useState(
-    entry?.collectionNames ?? [],
-  );
   const [currentId, setCurrentId] = useState(entry?.id ?? null);
   const [currentRevision, setCurrentRevision] = useState(
     entry?.revision ?? null,
@@ -379,7 +361,6 @@ export function FirstTimeEditor({
     }
     const input: FirstTimeEntryInput = {
       body,
-      collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       datePrecision: resolved.value.datePrecision,
       id: currentId,
       occurredLabel: resolved.value.occurredLabel,
@@ -427,7 +408,6 @@ export function FirstTimeEditor({
           title: parsed.data.title,
           body: parsed.data.body,
           location,
-          collectionNames: parsed.data.collectionNames,
           tagNames: parsed.data.tagNames,
           datePrecision: parsed.data.datePrecision,
           occurredStart: parsed.data.occurredStart,
@@ -644,18 +624,7 @@ export function FirstTimeEditor({
 
           <EntryOrganizationEditor
             disabled={isPending}
-            input={collectionInput}
-            kind="collection"
-            names={collectionNames}
-            onChange={setCollectionNames}
-            onInputChange={setCollectionInput}
-            options={collectionOptions}
-          />
-
-          <EntryOrganizationEditor
-            disabled={isPending}
             input={tagInput}
-            kind="tag"
             names={tagNames}
             onChange={setTagNames}
             onInputChange={setTagInput}

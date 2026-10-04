@@ -25,7 +25,7 @@ select ok(
     '98500000-0000-4000-8000-000000000001',1,
     'Pearl','Quiet drives around the bay.',
     '2025-06-01 07:00:00+00',null,'month',null,'America/Los_Angeles',
-    'Toyota','RAV4',2025,'White Pearl','{}',array['EV']
+    'Toyota','RAV4',2025,'White Pearl',array['EV']
   )),
   'Extraction creates a Vehicle through the specialized contract'
 );
@@ -71,7 +71,7 @@ select ok(
     '98500000-0000-4000-8000-000000000001',1,
     'Pearl','Quiet drives around the bay.',
     '2025-06-01 07:00:00+00',null,'month',null,'America/Los_Angeles',
-    'Toyota','RAV4',2025,'White Pearl','{}',array['EV']
+    'Toyota','RAV4',2025,'White Pearl',array['EV']
   )),
   'A lost-response retry finds the existing Vehicle'
 );
@@ -86,7 +86,7 @@ select is(
   (select count(*) from public.extract_capture_to_vehicle(
     '98500000-0000-4000-8000-000000000001',1,
     'Foreign Vehicle','No access',null,null,'unknown',null,'UTC',
-    null,null,null,null,'{}','{}'
+    null,null,null,null,'{}'
   )),
   0::bigint,
   'Another owner cannot extract from the Capture'
@@ -96,7 +96,7 @@ reset role;
 select ok(
   not has_function_privilege(
     'anon',
-    'public.extract_capture_to_vehicle(uuid,integer,text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[],text[])',
+    'public.extract_capture_to_vehicle(uuid,integer,text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[])',
     'execute'
   ),
   'Anonymous Vehicle extraction is denied'

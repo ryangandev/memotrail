@@ -30,7 +30,6 @@ export type HomeRecord = {
   attachments: HomeAttachment[];
   body: string;
   city: string | null;
-  collectionNames: string[];
   country: string | null;
   datePrecision: HomeDatePrecision;
   id: string;
@@ -130,7 +129,6 @@ function parseHomeRow(value: unknown): HomeRecord | null {
     !nullableString(value.place_notes) ||
     !nullableString(value.timeline_track_id) ||
     !nullableString(value.timeline_track_name) ||
-    !stringArray(value.collection_names) ||
     !stringArray(value.tag_names) ||
     typeof value.total_count !== "number"
   ) {
@@ -147,7 +145,6 @@ function parseHomeRow(value: unknown): HomeRecord | null {
     attachments,
     body: value.body,
     city: value.city,
-    collectionNames: value.collection_names,
     country: value.country,
     datePrecision: value.date_precision as HomeDatePrecision,
     id: value.entry_id,

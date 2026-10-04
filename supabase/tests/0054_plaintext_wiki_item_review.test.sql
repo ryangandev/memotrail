@@ -31,7 +31,7 @@ select is(
   (select revision from public.review_wiki_item_with_photo_place(
     '98700000-0000-4000-8000-000000000001',1,
     'Morning pages','Edited on iPhone.','entry','entry',
-    null,'UTC','{}',array['Morning'],true,null,null,'unknown',null
+    null,'UTC',array['Morning'],true,null,null,'unknown',null
   )),
   2,
   'A plaintext client classifies and reviews a raw Capture'
@@ -62,7 +62,7 @@ select throws_ok(
   $$select * from public.review_wiki_item_with_photo_place(
     '98700000-0000-4000-8000-000000000001',2,
     'Morning pages','Try to change Kind','entry','first_time',
-    null,'UTC','{}','{}',true,null,null,'unknown',null
+    null,'UTC','{}',true,null,null,'unknown',null
   )$$,
   '22023',
   'invalid_item_classification',
@@ -74,7 +74,7 @@ select is(
   (select count(*) from public.review_wiki_item_with_photo_place(
     '98700000-0000-4000-8000-000000000001',2,
     'Foreign','No access','entry','entry',
-    null,'UTC','{}','{}',true,null,null,'unknown',null
+    null,'UTC','{}',true,null,null,'unknown',null
   )),
   0::bigint,
   'Another owner cannot review the Wiki Item'
@@ -84,7 +84,7 @@ reset role;
 select ok(
   not has_function_privilege(
     'anon',
-    'public.review_wiki_item_with_photo_place(uuid,integer,text,text,text,text,timestamp with time zone,text,text[],text[],boolean,timestamp with time zone,text,text,jsonb)',
+    'public.review_wiki_item_with_photo_place(uuid,integer,text,text,text,text,timestamp with time zone,text,text[],boolean,timestamp with time zone,text,text,jsonb)',
     'execute'
   ),
   'Anonymous plaintext semantic review is denied'

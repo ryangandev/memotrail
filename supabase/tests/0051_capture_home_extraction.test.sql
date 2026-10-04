@@ -18,12 +18,8 @@ insert into public.entries(
   'America/Los_Angeles'
 );
 
-insert into public.collections(id,owner_id,name) values
-  ('98400000-0000-4000-8000-000000000010','10000000-0000-0000-0000-000000000111','California');
 insert into public.tags(id,owner_id,name) values
   ('98400000-0000-4000-8000-000000000011','10000000-0000-0000-0000-000000000111','Moving');
-insert into public.entry_collections(entry_id,collection_id,owner_id) values
-  ('98400000-0000-4000-8000-000000000001','98400000-0000-4000-8000-000000000010','10000000-0000-0000-0000-000000000111');
 insert into public.entry_tags(entry_id,tag_id,owner_id) values
   ('98400000-0000-4000-8000-000000000001','98400000-0000-4000-8000-000000000011','10000000-0000-0000-0000-000000000111');
 
@@ -34,11 +30,6 @@ select is(
   public.capture_extraction_source('98400000-0000-4000-8000-000000000001')->>'title',
   'Moved to Oakland',
   'The dedicated form can load the owned raw Capture'
-);
-select is(
-  public.capture_extraction_source('98400000-0000-4000-8000-000000000001')->'collection_names'->>0,
-  'California',
-  'The extraction source includes active Collections'
 );
 select is(
   public.capture_extraction_source('98400000-0000-4000-8000-000000000001')->'tag_names'->>0,
@@ -52,8 +43,7 @@ select ok(
     'Lake Merritt apartment','The apartment near the lake.',
     '2024-05-01 07:00:00+00',null,'month',null,'America/Los_Angeles',
     null,'Lake Merritt apartment','123 Grand Ave','Oakland','California','US',
-    37.8116,-122.2646,null,'A new job',null,
-    array['California'],array['Moving']
+    37.8116,-122.2646,null,'A new job',null,array['Moving']
   )),
   'Extraction creates a Home through the specialized contract'
 );
@@ -117,8 +107,7 @@ select ok(
     'Lake Merritt apartment','The apartment near the lake.',
     '2024-05-01 07:00:00+00',null,'month',null,'America/Los_Angeles',
     null,'Lake Merritt apartment','123 Grand Ave','Oakland','California','US',
-    37.8116,-122.2646,null,'A new job',null,
-    array['California'],array['Moving']
+    37.8116,-122.2646,null,'A new job',null,array['Moving']
   )),
   'A lost-response retry finds the existing Home'
 );
@@ -133,7 +122,7 @@ select is(
   (select count(*) from public.extract_capture_to_home(
     '98400000-0000-4000-8000-000000000001',1,
     'Foreign Home','No access',null,null,'unknown',null,'UTC',
-    null,'Foreign Place',null,null,null,null,null,null,null,null,null,'{}','{}'
+    null,'Foreign Place',null,null,null,null,null,null,null,null,null,'{}'
   )),
   0::bigint,
   'Another owner cannot extract from the Capture'
@@ -147,7 +136,7 @@ select ok(
 select ok(
   not has_function_privilege(
     'anon',
-    'public.extract_capture_to_home(uuid,integer,text,text,timestamp with time zone,timestamp with time zone,text,text,text,uuid,text,text,text,text,text,numeric,numeric,text,text,text,text[],text[])',
+    'public.extract_capture_to_home(uuid,integer,text,text,timestamp with time zone,timestamp with time zone,text,text,text,uuid,text,text,text,text,text,numeric,numeric,text,text,text,text[])',
     'execute'
   ),
   'Anonymous Home extraction is denied'

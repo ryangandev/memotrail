@@ -386,7 +386,6 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       p_item_subtype: "entry",
       p_occurred_start: raceBefore.occurred_start,
       p_occurred_timezone: raceBefore.occurred_timezone,
-      p_collection_names: [],
       p_tag_names: [],
       p_mark_done: false,
       p_occurred_end: null,

@@ -1,4 +1,5 @@
-import { parseOrganizationNames } from "./inbox-review";
+import { tagNamesLimitMessage } from "./organization";
+import { parseTagNames } from "./inbox-review";
 import {
   parseFirstTimeEntryInput,
   firstTimeDatePrecisions,
@@ -27,7 +28,6 @@ export type GoalAchievementPrecision =
 
 export type GoalEntryInput = {
   body: string;
-  collectionNames: string[];
   horizon: GoalHorizon;
   id: string | null;
   relatedEntryIds: string[];
@@ -68,7 +68,6 @@ export function parseGoalExtractionInput(
   const parsed = parseGoalEntryInput({
     ...input,
     body: "",
-    collectionNames: [],
     id: null,
     revision: null,
     tagNames: [],
@@ -103,8 +102,7 @@ export function parseGoalEntryInput(input: unknown): Parsed<GoalEntryInput> {
 
   const title = normalizedString(input.title);
   const body = normalizedString(input.body);
-  const collectionNames = parseOrganizationNames(input.collectionNames, 20, 80);
-  const tagNames = parseOrganizationNames(input.tagNames, 50, 60);
+  const tagNames = parseTagNames(input.tagNames);
   const relatedEntryIds = normalizedUuidArray(input.relatedEntryIds);
 
   if (!title) return invalid("Add a title for this Goal.");
@@ -126,11 +124,8 @@ export function parseGoalEntryInput(input: unknown): Parsed<GoalEntryInput> {
   ) {
     return invalid("Choose a valid reflective state.");
   }
-  if (!collectionNames) {
-    return invalid("Use up to 20 Collections with names under 80 characters.");
-  }
   if (!tagNames) {
-    return invalid("Use up to 50 tags with names under 60 characters.");
+    return invalid(tagNamesLimitMessage);
   }
   if (!relatedEntryIds || relatedEntryIds.length > goalRelatedEntryLimit) {
     return invalid(`Relate up to ${goalRelatedEntryLimit} Items.`);
@@ -147,7 +142,6 @@ export function parseGoalEntryInput(input: unknown): Parsed<GoalEntryInput> {
   return {
     data: {
       body,
-      collectionNames,
       horizon: input.horizon as GoalHorizon,
       id: input.id as string | null,
       relatedEntryIds,
@@ -179,7 +173,6 @@ export function parseGoalAchievementInput(
     ...input,
     title: "Achievement",
     body: "",
-    collectionNames: [],
     tagNames: [],
     occurredTimezone: input.occurredStart ? occurredTimezone : null,
   });

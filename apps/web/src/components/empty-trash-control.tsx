@@ -130,8 +130,7 @@ export function EmptyTrashControl({
             <>
               This includes all Trash pages, not just the visible items. Their
               records, associated history and private photos will be permanently
-              removed. Removing a Collection only removes its grouping, not
-              active Entries. This cannot be undone.
+              removed. This cannot be undone.
             </>
           }
           eyebrow={<>Permanent action</>}

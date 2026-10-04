@@ -28,13 +28,11 @@ export default async function InboxPage({
 }
 
 function Workspace({
-  collectionOptions,
   entries,
   loadError,
   tagOptions,
   focusedEntryId,
 }: {
-  collectionOptions: string[];
   entries: InboxEntry[];
   focusedEntryId: string | null;
   loadError: string | null;
@@ -81,7 +79,6 @@ function Workspace({
           ) : null}
 
           <EntryReviewList
-            collectionOptions={collectionOptions}
             entries={entries}
             initialEntryID={focusedEntryId}
             key={focusedEntryId ?? "inbox"}

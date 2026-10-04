@@ -19,7 +19,7 @@ $$;
 create function pg_temp.review(proposal jsonb, rev integer default null, done boolean default false) returns bigint language sql as $$
  select count(*) from public.review_wiki_item_with_photo_place(
  '93000000-0000-4000-8000-000000000001',coalesce(rev,(select revision from public.entries where id='93000000-0000-4000-8000-000000000001'),1),
- 'Photo memory','My edited words','entry','entry',null,'UTC','{}','{}',done,null,null,'unknown',proposal);
+ 'Photo memory','My edited words','entry','entry',null,'UTC','{}',done,null,null,'unknown',proposal);
 $$;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000093',true);
@@ -62,7 +62,7 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000094'
 select ok(not public.lock_photo_place_source('93000000-0000-4000-8000-000000000001','93000000-0000-4000-8000-000000000002'),'Narrow source helper never exposes a foreign photo');
 select is(pg_temp.review(pg_temp.proposal()),0::bigint,'Another owner cannot change the Entry or create an orphan Location');
 reset role;
-select ok(not has_function_privilege('anon','public.review_wiki_item_with_photo_place(uuid,integer,text,text,text,text,timestamptz,text,text[],text[],boolean,timestamptz,text,text,jsonb)','execute'),'Anonymous adoption denied');
+select ok(not has_function_privilege('anon','public.review_wiki_item_with_photo_place(uuid,integer,text,text,text,text,timestamptz,text,text[],boolean,timestamptz,text,text,jsonb)','execute'),'Anonymous adoption denied');
 select ok(not has_function_privilege('anon','public.lock_photo_place_source(uuid,uuid)','execute'),'Anonymous source locks denied');
 select * from finish();
 rollback;

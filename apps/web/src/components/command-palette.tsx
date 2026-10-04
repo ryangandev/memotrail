@@ -51,17 +51,10 @@ const commands: Command[] = [
     label: "Library",
   },
   {
-    description: "Browse your curated chapters",
-    href: "/collections",
-    icon: "archive",
-    keywords: "chapters organize",
-    label: "Collections",
-  },
-  {
-    description: "Browse lightweight archive filters",
+    description: "Browse groups across your archive",
     href: "/tags",
     icon: "tag",
-    keywords: "labels filter organize",
+    keywords: "labels filter organize collections groups",
     label: "Tags",
   },
   {

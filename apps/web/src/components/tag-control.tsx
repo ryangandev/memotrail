@@ -11,29 +11,26 @@ import {
   deleteUnusedTag,
   loadTagEntryPreviews,
   mergeTags,
-  saveOrganization,
-  trashCollection,
+  saveTag,
 } from "@/app/organization/actions";
 import { Icon } from "@/components/icon";
 import {
-  validOrganizationInput,
-  type OrganizationItem,
-  type OrganizationKind,
+  tagNameLengthLimit,
+  validTagInput,
   type TagEntryPreviewResult,
+  type TagItem,
 } from "@/lib/data/organization";
-import styles from "./organization-control.module.css";
+import styles from "./tag-control.module.css";
 import { countLabel } from "@/lib/count-label";
 
-export function OrganizationControl({
+export function TagControl({
   item,
   items = [],
-  kind,
   trigger,
   triggerClassName,
 }: {
-  item?: OrganizationItem;
-  items?: OrganizationItem[];
-  kind: OrganizationKind;
+  item?: TagItem;
+  items?: TagItem[];
   trigger?: ReactNode;
   triggerClassName?: string;
 }) {
@@ -42,23 +39,19 @@ export function OrganizationControl({
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState(item?.name ?? "");
-  const [order, setOrder] = useState(String(item?.sort_order ?? 0));
   const [targetId, setTargetId] = useState("");
   const [tagPreview, setTagPreview] = useState<TagEntryPreviewResult | null>(
     null,
   );
-  const label = kind === "collection" ? "Collection" : "Tag";
   const mergeTargets = items.filter((candidate) => candidate.id !== item?.id);
   const input = {
     id: item?.id ?? null,
-    kind,
     name,
-    order: kind === "tag" ? 0 : Number(order),
     revision: item?.revision ?? null,
   } as const;
 
   useEffect(() => {
-    if (!open || kind !== "tag" || !item) return;
+    if (!open || !item) return;
     let active = true;
 
     if (item.entry_count === 0) {
@@ -72,44 +65,27 @@ export function OrganizationControl({
     return () => {
       active = false;
     };
-  }, [item, kind, open]);
+  }, [item, open]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy || !validOrganizationInput(input)) return;
-    await run(
-      () => saveOrganization(input),
-      `${label} ${item ? "saved" : "created"}.`,
-    );
+    if (busy || !validTagInput(input)) return;
+    await run(() => saveTag(input), `Tag ${item ? "saved" : "created"}.`);
   }
 
   async function remove() {
     if (!item || busy) return;
     const confirmed = await requestConfirmation({
-      title:
-        kind === "collection" ? (
-          <>Move “{item.name}” to Trash?</>
-        ) : (
-          <>Delete the unused tag “{item.name}”?</>
-        ),
-      description:
-        kind === "collection" ? (
-          <>Entries stay in your archive and the Collection can be restored.</>
-        ) : (
-          <>This tag is unused and will be removed permanently.</>
-        ),
-      confirmLabel: kind === "collection" ? "Move to Trash" : "Delete tag",
-      eyebrow:
-        kind === "collection" ? <>Recoverable action</> : <>Permanent action</>,
+      title: <>Delete the unused tag “{item.name}”?</>,
+      description: <>This tag is unused and will be removed permanently.</>,
+      confirmLabel: "Delete tag",
+      eyebrow: <>Permanent action</>,
       variant: "danger",
     });
     if (!confirmed) return;
     await run(
-      () =>
-        kind === "collection"
-          ? trashCollection(input)
-          : deleteUnusedTag({ id: item.id, revision: item.revision }),
-      kind === "collection" ? "Collection moved to Trash." : "Tag deleted.",
+      () => deleteUnusedTag({ id: item.id, revision: item.revision }),
+      "Tag deleted.",
     );
   }
 
@@ -175,7 +151,7 @@ export function OrganizationControl({
               ? `Manage tag ${item.name}, used by ${countLabel(item.entry_count, "Entry")}`
               : item
                 ? `Edit ${item.name}`
-                : `New ${label}`
+                : "New Tag"
           }
           className={triggerClassName}
           onClick={openEditor}
@@ -193,7 +169,7 @@ export function OrganizationControl({
         </IconButton>
       ) : (
         <Button onClick={openEditor}>
-          <Icon name="plus" size={17} /> New {label}
+          <Icon name="plus" size={17} /> New Tag
         </Button>
       )}
 
@@ -203,35 +179,25 @@ export function OrganizationControl({
           onOpenChange={(nextOpen) => {
             if (!nextOpen) setOpen(false);
           }}
-          title={<>{item?.name ?? `Create a ${label}`}</>}
-          titleId={`organization-control-${item?.id ?? kind}`}
-          eyebrow={<>{item ? `Edit ${label}` : `New ${label}`}</>}
+          title={<>{item?.name ?? "Create a Tag"}</>}
+          titleId={`tag-control-${item?.id ?? "new"}`}
+          eyebrow={<>{item ? "Edit Tag" : "New Tag"}</>}
           headerContent={
             <>
-              {item && kind === "tag" ? (
+              {item ? (
                 <span className={styles.usageCount}>
                   Used by {countLabel(item.entry_count, "Entry")}
                 </span>
               ) : null}
             </>
           }
-          closeLabel="Close organization editor"
+          closeLabel="Close tag editor"
           busy={busy}
           size="standard"
           footer={
             <div className={styles.editorActions}>
               <div>
-                {item && kind === "collection" ? (
-                  <Button
-                    variant="danger"
-                    disabled={busy}
-                    onClick={() => void remove()}
-                    type="button"
-                  >
-                    Move to Trash
-                  </Button>
-                ) : null}
-                {item && kind === "tag" && item.entry_count === 0 ? (
+                {item && item.entry_count === 0 ? (
                   <Button
                     variant="danger"
                     disabled={busy}
@@ -252,16 +218,12 @@ export function OrganizationControl({
                   Cancel
                 </Button>
                 <Button
-                  form="organization-control-form"
+                  form="tag-control-form"
                   variant="primary"
-                  disabled={busy || !validOrganizationInput(input)}
+                  disabled={busy || !validTagInput(input)}
                   type="submit"
                 >
-                  {busy
-                    ? "Saving..."
-                    : item
-                      ? "Save changes"
-                      : `Create ${label}`}
+                  {busy ? "Saving..." : item ? "Save changes" : "Create Tag"}
                 </Button>
               </div>
             </div>
@@ -269,41 +231,21 @@ export function OrganizationControl({
         >
           {" "}
           <div className={styles.editorContent}>
-            <form id="organization-control-form" onSubmit={submit}>
+            <form id="tag-control-form" onSubmit={submit}>
               <fieldset disabled={busy}>
                 <label>
                   <span>Name *</span>
                   <input
                     autoFocus
-                    maxLength={kind === "tag" ? 60 : 80}
+                    maxLength={tagNameLengthLimit}
                     onChange={(event) => setName(event.target.value)}
                     required
                     value={name}
                   />
                 </label>
-                {kind === "collection" ? (
-                  <label>
-                    <span>Display order *</span>
-                    <input
-                      max={1000000}
-                      min={-1000000}
-                      onChange={(event) => setOrder(event.target.value)}
-                      required
-                      step={1}
-                      type="number"
-                      value={order}
-                    />
-                  </label>
-                ) : null}
               </fieldset>
-              {item?.system_key === "bucket_list" ? (
-                <p className={styles.helper}>
-                  This is your Bucket List Collection. Renaming it preserves
-                  Goal milestone behavior.
-                </p>
-              ) : null}
             </form>
-            {item && kind === "tag" && item.entry_count > 0 ? (
+            {item && item.entry_count > 0 ? (
               <div className={styles.mergePanel}>
                 <div>
                   <strong>Merge this tag</strong>
@@ -337,7 +279,7 @@ export function OrganizationControl({
                 </Button>
               </div>
             ) : null}
-            {item && kind === "tag" ? (
+            {item ? (
               <TagEntryList
                 count={item.entry_count}
                 name={item.name}

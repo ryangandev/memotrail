@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(58);
+select plan(56);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -83,7 +83,6 @@ select lives_ok(
       ' Model 3 ',
       2020,
       ' Deep Blue ',
-      array['Vehicles', 'Milestones', 'vehicles'],
       array['Electric', 'first-car', 'ELECTRIC'],
       null,
       null
@@ -135,12 +134,6 @@ select is(
   ),
   'vehicles|stage',
   'A Vehicle appears as a Stage on the Vehicles Timeline track'
-);
-
-select is(
-  (select collection_names::text from public.vehicles_workspace() where title = 'Bluebird'),
-  '{Milestones,vehicles}',
-  'Vehicle Collections are normalized and de-duplicated case-insensitively'
 );
 
 select is(
@@ -219,7 +212,6 @@ select lives_ok(
       'MX-5',
       2018,
       null,
-      array['Vehicles'],
       array['convertible'],
       null,
       null
@@ -261,7 +253,7 @@ select is(
     $$
       select * from public.save_vehicle_entry(
         ' ', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC',
-        null, null, null, null, array[]::text[], array[]::text[], null, null
+        null, null, null, null, array[]::text[], null, null
       )
     $$
   ),
@@ -274,7 +266,7 @@ select is(
     $$
       select * from public.save_vehicle_entry(
         'Car', '', '2020-01-01T00:00:00Z', null, 'year', null, 'Not/AZone',
-        null, null, null, null, array[]::text[], array[]::text[], null, null
+        null, null, null, null, array[]::text[], null, null
       )
     $$
   ),
@@ -287,7 +279,7 @@ select is(
     $$
       select * from public.save_vehicle_entry(
         'Car', '', '2020-01-02T00:00:00Z', '2020-01-01T00:00:00Z', 'range', null, 'UTC',
-        null, null, null, null, array[]::text[], array[]::text[], null, null
+        null, null, null, null, array[]::text[], null, null
       )
     $$
   ),
@@ -300,7 +292,7 @@ select is(
     $$
       select * from public.save_vehicle_entry(
         'Car', '', '2020-01-01T00:00:00Z', null, 'unknown', null, 'UTC',
-        null, null, null, null, array[]::text[], array[]::text[], null, null
+        null, null, null, null, array[]::text[], null, null
       )
     $$
   ),
@@ -313,25 +305,12 @@ select is(
     $$
       select * from public.save_vehicle_entry(
         'Car', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC',
-        'Make', 'Model', 1800, null, array[]::text[], array[]::text[], null, null
+        'Make', 'Model', 1800, null, array[]::text[], null, null
       )
     $$
   ),
   '22023',
   'A Vehicle rejects an impossible model year'
-);
-
-select is(
-  pg_temp.capture_sqlstate(
-    $$
-      select * from public.save_vehicle_entry(
-        'Car', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC',
-        null, null, null, null, array[''], array[]::text[], null, null
-      )
-    $$
-  ),
-  '22023',
-  'A Vehicle rejects blank Collection names'
 );
 
 select is(
@@ -349,7 +328,6 @@ select is(
       'Model Y',
       2021,
       'Midnight Silver',
-      array['Vehicles', 'Road trips'],
       array['electric', 'favorite'],
       (select id from public.entries where title = 'Bluebird'),
       (select revision from public.entries where title = 'Bluebird')
@@ -410,12 +388,12 @@ select is(
 
 select is(
   (
-    select concat(collection_names::text, '|', tag_names::text)
+    select tag_names::text
     from public.vehicles_workspace()
     where title = 'Bluebird EV'
   ),
-  '{"Road trips",vehicles}|{Electric,favorite}',
-  'A Vehicle update atomically replaces Collections and tags'
+  '{Electric,favorite}',
+  'A Vehicle update atomically replaces tags'
 );
 
 select is(
@@ -434,7 +412,7 @@ select is(
     select count(*)::integer
     from public.save_vehicle_entry(
       'Stale overwrite', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC',
-      'Changed', 'Changed', 2022, 'Changed', array[]::text[], array[]::text[],
+      'Changed', 'Changed', 2022, 'Changed', array[]::text[],
       (select id from public.entries where title = 'Bluebird EV'), 1
     )
   ),
@@ -474,7 +452,7 @@ select is(
     select count(*)::integer
     from public.save_vehicle_entry(
       'Cross-owner update', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC',
-      null, null, null, null, array[]::text[], array[]::text[],
+      null, null, null, null, array[]::text[],
       current_setting('app.test_vehicle_entry_id')::uuid, 2
     )
   ),
@@ -564,8 +542,7 @@ select lives_ok(
     select *
     from public.save_home_entry(
       'History regression home', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC',
-      null, 'Home Place', null, null, null, null, null, null, null, null, null,
-      array[]::text[], array[]::text[], null, null
+      null, 'Home Place', null, null, null, null, null, null, null, null, null, array[]::text[], null, null
     )
   $$,
   'Home creation still works after enriching the shared history trigger'
@@ -577,8 +554,7 @@ select lives_ok(
     from public.save_home_entry(
       'History regression home edited', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC',
       (select homes.place_id from public.homes join public.entries on entries.id = homes.entry_id where entries.title = 'History regression home'),
-      'Home Place', null, null, null, null, null, null, null, null, null,
-      array[]::text[], array[]::text[],
+      'Home Place', null, null, null, null, null, null, null, null, null, array[]::text[],
       (select id from public.entries where title = 'History regression home'),
       (select revision from public.entries where title = 'History regression home')
     )
@@ -632,7 +608,7 @@ select ok(
 select ok(
   has_function_privilege(
     'authenticated',
-    'public.save_vehicle_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[],text[],uuid,integer)',
+    'public.save_vehicle_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[],uuid,integer)',
     'execute'
   ),
   'Authenticated users can execute the Vehicle mutation contract'
@@ -641,7 +617,7 @@ select ok(
 select ok(
   not has_function_privilege(
     'public',
-    'public.save_vehicle_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[],text[],uuid,integer)',
+    'public.save_vehicle_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[],uuid,integer)',
     'execute'
   ),
   'PUBLIC cannot execute the Vehicle mutation contract'
@@ -679,7 +655,7 @@ select is(
   (
     select proconfig
     from pg_proc
-    where oid = 'public.save_vehicle_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[],text[],uuid,integer)'::regprocedure
+    where oid = 'public.save_vehicle_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[],uuid,integer)'::regprocedure
   ),
   array['search_path=""']::text[],
   'The Vehicle mutation contract uses an empty search path'
@@ -689,7 +665,7 @@ select is(
   (
     select prosecdef
     from pg_proc
-    where oid = 'public.save_vehicle_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[],text[],uuid,integer)'::regprocedure
+    where oid = 'public.save_vehicle_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[],uuid,integer)'::regprocedure
   ),
   false,
   'The Vehicle mutation contract remains security invoker'

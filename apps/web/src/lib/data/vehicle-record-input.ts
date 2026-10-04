@@ -1,5 +1,6 @@
 import { validateOccurrence } from "./occurrence";
-import { parseOrganizationNames } from "./inbox-review";
+import { tagNamesLimitMessage } from "./organization";
+import { parseTagNames } from "./inbox-review";
 
 export const vehicleBodyLimit = 50_000;
 export const vehicleColorLimit = 80;
@@ -23,7 +24,6 @@ export type VehicleDatePrecision = (typeof vehicleDatePrecisions)[number];
 
 export type VehicleEntryInput = {
   body: string;
-  collectionNames: string[];
   color: string | null;
   datePrecision: VehicleDatePrecision;
   id: string | null;
@@ -59,8 +59,7 @@ export function parseVehicleEntryInput(
   const color = optionalString(input.color);
   const occurredLabel = optionalString(input.occurredLabel);
   const occurredTimezone = normalizedString(input.occurredTimezone);
-  const collectionNames = parseOrganizationNames(input.collectionNames, 20, 80);
-  const tagNames = parseOrganizationNames(input.tagNames, 50, 60);
+  const tagNames = parseTagNames(input.tagNames);
 
   if (!title) {
     return invalid("Add a name or nickname for this Vehicle.");
@@ -115,11 +114,8 @@ export function parseVehicleEntryInput(
   if (modelYear === undefined) {
     return invalid("Use a model year from 1886 to 2200, or leave it empty.");
   }
-  if (!collectionNames) {
-    return invalid("Use up to 20 Collections with names under 80 characters.");
-  }
   if (!tagNames) {
-    return invalid("Use up to 50 tags with names under 60 characters.");
+    return invalid(tagNamesLimitMessage);
   }
   if (!isVehicleEntryIdentity(input.id, input.revision)) {
     return invalid("This Vehicle version is invalid. Refresh and try again.");
@@ -128,7 +124,6 @@ export function parseVehicleEntryInput(
   return {
     data: {
       body,
-      collectionNames,
       color,
       datePrecision: input.datePrecision as VehicleDatePrecision,
       id: input.id as string | null,

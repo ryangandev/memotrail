@@ -10,14 +10,12 @@ insert into public.entries(id,owner_id,title,deleted_at) values
  ('95000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000096','Foreign original',now());
 insert into public.people(owner_id,name,deleted_at) values
  ('10000000-0000-0000-0000-000000000095','Trashed Person',now());
-insert into public.collections(owner_id,name,archived_at) values
- ('10000000-0000-0000-0000-000000000095','Trashed Collection',now());
 create temporary table captured(snapshot jsonb);
 grant all on captured to authenticated;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000095',true);
 insert into captured values(public.prepare_empty_trash());
-select is(jsonb_array_length(public.prepare_empty_trash()),3,'All current Trash kinds are captured');
+select is(jsonb_array_length(public.prepare_empty_trash()),2,'All current Trash kinds are captured');
 select is(public.prepare_empty_trash()->0->>'item_kind','entry','Entry deletion precedes independent grouping definitions');
 select is((public.prepare_empty_trash()->0->>'deleted_at')::timestamptz,'2026-09-01T12:00:00.123456Z'::timestamptz,'Full deletion timestamp is retained');
 select ok(not (public.prepare_empty_trash()->0 ? 'title'),'Preparation excludes private titles');
@@ -35,8 +33,8 @@ update public.entries set deleted_at=now() where id='95000000-0000-4000-8000-000
 select is(count(*),0::bigint,'Restore then re-trash also invalidates the old confirmation') from public.delete_trash_item_forever(
  'entry','95000000-0000-4000-8000-000000000001',1,'2026-09-01T12:00:00.123456Z');
 insert into public.people(owner_id,name,deleted_at) values(auth.uid(),'Added after preparation',now());
-select is(jsonb_array_length((select snapshot from captured)),3,'Prepared targets do not grow when more items enter Trash');
-select is(jsonb_array_length(public.prepare_empty_trash()),4,'A new review includes the newly trashed record');
+select is(jsonb_array_length((select snapshot from captured)),2,'Prepared targets do not grow when more items enter Trash');
+select is(jsonb_array_length(public.prepare_empty_trash()),3,'A new review includes the newly trashed record');
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000096',true);
 select is(jsonb_array_length(public.prepare_empty_trash()),1,'Second owner sees only their own exact manifest');
 select is(count(*),0::bigint,'Known foreign target remains protected') from public.delete_trash_item_forever(

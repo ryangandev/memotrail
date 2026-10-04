@@ -35,7 +35,7 @@ Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/Me
 | Library browsing, search, AI suggestions, or exploration  | `app/library`, `components/library-search`, `/search` redirect, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`  | `Features/Library`, `Features/AI`                                                     | AI, evidence, exploration, and search migrations and tests                       |
 | Photos, metadata, or export                               | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                           | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, photo-history, cleanup, and export migrations and tests                   |
 | Timeline, Homes, Vehicles, Goals, or First Times          | matching `app` route, workspace component, and `lib/data` module                                                                | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                            |
-| Collections, tags, People, links, history, or Trash       | matching `app` route and component, shared Entry organization editor, `lib/data` organization, history, and Trash modules       | matching directory under `Features`                                                   | organization, relationship, history, Trash, and Empty Trash migrations and tests |
+| Tags, People, links, history, or Trash                    | matching `app` route and component, shared Entry tag editor, `lib/data` organization, history, and Trash modules                | matching directory under `Features`                                                   | organization, relationship, history, Trash, and Empty Trash migrations and tests |
 | Visual system                                             | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                    | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-tokens/tokens.json` and generator                               |
 
 Native destinations and shared detail routing live in `App/WorkspaceRoute.swift`; the primary tabs live in `App/RootTabView.swift`.
@@ -67,7 +67,6 @@ Pair it with the test file carrying the same feature name.
   Like Web `wikiEntryHref`, only a Person row from People opens a Person page; a person Entry opens as an Item.
   Like Web, it sends Inbox captures to their review and Moments and Periods to the Timeline.
   `App/WikiItemLink.swift` holds that routing for every native link to an Item, and `AppNavigator.openLibrary(collection:)` and `openLibrary(tag:)` open Library filtered to one Collection or tag, like Web `/library?tag=`.
-- `collection_wiki_items` composes the established paged Collection detail with canonical Kind, subtype, and specialized routing identity. Both clients use it so Collections remain organizational lenses rather than a second generic detail system.
 - `people.entry_id` is a required owner-scoped link to a canonical Entity Wiki Item. Triggers keep its name, notes, revision state, and Trash state synchronized.
 - The former authored `places` and `place_versions` tables and Place-only RPCs were removed by `202609240002_remove_authored_places.sql`.
 - `locations` stores private per-Entry address and coordinate snapshots with provider provenance, revision state, and soft deletion. It is not a Wiki Item or reusable catalog.
@@ -113,11 +112,12 @@ Pair it with the test file carrying the same feature name.
   Native Capture now writes through it like Web: `CaptureCard` edits one formatted note, `EntryEmphasisContent.capture` trims surrounding whitespace without dropping formatting, and drafts, the offline queue, and the Entry insert carry `body_rich` only when it matches the saved plaintext.
   Native review opens editable emphasis in the same editor and saves the editor's document when the note changes.
   An untouched note resends its original `body_rich`, so Web-only lists, quotes, links, and code survive a review that does not edit the note.
-- Collections, tags, People, and Wiki Item links are owner-scoped reusable relationships. Locations are Entry-owned snapshots.
-- Focused forms own specialized structure, Collections own curated groupings, tags own descriptive labels, and Timeline tracks own presentation only.
+- Tags, People, and Wiki Item links are owner-scoped reusable relationships. Locations are Entry-owned snapshots.
+- Focused forms own specialized structure, tags own grouping and descriptive labels, and Timeline tracks own presentation only.
 - Home and Vehicle are Entity subtypes whose occurrence range describes the user's relationship span.
 - First Time, Moment, and Period are focused Entry forms; Memory and Story are optional descriptive tags.
-- Web Entry editors reuse `components/entry-organization-editor.tsx`; their save RPC must atomically preserve Collection and tag memberships with the canonical Entry mutation.
+- Web Entry editors reuse `components/entry-organization-editor.tsx`; their save RPC must atomically preserve tag memberships with the canonical Entry mutation.
+  `replace_entry_tags` and `valid_tag_names` hold the shared tag write and the 70-name, 80-character limits, which Web `lib/data/organization.ts` mirrors.
 - Used tags merge atomically into another stable tag identity. Only unused tags can be deleted directly.
 - Tag management loads at most five linked Entry previews on demand through a server action, so the Tags page stays lightweight and never creates a per-tag data waterfall during its initial render.
 - Multi-record changes use authenticated RPCs so content, relationships, history, and specialized facts commit atomically.
@@ -134,8 +134,8 @@ Pair it with the test file carrying the same feature name.
   Web and native comparisons treat `body_rich` as part of Writing, matching the metadata details that hide it.
   Save RPCs retain unchanged Location, Timeline, People, and Entry-link memberships and skip unchanged Home, Vehicle, and Goal detail updates.
 - Older clients must preserve fields they cannot represent or reject the write safely.
-- AI organization payloads offer optional title, tags, Collections, and occurrence suggestions without structural classification.
-  The database rejects legacy `entryType` and `classification` payload keys.
+- AI organization payloads offer optional title, tags, and occurrence suggestions without structural classification.
+  The database rejects legacy `entryType`, `classification`, and `collections` payload keys.
 
 ## Date rules
 
@@ -150,7 +150,7 @@ Pair it with the test file carrying the same feature name.
 - A private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings.
 - Web Timeline lanes use each item's rendered pixel bounds, including minimum stage and event-label widths, so non-overlapping periods share a lane without allowing visible cards to collide. A dashed Today line uses the same reference instant as open stages; short ongoing labels end against it with a flat right edge, and stage labels share the same vertically centered layout whether rendered as buttons or links.
 - Timeline creation routes by Entry type, not track name. Generic moments use the Timeline editor; Home, Vehicle, and First Time creation reuse the exported Records editors in a lazy-loaded Timeline modal. Existing focused records navigate to their detail pages and edit inline. System track shortcuts select the corresponding specialized type, while ordinary tracks preselect the generic editor's placement.
-- Timeline server data loads specialized records, Collection, and tag choices needed by its creation editors in parallel. Existing focused records navigate to their own pages.
+- Timeline server data loads specialized records and tag choices needed by its creation editors in parallel. Existing focused records navigate to their own pages.
 - Web Timeline projects dated First Times without an explicit Timeline placement onto the visible First Times system track. Already placed records remain on their chosen track, and unanchored records remain in the First Times archive only.
 - Native `Features/Timeline` follows the Web phone layout: track cards, the Moment, Home, Vehicle, and First Time chooser, the first-visit birth date prompt, and the Timeline editor with the Settings time zone, Collections, and tags through `save_timeline_entry_with_organization`.
   `TimelineWorkspace` in `Models/TimelineEntry.swift` ports the First Times projection and the summary's year range.
@@ -174,6 +174,7 @@ Pair it with the test file carrying the same feature name.
   `EntryRelationsView` saves links as they change, `LinkedGoalSheet` creates a linked Goal through `extract_goal_from_item`, and Move to Trash applies only at the revision shown, like Web `trashWikiItem`.
   `Models/EntryHistory.swift` holds the snapshot model and the Web `lib/data/history.ts` presentation rules.
   `reloadOnReturn` in `App/AppNavigator.swift` reloads the Item page, version history, and each focused page when version history or a linked Item returns, so a restore or change made there shows at once.
+- Native Collections code described below predates the Web merge of Collections into tags and calls functions that migration `202610040001` drops; it is retired when native follows Web.
 - Native `TagsView` in `Features/Collections` follows Web `/tags`: badges with each tag's Entry count, name search, and New Tag.
   `OrganizationEditorSheet` is the Web `OrganizationControl` dialog on `MTSheet` over `OrganizationActions`, which call `save_organization`, `trash_collection`, `merge_tags`, and `delete_unused_tag` with the Web failure messages.
   A saved tag's editor loads up to five of its Entries through `search_wiki_items` only when it opens, like Web, and View all opens Library filtered to the tag through `AppNavigator.openLibrary(tag:)`.
@@ -301,7 +302,7 @@ Pair it with the test file carrying the same feature name.
   PhotoViewer keeps native top-layer media geometry, and Command Palette keeps its search and keyboard-result interaction model.
 - Reusable components do not import `app/**.module.css`; Web lint enforces this boundary along with valid token references.
   Feature modules own composition, and `editor-fields.module.css` shares native field spacing and states while excluding the reviewed composites' internals.
-- Noninteractive status, type, collection, and tag labels use `components/badge.tsx` with tone and size variants, single-line truncation, and Design System specimens.
+- Noninteractive status, type, and tag labels use `components/badge.tsx` with tone and size variants, single-line truncation, and Design System specimens.
 - Dot-separated summary and metadata rows use Web `components/separated-list.tsx` and native `MTFlowLayout` with `MTFlowSeparator`, or `MTWordFlow` for facts that read like a sentence.
   Facts wrap whole, and a "·" shows only between two facts on the same line, hidden from assistive technology.
   Web clips the separator of a fact that starts a line one gap outside the list, so focus rings stay whole; native line breaking leaves that separator out.

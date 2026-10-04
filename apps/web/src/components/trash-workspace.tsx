@@ -315,7 +315,6 @@ function iconForKind(kind: TrashItem["kind"]): "photo" | "timeline" {
 }
 
 function labelForItem(item: TrashItem) {
-  if (item.kind === "collection") return "Collection";
   if (item.kind === "person") return "Person";
   if (item.kind === "attachment") {
     return "Photo";
@@ -345,8 +344,6 @@ function retentionLabel(value: string) {
 }
 
 function deletionDescription(item: TrashItem) {
-  if (item.kind === "collection")
-    return "Only the Collection and its grouping links will be removed. Your Entries and photos stay in the archive.";
   if (item.kind === "person")
     return "The Person and their version history will be removed.";
   if (item.kind === "attachment") {

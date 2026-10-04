@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(43);
+select plan(41);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -82,7 +82,6 @@ select lives_ok(
       null,
       null,
       '{}'::text[],
-      '{}'::text[],
       null,
       null,
       null
@@ -121,14 +120,13 @@ select lives_ok(
       'day',
       'July 3, 2026',
       'America/Los_Angeles',
-      array['Travel', 'travel'],
       array['Snow', 'snow'],
       null,
       null,
       null
     )
   $$,
-  'A dated First Time can include a reflection, Collections, and tags'
+  'A dated First Time can include a reflection and tags'
 );
 
 select is(
@@ -151,19 +149,6 @@ select is(
   ),
   'America/Los_Angeles',
   'A First Time preserves its occurrence timezone'
-);
-
-select is(
-  (
-    select array(
-      select lower(collection_name)
-      from unnest(collection_names) as collection_name
-    )
-    from public.first_times_workspace_with_occurrence()
-    where title = 'First time skiing'
-  ),
-  array['travel'],
-  'Collection names are trimmed and case-insensitively de-duplicated'
 );
 
 select is(
@@ -215,7 +200,7 @@ select is(
     $$
       select *
       from public.save_first_time_with_occurrence(
-        ' ', '', null, 'unknown', null, null, '{}', '{}', null, null, null
+        ' ', '', null, 'unknown', null, null, '{}', null, null, null
       )
     $$
   ),
@@ -228,7 +213,7 @@ select is(
     $$
       select *
       from public.save_first_time_with_occurrence(
-        'Invalid exact date', '', null, 'day', null, null, '{}', '{}', null, null, null
+        'Invalid exact date', '', null, 'day', null, null, '{}', null, null, null
       )
     $$
   ),
@@ -247,7 +232,6 @@ select is(
         'day',
         null,
         'Not/AZone',
-        '{}',
         '{}',
         null,
         null,
@@ -269,7 +253,6 @@ select lives_ok(
       'day',
       null,
       'America/Los_Angeles',
-      array['Milestones'],
       array['Winter'],
       (
         select id
@@ -311,16 +294,6 @@ select is(
 
 select is(
   (
-    select collection_names
-    from public.first_times_workspace_with_occurrence()
-    where title = 'First ski trip'
-  ),
-  array['Milestones'],
-  'Updating a First Time atomically replaces Collections'
-);
-
-select is(
-  (
     select count(*)::integer
     from public.save_first_time_with_occurrence(
       'Stale overwrite',
@@ -329,7 +302,6 @@ select is(
       'unknown',
       null,
       null,
-      '{}',
       '{}',
       (select id from public.entries where title = 'First ski trip'),
       1,
@@ -597,7 +569,6 @@ select is(
       null,
       null,
       '{}',
-      '{}',
       (select entry_id from pg_temp.first_time_test_state),
       2,
       null
@@ -679,7 +650,7 @@ select is(
   (
     select count(*)::integer
     from public.save_first_time_with_occurrence(
-      'Anonymous write', '', null, 'unknown', null, null, '{}', '{}', null, null, null
+      'Anonymous write', '', null, 'unknown', null, null, '{}', null, null, null
     )
   ),
   0,

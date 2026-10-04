@@ -76,7 +76,6 @@ test("Dot-separated rows across the workspace keep their separators between fact
   test.setTimeout(120_000);
   const entryId = randomUUID();
   const locationId = randomUUID();
-  const collectionId = randomUUID();
   expect(
     (
       await client.from("entries").insert({
@@ -149,22 +148,6 @@ test("Dot-separated rows across the workspace keep their separators between fact
       })
     ).error,
   ).toBeNull();
-  expect(
-    (
-      await client
-        .from("collections")
-        .insert({ id: collectionId, owner_id: owner, name: "Festivals" })
-    ).error,
-  ).toBeNull();
-  expect(
-    (
-      await client.from("entry_collections").insert({
-        entry_id: entryId,
-        collection_id: collectionId,
-        owner_id: owner,
-      })
-    ).error,
-  ).toBeNull();
   await context.addCookies([
     {
       name: "memotrail-timeline-style",
@@ -199,8 +182,6 @@ test("Dot-separated rows across the workspace keep their separators between fact
     },
     { path: "/library?q=lantern", rows: 1 },
     { path: "/history", rows: 1 },
-    { path: "/collections", rows: 1 },
-    { path: `/collections/${collectionId}`, rows: 1 },
     { path: "/homes", rows: 1 },
     { path: "/vehicles", rows: 1 },
     { path: "/goals", rows: 1 },

@@ -20,7 +20,6 @@ export default async function HomeDetailPage({
     <FocusedRecordDetail
       kind="home"
       record={record}
-      collectionOptions={workspace.collectionOptions}
       tagOptions={workspace.tagOptions}
       ownerId={workspace.viewer.id}
     />

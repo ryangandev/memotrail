@@ -15,7 +15,6 @@ const entry = {
     },
   ],
   body: "A memory worth seeing again.",
-  collection_names: ["Travel"],
   created_at: "2025-09-03T17:00:00Z",
   date_precision: "day",
   entry_id: "87000000-0000-0000-0000-000000000001",
@@ -39,7 +38,6 @@ describe("Home resurfacing response", () => {
     ]);
 
     expect(memory).toMatchObject({
-      collectionNames: ["Travel"],
       id: entry.entry_id,
       resurfacingKind: "on_this_day",
       tagNames: ["snow"],

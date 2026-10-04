@@ -69,9 +69,6 @@ where user_id = '10000000-0000-0000-0000-000000000001';
 delete from public.entries
 where owner_id = '10000000-0000-0000-0000-000000000001';
 
-delete from public.collections
-where owner_id = '10000000-0000-0000-0000-000000000001';
-
 delete from public.tags
 where owner_id = '10000000-0000-0000-0000-000000000001';
 
@@ -190,44 +187,11 @@ values
     null
   );
 
-insert into public.collections (
-  id,
-  owner_id,
-  name,
-  system_key,
-  sort_order,
-  archived_at
-)
-values
-  (
-    '82000000-0000-0000-0000-000000000001',
-    '10000000-0000-0000-0000-000000000001',
-    'Home Test Learning',
-    'home-test-learning',
-    10,
-    null
-  ),
-  (
-    '82000000-0000-0000-0000-000000000002',
-    '10000000-0000-0000-0000-000000000001',
-    'Home Test Archived',
-    'home-test-archived',
-    20,
-    '2026-09-01T00:00:00Z'
-  );
-
 insert into public.tags (id, owner_id, name)
 values (
   '83000000-0000-0000-0000-000000000001',
   '10000000-0000-0000-0000-000000000001',
   'home-test'
-);
-
-insert into public.entry_collections (entry_id, collection_id, owner_id)
-values (
-  '81000000-0000-0000-0000-000000000002',
-  '82000000-0000-0000-0000-000000000001',
-  '10000000-0000-0000-0000-000000000001'
 );
 
 insert into public.entry_tags (entry_id, tag_id, owner_id)
@@ -312,9 +276,9 @@ select is(
   'First Time count includes only active owner First Times'
 );
 select is(
-  (select collection_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  (select tag_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
   1::bigint,
-  'Collection count excludes archived Collections'
+  'Tag count includes only the owner''s tags'
 );
 select is(
   (select current_stage_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
@@ -351,11 +315,6 @@ select ok(
     from public.home_workspace('2026-09-03', 'America/Los_Angeles', 10)
   ),
   'Recent Entries exclude other owners'
-);
-select is(
-  (select recent_entries -> 0 -> 'collection_names' ->> 0 from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  'Home Test Learning',
-  'Recent Entries include active Collection names'
 );
 select is(
   (select recent_entries -> 0 -> 'tag_names' ->> 0 from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),

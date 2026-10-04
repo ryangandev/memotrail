@@ -31,7 +31,6 @@ export default async function GoalsPage({
 
   return (
     <GoalsWorkspace
-      collectionOptions={workspace.collectionOptions}
       goals={workspace.goals}
       initialGoalId={initialGoalId}
       linkOptions={workspace.linkOptions}

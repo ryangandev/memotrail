@@ -65,7 +65,6 @@ for (const kind of ["home", "vehicle"] as const) {
       const common = {
         p_title: "Precision chapter",
         p_body: "Original writing",
-        p_collection_names: [],
         p_tag_names: [],
         p_entry_id: null,
         p_expected_revision: null,

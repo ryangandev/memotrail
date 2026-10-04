@@ -9,8 +9,6 @@ insert into public.entries(id,owner_id,title,body,inbox_status,date_precision) v
 ('93800000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000099','Private foreign','Hidden','organized','unknown');
 update public.entries set item_kind='goal' where id='93800000-0000-4000-8000-000000000004';
 insert into public.goals(entry_id,owner_id,horizon,status) values('93800000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000099','someday','active');
-insert into public.collections(id,owner_id,name,system_key) values('93800000-0000-4000-8000-000000000099','10000000-0000-0000-0000-000000000099','Bucket List','bucket_list');
-insert into public.entry_collections(entry_id,owner_id,collection_id) values('93800000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000099','93800000-0000-4000-8000-000000000099');
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
 select is(public.entry_relations('93800000-0000-4000-8000-000000000001')->>'total_count','0','Starts without links');
@@ -69,9 +67,9 @@ select is(public.entry_relations('93800000-0000-4000-8000-000000000001')->>'tota
 select is(jsonb_array_length(public.entry_relations('93800000-0000-4000-8000-000000000001','outgoing','',20,80)->'items'),20,'Last relationship page remains reachable');
 select ok(not has_table_privilege('authenticated','public.entry_links','update'),'Clients cannot rewrite system link provenance');
 select ok(not has_table_privilege('authenticated','public.entry_links','delete'),'Clients cannot bypass relationship history by direct deletion');
-select is((select count(*) from public.save_goal_entry('Forged title','','someday','active',null,'{}','{}','{}','93800000-0000-4000-8000-000000000004',2)),0::bigint,'Known foreign Goal cannot be edited through elevated boundary');
+select is((select count(*) from public.save_goal_entry('Forged title','','someday','active',null,'{}','{}','93800000-0000-4000-8000-000000000004',2)),0::bigint,'Known foreign Goal cannot be edited through elevated boundary');
 select is((select count(*) from public.achieve_goal_with_occurrence('93800000-0000-4000-8000-000000000004',2,null,'unknown',null,null,null)),0::bigint,'Known eligible foreign Goal cannot be achieved');
-select throws_ok($$select public.save_goal_entry('Bad target','','someday','active',null,'{}','{}',array['93800000-0000-4000-8000-000000000004'::uuid],null,null)$$,'22023','invalid_related_entries','Known foreign target cannot be linked through Goal save');
+select throws_ok($$select public.save_goal_entry('Bad target','','someday','active',null,'{}',array['93800000-0000-4000-8000-000000000004'::uuid],null,null)$$,'22023','invalid_related_entries','Known foreign target cannot be linked through Goal save');
 reset role;
 select is((select title from public.entries where id='93800000-0000-4000-8000-000000000004'),'Private foreign','Foreign writing remains intact after denied operations');
 select is((select status from public.goals where entry_id='93800000-0000-4000-8000-000000000004'),'active','Foreign Goal facts remain intact after denied operations');

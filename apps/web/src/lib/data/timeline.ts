@@ -24,7 +24,6 @@ import { includeUnplacedFirstTimes } from "@/lib/data/timeline-first-times";
 
 export type TimelineEntry = {
   body: string;
-  collectionNames: string[];
   datePrecision: TimelineDatePrecision;
   id: string;
   itemKind: WikiItemKind;
@@ -53,7 +52,6 @@ export type TimelineTrack = {
 export type TimelineWorkspace = {
   birthDate: string | null;
   birthDateAvailable: boolean;
-  collectionOptions: string[];
   defaultTimezone: string;
   firstTimes: FirstTimeEntry[];
   homes: HomeRecord[];
@@ -69,7 +67,6 @@ type NameRow = { name: string };
 
 type TimelineRow = {
   body: string | null;
-  collection_names: string[];
   date_precision: TimelineDatePrecision | null;
   entry_id: string | null;
   item_kind: WikiItemKind | null;
@@ -98,47 +95,32 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
     return null;
   }
 
-  const [
-    timeline,
-    inbox,
-    profile,
-    homes,
-    vehicles,
-    firstTimes,
-    collections,
-    tags,
-  ] = await Promise.all([
-    context.client.rpc("timeline_workspace_with_organization", {
-      p_include_hidden: false,
-    }),
-    context.client
-      .from("entries")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", context.userId)
-      .eq("inbox_status", "unreviewed")
-      .is("deleted_at", null),
-    context.client
-      .from("profiles")
-      .select("*")
-      .eq("user_id", context.userId)
-      .single(),
-    context.client.rpc("homes_workspace", { p_limit: 100, p_offset: 0 }),
-    context.client.rpc("vehicles_workspace", { p_limit: 100, p_offset: 0 }),
-    context.client.rpc("first_times_workspace_with_occurrence"),
-    context.client
-      .from("collections")
-      .select("name")
-      .eq("owner_id", context.userId)
-      .is("archived_at", null)
-      .order("name")
-      .returns<NameRow[]>(),
-    context.client
-      .from("tags")
-      .select("name")
-      .eq("owner_id", context.userId)
-      .order("name")
-      .returns<NameRow[]>(),
-  ]);
+  const [timeline, inbox, profile, homes, vehicles, firstTimes, tags] =
+    await Promise.all([
+      context.client.rpc("timeline_workspace_with_organization", {
+        p_include_hidden: false,
+      }),
+      context.client
+        .from("entries")
+        .select("id", { count: "exact", head: true })
+        .eq("owner_id", context.userId)
+        .eq("inbox_status", "unreviewed")
+        .is("deleted_at", null),
+      context.client
+        .from("profiles")
+        .select("*")
+        .eq("user_id", context.userId)
+        .single(),
+      context.client.rpc("homes_workspace", { p_limit: 100, p_offset: 0 }),
+      context.client.rpc("vehicles_workspace", { p_limit: 100, p_offset: 0 }),
+      context.client.rpc("first_times_workspace_with_occurrence"),
+      context.client
+        .from("tags")
+        .select("name")
+        .eq("owner_id", context.userId)
+        .order("name")
+        .returns<NameRow[]>(),
+    ]);
   const rows = timeline.error ? null : timelineRows(timeline.data);
   const timelineEntryIds = new Set(
     (rows ?? []).flatMap((row) => (row.entry_id ? [row.entry_id] : [])),
@@ -177,7 +159,6 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
       imageUrl: imageUrls.get(attachment.objectPath) ?? null,
     })),
     body: entry.body,
-    collectionNames: entry.collection_names,
     datePrecision: entry.date_precision,
     id: entry.entry_id,
     inboxStatus: entry.inbox_status,
@@ -194,9 +175,6 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
   return {
     birthDate: profileBirthDate.birthDate,
     birthDateAvailable: profileBirthDate.available,
-    collectionOptions: collections.error
-      ? []
-      : (collections.data ?? []).map((item) => item.name),
     defaultTimezone: profileTimezone.timezone,
     firstTimes: firstTimeEntries,
     homes: homeRows.map((home) => ({
@@ -247,7 +225,6 @@ function tracksFromRows(rows: TimelineRow[]) {
     if (row.entry_id) {
       track.items.push({
         body: row.body ?? "",
-        collectionNames: row.collection_names,
         datePrecision: row.date_precision ?? "unknown",
         id: row.entry_id,
         itemKind: row.item_kind ?? "entry",
@@ -318,7 +295,6 @@ function isTimelineRow(value: unknown): value is TimelineRow {
     nullableString(value.occurred_end) &&
     nullableString(value.occurred_label) &&
     nullableString(value.occurred_timezone) &&
-    stringArray(value.collection_names) &&
     stringArray(value.tag_names) &&
     typeof value.revision === "number" &&
     typeof value.updated_at === "string" &&

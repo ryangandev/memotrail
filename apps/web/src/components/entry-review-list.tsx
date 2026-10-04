@@ -39,12 +39,10 @@ import { trimEntryNote } from "@/lib/data/rich-text";
 import { wikiItemKindLabel, wikiItemSubtypeLabel } from "@/lib/data/wiki-item";
 
 export function EntryReviewList({
-  collectionOptions,
   entries,
   initialEntryID = null,
   tagOptions,
 }: {
-  collectionOptions: string[];
   entries: InboxEntry[];
   initialEntryID?: string | null;
   tagOptions: string[];
@@ -129,14 +127,6 @@ export function EntryReviewList({
                     </Badge>
                   </>
                 ) : null}
-                {entry.collectionNames.map((name) => (
-                  <Badge
-                    key={`collection:${name.toLocaleLowerCase()}`}
-                    tone="neutral"
-                  >
-                    {name}
-                  </Badge>
-                ))}
                 {entry.tagNames.slice(0, 3).map((name) => (
                   <Badge key={`tag:${name.toLocaleLowerCase()}`} tone="neutral">
                     #{name}
@@ -175,7 +165,6 @@ export function EntryReviewList({
         <EntryReviewDialog
           entry={selectedEntry}
           key={`${selectedEntry.id}:${selectedEntry.revision}`}
-          collectionOptions={collectionOptions}
           onClose={() => {
             setSelectedEntry(null);
             if (initialEntryID) router.replace("/inbox", { scroll: false });
@@ -198,7 +187,6 @@ export function EntryReviewList({
 }
 
 export function EntryReviewDialog({
-  collectionOptions,
   entry,
   onClose,
   onSaved,
@@ -207,7 +195,6 @@ export function EntryReviewDialog({
   organized = false,
   trashPending = false,
 }: {
-  collectionOptions: string[];
   entry: InboxEntry;
   onClose: () => void;
   onSaved: (entry: InboxEntry, done: boolean) => void;
@@ -220,8 +207,6 @@ export function EntryReviewDialog({
   const [title, setTitle] = useState(entry.title ?? "");
   const [body, setBody] = useState(entry.body);
   const [bodyRich, setBodyRich] = useState(entry.bodyRich);
-  const [collectionNames, setCollectionNames] = useState(entry.collectionNames);
-  const [collectionInput, setCollectionInput] = useState("");
   const [location, setLocation] = useState<LocationSelection | null>(
     entry.location ?? null,
   );
@@ -245,7 +230,6 @@ export function EntryReviewDialog({
       ...resolved.value!,
       body: note.body,
       bodyRich: note.bodyRich,
-      collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       id: entry.id,
       revision: entry.revision,
       tagNames: namesIncludingDraft(tagNames, tagInput),
@@ -426,17 +410,6 @@ export function EntryReviewDialog({
 
         <EntryOrganizationEditor
           disabled={isPending}
-          kind="collection"
-          names={collectionNames}
-          onChange={setCollectionNames}
-          input={collectionInput}
-          onInputChange={setCollectionInput}
-          options={collectionOptions}
-        />
-
-        <EntryOrganizationEditor
-          disabled={isPending}
-          kind="tag"
           names={tagNames}
           onChange={setTagNames}
           input={tagInput}

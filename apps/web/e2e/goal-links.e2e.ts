@@ -83,7 +83,6 @@ test("Goal edits retain links to Entries in Trash until they are restored", asyn
       p_horizon: "long_term",
       p_status: "active",
       p_target_date: null,
-      p_collection_names: [],
       p_tag_names: [],
       p_related_entry_ids: [hiddenID, activeID],
       p_entry_id: null,

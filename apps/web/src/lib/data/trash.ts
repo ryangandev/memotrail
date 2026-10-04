@@ -125,7 +125,6 @@ function isTrashRow(value: unknown): value is TrashRow {
   return (
     (value.item_kind === "entry" ||
       value.item_kind === "person" ||
-      value.item_kind === "collection" ||
       value.item_kind === "attachment") &&
     typeof value.item_id === "string" &&
     typeof value.title === "string" &&

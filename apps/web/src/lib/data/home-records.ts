@@ -9,7 +9,6 @@ import {
 } from "./home-record";
 
 export type HomesWorkspace = {
-  collectionOptions: string[];
   homes: HomeRecord[];
   inboxCount: number | undefined;
   loadError: string | null;
@@ -28,15 +27,8 @@ export async function getHomesWorkspace(
     return null;
   }
 
-  const [homes, collections, tags, inbox] = await Promise.all([
+  const [homes, tags, inbox] = await Promise.all([
     context.client.rpc("homes_workspace", { p_limit: 100, p_offset: 0 }),
-    context.client
-      .from("collections")
-      .select("name")
-      .eq("owner_id", context.userId)
-      .is("archived_at", null)
-      .order("name")
-      .returns<NameRow[]>(),
     context.client
       .from("tags")
       .select("name")
@@ -78,9 +70,6 @@ export async function getHomesWorkspace(
   const signedUrls = await signedImageUrls(context.client, attachments);
 
   return {
-    collectionOptions: collections.error
-      ? []
-      : (collections.data ?? []).map((item) => item.name),
     homes: visibleRows.map((home) => ({
       ...home,
       attachments: home.attachments.map((attachment) => ({
@@ -110,7 +99,6 @@ function unavailableWorkspace(
   inboxCount: number | undefined,
 ): HomesWorkspace {
   return {
-    collectionOptions: [],
     homes: [],
     inboxCount,
     loadError: "MemoTrail could not load your Homes. Refresh to try again.",

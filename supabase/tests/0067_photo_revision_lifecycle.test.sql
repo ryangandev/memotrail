@@ -15,20 +15,18 @@ begin
     when 'goal', 'achieve', 'legacy achieve' then
       select entry_id into created from public.save_goal_entry(
         'Revision ' || p_kind, 'Original writing', 'someday', 'active', null,
-        case when p_kind = 'goal' then '{}'::text[] else array['Bucket List'] end,
         '{}', '{}', null, null);
     when 'home' then
       select entry_id into created from public.save_home_entry_with_occurrence(
         'Revision home', 'Original writing', '2021-04-12T12:00:00Z', null, 'day', null, 'UTC',
-        null, 'Maple Street', null, null, null, null, null, null, null, '', '', '{}', '{}', null, null);
+        null, 'Maple Street', null, null, null, null, null, null, null, '', '', '{}', null, null);
     when 'vehicle' then
       select entry_id into created from public.save_vehicle_entry_with_occurrence(
         'Revision vehicle', 'Original writing', '2021-04-12T12:00:00Z', null, 'day', null, 'UTC',
-        'Honda', 'Civic', 2018, 'Blue', '{}', '{}', null, null);
+        'Honda', 'Civic', 2018, 'Blue', '{}', null, null);
     when 'first time' then
       select entry_id into created from public.save_first_time_with_occurrence(
-        'Revision first time', 'Original writing', '2021-04-12T12:00:00Z', 'day', null, 'UTC',
-        '{}', '{}', null, null, null);
+        'Revision first time', 'Original writing', '2021-04-12T12:00:00Z', 'day', null, 'UTC', '{}', null, null, null);
     when 'moment' then
       select entry_id into created from public.save_timeline_entry_with_occurrence(
         (select id from public.timeline_tracks where owner_id = auth.uid() and system_key = 'other_events'),

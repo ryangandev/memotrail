@@ -12,11 +12,20 @@ const nextConfig: NextConfig = {
     "libheif-js",
     "exifr",
   ],
-  // Library replaced the separate search page. Redirecting here, before any
-  // rendering, keeps old links to one request instead of a rendered page that
-  // then navigates again. Query values pass through to Library.
+  // Library replaced the separate search page, and tags replaced Collections.
+  // Redirecting here, before any rendering, keeps old links to one request
+  // instead of a rendered page that then navigates again. Query values pass
+  // through to the destination.
   async redirects() {
-    return [{ source: "/search", destination: "/library", permanent: false }];
+    return [
+      { source: "/search", destination: "/library", permanent: false },
+      { source: "/collections/:path*", destination: "/tags", permanent: false },
+      {
+        source: "/settings/organization",
+        destination: "/tags",
+        permanent: false,
+      },
+    ];
   },
   outputFileTracingIncludes: {
     "/*": [

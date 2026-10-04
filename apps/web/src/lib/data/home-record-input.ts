@@ -1,5 +1,6 @@
 import { validateOccurrence } from "./occurrence";
-import { parseOrganizationNames } from "./inbox-review";
+import { tagNamesLimitMessage } from "./organization";
+import { parseTagNames } from "./inbox-review";
 
 export const homeBodyLimit = 50_000;
 export const homeLabelLimit = 200;
@@ -23,7 +24,6 @@ export type HomeEntryInput = {
   address: string | null;
   body: string;
   city: string | null;
-  collectionNames: string[];
   country: string | null;
   datePrecision: HomeDatePrecision;
   id: string | null;
@@ -67,8 +67,7 @@ export function parseHomeEntryInput(input: unknown): Parsed<HomeEntryInput> {
   const moveOutReason = optionalString(input.moveOutReason);
   const occurredLabel = optionalString(input.occurredLabel);
   const occurredTimezone = normalizedString(input.occurredTimezone);
-  const collectionNames = parseOrganizationNames(input.collectionNames, 20, 80);
-  const tagNames = parseOrganizationNames(input.tagNames, 50, 60);
+  const tagNames = parseTagNames(input.tagNames);
 
   if (!title) {
     return invalid("Add a name for this Home.");
@@ -154,12 +153,8 @@ export function parseHomeEntryInput(input: unknown): Parsed<HomeEntryInput> {
     );
   }
 
-  if (!collectionNames) {
-    return invalid("Use up to 20 Collections with names under 80 characters.");
-  }
-
   if (!tagNames) {
-    return invalid("Use up to 50 tags with names under 60 characters.");
+    return invalid(tagNamesLimitMessage);
   }
 
   if (!isHomeEntryIdentity(input.id, input.revision)) {
@@ -177,7 +172,6 @@ export function parseHomeEntryInput(input: unknown): Parsed<HomeEntryInput> {
       address,
       body,
       city,
-      collectionNames,
       country,
       datePrecision: input.datePrecision as HomeDatePrecision,
       id: input.id as string | null,

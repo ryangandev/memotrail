@@ -71,7 +71,6 @@ const test = base.extend<{
 
 const common = {
   p_body: "Original writing",
-  p_collection_names: [],
   p_entry_id: null,
   p_expected_revision: null,
   p_tag_names: [],
@@ -143,12 +142,10 @@ async function createRecord(
   client: SupabaseClient,
   kind: RecordKind,
   title: string,
-  collectionNames: string[] = [],
 ) {
   const config = records[kind];
   const saved = await client.rpc(config.rpc, {
     ...config.args,
-    p_collection_names: collectionNames,
     p_title: title,
   });
   expect(saved.error).toBeNull();
@@ -277,7 +274,7 @@ test("Goal achievement succeeds after removing a photo in the same editor", asyn
   account: { client },
 }) => {
   const title = "Photo revision achievement";
-  const entry = await createRecord(client, "goal", title, ["Bucket List"]);
+  const entry = await createRecord(client, "goal", title);
   const { editor } = await openWithSavedPhoto(page, client, "goal", entry);
 
   await removePhoto(page, editor);

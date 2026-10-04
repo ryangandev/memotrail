@@ -65,19 +65,16 @@ describe("Entry history", () => {
   });
   it("does not imply unrecorded legacy relationships will be restored", () => {
     expect(
-      historyDifferences(
-        { ...snapshot, collections: [{ id: "new" }] },
-        snapshot,
-      ),
+      historyDifferences({ ...snapshot, tags: [{ id: "new" }] }, snapshot),
     ).toEqual([]);
   });
   it("compares writing and explicitly recorded empty relations", () => {
     expect(
       historyDifferences(
-        { ...snapshot, body: "New", collections: [{ id: "new" }] },
-        { ...snapshot, collections: [] },
+        { ...snapshot, body: "New", tags: [{ id: "new" }] },
+        { ...snapshot, tags: [] },
       ),
-    ).toEqual(["Writing", "Collections"]);
+    ).toEqual(["Writing", "Tags"]);
   });
   it("compares normalized Home and Vehicle content without client filtering", () => {
     const previous = {

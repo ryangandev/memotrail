@@ -35,7 +35,7 @@ select is(
   'Entry filtering returns every ordinary Entry'
 );
 select is(
-  (select title from public.search_wiki_items('',array[]::text[],array[]::text[],array['Memory'])),
+  (select title from public.search_wiki_items('',array[]::text[],array['Memory'])),
   'A good day',
   'Tag filtering finds a Memory Entry'
 );
@@ -45,7 +45,7 @@ select is(
   'Entry filtering and keyword search find the dated memory'
 );
 select is(
-  (select count(*) from public.search_wiki_items('',array[]::text[],array[]::text[],array['Story'])),
+  (select count(*) from public.search_wiki_items('',array[]::text[],array['Story'])),
   1::bigint,
   'Story is searchable as a tag'
 );
@@ -75,7 +75,7 @@ reset role;
 select ok(
   not has_function_privilege(
     'anon',
-    'public.search_wiki_items(text,text[],text[],text[],date,date,integer,integer,text)',
+    'public.search_wiki_items(text,text[],text[],date,date,integer,integer,text)',
     'execute'
   ),
   'Anonymous semantic search is denied'

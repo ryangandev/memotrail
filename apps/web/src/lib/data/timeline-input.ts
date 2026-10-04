@@ -1,10 +1,11 @@
 import { validateOccurrence } from "./occurrence";
+import {
+  tagNameCountLimit,
+  tagNameLengthLimit,
+  tagNamesLimitMessage,
+} from "./organization";
 export const timelineBodyLimit = 50_000;
-export const timelineCollectionCountLimit = 20;
-export const timelineCollectionNameLimit = 80;
 export const timelineLabelLimit = 200;
-export const timelineTagCountLimit = 50;
-export const timelineTagNameLimit = 60;
 export const timelineTitleLimit = 200;
 
 export const timelineDatePrecisions = [
@@ -23,7 +24,6 @@ export type TimelineKind = "event" | "stage";
 
 export type TimelineEntryInput = {
   body: string;
-  collectionNames: string[];
   datePrecision: TimelineDatePrecision;
   id: string | null;
   kind: TimelineKind;
@@ -49,29 +49,15 @@ export function parseTimelineEntryInput(
 ): ParsedTimelineEntryInput {
   const title = input.title.trim();
   const body = input.body.trim();
-  const collectionNames = normalizedNames(input.collectionNames);
   const occurredLabel = input.occurredLabel?.trim() || null;
   const occurredTimezone = input.occurredTimezone.trim();
   const tagNames = normalizedNames(input.tagNames);
 
   if (
-    collectionNames.length > timelineCollectionCountLimit ||
-    collectionNames.some(
-      (name) => [...name].length > timelineCollectionNameLimit,
-    )
+    tagNames.length > tagNameCountLimit ||
+    tagNames.some((name) => [...name].length > tagNameLengthLimit)
   ) {
-    return invalid(
-      `Use up to ${timelineCollectionCountLimit} Collections with ${timelineCollectionNameLimit} characters each.`,
-    );
-  }
-
-  if (
-    tagNames.length > timelineTagCountLimit ||
-    tagNames.some((name) => [...name].length > timelineTagNameLimit)
-  ) {
-    return invalid(
-      `Use up to ${timelineTagCountLimit} tags with ${timelineTagNameLimit} characters each.`,
-    );
+    return invalid(tagNamesLimitMessage);
   }
 
   if (!uuidPattern.test(input.trackId)) {
@@ -128,7 +114,6 @@ export function parseTimelineEntryInput(
     data: {
       ...input,
       body,
-      collectionNames,
       occurredEnd,
       occurredLabel,
       occurredStart,

@@ -9,7 +9,6 @@ const goalId = "40000000-0000-4000-8000-000000000001";
 const relatedId = "40000000-0000-4000-8000-000000000002";
 const validGoal = {
   body: " Learn the landscape, then decide. ",
-  collectionNames: [" Bucket List ", "bucket list", "Learning"],
   horizon: "long_term",
   id: goalId,
   relatedEntryIds: [relatedId, relatedId.toUpperCase()],
@@ -28,7 +27,6 @@ describe("parseGoalEntryInput", () => {
     if (parsed.success) {
       expect(parsed.data).toMatchObject({
         body: "Learn the landscape, then decide.",
-        collectionNames: ["Bucket List", "Learning"],
         relatedEntryIds: [relatedId],
         tagNames: ["Travel", "curious"],
         targetDate: "2030-06-15",
@@ -42,7 +40,6 @@ describe("parseGoalEntryInput", () => {
       parseGoalEntryInput({
         ...validGoal,
         body: "",
-        collectionNames: [],
         id: null,
         relatedEntryIds: [],
         revision: null,

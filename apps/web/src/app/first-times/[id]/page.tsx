@@ -21,7 +21,6 @@ export default async function FirstTimeDetailPage({
     <FocusedRecordDetail
       kind="first-time"
       record={record}
-      collectionOptions={workspace.collectionOptions}
       tagOptions={workspace.tagOptions}
       ownerId={workspace.viewer.id}
     />

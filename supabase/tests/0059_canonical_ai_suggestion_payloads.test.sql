@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(5);
+select plan(6);
 
 insert into public.entries(id, owner_id, title, body)
 values (
@@ -58,6 +58,13 @@ select throws_ok(
   '23514',
   'new row for relation "ai_suggestions" violates check constraint "ai_suggestions_entry_payload_check"',
   'AI classification payloads are rejected'
+);
+
+select throws_ok(
+  $$update public.ai_suggestions set suggestions = '{"tags":[],"collections":["Learning"]}' where id = '99000000-0000-4000-8000-000000000002'$$,
+  '23514',
+  'new row for relation "ai_suggestions" violates check constraint "ai_suggestions_entry_payload_check"',
+  'Retired Collection suggestions are rejected'
 );
 
 select * from finish();

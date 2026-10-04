@@ -1,4 +1,5 @@
-import { parseOrganizationNames } from "./inbox-review";
+import { tagNamesLimitMessage } from "./organization";
+import { parseTagNames } from "./inbox-review";
 import { validateOccurrence } from "./occurrence";
 
 export const firstTimeBodyLimit = 50_000;
@@ -31,7 +32,6 @@ export type FirstTimeImageMimeType = (typeof firstTimeImageMimeTypes)[number];
 
 export type FirstTimeEntryInput = {
   body: string;
-  collectionNames: string[];
   datePrecision: FirstTimeDatePrecision;
   id: string | null;
   occurredLabel: string | null;
@@ -85,8 +85,7 @@ export function parseFirstTimeEntryInput(
     typeof input.occurredTimezone === "string"
       ? input.occurredTimezone.trim() || null
       : null;
-  const collectionNames = parseOrganizationNames(input.collectionNames, 20, 80);
-  const tagNames = parseOrganizationNames(input.tagNames, 50, 60);
+  const tagNames = parseTagNames(input.tagNames);
 
   if (!title) {
     return invalid("Add a title for this First Time.");
@@ -106,12 +105,8 @@ export function parseFirstTimeEntryInput(
     );
   }
 
-  if (!collectionNames) {
-    return invalid("Use up to 20 Collections with names under 80 characters.");
-  }
-
   if (!tagNames) {
-    return invalid("Use up to 50 tags with names under 60 characters.");
+    return invalid(tagNamesLimitMessage);
   }
 
   if (
@@ -171,7 +166,6 @@ export function parseFirstTimeEntryInput(
   return {
     data: {
       body,
-      collectionNames,
       datePrecision,
       id: input.id as string | null,
       occurredLabel,

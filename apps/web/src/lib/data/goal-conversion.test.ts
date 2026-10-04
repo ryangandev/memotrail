@@ -15,7 +15,6 @@ describe("Goal extraction input", () => {
       parseGoalExtractionInput({
         ...input,
         body: "Do not overwrite",
-        collectionNames: ["Ignore"],
       }),
     ).toEqual({ success: true, data: { ...input, title: "学习" } });
   });

@@ -1,24 +1,21 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(42);
+select plan(41);
 insert into public.entries(id,owner_id,title,body,date_precision,occurred_label) values
 ('94000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','History original','Original writing','year','University year'),
 ('94000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','Linked context','Another memory','unknown',null);
-insert into public.collections(id,owner_id,name) values('94100000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','History collection');
 insert into public.tags(id,owner_id,name) values('94200000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','history-tag');
 insert into public.people(id,owner_id,name) values('94300000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Historical friend');
 insert into public.locations(id,owner_id,name) values
 ('94400000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Old location name'),
 ('94400000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','Home location');
 insert into public.timeline_tracks(id,owner_id,name) values('94500000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','History track');
-insert into public.entry_collections values('94000000-0000-4000-8000-000000000001','94100000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001',now());
 insert into public.entry_tags values('94000000-0000-4000-8000-000000000001','94200000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001',now());
 insert into public.entry_people(entry_id,person_id,owner_id) values('94000000-0000-4000-8000-000000000001','94300000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001');
 insert into public.entry_places(entry_id,place_id,owner_id) values('94000000-0000-4000-8000-000000000001','94400000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001');
 insert into public.timeline_items(entry_id,track_id,owner_id,timeline_kind) values('94000000-0000-4000-8000-000000000001','94500000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','event');
 insert into public.entry_links(source_entry_id,target_entry_id,owner_id) values('94000000-0000-4000-8000-000000000001','94000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001');
 update public.entries set title='History revised',body='Current writing',date_precision='unknown',occurred_label=null where id='94000000-0000-4000-8000-000000000001';
-delete from public.entry_collections where entry_id='94000000-0000-4000-8000-000000000001';
 delete from public.entry_tags where entry_id='94000000-0000-4000-8000-000000000001';
 delete from public.entry_people where entry_id='94000000-0000-4000-8000-000000000001';
 delete from public.entry_places where entry_id='94000000-0000-4000-8000-000000000001';
@@ -29,12 +26,11 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
 select is(public.entry_history('94000000-0000-4000-8000-000000000001')->>'total_count','1','Earlier version is browsable');
 select is(public.entry_history('94000000-0000-4000-8000-000000000001')->'versions'->0->'snapshot'->>'history_schema','3','New snapshots carry the canonical schema marker');
-select is(public.entry_history('94000000-0000-4000-8000-000000000001')->'versions'->0->'snapshot'->'collections'->0->>'name','History collection','Snapshot records original Collection name');
+select is(public.entry_history('94000000-0000-4000-8000-000000000001')->'versions'->0->'snapshot'->'tags'->0->>'name','history-tag','Snapshot records original tag name');
 select is((select count(*) from public.entry_history_index('History revised')),1::bigint,'History index finds current writing');
 select is(public.restore_entry_version('94000000-0000-4000-8000-000000000001',1,2),3,'Restore creates next revision');
 select is((select body from public.entries where id='94000000-0000-4000-8000-000000000001'),'Original writing','Restores writing');
 select is((select date_precision from public.entries where id='94000000-0000-4000-8000-000000000001'),'year','Restores imprecise date');
-select is((select count(*) from public.entry_collections where entry_id='94000000-0000-4000-8000-000000000001'),1::bigint,'Restores Collection links');
 select is((select count(*) from public.entry_tags where entry_id='94000000-0000-4000-8000-000000000001'),1::bigint,'Restores tag links');
 select is((select count(*) from public.entry_people where entry_id='94000000-0000-4000-8000-000000000001'),1::bigint,'Restores People links');
 select is((select count(*) from public.entry_places where entry_id='94000000-0000-4000-8000-000000000001'),1::bigint,'Restores Place links');
@@ -44,7 +40,7 @@ select is((select name from public.locations where id='94400000-0000-4000-8000-0
 select is((select snapshot->>'body' from public.entry_versions where entry_id='94000000-0000-4000-8000-000000000001' and version=2),'Current writing','Pre-restore current version remains available');
 select is(public.restore_entry_version('94000000-0000-4000-8000-000000000001',1,2),null::integer,'Stale restore rejected');
 select is(public.restore_entry_version('94000000-0000-4000-8000-000000000001',2,3),4,'Restoration can itself be undone');
-select is((select count(*) from public.entry_collections where entry_id='94000000-0000-4000-8000-000000000001'),0::bigint,'Recorded empty links are restored precisely');
+select is((select count(*) from public.entry_tags where entry_id='94000000-0000-4000-8000-000000000001'),0::bigint,'Recorded empty links are restored precisely');
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000099',true);
 select is(public.entry_history('94000000-0000-4000-8000-000000000001'),null::jsonb,'Other owner cannot inspect history');
 select is(public.restore_entry_version('94000000-0000-4000-8000-000000000001',1,4),null::integer,'Other owner cannot restore history');
@@ -80,12 +76,12 @@ select is((select color from public.vehicles where entry_id='94600000-0000-4000-
 reset role;
 -- Snapshots outside the canonical contract are rejected without partial writes.
 update public.entries set body='Legacy previous' where id='94000000-0000-4000-8000-000000000002';
-update public.entry_versions set snapshot=snapshot-array['collections','tags','people','places','timeline_items','timeline','links','related_entry_ids','attachments','history_schema'] where entry_id='94000000-0000-4000-8000-000000000002';
-insert into public.entry_collections values('94000000-0000-4000-8000-000000000002','94100000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001',now());
+update public.entry_versions set snapshot=snapshot-array['tags','people','places','timeline_items','timeline','links','related_entry_ids','attachments','history_schema'] where entry_id='94000000-0000-4000-8000-000000000002';
+insert into public.entry_tags values('94000000-0000-4000-8000-000000000002','94200000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001',now());
 set local role authenticated;
 select throws_ok($$select public.restore_entry_version('94000000-0000-4000-8000-000000000002',1,2)$$,'P0001','history_schema_unsupported','Noncanonical history cannot be restored');
 select is((select revision from public.entries where id='94000000-0000-4000-8000-000000000002'),2,'Rejected history leaves the revision unchanged');
-select is((select count(*) from public.entry_collections where entry_id='94000000-0000-4000-8000-000000000002'),1::bigint,'Rejected history leaves current relationships unchanged');
+select is((select count(*) from public.entry_tags where entry_id='94000000-0000-4000-8000-000000000002'),1::bigint,'Rejected history leaves current relationships unchanged');
 reset role;
 select ok(not has_function_privilege('anon','public.restore_entry_version(uuid,integer,integer)','execute'),'Anonymous restoration denied');
 select ok(not has_function_privilege('authenticated','public.entry_history_snapshot(public.entries)','execute'),'Internal snapshot helper not exposed to clients');

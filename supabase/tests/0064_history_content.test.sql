@@ -10,7 +10,7 @@ returns uuid language sql as $$
     p_title, 'Home memories', '2021-04-12T12:00:00Z', null, 'day', null, 'UTC',
     (select place_id from public.homes where entry_id = p_id), 'Maple Street',
     '10 Maple Street', 'Philadelphia', 'Pennsylvania', 'United States',
-    39.95, -75.16, null, p_reason, null, '{}', '{}', p_id, p_revision
+    39.95, -75.16, null, p_reason, null, '{}', p_id, p_revision
   );
 $$;
 create function pg_temp.save_vehicle(p_id uuid default null, p_revision integer default null,
@@ -18,7 +18,7 @@ create function pg_temp.save_vehicle(p_id uuid default null, p_revision integer 
 returns uuid language sql as $$
   select entry_id from public.save_vehicle_entry_with_occurrence(
     p_title, 'Vehicle memories', '2021-04-12T12:00:00Z', null, 'day', null, 'UTC',
-    'Honda', 'Civic', 2018, p_color, '{}', '{}', p_id, p_revision
+    'Honda', 'Civic', 2018, p_color, '{}', p_id, p_revision
   );
 $$;
 create function pg_temp.differences(p_id uuid, p_version integer)

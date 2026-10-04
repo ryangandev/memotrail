@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(64);
+select plan(61);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -65,7 +65,6 @@ select lives_ok(
       'long_term',
       'active',
       '2028-12-31',
-      array['Goals', 'Learning', 'goals'],
       array['Language', 'growth', 'LANGUAGE'],
       array[(select id from public.entries where title = 'Learning journal')],
       null,
@@ -109,12 +108,6 @@ select is(
 );
 
 select is(
-  (select collection_names::text from public.goals_workspace() where title = 'Learn Japanese'),
-  '{goals,Learning}',
-  'Goal Collections are normalized and de-duplicated case-insensitively'
-);
-
-select is(
   (select tag_names::text from public.goals_workspace() where title = 'Learn Japanese'),
   '{growth,Language}',
   'Goal tags are normalized and de-duplicated case-insensitively'
@@ -150,8 +143,7 @@ select lives_ok(
   $$
     select *
     from public.save_goal_entry(
-      'Visit Iceland', '', 'someday', 'considering', null,
-      array['Bucket List'], array['Travel'], array[]::uuid[], null, null
+      'Visit Iceland', '', 'someday', 'considering', null, array['Travel'], array[]::uuid[], null, null
     )
   $$,
   'A Goal may omit its description and target date'
@@ -161,8 +153,7 @@ select lives_ok(
   $$
     select *
     from public.save_goal_entry(
-      'Pause running', 'Rest without pressure.', 'short_term', 'paused', null,
-      array['Health'], array[]::text[], array[]::uuid[], null, null
+      'Pause running', 'Rest without pressure.', 'short_term', 'paused', null, array[]::text[], array[]::uuid[], null, null
     )
   $$,
   'A paused short-term Goal remains a valid reflective state'
@@ -188,7 +179,7 @@ select is(
 
 select is(
   pg_temp.capture_sqlstate(
-    $$select * from public.save_goal_entry('', '', 'someday', 'active', null, '{}', '{}', '{}', null, null)$$
+    $$select * from public.save_goal_entry('', '', 'someday', 'active', null, '{}', '{}', null, null)$$
   ),
   '22023',
   'Goal creation rejects an empty title'
@@ -196,7 +187,7 @@ select is(
 
 select is(
   pg_temp.capture_sqlstate(
-    $$select * from public.save_goal_entry('Bad', '', 'soon', 'active', null, '{}', '{}', '{}', null, null)$$
+    $$select * from public.save_goal_entry('Bad', '', 'soon', 'active', null, '{}', '{}', null, null)$$
   ),
   '22023',
   'Goal creation rejects an unsupported horizon'
@@ -204,7 +195,7 @@ select is(
 
 select is(
   pg_temp.capture_sqlstate(
-    $$select * from public.save_goal_entry('Bad', '', 'someday', 'done', null, '{}', '{}', '{}', null, null)$$
+    $$select * from public.save_goal_entry('Bad', '', 'someday', 'done', null, '{}', '{}', null, null)$$
   ),
   '22023',
   'Goal creation rejects a task-style unsupported status'
@@ -212,15 +203,7 @@ select is(
 
 select is(
   pg_temp.capture_sqlstate(
-    $$select * from public.save_goal_entry('Bad', '', 'someday', 'active', null, array[''], '{}', '{}', null, null)$$
-  ),
-  '22023',
-  'Goal creation rejects blank Collection names'
-);
-
-select is(
-  pg_temp.capture_sqlstate(
-    $$select * from public.save_goal_entry('Bad', '', 'someday', 'active', null, '{}', array[''], '{}', null, null)$$
+    $$select * from public.save_goal_entry('Bad', '', 'someday', 'active', null, array[''], '{}', null, null)$$
   ),
   '22023',
   'Goal creation rejects blank tags'
@@ -229,7 +212,7 @@ select is(
 select is(
   pg_temp.capture_sqlstate(
     $$select * from public.save_goal_entry(
-      'Bad', '', 'someday', 'active', null, '{}', '{}',
+      'Bad', '', 'someday', 'active', null, '{}',
       array['ffffffff-ffff-4fff-8fff-ffffffffffff'::uuid], null, null
     )$$
   ),
@@ -251,7 +234,7 @@ select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001
 select is(
   pg_temp.capture_sqlstate(
     $$select * from public.save_goal_entry(
-      'Bad', '', 'someday', 'active', null, '{}', '{}',
+      'Bad', '', 'someday', 'active', null, '{}',
       array[(select id from public.entries where title = 'Other private progress')], null, null
     )$$
   ),
@@ -263,7 +246,7 @@ select is(
   pg_temp.capture_sqlstate(
     format(
       $$select * from public.save_goal_entry(
-        'Self', '', 'someday', 'active', null, '{}', '{}', array[%L::uuid], %L::uuid, 1
+        'Self', '', 'someday', 'active', null, '{}', array[%L::uuid], %L::uuid, 1
       )$$,
       (select id from public.entries where title = 'Learn Japanese'),
       (select id from public.entries where title = 'Learn Japanese')
@@ -276,8 +259,7 @@ select is(
 select lives_ok(
   format(
     $$select * from public.save_goal_entry(
-      'Learn Japanese well', 'Updated reflection.', 'long_term', 'paused', null,
-      array['Learning'], array['language'], '{}', %L::uuid, 1
+      'Learn Japanese well', 'Updated reflection.', 'long_term', 'paused', null, array['language'], '{}', %L::uuid, 1
     )$$,
     (select id from public.entries where title = 'Learn Japanese')
   ),
@@ -322,7 +304,7 @@ select is(
   (
     select count(*)::integer
     from public.save_goal_entry(
-      'Stale', '', 'someday', 'active', null, '{}', '{}', '{}',
+      'Stale', '', 'someday', 'active', null, '{}', '{}',
       (select id from public.entries where title = 'Learn Japanese well'), 1
     )
   ),
@@ -333,7 +315,7 @@ select is(
 select is(
   (
     select title
-    from public.search_wiki_items('long term', array['goal'], '{}', '{}', null, null, 20, 0)
+    from public.search_wiki_items('long term', array['goal'], '{}', null, null, 20, 0)
     where title = 'Learn Japanese well'
   ),
   'Learn Japanese well',
@@ -343,23 +325,11 @@ select is(
 select is(
   (
     select title
-    from public.search_wiki_items('2028-12-31', array['goal'], '{}', '{}', null, null, 20, 0)
+    from public.search_wiki_items('2028-12-31', array['goal'], '{}', null, null, 20, 0)
     where title = 'Learn Japanese well'
   ),
   null,
   'Clearing a target date removes its structured search value'
-);
-
-select is(
-  (
-    select count(*)::integer
-    from public.mark_goal_achieved_with_first_time(
-      (select id from public.entries where title = 'Learn Japanese well'),
-      2, '2026-09-03T19:00:00Z', 'day', null, 'America/Los_Angeles'
-    )
-  ),
-  0,
-  'Only a Bucket List Goal can create an achieved First Time'
 );
 
 select is(
@@ -371,7 +341,7 @@ select is(
     )
   ),
   1,
-  'A Bucket List Goal can atomically create an achieved First Time'
+  'A Goal can atomically create an achieved First Time'
 );
 
 select is(
@@ -382,7 +352,7 @@ select is(
     where entries.title = 'Visit Iceland' and entries.item_kind = 'goal'
   ),
   'achieved',
-  'The Bucket List action marks the Goal achieved'
+  'The achievement action marks the Goal achieved'
 );
 
 select is(
@@ -392,7 +362,7 @@ select is(
     where title = 'Visit Iceland' and item_kind = 'goal'
   ),
   2,
-  'The Bucket List action revision-safely updates the Goal'
+  'The achievement action revision-safely updates the Goal'
 );
 
 select is(
@@ -559,7 +529,7 @@ select is(
 );
 
 select is(
-  (select prosecdef from pg_proc where oid = 'public.save_goal_entry(text,text,text,text,date,text[],text[],uuid[],uuid,integer)'::regprocedure),
+  (select prosecdef from pg_proc where oid = 'public.save_goal_entry(text,text,text,text,date,text[],uuid[],uuid,integer)'::regprocedure),
   true,
   'The owner-checked Goal save boundary supports protected relationship writes'
 );
@@ -567,7 +537,7 @@ select is(
 select is(
   (select prosecdef from pg_proc where oid = 'public.mark_goal_achieved_with_first_time(uuid,integer,timestamptz,text,text,text)'::regprocedure),
   false,
-  'The Bucket List action uses invoker rights'
+  'The Goal achievement action uses invoker rights'
 );
 
 select is(
@@ -593,7 +563,7 @@ select ok(
     'public.mark_goal_achieved_with_first_time(uuid,integer,timestamptz,text,text,text)',
     'EXECUTE'
   ),
-  'Authenticated users can execute the Bucket List achievement action'
+  'Authenticated users can execute the Goal achievement action'
 );
 
 select ok(
@@ -602,7 +572,7 @@ select ok(
     'public.mark_goal_achieved_with_first_time(uuid,integer,timestamptz,text,text,text)',
     'EXECUTE'
   ),
-  'Anonymous users cannot execute the Bucket List achievement action'
+  'Anonymous users cannot execute the Goal achievement action'
 );
 
 select ok(

@@ -218,7 +218,6 @@ export function evidenceParameters(
     // All Types really means all types. Thoughts can live inside a First Time
     // or Home, so model-inferred labels must not silently narrow the archive.
     p_item_classifications: request.itemClassifications,
-    p_collection_names: request.collectionNames,
     p_tag_names: request.tagNames,
     p_date_from: request.dateFrom ?? plan.dateFrom,
     p_date_to: request.dateTo ?? plan.dateTo,
@@ -331,7 +330,6 @@ export function buildSearchSources(raw: unknown, queries: string[]) {
               "occurred_end",
               "occurred_label",
               "occurred_timezone",
-              "collections",
               "tags",
               "facts",
             ].map((k) => [k, row[k]]),

@@ -21,7 +21,6 @@ export default async function VehicleDetailPage({
     <FocusedRecordDetail
       kind="vehicle"
       record={record}
-      collectionOptions={workspace.collectionOptions}
       tagOptions={workspace.tagOptions}
       ownerId={workspace.viewer.id}
     />

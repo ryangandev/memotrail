@@ -65,7 +65,6 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
           p_expected_revision: null,
           p_title: "Upload retry fixture",
           p_body: "Original writing",
-          p_collection_names: [],
           p_tag_names: [],
         };
         const dates = {

@@ -34,7 +34,6 @@ export default async function HomesPage({
 
   return (
     <HomesWorkspace
-      collectionOptions={workspace.collectionOptions}
       homes={workspace.homes}
       initialHomeId={initialHomeId}
       loadError={workspace.loadError}

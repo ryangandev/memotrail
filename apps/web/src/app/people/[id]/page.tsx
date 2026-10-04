@@ -33,7 +33,6 @@ export default async function PersonDetailPage({
       kind="person"
       record={record}
       entries={(entries.data ?? []) as PersonEntry[]}
-      collectionOptions={[]}
       tagOptions={[]}
       ownerId={context.viewer.id}
     />

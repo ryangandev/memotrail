@@ -2,8 +2,7 @@ import { describe, it, expect } from "vitest";
 import { parseEntryAISuggestions, mergeAISuggestionNames } from "./suggestion";
 const valid = {
   title: "牙套的原理",
-  collections: ["Learning"],
-  tags: ["牙齿"],
+  tags: ["Learning", "牙齿"],
   dateText: null,
   rationale: "记录刚学到的知识。",
   confidence: 0.9,
@@ -23,11 +22,9 @@ describe("Untrusted AI suggestions", () => {
   });
   it("rejects oversized names, prose, and malformed arrays", () => {
     expect(
-      parseEntryAISuggestions({ ...valid, tags: ["x".repeat(61)] }),
+      parseEntryAISuggestions({ ...valid, tags: ["x".repeat(81)] }),
     ).toBeNull();
-    expect(
-      parseEntryAISuggestions({ ...valid, collections: "Learning" }),
-    ).toBeNull();
+    expect(parseEntryAISuggestions({ ...valid, tags: "Learning" })).toBeNull();
     expect(
       parseEntryAISuggestions({ ...valid, rationale: "x".repeat(1001) }),
     ).toBeNull();

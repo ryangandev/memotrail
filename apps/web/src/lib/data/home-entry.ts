@@ -13,7 +13,6 @@ export type HomeAttachment = {
 export type HomeEntry = {
   attachments: HomeAttachment[];
   body: string;
-  collectionNames: string[];
   createdAt: string;
   datePrecision: string;
   id: string;
@@ -76,7 +75,6 @@ export function parseHomeEntry(value: unknown): HomeEntry | null {
     value.revision < 1 ||
     typeof value.created_at !== "string" ||
     typeof value.updated_at !== "string" ||
-    !stringArray(value.collection_names) ||
     !stringArray(value.tag_names)
   ) {
     return null;
@@ -85,7 +83,6 @@ export function parseHomeEntry(value: unknown): HomeEntry | null {
   return {
     attachments,
     body: value.body,
-    collectionNames: value.collection_names,
     createdAt: value.created_at,
     datePrecision: value.date_precision,
     id: value.entry_id,

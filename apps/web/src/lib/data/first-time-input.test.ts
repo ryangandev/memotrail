@@ -18,7 +18,6 @@ describe("parseFirstTimeEntryInput", () => {
     const value = {
       title: "First trip",
       body: "",
-      collectionNames: [],
       tagNames: [],
       id: null,
       revision: null,
@@ -57,7 +56,6 @@ describe("parseFirstTimeEntryInput", () => {
     expect(
       parseFirstTimeEntryInput({
         body: "  ",
-        collectionNames: [],
         datePrecision: "unknown",
         id: null,
         occurredLabel: null,
@@ -71,7 +69,6 @@ describe("parseFirstTimeEntryInput", () => {
       data: {
         body: "",
         occurredEnd: null,
-        collectionNames: [],
         datePrecision: "unknown",
         id: null,
         occurredLabel: null,
@@ -88,7 +85,6 @@ describe("parseFirstTimeEntryInput", () => {
   it("normalizes dated content and organization", () => {
     const parsed = parseFirstTimeEntryInput({
       body: "  A cold, clear morning. ",
-      collectionNames: [" Travel ", "travel"],
       datePrecision: "day",
       id: entryId,
       occurredLabel: "  July 3, 2026 ",
@@ -102,7 +98,6 @@ describe("parseFirstTimeEntryInput", () => {
     expect(parsed.success).toBe(true);
     if (parsed.success) {
       expect(parsed.data).toMatchObject({
-        collectionNames: ["Travel"],
         occurredLabel: "July 3, 2026",
         occurredStart: "2026-07-04T02:00:00.000Z",
         occurredTimezone: "America/Los_Angeles",
@@ -114,7 +109,6 @@ describe("parseFirstTimeEntryInput", () => {
   it("requires a title", () => {
     const parsed = parseFirstTimeEntryInput({
       body: "A note",
-      collectionNames: [],
       datePrecision: "unknown",
       id: null,
       occurredLabel: null,
@@ -131,7 +125,6 @@ describe("parseFirstTimeEntryInput", () => {
   it("requires a date for exact precision", () => {
     const parsed = parseFirstTimeEntryInput({
       body: "",
-      collectionNames: [],
       datePrecision: "day",
       id: null,
       occurredLabel: null,
@@ -148,7 +141,6 @@ describe("parseFirstTimeEntryInput", () => {
   it("accepts an age label without inventing an exact date", () => {
     const parsed = parseFirstTimeEntryInput({
       body: "",
-      collectionNames: [],
       datePrecision: "age",
       id: null,
       occurredLabel: "Age 7",

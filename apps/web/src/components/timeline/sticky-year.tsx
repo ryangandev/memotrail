@@ -34,9 +34,6 @@ function FeedCard({
       ) : null}
       <span className={styles.cardBottom}>
         <span>{timelineEntryTypeLabel(item.entry)}</span>
-        {item.entry.collectionNames.slice(0, 2).map((name) => (
-          <span key={name}>{name}</span>
-        ))}
       </span>
     </button>
   );

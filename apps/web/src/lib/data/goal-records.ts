@@ -11,7 +11,6 @@ import {
 } from "./goal-record";
 
 export type GoalsWorkspace = {
-  collectionOptions: string[];
   goals: GoalRecord[];
   inboxCount: number | undefined;
   linkOptions: GoalLinkOption[];
@@ -28,7 +27,7 @@ export async function getGoalsWorkspace(
   const context = await getAuthenticatedContext();
   if (!context) return null;
 
-  const [goals, links, collections, tags, inbox] = await Promise.all([
+  const [goals, links, tags, inbox] = await Promise.all([
     context.client.rpc("goals_workspace", { p_limit: 100, p_offset: 0 }),
     context.client
       .from("entries")
@@ -37,13 +36,6 @@ export async function getGoalsWorkspace(
       .is("deleted_at", null)
       .order("updated_at", { ascending: false })
       .limit(200),
-    context.client
-      .from("collections")
-      .select("name")
-      .eq("owner_id", context.userId)
-      .is("archived_at", null)
-      .order("name")
-      .returns<NameRow[]>(),
     context.client
       .from("tags")
       .select("name")
@@ -88,9 +80,6 @@ export async function getGoalsWorkspace(
     : (parseGoalLinkOptions(links.data) ?? []);
 
   return {
-    collectionOptions: collections.error
-      ? []
-      : (collections.data ?? []).map((item) => item.name),
     goals: visibleRows.map((goal) => ({
       ...goal,
       attachments: goal.attachments.map((attachment) => ({
@@ -121,7 +110,6 @@ function unavailableWorkspace(
   inboxCount: number | undefined,
 ): GoalsWorkspace {
   return {
-    collectionOptions: [],
     goals: [],
     inboxCount,
     linkOptions: [],

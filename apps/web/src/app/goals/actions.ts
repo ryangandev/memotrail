@@ -49,7 +49,6 @@ export async function saveGoalEntry(
 
   const parameters = {
     p_body: parsed.data.body,
-    p_collection_names: parsed.data.collectionNames,
     p_horizon: parsed.data.horizon,
     p_related_entry_ids: parsed.data.relatedEntryIds,
     p_status: parsed.data.status,
@@ -132,7 +131,7 @@ export async function markGoalAchieved(
   if (!achieved) {
     return result(
       "conflict",
-      "This Goal changed or is no longer in Bucket List. Close it, refresh, and try again.",
+      "This Goal changed or is already achieved. Close it, refresh, and try again.",
     );
   }
 
@@ -309,7 +308,6 @@ function expiredSession(): GoalActionResult {
 
 function refreshGoalPaths() {
   revalidatePath("/");
-  revalidatePath("/collections");
   revalidatePath("/first-times");
   revalidatePath("/goals");
   revalidatePath("/inbox");

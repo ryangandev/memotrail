@@ -35,32 +35,32 @@ declare
   track uuid := (select id from public.timeline_tracks where owner_id = auth.uid() and system_key = 'other_events');
   input jsonb := jsonb_build_object('title','Rich ' || p_kind,'body',p_body,
     'datePrecision','unknown',
-    'collectionNames','[]'::jsonb,'tagNames','[]'::jsonb,'id',p_id,'revision',current_revision);
+    'tagNames','[]'::jsonb,'id',p_id,'revision',current_revision);
 begin
   if p_kind = 'goal' then
     select entry_id into result from public.save_goal_entry(
-      'Rich goal',p_body,'long_term','active',null,'{}','{}','{}',p_id,current_revision);
+      'Rich goal',p_body,'long_term','active',null,'{}','{}',p_id,current_revision);
   elsif p_kind = 'moment' then
     select entry_id into result from public.save_timeline_entry_with_organization(
-      track,'event','Rich moment',p_body,null,null,'unknown',null,'UTC','{}','{}',p_id,current_revision);
+      track,'event','Rich moment',p_body,null,null,'unknown',null,'UTC','{}',p_id,current_revision);
   elsif p_kind = 'period' then
     select entry_id into result from public.save_timeline_entry_with_occurrence(
       track,'stage','Rich period',p_body,null,null,'unknown',null,'UTC',p_id,current_revision);
   elsif p_kind = 'first_time' then
     select entry_id into result from public.save_first_time_with_occurrence(
-      'Rich first time',p_body,null,'unknown',null,null,'{}','{}',p_id,current_revision,null);
+      'Rich first time',p_body,null,'unknown',null,null,'{}',p_id,current_revision,null);
   elsif p_kind = 'first_time_location' then
     select entry_id into result from public.save_first_time_with_location(input,null);
   elsif p_kind = 'home' then
     select entry_id into result from public.save_home_entry_with_occurrence(
       'Rich home',p_body,null,null,'unknown',null,'UTC',null,null,null,null,null,null,null,null,
-      null,null,null,'{}','{}',p_id,current_revision);
+      null,null,null,'{}',p_id,current_revision);
   elsif p_kind = 'home_geoapify' then
     result := (public.save_home_entry_with_geoapify(input || '{"occurredTimezone":"UTC"}',null,
       pg_temp.provider())->>'entry_id')::uuid;
   elsif p_kind = 'vehicle' then
     select entry_id into result from public.save_vehicle_entry_with_occurrence(
-      'Rich vehicle',p_body,null,null,'unknown',null,'UTC','Honda','Civic',2018,'Blue','{}','{}',
+      'Rich vehicle',p_body,null,null,'unknown',null,'UTC','Honda','Civic',2018,'Blue','{}',
       p_id,current_revision);
   elsif p_kind = 'vehicle_location' then
     select entry_id into result from public.save_vehicle_with_location(input,null,null);
@@ -87,7 +87,7 @@ select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000002'),'Run zebrafi
   'The linked Goal copies formatting that matches its writing');
 select is(
   (select revision from public.save_goal_entry('Renamed goal','Run zebrafinch marathon','short_term','active',
-    null,'{}','{}','{}','96600000-0000-4000-8000-000000000002',1)),
+    null,'{}','{}','96600000-0000-4000-8000-000000000002',1)),
   2,
   'A Goal save with unchanged writing advances one revision'
 );
@@ -97,7 +97,7 @@ select is(pg_temp.versions('96600000-0000-4000-8000-000000000002'),1::bigint,
   'Keeping formatting adds no history version of its own');
 select is(
   (select revision from public.save_goal_entry('Renamed goal','Run a half marathon','short_term','active',
-    null,'{}','{}','{}','96600000-0000-4000-8000-000000000002',2)),
+    null,'{}','{}','96600000-0000-4000-8000-000000000002',2)),
   3,
   'A Goal save with new writing advances one revision'
 );
@@ -189,7 +189,7 @@ values ('96600000-0000-4000-8000-000000000005',auth.uid(),'Review','Review words
   'organized','unknown','UTC',jsonb_build_object('body_rich',pg_temp.rich('Review words')));
 select is(
   (select revision from public.review_wiki_item_with_photo_place('96600000-0000-4000-8000-000000000005',1,
-    'Reviewed','Review words','entry','entry',null,'UTC','{}','{}',false,null,null,'unknown',null)),
+    'Reviewed','Review words','entry','entry',null,'UTC','{}',false,null,null,'unknown',null)),
   2,
   'A plaintext review with unchanged writing succeeds'
 );
@@ -197,7 +197,7 @@ select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000005'),'Review word
   'A plaintext review keeps formatting it cannot author while the writing is unchanged');
 select is(
   (select revision from public.review_wiki_item_with_photo_place_rich('96600000-0000-4000-8000-000000000005',2,
-    'Reviewed','Formatted words','entry','entry',null,'UTC','{}','{}',false,null,null,'unknown',null,
+    'Reviewed','Formatted words','entry','entry',null,'UTC','{}',false,null,null,'unknown',null,
     pg_temp.rich('Formatted words'))),
   3,
   'A rich review saves new writing with its formatting'
@@ -206,7 +206,7 @@ select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000005'),'Formatted w
   'A rich review stores formatting for its new writing');
 select is(
   (select revision from public.review_wiki_item_with_location_rich('96600000-0000-4000-8000-000000000005',3,
-    'Reviewed','Located words','entry','entry',null,'UTC','{}','{}',false,null,null,'unknown',null,null,
+    'Reviewed','Located words','entry','entry',null,'UTC','{}',false,null,null,'unknown',null,null,
     pg_temp.rich('Located words'))),
   4,
   'A Location review saves new writing with its formatting'
@@ -215,7 +215,7 @@ select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000005'),'Located wor
   'A Location review stores formatting for its new writing');
 select is(
   (select revision from public.review_wiki_item_with_photo_place('96600000-0000-4000-8000-000000000005',4,
-    'Reviewed','Plain edit','entry','entry',null,'UTC','{}','{}',false,null,null,'unknown',null)),
+    'Reviewed','Plain edit','entry','entry',null,'UTC','{}',false,null,null,'unknown',null)),
   5,
   'A plaintext review with new writing succeeds'
 );

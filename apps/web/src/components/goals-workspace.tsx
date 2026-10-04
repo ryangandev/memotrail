@@ -39,7 +39,6 @@ import {
   goalHorizonLabels,
   goalStatusLabels,
   goalTargetLabel,
-  isBucketListGoal,
   type GoalAttachment,
   type GoalLinkOption,
   type GoalRecord,
@@ -99,7 +98,6 @@ const goalSections: Array<{
 ];
 
 export function GoalsWorkspace({
-  collectionOptions,
   goals,
   initialGoalId,
   linkOptions,
@@ -108,7 +106,6 @@ export function GoalsWorkspace({
   sourceCapture,
   tagOptions,
 }: {
-  collectionOptions: string[];
   goals: GoalRecord[];
   initialGoalId: string | null;
   linkOptions: GoalLinkOption[];
@@ -127,7 +124,6 @@ export function GoalsWorkspace({
   const openCount = goals.filter(
     (goal) => !["achieved", "let_go"].includes(goal.status),
   ).length;
-  const bucketCount = goals.filter(isBucketListGoal).length;
 
   return (
     <FocusedViewLayout
@@ -153,7 +149,6 @@ export function GoalsWorkspace({
         <SeparatedList>
           <span>{countLabel(goals.length, "goal")}</span>
           <span>{openCount} open</span>
-          <span>{bucketCount} in Bucket List</span>
         </SeparatedList>
       }
       summaryLabel="Goals summary"
@@ -206,7 +201,6 @@ export function GoalsWorkspace({
 
       {selectedGoal !== undefined ? (
         <GoalEditor
-          collectionOptions={collectionOptions}
           goal={selectedGoal}
           key={selectedGoal?.id ?? captureHandoff?.id ?? "new-goal"}
           linkOptions={linkOptions}
@@ -309,11 +303,6 @@ function GoalCard({
           <p className={styles.reflection}>{truncate(goal.body, 180)}</p>
         ) : null}
         <div className={styles.contextLine}>
-          {isBucketListGoal(goal) ? (
-            <span>
-              <Icon name="star" size={13} /> Bucket List
-            </span>
-          ) : null}
           {relatedCount > 0 ? (
             <span>{countLabel(relatedCount, "related Item")}</span>
           ) : null}
@@ -321,18 +310,6 @@ function GoalCard({
         </div>
         <footer>
           <div>
-            {goal.collectionNames
-              .filter((name) => name.toLocaleLowerCase() !== "bucket list")
-              .slice(0, 2)
-              .map((name) => (
-                <Badge
-                  key={`collection:${name.toLocaleLowerCase()}`}
-                  size="micro"
-                  tone="neutral"
-                >
-                  {name}
-                </Badge>
-              ))}
             {goal.tagNames.slice(0, 2).map((name) => (
               <Badge
                 key={`tag:${name.toLocaleLowerCase()}`}
@@ -351,7 +328,6 @@ function GoalCard({
 }
 
 export function GoalEditor({
-  collectionOptions,
   goal,
   linkOptions,
   onClose,
@@ -361,7 +337,6 @@ export function GoalEditor({
   sourceCapture = null,
   tagOptions,
 }: {
-  collectionOptions: string[];
   goal: GoalRecord | null;
   linkOptions: GoalLinkOption[];
   onClose: () => void;
@@ -375,10 +350,6 @@ export function GoalEditor({
   const requestConfirmation = useConfirmationDialog();
   const titleRef = useRef<HTMLInputElement>(null);
   const [body, setBody] = useState(goal?.body ?? sourceCapture?.body ?? "");
-  const [collectionInput, setCollectionInput] = useState("");
-  const [collectionNames, setCollectionNames] = useState(
-    goal?.collectionNames ?? sourceCapture?.collectionNames ?? [],
-  );
   const [currentId, setCurrentId] = useState(goal?.id ?? null);
   const [currentRevision, setCurrentRevision] = useState(
     goal?.revision ?? null,
@@ -429,9 +400,7 @@ export function GoalEditor({
       title: option?.title ?? existing?.title ?? "Related Item",
     };
   });
-  const savedBucketListGoal = Boolean(
-    goal && isBucketListGoal(goal) && status !== "achieved",
-  );
+  const canRecordAchievement = Boolean(goal && status !== "achieved");
   const hasUnsavedChanges = Boolean(
     goal &&
     (title !== goal.title ||
@@ -439,7 +408,6 @@ export function GoalEditor({
       horizon !== goal.horizon ||
       status !== goal.status ||
       (targetDate || null) !== goal.targetDate ||
-      !sameNames(collectionNames, goal.collectionNames) ||
       !sameNames(tagNames, goal.tagNames) ||
       !sameNames(
         relatedEntryIds,
@@ -447,7 +415,6 @@ export function GoalEditor({
           .filter((entry) => entry.relationship === "related")
           .map((entry) => entry.id),
       ) ||
-      Boolean(collectionInput.trim()) ||
       Boolean(tagInput.trim()) ||
       pendingPhotos.length > 0),
   );
@@ -479,7 +446,6 @@ export function GoalEditor({
     event.preventDefault();
     const input: GoalEntryInput = {
       body,
-      collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       horizon,
       id: currentId,
       relatedEntryIds,
@@ -737,23 +703,9 @@ export function GoalEditor({
                 value={body}
               />
             </label>
-          </fieldset>
-
-          <fieldset className={common.formSection}>
-            <legend>Organization</legend>
-            <EntryOrganizationEditor
-              disabled={isPending}
-              input={collectionInput}
-              kind="collection"
-              names={collectionNames}
-              onChange={setCollectionNames}
-              onInputChange={setCollectionInput}
-              options={collectionOptions}
-            />
             <EntryOrganizationEditor
               disabled={isPending}
               input={tagInput}
-              kind="tag"
               names={tagNames}
               onChange={setTagNames}
               onInputChange={setTagInput}
@@ -841,7 +793,7 @@ export function GoalEditor({
             recordLabel="Goal"
           />
 
-          {savedBucketListGoal && currentId && currentRevision !== null ? (
+          {canRecordAchievement && currentId && currentRevision !== null ? (
             <AchievementPanel
               disabled={isPending}
               goalId={currentId}
@@ -932,7 +884,7 @@ function AchievementPanel({
 
   return (
     <fieldset className={`${common.formSection} ${styles.achievementPanel}`}>
-      <legend>Bucket List milestone</legend>
+      <legend>Achievement</legend>
       <div className={styles.achievementIntro}>
         <span>
           <Icon name="star" size={18} />

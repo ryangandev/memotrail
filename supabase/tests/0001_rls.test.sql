@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(32);
+select plan(31);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -171,7 +171,6 @@ select lives_ok(
       'entry','entry',
       '2026-07-03T18:30:00Z',
       'America/Los_Angeles',
-      array['Travel', 'Learning', 'travel'],
       array['skiing', 'learning', 'Skiing'],
       false,
       null,
@@ -180,7 +179,7 @@ select lives_ok(
       null
     )
   $$,
-  'An owner can atomically review an Entry with Collections and tags'
+  'An owner can atomically review an Entry with tags'
 );
 
 select is(
@@ -216,16 +215,6 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.entry_collections
-    where entry_id = '40000000-0000-0000-0000-000000000002'
-  ),
-  2,
-  'Atomic review de-duplicates and links Collections'
-);
-
-select is(
-  (
-    select count(*)::integer
     from public.entry_tags
     where entry_id = '40000000-0000-0000-0000-000000000002'
   ),
@@ -244,7 +233,6 @@ select is(
       'entry','entry',
       '2026-07-03T18:30:00Z',
       'UTC',
-      array['Wrong Collection'],
       array['wrong-tag'],
       true,
       null,
@@ -278,7 +266,6 @@ select is(
       'entry','entry',
       '2026-07-03T18:30:00Z',
       'America/Los_Angeles',
-      array['Travel', 'Learning'],
       array['skiing', 'learning'],
       true,
       null,
@@ -360,7 +347,6 @@ select is(
       '2026-07-03T18:30:00Z',
       'UTC',
       '{}'::text[],
-      '{}'::text[],
       false,
       null,
       null,
@@ -374,23 +360,23 @@ select is(
 
 select lives_ok(
   $$
-    insert into public.collections (id, owner_id, name)
+    insert into public.tags (id, owner_id, name)
     values (
-      '20000000-0000-0000-0000-000000000003',
+      '30000000-0000-0000-0000-000000000003',
       '10000000-0000-0000-0000-000000000002',
-      'Second User Collection'
+      'Second User Tag'
     )
   $$,
-  'A second user can create their own Collection'
+  'A second user can create their own tag'
 );
 
 select is(
   pg_temp.capture_sqlstate(
     $$
-      insert into public.entry_collections (entry_id, collection_id, owner_id)
+      insert into public.entry_tags (entry_id, tag_id, owner_id)
       values (
         '40000000-0000-0000-0000-000000000002',
-        '20000000-0000-0000-0000-000000000003',
+        '30000000-0000-0000-0000-000000000003',
         '10000000-0000-0000-0000-000000000002'
       )
     $$

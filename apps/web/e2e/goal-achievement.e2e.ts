@@ -113,7 +113,6 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
       p_horizon: "someday",
       p_status: "active",
       p_target_date: null,
-      p_collection_names: ["Bucket List"],
       p_tag_names: [],
       p_related_entry_ids: [],
       p_entry_id: null,

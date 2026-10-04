@@ -38,9 +38,9 @@ const preferences: Array<{
     title: "AI capabilities · Beta",
   },
   {
-    detail: "Open the Library to manage Collections and tags across items.",
-    href: "/collections",
-    icon: "archive",
+    detail: "Rename, merge, and clean up the tags across your archive.",
+    href: "/tags",
+    icon: "tag",
     title: "Archive organization",
   },
   {

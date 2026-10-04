@@ -69,7 +69,6 @@ import {
 import { countLabel } from "@/lib/count-label";
 
 export function HomesWorkspace({
-  collectionOptions,
   homes: serverRecords,
   initialHomeId,
   loadError,
@@ -77,7 +76,6 @@ export function HomesWorkspace({
   sourceCapture,
   tagOptions,
 }: {
-  collectionOptions: string[];
   homes: HomeRecord[];
   initialHomeId: string | null;
   loadError: string | null;
@@ -178,7 +176,6 @@ export function HomesWorkspace({
 
       {selectedHome !== undefined ? (
         <HomeEditor
-          collectionOptions={collectionOptions}
           home={selectedHome}
           key={selectedHome?.id ?? "new-home"}
           onSaved={confirm}
@@ -300,15 +297,6 @@ function HomeCard({
         ) : null}
         <footer>
           <div>
-            {home.collectionNames.slice(0, 2).map((name) => (
-              <Badge
-                key={`collection:${name.toLocaleLowerCase()}`}
-                size="micro"
-                tone="neutral"
-              >
-                {name}
-              </Badge>
-            ))}
             {home.tagNames.slice(0, 2).map((name) => (
               <Badge
                 key={`tag:${name.toLocaleLowerCase()}`}
@@ -327,7 +315,6 @@ function HomeCard({
 }
 
 export function HomeEditor({
-  collectionOptions,
   defaultTimezone,
   home,
   onClose,
@@ -338,7 +325,6 @@ export function HomeEditor({
   sourceCapture = null,
   tagOptions,
 }: {
-  collectionOptions: string[];
   defaultTimezone?: string;
   home: HomeRecord | null;
   onClose: () => void;
@@ -377,10 +363,6 @@ export function HomeEditor({
   const [address, setAddress] = useState(home?.address ?? "");
   const [body, setBody] = useState(home?.body ?? sourceCapture?.body ?? "");
   const [city, setCity] = useState(home?.city ?? "");
-  const [collectionInput, setCollectionInput] = useState("");
-  const [collectionNames, setCollectionNames] = useState(
-    home?.collectionNames ?? sourceCapture?.collectionNames ?? [],
-  );
   const [country, setCountry] = useState(home?.country ?? "");
   const [currentId, setCurrentId] = useState(home?.id ?? null);
   const [currentRevision, setCurrentRevision] = useState(
@@ -474,7 +456,6 @@ export function HomeEditor({
       address: address || null,
       body,
       city: city || null,
-      collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       country: country || null,
       datePrecision: resolved.value.datePrecision,
       id: currentId,
@@ -848,17 +829,7 @@ export function HomeEditor({
             </label>
             <EntryOrganizationEditor
               disabled={isPending}
-              input={collectionInput}
-              kind="collection"
-              names={collectionNames}
-              onChange={setCollectionNames}
-              onInputChange={setCollectionInput}
-              options={collectionOptions}
-            />
-            <EntryOrganizationEditor
-              disabled={isPending}
               input={tagInput}
-              kind="tag"
               names={tagNames}
               onChange={setTagNames}
               onInputChange={setTagInput}

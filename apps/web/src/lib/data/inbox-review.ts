@@ -6,13 +6,17 @@ import {
 import { validPhotoPlace, type PhotoPlaceDraft } from "@/lib/media/photo-place";
 import { validateOccurrence, type OccurrencePrecision } from "./occurrence";
 import { isEntryRichText, type EntryRichText } from "./rich-text";
+import {
+  tagNameCountLimit,
+  tagNameLengthLimit,
+  tagNamesLimitMessage,
+} from "./organization";
 
 export type InboxReviewInput = {
   location: LocationSelection | null;
   photoPlace?: PhotoPlaceDraft | null;
   body: string;
   bodyRich?: EntryRichText | null;
-  collectionNames: string[];
   id: string;
   occurredAt: string | null;
   occurredEnd?: string | null;
@@ -53,12 +57,7 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
       : isEntryRichText(values.bodyRich, body)
         ? values.bodyRich
         : undefined;
-  const collectionNames = parseOrganizationNames(
-    values.collectionNames,
-    20,
-    80,
-  );
-  const tagNames = parseOrganizationNames(values.tagNames, 50, 60);
+  const tagNames = parseTagNames(values.tagNames);
 
   if (!title && !body) {
     return invalidReview("Keep a title or note before saving.");
@@ -72,14 +71,8 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
     );
   }
 
-  if (!collectionNames) {
-    return invalidReview(
-      "Use up to 20 Collections with names under 80 characters.",
-    );
-  }
-
   if (!tagNames) {
-    return invalidReview("Use up to 50 tags with names under 60 characters.");
+    return invalidReview(tagNamesLimitMessage);
   }
 
   if (title.length > entryTitleLimit) {
@@ -119,7 +112,6 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
         : {}),
       body,
       bodyRich,
-      collectionNames,
       id: values.id,
       location: (values.location ?? null) as LocationSelection | null,
       ...occurrence,
@@ -134,10 +126,10 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
   };
 }
 
-export function parseOrganizationNames(
+export function parseTagNames(
   input: unknown,
-  maximumCount: number,
-  maximumNameLength: number,
+  maximumCount = tagNameCountLimit,
+  maximumNameLength = tagNameLengthLimit,
 ) {
   if (!Array.isArray(input) || input.length > maximumCount) {
     return null;

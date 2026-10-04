@@ -20,7 +20,6 @@ export default async function GoalDetailPage({
     <FocusedRecordDetail
       kind="goal"
       record={record}
-      collectionOptions={workspace.collectionOptions}
       tagOptions={workspace.tagOptions}
       ownerId={workspace.viewer.id}
       linkOptions={workspace.linkOptions}

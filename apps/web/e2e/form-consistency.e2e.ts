@@ -102,10 +102,7 @@ test("specialized forms share photo fields and required-label conventions", asyn
         name: "Preview selected goal-preview.png",
       }),
     ).toHaveCount(0);
-    for (const [legendText, kind] of [
-      ["Collections", "Collection"],
-      ["Tags", "tag"],
-    ] as const) {
+    for (const [legendText, kind] of [["Tags", "tag"]] as const) {
       const legend = goalDialog.getByText(legendText, { exact: true });
       await goalDialog
         .getByRole("button", { name: `Add ${kind}`, exact: true })

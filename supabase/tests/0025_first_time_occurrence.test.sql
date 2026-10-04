@@ -7,7 +7,7 @@ insert into auth.users(id,email,raw_user_meta_data) values
 create function pg_temp.save_first(p_precision text,p_start timestamptz,p_end timestamptz,p_label text default null,p_id uuid default null,p_revision integer default null)
 returns uuid language sql as $$
  select entry_id from public.save_first_time_with_occurrence('First memory','Original writing',p_start,p_precision,p_label,
- case when p_start is null then null else 'America/Los_Angeles' end,'{}','{}',p_id,p_revision,p_end);
+ case when p_start is null then null else 'America/Los_Angeles' end,'{}',p_id,p_revision,p_end);
 $$;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000097',true);
@@ -40,6 +40,6 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000098'
 select is((select count(*) from public.first_times_workspace_with_occurrence()),0::bigint,'Another account cannot read date metadata');
 reset role;
 select ok(not has_function_privilege('anon','public.first_times_workspace_with_occurrence()','execute'),'Anonymous workspace access is denied');
-select ok(not has_function_privilege('anon','public.save_first_time_with_occurrence(text,text,timestamptz,text,text,text,text[],text[],uuid,integer,timestamptz)','execute'),'Anonymous writes are denied');
+select ok(not has_function_privilege('anon','public.save_first_time_with_occurrence(text,text,timestamptz,text,text,text,text[],uuid,integer,timestamptz)','execute'),'Anonymous writes are denied');
 select * from finish();
 rollback;

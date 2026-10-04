@@ -7,7 +7,6 @@ import {
 const entryId = "40000000-0000-4000-8000-000000000001";
 const validInput = {
   body: " The electric road-trip years. ",
-  collectionNames: [" Vehicles ", "vehicles", "Road trips"],
   color: " Midnight Silver ",
   datePrecision: "range",
   id: entryId,
@@ -62,7 +61,6 @@ describe("parseVehicleEntryInput", () => {
     if (parsed.success) {
       expect(parsed.data).toMatchObject({
         body: "The electric road-trip years.",
-        collectionNames: ["Vehicles", "Road trips"],
         color: "Midnight Silver",
         make: "Tesla",
         model: "Model Y",
@@ -122,7 +120,7 @@ describe("parseVehicleEntryInput", () => {
     expect(
       parseVehicleEntryInput({
         ...validInput,
-        tagNames: Array.from({ length: 51 }, (_, index) => `T${index}`),
+        tagNames: Array.from({ length: 71 }, (_, index) => `T${index}`),
       }),
     ).toMatchObject({ success: false });
     expect(isVehicleEntryIdentity(entryId, 2)).toBe(true);

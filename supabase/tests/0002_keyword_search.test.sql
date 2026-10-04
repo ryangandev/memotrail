@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(21);
+select plan(20);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -130,20 +130,6 @@ values
   )
 on conflict (id) do nothing;
 
-insert into public.collections (id, owner_id, name)
-values
-  (
-    '20000000-0000-0000-0000-000000000010',
-    '10000000-0000-0000-0000-000000000001',
-    'Travel'
-  ),
-  (
-    '20000000-0000-0000-0000-000000000011',
-    '10000000-0000-0000-0000-000000000001',
-    'Dental Learning'
-  )
-on conflict (id) do nothing;
-
 insert into public.tags (id, owner_id, name)
 values
   (
@@ -157,20 +143,6 @@ values
     'orthodontics'
   )
 on conflict (id) do nothing;
-
-insert into public.entry_collections (entry_id, collection_id, owner_id)
-values
-  (
-    '50000000-0000-0000-0000-000000000001',
-    '20000000-0000-0000-0000-000000000010',
-    '10000000-0000-0000-0000-000000000001'
-  ),
-  (
-    '50000000-0000-0000-0000-000000000002',
-    '20000000-0000-0000-0000-000000000011',
-    '10000000-0000-0000-0000-000000000001'
-  )
-on conflict do nothing;
 
 insert into public.entry_tags (entry_id, tag_id, owner_id)
 values
@@ -254,15 +226,6 @@ select ok(
 
 select ok(
   (
-    select match_reasons @> array['Collection']::text[]
-    from public.search_wiki_items(p_query => 'Dental Learning')
-    where entry_id = '50000000-0000-0000-0000-000000000002'
-  ),
-  'Search matches and explains a Collection'
-);
-
-select ok(
-  (
     select match_reasons @> array['Date']::text[]
     from public.search_wiki_items(p_query => '2026-07-03')
     where entry_id = '50000000-0000-0000-0000-000000000001'
@@ -290,12 +253,12 @@ select is(
     select count(*)::integer
     from public.search_wiki_items(
       p_query => '',
-      p_collection_names => array['travel']
+      p_tag_names => array['SNOW']
     )
     where entry_id = '50000000-0000-0000-0000-000000000001'
   ),
   1,
-  'A Collection filter works without a keyword query'
+  'A tag filter works without a keyword query'
 );
 
 select is(
@@ -303,7 +266,7 @@ select is(
     select match_reasons
     from public.search_wiki_items(
       p_query => '',
-      p_collection_names => array['Travel']
+      p_tag_names => array['SNOW']
     )
     where entry_id = '50000000-0000-0000-0000-000000000001'
   ),

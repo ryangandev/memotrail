@@ -17,7 +17,7 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000105'
 select is(
   (select revision from public.review_wiki_item_with_photo_place_rich(
     '98000000-0000-4000-8000-000000000001',1,'Morning pages','A quiet start.','entry','entry',
-    null,'UTC','{}','{}',false,null,null,'unknown',null,null
+    null,'UTC','{}',false,null,null,'unknown',null,null
   )),
   2,
   'Saving an Inbox Capture classifies it atomically as Writing'
@@ -32,7 +32,7 @@ select is(
 select throws_ok(
   $$select * from public.review_wiki_item_with_photo_place_rich(
     '98000000-0000-4000-8000-000000000001',2,'Morning pages','A quiet start.','entry','first_time',
-    null,'UTC','{}','{}',true,null,null,'unknown',null,null
+    null,'UTC','{}',true,null,null,'unknown',null,null
   )$$,
   '22023',
   'invalid_item_classification',
@@ -42,7 +42,7 @@ select throws_ok(
 select is(
   (select revision from public.review_wiki_item_with_photo_place_rich(
     '98000000-0000-4000-8000-000000000001',2,'Morning pages','A quiet start.','entry','entry',
-    null,'UTC','{}','{}',true,null,null,'unknown',null,null
+    null,'UTC','{}',true,null,null,'unknown',null,null
   )),
   3,
   'A Writing may change to a compatible Writing subtype and finish review'
@@ -57,7 +57,7 @@ select is(
 select is(
   (select revision from public.review_wiki_item_with_photo_place_rich(
     '98000000-0000-4000-8000-000000000002',1,'A bright day','I felt happy today.','entry','entry',
-    null,'UTC','{}','{}',true,null,null,'unknown',null,null
+    null,'UTC','{}',true,null,null,'unknown',null,null
   )),
   2,
   'A raw Capture can be finalized directly as a Memory Event'
@@ -78,7 +78,7 @@ select is(
 select is(
   (select revision from public.review_wiki_item_with_photo_place_rich(
     '98000000-0000-4000-8000-000000000003',1,'Draft chapter','A longer arc.','entry','entry',
-    null,'UTC','{}','{}',true,null,null,'unknown',null,null
+    null,'UTC','{}',true,null,null,'unknown',null,null
   )),
   2,
   'A raw Capture can be finalized as an explicit Story Chapter'
@@ -94,7 +94,7 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000106'
 select is(
   (select count(*) from public.review_wiki_item_with_photo_place_rich(
     '98000000-0000-4000-8000-000000000002',2,'Foreign','Foreign','entry','entry',
-    null,'UTC','{}','{}',true,null,null,'unknown',null,null
+    null,'UTC','{}',true,null,null,'unknown',null,null
   )),
   0::bigint,
   'Another owner cannot review or reclassify a Wiki Item'
@@ -104,7 +104,7 @@ reset role;
 select ok(
   not has_function_privilege(
     'anon',
-    'public.review_wiki_item_with_photo_place_rich(uuid,integer,text,text,text,text,timestamptz,text,text[],text[],boolean,timestamptz,text,text,jsonb,jsonb)',
+    'public.review_wiki_item_with_photo_place_rich(uuid,integer,text,text,text,text,timestamptz,text,text[],boolean,timestamptz,text,text,jsonb,jsonb)',
     'execute'
   ),
   'Anonymous Wiki Item review is denied'

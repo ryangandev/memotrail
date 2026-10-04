@@ -23,7 +23,6 @@ export async function loadEditableEntry(id: string) {
   return {
     entry: entryFromRow(
       data,
-      data.collection_names,
       data.tag_names,
       existingLocationFromRow(data.primary_location),
     ),

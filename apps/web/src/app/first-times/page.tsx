@@ -20,7 +20,6 @@ export default async function FirstTimesPage({
 
   return (
     <FirstTimesWorkspace
-      collectionOptions={workspace.collectionOptions}
       entries={workspace.entries}
       initialEntryId={
         typeof parameters.entry === "string" ? parameters.entry : null

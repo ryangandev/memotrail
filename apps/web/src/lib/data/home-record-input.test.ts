@@ -8,7 +8,6 @@ const validInput = {
   address: " 456 Elm Street ",
   body: " A quieter home. ",
   city: " San Francisco ",
-  collectionNames: [" Homes ", "homes", "Milestones"],
   country: " United States ",
   datePrecision: "range",
   id: entryId,
@@ -70,7 +69,6 @@ describe("parseHomeEntryInput", () => {
       expect(parsed.data).toMatchObject({
         address: "456 Elm Street",
         body: "A quieter home.",
-        collectionNames: ["Homes", "Milestones"],
         occurredEnd: "2026-08-31T12:00:00-07:00",
         occurredStart: "2025-06-01T12:00:00-07:00",
         occurredTimezone: "America/Los_Angeles",
@@ -145,7 +143,7 @@ describe("parseHomeEntryInput", () => {
     expect(
       parseHomeEntryInput({
         ...validInput,
-        collectionNames: Array.from({ length: 21 }, (_, index) => `C${index}`),
+        tagNames: Array.from({ length: 71 }, (_, index) => `T${index}`),
       }),
     ).toMatchObject({ success: false });
   });

@@ -53,7 +53,6 @@ Use 1-6 short keyword terms, including English and Chinese translations/synonyms
       timeZone,
       filters: {
         classifications: request.itemClassifications,
-        collections: request.collectionNames,
         tags: request.tagNames,
         from: request.dateFrom,
         to: request.dateTo,

@@ -184,10 +184,10 @@ function Stats({ snapshot }: { snapshot: HomeSnapshot }) {
       icon: "star",
     },
     {
-      value: snapshot.collectionCount,
-      label: "Collections",
-      href: "/collections",
-      icon: "bulletList",
+      value: snapshot.tagCount,
+      label: "Tags",
+      href: "/tags",
+      icon: "tag",
     },
     {
       value: snapshot.inboxCount,
@@ -319,26 +319,12 @@ function EntryCard({
             </>
           )}
         </header>
-        <h3>
-          {!memory && entry.collectionNames.length ? (
-            <>
-              <span className={styles.collectionPrefix}>
-                {entry.collectionNames.map((name) => `[${name}]`).join(" ")}
-              </span>{" "}
-            </>
-          ) : null}
-          {entry.title || truncate(entry.body, 72) || "Untitled Entry"}
-        </h3>
+        <h3>{entry.title || truncate(entry.body, 72) || "Untitled Entry"}</h3>
         {entry.body.trim() ? (
           <p>{truncate(entry.body.trim(), memory ? 260 : 170)}</p>
         ) : null}
-        {(memory && entry.collectionNames.length) || entry.tagNames.length ? (
+        {entry.tagNames.length ? (
           <footer className={styles.tags}>
-            {(memory ? entry.collectionNames.slice(0, 2) : []).map((name) => (
-              <Badge key={`collection:${name}`} size="small">
-                {name}
-              </Badge>
-            ))}
             {entry.tagNames.slice(0, 3).map((name) => (
               <Badge key={`tag:${name}`} size="medium" title={`#${name}`}>
                 #{name}

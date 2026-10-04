@@ -69,7 +69,6 @@ import type { LocationSelection } from "@/lib/locations/location";
 import { countLabel } from "@/lib/count-label";
 
 export function VehiclesWorkspace({
-  collectionOptions,
   initialVehicleId,
   loadError,
   ownerId,
@@ -77,7 +76,6 @@ export function VehiclesWorkspace({
   tagOptions,
   vehicles: serverRecords,
 }: {
-  collectionOptions: string[];
   initialVehicleId: string | null;
   loadError: string | null;
   ownerId: string;
@@ -174,7 +172,6 @@ export function VehiclesWorkspace({
 
       {selectedVehicle !== undefined ? (
         <VehicleEditor
-          collectionOptions={collectionOptions}
           key={selectedVehicle?.id ?? "new-vehicle"}
           onSaved={confirm}
           onTrashed={forget}
@@ -302,15 +299,6 @@ function VehicleCard({
         ) : null}
         <footer>
           <div>
-            {vehicle.collectionNames.slice(0, 2).map((name) => (
-              <Badge
-                key={`collection:${name.toLocaleLowerCase()}`}
-                size="micro"
-                tone="neutral"
-              >
-                {name}
-              </Badge>
-            ))}
             {vehicle.tagNames.slice(0, 2).map((name) => (
               <Badge
                 key={`tag:${name.toLocaleLowerCase()}`}
@@ -329,7 +317,6 @@ function VehicleCard({
 }
 
 export function VehicleEditor({
-  collectionOptions,
   defaultTimezone,
   onClose,
   onSaved,
@@ -340,7 +327,6 @@ export function VehicleEditor({
   tagOptions,
   vehicle,
 }: {
-  collectionOptions: string[];
   defaultTimezone?: string;
   onClose: () => void;
   onSaved: (record: VehicleRecord) => void;
@@ -377,10 +363,6 @@ export function VehicleEditor({
     ),
   );
   const [body, setBody] = useState(vehicle?.body ?? sourceCapture?.body ?? "");
-  const [collectionInput, setCollectionInput] = useState("");
-  const [collectionNames, setCollectionNames] = useState(
-    vehicle?.collectionNames ?? sourceCapture?.collectionNames ?? [],
-  );
   const [color, setColor] = useState(vehicle?.color ?? "");
   const [currentId, setCurrentId] = useState(vehicle?.id ?? null);
   const [currentRevision, setCurrentRevision] = useState(
@@ -454,7 +436,6 @@ export function VehicleEditor({
     }
     const input: VehicleEntryInput = {
       body,
-      collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       color: color || null,
       datePrecision: resolved.value.datePrecision,
       id: currentId,
@@ -765,17 +746,7 @@ export function VehicleEditor({
             </label>
             <EntryOrganizationEditor
               disabled={isPending}
-              input={collectionInput}
-              kind="collection"
-              names={collectionNames}
-              onChange={setCollectionNames}
-              onInputChange={setCollectionInput}
-              options={collectionOptions}
-            />
-            <EntryOrganizationEditor
-              disabled={isPending}
               input={tagInput}
-              kind="tag"
               names={tagNames}
               onChange={setTagNames}
               onInputChange={setTagInput}

@@ -184,8 +184,7 @@ describe("AI search trust boundary", () => {
       ),
     ).toMatchObject({
       p_item_classifications: ["entry"],
-      p_collection_names: ["Travel"],
-      p_tag_names: ["winter"],
+      p_tag_names: ["winter", "Travel"],
       p_date_from: "2017-01-01",
       p_date_to: "2017-12-31",
     });

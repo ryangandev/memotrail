@@ -15,7 +15,7 @@ create function pg_temp.save_primary(p_kind text, p_id uuid, p_location jsonb) r
 declare
   result uuid;
   input jsonb := jsonb_build_object('title','History ' || p_kind,'body','Memories',
-    'datePrecision','unknown','collectionNames','[]'::jsonb,'tagNames','[]'::jsonb,
+    'datePrecision','unknown','tagNames','[]'::jsonb,
     'id',p_id,'revision',(select revision from public.entries where id = p_id));
 begin
   if p_kind = 'first_time' then
@@ -25,7 +25,7 @@ begin
   else
     select entry_id into result from public.review_wiki_item_with_location_rich(
       p_id,(select revision from public.entries where id = p_id),'History entry','Memories',
-      'entry','entry',null,'UTC','{}','{}',false,null,null,'unknown',null,p_location,null);
+      'entry','entry',null,'UTC','{}',false,null,null,'unknown',null,p_location,null);
   end if;
   return result;
 end;
@@ -59,7 +59,7 @@ select is((select count(*) from public.entry_places where entry_id = writers.id 
 
 -- Goal links preserve unchanged rows but still remove explicitly omitted links.
 insert into writers
-select 'goal', entry_id from public.save_goal_entry('Goal','Memories','long_term','active',null,'{}','{}',
+select 'goal', entry_id from public.save_goal_entry('Goal','Memories','long_term','active',null,'{}',
   array[(select id from writers where kind = 'entry')],null,null);
 reset role;
 update public.entry_links set created_at = '2000-01-01' where source_entry_id = (select id from writers where kind = 'goal');
@@ -67,13 +67,13 @@ alter table public.goals disable trigger goals_set_updated_at;
 update public.goals set updated_at = '2000-01-01' where entry_id = (select id from writers where kind = 'goal');
 alter table public.goals enable trigger goals_set_updated_at;
 set local role authenticated;
-select entry_id from public.save_goal_entry('Renamed Goal','Memories','long_term','active',null,'{}','{}',
+select entry_id from public.save_goal_entry('Renamed Goal','Memories','long_term','active',null,'{}',
   array[(select id from writers where kind = 'entry')],(select id from writers where kind = 'goal'),1);
 select is((select created_at from public.entry_links where source_entry_id = (select id from writers where kind = 'goal')),
   '2000-01-01'::timestamptz,'Goal saves retain unchanged Entry links');
 select is((select updated_at from public.goals where entry_id = (select id from writers where kind = 'goal')),
   '2000-01-01'::timestamptz,'Title-only Goal saves do not update specialized details');
-select entry_id from public.save_goal_entry('Renamed Goal','Memories','long_term','active',null,'{}','{}','{}',
+select entry_id from public.save_goal_entry('Renamed Goal','Memories','long_term','active',null,'{}','{}',
   (select id from writers where kind = 'goal'),2);
 select is((select count(*) from public.entry_links where source_entry_id = (select id from writers where kind = 'goal')),
   0::bigint,'Goal saves remove omitted Entry links');

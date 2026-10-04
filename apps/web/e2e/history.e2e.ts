@@ -26,7 +26,7 @@ test("History restores and re-restores writing, relationships, and private photo
   const ownerID = created.data.user.id,
     entryID = randomUUID(),
     photoID = randomUUID(),
-    collectionID = randomUUID();
+    tagID = randomUUID();
   const path = `${ownerID}/${entryID}/${photoID}.png`;
   const bytes = Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX1sAAAAASUVORK5CYII=",
@@ -78,18 +78,18 @@ test("History restores and re-restores writing, relationships, and private photo
     ).toBeNull();
     expect(
       (
-        await client.from("collections").insert({
-          id: collectionID,
+        await client.from("tags").insert({
+          id: tagID,
           owner_id: ownerID,
-          name: "Original collection",
+          name: "Original tag",
         })
       ).error,
     ).toBeNull();
     expect(
       (
-        await client.from("entry_collections").insert({
+        await client.from("entry_tags").insert({
           entry_id: entryID,
-          collection_id: collectionID,
+          tag_id: tagID,
           owner_id: ownerID,
         })
       ).error,
@@ -126,7 +126,6 @@ test("History restores and re-restores writing, relationships, and private photo
           p_item_subtype: "entry",
           p_occurred_start: "2024-01-01T12:00:00Z",
           p_occurred_timezone: "UTC",
-          p_collection_names: [],
           p_tag_names: [],
           p_mark_done: false,
           p_occurred_end: null,
@@ -147,7 +146,7 @@ test("History restores and re-restores writing, relationships, and private photo
     const earlier = page.getByRole("region", { name: "Earlier version" }),
       current = page.getByRole("region", { name: "Current version" });
     await expect(earlier).toContainText("The original words I want to keep.");
-    await expect(earlier).toContainText("Original collection");
+    await expect(earlier).toContainText("Original tag");
     await expect(earlier).toContainText("memory.png");
     await expect(current).toContainText("The newer words before restoration.");
     await expect(
@@ -170,10 +169,10 @@ test("History restores and re-restores writing, relationships, and private photo
     await expect(current).toContainText("Current · version 4");
     await expect(current).toContainText("The original words I want to keep.");
     const restored = await client
-      .from("entry_collections")
-      .select("collection_id")
+      .from("entry_tags")
+      .select("tag_id")
       .eq("entry_id", entryID);
-    expect(restored.data?.[0]?.collection_id).toBe(collectionID);
+    expect(restored.data?.[0]?.tag_id).toBe(tagID);
     await page
       .getByRole("button", { name: "Restore selected version" })
       .click();
@@ -308,7 +307,6 @@ for (const schema of [3, 2, undefined]) {
         p_date_precision: "unknown",
         p_occurred_label: null,
         p_occurred_timezone: "UTC",
-        p_collection_names: [],
         p_tag_names: [],
         p_place_id: null,
         p_place_name: null,
@@ -509,7 +507,6 @@ for (const scenario of focusedCases) {
         p_date_precision: "day",
         p_occurred_label: null,
         p_occurred_timezone: "UTC",
-        p_collection_names: [],
         p_tag_names: [],
       };
       const saved =

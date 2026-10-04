@@ -31,7 +31,6 @@ export default async function VehiclesPage({
 
   return (
     <VehiclesWorkspace
-      collectionOptions={workspace.collectionOptions}
       initialVehicleId={initialVehicleId}
       loadError={workspace.loadError}
       ownerId={workspace.viewer.id}

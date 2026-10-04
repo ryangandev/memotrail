@@ -174,7 +174,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     }
     await expect(
       page.getByRole("combobox", { name: "Collection" }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await expect(page.getByRole("combobox", { name: "Tag" })).toBeVisible();
     await showFilter.selectOption("entity");
     await page.getByRole("button", { name: "Search", exact: true }).click();

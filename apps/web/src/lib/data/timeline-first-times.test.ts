@@ -6,7 +6,6 @@ import { includeUnplacedFirstTimes } from "./timeline-first-times";
 const firstTime: FirstTimeEntry = {
   attachments: [],
   body: "A beginning",
-  collectionNames: [],
   datePrecision: "day",
   id: "first-1",
   inboxStatus: "organized",

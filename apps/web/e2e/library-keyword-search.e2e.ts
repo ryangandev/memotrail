@@ -128,7 +128,6 @@ test("Canonical keyword search finds People", async ({ page, context }) => {
       },
     });
     const response = await native.rpc("search_wiki_items", {
-      p_collection_names: [],
       p_date_from: null,
       p_date_to: null,
       p_item_classifications: [],
@@ -149,7 +148,6 @@ test("Canonical keyword search finds People", async ({ page, context }) => {
       response.data.map((item: { item_kind: string }) => item.item_kind),
     ).toEqual(["entity"]);
     const personScope = await native.rpc("search_wiki_items", {
-      p_collection_names: [],
       p_date_from: null,
       p_date_to: null,
       p_item_classifications: ["person"],

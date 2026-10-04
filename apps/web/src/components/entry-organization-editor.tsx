@@ -3,27 +3,23 @@
 import { useId, useState } from "react";
 import { Icon } from "@/components/icon";
 import { SearchField } from "@/components/search-field";
+import { tagNameCountLimit, tagNameLengthLimit } from "@/lib/data/organization";
 import styles from "./entry-organization-editor.module.css";
 
 type EntryOrganizationEditorProps = {
   disabled: boolean;
   input: string;
-  kind: "collection" | "tag";
   names: string[];
   onChange: (names: string[]) => void;
   onInputChange: (input: string) => void;
   options: string[];
 };
 
-const limits = {
-  collection: { count: 20, length: 80 },
-  tag: { count: 50, length: 60 },
-} as const;
+const limit = { count: tagNameCountLimit, length: tagNameLengthLimit };
 
 export function EntryOrganizationEditor({
   disabled,
   input,
-  kind,
   names,
   onChange,
   onInputChange,
@@ -31,9 +27,6 @@ export function EntryOrganizationEditor({
 }: EntryOrganizationEditorProps) {
   const editorId = useId();
   const [open, setOpen] = useState(false);
-  const label = kind === "collection" ? "Collections" : "Tags";
-  const singular = kind === "collection" ? "Collection" : "tag";
-  const limit = limits[kind];
   const normalizedNames = new Set(
     names.map((name) => name.toLocaleLowerCase()),
   );
@@ -84,24 +77,19 @@ export function EntryOrganizationEditor({
   }
 
   return (
-    <fieldset
-      className={styles.editor}
-      data-kind={kind}
-      disabled={disabled}
-      data-ui-field
-    >
-      <legend>{label}</legend>
+    <fieldset className={styles.editor} disabled={disabled} data-ui-field>
+      <legend>Tags</legend>
       <div className={styles.items}>
         {names.map((name) => (
           <span className={styles.item} key={name.toLocaleLowerCase()}>
-            <span>{kind === "tag" ? `#${name}` : name}</span>
+            <span>{`#${name}`}</span>
             <button
-              aria-label={`Remove ${name} from ${label}`}
+              aria-label={`Remove ${name} from Tags`}
               className={styles.removeButton}
               onClick={() => onChange(names.filter((item) => item !== name))}
               type="button"
             >
-              <Icon name="close" size={kind === "tag" ? 12 : 13} />
+              <Icon name="close" size={12} />
             </button>
           </span>
         ))}
@@ -122,7 +110,7 @@ export function EntryOrganizationEditor({
               aria-expanded={Boolean(query)}
               autoFocus
               hideLabel
-              label={`Search or create a ${singular}`}
+              label="Search or create a tag"
               maxLength={limit.length}
               onChange={(event) => onInputChange(event.target.value)}
               onKeyDown={(event) => {
@@ -131,15 +119,12 @@ export function EntryOrganizationEditor({
                   event.stopPropagation();
                   closeEditor();
                 }
-                if (
-                  event.key === "Enter" ||
-                  (kind === "tag" && event.key === ",")
-                ) {
+                if (event.key === "Enter" || event.key === ",") {
                   event.preventDefault();
                   if (canAdd) addName(query);
                 }
               }}
-              placeholder={`Find or create ${singular.toLowerCase()}`}
+              placeholder="Find or create tag"
               role="combobox"
               size="small"
               value={input}
@@ -157,7 +142,7 @@ export function EntryOrganizationEditor({
                     className={styles.statusOption}
                     role="option"
                   >
-                    <Icon name={kind === "tag" ? "tag" : "archive"} size={14} />
+                    <Icon name="tag" size={14} />
                     <span>{alreadyAddedName}</span>
                     <small>Already added</small>
                   </div>
@@ -171,9 +156,9 @@ export function EntryOrganizationEditor({
                     role="option"
                     type="button"
                   >
-                    <Icon name={kind === "tag" ? "tag" : "archive"} size={14} />
+                    <Icon name="tag" size={14} />
                     <span>{suggestion}</span>
-                    <small>Existing {singular.toLowerCase()}</small>
+                    <small>Existing tag</small>
                   </button>
                 ))}
                 {canAdd && !exactOption ? (
@@ -186,7 +171,7 @@ export function EntryOrganizationEditor({
                     type="button"
                   >
                     <Icon name="plus" size={14} />
-                    <span>Create {singular.toLowerCase()}</span>
+                    <span>Create tag</span>
                     <strong>{query}</strong>
                   </button>
                 ) : null}
@@ -195,13 +180,13 @@ export function EntryOrganizationEditor({
           </div>
         ) : names.length < limit.count ? (
           <button
-            aria-label={`Add ${singular}`}
+            aria-label="Add tag"
             className={styles.addButton}
             onClick={() => setOpen(true)}
             type="button"
           >
             <Icon name="plus" size={15} />
-            <span>Add {singular}</span>
+            <span>Add tag</span>
           </button>
         ) : null}
       </div>

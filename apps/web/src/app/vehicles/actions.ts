@@ -53,7 +53,6 @@ export async function saveVehicleEntry(
   }
   const parameters = {
     p_body: parsed.data.body,
-    p_collection_names: parsed.data.collectionNames,
     p_color: parsed.data.color,
     p_date_precision: parsed.data.datePrecision,
     p_make: parsed.data.make,
@@ -269,7 +268,6 @@ function expiredSession(): VehicleActionResult {
 
 function refreshVehiclePaths() {
   revalidatePath("/");
-  revalidatePath("/collections");
   revalidatePath("/inbox");
   revalidatePath("/library");
   revalidatePath("/search");

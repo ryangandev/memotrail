@@ -21,7 +21,6 @@ const row = {
     },
   ],
   body: "The electric road-trip years.",
-  collection_names: ["Vehicles"],
   color: "Midnight Silver",
   date_precision: "month",
   entry_id: "40000000-0000-4000-8000-000000000001",

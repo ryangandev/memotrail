@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   goalTargetLabel,
-  isBucketListGoal,
   parseGoalLinkOptions,
   parseGoalRows,
 } from "./goal-record";
@@ -21,7 +20,6 @@ const row = {
     },
   ],
   body: "Learn the landscape, then decide.",
-  collection_names: ["Bucket List"],
   created_at: "2026-09-01T10:00:00Z",
   entry_id: "40000000-0000-4000-8000-000000000001",
   horizon: "long_term",
@@ -50,18 +48,6 @@ const row = {
 };
 
 describe("Goal records", () => {
-  it("preserves Bucket List behavior after a Collection is renamed", () => {
-    const goal = parseGoalRows([
-      {
-        ...row,
-        collection_names: ["Someday adventures"],
-        is_bucket_list: true,
-      },
-    ])?.[0];
-    expect(goal && isBucketListGoal(goal)).toBe(true);
-    const removed = parseGoalRows([{ ...row, is_bucket_list: false }])?.[0];
-    expect(removed && isBucketListGoal(removed)).toBe(false);
-  });
   it("parses a complete Goal response", () => {
     const goals = parseGoalRows([row]);
 
@@ -91,13 +77,12 @@ describe("Goal records", () => {
     ).toBeNull();
   });
 
-  it("presents optional target and Bucket List context", () => {
+  it("presents an optional target", () => {
     const goal = parseGoalRows([row])?.[0];
     expect(goal).toBeDefined();
     if (!goal) return;
 
     expect(goalTargetLabel(goal)).toBe("Target Jun 15, 2030");
-    expect(isBucketListGoal(goal)).toBe(true);
     expect(goalTargetLabel({ ...goal, targetDate: null })).toBe(
       "No target date",
     );

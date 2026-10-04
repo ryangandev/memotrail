@@ -29,7 +29,6 @@ export type VehicleAttachment = {
 export type VehicleRecord = {
   attachments: VehicleAttachment[];
   body: string;
-  collectionNames: string[];
   color: string | null;
   datePrecision: VehicleDatePrecision;
   id: string;
@@ -114,7 +113,6 @@ function parseVehicleRow(value: unknown): VehicleRecord | null {
     !nullableString(value.color) ||
     !nullableString(value.timeline_track_id) ||
     !nullableString(value.timeline_track_name) ||
-    !stringArray(value.collection_names) ||
     !stringArray(value.tag_names) ||
     typeof value.total_count !== "number"
   ) {
@@ -127,7 +125,6 @@ function parseVehicleRow(value: unknown): VehicleRecord | null {
   return {
     attachments,
     body: value.body,
-    collectionNames: value.collection_names,
     color: value.color,
     datePrecision: value.date_precision as VehicleDatePrecision,
     id: value.entry_id,

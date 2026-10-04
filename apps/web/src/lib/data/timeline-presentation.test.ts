@@ -9,7 +9,6 @@ import {
 function entry(overrides: Partial<TimelineEntry>): TimelineEntry {
   return {
     body: "",
-    collectionNames: [],
     datePrecision: "unknown",
     id: "entry-1",
     itemKind: "entry",

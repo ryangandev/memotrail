@@ -188,6 +188,9 @@ test("repeating an address creates independent Entry and Home Locations", async 
     await page.goto(`/history?entry=${secondEntryId}`);
     await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     const secondDialog = page.getByRole("dialog");
+    await expect(
+      secondDialog.getByRole("textbox", { name: "Title" }),
+    ).toBeFocused();
     await secondDialog
       .getByRole("combobox", { name: "Find a Location" })
       .fill("Reading Terminal");

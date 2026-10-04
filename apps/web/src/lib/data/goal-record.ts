@@ -38,10 +38,8 @@ export type GoalRelatedEntry = {
 };
 
 export type GoalRecord = {
-  bucketListRole?: boolean;
   attachments: GoalAttachment[];
   body: string;
-  collectionNames: string[];
   createdAt: string;
   horizon: GoalHorizon;
   id: string;
@@ -126,15 +124,6 @@ export function goalTargetLabel(goal: GoalRecord) {
   }).format(date)}`;
 }
 
-export function isBucketListGoal(goal: GoalRecord) {
-  return (
-    goal.bucketListRole ??
-    goal.collectionNames.some(
-      (name) => name.trim().toLocaleLowerCase() === "bucket list",
-    )
-  );
-}
-
 function parseGoalRow(value: unknown): GoalRecord | null {
   if (
     !isRecord(value) ||
@@ -149,7 +138,6 @@ function parseGoalRow(value: unknown): GoalRecord | null {
     typeof value.status !== "string" ||
     !goalStatuses.includes(value.status as GoalStatus) ||
     !nullableString(value.target_date) ||
-    !stringArray(value.collection_names) ||
     !stringArray(value.tag_names) ||
     typeof value.total_count !== "number"
   ) {
@@ -162,12 +150,7 @@ function parseGoalRow(value: unknown): GoalRecord | null {
 
   return {
     attachments,
-    bucketListRole:
-      typeof value.is_bucket_list === "boolean"
-        ? value.is_bucket_list
-        : undefined,
     body: value.body,
-    collectionNames: value.collection_names,
     createdAt: value.created_at,
     horizon: value.horizon as GoalHorizon,
     id: value.entry_id,

@@ -12,7 +12,7 @@ insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,inbox_s
 create function pg_temp.rich_review(rev integer, body text, rich jsonb) returns bigint language sql as $$
   select count(*) from public.review_wiki_item_with_photo_place_rich(
     '96000000-0000-4000-8000-000000000001',rev,'Rich Entry',body,'entry','entry',
-    null,'UTC','{}','{}',false,null,null,'unknown',null,rich
+    null,'UTC','{}',false,null,null,'unknown',null,rich
   );
 $$;
 
@@ -22,7 +22,7 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000095'
 select is(
   (select count(*) from public.review_wiki_item_with_photo_place(
     '96000000-0000-4000-8000-000000000001',1,'Renamed by plaintext client','Original words','entry','entry',
-    null,'UTC','{}','{}',false,null,null,'unknown',null
+    null,'UTC','{}',false,null,null,'unknown',null
   )),
   1::bigint,
   'Existing client review remains available'
@@ -57,7 +57,7 @@ select is(pg_temp.rich_review(4,'Foreign edit',null),0::bigint,'Another owner ca
 reset role;
 
 select ok(
-  not has_function_privilege('anon','public.review_wiki_item_with_photo_place_rich(uuid,integer,text,text,text,text,timestamptz,text,text[],text[],boolean,timestamptz,text,text,jsonb,jsonb)','execute'),
+  not has_function_privilege('anon','public.review_wiki_item_with_photo_place_rich(uuid,integer,text,text,text,text,timestamptz,text,text[],boolean,timestamptz,text,text,jsonb,jsonb)','execute'),
   'Anonymous rich review denied'
 );
 select * from finish();

@@ -1,10 +1,11 @@
+import { tagNameCountLimit, tagNameLengthLimit } from "./organization";
+
 export const SEARCH_PAGE_SIZE = 25;
 export const SEARCH_QUERY_LIMIT = 200;
 
 export type RawSearchParams = Record<string, string | string[] | undefined>;
 
 export type SearchRequest = {
-  collectionNames: string[];
   dateFrom: string | null;
   dateTo: string | null;
   itemClassifications: string[];
@@ -69,8 +70,11 @@ export function parseSearchRequest(
 ): ParsedSearchRequest {
   const query = firstValue(parameters.q).trim();
   const itemClassifications = normalizedValues(parameters.type);
-  const collectionNames = normalizedValues(parameters.collection);
-  const tagNames = normalizedValues(parameters.tag);
+  // Collections became tags with the same names, so older links still filter.
+  const tagNames = normalizedValues([
+    ...listValues(parameters.tag),
+    ...listValues(parameters.collection),
+  ]);
   const dateFromValue = firstValue(parameters.from).trim();
   const dateToValue = firstValue(parameters.to).trim();
   const dateFrom = dateFromValue || null;
@@ -82,10 +86,8 @@ export function parseSearchRequest(
     error = `Search phrases can be up to ${SEARCH_QUERY_LIMIT} characters.`;
   } else if (!validNames(itemClassifications, 20, 80)) {
     error = "Choose up to 20 valid Kinds or types.";
-  } else if (!validNames(collectionNames, 20, 80)) {
-    error = "Choose up to 20 valid Collections.";
-  } else if (!validNames(tagNames, 50, 60)) {
-    error = "Choose up to 50 valid tags.";
+  } else if (!validNames(tagNames, tagNameCountLimit, tagNameLengthLimit)) {
+    error = `Choose up to ${tagNameCountLimit} valid tags.`;
   } else if (dateFrom && !isISODate(dateFrom)) {
     error = "Choose a valid start date.";
   } else if (dateTo && !isISODate(dateTo)) {
@@ -97,14 +99,12 @@ export function parseSearchRequest(
   return {
     error,
     request: {
-      collectionNames,
       dateFrom,
       dateTo,
       itemClassifications,
       hasCriteria:
         query.length > 0 ||
         itemClassifications.length > 0 ||
-        collectionNames.length > 0 ||
         tagNames.length > 0 ||
         Boolean(dateFrom) ||
         Boolean(dateTo),
@@ -125,10 +125,6 @@ export function librarySearchHref(request: SearchRequest, page: number) {
 
   for (const classification of request.itemClassifications) {
     parameters.append("type", classification);
-  }
-
-  for (const collectionName of request.collectionNames) {
-    parameters.append("collection", collectionName);
   }
 
   for (const tagName of request.tagNames) {
@@ -159,8 +155,12 @@ function firstValue(value: string | string[] | undefined) {
   return value ?? "";
 }
 
+function listValues(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value : value ? [value] : [];
+}
+
 function normalizedValues(value: string | string[] | undefined) {
-  const values = Array.isArray(value) ? value : value ? [value] : [];
+  const values = listValues(value);
   const seen = new Set<string>();
   const normalized: string[] = [];
 

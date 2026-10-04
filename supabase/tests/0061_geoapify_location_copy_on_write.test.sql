@@ -35,7 +35,7 @@ as $$
     entry_id,expected_revision,
     (select title from public.entries where id=entry_id),
     (select body from public.entries where id=entry_id),
-    'entry','entry',null,'UTC',array[]::text[],array[]::text[],false,
+    'entry','entry',null,'UTC',array[]::text[],false,
     null,null,'unknown',null,location,null
   );
 $$;
@@ -174,7 +174,6 @@ as $$
       'country', 'United States',
       'latitude', 39.95261234,
       'longitude', -75.16529876,
-      'collectionNames', jsonb_build_array(),
       'tagNames', jsonb_build_array(),
       'id', entry_id,
       'revision', expected_revision
