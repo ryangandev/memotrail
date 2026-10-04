@@ -8,6 +8,9 @@ Web is the client Ryan uses most, so work now focuses on finishing Web before re
 Native iOS work, including the acceptance items in section 3, is paused until Web is complete; native then follows the finished Web behavior.
 Before more Web building, unclear features and requirements are reviewed with Ryan and settled in [product.md](./product.md).
 The first review removed general links between Entries from Web; Goal, Person, and source links remain.
+Product direction is settled before UI questions.
+Open product questions: Timeline structure and current chapters, Collections versus tags, the Inbox review step, Goals, and People.
+UI questions held until then: how prominent version history is, Item page photos, date precision controls, the two export choices, and Timeline styles.
 Open `audit-2026-10` issues stay tracked in GitHub.
 
 ## Current state
