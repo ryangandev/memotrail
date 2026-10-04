@@ -237,16 +237,16 @@
   font-size: var(--mt-font-size-caption);
 }
 
+/* Every record editor's footer, Timeline's included. When Move to Trash and the
+   save actions do not fit on one line, as on a phone, the save actions wrap
+   below it instead of sliding over it. */
 .dialogFooter {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--mt-space-4);
   width: 100%;
-}
-
-.dialogFooterWithMessage {
-  flex-wrap: wrap;
 }
 
 .footerMessage {

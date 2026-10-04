@@ -152,20 +152,6 @@
   font-size: var(--mt-font-size-caption);
 }
 
-.dialogFooter {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--mt-space-4);
-  width: 100%;
-}
-
-.dialogFooter > div {
-  display: flex;
-  align-items: center;
-  gap: var(--mt-space-2);
-}
-
 @media (max-width: 780px) {
   .firstGrid {
     grid-template-columns: 1fr;
@@ -225,24 +211,13 @@
     display: none;
   }
 
-  .formGrid,
-  .dialogFooter {
+  .formGrid {
     width: 100%;
   }
 
   .formMessage {
     margin-right: var(--mt-space-3) 0;
     margin-left: var(--mt-space-3) 0;
-  }
-
-  .dialogFooter {
-    align-items: stretch;
-    width: 100%;
-  }
-
-  .dialogFooter > div:last-child {
-    flex: 1;
-    justify-content: flex-end;
   }
 }
 

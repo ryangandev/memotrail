@@ -45,6 +45,7 @@ import {
   timelineEntryDateLabel,
 } from "@/lib/data/timeline-presentation";
 import type { TimelineStyle } from "@/lib/timeline-style";
+import common from "@/components/record-workspace.module.css";
 import styles from "@/components/timeline-workspace.module.css";
 
 import { OccurrenceEditor } from "@/components/occurrence-editor";
@@ -1056,7 +1057,7 @@ function TimelineEditor({
       busy={isPending}
       size="wide"
       footer={
-        <div className={styles.dialogFooter}>
+        <div className={common.dialogFooter}>
           <div>
             {entry ? (
               <Button
