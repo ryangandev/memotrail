@@ -714,7 +714,8 @@ final class LocalSessionUITests: XCTestCase {
     attach(app, "Birth date prompt")
     app.buttons["Not now"].tap()
     XCTAssertTrue(app.buttons["timeline-set-birth-date"].waitForExistence(timeout: 5))
-    XCTAssertTrue(app.staticTexts["2019 to 2026"].exists)
+    // The range ends a padded stretch after today, so only its start is fixed.
+    XCTAssertTrue(text("2019 to", in: app).exists)
     attach(app, "Timeline")
 
     // Set birth date saves the profile and starts the range there.
@@ -724,8 +725,10 @@ final class LocalSessionUITests: XCTestCase {
     let header = app.datePickers.buttons["DatePicker.Show"]
     XCTAssertTrue(header.waitForExistence(timeout: 5))
     header.tap()
+    // The calendar opens on today's month, so both wheels move.
     let year = app.pickerWheels.element(boundBy: 1)
     XCTAssertTrue(year.waitForExistence(timeout: 5))
+    app.pickerWheels.element(boundBy: 0).adjust(toPickerWheelValue: "September")
     year.adjust(toPickerWheelValue: "1994")
     app.datePickers.buttons["DatePicker.Hide"].tap()
     app.datePickers.buttons.matching(NSPredicate(format: "label ENDSWITH %@", "September 18"))
