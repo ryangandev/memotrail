@@ -16,6 +16,7 @@ import {
   trashFirstTimeEntry,
   type FirstTimeActionResult,
 } from "@/app/first-times/actions";
+import common from "@/components/record-workspace.module.css";
 import styles from "@/components/first-times-workspace.module.css";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
@@ -555,7 +556,7 @@ export function FirstTimeEditor({
       closeLabel="Close First Time editor"
       busy={isPending}
       footer={
-        <div className={styles.dialogFooter}>
+        <div className={common.dialogFooter}>
           <div>
             {currentId ? (
               <Button

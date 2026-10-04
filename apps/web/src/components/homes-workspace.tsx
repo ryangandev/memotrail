@@ -658,9 +658,7 @@ export function HomeEditor({
       closeLabel="Close Home editor"
       busy={isPending}
       footer={
-        <div
-          className={`${styles.dialogFooter} ${result ? styles.dialogFooterWithMessage : ""}`}
-        >
+        <div className={styles.dialogFooter}>
           {result ? (
             <p
               className={`${styles.formMessage} ${styles.footerMessage}`}

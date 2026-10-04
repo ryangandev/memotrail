@@ -557,19 +557,6 @@
   font-size: var(--mt-font-size-caption);
 }
 
-.dialogFooter {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--mt-space-4);
-  width: 100%;
-}
-
-.dialogFooter > div {
-  display: flex;
-  gap: var(--mt-space-2);
-}
-
 .mobileTrack {
   overflow: hidden;
   border: 1px solid var(--mt-color-border);
@@ -719,18 +706,6 @@
 @media (max-width: 480px) {
   .summary {
     margin-top: var(--mt-space-4);
-  }
-
-  .dialogFooter {
-    align-items: stretch;
-    padding-right: var(--mt-space-4);
-    padding-left: var(--mt-space-4);
-    width: 100%;
-  }
-
-  .dialogFooter > div:last-child {
-    flex: 1;
-    justify-content: flex-end;
   }
 }
 
