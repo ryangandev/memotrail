@@ -3,6 +3,7 @@ import { Button } from "@/components/button";
 import Link from "next/link";
 import { EntryHistoryView } from "@/components/entry-history-view";
 import { PageFrame } from "@/components/page-frame";
+import { countLabel } from "@/lib/count-label";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
   historyTitle,
@@ -104,7 +105,7 @@ export default async function HistoryPage({
                   <strong>{historyTitle(row)}</strong>
                   <span>
                     {wikiItemIdentityLabel(row.item_kind, row.item_subtype)} ·{" "}
-                    {row.version_count} earlier versions
+                    {countLabel(row.version_count, "earlier version")}
                     {row.is_deleted ? " · In Trash" : ""}
                   </span>
                   <p>{row.excerpt}</p>
