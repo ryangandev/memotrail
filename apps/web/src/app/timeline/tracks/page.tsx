@@ -23,6 +23,7 @@ export default async function TrackSettingsPage({
     p_offset: (page - 1) * 50,
   });
   const tracks = (result.data ?? []) as TrackSetting[];
+  const hasMore = (tracks[0]?.total_count ?? 0) > page * 50;
   return (
     <PageFrame className={styles.workspace} variant="standard">
       <PageHeader
@@ -40,17 +41,19 @@ export default async function TrackSettingsPage({
       ) : (
         <TrackSettings tracks={tracks} />
       )}
-      <nav className={styles.pagination} aria-label="Track pages">
-        {page > 1 && (
-          <Link href={`/timeline/tracks?page=${page - 1}`}>
-            Previous tracks
-          </Link>
-        )}
-        <span>Page {page}</span>
-        {(tracks[0]?.total_count ?? 0) > page * 50 && (
-          <Link href={`/timeline/tracks?page=${page + 1}`}>More tracks</Link>
-        )}
-      </nav>
+      {page > 1 || hasMore ? (
+        <nav className={styles.pagination} aria-label="Track pages">
+          {page > 1 && (
+            <Link href={`/timeline/tracks?page=${page - 1}`}>
+              Previous tracks
+            </Link>
+          )}
+          <span>Page {page}</span>
+          {hasMore && (
+            <Link href={`/timeline/tracks?page=${page + 1}`}>More tracks</Link>
+          )}
+        </nav>
+      ) : null}
     </PageFrame>
   );
 }

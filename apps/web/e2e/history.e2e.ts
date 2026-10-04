@@ -139,6 +139,10 @@ test("History restores and re-restores writing, relationships, and private photo
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto("/history");
+    // One page of results needs no pager.
+    await expect(
+      page.getByRole("navigation", { name: "History pages" }),
+    ).toHaveCount(0);
     await page.getByRole("link", { name: /Revised chapter/ }).click();
     const earlier = page.getByRole("region", { name: "Earlier version" }),
       current = page.getByRole("region", { name: "Current version" });
@@ -146,6 +150,9 @@ test("History restores and re-restores writing, relationships, and private photo
     await expect(earlier).toContainText("Original collection");
     await expect(earlier).toContainText("memory.png");
     await expect(current).toContainText("The newer words before restoration.");
+    await expect(
+      page.getByRole("navigation", { name: "Version pages" }),
+    ).toHaveCount(0);
     // Every recorded version uses the current snapshot schema, so none is flagged as early.
     await expect(page.getByText("This early snapshot")).toHaveCount(0);
     await page.screenshot({

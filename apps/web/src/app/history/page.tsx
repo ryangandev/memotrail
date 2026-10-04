@@ -43,6 +43,7 @@ export default async function HistoryPage({
     result = await loadHistory();
   }
   const rows = (selected ? [] : (result.data ?? [])) as HistoryIndexEntry[];
+  const hasOlder = (rows[0]?.total_count ?? 0) > page * 50;
   return (
     <PageFrame className={styles.workspace} variant="wide">
       <PageHeader
@@ -111,23 +112,25 @@ export default async function HistoryPage({
               ))}
             </div>
           )}
-          <nav className={styles.pagination} aria-label="History pages">
-            {page > 1 && (
-              <Link
-                href={`/history?q=${encodeURIComponent(query)}&page=${page - 1}`}
-              >
-                Newer items
-              </Link>
-            )}
-            <span>Page {page}</span>
-            {(rows[0]?.total_count ?? 0) > page * 50 && (
-              <Link
-                href={`/history?q=${encodeURIComponent(query)}&page=${page + 1}`}
-              >
-                Older items
-              </Link>
-            )}
-          </nav>
+          {page > 1 || hasOlder ? (
+            <nav className={styles.pagination} aria-label="History pages">
+              {page > 1 && (
+                <Link
+                  href={`/history?q=${encodeURIComponent(query)}&page=${page - 1}`}
+                >
+                  Newer items
+                </Link>
+              )}
+              <span>Page {page}</span>
+              {hasOlder && (
+                <Link
+                  href={`/history?q=${encodeURIComponent(query)}&page=${page + 1}`}
+                >
+                  Older items
+                </Link>
+              )}
+            </nav>
+          ) : null}
         </>
       )}
     </PageFrame>

@@ -147,6 +147,10 @@ test("Timeline tracks create, rename, reorder, hide and reveal moments with revi
       exact: true,
     });
     await expect(renamed).toBeVisible();
+    // One page of tracks needs no pager.
+    await expect(
+      page.getByRole("navigation", { name: "Track pages" }),
+    ).toHaveCount(0);
     await page.screenshot({
       caret: "initial",
       path: "/private/tmp/memotrail-tracks-desktop.png",

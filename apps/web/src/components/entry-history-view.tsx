@@ -143,6 +143,7 @@ export function EntryHistoryView({
     }
   }
   const detailMode = mode === "detail";
+  const hasOlderVersions = history.total_count > page * 20;
   return (
     <>
       <Link
@@ -365,7 +366,7 @@ export function EntryHistoryView({
           onChanged={() => router.refresh()}
         />
       )}
-      {!detailMode ? (
+      {!detailMode && (page > 1 || hasOlderVersions) ? (
         <nav className={styles.pagination} aria-label="Version pages">
           {page > 1 && (
             <Link
@@ -375,7 +376,7 @@ export function EntryHistoryView({
             </Link>
           )}
           <span>Page {page}</span>
-          {history.total_count > page * 20 && (
+          {hasOlderVersions && (
             <Link
               href={`/history?entry=${history.current.id}&page=${page + 1}`}
             >
