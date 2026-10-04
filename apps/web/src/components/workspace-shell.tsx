@@ -448,7 +448,6 @@ export function WorkspaceShell({
 
 function destinationForPathname(pathname: string): WorkspaceDestination {
   if (pathname === "/") return "home";
-  if (pathname.startsWith("/search")) return "library";
   if (pathname.startsWith("/history")) return "history";
   if (pathname.startsWith("/explore")) return "explore";
   if (pathname.startsWith("/settings")) return "settings";
