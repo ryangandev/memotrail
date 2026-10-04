@@ -30,12 +30,13 @@ The Home and Vehicle history comparison fix is verified on local Supabase, inclu
 Migration `202610010001` is applied to the hosted project, so the shared server contract fixes comparison for both clients.
 Web and native history recognize schema 3 snapshots as restorable and keep unsupported snapshots viewable with a clear explanation and a disabled Restore action.
 Adding or removing a photo in a focused First Time, Home, Vehicle, or Goal editor no longer makes Move to Trash or Mark achieved report a false conflict on Web or native.
-Migration `202610030002` applies the existing photo-only revision rule inside the focused Trash RPCs and Goal achievement, so deployed clients need no update; it is verified locally and still needs to be applied to the hosted project.
+Migration `202610030002` applies the existing photo-only revision rule inside the focused Trash RPCs and Goal achievement, so deployed clients need no update.
 Delete forever and Empty Trash now delete an item's record before its private photo files on Web and native, so an interrupted request or a Restore from another device can no longer leave a restorable item without its originals.
 Restore refuses an item whose originals are missing, and opening Trash finishes any file removal left unfinished.
-Migration `202610030003` enforces this order on the server for every client, including deployed ones; it is verified locally and must be applied to the hosted project before this Web or native release, because the new clients call its RPCs.
+Migration `202610030003` enforces this order on the server for every client, including deployed ones.
 Pending captures now stop as Not accepted instead of retrying forever when Storage refuses a photo or the Entry is already in Trash, and a capture still waiting on a device can no longer create an Entry again after Delete forever, on Web and native.
-Migration `202610030004` records each Entry deleted forever and refuses to insert it again; it is verified locally and must be applied to the hosted project before this Web or native release, because the new clients rely on it to stop those captures.
+Migration `202610030004` records each Entry deleted forever and refuses to insert it again.
+Migrations `202610030001` through `202610030004` are applied to the hosted project, which the new Web and native clients require.
 The merged Web release still needs Production deployment verification and browser acceptance; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 
 Use Git history for feature-level implementation and test evidence.
@@ -51,7 +52,7 @@ Use Git history for feature-level implementation and test evidence.
 | Web Collections and tags                                                                        | Direct Library destinations and shared Entry organization editor implemented                                                                                         |
 | Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI               | Keyword search remains available. Web AI is paused behind an off/disabled Beta setting; provider logic and historical data are retained.                             |
 | Private media, Entry history, relationships, Trash, and complete export                         | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                   |
-| Hosted Supabase contracts                                                                       | `202610010001` is deployed to project `kaivkozeyuwzqrckmyqu`; later repository migrations, including `202610030002`, await hosted application                        |
+| Hosted Supabase contracts                                                                       | Every repository migration through `202610030004` is deployed to project `kaivkozeyuwzqrckmyqu`                                                                      |
 | Entry-centered information model                                                                | Web, hosted database, and native iOS use Entry, focused records, and intentional Timeline Moment or Period; native personal acceptance remains                       |
 | Web design system                                                                               | Approved canonical components migrated across Web; component-owned CSS and token boundaries enforced; local regression passed; production browser acceptance pending |
 | Backup and restore                                                                              | Not ready                                                                                                                                                            |
@@ -67,8 +68,11 @@ Its marked account and Storage objects were confirmed removed without accessing 
 - Verify the merged `main` deployment against the migrated hosted project, then check Quick Capture, Inbox review, Library routing, First Time, Moment, Period, Home, Vehicle, and Goal in a browser.
 - The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
 - Native compatibility is updated separately; complete personal native acceptance before treating it as a release.
+- The hosted schema matches the migrations except for platform privilege defaults that `supabase db diff --linked` reports.
+  Hosted `service_role` and `anon` get no table access or function execution unless a migration grants it, and new public tables get row level security automatically.
+  Local Supabase grants both roles by default, so a missing explicit grant can pass every local suite and fail only on the hosted project.
 - Editing a formatted note in a focused editor no longer leaves an outdated `body_rich` copy that search and export still see.
-  Migration `202610030001` enforces the matching-text rule for every Entry write and removes existing outdated copies from Entries and history without new revisions; it still needs to be applied to the hosted project.
+  Migration `202610030001` enforces the matching-text rule for every Entry write and removes existing outdated copies from Entries and history without new revisions.
   It passes 62 database files with 1,663 assertions, 473 Web unit tests, a formatted Goal browser regression with 23 related browser scenarios, and all 256 native tests against local Supabase.
 - The Web history schema fix passes 462 unit tests and nine local history browser scenarios in both development and production mode, covering supported restoration, legacy rejection, and version selection.
   Lint, type checking, formatting, and the production build also pass.
@@ -112,7 +116,7 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 ### 2. Accept Web Location
 
-- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202610010001`, which includes every Location migration. Home Location copy-on-write compares coordinates at the database's six-decimal storage precision.
+- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202610030004`, which includes every Location migration. Home Location copy-on-write compares coordinates at the database's six-decimal storage precision.
 - Web now has optional Home Locations, address search that feeds Entry-owned Location snapshots on save, keyboard-accessible address suggestions, explicit photo GPS source identity, owner-scoped Geoapify quotas, and a clustered Map of current Entry coordinates with Kind and year filters.
 - Local Web and database validation for the merged changes is listed above.
 - `localhost:3000` points to the linked cloud Supabase project. Its health endpoint returned 200, and an authenticated browser loaded Geoapify address suggestions, a selected coordinate preview, and the Map's raster tiles after migration; the test form was canceled without saving.
