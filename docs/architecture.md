@@ -90,7 +90,8 @@ Pair it with the test file carrying the same feature name.
 - A focused-record save that leaves some photos unattached keeps its editor open; later saves, including photo retries, are ordinary updates.
   After a Home save, its provider choice is held as the saved Location, so a retry keeps that snapshot instead of choosing the provider result again.
 - Web shows Goals as Want to Do. `goals.status` is `active`, `achieved`, or `let_go`, there is no horizon, and `save_goal_entry` and `extract_goal_from_item` take no related links and never change them.
-  `goals_workspace` returns only `achievement` links, so related links from older Goals stay in the data and history without appearing on Web.
+  `goals_workspace` returns only `achievement` links.
+- Migration `202610040006` deletes every general `related` link, scrubs them from version history, drops `entry_relations` and `set_entry_relation`, and limits `entry_links.relationship` to `achievement`, `derived`, `derived_from`, `exploration_conclusion`, and `exploration_source`.
 - Web Goal extraction uses a caller-generated target UUID for idempotency, preserves the source revision and identity, and records `derived` plus `derived_from` provenance links so both items remain discoverable.
 - `review_wiki_item_with_location_rich` is the only Entry review boundary, and the Web Entry editor is its caller.
   It writes plaintext and `body_rich` in one revision, and clears formatting when `p_body_rich` is null and the primary Location when `p_primary_location` is null.

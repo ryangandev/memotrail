@@ -12,7 +12,7 @@ insert into public.timeline_tracks(id,owner_id,name) values('94500000-0000-4000-
 insert into public.entry_tags values('94000000-0000-4000-8000-000000000001','94200000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001',now());
 insert into public.entry_places(entry_id,place_id,owner_id) values('94000000-0000-4000-8000-000000000001','94400000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001');
 insert into public.timeline_items(entry_id,track_id,owner_id,timeline_kind) values('94000000-0000-4000-8000-000000000001','94500000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','event');
-insert into public.entry_links(source_entry_id,target_entry_id,owner_id) values('94000000-0000-4000-8000-000000000001','94000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001');
+insert into public.entry_links(source_entry_id,target_entry_id,owner_id,relationship) values('94000000-0000-4000-8000-000000000001','94000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','derived');
 update public.entries set title='History revised',body='Current writing',date_precision='unknown',occurred_label=null where id='94000000-0000-4000-8000-000000000001';
 delete from public.entry_tags where entry_id='94000000-0000-4000-8000-000000000001';
 delete from public.entry_places where entry_id='94000000-0000-4000-8000-000000000001';
@@ -72,7 +72,7 @@ select is((select color from public.vehicles where entry_id='94600000-0000-4000-
 reset role;
 -- Snapshots outside the canonical contract are rejected without partial writes.
 update public.entries set body='Legacy previous' where id='94000000-0000-4000-8000-000000000002';
-update public.entry_versions set snapshot=snapshot-array['tags','places','timeline_items','timeline','links','related_entry_ids','attachments','history_schema'] where entry_id='94000000-0000-4000-8000-000000000002';
+update public.entry_versions set snapshot=snapshot-array['tags','places','timeline_items','timeline','links','attachments','history_schema'] where entry_id='94000000-0000-4000-8000-000000000002';
 insert into public.entry_tags values('94000000-0000-4000-8000-000000000002','94200000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001',now());
 set local role authenticated;
 select throws_ok($$select public.restore_entry_version('94000000-0000-4000-8000-000000000002',1,2)$$,'P0001','history_schema_unsupported','Noncanonical history cannot be restored');

@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
-test("Item pages no longer offer generic Entry links and keep existing links intact", async ({
+test("Item pages offer no general links between Entries", async ({
   page,
   context,
 }) => {
@@ -78,7 +78,6 @@ test("Item pages no longer offer generic Entry links and keep existing links int
         ])
       ).error,
     ).toBeNull();
-    // Older Web clients and the paused native client could still create this link.
     expect(
       (
         await client.rpc("set_entry_relation", {
@@ -87,8 +86,8 @@ test("Item pages no longer offer generic Entry links and keep existing links int
           p_expected_revision: 1,
           p_linked: true,
         })
-      ).data,
-    ).toBe(2);
+      ).error?.code,
+    ).toBe("PGRST202");
     for (const id of [source, target]) {
       await page.goto(`/items/${id}`);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -115,15 +114,11 @@ test("Item pages no longer offer generic Entry links and keep existing links int
     const current = (await client.rpc("entry_history", { p_entry_id: source }))
       .data.current;
     expect(current).toMatchObject({
-      revision: 2,
+      revision: 1,
       body: "My original words",
+      links: [],
     });
-    expect(current.links).toEqual([
-      expect.objectContaining({
-        target_entry_id: target,
-        relationship: "related",
-      }),
-    ]);
+    expect(current).not.toHaveProperty("related_entry_ids");
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }

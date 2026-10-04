@@ -22,6 +22,8 @@ It is not yet applied to the hosted project; native iOS still opens Inbox review
 Native iOS is not in use and will be rewritten, so the database keeps no compatibility window for it.
 Migration `202610040005` drops `entries.inbox_status`, the Dashboard Inbox count, the organize flag on Entry review, the Capture source on Home and Vehicle saves, the constant record source in Library and search, the empty Trash storage path helper, and the native-only review functions.
 It is not yet applied to the hosted project.
+General related links are deleted: migration `202610040006` removes them, including those older Goals carried, from the data and version history, and drops the functions that browsed and edited them.
+It is not yet applied to the hosted project.
 Open product questions: Timeline structure and current chapters.
 UI questions held until then: how prominent version history is, Item page photos, date precision controls, the two export choices, and Timeline styles.
 Open `audit-2026-10` issues stay tracked in GitHub.
@@ -153,7 +155,7 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 Paused until Web is complete; see Focus.
 When native resumes, remove the general Related Items panel from the native Item page to match Web.
-The `entry_relations` and `set_entry_relation` functions stay deployed until then because the current native client still calls them; retire them in a migration afterward.
+Migration `202610040006` already drops the `entry_relations` and `set_entry_relation` functions that panel calls.
 
 - Native models, filters, Capture, and ordinary Inbox review now use the shared canonical identities; focused forms retain their existing RPCs.
 - Home Location IDs and labels decode as optional, and editing address facts clears stale coordinates.

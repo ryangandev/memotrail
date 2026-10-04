@@ -123,7 +123,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - A used tag must be merged into another tag or removed from its Entries before deletion, so organization is never silently lost.
 - Web does not offer general links between Entries, because tags already connect related records.
   Entries stay connected only through purpose-specific links: the source link of an item added to Want to Do and the First Time that marking an item done creates.
-  General links saved earlier remain in the data, version history, and export, but the Item page no longer lists them.
+  General links saved earlier, including those older Goals carried, are deleted from the data and version history.
 - Important content, organization, relationship, specialized-field, and photo-membership changes remain recoverable through version history.
 - Adding or removing photos never makes an open First Time, Home, Vehicle, or Want to Do editor stale: its Save, Move to Trash, and Mark done still apply.
   Writing or other content changed elsewhere since the editor opened still reports a conflict instead of being overwritten.
@@ -211,7 +211,6 @@ That action atomically marks the item Done and creates a linked First Time using
 Changing the status to Done in the editor records it without a First Time.
 
 Want to Do items do not keep general links to other Entries.
-Related links that older Goals carried stay in the data and history but are not shown or edited.
 
 ### Locations
 

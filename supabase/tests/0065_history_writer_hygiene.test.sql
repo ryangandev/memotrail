@@ -62,7 +62,7 @@ insert into writers
 select 'goal', entry_id from public.save_goal_entry('Goal','Memories','active',null,'{}',null,null);
 reset role;
 insert into public.entry_links (source_entry_id, target_entry_id, owner_id, relationship)
-values ((select id from writers where kind = 'goal'), (select id from writers where kind = 'entry'), auth.uid(), 'related');
+values ((select id from writers where kind = 'goal'), (select id from writers where kind = 'entry'), auth.uid(), 'achievement');
 update public.entry_links set created_at = '2000-01-01' where source_entry_id = (select id from writers where kind = 'goal');
 alter table public.goals disable trigger goals_set_updated_at;
 update public.goals set updated_at = '2000-01-01' where entry_id = (select id from writers where kind = 'goal');
