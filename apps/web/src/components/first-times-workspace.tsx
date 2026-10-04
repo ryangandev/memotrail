@@ -54,7 +54,10 @@ import {
   uploadEntryPhotos,
   type PhotoUploadProgress as PhotoUploadProgressValue,
 } from "@/lib/media/upload";
-import type { LocationSelection } from "@/lib/locations/location";
+import {
+  locationDisplayLabel,
+  type LocationSelection,
+} from "@/lib/locations/location";
 import { countLabel } from "@/lib/count-label";
 
 export function FirstTimesWorkspace({
@@ -241,7 +244,7 @@ function FirstTimeCard({
         {entry.location ? (
           <p className={styles.locationLine}>
             <Icon name="map" size={14} />
-            {entry.location.name}
+            {locationDisplayLabel(entry.location)}
           </p>
         ) : null}
         {entry.body ? <p>{truncate(entry.body, 180)}</p> : null}

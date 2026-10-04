@@ -113,7 +113,6 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
             id,
             owner_id: owner,
             bound_entry_id: entryId,
-            name: "10 Pine Street",
             formatted_address: "10 Pine Street, Philadelphia, PA",
             address: "10 Pine Street",
             city: "Philadelphia",
@@ -125,29 +124,29 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
     ).toBeNull();
     expect(
       (
-        await client.from("entry_places").insert([
+        await client.from("entry_locations").insert([
           {
             owner_id: owner,
             entry_id: eventId,
-            place_id: eventLocationId,
+            location_id: eventLocationId,
             relationship: "primary",
           },
           {
             owner_id: owner,
             entry_id: eventId,
-            place_id: eventLocationId,
-            relationship: "related",
+            location_id: eventLocationId,
+            relationship: "photo",
           },
           {
             owner_id: owner,
             entry_id: writingId,
-            place_id: writingLocationId,
-            relationship: "related",
+            location_id: writingLocationId,
+            relationship: "photo",
           },
           {
             owner_id: owner,
             entry_id: deletedId,
-            place_id: deletedLocationId,
+            location_id: deletedLocationId,
             relationship: "primary",
           },
         ])
@@ -297,7 +296,6 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
           id: westLocationId,
           owner_id: owner,
           bound_entry_id: westEntryId,
-          name: "San Francisco Bay",
           formatted_address: "San Francisco, California",
           city: "San Francisco",
           region: "California",
@@ -309,10 +307,10 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
     ).toBeNull();
     expect(
       (
-        await client.from("entry_places").insert({
+        await client.from("entry_locations").insert({
           owner_id: owner,
           entry_id: westEntryId,
-          place_id: westLocationId,
+          location_id: westLocationId,
           relationship: "primary",
         })
       ).error,

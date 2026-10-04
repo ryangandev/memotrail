@@ -29,6 +29,10 @@ import {
 import { occurrenceLabel } from "@/lib/data/occurrence";
 import type { FirstTimeEntry } from "@/lib/data/first-times";
 import { wikiEntryHref } from "@/lib/data/wiki-item";
+import {
+  locationDisplayLabel,
+  type LocationSelection,
+} from "@/lib/locations/location";
 import styles from "./focused-record-detail.module.css";
 
 type Shared = {
@@ -136,6 +140,10 @@ export function FocusedRecordDetail(props: Props) {
   );
 }
 
+function optionalLocationLabel(location: LocationSelection | null | undefined) {
+  return location ? locationDisplayLabel(location) : null;
+}
+
 function Fact({
   label,
   value,
@@ -189,7 +197,10 @@ function RecordContent({
               label="Location"
               value={homeLocationLabel(record as HomeRecord)}
             />
-            <Fact label="Address" value={(record as HomeRecord).address} />
+            <Fact
+              label="Address"
+              value={(record as HomeRecord).location?.address}
+            />
             <Fact
               label="Why you moved in"
               value={(record as HomeRecord).moveInReason}
@@ -197,10 +208,6 @@ function RecordContent({
             <Fact
               label="Why you left"
               value={(record as HomeRecord).moveOutReason}
-            />
-            <Fact
-              label="Place notes"
-              value={(record as HomeRecord).placeNotes}
             />
           </>
         ) : null}
@@ -216,7 +223,7 @@ function RecordContent({
             />
             <Fact
               label="Location"
-              value={(record as VehicleRecord).location?.name}
+              value={optionalLocationLabel((record as VehicleRecord).location)}
             />
           </>
         ) : null}
@@ -235,7 +242,7 @@ function RecordContent({
             />
             <Fact
               label="Location"
-              value={(record as FirstTimeEntry).location?.name}
+              value={optionalLocationLabel((record as FirstTimeEntry).location)}
             />
           </>
         ) : null}

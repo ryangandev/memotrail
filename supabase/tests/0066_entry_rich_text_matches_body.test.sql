@@ -17,7 +17,7 @@ create function pg_temp.rich_text(p_id uuid) returns text language sql stable as
 $$;
 create function pg_temp.provider() returns jsonb language sql immutable as $$
   select jsonb_build_object('kind','provider','provider','geoapify',
-    'providerLocationId','rich-text-home','name','10 Pine Street','formattedAddress','10 Pine Street',
+    'providerLocationId','rich-text-home','formattedAddress','10 Pine Street',
     'address','10 Pine Street','city','Philadelphia','region','Pennsylvania','country','United States',
     'countryCode','us','latitude',39.95,'longitude',-75.16,'timezone','America/New_York');
 $$;
@@ -50,11 +50,9 @@ begin
     select entry_id into result from public.save_first_time_with_location(input,null);
   elsif p_kind = 'home' then
     select entry_id into result from public.save_home_entry_with_occurrence(
-      'Rich home',p_body,null,null,'unknown',null,'UTC',null,null,null,null,null,null,null,null,
-      null,null,null,'{}',p_id,current_revision);
-  elsif p_kind = 'home_geoapify' then
-    result := (public.save_home_entry_with_geoapify(input || '{"occurredTimezone":"UTC"}',
-      pg_temp.provider())->>'entry_id')::uuid;
+      'Rich home',p_body,null,null,'unknown',null,'UTC',null,null,'{}',p_id,current_revision);
+  elsif p_kind = 'home_location' then
+    select entry_id into result from public.save_home_with_location(input,pg_temp.provider());
   elsif p_kind = 'vehicle' then
     select entry_id into result from public.save_vehicle_entry_with_occurrence(
       'Rich vehicle',p_body,null,null,'unknown',null,'UTC','Honda','Civic',2018,'Blue','{}',
@@ -119,7 +117,7 @@ select is(
 -- Each focused writer keeps matching formatting and drops it once the writing changes.
 insert into writers
 select kind, pg_temp.save(kind,null,'Original words')
-from unnest(array['goal','moment','period','first_time','first_time_location','home','home_geoapify',
+from unnest(array['goal','moment','period','first_time','first_time_location','home','home_location',
   'vehicle','vehicle_location']) as kind;
 select isnt(id,null,kind || ' is created') from writers;
 -- Record formatting the way Capture and Inbox review store it.
@@ -158,26 +156,24 @@ insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,date_pr
 values ('96600000-0000-4000-8000-000000000005',auth.uid(),'Review','Review words','entry','entry',
   'unknown','UTC',jsonb_build_object('body_rich',pg_temp.rich('Review words')));
 select is(
-  (select revision from public.review_wiki_item_with_location_rich('96600000-0000-4000-8000-000000000005',1,
-    'Reviewed','Review words','entry','entry',null,'UTC','{}',null,null,'unknown',null,null,
-    pg_temp.rich('Review words'))),
+  (select revision from public.save_entry('96600000-0000-4000-8000-000000000005',1,
+    'Reviewed','Review words', pg_temp.rich('Review words'),null,null,'UTC',null,'unknown','{}',null, null)),
   2,
   'A review with unchanged writing succeeds'
 );
 select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000005'),'Review words',
   'A review with unchanged writing keeps its formatting');
 select is(
-  (select revision from public.review_wiki_item_with_location_rich('96600000-0000-4000-8000-000000000005',2,
-    'Reviewed','Formatted words','entry','entry',null,'UTC','{}',null,null,'unknown',null,null,
-    pg_temp.rich('Formatted words'))),
+  (select revision from public.save_entry('96600000-0000-4000-8000-000000000005',2,
+    'Reviewed','Formatted words', pg_temp.rich('Formatted words'),null,null,'UTC',null,'unknown','{}',null, null)),
   3,
   'A rich review saves new writing with its formatting'
 );
 select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000005'),'Formatted words',
   'A rich review stores formatting for its new writing');
 select is(
-  (select revision from public.review_wiki_item_with_location_rich('96600000-0000-4000-8000-000000000005',3,
-    'Reviewed','Plain edit','entry','entry',null,'UTC','{}',null,null,'unknown',null,null,null)),
+  (select revision from public.save_entry('96600000-0000-4000-8000-000000000005',3,
+    'Reviewed','Plain edit', null,null,null,'UTC',null,'unknown','{}',null, null)),
   4,
   'A review without formatting saves new writing'
 );

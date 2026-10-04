@@ -4,9 +4,9 @@ select no_plan();
 insert into public.entries(id,owner_id,title,body,date_precision,occurred_start) values
  ('97000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Undated memory','A feeling','unknown',null);
 create function pg_temp.review(p_precision text, p_start timestamptz default null, p_end timestamptz default null, p_label text default null, p_rev integer default null, p_zone text default 'UTC') returns bigint language sql as $$
- select count(*) from public.review_wiki_item_with_location_rich(
+ select count(*) from public.save_entry(
  '97000000-0000-4000-8000-000000000001',coalesce(p_rev,(select revision from public.entries where id='97000000-0000-4000-8000-000000000001'),1),
- 'Reviewed memory','My words','entry','entry',p_start,p_zone,array['memory'],p_end,p_label,p_precision,null,null,null);
+ 'Reviewed memory','My words', null,p_start,p_end,p_zone,p_label,p_precision,array['memory'],null, null);
 $$;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
@@ -39,7 +39,7 @@ select is(pg_temp.review('unknown',null,null,null,1),0::bigint,'Stale revision r
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000099',true);
 select is(pg_temp.review('unknown'),0::bigint,'Another owner cannot review');
 reset role;
-select ok(not has_function_privilege('anon','public.review_wiki_item_with_location_rich(uuid,integer,text,text,text,text,timestamptz,text,text[],timestamptz,text,text,jsonb,jsonb,jsonb)','execute'),'Anonymous review denied');
+select ok(not has_function_privilege('anon','public.save_entry(uuid,integer,text,text,jsonb,timestamptz,timestamptz,text,text,text,text[],jsonb,jsonb)','execute'),'Anonymous review denied');
 select hasnt_function('public','review_entry',array['uuid','integer','text','text','text','timestamp with time zone','text','text[]','text[]','boolean'],'Legacy review contract is removed');
 select * from finish();
 rollback;

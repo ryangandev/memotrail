@@ -13,14 +13,13 @@ returns uuid language plpgsql as $$
 declare created uuid;
 begin
   case p_kind
-    when 'goal', 'achieve', 'legacy achieve' then
+    when 'goal', 'achieve' then
       select entry_id into created from public.save_goal_entry(
         'Revision ' || p_kind, 'Original writing', 'active', null,
         '{}', null, null);
     when 'home' then
       select entry_id into created from public.save_home_entry_with_occurrence(
-        'Revision home', 'Original writing', '2021-04-12T12:00:00Z', null, 'day', null, 'UTC',
-        null, 'Maple Street', null, null, null, null, null, null, null, '', '', '{}', null, null);
+        'Revision home', 'Original writing', '2021-04-12T12:00:00Z', null, 'day', null, 'UTC', '', '', '{}', null, null);
     when 'vehicle' then
       select entry_id into created from public.save_vehicle_entry_with_occurrence(
         'Revision vehicle', 'Original writing', '2021-04-12T12:00:00Z', null, 'day', null, 'UTC',
@@ -56,9 +55,6 @@ begin
     when 'achieve' then
       select goal_revision into written from public.achieve_goal_with_occurrence(
         p_entry_id, p_revision, null, 'unknown', null, null, null);
-    when 'legacy achieve' then
-      select goal_revision into written from public.mark_goal_achieved_with_first_time(
-        p_entry_id, p_revision, '2020-01-01T12:00:00Z', 'day', null, 'UTC');
   end case;
   return written;
 end;
@@ -67,7 +63,7 @@ $$;
 -- Whether the lifecycle write landed: in Trash, or achieved with its First Time.
 create function pg_temp.written(p_kind text, p_entry_id uuid)
 returns boolean language sql as $$
-  select case when p_kind like '%achieve'
+  select case when p_kind = 'achieve'
     then exists(select 1 from public.goals where entry_id = p_entry_id and status = 'achieved')
       and exists(select 1 from public.entry_links where source_entry_id = p_entry_id and relationship = 'achievement')
     else (select deleted_at is not null from public.entries where id = p_entry_id)
@@ -92,9 +88,9 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
 insert into fixtures(kind, outcome, id)
 select kind, outcome, pg_temp.create_record(kind)
-from unnest(array['goal', 'home', 'vehicle', 'first time', 'moment', 'achieve', 'legacy achieve']) as kind,
+from unnest(array['goal', 'home', 'vehicle', 'first time', 'moment', 'achieve']) as kind,
   unnest(array['adopt', 'conflict']) as outcome;
-select is((select count(*) from fixtures where id is not null), 14::bigint, 'Every lifecycle writer has two fresh records');
+select is((select count(*) from fixtures where id is not null), 12::bigint, 'Every lifecycle writer has two fresh records');
 
 reset role;
 update fixtures set photo_id = pg_temp.add_photo(id);

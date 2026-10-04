@@ -12,7 +12,7 @@ as $$
   select jsonb_build_object(
     'kind','provider','provider','geoapify',
     'providerLocationId',provider_id,
-    'name',formatted,'formattedAddress',formatted,
+    'formattedAddress',formatted,
     'address','10 Pine Street','city','Philadelphia','region','Pennsylvania',
     'postalCode',null,'country','United States','countryCode','us',
     'latitude',39.9526,'longitude',-75.1652,'timezone','America/New_York',
@@ -49,8 +49,8 @@ select is(
 );
 
 select is(
-  (select count(distinct link.place_id)
-   from public.entry_places as link
+  (select count(distinct link.location_id)
+   from public.entry_locations as link
    join public.entries as entry on entry.id=link.entry_id
    where entry.title in ('First hike','Blue Civic')
      and link.relationship='primary'),
@@ -87,9 +87,9 @@ select is(
 select is(
   (
     select location.provider_location_id
-    from public.entry_places as link
+    from public.entry_locations as link
     join public.entries as entry on entry.id=link.entry_id
-    join public.locations as location on location.id=link.place_id
+    join public.locations as location on location.id=link.location_id
     where entry.title='Blue Civic' and link.relationship='primary'
   ),
   'specialized-pine-10',
@@ -120,7 +120,7 @@ select is(
 );
 
 select is(
-  (select count(*) from public.entry_places as link
+  (select count(*) from public.entry_locations as link
    join public.entries as entry on entry.id=link.entry_id
    where entry.title='Blue Civic' and link.relationship='primary'),
   0::bigint,

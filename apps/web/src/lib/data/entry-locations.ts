@@ -16,9 +16,9 @@ export async function getPrimaryEntryLocations(
   if (entryIds.length === 0) return new Map();
 
   const { data, error } = await context.client
-    .from("entry_places")
+    .from("entry_locations")
     .select(
-      "entry_id,location:locations!entry_places_location_id_owner_id_fkey(id,revision,name,formatted_address,address,city,region,postal_code,country,country_code,latitude,longitude,timezone_id,result_type)",
+      "entry_id,location:locations!entry_locations_location_id_owner_id_fkey(id,revision,formatted_address,address,city,region,postal_code,country,country_code,latitude,longitude,timezone_id,result_type)",
     )
     .eq("owner_id", context.userId)
     .eq("relationship", "primary")

@@ -10,10 +10,9 @@ insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,date_pr
    '{"body_rich":{"version":1,"text":"Original words","document":{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Original words","marks":[{"type":"bold"}]}]}]}}}');
 
 create function pg_temp.rich_review(rev integer, body text, rich jsonb) returns bigint language sql as $$
-  select count(*) from public.review_wiki_item_with_location_rich(
-    '96000000-0000-4000-8000-000000000001',rev,'Rich Entry',body,'entry','entry',
-    null,'UTC','{}',null,null,'unknown',null,null,rich
-  );
+  select count(*) from public.save_entry(
+    '96000000-0000-4000-8000-000000000001',rev,'Rich Entry',body, rich,
+    null,null,'UTC',null,'unknown','{}',null, null);
 $$;
 
 set local role authenticated;
@@ -42,7 +41,7 @@ select is(pg_temp.rich_review(3,'Foreign edit',null),0::bigint,'Another owner ca
 reset role;
 
 select ok(
-  not has_function_privilege('anon','public.review_wiki_item_with_location_rich(uuid,integer,text,text,text,text,timestamptz,text,text[],timestamptz,text,text,jsonb,jsonb,jsonb)','execute'),
+  not has_function_privilege('anon','public.save_entry(uuid,integer,text,text,jsonb,timestamptz,timestamptz,text,text,text,text[],jsonb,jsonb)','execute'),
   'Anonymous rich review denied'
 );
 select * from finish();

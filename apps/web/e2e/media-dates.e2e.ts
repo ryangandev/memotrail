@@ -289,7 +289,7 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
       true,
     );
     expect(
-      (await client.from("entry_places").select("*").eq("entry_id", entry))
+      (await client.from("entry_locations").select("*").eq("entry_id", entry))
         .data,
     ).toEqual([]);
     async function openPlaceDraft() {
@@ -348,7 +348,9 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
       .eq("owner_id", owner)
       .single();
     expect(newLocation.data).toMatchObject({
-      name: "Location not set",
+      formatted_address: null,
+      coordinate_source: "photo_gps",
+      source_attachment_id: attachment,
       latitude: 39.95,
       longitude: -75.166667,
       bound_entry_id: entry,
@@ -356,11 +358,11 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
     expect(
       (
         await client
-          .from("entry_places")
-          .select("place_id")
+          .from("entry_locations")
+          .select("location_id,relationship")
           .eq("entry_id", entry)
       ).data,
-    ).toEqual([{ place_id: newLocation.data!.id }]);
+    ).toEqual([{ location_id: newLocation.data!.id, relationship: "photo" }]);
     const nativeOptions = await page.request.post(
       "/api/media/place-options?query=anything",
       { headers: bearer },
@@ -372,18 +374,14 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
       p_expected_revision: raceBefore.revision,
       p_title: raceBefore.title,
       p_body: raceBefore.body,
-      p_item_kind: "entry",
-      p_item_subtype: "entry",
       p_occurred_start: raceBefore.occurred_start,
       p_occurred_timezone: raceBefore.occurred_timezone,
       p_tag_names: [],
       p_occurred_end: null,
       p_occurred_label: null,
       p_date_precision: "day",
-      p_photo_place: {
-        kind: "new",
+      p_photo_location: {
         attachmentId: attachment,
-        name: "Concurrent photo Location",
         latitude: 30,
         longitude: 40,
       },
@@ -391,8 +389,8 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
       p_body_rich: null,
     };
     const race = await Promise.all([
-      client.rpc("review_wiki_item_with_location_rich", raceInput),
-      client.rpc("review_wiki_item_with_location_rich", raceInput),
+      client.rpc("save_entry", raceInput),
+      client.rpc("save_entry", raceInput),
     ]);
     expect(race.map((v) => v.error)).toEqual([null, null]);
     expect(race.map((v) => v.data.length).sort()).toEqual([0, 1]);

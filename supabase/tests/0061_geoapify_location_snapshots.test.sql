@@ -18,7 +18,7 @@ as $$
   select jsonb_build_object(
     'kind','provider','provider','geoapify',
     'providerLocationId',provider_id,
-    'name',formatted,'formattedAddress',formatted,
+    'formattedAddress',formatted,
     'address','10 Pine Street','city','Philadelphia','region','Pennsylvania',
     'postalCode','19107','country','United States','countryCode','us',
     'latitude',latitude,'longitude',longitude,
@@ -31,13 +31,11 @@ create function pg_temp.review(entry_id uuid, expected_revision integer, locatio
 returns bigint
 language sql
 as $$
-  select count(*) from public.review_wiki_item_with_location_rich(
+  select count(*) from public.save_entry(
     entry_id,expected_revision,
     (select title from public.entries where id=entry_id),
-    (select body from public.entries where id=entry_id),
-    'entry','entry',null,'UTC',array[]::text[],
-    null,null,'unknown',null,location,null
-  );
+    (select body from public.entries where id=entry_id),null,null,
+    null,'UTC',null,'unknown',array[]::text[],location,null);
 $$;
 
 set local role authenticated;
@@ -68,7 +66,7 @@ select is(
 );
 
 select is(
-  (select count(distinct place_id) from public.entry_places where entry_id in ('99100000-0000-4000-8000-000000000002','99100000-0000-4000-8000-000000000003')),
+  (select count(distinct location_id) from public.entry_locations where entry_id in ('99100000-0000-4000-8000-000000000002','99100000-0000-4000-8000-000000000003')),
   2::bigint,
   'The two Entries have different Location identities'
 );
@@ -80,18 +78,18 @@ select is(
 );
 
 select is(
-  (select count(*) from public.locations where name='10 Pine Street, Philadelphia, PA 19107, USA' and notes is null),
+  (select count(*) from public.locations where formatted_address='10 Pine Street, Philadelphia, PA 19107, USA'),
   2::bigint,
-  'Location labels come from the address and notes remain empty'
+  'Each snapshot keeps the provider address'
 );
 
 select throws_ok(
   $$
-    insert into public.entry_places(entry_id,place_id,owner_id,relationship)
+    insert into public.entry_locations(entry_id,location_id,owner_id,relationship)
     select
-      '99100000-0000-4000-8000-000000000003',place_id,
-      '10000000-0000-0000-0000-000000000124','related'
-    from public.entry_places
+      '99100000-0000-4000-8000-000000000003',location_id,
+      '10000000-0000-0000-0000-000000000124','primary'
+    from public.entry_locations
     where entry_id='99100000-0000-4000-8000-000000000002'
       and relationship='primary'
   $$,
@@ -112,8 +110,8 @@ select is(
 select is(
   (
     select location.provider_location_id
-    from public.entry_places as link
-    join public.locations as location on location.id=link.place_id
+    from public.entry_locations as link
+    join public.locations as location on location.id=link.location_id
     where link.entry_id='99100000-0000-4000-8000-000000000003'
       and link.relationship='primary'
   ),
@@ -164,19 +162,12 @@ create function pg_temp.save_precision_home(entry_id uuid, expected_revision int
 returns jsonb
 language sql
 as $$
-  select public.save_home_entry_with_geoapify(
+  select to_jsonb(saved) from public.save_home_with_location(
     jsonb_build_object(
       'title', 'High-precision Home',
       'body', '',
       'datePrecision', 'unknown',
       'occurredTimezone', 'UTC',
-      'placeName', '10 Pine Street, Philadelphia, PA 19107, USA',
-      'address', '10 Pine Street',
-      'city', 'Philadelphia',
-      'region', 'Pennsylvania',
-      'country', 'United States',
-      'latitude', 39.95261234,
-      'longitude', -75.16529876,
       'tagNames', jsonb_build_array(),
       'id', entry_id,
       'revision', expected_revision
@@ -186,7 +177,7 @@ as $$
       '10 Pine Street, Philadelphia, PA 19107, USA',
       39.95261234, -75.16529876
     )
-  );
+  ) as saved;
 $$;
 
 create temporary table precision_home as

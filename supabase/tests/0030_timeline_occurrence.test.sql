@@ -26,7 +26,6 @@ create temporary table fixture as select entry_id id from public.timeline_worksp
 select is(pg_temp.save_moment(date_precision,occurred_start,occurred_end,occurred_label,entry_id,revision),entry_id,'Exact stage can save without rewriting its bounds') from public.timeline_workspace_with_organization(false) where date_precision='exact';
 select is(occurred_start,'2026-11-01 09:30:00.123456Z'::timestamptz,'Start microseconds survive') from public.entries where id=(select id from fixture);
 select is(occurred_end,'2026-11-01 10:30:00.654321Z'::timestamptz,'End microseconds survive') from public.entries where id=(select id from fixture);
-select throws_ok($$select public.save_timeline_entry(track_id,timeline_kind,title,body,occurred_start,occurred_end,date_precision,occurred_label,occurred_timezone,entry_id,revision) from public.timeline_workspace_with_organization(false) where date_precision='exact'$$,'22023','timeline_requires_current_editor','Date-only legacy editor cannot overwrite exact data');
 select is(pg_temp.save_moment('unknown',null,null,null,id,1),null::uuid,'Stale revision cannot erase exact data') from fixture;
 select throws_ok($$select pg_temp.save_moment('age')$$,'22023','invalid_timeline_occurrence','Age requires a description');
 select throws_ok($$select pg_temp.save_moment('unknown','2017-07-08')$$,'22023','invalid_timeline_occurrence','Unknown cannot imply a calendar date');

@@ -27,6 +27,8 @@ It is not yet applied to the hosted project.
 Version history is removed: migration `202610040007` deletes every stored version and stops recording them, stops photo changes from creating Entry revisions, drops Locations kept only for history, and purges prepared export snapshots.
 `/history` links open the Item page or Library.
 It is not yet applied to the hosted project.
+Database leftovers are dropped: migration `202610040008` links Home Locations through `entry_locations` like every other Entry, turns `related` Location links into `photo` links and `source_capture` Entries into plain Entries, drops unused Location columns and functions no client calls, and replaces the Entry review chain with one `save_entry`.
+It is not yet applied to the hosted project.
 Open product questions: Timeline structure and current chapters.
 UI questions held until then: Item page photos, date precision controls, the two export choices, and Timeline styles.
 Open `audit-2026-10` issues stay tracked in GitHub.

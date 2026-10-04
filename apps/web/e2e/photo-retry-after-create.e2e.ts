@@ -256,18 +256,13 @@ async function savedLocations(
   entryID: string,
 ) {
   if (kind === "goal") return [];
-  const links =
-    kind === "home"
-      ? await client.from("homes").select("place_id").eq("entry_id", entryID)
-      : await client
-          .from("entry_places")
-          .select("place_id")
-          .eq("entry_id", entryID)
-          .eq("relationship", "primary");
+  const links = await client
+    .from("entry_locations")
+    .select("location_id")
+    .eq("entry_id", entryID)
+    .eq("relationship", "primary");
   expect(links.error).toBeNull();
-  return links
-    .data!.map((link) => link.place_id as string | null)
-    .filter((id): id is string => id !== null);
+  return links.data!.map((link) => link.location_id as string);
 }
 
 async function mockProviderSearch(page: Page) {
@@ -282,7 +277,6 @@ async function mockProviderSearch(page: Page) {
             kind: "provider",
             provider: "geoapify",
             providerLocationId: "synthetic-retry-address",
-            name: "10 Pine Street, Philadelphia, PA",
             formattedAddress: "10 Pine Street, Philadelphia, PA",
             address: "10 Pine Street",
             city: "Philadelphia",

@@ -82,26 +82,17 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
           },
           home: {
             path: "/homes",
-            rpc: "save_home_entry",
+            rpc: "save_home_entry_with_occurrence",
             args: {
               ...common,
               ...dates,
-              p_place_id: null,
-              p_place_name: "Test home",
-              p_address: null,
-              p_city: null,
-              p_region: null,
-              p_country: null,
-              p_latitude: null,
-              p_longitude: null,
-              p_place_notes: "",
               p_move_in_reason: "",
               p_move_out_reason: "",
             },
           },
           vehicle: {
             path: "/vehicles",
-            rpc: "save_vehicle_entry",
+            rpc: "save_vehicle_entry_with_occurrence",
             args: {
               ...common,
               ...dates,

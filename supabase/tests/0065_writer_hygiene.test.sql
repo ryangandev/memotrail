@@ -4,7 +4,7 @@ select no_plan();
 
 create function pg_temp.provider(p_name text default '10 Maple Street') returns jsonb language sql as $$
   select jsonb_build_object('kind','provider','provider','geoapify',
-    'providerLocationId',p_name,'name',p_name,'formattedAddress',p_name,
+    'providerLocationId',p_name,'formattedAddress',p_name,
     'address',p_name,'city','Philadelphia','country','United States',
     'latitude',39.95,'longitude',-75.16);
 $$;
@@ -22,10 +22,11 @@ begin
     select entry_id into result from public.save_first_time_with_location(input, p_location);
   elsif p_kind = 'vehicle' then
     select entry_id into result from public.save_vehicle_with_location(input, p_location);
+  elsif p_kind = 'home' then
+    select entry_id into result from public.save_home_with_location(input, p_location);
   else
-    select entry_id into result from public.review_wiki_item_with_location_rich(
-      p_id,(select revision from public.entries where id = p_id),'Writer entry','Memories',
-      'entry','entry',null,'UTC','{}',null,null,'unknown',null,p_location,null);
+    select entry_id into result from public.save_entry(
+      p_id,(select revision from public.entries where id = p_id),'Writer entry','Memories',null,null,null,'UTC',null,'unknown','{}',p_location,null);
   end if;
   return result;
 end;
@@ -35,26 +36,27 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
 insert into writers values
   ('first_time', pg_temp.save_primary('first_time',null,pg_temp.provider())),
-  ('vehicle', pg_temp.save_primary('vehicle',null,pg_temp.provider()));
+  ('vehicle', pg_temp.save_primary('vehicle',null,pg_temp.provider())),
+  ('home', pg_temp.save_primary('home',null,pg_temp.provider()));
 insert into public.entries(owner_id,title) values(auth.uid(),'Writer Entry') returning id \gset entry_
 insert into writers values('entry',pg_temp.save_primary('entry',:'entry_id',pg_temp.provider()));
 reset role;
-update public.entry_places set created_at = '2000-01-01' where entry_id in (select id from writers);
+update public.entry_locations set created_at = '2000-01-01' where entry_id in (select id from writers);
 set local role authenticated;
 select is(pg_temp.save_primary(kind,id,(
   select jsonb_build_object('kind','existing','id',location.id,'revision',location.revision)
-  from public.entry_places as link join public.locations as location on location.id = link.place_id
+  from public.entry_locations as link join public.locations as location on location.id = link.location_id
   where link.entry_id = writers.id and link.relationship = 'primary'
 )),id,'Saving the same ' || kind || ' Location succeeds') from writers;
-select is((select created_at from public.entry_places where entry_id = writers.id and relationship = 'primary'),
+select is((select created_at from public.entry_locations where entry_id = writers.id and relationship = 'primary'),
   '2000-01-01'::timestamptz,kind || ' retains unchanged primary Location membership') from writers;
 select is(pg_temp.save_primary(kind,id,pg_temp.provider('20 Maple Street')),id,'Changing the ' || kind || ' Location succeeds') from writers;
-select is((select count(*) from public.entry_places where entry_id = writers.id and relationship = 'primary'),
+select is((select count(*) from public.entry_locations where entry_id = writers.id and relationship = 'primary'),
   1::bigint,kind || ' replaces the primary relationship rather than retaining both') from writers;
-select is((select name from public.locations where id = (select place_id from public.entry_places where entry_id = writers.id and relationship = 'primary')),
+select is((select formatted_address from public.locations where id = (select location_id from public.entry_locations where entry_id = writers.id and relationship = 'primary')),
   '20 Maple Street',kind || ' points at the changed Location') from writers;
 select is(pg_temp.save_primary(kind,id,null),id,'Removing the ' || kind || ' Location succeeds') from writers;
-select is((select count(*) from public.entry_places where entry_id = writers.id and relationship = 'primary'),
+select is((select count(*) from public.entry_locations where entry_id = writers.id and relationship = 'primary'),
   0::bigint,kind || ' removes only the active primary relationship') from writers;
 
 -- Goal saves leave Entry links alone and skip unchanged Goal details.

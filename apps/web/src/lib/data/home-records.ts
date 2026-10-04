@@ -1,6 +1,7 @@
 import "server-only";
 import { displayImageURLs } from "@/lib/media/urls";
 
+import { getPrimaryEntryLocations } from "./entry-locations";
 import { getAuthenticatedContext, type Viewer } from "./inbox";
 import {
   parseHomeRows,
@@ -58,12 +59,21 @@ export async function getHomesWorkspace(
     ? rows.filter((record) => record.id === targetId)
     : rows;
 
+  const locations = await getPrimaryEntryLocations(
+    context,
+    visibleRows.map((row) => row.id),
+  );
+  if (!locations) {
+    return unavailableWorkspace(context.viewer);
+  }
+
   const attachments = visibleRows.flatMap((home) => home.attachments);
   const signedUrls = await signedImageUrls(context.client, attachments);
 
   return {
     homes: visibleRows.map((home) => ({
       ...home,
+      location: locations.get(home.id) ?? null,
       attachments: home.attachments.map((attachment) => ({
         ...attachment,
         imageUrl: signedUrls.get(attachment.objectPath) ?? null,

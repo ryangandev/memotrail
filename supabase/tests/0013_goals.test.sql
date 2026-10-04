@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(61);
+select plan(49);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -282,108 +282,6 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.mark_goal_achieved_with_first_time(
-      (select id from public.entries where title = 'Visit Iceland'),
-      1, '2026-09-03T19:00:00Z', 'day', 'First Iceland trip', 'America/Los_Angeles'
-    )
-  ),
-  1,
-  'A Goal can atomically create an achieved First Time'
-);
-
-select is(
-  (
-    select goals.status
-    from public.goals
-    join public.entries on entries.id = goals.entry_id
-    where entries.title = 'Visit Iceland' and entries.item_kind = 'goal'
-  ),
-  'achieved',
-  'The achievement action marks the Goal achieved'
-);
-
-select is(
-  (
-    select revision
-    from public.entries
-    where title = 'Visit Iceland' and item_kind = 'goal'
-  ),
-  2,
-  'The achievement action revision-safely updates the Goal'
-);
-
-select is(
-  (
-    select body
-    from public.entries
-    where title = 'Visit Iceland' and item_kind = 'entry' and item_subtype = 'first_time'
-  ),
-  '',
-  'The created First Time does not copy the Goal description'
-);
-
-select is(
-  (
-    select concat_ws('|', item_kind, item_subtype, date_precision, occurred_label)
-    from public.entries
-    where title = 'Visit Iceland' and item_kind = 'entry' and item_subtype = 'first_time'
-  ),
-  'entry|first_time|day|First Iceland trip',
-  'The created First Time preserves organized occurrence context'
-);
-
-select is(
-  (
-    select relationship
-    from public.entry_links
-    join public.entries as source on source.id = entry_links.source_entry_id
-    where source.title = 'Visit Iceland' and relationship = 'achievement'
-  ),
-  'achievement',
-  'The achieved Goal links to its First Time'
-);
-
-select is(
-  (
-    select count(*)::integer
-    from public.mark_goal_achieved_with_first_time(
-      (select id from public.entries where title = 'Visit Iceland' and item_kind = 'goal'),
-      1, '2026-09-04T19:00:00Z', 'day', null, 'America/Los_Angeles'
-    )
-  ),
-  0,
-  'A stale achievement action cannot create another First Time'
-);
-
-select is(
-  pg_temp.capture_sqlstate(
-    format(
-      $$select * from public.mark_goal_achieved_with_first_time(
-        %L::uuid, 2, '2026-09-03T19:00:00Z', 'unknown', null, 'America/Los_Angeles'
-      )$$,
-      (select id from public.entries where title = 'Visit Iceland' and item_kind = 'goal')
-    )
-  ),
-  '22023',
-  'The achievement action rejects unknown completion precision'
-);
-
-select is(
-  pg_temp.capture_sqlstate(
-    format(
-      $$select * from public.mark_goal_achieved_with_first_time(
-        %L::uuid, 2, '2026-09-03T19:00:00Z', 'day', null, 'Not/A-Timezone'
-      )$$,
-      (select id from public.entries where title = 'Visit Iceland' and item_kind = 'goal')
-    )
-  ),
-  '22023',
-  'The achievement action rejects an invalid timezone'
-);
-
-select is(
-  (
-    select count(*)::integer
     from public.trash_goal_entry(
       (select id from public.entries where title = 'Pause running'),
       1
@@ -489,12 +387,6 @@ select throws_ok(
 );
 
 select is(
-  (select prosecdef from pg_proc where oid = 'public.mark_goal_achieved_with_first_time(uuid,integer,timestamptz,text,text,text)'::regprocedure),
-  false,
-  'The Goal achievement action uses invoker rights'
-);
-
-select is(
   (select proconfig from pg_proc where oid = 'public.goals_workspace(integer,integer)'::regprocedure),
   array['search_path=""']::text[],
   'The Goals workspace has an empty search path'
@@ -509,24 +401,6 @@ select ok(
   not has_function_privilege('anon', 'public.goals_workspace(integer,integer)', 'EXECUTE')
     and not has_function_privilege('public', 'public.goals_workspace(integer,integer)', 'EXECUTE'),
   'Anonymous and PUBLIC roles cannot execute the Goals workspace'
-);
-
-select ok(
-  has_function_privilege(
-    'authenticated',
-    'public.mark_goal_achieved_with_first_time(uuid,integer,timestamptz,text,text,text)',
-    'EXECUTE'
-  ),
-  'Authenticated users can execute the Goal achievement action'
-);
-
-select ok(
-  not has_function_privilege(
-    'anon',
-    'public.mark_goal_achieved_with_first_time(uuid,integer,timestamptz,text,text,text)',
-    'EXECUTE'
-  ),
-  'Anonymous users cannot execute the Goal achievement action'
 );
 
 select ok(

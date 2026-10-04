@@ -71,7 +71,7 @@ select is(
 select lives_ok(
   $$
     select *
-    from public.save_vehicle_entry(
+    from public.save_vehicle_entry_with_occurrence(
       'Bluebird',
       'My first daily driver.',
       '2020-03-12T12:00:00Z',
@@ -194,7 +194,7 @@ select is(
 select lives_ok(
   $$
     select *
-    from public.save_vehicle_entry(
+    from public.save_vehicle_entry_with_occurrence(
       'Roadster',
       'A short summer chapter.',
       '2018-06-01T19:00:00Z',
@@ -245,7 +245,7 @@ select is(
 select is(
   pg_temp.capture_sqlstate(
     $$
-      select * from public.save_vehicle_entry(
+      select * from public.save_vehicle_entry_with_occurrence(
         ' ', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC',
         null, null, null, null, array[]::text[], null, null
       )
@@ -258,7 +258,7 @@ select is(
 select is(
   pg_temp.capture_sqlstate(
     $$
-      select * from public.save_vehicle_entry(
+      select * from public.save_vehicle_entry_with_occurrence(
         'Car', '', '2020-01-01T00:00:00Z', null, 'year', null, 'Not/AZone',
         null, null, null, null, array[]::text[], null, null
       )
@@ -271,7 +271,7 @@ select is(
 select is(
   pg_temp.capture_sqlstate(
     $$
-      select * from public.save_vehicle_entry(
+      select * from public.save_vehicle_entry_with_occurrence(
         'Car', '', '2020-01-02T00:00:00Z', '2020-01-01T00:00:00Z', 'range', null, 'UTC',
         null, null, null, null, array[]::text[], null, null
       )
@@ -284,7 +284,7 @@ select is(
 select is(
   pg_temp.capture_sqlstate(
     $$
-      select * from public.save_vehicle_entry(
+      select * from public.save_vehicle_entry_with_occurrence(
         'Car', '', '2020-01-01T00:00:00Z', null, 'unknown', null, 'UTC',
         null, null, null, null, array[]::text[], null, null
       )
@@ -297,7 +297,7 @@ select is(
 select is(
   pg_temp.capture_sqlstate(
     $$
-      select * from public.save_vehicle_entry(
+      select * from public.save_vehicle_entry_with_occurrence(
         'Car', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC',
         'Make', 'Model', 1800, null, array[]::text[], null, null
       )
@@ -310,7 +310,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.save_vehicle_entry(
+    from public.save_vehicle_entry_with_occurrence(
       'Bluebird EV',
       'The electric road-trip years.',
       '2020-03-12T12:00:00Z',
@@ -371,7 +371,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.save_vehicle_entry(
+    from public.save_vehicle_entry_with_occurrence(
       'Stale overwrite', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC',
       'Changed', 'Changed', 2022, 'Changed', array[]::text[],
       (select id from public.entries where title = 'Bluebird EV'), 1
@@ -411,7 +411,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.save_vehicle_entry(
+    from public.save_vehicle_entry_with_occurrence(
       'Cross-owner update', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC',
       null, null, null, null, array[]::text[],
       current_setting('app.test_vehicle_entry_id')::uuid, 2
@@ -517,7 +517,7 @@ select ok(
 select ok(
   has_function_privilege(
     'authenticated',
-    'public.save_vehicle_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[],uuid,integer)',
+    'public.save_vehicle_entry_with_occurrence(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[],uuid,integer)',
     'execute'
   ),
   'Authenticated users can execute the Vehicle mutation contract'
@@ -526,7 +526,7 @@ select ok(
 select ok(
   not has_function_privilege(
     'public',
-    'public.save_vehicle_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[],uuid,integer)',
+    'public.save_vehicle_entry_with_occurrence(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[],uuid,integer)',
     'execute'
   ),
   'PUBLIC cannot execute the Vehicle mutation contract'
@@ -564,7 +564,7 @@ select is(
   (
     select proconfig
     from pg_proc
-    where oid = 'public.save_vehicle_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[],uuid,integer)'::regprocedure
+    where oid = 'public.save_vehicle_entry_with_occurrence(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[],uuid,integer)'::regprocedure
   ),
   array['search_path=""']::text[],
   'The Vehicle mutation contract uses an empty search path'
@@ -574,7 +574,7 @@ select is(
   (
     select prosecdef
     from pg_proc
-    where oid = 'public.save_vehicle_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[],uuid,integer)'::regprocedure
+    where oid = 'public.save_vehicle_entry_with_occurrence(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,integer,text,text[],uuid,integer)'::regprocedure
   ),
   false,
   'The Vehicle mutation contract remains security invoker'

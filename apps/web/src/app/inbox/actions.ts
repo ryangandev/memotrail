@@ -230,26 +230,21 @@ export async function reviewInboxEntry(
     };
   }
 
-  const { data, error } = await context.client.rpc(
-    "review_wiki_item_with_location_rich",
-    {
-      p_body_rich: parsedInput.data.bodyRich ?? null,
-      p_photo_place: parsedInput.data.photoPlace ?? null,
-      p_primary_location: parsedInput.data.location,
-      p_body: parsedInput.data.body,
-      p_entry_id: parsedInput.data.id,
-      p_item_kind: "entry",
-      p_item_subtype: "entry",
-      p_expected_revision: parsedInput.data.revision,
-      p_occurred_start: parsedInput.data.occurredAt,
-      p_occurred_end: parsedInput.data.occurredEnd ?? null,
-      p_occurred_label: parsedInput.data.occurredLabel ?? null,
-      p_date_precision: parsedInput.data.datePrecision ?? "exact",
-      p_occurred_timezone: parsedInput.data.occurredTimezone,
-      p_tag_names: parsedInput.data.tagNames,
-      p_title: parsedInput.data.title,
-    },
-  );
+  const { data, error } = await context.client.rpc("save_entry", {
+    p_body_rich: parsedInput.data.bodyRich ?? null,
+    p_photo_location: parsedInput.data.photoLocation ?? null,
+    p_primary_location: parsedInput.data.location,
+    p_body: parsedInput.data.body,
+    p_entry_id: parsedInput.data.id,
+    p_expected_revision: parsedInput.data.revision,
+    p_occurred_start: parsedInput.data.occurredAt,
+    p_occurred_end: parsedInput.data.occurredEnd ?? null,
+    p_occurred_label: parsedInput.data.occurredLabel ?? null,
+    p_date_precision: parsedInput.data.datePrecision ?? "exact",
+    p_occurred_timezone: parsedInput.data.occurredTimezone,
+    p_tag_names: parsedInput.data.tagNames,
+    p_title: parsedInput.data.title,
+  });
 
   if (error?.code === "40001")
     return {

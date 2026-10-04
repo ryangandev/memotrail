@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getAuthenticatedContext } from "@/lib/data/inbox";
+import { locationDisplayLabel } from "@/lib/locations/location";
 import {
   isWikiItemKind,
   wikiEntryHref,
@@ -23,7 +24,7 @@ export type LocationMapItem = {
   href: string;
 };
 
-type LinkRow = { entry_id: string; place_id: string; relationship: string };
+type LinkRow = { entry_id: string; location_id: string };
 type EntryRow = {
   id: string;
   title: string;
@@ -36,7 +37,7 @@ type LocationRow = {
   latitude: number | null;
   longitude: number | null;
   formatted_address: string | null;
-  name: string;
+  address: string | null;
   city: string | null;
   region: string | null;
   country: string | null;
@@ -50,10 +51,9 @@ export async function getLocationMapWorkspace() {
   let truncated = false;
   for (let offset = 0; offset <= 5000; offset += 250) {
     const { data, error } = await context.client
-      .from("entry_places")
-      .select("entry_id,place_id,relationship")
+      .from("entry_locations")
+      .select("entry_id,location_id")
       .eq("owner_id", context.userId)
-      .in("relationship", ["home", "primary", "related"])
       .order("created_at", { ascending: false })
       .order("entry_id")
       .range(offset, offset + 249)
@@ -77,7 +77,7 @@ export async function getLocationMapWorkspace() {
   for (let offset = 0; offset < links.length; offset += 250) {
     const batch = links.slice(offset, offset + 250);
     const entryIds = [...new Set(batch.map((link) => link.entry_id))];
-    const locationIds = [...new Set(batch.map((link) => link.place_id))];
+    const locationIds = [...new Set(batch.map((link) => link.location_id))];
     const [entriesResult, locationsResult] = await Promise.all([
       context.client
         .from("entries")
@@ -89,10 +89,9 @@ export async function getLocationMapWorkspace() {
       context.client
         .from("locations")
         .select(
-          "id,latitude,longitude,formatted_address,name,city,region,country",
+          "id,latitude,longitude,formatted_address,address,city,region,country",
         )
         .eq("owner_id", context.userId)
-        .is("deleted_at", null)
         .in("id", locationIds)
         .returns<LocationRow[]>(),
     ]);
@@ -111,7 +110,7 @@ export async function getLocationMapWorkspace() {
     );
     for (const link of batch) {
       const entry = entries.get(link.entry_id);
-      const location = locations.get(link.place_id);
+      const location = locations.get(link.location_id);
       if (
         !entry ||
         !location ||
@@ -132,7 +131,15 @@ export async function getLocationMapWorkspace() {
         occurredAt: entry.occurred_start,
         latitude: location.latitude,
         longitude: location.longitude,
-        address: location.formatted_address ?? location.name,
+        address: locationDisplayLabel({
+          formattedAddress: location.formatted_address,
+          address: location.address,
+          city: location.city,
+          region: location.region,
+          country: location.country,
+          latitude: location.latitude,
+          longitude: location.longitude,
+        }),
         city: location.city,
         region: location.region,
         country: location.country,

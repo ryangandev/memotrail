@@ -61,7 +61,10 @@ import {
   uploadEntryPhotos,
   type PhotoUploadProgress as PhotoUploadProgressValue,
 } from "@/lib/media/upload";
-import type { LocationSelection } from "@/lib/locations/location";
+import {
+  locationDisplayLabel,
+  type LocationSelection,
+} from "@/lib/locations/location";
 import { countLabel } from "@/lib/count-label";
 
 export function VehiclesWorkspace({
@@ -269,7 +272,7 @@ function VehicleCard({
         {vehicle.location ? (
           <p className={styles.location}>
             <Icon name="map" size={14} />
-            {vehicle.location.name}
+            {locationDisplayLabel(vehicle.location)}
           </p>
         ) : null}
         {vehicle.body ? (

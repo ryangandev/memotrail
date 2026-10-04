@@ -13,24 +13,29 @@ import {
 } from "@/lib/data/home-record-input";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
-  validLocationSelection,
-  type ProviderLocation,
+  validLocationInput,
+  type LocationInput,
 } from "@/lib/locations/location";
 
 export type HomeActionResult = {
-  entry: { id: string; placeId: string | null; revision: number } | null;
+  /** locationId is the saved primary Location when the save set one. */
+  entry: { id: string; revision: number; locationId?: string | null } | null;
   message: string;
   status: "conflict" | "created" | "error" | "saved" | "trashed";
 };
 
+/** A Location of undefined leaves the Home's Location unchanged; null removes it. */
 export async function saveHomeEntry(
   input: HomeEntryInput,
-  providerLocation: ProviderLocation | null = null,
+  location?: LocationInput | null,
 ): Promise<HomeActionResult> {
   const parsed = parseHomeEntryInput(input);
 
   if (!parsed.success) {
     return result("error", parsed.message);
+  }
+  if (location != null && !validLocationInput(location)) {
+    return result("error", "Choose the address again before saving this Home.");
   }
 
   const context = await getAuthenticatedContext();
@@ -39,57 +44,26 @@ export async function saveHomeEntry(
     return expiredSession();
   }
 
-  if (providerLocation) {
-    if (
-      !validLocationSelection(providerLocation) ||
-      providerLocation.kind !== "provider" ||
-      parsed.data.placeId !== null ||
-      parsed.data.placeName !== providerLocation.name ||
-      parsed.data.address !== providerLocation.address ||
-      parsed.data.city !== providerLocation.city ||
-      parsed.data.region !== providerLocation.region ||
-      parsed.data.country !== providerLocation.country ||
-      parsed.data.latitude !== providerLocation.latitude ||
-      parsed.data.longitude !== providerLocation.longitude
-    ) {
-      return result(
-        "error",
-        "Choose the address again before saving this Home.",
-      );
-    }
-  }
-
-  const parameters = {
-    p_address: parsed.data.address,
-    p_body: parsed.data.body,
-    p_city: parsed.data.city,
-    p_country: parsed.data.country,
-    p_date_precision: parsed.data.datePrecision,
-    p_latitude: parsed.data.latitude,
-    p_longitude: parsed.data.longitude,
-    p_move_in_reason: parsed.data.moveInReason,
-    p_move_out_reason: parsed.data.moveOutReason,
-    p_occurred_end: parsed.data.occurredEnd,
-    p_occurred_label: parsed.data.occurredLabel,
-    p_occurred_start: parsed.data.occurredStart,
-    p_occurred_timezone: parsed.data.occurredTimezone,
-    p_place_id: parsed.data.placeId,
-    p_place_name: parsed.data.placeName,
-    p_place_notes: parsed.data.placeNotes,
-    p_region: parsed.data.region,
-    p_tag_names: parsed.data.tagNames,
-    p_title: parsed.data.title,
-  };
-  const { data, error } = providerLocation
-    ? await context.client.rpc("save_home_entry_with_geoapify", {
-        p_input: parsed.data,
-        p_provider_location: providerLocation,
-      })
-    : await context.client.rpc("save_home_entry_with_occurrence", {
-        ...parameters,
-        p_entry_id: parsed.data.id,
-        p_expected_revision: parsed.data.revision,
-      });
+  const { data, error } =
+    location !== undefined
+      ? await context.client.rpc("save_home_with_location", {
+          p_input: parsed.data,
+          p_location: location,
+        })
+      : await context.client.rpc("save_home_entry_with_occurrence", {
+          p_body: parsed.data.body,
+          p_date_precision: parsed.data.datePrecision,
+          p_entry_id: parsed.data.id,
+          p_expected_revision: parsed.data.revision,
+          p_move_in_reason: parsed.data.moveInReason,
+          p_move_out_reason: parsed.data.moveOutReason,
+          p_occurred_end: parsed.data.occurredEnd,
+          p_occurred_label: parsed.data.occurredLabel,
+          p_occurred_start: parsed.data.occurredStart,
+          p_occurred_timezone: parsed.data.occurredTimezone,
+          p_tag_names: parsed.data.tagNames,
+          p_title: parsed.data.title,
+        });
 
   if (error?.code === "40001") {
     return result(
@@ -101,8 +75,7 @@ export async function saveHomeEntry(
     return result("error", "MemoTrail could not save this Home. Try again.");
   }
 
-  const payload = providerLocation ? [data] : data;
-  const saved = savedHome(payload);
+  const saved = savedHome(data);
   if (!saved) {
     return result(
       "conflict",
@@ -244,12 +217,17 @@ function savedHome(value: unknown) {
   return typeof item === "object" &&
     item !== null &&
     "entry_id" in item &&
-    "place_id" in item &&
     "revision" in item &&
     typeof item.entry_id === "string" &&
-    (item.place_id === null || typeof item.place_id === "string") &&
     typeof item.revision === "number"
-    ? { id: item.entry_id, placeId: item.place_id, revision: item.revision }
+    ? {
+        id: item.entry_id,
+        revision: item.revision,
+        locationId:
+          "location_id" in item && typeof item.location_id === "string"
+            ? item.location_id
+            : null,
+      }
     : null;
 }
 

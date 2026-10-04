@@ -4,7 +4,7 @@ import styles from "@/components/entry-editor-dialog.module.css";
 import entryFormStyles from "@/components/entry-form.module.css";
 import { Dialog } from "@/components/dialog";
 import { Button } from "@/components/button";
-import type { PhotoPlaceDraft } from "@/lib/media/photo-place";
+import type { PhotoLocationDraft } from "@/lib/media/photo-location";
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -47,7 +47,9 @@ export function EntryEditorDialog({
     entry.location ?? null,
   );
   const [occurrence, setOccurrence] = useState(() => occurrenceDraft(entry));
-  const [photoPlace, setPhotoPlace] = useState<PhotoPlaceDraft | null>(null);
+  const [photoLocation, setPhotoLocation] = useState<PhotoLocationDraft | null>(
+    null,
+  );
   const [isPending, setIsPending] = useState(false);
   const [result, setResult] = useState<ReviewInboxEntryResult | null>(null);
   const [tagNames, setTagNames] = useState(entry.tagNames);
@@ -62,7 +64,7 @@ export function EntryEditorDialog({
     const note = trimEntryNote(body, bodyRich);
     const input: InboxReviewInput = {
       location,
-      photoPlace,
+      photoLocation,
       ...resolved.value!,
       body: note.body,
       bodyRich: note.bodyRich,
@@ -204,8 +206,8 @@ export function EntryEditorDialog({
         />
 
         <EntryPhotoDates
-          place={photoPlace}
-          onPlaceChange={setPhotoPlace}
+          photoLocation={photoLocation}
+          onPhotoLocationChange={setPhotoLocation}
           entryId={entry.id}
           disabled={isPending}
           onUseDate={(date) =>

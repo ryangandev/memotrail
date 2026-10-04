@@ -74,18 +74,18 @@ select ok(not has_function_privilege('anon','public.entry_detail(uuid)','execute
   'Signed-out visitors cannot read Entries');
 
 -- A Location is dropped at commit once nothing links to it, and kept when relinked.
-insert into public.locations(id,owner_id,name,bound_entry_id) values
+insert into public.locations(id,owner_id,formatted_address,bound_entry_id) values
   ('99730000-0000-4000-8000-000000000030','10000000-0000-0000-0000-000000000173','Old corner','99730000-0000-4000-8000-000000000001'),
   ('99730000-0000-4000-8000-000000000031','10000000-0000-0000-0000-000000000173','Kept corner','99730000-0000-4000-8000-000000000001');
-insert into public.entry_places(entry_id,place_id,owner_id,relationship) values
+insert into public.entry_locations(entry_id,location_id,owner_id,relationship) values
   ('99730000-0000-4000-8000-000000000001','99730000-0000-4000-8000-000000000030','10000000-0000-0000-0000-000000000173','primary'),
   ('99730000-0000-4000-8000-000000000001','99730000-0000-4000-8000-000000000031','10000000-0000-0000-0000-000000000173','primary');
 set constraints all immediate;
 set constraints all deferred;
-delete from public.entry_places where place_id = '99730000-0000-4000-8000-000000000030';
-delete from public.entry_places where place_id = '99730000-0000-4000-8000-000000000031';
-insert into public.entry_places(entry_id,place_id,owner_id,relationship) values
-  ('99730000-0000-4000-8000-000000000001','99730000-0000-4000-8000-000000000031','10000000-0000-0000-0000-000000000173','related');
+delete from public.entry_locations where location_id = '99730000-0000-4000-8000-000000000030';
+delete from public.entry_locations where location_id = '99730000-0000-4000-8000-000000000031';
+insert into public.entry_locations(entry_id,location_id,owner_id,relationship) values
+  ('99730000-0000-4000-8000-000000000001','99730000-0000-4000-8000-000000000031','10000000-0000-0000-0000-000000000173','photo');
 select is((select count(*) from public.locations where id = '99730000-0000-4000-8000-000000000030'),1::bigint,
   'An unlinked Location waits for the end of the transaction');
 set constraints all immediate;

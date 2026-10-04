@@ -1,13 +1,14 @@
 "use client";
 import { Button } from "@/components/button";
-import type { PhotoPlaceDraft } from "@/lib/media/photo-place";
-export function PhotoPlaceEditor({
+import type { PhotoLocationDraft } from "@/lib/media/photo-location";
+
+export function PhotoLocationEditor({
   value,
   onChange,
   disabled,
 }: {
-  value: PhotoPlaceDraft;
-  onChange: (value: PhotoPlaceDraft | null) => void;
+  value: PhotoLocationDraft;
+  onChange: (value: PhotoLocationDraft | null) => void;
   disabled: boolean;
 }) {
   return (
@@ -17,13 +18,9 @@ export function PhotoPlaceEditor({
         The photo&apos;s GPS position will be saved for this Entry after you
         confirm. No address or personal Location name is inferred.
       </p>
-      {value.kind === "new" ? (
-        <p>
-          {value.latitude?.toFixed(5)}, {value.longitude?.toFixed(5)}
-        </p>
-      ) : (
-        <p>This Entry&apos;s current Location is unchanged.</p>
-      )}
+      <p>
+        {value.latitude.toFixed(5)}, {value.longitude.toFixed(5)}
+      </p>
       <Button variant="secondary" type="button" onClick={() => onChange(null)}>
         Remove Location from draft
       </Button>

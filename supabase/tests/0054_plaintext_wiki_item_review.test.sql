@@ -28,19 +28,12 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000117',true);
 
 select is(
-  (select revision from public.review_wiki_item_with_location_rich(
+  (select revision from public.save_entry(
     '98700000-0000-4000-8000-000000000001',1,
-    'Morning pages','Edited without formatting.','entry','entry',
-    null,'UTC',array['Morning'],null,null,'unknown',null,null,null
-  )),
+    'Morning pages','Edited without formatting.', null,
+    null,null,'UTC',null,'unknown',array['Morning'],null, null)),
   2,
   'An edit without formatting saves the Entry'
-);
-select is(
-  (select item_kind || ':' || item_subtype
-   from public.entries where id='98700000-0000-4000-8000-000000000001'),
-  'entry:entry',
-  'The semantic Kind and subtype are saved atomically'
 );
 select ok(
   not (select metadata ? 'body_rich'
@@ -58,24 +51,12 @@ select is(
   'Organization is saved through the same transaction'
 );
 
-select throws_ok(
-  $$select * from public.review_wiki_item_with_location_rich(
-    '98700000-0000-4000-8000-000000000001',2,
-    'Morning pages','Try to change Kind','entry','first_time',
-    null,'UTC','{}',null,null,'unknown',null,null,null
-  )$$,
-  '22023',
-  'invalid_item_classification',
-  'An edit cannot turn an Entry into a First Time'
-);
-
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000118',true);
 select is(
-  (select count(*) from public.review_wiki_item_with_location_rich(
+  (select count(*) from public.save_entry(
     '98700000-0000-4000-8000-000000000001',2,
-    'Foreign','No access','entry','entry',
-    null,'UTC','{}',null,null,'unknown',null,null,null
-  )),
+    'Foreign','No access', null,
+    null,null,'UTC',null,'unknown','{}',null, null)),
   0::bigint,
   'Another owner cannot review the Wiki Item'
 );
@@ -84,7 +65,7 @@ reset role;
 select ok(
   not has_function_privilege(
     'anon',
-    'public.review_wiki_item_with_location_rich(uuid,integer,text,text,text,text,timestamptz,text,text[],timestamptz,text,text,jsonb,jsonb,jsonb)',
+    'public.save_entry(uuid,integer,text,text,jsonb,timestamptz,timestamptz,text,text,text,text[],jsonb,jsonb)',
     'execute'
   ),
   'Anonymous review is denied'

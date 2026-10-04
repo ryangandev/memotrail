@@ -8,6 +8,10 @@ import {
   type FirstTimeImageMimeType,
 } from "./first-time-input";
 import {
+  locationDisplayLabel,
+  type ExistingLocation,
+} from "@/lib/locations/location";
+import {
   homeDatePrecisions,
   type HomeDatePrecision,
 } from "./home-record-input";
@@ -26,25 +30,17 @@ export type HomeAttachment = {
 };
 
 export type HomeRecord = {
-  address: string | null;
   attachments: HomeAttachment[];
   body: string;
-  city: string | null;
-  country: string | null;
   datePrecision: HomeDatePrecision;
   id: string;
-  latitude: number | null;
-  longitude: number | null;
+  location: ExistingLocation | null;
   moveInReason: string | null;
   moveOutReason: string | null;
   occurredEnd: string | null;
   occurredLabel: string | null;
   occurredStart: string | null;
   occurredTimezone: string;
-  placeId: string | null;
-  placeName: string | null;
-  placeNotes: string | null;
-  region: string | null;
   revision: number;
   tagNames: string[];
   timelineTrackId: string | null;
@@ -73,13 +69,14 @@ export function parseHomeRows(value: unknown): HomeRecord[] | null {
 }
 
 export function homeLocationLabel(home: HomeRecord) {
-  const parts = [home.city, home.region, home.country].filter(
-    (part): part is string => Boolean(part),
-  );
+  if (!home.location) return "Location not added";
+  const parts = [
+    home.location.city,
+    home.location.region,
+    home.location.country,
+  ].filter((part): part is string => Boolean(part));
 
-  return (
-    [...new Set(parts)].join(", ") || home.placeName || "Location not added"
-  );
+  return [...new Set(parts)].join(", ") || locationDisplayLabel(home.location);
 }
 
 export function homeOccurrence(value: HomeRecord): Occurrence {
@@ -118,15 +115,6 @@ function parseHomeRow(value: unknown): HomeRecord | null {
     typeof value.updated_at !== "string" ||
     !nullableString(value.move_in_reason) ||
     !nullableString(value.move_out_reason) ||
-    !nullableString(value.place_id) ||
-    !nullableString(value.place_name) ||
-    !nullableString(value.address) ||
-    !nullableString(value.city) ||
-    !nullableString(value.region) ||
-    !nullableString(value.country) ||
-    !nullableNumber(value.latitude) ||
-    !nullableNumber(value.longitude) ||
-    !nullableString(value.place_notes) ||
     !nullableString(value.timeline_track_id) ||
     !nullableString(value.timeline_track_name) ||
     !stringArray(value.tag_names) ||
@@ -141,25 +129,17 @@ function parseHomeRow(value: unknown): HomeRecord | null {
   }
 
   return {
-    address: value.address,
     attachments,
     body: value.body,
-    city: value.city,
-    country: value.country,
     datePrecision: value.date_precision as HomeDatePrecision,
     id: value.entry_id,
-    latitude: value.latitude,
-    longitude: value.longitude,
+    location: null,
     moveInReason: value.move_in_reason,
     moveOutReason: value.move_out_reason,
     occurredEnd: value.occurred_end,
     occurredLabel: value.occurred_label,
     occurredStart: value.occurred_start,
     occurredTimezone: value.occurred_timezone ?? "UTC",
-    placeId: value.place_id,
-    placeName: value.place_name,
-    placeNotes: value.place_notes,
-    region: value.region,
     revision: value.revision,
     tagNames: value.tag_names,
     timelineTrackId: value.timeline_track_id,

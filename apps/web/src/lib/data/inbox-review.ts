@@ -3,7 +3,10 @@ import {
   validLocationSelection,
   type LocationSelection,
 } from "@/lib/locations/location";
-import { validPhotoPlace, type PhotoPlaceDraft } from "@/lib/media/photo-place";
+import {
+  validPhotoLocation,
+  type PhotoLocationDraft,
+} from "@/lib/media/photo-location";
 import { validateOccurrence, type OccurrencePrecision } from "./occurrence";
 import { isEntryRichText, type EntryRichText } from "./rich-text";
 import {
@@ -14,7 +17,7 @@ import {
 
 export type InboxReviewInput = {
   location: LocationSelection | null;
-  photoPlace?: PhotoPlaceDraft | null;
+  photoLocation?: PhotoLocationDraft | null;
   body: string;
   bodyRich?: EntryRichText | null;
   id: string;
@@ -45,9 +48,9 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
     return invalidReview(
       "Choose a valid Location or remove it from this Entry.",
     );
-  if (values.photoPlace != null && !validPhotoPlace(values.photoPlace))
+  if (values.photoLocation != null && !validPhotoLocation(values.photoLocation))
     return invalidReview(
-      "Review the Place name and coordinates, or remove it from this draft.",
+      "Choose the photo's GPS position again, or remove it from this draft.",
     );
   const title = typeof values.title === "string" ? values.title.trim() : "";
   const body = typeof values.body === "string" ? values.body.trim() : "";
@@ -107,8 +110,8 @@ export function parseInboxReviewInput(input: unknown): InboxReviewInputResult {
 
   return {
     data: {
-      ...(values.photoPlace != null
-        ? { photoPlace: values.photoPlace as PhotoPlaceDraft }
+      ...(values.photoLocation != null
+        ? { photoLocation: values.photoLocation as PhotoLocationDraft }
         : {}),
       body,
       bodyRich,

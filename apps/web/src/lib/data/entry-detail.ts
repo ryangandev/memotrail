@@ -16,7 +16,13 @@ export type EntryDetail = {
   occurred_timezone: string | null;
   metadata?: unknown;
   tags: { id: string; name: string }[];
-  places: { place_id: string; relationship: string; name: string | null }[];
+  locations: {
+    location_id: string;
+    relationship: "primary" | "photo";
+    formatted_address: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  }[];
   timeline_items: {
     track_id: string;
     timeline_kind: string;

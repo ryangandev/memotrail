@@ -75,29 +75,20 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
       .single();
     const saves = await Promise.all([
       client.rpc("save_home_entry_with_occurrence", {
-        p_address: null,
         p_body: "",
-        p_city: null,
-        p_country: null,
         p_date_precision: "day",
         p_entry_id: null,
         p_expected_revision: null,
-        p_latitude: null,
-        p_longitude: null,
         p_move_in_reason: null,
         p_move_out_reason: null,
         p_occurred_end: null,
         p_occurred_label: null,
         p_occurred_start: "2021-06-01T12:00:00+00:00",
         p_occurred_timezone: "UTC",
-        p_place_id: null,
-        p_place_name: null,
-        p_place_notes: null,
-        p_region: null,
         p_tag_names: [],
         p_title: "Maple Street flat",
       }),
-      client.rpc("save_vehicle_entry", {
+      client.rpc("save_vehicle_entry_with_occurrence", {
         p_body: "",
         p_color: "Blue",
         p_date_precision: "day",

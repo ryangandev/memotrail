@@ -14,12 +14,11 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000123','locations-other@memotrail.local');
 
 insert into public.locations(
-  id,owner_id,name,formatted_address,address,city,region,country,latitude,longitude,notes,
+  id,owner_id,formatted_address,address,city,region,country,latitude,longitude,
   provider,provider_location_id
 ) values (
   '99000000-0000-4000-8000-000000000002',
   '10000000-0000-0000-0000-000000000122',
-  'Home location',
   '10 Pine Street, Philadelphia, Pennsylvania, USA',
   '10 Pine Street',
   'Philadelphia',
@@ -27,7 +26,6 @@ insert into public.locations(
   'USA',
   39.952600,
   -75.165200,
-  'Private geographic context.',
   'test-provider',
   'home-location-1'
 );
@@ -43,37 +41,44 @@ insert into public.entries(
   'home',
   'unknown'
 );
-insert into public.homes(entry_id,owner_id,place_id) values (
+insert into public.homes(entry_id,owner_id) values (
   '99000000-0000-4000-8000-000000000003',
-  '10000000-0000-0000-0000-000000000122',
-  '99000000-0000-4000-8000-000000000002'
+  '10000000-0000-0000-0000-000000000122'
 );
-insert into public.entry_places(entry_id,place_id,owner_id,relationship) values (
+insert into public.entry_locations(entry_id,location_id,owner_id,relationship) values (
   '99000000-0000-4000-8000-000000000003',
   '99000000-0000-4000-8000-000000000002',
   '10000000-0000-0000-0000-000000000122',
-  'home'
+  'primary'
 );
 
 select is(
   (
-    select location_id
-    from public.entry_locations
-    where entry_id='99000000-0000-4000-8000-000000000003'
+    select bound_entry_id
+    from public.locations
+    where id='99000000-0000-4000-8000-000000000002'
   ),
-  '99000000-0000-4000-8000-000000000002'::uuid,
-  'The canonical relationship view exposes a Location identity'
+  '99000000-0000-4000-8000-000000000003'::uuid,
+  'Linking a Location binds it to its Entry'
 );
 
-select is(
-  (
-    select c.confrelid::regclass::text
-    from pg_constraint as c
-    where c.conname='homes_location_id_owner_id_fkey'
-  ),
-  'locations',
-  'Homes reference Locations rather than Places'
+select throws_ok(
+  $$insert into public.entry_locations(entry_id,location_id,owner_id,relationship) values (
+    '99000000-0000-4000-8000-000000000003',
+    '99000000-0000-4000-8000-000000000002',
+    '10000000-0000-0000-0000-000000000122',
+    'home'
+  )$$,
+  '23514',
+  null,
+  'Links are primary or photo Locations only'
 );
+
+select hasnt_column('public', 'homes', 'place_id', 'A Home''s Location is its primary Location link');
+select hasnt_table('public', 'entry_places', 'Entry Location links live in entry_locations');
+select hasnt_column('public', 'locations', 'name', 'Locations have no separate name');
+select hasnt_column('public', 'locations', 'notes', 'Locations have no notes');
+select hasnt_column('public', 'locations', 'deleted_at', 'Locations are never soft-deleted');
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000122',true);

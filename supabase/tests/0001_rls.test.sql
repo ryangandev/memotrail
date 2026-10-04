@@ -153,22 +153,18 @@ select is(
 select lives_ok(
   $$
     select *
-    from public.review_wiki_item_with_location_rich(
+    from public.save_entry(
       '40000000-0000-0000-0000-000000000002',
       2,
       'First time skiing',
-      'A cold and brilliant day.',
-      'entry','entry',
+      'A cold and brilliant day.', null,
       '2026-07-03T18:30:00Z',
-      'America/Los_Angeles',
-      array['skiing', 'learning', 'Skiing'],
       null,
+      'America/Los_Angeles',
       null,
       'exact',
-      null,
-      null,
-      null
-    )
+      array['skiing', 'learning', 'Skiing'],
+      null, null)
   $$,
   'An owner can atomically review an Entry with tags'
 );
@@ -206,22 +202,18 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.review_wiki_item_with_location_rich(
+    from public.save_entry(
       '40000000-0000-0000-0000-000000000002',
       2,
       'Stale overwrite',
-      '',
-      'entry','entry',
+      '', null,
       '2026-07-03T18:30:00Z',
-      'UTC',
-      array['wrong-tag'],
       null,
+      'UTC',
       null,
       'exact',
-      null,
-      null,
-      null
-    )
+      array['wrong-tag'],
+      null, null)
   ),
   0,
   'A stale review returns no row'
@@ -240,22 +232,18 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.review_wiki_item_with_location_rich(
+    from public.save_entry(
       '40000000-0000-0000-0000-000000000002',
       3,
       'First time skiing',
-      'A cold and brilliant day.',
-      'entry','entry',
+      'A cold and brilliant day.', null,
       '2026-07-03T18:30:00Z',
-      'America/Los_Angeles',
-      array['skiing', 'learning'],
       null,
+      'America/Los_Angeles',
       null,
       'exact',
-      null,
-      null,
-      null
-    )
+      array['skiing', 'learning'],
+      null, null)
   ),
   1,
   'The current revision can be reviewed'
@@ -311,22 +299,18 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.review_wiki_item_with_location_rich(
+    from public.save_entry(
       '40000000-0000-0000-0000-000000000001',
       1,
       'Changed by another user',
-      '',
-      'entry','entry',
+      '', null,
       '2026-07-03T18:30:00Z',
-      'UTC',
-      '{}'::text[],
       null,
+      'UTC',
       null,
       'exact',
-      null,
-      null,
-      null
-    )
+      '{}'::text[],
+      null, null)
   ),
   0,
   'Another authenticated user cannot review the first user''s Entry'

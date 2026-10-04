@@ -117,7 +117,6 @@ test("Dot-separated rows across the workspace keep their separators between fact
         id: locationId,
         owner_id: owner,
         bound_entry_id: entryId,
-        name: "Riverside Park",
         formatted_address:
           "1200 Riverside Drive, Upper West Side, New York, NY 10027",
         address: "1200 Riverside Drive",
@@ -129,10 +128,10 @@ test("Dot-separated rows across the workspace keep their separators between fact
   ).toBeNull();
   expect(
     (
-      await client.from("entry_places").insert({
+      await client.from("entry_locations").insert({
         owner_id: owner,
         entry_id: entryId,
-        place_id: locationId,
+        location_id: locationId,
         relationship: "primary",
       })
     ).error,

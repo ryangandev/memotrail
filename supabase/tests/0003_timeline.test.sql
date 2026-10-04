@@ -102,7 +102,7 @@ where owner_id = '10000000-0000-0000-0000-000000000001'
 select lives_ok(
   $$
     select *
-    from public.save_timeline_entry(
+    from public.save_timeline_entry_with_occurrence(
       (
         select id
         from public.timeline_tracks
@@ -172,7 +172,7 @@ select is(
 select lives_ok(
   $$
     select *
-    from public.save_timeline_entry(
+    from public.save_timeline_entry_with_occurrence(
       (
         select id
         from public.timeline_tracks
@@ -217,7 +217,7 @@ select is(
 select lives_ok(
   $$
     select *
-    from public.save_timeline_entry(
+    from public.save_timeline_entry_with_occurrence(
       (
         select id
         from public.timeline_tracks
@@ -253,7 +253,7 @@ select is(
   pg_temp.capture_sqlstate(
     $$
       select *
-      from public.save_timeline_entry(
+      from public.save_timeline_entry_with_occurrence(
         (select id from public.timeline_tracks where system_key = 'other_events'),
         'event',
         'Invalid event',
@@ -276,7 +276,7 @@ select is(
   pg_temp.capture_sqlstate(
     $$
       select *
-      from public.save_timeline_entry(
+      from public.save_timeline_entry_with_occurrence(
         (select id from public.timeline_tracks where system_key = 'other_events'),
         'stage',
         'Invalid range',
@@ -299,7 +299,7 @@ select is(
   pg_temp.capture_sqlstate(
     $$
       select *
-      from public.save_timeline_entry(
+      from public.save_timeline_entry_with_occurrence(
         (select id from public.timeline_tracks where system_key = 'other_events'),
         'stage',
         ' ',
@@ -322,7 +322,7 @@ select is(
   pg_temp.capture_sqlstate(
     $$
       select *
-      from public.save_timeline_entry(
+      from public.save_timeline_entry_with_occurrence(
         (select id from public.timeline_tracks where system_key = 'other_events'),
         'stage',
         'Invalid timezone',
@@ -344,7 +344,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.save_timeline_entry(
+    from public.save_timeline_entry_with_occurrence(
       (
         select id
         from public.timeline_tracks
@@ -395,7 +395,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.save_timeline_entry(
+    from public.save_timeline_entry_with_occurrence(
       (select id from public.timeline_tracks where system_key = 'education'),
       'stage',
       'Stale overwrite',
@@ -441,7 +441,7 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.save_timeline_entry(
+    from public.save_timeline_entry_with_occurrence(
       (
         select id
         from public.timeline_tracks

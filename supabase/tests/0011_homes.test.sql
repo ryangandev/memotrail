@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(51);
+select plan(55);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -71,31 +71,36 @@ select is(
 select lives_ok(
   $$
     select *
-    from public.save_home_entry(
-      'California apartment',
-      'A sunny place near the coast.',
-      '2025-06-01T19:00:00Z',
-      null,
-      'month',
-      'Since June 2025',
-      'America/Los_Angeles',
-      null,
-      'California apartment',
-      '123 Palm Street',
-      'Los Angeles',
-      'California',
-      'United States',
-      34.052235,
-      -118.243683,
-      'Near the coast.',
-      'Moved for a new chapter.',
-      null,
-      array['California', 'home', 'HOME'],
-      null,
-      null
+    from public.save_home_with_location(
+      jsonb_build_object(
+        'title', 'California apartment',
+        'body', 'A sunny place near the coast.',
+        'occurredStart', '2025-06-01T19:00:00Z',
+        'occurredEnd', null,
+        'datePrecision', 'month',
+        'occurredLabel', 'Since June 2025',
+        'occurredTimezone', 'America/Los_Angeles',
+        'moveInReason', 'Moved for a new chapter.',
+        'moveOutReason', null,
+        'tagNames', jsonb_build_array('California', 'home', 'HOME'),
+        'id', null,
+        'revision', null
+      ),
+      jsonb_build_object(
+        'kind', 'provider',
+        'provider', 'geoapify',
+        'providerLocationId', 'palm-street',
+        'formattedAddress', '123 Palm Street, Los Angeles, California, United States',
+        'address', '123 Palm Street',
+        'city', 'Los Angeles',
+        'region', 'California',
+        'country', 'United States',
+        'latitude', 34.052235,
+        'longitude', -118.243683
+      )
     )
   $$,
-  'An owner can create an open-ended Home with a new Place'
+  'An owner can create an open-ended Home with a new Location'
 );
 
 select is(
@@ -109,38 +114,40 @@ select is(
   'A Home is stored as a specialized Home Entity'
 );
 
-select ok(
+select is(
   (
-    select homes.place_id is not null
-    from public.homes
-    join public.entries on entries.id = homes.entry_id
+    select locations.bound_entry_id
+    from public.entry_locations
+    join public.entries on entries.id = entry_locations.entry_id
+    join public.locations on locations.id = entry_locations.location_id
     where entries.title = 'California apartment'
   ),
-  'The Home owns an Entry-specific Location relationship'
+  (select id from public.entries where title = 'California apartment'),
+  'The Home owns its Location'
 );
 
 select is(
   (
-    select concat_ws('|', locations.name, locations.address, locations.city, locations.region, locations.country)
-    from public.homes
-    join public.entries on entries.id = homes.entry_id
-    join public.locations on locations.id = homes.place_id
+    select concat_ws('|', locations.formatted_address, locations.address, locations.city, locations.region, locations.country)
+    from public.entry_locations
+    join public.entries on entries.id = entry_locations.entry_id
+    join public.locations on locations.id = entry_locations.location_id
     where entries.title = 'California apartment'
   ),
   '123 Palm Street, Los Angeles, California, United States|123 Palm Street|Los Angeles|California|United States',
-  'The Location derives its label from normalized address fields'
+  'The Location keeps the chosen address'
 );
 
 select is(
   (
     select concat(locations.latitude::text, ',', locations.longitude::text)
-    from public.homes
-    join public.entries on entries.id = homes.entry_id
-    join public.locations on locations.id = homes.place_id
+    from public.entry_locations
+    join public.entries on entries.id = entry_locations.entry_id
+    join public.locations on locations.id = entry_locations.location_id
     where entries.title = 'California apartment'
   ),
   '34.052235,-118.243683',
-  'The Location preserves optional coordinates'
+  'The Location keeps its coordinates'
 );
 
 select is(
@@ -156,13 +163,13 @@ select is(
 
 select is(
   (
-    select entry_places.relationship
-    from public.entry_places
-    join public.entries on entries.id = entry_places.entry_id
+    select entry_locations.relationship
+    from public.entry_locations
+    join public.entries on entries.id = entry_locations.entry_id
     where entries.title = 'California apartment'
   ),
-  'home',
-  'The Home is linked to its Entry-owned Location through the compatibility relationship'
+  'primary',
+  'The Home links its Location as its primary Location'
 );
 
 select is(
@@ -243,57 +250,53 @@ select is(
   'The Homes workspace includes active private attachment metadata'
 );
 
-insert into public.locations (
-  id,
-  owner_id,
-  name,
-  city,
-  region,
-  country
-)
-values (
-  '50000000-0000-0000-0000-000000000011',
-  '10000000-0000-0000-0000-000000000001',
-  'Philadelphia rowhome',
-  'Philadelphia',
-  'Pennsylvania',
-  'United States'
-);
-
-select lives_ok(
-  $$
-    select *
-    from public.save_home_entry(
-      'Philadelphia rowhome',
-      'The East Coast chapter.',
-      '2012-08-01T16:00:00Z',
-      '2025-05-31T16:00:00Z',
-      'approximate',
-      'Ages 12 to 25',
-      'America/New_York',
-      '50000000-0000-0000-0000-000000000011',
-      'Philadelphia rowhome',
-      null,
-      'Philadelphia',
-      'Pennsylvania',
-      'United States',
-      null,
-      null,
-      null,
-      'Moved with family.',
-      'Moved to California.',
-      array['Philadelphia'],
-      null,
-      null
+-- The save returns the Location it linked, so the editor can show it before a refresh.
+select ok(
+  set_config('app.test_typed_home_location_id', (
+    select location_id::text
+    from public.save_home_with_location(
+      jsonb_build_object(
+        'title', 'Philadelphia rowhome',
+        'body', 'The East Coast chapter.',
+        'occurredStart', '2012-08-01T16:00:00Z',
+        'occurredEnd', '2025-05-31T16:00:00Z',
+        'datePrecision', 'approximate',
+        'occurredLabel', 'Ages 12 to 25',
+        'occurredTimezone', 'America/New_York',
+        'moveInReason', 'Moved with family.',
+        'moveOutReason', 'Moved to California.',
+        'tagNames', jsonb_build_array('Philadelphia'),
+        'id', null,
+        'revision', null
+      ),
+      jsonb_build_object('kind', 'manual', 'city', ' Philadelphia ', 'region', 'Pennsylvania', 'country', 'United States')
     )
-  $$,
-  'An owner can create a completed Home using an existing Place'
+  ), true) <> '',
+  'An owner can create a completed Home with a typed address'
 );
 
 select is(
-  (select count(*)::integer from public.locations),
-  2,
-  'Saving an unchanged Entry-owned Location keeps the same snapshot'
+  (
+    select concat_ws('|', locations.formatted_address, locations.city, locations.coordinate_source, locations.latitude::text)
+    from public.entry_locations
+    join public.entries on entries.id = entry_locations.entry_id
+    join public.locations on locations.id = entry_locations.location_id
+    where entries.title = 'Philadelphia rowhome'
+      and entry_locations.location_id::text = current_setting('app.test_typed_home_location_id')
+  ),
+  'Philadelphia, Pennsylvania, United States|Philadelphia|manual',
+  'A typed address is saved without coordinates'
+);
+
+select is(
+  pg_temp.capture_sqlstate($$
+    select * from public.save_home_with_location(
+      jsonb_build_object('title', 'Blank address', 'body', '', 'datePrecision', 'unknown', 'tagNames', jsonb_build_array()),
+      jsonb_build_object('kind', 'manual', 'city', ' ')
+    )
+  $$),
+  '22023',
+  'A typed address needs at least one part'
 );
 
 select is(
@@ -327,9 +330,8 @@ select is(
 select is(
   pg_temp.capture_sqlstate(
     $$
-      select * from public.save_home_entry(
-        ' ', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC', null,
-        'Place', null, null, null, null, null, null, null, null, null, array[]::text[], null, null
+      select * from public.save_home_entry_with_occurrence(
+        ' ', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC', null, null, array[]::text[], null, null
       )
     $$
   ),
@@ -341,9 +343,8 @@ savepoint optional_home_location;
 select is(
   pg_temp.capture_sqlstate(
     $$
-      select * from public.save_home_entry(
-        'Home', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC', null,
-        ' ', null, null, null, null, null, null, null, null, null, array[]::text[], null, null
+      select * from public.save_home_entry_with_occurrence(
+        'Home', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC', null, null, array[]::text[], null, null
       )
     $$
   ),
@@ -355,9 +356,8 @@ rollback to savepoint optional_home_location;
 select is(
   pg_temp.capture_sqlstate(
     $$
-      select * from public.save_home_entry(
-        'Home', '', '2020-01-01T00:00:00Z', null, 'year', null, 'Not/AZone', null,
-        'Place', null, null, null, null, null, null, null, null, null, array[]::text[], null, null
+      select * from public.save_home_entry_with_occurrence(
+        'Home', '', '2020-01-01T00:00:00Z', null, 'year', null, 'Not/AZone', null, null, array[]::text[], null, null
       )
     $$
   ),
@@ -368,9 +368,8 @@ select is(
 select is(
   pg_temp.capture_sqlstate(
     $$
-      select * from public.save_home_entry(
-        'Home', '', '2020-01-02T00:00:00Z', '2020-01-01T00:00:00Z', 'range', null, 'UTC', null,
-        'Place', null, null, null, null, null, null, null, null, null, array[]::text[], null, null
+      select * from public.save_home_entry_with_occurrence(
+        'Home', '', '2020-01-02T00:00:00Z', '2020-01-01T00:00:00Z', 'range', null, 'UTC', null, null, array[]::text[], null, null
       )
     $$
   ),
@@ -381,22 +380,8 @@ select is(
 select is(
   pg_temp.capture_sqlstate(
     $$
-      select * from public.save_home_entry(
-        'Home', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC', null,
-        'Place', null, null, null, null, 34, null, null, null, null, array[]::text[], null, null
-      )
-    $$
-  ),
-  '22023',
-  'Home coordinates must be supplied as a complete pair'
-);
-
-select is(
-  pg_temp.capture_sqlstate(
-    $$
-      select * from public.save_home_entry(
-        'Home', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC', null,
-        'Place', null, null, null, null, null, null, null, null, 'Already left', array[]::text[], null, null
+      select * from public.save_home_entry_with_occurrence(
+        'Home', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC', null, 'Already left', array[]::text[], null, null
       )
     $$
   ),
@@ -407,33 +392,70 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.save_home_entry(
-      'California home',
-      'A quieter home near work.',
-      '2025-06-01T19:00:00Z',
-      '2026-08-31T19:00:00Z',
-      'month',
-      'June 2025 to August 2026',
-      'America/Los_Angeles',
-      (
-        select homes.place_id
-        from public.homes
-        join public.entries on entries.id = homes.entry_id
-        where entries.title = 'California apartment'
+    from public.save_home_with_location(
+      jsonb_build_object(
+        'title', 'California apartment',
+        'body', 'A sunny place near the coast.',
+        'occurredStart', '2025-06-01T19:00:00Z',
+        'occurredEnd', null,
+        'datePrecision', 'month',
+        'occurredLabel', 'Since June 2025',
+        'occurredTimezone', 'America/Los_Angeles',
+        'moveInReason', 'Moved for a new chapter.',
+        'moveOutReason', null,
+        'tagNames', jsonb_build_array('California', 'home'),
+        'id', (select id from public.entries where title = 'California apartment'),
+        'revision', (select revision from public.entries where title = 'California apartment')
       ),
-      'California home',
-      '456 Elm Street',
-      'San Francisco',
-      'California',
-      'United States',
-      37.774929,
-      -122.419418,
-      'Walkable and quiet.',
-      'Moved for a new chapter.',
-      'Needed more space.',
-      array['California', 'favorite'],
-      (select id from public.entries where title = 'California apartment' and item_kind = 'entity' and item_subtype = 'home'),
-      (select revision from public.entries where title = 'California apartment' and item_kind = 'entity' and item_subtype = 'home')
+      (
+        select jsonb_build_object('kind', 'existing', 'id', locations.id, 'revision', locations.revision)
+        from public.entry_locations
+        join public.entries on entries.id = entry_locations.entry_id
+        join public.locations on locations.id = entry_locations.location_id
+        where entries.title = 'California apartment'
+      )
+    )
+  ),
+  1,
+  'Saving a Home with its current Location succeeds'
+);
+
+select is(
+  (select count(*)::integer from public.locations),
+  2,
+  'Saving an unchanged Location keeps the same snapshot'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from public.save_home_with_location(
+      jsonb_build_object(
+        'title', 'California home',
+        'body', 'A quieter home near work.',
+        'occurredStart', '2025-06-01T19:00:00Z',
+        'occurredEnd', '2026-08-31T19:00:00Z',
+        'datePrecision', 'month',
+        'occurredLabel', 'June 2025 to August 2026',
+        'occurredTimezone', 'America/Los_Angeles',
+        'moveInReason', 'Moved for a new chapter.',
+        'moveOutReason', 'Needed more space.',
+        'tagNames', jsonb_build_array('California', 'favorite'),
+        'id', (select id from public.entries where title = 'California apartment'),
+        'revision', (select revision from public.entries where title = 'California apartment')
+      ),
+      jsonb_build_object(
+        'kind', 'provider',
+        'provider', 'geoapify',
+        'providerLocationId', 'elm-street',
+        'formattedAddress', '456 Elm Street, San Francisco, California, United States',
+        'address', '456 Elm Street',
+        'city', 'San Francisco',
+        'region', 'California',
+        'country', 'United States',
+        'latitude', 37.774929,
+        'longitude', -122.419418
+      )
     )
   ),
   1,
@@ -442,18 +464,30 @@ select is(
 
 select is(
   (select revision from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home'),
-  2,
-  'Updating a Home advances its Entry revision once'
+  3,
+  'Each Home update advances its Entry revision once'
 );
 
 select is(
   (
-    select concat_ws('|', address, city, move_out_reason)
+    select move_out_reason
     from public.homes_workspace()
     where title = 'California home'
   ),
-  '456 Elm Street|San Francisco|Needed more space.',
-  'The Homes workspace returns the updated Location and move details'
+  'Needed more space.',
+  'The Homes workspace returns the updated move details'
+);
+
+select is(
+  (
+    select string_agg(concat_ws('|', locations.address, locations.city), ',')
+    from public.entry_locations
+    join public.entries on entries.id = entry_locations.entry_id
+    join public.locations on locations.id = entry_locations.location_id
+    where entries.title = 'California home'
+  ),
+  '456 Elm Street|San Francisco',
+  'A new Location replaces the Home''s earlier one'
 );
 
 select is(
@@ -480,33 +514,51 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.save_home_entry(
-      'Stale overwrite', '', '2025-06-01T19:00:00Z', null, 'month', null,
-      'America/Los_Angeles',
-      (select homes.place_id from public.homes join public.entries on entries.id = homes.entry_id where entries.title = 'California home'),
-      'Changed by stale write', null, null, null, null, null, null, null, null, null, array[]::text[],
-      (select id from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home'), 1
+    from public.save_home_with_location(
+      jsonb_build_object(
+        'title', 'Stale overwrite', 'body', '', 'occurredStart', '2025-06-01T19:00:00Z',
+        'occurredEnd', null, 'datePrecision', 'month', 'occurredLabel', null,
+        'occurredTimezone', 'America/Los_Angeles', 'moveInReason', null, 'moveOutReason', null,
+        'tagNames', jsonb_build_array(),
+        'id', (select id from public.entries where title = 'California home'), 'revision', 1
+      ),
+      jsonb_build_object(
+        'kind', 'provider', 'provider', 'geoapify', 'providerLocationId', 'stale-street',
+        'formattedAddress', 'Stale Street', 'latitude', 1, 'longitude', 1
+      )
     )
   ),
   0,
   'A stale Home update returns no row'
 );
 
+-- Replaced Locations are dropped when the transaction commits.
+set constraints all immediate;
+set constraints all deferred;
+
 select is(
   (
-    select locations.name
-    from public.homes
-    join public.entries on entries.id = homes.entry_id
-    join public.locations on locations.id = homes.place_id
-    where entries.title = 'California home'
+    select string_agg(locations.formatted_address, ',' order by locations.formatted_address desc)
+    from public.locations
+    where locations.owner_id = '10000000-0000-0000-0000-000000000001'
   ),
-  '456 Elm Street, San Francisco, California, United States',
-  'A stale Home update does not partially replace its Location snapshot'
+  'Philadelphia, Pennsylvania, United States,456 Elm Street, San Francisco, California, United States',
+  'A stale Home update creates and links no Location'
 );
 
 select set_config(
   'app.test_home_entry_id',
   (select id::text from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home'),
+  true
+);
+select set_config(
+  'app.test_home_location_id',
+  (
+    select entry_locations.location_id::text
+    from public.entry_locations
+    join public.entries on entries.id = entry_locations.entry_id
+    where entries.title = 'California home'
+  ),
   true
 );
 
@@ -521,25 +573,29 @@ select is(
 );
 
 select is(
-  (
-    select count(*)::integer
-    from public.save_home_entry(
-      'Cross-owner place', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC',
-      '50000000-0000-0000-0000-000000000011',
-      'Other place', null, null, null, null, null, null, null, null, null, array[]::text[], null, null
-    )
-  ),
-  0,
-  'Another owner cannot create a Home with an inaccessible Place'
+  pg_temp.capture_sqlstate(format(
+    $$
+      select * from public.save_home_with_location(
+        jsonb_build_object(
+          'title', 'Cross-owner place', 'body', '', 'occurredStart', '2020-01-01T00:00:00Z',
+          'occurredEnd', null, 'datePrecision', 'year', 'occurredLabel', null,
+          'occurredTimezone', 'UTC', 'tagNames', jsonb_build_array(), 'id', null, 'revision', null
+        ),
+        jsonb_build_object('kind', 'existing', 'id', %L, 'revision', 1)
+      )
+    $$,
+    current_setting('app.test_home_location_id')
+  )),
+  '40001',
+  'Another owner cannot link a Home to an inaccessible Location'
 );
 
 select is(
   (
     select count(*)::integer
-    from public.save_home_entry(
-      'Cross-owner update', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC', null,
-      'Other place', null, null, null, null, null, null, null, null, null, array[]::text[],
-      current_setting('app.test_home_entry_id')::uuid, 2
+    from public.save_home_entry_with_occurrence(
+      'Cross-owner update', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC', null, null, array[]::text[],
+      current_setting('app.test_home_entry_id')::uuid, 3
     )
   ),
   0,
@@ -551,7 +607,7 @@ select is(
     select count(*)::integer
     from public.trash_home_entry(
       current_setting('app.test_home_entry_id')::uuid,
-      2
+      3
     )
   ),
   0,
@@ -567,7 +623,7 @@ select is(
     select count(*)::integer
     from public.trash_home_entry(
       (select id from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home'),
-      2
+      3
     )
   ),
   1,
@@ -650,7 +706,7 @@ select ok(
 select ok(
   has_function_privilege(
     'authenticated',
-    'public.save_home_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,uuid,text,text,text,text,text,numeric,numeric,text,text,text,text[],uuid,integer)',
+    'public.save_home_entry_with_occurrence(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,text[],uuid,integer)',
     'execute'
   ),
   'Authenticated users can execute the Home mutation contract'
@@ -659,10 +715,16 @@ select ok(
 select ok(
   not has_function_privilege(
     'public',
-    'public.save_home_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,uuid,text,text,text,text,text,numeric,numeric,text,text,text,text[],uuid,integer)',
+    'public.save_home_entry_with_occurrence(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,text[],uuid,integer)',
     'execute'
   ),
   'PUBLIC cannot execute the Home mutation contract'
+);
+
+select ok(
+  has_function_privilege('authenticated', 'public.save_home_with_location(jsonb,jsonb)', 'execute')
+    and not has_function_privilege('anon', 'public.save_home_with_location(jsonb,jsonb)', 'execute'),
+  'Only signed-in users can save a Home with its Location'
 );
 
 select is(
@@ -679,7 +741,7 @@ select is(
   (
     select proconfig
     from pg_proc
-    where oid = 'public.save_home_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,uuid,text,text,text,text,text,numeric,numeric,text,text,text,text[],uuid,integer)'::regprocedure
+    where oid = 'public.save_home_entry_with_occurrence(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,text[],uuid,integer)'::regprocedure
   ),
   array['search_path=""']::text[],
   'The Home mutation contract uses an empty search path'
@@ -689,7 +751,7 @@ select is(
   (
     select prosecdef
     from pg_proc
-    where oid = 'public.save_home_entry(text,text,timestamp with time zone,timestamp with time zone,text,text,text,uuid,text,text,text,text,text,numeric,numeric,text,text,text,text[],uuid,integer)'::regprocedure
+    where oid = 'public.save_home_entry_with_occurrence(text,text,timestamp with time zone,timestamp with time zone,text,text,text,text,text,text[],uuid,integer)'::regprocedure
   ),
   false,
   'The Home mutation contract remains security invoker'

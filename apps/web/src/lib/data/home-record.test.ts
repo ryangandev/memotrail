@@ -5,9 +5,9 @@ import {
   homeRangeLabel,
   parseHomeRows,
 } from "./home-record";
+import type { ExistingLocation } from "@/lib/locations/location";
 
 const row = {
-  address: "456 Elm Street",
   attachments: [
     {
       bucket_id: "entry-media",
@@ -22,22 +22,14 @@ const row = {
     },
   ],
   body: "A quieter home.",
-  city: "San Francisco",
-  country: "United States",
   date_precision: "month",
   entry_id: "40000000-0000-4000-8000-000000000001",
-  latitude: 37.774929,
-  longitude: -122.419418,
   move_in_reason: "A new chapter.",
   move_out_reason: null,
   occurred_end: null,
   occurred_label: null,
   occurred_start: "2025-06-01T19:00:00Z",
   occurred_timezone: "America/Los_Angeles",
-  place_id: "50000000-0000-4000-8000-000000000001",
-  place_name: "California home",
-  place_notes: "Walkable and quiet.",
-  region: "California",
   revision: 2,
   tag_names: ["California"],
   timeline_track_id: "70000000-0000-4000-8000-000000000001",
@@ -45,6 +37,23 @@ const row = {
   title: "California home",
   total_count: 1,
   updated_at: "2026-09-03T10:00:00Z",
+};
+
+const location: ExistingLocation = {
+  kind: "existing",
+  id: "50000000-0000-4000-8000-000000000001",
+  revision: 1,
+  formattedAddress: "456 Elm Street, San Francisco, CA, United States",
+  address: "456 Elm Street",
+  city: "San Francisco",
+  region: "California",
+  postalCode: null,
+  country: "United States",
+  countryCode: "us",
+  latitude: 37.774929,
+  longitude: -122.419418,
+  timezone: null,
+  resultType: null,
 };
 
 describe("Home records", () => {
@@ -71,28 +80,15 @@ describe("Home records", () => {
 
     expect(records).toHaveLength(1);
     expect(records?.[0]).toMatchObject({
-      address: "456 Elm Street",
       attachments: [{ imageUrl: null, mimeType: "image/jpeg" }],
-      placeName: "California home",
+      location: null,
       timelineTrackName: "Homes",
     });
   });
 
   it("keeps a Home with no Location visible", () => {
-    const home = parseHomeRows([
-      {
-        ...row,
-        place_id: null,
-        place_name: null,
-        address: null,
-        city: null,
-        region: null,
-        country: null,
-        latitude: null,
-        longitude: null,
-      },
-    ])?.[0];
-    expect(home?.placeId).toBeNull();
+    const home = parseHomeRows([row])?.[0];
+    expect(home?.location).toBeNull();
     expect(home && homeLocationLabel(home)).toBe("Location not added");
   });
 
@@ -108,9 +104,15 @@ describe("Home records", () => {
     expect(home).toBeDefined();
     if (!home) return;
 
-    expect(homeLocationLabel(home)).toBe(
+    expect(homeLocationLabel({ ...home, location })).toBe(
       "San Francisco, California, United States",
     );
+    expect(
+      homeLocationLabel({
+        ...home,
+        location: { ...location, city: null, region: null, country: null },
+      }),
+    ).toBe("456 Elm Street, San Francisco, CA, United States");
     expect(homeRangeLabel(home)).toBe("Since Jun 2025");
     expect(homeDurationLabel(home, new Date("2026-09-03T12:00:00Z"))).toBe(
       "About 1 year 3 months",

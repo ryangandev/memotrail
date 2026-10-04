@@ -71,34 +71,36 @@ Pair it with the test file carrying the same feature name.
   `App/WikiItemLink.swift` holds that routing for every native link to an Item, and `AppNavigator.openLibrary(collection:)` and `openLibrary(tag:)` open Library filtered to one Collection or tag, like Web `/library?tag=`.
 - The former `people`, `person_versions`, and `entry_people` tables and People RPCs were removed by `202610040002_remove_people.sql`; Entity Entries are limited to `home` and `vehicle`.
 - The former authored `places` and `place_versions` tables and Place-only RPCs were removed by `202609240002_remove_authored_places.sql`.
-- `locations` stores private per-Entry address and coordinate snapshots with provider provenance, revision state, and soft deletion. It is not a Wiki Item or reusable catalog.
+- `locations` stores private per-Entry address and coordinate snapshots with provider provenance and revision state. It is not a Wiki Item or reusable catalog.
+- `entry_locations` links an Entry to its Locations with relationship `primary` (the Entry's own Location, including a Home's address) or `photo` (a position adopted from a photo's GPS).
+  Migration `202610040008` renamed it from `entry_places`, moved Home Locations off `homes.place_id` into `primary` links, turned `related` links into `photo` links, and dropped the `name`, `notes`, and `deleted_at` columns from `locations`.
 - Location rows are immutable through the authenticated table API.
-  `review_wiki_item_with_location_rich` atomically creates a Geoapify snapshot or keeps the current Entry's Location and replaces only its `primary` relationship.
-  Home's provider-backed save uses `save_home_entry_with_geoapify` to create and link a snapshot in the same transaction; manual Home saves use `resolve_home_location_copy_on_write` for an unchanged current value or a new snapshot.
-  Specialized First Time and Vehicle editors use `save_first_time_with_location` and `save_vehicle_with_location` when changing a primary Location, preserving their existing save paths when Location is untouched.
-  `locations.bound_entry_id`, owner-scoped foreign keys, and deferred link constraints reject attempts to attach one snapshot to another Entry or commit an active unbound snapshot. Provider identity is provenance, not a deduplication key.
-  The deferred `discard_unlinked_location` triggers on `entry_places` and `homes` delete a snapshot at commit once nothing links to it, so a save that relinks the same snapshot keeps it.
+  `resolve_selected_location` keeps the Entry's current snapshot, creates one from a Geoapify result, or creates one from a typed address without coordinates (`kind: "manual"`), and `replace_primary_location` swaps the `primary` link.
+  The Entry editor's `save_entry`, Home's `save_home_with_location`, First Time's `save_first_time_with_location`, and Vehicle's `save_vehicle_with_location` call it in the same transaction as the record save; focused editors keep their plain save when Location is untouched.
+  `save_home_with_location` also returns the linked Location's id, so the Home card shows the saved snapshot before the page refreshes.
+  `locations.bound_entry_id`, owner-scoped foreign keys, and deferred link constraints reject attempts to attach one snapshot to another Entry or commit an unbound snapshot. Provider identity is provenance, not a deduplication key.
+  The deferred `entry_locations_discard_unlinked_location` trigger deletes a snapshot at commit once nothing links to it, so a save that relinks the same snapshot keeps it.
   Permanently deleting an Entry cascades its Location snapshots; moving an Entry to Trash does not.
-  Legacy `name` and `notes` columns remain for existing RPC and iOS wire shapes, but compatibility writers ignore those inputs, derive the label from address facts, and clear notes; Web exposes neither custom field nor saved-Location search.
-  Homes may omit a Location entirely; `homes_workspace` keeps them visible with a left join, and manual address edits discard stale provider coordinates.
+  A Location's label is its formatted address, which `normalize_location_snapshot` derives from the address parts when the provider gave none; a photo position with no address reads as its coordinates.
+  Homes may omit a Location entirely, and typing an address part in the Home editor replaces any chosen search result, so an edited address never keeps old coordinates.
   `coordinate_source` distinguishes manual, Geoapify, and explicitly adopted photo GPS coordinates; `source_attachment_id` points to the adopted original photo while it exists.
-- `homes.place_id` and `entry_places.place_id` remain compatibility column names for one cross-client window, but their foreign keys target `locations`; new reads use the `entry_locations` view and Location vocabulary.
 - Quick Capture creates an organized `entry:entry` in Library; the Web Entry editor and iOS Inbox review save that same Entry without a Kind selector.
 - First Time, Home, Vehicle, Goal, Moment, and Period creation starts in Timeline or a focused view.
 - Migration `202610040004` drops `organize_capture`, `extract_capture_item`, `capture_extraction_source`, and `extract_capture_to_goal`, `_home`, and `_vehicle`, so Captures no longer hand off to focused records.
-  Migration `202610040005` removed the Capture source parameter from `save_home_entry_with_geoapify` and `save_vehicle_with_location`.
+  Migration `202610040005` removed the Capture source parameter from the Home and Vehicle Location saves, and `202610040008` turned the `source_capture` subtype those handoffs left on a source Entry back into a plain `entry`.
   Existing `derived` and `derived_from` provenance links stay in the data.
 - A focused-record save that leaves some photos unattached keeps its editor open; later saves, including photo retries, are ordinary updates.
-  After a Home save, its provider choice is held as the saved Location, so a retry keeps that snapshot instead of choosing the provider result again.
+  After a Home save, the editor holds the saved snapshot, so a retry leaves the Location unchanged instead of creating another one.
 - Web shows Goals as Want to Do. `goals.status` is `active`, `achieved`, or `let_go`, there is no horizon, and `save_goal_entry` and `extract_goal_from_item` take no related links and never change them.
   `goals_workspace` returns only `achievement` links.
 - Migration `202610040006` deletes every general `related` link, scrubs them from version history, drops `entry_relations` and `set_entry_relation`, and limits `entry_links.relationship` to `achievement`, `derived`, `derived_from`, `exploration_conclusion`, and `exploration_source`.
 - Web Goal extraction uses a caller-generated target UUID for idempotency, preserves the source revision and identity, and records `derived` plus `derived_from` provenance links so both items remain discoverable.
-- `review_wiki_item_with_location_rich` is the only Entry review boundary, and the Web Entry editor is its caller.
+- `save_entry` is the Web Entry editor's only save, and it saves plain `entry:entry` Entries only; focused records keep their own editors and RPCs.
   It writes plaintext and `body_rich` in one revision, and clears formatting when `p_body_rich` is null and the primary Location when `p_primary_location` is null.
-  Migration `202610040005` dropped the native-only `review_wiki_item_with_photo_place` and `_rich` wrappers and the plain-text path that kept formatting it did not see.
+  `p_photo_location` (`{attachmentId, latitude, longitude}`) adds the photo's GPS position as a `photo` Location, and fails with `photo_source_changed` if the photo is no longer the Entry's active original.
+  Migration `202610040008` replaced `review_wiki_item_with_location_rich` and its nested review steps, which took a Kind that could only be `entry`, and dropped functions no client called: `save_home_entry`, `save_vehicle_entry`, `save_timeline_entry`, `mark_goal_achieved_with_first_time`, `library_text_matches`, and `save_location`.
 - Native iOS uses the canonical Entry, Entity, and Goal decoding and filter identities.
-  It still sends and reads the columns, parameters, and functions that migrations `202610040001` through `202610040005` removed, so it fails against them until it is rewritten to follow Web.
+  It still sends and reads the columns, parameters, and functions that migrations `202610040001` through `202610040008` removed, so it fails against them until it is rewritten to follow Web.
   Its ordinary Entry editor, `Features/Inbox/EntryReviewSheet.swift`, serves Inbox review and Edit Entry on the Item page and in version history through `InboxController.submitReview`; focused records keep their own editors and RPCs.
   Moving an Inbox capture to Trash sets `deleted_at` only at the reviewed revision, like Web `trashWikiItem`.
   The retired Place surface and saved-Location catalog are removed, and Home Location is optional.
@@ -109,7 +111,7 @@ Pair it with the test file carrying the same feature name.
   The `discard_stale_entry_rich_text` trigger removes `body_rich` whenever a write leaves its text different from `body`, so plaintext focused editors, direct client writes, and restores cannot keep outdated formatted text for search or export.
 - Web capture and Entry review use `components/rich-text-editor.tsx` for the reusable headless editor surface, with page, dialog, and form variants instead of separate editors.
   `components/entry-rich-text-content.tsx` safely renders validated formatting on note surfaces and falls back to canonical plaintext when rich metadata is absent, invalid, or stale.
-  Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while `review_wiki_item_with_location_rich` writes plaintext, formatting, organization, occurrence, photo Location adoption, and the primary Location in one revision.
+  Formatting controls expose their real keyboard commands through accessible tooltips; drafts and pending queues preserve the same rich payload, while `save_entry` writes plaintext, formatting, organization, occurrence, photo Location adoption, and the primary Location in one revision.
   Drafts keep the editor's untrimmed note; on Capture and review save, `trimEntryNote` in `lib/data/rich-text.ts` trims surrounding whitespace from the document and derives the plaintext from the result, like native `EntryEmphasisContent.capture`.
   The review parser and RPCs still reject formatting whose text differs from the trimmed body.
 - Native `DesignSystem/Components/NativeRichTextEditor.swift` provides a reusable UIKit writing surface with an Aa formatting toggle, bold, italic, underline, strikethrough, selection formatting, typing styles, and undo/redo.

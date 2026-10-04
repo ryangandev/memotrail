@@ -34,7 +34,8 @@ describe("Geoapify location normalization", () => {
       expect.objectContaining({
         provider: "geoapify",
         providerLocationId: "51bf7-test",
-        name: "2600 Benjamin Franklin Parkway, Philadelphia, PA 19130, USA",
+        formattedAddress:
+          "2600 Benjamin Franklin Parkway, Philadelphia, PA 19130, USA",
         postalCode: "19130",
         timezone: "America/New_York",
         latitude: 39.9656,

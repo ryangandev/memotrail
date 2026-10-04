@@ -22,6 +22,7 @@ import {
   type EntryDetail,
 } from "@/lib/data/entry-detail";
 import { wikiItemIdentityLabel, wikiItemKindLabel } from "@/lib/data/wiki-item";
+import { locationDisplayLabel } from "@/lib/locations/location";
 import styles from "@/components/entry-detail-view.module.css";
 
 const sourceLinkLabels: Record<string, string> = {
@@ -96,7 +97,7 @@ export function EntryDetailView({
       <div className={styles.itemActions}>
         {active &&
           entry.item_kind === "entry" &&
-          ["entry", "source_capture"].includes(entry.item_subtype) && (
+          entry.item_subtype === "entry" && (
             <Button
               variant="secondary"
               type="submit"
@@ -190,9 +191,15 @@ function CurrentItem({ value }: { value: EntryDetail }) {
   const groups = [
     { key: "tags", label: "tags", names: value.tags.map((tag) => tag.name) },
     {
-      key: "places",
-      label: "places",
-      names: value.places.map((place) => place.name ?? place.place_id),
+      key: "locations",
+      label: "locations",
+      names: value.locations.map((location) =>
+        locationDisplayLabel({
+          formattedAddress: location.formatted_address,
+          latitude: location.latitude,
+          longitude: location.longitude,
+        }),
+      ),
     },
     {
       key: "timeline_items",
@@ -211,8 +218,7 @@ function CurrentItem({ value }: { value: EntryDetail }) {
         metadata={value.body ? value.metadata : undefined}
       />
       <dl className={styles.currentFacts}>
-        {value.item_kind !== "entry" ||
-        !["entry", "source_capture"].includes(value.item_subtype) ? (
+        {value.item_kind !== "entry" || value.item_subtype !== "entry" ? (
           <div>
             <dt>Record</dt>
             <dd>

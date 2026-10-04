@@ -64,7 +64,6 @@ test("Home keeps Location optional and never pairs edited addresses with old coo
               kind: "provider",
               provider: "geoapify",
               providerLocationId: "synthetic-home-address",
-              name: "10 Pine Street, Philadelphia, PA",
               formattedAddress: "10 Pine Street, Philadelphia, PA",
               address: "10 Pine Street",
               city: "Philadelphia",
@@ -96,11 +95,18 @@ test("Home keeps Location optional and never pairs edited addresses with old coo
     const emptyRecord = (
       await client
         .from("homes")
-        .select("place_id")
+        .select("entry_id")
         .eq("owner_id", owner)
         .single()
-    ).data;
-    expect(emptyRecord?.place_id).toBeNull();
+    ).data!;
+    expect(
+      (
+        await client
+          .from("entry_locations")
+          .select("location_id")
+          .eq("entry_id", emptyRecord.entry_id)
+      ).data,
+    ).toEqual([]);
     await expect(
       page
         .getByRole("button", { name: /Home without coordinates/ })
@@ -202,19 +208,25 @@ test("Home keeps Location optional and never pairs edited addresses with old coo
     await expect(editor).not.toBeVisible();
     const home = (
       await client
-        .from("homes")
-        .select("place_id,entries!inner(title)")
+        .from("entries")
+        .select("id")
         .eq("owner_id", owner)
-    ).data?.find((row) => {
-      const entry = row.entries as unknown as { title: string };
-      return entry.title === "Edited Pine Home";
-    });
-    expect(home?.place_id).toBeTruthy();
+        .eq("title", "Edited Pine Home")
+        .single()
+    ).data!;
+    const homeLink = (
+      await client
+        .from("entry_locations")
+        .select("location_id,relationship")
+        .eq("entry_id", home.id)
+        .single()
+    ).data;
+    expect(homeLink?.relationship).toBe("primary");
     const location = (
       await client
         .from("locations")
         .select("address,latitude,longitude")
-        .eq("id", home!.place_id!)
+        .eq("id", homeLink!.location_id)
         .single()
     ).data;
     expect(location).toMatchObject({
