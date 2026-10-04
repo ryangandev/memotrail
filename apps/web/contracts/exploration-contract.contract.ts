@@ -122,13 +122,12 @@ test("Exploration RPCs serialize competing devices and preserve original writing
     expect(more.every((r) => !r.error && r.data.created)).toBe(true);
     const source = await client
       .from("entries")
-      .select("body,revision,inbox_status")
+      .select("body,revision")
       .eq("id", entryID)
       .single();
     expect(source.data).toEqual({
       body: original,
       revision: 6,
-      inbox_status: "unreviewed",
     });
     const links = await client
       .from("entry_links")
@@ -149,15 +148,6 @@ test("Exploration RPCs serialize competing devices and preserve original writing
     ).data;
     expect(workspace.turns).toHaveLength(1);
     expect(workspace.turns[0].saved_entries).toHaveLength(5);
-    const histories = (
-      await client.rpc("entry_history", { p_entry_id: entryID })
-    ).data;
-    expect(histories.total_count).toBe(5);
-    expect(
-      histories.versions.every(
-        (v: { snapshot: { body: string } }) => v.snapshot.body === original,
-      ),
-    ).toBe(true);
     expect((await client.rpc("ai_workspace")).data.recent_usage).toHaveLength(
       0,
     );

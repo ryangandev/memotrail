@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { AI_CAPABILITIES_AVAILABLE } from "@/lib/ai/availability";
 import { suggestForEntry } from "@/lib/ai/suggestions-server";
-import { writingRevision } from "@/lib/media/writing-revision";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
   parseFirstTimeAttachmentInput,
@@ -205,14 +204,11 @@ export async function finishInboxCapture(entryId: string) {
   if (!AI_CAPABILITIES_AVAILABLE) return;
   const context = await getAuthenticatedContext();
   if (!context) return;
-  const revision = await writingRevision(context.client, entryId, 1);
+  // Registering photos leaves the Entry at the revision its capture made.
   after(async () => {
-    await suggestForEntry(
-      context.client,
-      context.userId,
-      entryId,
-      revision ?? 1,
-    ).catch(() => undefined);
+    await suggestForEntry(context.client, context.userId, entryId, 1).catch(
+      () => undefined,
+    );
   });
 }
 

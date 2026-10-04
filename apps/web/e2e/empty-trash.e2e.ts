@@ -114,18 +114,6 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
         .error,
     ).toBeNull();
     await page.goto("/trash");
-    expect(
-      (
-        await client
-          .from("entries")
-          .update({ body: "A later removed revision" })
-          .eq("id", ids[1])
-      ).error,
-    ).toBeNull();
-    expect(
-      (await client.from("entry_versions").select("id").eq("entry_id", ids[1]))
-        .data?.length,
-    ).toBeGreaterThan(0);
     await expect(
       page.getByRole("button", { name: "Empty Trash", exact: true }),
     ).toBeVisible();
@@ -216,10 +204,6 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     ).toBe("Active writing stays intact.");
     expect(
       (await client.from("attachments").select("id").eq("id", photoID)).data,
-    ).toEqual([]);
-    expect(
-      (await client.from("entry_versions").select("id").eq("entry_id", ids[1]))
-        .data,
     ).toEqual([]);
     expect(
       (await admin.storage.from("entry-media").download(photoPath)).error,

@@ -12,8 +12,8 @@ const nextConfig: NextConfig = {
     "libheif-js",
     "exifr",
   ],
-  // Library replaced the separate search page and the Inbox, and tags
-  // replaced Collections. Redirecting here, before any rendering, keeps old
+  // Library replaced the separate search page, the Inbox, and version
+  // history, and tags replaced Collections. Redirecting here, before any rendering, keeps old
   // links to one request instead of a rendered page that then navigates
   // again. Query values pass through to the destination.
   async redirects() {
@@ -36,6 +36,19 @@ const nextConfig: NextConfig = {
         destination: "/library?show=needs-organizing",
         permanent: false,
       },
+      {
+        source: "/history",
+        has: [
+          {
+            type: "query",
+            key: "entry",
+            value: "(?<entry>[0-9a-fA-F-]{36})",
+          },
+        ],
+        destination: "/items/:entry",
+        permanent: false,
+      },
+      { source: "/history", destination: "/library", permanent: false },
       { source: "/collections/:path*", destination: "/tags", permanent: false },
       { source: "/people/:path*", destination: "/library", permanent: false },
       {

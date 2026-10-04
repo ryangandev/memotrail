@@ -2,8 +2,9 @@ begin;
 create extension if not exists pgtap with schema extensions;
 select no_plan();
 
--- Move to Trash and Goal achievement adopt photo-only revisions exactly like
--- entry_writing_revision, and still refuse any unseen writing.
+-- Photo changes leave the Entry's revision alone, so Move to Trash and Goal
+-- achievement still land after the editor's own photo changes, and still refuse
+-- any unseen writing.
 create temporary table fixtures(kind text, outcome text, id uuid, photo_id uuid);
 grant all on fixtures to authenticated;
 
@@ -98,7 +99,7 @@ select is((select count(*) from fixtures where id is not null), 14::bigint, 'Eve
 reset role;
 update fixtures set photo_id = pg_temp.add_photo(id);
 set local role authenticated;
-select is(revision, 2, kind || ' (' || outcome || '): Photo registration creates a revision')
+select is(revision, 1, kind || ' (' || outcome || '): Photo registration keeps the revision')
 from fixtures join public.entries on entries.id = fixtures.id order by kind, outcome;
 
 -- Another device writes between the photo actions on every conflict record.
@@ -107,31 +108,31 @@ where id in (select id from fixtures where outcome = 'conflict');
 select is((select count(*) from public.trash_entry_attachment(photo_id)), 1::bigint,
   kind || ' (' || outcome || '): The editor moves its photo to Trash')
 from fixtures order by kind, outcome;
-select is(revision, case when outcome = 'adopt' then 3 else 4 end,
-  kind || ' (' || outcome || '): Photo Trash creates a revision')
+select is(revision, case when outcome = 'adopt' then 1 else 2 end,
+  kind || ' (' || outcome || '): Photo Trash keeps the revision, and writing advances it')
 from fixtures join public.entries on entries.id = fixtures.id order by kind, outcome;
 
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000002","role":"authenticated"}', true);
-select is(pg_temp.write(kind, id, 1), null, kind || ': A foreign caller cannot use reconciliation')
+select is(pg_temp.write(kind, id, 1), null, kind || ': A foreign caller cannot write')
 from fixtures where outcome = 'adopt' order by kind;
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
-select is(pg_temp.write(kind, id, 4), null, kind || ': A revision ahead of the Entry is refused')
+select is(pg_temp.write(kind, id, 2), null, kind || ': A revision ahead of the Entry is refused')
 from fixtures where outcome = 'adopt' order by kind;
 
-select is(pg_temp.write(kind, id, 1), null, kind || ': Unseen writing is never adopted')
+select is(pg_temp.write(kind, id, 1), null, kind || ': Unseen writing is refused')
 from fixtures where outcome = 'conflict' order by kind;
 select ok(not pg_temp.written(kind, id), kind || ': A refused write leaves the record unchanged')
 from fixtures where outcome = 'conflict' order by kind;
-select is(revision, 4, kind || ': A refused write creates no revision')
+select is(revision, 2, kind || ': A refused write creates no revision')
 from fixtures join public.entries on entries.id = fixtures.id where outcome = 'conflict' order by kind;
 
-select is(pg_temp.write(kind, id, 1), 4, kind || ': The editor''s own photo-only revisions are adopted')
+select is(pg_temp.write(kind, id, 1), 2, kind || ': The editor''s own photo changes need no reconciliation')
 from fixtures where outcome = 'adopt' order by kind;
-select ok(pg_temp.written(kind, id), kind || ': The adopted write lands')
+select ok(pg_temp.written(kind, id), kind || ': The write after photo changes lands')
 from fixtures where outcome = 'adopt' order by kind;
-select is(pg_temp.write(kind, id, 3), 5, kind || ': An editor opened after the writing adopts the later photo change')
+select is(pg_temp.write(kind, id, 2), 3, kind || ': An editor opened after the writing succeeds')
 from fixtures where outcome = 'conflict' order by kind;
-select ok(pg_temp.written(kind, id), kind || ': The write after reconciliation lands')
+select ok(pg_temp.written(kind, id), kind || ': The write from the current revision lands')
 from fixtures where outcome = 'conflict' order by kind;
 reset role;
 

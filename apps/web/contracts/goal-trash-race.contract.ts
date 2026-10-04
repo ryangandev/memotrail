@@ -5,10 +5,10 @@ import { createClient } from "@supabase/supabase-js";
 import sharp from "sharp";
 import { query, transaction } from "./helpers/local-sql";
 
-// Move to Trash locks the Entry before reconciling photo-only revisions, so a
-// photo change committed while it waits is adopted, and writing still conflicts.
+// Photo changes leave the Entry's revision alone, so Move to Trash waiting
+// behind a photo removal still succeeds, while waiting behind writing conflicts.
 for (const concurrent of ["photo removal", "writing"] as const) {
-  test(`Goal Trash waiting behind concurrent ${concurrent} ${concurrent === "writing" ? "still conflicts" : "adopts it"}`, async () => {
+  test(`Goal Trash waiting behind concurrent ${concurrent} ${concurrent === "writing" ? "conflicts" : "succeeds"}`, async () => {
     const env = JSON.parse(
       execFileSync("supabase", ["status", "-o", "json"], {
         encoding: "utf8",
@@ -17,7 +17,7 @@ for (const concurrent of ["photo removal", "writing"] as const) {
     );
     expect(env.API_URL).toBe("http://127.0.0.1:54321");
     const admin = createClient(env.API_URL, env.SERVICE_ROLE_KEY);
-    const email = `media-revision-race-${randomUUID()}@memotrail.local`;
+    const email = `goal-trash-race-${randomUUID()}@memotrail.local`;
     const user = await admin.auth.admin.createUser({
       email,
       email_confirm: true,
@@ -25,7 +25,7 @@ for (const concurrent of ["photo removal", "writing"] as const) {
     expect(user.error).toBeNull();
     const owner = user.data.user!.id,
       photo = randomUUID();
-    const label = `media-revision-race-${owner}`;
+    const label = `goal-trash-race-${owner}`;
     const tx = transaction();
     try {
       const client = createClient(env.API_URL, env.ANON_KEY, {
@@ -44,14 +44,11 @@ for (const concurrent of ["photo removal", "writing"] as const) {
         ).error,
       ).toBeNull();
       const saved = await client.rpc("save_goal_entry", {
-        p_title: "Concurrent photo revision",
+        p_title: "Concurrent Trash",
         p_body: "Original writing",
-        p_horizon: "someday",
         p_status: "active",
         p_target_date: null,
-        p_collection_names: [],
         p_tag_names: [],
-        p_related_entry_ids: [],
         p_entry_id: null,
         p_expected_revision: null,
       });
@@ -85,7 +82,7 @@ for (const concurrent of ["photo removal", "writing"] as const) {
         ).error,
       ).toBeNull();
       // The editor opens here, with the photo attached.
-      const opened = 2;
+      const opened = 1;
       expect(
         query(`select revision from public.entries where id='${entry}'`),
       ).toBe(String(opened));
@@ -122,14 +119,14 @@ for (const concurrent of ["photo removal", "writing"] as const) {
         .single();
       expect(row.error).toBeNull();
       if (concurrent === "photo removal") {
-        expect(trashed.data).toEqual([{ entry_id: entry, revision: 4 }]);
+        expect(trashed.data).toEqual([{ entry_id: entry, revision: 2 }]);
         expect(row.data!.deleted_at).not.toBeNull();
       } else {
         expect(trashed.data).toEqual([]);
         expect(row.data).toEqual({
           body: "Other device writing",
           deleted_at: null,
-          revision: 3,
+          revision: 2,
         });
       }
     } finally {

@@ -191,9 +191,6 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await expect(
       page.getByText("More views and tools", { exact: true }),
     ).toHaveCount(0);
-    await expect(
-      page.getByRole("link", { name: "Version history", exact: true }),
-    ).toHaveAttribute("href", "/history");
     const reflectionLink = page.getByRole("link", {
       name: /Entry.*Morning reflection/,
     });
@@ -231,8 +228,8 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       page.getByRole("article", { name: "Current item" }),
     ).toContainText("The calm helped me notice what mattered.");
     await expect(
-      page.getByRole("link", { name: "View version history (1)" }),
-    ).toBeVisible();
+      page.getByRole("link", { name: /version history/i }),
+    ).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: "Move to Trash" }),
     ).toBeVisible();
@@ -242,16 +239,12 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       path: "/private/tmp/memotrail-wiki-item-detail-desktop.png",
     });
 
-    await page.getByRole("link", { name: "View version history (1)" }).click();
-    await expect(page).toHaveURL(`/history?entry=${reflectionID}`);
+    // Old version history links open the Item page.
+    await page.goto(`/history?entry=${reflectionID}`);
+    await expect(page).toHaveURL(new RegExp(`/items/${reflectionID}`));
     await expect(
-      page.getByRole("heading", { name: "Version history", exact: true }),
+      page.getByRole("heading", { name: "Morning reflection", exact: true }),
     ).toBeVisible();
-    await expect(
-      page.getByRole("region", { name: "Earlier version" }),
-    ).toContainText("The quiet helped me notice what mattered.");
-
-    await page.goto(`/items/${reflectionID}`);
     await page.getByRole("button", { name: "Move to Trash" }).click();
     await page
       .getByRole("dialog", {

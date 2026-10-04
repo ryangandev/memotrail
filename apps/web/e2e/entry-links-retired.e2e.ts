@@ -104,15 +104,8 @@ test("Item pages offer no general links between Entries", async ({
         page.getByRole("button", { name: "Linked from", exact: true }),
       ).toHaveCount(0);
     }
-    await page.goto(`/history?entry=${source}`);
-    await expect(
-      page.getByRole("region", { name: "Current version", exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("region", { name: "Related Items", exact: true }),
-    ).toHaveCount(0);
-    const current = (await client.rpc("entry_history", { p_entry_id: source }))
-      .data.current;
+    const current = (await client.rpc("entry_detail", { p_entry_id: source }))
+      .data;
     expect(current).toMatchObject({
       revision: 1,
       body: "My original words",

@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(55);
+select plan(47);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -339,39 +339,6 @@ select is(
 
 select is(
   (
-    select snapshot ->> 'title'
-    from public.entry_versions
-    where entry_id = (select id from public.entries where title = 'Bluebird EV')
-      and version = 1
-  ),
-  'Bluebird',
-  'Vehicle history preserves the previous Entry content'
-);
-
-select is(
-  (
-    select snapshot #>> '{vehicle,model}'
-    from public.entry_versions
-    where entry_id = (select id from public.entries where title = 'Bluebird EV')
-      and version = 1
-  ),
-  'Model 3',
-  'Vehicle history preserves the previous specialized facts'
-);
-
-select is(
-  (
-    select snapshot #>> '{timeline,track_system_key}'
-    from public.entry_versions
-    where entry_id = (select id from public.entries where title = 'Bluebird EV')
-      and version = 1
-  ),
-  'vehicles',
-  'Vehicle history preserves its previous Timeline relationship'
-);
-
-select is(
-  (
     select concat_ws('|', make, model, model_year::text, color)
     from public.vehicles_workspace()
     where title = 'Bluebird EV'
@@ -496,17 +463,6 @@ select is(
 
 select is(
   (
-    select snapshot #>> '{vehicle,color}'
-    from public.entry_versions
-    where entry_id = (select id from public.entries where title = 'Bluebird EV')
-      and version = 2
-  ),
-  'Midnight Silver',
-  'Moving a Vehicle to Trash preserves its current specialized state in history'
-);
-
-select is(
-  (
     select count(*)::integer
     from public.restore_trash_item(
       'entry',
@@ -529,47 +485,6 @@ select is(
   ),
   1,
   'A restored Vehicle reappears on the Vehicles Timeline track'
-);
-
-select lives_ok(
-  $$
-    select *
-    from public.save_home_entry(
-      'History regression home', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC',
-      null, 'Home Place', null, null, null, null, null, null, null, null, null, array[]::text[], null, null
-    )
-  $$,
-  'Home creation still works after enriching the shared history trigger'
-);
-
-select lives_ok(
-  $$
-    select *
-    from public.save_home_entry(
-      'History regression home edited', '', '2020-01-01T00:00:00Z', null, 'year', null, 'UTC',
-      (select homes.place_id from public.homes join public.entries on entries.id = homes.entry_id where entries.title = 'History regression home'),
-      'Home Place', null, null, null, null, null, null, null, null, null, array[]::text[],
-      (select id from public.entries where title = 'History regression home'),
-      (select revision from public.entries where title = 'History regression home')
-    )
-  $$,
-  'Home editing still works after enriching the shared history trigger'
-);
-
-select is(
-  (
-    select snapshot #>> '{home,place_id}'
-    from public.entry_versions
-    where entry_id = (select id from public.entries where title = 'History regression home edited')
-      and version = 1
-  ),
-  (
-    select homes.place_id::text
-    from public.homes
-    join public.entries on entries.id = homes.entry_id
-    where entries.title = 'History regression home edited'
-  ),
-  'The enriched history trigger still archives specialized Home state'
 );
 
 reset role;
@@ -663,16 +578,6 @@ select is(
   ),
   false,
   'The Vehicle mutation contract remains security invoker'
-);
-
-select is(
-  (
-    select prosecdef
-    from pg_proc
-    where oid = 'public.archive_entry_version()'::regprocedure
-  ),
-  true,
-  'Entry history remains a hardened security-definer trigger boundary'
 );
 
 select is(

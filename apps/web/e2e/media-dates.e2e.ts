@@ -205,7 +205,7 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
       ).status(),
     ).toBe(404);
     expect(await snapshot()).toEqual(before);
-    await page.goto(`/history?entry=${entry}`);
+    await page.goto(`/items/${entry}`);
     await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await dialog

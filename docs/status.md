@@ -24,8 +24,11 @@ Migration `202610040005` drops `entries.inbox_status`, the Dashboard Inbox count
 It is not yet applied to the hosted project.
 General related links are deleted: migration `202610040006` removes them, including those older Goals carried, from the data and version history, and drops the functions that browsed and edited them.
 It is not yet applied to the hosted project.
+Version history is removed: migration `202610040007` deletes every stored version and stops recording them, stops photo changes from creating Entry revisions, drops Locations kept only for history, and purges prepared export snapshots.
+`/history` links open the Item page or Library.
+It is not yet applied to the hosted project.
 Open product questions: Timeline structure and current chapters.
-UI questions held until then: how prominent version history is, Item page photos, date precision controls, the two export choices, and Timeline styles.
+UI questions held until then: Item page photos, date precision controls, the two export choices, and Timeline styles.
 Open `audit-2026-10` issues stay tracked in GitHub.
 
 ## Current state
@@ -51,11 +54,7 @@ The native Dashboard now follows the Web Data Ribbon order and links, verified a
 The native Inbox now matches the Web review list and Review Entry dialog, including Move to Trash and formatted note review, verified against a seeded local account.
 The native Library now matches Web Library, combining the all-items browser with keyword search, grouped filters, formatted result notes, and match reasons, verified against a seeded local account.
 The native MapKit screen and Debug Design System gallery are implemented; personal acceptance and broad screen migration remain pending.
-The Home and Vehicle history comparison fix is verified on local Supabase, including old snapshots, unchanged relationship timestamps, and restoration.
-Migration `202610010001` is applied to the hosted project, so the shared server contract fixes comparison for both clients.
-Web and native history recognize schema 3 snapshots as restorable and keep unsupported snapshots viewable with a clear explanation and a disabled Restore action.
 Adding or removing a photo in a focused First Time, Home, Vehicle, or Goal editor no longer makes Move to Trash or Mark achieved report a false conflict on Web or native.
-Migration `202610030002` applies the existing photo-only revision rule inside the focused Trash RPCs and Goal achievement, so deployed clients need no update.
 Delete forever and Empty Trash now delete an item's record before its private photo files on Web and native, so an interrupted request or a Restore from another device can no longer leave a restorable item without its originals.
 Restore refuses an item whose originals are missing, and opening Trash finishes any file removal left unfinished.
 Migration `202610030003` enforces this order on the server for every client, including deployed ones.
@@ -76,7 +75,7 @@ Use Git history for feature-level implementation and test evidence.
 | Web Settings                                                                      | Account, preferred name, dates, timezone, appearance, browser-local Timeline style, simplified AI, and account controls implemented                                                              |
 | Web tags                                                                          | One Tags destination and shared Entry tag editor implemented; Collections are merged into tags                                                                                                   |
 | Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI | Keyword search remains available. Web AI is paused behind an off/disabled Beta setting; provider logic and historical data are retained.                                                         |
-| Private media, Entry history, relationships, Trash, and complete export           | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                               |
+| Private media, relationships, Trash, and complete export                          | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                               |
 | Hosted Supabase contracts                                                         | Every repository migration through `202610030004` is deployed to project `kaivkozeyuwzqrckmyqu`; `202610040001` and later are not applied                                                        |
 | Entry-centered information model                                                  | Web, hosted database, and native iOS use Entry, focused records, and intentional Timeline Moment or Period; native personal acceptance remains                                                   |
 | Web design system                                                                 | Approved canonical components migrated across Web; component-owned CSS and token boundaries enforced; local regression passed; production browser acceptance pending                             |
@@ -97,11 +96,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Hosted `service_role` and `anon` get no table access or function execution unless a migration grants it, and new public tables get row level security automatically.
   Local Supabase grants both roles by default, so a missing explicit grant can pass every local suite and fail only on the hosted project.
 - Editing a formatted note in a focused editor no longer leaves an outdated `body_rich` copy that search and export still see.
-  Migration `202610030001` enforces the matching-text rule for every Entry write and removes existing outdated copies from Entries and history without new revisions.
+  Migration `202610030001` enforces the matching-text rule for every Entry write and removes existing outdated copies from Entries without new revisions.
   It passes 62 database files with 1,663 assertions, 473 Web unit tests, a formatted Goal browser regression with 23 related browser scenarios, and all 256 native tests against local Supabase.
-- The Web history schema fix passes 462 unit tests and nine local history browser scenarios in both development and production mode, covering supported restoration, legacy rejection, and version selection.
-  Lint, type checking, formatting, and the production build also pass.
-- The native history schema fix passes all 249 native tests, including local Supabase contract tests, and the seeded Simulator Item page scenario covering both restorable and unrestorable versions.
 - The current test-layer check passes 469 Web unit/rendering tests, four multi-client data contracts, and 12 development-gallery scenarios.
   All 77 product browser/HTTP scenarios are verified through a complete run and passing focused reruns of corrected assertions; no failures or skips remain unresolved.
   Native validation passes all 254 unit/backend tests, including 17 local Supabase contracts, plus three signed-in UI flows covering Capture, offline replay, and Export.
@@ -112,9 +108,6 @@ Its marked account and Storage objects were confirmed removed without accessing 
   `capture-sync.e2e.ts` covers those paths and two open tabs, and `inbox-sync.test.ts` covers single flight, reruns, break-on-retry, and cross-tab skipping.
   iOS already syncs from the root-owned `InboxController` and needed no change.
 - A seeded pre-migration local exercise converted Journal, Story, and Trip to tags; Timeline point and span to Moment and Period; and preserved Inbox state and revision numbers.
-- The photo revision fix passes 118 database assertions covering each focused Trash RPC, Goal achievement, and the legacy achievement path, plus two lock-ordering data contracts.
-  Seven local browser scenarios cover Move to Trash after removing a photo for all four focused types, Goal achievement, a partial upload failure, and a retained writing conflict.
-  Two native contract tests cover the same Trash and achievement paths, and the full native run passes 258 tests.
 - Web Capture and Inbox review now trim spaces and blank lines around a formatted note without losing its formatting, like native Capture and review.
   Before the fix, a bold capture ending in a new line saved with empty metadata, and a review with a trailing new line stopped at revision 1 with "This Entry's rich text is invalid."
   Unit tests for `trimEntryNote`, including 500 generated documents checked against the editor schema, and both `rich-text-whitespace.e2e.ts` browser scenarios now pass.

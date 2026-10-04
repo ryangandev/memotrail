@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { writingRevision } from "@/lib/media/writing-revision";
 import {
   isFirstTimeUuid,
   parseFirstTimeAttachmentInput,
@@ -35,11 +34,7 @@ export async function saveGoalEntry(
   const { data, error } = await context.client.rpc("save_goal_entry", {
     p_body: parsed.data.body,
     p_entry_id: parsed.data.id,
-    p_expected_revision: await writingRevision(
-      context.client,
-      parsed.data.id,
-      parsed.data.revision,
-    ),
+    p_expected_revision: parsed.data.revision,
     p_status: parsed.data.status,
     p_tag_names: parsed.data.tagNames,
     p_target_date: parsed.data.targetDate,

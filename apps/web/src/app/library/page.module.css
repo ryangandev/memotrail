@@ -160,34 +160,6 @@
   color: var(--mt-color-accent);
 }
 
-.libraryFooter {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: var(--mt-space-8);
-  padding-top: var(--mt-space-4);
-  border-top: 1px solid var(--mt-color-border);
-}
-
-.libraryFooter a {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--mt-space-2);
-  color: var(--mt-color-accent);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-medium);
-  text-decoration: none;
-}
-
-.libraryFooter a:hover {
-  color: var(--mt-color-accent-hover);
-}
-
-.libraryFooter a:focus-visible {
-  border-radius: var(--mt-radius-small);
-  outline: 2px solid var(--mt-color-accent);
-  outline-offset: 4px;
-}
-
 @media (max-width: 390px) {
   .sectionHeading span {
     max-width: 150px;

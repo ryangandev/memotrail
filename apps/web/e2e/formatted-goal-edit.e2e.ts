@@ -110,18 +110,6 @@ test("Editing a formatted Goal's writing removes its outdated formatted copy", a
   ).toBeVisible();
   await expect(results.locator("strong")).toHaveCount(0);
 
-  // History shows the formatted writing being replaced, not unexplained metadata.
-  await page.goto(`/history?entry=${goalID}`);
-  await expect(
-    page.getByText(
-      "Differences from current version: Writing. Your current version 3 will stay in history.",
-      { exact: true },
-    ),
-  ).toBeVisible();
-  await expect(
-    main.locator("strong", { hasText: original }).first(),
-  ).toBeVisible();
-
   const goal = await client
     .from("entries")
     .select("body,metadata")

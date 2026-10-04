@@ -121,10 +121,13 @@ select is(
   'Changing one Entry leaves the other Entry snapshot unchanged'
 );
 
+-- Unlinked Locations are dropped at commit.
+set constraints all immediate;
+set constraints all deferred;
 select is(
   (select count(*) from public.locations where bound_entry_id='99100000-0000-4000-8000-000000000002'),
-  2::bigint,
-  'The replaced snapshot remains available to Entry history'
+  1::bigint,
+  'The replaced snapshot is dropped once nothing links to it'
 );
 
 select is(
@@ -221,8 +224,8 @@ select ok(
 set constraints all immediate;
 select is(
   (select count(*) from public.locations where provider_location_id='geoapify-high-precision-home' and bound_entry_id is not null),
-  2::bigint,
-  'Resaving keeps both provider snapshots owned by the Home'
+  1::bigint,
+  'Resaving replaces the Home snapshot instead of keeping both'
 );
 
 reset role;

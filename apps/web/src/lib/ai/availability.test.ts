@@ -10,15 +10,11 @@ const capture = vi.hoisted(() => ({
   after: vi.fn(),
   context: vi.fn(),
   photos: vi.fn(),
-  revision: vi.fn(),
 }));
 vi.mock("next/server", () => ({ after: capture.after }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/data/inbox", () => ({
   getAuthenticatedContext: capture.context,
-}));
-vi.mock("@/lib/media/writing-revision", () => ({
-  writingRevision: capture.revision,
 }));
 vi.mock("./suggestion-photos", () => ({ suggestionPhotos: capture.photos }));
 import { createClient } from "@supabase/supabase-js";
@@ -120,18 +116,16 @@ it("saves a capture to Library without scheduling paused suggestion work", async
   ).toEqual({ message: "Saved to Library.", status: "synced" });
   expect(insert).toHaveBeenCalledOnce();
   expect(capture.context).toHaveBeenCalledOnce();
-  expect(capture.revision).not.toHaveBeenCalled();
   expect(rpc).not.toHaveBeenCalled();
   expect(capture.after).not.toHaveBeenCalled();
 });
 
-it("finishes a photo capture without reading its revision or scheduling suggestions", async () => {
+it("finishes a photo capture without scheduling suggestions", async () => {
   capture.context.mockResolvedValue({
     client: { rpc: vi.fn() },
     userId: "owner",
   });
   await finishInboxCapture(entryID);
   expect(capture.context).not.toHaveBeenCalled();
-  expect(capture.revision).not.toHaveBeenCalled();
   expect(capture.after).not.toHaveBeenCalled();
 });

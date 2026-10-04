@@ -55,16 +55,6 @@ select is(
 update public.entries
 set body='I felt very happy today.'
 where id='97000000-0000-4000-8000-000000000010';
-select is(
-  public.restore_entry_version('97000000-0000-4000-8000-000000000010',1,2),
-  3,
-  'History restoration succeeds after editing an Entry'
-);
-select is(
-  (select body from public.entries where id='97000000-0000-4000-8000-000000000010'),
-  'I felt happy today.',
-  'History restoration restores Entry content'
-);
 
 insert into public.entries(id,owner_id,body,item_kind,item_subtype,date_precision) values
   ('97000000-0000-4000-8000-000000000030',auth.uid(),'A longer narrative','entry','entry','unknown');

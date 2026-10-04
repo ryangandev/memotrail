@@ -16,7 +16,6 @@ const pageFamilies = [
   { path: "/", variant: "wide", width: 1080 },
   { path: "/first-times", variant: "wide", width: 1080 },
   { path: "/goals", variant: "wide", width: 1080 },
-  { path: "/history", variant: "wide", width: 1080 },
   { path: "/homes", variant: "wide", width: 1080 },
   { path: "/vehicles", variant: "wide", width: 1080 },
   { path: "/timeline", variant: "canvas", width: 1180 },

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ButtonLink } from "@/components/button";
 import { Badge } from "@/components/badge";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
@@ -59,10 +58,13 @@ export function FocusedRecordDetail(props: Props) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState<Props["record"] | null>(null);
+  // The saved copy bridges the wait for the refreshed page. Once the server
+  // reaches its revision, the server copy wins, since it also has the photos
+  // uploaded after the save, which leave the revision unchanged.
   const record =
     saved &&
     saved.id === props.record.id &&
-    saved.revision >= props.record.revision
+    saved.revision > props.record.revision
       ? saved
       : props.record;
   const back = paths[props.kind];
@@ -128,9 +130,6 @@ export function FocusedRecordDetail(props: Props) {
             }
           />
           <RecordContent kind={props.kind} record={record} />
-          <ButtonLink href={`/history?entry=${record.id}`} variant="secondary">
-            Version history
-          </ButtonLink>
         </>
       )}
     </PageFrame>

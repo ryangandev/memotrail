@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(30);
+select plan(28);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -142,16 +142,6 @@ select lives_ok(
 
 select is(
   (
-    select count(*)::integer
-    from public.entry_versions
-    where entry_id = '40000000-0000-0000-0000-000000000002'
-  ),
-  1,
-  'Updating an Entry records immutable history'
-);
-
-select is(
-  (
     select revision
     from public.entries
     where id = '40000000-0000-0000-0000-000000000002'
@@ -201,16 +191,6 @@ select is(
   ),
   'entry:entry',
   'Atomic review updates the canonical Wiki Item identity'
-);
-
-select is(
-  (
-    select count(*)::integer
-    from public.entry_versions
-    where entry_id = '40000000-0000-0000-0000-000000000002'
-  ),
-  2,
-  'Atomic review preserves the previous Entry revision'
 );
 
 select is(
@@ -288,7 +268,7 @@ select is(
     where id = '40000000-0000-0000-0000-000000000002'
   ),
   4,
-  'Done preserves history through one additional revision'
+  'Done advances the revision once'
 );
 
 reset role;

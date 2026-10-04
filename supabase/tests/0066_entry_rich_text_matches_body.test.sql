@@ -15,9 +15,6 @@ $$;
 create function pg_temp.rich_text(p_id uuid) returns text language sql stable as $$
   select metadata->'body_rich'->>'text' from public.entries where id = p_id;
 $$;
-create function pg_temp.versions(p_id uuid) returns bigint language sql stable as $$
-  select count(*) from public.entry_versions where entry_id = p_id;
-$$;
 create function pg_temp.provider() returns jsonb language sql immutable as $$
   select jsonb_build_object('kind','provider','provider','geoapify',
     'providerLocationId','rich-text-home','name','10 Pine Street','formattedAddress','10 Pine Street',
@@ -93,8 +90,6 @@ select is(
 );
 select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000002'),'Run zebrafinch marathon',
   'A Goal save with unchanged writing keeps its formatting');
-select is(pg_temp.versions('96600000-0000-4000-8000-000000000002'),1::bigint,
-  'Keeping formatting adds no history version of its own');
 select is(
   (select revision from public.save_goal_entry('Renamed goal','Run a half marathon','active',
     null,'{}','96600000-0000-4000-8000-000000000002',2)),
@@ -105,14 +100,6 @@ select is((select body from public.entries where id = '96600000-0000-4000-8000-0
   'Run a half marathon','The Goal stores the new writing');
 select ok(not (select metadata ? 'body_rich' from public.entries where id = '96600000-0000-4000-8000-000000000002'),
   'The Goal drops formatting for writing it no longer has');
-select is(pg_temp.versions('96600000-0000-4000-8000-000000000002'),2::bigint,
-  'Dropping formatting adds no history version of its own');
-select is(
-  (select snapshot->'metadata'->'body_rich'->>'text' from public.entry_versions
-   where entry_id = '96600000-0000-4000-8000-000000000002' and version = 2),
-  'Run zebrafinch marathon',
-  'History keeps the formatting the Goal had before the edit'
-);
 select is(
   (select count(*) from public.search_wiki_items('zebrafinch') where entry_id = '96600000-0000-4000-8000-000000000002'),
   0::bigint,
@@ -128,23 +115,6 @@ select is(
   1::bigint,
   'Search finds the Goal by its new writing'
 );
-
--- Restoring replays a snapshot's metadata through the same rule.
-select is(public.restore_entry_version('96600000-0000-4000-8000-000000000002',2,3),4,
-  'Restoring the formatted version succeeds');
-select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000002'),'Run zebrafinch marathon',
-  'Restoring a version restores formatting that matches its writing');
-reset role;
-update public.entry_versions
-set snapshot = jsonb_set(snapshot,'{metadata,body_rich}',pg_temp.rich('Run zebrafinch marathon'))
-where entry_id = '96600000-0000-4000-8000-000000000002' and version = 3;
-set local role authenticated;
-select is(public.restore_entry_version('96600000-0000-4000-8000-000000000002',3,4),5,
-  'Restoring a version with outdated formatting succeeds');
-select is((select body from public.entries where id = '96600000-0000-4000-8000-000000000002'),
-  'Run a half marathon','The restored writing is canonical');
-select ok(not (select metadata ? 'body_rich' from public.entries where id = '96600000-0000-4000-8000-000000000002'),
-  'Restoring never revives formatting for different writing');
 
 -- Each focused writer keeps matching formatting and drops it once the writing changes.
 insert into writers

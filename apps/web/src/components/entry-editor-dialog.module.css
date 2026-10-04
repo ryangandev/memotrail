@@ -1,24 +1,3 @@
-.historyLink {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--mt-space-1);
-  margin-top: var(--mt-space-2);
-  color: var(--mt-color-accent);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-medium);
-  text-decoration: none;
-}
-
-.historyLink:hover {
-  color: var(--mt-color-accent-hover);
-}
-
-.historyLink:focus-visible {
-  border-radius: var(--mt-radius-small);
-  outline: 2px solid var(--mt-color-accent);
-  outline-offset: 4px;
-}
-
 .richTextField {
   display: grid;
   gap: var(--mt-space-2);

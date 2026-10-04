@@ -28,7 +28,6 @@ select is(occurred_start,'2026-11-01 09:30:00.123456Z'::timestamptz,'Microsecond
 select is(count(*),8::bigint,'Original Goal writing remains unchanged') from public.entries where item_kind='goal' and body='Original intention';
 select is(count(*),8::bigint,'New First Times do not duplicate original writing') from public.entries where item_kind = 'entry' and item_subtype='first_time' and body='';
 select is(count(*),8::bigint,'Every completion has exactly one achievement relationship') from public.entry_links where relationship='achievement';
-select is(count(*),8::bigint,'Original revisions are retained in history') from public.entry_versions;
 create temporary table fixture as select pg_temp.new_goal() id;
 select throws_ok($$select pg_temp.achieve(id,'range','2017-07-15','2017-07-08') from fixture$$,'22023','invalid_first_time_occurrence','Reversed bounds are rejected');
 select throws_ok($$select pg_temp.achieve(id,'age') from fixture$$,'22023','invalid_first_time_occurrence','Missing age description is rejected');
@@ -36,7 +35,6 @@ select throws_ok($$select pg_temp.achieve(id,null) from fixture$$,'22023','inval
 select throws_ok($$select pg_temp.achieve(id,'exact','infinity') from fixture$$,'22023','invalid_first_time_occurrence','Infinite timestamp is rejected');
 select is(revision,1,'Invalid completion rolls back the original revision') from public.entries where id=(select id from fixture);
 select is(status,'active','Invalid completion rolls back Goal status') from public.goals where entry_id=(select id from fixture);
-select is(count(*),0::bigint,'Invalid completion creates no history') from public.entry_versions where entry_id=(select id from fixture);
 select is(count(*),8::bigint,'Invalid completion creates no orphan First Time') from public.entries where item_kind = 'entry' and item_subtype='first_time';
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000090',true);
 select is(pg_temp.achieve(id,'unknown'),null::uuid,'Other owner cannot complete a Goal') from fixture;

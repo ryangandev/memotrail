@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(40);
+select plan(38);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -270,16 +270,6 @@ select is(
   ),
   2,
   'Updating a First Time advances its revision once'
-);
-
-select is(
-  (
-    select count(*)::integer
-    from public.entry_versions
-    where entry_id = (select id from public.entries where title = 'First ski trip')
-  ),
-  1,
-  'Updating a First Time preserves its previous Entry version'
 );
 
 select is(
@@ -584,7 +574,7 @@ select is(
     select count(*)::integer
     from public.trash_first_time_entry(
       (select entry_id from pg_temp.first_time_test_state),
-      4
+      2
     )
   ),
   0,
@@ -600,7 +590,7 @@ select is(
     select count(*)::integer
     from public.trash_first_time_entry(
       (select entry_id from pg_temp.first_time_test_state),
-      4
+      2
     )
   ),
   1,
@@ -615,16 +605,6 @@ select is(
   ),
   0,
   'A trashed First Time disappears from the active workspace'
-);
-
-select is(
-  (
-    select count(*)::integer
-    from public.entry_versions
-    where entry_id = (select entry_id from pg_temp.first_time_test_state)
-  ),
-  4,
-  'Moving a First Time to Trash preserves another Entry version'
 );
 
 reset role;

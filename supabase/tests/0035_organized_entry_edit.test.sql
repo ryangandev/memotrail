@@ -13,7 +13,6 @@ select is(public.editable_entry('95000000-0000-4000-8000-000000000001')->>'title
 select is(public.editable_entry('95000000-0000-4000-8000-000000000002'),null::jsonb,'Specialized Goal cannot enter a lossy generic editor');
 select is(pg_temp.edit(),1::bigint,'A Standard Entry is editable');
 select is((select occurred_start from public.entries where id='95000000-0000-4000-8000-000000000001'),'2017-07-08T12:34:56.123456Z'::timestamptz,'Unchanged exact occurrence retains microseconds');
-select is((select snapshot->>'body' from public.entry_versions where entry_id='95000000-0000-4000-8000-000000000001' and version=1),'Keep original','Original text remains restorable');
 select is((select count(*) from public.entry_tags where entry_id='95000000-0000-4000-8000-000000000001'),1::bigint,'Edit links its tags');
 select is(pg_temp.edit(),0::bigint,'Competing stale edit rejected');
 select is(pg_temp.edit('95000000-0000-4000-8000-000000000002'),0::bigint,'Generic save cannot strip a specialized Entry type');

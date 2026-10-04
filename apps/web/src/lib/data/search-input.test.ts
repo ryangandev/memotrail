@@ -105,7 +105,7 @@ describe("parseQuickSearchResult", () => {
         error: null,
         items: [
           {
-            href: "/history?entry=123",
+            href: "/items/123",
             id: "123",
             label: "Entry",
             subtitle: "A saved note",

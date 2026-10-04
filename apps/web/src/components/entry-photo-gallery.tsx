@@ -11,7 +11,7 @@ import {
   inboxPhotoLimit,
 } from "@/lib/data/inbox-photo";
 import { registerEntryAttachment } from "@/app/inbox/actions";
-import { trashEntryPhoto } from "@/app/history/media-actions";
+import { trashEntryPhoto } from "@/app/items/media-actions";
 import { ProgressiveImage } from "@/components/progressive-image";
 import { PhotoUploadProgress } from "@/components/photo-upload-progress";
 import { SelectedPhotoPreview } from "@/components/selected-photo-preview";
@@ -84,7 +84,7 @@ export function EntryPhotoGallery({
       pending.length > 0
     )
       return;
-    // Refresh current membership after writing/history changes, but retain an
+    // Refresh current membership after an edit elsewhere on the page, but retain an
     // unconfirmed selection and its upload identity across Server Action refreshes.
     // Coalesce server refreshes after commit; cancel if a user operation begins.
     const refresh = window.setTimeout(() => {

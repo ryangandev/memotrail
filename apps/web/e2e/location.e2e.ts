@@ -118,7 +118,7 @@ test("repeating an address creates independent Entry and Home Locations", async 
       });
     });
 
-    await page.goto(`/history?entry=${firstEntryId}`);
+    await page.goto(`/items/${firstEntryId}`);
     await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByPlaceholder("Search for an address")).toHaveCSS(
@@ -183,7 +183,7 @@ test("repeating an address creates independent Entry and Home Locations", async 
       providerUnavailable: false,
     });
 
-    await page.goto(`/history?entry=${secondEntryId}`);
+    await page.goto(`/items/${secondEntryId}`);
     await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     const secondDialog = page.getByRole("dialog");
     await expect(

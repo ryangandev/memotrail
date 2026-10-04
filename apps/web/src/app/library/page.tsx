@@ -2,7 +2,6 @@ import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/badge";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Icon } from "@/components/icon";
 import { LibrarySearch } from "@/components/library-search";
 import { PageFrame } from "@/components/page-frame";
 import { getSearchWorkspace } from "@/lib/data/search";
@@ -80,14 +79,6 @@ export default async function LibraryPage({
         }
         workspace={searchWorkspace}
       />
-
-      <footer className={styles.libraryFooter}>
-        <Link href="/history">
-          <Icon name="clock" size={16} />
-          <span>Version history</span>
-          <Icon name="chevron" size={14} />
-        </Link>
-      </footer>
     </PageFrame>
   );
 }

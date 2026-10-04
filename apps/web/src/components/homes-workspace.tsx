@@ -169,10 +169,7 @@ export function HomesWorkspace({
           key={selectedHome?.id ?? "new-home"}
           onSaved={confirm}
           onTrashed={forget}
-          onClose={() => {
-            setSelectedHome(undefined);
-            router.refresh();
-          }}
+          onClose={() => setSelectedHome(undefined)}
           ownerId={ownerId}
           tagOptions={tagOptions}
         />
@@ -517,6 +514,7 @@ export function HomeEditor({
         return;
       }
 
+      router.refresh();
       notify.success(
         saved.status === "created" ? "Home created." : "Home saved.",
       );
@@ -570,7 +568,9 @@ export function HomeEditor({
     const confirmed = await requestConfirmation({
       title: <>Move “{title.trim() || "this Home"}” to Trash?</>,
       description: (
-        <>Its history, Location, and private photos will be preserved.</>
+        <>
+          It, its Location, and its private photos can be restored from Trash.
+        </>
       ),
       confirmLabel: "Move to Trash",
       eyebrow: <>Recoverable action</>,

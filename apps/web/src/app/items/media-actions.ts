@@ -1,13 +1,13 @@
 "use server";
 
 import { getAuthenticatedContext } from "@/lib/data/inbox";
-import { validHistoryID } from "@/lib/data/history";
+import { validEntryID } from "@/lib/data/entry-detail";
 
 export async function trashEntryPhoto(
   entryId: string,
   attachmentId: string,
 ): Promise<boolean> {
-  if (!validHistoryID(entryId) || !validHistoryID(attachmentId)) return false;
+  if (!validEntryID(entryId) || !validEntryID(attachmentId)) return false;
   const context = await getAuthenticatedContext();
   if (!context) return false;
   const photo = await context.client

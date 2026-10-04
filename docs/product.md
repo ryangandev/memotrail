@@ -35,7 +35,7 @@ Timeline has an intentional point Moment and an interval Period, plus spans from
 An Entry's date alone does not put it on Timeline.
 Timeline tracks control presentation, not the record's identity.
 
-Every Entry may have writing, best-known time, media, tags, links, history, and retrieval behavior where those capabilities make sense.
+Every Entry may have writing, best-known time, media, tags, links, and retrieval behavior where those capabilities make sense.
 Focused forms add typed facts to the same record without duplicating its common content.
 Cross-form actions create and link another record rather than silently changing an existing record's identity.
 
@@ -97,7 +97,7 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 Original photos remain private and unchanged.
 Photo metadata may be offered as a date or Location suggestion but is never adopted automatically.
 
-## Organization, history, and relationships
+## Organization and relationships
 
 - An Entry may have several tags.
 - Tags are the one organization label: they group related Entries, such as travel, family, or a trip, for browsing, filtering, and discovery.
@@ -112,9 +112,8 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
   Its default browser presents Entries, Entities, and Want to Do items as paginated rows and opens focused records in their own views.
   A new capture appears there, and in its item count, as soon as it is saved.
   Library search supports record, date, and tag filters with match context.
-  Library avoids duplicating the sidebar's focused and organizing destinations; the global Version history index has a link below Library results.
-- Opening a general Wiki Item shows its current content and primary actions first.
-  Version history is an explicit secondary action, while focused records open their own read-only detail pages.
+  Library avoids duplicating the sidebar's focused and organizing destinations.
+- Opening a general Wiki Item shows its current content and primary actions, while focused records open their own read-only detail pages.
   A pencil-and-Edit action changes the fields on that detail page into an inline form; Add remains a modal creation flow.
 - Current Wiki Item detail supports moving the item to Trash, where it remains restorable.
 - Tags are created and managed from the Tags destination and remain available in every compatible Wiki Item editor.
@@ -123,12 +122,12 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - A used tag must be merged into another tag or removed from its Entries before deletion, so organization is never silently lost.
 - Web does not offer general links between Entries, because tags already connect related records.
   Entries stay connected only through purpose-specific links: the source link of an item added to Want to Do and the First Time that marking an item done creates.
-  General links saved earlier, including those older Goals carried, are deleted from the data and version history.
-- Important content, organization, relationship, specialized-field, and photo-membership changes remain recoverable through version history.
+  General links saved earlier, including those older Goals carried, are deleted.
+- MemoTrail keeps only the current version of each Entry.
+  It has no version history: an edit replaces the earlier writing, and Trash is the only way to undo, for a whole Entry or one photo.
+  Earlier versions saved before this change were deleted, and older version history links open the Item page or Library.
 - Adding or removing photos never makes an open First Time, Home, Vehicle, or Want to Do editor stale: its Save, Move to Trash, and Mark done still apply.
   Writing or other content changed elsewhere since the editor opened still reports a conflict instead of being overwritten.
-- Restoring history creates a new revision and does not erase later history.
-- Historical versions with an unsupported format remain viewable, with an explanation that they cannot be restored.
 
 ## Retrieval and AI
 
@@ -219,7 +218,7 @@ On Web, First Time, Home, and Vehicle cards prefer a photo, then a map when thei
 Locations store address context, optional provider provenance, and private coordinates for one Wiki Item at a time.
 The same physical address may appear in several Items, but each Item keeps an independent snapshot so later edits never change another Item.
 Locations have no user-authored name or notes, no Saved Location catalog, and no Library destination.
-Replaced Location snapshots remain private history for their owning Item, while permanently deleting the Item also deletes all of its Location snapshots.
+A replaced or removed Location snapshot is deleted, and permanently deleting the Item also deletes all of its Location snapshots.
 Editors show a formatted address and map preview when coordinates exist; a photo's GPS position may be saved without an inferred address.
 Homes may be saved without a Location; manually editing an address clears any provider-backed coordinate preview until another address is selected.
 Both maps cluster current Entry coordinates, filter by Kind and occurred year, and open the records associated with a selected point.

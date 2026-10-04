@@ -9,7 +9,7 @@ Last reviewed: 2026-09-28.
 | Web client        | Next.js routes, server actions, responsive UI, browser drafts and queues    | `apps/web/src/app`, `apps/web/src/components`, `apps/web/src/lib`                                  |
 | Web server        | Authenticated AI, media, metadata, and export APIs                          | `apps/web/src/app/api`, `apps/web/src/lib/ai`, `apps/web/src/lib/media`, `apps/web/src/lib/export` |
 | Native client     | SwiftUI screens, controllers, device drafts and queues, native integrations | `apps/ios/MemoTrail/Features`, `apps/ios/MemoTrail/Models`, `apps/ios/MemoTrail/App`               |
-| Shared data       | Postgres schema, RLS, Storage policies, atomic RPCs, history, and search    | `supabase/migrations`                                                                              |
+| Shared data       | Postgres schema, RLS, Storage policies, atomic RPCs, and search             | `supabase/migrations`                                                                              |
 | Data verification | Ownership, denial, concurrency, lifecycle, and contract tests               | `supabase/tests`                                                                                   |
 | Design tokens     | Semantic source tokens and generated Web and Swift outputs                  | `packages/design-tokens`                                                                           |
 | Web design system | Reusable Web components and the development-only audit gallery              | `apps/web/src/components`, `apps/web/src/app/design-system`                                        |
@@ -28,15 +28,15 @@ Next.js link prefetching and `app/loading.tsx` provide route fallbacks, while na
 Use this table to find the first likely files, then search by the product term or RPC name.
 Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/MemoTrail`.
 
-| Request                                                  | Web                                                                                                                             | iOS                                                                                   | Shared data and tests                                                            |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Authentication or environment                            | `app/auth`, `lib/auth`, `lib/supabase`, `src/proxy.ts`                                                                          | `Features/Authentication`, `App/AppConfiguration.swift`                               | foundation and security migrations, `0001_rls.test.sql`                          |
-| Capture, drafts, dates, rich text, or offline sync       | `app/inbox`, capture, rich-text and occurrence components, `lib/data/inbox*`, `lib/data/rich-text.ts`, `lib/data/occurrence.ts` | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests               |
-| Library browsing, search, AI suggestions, or exploration | `app/library`, `components/library-search`, `/search` redirect, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`  | `Features/Library`, `Features/AI`                                                     | AI, evidence, exploration, and search migrations and tests                       |
-| Photos, metadata, or export                              | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                           | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, photo-history, cleanup, and export migrations and tests                   |
-| Timeline, Homes, Vehicles, Goals, or First Times         | matching `app` route, workspace component, and `lib/data` module                                                                | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                            |
-| Tags, links, history, or Trash                           | matching `app` route and component, shared Entry tag editor, `lib/data` organization, history, and Trash modules                | matching directory under `Features`                                                   | organization, relationship, history, Trash, and Empty Trash migrations and tests |
-| Visual system                                            | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                    | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-tokens/tokens.json` and generator                               |
+| Request                                                  | Web                                                                                                                             | iOS                                                                                   | Shared data and tests                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Authentication or environment                            | `app/auth`, `lib/auth`, `lib/supabase`, `src/proxy.ts`                                                                          | `Features/Authentication`, `App/AppConfiguration.swift`                               | foundation and security migrations, `0001_rls.test.sql`                 |
+| Capture, drafts, dates, rich text, or offline sync       | `app/inbox`, capture, rich-text and occurrence components, `lib/data/inbox*`, `lib/data/rich-text.ts`, `lib/data/occurrence.ts` | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests      |
+| Library browsing, search, AI suggestions, or exploration | `app/library`, `components/library-search`, `/search` redirect, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`  | `Features/Library`, `Features/AI`                                                     | AI, evidence, exploration, and search migrations and tests              |
+| Photos, metadata, or export                              | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                           | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, cleanup, and export migrations and tests                         |
+| Timeline, Homes, Vehicles, Goals, or First Times         | matching `app` route, workspace component, and `lib/data` module                                                                | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                   |
+| Tags, links, the Item page, or Trash                     | matching `app` route and component, shared Entry tag editor, `lib/data` organization, Entry detail, and Trash modules           | matching directory under `Features`                                                   | organization, relationship, Trash, and Empty Trash migrations and tests |
+| Visual system                                            | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                    | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-tokens/tokens.json` and generator                      |
 
 Native destinations and shared detail routing live in `App/WorkspaceRoute.swift`; the primary tabs live in `App/RootTabView.swift`.
 The More tab lays out `WorkspaceRoute.groups` like Web's mobile More menu, with the same groups, order, and icons.
@@ -65,7 +65,7 @@ Pair it with the test file carrying the same feature name.
 - `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item before filtering and pagination.
   `p_needs_organizing` limits it to ordinary Entries with a blank title and no tag, which Web `/library?show=needs-organizing` and the Dashboard Needs organizing panel read.
 - Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace.
-  Web routes typed records to focused detail pages with inline editing and general items to `/items/[entry]`, where current content and primary actions precede an explicit history link.
+  Web routes typed records to focused detail pages with inline editing and general items to `/items/[entry]`, which reads `entry_detail` for the current content, tags, Locations, Timeline placement, and provenance links.
   Native Library routes Homes, Vehicles, First Times, Goals, and People to their focused pages like Web, other typed records to their focused editors, and other canonical items to the Item page, like Web `/items/[entry]`.
   It sends Moments and Periods to the Timeline, and still sends Entries it considers unreviewed to Inbox review until native follows Web.
   `App/WikiItemLink.swift` holds that routing for every native link to an Item, and `AppNavigator.openLibrary(collection:)` and `openLibrary(tag:)` open Library filtered to one Collection or tag, like Web `/library?tag=`.
@@ -77,7 +77,8 @@ Pair it with the test file carrying the same feature name.
   Home's provider-backed save uses `save_home_entry_with_geoapify` to create and link a snapshot in the same transaction; manual Home saves use `resolve_home_location_copy_on_write` for an unchanged current value or a new snapshot.
   Specialized First Time and Vehicle editors use `save_first_time_with_location` and `save_vehicle_with_location` when changing a primary Location, preserving their existing save paths when Location is untouched.
   `locations.bound_entry_id`, owner-scoped foreign keys, and deferred link constraints reject attempts to attach one snapshot to another Entry or commit an active unbound snapshot. Provider identity is provenance, not a deduplication key.
-  Replaced or removed snapshots stay bound to their Entry so history restoration remains possible. Permanently deleting that Entry cascades its Location snapshots; moving an Entry to Trash does not.
+  The deferred `discard_unlinked_location` triggers on `entry_places` and `homes` delete a snapshot at commit once nothing links to it, so a save that relinks the same snapshot keeps it.
+  Permanently deleting an Entry cascades its Location snapshots; moving an Entry to Trash does not.
   Legacy `name` and `notes` columns remain for existing RPC and iOS wire shapes, but compatibility writers ignore those inputs, derive the label from address facts, and clear notes; Web exposes neither custom field nor saved-Location search.
   Homes may omit a Location entirely; `homes_workspace` keeps them visible with a left join, and manual address edits discard stale provider coordinates.
   `coordinate_source` distinguishes manual, Geoapify, and explicitly adopted photo GPS coordinates; `source_attachment_id` points to the adopted original photo while it exists.
@@ -86,7 +87,7 @@ Pair it with the test file carrying the same feature name.
 - First Time, Home, Vehicle, Goal, Moment, and Period creation starts in Timeline or a focused view.
 - Migration `202610040004` drops `organize_capture`, `extract_capture_item`, `capture_extraction_source`, and `extract_capture_to_goal`, `_home`, and `_vehicle`, so Captures no longer hand off to focused records.
   Migration `202610040005` removed the Capture source parameter from `save_home_entry_with_geoapify` and `save_vehicle_with_location`.
-  Existing `derived` and `derived_from` provenance links stay in the data and history.
+  Existing `derived` and `derived_from` provenance links stay in the data.
 - A focused-record save that leaves some photos unattached keeps its editor open; later saves, including photo retries, are ordinary updates.
   After a Home save, its provider choice is held as the saved Location, so a retry keeps that snapshot instead of choosing the provider result again.
 - Web shows Goals as Want to Do. `goals.status` is `active`, `achieved`, or `let_go`, there is no horizon, and `save_goal_entry` and `extract_goal_from_item` take no related links and never change them.
@@ -101,9 +102,9 @@ Pair it with the test file carrying the same feature name.
   Its ordinary Entry editor, `Features/Inbox/EntryReviewSheet.swift`, serves Inbox review and Edit Entry on the Item page and in version history through `InboxController.submitReview`; focused records keep their own editors and RPCs.
   Moving an Inbox capture to Trash sets `deleted_at` only at the reviewed revision, like Web `trashWikiItem`.
   The retired Place surface and saved-Location catalog are removed, and Home Location is optional.
-- Web and iOS create a separately editable Goal with `extract_goal_from_item` when an established Wiki Item inspires a Goal. The caller-generated Goal ID makes lost-response retries idempotent, and History exposes both provenance directions.
+- Web and iOS create a separately editable Goal with `extract_goal_from_item` when an established Wiki Item inspires a Goal. The caller-generated Goal ID makes lost-response retries idempotent, and the Item page exposes both provenance directions.
 - `convert_entry_to_goal` remains only as an administrative recovery function. Authenticated and anonymous clients have no execute grant because established items must never change Kind through a conversion.
-- Specialized tables add typed facts without duplicating common writing, organization, dates, media, or history.
+- Specialized tables add typed facts without duplicating common writing, organization, dates, or media.
 - `entries.body` remains canonical plaintext. Optional validated rich content is versioned under `entries.metadata.body_rich` and carries the exact matching plaintext.
   The `discard_stale_entry_rich_text` trigger removes `body_rich` whenever a write leaves its text different from `body`, so plaintext focused editors, direct client writes, and restores cannot keep outdated formatted text for search or export.
 - Web capture and Entry review use `components/rich-text-editor.tsx` for the reusable headless editor surface, with page, dialog, and form variants instead of separate editors.
@@ -125,19 +126,15 @@ Pair it with the test file carrying the same feature name.
   `replace_entry_tags` and `valid_tag_names` hold the shared tag write and the 70-name, 80-character limits, which Web `lib/data/organization.ts` mirrors.
 - Used tags merge atomically into another stable tag identity. Only unused tags can be deleted directly.
 - Tag management loads at most five linked Entry previews on demand through a server action, so the Tags page stays lightweight and never creates a per-tag data waterfall during its initial render.
-- Multi-record changes use authenticated RPCs so content, relationships, history, and specialized facts commit atomically.
+- Multi-record changes use authenticated RPCs so content, relationships, and specialized facts commit atomically.
 - Clients send the revision they read. A stale revision surfaces a conflict instead of silently merging or overwriting another device.
-  Registering, trashing, or restoring a photo creates an Entry revision recorded in `entry_photo_changes`, and `entry_writing_revision` adopts only an unbroken run of those after the revision a client read.
-  Focused-record saves call it before their save RPC, while the focused Trash RPCs and `achieve_goal_with_occurrence` lock the Entry and apply it themselves, so an editor's own photo action never reads as another device's change on Web or native.
-  History restoration and every writing, organization, or lifecycle change still conflict.
-- Important mutations snapshot prior state.
-  Restoring history creates another revision rather than deleting subsequent history.
-  The restore RPC accepts history schema 3 only; Web `lib/data/history.ts` and native `HistoryPresentation` in `Models/EntryHistory.swift` each name that version once, disable restoring unsupported snapshots, and explain the incompatibility while preserving their comparison view.
-  `normalize_entry_history_snapshot` defines comparable history content for newly archived state and both stored and live snapshots returned by the history read RPC.
-  Relationship and specialized-detail rows exclude bookkeeping timestamps; attachment rows also exclude their soft-delete bookkeeping.
-  Stable identities, domain facts, array order, and authored metadata remain intact for comparison and restoration, and reading old versions never rewrites them.
-  Web and native comparisons treat `body_rich` as part of Writing, matching the metadata details that hide it.
-  Save RPCs retain unchanged Location, Timeline, and Entry-link memberships and skip unchanged Home, Vehicle, and Goal detail updates.
+  The `advance_entry_revision` trigger advances `entries.revision` and `updated_at` on every Entry update, whatever revision a write sends.
+  Registering, trashing, or restoring a photo locks the Entry but leaves its revision, so an editor's own photo action never reads as another device's change; every writing, organization, or lifecycle change still conflicts.
+  Focused editors refresh the page after a save, and `FocusedRecordDetail` shows its saved copy only until the server copy reaches that revision, so photos uploaded after the save appear.
+- MemoTrail keeps no earlier versions.
+  Migration `202610040007` dropped `entry_versions`, `entry_photo_changes`, the history and restore RPCs, and the archiving trigger, deleted every stored version, and purged prepared export snapshots that held them.
+  Web `/history` redirects to `/items/[entry]` or `/library` in `next.config.ts`.
+- Save RPCs retain unchanged Location, Timeline, and Entry-link memberships and skip unchanged Home, Vehicle, and Goal detail updates.
 - Older clients must preserve fields they cannot represent or reject the write safely.
 - AI organization payloads offer optional title, tags, and occurrence suggestions without structural classification.
   The database rejects legacy `entryType`, `classification`, and `collections` payload keys.

@@ -451,7 +451,7 @@ async function attachmentCount(client: SupabaseClient, entryId: string) {
   return data?.length ?? 0;
 }
 
-/** Moves the Entry to Trash the way History does. */
+/** Moves the Entry to Trash the way the Item page does. */
 async function moveToTrash(client: SupabaseClient, body: string) {
   await expect.poll(async () => entries(client, body)).toHaveLength(1);
   const [entry] = await entries(client, body);

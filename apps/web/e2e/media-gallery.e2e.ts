@@ -6,7 +6,7 @@ import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
-test("Current Entry photos are browsable without changing history", async ({
+test("Current Entry photos are browsable without changing the Entry", async ({
   page,
   context,
 }) => {
@@ -116,7 +116,7 @@ test("Current Entry photos are browsable without changing history", async ({
     );
     expect(native.status()).toBe(200);
     expect((await native.json()).photos).toHaveLength(2);
-    await page.goto(`/history?entry=${entry}`);
+    await page.goto(`/items/${entry}`);
     const gallery = page.getByRole("region", {
       name: "Current photos",
       exact: true,

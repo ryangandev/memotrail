@@ -80,7 +80,7 @@ test("Dot-separated rows across the workspace keep their separators between fact
       await client.from("entries").insert({
         id: entryId,
         owner_id: owner,
-        title: "Lantern festival",
+        title: "Lantern festival by the river",
         body: "Paper lanterns drifting down the river.",
         item_kind: "entry",
         item_subtype: "moment",
@@ -88,15 +88,6 @@ test("Dot-separated rows across the workspace keep their separators between fact
         occurred_timezone: "America/New_York",
         date_precision: "day",
       })
-    ).error,
-  ).toBeNull();
-  // Editing once leaves an earlier version for History.
-  expect(
-    (
-      await client
-        .from("entries")
-        .update({ title: "Lantern festival by the river" })
-        .eq("id", entryId)
     ).error,
   ).toBeNull();
   const track = (
@@ -179,7 +170,6 @@ test("Dot-separated rows across the workspace keep their separators between fact
       wrapping: "1200 Riverside Drive, Upper West Side, New York, NY 10027",
     },
     { path: "/library?q=lantern", rows: 1 },
-    { path: "/history", rows: 1 },
     { path: "/homes", rows: 1 },
     { path: "/vehicles", rows: 1 },
     { path: "/goals", rows: 1 },

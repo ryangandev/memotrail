@@ -129,8 +129,8 @@ export function EmptyTrashControl({
           description={
             <>
               This includes all Trash pages, not just the visible items. Their
-              records, associated history and private photos will be permanently
-              removed. This cannot be undone.
+              records and private photos will be permanently removed. This
+              cannot be undone.
             </>
           }
           eyebrow={<>Permanent action</>}

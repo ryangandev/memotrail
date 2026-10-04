@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(24);
+select plan(23);
 insert into public.entries(id,owner_id,title,item_kind,item_subtype) values('96000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Pottery milestone','goal','goal');
 insert into public.goals(entry_id,owner_id) values('96000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001');
 insert into public.tags(id,owner_id,name) values('96000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000001','Organization test tag');
@@ -17,7 +17,6 @@ select ok(public.save_tag(' 新标签 ') is not null,'Create bilingual tag');
 select is(public.save_tag('Pottery','96000000-0000-4000-8000-000000000003',1),'96000000-0000-4000-8000-000000000003'::uuid,'Rename tag preserves ID');
 select is((select entry_count from public.tags_workspace('pottery')),1::bigint,'Tag links preserved');
 select is((select revision from public.entries where id='96000000-0000-4000-8000-000000000001'),2,'Tag rename invalidates stale Entry reviews');
-select is((select snapshot->'tags'->0->>'name' from public.entry_versions where entry_id='96000000-0000-4000-8000-000000000001' and version=1),'Organization test tag','History captures pre-rename metadata');
 select is(public.save_tag('Stale','96000000-0000-4000-8000-000000000003',1),null::uuid,'Stale tag save rejected');
 select throws_ok($$select public.save_tag('POTTERY')$$,'23505',null,'Case-insensitive duplicate rejected');
 select throws_ok($$select public.save_tag(' ')$$,'22023','invalid_tag_details','Empty name refused');

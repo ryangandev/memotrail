@@ -28,11 +28,6 @@ select throws_ok(
 );
 
 reset role;
-select is(
-  (select count(*) from public.entry_versions where snapshot ? 'inbox_status'),
-  0::bigint,
-  'No history version carries an Inbox state'
-);
 
 select hasnt_function('public','capture_extraction_source','Capture handoff lookup is retired');
 select hasnt_function('public','extract_capture_to_goal','Want to Do no longer starts from a Capture');

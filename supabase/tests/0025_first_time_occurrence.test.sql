@@ -14,8 +14,6 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000097'
 select lives_ok($$select pg_temp.save_first('range','2017-07-08 12:00Z','2017-07-15 12:00Z')$$,'Range creation accepts both bounds');
 select is((select occurred_end from public.first_times_workspace_with_occurrence()),'2017-07-15 12:00Z'::timestamptz,'Workspace returns the complete range');
 select lives_ok($$select pg_temp.save_first('range',occurred_start,occurred_end,null,entry_id,revision) from public.first_times_workspace_with_occurrence()$$,'Existing range can be saved without rewriting its precision');
-select is((select count(*) from public.entry_versions where owner_id=auth.uid()),1::bigint,'Save retains exactly one previous version');
-select is((select snapshot->>'occurred_end' from public.entry_versions where owner_id=auth.uid()),'2017-07-15T12:00:00+00:00','History retains original range end');
 select is((select count(*) from public.first_times_workspace_with_occurrence()),1::bigint,'Canonical First Time reads remain available');
 select hasnt_function('public','save_first_time_entry',array['text','text','timestamp with time zone','text','text','text','text[]','text[]','uuid','integer'],'Legacy mutation is removed');
 select is((select revision from public.first_times_workspace_with_occurrence()),2,'Removing the legacy mutation leaves revision unchanged');

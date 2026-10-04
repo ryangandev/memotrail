@@ -8,12 +8,10 @@ import type { PhotoPlaceDraft } from "@/lib/media/photo-place";
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   reviewInboxEntry,
   type ReviewInboxEntryResult,
 } from "@/app/inbox/actions";
-import { Icon } from "@/components/icon";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { OccurrenceEditor } from "@/components/occurrence-editor";
 import { EntryPhotoDates } from "@/components/entry-photo-dates";
@@ -125,15 +123,6 @@ export function EntryEditorDialog({
       title={<>Edit Entry</>}
       titleId="entry-editor-heading"
       eyebrow={<>Life Wiki editor</>}
-      headerContent={
-        <Link
-          className={styles.historyLink}
-          href={`/history?entry=${entry.id}`}
-        >
-          <Icon name="clock" size={14} />
-          Version history
-        </Link>
-      }
       closeLabel="Close Entry editor"
       busy={isPending}
       size="wide"

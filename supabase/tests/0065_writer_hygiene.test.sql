@@ -14,7 +14,7 @@ grant all on writers to authenticated;
 create function pg_temp.save_primary(p_kind text, p_id uuid, p_location jsonb) returns uuid language plpgsql as $$
 declare
   result uuid;
-  input jsonb := jsonb_build_object('title','History ' || p_kind,'body','Memories',
+  input jsonb := jsonb_build_object('title','Writer ' || p_kind,'body','Memories',
     'datePrecision','unknown','tagNames','[]'::jsonb,
     'id',p_id,'revision',(select revision from public.entries where id = p_id));
 begin
@@ -24,7 +24,7 @@ begin
     select entry_id into result from public.save_vehicle_with_location(input, p_location);
   else
     select entry_id into result from public.review_wiki_item_with_location_rich(
-      p_id,(select revision from public.entries where id = p_id),'History entry','Memories',
+      p_id,(select revision from public.entries where id = p_id),'Writer entry','Memories',
       'entry','entry',null,'UTC','{}',null,null,'unknown',null,p_location,null);
   end if;
   return result;
@@ -36,7 +36,7 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001'
 insert into writers values
   ('first_time', pg_temp.save_primary('first_time',null,pg_temp.provider())),
   ('vehicle', pg_temp.save_primary('vehicle',null,pg_temp.provider()));
-insert into public.entries(owner_id,title) values(auth.uid(),'History Entry') returning id \gset entry_
+insert into public.entries(owner_id,title) values(auth.uid(),'Writer Entry') returning id \gset entry_
 insert into writers values('entry',pg_temp.save_primary('entry',:'entry_id',pg_temp.provider()));
 reset role;
 update public.entry_places set created_at = '2000-01-01' where entry_id in (select id from writers);

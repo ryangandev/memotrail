@@ -342,15 +342,6 @@ select is(
   2,
   'Restoring an Entry advances its revision'
 );
-select ok(
-  exists (
-    select 1
-    from public.entry_versions
-    where entry_id = '71000000-0000-0000-0000-000000000001'
-      and (snapshot ->> 'deleted_at') is not null
-  ),
-  'Restoring an Entry preserves the deleted version in history'
-);
 select is(
   (
     select count(*)::integer
@@ -436,15 +427,6 @@ select is(
   ),
   0,
   'Permanent Entry deletion cascades through attachment metadata'
-);
-select is(
-  (
-    select count(*)::integer
-    from public.entry_versions
-    where entry_id = '71000000-0000-0000-0000-000000000001'
-  ),
-  0,
-  'Permanent Entry deletion removes its version history under the deletion policy'
 );
 select is(
   (

@@ -24,7 +24,7 @@ test("An Idea creates a linked Goal without changing the source", async ({
     email,
     email_confirm: true,
   });
-  if (!created.data.user) throw new Error("Local history fixture unavailable.");
+  if (!created.data.user) throw new Error("Local fixture unavailable.");
   const ownerID = created.data.user.id,
     entryID = randomUUID(),
     photoID = randomUUID(),
@@ -134,16 +134,11 @@ test("An Idea creates a linked Goal without changing the source", async ({
           .eq("id", entryID)
       ).error,
     ).toBeNull();
-    const before = (
-      await client.rpc("entry_history", {
-        p_entry_id: entryID,
-        p_limit: 20,
-        p_offset: 0,
-      })
-    ).data.current;
+    const before = (await client.rpc("entry_detail", { p_entry_id: entryID }))
+      .data;
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
-    await page.goto("/history?entry=" + entryID);
+    await page.goto("/items/" + entryID);
     await page
       .getByRole("button", { name: "Add to Want to Do", exact: true })
       .click();
@@ -195,13 +190,8 @@ test("An Idea creates a linked Goal without changing the source", async ({
       .single();
     expect(derivedLinks.error).toBeNull();
     const goalID = derivedLinks.data!.target_entry_id;
-    const after = (
-      await client.rpc("entry_history", {
-        p_entry_id: entryID,
-        p_limit: 20,
-        p_offset: 0,
-      })
-    ).data.current;
+    const after = (await client.rpc("entry_detail", { p_entry_id: entryID }))
+      .data;
     for (const key of [
       "id",
       "body",
@@ -212,7 +202,6 @@ test("An Idea creates a linked Goal without changing the source", async ({
       "occurred_timezone",
       "tags",
       "places",
-      "attachments",
       "metadata",
       "revision",
       "item_kind",
@@ -227,19 +216,20 @@ test("An Idea creates a linked Goal without changing the source", async ({
         }),
       ]),
     );
-    const goal = (
-      await client.rpc("entry_history", {
-        p_entry_id: goalID,
-        p_limit: 20,
-        p_offset: 0,
-      })
-    ).data.current;
+    const goal = (await client.rpc("entry_detail", { p_entry_id: goalID }))
+      .data;
     expect(goal.id).toBe(goalID);
     expect(goal.item_kind).toBe("goal");
     expect(goal.body).toBe(before.body);
-    expect(goal.goal.status).toBe("active");
-    expect(goal.goal).not.toHaveProperty("horizon");
-    expect(goal.goal.target_date).toBe("2027-12-31");
+    expect(
+      (
+        await client
+          .from("goals")
+          .select("status,target_date")
+          .eq("entry_id", goalID)
+          .single()
+      ).data,
+    ).toEqual({ status: "active", target_date: "2027-12-31" });
     const retry = await client.rpc("extract_goal_from_item", {
       p_goal_id: goalID,
       p_status: "active",
@@ -268,11 +258,11 @@ test("An Idea creates a linked Goal without changing the source", async ({
     ).data!;
     expect(later.occurred_start).toBe(before.occurred_start);
     expect(later.occurred_end).toBe(before.occurred_end);
-    await page.goto("/history?entry=" + goalID);
+    await page.goto("/items/" + goalID);
     await expect(
       page.getByRole("link", { name: "Open source item", exact: true }),
     ).toBeVisible();
-    await page.goto("/history?entry=" + entryID);
+    await page.goto("/items/" + entryID);
     await expect(
       page.getByRole("button", { name: "Add to Want to Do", exact: true }),
     ).toBeVisible();

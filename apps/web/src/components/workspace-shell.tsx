@@ -26,7 +26,6 @@ import { SIDEBAR_COOKIE_NAME } from "@/lib/sidebar-preference";
 
 export type WorkspaceDestination =
   | "explore"
-  | "history"
   | "home"
   | "homes"
   | "library"
@@ -113,14 +112,8 @@ const mobileMoreGroups: { label: string; items: NavigationItem[] }[] = [
   { label: "Focused views", items: recordNavigation },
   { label: "Organize", items: organizationNavigation.slice(0, 1) },
   {
-    label: "Archive and account",
+    label: "Trash and settings",
     items: [
-      {
-        destination: "history",
-        href: "/history",
-        icon: "clock",
-        label: "Version history",
-      },
       organizationNavigation[1],
       {
         destination: "settings",
@@ -411,7 +404,6 @@ export function WorkspaceShell({
 
 function destinationForPathname(pathname: string): WorkspaceDestination {
   if (pathname === "/") return "home";
-  if (pathname.startsWith("/history")) return "history";
   if (pathname.startsWith("/explore")) return "explore";
   if (pathname.startsWith("/settings")) return "settings";
   if (pathname.startsWith("/timeline")) return "timeline";

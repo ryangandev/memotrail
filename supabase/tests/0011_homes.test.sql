@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(57);
+select plan(51);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -448,50 +448,6 @@ select is(
 
 select is(
   (
-    select snapshot ->> 'title'
-    from public.entry_versions
-    where entry_id = (select id from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home')
-      and version = 1
-  ),
-  'California apartment',
-  'Home history preserves the previous Entry content'
-);
-
-select is(
-  (
-    select snapshot #>> '{home,move_in_reason}'
-    from public.entry_versions
-    where entry_id = (select id from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home')
-      and version = 1
-  ),
-  'Moved for a new chapter.',
-  'Home history preserves the previous specialized Home fields'
-);
-
-select is(
-  (
-    select snapshot #>> '{place,address}'
-    from public.entry_versions
-    where entry_id = (select id from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home')
-      and version = 1
-  ),
-  '123 Palm Street',
-  'Home history preserves the previous Place fields'
-);
-
-select is(
-  (
-    select snapshot #>> '{timeline,track_system_key}'
-    from public.entry_versions
-    where entry_id = (select id from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home')
-      and version = 1
-  ),
-  'homes',
-  'Home history preserves its previous Timeline relationship'
-);
-
-select is(
-  (
     select concat_ws('|', address, city, move_out_reason)
     from public.homes_workspace()
     where title = 'California home'
@@ -640,17 +596,6 @@ select is(
 
 select is(
   (
-    select snapshot #>> '{place,city}'
-    from public.entry_versions
-    where entry_id = (select id from public.entries where title = 'California home' and item_kind = 'entity' and item_subtype = 'home')
-      and version = 2
-  ),
-  'San Francisco',
-  'Moving a Home to Trash preserves its current specialized state in history'
-);
-
-select is(
-  (
     select count(*)::integer
     from public.restore_trash_item(
       'entry',
@@ -748,16 +693,6 @@ select is(
   ),
   false,
   'The Home mutation contract remains security invoker'
-);
-
-select is(
-  (
-    select prosecdef
-    from pg_proc
-    where oid = 'public.archive_entry_version()'::regprocedure
-  ),
-  true,
-  'Entry history remains a hardened security-definer trigger boundary'
 );
 
 select is(

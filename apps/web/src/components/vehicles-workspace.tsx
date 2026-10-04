@@ -160,10 +160,7 @@ export function VehiclesWorkspace({
           key={selectedVehicle?.id ?? "new-vehicle"}
           onSaved={confirm}
           onTrashed={forget}
-          onClose={() => {
-            setSelectedVehicle(undefined);
-            router.refresh();
-          }}
+          onClose={() => setSelectedVehicle(undefined)}
           ownerId={ownerId}
           tagOptions={tagOptions}
           vehicle={selectedVehicle}
@@ -475,6 +472,7 @@ export function VehicleEditor({
         return;
       }
 
+      router.refresh();
       notify.success(
         saved.status === "created" ? "Vehicle created." : "Vehicle saved.",
       );
@@ -528,7 +526,7 @@ export function VehicleEditor({
     if (!currentId || currentRevision === null) return;
     const confirmed = await requestConfirmation({
       title: <>Move “{title.trim() || "this Vehicle"}” to Trash?</>,
-      description: <>Its history and private photos will be preserved.</>,
+      description: <>It and its private photos can be restored from Trash.</>,
       confirmLabel: "Move to Trash",
       eyebrow: <>Recoverable action</>,
       variant: "danger",

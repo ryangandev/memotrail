@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { writingRevision } from "@/lib/media/writing-revision";
 import {
   isFirstTimeUuid,
   parseFirstTimeAttachmentInput,
@@ -81,20 +80,15 @@ export async function saveHomeEntry(
     p_tag_names: parsed.data.tagNames,
     p_title: parsed.data.title,
   };
-  const expectedRevision = await writingRevision(
-    context.client,
-    parsed.data.id,
-    parsed.data.revision,
-  );
   const { data, error } = providerLocation
     ? await context.client.rpc("save_home_entry_with_geoapify", {
-        p_input: { ...parsed.data, revision: expectedRevision },
+        p_input: parsed.data,
         p_provider_location: providerLocation,
       })
     : await context.client.rpc("save_home_entry_with_occurrence", {
         ...parameters,
         p_entry_id: parsed.data.id,
-        p_expected_revision: expectedRevision,
+        p_expected_revision: parsed.data.revision,
       });
 
   if (error?.code === "40001") {

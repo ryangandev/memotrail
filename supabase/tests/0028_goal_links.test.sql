@@ -26,8 +26,6 @@ select is(jsonb_array_length(related_entries),1,'Workspace lists the achievement
 select is(related_entries->0->>'relationship','achievement','The listed link is the achievement') from public.goals_workspace();
 select is(pg_temp.save_goal(id,1),id,'Saving a Goal succeeds') from fixture;
 select is(count(*),1::bigint,'Saving keeps the achievement link') from public.entry_links where source_entry_id=(select id from fixture) and relationship='achievement';
-select ok(exists(select 1 from public.entry_versions v,jsonb_array_elements(v.snapshot->'links') link
- where v.entry_id=(select id from fixture) and link->>'relationship'='achievement'),'History keeps the achievement link');
 update public.entries set deleted_at=now() where id='20000000-0000-0000-0000-000000000091';
 select is(jsonb_array_length(related_entries),0,'Workspace hides trashed targets') from public.goals_workspace();
 select is(pg_temp.save_goal(id,1),null::uuid,'Stale save is refused') from fixture;

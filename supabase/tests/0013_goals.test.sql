@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(64);
+select plan(61);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -242,27 +242,6 @@ select is(
 );
 
 select is(
-  (
-    select snapshot -> 'goal' ->> 'status'
-    from public.entry_versions
-    join public.entries on entries.id = entry_versions.entry_id
-    where entries.title = 'Learn Japanese well' and entry_versions.version = 1
-  ),
-  'active',
-  'Goal history preserves the prior status'
-);
-
-select ok(
-  (
-    select not (snapshot -> 'goal' ? 'horizon')
-    from public.entry_versions
-    join public.entries on entries.id = entry_versions.entry_id
-    where entries.title = 'Learn Japanese well' and entry_versions.version = 1
-  ),
-  'Goal history no longer records a horizon'
-);
-
-select is(
   (select status from public.goals_workspace() where title = 'Learn Japanese well'),
   'let_go',
   'An edited Goal keeps its new state'
@@ -362,17 +341,6 @@ select is(
   ),
   'achievement',
   'The achieved Goal links to its First Time'
-);
-
-select is(
-  (
-    select snapshot -> 'goal' ->> 'status'
-    from public.entry_versions
-    join public.entries on entries.id = entry_versions.entry_id
-    where entries.title = 'Visit Iceland' and entry_versions.version = 1
-  ),
-  'active',
-  'The achievement action preserves the previous Goal status in history'
 );
 
 select is(

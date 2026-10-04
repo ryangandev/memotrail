@@ -31,8 +31,6 @@ select is((select coordinate_source from public.locations where owner_id='100000
 select is((select source_attachment_id from public.locations where owner_id='10000000-0000-0000-0000-000000000093' and latitude=39.95 and longitude=-75.166667),'93000000-0000-4000-8000-000000000002'::uuid,'Explicit adoption retains the source photo identity');
 select is((select count(*) from public.entry_places where entry_id='93000000-0000-4000-8000-000000000001'),1::bigint,'Entry link is saved in the same transaction');
 select is((select body from public.entries where id='93000000-0000-4000-8000-000000000001'),'My edited words','Writing save succeeds with Location adoption');
-select is((select snapshot->>'body' from public.entry_versions where entry_id='93000000-0000-4000-8000-000000000001' and version=1),'Original writing','Prior original writing remains in history');
-select is((select jsonb_array_length(snapshot->'places') from public.entry_versions where entry_id='93000000-0000-4000-8000-000000000001' and version=1),0,'Prior history does not invent the later Place link');
 select is(pg_temp.review(pg_temp.proposal(),1),0::bigint,'Same-revision retry cannot create another Place');
 select is((select count(*) from public.locations where owner_id='10000000-0000-0000-0000-000000000093' and latitude=39.95 and longitude=-75.166667),1::bigint,'Rejected retry leaves one photo GPS Location');
 select is(pg_temp.review('{"kind":"existing","attachmentId":"93000000-0000-4000-8000-000000000002","placeId":"93000000-0000-4000-8000-000000000003","revision":1}'),1::bigint,'Existing owned Location can be linked explicitly');
@@ -50,10 +48,6 @@ select is((select revision from public.entries where id='93000000-0000-4000-8000
 select is((select count(*) from public.locations where owner_id='10000000-0000-0000-0000-000000000093' and latitude=39.95 and longitude=-75.166667),1::bigint,'Failed source adoption creates no orphan Location');
 select is(pg_temp.review(null),1::bigint,'No proposal preserves ordinary review behavior');
 select is((select count(*) from public.entry_places where entry_id='93000000-0000-4000-8000-000000000001'),2::bigint,'No proposal never clears existing Locations');
-select is(public.restore_entry_version('93000000-0000-4000-8000-000000000001',1,4),5,'Earlier Entry version restores before Location adoption');
-select is((select count(*) from public.entry_places where entry_id='93000000-0000-4000-8000-000000000001'),0::bigint,'Restoring earlier history removes only the later Entry links');
-select is((select count(*) from public.locations where owner_id='10000000-0000-0000-0000-000000000093' and latitude=39.95 and longitude=-75.166667),1::bigint,'History restoration retains the Entry-owned snapshot for later restoration');
-select is(public.restore_entry_version('93000000-0000-4000-8000-000000000001',4,5),6,'Later Location relationships can be restored again');
 select is((select count(*) from public.entry_places where entry_id='93000000-0000-4000-8000-000000000001'),2::bigint,'Restoration recovers both prior Place links');
 select ok(public.lock_photo_place_source('93000000-0000-4000-8000-000000000001','93000000-0000-4000-8000-000000000002'),'Narrow source helper can lock an owned original');
 select lives_ok($$select public.trash_entry_attachment('93000000-0000-4000-8000-000000000002')$$,'Photo can enter Trash');

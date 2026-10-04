@@ -14,7 +14,6 @@ select is(pg_temp.review('unknown'),1::bigint,'Unknown occurrence can be reviewe
 select is((select occurred_start from public.entries where id='97000000-0000-4000-8000-000000000001'),null::timestamptz,'Unknown start stays null');
 select is((select revision from public.entries where id='97000000-0000-4000-8000-000000000001'),2,'One atomic revision per review');
 select is((select count(*) from public.entry_tags where entry_id='97000000-0000-4000-8000-000000000001'),1::bigint,'Review links its tags');
-select is((select snapshot->>'date_precision' from public.entry_versions where entry_id='97000000-0000-4000-8000-000000000001' and version=1),'unknown','History preserves original precision');
 select is(pg_temp.review('age',null,null,'17岁'),1::bigint,'Age-only accepted');
 select is((select occurred_label from public.entries where id='97000000-0000-4000-8000-000000000001'),'17岁','Bilingual age label retained');
 select is(pg_temp.review('approximate',null,null,'Summer before college'),1::bigint,'Approximate description needs no invented date');

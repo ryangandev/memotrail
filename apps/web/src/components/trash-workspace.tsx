@@ -347,5 +347,5 @@ function deletionDescription(item: TrashItem) {
     return "The private photo file and its attachment record will be removed.";
   }
 
-  return "The Entry, private photos, relationships, specialized details, and version history will be removed.";
+  return "The Entry, private photos, relationships, and specialized details will be removed.";
 }

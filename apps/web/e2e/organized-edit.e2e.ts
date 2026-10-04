@@ -107,13 +107,13 @@ test("Organized Entries stay editable in place", async ({ page, context }) => {
         })
       ).error,
     ).toBeNull();
-    await page.goto(`/history?entry=${id}`);
-    const currentVersion = page.getByRole("region", {
-      name: "Current version",
+    await page.goto(`/items/${id}`);
+    const currentItem = page.getByRole("article", {
+      name: "Current item",
       exact: true,
     });
     await expect(
-      currentVersion.locator("strong").filter({ hasText: /^Original words$/ }),
+      currentItem.locator("strong").filter({ hasText: /^Original words$/ }),
     ).toHaveText("Original words");
     await page
       .getByRole("button", { name: "Edit Entry", exact: true })
@@ -184,19 +184,9 @@ test("Organized Entries stay editable in place", async ({ page, context }) => {
       occurred_start: "2017-07-08T12:34:56.123456+00:00",
       revision: 2,
     });
-    await expect(currentVersion.locator("em")).toHaveText(
+    await expect(currentItem.locator("em")).toHaveText(
       "Updated after organizing",
     );
-    expect(
-      (
-        await client
-          .from("entry_versions")
-          .select("snapshot")
-          .eq("entry_id", id)
-          .eq("version", 1)
-          .single()
-      ).data!.snapshot.body,
-    ).toBe("Original words");
     await page.goto("/search?tag=Rich%20notes");
     await expect(
       page

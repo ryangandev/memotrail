@@ -32,7 +32,6 @@ create temporary table home_fixture as select entry_id id from public.homes_work
 select is(pg_temp.save_home(date_precision,occurred_start,occurred_end,occurred_label,entry_id,revision),entry_id,'home: exact resave succeeds') from public.homes_workspace() where date_precision='exact';
 select is(occurred_start,'2026-11-01 09:30:00.123456Z'::timestamptz,'home: start microseconds survive') from public.entries where id=(select id from home_fixture);
 select is(occurred_end,'2026-11-01 10:30:00.654321Z'::timestamptz,'home: end microseconds survive') from public.entries where id=(select id from home_fixture);
-select is(count(*),1::bigint,'home: prior version recorded') from public.entry_versions where entry_id=(select id from home_fixture);
 select throws_ok($$select pg_temp.save_home('day','2026-11-01',null,null,id,2,true) from home_fixture$$,'22023','home_requires_current_editor','home: legacy date-only saves cannot destroy exact bounds');
 select is(pg_temp.save_home('unknown',null,null,null,id,1),null::uuid,'home: stale save cannot erase dates') from home_fixture;
 select throws_ok($$select pg_temp.save_home('age')$$,'22023','invalid_home_occurrence','home: age requires label');
@@ -68,7 +67,6 @@ create temporary table vehicle_fixture as select entry_id id from public.vehicle
 select is(pg_temp.save_vehicle(date_precision,occurred_start,occurred_end,occurred_label,entry_id,revision),entry_id,'vehicle: exact resave succeeds') from public.vehicles_workspace() where date_precision='exact';
 select is(occurred_start,'2026-11-01 09:30:00.123456Z'::timestamptz,'vehicle: start microseconds survive') from public.entries where id=(select id from vehicle_fixture);
 select is(occurred_end,'2026-11-01 10:30:00.654321Z'::timestamptz,'vehicle: end microseconds survive') from public.entries where id=(select id from vehicle_fixture);
-select is(count(*),1::bigint,'vehicle: prior version recorded') from public.entry_versions where entry_id=(select id from vehicle_fixture);
 select throws_ok($$select pg_temp.save_vehicle('day','2026-11-01',null,null,id,2,true) from vehicle_fixture$$,'22023','vehicle_requires_current_editor','vehicle: legacy date-only saves cannot destroy exact bounds');
 select is(pg_temp.save_vehicle('unknown',null,null,null,id,1),null::uuid,'vehicle: stale save cannot erase dates') from vehicle_fixture;
 select throws_ok($$select pg_temp.save_vehicle('age')$$,'22023','invalid_vehicle_occurrence','vehicle: age requires label');

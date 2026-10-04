@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(9);
+select plan(8);
 select is(to_regclass('public.people'), null, 'People no longer exist');
 select is(to_regclass('public.entry_people'), null, 'People links no longer exist');
 select is(to_regclass('public.person_versions'), null, 'Person history no longer exists');
@@ -11,7 +11,6 @@ select throws_ok(
   '23514', null, 'Person Entities are refused'
 );
 select ok(not (public.export_dataset_names() && array['people','entry_people','person_versions']), 'Exports no longer list People');
-select ok(not exists(select 1 from public.entry_versions where snapshot ? 'people'), 'History no longer records People');
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
 select throws_ok(

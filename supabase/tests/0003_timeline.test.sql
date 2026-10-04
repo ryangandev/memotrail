@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(33);
+select plan(31);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -379,20 +379,6 @@ select is(
 
 select is(
   (
-    select count(*)::integer
-    from public.entry_versions
-    where entry_id = (
-      select id
-      from public.entries
-      where title = 'University and first role'
-    )
-  ),
-  1,
-  'Updating a Timeline Entry preserves its previous version'
-);
-
-select is(
-  (
     select tracks.system_key
     from public.timeline_items as items
     join public.timeline_tracks as tracks on tracks.id = items.track_id
@@ -514,20 +500,6 @@ select is(
   ),
   0,
   'Trashed Entries disappear from the Timeline workspace'
-);
-
-select is(
-  (
-    select count(*)::integer
-    from public.entry_versions
-    where entry_id = (
-      select id
-      from public.entries
-      where title = 'Moved to California'
-    )
-  ),
-  1,
-  'Moving a Timeline Entry to Trash preserves its previous version'
 );
 
 reset role;

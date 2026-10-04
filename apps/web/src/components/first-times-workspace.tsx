@@ -488,7 +488,7 @@ export function FirstTimeEditor({
     if (!currentId || currentRevision === null) return;
     const confirmed = await requestConfirmation({
       title: <>Move “{title.trim() || "this First Time"}” to Trash?</>,
-      description: <>Its history and private photos will be preserved.</>,
+      description: <>It and its private photos can be restored from Trash.</>,
       confirmLabel: "Move to Trash",
       eyebrow: <>Recoverable action</>,
       variant: "danger",

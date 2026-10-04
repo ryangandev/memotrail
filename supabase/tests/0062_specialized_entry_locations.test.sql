@@ -96,11 +96,13 @@ select is(
   'The Vehicle retains its independent original snapshot'
 );
 
+set constraints all immediate;
+set constraints all deferred;
 select is(
   (select count(*) from public.locations
    where bound_entry_id=(select id from public.entries where title='First hike')),
-  2::bigint,
-  'The First Time keeps its earlier snapshot for history restoration'
+  1::bigint,
+  'The First Time drops its replaced snapshot'
 );
 
 select is(
@@ -125,11 +127,13 @@ select is(
   'Removing the active association clears the Vehicle primary link'
 );
 
+set constraints all immediate;
+set constraints all deferred;
 select is(
   (select count(*) from public.locations
    where bound_entry_id=(select id from public.entries where title='Blue Civic')),
-  1::bigint,
-  'The removed Vehicle snapshot remains available to history'
+  0::bigint,
+  'The removed Vehicle snapshot is dropped'
 );
 
 select throws_ok(

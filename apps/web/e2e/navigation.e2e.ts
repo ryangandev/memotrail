@@ -1029,24 +1029,26 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       .getByRole("link", { name: "Library", exact: true })
       .click();
     await expect(page).toHaveURL(/\/library$/);
-    await page.getByRole("link", { name: "Version history" }).click();
-    await expect(page).toHaveURL(/\/history$/);
+    await primaryNavigation
+      .getByRole("link", { name: "Tags", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/tags$/);
     await expect(goForward).toBeDisabled();
     await goBack.click();
     await expect(page).toHaveURL(/\/library$/);
     await expect(goForward).toBeEnabled();
     await goForward.click();
-    await expect(page).toHaveURL(/\/history$/);
+    await expect(page).toHaveURL(/\/tags$/);
     await goBack.click();
     await expect(page).toHaveURL(/\/library$/);
-    await page.goto("/history");
-    await expect(page).toHaveURL(/\/history$/);
+    await page.goto("/tags");
+    await expect(page).toHaveURL(/\/tags$/);
     await expect(goBack).toBeEnabled();
     await goBack.click();
     await expect(page).toHaveURL(/\/library$/);
     await expect(goForward).toBeEnabled();
     await goForward.click();
-    await expect(page).toHaveURL(/\/history$/);
+    await expect(page).toHaveURL(/\/tags$/);
     await page.goBack();
     await expect(page).toHaveURL(/\/library$/);
   } finally {

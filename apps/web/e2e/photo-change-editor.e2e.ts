@@ -11,9 +11,9 @@ import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
-// Photo changes create their own Entry revision. An editor opened before one
-// must still trash or achieve its record, while another device's writing must not
-// be silently adopted.
+// Photo changes leave the Entry's revision alone, so an editor that changed a
+// photo can still trash or achieve its record, while another device's writing
+// still conflicts.
 const test = base.extend<{
   account: { client: SupabaseClient; owner: string };
 }>({
@@ -29,7 +29,7 @@ const test = base.extend<{
       auth: { persistSession: false },
     });
     const created = await admin.auth.admin.createUser({
-      email: `media-revision-${randomUUID()}@memotrail.local`,
+      email: `media-photo-change-${randomUUID()}@memotrail.local`,
       email_confirm: true,
     });
     expect(created.error).toBeNull();
@@ -179,7 +179,7 @@ async function currentPhotos(client: SupabaseClient, entry: string) {
   return data!.length;
 }
 
-/** Adds one photo through the focused editor, then reopens it at the photo revision. */
+/** Adds one photo through the focused editor, then reopens the editor. */
 async function openWithSavedPhoto(
   page: Page,
   client: SupabaseClient,
@@ -204,8 +204,10 @@ async function openWithSavedPhoto(
     page.getByRole("button", { name: `Edit ${label}`, exact: true }),
   ).toBeVisible();
   await expect.poll(() => currentPhotos(client, entry)).toBe(1);
-  // Reload so the editor opens from the server's current photo revision.
-  await page.reload();
+  // The page shows the saved photo once it refreshes.
+  await expect(
+    page.getByRole("main").getByRole("img", { name: "kept.png", exact: true }),
+  ).toBeVisible();
   await page
     .getByRole("button", { name: `Edit ${label}`, exact: true })
     .click();
@@ -245,7 +247,7 @@ for (const kind of Object.keys(records) as RecordKind[]) {
   }) => {
     const uiErrors: string[] = [];
     page.on("pageerror", (error) => uiErrors.push(error.message));
-    const title = `Photo revision ${kind}`;
+    const title = `Photo change ${kind}`;
     const entry = await createRecord(client, kind, title);
     const { editor, opened } = await openWithSavedPhoto(
       page,
@@ -255,9 +257,8 @@ for (const kind of Object.keys(records) as RecordKind[]) {
     );
 
     await removePhoto(page, editor);
-    await expect
-      .poll(async () => (await entryRow(client, entry)).revision)
-      .toBe(opened + 1);
+    await expect.poll(() => currentPhotos(client, entry)).toBe(0);
+    expect((await entryRow(client, entry)).revision).toBe(opened);
     await moveToTrash(page, editor, title);
 
     await expect(page).toHaveURL(records[kind].path);
@@ -271,7 +272,7 @@ test("Goal achievement succeeds after removing a photo in the same editor", asyn
   page,
   account: { client },
 }) => {
-  const title = "Photo revision achievement";
+  const title = "Photo change achievement";
   const entry = await createRecord(client, "goal", title);
   const { editor } = await openWithSavedPhoto(page, client, "goal", entry);
 
@@ -305,7 +306,7 @@ test("Goal moves to Trash after a partial photo upload failure", async ({
   page,
   account: { client },
 }) => {
-  const title = "Photo revision partial upload";
+  const title = "Photo change partial upload";
   const entry = await createRecord(client, "goal", title);
   let failed = false;
   await page.route("**/storage/v1/object/entry-media/**", async (route) => {
@@ -340,7 +341,7 @@ test("Goal Trash still refuses another device's writing after a photo removal", 
   page,
   account: { client },
 }) => {
-  const title = "Photo revision conflict";
+  const title = "Photo change conflict";
   const entry = await createRecord(client, "goal", title);
   const { editor } = await openWithSavedPhoto(page, client, "goal", entry);
 

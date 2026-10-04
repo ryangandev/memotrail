@@ -33,7 +33,6 @@ select throws_ok($$select public.register_media_derivatives(owner,original,'orig
 select throws_ok($$select public.register_media_derivatives(owner,original,'original-v1',repeat('a',64),jsonb_set(pg_temp.variants(),'{0,object_path}','"other-owner/private.webp"')) from fixture$$,'22023','invalid_media_derivative','Foreign Storage paths rejected');
 reset role;
 select is(count(*),3::bigint,'Invalid registration leaves rows unchanged') from public.attachments where owner_id='10000000-0000-0000-0000-000000000091';
-select is(jsonb_array_length(public.entry_history_snapshot(e)->'attachments'),1,'Generated variants are not canonical historical photos') from public.entries e where e.id='91000000-0000-4000-8000-000000000001';
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000091',true);
 select is(jsonb_array_length(attachments),1,'Current First Times projects original photos only') from public.first_times_workspace_with_occurrence();
@@ -50,15 +49,12 @@ select isnt(public.media_source(owner,original,true),null::jsonb,'Explicit Trash
 set local role authenticated;
 select lives_ok($$select public.restore_trash_item('attachment',id,null,deleted_at) from public.attachments where id='91000000-0000-4000-8000-000000000002'$$,'Restoring the original keeps its generated family usable');
 select is(count(*),0::bigint,'Restored photo disappears from Trash') from public.trash_workspace();
-select lives_ok($$update public.entries set body='Edited writing',revision=revision+1 where id='91000000-0000-4000-8000-000000000001'$$,'Writing edits record history independently of previews');
-select is(jsonb_array_length(snapshot->'attachments'),1,'Saved historical version retains only original membership') from public.entry_versions where entry_id='91000000-0000-4000-8000-000000000001' order by version desc limit 1;
+select lives_ok($$update public.entries set body='Edited writing',revision=revision+1 where id='91000000-0000-4000-8000-000000000001'$$,'Writing edits work independently of previews');
 reset role;
 -- These are transaction-only catalog fixtures, with no actual Storage objects.
 select set_config('storage.allow_delete_query','true',true);
 delete from storage.objects where split_part(name,'/',1)='10000000-0000-0000-0000-000000000091' and split_part(name,'/',3)='derived';
 set local role authenticated;
-select is(public.restore_entry_version('91000000-0000-4000-8000-000000000001',3,4),5,'Missing cached preview cannot block restoring writing');
-select is(body,'Original writing','History restores original writing') from public.entries where id='91000000-0000-4000-8000-000000000001';
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000092',true);
 select is(count(*),0::bigint,'Other owner cannot read originals or derivatives') from public.attachments;
 reset role;

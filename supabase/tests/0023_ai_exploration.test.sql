@@ -48,7 +48,7 @@ select ok(pg_temp.finish_turn('99000000-0000-4000-8000-000000000011'),'Server st
 select is(pg_temp.finish_turn('99000000-0000-4000-8000-000000000011','Replacement'),false,'Completed answer is immutable');
 reset role;
 select is((select body from public.entries where id='99000000-0000-4000-8000-000000000001'),'为什么人需要不断学习？','Generation never overwrites original');
-select is((select revision from public.entries where id='99000000-0000-4000-8000-000000000001'),1,'Generation creates no spurious Entry history');
+select is((select revision from public.entries where id='99000000-0000-4000-8000-000000000001'),1,'Generation leaves the source Entry unchanged');
 set local role service_role;
 select is(pg_temp.claim('99000000-0000-4000-8000-000000000012','Follow up?')->>'claimed','true','Next explicit turn allowed');
 update public.ai_exploration_turns set created_at=now()-interval '3 minutes' where id='99000000-0000-4000-8000-000000000012';
@@ -73,8 +73,6 @@ select is((select date_precision from public.entries where id=(pg_temp.save('990
 select is((select count(*) from public.entry_links where source_entry_id='99000000-0000-4000-8000-000000000001' and relationship='exploration_conclusion'),1::bigint,'Source links to conclusion');
 select is((select count(*) from public.entry_links where target_entry_id='99000000-0000-4000-8000-000000000001' and relationship='exploration_source'),1::bigint,'Conclusion links back to source');
 select is((select revision from public.entries where id='99000000-0000-4000-8000-000000000001'),2,'Link addition advances source revision for stale clients');
-select is((select snapshot->>'body' from public.entry_versions where entry_id='99000000-0000-4000-8000-000000000001' and version=1),'为什么人需要不断学习？','Link addition preserves source history');
-select is(jsonb_array_length((select snapshot->'links' from public.entry_versions where entry_id='99000000-0000-4000-8000-000000000001' and version=1)),0,'History captures links before addition');
 select is(pg_temp.save('99000000-0000-4000-8000-000000000022','A second conclusion.')->>'created','true','Can save more than one durable conclusion from a turn');
 select is(jsonb_array_length(pg_temp.workspace()->'turns'->0->'saved_entries'),2,'Both clients can discover saved conclusions');
 select throws_ok($$select pg_temp.save(gen_random_uuid(),repeat('x',50001))$$,'22023','invalid_exploration_conclusion','Conclusion respects shared Entry length limit');

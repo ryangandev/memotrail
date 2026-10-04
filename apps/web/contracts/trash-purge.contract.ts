@@ -146,19 +146,16 @@ const blockedBy = (label: string) =>
     `select count(*) from pg_stat_activity a where (select pid from pg_stat_activity where application_name='${label}')=any(pg_blocking_pids(a.pid))`,
   );
 
-test("A deployed client's Delete forever sequence cannot lose a restorable original", async () => {
+test("Removing a Trash original by name cannot lose a restorable original", async () => {
   await withAccount(async ({ client, photoEntry, trashEntry, objectCount }) => {
-    const { entry, path } = await photoEntry("Old sequence");
+    const { entry, path } = await photoEntry("Removed by name");
     const params = await trashEntry(entry);
-    const manifest = await client.rpc("trash_item_storage_paths", params);
-    expect(manifest.error).toBeNull();
-    expect(manifest.data).toEqual([]);
-    // Even a client that removes the original by name before deleting keeps it.
+    // A client that removes the original by name before deleting keeps it.
     const early = await client.storage.from("entry-media").remove([path]);
     expect(early.error).toBeNull();
     expect(early.data).toEqual([]);
     expect(objectCount(path)).toBe("1");
-    // Another device restores in the gap the old sequence left open.
+    // Another device restores before this one deletes forever.
     const restored = await client.rpc("restore_trash_item", params);
     expect(restored.error).toBeNull();
     expect(restored.data).toHaveLength(1);

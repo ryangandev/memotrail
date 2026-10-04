@@ -28,7 +28,6 @@ select is(
 select is((select body from public.entries where id='96000000-0000-4000-8000-000000000001'),'Updated words','Plaintext stays canonical');
 select is((select metadata->'body_rich'->'document'->'content'->0->'content'->0->'marks'->0->>'type' from public.entries where id='96000000-0000-4000-8000-000000000001'),'italic','Rich formatting is stored in metadata');
 select is((select revision from public.entries where id='96000000-0000-4000-8000-000000000001'),2,'One rich save advances one revision');
-select is((select snapshot->'metadata'->'body_rich'->>'text' from public.entry_versions where entry_id='96000000-0000-4000-8000-000000000001' and version=1),'Original words','Prior rich text remains restorable');
 
 select throws_ok(
   $$select pg_temp.rich_review(2,'Mismatch','{"version":1,"text":"Different","document":{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Different"}]}]}}')$$,

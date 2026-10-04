@@ -992,7 +992,7 @@ function TimelineEditor({
     if (!entry) return;
     const confirmed = await requestConfirmation({
       title: <>Move “{entry.title}” to Trash?</>,
-      description: <>{"Its history will be preserved."}</>,
+      description: <>You can restore it later from Trash.</>,
       confirmLabel: "Move to Trash",
       eyebrow: <>Recoverable action</>,
       variant: "danger",
