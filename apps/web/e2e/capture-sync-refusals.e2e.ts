@@ -11,6 +11,7 @@ import {
 import { createServerClient } from "@supabase/ssr";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import sharp from "sharp";
+import { clickUnlessSynced } from "./helpers/capture-sync";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
 // A pending capture stops for good, with a reason, when MemoTrail can never
@@ -152,7 +153,7 @@ test("a photo upload whose response was lost waits, then attaches the stored ori
     expect(await attachmentCount(client, entry.id)).toBe(0);
 
     // Storage reports the stored original as a duplicate, which still attaches.
-    await retryButton(page).click();
+    await clickUnlessSynced(retryButton(page));
     await expect(
       page.getByText("Saved to Inbox with 1 photo.", { exact: true }),
     ).toBeVisible({ timeout: 30_000 });
@@ -182,19 +183,20 @@ test("a pending capture whose Entry is already in Trash stops instead of retryin
     await expect(composer).toContainText(offlinePhotos, firstCompile);
     await moveToTrash(client, "Trashed while its photo waited");
     await page.unroute(uploadRoute);
-    await retryButton(page).click();
+    await clickUnlessSynced(retryButton(page));
     const photoCard = pendingCard(page, "Trashed while its photo waited");
     await expect(photoCard).toContainText(trashedPhoto, { timeout: 30_000 });
     await expect(photoCard).toContainText("Not accepted");
-    expect(uploads()).toBe(1);
+    // Retries while Storage was unreachable may have tried the upload again.
+    const refusedUploads = uploads();
 
     // A capture without photos whose saved response was lost, then trashed.
     await loseSavedResponse(page, "Trashed before its retry");
     await saveCapture(page, composer, "Trashed before its retry");
     await expect(composer).toContainText(offlineEntry, firstCompile);
-    await page.unroute("**/*");
     await moveToTrash(client, "Trashed before its retry");
-    await retryButton(page).click();
+    await page.unroute("**/*");
+    await clickUnlessSynced(retryButton(page));
     const textCard = pendingCard(page, "Trashed before its retry");
     await expect(textCard).toContainText(trashedEntry, { timeout: 30_000 });
     await expect(pendingIndicator(page)).toHaveText("2 not accepted");
@@ -208,7 +210,7 @@ test("a pending capture whose Entry is already in Trash stops instead of retryin
     await page.reload();
     await expect(textCard).toContainText(trashedEntry, firstCompile);
     await page.waitForLoadState("networkidle");
-    expect(uploads()).toBe(1);
+    expect(uploads()).toBe(refusedUploads);
     for (const body of [
       "Trashed while its photo waited",
       "Trashed before its retry",
@@ -235,7 +237,6 @@ test("Delete forever on another device never brings back a pending capture", asy
     await loseSavedResponse(page, text);
     await saveCapture(page, composer, text);
     await expect(composer).toContainText(offlineEntry, firstCompile);
-    await page.unroute("**/*");
     await moveToTrash(client, text);
 
     const trash = await otherDevice();
@@ -249,7 +250,8 @@ test("Delete forever on another device never brings back a pending capture", asy
     ).toBeVisible(firstCompile);
     expect(await entries(client, text)).toHaveLength(0);
 
-    await retryButton(page).click();
+    await page.unroute("**/*");
+    await clickUnlessSynced(retryButton(page));
     const card = pendingCard(page, text);
     await expect(card).toContainText(deletedForever, { timeout: 30_000 });
     await expect(card).toContainText("Not accepted");
@@ -319,21 +321,21 @@ function countUploads(page: Page) {
   return () => count;
 }
 
-/** Lets a capture's save reach MemoTrail, then drops the response. */
+/**
+ * Lets a capture's save reach MemoTrail and drops the response, then keeps
+ * this device from reaching MemoTrail until the route is removed, so the
+ * capture keeps waiting however often it is retried.
+ */
 async function loseSavedResponse(page: Page, text: string) {
   let lost = false;
   await page.route("**/*", async (route) => {
     const request = route.request();
-    if (
-      !lost &&
-      request.method() === "POST" &&
-      request.headers()["next-action"] &&
-      (request.postData() ?? "").includes(text)
-    ) {
-      lost = true;
-      await route.fetch();
-      await route.abort("internetdisconnected");
-      return;
+    if (request.method() === "POST" && request.headers()["next-action"]) {
+      if (!lost && (request.postData() ?? "").includes(text)) {
+        lost = true;
+        await route.fetch();
+      }
+      if (lost) return route.abort("internetdisconnected");
     }
     await route.continue();
   });

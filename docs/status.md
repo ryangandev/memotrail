@@ -129,6 +129,8 @@ Its marked account and Storage objects were confirmed removed without accessing 
 ### 3. Accept native foundations, Map, and navigation
 
 - Native models, filters, Capture, and ordinary Inbox review now use the shared canonical identities; focused forms retain their existing RPCs.
+- Native `InboxController` retries waiting captures only when its network path becomes satisfied, a capture is saved, or Inbox or Home refreshes, including on return to the foreground.
+  A failed attempt therefore waits for one of those events; Web now keeps retrying with capped backoff while online, and native should adopt the same policy.
 - Home Location IDs and labels decode as optional, and editing address facts clears stale coordinates.
 - Supabase public configuration matches Web locally. Media, metadata, and export use the Web API base URL; Geoapify, AI, and Supabase secret keys remain on the server.
 - Shared media and export authentication is independent of the AI pause; local HTTP checks cover native bearer identity, Web cookies and Origin checks, metadata, retired catalog responses, invalid sessions, and all four paused AI endpoints.
