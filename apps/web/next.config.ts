@@ -12,6 +12,12 @@ const nextConfig: NextConfig = {
     "libheif-js",
     "exifr",
   ],
+  // Library replaced the separate search page. Redirecting here, before any
+  // rendering, keeps old links to one request instead of a rendered page that
+  // then navigates again. Query values pass through to Library.
+  async redirects() {
+    return [{ source: "/search", destination: "/library", permanent: false }];
+  },
   outputFileTracingIncludes: {
     "/*": [
       "./node_modules/libheif-js/libheif-wasm/libheif-bundle.js",
