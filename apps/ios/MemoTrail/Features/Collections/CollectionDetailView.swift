@@ -77,10 +77,17 @@ struct CollectionDetailView: View {
   /// Web's detail toolbar: the counts, then the Collection's editor.
   private var toolbar: some View {
     HStack(spacing: MTSpacing.s4) {
-      Text(summary)
-        .font(MTFont.caption.weight(.regular))
-        .foregroundStyle(MTColor.inkFaint)
-      Spacer(minLength: 0)
+      MTFlowLayout(spacing: MTSpacing.s2) {
+        Text(countLabel(collection.entryCount, "Entry"))
+        if collection.unreviewedCount > 0 {
+          MTFlowSeparator()
+          Text("\(collection.unreviewedCount) still in Inbox")
+        }
+      }
+      .font(MTFont.caption.weight(.regular))
+      .foregroundStyle(MTColor.inkFaint)
+      .accessibilityElement(children: .contain)
+      .accessibilityLabel("Collection summary")
       if item != nil {
         MTIconButton(label: "Edit \(collection.name)", icon: .more) { isEditing = true }
       }
@@ -88,12 +95,6 @@ struct CollectionDetailView: View {
     .padding(.vertical, MTSpacing.s3)
     .overlay(alignment: .top) { MTListDivider() }
     .overlay(alignment: .bottom) { MTListDivider() }
-  }
-
-  private var summary: String {
-    let entries = countLabel(collection.entryCount, "Entry")
-    return collection.unreviewedCount > 0
-      ? "\(entries) · \(collection.unreviewedCount) still in Inbox" : entries
   }
 
   @ViewBuilder private var content: some View {

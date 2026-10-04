@@ -265,27 +265,19 @@
     color-mix(in srgb, var(--mt-color-border) 70%, transparent);
 }
 
-.resultCard footer > span {
+.matchLabel {
+  flex: none;
   color: var(--mt-color-ink-faint);
   font-size: 10px;
   text-transform: uppercase;
 }
 
-.resultCard footer div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.resultCard footer div span {
+.matchReasons {
+  --separated-list-gap: 5px;
+  --separated-list-separator-color: var(--mt-color-border-strong);
+  min-width: 0;
   color: var(--mt-color-accent);
   font-size: var(--mt-font-size-caption);
-}
-
-.resultCard footer div span:not(:last-child)::after {
-  margin-left: 5px;
-  color: var(--mt-color-border-strong);
-  content: "·";
 }
 
 .pagination {

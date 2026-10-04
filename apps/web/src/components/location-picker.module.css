@@ -192,6 +192,11 @@
   color: inherit;
 }
 
+.attributionLinks {
+  --separated-list-gap: 5px;
+  --separated-list-row-gap: 0px;
+}
+
 @media (max-width: 640px) {
   .searchRow {
     grid-template-columns: 1fr;

@@ -140,7 +140,7 @@ struct TimelineView: View {
         .contentShape(Rectangle())
         .accessibilityIdentifier("manage-timeline-tracks")
       ForEach(summaryFacts, id: \.self) { fact in
-        Text("·").accessibilityHidden(true)
+        MTFlowSeparator()
         Text(fact)
       }
       // Its border sets the button apart, so no separator dangles when it wraps.
@@ -155,6 +155,8 @@ struct TimelineView: View {
     }
     .font(MTFont.caption.weight(.regular))
     .foregroundStyle(MTColor.inkFaint)
+    .accessibilityElement(children: .contain)
+    .accessibilityLabel("Timeline summary")
   }
 
   private var summaryFacts: [String] {

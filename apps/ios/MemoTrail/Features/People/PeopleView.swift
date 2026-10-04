@@ -53,7 +53,7 @@ struct PeopleView: View {
     let connections = people.reduce(0) { $0 + $1.linkedEntries.count }
     return MTFlowLayout(spacing: MTSpacing.s2) {
       Text(countLabel(people.count, "person", plural: "people"))
-      Text("·").accessibilityHidden(true)
+      MTFlowSeparator()
       Text(countLabel(connections, "connected Item"))
       if controller.isLoading, controller.hasLoaded {
         ProgressView().controlSize(.small).tint(MTColor.accent)

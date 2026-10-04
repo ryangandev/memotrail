@@ -62,7 +62,9 @@ final class LocalSessionUITests: XCTestCase {
     let summer = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Summer 2025"))
       .firstMatch
     XCTAssertTrue(summer.waitForExistence(timeout: 15))
-    XCTAssertTrue(text("2 Collections · 4 Entry placements", in: app).exists)
+    let summary = app.otherElements["Collections summary"]
+    XCTAssertTrue(summary.staticTexts["2 Collections"].exists)
+    XCTAssertTrue(summary.staticTexts["4 Entry placements"].exists)
     XCTAssertTrue(app.buttons["Edit Summer 2025"].exists)
     Thread.sleep(forTimeInterval: 1)
     attach(app, "Collections")
@@ -80,7 +82,8 @@ final class LocalSessionUITests: XCTestCase {
     attach(app, "New Collection")
     app.buttons["save-organization"].tap()
     XCTAssertTrue(text("Collection created.", in: app).waitForExistence(timeout: 10))
-    XCTAssertTrue(text("3 Collections · 4 Entry placements", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(summary.staticTexts["3 Collections"].waitForExistence(timeout: 10))
+    XCTAssertTrue(summary.staticTexts["4 Entry placements"].exists)
     let road = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Road trips"))
       .firstMatch
     XCTAssertTrue(road.exists)
@@ -137,7 +140,8 @@ final class LocalSessionUITests: XCTestCase {
     attach(app, "Collection trash confirmation")
     trash.tap()
     XCTAssertTrue(text("Collection moved to Trash.", in: app).waitForExistence(timeout: 10))
-    XCTAssertTrue(text("2 Collections · 4 Entry placements", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(summary.staticTexts["2 Collections"].waitForExistence(timeout: 10))
+    XCTAssertTrue(summary.staticTexts["4 Entry placements"].exists)
     XCTAssertTrue(road.waitForNonExistence(timeout: 10))
 
     // Settings' Archive organization leaves the sheet for Collections, like Web's link.
@@ -621,6 +625,34 @@ final class LocalSessionUITests: XCTestCase {
     // The Dashboard greeting follows the saved name.
     app.navigationBars["Settings"].buttons["Done"].tap()
     XCTAssertTrue(text("River.", in: app).waitForExistence(timeout: 10))
+  }
+
+  /// Summary rows wrap at large text sizes without a separator at either end of a line, like Web.
+  func testSummaryRowsKeepSeparatorsBetweenFactsAtLargeTextSizes() throws {
+    for size in ["UICTContentSizeCategoryXXXL", "UICTContentSizeCategoryAccessibilityL"] {
+      let app = try launchLocalSession(contentSize: size)
+      XCTAssertTrue(app.tabBars.buttons["Timeline"].waitForExistence(timeout: 20))
+      app.tabBars.buttons["Timeline"].tap()
+      dismissBirthDatePrompt(
+        once: app.buttons.matching(
+          NSPredicate(format: "label BEGINSWITH %@", "Finished the first marathon")
+        ).firstMatch, in: app)
+      let timeline = app.otherElements["Timeline summary"]
+      XCTAssertTrue(timeline.waitForExistence(timeout: 5))
+      let lines = assertSeparatorsBetweenFacts(revealWhole(timeline, in: app), in: app)
+      XCTAssertGreaterThan(lines.count, 1, "\(lines)")
+      attach(app, "Timeline summary at \(size)")
+      app.tabBars.buttons["More"].tap()
+      for route in ["People", "Homes", "Vehicles", "First Times", "Goals"] {
+        reveal(app.buttons[route], in: app).tap()
+        let summary = app.otherElements["\(route) summary"]
+        XCTAssertTrue(summary.waitForExistence(timeout: 10), route)
+        assertSeparatorsBetweenFacts(revealWhole(summary, in: app), in: app)
+        attach(app, "\(route) summary at \(size)")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+      }
+      app.terminate()
+    }
   }
 
   func testTagsFindPreviewMergeAddAndDeleteTags() throws {
@@ -1399,13 +1431,19 @@ final class LocalSessionUITests: XCTestCase {
   }
 
   /// `offline` fails every request once the session is open, like an iPhone with no network.
-  private func launchLocalSession(offline: Bool = false) throws -> XCUIApplication {
+  /// `contentSize` names a text size category, such as `UICTContentSizeCategoryAccessibilityL`.
+  private func launchLocalSession(offline: Bool = false, contentSize: String? = nil) throws
+    -> XCUIApplication
+  {
     let path = ProcessInfo.processInfo.environment["MEMOTRAIL_REVIEW_SESSION"] ?? ""
     guard !path.isEmpty else {
       throw XCTSkip("Run apps/ios/scripts/review-local-session.py with the local Supabase stack.")
     }
     let app = XCUIApplication()
     app.launchArguments = ["--review-local-session"] + (offline ? ["--review-offline"] : [])
+    if let contentSize {
+      app.launchArguments += ["-UIPreferredContentSizeCategoryName", contentSize]
+    }
     app.launchEnvironment["MEMOTRAIL_REVIEW_SESSION"] = path
     app.launch()
     return app

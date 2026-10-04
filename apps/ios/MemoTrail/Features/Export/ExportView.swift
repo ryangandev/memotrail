@@ -272,9 +272,16 @@ struct ExportView: View {
       }
       ForEach(snapshots) { snapshot in
         ExportCard(title: ExportSnapshot.dateLabel(snapshot.capturedAt), level: .item) {
-          paragraph(
-            "\(snapshot.rowCount.formatted()) records · \(snapshot.datasets["entries"] ?? 0) Entries · \(snapshot.datasets["media_objects"] ?? 0) media files"
-          )
+          MTWordFlow(.subheadline) {
+            Text("\(snapshot.rowCount.formatted()) records")
+            MTFlowSeparator()
+            Text("\(snapshot.datasets["entries"] ?? 0) Entries")
+            MTFlowSeparator()
+            Text("\(snapshot.datasets["media_objects"] ?? 0) media files")
+          }
+          .font(MTFont.body)
+          .foregroundStyle(MTColor.inkMuted)
+          .mtLineSpacing(1.65)
           paragraph("Expires \(ExportSnapshot.dateLabel(snapshot.expiresAt))")
           MTFlowLayout(spacing: 10) {
             Button("Download ZIP") { run { await download(snapshot) } }

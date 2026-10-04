@@ -61,9 +61,9 @@ struct GoalsView: View {
     let open = controller.entries.filter { ![.achieved, .letGo].contains($0.status) }.count
     return MTFlowLayout(spacing: MTSpacing.s2) {
       Text(countLabel(controller.entries.count, "goal"))
-      Text("·").accessibilityHidden(true)
+      MTFlowSeparator()
       Text("\(open) open")
-      Text("·").accessibilityHidden(true)
+      MTFlowSeparator()
       Text("\(controller.entries.filter(\.isBucketList).count) in Bucket List")
       if controller.isLoading, controller.hasLoaded {
         ProgressView().controlSize(.small).tint(MTColor.accent)

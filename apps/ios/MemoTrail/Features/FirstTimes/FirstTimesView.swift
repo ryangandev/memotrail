@@ -51,7 +51,7 @@ struct FirstTimesView: View {
   private var summary: some View {
     MTFlowLayout(spacing: MTSpacing.s2) {
       Text(countLabel(controller.entries.count, "First Time"))
-      Text("·").accessibilityHidden(true)
+      MTFlowSeparator()
       Text(countLabel(controller.photoCount, "photo"))
       if controller.isLoading, controller.hasLoaded {
         ProgressView().controlSize(.small).tint(MTColor.accent)

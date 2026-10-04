@@ -136,54 +136,131 @@ struct MTPage<Content: View>: View {
 }
 
 /// Wraps children onto new lines like Web `flex-wrap`, for badges, chips, and compact actions.
+/// An `MTFlowSeparator` child shows only between two items on one line, like Web `SeparatedList`.
 struct MTFlowLayout: Layout {
   var spacing: CGFloat = MTSpacing.s2
   var lineSpacing: CGFloat?
 
+  /// A child as line breaking sees it.
+  struct Item: Equatable {
+    var size: CGSize
+    var isSeparator = false
+  }
+
+  /// A line's shown children, from its leading edge, and its size.
+  struct Line: Equatable {
+    var indices: [Int]
+    var width: CGFloat
+    var height: CGFloat
+  }
+
   func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-    let rows = rows(for: proposal.width ?? .infinity, subviews: subviews)
-    let width = rows.map(\.width).max() ?? 0
-    let height = rows.map(\.height).reduce(0, +) + CGFloat(max(rows.count - 1, 0)) * rowGap
-    return CGSize(width: proposal.width ?? width, height: height)
+    let width = proposal.width ?? .infinity
+    let lines = Self.lines(for: items(subviews, width: width), width: width, spacing: spacing)
+    let height = lines.map(\.height).reduce(0, +) + CGFloat(max(lines.count - 1, 0)) * rowGap
+    return CGSize(width: proposal.width ?? lines.map(\.width).max() ?? 0, height: height)
   }
 
   func placeSubviews(
     in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()
   ) {
+    let items = items(subviews, width: bounds.width)
+    var collapsed = Set(subviews.indices)
     var y = bounds.minY
-    for row in rows(for: bounds.width, subviews: subviews) {
+    for line in Self.lines(for: items, width: bounds.width, spacing: spacing) {
       var x = bounds.minX
-      for index in row.indices {
-        let size = subviews[index].sizeThatFits(ProposedViewSize(width: bounds.width, height: nil))
+      for index in line.indices {
+        let size = CGSize(
+          width: min(items[index].size.width, bounds.width), height: items[index].size.height)
         subviews[index].place(
-          at: CGPoint(x: x, y: y + (row.height - size.height) / 2),
-          proposal: ProposedViewSize(width: min(size.width, bounds.width), height: size.height))
-        x += min(size.width, bounds.width) + spacing
+          at: CGPoint(x: x, y: y + (line.height - size.height) / 2),
+          proposal: ProposedViewSize(size))
+        collapsed.remove(index)
+        x += size.width + spacing
       }
-      y += row.height + rowGap
+      y += line.height + rowGap
     }
+    // A separator left out of every line gets no width, so it draws nothing.
+    for index in collapsed { subviews[index].place(at: bounds.origin, proposal: .zero) }
+  }
+
+  /// Breaks children into lines like `flex-wrap`, fitting each one to `width`. A separator
+  /// belongs to the item after it and shows only when that item joins a line behind another
+  /// item, so no line starts or ends with one. A run of separators shows at most its first.
+  static func lines(for items: [Item], width: CGFloat, spacing: CGFloat) -> [Line] {
+    var lines: [Line] = []
+    var separator: Int?
+    for (index, item) in items.enumerated() {
+      if item.isSeparator {
+        if separator == nil, !lines.isEmpty { separator = index }
+        continue
+      }
+      let joining = (separator.map { [$0] } ?? []) + [index]
+      separator = nil
+      let added = joining.reduce(0) { $0 + spacing + min(items[$1].size.width, width) }
+      if var line = lines.last, line.width + added <= width {
+        line.indices += joining
+        line.width += added
+        line.height = joining.reduce(line.height) { max($0, items[$1].size.height) }
+        lines[lines.count - 1] = line
+      } else {
+        lines.append(
+          Line(indices: [index], width: min(item.size.width, width), height: item.size.height))
+      }
+    }
+    return lines
   }
 
   private var rowGap: CGFloat { lineSpacing ?? spacing }
 
-  private func rows(for width: CGFloat, subviews: Subviews) -> [(
-    indices: [Int], width: CGFloat, height: CGFloat
-  )] {
-    var rows: [(indices: [Int], width: CGFloat, height: CGFloat)] = []
-    var current: (indices: [Int], width: CGFloat, height: CGFloat) = ([], 0, 0)
-    for index in subviews.indices {
-      let size = subviews[index].sizeThatFits(ProposedViewSize(width: width, height: nil))
-      let itemWidth = min(size.width, width)
-      let proposed = current.indices.isEmpty ? itemWidth : current.width + spacing + itemWidth
-      if proposed > width, !current.indices.isEmpty {
-        rows.append(current)
-        current = ([index], itemWidth, size.height)
-      } else {
-        current = (current.indices + [index], proposed, max(current.height, size.height))
-      }
+  private func items(_ subviews: Subviews, width: CGFloat) -> [Item] {
+    subviews.map {
+      Item(
+        size: $0.sizeThatFits(ProposedViewSize(width: width, height: nil)),
+        isSeparator: $0[MTFlowSeparatorKey.self])
     }
-    if !current.indices.isEmpty { rows.append(current) }
-    return rows
+  }
+}
+
+private struct MTFlowSeparatorKey: LayoutValueKey {
+  static let defaultValue = false
+}
+
+/// The quiet "·" between facts in an `MTFlowLayout`, like Web `SeparatedList`. It shows only
+/// between two items on one line, and assistive technology skips it.
+struct MTFlowSeparator: View {
+  var body: some View {
+    // At a line's edge the layout proposes no width, which only the empty choice fits.
+    ViewThatFits(in: .horizontal) {
+      Text("·")
+      Color.clear.frame(width: 0, height: 0)
+    }
+    .accessibilityHidden(true)
+    .layoutValue(key: MTFlowSeparatorKey.self, value: true)
+  }
+}
+
+/// An `MTFlowLayout` for plain facts that read like a sentence, like Web `SeparatedList` with
+/// word spacing: one word space apart at `textStyle`, with wrapped lines as close as the text's.
+struct MTWordFlow<Content: View>: View {
+  private let textStyle: UIFont.TextStyle
+  private let content: Content
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+  @Environment(\.lineSpacing) private var lineSpacing
+
+  init(_ textStyle: UIFont.TextStyle, @ViewBuilder content: () -> Content) {
+    self.textStyle = textStyle
+    self.content = content()
+  }
+
+  var body: some View {
+    let traits = UITraitCollection(
+      preferredContentSizeCategory: UIContentSizeCategory(dynamicTypeSize))
+    let font = UIFont.preferredFont(forTextStyle: textStyle, compatibleWith: traits)
+    MTFlowLayout(
+      spacing: (" " as NSString).size(withAttributes: [.font: font]).width,
+      lineSpacing: lineSpacing
+    ) { content }
   }
 }
 

@@ -4,6 +4,7 @@ import { FocusedEditorSurface } from "@/components/focused-editor-surface";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { FocusedViewLayout } from "@/components/focused-view-layout";
+import { SeparatedList } from "@/components/separated-list";
 import { Button } from "@/components/button";
 import { Badge } from "@/components/badge";
 
@@ -125,13 +126,11 @@ export function VehiclesWorkspace({
       }
       eyebrow={<>The machines that carried your story</>}
       summary={
-        <>
+        <SeparatedList>
           <span>{countLabel(vehicles.length, "vehicle")}</span>
-          <span aria-hidden="true">·</span>
           <span>{countLabel(currentVehicles.length, "current vehicle")}</span>
-          <span aria-hidden="true">·</span>
           <span>{countLabel(earlierVehicles.length, "earlier vehicle")}</span>
-        </>
+        </SeparatedList>
       }
       summaryLabel="Vehicles summary"
       title={<>Vehicles</>}

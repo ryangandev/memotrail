@@ -21,6 +21,7 @@ import {
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { SearchField } from "@/components/search-field";
 import { SelectField } from "@/components/select-field";
+import { SeparatedList } from "@/components/separated-list";
 import { TextField } from "@/components/text-field";
 import { notify } from "@/components/app-toast";
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
@@ -741,6 +742,44 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
             body={sampleRichText.text}
             richText={sampleRichText}
           />
+        </Specimen>
+
+        <Specimen
+          api="align: start | end · spacing: default | word · className"
+          description="Summary and metadata rows. As the frames narrow, facts wrap whole and a separator shows only between two facts on the same line."
+          id="separated-list"
+          title="SeparatedList"
+        >
+          <div className={styles.separatedListFrames}>
+            {["wide", "medium", "narrow"].map((frame) => (
+              <div
+                className={styles.separatedListFrame}
+                data-frame={frame}
+                key={frame}
+              >
+                <SeparatedList>
+                  <a href="#separated-list">Manage tracks</a>
+                  <span>8 tracks</span>
+                  <span>12 moments</span>
+                  <span>2017 to 2026</span>
+                </SeparatedList>
+                <SeparatedList spacing="word">
+                  <span>First Time</span>
+                  <span>3 earlier versions</span>
+                  <span>In Trash</span>
+                </SeparatedList>
+                <SeparatedList
+                  align="end"
+                  className={styles.separatedListAttribution}
+                >
+                  <span>
+                    Powered by <a href="#separated-list">Geoapify</a>
+                  </span>
+                  <a href="#separated-list">© OpenStreetMap contributors</a>
+                </SeparatedList>
+              </div>
+            ))}
+          </div>
         </Specimen>
       </GallerySection>
 

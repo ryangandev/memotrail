@@ -1,3 +1,4 @@
+import { SeparatedList } from "@/components/separated-list";
 import type { TimelineEntry } from "@/lib/data/timeline";
 import type {
   TimelineDisplayItem,
@@ -23,11 +24,10 @@ function FeedCard({
       onClick={() => onSelect(item.entry)}
       type="button"
     >
-      <span className={styles.cardMeta}>
-        <span>{item.trackName}</span>
-        <span aria-hidden="true">·</span>
+      <SeparatedList className={styles.cardMeta}>
+        <span className={styles.trackName}>{item.trackName}</span>
         <span>{item.dateLabel}</span>
-      </span>
+      </SeparatedList>
       <strong>{item.entry.title}</strong>
       {item.entry.body ? (
         <span className={styles.body}>{item.entry.body}</span>

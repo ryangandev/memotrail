@@ -67,7 +67,9 @@ final class NativeWorkspaceUITests: XCTestCase {
     marker.tap()
     XCTAssertTrue(app.staticTexts["2 Entries here"].waitForExistence(timeout: 3))
     XCTAssertTrue(app.staticTexts["A new beginning"].exists)
-    XCTAssertTrue(app.staticTexts["First Time · Austin, Texas · Jun 1, 2022"].exists)
+    for fact in ["First Time", "Austin, Texas", "Jun 1, 2022"] {
+      XCTAssertTrue(app.staticTexts[fact].exists, fact)
+    }
     attach(app, "Cluster records")
     app.buttons["map-record-99000000-0000-4000-8000-000000000001"].tap()
     XCTAssertTrue(
@@ -119,6 +121,30 @@ final class NativeWorkspaceUITests: XCTestCase {
     let summary = reveal(app.staticTexts["A quiet afternoon by the coast"], in: app)
     attach(app, "Dark records at accessibility text size")
     XCTAssertTrue(summary.isHittable)
+  }
+
+  // Like Web SeparatedList, a separator shows only between two facts on a line as frames narrow.
+  func testFlowSeparatorsStayBetweenFactsAsTheirFramesNarrow() {
+    let app = launch("--review-design-system")
+    for size in ["Standard text", "Large text", "Accessibility text"] {
+      app.buttons["design-preview-settings"].tap()
+      app.buttons[size].tap()
+      reveal(app.buttons["design-section-containers"], in: app).tap()
+      XCTAssertTrue(app.navigationBars["Containers & data"].waitForExistence(timeout: 3))
+      for frame in ["Wide", "Medium", "Narrow"] {
+        for kind in ["separated facts", "word-spaced facts"] {
+          let row = revealWhole(app.otherElements["\(frame) \(kind)"], in: app)
+          let lines = assertSeparatorsBetweenFacts(row, in: app)
+          // At standard text a phone's widest frame still fits the shorter row on one line.
+          if frame == "Wide", kind == "word-spaced facts", size == "Standard text" {
+            XCTAssertEqual(lines.count, 1, "\(lines)")
+          }
+          if frame == "Narrow" { XCTAssertGreaterThan(lines.count, 1, "\(lines)") }
+        }
+        attach(app, "\(frame) flow separators at \(size)")
+      }
+      app.navigationBars.buttons.element(boundBy: 0).tap()
+    }
   }
 
   func testRichWritingTypingFormattingUndoAndSavedPreview() {

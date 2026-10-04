@@ -229,6 +229,51 @@
         }
 
         GallerySpecimen(
+          title: "FlowSeparator",
+          api: "MTFlowLayout { MTFlowSeparator() } · MTWordFlow(textStyle)",
+          description:
+            "Summary and metadata rows, like Web SeparatedList. As the frames narrow, facts wrap whole and a separator shows only between two facts on the same line."
+        ) {
+          VStack(alignment: .leading, spacing: MTSpacing.s4) {
+            ForEach(
+              [("Wide", nil), ("Medium", 240), ("Narrow", 150)] as [(String, CGFloat?)], id: \.0
+            ) { name, width in
+              VStack(alignment: .leading, spacing: MTSpacing.s3) {
+                MTFlowLayout(spacing: MTSpacing.s2) {
+                  Button("Manage tracks") {}
+                    .buttonStyle(.plain)
+                    .foregroundStyle(MTColor.accent)
+                  ForEach(["8 tracks", "12 moments", "2017 to 2026"], id: \.self) { fact in
+                    MTFlowSeparator()
+                    Text(fact)
+                  }
+                }
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("\(name) separated facts")
+                MTWordFlow(.caption1) {
+                  Text("First Time")
+                  MTFlowSeparator()
+                  Text("3 earlier versions")
+                  MTFlowSeparator()
+                  Text("In Trash")
+                }
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("\(name) word-spaced facts")
+              }
+              .font(MTFont.caption.weight(.regular))
+              .foregroundStyle(MTColor.inkFaint)
+              .padding(MTSpacing.s4)
+              .frame(width: width)
+              .overlay {
+                RoundedRectangle(cornerRadius: MTRadius.medium)
+                  .strokeBorder(
+                    MTColor.borderStrong, style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+              }
+            }
+          }
+        }
+
+        GallerySpecimen(
           title: "RecordSummary",
           api: "kind · title · subtitle · status",
           description: "The compact record identity used in Map results."

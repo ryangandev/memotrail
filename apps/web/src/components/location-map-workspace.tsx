@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type * as Leaflet from "leaflet";
 import { PageFrame } from "@/components/page-frame";
 import { PageHeader } from "@/components/page-header";
+import { SeparatedList } from "@/components/separated-list";
 import { Icon } from "@/components/icon";
 import { useEffectiveTheme } from "@/components/use-effective-theme";
 import type { LocationMapItem } from "@/lib/data/location-map";
@@ -369,30 +370,32 @@ export function LocationMapWorkspace({
             </p>
           ) : null}
           <p className={styles.attribution}>
-            Map data{" "}
-            <a
-              href="https://www.openstreetmap.org/copyright"
-              rel="noreferrer"
-              target="_blank"
-            >
-              © OpenStreetMap contributors
-            </a>
-            {" · "}
-            <a
-              href="https://openmaptiles.org/"
-              rel="noreferrer"
-              target="_blank"
-            >
-              © OpenMapTiles
-            </a>
-            {" · "}
-            <a
-              href="https://www.geoapify.com/"
-              rel="noreferrer"
-              target="_blank"
-            >
-              Geoapify
-            </a>
+            <SeparatedList className={styles.attributionLinks}>
+              <span>
+                Map data{" "}
+                <a
+                  href="https://www.openstreetmap.org/copyright"
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  © OpenStreetMap contributors
+                </a>
+              </span>
+              <a
+                href="https://openmaptiles.org/"
+                rel="noreferrer"
+                target="_blank"
+              >
+                © OpenMapTiles
+              </a>
+              <a
+                href="https://www.geoapify.com/"
+                rel="noreferrer"
+                target="_blank"
+              >
+                Geoapify
+              </a>
+            </SeparatedList>
           </p>
         </div>
         <aside
@@ -414,10 +417,13 @@ export function LocationMapWorkspace({
                   <Link href={item.href}>
                     <span>{item.title}</span>
                     <small>
-                      {item.kind} · {item.address}
-                      {item.occurredAt
-                        ? ` · ${item.occurredAt.slice(0, 10)}`
-                        : ""}
+                      <SeparatedList spacing="word">
+                        <span>{item.kind}</span>
+                        <span>{item.address}</span>
+                        {item.occurredAt ? (
+                          <span>{item.occurredAt.slice(0, 10)}</span>
+                        ) : null}
+                      </SeparatedList>
                     </small>
                   </Link>
                 </li>

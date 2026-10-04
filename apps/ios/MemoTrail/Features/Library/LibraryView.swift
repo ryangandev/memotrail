@@ -480,8 +480,14 @@ private struct LibraryResultCard: View {
           Text("MATCHED IN")
             .font(.caption2)
             .foregroundStyle(MTColor.inkFaint)
-          Text(matchReasons)
-            .font(MTFont.caption.weight(.regular))
+          // Web's reasons: 5 points apart, with quiet dots between neighbors on a line.
+          MTFlowLayout(spacing: 5) {
+            ForEach(entry.matchReasons, id: \.self) { reason in
+              MTFlowSeparator().foregroundStyle(MTColor.borderStrong)
+              Text(reason).foregroundStyle(MTColor.accent)
+            }
+          }
+          .font(MTFont.caption.weight(.regular))
         }
         .padding(.top, MTSpacing.s3)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -494,20 +500,6 @@ private struct LibraryResultCard: View {
       }
     }
     .padding(MTSpacing.s4)
-  }
-
-  /// The reasons in accent, separated by quiet dots.
-  private var matchReasons: AttributedString {
-    entry.matchReasons.enumerated().reduce(into: AttributedString()) { result, reason in
-      if reason.offset > 0 {
-        var separator = AttributedString("  ·  ")
-        separator.foregroundColor = MTColor.borderStrong
-        result += separator
-      }
-      var text = AttributedString(reason.element)
-      text.foregroundColor = MTColor.accent
-      result += text
-    }
   }
 }
 
