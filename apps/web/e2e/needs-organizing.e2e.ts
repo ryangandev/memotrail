@@ -175,6 +175,10 @@ test("captures land in Library and wait under Needs organizing until they have a
     await expect(
       page.locator("[data-sonner-toast]").filter({ hasText: "Entry saved." }),
     ).toBeVisible();
+    // The save finishes once the Item page shows the new title.
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "The newest thought, sorted",
+    );
 
     await page.goto("/library");
     const library = page.getByRole("region", { name: "All items" });

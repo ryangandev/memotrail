@@ -237,9 +237,11 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
           occurredLabel: "At age 17",
         });
         await context.setOffline(false);
-        // Let the online listener finish its retry/refresh before exercising
-        // reload recovery, rather than aborting its in-flight RSC stream.
-        await page.waitForLoadState("networkidle");
+        // Let the online retry finish before exercising reload recovery,
+        // rather than aborting its in-flight render.
+        await expect(
+          page.getByRole("region", { name: "Recent Entries", exact: true }),
+        ).toContainText("Capture age");
         await page.reload();
       }
       await expect
@@ -382,6 +384,9 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
     await newCapture
       .getByRole("button", { name: "Close quick capture" })
       .click();
+    await expect(
+      page.getByRole("region", { name: "Recent Entries", exact: true }),
+    ).toContainText("Capture from New");
 
     // Old pending payloads retain their UUID/date and are not duplicated on replay.
     const legacyId = randomUUID();
@@ -424,6 +429,10 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       date_precision: "exact",
       occurred_start: "2017-07-08T12:34:56.123456+00:00",
     });
+    // The replay finishes once the Dashboard shows the Entry.
+    await expect(
+      page.getByRole("region", { name: "Recent Entries", exact: true }),
+    ).toContainText("Legacy capture");
   } finally {
     await context.setOffline(false);
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();

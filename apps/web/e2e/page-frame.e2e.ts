@@ -108,6 +108,8 @@ test("authenticated pages use the shared responsive page frame", async ({
       if (focusedViewPaths.has(family.path)) {
         await expectFocusedViewContentGap(frame, 32);
       }
+      // Leave only after the page finishes loading its data.
+      await page.waitForLoadState("networkidle");
     }
 
     await page.setViewportSize({ width: 390, height: 844 });
@@ -137,6 +139,8 @@ test("authenticated pages use the shared responsive page frame", async ({
       if (focusedViewPaths.has(family.path)) {
         await expectFocusedViewContentGap(frame, 24);
       }
+      // Leave only after the page finishes loading its data.
+      await page.waitForLoadState("networkidle");
     }
   } finally {
     await page.close();

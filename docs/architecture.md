@@ -221,6 +221,7 @@ Pair it with the test file carrying the same feature name.
   Discard, `InboxSyncStore.discard` or `InboxController.discardRejected`, removes only refused captures: their photo drafts first, then the queue entry, so orphaned photos cannot reappear in a composer.
 - A per-owner Web Lock serializes runs across tabs, and each capture is reread from storage before it is sent, so a tab skips captures another tab already synced.
   `storage` events refresh the pending lists of other tabs, and a tab whose captures another tab synced refreshes its route so Library and Needs organizing stay current.
+  The tab that sends a capture needs no extra refresh, because the sync Server Actions revalidate and return its current route.
   Browsers without Web Locks fall back to per-tab runs, where the stable Entry ID still keeps a repeated send from creating a second Entry.
 - The same provider owns the capture draft through the framework-free store in `lib/data/inbox-draft-store.ts`, read with `useCaptureDraft()`.
   Every `CaptureComposer` renders and edits that one draft: writing, `body_rich`, occurrence, photo drafts, and the voice capture in progress.
@@ -278,6 +279,7 @@ Pair it with the test file carrying the same feature name.
   Tombstones hold no content, have row level security with no client grants, are not exported, and are kept until the account is deleted, which removes them by cascade and records none for its own Entries.
 - Export captures one consistent database snapshot and streams canonical data plus original media into a ZIP.
 - Missing, changed, or truncated media fails the export instead of producing a successful partial archive.
+  A server-side failure or timeout logs one `Export stopped before completion` warning with its cause, while a download the person closes logs nothing.
 - Cross-device synchronization and an application export are not infrastructure backups.
 - Database and original Storage objects need separately protected backups and a tested non-production restore before MemoTrail can be considered recoverable.
 - Automatic 30-day cleanup is not active until its exact scope, backup prerequisites, and rollout are approved.
@@ -385,11 +387,14 @@ Pair it with the test file carrying the same feature name.
 - iOS receives public backend configuration and the Web API base URL.
 - `lib/auth/api.ts` verifies Web cookie or native bearer identity for media, metadata, and export independently of AI availability.
   AI routes add their own pause gate before shared authentication, and native AI entry points remain paused as well.
+- `src/proxy.ts` refreshes the Supabase session for pages and Server Actions.
+  API routes are outside its matcher because they authenticate and refresh the session themselves, so Next.js does not copy upload bodies for the proxy, and an upload the browser abandons ends quietly.
 - Shared behavior should be implemented and tested across Web, iOS, and Supabase in the same product slice.
 - Validation should cover the narrow unit or SQL contract first, then builds, then the closest real browser or native interaction.
 - Web unit collection includes both `.test.ts` and `.test.tsx`; synchronous rendering assertions belong in this fast layer.
 - Multi-client RPC, Storage, and database-locking tests belong in `apps/web/contracts` and run independently of Next.js and Chrome.
   Browser interactions and Web HTTP route acceptance remain in `apps/web/e2e`.
+  A browser test ends only after the page shows the result of its last action, so the server never logs a render the closing page cut short.
   The development-only design gallery has its own browser runner and is excluded from product acceptance.
   Test servers isolate Next.js build output and generated TypeScript configuration by port.
 - Native unit and backend contracts use `MemoTrail`, while Simulator UI interactions use `MemoTrailUI`.

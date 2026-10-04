@@ -302,6 +302,8 @@ async function setMemoTrailReachable(page: Page, reachable: boolean) {
 /** Restores MemoTrail and lets the browser announce that it is online again. */
 async function reconnect(context: BrowserContext, page: Page) {
   await context.setOffline(true);
+  // An offline blip the page never noticed would not announce reconnection.
+  await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
   await setMemoTrailReachable(page, true);
   await context.setOffline(false);
 }

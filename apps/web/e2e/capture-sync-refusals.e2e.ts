@@ -159,6 +159,15 @@ test("a photo upload whose response was lost waits, then attaches the stored ori
     await expect(card).toHaveCount(0);
     expect(uploads).toEqual([400]);
     expect(await attachmentCount(client, entry.id)).toBe(1);
+    // The Dashboard finishes once the attached photo's preview has loaded.
+    const preview = page.locator('main img[src*="/api/media/image"]').first();
+    await expect
+      .poll(() =>
+        preview.evaluate(
+          (img: HTMLImageElement) => img.complete && img.naturalWidth > 0,
+        ),
+      )
+      .toBe(true);
   });
 });
 

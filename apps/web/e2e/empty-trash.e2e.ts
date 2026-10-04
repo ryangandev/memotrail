@@ -235,6 +235,9 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
         hasText: /(^|\s)1 confirmed item permanently deleted\./,
       }),
     ).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByText("Nothing in Trash", { exact: true }),
+    ).toBeVisible();
   } finally {
     await page.close();
     // Clean only this test user's private fixture objects after assertions.

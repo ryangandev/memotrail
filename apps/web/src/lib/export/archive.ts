@@ -171,6 +171,22 @@ A download is complete only when the ZIP closes successfully with its MemoTrail 
 Unzip with a tool that validates ZIP checksums; checksums.json additionally verifies original media bytes.
 `;
 
+const exportFailureReasons = new Set([
+  "Export snapshot changed.",
+  "Export page is incomplete.",
+  "Invalid Entry identity.",
+  "Original media is missing or cannot be verified.",
+  "Original media is unavailable.",
+  "Original media changed after capture.",
+  "Original media size changed after capture.",
+]);
+
+function exportFailureReason(error: unknown) {
+  return error instanceof Error && exportFailureReasons.has(error.message)
+    ? error.message
+    : "export_unavailable";
+}
+
 // Only one source is read at a time. Backpressure reaches Storage and paginated RPCs.
 // ZIP directory and checksum metadata grow with file count, not attachment byte size.
 export function createExportArchive(
@@ -189,8 +205,11 @@ export function createExportArchive(
   const output = zip.outputStream as PassThrough;
   let current: Readable | undefined;
   const fail = () => {
-    const error = new Error(
+    // An abort ends the response without a complete archive, and the server logs
+    // the cause below rather than a stream error.
+    const error = new DOMException(
       "Export interrupted. No complete archive was produced.",
+      "AbortError",
     );
     current?.destroy(error);
     output.destroy(error);
@@ -359,6 +378,16 @@ export function createExportArchive(
     );
     zip.end({ forceZip64Format: false, comment: EXPORT_COMPLETE });
   };
-  void produce().catch(() => controller.abort());
+  void produce().catch((error: unknown) => {
+    // A closed download already aborted the export, and is not a failure.
+    const timedOut =
+      signal.reason instanceof DOMException &&
+      signal.reason.name === "TimeoutError";
+    if (!signal.aborted || timedOut)
+      console.warn("Export stopped before completion", {
+        reason: timedOut ? "Export timed out." : exportFailureReason(error),
+      });
+    controller.abort();
+  });
   return Readable.toWeb(output) as ReadableStream<Uint8Array>;
 }

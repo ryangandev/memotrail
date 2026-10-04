@@ -75,17 +75,16 @@ export function CaptureProvider({
 
   useEffect(() => {
     const { draft, queue } = capture;
-    const stopWatchingRuns = queue.onRunFinished(
-      ({ rejected, result, synced }) => {
-        if (result?.status === "synced") notify.success(result.message);
-        // A rejected capture may come from a composer that is already closed.
-        if (rejected > 0)
-          notify.error(
-            `MemoTrail did not accept ${countLabel(rejected, "Entry")}. Review ${rejected === 1 ? "it" : "them"} in Pending sync.`,
-          );
-        if (synced > 0) router.refresh();
-      },
-    );
+    // The sync Server Actions revalidate, so this tab's page already shows
+    // what it synced and needs no refresh of its own.
+    const stopWatchingRuns = queue.onRunFinished(({ rejected, result }) => {
+      if (result?.status === "synced") notify.success(result.message);
+      // A rejected capture may come from a composer that is already closed.
+      if (rejected > 0)
+        notify.error(
+          `MemoTrail did not accept ${countLabel(rejected, "Entry")}. Review ${rejected === 1 ? "it" : "them"} in Pending sync.`,
+        );
+    });
     function handleOnline() {
       void queue.synchronize();
     }

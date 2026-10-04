@@ -351,6 +351,10 @@ test("voice capture follows the draft into Quick Capture and stops when it close
     "Before speaking.\nfirst words and more\nfrom the dialog",
     1,
   );
+  // The save finishes once the Dashboard shows the new Entry.
+  await expect(
+    page.getByRole("region", { name: "Recent Entries", exact: true }),
+  ).toContainText("Before speaking.");
 });
 
 async function openDashboard(page: Page) {
