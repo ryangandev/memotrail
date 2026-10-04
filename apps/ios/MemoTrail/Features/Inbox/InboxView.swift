@@ -80,20 +80,23 @@ struct InboxView: View {
 
   private var pendingSection: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
+      // Like Web's Pending sync, it also holds captures MemoTrail refused, which never retry.
       MTListHeader(
-        "Waiting to sync", detail: "\(captureCount(controller.pendingEntries.count)) on this iPhone"
+        "Pending sync", detail: "\(captureCount(controller.pendingEntries.count)) on this iPhone"
       ) {
-        Button {
-          Task { await controller.refresh() }
-        } label: {
-          Label("Retry now", icon: .refresh)
+        if controller.waitingEntryCount > 0 {
+          Button {
+            Task { await controller.refresh() }
+          } label: {
+            Label("Retry now", icon: .refresh)
+          }
+          .mtButtonStyle(.ghost, size: .small, isLoading: controller.isSyncing)
+          .accessibilityIdentifier("retry-pending-entries")
         }
-        .mtButtonStyle(.ghost, size: .small, isLoading: controller.isSyncing)
-        .accessibilityIdentifier("retry-pending-entries")
       }
       MTListSurface {
         ForEach(controller.pendingEntries) { entry in
-          PendingCaptureRow(entry: entry)
+          PendingCaptureRow(entry: entry) { await controller.discardRejected(entry.id) }
           if entry.id != controller.pendingEntries.last?.id {
             MTListDivider()
           }
@@ -122,7 +125,7 @@ struct InboxView: View {
               .mtButtonStyle(.secondary, size: .small)
           }
         } else if controller.entries.isEmpty {
-          if controller.pendingEntries.isEmpty {
+          if controller.waitingEntryCount == 0 {
             InboxMessage(
               icon: .inbox, title: "Your Inbox is ready",
               message: "New captures will wait here until you give them a place.")

@@ -8,7 +8,10 @@ import { Dialog } from "@/components/dialog";
 import { Icon } from "@/components/icon";
 import { PendingCaptureList } from "@/components/pending-captures";
 import { countLabel } from "@/lib/count-label";
-import { hasWaitingCaptures } from "@/lib/data/inbox-sync";
+import {
+  countPendingCaptures,
+  hasWaitingCaptures,
+} from "@/lib/data/inbox-sync";
 
 /** The workspace's pending captures: syncs them and lists what is waiting. */
 export function SyncStatus() {
@@ -16,27 +19,47 @@ export function SyncStatus() {
   const { isSyncing, items, lastError, synchronize } = captureQueue;
   const [isOpen, setIsOpen] = useState(false);
   const isVisible = hasWaitingCaptures(captureQueue);
+  const { rejected, waiting } = countPendingCaptures(items);
 
-  // Once everything syncs, the list closes with its indicator.
+  // Once everything syncs or is discarded, the list closes with its indicator.
   if (isOpen && items.length === 0) setIsOpen(false);
 
   if (!isVisible && !isOpen) {
     return null;
   }
 
+  const label = [
+    waiting > 0 ? `${waiting} pending` : null,
+    rejected > 0 ? `${rejected} not accepted` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const description = [
+    waiting > 0
+      ? `${countLabel(waiting, "Entry")} saved on this device will sync when MemoTrail can be reached.`
+      : null,
+    rejected > 0
+      ? `MemoTrail did not accept ${countLabel(rejected, "Entry")}; copy what you want to keep, then discard ${rejected === 1 ? "it" : "them"}.`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <Dialog
-      description={`${countLabel(items.length, "Entry")} saved on this device will sync when MemoTrail can be reached.`}
+      description={description}
       footer={
-        <Button
-          disabled={isSyncing}
-          onClick={() => void synchronize()}
-          type="button"
-          variant="secondary"
-        >
-          <Icon name="refresh" size={14} />
-          {isSyncing ? "Syncing…" : "Retry now"}
-        </Button>
+        waiting > 0 ? (
+          <Button
+            disabled={isSyncing}
+            onClick={() => void synchronize()}
+            type="button"
+            variant="secondary"
+          >
+            <Icon name="refresh" size={14} />
+            {isSyncing ? "Syncing…" : "Retry now"}
+          </Button>
+        ) : null
       }
       onOpenChange={setIsOpen}
       open={isOpen}
@@ -46,12 +69,17 @@ export function SyncStatus() {
         <button
           aria-busy={isSyncing}
           className={syncStatusStyles.syncStatus}
+          data-rejected={rejected > 0 || undefined}
           onClick={() => void synchronize()}
-          title="Sync now and review captures waiting on this device"
+          title={
+            rejected > 0
+              ? "Review captures MemoTrail did not accept and sync the rest"
+              : "Sync now and review captures waiting on this device"
+          }
           type="button"
         >
           <span aria-hidden="true" />
-          {items.length} pending
+          {label}
         </button>
       }
     >

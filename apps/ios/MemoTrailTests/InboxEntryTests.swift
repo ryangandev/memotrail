@@ -1,3 +1,4 @@
+@preconcurrency import Supabase
 import UIKit
 import XCTest
 
@@ -709,6 +710,122 @@ final class InboxEntryTests: XCTestCase {
     XCTAssertNil(
       store.enqueue(makeQueuedEntry(id: UUID()), ownerID: ownerID)
     )
+  }
+
+  func testQueueStoreMarksARefusedCaptureInPlaceAcrossLaunches() throws {
+    let defaults = makeDefaults()
+    let store = InboxQueueStore(defaults: defaults)
+    let ownerID = UUID()
+    let first = makeQueuedEntry(title: "Pasted log")
+    let second = makeQueuedEntry(id: UUID(), title: "Second thought")
+    let rejection = QueuedInboxRejection(
+      message: "MemoTrail cannot accept this Entry, so it will not sync.",
+      rejectedAt: Date(timeIntervalSince1970: 1_790_000_000))
+    _ = store.enqueue(first, ownerID: ownerID)
+    _ = store.enqueue(second, ownerID: ownerID)
+
+    var refused = first
+    refused.rejection = rejection
+    XCTAssertEqual(
+      store.markRejected(entryID: first.id, rejection: rejection, ownerID: ownerID),
+      [refused, second])
+
+    // The marker survives a relaunch with the capture's content and order, so a later sync
+    // never sends it again.
+    let reloaded = InboxQueueStore(defaults: defaults).load(ownerID: ownerID)
+    XCTAssertEqual(reloaded, [refused, second])
+    XCTAssertEqual(reloaded.map(\.rejection), [rejection, nil])
+  }
+
+  func testQueueStoreDoesNotBringBackARemovedCaptureWhenRefusingIt() {
+    let defaults = makeDefaults()
+    let store = InboxQueueStore(defaults: defaults)
+    let ownerID = UUID()
+    let rejection = QueuedInboxRejection(message: "Refused.", rejectedAt: Date())
+
+    XCTAssertEqual(
+      store.markRejected(entryID: UUID(), rejection: rejection, ownerID: ownerID), [])
+    XCTAssertNil(defaults.data(forKey: InboxQueueStore.storageKey(ownerID: ownerID)))
+  }
+
+  func testQueueKeepsACaptureWhoseRefusalMarkerIsMalformed() throws {
+    let defaults = makeDefaults()
+    let store = InboxQueueStore(defaults: defaults)
+    let ownerID = UUID()
+    let entry = makeQueuedEntry()
+    let encoded = try JSONEncoder().encode(TestStoredInboxQueue(version: 3, entries: [entry]))
+    let valid = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+
+    let malformedMarkers: [Any] = [
+      NSNull(),
+      "rejected",
+      ["message": "", "rejectedAt": 1_000],
+      ["message": String(repeating: "x", count: 501), "rejectedAt": 1_000],
+      ["message": "Refused."],
+      ["message": "Refused.", "rejectedAt": "yesterday"],
+    ]
+    for marker in malformedMarkers {
+      var queue = valid
+      var entries = try XCTUnwrap(queue["entries"] as? [[String: Any]])
+      entries[0]["rejection"] = marker
+      queue["entries"] = entries
+      defaults.set(
+        try JSONSerialization.data(withJSONObject: queue),
+        forKey: InboxQueueStore.storageKey(ownerID: ownerID))
+
+      // The capture stays, sendable again, rather than costing the whole queue.
+      let loaded = store.load(ownerID: ownerID)
+      XCTAssertEqual(loaded.map(\.id), [entry.id], "\(marker)")
+      XCTAssertNil(loaded.first?.rejection, "\(marker)")
+    }
+  }
+
+  func testRefusedCaptureCopiesItsTitleAndNote() {
+    XCTAssertEqual(
+      makeQueuedEntry(title: "Pasted log", body: "Line one\nLine two").copyableText,
+      "Pasted log\n\nLine one\nLine two")
+    XCTAssertEqual(makeQueuedEntry(body: "Only a note").copyableText, "Only a note")
+    XCTAssertEqual(
+      makeQueuedEntry(body: "", attachments: [makeQueuedAttachment()]).copyableText, "")
+  }
+
+  func testCaptureSyncFailuresAreClassifiedByCodeLikeWeb() {
+    func failure(_ code: String?) -> CaptureSyncFailure {
+      CaptureSyncFailure(PostgrestError(code: code, message: "Any message"))
+    }
+
+    // Text Postgres cannot store, constraint and size violations, refused writes, and a
+    // request PostgREST cannot read never succeed on a later attempt.
+    for code in [
+      "22P05", "22P02", "22001", "22023", "23502", "23505", "23514", "54000", "42501",
+      "PGRST102",
+    ] {
+      XCTAssertEqual(failure(code), .rejected, code)
+    }
+
+    for code in ["PGRST301", "PGRST302", "PGRST303"] {
+      XCTAssertEqual(failure(code), .session, code)
+    }
+
+    // Unavailable databases, stale schema caches, conflicts that succeed on retry, undeployed
+    // functions, and errors without a code all stay retryable.
+    for code in [
+      nil, "", "PGRST000", "PGRST001", "PGRST002", "PGRST003", "PGRST204", "PGRST205",
+      "PGRSTX00", "PGRST1XX", "40001", "40P01", "57014", "08006", "53300", "XX000", "42883",
+      "42P01", "P0001", "22p05",
+    ] {
+      XCTAssertEqual(failure(code), .unavailable, code ?? "nil")
+    }
+
+    XCTAssertEqual(CaptureSyncFailure(URLError(.notConnectedToInternet)), .unavailable)
+    XCTAssertEqual(CaptureSyncFailure(URLError(.timedOut)), .unavailable)
+    let gateway = HTTPURLResponse(
+      url: URL(string: "http://127.0.0.1:54321/rest/v1/entries")!, statusCode: 502,
+      httpVersion: nil, headerFields: nil)!
+    XCTAssertEqual(
+      CaptureSyncFailure(HTTPError(data: Data("Bad gateway".utf8), response: gateway)),
+      .unavailable)
+    XCTAssertEqual(CaptureSyncFailure(CancellationError()), .unavailable)
   }
 
   func testPhotoStorePersistsPrivateDraftsByOwnerAndRemovesThem() throws {

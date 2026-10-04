@@ -29,6 +29,11 @@
   box-shadow: inset 0 0 0 2px var(--mt-color-accent);
 }
 
+/* A capture MemoTrail did not accept waits for the person, so it stays visible. */
+.syncStatus[data-rejected] {
+  color: var(--mt-color-warm);
+}
+
 .syncStatus > span {
   width: 6px;
   height: 6px;

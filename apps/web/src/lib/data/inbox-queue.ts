@@ -14,7 +14,15 @@ type QueueEntryBase = {
   id: string;
   occurredTimezone: string;
   queuedAt: string;
+  /** Set once MemoTrail refuses the capture; read it through `queuedRejection`. */
+  rejection?: QueuedInboxRejection;
   title: string | null;
+};
+
+/** Why MemoTrail will never accept a capture, kept with its original content. */
+export type QueuedInboxRejection = {
+  message: string;
+  rejectedAt: string;
 };
 export type QueuedInboxEntry = QueueEntryBase &
   ({ version: 2; occurredAt: string } | ({ version: 3 } & Occurrence));
@@ -42,6 +50,7 @@ type LegacyQueuedInboxEntry = Omit<
 export type QueueStorage = Pick<Storage, "getItem" | "removeItem" | "setItem">;
 
 const maximumQueueSize = 100;
+const maximumRejectionMessageLength = 500;
 const maximumTimezoneLength = 100;
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -106,6 +115,51 @@ export function removeInboxQueueEntry(
   } catch {
     return null;
   }
+}
+
+/**
+ * Marks a capture MemoTrail will never accept, so later runs skip it until the
+ * person discards it. A capture another tab already removed stays removed.
+ */
+export function rejectInboxQueueEntry(
+  storage: QueueStorage,
+  ownerId: string,
+  entryId: string,
+  rejection: QueuedInboxRejection,
+) {
+  const currentQueue = loadInboxQueue(storage, ownerId);
+  if (!currentQueue.some((entry) => entry.id === entryId)) return currentQueue;
+
+  const nextQueue = currentQueue.map((entry) =>
+    entry.id === entryId ? { ...entry, rejection } : entry,
+  );
+
+  try {
+    storage.setItem(inboxQueueKey(ownerId), JSON.stringify(nextQueue));
+    return nextQueue;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The rejection a capture carries, or null while it waits to sync. A malformed
+ * marker never hides the capture; it only lets it be sent again.
+ */
+export function queuedRejection(
+  entry: QueuedInboxEntry,
+): QueuedInboxRejection | null {
+  const rejection: unknown = entry.rejection;
+  if (typeof rejection !== "object" || rejection === null) return null;
+
+  const { message, rejectedAt } = rejection as Partial<QueuedInboxRejection>;
+  return typeof message === "string" &&
+    message.length > 0 &&
+    message.length <= maximumRejectionMessageLength &&
+    typeof rejectedAt === "string" &&
+    !Number.isNaN(Date.parse(rejectedAt))
+    ? { message, rejectedAt }
+    : null;
 }
 
 export function parseInboxQueue(value: string | null): QueuedInboxEntry[] {

@@ -195,6 +195,14 @@ Pair it with the test file carrying the same feature name.
 - Web `components/capture-provider.tsx` mounts once in the signed-in workspace and owns pending-capture sync through the framework-free store in `lib/data/inbox-sync.ts`.
   Composers enqueue captures and render its items, run problem, and photo progress, so synchronization never depends on a mounted composer.
 - The store syncs on load, on `online`, and after each new capture, with one run at a time per tab; a run sends the oldest capture first and stops at the first retryable failure.
+- Sync failures are classified by PostgREST and Postgres error code, never message text, in Web `lib/data/sync-failure.ts` and native `CaptureSyncFailure` in `Models/InboxEntry.swift`.
+  Missing codes, connection and schema-cache errors, and retryable SQLSTATEs stay retryable; JWT errors ask the person to sign in again; `PGRST1xx`, `42501`, and SQLSTATE classes `22`, `23`, and `54` are refusals.
+  The `attachment_object_missing` registration error stays retryable because Storage upload errors are not reported yet.
+  `syncInboxEntry` and `registerEntryAttachment` in `app/inbox/actions.ts` return `rejected` for a refusal, and the client also refuses a photo that changed or has an invalid path on the device.
+- A refused capture keeps its content in the queue with a `rejection` marker (message and time), written by `rejectInboxQueueEntry` in `lib/data/inbox-queue.ts` or `InboxQueueStore.markRejected`.
+  Runs skip marked captures and continue with later ones, and a malformed marker only makes the capture sendable again.
+  If the marker cannot be stored, the run stops with a retry instead, so the capture is never sent again unmarked.
+  Discard, `InboxSyncStore.discard` or `InboxController.discardRejected`, removes only refused captures: their photo drafts first, then the queue entry, so orphaned photos cannot reappear in a composer.
 - A per-owner Web Lock serializes runs across tabs, and each capture is reread from storage before it is sent, so a tab skips captures another tab already synced.
   `storage` events refresh the pending lists of other tabs, and a tab whose captures another tab synced refreshes its route so Inbox counts stay current.
   Browsers without Web Locks fall back to per-tab runs, where the stable Entry ID still keeps a repeated send from creating a second Entry.
@@ -269,7 +277,8 @@ Pair it with the test file carrying the same feature name.
   Web `QuickCaptureDialog` shows CaptureComposer's dialog variant under its own header; native `QuickCaptureView` shows the same header over `CaptureCard(style: .dialog)` full screen, where Web now anchors the composer to its bottom dock.
   Both composers open the relevant date in place, keep only problems in the composer, and announce a synced capture with a toast.
   A capture saved without a connection gets an info toast instead: Web checks the browser's connection before syncing, while `InboxController` confirms a capture once when its first sync cannot reach MemoTrail and keeps later offline retries quiet.
-  Web `SyncStatus` in the workspace header counts waiting captures; selecting it retries now and opens a compact Dialog with the same `PendingCaptureList` both composers render.
+  Web `SyncStatus` in the workspace header counts waiting and refused captures separately; selecting it retries now and opens a compact Dialog with the same `PendingCaptureList` both composers render.
+  A refused capture is announced with an error toast, and `PendingCaptureList` and native `PendingCaptureRow` give it Copy text and a confirmed Discard; Retry now appears only while a capture is still waiting.
 - The Web Inbox renders `components/entry-review-list.tsx` and its `EntryReviewDialog` inside the compact PageFrame.
   Native `Features/Inbox` mirrors the list with `InboxCards.swift` and the dialog with `EntryReviewSheet.swift`: the same fields, sticky Save changes and Save to Library footer, confirmations anchored to Move to Trash, and toasts.
   Neither Inbox embeds a composer; Web captures from the bottom dock, and iOS from the Dashboard or New entry in the workspace header.

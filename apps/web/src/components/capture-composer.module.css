@@ -258,10 +258,11 @@
   text-align: right;
 }
 
-/* Enough for a short status in two lines, never a column of single words. */
+/* Enough for a short status on one line and the offline message in three, never
+   a column of single words; anything wider moves to its own row. */
 .captureStatus:not(:empty),
 .captureError:not(:empty) {
-  min-width: 120px;
+  min-width: 160px;
 }
 
 .captureStatus {

@@ -63,7 +63,13 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - On Web, a voice capture in progress belongs to that draft too, and every open tab in a browser follows the same draft.
 - Offline captures remain visible and retryable until synchronization is confirmed.
 - Pending captures sync from any signed-in page once MemoTrail can be reached, whether or not a composer is open.
-- On Web, the workspace header counts the captures waiting on this device on desktop and mobile; selecting it retries now and lists them with the latest sync problem.
+- A capture MemoTrail cannot accept, such as text with a character Postgres cannot store, is never reported as offline and never retried automatically.
+  It stays in Pending sync on that device with its original content, marked Not accepted with a reason, and later captures still sync.
+  Copy text keeps its title and note, and Discard asks for confirmation before removing it and its photos from the device.
+  If only its photos were refused, the Entry is already in the Inbox and Discard removes only the local copy.
+- An expired session keeps captures waiting and asks the person to sign in again instead of reporting them as offline.
+- On Web, the workspace header counts the captures waiting on this device and, separately, the ones not accepted, on desktop and mobile; selecting it retries now and lists them with the latest sync problem.
+- On iOS, the Inbox lists the same Pending sync captures, and the Dashboard and Quick Capture say how many wait and how many were not accepted.
 - Every open tab in a browser shows the same pending captures, and each capture is saved once.
 - An ordinary online save shows progress in the composer; its brief local queue stage does not open a Pending sync list or the header count.
 - Voice capture produces editable text and never retains the original audio.

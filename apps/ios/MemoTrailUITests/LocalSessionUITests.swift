@@ -1,3 +1,4 @@
+import UIKit
 import XCTest
 
 /// Runs signed in as the seeded, disposable local account that
@@ -292,6 +293,65 @@ final class LocalSessionUITests: XCTestCase {
     online.buttons["Move Ferry tickets for Saturday to Trash"].tap()
     online.buttons["Move to Trash"].tap()
     XCTAssertTrue(text("Capture moved to Trash.", in: online).waitForExistence(timeout: 10))
+  }
+
+  func testRefusedQuickCaptureIsKeptWithCopyAndDiscard() throws {
+    let app = try launchLocalSession()
+    XCTAssertTrue(app.tabBars.buttons["Inbox"].waitForExistence(timeout: 20))
+    app.tabBars.buttons["Inbox"].tap()
+    app.buttons["workspace-new-entry"].tap()
+    let composer = try quickCapture(in: app)
+    let quick = composer.textViews["capture-body"]
+    XCTAssertTrue(quick.waitForExistence(timeout: 10))
+    XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+
+    // Text pasted from a terminal can carry a NUL character, which Postgres text cannot store,
+    // so MemoTrail refuses this capture on every attempt.
+    let pasted = "Pasted from a terminal \u{0000} log"
+    UIPasteboard.general.string = pasted
+    quick.press(forDuration: 1.2)
+    let pasteMenuItem = app.menuItems["Paste"]
+    let pasteButton = app.buttons["Paste"]
+    let deadline = Date().addingTimeInterval(5)
+    while !pasteMenuItem.exists, !pasteButton.exists, Date() < deadline {
+      Thread.sleep(forTimeInterval: 0.25)
+    }
+    (pasteMenuItem.exists ? pasteMenuItem : pasteButton).tap()
+    composer.buttons["rich-dismiss-keyboard"].tap()
+    composer.buttons["save-entry"].tap()
+
+    // It is announced as refused, never as offline, and waits in the Inbox with why.
+    XCTAssertTrue(app.buttons["Close quick capture"].waitForNonExistence(timeout: 10))
+    XCTAssertTrue(
+      text("MemoTrail did not accept 1 Entry. Review it in your Inbox.", in: app)
+        .waitForExistence(timeout: 15))
+    XCTAssertFalse(text("Saved on this iPhone", in: app).exists)
+    XCTAssertTrue(text("Not accepted", in: app).waitForExistence(timeout: 5))
+    XCTAssertTrue(text("MemoTrail cannot accept this Entry, so it will not sync.", in: app).exists)
+    XCTAssertFalse(app.buttons["Retry now"].exists)
+    attach(app, "Refused capture in Pending sync")
+    app.buttons["workspace-new-entry"].tap()
+    XCTAssertTrue(text("1 Entry not accepted", in: app).waitForExistence(timeout: 10))
+    attach(app, "Quick Capture with a refused capture")
+    app.buttons["Close quick capture"].tap()
+
+    let copy = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Copy the text of"))
+      .firstMatch
+    reveal(copy, in: app).tap()
+    XCTAssertTrue(text("Text copied.", in: app).waitForExistence(timeout: 5))
+
+    // Discard asks first, then removes the capture from this iPhone.
+    let discard = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Discard "))
+      .firstMatch
+    reveal(discard, in: app).tap()
+    let confirm = app.buttons.matching(NSPredicate(format: "label == %@", "Discard")).firstMatch
+    XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+    XCTAssertTrue(text("Discard this pending Entry?", in: app).exists)
+    attach(app, "Discard refused capture")
+    confirm.tap()
+    XCTAssertTrue(text("Pending Entry discarded.", in: app).waitForExistence(timeout: 10))
+    XCTAssertTrue(text("Not accepted", in: app).waitForNonExistence(timeout: 5))
+    XCTAssertFalse(app.otherElements["inbox-pending-entries"].exists)
   }
 
   func testExportPreparesDownloadsAndDiscardsASnapshot() throws {

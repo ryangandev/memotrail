@@ -2,14 +2,22 @@ import type { PhotoUploadProgress } from "@/lib/media/upload";
 import {
   enqueueInboxEntry,
   loadInboxQueue,
+  queuedRejection,
+  rejectInboxQueueEntry,
   removeInboxQueueEntry,
   type QueueStorage,
   type QueuedInboxEntry,
+  type QueuedInboxRejection,
 } from "./inbox-queue";
 
+/**
+ * `retry` keeps a capture waiting and ends the run, so later captures stay in
+ * order; `rejected` means MemoTrail will never accept it, so it is kept for
+ * the person and the run moves on.
+ */
 export type InboxSyncResult = {
   message: string;
-  status: "retry" | "synced";
+  status: "rejected" | "retry" | "synced";
 };
 
 /** The network side of one capture's synchronization. */
@@ -25,7 +33,7 @@ export type InboxSyncTransport = {
   finishCapture: (entryId: string) => Promise<void>;
 };
 
-export type PendingCaptureStatus = "syncing" | "waiting";
+export type PendingCaptureStatus = "rejected" | "syncing" | "waiting";
 
 export type PendingCapture = {
   entry: QueuedInboxEntry;
@@ -35,6 +43,8 @@ export type PendingCapture = {
    * Such a brief local queue stage is progress, not a Pending sync list.
    */
   firstAttempt: boolean;
+  /** Why MemoTrail refused a `rejected` capture; null while it waits. */
+  rejection: QueuedInboxRejection | null;
 };
 
 export type InboxSyncSnapshot = {
@@ -50,12 +60,22 @@ export type InboxSyncSnapshot = {
 };
 
 export type InboxSyncRun = {
-  /** The final attempt's result, or null when nothing needed to sync. */
+  /**
+   * The latest synced or retryable attempt's result, or null when there was
+   * none; rejected captures are only counted, so they never hide a synced one.
+   */
   result: InboxSyncResult | null;
+  /** Captures MemoTrail refused in this run. */
+  rejected: number;
   synced: number;
 };
 
 export type InboxSyncStore = {
+  /**
+   * Removes a rejected capture and its photos from this device, resolving
+   * false when it is not rejected or could not be removed. Never rejects.
+   */
+  discard: (entryId: string) => Promise<boolean>;
   /** Stores a capture on this device, then starts its synchronization. */
   enqueue: (entry: QueuedInboxEntry) => QueuedInboxEntry[] | null;
   getServerSnapshot: () => InboxSyncSnapshot;
@@ -91,17 +111,21 @@ const serverSnapshot: InboxSyncSnapshot = {
  * Owns one person's pending captures in this browser tab. Runs are serialized
  * in the tab and, through `runExclusive`, across tabs that share the queue.
  * Each run sends captures oldest first and stops at the first one that must
- * wait, rereading the shared queue before every capture.
+ * wait, rereading the shared queue before every capture. A capture MemoTrail
+ * rejects is marked in the queue and skipped by every later run.
  */
 export function createInboxSyncStore({
   isOnline = () => true,
   ownerId,
+  removePhotoDrafts,
   runExclusive = (task) => task(),
   storage,
   transport,
 }: {
   isOnline?: () => boolean;
   ownerId: string;
+  /** Deletes this device's copies of the given capture photos. */
+  removePhotoDrafts: (attachmentIds: string[]) => Promise<void>;
   runExclusive?: <T>(task: () => Promise<T>) => Promise<T>;
   storage: QueueStorage;
   transport: InboxSyncTransport;
@@ -122,11 +146,19 @@ export function createInboxSyncStore({
   }
 
   function itemsFor(queue: QueuedInboxEntry[]): PendingCapture[] {
-    return queue.map((entry) => ({
-      entry,
-      firstAttempt: firstAttemptIds.has(entry.id),
-      status: entry.id === syncingId ? "syncing" : "waiting",
-    }));
+    return queue.map((entry) => {
+      const rejection = queuedRejection(entry);
+      return {
+        entry,
+        firstAttempt: firstAttemptIds.has(entry.id),
+        rejection,
+        status: rejection
+          ? "rejected"
+          : entry.id === syncingId
+            ? "syncing"
+            : "waiting",
+      };
+    });
   }
 
   function replaceEntries(queue: QueuedInboxEntry[]) {
@@ -157,7 +189,7 @@ export function createInboxSyncStore({
       result = { message: offlineSyncMessage, status: "retry" };
     }
 
-    if (result.status === "retry" || entry.attachments.length === 0)
+    if (result.status !== "synced" || entry.attachments.length === 0)
       return result;
 
     try {
@@ -171,6 +203,7 @@ export function createInboxSyncStore({
 
   async function runOnce(): Promise<InboxSyncRun> {
     let result: InboxSyncResult | null = null;
+    let rejected = 0;
     let synced = 0;
     const attempted = new Set<string>();
     let considered: QueuedInboxEntry[] = [];
@@ -179,13 +212,34 @@ export function createInboxSyncStore({
       for (;;) {
         // Another tab may have synced or queued captures since the last step.
         considered = readQueue();
-        const entry = considered.find(({ id }) => !attempted.has(id));
+        const entry = considered.find(
+          (queued) => !attempted.has(queued.id) && isSendable(queued),
+        );
         if (!entry) break;
 
         attempted.add(entry.id);
         syncingId = entry.id;
         replaceEntries(considered);
-        result = await attempt(entry);
+        const attemptResult = await attempt(entry);
+
+        if (attemptResult.status === "rejected") {
+          // Sending it again cannot help, so it waits for the person without
+          // holding back the captures queued after it.
+          const nextQueue = rejectInboxQueueEntry(storage, ownerId, entry.id, {
+            message: attemptResult.message,
+            rejectedAt: new Date().toISOString(),
+          });
+          if (nextQueue === null) {
+            result = { message: attemptResult.message, status: "retry" };
+            break;
+          }
+          rejected += 1;
+          syncingId = null;
+          replaceEntries(nextQueue);
+          continue;
+        }
+
+        result = attemptResult;
         if (result.status === "retry") break;
 
         const nextQueue = removeInboxQueueEntry(storage, ownerId, entry.id);
@@ -213,7 +267,7 @@ export function createInboxSyncStore({
       });
     }
 
-    return { result, synced };
+    return { rejected, result, synced };
   }
 
   async function runUntilSettled() {
@@ -226,6 +280,7 @@ export function createInboxSyncStore({
           run = await runExclusive(runOnce);
         } catch {
           run = {
+            rejected: 0,
             result: { message: offlineSyncMessage, status: "retry" },
             synced: 0,
           };
@@ -235,7 +290,7 @@ export function createInboxSyncStore({
           });
         }
         for (const listener of runListeners) listener(run);
-      } while (rerunRequested && readQueue().length > 0);
+      } while (rerunRequested && readQueue().some(isSendable));
     } finally {
       inFlight = null;
       publish({ isSyncing: false, photoUploadProgress: null });
@@ -251,8 +306,9 @@ export function createInboxSyncStore({
 
     ensureLoaded();
     const queue = readQueue();
-    if (queue.length === 0) {
-      if (entries.length > 0 || snapshot.lastError) {
+    if (!queue.some(isSendable)) {
+      // Only rejected captures, if any, remain; they are never sent again.
+      if (entries.length > 0 || queue.length > 0 || snapshot.lastError) {
         replaceEntries(queue);
         publish({ lastError: null });
       }
@@ -263,7 +319,32 @@ export function createInboxSyncStore({
     return inFlight;
   }
 
+  async function discard(entryId: string) {
+    ensureLoaded();
+    const entry = readQueue().find(({ id }) => id === entryId);
+    if (!entry) {
+      // Another tab already removed it.
+      replaceEntries(readQueue());
+      return true;
+    }
+    if (isSendable(entry)) return false;
+
+    try {
+      // Photos go first: one left behind without its capture would reappear
+      // in the composer as part of the next draft.
+      await removePhotoDrafts(entry.attachments.map(({ id }) => id));
+    } catch {
+      return false;
+    }
+
+    const nextQueue = removeInboxQueueEntry(storage, ownerId, entryId);
+    if (nextQueue === null) return false;
+    replaceEntries(nextQueue);
+    return true;
+  }
+
   return {
+    discard,
     enqueue(entry) {
       ensureLoaded();
       const nextQueue = enqueueInboxEntry(storage, ownerId, entry);
@@ -286,7 +367,10 @@ export function createInboxSyncStore({
     reload() {
       const queue = readQueue();
       const remaining = new Set(queue.map(({ id }) => id));
-      const removed = entries.filter(({ id }) => !remaining.has(id)).length;
+      // A rejected capture leaves the queue only when it is discarded.
+      const removed = entries.filter(
+        (entry) => !remaining.has(entry.id) && isSendable(entry),
+      ).length;
       replaceEntries(queue);
       return removed;
     },
@@ -301,4 +385,15 @@ export function createInboxSyncStore({
 /** Whether a pending list should appear; a first online attempt is progress. */
 export function hasWaitingCaptures(snapshot: InboxSyncSnapshot) {
   return snapshot.items.some((item) => !item.firstAttempt);
+}
+
+/** How many listed captures still sync and how many MemoTrail rejected. */
+export function countPendingCaptures(items: readonly PendingCapture[]) {
+  const rejected = items.filter(({ status }) => status === "rejected").length;
+  return { rejected, waiting: items.length - rejected };
+}
+
+/** Whether a capture is still sent; a rejected one waits for the person. */
+function isSendable(entry: QueuedInboxEntry) {
+  return queuedRejection(entry) === null;
 }

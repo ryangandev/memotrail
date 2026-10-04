@@ -122,16 +122,19 @@ struct HomeView: View {
   }
 
   private var pendingCaptureSection: some View {
-    Label(
-      countLabel(captureController.pendingEntries.count, "Entry") + " waiting to sync",
-      icon: .history
+    // Captures MemoTrail refused need the person, so they read warm like Web's indicator.
+    let hasRejected = captureController.rejectedEntryCount > 0
+    return Label(
+      captureController.pendingSummary,
+      icon: hasRejected ? .warning : .history
     )
     .font(MTFont.caption)
-    .foregroundStyle(MTColor.inkMuted)
+    .foregroundStyle(hasRejected ? MTColor.warm : MTColor.inkMuted)
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(MTSpacing.s3)
     .background(
-      MTColor.accentSubtle.opacity(0.42), in: RoundedRectangle(cornerRadius: MTRadius.medium)
+      (hasRejected ? MTColor.warmSubtle : MTColor.accentSubtle).opacity(0.42),
+      in: RoundedRectangle(cornerRadius: MTRadius.medium)
     )
     .accessibilityIdentifier("home-pending-entries")
   }
