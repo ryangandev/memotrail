@@ -143,6 +143,9 @@ The CI Web job runs these independent checks concurrently before the build.
 Web type checking runs `next typegen` before TypeScript so a fresh checkout generates the required Next.js declarations.
 The generated `apps/web/next-env.d.ts` stays local and is ignored by Git.
 Playwright browser tests are a separate local acceptance suite that requires the local Supabase stack; they are not part of the current GitHub CI job.
+GitHub CI does not build or test the iOS app.
+Each macOS runner minute costs this private repository ten Linux minutes, and the native contract and interaction suites need the Docker-based local Supabase stack, which GitHub's Apple silicon macOS runners cannot start.
+Before merging a change to `apps/ios`, design tokens, migrations, or a contract both clients share, run the affected native layers below locally.
 
 ### Choose the relevant test layer
 
