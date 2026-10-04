@@ -8,29 +8,18 @@ import { validTimezone } from "./occurrence";
 
 export const goalBodyLimit = 50_000;
 export const goalLabelLimit = 200;
-export const goalRelatedEntryLimit = 100;
 export const goalTitleLimit = 200;
 
-export const goalHorizons = ["short_term", "long_term", "someday"] as const;
-export const goalStatuses = [
-  "considering",
-  "active",
-  "paused",
-  "achieved",
-  "let_go",
-] as const;
+export const goalStatuses = ["active", "achieved", "let_go"] as const;
 export const goalAchievementPrecisions = firstTimeDatePrecisions;
 
-export type GoalHorizon = (typeof goalHorizons)[number];
 export type GoalStatus = (typeof goalStatuses)[number];
 export type GoalAchievementPrecision =
   (typeof goalAchievementPrecisions)[number];
 
 export type GoalEntryInput = {
   body: string;
-  horizon: GoalHorizon;
   id: string | null;
-  relatedEntryIds: string[];
   revision: number | null;
   status: GoalStatus;
   tagNames: string[];
@@ -50,8 +39,12 @@ export type GoalAchievementInput = {
 
 export type GoalExtractionInput = Pick<
   GoalEntryInput,
-  "title" | "horizon" | "status" | "targetDate"
-> & { goalId: string; sourceId: string; sourceRevision: number };
+  "title" | "targetDate"
+> & {
+  goalId: string;
+  sourceId: string;
+  sourceRevision: number;
+};
 
 export function parseGoalExtractionInput(
   input: unknown,
@@ -64,17 +57,17 @@ export function parseGoalExtractionInput(
     !Number.isSafeInteger(input.sourceRevision) ||
     input.sourceRevision < 1
   )
-    return invalid("Choose a current Wiki Item to create this Goal from.");
+    return invalid("Choose a current Wiki Item to add to Want to Do.");
   const parsed = parseGoalEntryInput({
     ...input,
     body: "",
     id: null,
     revision: null,
+    status: "active",
     tagNames: [],
-    relatedEntryIds: [],
   });
   if (!parsed.success) return parsed;
-  const { title, horizon, status, targetDate } = parsed.data;
+  const { title, targetDate } = parsed.data;
   return {
     success: true,
     data: {
@@ -82,8 +75,6 @@ export function parseGoalExtractionInput(
       sourceId: input.sourceId,
       sourceRevision: input.sourceRevision,
       title,
-      horizon,
-      status,
       targetDate,
     },
   };
@@ -97,41 +88,31 @@ const uuidPattern =
 
 export function parseGoalEntryInput(input: unknown): Parsed<GoalEntryInput> {
   if (!isRecord(input)) {
-    return invalid("This Goal is invalid. Refresh and try again.");
+    return invalid("This item is invalid. Refresh and try again.");
   }
 
   const title = normalizedString(input.title);
   const body = normalizedString(input.body);
   const tagNames = parseTagNames(input.tagNames);
-  const relatedEntryIds = normalizedUuidArray(input.relatedEntryIds);
 
-  if (!title) return invalid("Add a title for this Goal.");
+  if (!title) return invalid("Add a title.");
   if (title.length > goalTitleLimit) {
-    return invalid(`Goal titles can be up to ${goalTitleLimit} characters.`);
+    return invalid(`Titles can be up to ${goalTitleLimit} characters.`);
   }
   if (body.length > goalBodyLimit) {
-    return invalid(`Reflections can be up to ${goalBodyLimit} characters.`);
-  }
-  if (
-    typeof input.horizon !== "string" ||
-    !goalHorizons.includes(input.horizon as GoalHorizon)
-  ) {
-    return invalid("Choose a valid Goal horizon.");
+    return invalid(`Notes can be up to ${goalBodyLimit} characters.`);
   }
   if (
     typeof input.status !== "string" ||
     !goalStatuses.includes(input.status as GoalStatus)
   ) {
-    return invalid("Choose a valid reflective state.");
+    return invalid("Choose a valid status.");
   }
   if (!tagNames) {
     return invalid(tagNamesLimitMessage);
   }
-  if (!relatedEntryIds || relatedEntryIds.length > goalRelatedEntryLimit) {
-    return invalid(`Relate up to ${goalRelatedEntryLimit} Items.`);
-  }
   if (!isGoalEntryIdentity(input.id, input.revision)) {
-    return invalid("This Goal version is invalid. Refresh and try again.");
+    return invalid("This version is invalid. Refresh and try again.");
   }
 
   const targetDate = optionalCalendarDate(input.targetDate);
@@ -142,9 +123,7 @@ export function parseGoalEntryInput(input: unknown): Parsed<GoalEntryInput> {
   return {
     data: {
       body,
-      horizon: input.horizon as GoalHorizon,
       id: input.id as string | null,
-      relatedEntryIds,
       revision: input.revision as number | null,
       status: input.status as GoalStatus,
       tagNames,
@@ -159,10 +138,10 @@ export function parseGoalAchievementInput(
   input: unknown,
 ): Parsed<GoalAchievementInput> {
   if (!isRecord(input) || !isGoalEntryIdentity(input.id, input.revision)) {
-    return invalid("This Goal version is invalid. Refresh and try again.");
+    return invalid("This version is invalid. Refresh and try again.");
   }
   if (input.id === null || input.revision === null) {
-    return invalid("Save this Goal before recording its achievement.");
+    return invalid("Save this item before marking it done.");
   }
 
   const occurredTimezone = normalizedString(input.occurredTimezone);
@@ -199,16 +178,6 @@ export function isGoalEntryIdentity(id: unknown, revision: unknown) {
         typeof revision === "number" &&
         Number.isSafeInteger(revision) &&
         revision >= 1;
-}
-
-function normalizedUuidArray(value: unknown) {
-  if (!Array.isArray(value)) return null;
-  const unique = new Set<string>();
-  for (const item of value) {
-    if (!validUuid(item)) return null;
-    unique.add(item.toLocaleLowerCase());
-  }
-  return [...unique];
 }
 
 function optionalCalendarDate(value: unknown): string | null | undefined {

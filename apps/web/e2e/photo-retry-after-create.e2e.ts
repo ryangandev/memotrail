@@ -36,10 +36,29 @@ const scenarios = [
 ] as const;
 
 const records = {
-  goal: { label: "Goal", path: "/goals", itemKind: "goal", subtype: "goal" },
-  home: { label: "Home", path: "/homes", itemKind: "entity", subtype: "home" },
+  goal: {
+    add: "Add to Want to Do",
+    captureDialog: "Add this Capture to Want to Do",
+    partial: "Saved",
+    saved: "Changes saved.",
+    path: "/goals",
+    itemKind: "goal",
+    subtype: "goal",
+  },
+  home: {
+    add: "Add Home",
+    captureDialog: "Create a Home from this Capture",
+    partial: "The Home was saved",
+    saved: "Home saved.",
+    path: "/homes",
+    itemKind: "entity",
+    subtype: "home",
+  },
   vehicle: {
-    label: "Vehicle",
+    add: "Add Vehicle",
+    captureDialog: "Create a Vehicle from this Capture",
+    partial: "The Vehicle was saved",
+    saved: "Vehicle saved.",
     path: "/vehicles",
     itemKind: "entity",
     subtype: "vehicle",
@@ -74,7 +93,7 @@ for (const scenario of scenarios) {
     expect(created.error).toBeNull();
     const owner = created.data.user!.id;
     const record = records[scenario.kind];
-    const title = `Retry ${record.label} fixture`;
+    const title = `Retry ${record.subtype} fixture`;
 
     try {
       const cookies: { name: string; value: string }[] = [];
@@ -134,7 +153,7 @@ for (const scenario of scenarios) {
         // The shared Dialog mounts only on the client, so it appears once the page hydrates.
         await expect(
           page.getByRole("dialog", {
-            name: `Create a ${record.label} from this Capture`,
+            name: record.captureDialog,
           }),
         ).toBeVisible(slow);
         await expect(
@@ -146,7 +165,7 @@ for (const scenario of scenarios) {
         await expect(async () => {
           if (!(await editor.isVisible())) {
             await page
-              .getByRole("button", { name: `Add ${record.label}` })
+              .getByRole("button", { name: record.add })
               .first()
               .click();
           }
@@ -186,11 +205,11 @@ for (const scenario of scenarios) {
         } else await route.continue();
       });
       await editor
-        .getByRole("button", { name: `Add ${record.label}`, exact: true })
+        .getByRole("button", { name: record.add, exact: true })
         .click();
       await expect(
         editor.getByText(
-          `The ${record.label} was saved, but 1 photo could not be attached. Select Save again to retry.`,
+          `${record.partial}, but 1 photo could not be attached. Select Save again to retry.`,
         ),
       ).toBeVisible(slow);
       expect(failedUploads).toBe(1);
@@ -223,7 +242,7 @@ for (const scenario of scenarios) {
         .getByRole("button", { name: "Save changes", exact: true })
         .click();
       await expect(editor).not.toBeVisible(slow);
-      await expect(page.getByText(`${record.label} saved.`)).toBeVisible();
+      await expect(page.getByText(record.saved)).toBeVisible();
 
       const entries = await client
         .from("entries")

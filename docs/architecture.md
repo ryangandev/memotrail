@@ -86,6 +86,8 @@ Pair it with the test file carrying the same feature name.
 - Web Goal, Home, and Vehicle workspaces keep a `?source=` Capture handoff for the open editor, because creating the record organizes the Capture and the revalidated page no longer returns it.
   Only the create call sends the Capture; once the record exists, later saves, including photo retries, are ordinary updates, as in the native editors.
   After a Home save, its provider choice is held as the saved Location, so a retry keeps that snapshot instead of choosing the provider result again.
+- Web shows Goals as Want to Do. `goals.status` is `active`, `achieved`, or `let_go`, there is no horizon, and `save_goal_entry`, `extract_capture_to_goal`, and `extract_goal_from_item` take no related links and never change them.
+  `goals_workspace` returns only `achievement` links, so related links from older Goals stay in the data and history without appearing on Web.
 - Web Goal extraction uses a caller-generated target UUID for idempotency, preserves the source revision and identity, and records `derived` plus `derived_from` provenance links so both items remain discoverable.
 - `review_wiki_item_with_photo_place_rich` is the review boundary for clients without a Location editor.
   It writes plaintext and `body_rich` in one revision, clears formatting when `p_body_rich` is null, and leaves the primary Location unchanged.
@@ -166,6 +168,7 @@ Pair it with the test file carrying the same feature name.
   The list groups Goals by reflective state like Web `goalSections`, and a Goal's own page pages past the first 100 Goals to find it, like Web `getGoalsWorkspace(targetId)`.
   The editor keeps the Web Related Items picker and, for a saved Bucket List Goal, the milestone panel, which records the achievement through `achieve_goal_with_occurrence` and stays open.
   `App/ConnectedItemsSection.swift` lists a record's Connected Items and routes them like Web `wikiEntryHref`: Moments and Periods open on the Timeline, and other records open their own page through `WikiItemDestinationView`.
+- Native Goals code predates the Web Want to Do simplification: it sends horizons and related links to the save and extraction RPCs that migration `202610040003` replaces, so it fails until native follows Web.
 - Native People code predates the Web removal of People and calls functions that migration `202610040002` drops; it is retired when native follows Web.
 - Native `Features/People` followed Web `/people` and `/people/[id]` with `PeopleView`, `PersonDetailView`, and `PersonEditorSheet` over `PeopleController`.
   The list loads `people_workspace` in pages of 100 through `MTLoadMore`, and a Person's own page loads `person_record` by ID, so it opens the same way from People, Library, or a Collection.

@@ -146,13 +146,10 @@ test("An Idea creates a linked Goal without changing the source", async ({
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto("/history?entry=" + entryID);
     await page
-      .getByRole("button", { name: "Create linked Goal", exact: true })
+      .getByRole("button", { name: "Add to Want to Do", exact: true })
       .click();
-    const form = page.getByRole("form", { name: "Create linked Goal" });
-    await expect(form.getByLabel("Horizon")).toHaveValue("someday");
-    await expect(
-      form.getByRole("combobox", { name: "Status", exact: true }),
-    ).toHaveValue("considering");
+    const form = page.getByRole("form", { name: "Add to Want to Do" });
+    await expect(form.getByRole("combobox")).toHaveCount(0);
     await form.getByRole("button", { name: "Cancel", exact: true }).click();
     expect(
       (
@@ -164,12 +161,8 @@ test("An Idea creates a linked Goal without changing the source", async ({
       ).data,
     ).toEqual({ item_kind: "entry", item_subtype: "entry" });
     await page
-      .getByRole("button", { name: "Create linked Goal", exact: true })
+      .getByRole("button", { name: "Add to Want to Do", exact: true })
       .click();
-    await form.getByLabel("Horizon").selectOption("long_term");
-    await form
-      .getByRole("combobox", { name: "Status", exact: true })
-      .selectOption("active");
     await form.getByLabel("Target date", { exact: true }).fill("2027-12-31");
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
@@ -189,10 +182,12 @@ test("An Idea creates a linked Goal without changing the source", async ({
       ),
     ).toBe(true);
     await form
-      .getByRole("button", { name: "Create linked Goal", exact: true })
+      .getByRole("button", { name: "Add to Want to Do", exact: true })
       .click();
     await expect(page).toHaveURL(/\/goals\/[0-9a-f-]+$/);
-    await expect(page.getByRole("button", { name: "Edit Goal" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Edit Want to Do" }),
+    ).toBeVisible();
     const derivedLinks = await client
       .from("entry_links")
       .select("target_entry_id")
@@ -244,11 +239,11 @@ test("An Idea creates a linked Goal without changing the source", async ({
     expect(goal.id).toBe(goalID);
     expect(goal.item_kind).toBe("goal");
     expect(goal.body).toBe(before.body);
-    expect(goal.goal.horizon).toBe("long_term");
+    expect(goal.goal.status).toBe("active");
+    expect(goal.goal).not.toHaveProperty("horizon");
     expect(goal.goal.target_date).toBe("2027-12-31");
     const retry = await client.rpc("extract_goal_from_item", {
       p_goal_id: goalID,
-      p_horizon: "long_term",
       p_status: "active",
       p_target_date: "2027-12-31",
       p_title: before.title,
@@ -258,12 +253,14 @@ test("An Idea creates a linked Goal without changing the source", async ({
     expect(retry.error).toBeNull();
     expect(retry.data).toHaveLength(1);
     expect(retry.data[0].goal_entry_id).toBe(goalID);
-    await page.getByRole("button", { name: "Edit Goal" }).click();
+    await page.getByRole("button", { name: "Edit Want to Do" }).click();
     await page
       .getByRole("main")
       .getByRole("button", { name: "Save changes", exact: true })
       .click();
-    await expect(page.getByRole("button", { name: "Edit Goal" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Edit Want to Do" }),
+    ).toBeVisible();
     const later = (
       await client
         .from("entries")
@@ -279,7 +276,7 @@ test("An Idea creates a linked Goal without changing the source", async ({
     ).toBeVisible();
     await page.goto("/history?entry=" + entryID);
     await expect(
-      page.getByRole("button", { name: "Create linked Goal", exact: true }),
+      page.getByRole("button", { name: "Add to Want to Do", exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Open extracted item", exact: true }),

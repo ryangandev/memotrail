@@ -33,7 +33,6 @@ export default async function GoalsPage({
     <GoalsWorkspace
       goals={workspace.goals}
       initialGoalId={initialGoalId}
-      linkOptions={workspace.linkOptions}
       loadError={workspace.loadError}
       ownerId={workspace.viewer.id}
       sourceCapture={sourceCapture}

@@ -58,9 +58,11 @@ test("specialized forms share photo fields and required-label conventions", asyn
     );
 
     await page.goto("/goals");
-    await page.getByRole("button", { name: "Add Goal", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Add to Want to Do", exact: true })
+      .click();
     const goalDialog = page.getByRole("dialog", {
-      name: "Keep an intention close",
+      name: "What do you want to do?",
       exact: true,
     });
     await expect(
@@ -124,7 +126,7 @@ test("specialized forms share photo fields and required-label conventions", asyn
       await input.press("Escape");
     }
     await goalDialog
-      .getByRole("button", { name: "Close Goal editor", exact: true })
+      .getByRole("button", { name: "Close Want to Do editor", exact: true })
       .click();
 
     await page.goto("/first-times");

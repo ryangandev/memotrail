@@ -49,8 +49,6 @@ export async function saveGoalEntry(
 
   const parameters = {
     p_body: parsed.data.body,
-    p_horizon: parsed.data.horizon,
-    p_related_entry_ids: parsed.data.relatedEntryIds,
     p_status: parsed.data.status,
     p_tag_names: parsed.data.tagNames,
     p_target_date: parsed.data.targetDate,
@@ -72,7 +70,7 @@ export async function saveGoalEntry(
         ),
       });
   if (error) {
-    return result("error", "MemoTrail could not save this Goal. Try again.");
+    return result("error", "MemoTrail could not save this item. Try again.");
   }
 
   const saved = source ? extractedGoal(data) : savedGoal(data);
@@ -80,10 +78,10 @@ export async function saveGoalEntry(
     return result(
       "conflict",
       parsed.data.id
-        ? "This Goal changed on another device. Close it, refresh, and try again."
+        ? "This item changed on another device. Close it, refresh, and try again."
         : source
           ? "This Capture changed or was already organized. Return to Inbox and refresh."
-          : "MemoTrail could not create this Goal. Refresh and try again.",
+          : "MemoTrail could not add this item. Refresh and try again.",
     );
   }
 
@@ -92,10 +90,10 @@ export async function saveGoalEntry(
     entry: saved,
     firstTimeEntryId: null,
     message: parsed.data.id
-      ? "Goal saved."
+      ? "Changes saved."
       : source
-        ? "Goal created from Capture."
-        : "Goal added.",
+        ? "Capture added to Want to Do."
+        : "Added to Want to Do.",
     status: parsed.data.id ? "saved" : "created",
   };
 }
@@ -122,16 +120,13 @@ export async function markGoalAchieved(
     },
   );
   if (error) {
-    return result(
-      "error",
-      "MemoTrail could not record this achievement. Try again.",
-    );
+    return result("error", "MemoTrail could not mark this done. Try again.");
   }
   const achieved = achievedGoal(data);
   if (!achieved) {
     return result(
       "conflict",
-      "This Goal changed or is already achieved. Close it, refresh, and try again.",
+      "This item changed or is already done. Close it, refresh, and try again.",
     );
   }
 
@@ -139,7 +134,7 @@ export async function markGoalAchieved(
   return {
     entry: { id: achieved.id, revision: achieved.revision },
     firstTimeEntryId: achieved.firstTimeEntryId,
-    message: "Achievement saved, with a linked First Time.",
+    message: "Marked done, with a linked First Time.",
     status: "achieved",
   };
 }
@@ -217,10 +212,7 @@ export async function trashGoalEntry(input: {
   revision: number;
 }): Promise<GoalActionResult> {
   if (!isGoalEntryIdentity(input.id, input.revision)) {
-    return result(
-      "error",
-      "This Goal version is invalid. Refresh and try again.",
-    );
+    return result("error", "This version is invalid. Refresh and try again.");
   }
 
   const context = await getAuthenticatedContext();
@@ -233,18 +225,18 @@ export async function trashGoalEntry(input: {
   if (error) {
     return result(
       "error",
-      "MemoTrail could not move this Goal to Trash. Try again.",
+      "MemoTrail could not move this item to Trash. Try again.",
     );
   }
   if (!Array.isArray(data) || data.length === 0) {
     return result(
       "conflict",
-      "This Goal changed on another device. Close it, refresh, and try again.",
+      "This item changed on another device. Close it, refresh, and try again.",
     );
   }
 
   refreshGoalPaths();
-  return result("trashed", "Goal moved to Trash.");
+  return result("trashed", "Moved to Trash.");
 }
 
 function savedGoal(value: unknown) {

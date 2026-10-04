@@ -3,17 +3,14 @@ import { displayImageURLs } from "@/lib/media/urls";
 
 import { getAuthenticatedContext, type Viewer } from "./inbox";
 import {
-  parseGoalLinkOptions,
   parseGoalRows,
   type GoalAttachment,
-  type GoalLinkOption,
   type GoalRecord,
 } from "./goal-record";
 
 export type GoalsWorkspace = {
   goals: GoalRecord[];
   inboxCount: number | undefined;
-  linkOptions: GoalLinkOption[];
   loadError: string | null;
   tagOptions: string[];
   viewer: Viewer;
@@ -27,15 +24,8 @@ export async function getGoalsWorkspace(
   const context = await getAuthenticatedContext();
   if (!context) return null;
 
-  const [goals, links, tags, inbox] = await Promise.all([
+  const [goals, tags, inbox] = await Promise.all([
     context.client.rpc("goals_workspace", { p_limit: 100, p_offset: 0 }),
-    context.client
-      .from("entries")
-      .select("id,title,body,item_kind,item_subtype,updated_at")
-      .eq("owner_id", context.userId)
-      .is("deleted_at", null)
-      .order("updated_at", { ascending: false })
-      .limit(200),
     context.client
       .from("tags")
       .select("name")
@@ -75,9 +65,6 @@ export async function getGoalsWorkspace(
 
   const attachments = visibleRows.flatMap((goal) => goal.attachments);
   const signedUrls = await signedImageUrls(context.client, attachments);
-  const linkOptions = links.error
-    ? []
-    : (parseGoalLinkOptions(links.data) ?? []);
 
   return {
     goals: visibleRows.map((goal) => ({
@@ -88,7 +75,6 @@ export async function getGoalsWorkspace(
       })),
     })),
     inboxCount: inbox.error ? undefined : (inbox.count ?? 0),
-    linkOptions,
     loadError: null,
     tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
     viewer: context.viewer,
@@ -112,8 +98,7 @@ function unavailableWorkspace(
   return {
     goals: [],
     inboxCount,
-    linkOptions: [],
-    loadError: "MemoTrail could not load your Goals. Refresh to try again.",
+    loadError: "MemoTrail could not load Want to Do. Refresh to try again.",
     tagOptions: [],
     viewer,
   };

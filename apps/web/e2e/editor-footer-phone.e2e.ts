@@ -117,8 +117,6 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
         p_body: "",
         p_entry_id: null,
         p_expected_revision: null,
-        p_horizon: "short_term",
-        p_related_entry_ids: [],
         p_status: "active",
         p_tag_names: [],
         p_target_date: null,
@@ -165,7 +163,7 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
       for (const [path, edit] of [
         [`/homes/${idFor("Maple Street flat")}`, "Edit Home"],
         [`/vehicles/${idFor("Blue hatchback")}`, "Edit Vehicle"],
-        [`/goals/${idFor("Hike the coast trail")}`, "Edit Goal"],
+        [`/goals/${idFor("Hike the coast trail")}`, "Edit Want to Do"],
         [`/first-times/${idFor("First sourdough loaf")}`, "Edit First Time"],
       ]) {
         await page.goto(path);

@@ -3,9 +3,8 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
-import { saveAtCurrentRevision } from "./helpers/mutations";
 
-test("Goal edits retain links to Entries in Trash until they are restored", async ({
+test("Want to Do edits keep older related links without showing them", async ({
   page,
   context,
 }) => {
@@ -77,20 +76,30 @@ test("Goal edits retain links to Entries in Trash until they are restored", asyn
         ])
       ).error,
     ).toBeNull();
-    const args = {
+    const saved = await client.rpc("save_goal_entry", {
       p_title: "Patient learning",
       p_body: "Original intention",
-      p_horizon: "long_term",
       p_status: "active",
       p_target_date: null,
       p_tag_names: [],
-      p_related_entry_ids: [hiddenID, activeID],
       p_entry_id: null,
       p_expected_revision: null,
-    };
-    const saved = await client.rpc("save_goal_entry", args);
+    });
     expect(saved.error).toBeNull();
     const id = saved.data[0].entry_id;
+    // Older Goals could carry general links. Want to Do no longer edits them.
+    expect(
+      (
+        await admin.from("entry_links").insert(
+          [hiddenID, activeID].map((target) => ({
+            owner_id: owner,
+            relationship: "related",
+            source_entry_id: id,
+            target_entry_id: target,
+          })),
+        )
+      ).error,
+    ).toBeNull();
     expect(
       (
         await client
@@ -100,65 +109,21 @@ test("Goal edits retain links to Entries in Trash until they are restored", asyn
       ).error,
     ).toBeNull();
     await page.goto("/goals/" + id);
-    await page.getByRole("button", { name: "Edit Goal" }).click();
-    const dialog = page.getByRole("main");
-    await expect(dialog).not.toContainText("Hidden progress note");
-    await expect(dialog).toContainText("Visible progress note");
-    await dialog
+    const main = page.getByRole("main");
+    await expect(main).not.toContainText("progress note");
+    await page.getByRole("button", { name: "Edit Want to Do" }).click();
+    await expect(main).not.toContainText("progress note");
+    await expect(main.getByText(/Related/)).toHaveCount(0);
+    await main.getByRole("textbox", { name: "Title" }).fill("Patient practice");
+    await main
       .getByRole("button", { name: "Save changes", exact: true })
       .click();
-    await expect(page.getByRole("button", { name: "Edit Goal" })).toBeVisible();
-    expect(
-      (
-        await client
-          .from("entry_links")
-          .select("target_entry_id")
-          .eq("source_entry_id", id)
-          .eq("target_entry_id", hiddenID)
-      ).data,
-    ).toHaveLength(1);
-    await saveAtCurrentRevision(client, "save_goal_entry", id, {
-      ...args,
-      p_related_entry_ids: [],
-    });
-    expect(
-      (
-        await client
-          .from("entry_links")
-          .select("target_entry_id")
-          .eq("source_entry_id", id)
-          .eq("relationship", "related")
-      ).data,
-    ).toEqual([{ target_entry_id: hiddenID }]);
-    await page.goto("/trash");
-    await page.getByRole("button", { name: "Restore", exact: true }).click();
     await expect(
-      page.getByText("Hidden progress note", { exact: true }),
-    ).not.toBeVisible();
-    await page.goto("/goals/" + id);
-    await page.getByRole("button", { name: "Edit Goal" }).click();
-    await expect(
-      dialog.getByRole("button", {
-        name: "Remove related Item Hidden progress note",
-        exact: true,
-      }),
+      page.getByRole("button", { name: "Edit Want to Do" }),
     ).toBeVisible();
     await expect(
-      dialog.getByRole("button", {
-        name: "Remove related Item Visible progress note",
-        exact: true,
-      }),
-    ).not.toBeVisible();
-    const removeHidden = dialog.getByRole("button", {
-      name: "Remove related Item Hidden progress note",
-      exact: true,
-    });
-    await removeHidden.click();
-    await expect(removeHidden).not.toBeVisible();
-    await dialog
-      .getByRole("button", { name: "Save changes", exact: true })
-      .click();
-    await expect(page.getByRole("button", { name: "Edit Goal" })).toBeVisible();
+      page.getByRole("heading", { name: "Patient practice" }),
+    ).toBeVisible();
     await expect
       .poll(
         async () =>
@@ -170,7 +135,7 @@ test("Goal edits retain links to Entries in Trash until they are restored", asyn
               .eq("relationship", "related")
           ).data?.length,
       )
-      .toBe(0);
+      .toBe(2);
     expect(uiErrors).toEqual([]);
   } finally {
     await admin.auth.admin.deleteUser(owner);

@@ -18,13 +18,6 @@ import {
   trashWikiItem,
 } from "@/app/history/actions";
 import {
-  goalHorizons,
-  goalStatuses,
-  type GoalHorizon,
-  type GoalStatus,
-} from "@/lib/data/goal-record-input";
-import { goalHorizonLabels, goalStatusLabels } from "@/lib/data/goal-record";
-import {
   historyTitle,
   historyDifferences,
   historyDateLabel,
@@ -215,7 +208,7 @@ export function EntryHistoryView({
         {!history.current.deleted_at &&
           history.current.item_kind === "goal" && (
             <ButtonLink href={`/goals/${history.current.id}`}>
-              Open Goal
+              Open in Want to Do
             </ButtonLink>
           )}
         {detailMode && !history.current.deleted_at ? (
@@ -448,27 +441,25 @@ function GoalExtraction({
   const [goalId, setGoalId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [title, setTitle] = useState(entry.title ?? "");
-  const [horizon, setHorizon] = useState<GoalHorizon>("someday");
-  const [status, setStatus] = useState<GoalStatus>("considering");
   const [targetDate, setTargetDate] = useState("");
   const [error, setError] = useState<string | null>(null);
   if (!open)
     return (
       <Button
-        variant="primary"
-        type="submit"
+        variant="secondary"
+        type="button"
         disabled={disabled}
         onClick={() => {
           setGoalId(crypto.randomUUID());
           setOpen(true);
         }}
       >
-        Create linked Goal
+        Add to Want to Do
       </Button>
     );
   return (
     <form
-      aria-label="Create linked Goal"
+      aria-label="Add to Want to Do"
       className={styles.conversion}
       onSubmit={async (event) => {
         event.preventDefault();
@@ -476,14 +467,12 @@ function GoalExtraction({
         onBusyChange(true);
         setError(null);
         try {
-          if (!goalId) throw Error("Missing Goal identity");
+          if (!goalId) throw Error("Missing Want to Do identity");
           const result = await extractGoalFromItem({
             goalId,
             sourceId: entry.id,
             sourceRevision: entry.revision,
             title,
-            horizon,
-            status,
             targetDate: targetDate || null,
           });
           if (result.error) setError(result.error);
@@ -493,7 +482,7 @@ function GoalExtraction({
           }
         } catch {
           setError(
-            "Could not confirm Goal creation. Refresh to check the source before retrying.",
+            "Could not confirm it was added. Refresh to check the source before retrying.",
           );
         } finally {
           setBusy(false);
@@ -501,47 +490,23 @@ function GoalExtraction({
         }
       }}
     >
-      <h3>Create a Goal from this item</h3>
+      <h3>Add this to Want to Do</h3>
       <p>
-        This creates a separate Goal and links it back to this source. The
-        source keeps its writing, dates, photos, links, and history.
+        This adds a separate item to Want to Do and links it back to this
+        source. The source keeps its writing, dates, photos, and history.
       </p>
       <fieldset disabled={busy || disabled}>
         <label>
-          Goal title <span aria-hidden="true">*</span>
+          <span>
+            What do you want to do? <span aria-hidden="true">*</span>
+          </span>
           <input
-            aria-label="Goal title"
+            aria-label="What do you want to do?"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={200}
             required
           />
-        </label>
-        <label>
-          Horizon
-          <select
-            value={horizon}
-            onChange={(e) => setHorizon(e.target.value as GoalHorizon)}
-          >
-            {goalHorizons.map((v) => (
-              <option key={v} value={v}>
-                {goalHorizonLabels[v]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Status
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as GoalStatus)}
-          >
-            {goalStatuses.map((v) => (
-              <option key={v} value={v}>
-                {goalStatusLabels[v]}
-              </option>
-            ))}
-          </select>
         </label>
         <DatePickerField
           disabled={busy}
@@ -561,7 +526,7 @@ function GoalExtraction({
             Cancel
           </Button>
           <Button variant="primary" type="submit">
-            {busy ? "Creating..." : "Create linked Goal"}
+            {busy ? "Adding..." : "Add to Want to Do"}
           </Button>
         </div>
       </fieldset>

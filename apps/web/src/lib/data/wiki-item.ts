@@ -16,7 +16,7 @@ export const wikiItemSearchGroups: readonly WikiItemSearchGroup[] = [
     options: [
       { label: "Entries", value: "entry" },
       { label: "Entities", value: "entity" },
-      { label: "Goals", value: "goal" },
+      { label: "Want to Do", value: "goal" },
     ],
   },
   {
@@ -42,7 +42,7 @@ export function wikiItemKindLabel(kind: WikiItemKind) {
     case "entity":
       return "Entity";
     case "goal":
-      return "Goal";
+      return "Want to Do";
   }
 }
 
@@ -55,8 +55,7 @@ export function wikiItemSubtypeLabel(kind: WikiItemKind, subtype: string) {
   }
   if (kind === "entity" && subtype === "home") return "Home";
   if (kind === "entity" && subtype === "vehicle") return "Vehicle";
-  if (kind === "goal")
-    return subtype === "bucket_list" ? "Bucket List" : "Goal";
+  if (kind === "goal") return "Want to Do";
   return subtype
     .split("_")
     .map((part) => part.charAt(0).toLocaleUpperCase() + part.slice(1))

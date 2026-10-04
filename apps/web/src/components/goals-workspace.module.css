@@ -28,18 +28,11 @@
 
 .goalCardBody {
   display: flex;
-  min-height: 245px;
+  min-height: 170px;
   flex-direction: column;
 }
 
-.goalMeta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
 .goalCardBody h3 {
-  margin-top: var(--mt-space-3);
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-title);
   font-weight: var(--mt-font-weight-medium);
@@ -99,51 +92,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-}
-
-.relatedSection {
-  grid-template-columns: 1fr;
-}
-
-.relatedSection > p {
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
-  line-height: var(--mt-line-height-body);
-}
-
-.relatedChips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.relatedChips span {
-  color: var(--mt-color-ink-faint);
-  font-size: 16px;
-}
-
-.relatedPicker {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--mt-space-2);
-}
-
-.relatedPicker select {
-  height: 42px;
-  min-width: 0;
-  padding: 0 var(--mt-space-3);
-  border: 1px solid var(--mt-color-border);
-  border-radius: var(--mt-radius-small);
-  outline: 0;
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface);
-  font-family: var(--mt-font-family-sans);
-  font-size: var(--mt-font-size-label);
-}
-
-.relatedPicker select:focus {
-  border-color: var(--mt-color-accent);
-  box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
 }
 
 .achievementPanel {
@@ -217,17 +165,7 @@
     grid-template-columns: 1fr;
   }
 
-  .goalCardBody {
-    min-height: 220px;
-  }
-
   .goalCover {
     height: 125px;
-  }
-}
-
-@media (max-width: 560px) {
-  .relatedPicker {
-    grid-template-columns: 1fr;
   }
 }

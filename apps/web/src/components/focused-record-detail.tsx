@@ -23,10 +23,8 @@ import {
   type VehicleRecord,
 } from "@/lib/data/vehicle-record";
 import {
-  goalHorizonLabels,
   goalStatusLabels,
-  goalTargetLabel,
-  type GoalLinkOption,
+  goalTargetDate,
   type GoalRecord,
 } from "@/lib/data/goal-record";
 import { occurrenceLabel } from "@/lib/data/occurrence";
@@ -42,11 +40,7 @@ type Props =
   | ({ kind: "home"; record: HomeRecord } & Shared)
   | ({ kind: "vehicle"; record: VehicleRecord } & Shared)
   | ({ kind: "first-time"; record: FirstTimeEntry } & Shared)
-  | ({
-      kind: "goal";
-      record: GoalRecord;
-      linkOptions: GoalLinkOption[];
-    } & Shared);
+  | ({ kind: "goal"; record: GoalRecord } & Shared);
 
 const paths = {
   home: "/homes",
@@ -58,7 +52,7 @@ const labels = {
   home: "Home",
   vehicle: "Vehicle",
   "first-time": "First Time",
-  goal: "Goal",
+  goal: "Want to Do",
 };
 
 export function FocusedRecordDetail(props: Props) {
@@ -113,7 +107,6 @@ export function FocusedRecordDetail(props: Props) {
           <GoalEditor
             {...sharedEditorProps}
             goal={record as GoalRecord}
-            linkOptions={props.linkOptions}
             onTrashed={() => router.push(back)}
           />
         )
@@ -254,19 +247,15 @@ function RecordContent({
               value={goalStatusLabels[(record as GoalRecord).status]}
             />
             <Fact
-              label="Horizon"
-              value={goalHorizonLabels[(record as GoalRecord).horizon]}
-            />
-            <Fact
-              label="Target"
-              value={goalTargetLabel(record as GoalRecord)}
+              label="Target date"
+              value={goalTargetDate(record as GoalRecord)}
             />
           </>
         ) : null}
       </dl>
       {body ? (
         <section className={styles.section}>
-          <h2>Story</h2>
+          <h2>{kind === "goal" ? "Notes" : "Story"}</h2>
           <p className={styles.prose}>{body}</p>
         </section>
       ) : null}
@@ -284,7 +273,7 @@ function RecordContent({
       ) : null}
       {kind === "goal" && (record as GoalRecord).relatedEntries.length ? (
         <section className={styles.section}>
-          <h2>Connected Items</h2>
+          <h2>First Time</h2>
           <ul>
             {(record as GoalRecord).relatedEntries.map((entry) => (
               <li key={entry.id}>

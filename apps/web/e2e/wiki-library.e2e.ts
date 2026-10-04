@@ -178,7 +178,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await expect(
       showFilter.getByRole("option", { name: "People" }),
     ).toHaveCount(0);
-    for (const name of ["Homes", "Vehicles", "First Times", "Goals"]) {
+    for (const name of ["Homes", "Vehicles", "First Times", "Want to Do"]) {
       await expect(showFilter.getByRole("option", { name })).toHaveCount(1);
     }
     await expect(

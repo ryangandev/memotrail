@@ -14,8 +14,8 @@ begin
   case p_kind
     when 'goal', 'achieve', 'legacy achieve' then
       select entry_id into created from public.save_goal_entry(
-        'Revision ' || p_kind, 'Original writing', 'someday', 'active', null,
-        '{}', '{}', null, null);
+        'Revision ' || p_kind, 'Original writing', 'active', null,
+        '{}', null, null);
     when 'home' then
       select entry_id into created from public.save_home_entry_with_occurrence(
         'Revision home', 'Original writing', '2021-04-12T12:00:00Z', null, 'day', null, 'UTC',

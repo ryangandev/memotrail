@@ -38,15 +38,14 @@ export async function extractGoalFromItem(
   const context = await getAuthenticatedContext();
   if (!context)
     return {
-      error: "Sign in again to create a Goal from this Wiki Item.",
+      error: "Sign in again to add this to Want to Do.",
       goalId: null,
     };
   const value = parsed.data;
   const { data, error } = await context.client.rpc("extract_goal_from_item", {
     p_goal_id: value.goalId,
     p_title: value.title,
-    p_horizon: value.horizon,
-    p_status: value.status,
+    p_status: "active",
     p_target_date: value.targetDate,
     p_source_entry_id: value.sourceId,
     p_source_revision: value.sourceRevision,
@@ -54,14 +53,14 @@ export async function extractGoalFromItem(
   if (error)
     return {
       error:
-        "Could not confirm Goal creation. Refresh to check the source before retrying.",
+        "Could not confirm it was added. Refresh to check the source before retrying.",
       goalId: null,
     };
   const result = Array.isArray(data) ? data[0] : data;
   if (!result?.goal_entry_id)
     return {
       error:
-        "The source changed or is in Trash. Refresh before creating this Goal.",
+        "The source changed or is in Trash. Refresh before adding it to Want to Do.",
       goalId: null,
     };
   revalidatePath("/", "layout");

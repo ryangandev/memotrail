@@ -2,12 +2,7 @@ import {
   firstTimeImageMimeTypes,
   type FirstTimeImageMimeType,
 } from "./first-time-input";
-import {
-  goalHorizons,
-  goalStatuses,
-  type GoalHorizon,
-  type GoalStatus,
-} from "./goal-record-input";
+import { goalStatuses, type GoalStatus } from "./goal-record-input";
 import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
 
 export type GoalAttachment = {
@@ -41,7 +36,6 @@ export type GoalRecord = {
   attachments: GoalAttachment[];
   body: string;
   createdAt: string;
-  horizon: GoalHorizon;
   id: string;
   relatedEntries: GoalRelatedEntry[];
   revision: number;
@@ -53,26 +47,10 @@ export type GoalRecord = {
   updatedAt: string;
 };
 
-export type GoalLinkOption = {
-  id: string;
-  itemKind: WikiItemKind;
-  itemSubtype: string;
-  title: string;
-  updatedAt: string;
-};
-
-export const goalHorizonLabels: Record<GoalHorizon, string> = {
-  long_term: "Long-term",
-  short_term: "Short-term",
-  someday: "Someday",
-};
-
 export const goalStatusLabels: Record<GoalStatus, string> = {
-  achieved: "Achieved",
-  active: "Active",
-  considering: "Considering",
+  achieved: "Done",
+  active: "Want to do",
   let_go: "Let go",
-  paused: "Paused",
 };
 
 export function parseGoalRows(value: unknown): GoalRecord[] | null {
@@ -86,42 +64,22 @@ export function parseGoalRows(value: unknown): GoalRecord[] | null {
   return records;
 }
 
-export function parseGoalLinkOptions(value: unknown): GoalLinkOption[] | null {
-  if (!Array.isArray(value)) return null;
-  const options: GoalLinkOption[] = [];
-  for (const item of value) {
-    if (
-      !isRecord(item) ||
-      typeof item.id !== "string" ||
-      !nullableString(item.title) ||
-      !nullableString(item.body) ||
-      !isWikiItemKind(item.item_kind) ||
-      typeof item.item_subtype !== "string" ||
-      typeof item.updated_at !== "string"
-    ) {
-      return null;
-    }
-    options.push({
-      id: item.id,
-      itemKind: item.item_kind,
-      itemSubtype: item.item_subtype,
-      title: entryOptionTitle(item.title, item.body),
-      updatedAt: item.updated_at,
-    });
-  }
-  return options;
-}
-
 export function goalTargetLabel(goal: GoalRecord) {
   if (!goal.targetDate) return "No target date";
+  const date = goalTargetDate(goal);
+  return date ? `Target ${date}` : "Target date unavailable";
+}
+
+export function goalTargetDate(goal: GoalRecord) {
+  if (!goal.targetDate) return null;
   const date = new Date(`${goal.targetDate}T12:00:00Z`);
-  if (Number.isNaN(date.getTime())) return "Target date unavailable";
-  return `Target ${new Intl.DateTimeFormat("en", {
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat("en", {
     day: "numeric",
     month: "short",
     timeZone: "UTC",
     year: "numeric",
-  }).format(date)}`;
+  }).format(date);
 }
 
 function parseGoalRow(value: unknown): GoalRecord | null {
@@ -133,8 +91,6 @@ function parseGoalRow(value: unknown): GoalRecord | null {
     typeof value.revision !== "number" ||
     typeof value.created_at !== "string" ||
     typeof value.updated_at !== "string" ||
-    typeof value.horizon !== "string" ||
-    !goalHorizons.includes(value.horizon as GoalHorizon) ||
     typeof value.status !== "string" ||
     !goalStatuses.includes(value.status as GoalStatus) ||
     !nullableString(value.target_date) ||
@@ -152,7 +108,6 @@ function parseGoalRow(value: unknown): GoalRecord | null {
     attachments,
     body: value.body,
     createdAt: value.created_at,
-    horizon: value.horizon as GoalHorizon,
     id: value.entry_id,
     relatedEntries,
     revision: value.revision,
@@ -241,16 +196,6 @@ function parseAttachments(value: unknown): GoalAttachment[] | null {
 
 function nullableString(value: unknown) {
   return value === null || typeof value === "string";
-}
-
-function entryOptionTitle(title: string | null, body: string | null) {
-  const normalizedTitle = title?.trim();
-  if (normalizedTitle) return normalizedTitle;
-  const normalizedBody = body?.trim();
-  if (!normalizedBody) return "Untitled Entry";
-  return normalizedBody.length > 80
-    ? `${normalizedBody.slice(0, 80).trimEnd()}...`
-    : normalizedBody;
 }
 
 function nullableNumber(value: unknown): value is number | null {

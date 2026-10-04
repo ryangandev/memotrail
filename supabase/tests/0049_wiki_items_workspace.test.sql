@@ -11,8 +11,8 @@ insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,inbox_s
   ('98200000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000109','Learn Spanish','Practice every day.','goal','goal','organized'),
   ('98200000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000110','Foreign item','Hidden.','entry','entry','organized'),
   ('98200000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000109','Inbox-only thought','Only saved to Inbox so far.','entry','entry','unreviewed');
-insert into public.goals(entry_id,owner_id,horizon,status) values
-  ('98200000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000109','long_term','active');
+insert into public.goals(entry_id,owner_id,status) values
+  ('98200000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000109','active');
 insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,inbox_status) values
   ('98200000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000109','Harbor flat','Lived near the marina.','entity','home','organized');
 insert into public.homes(entry_id,owner_id) values

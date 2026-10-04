@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  goalTargetLabel,
-  parseGoalLinkOptions,
-  parseGoalRows,
-} from "./goal-record";
+import { goalTargetDate, goalTargetLabel, parseGoalRows } from "./goal-record";
 
 const row = {
   attachments: [
@@ -22,19 +18,18 @@ const row = {
   body: "Learn the landscape, then decide.",
   created_at: "2026-09-01T10:00:00Z",
   entry_id: "40000000-0000-4000-8000-000000000001",
-  horizon: "long_term",
   related_entries: [
     {
-      body: "A useful sailing lesson.",
+      body: "Sailed across the bay.",
       item_kind: "entry",
       item_subtype: "entry",
       id: "40000000-0000-4000-8000-000000000002",
       occurred_label: null,
       occurred_start: "2026-08-01T12:00:00Z",
       occurred_timezone: "America/Los_Angeles",
-      relationship: "related",
+      relationship: "achievement",
       revision: 1,
-      title: "First sailing lesson",
+      title: "First sail across the bay",
       updated_at: "2026-08-01T12:00:00Z",
     },
   ],
@@ -54,12 +49,11 @@ describe("Goal records", () => {
     expect(goals).toHaveLength(1);
     expect(goals?.[0]).toMatchObject({
       attachments: [{ imageUrl: null, mimeType: "image/jpeg" }],
-      horizon: "long_term",
       relatedEntries: [
         {
           itemKind: "entry",
           itemSubtype: "entry",
-          relationship: "related",
+          relationship: "achievement",
         },
       ],
       status: "active",
@@ -67,8 +61,9 @@ describe("Goal records", () => {
     });
   });
 
-  it("rejects malformed Goal, relationship, and attachment rows", () => {
-    expect(parseGoalRows([{ ...row, horizon: "weekly" }])).toBeNull();
+  it("rejects retired states and malformed Goal, relationship, and attachment rows", () => {
+    expect(parseGoalRows([{ ...row, status: "paused" }])).toBeNull();
+    expect(parseGoalRows([{ ...row, status: "considering" }])).toBeNull();
     expect(
       parseGoalRows([{ ...row, related_entries: [{ id: "missing-fields" }] }]),
     ).toBeNull();
@@ -83,32 +78,10 @@ describe("Goal records", () => {
     if (!goal) return;
 
     expect(goalTargetLabel(goal)).toBe("Target Jun 15, 2030");
+    expect(goalTargetDate(goal)).toBe("Jun 15, 2030");
+    expect(goalTargetDate({ ...goal, targetDate: null })).toBeNull();
     expect(goalTargetLabel({ ...goal, targetDate: null })).toBe(
       "No target date",
     );
-  });
-
-  it("parses selectable related Entry options", () => {
-    expect(
-      parseGoalLinkOptions([
-        {
-          item_kind: "entry",
-          item_subtype: "entry",
-          body: null,
-          id: "40000000-0000-4000-8000-000000000002",
-          title: "An earlier reflection",
-          updated_at: "2026-09-03T10:00:00Z",
-        },
-      ]),
-    ).toEqual([
-      {
-        id: "40000000-0000-4000-8000-000000000002",
-        itemKind: "entry",
-        itemSubtype: "entry",
-        title: "An earlier reflection",
-        updatedAt: "2026-09-03T10:00:00Z",
-      },
-    ]);
-    expect(parseGoalLinkOptions([{ id: "incomplete" }])).toBeNull();
   });
 });

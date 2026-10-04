@@ -116,10 +116,8 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
             rpc: "save_goal_entry",
             args: {
               ...common,
-              p_horizon: "someday",
               p_status: "active",
               p_target_date: null,
-              p_related_entry_ids: [],
             },
           },
         };
@@ -171,7 +169,7 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
           first_time: "First Time",
           home: "Home",
           vehicle: "Vehicle",
-          goal: "Goal",
+          goal: "Want to Do",
         }[kind];
         await page.getByRole("button", { name: `Edit ${label}` }).click();
         const dialog = page.getByRole("main");

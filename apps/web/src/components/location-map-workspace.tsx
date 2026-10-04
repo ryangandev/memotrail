@@ -22,7 +22,7 @@ const kinds: { label: string; value: MapKind }[] = [
   { label: "All records", value: "all" },
   { label: "Entries", value: "entry" },
   { label: "Entities", value: "entity" },
-  { label: "Goals", value: "goal" },
+  { label: "Want to Do", value: "goal" },
 ];
 
 export function LocationMapWorkspace({

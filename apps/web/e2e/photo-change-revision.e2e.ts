@@ -84,14 +84,12 @@ const dates = {
 };
 const goal = {
   ...common,
-  p_horizon: "someday",
-  p_related_entry_ids: [],
   p_status: "active",
   p_target_date: null,
 };
 const records = {
   goal: {
-    label: "Goal",
+    label: "Want to Do",
     path: "/goals",
     rpc: "save_goal_entry",
     args: goal,
@@ -279,13 +277,13 @@ test("Goal achievement succeeds after removing a photo in the same editor", asyn
 
   await removePhoto(page, editor);
   const achieve = editor.getByRole("button", {
-    name: "Mark achieved and create First Time",
+    name: "Mark done and add First Time",
     exact: true,
   });
   await achieve.click();
 
   await expect(
-    page.getByText("Achievement saved, with a linked First Time."),
+    page.getByText("Marked done, with a linked First Time."),
   ).toBeVisible();
   await expect(achieve).toHaveCount(0);
   await expect(editor.getByText(/changed or is no longer/)).toHaveCount(0);
@@ -317,7 +315,9 @@ test("Goal moves to Trash after a partial photo upload failure", async ({
     } else await route.continue();
   });
   await page.goto(`/goals/${entry}`);
-  await page.getByRole("button", { name: "Edit Goal", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Edit Want to Do", exact: true })
+    .click();
   const editor = page.getByRole("main");
   const bytes = await photo();
   await editor.locator('input[type="file"]').setInputFiles([
@@ -357,7 +357,7 @@ test("Goal Trash still refuses another device's writing after a photo removal", 
 
   await expect(
     editor.getByText(
-      "This Goal changed on another device. Close it, refresh, and try again.",
+      "This item changed on another device. Close it, refresh, and try again.",
     ),
   ).toBeVisible();
   expect((await entryRow(client, entry)).deleted_at).toBeNull();

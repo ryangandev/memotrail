@@ -7,13 +7,16 @@ Last reviewed: 2026-10-04.
 Web is the client Ryan uses most, so work now focuses on finishing Web before returning to native iOS.
 Native iOS work, including the acceptance items in section 3, is paused until Web is complete; native then follows the finished Web behavior.
 Before more Web building, unclear features and requirements are reviewed with Ryan and settled in [product.md](./product.md).
-The first review removed general links between Entries from Web; Goal and source links remain.
+The first review removed general links between Entries from Web; source and achievement links remain.
 Product direction is settled before UI questions.
 Collections are merged into tags: each Collection became a tag with the same name and kept its Entries.
 Migration `202610040001` carries this change and is not yet applied to the hosted project; native iOS still calls the retired Collection functions until it follows Web.
 People are removed: migration `202610040002` deletes every Person, its Entity Wiki Item, its links, and its version history, and strips People from Entry version snapshots.
 It is not yet applied to the hosted project; native iOS still calls the retired People functions until it follows Web.
-Open product questions: Timeline structure and current chapters, the Inbox review step, and Goals.
+Goals became Want to Do: migration `202610040003` maps Considering and Paused to Want to do, drops horizons, and stops Goal saves from touching related links; the former Bucket List Collection is already an ordinary tag.
+It is not yet applied to the hosted project; native iOS still sends horizons and related links and fails against it until it follows Web.
+The English name "Want to Do" is a working name and may change.
+Open product questions: Timeline structure and current chapters, and the Inbox review step.
 UI questions held until then: how prominent version history is, Item page photos, date precision controls, the two export choices, and Timeline styles.
 Open `audit-2026-10` issues stay tracked in GitHub.
 
@@ -58,7 +61,7 @@ Use Git history for feature-level implementation and test evidence.
 | Area                                                                              | State                                                                                                                                                                                            |
 | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Capture, Inbox, organization, dates, drafts, and offline queues                   | Implemented on Web and iOS                                                                                                                                                                       |
-| Timeline, Home (Dashboard on Web), First Times, Homes, Vehicles, and Goals        | Implemented on Web and iOS; the retired Place and People surfaces are removed from Web                                                                                                           |
+| Timeline, Home (Dashboard on Web), First Times, Homes, Vehicles, and Want to Do   | Implemented on Web and iOS; Web simplified Goals into Want to Do, and the retired Place and People surfaces are removed from Web                                                                 |
 | Location data layer                                                               | Web and native Map, optional Home Location, photo GPS provenance, and Web provider quotas are implemented; personal acceptance remains.                                                          |
 | Habits                                                                            | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                                               |
 | Web navigation shell                                                              | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                                                |

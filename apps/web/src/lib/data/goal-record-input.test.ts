@@ -6,12 +6,9 @@ import {
 } from "./goal-record-input";
 
 const goalId = "40000000-0000-4000-8000-000000000001";
-const relatedId = "40000000-0000-4000-8000-000000000002";
 const validGoal = {
   body: " Learn the landscape, then decide. ",
-  horizon: "long_term",
   id: goalId,
-  relatedEntryIds: [relatedId, relatedId.toUpperCase()],
   revision: 3,
   status: "active",
   tagNames: [" Travel ", "travel", "curious"],
@@ -27,7 +24,7 @@ describe("parseGoalEntryInput", () => {
     if (parsed.success) {
       expect(parsed.data).toMatchObject({
         body: "Learn the landscape, then decide.",
-        relatedEntryIds: [relatedId],
+        status: "active",
         tagNames: ["Travel", "curious"],
         targetDate: "2030-06-15",
         title: "Learn to sail",
@@ -41,7 +38,6 @@ describe("parseGoalEntryInput", () => {
         ...validGoal,
         body: "",
         id: null,
-        relatedEntryIds: [],
         revision: null,
         tagNames: [],
         targetDate: null,
@@ -49,21 +45,16 @@ describe("parseGoalEntryInput", () => {
     ).toMatchObject({ success: true });
   });
 
-  it("rejects invalid content, states, targets, and links", () => {
+  it("rejects invalid content, retired states, and targets", () => {
     expect(parseGoalEntryInput({ ...validGoal, title: " " })).toMatchObject({
       success: false,
     });
-    expect(
-      parseGoalEntryInput({ ...validGoal, horizon: "weekly" }),
-    ).toMatchObject({ success: false });
-    expect(
-      parseGoalEntryInput({ ...validGoal, status: "overdue" }),
-    ).toMatchObject({ success: false });
+    for (const status of ["overdue", "considering", "paused"])
+      expect(parseGoalEntryInput({ ...validGoal, status })).toMatchObject({
+        success: false,
+      });
     expect(
       parseGoalEntryInput({ ...validGoal, targetDate: "2030-02-30" }),
-    ).toMatchObject({ success: false });
-    expect(
-      parseGoalEntryInput({ ...validGoal, relatedEntryIds: ["not-a-uuid"] }),
     ).toMatchObject({ success: false });
   });
 

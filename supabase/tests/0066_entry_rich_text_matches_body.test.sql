@@ -39,7 +39,7 @@ declare
 begin
   if p_kind = 'goal' then
     select entry_id into result from public.save_goal_entry(
-      'Rich goal',p_body,'long_term','active',null,'{}','{}',p_id,current_revision);
+      'Rich goal',p_body,'active',null,'{}',p_id,current_revision);
   elsif p_kind = 'moment' then
     select entry_id into result from public.save_timeline_entry_with_organization(
       track,'event','Rich moment',p_body,null,null,'unknown',null,'UTC','{}',p_id,current_revision);
@@ -79,15 +79,15 @@ values ('96600000-0000-4000-8000-000000000001',auth.uid(),'Marathon plan','Run z
   'entry','entry','organized','unknown',jsonb_build_object('body_rich',pg_temp.rich('Run zebrafinch marathon')));
 select is(
   (select goal_entry_id from public.extract_goal_from_item('96600000-0000-4000-8000-000000000001',1,
-    '96600000-0000-4000-8000-000000000002','Marathon goal','short_term','active',null)),
+    '96600000-0000-4000-8000-000000000002','Marathon goal','active',null)),
   '96600000-0000-4000-8000-000000000002'::uuid,
   'A formatted Item creates a linked Goal'
 );
 select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000002'),'Run zebrafinch marathon',
   'The linked Goal copies formatting that matches its writing');
 select is(
-  (select revision from public.save_goal_entry('Renamed goal','Run zebrafinch marathon','short_term','active',
-    null,'{}','{}','96600000-0000-4000-8000-000000000002',1)),
+  (select revision from public.save_goal_entry('Renamed goal','Run zebrafinch marathon','active',
+    null,'{}','96600000-0000-4000-8000-000000000002',1)),
   2,
   'A Goal save with unchanged writing advances one revision'
 );
@@ -96,8 +96,8 @@ select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000002'),'Run zebrafi
 select is(pg_temp.versions('96600000-0000-4000-8000-000000000002'),1::bigint,
   'Keeping formatting adds no history version of its own');
 select is(
-  (select revision from public.save_goal_entry('Renamed goal','Run a half marathon','short_term','active',
-    null,'{}','{}','96600000-0000-4000-8000-000000000002',2)),
+  (select revision from public.save_goal_entry('Renamed goal','Run a half marathon','active',
+    null,'{}','96600000-0000-4000-8000-000000000002',2)),
   3,
   'A Goal save with new writing advances one revision'
 );

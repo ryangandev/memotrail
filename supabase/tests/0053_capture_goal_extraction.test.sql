@@ -35,8 +35,7 @@ select ok(
   (select goal_entry_id is not null from public.extract_capture_to_goal(
     '98600000-0000-4000-8000-000000000001',1,
     'Learn to sail','A wish I want to make concrete.',
-    'long_term','active','2028-06-01',array['Ocean'],
-    array['98600000-0000-4000-8000-000000000002'::uuid]
+    'active','2028-06-01',array['Ocean']
   )),
   'Extraction creates a Goal through the specialized contract'
 );
@@ -58,14 +57,14 @@ select is(
   'The durable target is a Goal'
 );
 select is(
-  (select horizon || ':' || status || ':' || target_date::text
+  (select status || ':' || target_date::text
    from public.goals
    where entry_id = (
      select target_entry_id from public.entry_links
      where source_entry_id='98600000-0000-4000-8000-000000000001'
        and relationship='derived'
    )),
-  'long_term:active:2028-06-01',
+  'active:2028-06-01',
   'Goal-specific intent fields are saved'
 );
 select is(
@@ -91,8 +90,8 @@ select is(
    )
      and target_entry_id='98600000-0000-4000-8000-000000000002'
      and relationship='related'),
-  1::bigint,
-  'Related Entries are saved independently from provenance'
+  0::bigint,
+  'Capture extraction creates no related links'
 );
 select is(
   (select count(*) from public.entry_links
@@ -107,8 +106,7 @@ select ok(
   (select goal_entry_id is not null from public.extract_capture_to_goal(
     '98600000-0000-4000-8000-000000000001',1,
     'Learn to sail','A wish I want to make concrete.',
-    'long_term','active','2028-06-01',array['Ocean'],
-    array['98600000-0000-4000-8000-000000000002'::uuid]
+    'active','2028-06-01',array['Ocean']
   )),
   'A lost-response retry finds the existing Goal'
 );
@@ -122,7 +120,7 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000116'
 select is(
   (select count(*) from public.extract_capture_to_goal(
     '98600000-0000-4000-8000-000000000001',1,
-    'Foreign Goal','No access','someday','considering',null,'{}','{}'
+    'Foreign Goal','No access','active',null,'{}'
   )),
   0::bigint,
   'Another owner cannot extract from the Capture'
@@ -132,7 +130,7 @@ reset role;
 select ok(
   not has_function_privilege(
     'anon',
-    'public.extract_capture_to_goal(uuid,integer,text,text,text,text,date,text[],uuid[])',
+    'public.extract_capture_to_goal(uuid,integer,text,text,text,date,text[])',
     'execute'
   ),
   'Anonymous Goal extraction is denied'

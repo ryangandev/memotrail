@@ -92,17 +92,17 @@ test("Inbox saves an Entry while Goal uses its focused form", async ({
     await expect(review).not.toBeVisible();
 
     await page.goto("/goals");
-    await page.getByRole("button", { name: "Add Goal" }).click();
+    await page.getByRole("button", { name: "Add to Want to Do" }).click();
     const editor = page.getByRole("dialog");
     await editor.getByLabel("Title", { exact: true }).fill("Learn to sail");
-    await editor
-      .getByRole("combobox", { name: "Horizon" })
-      .selectOption("long_term");
-    await editor
-      .getByRole("combobox", { name: "Reflective state" })
-      .selectOption("active");
+    // A new item always starts as something you want to do.
+    await expect(editor.getByRole("combobox", { name: "Status" })).toHaveCount(
+      0,
+    );
     await editor.getByLabel(/Target date/).fill("2028-06-01");
-    await editor.getByRole("button", { name: "Add Goal", exact: true }).click();
+    await editor
+      .getByRole("button", { name: "Add to Want to Do", exact: true })
+      .click();
     await expect(editor).not.toBeVisible();
     await expect(
       page.getByRole("button", { name: /Learn to sail/ }),
@@ -120,9 +120,7 @@ test("Inbox saves an Entry while Goal uses its focused form", async ({
     });
     const goal = await client
       .from("entries")
-      .select(
-        "id,item_kind,item_subtype,title,goals(horizon,status,target_date)",
-      )
+      .select("id,item_kind,item_subtype,title,goals(status,target_date)")
       .eq("owner_id", ownerID)
       .eq("item_kind", "goal")
       .single();
@@ -132,7 +130,6 @@ test("Inbox saves an Entry while Goal uses its focused form", async ({
       title: "Learn to sail",
       goals: [
         {
-          horizon: "long_term",
           status: "active",
           target_date: "2028-06-01",
         },

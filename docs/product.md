@@ -30,7 +30,7 @@ Notes, journals, reflections, lessons, ideas, stories, memories, milestones, and
 They do not change the Entry's structure.
 
 Focused records keep structure only when the experience needs specific fields or actions.
-Home and Vehicle are Entities; Goal has its own lifecycle; First Time has a focused Entry form.
+Home and Vehicle are Entities; a Want to Do item (a Goal in data) has its own lifecycle; First Time has a focused Entry form.
 Timeline has an intentional point Moment and an interval Period, plus spans from focused records.
 An Entry's date alone does not put it on Timeline.
 Timeline tracks control presentation, not the record's identity.
@@ -107,7 +107,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - A Location does not require a personal name; an Entry, Home, Vehicle, or First Time can carry its address or coordinates.
 - Inbox, Timeline, Dashboard, and Library are views or workflow states, not organization labels.
 - Library is the primary all-items entry point for the Life Wiki.
-  Its default browser presents organized Entries, Entities, and Goals as paginated rows and opens focused records in their own views.
+  Its default browser presents organized Entries, Entities, and Want to Do items as paginated rows and opens focused records in their own views.
   Unreviewed captures remain in Inbox and do not appear in the default Library browser or its item count until `Save to Library`.
   Library search also finds Inbox captures, labels them clearly, and supports record, date, and tag filters with match context.
   Library avoids duplicating the sidebar's focused and organizing destinations; the global Version history index has a link below Library results.
@@ -119,11 +119,11 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - Tag management opens in viewport-level dialogs. The Tags Library uses compact usage-count badges that open tag management, recent linked Entries, and a path to the complete filtered result set.
 - Renaming a tag preserves its identity and linked Wiki Items.
 - A used tag must be merged into another tag or removed from its Entries before deletion, so organization is never silently lost.
-- Web does not offer general links between Entries, because tags and Goals already connect related records.
-  Entries stay connected through purpose-specific links: a Goal's Related Items and source links such as Create linked Goal or the First Time a Goal achievement creates.
+- Web does not offer general links between Entries, because tags already connect related records.
+  Entries stay connected only through purpose-specific links: the source link of an item added to Want to Do and the First Time that marking an item done creates.
   General links saved earlier remain in the data, version history, and export, but the Item page no longer lists them.
 - Important content, organization, relationship, specialized-field, and photo-membership changes remain recoverable through version history.
-- Adding or removing photos never makes an open First Time, Home, Vehicle, or Goal editor stale: its Save, Move to Trash, and Goal achievement still apply.
+- Adding or removing photos never makes an open First Time, Home, Vehicle, or Want to Do editor stale: its Save, Move to Trash, and Mark done still apply.
   Writing or other content changed elsewhere since the editor opened still reports a conflict instead of being overwritten.
 - Restoring history creates a new revision and does not erase later history.
 - Historical versions with an unsupported format remain viewable, with an explanation that they cannot be restored.
@@ -193,15 +193,23 @@ An absent end means that relationship is current, not that the Entity is automat
 Duration labels must not imply more precision than the recorded dates.
 Property operations, vehicle maintenance, fuel, expenses, insurance, and document storage are outside the current scope.
 
-### Goals and Ideas
+### Want to Do
 
-Goals are low-pressure Entries with Short-term, Long-term, or Someday horizons and Considering, Active, Paused, Achieved, or Let Go states.
-They may have a target date, progress notes, and related Entries, but never require a percentage, subtasks, deadlines, overdue warnings, or productivity scores.
+Want to Do is a low-pressure list of things the user wants to do someday.
+Each item needs only a title; a target date, notes, tags, and photos are optional.
+An item is Want to do, Done, or Let go, and every new item starts as Want to do.
+There are no horizons, Bucket List, percentages, subtasks, deadlines, overdue warnings, or productivity scores.
+In data and routes an item is still a Goal (`item_kind = 'goal'`, `/goals`); Want to Do is its user-facing name.
 
-An idea remains an Entry until the user explicitly creates a linked Goal from it.
-The Entry remains intact as the source.
+An idea remains an Entry until the user explicitly adds it to Want to Do from its Item page.
+That secondary action creates a separate item linked back to its source, and the Entry remains intact.
 
-An explicit achievement action may atomically mark any Goal that is not yet Achieved as Achieved and create a linked First Time using the best-known date without copying the Goal writing.
+Marking an item done is the moment it can become a First Time.
+That action atomically marks the item Done and creates a linked First Time using the best-known date without copying the notes.
+Changing the status to Done in the editor records it without a First Time.
+
+Want to Do items do not keep general links to other Entries.
+Related links that older Goals carried stay in the data and history but are not shown or edited.
 
 ### Locations
 

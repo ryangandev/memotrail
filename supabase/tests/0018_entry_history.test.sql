@@ -59,7 +59,7 @@ insert into public.goals(entry_id,owner_id,status) values('94600000-0000-4000-80
 insert into public.homes(entry_id,owner_id,place_id,move_in_reason) values('94600000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','94400000-0000-4000-8000-000000000002','Study');
 insert into public.vehicles(entry_id,owner_id,model,color) values('94600000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000001','Original model','Blue');
 update public.entries set title=title||' changed' where id in ('94600000-0000-4000-8000-000000000001','94600000-0000-4000-8000-000000000002','94600000-0000-4000-8000-000000000003');
-update public.goals set status='paused' where entry_id='94600000-0000-4000-8000-000000000001';
+update public.goals set status='let_go' where entry_id='94600000-0000-4000-8000-000000000001';
 update public.homes set move_in_reason='Work' where entry_id='94600000-0000-4000-8000-000000000002';
 update public.vehicles set color='Red' where entry_id='94600000-0000-4000-8000-000000000003';
 set local role authenticated;

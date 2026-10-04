@@ -68,7 +68,7 @@ export const historyFields: Record<string, string> = {
   timeline_items: "Timeline placement",
   home: "Home details",
   vehicle: "Vehicle details",
-  goal: "Goal details",
+  goal: "Want to Do details",
   links: "Entry links",
   attachments: "Photos",
   metadata: "Other metadata",

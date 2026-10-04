@@ -5,20 +5,20 @@ const input = {
   sourceId: "9ee35d43-af21-41c4-9bdb-2864b99622f0",
   sourceRevision: 3,
   title: " 学习 ",
-  horizon: "someday",
-  status: "considering",
   targetDate: null,
 };
 describe("Goal extraction input", () => {
-  it("keeps source and target identity and only exposes explicit Goal fields", () => {
+  it("keeps source and target identity and only exposes title and target", () => {
     expect(
       parseGoalExtractionInput({
         ...input,
         body: "Do not overwrite",
+        horizon: "someday",
+        status: "achieved",
       }),
     ).toEqual({ success: true, data: { ...input, title: "学习" } });
   });
-  it("rejects invalid versions, titles, states and calendar dates", () => {
+  it("rejects invalid versions, titles and calendar dates", () => {
     for (const patch of [
       { goalId: null },
       { goalId: "bad" },
@@ -26,8 +26,6 @@ describe("Goal extraction input", () => {
       { sourceRevision: 0 },
       { sourceRevision: 1.5 },
       { title: " " },
-      { status: "bad" },
-      { horizon: null },
       { targetDate: "2026-02-30" },
     ])
       expect(parseGoalExtractionInput({ ...input, ...patch }).success).toBe(
