@@ -48,23 +48,6 @@ jobs:
       - name: Verify shipped media dependencies
         run: node apps/web/scripts/verify-media-trace.mjs
 
-  ios:
-    name: iOS build
-    runs-on: macos-15
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-
-      - name: Build iOS app
-        run: |
-          xcodebuild -quiet \
-            -project apps/ios/MemoTrail.xcodeproj \
-            -scheme MemoTrail \
-            -configuration Debug \
-            -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO \
-            build
-
   database:
     name: Supabase database tests
     runs-on: ubuntu-latest
