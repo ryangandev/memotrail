@@ -25,6 +25,16 @@ const rejectedEntry = {
     "MemoTrail cannot accept this Entry, so it will not sync. Copy its text to keep it, then discard it.",
   status: "rejected",
 };
+const deletedForever = {
+  message:
+    "This Entry was deleted forever, so MemoTrail will not create it again. Copy its text to keep it, then discard it.",
+  status: "rejected",
+};
+const trashedPhoto = {
+  message:
+    "This Entry is in Trash, so its photos will not be attached. Discard to remove them from this device.",
+  status: "rejected",
+};
 
 describe("Capture sync failures", () => {
   beforeEach(() => vi.resetAllMocks());
@@ -68,12 +78,40 @@ describe("Capture sync failures", () => {
 
   it("counts an Entry that already reached MemoTrail as synced, whatever the error", async () => {
     signedIn({
-      existing: { id: entryId },
+      existing: { deleted_at: null, id: entryId },
       insert: { error: { code: "23505", message: "duplicate" }, status: 409 },
     });
     expect(await syncInboxEntry(capture())).toMatchObject({
       status: "synced",
     });
+  });
+
+  it("stops a capture whose Entry is already in Trash", async () => {
+    // Sending it again would only repeat the duplicate-key refusal forever.
+    const trashed = {
+      existing: { deleted_at: "2026-10-03T12:05:00.000Z", id: entryId },
+      insert: { error: { code: "23505", message: "duplicate" }, status: 409 },
+    };
+    signedIn(trashed);
+    expect(await syncInboxEntry(capture())).toEqual({
+      message:
+        "This Entry is already in Trash, so it will not sync again. Restore it from Trash to keep it, then discard this copy.",
+      status: "rejected",
+    });
+
+    signedIn(trashed);
+    expect(await syncInboxEntry(captureWithPhoto())).toEqual(trashedPhoto);
+  });
+
+  it("never recreates an Entry that was deleted forever", async () => {
+    const { lookup } = signedIn({
+      insert: {
+        error: { code: "23505", message: "entry_deleted_forever" },
+        status: 409,
+      },
+    });
+    expect(await syncInboxEntry(capture())).toEqual(deletedForever);
+    expect(lookup).not.toHaveBeenCalled();
   });
 
   it("keeps a refusal retryable when MemoTrail cannot say whether the Entry exists", async () => {
@@ -171,6 +209,23 @@ describe("Capture photo sync failures", () => {
     expect(await registerEntryAttachment(photo())).toEqual(waitingPhoto);
   });
 
+  it("refuses an original that never reached Storage once this device lost it", async () => {
+    signedIn({
+      rpc: {
+        data: null,
+        error: { code: "22023", message: "attachment_object_missing" },
+        status: 400,
+      },
+    });
+    expect(
+      await registerEntryAttachment(photo(), { originalOnDevice: false }),
+    ).toEqual({
+      message:
+        "This Entry is in your Inbox, but one of its photos is no longer on this device, so they will not sync. Discard to remove them from this device.",
+      status: "rejected",
+    });
+  });
+
   it("keeps waiting when MemoTrail cannot be reached or confirms nothing", async () => {
     signedIn({
       rpc: {
@@ -183,6 +238,36 @@ describe("Capture photo sync failures", () => {
 
     signedIn({ rpc: { data: [], error: null, status: 200 } });
     expect(await registerEntryAttachment(photo())).toEqual(waitingPhoto);
+
+    // A registration this device can still repeat, even without the photo.
+    signedIn({ rpc: { data: [], error: null, status: 200 } });
+    expect(
+      await registerEntryAttachment(photo(), { originalOnDevice: false }),
+    ).toEqual({
+      message:
+        "MemoTrail will retry attaching this Entry's photos when you are online.",
+      status: "retry",
+    });
+  });
+
+  it("stops attaching photos to an Entry in Trash or deleted forever", async () => {
+    signedIn({
+      rpc: {
+        data: null,
+        error: { code: "22023", message: "entry_in_trash" },
+        status: 400,
+      },
+    });
+    expect(await registerEntryAttachment(photo())).toEqual(trashedPhoto);
+
+    signedIn({
+      rpc: {
+        data: null,
+        error: { code: "23505", message: "entry_deleted_forever" },
+        status: 409,
+      },
+    });
+    expect(await registerEntryAttachment(photo())).toEqual(deletedForever);
   });
 
   it("asks the person to sign in again without a session", async () => {
@@ -218,6 +303,21 @@ function capture(body = "A thought worth keeping."): QueuedInboxEntry {
   };
 }
 
+function captureWithPhoto(): QueuedInboxEntry {
+  return {
+    ...capture(),
+    attachments: [
+      {
+        id: attachmentId,
+        lastModified: 1,
+        mimeType: "image/jpeg",
+        name: "memory.jpg",
+        size: 10,
+      },
+    ],
+  };
+}
+
 function photo() {
   return {
     attachmentId,
@@ -237,7 +337,7 @@ function signedIn({
   lookupError = null,
   rpc: rpcResult = { data: [], error: null },
 }: {
-  existing?: { id: string } | null;
+  existing?: { deleted_at: string | null; id: string } | null;
   insert?: { error: { code: string; message: string } | null; status: number };
   lookupError?: { code: string; message: string } | null;
   rpc?: {
@@ -247,20 +347,21 @@ function signedIn({
   };
 }) {
   const insert = vi.fn(async () => insertResult);
-  const lookup = {
-    eq: () => lookup,
-    maybeSingle: async () => ({
-      data: lookupError ? null : existing,
-      error: lookupError,
-    }),
-    select: () => lookup,
+  const lookup = vi.fn(async () => ({
+    data: lookupError ? null : existing,
+    error: lookupError,
+  }));
+  const query = {
+    eq: () => query,
+    maybeSingle: lookup,
+    select: () => query,
   };
   const rpc = vi.fn(async () => rpcResult);
   vi.mocked(getAuthenticatedContext).mockResolvedValue({
-    client: { from: () => ({ insert, ...lookup }), rpc },
+    client: { from: () => ({ insert, ...query }), rpc },
     userId: owner,
   } as unknown as NonNullable<
     Awaited<ReturnType<typeof getAuthenticatedContext>>
   >);
-  return { insert, rpc };
+  return { insert, lookup, rpc };
 }

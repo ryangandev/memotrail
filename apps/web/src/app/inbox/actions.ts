@@ -23,6 +23,15 @@ import {
   metadataWithEntryRichText,
   parseEntryRichTextJson,
 } from "@/lib/data/rich-text";
+import {
+  deletedForeverMessage,
+  missingPhotoMessage,
+  photoSessionMessage,
+  rejectedEntryMessage,
+  rejectedPhotoMessage,
+  trashedEntryMessage,
+  trashedPhotoMessage,
+} from "@/lib/data/capture-sync-messages";
 import { classifySyncFailure, type SyncFailure } from "@/lib/data/sync-failure";
 
 /**
@@ -36,21 +45,34 @@ export type SyncInboxEntryResult = {
 
 const invalidEntryMessage =
   "This Entry is invalid on this device, so it will not sync. Copy its text to keep it, then discard it.";
-const rejectedEntryMessage =
-  "MemoTrail cannot accept this Entry, so it will not sync. Copy its text to keep it, then discard it.";
-const rejectedPhotoMessage =
-  "This Entry is in your Inbox, but MemoTrail cannot accept one of its photos, so they will not sync. Discard to remove them from this device.";
-// The attachment RPC raises this for an original that has not reached Storage
-// yet; uploading it again on a later attempt can still succeed.
-const pendingOriginalError = "attachment_object_missing";
+
+// MemoTrail names its own refusals in the error message, beside a standard
+// SQLSTATE that deployed clients already classify.
+type MemoTrailError = { code?: string | null; message?: string | null };
+/** The Entry was deleted forever, so its ID can never be created again. */
+const isDeletedForever = (error: MemoTrailError) =>
+  error.code === "23505" && error.message === "entry_deleted_forever";
+/** The Entry is in Trash, so it cannot take photos. */
+const isInTrash = (error: MemoTrailError) =>
+  error.code === "22023" && error.message === "entry_in_trash";
+/** The original has not reached Storage. */
+const isOriginalMissing = (error: MemoTrailError) =>
+  error.code === "22023" && error.message === "attachment_object_missing";
 
 export type ReviewInboxEntryResult =
   | { message: string; status: "conflict" | "error" }
   | { message: string; status: "done" | "saved"; revision: number };
 
+/**
+ * Registers an uploaded original. Pass `originalOnDevice: false` when this
+ * device no longer has the photo, so an original that never reached Storage
+ * is final instead of waiting for an upload that cannot happen.
+ */
 export async function registerEntryAttachment(
   input: FirstTimeAttachmentInput,
+  options?: { originalOnDevice?: boolean },
 ): Promise<SyncInboxEntryResult> {
+  const originalOnDevice = options?.originalOnDevice !== false;
   const parsed = parseFirstTimeAttachmentInput(input);
 
   if (!parsed.success) {
@@ -78,15 +100,23 @@ export async function registerEntryAttachment(
   );
 
   if (error) {
+    if (isInTrash(error))
+      return { message: trashedPhotoMessage, status: "rejected" };
+    if (isDeletedForever(error))
+      return { message: deletedForeverMessage, status: "rejected" };
+    // Uploading the original again can still succeed while this device has it.
+    if (isOriginalMissing(error))
+      return originalOnDevice
+        ? photoSyncFailure("unavailable")
+        : { message: missingPhotoMessage, status: "rejected" };
     return photoSyncFailure(
-      error.message === pendingOriginalError
-        ? "unavailable"
-        : classifySyncFailure({ code: error.code, status }),
+      classifySyncFailure({ code: error.code, status }),
+      originalOnDevice,
     );
   }
 
   if (!Array.isArray(data) || data.length === 0) {
-    return photoSyncFailure("unavailable");
+    return photoSyncFailure("unavailable", originalOnDevice);
   }
 
   revalidatePath("/");
@@ -135,16 +165,27 @@ export async function syncInboxEntry(
     title: entry.title,
   });
 
-  // A lost response may hide an insert that succeeded, so an existing Entry
-  // counts as synced whatever the error was.
   if (error) {
-    const exists = await entryAlreadyExists(entry.id, context);
-    if (!exists) {
+    if (isDeletedForever(error))
+      return { message: deletedForeverMessage, status: "rejected" };
+
+    // A lost response may hide an insert that succeeded, so an existing Entry
+    // counts as synced whatever the error was, unless it is now in Trash.
+    const existing = await existingEntry(entry.id, context);
+    if (existing === "trashed")
+      return {
+        message:
+          entry.attachments.length > 0
+            ? trashedPhotoMessage
+            : trashedEntryMessage,
+        status: "rejected",
+      };
+    if (existing !== "active") {
       const failure = classifySyncFailure({ code: error.code, status });
       // Only a confirmed absence makes a refusal final; an unanswered lookup
       // could hide an Entry an earlier attempt already created.
       return entrySyncFailure(
-        exists === null && failure === "rejected" ? "unavailable" : failure,
+        existing === null && failure === "rejected" ? "unavailable" : failure,
       );
     }
   }
@@ -280,33 +321,35 @@ function entrySyncFailure(failure: SyncFailure): SyncInboxEntryResult {
   };
 }
 
-function photoSyncFailure(failure: SyncFailure): SyncInboxEntryResult {
+function photoSyncFailure(
+  failure: SyncFailure,
+  originalOnDevice = true,
+): SyncInboxEntryResult {
   if (failure === "rejected")
     return { message: rejectedPhotoMessage, status: "rejected" };
   if (failure === "session")
-    return {
-      message:
-        "Your session expired. Sign in again to sync this Entry's photos.",
-      status: "retry",
-    };
+    return { message: photoSessionMessage, status: "retry" };
   return {
-    message:
-      "The photo is saved on this device. MemoTrail will retry attaching it.",
+    message: originalOnDevice
+      ? "The photo is saved on this device. MemoTrail will retry attaching it."
+      : "MemoTrail will retry attaching this Entry's photos when you are online.",
     status: "retry",
   };
 }
 
-/** Whether the Entry exists, or null when MemoTrail could not answer. */
-async function entryAlreadyExists(
+/** Where the Entry is, or null when MemoTrail could not answer. */
+async function existingEntry(
   entryId: string,
   context: NonNullable<Awaited<ReturnType<typeof getAuthenticatedContext>>>,
-): Promise<boolean | null> {
+): Promise<"active" | "absent" | "trashed" | null> {
   const { data, error } = await context.client
     .from("entries")
-    .select("id")
+    .select("id,deleted_at")
     .eq("id", entryId)
     .eq("owner_id", context.userId)
-    .maybeSingle<{ id: string }>();
+    .maybeSingle<{ deleted_at: string | null; id: string }>();
 
-  return error ? null : data?.id === entryId;
+  if (error) return null;
+  if (data?.id !== entryId) return "absent";
+  return data.deleted_at ? "trashed" : "active";
 }

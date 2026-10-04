@@ -1,4 +1,5 @@
 import type { PhotoUploadProgress } from "@/lib/media/upload";
+import { offlinePhotoSyncMessage } from "./capture-sync-messages";
 import {
   enqueueInboxEntry,
   loadInboxQueue,
@@ -93,8 +94,6 @@ export type InboxSyncStore = {
 
 export const offlineSyncMessage =
   "Saved on this device. MemoTrail will retry when you are online.";
-const offlinePhotoSyncMessage =
-  "Photos are saved on this device. MemoTrail will retry when you are online.";
 const uncleanedQueueMessage =
   "This Entry reached MemoTrail, but its local pending copy could not be cleared.";
 
