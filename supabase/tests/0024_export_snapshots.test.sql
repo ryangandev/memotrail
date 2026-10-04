@@ -25,8 +25,9 @@ create function pg_temp.page(p_after bigint default 0,p_limit integer default 10
 select set_eq($$select unnest(public.export_dataset_names()) except select 'media_objects'$$,
  -- Internal photo revision reconciliation has no user content; complete snapshots
  -- and original membership are already exported through entry_versions/attachments.
- -- Pending Storage removals belong to permanently deleted media, never to the archive.
- $$select tablename from pg_tables where schemaname='public' and tablename not in ('export_snapshots','export_snapshot_rows','entry_photo_changes','entry_places','location_provider_usage','media_purges')
+ -- Pending Storage removals belong to permanently deleted media, never to the archive,
+ -- and tombstones only keep permanently deleted Entries from being created again.
+ $$select tablename from pg_tables where schemaname='public' and tablename not in ('export_snapshots','export_snapshot_rows','entry_photo_changes','entry_places','location_provider_usage','media_purges','entry_tombstones')
    union all select 'entry_locations'$$,
  'Explicit export inventory covers every canonical table and requires updates for new tables');
 set local role authenticated;

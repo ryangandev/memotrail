@@ -686,6 +686,52 @@ enum CaptureSyncFailure: Equatable, Sendable {
   }
 }
 
+/// How a capture photo's Storage upload failed, classified by status like Web
+/// `classifyUploadFailure`, never from message text.
+enum CaptureUploadFailure: Equatable, Sendable {
+  /// MemoTrail refused this file, and uploading it again cannot change the answer.
+  case rejected
+  /// The session can no longer write, so the person needs to sign in again.
+  case session
+  /// MemoTrail could not be reached or answer now; a later attempt can succeed.
+  case unavailable
+  /// Storage refused the signed-in request. It reports an expired session exactly like a policy
+  /// denial, so the caller checks the session before calling it a refusal.
+  case denied
+  /// An earlier attempt already stored this original, perhaps before its response was lost.
+  case exists
+  case tooLarge
+  case unsupportedType
+
+  init(_ error: Error) {
+    switch error {
+    case let error as StorageError:
+      // Storage reports the real status in its error body, beside an HTTP 400.
+      self.init(status: error.statusCode.flatMap { Int($0) })
+    case let error as HTTPError:
+      // A body Storage did not write, such as a gateway page, keeps only the HTTP status.
+      self.init(status: error.response.statusCode)
+    default:
+      // Network failures never reached Storage.
+      self = .unavailable
+    }
+  }
+
+  init(status: Int?) {
+    switch status {
+    case 409: self = .exists
+    case 401: self = .session
+    case 403: self = .denied
+    case 413: self = .tooLarge
+    case 415: self = .unsupportedType
+    // Timeouts, locks, early data, rate limits, and server errors can pass.
+    case 408, 423, 425, 429: self = .unavailable
+    case let status? where (400..<500).contains(status): self = .rejected
+    default: self = .unavailable
+    }
+  }
+}
+
 struct InboxQueueStore {
   static let maximumEntryCount = 100
 

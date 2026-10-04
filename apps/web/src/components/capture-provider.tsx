@@ -14,12 +14,9 @@ import {
   registerEntryAttachment,
   syncInboxEntry,
 } from "@/app/inbox/actions";
+import { isAuthRetryableFetchError } from "@supabase/supabase-js";
 import { notify } from "@/components/app-toast";
 import { countLabel } from "@/lib/count-label";
-import {
-  createFirstTimeObjectPath,
-  type FirstTimeAttachmentInput,
-} from "@/lib/data/first-time-input";
 import { inboxDraftKey } from "@/lib/data/inbox-draft";
 import {
   createInboxDraftStore,
@@ -31,6 +28,7 @@ import {
   persistInboxPhotoDrafts,
   removeInboxPhotoDrafts,
 } from "@/lib/data/inbox-photo-store";
+import { synchronizeCapturePhotos } from "@/lib/data/inbox-photo-sync";
 import {
   inboxQueueKey,
   loadInboxQueue,
@@ -285,103 +283,39 @@ async function runAcrossTabs<T>(name: string, task: () => Promise<T>) {
   }
 }
 
-async function synchronizeAttachments(
+function synchronizeAttachments(
   ownerId: string,
   entry: QueuedInboxEntry,
   onProgress?: (progress: PhotoUploadProgress) => void,
 ): Promise<InboxSyncResult> {
-  const storedPhotos = await loadInboxPhotoDrafts(ownerId);
-  const photosById = new Map(storedPhotos.map((photo) => [photo.id, photo]));
-  const client = createClient();
-
-  let completed = 0;
-  onProgress?.({ completed, total: entry.attachments.length });
-  for (const attachment of entry.attachments) {
-    const photo = photosById.get(attachment.id);
-    const objectPath = createFirstTimeObjectPath(
-      ownerId,
-      entry.id,
-      attachment.id,
-      attachment.mimeType,
-    );
-
-    if (!objectPath) {
-      return {
-        message:
-          "This Entry is in your Inbox, but one of its photos is invalid on this device, so they will not sync. Discard to remove them from this device.",
-        status: "rejected",
-      };
-    }
-
-    const attachmentInput: FirstTimeAttachmentInput = {
-      attachmentId: attachment.id,
-      byteSize: attachment.size,
-      entryId: entry.id,
-      mimeType: attachment.mimeType,
-      objectPath,
-      originalFilename: attachment.name || null,
-      pixelHeight: null,
-      pixelWidth: null,
-    };
-
-    if (!photo) {
-      const registered = await registerEntryAttachment(attachmentInput);
-
-      if (registered.status === "synced") {
-        continue;
-      }
-
-      if (registered.status === "rejected") {
-        return registered;
-      }
-
-      return {
-        message:
-          "A pending photo is missing from this device. Keep this page open and select the photo again if needed.",
-        status: "retry",
-      };
-    }
-
-    if (
-      photo.file.name !== attachment.name ||
-      photo.file.size !== attachment.size ||
-      photo.file.lastModified !== attachment.lastModified ||
-      photo.mimeType !== attachment.mimeType
-    ) {
-      return {
-        message:
-          "This Entry is in your Inbox, but one of its photos changed on this device, so they will not sync. Discard to remove them from this device.",
-        status: "rejected",
-      };
-    }
-
-    await client.storage.from("entry-media").upload(objectPath, photo.file, {
-      cacheControl: "3600",
-      contentType: attachment.mimeType,
-      upsert: false,
-    });
-
-    const registered = await registerEntryAttachment(attachmentInput);
-
-    if (registered.status !== "synced") {
-      return registered;
-    }
-
-    try {
-      await removeInboxPhotoDrafts(ownerId, [attachment.id]);
-    } catch {
-      return {
-        message:
-          "This photo reached MemoTrail, but its local pending copy could not be cleared. Retry to finish.",
-        status: "retry",
-      };
-    }
-    completed += 1;
-    onProgress?.({ completed, total: entry.attachments.length });
-  }
-
-  return {
-    message: `Saved to Inbox with ${countLabel(entry.attachments.length, "photo")}.`,
-    status: "synced",
-  };
+  const media = () => createClient().storage.from("entry-media");
+  return synchronizeCapturePhotos(
+    ownerId,
+    entry,
+    {
+      loadPhotos: () => loadInboxPhotoDrafts(ownerId),
+      register: registerEntryAttachment,
+      removePhoto: (attachmentId) =>
+        removeInboxPhotoDrafts(ownerId, [attachmentId]),
+      removeUpload: async (objectPath) => {
+        await media().remove([objectPath]);
+      },
+      sessionFailure: async () => {
+        const { data, error } = await createClient().auth.getUser();
+        if (data.user?.id === ownerId) return null;
+        // Only an answer from MemoTrail proves the session ended.
+        return error &&
+          (isAuthRetryableFetchError(error) || (error.status ?? 0) >= 500)
+          ? "unavailable"
+          : "session";
+      },
+      upload: (objectPath, photo) =>
+        media().upload(objectPath, photo.file, {
+          cacheControl: "3600",
+          contentType: photo.mimeType,
+          upsert: false,
+        }),
+    },
+    onProgress,
+  );
 }

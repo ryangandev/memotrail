@@ -48,3 +48,56 @@ export function classifySyncFailure({
     return "rejected";
   return "unavailable";
 }
+
+/**
+ * How a capture photo's Storage upload failed.
+ *
+ * - `exists`: an earlier attempt already stored this original, perhaps before
+ *   its response was lost, so registration can continue.
+ * - `denied`: Storage refused the signed-in request. It reports an expired
+ *   session exactly like a policy denial, so the caller checks the session.
+ * - `too_large` and `unsupported_type`: refusals of this file in particular.
+ */
+export type UploadFailure =
+  SyncFailure | "denied" | "exists" | "too_large" | "unsupported_type";
+
+/** The parts of a Storage failure that classify it, never its message text. */
+export type StorageFailure = {
+  /** The HTTP status; absent when the request never got a response. */
+  status?: number | null;
+  /** The status Storage reports in its error body, such as "409". */
+  statusCode?: string | null;
+};
+
+/**
+ * Classifies a Storage upload failure by status. Storage answers most errors
+ * with HTTP 400 and puts the real status in its body, so that one comes first.
+ * Client errors are permanent; a missing response, a timeout, a lock, rate
+ * limiting, and server errors stay retryable.
+ */
+export function classifyUploadFailure({
+  status,
+  statusCode,
+}: StorageFailure): UploadFailure {
+  const reported = Number(statusCode);
+  const effective =
+    Number.isInteger(reported) && reported >= 100 && reported <= 599
+      ? reported
+      : (status ?? 0);
+
+  if (effective === 409) return "exists";
+  if (effective === 401) return "session";
+  if (effective === 403) return "denied";
+  if (effective === 413) return "too_large";
+  if (effective === 415) return "unsupported_type";
+  if (
+    effective === 408 ||
+    effective === 423 ||
+    effective === 425 ||
+    effective === 429 ||
+    effective >= 500
+  )
+    return "unavailable";
+  if (effective >= 400) return "rejected";
+  return "unavailable";
+}

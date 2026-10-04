@@ -34,6 +34,8 @@ Migration `202610030002` applies the existing photo-only revision rule inside th
 Delete forever and Empty Trash now delete an item's record before its private photo files on Web and native, so an interrupted request or a Restore from another device can no longer leave a restorable item without its originals.
 Restore refuses an item whose originals are missing, and opening Trash finishes any file removal left unfinished.
 Migration `202610030003` enforces this order on the server for every client, including deployed ones; it is verified locally and must be applied to the hosted project before this Web or native release, because the new clients call its RPCs.
+Pending captures now stop as Not accepted instead of retrying forever when Storage refuses a photo or the Entry is already in Trash, and a capture still waiting on a device can no longer create an Entry again after Delete forever, on Web and native.
+Migration `202610030004` records each Entry deleted forever and refuses to insert it again; it is verified locally and must be applied to the hosted project before this Web or native release, because the new clients rely on it to stop those captures.
 The merged Web release still needs Production deployment verification and browser acceptance; live configuration, native interactions, CI, and recovery evidence remain incomplete.
 
 Use Git history for feature-level implementation and test evidence.
@@ -102,6 +104,11 @@ Its marked account and Storage objects were confirmed removed without accessing 
   Before the fix, a note with a NUL character was reported as offline on both clients, retried on every sync, and held every later capture behind it.
   The two `capture-rejected-sync.e2e.ts` scenarios pass with 22 related browser scenarios, beside unit tests for code classification, both server actions, the queue marker, and the sync store; 593 Web unit tests pass.
   Native unit tests cover the classification and queue marker, a local Supabase contract covers a refused note, a changed photo, relaunch, and Discard, and the signed-in Simulator flow covers paste, Copy text, and Discard; the full native run passes 268 tests.
+- Photo uploads Storage refuses, captures whose Entry is in Trash, and captures whose Entry was deleted forever now stop as Not accepted with their own reason on Web and iOS.
+  Before the fix, both clients ignored upload errors, so a refused photo retried on every sync as offline; an Entry in Trash counted as synced, which dropped a text capture silently and retried its photos forever; and a capture still waiting after Delete forever created the Entry again.
+  The six `capture-sync-refusals.e2e.ts` scenarios cover a refused and a denied upload, a lost upload answer, Trash, Delete forever from another device, and an upload that lands after Delete forever; all six fail against the previous client and pass with 23 related browser scenarios.
+  `0069_entry_tombstones.test.sql` adds 30 database assertions, three data contracts cover the tombstone and an insert racing an uncommitted Delete forever, and 631 Web unit tests pass, including photo sync and upload classification.
+  Three native contract tests cover the same Trash, Delete forever, refused upload, and lost upload paths and fail against the previous controller; the full native run passes 272 tests.
 
 ### 2. Accept Web Location
 

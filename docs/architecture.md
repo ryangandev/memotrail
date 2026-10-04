@@ -197,8 +197,15 @@ Pair it with the test file carrying the same feature name.
 - The store syncs on load, on `online`, and after each new capture, with one run at a time per tab; a run sends the oldest capture first and stops at the first retryable failure.
 - Sync failures are classified by PostgREST and Postgres error code, never message text, in Web `lib/data/sync-failure.ts` and native `CaptureSyncFailure` in `Models/InboxEntry.swift`.
   Missing codes, connection and schema-cache errors, and retryable SQLSTATEs stay retryable; JWT errors ask the person to sign in again; `PGRST1xx`, `42501`, and SQLSTATE classes `22`, `23`, and `54` are refusals.
-  The `attachment_object_missing` registration error stays retryable because Storage upload errors are not reported yet.
   `syncInboxEntry` and `registerEntryAttachment` in `app/inbox/actions.ts` return `rejected` for a refusal, and the client also refuses a photo that changed or has an invalid path on the device.
+- A capture insert refused as a duplicate looks up the existing Entry: an active one counts as synced, one in Trash is refused with its own message, and a failed lookup downgrades the refusal to a retry.
+  `entry_deleted_forever` (SQLSTATE `23505`) is refused without a lookup, and `register_entry_attachment` raises `entry_in_trash` or `entry_deleted_forever` for the owner's Entry; each code is matched together with its SQLSTATE.
+- Photo uploads run through Web `lib/data/inbox-photo-sync.ts` and native `InboxController.synchronizeAttachments`, which classify a Storage error by its status code, never message text, with Web `classifyUploadFailure` and native `CaptureUploadFailure`.
+  `409` means an earlier upload whose answer was lost, so registration continues; network errors, `408`, `423`, `425`, `429`, and `5xx` retry; `401` asks the person to sign in; `413`, `415`, and other `4xx` refuse the photo with a fitting message.
+  Storage answers an expired session with the same `403` as a policy denial, so a `403` first checks the session with the Auth server: the same owner means a refusal, an unreachable server a retry, and anything else a sign-in.
+  `attachment_object_missing` is a refusal only when the original is no longer on the device; while it is, the next run uploads it again.
+  When registration refuses a photo that was just uploaded, the client removes that unregistered original, which the Storage delete policy allows.
+  This removal is best effort; there is still no server sweep of abandoned unregistered uploads.
 - A refused capture keeps its content in the queue with a `rejection` marker (message and time), written by `rejectInboxQueueEntry` in `lib/data/inbox-queue.ts` or `InboxQueueStore.markRejected`.
   Runs skip marked captures and continue with later ones, and a malformed marker only makes the capture sendable again.
   If the marker cannot be stored, the run stops with a retry instead, so the capture is never sent again unmarked.
@@ -257,6 +264,9 @@ Pair it with the test file carrying the same feature name.
 - Ordinary deletion moves supported records to recoverable Trash.
 - Permanent deletion and Empty Trash require an explicit, complete confirmation scope.
 - Changed targets or uncertain responses stop further destructive dispatch.
+- Every hard delete of an Entry records its owner, ID, and deletion time in `entry_tombstones` through a trigger, so a delayed capture cannot create it again.
+  A later insert of that ID for the same owner fails with `entry_deleted_forever` (SQLSTATE `23505`), after waiting for any uncommitted Delete forever of the same row.
+  Tombstones hold no content, have row level security with no client grants, are not exported, and are kept until the account is deleted, which removes them by cascade and records none for its own Entries.
 - Export captures one consistent database snapshot and streams canonical data plus original media into a ZIP.
 - Missing, changed, or truncated media fails the export instead of producing a successful partial archive.
 - Cross-device synchronization and an application export are not infrastructure backups.

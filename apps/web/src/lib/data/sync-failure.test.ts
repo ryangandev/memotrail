@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifySyncFailure } from "./sync-failure";
+import { classifySyncFailure, classifyUploadFailure } from "./sync-failure";
 
 describe("Capture sync failure classification", () => {
   it.each([
@@ -57,5 +57,45 @@ describe("Capture sync failure classification", () => {
     ["P0001", 400],
   ])("keeps %s retryable", (code, status) => {
     expect(classifySyncFailure({ code, status })).toBe("unavailable");
+  });
+});
+
+describe("Capture photo upload failure classification", () => {
+  // Storage answers with HTTP 400 and reports the real status in its body.
+  it.each([
+    ["409", "exists"],
+    ["403", "denied"],
+    ["413", "too_large"],
+    ["415", "unsupported_type"],
+    ["400", "rejected"],
+    ["404", "rejected"],
+    ["422", "rejected"],
+    ["401", "session"],
+    ["408", "unavailable"],
+    ["423", "unavailable"],
+    ["429", "unavailable"],
+    ["500", "unavailable"],
+    ["503", "unavailable"],
+  ])("classifies a reported %s as %s", (statusCode, failure) => {
+    expect(classifyUploadFailure({ status: 400, statusCode })).toBe(failure);
+  });
+
+  it("falls back to the HTTP status when the body reports none", () => {
+    expect(classifyUploadFailure({ status: 413, statusCode: null })).toBe(
+      "too_large",
+    );
+    expect(classifyUploadFailure({ status: 502, statusCode: "" })).toBe(
+      "unavailable",
+    );
+    expect(classifyUploadFailure({ status: 400, statusCode: "oops" })).toBe(
+      "rejected",
+    );
+  });
+
+  it("keeps an upload that never got a response retryable", () => {
+    expect(classifyUploadFailure({})).toBe("unavailable");
+    expect(classifyUploadFailure({ status: 0, statusCode: undefined })).toBe(
+      "unavailable",
+    );
   });
 });
