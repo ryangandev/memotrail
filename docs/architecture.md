@@ -290,6 +290,7 @@ Pair it with the test file carrying the same feature name.
   A later insert of that ID for the same owner fails with `entry_deleted_forever` (SQLSTATE `23505`), after waiting for any uncommitted Delete forever of the same row.
   Tombstones hold no content, have row level security with no client grants, are not exported, and are kept until the account is deleted, which removes them by cascade and records none for its own Entries.
 - Export captures one consistent database snapshot and streams canonical data plus original media into a ZIP.
+  Web `components/export-settings.tsx` opens the save picker while the click is still active, then creates the snapshot with a client id that a retry reuses and downloads it in the same action; its recent exports list downloads a snapshot again or discards it.
 - Missing, changed, or truncated media fails the export instead of producing a successful partial archive.
   A server-side failure or timeout logs one `Export stopped before completion` warning with its cause, while a download the person closes logs nothing.
 - Cross-device synchronization and an application export are not infrastructure backups.

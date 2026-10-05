@@ -38,7 +38,9 @@ export function parseExportAction(value: unknown): ExportAction | null {
     };
   return null;
 }
-export function exportFilename(snapshot: ExportSnapshot) {
+export function exportFilename(
+  snapshot: Pick<ExportSnapshot, "captured_at" | "id">,
+) {
   return `MemoTrail-${snapshot.captured_at.slice(0, 10)}-${snapshot.id.slice(0, 8)}.zip`;
 }
 // Completeness marker in the standard ZIP end-of-central-directory record.

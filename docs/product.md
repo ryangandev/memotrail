@@ -292,6 +292,8 @@ Form labels mark required fields with `*` and leave optional fields unmarked.
   To enforce this, MemoTrail keeps only the deleted Entry's ID and deletion time, with no writing, photos, or other content, until the account is deleted.
   This record is not visible in the app and is not part of an export.
 - Complete export includes canonical JSON, readable Markdown, structured CSV, relationships, and original media.
+  On Web, one Export everything action prepares a consistent copy and downloads it as a ZIP.
+  Recent exports can be downloaded again for 24 hours and keep the copy made at export time; up to two are kept, and discarding one deletes its copy sooner.
 
 ## Product boundaries
 

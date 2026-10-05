@@ -152,10 +152,13 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
         })
       ).status(),
     ).toBe(403);
-    await page.getByRole("button", { name: "Prepare snapshot" }).click();
+    // One action prepares a consistent copy and downloads it.
+    const exporting = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Export everything" }).click();
+    expect(await (await exporting).failure()).toBeNull();
     await expect(
       page.locator("[data-sonner-toast]").filter({
-        hasText: "Snapshot prepared",
+        hasText: "Export ready",
       }),
     ).toBeVisible();
     const nativeList = await page.request.post("/api/export", {
@@ -186,8 +189,9 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
           .eq("id", entryID)
       ).error,
     ).toBeNull();
+    // Downloading again returns the copy made at export time, not later edits.
     const downloading = page.waitForEvent("download");
-    await page.getByRole("button", { name: "Download ZIP" }).click();
+    await page.getByRole("button", { name: "Download again" }).click();
     const download = await downloading;
     const zipPath = testInfo.outputPath("synthetic-export.zip");
     await download.saveAs(zipPath);
@@ -247,10 +251,10 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
         }),
       });
     });
-    await page.getByRole("button", { name: "Download ZIP" }).click();
+    await page.getByRole("button", { name: "Download again" }).click();
     await expect(
       page.locator("[data-sonner-toast]").filter({
-        hasText: "Complete ZIP saved",
+        hasText: "Export saved",
       }),
     ).toBeVisible();
     const sink = await page.evaluate(
@@ -270,14 +274,18 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
     expect(sink.aborted).toBe(false);
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
+      fullPage: true,
       path: "/private/tmp/memotrail-export-desktop.png",
     });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
+      fullPage: true,
       path: "/private/tmp/memotrail-export-mobile.png",
     });
     expect(
@@ -295,9 +303,9 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
         { bytes: 0, closed: false, aborted: false },
       );
     });
-    await page.getByRole("button", { name: "Download ZIP" }).click();
+    await page.getByRole("button", { name: "Download again" }).click();
     await expect(page.getByRole("status")).toContainText(
-      "Download did not complete",
+      "The download did not complete",
       { timeout: 30_000 },
     );
     expect(
@@ -306,15 +314,16 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
           (window as unknown as { exportSinkState: object }).exportSinkState,
       ),
     ).toMatchObject({ closed: false, aborted: true });
-    await page
-      .getByRole("button", { name: "Discard snapshot", exact: true })
-      .click();
+    await page.getByRole("button", { name: "Discard", exact: true }).click();
     await page.getByRole("button", { name: "Confirm discard" }).click();
     await expect(
       page.locator("[data-sonner-toast]").filter({
-        hasText: "Temporary copy discarded",
+        hasText: "Export discarded",
       }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Recent exports" }),
+    ).toHaveCount(0);
     expect(
       (
         await page.request.post("/api/export", {
@@ -327,6 +336,23 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
       (await client.from("entries").select("body").eq("id", entryID).single())
         .data?.body,
     ).toBe("Edited later on another device");
+    // Two unexpired exports are the limit until one is discarded.
+    for (let count = 0; count < 2; count += 1)
+      expect(
+        (
+          await page.request.post("/api/export", {
+            headers: nativeHeaders,
+            data: { action: "create", id: randomUUID() },
+          })
+        ).status(),
+      ).toBe(200);
+    await page.reload();
+    await expect(
+      page.getByRole("button", { name: "Export everything" }),
+    ).toBeDisabled();
+    await expect(
+      page.getByText("Discard a recent export below to make a new one."),
+    ).toBeVisible();
   } finally {
     await admin.storage.from("entry-media").remove([path]);
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
