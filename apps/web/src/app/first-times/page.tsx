@@ -15,6 +15,7 @@ export default async function FirstTimesPage() {
       defaultTimezone={workspace.defaultTimezone}
       entries={workspace.entries}
       loadError={workspace.loadError}
+      ownerId={workspace.viewer.id}
       tagOptions={workspace.tagOptions}
     />
   );

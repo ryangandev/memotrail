@@ -43,6 +43,14 @@
   display: grid;
   gap: var(--mt-space-4);
 }
+.sectionHeading {
+  display: grid;
+  gap: var(--mt-space-1);
+}
+.sectionHeading p {
+  margin: 0;
+  font-size: var(--mt-font-size-label);
+}
 .footnote {
   font-size: var(--mt-font-size-caption);
 }

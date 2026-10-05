@@ -12,6 +12,7 @@ import {
   type ExportAction,
   type ExportSnapshot,
 } from "@/lib/export/contracts";
+import { countLabel } from "@/lib/count-label";
 import styles from "@/components/export-settings.module.css";
 
 type FileSink = {
@@ -50,97 +51,140 @@ async function exportRequest(input: ExportAction, signal?: AbortSignal) {
   }
   return response;
 }
+// Keep in step with the server's limit on unexpired exports.
+const exportLimit = 2;
+
+type Progress = { bytes: number | null; phase: "downloading" | "preparing" };
+
 export function ExportSettings({
   initial,
   initialError,
+  timezone,
 }: {
   initial: ExportSnapshot[];
   initialError: boolean;
+  // The time zone from Settings, so the server and browser show the same times.
+  timezone: string;
 }) {
   const [snapshots, setSnapshots] = useState<ExportSnapshot[]>(initial);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(
-    initialError ? "Could not load snapshots. Refresh to retry." : "",
+    initialError ? "Could not load recent exports. Refresh to retry." : "",
   );
-  const [bytes, setBytes] = useState<number | null>(null);
+  const [progress, setProgress] = useState<Progress | null>(null);
   const [discard, setDiscard] = useState<ExportSnapshot | null>(null);
+  // A retried export reuses its id, so a lost answer cannot make a second copy.
   const pendingCreate = useRef<string | null>(null);
   const active = useRef<AbortController | null>(null);
-  async function refresh(signal?: AbortSignal) {
-    const response = await exportRequest({ action: "list" }, signal);
-    const result = await response.json();
-    setSnapshots(result.snapshots);
-  }
   useEffect(() => {
     return () => {
       active.current?.abort();
     };
   }, []);
-  async function change(action: "create" | "discard" | "list", id?: string) {
+
+  async function refresh(signal?: AbortSignal) {
+    const response = await exportRequest({ action: "list" }, signal);
+    const result = await response.json();
+    setSnapshots(result.snapshots);
+  }
+
+  async function run(task: (controller: AbortController) => Promise<void>) {
     if (active.current) return;
     const controller = new AbortController();
     active.current = controller;
     setBusy(true);
     setMessage("");
     try {
-      if (action === "create") {
-        pendingCreate.current ??= crypto.randomUUID();
-        await exportRequest(
-          { action, id: pendingCreate.current },
-          controller.signal,
-        );
-        pendingCreate.current = null;
-        notify.success(
-          "Snapshot prepared. Download it on either device within 24 hours.",
-        );
-      } else if (action === "discard") {
-        await exportRequest({ action, id }, controller.signal);
-        setDiscard(null);
-        notify.success(
-          "Temporary copy discarded. Your records and downloaded files are unchanged.",
-        );
-      }
-      await refresh(controller.signal);
-    } catch (error) {
-      if (
-        error instanceof ExportRequestError &&
-        ["expired", "request_unavailable"].includes(error.code)
-      )
-        pendingCreate.current = null;
-      if (!controller.signal.aborted)
-        setMessage(
-          error instanceof Error
-            ? error.message
-            : "Could not update snapshots. Retry uses the same request.",
-        );
+      await task(controller);
     } finally {
       active.current = null;
       setBusy(false);
+      setProgress(null);
     }
   }
-  async function download(snapshot: ExportSnapshot) {
-    if (active.current) return;
-    const controller = new AbortController();
-    active.current = controller;
-    setBusy(true);
-    setBytes(0);
-    setMessage("");
-    let sink: FileSink | undefined;
-    try {
-      const picker = (window as PickerWindow).showSaveFilePicker;
-      // Invoke the picker before any network await, while the click is active.
-      if (picker) {
-        const handle = await picker.call(window, {
-          suggestedName: exportFilename(snapshot),
-          types: [
-            {
-              description: "ZIP archive",
-              accept: { "application/zip": [".zip"] },
-            },
-          ],
-        });
-        sink = await handle.createWritable();
+
+  // Prepares a consistent copy of everything, then saves it as one ZIP.
+  function exportEverything() {
+    void run(async (controller) => {
+      const id = (pendingCreate.current ??= crypto.randomUUID());
+      let sink: FileSink | undefined;
+      try {
+        sink = await openSink({ captured_at: new Date().toISOString(), id });
+      } catch {
+        return;
       }
+      let snapshot: ExportSnapshot;
+      try {
+        setProgress({ bytes: null, phase: "preparing" });
+        const response = await exportRequest(
+          { action: "create", id },
+          controller.signal,
+        );
+        snapshot = (await response.json()).snapshot;
+        pendingCreate.current = null;
+        await refresh(controller.signal);
+      } catch (error) {
+        await sink?.abort().catch(() => {});
+        if (
+          error instanceof ExportRequestError &&
+          ["expired", "request_unavailable"].includes(error.code)
+        )
+          pendingCreate.current = null;
+        if (!controller.signal.aborted)
+          setMessage(
+            error instanceof Error
+              ? error.message
+              : "Could not prepare the export. Try again.",
+          );
+        return;
+      }
+      await save(snapshot, sink, controller);
+    });
+  }
+
+  function downloadAgain(snapshot: ExportSnapshot) {
+    void run(async (controller) => {
+      let sink: FileSink | undefined;
+      try {
+        sink = await openSink(snapshot);
+      } catch {
+        return;
+      }
+      await save(snapshot, sink, controller);
+    });
+  }
+
+  function discardSnapshot(snapshot: ExportSnapshot) {
+    void run(async (controller) => {
+      try {
+        await exportRequest(
+          { action: "discard", id: snapshot.id },
+          controller.signal,
+        );
+        setDiscard(null);
+        notify.success(
+          "Export discarded. Your records and downloaded files are unchanged.",
+        );
+        await refresh(controller.signal);
+      } catch (error) {
+        if (!controller.signal.aborted)
+          setMessage(
+            error instanceof Error
+              ? error.message
+              : "Could not discard the export. Try again.",
+          );
+      }
+    });
+  }
+
+  // Streams the ZIP to a chosen file where the browser allows it, otherwise to a download.
+  async function save(
+    snapshot: ExportSnapshot,
+    sink: FileSink | undefined,
+    controller: AbortController,
+  ) {
+    setProgress({ bytes: 0, phase: "downloading" });
+    try {
       const response = await exportRequest(
         { action: "download", id: snapshot.id },
         controller.signal,
@@ -163,7 +207,7 @@ export function ExportSettings({
           received += next.value.byteLength;
           if (sink) await sink.write(next.value);
           else chunks.push(next.value.slice().buffer);
-          setBytes(received);
+          setProgress({ bytes: received, phase: "downloading" });
         }
       } finally {
         reader.releaseLock();
@@ -173,9 +217,7 @@ export function ExportSettings({
       if (sink) {
         await sink.close();
         sink = undefined;
-        notify.success(
-          "Complete ZIP saved. Keep this private copy somewhere safe.",
-        );
+        notify.success("Export saved. Keep this private copy somewhere safe.");
       } else {
         const url = URL.createObjectURL(
           new Blob(chunks, { type: "application/zip" }),
@@ -188,7 +230,7 @@ export function ExportSettings({
         anchor.remove();
         window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
         notify.success(
-          "Complete ZIP prepared. Check your browser downloads to finish saving it.",
+          "Export ready. Check your browser downloads to finish saving it.",
         );
       }
     } catch (error) {
@@ -196,15 +238,14 @@ export function ExportSettings({
       await sink?.abort().catch(() => {});
       setMessage(
         error instanceof DOMException && error.name === "AbortError"
-          ? "Download cancelled. The snapshot is still available."
-          : "Download did not complete. An original may be missing or changed, or the connection was interrupted. Retry this snapshot or prepare a new one. No complete ZIP was saved.",
+          ? "Download cancelled. You can download this export again below."
+          : "The download did not complete, so no ZIP was saved. An original photo may be missing or changed, or the connection was interrupted. Download it again below, or export again.",
       );
-    } finally {
-      active.current = null;
-      setBusy(false);
-      setBytes(null);
     }
   }
+
+  const full = snapshots.length >= exportLimit;
+
   return (
     <PageFrame className={styles.content} variant="compact">
       <PageHeader
@@ -212,130 +253,134 @@ export function ExportSettings({
         eyebrow={<>YOUR ARCHIVE, TO KEEP</>}
         description={<>A portable copy of your story. No AI processing.</>}
       />
-      <section className={styles.card}>
-        <h2>Everything, in one ZIP</h2>
+      <section aria-labelledby="export-everything" className={styles.card}>
+        <h2 id="export-everything">Export everything</h2>
         <p>
-          Complete JSON, readable Entry Markdown, structured CSV tables, and
-          original photos. Includes Trash, relationships, and AI conversations.
+          One ZIP with complete JSON, readable Entry Markdown, CSV tables, and
+          your original photos. It includes Trash and AI conversations.
         </p>
         <p>
-          The ZIP is not encrypted. Anyone you share it with can read it.
-          Unsynced offline changes are not included; sync every device first.
-        </p>
-      </section>
-      <section className={styles.card}>
-        <h2>Prepare a snapshot</h2>
-        <p>
-          Capture one consistent moment across your devices. Temporary copies
-          retain that content for 24 hours, even if you later edit or delete the
-          originals. Discard a snapshot to remove its copied content sooner.
-        </p>
-        <p>
-          Keep up to two snapshots. Original media is verified during download;
-          changed or missing files stop the export.
+          The ZIP is not encrypted, so anyone you share it with can read it.
+          Sync every device first; changes still waiting offline are not
+          included.
         </p>
         <div className={styles.actions}>
           <Button
             variant="primary"
-            type="submit"
-            disabled={busy || snapshots.length >= 2}
-            onClick={() => void change("create")}
+            type="button"
+            disabled={busy || full}
+            onClick={exportEverything}
           >
-            Prepare snapshot
-          </Button>
-          <Button
-            variant="secondary"
-            type="submit"
-            disabled={busy}
-            onClick={() => void change("list")}
-          >
-            Refresh
+            {progress?.phase === "preparing"
+              ? "Preparing export…"
+              : "Export everything"}
           </Button>
         </div>
+        {full ? (
+          <p className={styles.footnote}>
+            Discard a recent export below to make a new one.
+          </p>
+        ) : null}
       </section>
-      {message && (
+      {progress ? (
+        <div className={styles.notice} role="status">
+          <p>
+            {progress.phase === "preparing"
+              ? "Preparing a consistent copy of everything…"
+              : `Downloading · ${((progress.bytes ?? 0) / 1_048_576).toFixed(1)} MB received`}
+          </p>
+          {progress.phase === "downloading" ? (
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={() => active.current?.abort()}
+            >
+              Cancel download
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+      {message ? (
         <p className={styles.notice} role="status">
           {message}
         </p>
-      )}
-      {bytes !== null && (
-        <div className={styles.notice} role="status">
-          <p>Downloading · {(bytes / 1_048_576).toFixed(1)} MB received</p>
-          <Button
-            variant="secondary"
-            type="submit"
-            onClick={() => active.current?.abort()}
-          >
-            Cancel download
-          </Button>
-        </div>
-      )}
-      <section aria-label="Available snapshots" className={styles.snapshots}>
-        <h2>Available snapshots</h2>
-        {snapshots.length === 0 ? (
-          <p>No snapshots yet. Your archive is unchanged.</p>
-        ) : (
-          snapshots.map((snapshot) => (
+      ) : null}
+      {snapshots.length > 0 ? (
+        <section aria-labelledby="recent-exports" className={styles.snapshots}>
+          <div className={styles.sectionHeading}>
+            <h2 id="recent-exports">Recent exports</h2>
+            <p>
+              Each export can be downloaded again for 24 hours and keeps the
+              copy it made, even if you later edit or delete records. Discard
+              one to delete its copy sooner.
+            </p>
+          </div>
+          {snapshots.map((snapshot) => (
             <article className={styles.card} key={snapshot.id}>
-              <h3>{new Date(snapshot.captured_at).toLocaleString()}</h3>
+              <h3>{exportTime(snapshot.captured_at, timezone)}</h3>
               <p>
                 <SeparatedList spacing="word">
-                  <span>{snapshot.row_count.toLocaleString()} records</span>
-                  <span>{snapshot.datasets.entries ?? 0} Entries</span>
+                  <span>{countLabel(snapshot.row_count, "record")}</span>
                   <span>
-                    {snapshot.datasets.media_objects ?? 0} media files
+                    {countLabel(snapshot.datasets.entries ?? 0, "Entry")}
+                  </span>
+                  <span>
+                    {countLabel(
+                      snapshot.datasets.media_objects ?? 0,
+                      "media file",
+                    )}
                   </span>
                 </SeparatedList>
               </p>
-              <p>Expires {new Date(snapshot.expires_at).toLocaleString()}</p>
+              <p>Available until {exportTime(snapshot.expires_at, timezone)}</p>
               <div className={styles.actions}>
                 <Button
                   variant="secondary"
-                  type="submit"
+                  type="button"
                   disabled={busy}
-                  onClick={() => void download(snapshot)}
+                  onClick={() => downloadAgain(snapshot)}
                 >
-                  Download ZIP
+                  Download again
                 </Button>
                 <Button
                   variant="danger"
-                  type="submit"
+                  type="button"
                   disabled={busy}
                   onClick={() => setDiscard(snapshot)}
                 >
-                  Discard snapshot
+                  Discard
                 </Button>
               </div>
-              {discard?.id === snapshot.id && (
+              {discard?.id === snapshot.id ? (
                 <div className={styles.notice}>
                   <p>
-                    Discard this temporary copy? Your original records and
-                    downloaded ZIPs will stay unchanged.
+                    Discard this export? Your records and any ZIP you already
+                    downloaded stay unchanged.
                   </p>
                   <div className={styles.actions}>
                     <Button
                       variant="danger"
-                      type="submit"
+                      type="button"
                       disabled={busy}
-                      onClick={() => void change("discard", snapshot.id)}
+                      onClick={() => discardSnapshot(snapshot)}
                     >
                       Confirm discard
                     </Button>
                     <Button
                       variant="secondary"
-                      type="submit"
+                      type="button"
                       disabled={busy}
                       onClick={() => setDiscard(null)}
                     >
-                      Keep snapshot
+                      Keep export
                     </Button>
                   </div>
                 </div>
-              )}
+              ) : null}
             </article>
-          ))
-        )}
-      </section>
+          ))}
+        </section>
+      ) : null}
       <p className={styles.footnote}>
         For large archives, use Chrome or Edge to stream directly to a file, or
         the iOS app to download to disk. Other browsers may hold the ZIP in
@@ -344,4 +389,31 @@ export function ExportSettings({
       </p>
     </PageFrame>
   );
+}
+
+function exportTime(value: string, timezone: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: timezone,
+  }).format(new Date(value));
+}
+
+// Asks where to save while the click still counts as the person's action. Throws when they
+// cancel; resolves to undefined where the browser cannot save to a chosen file.
+async function openSink(
+  snapshot: Pick<ExportSnapshot, "captured_at" | "id">,
+): Promise<FileSink | undefined> {
+  const picker = (window as PickerWindow).showSaveFilePicker;
+  if (!picker) return undefined;
+  const handle = await picker.call(window, {
+    suggestedName: exportFilename(snapshot),
+    types: [
+      {
+        description: "ZIP archive",
+        accept: { "application/zip": [".zip"] },
+      },
+    ],
+  });
+  return handle.createWritable();
 }

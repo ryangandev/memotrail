@@ -92,9 +92,6 @@ test("Item pages offer no general links between Entries", async ({
       await page.goto(`/items/${id}`);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       await expect(
-        page.getByRole("region", { name: "Current photos", exact: true }),
-      ).toBeVisible();
-      await expect(
         page.getByRole("region", { name: "Related Items", exact: true }),
       ).toHaveCount(0);
       await expect(
@@ -104,6 +101,8 @@ test("Item pages offer no general links between Entries", async ({
         page.getByRole("button", { name: "Linked from", exact: true }),
       ).toHaveCount(0);
     }
+    // Let the Library link prefetch finish so the test does not cut its stream short.
+    await page.waitForLoadState("networkidle");
     const current = (await client.rpc("entry_detail", { p_entry_id: source }))
       .data;
     expect(current).toMatchObject({

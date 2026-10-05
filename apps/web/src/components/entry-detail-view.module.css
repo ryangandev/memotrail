@@ -46,6 +46,11 @@
 .workspace .currentBody p {
   color: var(--mt-color-ink);
 }
+.photosError {
+  margin: 0;
+  color: var(--mt-color-warm);
+  font-size: var(--mt-font-size-label);
+}
 .currentFacts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

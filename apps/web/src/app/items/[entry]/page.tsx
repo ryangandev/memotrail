@@ -4,6 +4,7 @@ import { EntryDetailView } from "@/components/entry-detail-view";
 import { PageFrame } from "@/components/page-frame";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { validEntryID, type EntryDetail } from "@/lib/data/entry-detail";
+import { loadEntryPhotos } from "@/lib/data/entry-photos";
 import styles from "@/components/entry-detail-view.module.css";
 
 export const dynamic = "force-dynamic";
@@ -28,15 +29,22 @@ export default async function WikiItemPage({
     await new Promise((resolve) => setTimeout(resolve, 50));
     result = await loadItem();
   }
+  const item = result.error ? null : (result.data as EntryDetail | null);
+  // Photos of an item in Trash show from Trash, where it can be restored.
+  const photos =
+    item && !item.deleted_at
+      ? await loadEntryPhotos(context.client, context.userId, item.id)
+      : null;
 
   return (
     <PageFrame className={styles.workspace} variant="compact">
       {result.error ? (
         <p role="alert">This item could not load. Refresh to try again.</p>
-      ) : result.data ? (
+      ) : item ? (
         <EntryDetailView
-          entry={result.data as EntryDetail}
+          entry={item}
           ownerId={context.viewer.id}
+          photos={photos}
         />
       ) : (
         <UnavailableItem />

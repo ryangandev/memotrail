@@ -4,14 +4,18 @@ import styles from "@/components/entry-editor-dialog.module.css";
 import entryFormStyles from "@/components/entry-form.module.css";
 import { Dialog } from "@/components/dialog";
 import { Button } from "@/components/button";
+import { useConfirmationDialog } from "@/components/confirmation-dialog";
+import { EntryPhotoField } from "@/components/entry-photo-field";
 import type { PhotoLocationDraft } from "@/lib/media/photo-location";
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
+  registerEntryAttachment,
   reviewInboxEntry,
   type ReviewInboxEntryResult,
 } from "@/app/inbox/actions";
+import { trashEntryPhoto } from "@/app/items/media-actions";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { OccurrenceEditor } from "@/components/occurrence-editor";
 import { EntryPhotoDates } from "@/components/entry-photo-dates";
@@ -20,7 +24,19 @@ import { LocationPicker } from "@/components/location-picker";
 import { MilestoneFields } from "@/components/milestone-fields";
 import type { Milestone } from "@/lib/data/milestone";
 import type { LocationSelection } from "@/lib/locations/location";
-import { photoCalendarDateDraft } from "@/lib/media/photo-metadata";
+import {
+  photoCalendarDateDraft,
+  type EntryPhoto,
+} from "@/lib/media/photo-metadata";
+import {
+  uploadEntryPhotos,
+  type PhotoUploadProgress,
+} from "@/lib/media/upload";
+import {
+  entryPhotoLimit,
+  type EntryAttachmentInput,
+} from "@/lib/data/entry-photo-input";
+import { validateInboxPhotoFiles } from "@/lib/data/inbox-photo";
 import { occurrenceDraft, resolveOccurrenceDraft } from "@/lib/data/occurrence";
 import type { InboxEntry } from "@/lib/data/inbox";
 import { entryBodyLimit, entryTitleLimit } from "@/lib/data/inbox-input";
@@ -35,11 +51,13 @@ import { trimEntryNote } from "@/lib/data/rich-text";
 export function NewEntryDialog({
   milestone,
   onClose,
+  ownerId,
   tagOptions,
   timezone,
 }: {
   milestone: Milestone | null;
   onClose: () => void;
+  ownerId: string;
   tagOptions: string[];
   timezone: string;
 }) {
@@ -51,6 +69,8 @@ export function NewEntryDialog({
       isNew
       onClose={onClose}
       onSaved={onClose}
+      ownerId={ownerId}
+      photos={[]}
       tagOptions={tagOptions}
     />
   );
@@ -89,6 +109,8 @@ export function EntryEditorDialog({
   isNew = false,
   onClose,
   onSaved,
+  ownerId,
+  photos,
   tagOptions,
 }: {
   // The time zone from Settings, shown as the default for a new Entry.
@@ -98,9 +120,13 @@ export function EntryEditorDialog({
   isNew?: boolean;
   onClose: () => void;
   onSaved: (entry: InboxEntry) => void;
+  ownerId: string;
+  // The Entry's saved photos when the editor opened.
+  photos: EntryPhoto[];
   tagOptions: string[];
 }) {
   const router = useRouter();
+  const requestConfirmation = useConfirmationDialog();
   const [title, setTitle] = useState(entry.title ?? "");
   const [body, setBody] = useState(entry.body);
   const [bodyRich, setBodyRich] = useState(entry.bodyRich);
@@ -118,6 +144,14 @@ export function EntryEditorDialog({
   const [result, setResult] = useState<ReviewInboxEntryResult | null>(null);
   const [tagNames, setTagNames] = useState(entry.tagNames);
   const [tagInput, setTagInput] = useState("");
+  const [existingPhotos, setExistingPhotos] = useState(photos);
+  const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
+  const [photoProgress, setPhotoProgress] =
+    useState<PhotoUploadProgress | null>(null);
+  // Once a new Entry is saved, Save again updates it, such as to retry its photos.
+  const [revision, setRevision] = useState<number | null>(
+    isNew ? null : entry.revision,
+  );
 
   function changeMilestone(next: Milestone | null) {
     // Only a Period can be still going on or end on a calendar date, and a Moment is one
@@ -156,7 +190,7 @@ export function EntryEditorDialog({
       bodyRich: note.bodyRich,
       id: entry.id,
       milestone,
-      revision: isNew ? null : entry.revision,
+      revision,
       tagNames: namesIncludingDraft(tagNames, tagInput),
       title: title || null,
     };
@@ -174,6 +208,23 @@ export function EntryEditorDialog({
       const nextResult = await reviewInboxEntry(parsedInput.data);
 
       if (nextResult.status === "saved") {
+        setRevision(nextResult.revision);
+        const failedPhotos = await uploadEntryPhotos(
+          ownerId,
+          entry.id,
+          pendingPhotos,
+          registerPhoto,
+          setPhotoProgress,
+        );
+        if (failedPhotos.length > 0) {
+          setPendingPhotos(failedPhotos);
+          setResult({
+            message: `The Entry was saved, but ${failedPhotos.length === 1 ? "1 photo" : `${failedPhotos.length} photos`} could not be attached. Select Save again to retry.`,
+            status: "error",
+          });
+          router.refresh();
+          return;
+        }
         onSaved({
           ...entry,
           ...parsedInput.data,
@@ -199,6 +250,51 @@ export function EntryEditorDialog({
     } catch {
       setResult({
         message: "MemoTrail could not reach the server. Try again when online.",
+        status: "error",
+      });
+    } finally {
+      setPhotoProgress(null);
+      setIsPending(false);
+    }
+  }
+
+  function selectPhotos(files: File[]) {
+    const selection = validateInboxPhotoFiles(
+      files,
+      existingPhotos.length + pendingPhotos.length,
+    );
+    setPendingPhotos((current) => [
+      ...current,
+      ...selection.accepted.map((draft) => draft.file),
+    ]);
+    setResult(
+      selection.message
+        ? { message: selection.message, status: "error" }
+        : null,
+    );
+  }
+
+  async function removePhoto(photo: EntryPhoto) {
+    const confirmed = await requestConfirmation({
+      title: <>Move this photo to Trash?</>,
+      description: <>The original will be preserved for recovery.</>,
+      confirmLabel: "Move photo to Trash",
+      eyebrow: <>Recoverable action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
+    setIsPending(true);
+    setResult(null);
+    try {
+      if (!(await trashEntryPhoto(entry.id, photo.id))) throw Error();
+      setExistingPhotos((current) =>
+        current.filter((item) => item.id !== photo.id),
+      );
+      router.refresh();
+      notify.info("Photo moved to Trash.");
+    } catch {
+      setResult({
+        message: "MemoTrail could not remove this photo. Try again.",
         status: "error",
       });
     } finally {
@@ -289,6 +385,25 @@ export function EntryEditorDialog({
           />
         </div>
 
+        <EntryPhotoField
+          disabled={isPending}
+          existingPhotos={existingPhotos.map((photo) => ({
+            ...photo,
+            originalFilename: photo.name,
+          }))}
+          limit={entryPhotoLimit}
+          onRemoveExisting={(photo) => void removePhoto(photo)}
+          onRemovePending={(index) =>
+            setPendingPhotos((current) =>
+              current.filter((_, position) => position !== index),
+            )
+          }
+          onSelect={selectPhotos}
+          pendingPhotos={pendingPhotos}
+          progress={photoProgress}
+          recordLabel="Entry"
+        />
+
         <MilestoneFields
           disabled={isPending}
           onChange={changeMilestone}
@@ -319,17 +434,17 @@ export function EntryEditorDialog({
           options={tagOptions}
         />
 
-        {isNew ? null : (
+        {existingPhotos.length > 0 ? (
           <EntryPhotoDates
             photoLocation={photoLocation}
             onPhotoLocationChange={setPhotoLocation}
-            entryId={entry.id}
+            photos={existingPhotos}
             disabled={isPending}
             onUseDate={(date) =>
               setOccurrence((current) => photoCalendarDateDraft(date, current))
             }
           />
-        )}
+        ) : null}
 
         {result ? (
           <p className={styles.error} role="alert">
@@ -339,6 +454,11 @@ export function EntryEditorDialog({
       </form>
     </Dialog>
   );
+}
+
+async function registerPhoto(input: EntryAttachmentInput) {
+  const result = await registerEntryAttachment(input);
+  return { status: result.status === "synced" ? "saved" : "error" };
 }
 
 function namesIncludingDraft(names: string[], draft: string) {

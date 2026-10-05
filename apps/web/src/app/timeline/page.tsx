@@ -1,10 +1,5 @@
 import { TimelineWorkspace } from "@/components/timeline-workspace";
 import { getTimelineWorkspace } from "@/lib/data/timeline";
-import { cookies } from "next/headers";
-import {
-  storedTimelineStyle,
-  TIMELINE_STYLE_COOKIE_NAME,
-} from "@/lib/timeline-style";
 
 export const dynamic = "force-dynamic";
 
@@ -14,10 +9,6 @@ export default async function TimelinePage() {
   if (!workspace) {
     return null;
   }
-  const timelineStyle = storedTimelineStyle(
-    (await cookies()).get(TIMELINE_STYLE_COOKIE_NAME)?.value,
-    workspace.viewer.id,
-  );
 
   return (
     <TimelineWorkspace
@@ -29,7 +20,6 @@ export default async function TimelinePage() {
       ownerId={workspace.viewer.id}
       referenceDate={new Date().toISOString()}
       tagOptions={workspace.tagOptions}
-      timelineStyle={timelineStyle}
     />
   );
 }

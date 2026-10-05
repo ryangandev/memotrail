@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EntryEditorDialog } from "./entry-editor-dialog";
-import { EntryPhotoGallery } from "./entry-photo-gallery";
+import { EntryPhotos } from "./entry-photos";
 import { EntryRichTextContent } from "./entry-rich-text-content";
 import { Icon } from "./icon";
 import { DatePickerField } from "./date-picker-field";
@@ -22,6 +22,7 @@ import {
   type EntryDetail,
 } from "@/lib/data/entry-detail";
 import { wikiItemIdentityLabel, wikiItemKindLabel } from "@/lib/data/wiki-item";
+import type { EntryPhotos as EntryPhotoList } from "@/lib/data/entry-photos";
 import { locationDisplayLabel } from "@/lib/locations/location";
 import { timelineLaneLabels } from "@/lib/data/milestone";
 import styles from "@/components/entry-detail-view.module.css";
@@ -36,9 +37,12 @@ const sourceLinkLabels: Record<string, string> = {
 export function EntryDetailView({
   entry,
   ownerId,
+  photos,
 }: {
   entry: EntryDetail;
   ownerId: string;
+  // Null when the item is in Trash or its photos could not load.
+  photos: EntryPhotoList | null;
 }) {
   const router = useRouter();
   const requestConfirmation = useConfirmationDialog();
@@ -109,12 +113,12 @@ export function EntryDetailView({
         {editing && (
           <EntryEditorDialog
             entry={editing.entry}
+            ownerId={ownerId}
+            photos={editing.photos}
             tagOptions={editing.tagOptions}
             onClose={() => setEditing(null)}
-            onSaved={() => {
-              setEditing(null);
-              router.refresh();
-            }}
+            // The editor refreshes the page after it saves.
+            onSaved={() => setEditing(null)}
           />
         )}
         {active && entry.item_kind !== "goal" && (
@@ -158,21 +162,21 @@ export function EntryDetailView({
           This item is in Trash. Restore it there to change it.
         </p>
       )}
-      <CurrentItem value={entry} />
-      {active && (
-        <EntryPhotoGallery
-          key={`photos:${entry.id}`}
-          entryId={entry.id}
-          entryRevision={entry.revision}
-          ownerId={ownerId}
-          onChanged={() => router.refresh()}
-        />
-      )}
+      <CurrentItem
+        photos={active ? photos : { hasMore: false, photos: [] }}
+        value={entry}
+      />
     </>
   );
 }
 
-function CurrentItem({ value }: { value: EntryDetail }) {
+function CurrentItem({
+  photos,
+  value,
+}: {
+  photos: EntryPhotoList | null;
+  value: EntryDetail;
+}) {
   const groups = [
     { key: "tags", label: "tags", names: value.tags.map((tag) => tag.name) },
     {
@@ -212,6 +216,13 @@ function CurrentItem({ value }: { value: EntryDetail }) {
         className={styles.currentBody}
         metadata={value.body ? value.metadata : undefined}
       />
+      {photos === null ? (
+        <p className={styles.photosError} role="alert">
+          Photos could not load. Refresh the page to try again.
+        </p>
+      ) : photos.photos.length > 0 ? (
+        <EntryPhotos hasMore={photos.hasMore} photos={photos.photos} />
+      ) : null}
       <dl className={styles.currentFacts}>
         {value.item_kind !== "entry" || value.item_subtype !== "entry" ? (
           <div>

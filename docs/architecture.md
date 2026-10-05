@@ -201,7 +201,7 @@ Pair it with the test file carrying the same feature name.
   New entry opens Quick Capture through `AppNavigator.startCapture()`, and Settings' Archive organization leaves the Settings sheet for Collections through `routeAfterSettings`, like Web's `/collections` link.
 - Native `Features/Trash` follows Web `/trash` over `TrashController`: the retention badge and note, Empty Trash, and cards that restore or delete forever through the Web RPCs and messages, with results as toasts.
   Delete forever and Empty Trash confirm in Web's Permanent action sheets, and Empty Trash keeps its prepared list and progress on screen until the run ends, like Web `EmptyTrashControl`.
-- Web Timeline style selection lives in Settings as an owner-scoped browser cookie. The lane view remains the default; Vertical Spine and Sticky Year are presentation components under `apps/web/src/components/timeline` that share the Timeline workspace data and link each card to its Item page. The original 20 HTML design studies remain under `timeline-ideas/`.
+- Web Timeline has only the lane view; the Vertical Spine and Sticky Year styles and their Settings cookie were removed so Timeline changes land in one layout. The original 20 HTML design studies remain under `timeline-ideas/`.
 - Web occurrence and profile date forms use `components/date-picker-field.tsx`; domain editors map their precision into its generic granularity, time, editability, and size props instead of duplicating picker UI.
 
 ## Offline rules
@@ -290,6 +290,7 @@ Pair it with the test file carrying the same feature name.
   A later insert of that ID for the same owner fails with `entry_deleted_forever` (SQLSTATE `23505`), after waiting for any uncommitted Delete forever of the same row.
   Tombstones hold no content, have row level security with no client grants, are not exported, and are kept until the account is deleted, which removes them by cascade and records none for its own Entries.
 - Export captures one consistent database snapshot and streams canonical data plus original media into a ZIP.
+  Web `components/export-settings.tsx` opens the save picker while the click is still active, then creates the snapshot with a client id that a retry reuses and downloads it in the same action; its recent exports list downloads a snapshot again or discards it.
 - Missing, changed, or truncated media fails the export instead of producing a successful partial archive.
   A server-side failure or timeout logs one `Export stopped before completion` warning with its cause, while a download the person closes logs nothing.
 - Cross-device synchronization and an application export are not infrastructure backups.
@@ -313,6 +314,9 @@ Pair it with the test file carrying the same feature name.
   Web `SyncStatus` in the workspace header counts waiting and refused captures separately; selecting it retries now and opens a compact Dialog with the same `PendingCaptureList` both composers render.
   A refused capture is announced with an error toast, and `PendingCaptureList` and native `PendingCaptureRow` give it Copy text and a confirmed Discard; Retry now appears only while a capture is still waiting.
 - Web `components/entry-editor-dialog.tsx` is the ordinary Entry editor on the Item page, with Cancel and Save changes, and its `NewEntryDialog` adds a milestone Entry from Timeline and First Times.
+  It edits photos through `EntryPhotoField`: new photos upload after the Entry saves, and a saved photo moves to Trash at once after confirmation.
+  `EntryPhotoDates` reads camera dates and GPS from the Entry's saved photos.
+- The Web Item page loads its photos on the server with `lib/data/entry-photos.ts`, which also serves `/api/media/photos` for native, and `components/entry-photos.tsx` shows them read-only and pages through them in `PhotoPreviewDialog`.
   `/inbox` redirects to `/library?show=needs-organizing` and `/inbox?entry=` to `/items/[entry]` in `next.config.ts`.
   Native `Features/Inbox` still shows the retired list with `InboxCards.swift` and the dialog with `EntryReviewSheet.swift`, including its Save to Library footer, until native follows Web.
   Web captures from the bottom dock, and iOS from the Dashboard or New entry in the workspace header.

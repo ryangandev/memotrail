@@ -65,7 +65,6 @@ test("Timeline summary keeps its separators between facts on phones", async ({
 });
 
 test("Dot-separated rows across the workspace keep their separators between facts on phones", async ({
-  context,
   page,
   workspace: { client, owner },
 }) => {
@@ -122,16 +121,6 @@ test("Dot-separated rows across the workspace keep their separators between fact
       })
     ).error,
   ).toBeNull();
-  await context.addCookies([
-    {
-      name: "memotrail-timeline-style",
-      value: `${owner}:sticky-year`,
-      domain: "127.0.0.1",
-      path: "/",
-      sameSite: "Lax",
-    },
-  ]);
-
   const pages: {
     path: string;
     open?: () => Promise<void>;
@@ -145,7 +134,7 @@ test("Dot-separated rows across the workspace keep their separators between fact
           .getByRole("dialog", { name: "When did your story begin?" })
           .getByRole("button", { name: "Not now", exact: true })
           .click(),
-      rows: 2,
+      rows: 1,
     },
     {
       path: "/map",

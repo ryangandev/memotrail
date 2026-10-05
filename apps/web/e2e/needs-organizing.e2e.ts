@@ -149,15 +149,13 @@ test("captures land in Library and wait under Needs organizing until they have a
       editor.getByRole("button", { name: "Cancel", exact: true }),
     ).toHaveAttribute("data-variant", "secondary");
     const tags = editor.getByRole("group", { name: "Tags", exact: true });
-    const photos = editor.getByRole("region", {
-      name: "Photo date suggestions",
-    });
+    const photos = editor.getByRole("group", { name: "Photos", exact: true });
     expect(
       await tags.evaluate(
         (element, photoElement) =>
           Boolean(
             element.compareDocumentPosition(photoElement as Node) &
-            Node.DOCUMENT_POSITION_FOLLOWING,
+            Node.DOCUMENT_POSITION_PRECEDING,
           ),
         await photos.elementHandle(),
       ),

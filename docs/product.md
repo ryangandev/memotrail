@@ -117,6 +117,8 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
   Library search supports record, date, and tag filters with match context.
   Library avoids duplicating the sidebar's focused and organizing destinations.
 - Opening a general Wiki Item shows its current content and primary actions, while focused records open their own read-only detail pages.
+  An Item page shows its photos below its writing as soon as it opens; selecting one opens a preview that pages through them with Previous, Next, and the arrow keys.
+  Photos are added and removed in the Entry editor, not on the Item page.
   A pencil-and-Edit action changes the fields on that detail page into an inline form; Add remains a modal creation flow.
 - Current Wiki Item detail supports moving the item to Trash, where it remains restorable.
 - Tags are created and managed from the Tags destination and remain available in every compatible Wiki Item editor.
@@ -160,7 +162,7 @@ Homes and Vehicles appear as Periods without being marked, from when they became
 Timeline has four fixed lanes, in this order: Places lived, Vehicles, Work and study, and Other milestones.
 Homes fill Places lived and Vehicles fill Vehicles; each milestone chooses Work and study or Other milestones.
 There are no custom tracks, and lanes cannot be renamed, reordered, or hidden.
-Web Timeline opens in the lane view by default and offers Vertical Spine and Sticky Year styles through Settings; the chosen style is remembered for the signed-in account in that browser.
+Web Timeline has one view, the lanes; there is no style setting.
 The first Timeline visit asks for a private birth date, uses it as the story's starting point, and keeps it editable in Settings.
 Add to Timeline asks whether the user is adding a milestone, a First Time, a Home, or a Vehicle.
 A milestone or First Time opens the Entry editor with the milestone already marked; a Home or Vehicle opens its focused editor.
@@ -273,8 +275,8 @@ Enter starts a new paragraph, and Shift+Enter inserts a line break; input method
 Escape or the close control collapses it and restores focus to the bottom control without discarding the draft.
 On mobile Web the collapsed control sits above navigation; the expanded composer stays within the visible viewport and scrolls when needed.
 Home, Vehicle, and First Time results share one reusable card shell while preserving subtype-specific content and responsive layouts.
-Specialized editors share one unboxed photo field with consistent previews, progress, limits, and controls.
-When a record saves but some photos do not attach, the editor stays open with those photos selected, and Save again updates that record and retries them, even when it was created with a chosen address.
+The Entry editor and specialized editors share one unboxed photo field with consistent previews, progress, limits, and controls.
+When a record, including a new Entry, saves but some photos do not attach, the editor stays open with those photos selected, and Save again updates that record and retries them, even when it was created with a chosen address.
 On Web, selecting a photo thumbnail in an editor or capture draft opens a single-photo dialog without removing it; the separate X control removes the photo.
 Form labels mark required fields with `*` and leave optional fields unmarked.
 
@@ -290,6 +292,8 @@ Form labels mark required fields with `*` and leave optional fields unmarked.
   To enforce this, MemoTrail keeps only the deleted Entry's ID and deletion time, with no writing, photos, or other content, until the account is deleted.
   This record is not visible in the app and is not part of an export.
 - Complete export includes canonical JSON, readable Markdown, structured CSV, relationships, and original media.
+  On Web, one Export everything action prepares a consistent copy and downloads it as a ZIP.
+  Recent exports can be downloaded again for 24 hours and keep the copy made at export time; up to two are kept, and discarding one deletes its copy sooner.
 
 ## Product boundaries
 

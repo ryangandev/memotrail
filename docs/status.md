@@ -10,30 +10,28 @@ Before more Web building, unclear features and requirements are reviewed with Ry
 The first review removed general links between Entries from Web; source and achievement links remain.
 Product direction is settled before UI questions.
 Collections are merged into tags: each Collection became a tag with the same name and kept its Entries.
-Migration `202610040001` carries this change and is not yet applied to the hosted project; native iOS still calls the retired Collection functions until it follows Web.
+Migration `202610040001` carries this change; native iOS still calls the retired Collection functions until it follows Web.
 People are removed: migration `202610040002` deletes every Person, its Entity Wiki Item, its links, and its version history, and strips People from Entry version snapshots.
-It is not yet applied to the hosted project; native iOS still calls the retired People functions until it follows Web.
+Native iOS still calls the retired People functions until it follows Web.
 Goals became Want to Do: migration `202610040003` maps Considering and Paused to Want to do, drops horizons, and stops Goal saves from touching related links; the former Bucket List Collection is already an ordinary tag.
-It is not yet applied to the hosted project; native iOS still sends horizons and related links and fails against it until it follows Web.
+Native iOS still sends horizons and related links and fails against it until it follows Web.
 The English name "Want to Do" is a working name and may change.
 Inbox is retired: captures save straight to Library, and Library and the Dashboard show Entries without a title or tag under Needs organizing.
 Migration `202610040004` marks every Entry organized, keeps new ones organized, and drops the Inbox organize and capture-handoff functions.
-It is not yet applied to the hosted project; native iOS still opens Inbox review and calls the retired functions until it follows Web.
+Native iOS still opens Inbox review and calls the retired functions until it follows Web.
 Native iOS is not in use and will be rewritten, so the database keeps no compatibility window for it.
 Migration `202610040005` drops `entries.inbox_status`, the Dashboard Inbox count, the organize flag on Entry review, the Capture source on Home and Vehicle saves, the constant record source in Library and search, the empty Trash storage path helper, and the native-only review functions.
-It is not yet applied to the hosted project.
 General related links are deleted: migration `202610040006` removes them, including those older Goals carried, from the data and version history, and drops the functions that browsed and edited them.
-It is not yet applied to the hosted project.
 Version history is removed: migration `202610040007` deletes every stored version and stops recording them, stops photo changes from creating Entry revisions, drops Locations kept only for history, and purges prepared export snapshots.
 `/history` links open the Item page or Library.
-It is not yet applied to the hosted project.
 Database leftovers are dropped: migration `202610040008` links Home Locations through `entry_locations` like every other Entry, turns `related` Location links into `photo` links and `source_capture` Entries into plain Entries, drops unused Location columns and functions no client calls, and replaces the Entry review chain with one `save_entry`.
-It is not yet applied to the hosted project.
 Timeline shows life milestones: any Entry can be marked as a Moment or a Period in Work and study or Other milestones, and a First Time is a flag on a milestone.
 Homes and Vehicles appear on Timeline in their own lanes, custom tracks are gone, First Times is a filtered view of Entries, and the Dashboard Now block replaces current chapters.
 Migration `202610040009` converts existing Moments, Periods, First Times, and track placements into milestones and turns custom track names into tags.
-It is not yet applied to the hosted project; native iOS still calls the retired Timeline and First Time functions until it follows Web.
-UI questions still held: Item page photos, date precision controls, the two export choices, and Timeline styles.
+Native iOS still calls the retired Timeline and First Time functions until it follows Web.
+Migrations `202610040001` through `202610040009` were applied to the hosted project on 2026-10-05 after a schema and data backup, and `main` at `cf68cab` was deployed to Production.
+Item page photos, the export page, and Timeline styles are settled: photos show on the Item page and are edited in the Entry editor, export is one Export everything action, and Timeline keeps only the lane view.
+The UI question still held is the date precision controls.
 Open `audit-2026-10` issues stay tracked in GitHub.
 
 ## Current state
@@ -77,11 +75,11 @@ Use Git history for feature-level implementation and test evidence.
 | Location data layer                                                               | Web and native Map, optional Home Location, photo GPS provenance, and Web provider quotas are implemented; personal acceptance remains.                                                          |
 | Habits                                                                            | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                                               |
 | Web navigation shell                                                              | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                                                |
-| Web Settings                                                                      | Account, preferred name, dates, timezone, appearance, browser-local Timeline style, simplified AI, and account controls implemented                                                              |
+| Web Settings                                                                      | Account, preferred name, dates, timezone, appearance, simplified AI, and account controls implemented                                                                                            |
 | Web tags                                                                          | One Tags destination and shared Entry tag editor implemented; Collections are merged into tags                                                                                                   |
 | Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI | Keyword search remains available. Web AI is paused behind an off/disabled Beta setting; provider logic and historical data are retained.                                                         |
 | Private media, relationships, Trash, and complete export                          | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                               |
-| Hosted Supabase contracts                                                         | Every repository migration through `202610030004` is deployed to project `kaivkozeyuwzqrckmyqu`; `202610040001` and later are not applied                                                        |
+| Hosted Supabase contracts                                                         | Every repository migration through `202610040009` is deployed to project `kaivkozeyuwzqrckmyqu`; `202610040001` through `202610040009` were applied on 2026-10-05                                |
 | Entry-centered information model                                                  | Web, hosted database, and native iOS use Entry, focused records, and intentional Timeline Moment or Period; native personal acceptance remains                                                   |
 | Web design system                                                                 | Approved canonical components migrated across Web; component-owned CSS and token boundaries enforced; local regression passed; production browser acceptance pending                             |
 | Backup and restore                                                                | Not ready                                                                                                                                                                                        |
@@ -94,7 +92,7 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 ### 1. Release and accept the Entry-centered Web flow
 
-- Verify the merged `main` deployment against the migrated hosted project, then check Quick Capture, Needs organizing, Library routing, First Time, Moment, Period, Home, Vehicle, and Goal in a browser.
+- Verify the Production deployment against the hosted project migrated through `202610040009`, then check Quick Capture, Needs organizing, Library, Timeline milestones, First Times, the Dashboard Now block, Home, Vehicle, and Want to Do in a browser.
 - The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
 - Native iOS is rewritten to follow Web once Web is complete; complete personal native acceptance before treating it as a release.
 - The hosted schema matches the migrations except for platform privilege defaults that `supabase db diff --linked` reports.
@@ -139,7 +137,7 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 ### 2. Accept Web Location
 
-- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202610030004`, which includes every Location migration. Home Location copy-on-write compares coordinates at the database's six-decimal storage precision.
+- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202610040009`, which includes every Location migration. Home Location copy-on-write compares coordinates at the database's six-decimal storage precision.
 - Web now has optional Home Locations, address search that feeds Entry-owned Location snapshots on save, keyboard-accessible address suggestions, explicit photo GPS source identity, owner-scoped Geoapify quotas, and a clustered Map of current Entry coordinates with Kind and year filters.
 - Local Web and database validation for the merged changes is listed above.
 - `localhost:3000` points to the linked cloud Supabase project. Its health endpoint returned 200, and an authenticated browser loaded Geoapify address suggestions, a selected coordinate preview, and the Map's raster tiles after migration; the test form was canceled without saving.
@@ -185,7 +183,6 @@ Migration `202610040006` already drops the `entry_relations` and `set_entry_rela
   Native full-note rendering on focused record pages still needs to adopt the rich payload.
 - Native Settings now follows Web `/settings`: the account card with Sign out, preferred name, birth date, and default time zone each save on their own with Web validation and toasts, then app-local appearance and the paused Beta AI, organization, and export rows.
   The Dashboard greeting refreshes after a name save; a local contract run and a seeded Simulator UI run confirmed saving, clearing, and the greeting.
-  Web's browser-local Timeline style stays Web-only.
 - Native Timeline now follows the Web phone layout with the shared header, type chooser, birth date prompt, and a Timeline editor that uses the Settings time zone and saves Collections and tags.
   Local contract and seeded Simulator runs confirmed creating, editing, and trashing Moments and saving the birth date.
   Manage tracks opens the Web track page, where each track saves its own name, order, and visibility.
