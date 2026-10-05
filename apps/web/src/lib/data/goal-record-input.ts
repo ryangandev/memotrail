@@ -57,7 +57,7 @@ export function parseGoalExtractionInput(
     !Number.isSafeInteger(input.sourceRevision) ||
     input.sourceRevision < 1
   )
-    return invalid("Choose a current Wiki Item to add to Want to Do.");
+    return invalid("Choose a current Wiki Item to add to Someday.");
   const parsed = parseGoalEntryInput({
     ...input,
     body: "",

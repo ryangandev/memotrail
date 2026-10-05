@@ -58,7 +58,7 @@ export async function saveGoalEntry(
   return {
     entry: saved,
     firstTimeEntryId: null,
-    message: parsed.data.id ? "Changes saved." : "Added to Want to Do.",
+    message: parsed.data.id ? "Changes saved." : "Added to Someday.",
     status: parsed.data.id ? "saved" : "created",
   };
 }

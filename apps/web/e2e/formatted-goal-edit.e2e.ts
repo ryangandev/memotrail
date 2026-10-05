@@ -50,24 +50,24 @@ test("Editing a formatted Goal's writing removes its outdated formatted copy", a
   await expect(
     page.getByRole("main").locator("strong", { hasText: original }),
   ).toBeVisible();
-  const createForm = page.getByRole("form", { name: "Add to Want to Do" });
+  const createForm = page.getByRole("form", { name: "Add to Someday" });
   // The Item page is server rendered, so a click before hydration opens nothing.
   await expect(async () => {
     if (!(await createForm.isVisible())) {
       await page
-        .getByRole("button", { name: "Add to Want to Do", exact: true })
+        .getByRole("button", { name: "Add to Someday", exact: true })
         .click();
     }
     await expect(createForm).toBeVisible({ timeout: 2_000 });
   }).toPass(firstCompile);
   await createForm.getByLabel("What do you want to do?").fill("Marathon goal");
   await createForm
-    .getByRole("button", { name: "Add to Want to Do", exact: true })
+    .getByRole("button", { name: "Add to Someday", exact: true })
     .click();
   await expect(page).toHaveURL(/\/goals\/[0-9a-f-]+$/, firstCompile);
   const goalID = new URL(page.url()).pathname.split("/").pop()!;
   const main = page.getByRole("main");
-  const editButton = main.getByRole("button", { name: "Edit Want to Do" });
+  const editButton = main.getByRole("button", { name: "Edit Someday item" });
   const library = async (query: string) => {
     await page.goto(`/library?q=${encodeURIComponent(query)}`);
     return page.getByRole("region", { name: "Results", exact: true });

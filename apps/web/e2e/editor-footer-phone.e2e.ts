@@ -139,7 +139,7 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
       for (const [path, edit] of [
         [`/homes/${idFor("Maple Street flat")}`, "Edit Home"],
         [`/vehicles/${idFor("Blue hatchback")}`, "Edit Vehicle"],
-        [`/goals/${idFor("Hike the coast trail")}`, "Edit Want to Do"],
+        [`/goals/${idFor("Hike the coast trail")}`, "Edit Someday item"],
       ]) {
         await page.goto(path);
         await openEditor(

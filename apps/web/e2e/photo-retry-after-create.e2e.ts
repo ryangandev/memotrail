@@ -7,7 +7,7 @@ import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
 const scenarios = [
-  { name: "Want to Do item", kind: "goal", provider: false },
+  { name: "Someday item", kind: "goal", provider: false },
   { name: "Home", kind: "home", provider: false },
   { name: "Vehicle", kind: "vehicle", provider: false },
   { name: "Home with a provider address", kind: "home", provider: true },
@@ -20,7 +20,7 @@ const scenarios = [
 
 const records = {
   goal: {
-    add: "Add to Want to Do",
+    add: "Add to Someday",
     nameField: "Title",
     partial: "Saved",
     saved: "Changes saved.",

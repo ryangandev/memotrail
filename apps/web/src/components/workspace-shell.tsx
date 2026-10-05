@@ -83,7 +83,7 @@ const recordNavigation: NavigationItem[] = [
     icon: "star",
     label: "First Times",
   },
-  { destination: "goals", href: "/goals", icon: "target", label: "Want to Do" },
+  { destination: "goals", href: "/goals", icon: "target", label: "Someday" },
 ];
 
 const organizationNavigation: NavigationItem[] = [

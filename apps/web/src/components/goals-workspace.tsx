@@ -69,7 +69,7 @@ const goalSections: Array<{
   {
     detail: "Things you still want to do",
     status: "active",
-    title: "Want to do",
+    title: "Not yet",
   },
   {
     detail: "Things you did",
@@ -105,7 +105,7 @@ export function GoalsWorkspace({
       actions={
         <Button
           variant="primary"
-          aria-label="Add to Want to Do"
+          aria-label="Add to Someday"
           onClick={() => setSelectedGoal(null)}
           type="button"
         >
@@ -119,21 +119,21 @@ export function GoalsWorkspace({
           one, it can become a First Time.
         </>
       }
-      eyebrow={<>Someday, or soon</>}
+      eyebrow={<>No rush</>}
       summary={
         <SeparatedList>
           <span>{countLabel(goals.length, "item")}</span>
-          <span>{openCount} to do</span>
+          <span>{openCount} not yet</span>
         </SeparatedList>
       }
-      summaryLabel="Want to Do summary"
-      title={<>Want to Do</>}
+      summaryLabel="Someday summary"
+      title={<>Someday</>}
     >
       {loadError ? (
         <div className={common.message} role="alert">
           <Icon name="sparkle" size={22} />
           <div>
-            <strong>Want to Do unavailable</strong>
+            <strong>Someday unavailable</strong>
             <p>{loadError}</p>
           </div>
         </div>
@@ -394,7 +394,7 @@ export function GoalEditor({
       }
       router.refresh();
       notify.success(
-        saved.status === "created" ? "Added to Want to Do." : "Changes saved.",
+        saved.status === "created" ? "Added to Someday." : "Changes saved.",
       );
       onClose();
     } catch {
@@ -477,11 +477,11 @@ export function GoalEditor({
       onClose={onClose}
       presentation={presentation}
       title={
-        <>{currentId ? title || "Want to Do" : "What do you want to do?"}</>
+        <>{currentId ? title || "Someday item" : "What do you want to do?"}</>
       }
       titleId="goal-editor-title"
-      eyebrow={<>{currentId ? "Edit Want to Do" : "Want to Do"}</>}
-      closeLabel="Close Want to Do editor"
+      eyebrow={<>{currentId ? "Edit Someday item" : "Someday"}</>}
+      closeLabel="Close Someday editor"
       busy={isPending}
       footer={
         <div className={common.dialogFooter}>
@@ -516,7 +516,7 @@ export function GoalEditor({
                 ? "Saving..."
                 : currentId
                   ? "Save changes"
-                  : "Add to Want to Do"}
+                  : "Add to Someday"}
             </Button>
           </div>
         </div>
@@ -596,7 +596,7 @@ export function GoalEditor({
             onSelect={handlePhotoSelection}
             pendingPhotos={pendingPhotos}
             progress={photoUploadProgress}
-            recordLabel="Want to Do"
+            recordLabel="Someday item"
           />
 
           {canRecordAchievement && currentId && currentRevision !== null ? (

@@ -130,9 +130,7 @@ export function EntryDetailView({
           />
         )}
         {active && entry.item_kind === "goal" && (
-          <ButtonLink href={`/goals/${entry.id}`}>
-            Open in Want to Do
-          </ButtonLink>
+          <ButtonLink href={`/goals/${entry.id}`}>Open in Someday</ButtonLink>
         )}
         {active ? (
           <Button
@@ -273,12 +271,12 @@ function GoalExtraction({
           setOpen(true);
         }}
       >
-        Add to Want to Do
+        Add to Someday
       </Button>
     );
   return (
     <form
-      aria-label="Add to Want to Do"
+      aria-label="Add to Someday"
       className={styles.conversion}
       onSubmit={async (event) => {
         event.preventDefault();
@@ -286,7 +284,7 @@ function GoalExtraction({
         onBusyChange(true);
         setError(null);
         try {
-          if (!goalId) throw Error("Missing Want to Do identity");
+          if (!goalId) throw Error("Missing Someday item identity");
           const result = await extractGoalFromItem({
             goalId,
             sourceId: entry.id,
@@ -309,10 +307,10 @@ function GoalExtraction({
         }
       }}
     >
-      <h3>Add this to Want to Do</h3>
+      <h3>Add this to Someday</h3>
       <p>
-        This adds a separate item to Want to Do and links it back to this
-        source. The source keeps its writing, dates, and photos.
+        This adds a separate item to Someday and links it back to this source.
+        The source keeps its writing, dates, and photos.
       </p>
       <fieldset disabled={busy || disabled}>
         <label>
@@ -345,7 +343,7 @@ function GoalExtraction({
             Cancel
           </Button>
           <Button variant="primary" type="submit">
-            {busy ? "Adding..." : "Add to Want to Do"}
+            {busy ? "Adding..." : "Add to Someday"}
           </Button>
         </div>
       </fieldset>

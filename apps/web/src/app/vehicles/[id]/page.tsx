@@ -11,12 +11,24 @@ export default async function VehicleDetailPage({
 }) {
   const { id } = await params;
   if (!isEntryUuid(id))
-    return <FocusedDetailUnavailable label="Vehicle" back="/vehicles" />;
+    return (
+      <FocusedDetailUnavailable
+        label="Vehicle"
+        back="/vehicles"
+        backLabel="Vehicles"
+      />
+    );
   const workspace = await getVehiclesWorkspace(id);
   if (!workspace) return null;
   const record = workspace.vehicles.find((vehicle) => vehicle.id === id);
   if (!record)
-    return <FocusedDetailUnavailable label="Vehicle" back="/vehicles" />;
+    return (
+      <FocusedDetailUnavailable
+        label="Vehicle"
+        back="/vehicles"
+        backLabel="Vehicles"
+      />
+    );
   return (
     <FocusedRecordDetail
       kind="vehicle"

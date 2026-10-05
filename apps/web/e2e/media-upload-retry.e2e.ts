@@ -153,7 +153,7 @@ for (const kind of ["home", "vehicle", "goal"] as const) {
         const label = {
           home: "Home",
           vehicle: "Vehicle",
-          goal: "Want to Do",
+          goal: "Someday item",
         }[kind];
         await page.getByRole("button", { name: `Edit ${label}` }).click();
         const dialog = page.getByRole("main");

@@ -49,7 +49,7 @@ const paths = {
 const labels = {
   home: "Home",
   vehicle: "Vehicle",
-  goal: "Want to Do",
+  goal: "Someday item",
 };
 
 export function FocusedRecordDetail(props: Props) {

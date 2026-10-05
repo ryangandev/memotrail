@@ -140,9 +140,9 @@ test("An Idea creates a linked Goal without changing the source", async ({
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto("/items/" + entryID);
     await page
-      .getByRole("button", { name: "Add to Want to Do", exact: true })
+      .getByRole("button", { name: "Add to Someday", exact: true })
       .click();
-    const form = page.getByRole("form", { name: "Add to Want to Do" });
+    const form = page.getByRole("form", { name: "Add to Someday" });
     await expect(form.getByRole("combobox")).toHaveCount(0);
     await form.getByRole("button", { name: "Cancel", exact: true }).click();
     expect(
@@ -155,7 +155,7 @@ test("An Idea creates a linked Goal without changing the source", async ({
       ).data,
     ).toEqual({ item_kind: "entry", item_subtype: "entry" });
     await page
-      .getByRole("button", { name: "Add to Want to Do", exact: true })
+      .getByRole("button", { name: "Add to Someday", exact: true })
       .click();
     await form.getByLabel("Target date", { exact: true }).fill("2027-12-31");
     await page.evaluate(() => window.scrollTo(0, 0));
@@ -176,11 +176,11 @@ test("An Idea creates a linked Goal without changing the source", async ({
       ),
     ).toBe(true);
     await form
-      .getByRole("button", { name: "Add to Want to Do", exact: true })
+      .getByRole("button", { name: "Add to Someday", exact: true })
       .click();
     await expect(page).toHaveURL(/\/goals\/[0-9a-f-]+$/);
     await expect(
-      page.getByRole("button", { name: "Edit Want to Do" }),
+      page.getByRole("button", { name: "Edit Someday item" }),
     ).toBeVisible();
     const derivedLinks = await client
       .from("entry_links")
@@ -241,13 +241,13 @@ test("An Idea creates a linked Goal without changing the source", async ({
     expect(retry.error).toBeNull();
     expect(retry.data).toHaveLength(1);
     expect(retry.data[0].goal_entry_id).toBe(goalID);
-    await page.getByRole("button", { name: "Edit Want to Do" }).click();
+    await page.getByRole("button", { name: "Edit Someday item" }).click();
     await page
       .getByRole("main")
       .getByRole("button", { name: "Save changes", exact: true })
       .click();
     await expect(
-      page.getByRole("button", { name: "Edit Want to Do" }),
+      page.getByRole("button", { name: "Edit Someday item" }),
     ).toBeVisible();
     const later = (
       await client
@@ -264,7 +264,7 @@ test("An Idea creates a linked Goal without changing the source", async ({
     ).toBeVisible();
     await page.goto("/items/" + entryID);
     await expect(
-      page.getByRole("button", { name: "Add to Want to Do", exact: true }),
+      page.getByRole("button", { name: "Add to Someday", exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Open extracted item", exact: true }),

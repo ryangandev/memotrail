@@ -5,20 +5,20 @@ import { PageHeader } from "@/components/page-header";
 export function FocusedDetailUnavailable({
   label,
   back,
+  backLabel,
 }: {
   label: string;
   back: string;
+  backLabel: string;
 }) {
   return (
     <PageFrame variant="compact">
       <PageHeader
+        actions={<ButtonLink href={back}>Back to {backLabel}</ButtonLink>}
         eyebrow={label}
         title={`${label} unavailable`}
         description="This record may have moved to Trash or no longer be accessible."
       />
-      <ButtonLink href={back}>
-        Back to {back.slice(1).replace("-", " ")}
-      </ButtonLink>
     </PageFrame>
   );
 }

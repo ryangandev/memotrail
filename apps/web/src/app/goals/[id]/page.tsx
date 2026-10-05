@@ -11,12 +11,24 @@ export default async function GoalDetailPage({
 }) {
   const { id } = await params;
   if (!isEntryUuid(id))
-    return <FocusedDetailUnavailable label="Want to Do" back="/goals" />;
+    return (
+      <FocusedDetailUnavailable
+        label="Someday item"
+        back="/goals"
+        backLabel="Someday"
+      />
+    );
   const workspace = await getGoalsWorkspace(id);
   if (!workspace) return null;
   const record = workspace.goals.find((goal) => goal.id === id);
   if (!record)
-    return <FocusedDetailUnavailable label="Want to Do" back="/goals" />;
+    return (
+      <FocusedDetailUnavailable
+        label="Someday item"
+        back="/goals"
+        backLabel="Someday"
+      />
+    );
   return (
     <FocusedRecordDetail
       kind="goal"

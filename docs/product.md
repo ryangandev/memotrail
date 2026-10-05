@@ -30,7 +30,7 @@ Notes, journals, reflections, lessons, ideas, stories, memories, milestones, and
 They do not change the Entry's structure.
 
 Focused records keep structure only when the experience needs specific fields or actions.
-Home and Vehicle are Entities, and a Want to Do item (a Goal in data) has its own lifecycle.
+Home and Vehicle are Entities, and a Someday item (a Goal in data) has its own lifecycle.
 A milestone is a mark on an ordinary Entry, not a record type: it puts that Entry on Timeline as a Moment or a Period.
 First Time is a flag on a milestone, so a First Time is an Entry like any other.
 An Entry's date alone does not put it on Timeline.
@@ -119,7 +119,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - A Location does not require a personal name; an Entry, Home, Vehicle, or First Time can carry its address or coordinates.
 - Timeline, Dashboard, Library, and Needs organizing are views, not organization labels.
 - Library is the primary all-items entry point for the Life Wiki.
-  Its default browser presents Entries, Entities, and Want to Do items as paginated rows and opens focused records in their own views.
+  Its default browser presents Entries, Entities, and Someday items as paginated rows and opens focused records in their own views.
   A new capture appears there, and in its item count, as soon as it is saved.
   Library search supports record, date, and tag filters with match context.
   Library avoids duplicating the sidebar's focused and organizing destinations.
@@ -133,12 +133,12 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 - Renaming a tag preserves its identity and linked Wiki Items.
 - A used tag must be merged into another tag or removed from its Entries before deletion, so organization is never silently lost.
 - Web does not offer general links between Entries, because tags already connect related records.
-  Entries stay connected only through purpose-specific links: the source link of an item added to Want to Do and the First Time that marking an item done creates.
+  Entries stay connected only through purpose-specific links: the source link of an item added to Someday and the First Time that marking an item done creates.
   General links saved earlier, including those older Goals carried, are deleted.
 - MemoTrail keeps only the current version of each Entry.
   It has no version history: an edit replaces the earlier writing, and Trash is the only way to undo, for a whole Entry or one photo.
   Earlier versions saved before this change were deleted, and older version history links open the Item page or Library.
-- Adding or removing photos never makes an open Entry, Home, Vehicle, or Want to Do editor stale: its Save, Move to Trash, and Mark done still apply.
+- Adding or removing photos never makes an open Entry, Home, Vehicle, or Someday editor stale: its Save, Move to Trash, and Mark done still apply.
   Writing or other content changed elsewhere since the editor opened still reports a conflict instead of being overwritten.
 
 ## Retrieval and AI
@@ -211,22 +211,22 @@ An absent end means that relationship is current, so the Home or Vehicle appears
 Duration labels must not imply more precision than the recorded dates.
 Property operations, vehicle maintenance, fuel, expenses, insurance, and document storage are outside the current scope.
 
-### Want to Do
+### Someday
 
-Want to Do is a low-pressure list of things the user wants to do someday.
+Someday is a low-pressure list of things the user wants to do someday.
 Each item needs only a title; a target date, notes, tags, and photos are optional.
-An item is Want to do, Done, or Let go, and every new item starts as Want to do.
+An item is Not yet, Done, or Let go, and every new item starts as Not yet.
 There are no horizons, Bucket List, percentages, subtasks, deadlines, overdue warnings, or productivity scores.
-In data and routes an item is still a Goal (`item_kind = 'goal'`, `/goals`); Want to Do is its user-facing name.
+In data and routes an item is still a Goal (`item_kind = 'goal'`, `/goals`); Someday is its user-facing name, and one item is a Someday item.
 
-An idea remains an Entry until the user explicitly adds it to Want to Do from its Item page.
+An idea remains an Entry until the user explicitly adds it to Someday from its Item page.
 That secondary action creates a separate item linked back to its source, and the Entry remains intact.
 
 Marking an item done is the moment it can become a First Time.
 That action atomically marks the item Done and creates a linked First Time using the best-known date without copying the notes.
 Changing the status to Done in the editor records it without a First Time.
 
-Want to Do items do not keep general links to other Entries.
+Someday items do not keep general links to other Entries.
 
 ### Locations
 
