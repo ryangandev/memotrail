@@ -129,7 +129,7 @@ test("Goal achievements keep every date the editor records and reject duplicate 
       expect(saved.error).toBeNull();
       const id = saved.data[0].entry_id;
       await page.goto("/goals/" + id);
-      await page.getByRole("button", { name: "Edit Want to Do" }).click();
+      await page.getByRole("button", { name: "Edit Someday item" }).click();
       const dialog = page.getByRole("main");
       await setOccurrencePrecision(dialog, value.precision);
       await expectOccurrencePrecision(dialog, value.precision);

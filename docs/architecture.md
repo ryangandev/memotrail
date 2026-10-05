@@ -97,7 +97,7 @@ Pair it with the test file carrying the same feature name.
   Existing `derived` and `derived_from` provenance links stay in the data.
 - A focused-record save that leaves some photos unattached keeps its editor open; later saves, including photo retries, are ordinary updates.
   After a Home save, the editor holds the saved snapshot, so a retry leaves the Location unchanged instead of creating another one.
-- Web shows Goals as Want to Do. `goals.status` is `active`, `achieved`, or `let_go`, there is no horizon, and `save_goal_entry` and `extract_goal_from_item` take no related links and never change them.
+- Web shows Goals as Someday, and the `active` status as Not yet. `goals.status` is `active`, `achieved`, or `let_go`, there is no horizon, and `save_goal_entry` and `extract_goal_from_item` take no related links and never change them.
   `goals_workspace` returns only `achievement` links.
 - Migration `202610040006` deletes every general `related` link, scrubs them from version history, drops `entry_relations` and `set_entry_relation`, and limits `entry_links.relationship` to `achievement`, `derived`, `derived_from`, `exploration_conclusion`, and `exploration_source`.
 - Web Goal extraction uses a caller-generated target UUID for idempotency, preserves the source revision and identity, and records `derived` plus `derived_from` provenance links so both items remain discoverable.
@@ -182,7 +182,7 @@ Pair it with the test file carrying the same feature name.
   The list groups Goals by reflective state like Web `goalSections`, and a Goal's own page pages past the first 100 Goals to find it, like Web `getGoalsWorkspace(targetId)`.
   The editor keeps the Web Related Items picker and, for a saved Bucket List Goal, the milestone panel, which records the achievement through `achieve_goal_with_occurrence` and stays open.
   `App/ConnectedItemsSection.swift` lists a record's Connected Items and routes them like Web `wikiEntryHref`: Moments and Periods open on the Timeline, and other records open their own page through `WikiItemDestinationView`.
-- Native Goals code predates the Web Want to Do simplification: it sends horizons and related links to the save and extraction RPCs that migration `202610040003` replaces, so it fails until native follows Web.
+- Native Goals code predates the Web Someday simplification: it sends horizons and related links to the save and extraction RPCs that migration `202610040003` replaces, so it fails until native follows Web.
 - Native Inbox code predates the Web retirement of Inbox: its Inbox lists only `unreviewed` Entries, so it stays empty, and its Capture handoffs call `extract_capture_to_goal`, `_home`, and `_vehicle`, which migration `202610040004` drops, so they fail until native follows Web.
 - Native People code predates the Web removal of People and calls functions that migration `202610040002` drops; it is retired when native follows Web.
 - Native `Features/People` followed Web `/people` and `/people/[id]` with `PeopleView`, `PersonDetailView`, and `PersonEditorSheet` over `PeopleController`.

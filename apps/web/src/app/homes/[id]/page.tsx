@@ -11,11 +11,16 @@ export default async function HomeDetailPage({
 }) {
   const { id } = await params;
   if (!isEntryUuid(id))
-    return <FocusedDetailUnavailable label="Home" back="/homes" />;
+    return (
+      <FocusedDetailUnavailable label="Home" back="/homes" backLabel="Homes" />
+    );
   const workspace = await getHomesWorkspace(id);
   if (!workspace) return null;
   const record = workspace.homes.find((home) => home.id === id);
-  if (!record) return <FocusedDetailUnavailable label="Home" back="/homes" />;
+  if (!record)
+    return (
+      <FocusedDetailUnavailable label="Home" back="/homes" backLabel="Homes" />
+    );
   return (
     <FocusedRecordDetail
       kind="home"

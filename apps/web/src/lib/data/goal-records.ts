@@ -85,7 +85,7 @@ async function signedImageUrls(
 function unavailableWorkspace(viewer: Viewer): GoalsWorkspace {
   return {
     goals: [],
-    loadError: "MemoTrail could not load Want to Do. Refresh to try again.",
+    loadError: "MemoTrail could not load Someday. Refresh to try again.",
     tagOptions: [],
     viewer,
   };

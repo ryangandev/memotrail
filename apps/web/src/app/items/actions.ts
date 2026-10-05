@@ -48,7 +48,7 @@ export async function extractGoalFromItem(
   const context = await getAuthenticatedContext();
   if (!context)
     return {
-      error: "Sign in again to add this to Want to Do.",
+      error: "Sign in again to add this to Someday.",
       goalId: null,
     };
   const value = parsed.data;
@@ -70,7 +70,7 @@ export async function extractGoalFromItem(
   if (!result?.goal_entry_id)
     return {
       error:
-        "The source changed or is in Trash. Refresh before adding it to Want to Do.",
+        "The source changed or is in Trash. Refresh before adding it to Someday.",
       goalId: null,
     };
   revalidatePath("/", "layout");

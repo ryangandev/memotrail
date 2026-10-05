@@ -13,9 +13,9 @@ Collections are merged into tags: each Collection became a tag with the same nam
 Migration `202610040001` carries this change; native iOS still calls the retired Collection functions until it follows Web.
 People are removed: migration `202610040002` deletes every Person, its Entity Wiki Item, its links, and its version history, and strips People from Entry version snapshots.
 Native iOS still calls the retired People functions until it follows Web.
-Goals became Want to Do: migration `202610040003` maps Considering and Paused to Want to do, drops horizons, and stops Goal saves from touching related links; the former Bucket List Collection is already an ordinary tag.
+Goals became Someday: migration `202610040003` maps Considering and Paused to the open status, shown as Not yet, drops horizons, and stops Goal saves from touching related links; the former Bucket List Collection is already an ordinary tag.
 Native iOS still sends horizons and related links and fails against it until it follows Web.
-The English name "Want to Do" is a working name and may change.
+The list is named Someday and its open status Not yet; the working name Want to Do is retired.
 Inbox is retired: captures save straight to Library, and Library and the Dashboard show Entries without a title or tag under Needs organizing.
 Migration `202610040004` marks every Entry organized, keeps new ones organized, and drops the Inbox organize and capture-handoff functions.
 Native iOS still opens Inbox review and calls the retired functions until it follows Web.
@@ -72,7 +72,7 @@ Use Git history for feature-level implementation and test evidence.
 | Area                                                                              | State                                                                                                                                                                                            |
 | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Capture, organization, dates, drafts, and offline queues                          | Implemented on Web and iOS; Web retired Inbox for Needs organizing in Library, while native still shows Inbox                                                                                    |
-| Timeline, Home (Dashboard on Web), First Times, Homes, Vehicles, and Want to Do   | Implemented on Web and iOS; Web simplified Goals into Want to Do and turned Timeline into fixed-lane milestones, and the retired Place and People surfaces are removed from Web                  |
+| Timeline, Home (Dashboard on Web), First Times, Homes, Vehicles, and Someday      | Implemented on Web and iOS; Web simplified Goals into Someday and turned Timeline into fixed-lane milestones, and the retired Place and People surfaces are removed from Web                     |
 | Location data layer                                                               | Web and native Map, optional Home Location, photo GPS provenance, and Web provider quotas are implemented; personal acceptance remains.                                                          |
 | Habits                                                                            | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                                               |
 | Web navigation shell                                                              | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                                                |
@@ -93,7 +93,7 @@ Its marked account and Storage objects were confirmed removed without accessing 
 
 ### 1. Release and accept the Entry-centered Web flow
 
-- Verify the Production deployment against the hosted project migrated through `202610040009`, then check Quick Capture, Needs organizing, Library, Timeline milestones, First Times, the Dashboard Now block, Home, Vehicle, and Want to Do in a browser.
+- Verify the Production deployment against the hosted project migrated through `202610040009`, then check Quick Capture, Needs organizing, Library, Timeline milestones, First Times, the Dashboard Now block, Home, Vehicle, and Someday in a browser.
 - The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
 - Native iOS is rewritten to follow Web once Web is complete; complete personal native acceptance before treating it as a release.
 - The hosted schema matches the migrations except for platform privilege defaults that `supabase db diff --linked` reports.

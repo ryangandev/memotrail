@@ -89,7 +89,7 @@ const goal = {
 };
 const records = {
   goal: {
-    label: "Want to Do",
+    label: "Someday item",
     path: "/goals",
     rpc: "save_goal_entry",
     args: goal,
@@ -302,7 +302,7 @@ test("Goal moves to Trash after a partial photo upload failure", async ({
   });
   await page.goto(`/goals/${entry}`);
   await page
-    .getByRole("button", { name: "Edit Want to Do", exact: true })
+    .getByRole("button", { name: "Edit Someday item", exact: true })
     .click();
   const editor = page.getByRole("main");
   const bytes = await photo();

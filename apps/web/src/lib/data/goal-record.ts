@@ -49,7 +49,7 @@ export type GoalRecord = {
 
 export const goalStatusLabels: Record<GoalStatus, string> = {
   achieved: "Done",
-  active: "Want to do",
+  active: "Not yet",
   let_go: "Let go",
 };
 
