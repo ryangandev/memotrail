@@ -3,7 +3,10 @@ import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { fillOccurrenceStart } from "./helpers/occurrence";
+import {
+  fillOccurrenceStart,
+  setOccurrencePrecision,
+} from "./helpers/occurrence";
 
 test("Tags are first-class and organize generic Timeline moments", async ({
   context,
@@ -180,9 +183,7 @@ test("Tags are first-class and organize generic Timeline moments", async ({
     await momentDialog
       .getByLabel("Title", { exact: true })
       .fill("Moved to Seattle");
-    await momentDialog
-      .getByRole("combobox", { name: "Date type", exact: true })
-      .selectOption("day");
+    await setOccurrencePrecision(momentDialog, "day");
     await fillOccurrenceStart(momentDialog, "2025-03-14");
     await momentDialog
       .getByRole("button", { name: "Add tag", exact: true })

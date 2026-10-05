@@ -155,18 +155,21 @@ export function EntryEditorDialog({
 
   function changeMilestone(next: Milestone | null) {
     // Only a Period can be still going on or end on a calendar date, and a Moment is one
-    // point in time, so leaving a Period drops its end. A plain Entry keeps a date range.
+    // point in time, so leaving a Period drops its end. A plain Entry keeps a Day's end
+    // as a date range, and a Not sure date keeps its end.
     if (next?.shape !== "period")
-      setOccurrence((value) =>
-        !next && value.precision === "range"
-          ? value
-          : {
-              ...value,
-              end: "",
-              endMode: "date",
-              precision: value.precision === "range" ? "day" : value.precision,
-            },
-      );
+      setOccurrence((value) => {
+        if (!next && value.precision === "day" && value.end)
+          return { ...value, endMode: "date", precision: "range" };
+        if (!next && ["range", "approximate", "age"].includes(value.precision))
+          return value;
+        return {
+          ...value,
+          end: "",
+          endMode: "date",
+          precision: value.precision === "range" ? "day" : value.precision,
+        };
+      });
     setMilestone(next);
     setResult(null);
   }

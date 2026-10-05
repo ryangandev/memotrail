@@ -273,6 +273,87 @@ test("OccurrenceEditor keeps the optional date description collapsed", async ({
   ).toHaveCount(0);
 });
 
+test("OccurrenceEditor moves between Day, Month, Year, and Not sure without inventing dates", async ({
+  page,
+}) => {
+  const shot = (name: string) =>
+    page
+      .locator("#forms")
+      .getByRole("group", { name: "Date" })
+      .screenshot({
+        animations: "disabled",
+        caret: "initial",
+        path: `/private/tmp/memotrail-date-${name}.png`,
+      });
+  await page.goto("/design-system#forms");
+  const editor = page.getByRole("group", { name: "Date" });
+  const segment = (name: string) =>
+    editor.getByRole("button", { name, exact: true });
+  const start = editor.getByRole("textbox", {
+    name: /^(Occurred|Start date|Roughly when)$/,
+  });
+  const toggle = (name: string) =>
+    editor.getByRole("checkbox", { name, exact: true });
+  await expect(segment("Day")).toHaveAttribute("aria-pressed", "true");
+  await expect(start).toHaveValue("2026-09-17");
+  await expect(editor.getByRole("combobox", { name: "Time zone" })).toHaveCount(
+    0,
+  );
+  await shot("day");
+
+  // A time is one point in the Settings time zone, so it cannot also end.
+  await toggle("Add time").check();
+  await expect(editor.getByText("Default from Settings")).toBeVisible();
+  await expect(
+    editor.getByRole("button", { name: "Choose occurred time" }),
+  ).toHaveText("Time");
+  await expect(toggle("Add end date")).toHaveCount(0);
+  await shot("time");
+  await toggle("Add time").uncheck();
+  await expect(start).toHaveValue("2026-09-17");
+
+  await toggle("Add end date").check();
+  await expect(toggle("Add time")).toHaveCount(0);
+  await expect(
+    editor.getByRole("textbox", { name: "End date", exact: true }),
+  ).toBeVisible();
+  await expect(toggle("Present")).not.toBeChecked();
+  await shot("range");
+
+  // A coarser date keeps what is known; a finer one starts empty.
+  await segment("Month").click();
+  await expect(start).toHaveValue("2026-09");
+  await expect(toggle("Add end date")).toHaveCount(0);
+  await expect(
+    editor.getByRole("textbox", { name: "End date", exact: true }),
+  ).toHaveCount(0);
+  await segment("Year").click();
+  await expect(start).toHaveValue("2026");
+  await segment("Day").click();
+  await expect(start).toHaveValue("");
+  await expect(toggle("Add end date")).not.toBeChecked();
+
+  await segment("Not sure").click();
+  await expect(segment("Not sure")).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    editor.getByRole("textbox", { name: "Roughly when" }),
+  ).toBeVisible();
+  await expect(
+    editor.getByRole("textbox", { name: "Date description" }),
+  ).toHaveAttribute("required", "");
+  await expect(toggle("Add date description")).toHaveCount(0);
+  await expect(toggle("Add end date")).not.toBeChecked();
+  await shot("not-sure");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ colorScheme: "dark" });
+  await shot("not-sure-mobile");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+});
+
 test("SearchField has one focus surface and composes with a Search action", async ({
   page,
 }) => {

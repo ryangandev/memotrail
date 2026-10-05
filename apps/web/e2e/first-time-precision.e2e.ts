@@ -4,9 +4,13 @@ import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import {
+  expectOccurrencePrecision,
   fillOccurrenceEnd,
   fillOccurrenceStart,
+  occurrenceStartField,
   setDateDescription,
+  setOccurrencePrecision,
+  type DatePrecision,
 } from "./helpers/occurrence";
 
 test("Editing a First Time keeps its original date range", async ({
@@ -108,7 +112,7 @@ test("Editing a First Time keeps its original date range", async ({
     await expect
       .poll(() =>
         dialog
-          .getByLabel("Date type")
+          .getByRole("combobox", { name: "Time zone", exact: true })
           .evaluate(
             (control) => getComputedStyle(control.closest("label")!).rowGap,
           ),
@@ -179,9 +183,7 @@ test("Editing a First Time keeps its original date range", async ({
     ).toBeNull();
     await page.reload();
     await page.getByRole("button", { name: "Edit Entry" }).click();
-    await expect(
-      dialog.getByRole("combobox", { name: "Date type", exact: true }),
-    ).toHaveValue("exact");
+    await expectOccurrencePrecision(dialog, "exact");
     await dialog.getByRole("button", { name: "Save changes" }).click();
     await expect(dialog).not.toBeVisible();
     expect(
@@ -193,41 +195,49 @@ test("Editing a First Time keeps its original date range", async ({
           .single()
       ).data!.occurred_start,
     ).toBe(exact);
-    for (const sample of [
+    // A Period's Day has an end of its own, so it never needs the range precision.
+    const samples: {
+      precision: DatePrecision;
+      start: string;
+      label: string;
+      end: string;
+    }[] = [
       { precision: "year", start: "2017", label: "", end: "" },
       { precision: "month", start: "2017-07", label: "", end: "" },
       { precision: "day", start: "2017-07-08", label: "", end: "" },
-      { precision: "age", start: "", label: "17岁", end: "" },
       {
         precision: "approximate",
         start: "",
         label: "Summer before college",
         end: "",
       },
-      { precision: "range", start: "2017-07-08", label: "", end: "2017-07-15" },
+      { precision: "day", start: "2017-07-08", label: "", end: "2017-07-15" },
       { precision: "unknown", start: "", label: "", end: "" },
-    ]) {
+    ];
+    for (const sample of samples) {
       await page.getByRole("button", { name: "Edit Entry" }).click();
-      await dialog
-        .getByRole("combobox", { name: "Date type", exact: true })
-        .selectOption(sample.precision);
+      await setOccurrencePrecision(dialog, sample.precision);
       if (sample.start) await fillOccurrenceStart(dialog, sample.start);
+      else await occurrenceStartField(dialog).fill("");
       if (sample.end) await fillOccurrenceEnd(dialog, sample.end);
+      else
+        await dialog
+          .getByRole("checkbox", { name: "Present", exact: true })
+          .check();
       await setDateDescription(dialog, sample.label);
       await dialog.getByRole("button", { name: "Save changes" }).click();
       await expect(dialog).not.toBeVisible();
+      // Two samples in a row can share a precision, so wait for the end too.
       await expect
-        .poll(
-          async () =>
-            (
-              await client
-                .from("entries")
-                .select("date_precision")
-                .eq("id", id)
-                .single()
-            ).data?.date_precision,
-        )
-        .toBe(sample.precision);
+        .poll(async () => {
+          const { data } = await client
+            .from("entries")
+            .select("date_precision,occurred_end")
+            .eq("id", id)
+            .single();
+          return [data?.date_precision, data?.occurred_end === null];
+        })
+        .toEqual([sample.precision, !sample.end]);
       const value = (
         await client
           .from("entries")

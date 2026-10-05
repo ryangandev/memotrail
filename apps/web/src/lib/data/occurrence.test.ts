@@ -188,6 +188,44 @@ describe("precision-aware occurrence", () => {
       ).toBeDefined();
     }
   });
+  it("stores an empty calendar date as unknown and keeps its description", () => {
+    for (const precision of ["exact", "day", "month", "year", "range"] as const)
+      expect(
+        resolveOccurrenceDraft({
+          precision,
+          start: "",
+          end: "",
+          label: "Sometime in childhood",
+          timezone: "UTC",
+        }).value,
+      ).toEqual({
+        datePrecision: "unknown",
+        occurredAt: null,
+        occurredEnd: null,
+        occurredLabel: "Sometime in childhood",
+        occurredTimezone: "UTC",
+      });
+  });
+  it("asks for a start date before an end date", () => {
+    for (const [precision, span] of [
+      ["day", true],
+      ["approximate", false],
+    ] as const)
+      expect(
+        resolveOccurrenceDraft(
+          {
+            precision,
+            start: "",
+            end: "2023-01-01",
+            endMode: "date",
+            label: "Around college",
+            timezone: "UTC",
+          },
+          undefined,
+          span,
+        ).error,
+      ).toBe("Add a start date before the end date.");
+  });
   it("rejects invalid partial dates rather than silently converting them", () => {
     for (const [precision, start] of [
       ["year", "20"],

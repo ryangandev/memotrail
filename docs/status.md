@@ -31,7 +31,8 @@ Migration `202610040009` converts existing Moments, Periods, First Times, and tr
 Native iOS still calls the retired Timeline and First Time functions until it follows Web.
 Migrations `202610040001` through `202610040009` were applied to the hosted project on 2026-10-05 after a schema and data backup, and `main` at `cf68cab` was deployed to Production.
 Item page photos, the export page, and Timeline styles are settled: photos show on the Item page and are edited in the Entry editor, export is one Export everything action, and Timeline keeps only the lane view.
-The UI question still held is the date precision controls.
+The date precision controls are settled too: Web date forms choose Day, Month, Year, or Not sure, with Add time and Add end date toggles, and an empty date means Unknown.
+Native iOS still shows the eight Date types until it follows Web.
 Open `audit-2026-10` issues stay tracked in GitHub.
 
 ## Current state
@@ -172,7 +173,7 @@ Migration `202610040006` already drops the `entry_relations` and `set_entry_rela
   Thirteen workspace Simulator UI scenarios pass, including form pickers, organization editing, toasts rising clear of the keyboard, photo field removal, the Map, sign-in, and a gallery screenshot tour.
   All seventeen seeded Simulator UI scenarios pass against a disposable local account and the local Web API, and all 249 native tests pass against local Supabase, including twelve contract tests.
   `review-local-session.py` now runs signed-in UI flows as a seeded, disposable local account, so screen syncs are checked against real local data rather than synthetic previews.
-  One shared OccurrenceEditor and tag/Collection editor now serve Capture, Inbox review, Timeline, First Times, Homes, Vehicles, and Goals, with the Web Date types, Present end, and optional description.
+  One shared OccurrenceEditor and tag/Collection editor now serve Capture, Inbox review, Timeline, First Times, Homes, Vehicles, and Goals, with the Web date precision, Present end, and optional description at the time.
 - The gallery's Writing & formatting page now previews a native Aa toolbar with bold, italic, underline, strikethrough, selection formatting, typing styles, undo/redo, and saved note reopening.
   The sample form uses the same reusable editor.
   Preview saves round-trip Web-compatible paragraph and emphasis JSON locally; they do not create an Entry.

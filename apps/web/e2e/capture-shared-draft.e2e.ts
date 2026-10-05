@@ -83,7 +83,9 @@ test("typing in either composer shows in the other without moving the caret", as
     "Hello big world and so much more",
   );
   await dialog.getByRole("button", { name: "Date", exact: true }).click();
-  await expect(dialog.getByLabel("Date type")).toBeVisible();
+  await expect(
+    dialog.getByRole("group", { name: "Date", exact: true }),
+  ).toBeVisible();
   await dialog.getByRole("button", { name: "Close quick capture" }).click();
   await expect(dialog).toBeHidden();
 
@@ -91,7 +93,9 @@ test("typing in either composer shows in the other without moving the caret", as
   await expect(dashboardEditor.locator("strong")).toHaveText(
     "Hello big world and so much more",
   );
-  await expect(dashboard.getByLabel("Date type")).toBeVisible();
+  await expect(
+    dashboard.getByRole("group", { name: "Date", exact: true }),
+  ).toBeVisible();
   await expect(
     dashboard.getByRole("button", { name: "Custom date", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
@@ -113,10 +117,14 @@ test("discarding a draft in one composer clears it in the other", async ({
 
   await dashboardEditor.fill("A thought to let go");
   await dashboard.getByRole("button", { name: "Date", exact: true }).click();
-  await expect(dashboard.getByLabel("Date type")).toBeVisible();
+  await expect(
+    dashboard.getByRole("group", { name: "Date", exact: true }),
+  ).toBeVisible();
   await trigger.click();
   await expect(dialogEditor).toHaveText("A thought to let go");
-  await expect(dialog.getByLabel("Date type")).toBeVisible();
+  await expect(
+    dialog.getByRole("group", { name: "Date", exact: true }),
+  ).toBeVisible();
 
   await dialogEditor.press("Meta+a");
   await dialogEditor.press("Backspace");
@@ -129,7 +137,9 @@ test("discarding a draft in one composer clears it in the other", async ({
   await expect(dialog).toBeHidden();
 
   await expect(dashboardEditor).toBeEmpty();
-  await expect(dashboard.getByLabel("Date type")).toHaveCount(0);
+  await expect(
+    dashboard.getByRole("group", { name: "Date", exact: true }),
+  ).toHaveCount(0);
   await expect(dashboard).not.toContainText("Draft saved on this device.");
   expect(await storedDraft(page, workspace.owner)).toBeNull();
 });

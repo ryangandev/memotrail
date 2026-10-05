@@ -4,12 +4,15 @@ import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import {
+  expectOccurrencePrecision,
   fillOccurrenceEnd,
   fillOccurrenceStart,
   setDateDescription,
+  setOccurrencePrecision,
+  type DatePrecision,
 } from "./helpers/occurrence";
 
-test("Goal achievements preserve all eight date precisions and reject duplicate completion", async ({
+test("Goal achievements keep every date the editor records and reject duplicate completion", async ({
   page,
   context,
 }) => {
@@ -61,8 +64,13 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
       })),
     );
 
-    const cases = [
-      { precision: "age", label: "17岁", start: "", end: "", expected: null },
+    const cases: {
+      precision: DatePrecision;
+      label: string;
+      start: string;
+      end: string;
+      expected: string | null;
+    }[] = [
       {
         precision: "approximate",
         label: "Summer before college",
@@ -123,25 +131,19 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
       await page.goto("/goals/" + id);
       await page.getByRole("button", { name: "Edit Want to Do" }).click();
       const dialog = page.getByRole("main");
-      await dialog
-        .getByRole("combobox", { name: "Date type", exact: true })
-        .selectOption(value.precision);
-      await expect(
-        dialog.getByRole("combobox", { name: "Date type", exact: true }),
-      ).toHaveValue(value.precision);
+      await setOccurrencePrecision(dialog, value.precision);
+      await expectOccurrencePrecision(dialog, value.precision);
       await dialog
         .getByRole("combobox", { name: "Time zone", exact: true })
         .selectOption("America/Los_Angeles");
       if (value.start) await fillOccurrenceStart(dialog, value.start);
       if (value.end) await fillOccurrenceEnd(dialog, value.end);
       await setDateDescription(dialog, value.label);
-      await expect(
-        dialog.getByRole("combobox", { name: "Date type", exact: true }),
-      ).toHaveValue(value.precision);
+      await expectOccurrencePrecision(dialog, value.precision);
       await expect(
         dialog.getByRole("textbox", { name: "Title", exact: true }),
       ).toHaveValue("Try skiing");
-      if (value.precision === "age") {
+      if (value.precision === "approximate") {
         const achieveButton = dialog.getByRole("button", {
           name: "Mark done and add First Time",
           exact: true,
