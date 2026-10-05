@@ -164,7 +164,9 @@ test("Timeline shows Homes, Vehicles, and milestones in fixed lanes", async ({
   for (const period of [ongoingPeriod, vehiclePeriod]) {
     const appearance = await period.evaluate((element) => {
       const card = element.getBoundingClientRect();
-      const label = element.querySelector("span")!.getBoundingClientRect();
+      const label = element
+        .querySelector("span:last-child")!
+        .getBoundingClientRect();
       return {
         centerOffset: Math.abs(
           card.top + card.height / 2 - (label.top + label.height / 2),
@@ -177,21 +179,40 @@ test("Timeline shows Homes, Vehicles, and milestones in fixed lanes", async ({
     expect(appearance.indicatorContent).toBe("none");
     expect(appearance.textDecoration).toBe("none");
   }
+  // A Period too short for its title draws its bar alone and puts the title beside it.
+  await expect(ongoingPeriod).toHaveAttribute("data-label", "after");
+  await expect(vehiclePeriod).toHaveAttribute("data-label", "inside");
   const ongoingGeometry = await ongoingPeriod.evaluate((element) => {
-    const card = element.getBoundingClientRect();
+    const bar = element.querySelector("span:first-child")!;
+    const card = bar.getBoundingClientRect();
+    const label = element
+      .querySelector("span:last-child")!
+      .getBoundingClientRect();
     const line = document
       .querySelector('[data-testid="timeline-today"]')!
       .getBoundingClientRect();
     return {
       cardRight: card.right,
+      labelLeft: label.left,
       lineLeft: line.left,
-      rightBorderRadius: window.getComputedStyle(element).borderTopRightRadius,
+      rightBorderRadius: window.getComputedStyle(bar).borderTopRightRadius,
     };
   });
+  expect(ongoingGeometry.labelLeft).toBeGreaterThan(ongoingGeometry.cardRight);
   expect(
     Math.abs(ongoingGeometry.cardRight - ongoingGeometry.lineLeft),
   ).toBeLessThan(1);
   expect(ongoingGeometry.rightBorderRadius).toBe("0px");
+  // Every title shows in full.
+  const truncated = await timeline
+    .getByTestId("timeline-viewport")
+    .locator("a > span:last-child")
+    .evaluateAll((labels) =>
+      labels
+        .filter((label) => label.scrollWidth > label.clientWidth)
+        .map((label) => label.textContent),
+    );
+  expect(truncated).toEqual([]);
   // Periods in one lane that do not overlap share a row.
   const university = timeline.getByRole("link", { name: /University/ });
   const rows = await Promise.all(

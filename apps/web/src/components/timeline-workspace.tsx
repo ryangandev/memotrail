@@ -6,7 +6,15 @@ import { notify } from "@/components/app-toast";
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useMemo, useState, type CSSProperties, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+  type RefObject,
+} from "react";
 import { useRouter } from "next/navigation";
 import { saveBirthDate } from "@/app/settings/actions";
 import { Icon } from "@/components/icon";
@@ -17,7 +25,10 @@ import { StickyYear } from "@/components/timeline/sticky-year";
 import { VerticalSpine } from "@/components/timeline/vertical-spine";
 import type { Milestone, MilestoneLane } from "@/lib/data/milestone";
 import type { TimelineLaneGroup } from "@/lib/data/timeline";
-import { createTimelineLayout } from "@/lib/data/timeline-layout";
+import {
+  createTimelineLayout,
+  estimateLabelWidth,
+} from "@/lib/data/timeline-layout";
 import {
   createTimelineDisplayModel,
   timelineEntryDateLabel,
@@ -55,8 +66,10 @@ type EditorSelection =
 type CreationType = "milestone" | "first-time" | "home" | "vehicle";
 
 type PositionedStyle = CSSProperties & {
+  "--item-bar-width": string;
+  "--item-label-width": string;
   "--item-left": string;
-  "--item-period-label-offset": string;
+  "--item-offset": string;
   "--item-row": number;
   "--item-width": string;
 };
@@ -93,13 +106,23 @@ export function TimelineWorkspace({
     birthDateAvailable && serverBirthDate === null && loadError === null,
   );
   const items = useMemo(() => lanes.flatMap((lane) => lane.items), [lanes]);
+  const labelProbe = useRef<HTMLSpanElement>(null);
+  const measureLabel = useLabelMeasure(labelProbe);
   const displayModel = useMemo(
     () => createTimelineDisplayModel(lanes),
     [lanes],
   );
   const layout = useMemo(
-    () => createTimelineLayout(items, new Date(referenceDate), birthDate),
-    [birthDate, items, referenceDate],
+    () =>
+      createTimelineLayout(
+        items.map((item) => ({
+          ...item,
+          labelWidthPixels: measureLabel(item.title),
+        })),
+        new Date(referenceDate),
+        birthDate,
+      ),
+    [birthDate, items, measureLabel, referenceDate],
   );
   const positions = useMemo(
     () => new Map(layout.positions.map((position) => [position.id, position])),
@@ -269,6 +292,11 @@ export function TimelineWorkspace({
                   aria-hidden="true"
                   className={styles.todayLine}
                   data-testid="timeline-today"
+                />
+                <span
+                  aria-hidden="true"
+                  className={styles.labelProbe}
+                  ref={labelProbe}
                 />
               </div>
             </div>
@@ -606,10 +634,12 @@ function LaneRow({
           }
 
           const itemStyle: PositionedStyle = {
+            "--item-bar-width": `${position.barWidthPixels}px`,
+            "--item-label-width": `${position.labelWidthPixels}px`,
             "--item-left": `${position.leftPercent}%`,
-            "--item-period-label-offset": `${position.periodLabelOffsetPixels}px`,
+            "--item-offset": `${position.offsetPixels}px`,
             "--item-row": position.row,
-            "--item-width": `${position.widthPercent}%`,
+            "--item-width": `${position.widthPixels}px`,
           };
           const dateLabel = timelineEntryDateLabel(entry);
 
@@ -619,11 +649,7 @@ function LaneRow({
               className={
                 entry.shape === "period" ? styles.periodItem : styles.momentItem
               }
-              data-edge={
-                entry.shape === "moment" && position.leftPercent > 90
-                  ? "end"
-                  : undefined
-              }
+              data-label={position.labelPlacement}
               data-ongoing={
                 entry.shape === "period" && entry.occurredEnd === null
                   ? "true"
@@ -636,7 +662,9 @@ function LaneRow({
             >
               {entry.shape === "moment" ? (
                 <span className={styles.momentDot} />
-              ) : null}
+              ) : position.labelPlacement === "inside" ? null : (
+                <span className={styles.periodBar} />
+              )}
               <span>{entry.title}</span>
             </Link>
           );
@@ -649,6 +677,42 @@ function LaneRow({
       </div>
     </>
   );
+}
+
+// Measures titles in the lane item font once it has loaded, so the layout knows which
+// fit inside their Period. The server and first render estimate, which keeps hydration
+// stable.
+function useLabelMeasure(probe: RefObject<HTMLSpanElement | null>) {
+  const [measure, setMeasure] = useState<(text: string) => number>(
+    () => estimateLabelWidth,
+  );
+
+  useEffect(() => {
+    let active = true;
+
+    void document.fonts.ready.then(() => {
+      const element = probe.current;
+      const context = document.createElement("canvas").getContext("2d");
+      if (!active || !element || !context) return;
+      const style = getComputedStyle(element);
+      context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      const widths = new Map<string, number>();
+      setMeasure(() => (text: string) => {
+        let width = widths.get(text);
+        if (width === undefined) {
+          width = Math.ceil(context.measureText(text).width);
+          widths.set(text, width);
+        }
+        return width;
+      });
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [probe]);
+
+  return measure;
 }
 
 function addLabel(lane: TimelineLaneGroup) {

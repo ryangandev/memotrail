@@ -1,19 +1,28 @@
 export type TimelineLayoutSource = {
   id: string;
+  // The title's rendered width at the lane item font.
+  labelWidthPixels: number;
   lane: string;
   occurredEnd: string | null;
   occurredStart: string | null;
   shape: "moment" | "period";
 };
 
-// Overlapping items in one lane stack on separate rows.
+// Where a title sits: inside a Period wide enough to hold it, or beside a Moment's dot or a
+// short Period's bar, before it only when it would run past the end of the Timeline.
+export type TimelineLabelPlacement = "after" | "before" | "inside";
+
+// Overlapping items in one lane stack on separate rows. An item is drawn from its anchor at
+// leftPercent, shifted by offsetPixels, and is widthPixels wide including any outside label.
 export type TimelinePosition = {
+  barWidthPixels: number;
   id: string;
+  labelPlacement: TimelineLabelPlacement;
+  labelWidthPixels: number;
   leftPercent: number;
+  offsetPixels: number;
   row: number;
-  periodLabelOffsetPixels: number;
   widthPixels: number;
-  widthPercent: number;
 };
 
 export type TimelineYearMarker = {
@@ -35,10 +44,17 @@ export type TimelineLayout = {
 const minimumRangeMilliseconds = 365 * 24 * 60 * 60 * 1_000;
 const minimumCanvasWidthPixels = 840;
 const yearWidthPixels = 112;
-const minimumPeriodWidthPixels = 54;
-const momentWidthPixels = 126;
-const momentLeadingOffsetPixels = 6;
-const endAlignedMomentThresholdPercent = 90;
+// A Period's title sits inside when the bar holds it with its padding and borders.
+const periodLabelInsetPixels = 22;
+const minimumPeriodBarPixels = 10;
+const momentDotPixels = 12;
+const outsideLabelGapPixels = 7;
+// Longer titles beside a dot or bar end in an ellipsis and show in full on hover.
+const maximumOutsideLabelPixels = 180;
+
+export function estimateLabelWidth(text: string) {
+  return Math.ceil(text.length * 6.2);
+}
 
 export function createTimelineLayout(
   items: TimelineLayoutSource[],
@@ -116,50 +132,66 @@ export function createTimelineLayout(
   const rowCountByLane: Record<string, number> = {};
   const renderedItems = normalized.map((item) => {
     const leftPercent = clamp(((item.start - earliest) / range) * 100);
-    const widthPercent =
+    const anchor = (leftPercent / 100) * canvasWidth;
+    const spanPixels =
       item.shape === "moment"
         ? 0
-        : clamp(((item.end - item.start) / range) * 100);
-    const anchor = (leftPercent / 100) * canvasWidth;
-    const widthPixels = (widthPercent / 100) * canvasWidth;
-    const periodLabelOffsetPixels =
-      item.shape === "period" && item.occurredEnd === null
-        ? Math.min(0, widthPixels - minimumPeriodWidthPixels)
-        : 0;
+        : (clamp(((item.end - item.start) / range) * 100) / 100) * canvasWidth;
+
+    if (
+      item.shape === "period" &&
+      spanPixels >= item.labelWidthPixels + periodLabelInsetPixels
+    ) {
+      return {
+        ...item,
+        barWidthPixels: spanPixels,
+        labelPlacement: "inside" as const,
+        labelWidthPixels: item.labelWidthPixels,
+        leftPercent,
+        offsetPixels: 0,
+        visualEnd: anchor + spanPixels,
+        visualStart: anchor,
+        widthPixels: spanPixels,
+      };
+    }
+
+    // A Moment's dot centers on its date. A short Period's bar covers its dates, and an
+    // ongoing one still ends at today.
+    const barWidthPixels =
+      item.shape === "moment"
+        ? momentDotPixels
+        : Math.max(spanPixels, minimumPeriodBarPixels);
+    const barStart =
+      item.shape === "moment"
+        ? anchor - momentDotPixels / 2
+        : item.occurredEnd === null
+          ? anchor + spanPixels - barWidthPixels
+          : anchor;
+    const barEnd = barStart + barWidthPixels;
+    const labelWidthPixels = Math.min(
+      item.labelWidthPixels,
+      maximumOutsideLabelPixels,
+    );
+    const outsideWidth = outsideLabelGapPixels + labelWidthPixels;
+    const labelPlacement =
+      barEnd + outsideWidth <= canvasWidth
+        ? ("after" as const)
+        : ("before" as const);
     const visualStart =
-      item.shape === "moment"
-        ? Math.max(
-            0,
-            anchor -
-              (leftPercent > endAlignedMomentThresholdPercent
-                ? momentWidthPixels - momentLeadingOffsetPixels
-                : momentLeadingOffsetPixels),
-          )
-        : anchor + periodLabelOffsetPixels;
+      labelPlacement === "after" ? barStart : barStart - outsideWidth;
     const visualEnd =
-      item.shape === "moment"
-        ? Math.min(
-            canvasWidth,
-            anchor +
-              (leftPercent > endAlignedMomentThresholdPercent
-                ? momentLeadingOffsetPixels
-                : momentWidthPixels - momentLeadingOffsetPixels),
-          )
-        : Math.min(
-            canvasWidth,
-            anchor +
-              periodLabelOffsetPixels +
-              Math.max(widthPixels, minimumPeriodWidthPixels),
-          );
+      labelPlacement === "after" ? barEnd + outsideWidth : barEnd;
 
     return {
       ...item,
+      barWidthPixels,
+      labelPlacement,
+      labelWidthPixels,
       leftPercent,
-      periodLabelOffsetPixels,
+      offsetPixels: visualStart - anchor,
       visualEnd,
       visualStart,
-      widthPixels,
-      widthPercent,
+      widthPixels: visualEnd - visualStart,
     };
   });
   const itemsByLane = new Map<string, typeof renderedItems>();
@@ -189,12 +221,14 @@ export function createTimelineLayout(
 
       rowEnds[row] = item.visualEnd;
       positions.push({
+        barWidthPixels: item.barWidthPixels,
         id: item.id,
+        labelPlacement: item.labelPlacement,
+        labelWidthPixels: item.labelWidthPixels,
         leftPercent: item.leftPercent,
+        offsetPixels: item.offsetPixels,
         row,
-        periodLabelOffsetPixels: item.periodLabelOffsetPixels,
         widthPixels: item.widthPixels,
-        widthPercent: item.widthPercent,
       });
     }
 

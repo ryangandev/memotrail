@@ -159,7 +159,10 @@ Pair it with the test file carrying the same feature name.
 - Timeline date-only, partial, and uncertain editors do not surface a timezone control, but they preserve the stored timezone needed for stable calendar interpretation.
 - Timeline, search, Home, and specialized editors must use the same occurrence semantics.
 - A private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings.
-- Web Timeline lanes use each item's rendered pixel bounds, including minimum Period and Moment-label widths, so non-overlapping items share a row without allowing visible cards to collide. A dashed Today line uses the same reference instant as open Periods; short ongoing labels end against it with a flat right edge.
+- Web Timeline lanes use each item's rendered pixel bounds, including titles beside a dot or bar, so non-overlapping items share a row without allowing visible items to collide.
+  `TimelineWorkspace` measures titles in the lane item font once fonts load, estimating on the server and first render, and `createTimelineLayout` puts a title inside a Period only when the bar holds it.
+  A shorter Period draws its bar alone with the title after it, or before it at the end of the Timeline, like a Moment; titles beside an item mask the year and Today lines and end in an ellipsis only past 180 pixels.
+  A dashed Today line uses the same reference instant as open Periods, whose bars end against it with a flat right edge.
 - Every Timeline item is a link to its Item page through `wikiEntryHref`. Creation routes by what is added, not by lane: a milestone or First Time opens `NewEntryDialog` from `components/entry-editor-dialog.tsx` with the milestone preset, and a Home or Vehicle reuses the exported Records editor in a lazy-loaded modal.
 - `components/milestone-fields.tsx` is the Entry editor's Timeline fieldset; turning a Period back into a Moment clears its end date.
 - Timeline server data loads the lanes, the profile's time zone and birth date, and tag choices in parallel.

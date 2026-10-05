@@ -11,6 +11,7 @@ function source(
 ): TimelineLayoutSource {
   return {
     id: "moment-1",
+    labelWidthPixels: 80,
     shape: "moment",
     occurredEnd: null,
     occurredStart: "2020-01-01T12:00:00.000Z",
@@ -67,7 +68,8 @@ describe("createTimelineLayout", () => {
 
     expect(position?.leftPercent).toBeGreaterThan(0);
     expect(position?.leftPercent).toBeLessThan(100);
-    expect(position?.widthPercent).toBe(0);
+    expect(position?.barWidthPixels).toBe(12);
+    expect(position?.labelPlacement).toBe("after");
   });
 
   it("extends an open period to the reference date", () => {
@@ -82,7 +84,10 @@ describe("createTimelineLayout", () => {
       reference,
     );
 
-    expect(layout.positions[0]?.widthPercent).toBeGreaterThan(50);
+    expect(layout.positions[0]?.widthPixels).toBeGreaterThan(
+      layout.canvasWidth / 2,
+    );
+    expect(layout.positions[0]?.labelPlacement).toBe("inside");
   });
 
   it("stacks overlapping periods on different rows", () => {
@@ -135,6 +140,7 @@ describe("createTimelineLayout", () => {
       [
         source({
           id: "walmart",
+          labelWidthPixels: 44,
           shape: "period",
           occurredEnd: "2026-01-31T00:00:00.000Z",
           occurredStart: "2025-05-19T00:00:00.000Z",
@@ -142,6 +148,7 @@ describe("createTimelineLayout", () => {
         }),
         source({
           id: "adobe",
+          labelWidthPixels: 34,
           shape: "period",
           occurredStart: "2026-04-13T00:00:00.000Z",
           lane: "work_study",
@@ -175,17 +182,19 @@ describe("createTimelineLayout", () => {
     expect(layout.rowCountByLane.other).toBe(2);
   });
 
-  it("aligns short ongoing period labels to their shared present endpoint", () => {
+  it("aligns short ongoing period bars to their shared present endpoint", () => {
     const layout = createTimelineLayout(
       [
         source({
           id: "adobe",
+          labelWidthPixels: 30,
           shape: "period",
           occurredStart: "2026-04-13T00:00:00.000Z",
           lane: "work_study",
         }),
         source({
           id: "evergreen",
+          labelWidthPixels: 30,
           shape: "period",
           occurredStart: "2026-09-01T00:00:00.000Z",
           lane: "homes",
@@ -197,13 +206,101 @@ describe("createTimelineLayout", () => {
     const rightEdges = layout.positions.map(
       (position) =>
         (position.leftPercent / 100) * layout.canvasWidth +
-        position.periodLabelOffsetPixels +
-        Math.max(position.widthPixels, 54),
+        position.offsetPixels +
+        position.barWidthPixels,
     );
     const today = (layout.todayPercent / 100) * layout.canvasWidth;
 
+    expect(layout.positions.map((position) => position.labelPlacement)).toEqual(
+      ["after", "after"],
+    );
+
     expect(rightEdges[0]).toBeCloseTo(rightEdges[1]!, 5);
     expect(rightEdges[0]).toBeCloseTo(today, 5);
+  });
+
+  it("puts a title beside a Period too short to hold it, never cut off", () => {
+    const layout = createTimelineLayout(
+      [
+        source({
+          id: "ended",
+          labelWidthPixels: 64,
+          shape: "period",
+          occurredEnd: "2010-06-01T00:00:00.000Z",
+          occurredStart: "2010-01-01T00:00:00.000Z",
+        }),
+        source({
+          id: "ongoing",
+          labelWidthPixels: 40,
+          shape: "period",
+          occurredStart: "2026-04-13T00:00:00.000Z",
+          lane: "work_study",
+        }),
+        source({
+          id: "wide",
+          labelWidthPixels: 64,
+          shape: "period",
+          occurredEnd: "2020-01-01T00:00:00.000Z",
+          occurredStart: "2012-01-01T00:00:00.000Z",
+          lane: "homes",
+        }),
+      ],
+      reference,
+      "2000-05-16",
+    );
+    const [ended, ongoing, wide] = ["ended", "ongoing", "wide"].map((id) =>
+      layout.positions.find((position) => position.id === id),
+    );
+
+    expect(ended?.labelPlacement).toBe("after");
+    expect(ended?.offsetPixels).toBe(0);
+    expect(ended?.labelWidthPixels).toBe(64);
+    expect(ended?.widthPixels).toBeCloseTo(ended!.barWidthPixels + 7 + 64, 5);
+    // An ongoing bar still ends at today, with its title after the Today line.
+    expect(ongoing?.labelPlacement).toBe("after");
+    expect(ongoing?.offsetPixels).toBeLessThanOrEqual(0);
+    expect(wide?.labelPlacement).toBe("inside");
+    expect(wide?.offsetPixels).toBe(0);
+  });
+
+  it("keeps a short Period's bar visible and caps a long title beside it", () => {
+    const layout = createTimelineLayout(
+      [
+        source({
+          id: "week",
+          labelWidthPixels: 400,
+          shape: "period",
+          occurredEnd: "2010-01-08T00:00:00.000Z",
+          occurredStart: "2010-01-01T00:00:00.000Z",
+        }),
+      ],
+      reference,
+      "2000-05-16",
+    );
+
+    expect(layout.positions[0]?.barWidthPixels).toBe(10);
+    expect(layout.positions[0]?.labelWidthPixels).toBe(180);
+  });
+
+  it("puts a Moment's title before its dot only when it would pass the end", () => {
+    const layout = createTimelineLayout(
+      [
+        source({ id: "early", occurredStart: "2010-01-01T00:00:00.000Z" }),
+        source({
+          id: "late",
+          lane: "work_study",
+          occurredStart: "2026-08-01T00:00:00.000Z",
+        }),
+      ],
+      reference,
+      "2000-05-16",
+    );
+    const [early, late] = layout.positions;
+
+    expect(early?.labelPlacement).toBe("after");
+    expect(early?.offsetPixels).toBe(-6);
+    expect(late?.labelPlacement).toBe("before");
+    expect(late?.offsetPixels).toBe(-(7 + 80 + 6));
   });
 
   it("stacks rows independently in each lane", () => {

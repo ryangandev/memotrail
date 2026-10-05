@@ -225,15 +225,16 @@
 }
 
 .laneCanvas {
-  position: relative;
-  min-height: 70px;
-  overflow: hidden;
-  border-bottom: 1px solid var(--mt-color-border);
-  background: color-mix(
+  --timeline-lane-surface: color-mix(
     in srgb,
     var(--mt-color-surface-raised) 94%,
     var(--mt-color-accent-subtle)
   );
+  position: relative;
+  min-height: 70px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--mt-color-border);
+  background: var(--timeline-lane-surface);
 }
 
 .yearLine {
@@ -259,62 +260,71 @@
   cursor: pointer;
 }
 
-.periodItem {
+.periodItem,
+.momentItem {
   display: flex;
-  width: max(54px, var(--item-width));
-  max-width: calc(100% - var(--item-left));
+  width: var(--item-width);
   align-items: center;
-  transform: translateX(var(--item-period-label-offset));
-  padding: 0 10px;
-  border: 1px solid color-mix(in srgb, var(--mt-color-accent) 42%, transparent);
-  border-radius: var(--mt-radius-small);
-  background: var(--mt-color-accent-subtle);
+  gap: 7px;
+  transform: translateX(var(--item-offset));
+  padding: 0;
+  background: transparent;
   white-space: nowrap;
 }
 
-.periodItem[data-ongoing="true"] {
+/* With no room after it, a title sits before its dot or bar. */
+.periodItem[data-label="before"],
+.momentItem[data-label="before"] {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.periodItem > span:last-child,
+.momentItem > span:last-child {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A title beside its dot or bar reads over the year and Today lines. */
+.periodItem:not([data-label="inside"]) > span:last-child,
+.momentItem > span:last-child {
+  background: var(--timeline-lane-surface);
+}
+
+/* A Period wide enough for its title draws the bar itself, with the title inside. */
+.periodItem[data-label="inside"],
+.periodBar {
+  border: 1px solid color-mix(in srgb, var(--mt-color-accent) 42%, transparent);
+  border-radius: var(--mt-radius-small);
+  background: var(--mt-color-accent-subtle);
+}
+
+.periodItem[data-label="inside"] {
+  padding: 0 10px;
+}
+
+.periodBar {
+  width: var(--item-bar-width);
+  height: 100%;
+  flex: none;
+}
+
+.periodItem[data-label="inside"][data-ongoing="true"],
+.periodItem[data-ongoing="true"] .periodBar {
   border-right: 2px solid var(--mt-color-accent);
   border-radius: var(--mt-radius-small) 0 0 var(--mt-radius-small);
 }
 
-.periodItem > span {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.periodItem:hover {
+.periodItem[data-label="inside"]:hover,
+.periodItem:hover .periodBar {
   border-color: var(--mt-color-accent);
   background: color-mix(
     in srgb,
     var(--mt-color-accent-subtle) 72%,
     var(--mt-color-accent)
   );
-}
-
-.momentItem {
-  display: flex;
-  width: 126px;
-  align-items: center;
-  gap: 7px;
-  padding: 0;
-  transform: translateX(-6px);
-  overflow: hidden;
-  background: transparent;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.momentItem[data-edge="end"] {
-  flex-direction: row-reverse;
-  transform: translateX(calc(-100% + 6px));
-  text-align: right;
-}
-
-.momentItem > span:last-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .momentDot {
@@ -327,8 +337,18 @@
   box-shadow: 0 0 0 1px var(--mt-color-warm);
 }
 
+.periodItem:not([data-label="inside"]):hover,
 .momentItem:hover {
   color: var(--mt-color-accent);
+}
+
+/* Carries the lane item font so titles can be measured before layout. */
+.labelProbe {
+  position: absolute;
+  visibility: hidden;
+  font-size: 11px;
+  font-weight: var(--mt-font-weight-medium);
+  pointer-events: none;
 }
 
 .emptyLane {
