@@ -313,6 +313,9 @@ Pair it with the test file carrying the same feature name.
   Web `SyncStatus` in the workspace header counts waiting and refused captures separately; selecting it retries now and opens a compact Dialog with the same `PendingCaptureList` both composers render.
   A refused capture is announced with an error toast, and `PendingCaptureList` and native `PendingCaptureRow` give it Copy text and a confirmed Discard; Retry now appears only while a capture is still waiting.
 - Web `components/entry-editor-dialog.tsx` is the ordinary Entry editor on the Item page, with Cancel and Save changes, and its `NewEntryDialog` adds a milestone Entry from Timeline and First Times.
+  It edits photos through `EntryPhotoField`: new photos upload after the Entry saves, and a saved photo moves to Trash at once after confirmation.
+  `EntryPhotoDates` reads camera dates and GPS from the Entry's saved photos.
+- The Web Item page loads its photos on the server with `lib/data/entry-photos.ts`, which also serves `/api/media/photos` for native, and `components/entry-photos.tsx` shows them read-only and pages through them in `PhotoPreviewDialog`.
   `/inbox` redirects to `/library?show=needs-organizing` and `/inbox?entry=` to `/items/[entry]` in `next.config.ts`.
   Native `Features/Inbox` still shows the retired list with `InboxCards.swift` and the dialog with `EntryReviewSheet.swift`, including its Save to Library footer, until native follows Web.
   Web captures from the bottom dock, and iOS from the Dashboard or New entry in the workspace header.

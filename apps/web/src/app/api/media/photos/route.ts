@@ -1,5 +1,5 @@
 import { authenticateAPI, APIError } from "@/lib/auth/api";
-import { displayImageURLs } from "@/lib/media/urls";
+import { loadEntryPhotos } from "@/lib/data/entry-photos";
 export const runtime = "nodejs";
 export async function POST(request: Request) {
   const headers = { "Cache-Control": "private, no-store" };
@@ -29,34 +29,9 @@ export async function POST(request: Request) {
         { error: "Entry unavailable" },
         { status: 404, headers },
       );
-    const { data, error } = await client
-      .from("attachments")
-      .select("id,original_filename,object_path")
-      .eq("entry_id", id)
-      .eq("owner_id", ownerID)
-      .eq("variant", "original")
-      .eq("bucket_id", "entry-media")
-      .is("deleted_at", null)
-      .order("created_at")
-      .order("id")
-      .limit(101);
-    if (error) throw Error();
-    const rows = (data ?? []).slice(0, 100);
-    const urls = await displayImageURLs(
-      client,
-      rows.map((v) => v.object_path),
-    );
-    return Response.json(
-      {
-        photos: rows.map((v) => ({
-          id: v.id,
-          name: v.original_filename ?? "Photo",
-          imageUrl: urls.get(v.object_path) ?? null,
-        })),
-        hasMore: (data ?? []).length > 100,
-      },
-      { headers },
-    );
+    const result = await loadEntryPhotos(client, ownerID, id);
+    if (!result) throw Error();
+    return Response.json(result, { headers });
   } catch (error) {
     return Response.json(
       { error: "Photos unavailable. Try again." },

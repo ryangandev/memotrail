@@ -6,7 +6,7 @@ import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
-test("Current Entry photos are browsable without changing the Entry", async ({
+test("An Item page shows its photos and pages through them without changing the Entry", async ({
   page,
   context,
 }) => {
@@ -116,12 +116,6 @@ test("Current Entry photos are browsable without changing the Entry", async ({
     );
     expect(native.status()).toBe(200);
     expect((await native.json()).photos).toHaveLength(2);
-    await page.goto(`/items/${entry}`);
-    const gallery = page.getByRole("region", {
-      name: "Current photos",
-      exact: true,
-    });
-    await expect(gallery).toBeVisible();
     let releaseImages: () => void = () => undefined;
     const imageGate = new Promise<void>((resolve) => {
       releaseImages = resolve;
@@ -130,14 +124,20 @@ test("Current Entry photos are browsable without changing the Entry", async ({
       await imageGate;
       await route.continue();
     });
-    await gallery
-      .getByRole("button", { name: "Show photos", exact: true })
-      .click();
+    await page.goto(`/items/${entry}`);
+    const gallery = page.getByRole("region", { name: "Photos", exact: true });
+    // Photos show with the page; there is no separate step to load them.
     const firstPhoto = gallery.getByRole("button", {
       name: "Open Photo 1.jpg",
       exact: true,
     });
     await expect(firstPhoto).toBeVisible();
+    await expect(
+      gallery.getByRole("button", { name: /^Open Photo/ }),
+    ).toHaveCount(2);
+    await expect(
+      gallery.getByRole("button", { name: /Show photos|Upload|Trash/ }),
+    ).toHaveCount(0);
     const progressiveImage = firstPhoto.locator("[data-image-status]");
     await expect(progressiveImage).toHaveAttribute(
       "data-image-status",
@@ -145,6 +145,7 @@ test("Current Entry photos are browsable without changing the Entry", async ({
     );
     await expect(progressiveImage).toHaveAttribute("aria-busy", "true");
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       fullPage: true,
       path: "/private/tmp/memotrail-image-loading.png",
@@ -156,10 +157,14 @@ test("Current Entry photos are browsable without changing the Entry", async ({
     );
     await expect(progressiveImage).toHaveAttribute("aria-busy", "false");
     await page.unroute("**/api/media/image?*");
-    await gallery
-      .getByRole("button", { name: "Open Photo 1.jpg", exact: true })
-      .click();
-    const viewer = page.getByRole("dialog", { name: "Photo viewer" });
+    await page.screenshot({
+      animations: "disabled",
+      caret: "initial",
+      fullPage: true,
+      path: "/private/tmp/memotrail-item-photos-desktop-light.png",
+    });
+    await firstPhoto.click();
+    const viewer = page.getByRole("dialog", { name: "Photo 1.jpg" });
     await expect(viewer).toBeVisible();
     await expect(viewer.getByRole("img")).toHaveCSS("object-fit", "contain");
     await expect
@@ -171,55 +176,50 @@ test("Current Entry photos are browsable without changing the Entry", async ({
       .toBeGreaterThan(0);
     await expect(viewer).toContainText("1 of 2");
     await expect(
-      viewer.getByRole("button", { name: "Previous photo", exact: true }),
+      viewer.getByRole("button", { name: "Previous", exact: true }),
     ).toBeDisabled();
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       path: "/private/tmp/memotrail-gallery-desktop-light.png",
     });
-    await viewer
-      .getByRole("button", { name: "Next photo", exact: true })
-      .click();
-    await expect(viewer.getByRole("img")).toHaveAttribute("alt", "Photo 2.jpg");
+    await viewer.getByRole("button", { name: "Next", exact: true }).click();
+    const secondViewer = page.getByRole("dialog", { name: "Photo 2.jpg" });
+    await expect(secondViewer.getByRole("img")).toHaveAttribute(
+      "alt",
+      "Photo 2.jpg",
+    );
     await expect(
-      viewer.getByRole("button", { name: "Next photo", exact: true }),
+      secondViewer.getByRole("button", { name: "Next", exact: true }),
     ).toBeDisabled();
+    await page.keyboard.press("ArrowLeft");
+    await expect(viewer).toContainText("1 of 2");
+    await page.keyboard.press("ArrowRight");
+    await expect(secondViewer).toContainText("2 of 2");
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       path: "/private/tmp/memotrail-gallery-mobile-dark.png",
     });
     await page.keyboard.press("Escape");
-    await expect(viewer).toHaveCount(0);
-    await expect(
-      gallery.getByRole("button", { name: "Open Photo 1.jpg", exact: true }),
-    ).toBeFocused();
-    await page.route("**/api/media/photos?*", (route) =>
-      route.fulfill({ status: 503, json: { error: "Unavailable" } }),
-    );
-    await gallery
-      .getByRole("button", { name: "Refresh photos", exact: true })
-      .click();
-    await expect(gallery.getByRole("alert")).toContainText(
-      "Could not load photos",
-    );
-    await expect(
-      gallery.getByRole("button", { name: /^Open Photo/ }),
-    ).toHaveCount(0);
-    await page.unroute("**/api/media/photos?*");
-    await gallery
-      .getByRole("button", { name: "Show photos", exact: true })
-      .click();
-    await expect(
-      gallery.getByRole("button", { name: /^Open Photo/ }),
-    ).toHaveCount(2);
+    await expect(secondViewer).toHaveCount(0);
+    await page.screenshot({
+      animations: "disabled",
+      caret: "initial",
+      fullPage: true,
+      path: "/private/tmp/memotrail-item-photos-mobile-dark.png",
+    });
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.emulateMedia({ colorScheme: "light" });
     expect(
       (await client.from("entries").select("*").eq("id", entry).single()).data,
     ).toEqual(before);
     await page.route("**/api/media/image?*", (route) =>
       route.fulfill({ status: 404 }),
     );
+    await page.reload();
     await gallery
       .getByRole("button", { name: "Open Photo 1.jpg", exact: true })
       .click();
@@ -233,9 +233,7 @@ test("Current Entry photos are browsable without changing the Entry", async ({
         })
       ).error,
     ).toBeNull();
-    await gallery
-      .getByRole("button", { name: "Refresh photos", exact: true })
-      .click();
+    await page.reload();
     await expect(
       gallery.getByRole("button", { name: /^Open Photo/ }),
     ).toHaveCount(1);
@@ -258,9 +256,7 @@ test("Current Entry photos are browsable without changing the Entry", async ({
         })
       ).error,
     ).toBeNull();
-    await gallery
-      .getByRole("button", { name: "Refresh photos", exact: true })
-      .click();
+    await page.reload();
     await expect(
       gallery.getByRole("button", { name: /^Open Photo/ }),
     ).toHaveCount(2);

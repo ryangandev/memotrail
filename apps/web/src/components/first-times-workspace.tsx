@@ -33,11 +33,13 @@ export function FirstTimesWorkspace({
   defaultTimezone,
   entries,
   loadError,
+  ownerId,
   tagOptions,
 }: {
   defaultTimezone: string;
   entries: FirstTimeEntry[];
   loadError: string | null;
+  ownerId: string;
   tagOptions: string[];
 }) {
   const router = useRouter();
@@ -112,6 +114,7 @@ export function FirstTimesWorkspace({
         <NewEntryDialog
           milestone={{ isFirstTime: true, lane: "other", shape: "moment" }}
           onClose={() => setAdding(false)}
+          ownerId={ownerId}
           tagOptions={tagOptions}
           timezone={defaultTimezone}
         />

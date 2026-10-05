@@ -10,50 +10,42 @@ import type {
 } from "@/lib/media/photo-metadata";
 import styles from "./entry-photo-dates.module.css";
 
+// Reads a saved photo's camera date or GPS position on request. Nothing changes until
+// the editor is saved.
 export function EntryPhotoDates({
-  entryId,
   disabled,
   onUseDate,
   photoLocation,
   onPhotoLocationChange,
+  photos,
 }: {
-  entryId: string;
   disabled: boolean;
   onUseDate: (date: string) => void;
   photoLocation: PhotoLocationDraft | null;
   onPhotoLocationChange: (value: PhotoLocationDraft | null) => void;
+  photos: EntryPhoto[];
 }) {
-  const [photos, setPhotos] = useState<EntryPhoto[] | null>(null);
   const [metadata, setMetadata] = useState<
     Record<string, PhotoMetadataResponse>
   >({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  async function load(photo?: EntryPhoto) {
+  async function load(photo: EntryPhoto) {
     setBusy(true);
     setError(null);
     setNotice(null);
     try {
       const response = await fetch(
-        photo
-          ? `/api/media/metadata?attachmentId=${photo.id}`
-          : `/api/media/photos?entryId=${entryId}`,
+        `/api/media/metadata?attachmentId=${photo.id}`,
         { method: "POST" },
       );
       if (!response.ok)
         throw Error(
-          photo
-            ? "Photo metadata is unavailable. The original is unchanged."
-            : "Photos could not be loaded. Try again.",
+          "Photo metadata is unavailable. The original is unchanged.",
         );
       const data = await response.json();
-      if (photo) setMetadata((previous) => ({ ...previous, [photo.id]: data }));
-      else {
-        setPhotos(data.photos);
-        setMetadata({});
-        if (data.hasMore) setNotice("Showing the first 100 photos.");
-      }
+      setMetadata((previous) => ({ ...previous, [photo.id]: data }));
     } catch (error) {
       setError(error instanceof Error ? error.message : "Photos unavailable.");
     } finally {
@@ -62,29 +54,19 @@ export function EntryPhotoDates({
   }
   return (
     <section className={styles.panel} aria-label="Photo date suggestions">
-      <div className={styles.heading}>
-        <h3>Photos & camera dates</h3>
-        <Button
-          variant="secondary"
-          type="button"
-          disabled={busy || disabled}
-          onClick={() => void load()}
-        >
-          {busy ? "Loading…" : photos ? "Refresh photos" : "Show photos"}
-        </Button>
-      </div>
+      <h3>Camera dates</h3>
       <p>
-        Read the original photo&apos;s camera metadata. No AI, no automatic
-        changes.
+        Read a saved photo&apos;s camera date or GPS position. No AI, no
+        automatic changes.
       </p>
-      {photos?.length === 0 ? <p>No saved photos on this Entry.</p> : null}
-      {photos?.map((photo) => {
+      {photos.map((photo) => {
         const info = metadata[photo.id];
         return (
           <article className={styles.photo} key={photo.id}>
             {photo.imageUrl ? (
               <ProgressiveImage
                 alt={photo.name}
+                className={styles.thumbnail}
                 loading="lazy"
                 src={photo.imageUrl}
               />

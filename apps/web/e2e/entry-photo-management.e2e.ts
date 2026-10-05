@@ -6,7 +6,7 @@ import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
-test("Organized Entry photos can be staged, uploaded, trashed, and restored", async ({
+test("Entry photos are added, retried, and moved to Trash in the editor", async ({
   page,
   context,
 }) => {
@@ -69,61 +69,54 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
       .png()
       .toBuffer();
     await page.goto(`/items/${entry}`);
-    const gallery = page.getByRole("region", {
-      name: "Current photos",
+    const itemPhotos = page.getByRole("region", {
+      name: "Photos",
       exact: true,
     });
-    await gallery
-      .getByRole("button", { name: "Show photos", exact: true })
-      .click();
-    const picker = gallery.getByLabel("Add photos", { exact: true });
-    await expect(picker).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Organized photo memory",
+    );
+    await expect(itemPhotos).toHaveCount(0);
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
+    const editor = page.getByRole("dialog", { name: "Edit Entry" });
+    const field = editor.getByRole("group", { name: "Photos", exact: true });
+    const picker = field.getByLabel("Add photos", { exact: true });
     await picker.setInputFiles({
       name: "not-a-photo.txt",
       mimeType: "text/plain",
       buffer: Buffer.from("text"),
     });
-    await expect(gallery.getByRole("alert")).toContainText("Use JPEG");
-    await expect(
-      gallery.getByRole("button", { name: "Upload photos", exact: true }),
-    ).toHaveCount(0);
+    await expect(editor.getByRole("alert")).toContainText("Use JPEG");
     await picker.setInputFiles({
       name: "New memory.png",
       mimeType: "image/png",
       buffer: bytes,
     });
-    await gallery
-      .getByRole("button", { name: "Preview selected New memory.png" })
-      .click();
-    const pendingPreview = page.getByRole("dialog", { name: "New memory.png" });
-    await expect(pendingPreview).toBeVisible();
-    await pendingPreview
-      .getByRole("button", { name: "Close", exact: true })
-      .click();
-    await gallery
+    await expect(editor.getByRole("alert")).toHaveCount(0);
+    await field
       .getByRole("button", {
-        name: "Discard selected New memory.png",
+        name: "Remove selected New memory.png",
         exact: true,
       })
       .click();
+    await editor.getByRole("button", { name: "Cancel", exact: true }).click();
+    await expect(editor).toHaveCount(0);
     expect(
       (await client.from("attachments").select("id").eq("entry_id", entry))
         .data,
     ).toEqual([]);
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     await picker.setInputFiles({
       name: "New memory.png",
       mimeType: "image/png",
       buffer: bytes,
     });
     await page.screenshot({
-      caret: "initial",
-      path: "/private/tmp/memotrail-photo-management-desktop.png",
-      fullPage: true,
+      animations: "disabled",
+      caret: "hide",
+      path: "/private/tmp/memotrail-photo-management-editor-light.png",
     });
-    await gallery.screenshot({
-      caret: "initial",
-      path: "/private/tmp/memotrail-photo-management-panel-light.png",
-    });
+    // The first registration reaches the server but its answer is lost.
     let dropped = false;
     await page.route(`**/items/${entry}`, async (route) => {
       if (
@@ -136,68 +129,64 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
         await route.abort("failed");
       } else await route.continue();
     });
-    await gallery
-      .getByRole("button", { name: "Upload photos", exact: true })
+    await editor
+      .getByRole("button", { name: "Save changes", exact: true })
       .click();
     await expect.poll(() => dropped).toBe(true);
-    await expect(gallery.getByRole("alert")).toContainText("not confirmed");
-    await gallery
-      .getByRole("button", { name: "Upload photos", exact: true })
+    await expect(editor.getByRole("alert")).toContainText(
+      "The Entry was saved, but 1 photo could not be attached.",
+    );
+    await editor
+      .getByRole("button", { name: "Save changes", exact: true })
       .click();
+    await expect(editor).toHaveCount(0);
     await expect(
-      gallery.getByRole("button", { name: "Upload photos", exact: true }),
-    ).toHaveCount(0);
-    await expect(
-      gallery.getByRole("button", { name: "Open New memory.png", exact: true }),
+      itemPhotos.getByRole("button", {
+        name: "Open New memory.png",
+        exact: true,
+      }),
     ).toBeVisible();
-    const row = await client
+    const rows = await client
       .from("attachments")
       .select("id,object_path")
       .eq("entry_id", entry)
-      .eq("variant", "original")
-      .single();
-    expect(row.error).toBeNull();
-    const photo = row.data!;
-    expect(
-      (await client.from("entries").select("revision").eq("id", entry).single())
-        .data?.revision,
-    ).toBe(1);
-    await gallery
-      .getByRole("button", {
-        name: "Move New memory.png to Trash",
-        exact: true,
-      })
+      .eq("variant", "original");
+    expect(rows.error).toBeNull();
+    expect(rows.data).toHaveLength(1);
+    const photo = rows.data![0];
+    const revision = (
+      await client.from("entries").select("revision").eq("id", entry).single()
+    ).data?.revision;
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
+    await field
+      .getByRole("button", { name: "Remove New memory.png", exact: true })
       .click();
     await page
-      .getByRole("dialog", { name: "Move “New memory.png” to Trash?" })
+      .getByRole("dialog", { name: "Move this photo to Trash?" })
       .getByRole("button", { name: "Cancel", exact: true })
       .click();
     await expect(
-      gallery.getByRole("button", { name: "Open New memory.png", exact: true }),
+      field.getByRole("button", {
+        name: "Preview New memory.png",
+        exact: true,
+      }),
     ).toBeVisible();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
-      caret: "initial",
-      path: "/private/tmp/memotrail-photo-management-mobile.png",
-      fullPage: true,
+      animations: "disabled",
+      caret: "hide",
+      path: "/private/tmp/memotrail-photo-management-editor-mobile-dark.png",
     });
-    await gallery.screenshot({
-      caret: "initial",
-      path: "/private/tmp/memotrail-photo-management-panel-dark.png",
-    });
-    await gallery
-      .getByRole("button", {
-        name: "Move New memory.png to Trash",
-        exact: true,
-      })
+    await field
+      .getByRole("button", { name: "Remove New memory.png", exact: true })
       .click();
     await page
-      .getByRole("dialog", { name: "Move “New memory.png” to Trash?" })
+      .getByRole("dialog", { name: "Move this photo to Trash?" })
       .getByRole("button", { name: "Move photo to Trash", exact: true })
       .click();
     await expect(
-      gallery.getByRole("button", { name: "Open New memory.png", exact: true }),
+      field.getByRole("button", { name: "Preview New memory.png" }),
     ).toHaveCount(0);
     const removed = (
       await client
@@ -207,10 +196,13 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
         .single()
     ).data!;
     expect(removed.deleted_at).not.toBeNull();
+    // Photo changes leave the Entry's revision alone, so the open editor stays current.
     expect(
       (await client.from("entries").select("revision").eq("id", entry).single())
         .data?.revision,
-    ).toBe(1);
+    ).toBe(revision);
+    await editor.getByRole("button", { name: "Cancel", exact: true }).click();
+    await expect(itemPhotos).toHaveCount(0);
     const original = await admin.storage
       .from("entry-media")
       .download(photo.object_path);
@@ -225,16 +217,12 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
         })
       ).error,
     ).toBeNull();
-    await gallery
-      .getByRole("button", { name: "Refresh photos", exact: true })
-      .click();
-    // Photo changes leave the Entry's revision alone, so an open editor stays current.
-    expect(
-      (await client.from("entries").select("revision").eq("id", entry).single())
-        .data?.revision,
-    ).toBe(1);
+    await page.reload();
     await expect(
-      gallery.getByRole("button", { name: "Open New memory.png", exact: true }),
+      itemPhotos.getByRole("button", {
+        name: "Open New memory.png",
+        exact: true,
+      }),
     ).toBeVisible();
     expect(
       (
@@ -248,17 +236,43 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
       body: "Original thoughts",
       date_precision: "unknown",
     });
-    await page.reload();
-    await gallery
-      .getByRole("button", { name: "Show photos", exact: true })
+    await page.unroute(`**/items/${entry}`);
+
+    // A new Entry takes its photos when it is first saved.
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("/first-times");
+    await page
+      .getByRole("button", { name: "Add First Time", exact: true })
+      .first()
       .click();
-    await expect(
-      gallery.getByRole("button", { name: "Open New memory.png", exact: true }),
-    ).toBeVisible();
-    const retained = await admin.storage
-      .from("entry-media")
-      .download(photo.object_path);
-    expect(Buffer.from(await retained.data!.arrayBuffer())).toEqual(bytes);
+    const creator = page.getByRole("dialog", { name: "Add a First Time" });
+    await creator.getByRole("textbox", { name: "Title" }).fill("First kayak");
+    await creator
+      .getByRole("group", { name: "Photos", exact: true })
+      .getByLabel("Add photos", { exact: true })
+      .setInputFiles({
+        name: "Kayak.png",
+        mimeType: "image/png",
+        buffer: bytes,
+      });
+    await creator.getByRole("button", { name: "Add", exact: true }).click();
+    await expect(creator).toHaveCount(0);
+    const kayak = await client
+      .from("entries")
+      .select("id")
+      .eq("title", "First kayak")
+      .single();
+    expect(kayak.error).toBeNull();
+    expect(
+      (
+        await client
+          .from("attachments")
+          .select("original_filename")
+          .eq("entry_id", kayak.data!.id)
+          .eq("variant", "original")
+      ).data,
+    ).toEqual([{ original_filename: "Kayak.png" }]);
   } finally {
     await cleanupMediaFixture(admin, owner, env.API_URL);
   }

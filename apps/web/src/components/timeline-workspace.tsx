@@ -360,6 +360,7 @@ export function TimelineWorkspace({
         <NewEntryDialog
           milestone={selection.milestone}
           onClose={closeSelection}
+          ownerId={ownerId}
           tagOptions={tagOptions}
           timezone={defaultTimezone}
         />

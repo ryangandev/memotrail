@@ -209,9 +209,6 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
     await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await dialog
-      .getByRole("button", { name: "Show photos", exact: true })
-      .click();
-    await dialog
       .getByRole("button", { name: "Read camera date", exact: true })
       .click();
     await expect(
@@ -231,6 +228,7 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
     );
     expect(await snapshot()).toEqual(before);
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       path: "/private/tmp/memotrail-photo-dates-desktop.png",
       fullPage: true,
@@ -244,6 +242,7 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
       })
       .scrollIntoViewIfNeeded();
     await page.screenshot({
+      animations: "disabled",
       caret: "initial",
       path: "/private/tmp/memotrail-photo-dates-mobile.png",
       fullPage: true,
@@ -252,9 +251,6 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
     expect(await snapshot()).toEqual(before);
     await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     await expect(dialog.getByLabel("Date type")).toHaveValue("range");
-    await dialog
-      .getByRole("button", { name: "Show photos", exact: true })
-      .click();
     await dialog
       .getByRole("button", { name: "Read camera date", exact: true })
       .click();
@@ -296,9 +292,6 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
       await expect(dialog).not.toBeVisible();
       await page
         .getByRole("button", { name: "Edit Entry", exact: true })
-        .click();
-      await dialog
-        .getByRole("button", { name: "Show photos", exact: true })
         .click();
       await dialog
         .getByRole("button", { name: "Read camera date", exact: true })

@@ -8,20 +8,22 @@ import {
 } from "@/lib/data/goal-record-input";
 import { existingLocationFromRow } from "@/lib/locations/location";
 import { milestoneFromRow } from "@/lib/data/milestone";
+import { loadEntryPhotos } from "@/lib/data/entry-photos";
 
 export async function loadEditableEntry(id: string) {
   if (!validEntryID(id)) return null;
   const context = await getAuthenticatedContext();
   if (!context) return null;
-  const [{ data, error }, tags] = await Promise.all([
+  const [{ data, error }, tags, photos] = await Promise.all([
     context.client.rpc("editable_entry", { p_entry_id: id }),
     context.client
       .from("tags")
       .select("name")
       .eq("owner_id", context.userId)
       .order("name"),
+    loadEntryPhotos(context.client, context.userId, id),
   ]);
-  if (error || !data) return null;
+  if (error || !data || !photos) return null;
   return {
     entry: {
       ...entryFromRow(
@@ -31,6 +33,7 @@ export async function loadEditableEntry(id: string) {
       ),
       milestone: milestoneFromRow(data.milestone),
     },
+    photos: photos.photos,
     tagOptions: tags.error
       ? data.tag_names
       : (tags.data ?? []).map((tag) => tag.name),
