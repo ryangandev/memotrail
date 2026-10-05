@@ -190,6 +190,10 @@ for (const scenario of scenarios) {
         .click();
       await expect(editor).not.toBeVisible(slow);
       await expect(page.getByText(record.saved)).toBeVisible();
+      // The refreshed card shows both photos.
+      await expect(
+        page.locator("main").getByText("2 photos", { exact: true }),
+      ).toBeVisible();
 
       const entries = await client
         .from("entries")
