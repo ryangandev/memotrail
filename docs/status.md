@@ -30,7 +30,8 @@ Homes and Vehicles appear on Timeline in their own lanes, custom tracks are gone
 Migration `202610040009` converts existing Moments, Periods, First Times, and track placements into milestones and turns custom track names into tags.
 Native iOS still calls the retired Timeline and First Time functions until it follows Web.
 Migrations `202610040001` through `202610040009` were applied to the hosted project on 2026-10-05 after a schema and data backup, and `main` at `cf68cab` was deployed to Production.
-UI questions still held: Item page photos, date precision controls, the two export choices, and Timeline styles.
+Item page photos, the export page, and Timeline styles are settled: photos show on the Item page and are edited in the Entry editor, export is one Export everything action, and Timeline keeps only the lane view.
+The UI question still held is the date precision controls.
 Open `audit-2026-10` issues stay tracked in GitHub.
 
 ## Current state
