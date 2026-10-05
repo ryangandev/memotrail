@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { clickUnlessSynced } from "./helpers/capture-sync";
 import { test, expect } from "./helpers/workspace-test";
 
 // A capture MemoTrail will never accept is not an offline capture: it is kept
@@ -136,13 +137,21 @@ test("an unreachable MemoTrail still reports offline and retries beside a reject
   await expect(pending.getByRole("article").nth(1)).not.toContainText(
     "Discard",
   );
+  // MemoTrail is retried on its own while the browser is online, and only
+  // for the capture that is still waiting.
+  await expect
+    .poll(() => attempts.for("Waiting for MemoTrail"), { timeout: 10_000 })
+    .toBeGreaterThanOrEqual(2);
+  expect(attempts.for(rejectedPrefix)).toBe(1);
 
   await setMemoTrailReachable(page, true);
-  await pending.getByRole("button", { name: "Retry now", exact: true }).click();
+  await clickUnlessSynced(
+    pending.getByRole("button", { name: "Retry now", exact: true }),
+  );
   await expectEntryCount(workspace.client, "Waiting for MemoTrail", 1);
   await expect(pendingIndicator(page)).toHaveText("1 not accepted");
   await expect(composer).not.toContainText(offlineMessage);
-  expect(attempts.for("Waiting for MemoTrail")).toBe(2);
+  await page.waitForLoadState("networkidle");
   expect(attempts.for(rejectedPrefix)).toBe(1);
 });
 

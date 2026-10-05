@@ -35,6 +35,7 @@ import {
   type QueueStorage,
   type QueuedInboxEntry,
 } from "@/lib/data/inbox-queue";
+import { createCaptureSyncRetry } from "@/lib/data/inbox-sync-retry";
 import {
   createInboxSyncStore,
   type InboxSyncResult,
@@ -61,7 +62,7 @@ const workspaces = new Map<string, WorkspaceCapture>();
  * Owns the signed-in person's capture draft and pending captures for the
  * whole workspace. Every composer edits the same draft, which follows other
  * tabs, and pending captures sync on load, on reconnection, and when queued,
- * from any page.
+ * from any page, then keep retrying with backoff while the browser is online.
  */
 export function CaptureProvider({
   children,
@@ -75,9 +76,18 @@ export function CaptureProvider({
 
   useEffect(() => {
     const { draft, queue } = capture;
+    // Retries belong to this signed-in workspace, so they end with it and never
+    // send one person's captures under a later session.
+    const retry = createCaptureSyncRetry({
+      isOnline: () => navigator.onLine,
+      isSyncing: () => queue.getSnapshot().isSyncing,
+      retry: () => void queue.synchronize(),
+    });
     // The sync Server Actions revalidate, so this tab's page already shows
     // what it synced and needs no refresh of its own.
-    const stopWatchingRuns = queue.onRunFinished(({ rejected, result }) => {
+    const stopWatchingRuns = queue.onRunFinished((run) => {
+      retry.afterRun(run);
+      const { rejected, result } = run;
       if (result?.status === "synced") notify.success(result.message);
       // A rejected capture may come from a composer that is already closed.
       if (rejected > 0)
@@ -87,6 +97,9 @@ export function CaptureProvider({
     });
     function handleOnline() {
       void queue.synchronize();
+    }
+    function handleOffline() {
+      retry.stop();
     }
     function handleStorage(event: StorageEvent) {
       if (event.key === null || event.key === inboxDraftKey(ownerId))
@@ -118,6 +131,7 @@ export function CaptureProvider({
     );
 
     window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
     window.addEventListener("pageshow", handlePageShow);
     window.addEventListener("storage", handleStorage);
     void draft.loadPhotos();
@@ -125,9 +139,11 @@ export function CaptureProvider({
 
     return () => {
       stopWatchingRuns();
+      retry.stop();
       stopAnnouncingPhotos();
       photoChannel?.close();
       window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
       window.removeEventListener("pageshow", handlePageShow);
       window.removeEventListener("storage", handleStorage);
     };

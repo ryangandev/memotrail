@@ -63,6 +63,8 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - On Web, a voice capture in progress belongs to that draft too, and every open tab in a browser follows the same draft.
 - Offline captures remain visible and retryable until synchronization is confirmed.
 - Pending captures sync from any signed-in page once MemoTrail can be reached, whether or not a composer is open.
+- On Web, waiting captures keep retrying on their own while the browser reports a connection, less often the longer MemoTrail stays unreachable.
+  A connection that returns before it actually works, or a brief MemoTrail outage, therefore never leaves captures waiting until a reload.
 - A capture MemoTrail cannot accept, such as text with a character Postgres cannot store, is never reported as offline and never retried automatically.
   It stays in Pending sync on that device with its original content, marked Not accepted with a reason, and later captures still sync.
   Copy text keeps its title and note, and Discard asks for confirmation before removing it and its photos from the device.

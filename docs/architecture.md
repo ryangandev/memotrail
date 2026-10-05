@@ -213,6 +213,9 @@ Pair it with the test file carrying the same feature name.
 - Web `components/capture-provider.tsx` mounts once in the signed-in workspace and owns pending-capture sync through the framework-free store in `lib/data/inbox-sync.ts`.
   Composers enqueue captures and render its items, run problem, and photo progress, so synchronization never depends on a mounted composer.
 - The store syncs on load, on `online`, and after each new capture, with one run at a time per tab; a run sends the oldest capture first and stops at the first retryable failure.
+  While the browser reports online, the provider retries a run that left a capture waiting through `lib/data/inbox-sync-retry.ts`, backing off from 1 second to at most 1 minute and restarting after progress.
+  `online` can fire before requests get through, so a single attempt per event is not enough.
+  The retry belongs to the provider's lifetime, never the per-tab store, so it stops on `offline` and on sign-out and cannot send one person's queue under a later session.
 - Sync failures are classified by PostgREST and Postgres error code, never message text, in Web `lib/data/sync-failure.ts` and native `CaptureSyncFailure` in `Models/InboxEntry.swift`.
   Missing codes, connection and schema-cache errors, and retryable SQLSTATEs stay retryable; JWT errors ask the person to sign in again; `PGRST1xx`, `42501`, and SQLSTATE classes `22`, `23`, and `54` are refusals.
   `syncInboxEntry` and `registerEntryAttachment` in `app/inbox/actions.ts` return `rejected` for a refusal, and the client also refuses a photo that changed or has an invalid path on the device.

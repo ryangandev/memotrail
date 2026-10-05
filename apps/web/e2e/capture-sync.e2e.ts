@@ -1,5 +1,6 @@
 import type { BrowserContext, Page } from "@playwright/test";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { clickUnlessSynced } from "./helpers/capture-sync";
 import { test, expect } from "./helpers/workspace-test";
 
 // Pending captures belong to the signed-in workspace, not to whichever composer
@@ -53,6 +54,43 @@ test("a capture queued offline on the Dashboard syncs after moving to Library", 
   await reconnect(context, page);
   await expectEntryCount(workspace.client, "Offline on the Dashboard", 1);
   await expect(indicator).toHaveCount(0);
+});
+
+test("a capture keeps retrying while online until MemoTrail can be reached", async ({
+  page,
+  workspace,
+}) => {
+  test.setTimeout(120_000);
+  await page.goto("/library");
+  await page.waitForLoadState("networkidle");
+  const attempts = countCaptureSyncAttempts(page);
+
+  // The browser reports a connection throughout, so no online event will
+  // announce that MemoTrail is back.
+  await setMemoTrailReachable(page, false);
+  await page.getByRole("button", { name: "New entry", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "What’s on your mind?" });
+  await dialog
+    .getByRole("textbox", { name: "Entry text", exact: true })
+    .fill("Retried while online");
+  await dialog
+    .getByRole("button", { name: "Save to Library", exact: true })
+    .click();
+  await expect(
+    dialog.getByRole("heading", { name: "Pending sync", exact: true }),
+  ).toBeVisible();
+  await dialog.getByRole("button", { name: "Close quick capture" }).click();
+  await expect(pendingIndicator(page)).toHaveText("1 pending");
+  await expect
+    .poll(() => attempts.for("Retried while online"), { timeout: 10_000 })
+    .toBeGreaterThanOrEqual(2);
+
+  await setMemoTrailReachable(page, true);
+  await expectEntryCount(workspace.client, "Retried while online", 1);
+  await expect(pendingIndicator(page)).toHaveCount(0);
+  await expect(
+    page.getByText("Saved to Library.", { exact: true }),
+  ).toBeVisible();
 });
 
 test("a capture from a closed Quick Capture syncs when the connection returns", async ({
@@ -111,16 +149,18 @@ test("the header pending indicator syncs and lists captures waiting on this devi
   ).toBeVisible();
   await capture.getByRole("button", { name: "Close quick capture" }).click();
   await expect(capture).toBeHidden();
-  expect(attempts.for("Waiting for MemoTrail")).toBe(1);
 
   const indicator = page
     .locator("main > header")
     .getByRole("button", { name: "1 pending", exact: true });
   await expect(indicator).toHaveAttribute("aria-haspopup", "dialog");
+  const attemptsBeforeOpening = attempts.for("Waiting for MemoTrail");
   await indicator.click();
   const pending = page.getByRole("dialog", { name: "Pending sync" });
   await expect(pending).toBeVisible();
-  await expect.poll(() => attempts.for("Waiting for MemoTrail")).toBe(2);
+  await expect
+    .poll(() => attempts.for("Waiting for MemoTrail"))
+    .toBeGreaterThan(attemptsBeforeOpening);
   await expect(pending.getByRole("article")).toHaveCount(1);
   await expect(pending.getByRole("article")).toContainText(
     "Waiting for MemoTrail",
@@ -143,14 +183,13 @@ test("the header pending indicator syncs and lists captures waiting on this devi
   await expect(indicator).toBeFocused();
 
   await setMemoTrailReachable(page, true);
-  await indicator.click();
+  await clickUnlessSynced(indicator);
   await expectEntryCount(workspace.client, "Waiting for MemoTrail", 1);
   await expect(pending).toBeHidden();
   await expect(indicator).toHaveCount(0);
   await expect(
     page.getByText("Saved to Library.", { exact: true }),
   ).toBeVisible();
-  expect(attempts.for("Waiting for MemoTrail")).toBe(3);
 });
 
 test("the Dashboard composer and Quick Capture send each queued capture once", async ({
