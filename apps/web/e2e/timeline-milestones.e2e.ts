@@ -1,7 +1,10 @@
 import { randomUUID } from "node:crypto";
 import type { Page } from "@playwright/test";
 import { expect, test } from "./helpers/workspace-test";
-import { fillOccurrenceStart } from "./helpers/occurrence";
+import {
+  fillOccurrenceStart,
+  setOccurrencePrecision,
+} from "./helpers/occurrence";
 
 async function expectNoHorizontalScroll(page: Page) {
   expect(
@@ -295,21 +298,23 @@ test("Timeline shows Homes, Vehicles, and milestones in fixed lanes", async ({
   await expect(editor.getByRole("combobox", { name: "Lane" })).toHaveValue(
     "work_study",
   );
-  await editor.getByLabel("Date type").selectOption("exact");
+  await setOccurrencePrecision(editor, "exact");
   await expect(editor.getByRole("combobox", { name: "Time zone" })).toHaveValue(
     "America/New_York",
   );
   await expect(editor.getByText("Default from Settings")).toBeVisible();
-  // A Moment is one point in time, so it cannot be a date range.
+  // A Moment is one point in time, so it cannot have an end date.
   await editor.getByRole("button", { name: "Moment", exact: true }).click();
+  await setOccurrencePrecision(editor, "day");
+  for (const name of ["Add end date", "Present"])
+    await expect(
+      editor.getByRole("checkbox", { name, exact: true }),
+    ).toHaveCount(0);
   await expect(
-    editor
-      .getByRole("combobox", { name: "Date type", exact: true })
-      .locator('option[value="range"]'),
+    editor.getByRole("textbox", { name: "End date", exact: true }),
   ).toHaveCount(0);
   await editor.getByRole("button", { name: "Period", exact: true }).click();
   await editor.getByLabel("Title", { exact: true }).fill("Bakery job");
-  await editor.getByLabel("Date type").selectOption("range");
   await fillOccurrenceStart(editor, "2021-03-01");
   await editor.getByRole("checkbox", { name: "Present", exact: true }).check();
   await expect(
@@ -404,7 +409,7 @@ test("A First Time is a milestone that First Times lists and the Entry editor ch
     editor.getByRole("button", { name: "Moment", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   await editor.getByLabel("Title", { exact: true }).fill("First snow walk");
-  await editor.getByLabel("Date type").selectOption("day");
+  await setOccurrencePrecision(editor, "day");
   await fillOccurrenceStart(editor, "2024-12-01");
   await editor.getByRole("button", { name: "Add", exact: true }).click();
   await expect(editor).not.toBeVisible();
@@ -430,6 +435,11 @@ test("A First Time is a milestone that First Times lists and the Entry editor ch
   await page.goto(`/first-times/${id}`);
   await expect(page).toHaveURL(`/items/${id}`);
   await page.goto("/timeline");
+  // This person has no birth date, so Timeline first asks for one in a dialog.
+  await page
+    .getByRole("dialog", { name: "When did your story begin?" })
+    .getByRole("button", { name: "Not now", exact: true })
+    .click();
   await expect(
     page
       .getByRole("region", { name: "Timeline by lane" })

@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { expect, test, type Locator } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+import { setOccurrencePrecision } from "./helpers/occurrence";
 
 type SidebarMotionFrame = {
   logoCenter: number;
@@ -814,7 +815,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await quickCapture
       .getByRole("button", { name: "Date", exact: true })
       .click();
-    await quickCapture.getByLabel("Date type").selectOption("day");
+    await setOccurrencePrecision(quickCapture, "day");
     await quickCapture
       .getByRole("button", { name: "Choose occurred", exact: true })
       .click();

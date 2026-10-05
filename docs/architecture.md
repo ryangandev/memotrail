@@ -153,6 +153,7 @@ Pair it with the test file carrying the same feature name.
 - Occurrence precision is part of the data, not presentation metadata.
 - Exact timestamp, day, month, year, age, range, approximate, and Unknown values remain distinct.
 - Unknown and description-only dates have no fabricated calendar anchor.
+- The Web `OccurrenceEditor` offers Day, Month, Year, and Not sure and maps them, with its Add time and Add end date toggles, onto the stored precisions; `resolveOccurrenceDraft` stores an empty calendar date as Unknown.
 - Recorded timezone controls calendar interpretation and search overlap.
 - `profiles.timezone` supplies the default for new exact Timeline timestamps; an Entry stores its own timezone snapshot and may override that default.
 - Shared Web timezone options derive their displayed UTC offset from the edited occurrence date when available and otherwise from the current date, so daylight-saving changes remain explicit without replacing the stored IANA identifier.

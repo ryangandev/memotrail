@@ -4,9 +4,13 @@ import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import {
+  expectOccurrencePrecision,
   fillOccurrenceEnd,
   fillOccurrenceStart,
+  occurrenceStartField,
   setDateDescription,
+  setOccurrencePrecision,
+  type DatePrecision,
 } from "./helpers/occurrence";
 
 for (const kind of ["home", "vehicle"] as const) {
@@ -108,9 +112,7 @@ for (const kind of ["home", "vehicle"] as const) {
       const editLabel = kind === "home" ? "Edit Home" : "Edit Vehicle";
       await page.getByRole("button", { name: editLabel }).click();
       let dialog = page.getByRole("main");
-      await expect(
-        dialog.getByRole("combobox", { name: "Date type", exact: true }),
-      ).toHaveValue("exact");
+      await expectOccurrencePrecision(dialog, "exact");
       await dialog
         .getByRole("button", { name: "Save changes", exact: true })
         .click();
@@ -124,27 +126,28 @@ for (const kind of ["home", "vehicle"] as const) {
       ).data!;
       expect(entry.occurred_start).toBe("2026-11-01T09:30:00.123456+00:00");
       expect(entry.occurred_end).toBe("2026-11-01T10:30:00.654321+00:00");
-      for (const [precision, start, end, label] of [
+      const samples: [DatePrecision, string, string, string][] = [
         ["year", "2017", "2023", ""],
         ["month", "2017-07", "2023-06", ""],
         ["day", "2017-07-08", "2023-06-01", ""],
-        ["range", "2017-07-08", "", ""],
-        ["age", "", "", "Ages 17 to 23"],
+        ["day", "2017-07-08", "", ""],
         ["approximate", "", "", "During college"],
         ["unknown", "", "", ""],
-      ]) {
+      ];
+      for (const [precision, start, end, label] of samples) {
         await page.getByRole("button", { name: editLabel }).click();
-        await dialog
-          .getByRole("combobox", { name: "Date type", exact: true })
-          .selectOption(precision);
-        if (precision !== "unknown") {
-          if (start) await fillOccurrenceStart(dialog, start);
-          if (end) await fillOccurrenceEnd(dialog, end);
-        }
+        await setOccurrencePrecision(dialog, precision);
+        if (start) await fillOccurrenceStart(dialog, start);
+        else await occurrenceStartField(dialog).fill("");
+        if (end) await fillOccurrenceEnd(dialog, end);
+        else
+          await dialog
+            .getByRole("checkbox", { name: "Present", exact: true })
+            .check();
         await setDateDescription(dialog, label);
         if (kind === "home" && !end) {
           // Removing the end must not silently discard the existing reason.
-          if (precision === "range") {
+          if (precision === "day") {
             await expect(dialog.getByLabel("Why you left")).toHaveValue(
               "A new chapter",
             );
@@ -162,18 +165,17 @@ for (const kind of ["home", "vehicle"] as const) {
           dialog.getByRole("button", { name: "Save changes" }),
           `${kind} editor should close after saving ${precision} precision`,
         ).not.toBeVisible({ timeout: 15_000 });
+        // Two samples in a row can share a precision, so wait for the end too.
         await expect
-          .poll(
-            async () =>
-              (
-                await client
-                  .from("entries")
-                  .select("date_precision")
-                  .eq("id", id)
-                  .single()
-              ).data?.date_precision,
-          )
-          .toBe(precision);
+          .poll(async () => {
+            const { data } = await client
+              .from("entries")
+              .select("date_precision,occurred_end")
+              .eq("id", id)
+              .single();
+            return [data?.date_precision, data?.occurred_end === null];
+          })
+          .toEqual([precision, !end]);
         const persisted = await client
           .from("entries")
           .select(
@@ -194,9 +196,7 @@ for (const kind of ["home", "vehicle"] as const) {
       ).toBeVisible();
       await page.goto(config.path + "/" + id);
       await page.getByRole("button", { name: editLabel }).click();
-      await expect(
-        dialog.getByRole("combobox", { name: "Date type", exact: true }),
-      ).toHaveValue("unknown");
+      await expectOccurrencePrecision(dialog, "unknown");
       await page.screenshot({
         caret: "initial",
         path: `/private/tmp/memotrail-${kind}-chapter-desktop.png`,
@@ -218,9 +218,7 @@ for (const kind of ["home", "vehicle"] as const) {
         })
         .click();
       dialog = page.getByRole("dialog");
-      await expect(
-        dialog.getByRole("combobox", { name: "Date type", exact: true }),
-      ).toHaveValue("unknown");
+      await expectOccurrencePrecision(dialog, "unknown");
       await dialog
         .getByRole("textbox", {
           name: kind === "home" ? "Home name" : "Name or nickname",

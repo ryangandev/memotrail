@@ -4,6 +4,7 @@ import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import {
+  expectOccurrencePrecision,
   fillOccurrenceStart,
   occurrenceStartField,
 } from "./helpers/occurrence";
@@ -221,7 +222,7 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
         exact: true,
       })
       .click();
-    await expect(dialog.getByLabel("Date type")).toHaveValue("day");
+    await expectOccurrencePrecision(dialog, "day");
     await expect(occurrenceStartField(dialog)).toHaveValue("2017-07-08");
     await expect(dialog.getByLabel("Time zone", { exact: true })).toHaveValue(
       "America/Los_Angeles",
@@ -250,7 +251,7 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
     await dialog.getByRole("button", { name: "Close Entry editor" }).click();
     expect(await snapshot()).toEqual(before);
     await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
-    await expect(dialog.getByLabel("Date type")).toHaveValue("range");
+    await expectOccurrencePrecision(dialog, "range");
     await dialog
       .getByRole("button", { name: "Read camera date", exact: true })
       .click();

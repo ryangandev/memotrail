@@ -41,6 +41,13 @@ Cross-form actions create and link another record rather than silently changing 
 
 Dates support exact timestamp, day, month, year, age or age range, date range, approximate description, and Unknown.
 The system must preserve the recorded precision and timezone without inventing a calendar anchor.
+Web date forms ask how well the date is known with four choices: Day, Month, Year, and Not sure.
+Day offers Add time for an exact timestamp and, outside a Period, Add end date for a date range; the two do not combine outside a Period.
+A Period, Home, or Vehicle always offers an end date and Present, so its Day keeps its own end without becoming a date range.
+Not sure stores an approximate description, with an optional rough date and, outside a Moment, an optional end date.
+An age recorded before Not sure existed stays an age when its Entry is edited.
+Leaving the date empty stores Unknown, so Unknown is not a separate choice.
+Moving to a coarser choice keeps what is known, and moving to a finer one starts empty rather than inventing a day or month.
 Web date forms share one calendar control with day, month, year, optional hour-and-minute, editable numeric-entry, picker-only, and size variants.
 Editable date fields accept digits and add their own separators; the first-visit birth-date prompt is picker-only, while Settings also permits numeric editing.
 Settings owns the user's default timezone for new exact Timeline timestamps.

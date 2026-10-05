@@ -563,7 +563,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
         </Specimen>
 
         <Specimen
-          api="point · span · disabled · defaultTimezone · eight precision modes"
+          api="point · span · disabled · defaultTimezone · Day, Month, Year, Not sure"
           title="OccurrenceEditor"
         >
           <div className={styles.occurrenceSpecimen}>

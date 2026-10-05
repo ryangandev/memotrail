@@ -186,6 +186,16 @@ export function resolveOccurrenceDraft(
     return {
       error: "Choose a valid IANA time zone, for example America/Los_Angeles.",
     };
+  // A calendar date left empty means the date is not known.
+  if (
+    !draft.start &&
+    ["exact", "day", "month", "year", "range"].includes(draft.precision)
+  )
+    draft = {
+      ...draft,
+      precision: "unknown",
+      end: span && draft.endMode !== "present" ? draft.end : "",
+    };
   const previous = original ? occurrenceDraft(original) : null;
   const convert = (text: string, key: "start" | "end") => {
     if (!text) return null;
@@ -217,6 +227,8 @@ export function resolveOccurrenceDraft(
       error:
         "Choose a valid calendar date and time. This time may not exist during a daylight-saving change.",
     };
+  if (!draft.start && draft.end && draft.endMode !== "present")
+    return { error: "Add a start date before the end date." };
   const value: Occurrence = {
     datePrecision: draft.precision,
     occurredAt: start,

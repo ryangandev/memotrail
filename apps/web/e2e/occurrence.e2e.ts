@@ -4,10 +4,13 @@ import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import {
+  expectOccurrencePrecision,
   fillOccurrenceEnd,
   fillOccurrenceStart,
+  occurrenceField,
   occurrenceStartField,
   setDateDescription,
+  setOccurrencePrecision,
 } from "./helpers/occurrence";
 
 test("Entry editing preserves uncertain dates and edits calendar precision without inventing dates", async ({
@@ -108,13 +111,11 @@ test("Entry editing preserves uncertain dates and edits calendar precision witho
       ["year", "2017", "2017"],
       ["month", "2017-07", "Jul 2017"],
       ["day", "2017-07-08", "Jul 8, 2017"],
-    ]) {
+    ] as const) {
       await page
         .getByRole("button", { name: "Edit Entry", exact: true })
         .click();
-      await page
-        .getByRole("combobox", { name: "Date type", exact: true })
-        .selectOption(precision);
+      await setOccurrencePrecision(page, precision);
       await fillOccurrenceStart(page, start);
       await page
         .getByRole("combobox", { name: "Time zone", exact: true })
@@ -135,9 +136,7 @@ test("Entry editing preserves uncertain dates and edits calendar precision witho
       });
     }
     await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
-    await page
-      .getByRole("combobox", { name: "Date type", exact: true })
-      .selectOption("range");
+    await setOccurrencePrecision(page, "range");
     await fillOccurrenceStart(page, "2020-01-01");
     await fillOccurrenceEnd(page, "2017-01-01");
     await page
@@ -162,17 +161,16 @@ test("Entry editing preserves uncertain dates and edits calendar precision witho
     expect(range.data?.occurred_end).not.toBeNull();
 
     await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
+    await setOccurrencePrecision(page, "approximate");
+    await expect(occurrenceStartField(page)).toHaveValue("2020-01-01");
+    await expect(
+      page.getByRole("textbox", { name: "End date", exact: true }),
+    ).toHaveValue("2023-01-01");
     await page
-      .getByRole("combobox", { name: "Date type", exact: true })
-      .selectOption("approximate");
+      .getByRole("checkbox", { name: "Add end date", exact: true })
+      .uncheck();
+    await occurrenceStartField(page).fill("");
     await setDateDescription(page, "17岁，第一次去日本");
-    await expect(
-      page.getByRole("combobox", { name: "Date type", exact: true }),
-    ).toHaveValue("approximate");
-    await expect(occurrenceStartField(page)).toHaveValue("");
-    await expect(
-      page.getByLabel("Date description", { exact: true }),
-    ).toHaveValue("17岁，第一次去日本");
     expect(
       (
         await client
@@ -182,13 +180,11 @@ test("Entry editing preserves uncertain dates and edits calendar precision witho
           .single()
       ).data?.date_precision,
     ).toBe("range");
-    await page
-      .getByRole("combobox", { name: "Date type", exact: true })
-      .selectOption("age");
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
-    await page.getByRole("group", { name: "Date" }).scrollIntoViewIfNeeded();
+    await occurrenceField(page).scrollIntoViewIfNeeded();
     await page.screenshot({
+      animations: "disabled",
       path: "/private/tmp/memotrail-occurrence-mobile.png",
       fullPage: true,
       caret: "initial",
@@ -202,15 +198,47 @@ test("Entry editing preserves uncertain dates and edits calendar precision witho
       .getByRole("button", { name: "Save changes", exact: true })
       .click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
-    const age = await client
+    const approximate = await client
       .from("entries")
       .select("date_precision,occurred_start,occurred_end,occurred_label")
       .eq("id", entryID)
       .single();
-    expect(age.data).toEqual({
-      date_precision: "age",
+    expect(approximate.data).toEqual({
+      date_precision: "approximate",
       occurred_start: null,
       occurred_end: null,
+      occurred_label: "17岁，第一次去日本",
+    });
+
+    // An age recorded before Not sure existed stays an age through an edit.
+    expect(
+      (
+        await client
+          .from("entries")
+          .update({ date_precision: "age" })
+          .eq("id", entryID)
+      ).error,
+    ).toBeNull();
+    await page.reload();
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
+    await expectOccurrencePrecision(page, "age");
+    await page
+      .getByRole("textbox", { name: "Note", exact: true })
+      .fill("Still an age.");
+    await page
+      .getByRole("button", { name: "Save changes", exact: true })
+      .click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    expect(
+      (
+        await client
+          .from("entries")
+          .select("date_precision,occurred_label")
+          .eq("id", entryID)
+          .single()
+      ).data,
+    ).toEqual({
+      date_precision: "age",
       occurred_label: "17岁，第一次去日本",
     });
 

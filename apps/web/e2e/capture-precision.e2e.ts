@@ -7,8 +7,11 @@ import sharp from "sharp";
 import {
   fillOccurrenceEnd,
   fillOccurrenceStart,
+  occurrenceField,
   occurrenceStartField,
   setDateDescription,
+  setOccurrencePrecision,
+  type DatePrecision,
 } from "./helpers/occurrence";
 import { parseInboxDraft } from "../src/lib/data/inbox-draft";
 
@@ -112,7 +115,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       }),
     ).toHaveCount(0);
     await capture.getByRole("button", { name: "Date", exact: true }).click();
-    await expect(capture.getByLabel("Date type")).toBeVisible({
+    await expect(occurrenceField(capture)).toBeVisible({
       timeout: 5000,
     });
     await expect(
@@ -134,7 +137,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
         body: "Recovered partial draft",
         bodyRich: { text: "Recovered partial draft", version: 1 },
       });
-    await capture.getByLabel("Date type").selectOption("year");
+    await setOccurrencePrecision(capture, "year");
     await occurrenceStartField(capture).fill("20");
     const storedDraft = await page.evaluate(
       (ownerId) => localStorage.getItem(`memotrail:inbox-draft:${ownerId}`),
@@ -151,7 +154,12 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
     await expect(capture).toContainText("Choose a valid calendar date");
     expect((await client.from("entries").select("id")).data).toHaveLength(0);
 
-    const cases = [
+    const cases: {
+      precision: DatePrecision;
+      start: string;
+      label: string;
+      end: string;
+    }[] = [
       { precision: "exact", start: "2017-07-08T12:34", label: "", end: "" },
       { precision: "day", start: "2017-07-08", label: "", end: "" },
       { precision: "month", start: "2017-07", label: "", end: "" },
@@ -162,7 +170,6 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
         label: "Summer before college",
         end: "",
       },
-      { precision: "age", start: "", label: "At age 17", end: "" },
       { precision: "range", start: "2017-07-01", label: "", end: "2017-08-12" },
       { precision: "unknown", start: "", label: "", end: "" },
     ];
@@ -174,14 +181,15 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       await capture
         .getByRole("textbox", { name: "Entry text", exact: true })
         .fill(`Capture ${item.precision}`);
-      await capture.getByLabel("Date type").selectOption(item.precision);
+      await setOccurrencePrecision(capture, item.precision);
       await capture
         .getByRole("combobox", { name: "Time zone", exact: true })
         .selectOption("Asia/Kathmandu");
       if (item.start) await fillOccurrenceStart(capture, item.start);
+      else await occurrenceStartField(capture).fill("");
       await setDateDescription(capture, item.label);
       if (item.end) await fillOccurrenceEnd(capture, item.end);
-      if (item.precision === "age") {
+      if (item.precision === "approximate") {
         await page.setViewportSize({ width: 390, height: 844 });
         await page.emulateMedia({ colorScheme: "dark" });
         await page.screenshot({
@@ -214,16 +222,16 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       await capture
         .getByRole("button", { name: "Save to Library", exact: true })
         .click();
-      if (item.precision === "age") {
+      if (item.precision === "approximate") {
         await expect(
           page.getByRole("heading", { name: "Pending sync", exact: true }),
         ).toBeVisible();
         // The closed Quick Capture mirrors the same shared queue.
         await expect(
           page.locator("main article").filter({
-            hasText: "Capture age",
+            hasText: "Capture approximate",
           }),
-        ).toContainText("At age 17");
+        ).toContainText("Summer before college");
         const pending = await page.evaluate(
           (owner) =>
             JSON.parse(localStorage.getItem(`memotrail:inbox-queue:${owner}`)!),
@@ -231,17 +239,17 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
         );
         expect(pending[0]).toMatchObject({
           version: 3,
-          datePrecision: "age",
+          datePrecision: "approximate",
           occurredAt: null,
           occurredEnd: null,
-          occurredLabel: "At age 17",
+          occurredLabel: "Summer before college",
         });
         await context.setOffline(false);
         // Let the online retry finish before exercising reload recovery,
         // rather than aborting its in-flight render.
         await expect(
           page.getByRole("region", { name: "Recent Entries", exact: true }),
-        ).toContainText("Capture age");
+        ).toContainText("Capture approximate");
         await page.reload();
       }
       await expect
@@ -295,11 +303,11 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
     }
 
     await capture.getByRole("button", { name: "Date", exact: true }).click();
-    await capture.getByLabel("Date type").selectOption("unknown");
+    await setOccurrencePrecision(capture, "unknown");
     await capture
       .getByRole("button", { name: "Use capture time", exact: true })
       .click();
-    await expect(capture.getByLabel("Date type")).toHaveCount(0);
+    await expect(occurrenceField(capture)).toHaveCount(0);
     await capture
       .getByRole("textbox", { name: "Entry text", exact: true })
       .fill("Default capture time");
