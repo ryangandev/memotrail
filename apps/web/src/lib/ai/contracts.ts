@@ -78,7 +78,7 @@ export function updateSimpleAIPreferences(
   return { ...normalized, photo_analysis: checked };
 }
 export const featureLabels: Record<AIFeature, string> = {
-  classification: "Title, Type, Collection, and date suggestions",
+  classification: "Title, Type, and date suggestions",
   tagging: "Tag suggestions",
   search: "Natural-language search",
   explore: "Explore with AI",

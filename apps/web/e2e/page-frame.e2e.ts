@@ -5,7 +5,6 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
 const pageFamilies = [
-  { path: "/inbox", variant: "compact", width: 880 },
   { path: "/library", variant: "standard", width: 960 },
   { path: "/settings", variant: "compact", width: 880 },
   { path: "/settings/ai", variant: "compact", width: 880 },
@@ -13,15 +12,11 @@ const pageFamilies = [
   { path: "/search", variant: "standard", width: 960 },
   { path: "/tags", variant: "standard", width: 960 },
   { path: "/trash", variant: "standard", width: 960 },
-  { path: "/timeline/tracks", variant: "standard", width: 960 },
   { path: "/", variant: "wide", width: 1080 },
-  { path: "/collections", variant: "wide", width: 1080 },
   { path: "/first-times", variant: "wide", width: 1080 },
   { path: "/goals", variant: "wide", width: 1080 },
-  { path: "/history", variant: "wide", width: 1080 },
   { path: "/homes", variant: "wide", width: 1080 },
   { path: "/vehicles", variant: "wide", width: 1080 },
-  { path: "/people", variant: "wide", width: 1080 },
   { path: "/timeline", variant: "canvas", width: 1180 },
 ] as const;
 
@@ -29,7 +24,6 @@ const focusedViewPaths = new Set([
   "/first-times",
   "/goals",
   "/homes",
-  "/people",
   "/vehicles",
 ]);
 
@@ -112,6 +106,8 @@ test("authenticated pages use the shared responsive page frame", async ({
       if (focusedViewPaths.has(family.path)) {
         await expectFocusedViewContentGap(frame, 32);
       }
+      // Leave only after the page finishes loading its data.
+      await page.waitForLoadState("networkidle");
     }
 
     await page.setViewportSize({ width: 390, height: 844 });
@@ -141,6 +137,8 @@ test("authenticated pages use the shared responsive page frame", async ({
       if (focusedViewPaths.has(family.path)) {
         await expectFocusedViewContentGap(frame, 24);
       }
+      // Leave only after the page finishes loading its data.
+      await page.waitForLoadState("networkidle");
     }
   } finally {
     await page.close();

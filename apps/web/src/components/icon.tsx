@@ -23,7 +23,6 @@ export const iconNames = [
   "mic",
   "more",
   "photo",
-  "person",
   "plus",
   "quote",
   "refresh",
@@ -185,12 +184,6 @@ const paths: Record<IconName, React.ReactNode> = {
       <rect height="16" rx="2" width="18" x="3" y="4" />
       <circle cx="8.5" cy="9" r="1.5" />
       <path d="m5.5 17 4-4 3 3 2-2 4 3" />
-    </>
-  ),
-  person: (
-    <>
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
     </>
   ),
   plus: <path d="M12 5v14M5 12h14" />,

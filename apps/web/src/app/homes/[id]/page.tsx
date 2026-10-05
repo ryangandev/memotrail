@@ -1,7 +1,7 @@
 import { FocusedDetailUnavailable } from "@/components/focused-detail-unavailable";
 import { FocusedRecordDetail } from "@/components/focused-record-detail";
 import { getHomesWorkspace } from "@/lib/data/home-records";
-import { isFirstTimeUuid } from "@/lib/data/first-time-input";
+import { isEntryUuid } from "@/lib/data/entry-photo-input";
 
 export const dynamic = "force-dynamic";
 export default async function HomeDetailPage({
@@ -10,7 +10,7 @@ export default async function HomeDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  if (!isFirstTimeUuid(id))
+  if (!isEntryUuid(id))
     return <FocusedDetailUnavailable label="Home" back="/homes" />;
   const workspace = await getHomesWorkspace(id);
   if (!workspace) return null;
@@ -20,7 +20,6 @@ export default async function HomeDetailPage({
     <FocusedRecordDetail
       kind="home"
       record={record}
-      collectionOptions={workspace.collectionOptions}
       tagOptions={workspace.tagOptions}
       ownerId={workspace.viewer.id}
     />

@@ -59,7 +59,6 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
           owner_id: owner,
           title: "Organized photo memory",
           body: "Original thoughts",
-          inbox_status: "organized",
           date_precision: "unknown",
         })
       ).error,
@@ -69,7 +68,7 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
     })
       .png()
       .toBuffer();
-    await page.goto(`/history?entry=${entry}`);
+    await page.goto(`/items/${entry}`);
     const gallery = page.getByRole("region", {
       name: "Current photos",
       exact: true,
@@ -126,7 +125,7 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
       path: "/private/tmp/memotrail-photo-management-panel-light.png",
     });
     let dropped = false;
-    await page.route("**/history?*", async (route) => {
+    await page.route(`**/items/${entry}`, async (route) => {
       if (
         !dropped &&
         route.request().method() === "POST" &&
@@ -160,9 +159,9 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
     expect(row.error).toBeNull();
     const photo = row.data!;
     expect(
-      (await client.rpc("entry_history", { p_entry_id: entry })).data.current
-        .revision,
-    ).toBe(2);
+      (await client.from("entries").select("revision").eq("id", entry).single())
+        .data?.revision,
+    ).toBe(1);
     await gallery
       .getByRole("button", {
         name: "Move New memory.png to Trash",
@@ -209,9 +208,9 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
     ).data!;
     expect(removed.deleted_at).not.toBeNull();
     expect(
-      (await client.rpc("entry_history", { p_entry_id: entry })).data.current
-        .revision,
-    ).toBe(3);
+      (await client.from("entries").select("revision").eq("id", entry).single())
+        .data?.revision,
+    ).toBe(1);
     const original = await admin.storage
       .from("entry-media")
       .download(photo.object_path);
@@ -229,12 +228,11 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
     await gallery
       .getByRole("button", { name: "Refresh photos", exact: true })
       .click();
-    const history = (await client.rpc("entry_history", { p_entry_id: entry }))
-      .data;
-    expect(history.current.revision).toBe(4);
+    // Photo changes leave the Entry's revision alone, so an open editor stays current.
     expect(
-      history.versions.map((version: { version: number }) => version.version),
-    ).toEqual([3, 2, 1]);
+      (await client.from("entries").select("revision").eq("id", entry).single())
+        .data?.revision,
+    ).toBe(1);
     await expect(
       gallery.getByRole("button", { name: "Open New memory.png", exact: true }),
     ).toBeVisible();
@@ -242,51 +240,18 @@ test("Organized Entry photos can be staged, uploaded, trashed, and restored", as
       (
         await client
           .from("entries")
-          .select("body,inbox_status,date_precision")
+          .select("body,date_precision")
           .eq("id", entry)
           .single()
       ).data,
     ).toEqual({
       body: "Original thoughts",
-      inbox_status: "organized",
       date_precision: "unknown",
     });
     await page.reload();
     await gallery
       .getByRole("button", { name: "Show photos", exact: true })
       .click();
-    await expect(
-      gallery.getByRole("button", { name: "Open New memory.png", exact: true }),
-    ).toBeVisible();
-    await page
-      .getByRole("combobox", { name: /Earlier version/ })
-      .selectOption("1");
-    await page
-      .getByRole("button", { name: "Restore selected version", exact: true })
-      .click();
-    await page
-      .getByRole("dialog", { name: /Restore version \d+\?/ })
-      .getByRole("button", { name: "Restore version", exact: true })
-      .click();
-    await expect(
-      page.getByRole("region", { name: "Current version", exact: true }),
-    ).toContainText("version 5");
-    await expect(
-      gallery.getByRole("button", { name: "Open New memory.png", exact: true }),
-    ).toHaveCount(0);
-    await expect(
-      gallery.getByText("No saved photos on this Entry."),
-    ).toBeVisible();
-    await page
-      .getByRole("button", { name: "Restore selected version", exact: true })
-      .click();
-    await page
-      .getByRole("dialog", { name: /Restore version \d+\?/ })
-      .getByRole("button", { name: "Restore version", exact: true })
-      .click();
-    await expect(
-      page.getByRole("region", { name: "Current version", exact: true }),
-    ).toContainText("version 6");
     await expect(
       gallery.getByRole("button", { name: "Open New memory.png", exact: true }),
     ).toBeVisible();

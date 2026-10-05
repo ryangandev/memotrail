@@ -71,18 +71,22 @@
 }
 
 .timelineGrid {
+  /* Wide enough for the longest lane name, "Other milestones". */
+  --timeline-lane-label-width: 184px;
   position: relative;
   display: grid;
-  width: calc(164px + var(--timeline-canvas-width));
+  width: calc(var(--timeline-lane-label-width) + var(--timeline-canvas-width));
   min-width: 100%;
-  grid-template-columns: 164px var(--timeline-canvas-width);
+  grid-template-columns: var(--timeline-lane-label-width) var(
+      --timeline-canvas-width
+    );
 }
 
 .todayLine {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: calc(164px + var(--timeline-today-offset));
+  left: calc(var(--timeline-lane-label-width) + var(--timeline-today-offset));
   z-index: 1;
   width: 1px;
   background: repeating-linear-gradient(
@@ -150,7 +154,7 @@
   transform: translateX(-100%);
 }
 
-.trackLabel {
+.laneLabel {
   position: sticky;
   left: 0;
   z-index: 3;
@@ -165,13 +169,13 @@
   background: var(--mt-color-surface-raised);
 }
 
-.trackLabel > span {
+.laneLabel > span {
   display: grid;
   min-width: 0;
   gap: 3px;
 }
 
-.trackLabel strong {
+.laneLabel strong {
   overflow: hidden;
   color: var(--mt-color-ink);
   font-size: var(--mt-font-size-label);
@@ -180,16 +184,16 @@
   white-space: nowrap;
 }
 
-.trackLabel small {
+.laneLabel small {
   color: var(--mt-color-ink-faint);
   font-size: 10px;
 }
 
-.trackLabel
+.laneLabel
   button:not(
     :where([data-ui-button], [data-ui-empty-state], [data-record-card])
   ),
-.mobileTrack
+.mobileLane
   header:not([data-ui-page-header])
   button:not(
     :where([data-ui-button], [data-ui-empty-state], [data-record-card])
@@ -206,11 +210,11 @@
   cursor: pointer;
 }
 
-.trackLabel
+.laneLabel
   button:not(
     :where([data-ui-button], [data-ui-empty-state], [data-record-card])
   ):hover,
-.mobileTrack
+.mobileLane
   header:not([data-ui-page-header])
   button:not(
     :where([data-ui-button], [data-ui-empty-state], [data-record-card])
@@ -220,16 +224,17 @@
   background: var(--mt-color-surface);
 }
 
-.trackCanvas {
-  position: relative;
-  min-height: 70px;
-  overflow: hidden;
-  border-bottom: 1px solid var(--mt-color-border);
-  background: color-mix(
+.laneCanvas {
+  --timeline-lane-surface: color-mix(
     in srgb,
     var(--mt-color-surface-raised) 94%,
     var(--mt-color-accent-subtle)
   );
+  position: relative;
+  min-height: 70px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--mt-color-border);
+  background: var(--timeline-lane-surface);
 }
 
 .yearLine {
@@ -240,10 +245,10 @@
   opacity: 0.66;
 }
 
-.stageItem,
-.eventItem {
+.periodItem,
+.momentItem {
   position: absolute;
-  top: calc(16px + var(--item-lane) * 49px);
+  top: calc(16px + var(--item-row) * 49px);
   left: var(--item-left);
   z-index: 2;
   height: 34px;
@@ -255,32 +260,65 @@
   cursor: pointer;
 }
 
-.stageItem {
+.periodItem,
+.momentItem {
   display: flex;
-  width: max(54px, var(--item-width));
-  max-width: calc(100% - var(--item-left));
+  width: var(--item-width);
   align-items: center;
-  transform: translateX(var(--item-stage-label-offset));
-  padding: 0 10px;
-  border: 1px solid color-mix(in srgb, var(--mt-color-accent) 42%, transparent);
-  border-radius: var(--mt-radius-small);
-  background: var(--mt-color-accent-subtle);
+  gap: 7px;
+  transform: translateX(var(--item-offset));
+  padding: 0;
+  background: transparent;
   white-space: nowrap;
 }
 
-.stageItem[data-ongoing="true"] {
+/* With no room after it, a title sits before its dot or bar. */
+.periodItem[data-label="before"],
+.momentItem[data-label="before"] {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.periodItem > span:last-child,
+.momentItem > span:last-child {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A title beside its dot or bar reads over the year and Today lines. */
+.periodItem:not([data-label="inside"]) > span:last-child,
+.momentItem > span:last-child {
+  background: var(--timeline-lane-surface);
+}
+
+/* A Period wide enough for its title draws the bar itself, with the title inside. */
+.periodItem[data-label="inside"],
+.periodBar {
+  border: 1px solid color-mix(in srgb, var(--mt-color-accent) 42%, transparent);
+  border-radius: var(--mt-radius-small);
+  background: var(--mt-color-accent-subtle);
+}
+
+.periodItem[data-label="inside"] {
+  padding: 0 10px;
+}
+
+.periodBar {
+  width: var(--item-bar-width);
+  height: 100%;
+  flex: none;
+}
+
+.periodItem[data-label="inside"][data-ongoing="true"],
+.periodItem[data-ongoing="true"] .periodBar {
   border-right: 2px solid var(--mt-color-accent);
   border-radius: var(--mt-radius-small) 0 0 var(--mt-radius-small);
 }
 
-.stageItem > span {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.stageItem:hover {
+.periodItem[data-label="inside"]:hover,
+.periodItem:hover .periodBar {
   border-color: var(--mt-color-accent);
   background: color-mix(
     in srgb,
@@ -289,31 +327,7 @@
   );
 }
 
-.eventItem {
-  display: flex;
-  width: 126px;
-  align-items: center;
-  gap: 7px;
-  padding: 0;
-  transform: translateX(-6px);
-  overflow: hidden;
-  background: transparent;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.eventItem[data-edge="end"] {
-  flex-direction: row-reverse;
-  transform: translateX(calc(-100% + 6px));
-  text-align: right;
-}
-
-.eventItem > span:last-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.eventDot {
+.momentDot {
   width: 12px;
   height: 12px;
   flex: 0 0 auto;
@@ -323,11 +337,21 @@
   box-shadow: 0 0 0 1px var(--mt-color-warm);
 }
 
-.eventItem:hover {
+.periodItem:not([data-label="inside"]):hover,
+.momentItem:hover {
   color: var(--mt-color-accent);
 }
 
-.emptyTrack {
+/* Carries the lane item font so titles can be measured before layout. */
+.labelProbe {
+  position: absolute;
+  visibility: hidden;
+  font-size: 11px;
+  font-weight: var(--mt-font-weight-medium);
+  pointer-events: none;
+}
+
+.emptyLane {
   position: absolute;
   top: 18px;
   left: var(--mt-space-4);
@@ -339,7 +363,7 @@
   cursor: pointer;
 }
 
-.emptyTrack:hover {
+.emptyLane:hover {
   color: var(--mt-color-accent);
   background: var(--mt-color-accent-subtle);
 }
@@ -465,106 +489,14 @@
   gap: var(--mt-space-2);
 }
 
-.kindPicker {
-  margin: 0;
-  padding: var(--mt-space-6) var(--mt-space-6) 0;
-  border: 0;
-}
-
-.kindPicker legend {
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.kindPicker > div {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--mt-space-2);
-  margin-top: var(--mt-space-2);
-  padding: var(--mt-space-1);
-  border-radius: var(--mt-radius-medium);
-  background: var(--mt-color-surface-subtle);
-}
-
-.kindPicker {
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.kindPicker legend {
-  margin: 0;
-  padding: 0;
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.kindPicker
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ) {
-  display: flex;
-  height: 40px;
-  align-items: center;
-  justify-content: center;
-  gap: var(--mt-space-2);
-  border-radius: var(--mt-radius-small);
-  color: var(--mt-color-ink-muted);
-  background: transparent;
-  font-size: var(--mt-font-size-label);
-  cursor: pointer;
-}
-
-.kindPicker .kindActive {
-  color: var(--mt-color-accent);
-  background: var(--mt-color-surface-raised);
-  box-shadow: 0 1px 3px rgb(38 37 31 / 0.1);
-}
-
-.kindPicker > p {
-  margin-top: var(--mt-space-2);
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
-}
-
-.formGrid {
-  composes: fields from "./editor-fields.module.css";
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--mt-space-4);
-  --editor-textarea-height: 116px;
-  --editor-field-surface: var(--mt-color-surface);
-}
-
-.editorForm {
-  display: grid;
-  gap: var(--mt-space-4);
-}
-
-.fullField {
-  grid-column: 1 / -1;
-}
-
-.formMessage {
-  margin: var(--mt-space-3) 0;
-  padding: var(--mt-space-3);
-  border-radius: var(--mt-radius-small);
-  color: var(--mt-color-warm);
-  background: var(--mt-color-warm-subtle);
-  font-size: var(--mt-font-size-caption);
-}
-
-.mobileTrack {
+.mobileLane {
   overflow: hidden;
   border: 1px solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface-raised);
 }
 
-.mobileTrack header:not([data-ui-page-header]) {
+.mobileLane header:not([data-ui-page-header]) {
   display: flex;
   min-height: 62px;
   align-items: center;
@@ -574,13 +506,13 @@
   border-bottom: 1px solid var(--mt-color-border);
 }
 
-.mobileTrack header:not([data-ui-page-header]) h2 {
+.mobileLane header:not([data-ui-page-header]) h2 {
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-title-small);
   font-weight: var(--mt-font-weight-medium);
 }
 
-.mobileTrack header:not([data-ui-page-header]) span {
+.mobileLane header:not([data-ui-page-header]) span {
   color: var(--mt-color-ink-faint);
   font-size: 10px;
 }
@@ -595,13 +527,7 @@
   display: grid;
 }
 
-.mobileItems
-  > :is(
-    button:not(
-      :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-    ),
-    a
-  ) {
+.mobileItems > a {
   display: grid;
   grid-template-columns: 14px minmax(0, 1fr) auto;
   align-items: center;
@@ -616,34 +542,15 @@
   cursor: pointer;
 }
 
-.mobileItems
-  > :is(
-    button:not(
-      :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-    ),
-    a
-  ):last-child {
+.mobileItems > a:last-child {
   border-bottom: 0;
 }
 
-.mobileItems
-  > :is(
-    button:not(
-      :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-    ),
-    a
-  ):hover {
+.mobileItems > a:hover {
   background: var(--mt-color-surface);
 }
 
-.mobileItems
-  > :is(
-    button:not(
-      :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-    ),
-    a
-  )
-  > span:nth-child(2) {
+.mobileItems > a > span:nth-child(2) {
   display: grid;
   min-width: 0;
   gap: 3px;
@@ -663,14 +570,14 @@
   font-size: 10px;
 }
 
-.mobileStageMarker {
+.mobilePeriodMarker {
   width: 14px;
   height: 7px;
   border-radius: var(--mt-radius-pill);
   background: var(--mt-color-accent);
 }
 
-.mobileEventMarker {
+.mobileMomentMarker {
   width: 10px;
   height: 10px;
   margin-left: 2px;
@@ -693,14 +600,6 @@
     align-items: end;
     padding: 0;
   }
-
-  .formGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .fullField {
-    grid-column: auto;
-  }
 }
 
 @media (max-width: 480px) {
@@ -722,41 +621,34 @@
     animation: none;
   }
 }
-.undatedMoments {
+.undatedItems {
   border-top: 1px solid var(--mt-color-border);
   padding: var(--mt-space-6);
   display: grid;
   gap: var(--mt-space-4);
 }
 
-.undatedMoments p {
+.undatedItems p {
   color: var(--mt-color-ink-muted);
 }
 
-.undatedMoments h2 {
+.undatedItems h2 {
   font-family: var(--mt-font-family-serif);
   font-weight: var(--mt-font-weight-medium);
 }
-.undatedMoments h3 {
+.undatedItems h3 {
   font-size: var(--mt-font-size-caption);
   color: var(--mt-color-ink-muted);
 }
-.summary a {
-  color: var(--mt-color-accent);
-  text-decoration: none;
-}
-.summary a:hover {
-  text-decoration: underline;
-}
-.undatedMoments div {
+.undatedItems div {
   display: grid;
   gap: var(--mt-space-2);
 }
-.undatedMoments
+.undatedItems
   button:not(
     :where([data-ui-button], [data-ui-empty-state], [data-record-card])
   ),
-.undatedMoments a {
+.undatedItems a {
   text-align: left;
   color: inherit;
   background: transparent;
@@ -764,8 +656,4 @@
   border-radius: var(--mt-radius-medium);
   padding: var(--mt-space-3) var(--mt-space-4);
   cursor: pointer;
-}
-.requiredMark {
-  margin-left: var(--mt-space-1);
-  color: var(--mt-color-warm);
 }

@@ -7,7 +7,7 @@ import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
-for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
+for (const kind of ["home", "vehicle", "goal"] as const) {
   for (const interrupted of [
     "registration",
     "upload",
@@ -65,7 +65,6 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
           p_expected_revision: null,
           p_title: "Upload retry fixture",
           p_body: "Original writing",
-          p_collection_names: [],
           p_tag_names: [],
         };
         const dates = {
@@ -76,33 +75,19 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
           p_occurred_timezone: "UTC",
         };
         const configs = {
-          first_time: {
-            path: "/first-times",
-            rpc: "save_first_time_with_occurrence",
-            args: { ...common, ...dates },
-          },
           home: {
             path: "/homes",
-            rpc: "save_home_entry",
+            rpc: "save_home_entry_with_occurrence",
             args: {
               ...common,
               ...dates,
-              p_place_id: null,
-              p_place_name: "Test home",
-              p_address: null,
-              p_city: null,
-              p_region: null,
-              p_country: null,
-              p_latitude: null,
-              p_longitude: null,
-              p_place_notes: "",
               p_move_in_reason: "",
               p_move_out_reason: "",
             },
           },
           vehicle: {
             path: "/vehicles",
-            rpc: "save_vehicle_entry",
+            rpc: "save_vehicle_entry_with_occurrence",
             args: {
               ...common,
               ...dates,
@@ -117,10 +102,8 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
             rpc: "save_goal_entry",
             args: {
               ...common,
-              p_horizon: "someday",
               p_status: "active",
               p_target_date: null,
-              p_related_entry_ids: [],
             },
           },
         };
@@ -133,8 +116,7 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
         })
           .png()
           .toBuffer();
-        const previewCase =
-          kind === "first_time" && interrupted === "registration";
+        const previewCase = kind === "home" && interrupted === "registration";
         const selectedBytes = previewCase
           ? Buffer.from(
               readFileSync(
@@ -169,10 +151,9 @@ for (const kind of ["first_time", "home", "vehicle", "goal"] as const) {
           .click();
         await expect(page).toHaveURL(`${config.path}/${entry}`);
         const label = {
-          first_time: "First Time",
           home: "Home",
           vehicle: "Vehicle",
-          goal: "Goal",
+          goal: "Want to Do",
         }[kind];
         await page.getByRole("button", { name: `Edit ${label}` }).click();
         const dialog = page.getByRole("main");

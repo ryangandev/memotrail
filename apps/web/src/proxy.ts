@@ -6,7 +6,9 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
+  // API routes authenticate and refresh the session themselves, so request bodies
+  // such as photo uploads reach them without a proxy copy.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!api/|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

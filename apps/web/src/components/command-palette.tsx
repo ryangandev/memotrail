@@ -30,13 +30,6 @@ const commands: Command[] = [
     label: "Dashboard",
   },
   {
-    description: "Review newly captured Entries",
-    href: "/inbox",
-    icon: "inbox",
-    keywords: "review capture entries",
-    label: "Inbox",
-  },
-  {
     description: "Move through your story over time",
     href: "/timeline",
     icon: "timeline",
@@ -51,17 +44,17 @@ const commands: Command[] = [
     label: "Library",
   },
   {
-    description: "Browse your curated chapters",
-    href: "/collections",
-    icon: "archive",
-    keywords: "chapters organize",
-    label: "Collections",
+    description: "Entries without a title or tag",
+    href: "/library?show=needs-organizing",
+    icon: "inbox",
+    keywords: "organize review capture inbox untitled",
+    label: "Needs organizing",
   },
   {
-    description: "Browse lightweight archive filters",
+    description: "Browse groups across your archive",
     href: "/tags",
     icon: "tag",
-    keywords: "labels filter organize",
+    keywords: "labels filter organize collections groups",
     label: "Tags",
   },
   {
@@ -104,8 +97,8 @@ export function CommandPalette({
     (item) => ({
       description: `${item.label} · ${item.subtitle}`,
       href: item.href,
-      icon: quickResultIcon(item.kind),
-      key: `${item.kind}:${item.id}`,
+      icon: "timeline",
+      key: `entry:${item.id}`,
       label: item.title,
     }),
   );
@@ -118,7 +111,7 @@ export function CommandPalette({
   }));
   const fullSearchItem: PaletteItem | null = normalizedQuery
     ? {
-        description: "Search the Library and Inbox with filters",
+        description: "Search the Library with filters",
         href: `/library?q=${encodeURIComponent(normalizedQuery)}`,
         icon: "search",
         key: "full-search",
@@ -350,9 +343,4 @@ function filterCommands(query: string) {
       `${command.label} ${command.description} ${command.keywords}`.toLocaleLowerCase();
     return terms.every((term) => searchValue.includes(term));
   });
-}
-
-function quickResultIcon(kind: "entry" | "person"): IconName {
-  if (kind === "person") return "archive";
-  return "timeline";
 }

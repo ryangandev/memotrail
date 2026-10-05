@@ -69,9 +69,6 @@ where user_id = '10000000-0000-0000-0000-000000000001';
 delete from public.entries
 where owner_id = '10000000-0000-0000-0000-000000000001';
 
-delete from public.collections
-where owner_id = '10000000-0000-0000-0000-000000000001';
-
 delete from public.tags
 where owner_id = '10000000-0000-0000-0000-000000000001';
 
@@ -82,7 +79,6 @@ insert into public.entries (
   body,
   item_kind,
   item_subtype,
-  inbox_status,
   occurred_start,
   occurred_end,
   date_precision,
@@ -95,9 +91,8 @@ values
     '81000000-0000-0000-0000-000000000001',
     '10000000-0000-0000-0000-000000000001',
     'Newest home thought',
-    'A recent Inbox thought.',
+    'A Capture saved straight to Library.',
     'entry','entry',
-    'unreviewed',
     '2026-09-03T16:00:00Z',
     null,
     'exact',
@@ -110,8 +105,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'First long drive',
     'A First Time.',
-    'entry','first_time',
-    'organized',
+    'entry','entry',
     '2026-09-02T18:00:00Z',
     null,
     'day',
@@ -124,8 +118,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Current California chapter',
     'A current stage.',
-    'entry','period',
-    'organized',
+    'entry','entry',
     '2025-01-01T08:00:00Z',
     null,
     'year',
@@ -138,8 +131,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Past chapter',
     'An ended stage.',
-    'entry','period',
-    'organized',
+    'entry','entry',
     '2020-01-01T08:00:00Z',
     '2021-01-01T08:00:00Z',
     'range',
@@ -152,8 +144,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Future chapter',
     'A stage that has not started.',
-    'entry','period',
-    'organized',
+    'entry','entry',
     '2027-01-01T08:00:00Z',
     null,
     'year',
@@ -167,7 +158,6 @@ values
     'Removed thought',
     'This must stay out of Home.',
     'entry','entry',
-    'unreviewed',
     '2026-09-03T17:00:00Z',
     null,
     'exact',
@@ -181,7 +171,6 @@ values
     'Other owner thought',
     'This must remain private.',
     'entry','entry',
-    'unreviewed',
     '2026-09-03T19:00:00Z',
     null,
     'exact',
@@ -190,44 +179,11 @@ values
     null
   );
 
-insert into public.collections (
-  id,
-  owner_id,
-  name,
-  system_key,
-  sort_order,
-  archived_at
-)
-values
-  (
-    '82000000-0000-0000-0000-000000000001',
-    '10000000-0000-0000-0000-000000000001',
-    'Home Test Learning',
-    'home-test-learning',
-    10,
-    null
-  ),
-  (
-    '82000000-0000-0000-0000-000000000002',
-    '10000000-0000-0000-0000-000000000001',
-    'Home Test Archived',
-    'home-test-archived',
-    20,
-    '2026-09-01T00:00:00Z'
-  );
-
 insert into public.tags (id, owner_id, name)
 values (
   '83000000-0000-0000-0000-000000000001',
   '10000000-0000-0000-0000-000000000001',
   'home-test'
-);
-
-insert into public.entry_collections (entry_id, collection_id, owner_id)
-values (
-  '81000000-0000-0000-0000-000000000002',
-  '82000000-0000-0000-0000-000000000001',
-  '10000000-0000-0000-0000-000000000001'
 );
 
 insert into public.entry_tags (entry_id, tag_id, owner_id)
@@ -256,26 +212,12 @@ values (
   512
 );
 
-insert into public.timeline_items (entry_id, track_id, owner_id, timeline_kind, sort_order)
-select
-  entry_id,
-  timeline_tracks.id,
-  '10000000-0000-0000-0000-000000000001',
-  'stage',
-  item_order
-from (
-  values
-    ('81000000-0000-0000-0000-000000000003'::uuid, 1),
-    ('81000000-0000-0000-0000-000000000004'::uuid, 2),
-    ('81000000-0000-0000-0000-000000000005'::uuid, 3)
-) as staged_entries(entry_id, item_order)
-cross join lateral (
-  select id
-  from public.timeline_tracks
-  where owner_id = '10000000-0000-0000-0000-000000000001'
-    and system_key = 'other_events'
-  limit 1
-) as timeline_tracks;
+insert into public.milestones (entry_id, owner_id, shape, lane, is_first_time)
+values
+  ('81000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', 'moment', 'other', true),
+  ('81000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'period', 'work_study', false),
+  ('81000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000001', 'period', 'other', false),
+  ('81000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000001', 'period', 'other', false);
 
 set local role authenticated;
 set local request.jwt.claim.sub = '10000000-0000-0000-0000-000000000001';
@@ -297,14 +239,9 @@ select is(
   'The Home snapshot returns the owner profile name'
 );
 select is(
-  (select inbox_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  1::bigint,
-  'Inbox count includes only active owner Entries awaiting review'
-);
-select is(
   (select entry_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  4::bigint,
-  'Entry count includes organized active owner Entries'
+  5::bigint,
+  'Entry count includes active owner Entries'
 );
 select is(
   (select first_time_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
@@ -312,14 +249,14 @@ select is(
   'First Time count includes only active owner First Times'
 );
 select is(
-  (select collection_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  (select tag_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
   1::bigint,
-  'Collection count excludes archived Collections'
+  'Tag count includes only the owner''s tags'
 );
 select is(
-  (select current_stage_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  (select now_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
   1::bigint,
-  'Current stage count excludes ended and future stages'
+  'Now counts only Periods that have started and not ended'
 );
 select is(
   (select jsonb_array_length(recent_entries) from public.home_workspace('2026-09-03', 'America/Los_Angeles', 2)),
@@ -328,15 +265,13 @@ select is(
 );
 select is(
   (select recent_entries -> 0 ->> 'title' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  'First long drive',
-  'Recent Entries use stable newest-organized ordering'
+  'Newest home thought',
+  'Recent Entries start with the newest Capture'
 );
-select ok(
-  not (
-    select recent_entries @> '[{"title":"Newest home thought"}]'::jsonb
-    from public.home_workspace('2026-09-03', 'America/Los_Angeles', 10)
-  ),
-  'Recent Entries exclude unreviewed Inbox Captures'
+select is(
+  (select recent_entries -> 1 ->> 'title' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  'First long drive',
+  'Recent Entries use stable newest-first ordering'
 );
 select ok(
   not (
@@ -353,34 +288,29 @@ select ok(
   'Recent Entries exclude other owners'
 );
 select is(
-  (select recent_entries -> 0 -> 'collection_names' ->> 0 from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  'Home Test Learning',
-  'Recent Entries include active Collection names'
-);
-select is(
-  (select recent_entries -> 0 -> 'tag_names' ->> 0 from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  (select recent_entries -> 1 -> 'tag_names' ->> 0 from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
   'home-test',
   'Recent Entries include tag names'
 );
 select is(
-  (select recent_entries -> 0 -> 'attachments' -> 0 ->> 'mime_type' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  (select recent_entries -> 1 -> 'attachments' -> 0 ->> 'mime_type' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
   'image/jpeg',
   'Recent Entries include active private attachment metadata'
 );
 select is(
-  (select jsonb_array_length(current_stages) from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  (select jsonb_array_length(now_items) from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
   1,
-  'Current stages contain only active visible ranges'
+  'Now lists only Periods that have started and not ended'
 );
 select is(
-  (select current_stages -> 0 ->> 'title' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  (select now_items -> 0 ->> 'title' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
   'Current California chapter',
-  'Current stages retain their Entry title'
+  'Now items keep their Entry title'
 );
 select is(
-  (select current_stages -> 0 ->> 'track_name' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  'Other Events',
-  'Current stages retain their Timeline track'
+  (select now_items -> 0 ->> 'lane' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  'work_study',
+  'Now items say which Timeline lane they belong to'
 );
 select is(
   pg_temp.capture_sqlstate(
@@ -419,11 +349,11 @@ select is(
 );
 select is(
   (
-    select current_stage_count
+    select now_count
     from public.home_workspace('2026-09-02', 'Pacific/Kiritimati', 5)
   ),
   1::bigint,
-  'Current stage boundaries use the requested local timezone'
+  'Now uses the requested local timezone'
 );
 
 reset role;

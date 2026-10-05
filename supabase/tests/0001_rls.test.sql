@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(32);
+select plan(28);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -78,11 +78,11 @@ select ok(
 select is(
   (
     select count(*)::integer
-    from public.timeline_tracks
-    where owner_id = '10000000-0000-0000-0000-000000000001'
+    from public.milestones
+    where owner_id = '10000000-0000-0000-0000-000000000002'
   ),
-  8,
-  'New users receive the eight default timeline tracks'
+  0,
+  'New users start with an empty Timeline'
 );
 
 select is(
@@ -142,16 +142,6 @@ select lives_ok(
 
 select is(
   (
-    select count(*)::integer
-    from public.entry_versions
-    where entry_id = '40000000-0000-0000-0000-000000000002'
-  ),
-  1,
-  'Updating an Entry records immutable history'
-);
-
-select is(
-  (
     select revision
     from public.entries
     where id = '40000000-0000-0000-0000-000000000002'
@@ -163,24 +153,20 @@ select is(
 select lives_ok(
   $$
     select *
-    from public.review_wiki_item_with_photo_place(
+    from public.save_entry(
       '40000000-0000-0000-0000-000000000002',
       2,
       'First time skiing',
-      'A cold and brilliant day.',
-      'entry','entry',
+      'A cold and brilliant day.', null,
       '2026-07-03T18:30:00Z',
-      'America/Los_Angeles',
-      array['Travel', 'Learning', 'travel'],
-      array['skiing', 'learning', 'Skiing'],
-      false,
       null,
+      'America/Los_Angeles',
       null,
       'exact',
-      null
-    )
+      array['skiing', 'learning', 'Skiing'],
+      null, null, null)
   $$,
-  'An owner can atomically review an Entry with Collections and tags'
+  'An owner can atomically review an Entry with tags'
 );
 
 select is(
@@ -206,26 +192,6 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.entry_versions
-    where entry_id = '40000000-0000-0000-0000-000000000002'
-  ),
-  2,
-  'Atomic review preserves the previous Entry revision'
-);
-
-select is(
-  (
-    select count(*)::integer
-    from public.entry_collections
-    where entry_id = '40000000-0000-0000-0000-000000000002'
-  ),
-  2,
-  'Atomic review de-duplicates and links Collections'
-);
-
-select is(
-  (
-    select count(*)::integer
     from public.entry_tags
     where entry_id = '40000000-0000-0000-0000-000000000002'
   ),
@@ -236,22 +202,18 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.review_wiki_item_with_photo_place(
+    from public.save_entry(
       '40000000-0000-0000-0000-000000000002',
       2,
       'Stale overwrite',
-      '',
-      'entry','entry',
+      '', null,
       '2026-07-03T18:30:00Z',
-      'UTC',
-      array['Wrong Collection'],
-      array['wrong-tag'],
-      true,
       null,
+      'UTC',
       null,
       'exact',
-      null
-    )
+      array['wrong-tag'],
+      null, null, null)
   ),
   0,
   'A stale review returns no row'
@@ -270,35 +232,21 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.review_wiki_item_with_photo_place(
+    from public.save_entry(
       '40000000-0000-0000-0000-000000000002',
       3,
       'First time skiing',
-      'A cold and brilliant day.',
-      'entry','entry',
+      'A cold and brilliant day.', null,
       '2026-07-03T18:30:00Z',
-      'America/Los_Angeles',
-      array['Travel', 'Learning'],
-      array['skiing', 'learning'],
-      true,
       null,
+      'America/Los_Angeles',
       null,
       'exact',
-      null
-    )
+      array['skiing', 'learning'],
+      null, null, null)
   ),
   1,
-  'The current revision can be explicitly marked Done'
-);
-
-select is(
-  (
-    select inbox_status
-    from public.entries
-    where id = '40000000-0000-0000-0000-000000000002'
-  ),
-  'organized',
-  'Done marks the Entry organized'
+  'The current revision can be reviewed'
 );
 
 select is(
@@ -308,7 +256,7 @@ select is(
     where id = '40000000-0000-0000-0000-000000000002'
   ),
   4,
-  'Done preserves history through one additional revision'
+  'Done advances the revision once'
 );
 
 reset role;
@@ -351,22 +299,18 @@ select is(
 select is(
   (
     select count(*)::integer
-    from public.review_wiki_item_with_photo_place(
+    from public.save_entry(
       '40000000-0000-0000-0000-000000000001',
       1,
       'Changed by another user',
-      '',
-      'entry','entry',
+      '', null,
       '2026-07-03T18:30:00Z',
-      'UTC',
-      '{}'::text[],
-      '{}'::text[],
-      false,
       null,
+      'UTC',
       null,
       'exact',
-      null
-    )
+      '{}'::text[],
+      null, null, null)
   ),
   0,
   'Another authenticated user cannot review the first user''s Entry'
@@ -374,23 +318,23 @@ select is(
 
 select lives_ok(
   $$
-    insert into public.collections (id, owner_id, name)
+    insert into public.tags (id, owner_id, name)
     values (
-      '20000000-0000-0000-0000-000000000003',
+      '30000000-0000-0000-0000-000000000003',
       '10000000-0000-0000-0000-000000000002',
-      'Second User Collection'
+      'Second User Tag'
     )
   $$,
-  'A second user can create their own Collection'
+  'A second user can create their own tag'
 );
 
 select is(
   pg_temp.capture_sqlstate(
     $$
-      insert into public.entry_collections (entry_id, collection_id, owner_id)
+      insert into public.entry_tags (entry_id, tag_id, owner_id)
       values (
         '40000000-0000-0000-0000-000000000002',
-        '20000000-0000-0000-0000-000000000003',
+        '30000000-0000-0000-0000-000000000003',
         '10000000-0000-0000-0000-000000000002'
       )
     $$

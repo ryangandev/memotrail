@@ -23,11 +23,9 @@ insert into public.ai_exploration_turns(id,owner_id,entry_id,question,source_rev
 create function pg_temp.capture(p_id uuid default '87000000-0000-4000-8000-000000000020') returns jsonb language sql as $$select public.create_export_snapshot(p_id)$$;
 create function pg_temp.page(p_after bigint default 0,p_limit integer default 100) returns jsonb language sql as $$select public.read_export_snapshot('87000000-0000-4000-8000-000000000020',p_after,p_limit)$$;
 select set_eq($$select unnest(public.export_dataset_names()) except select 'media_objects'$$,
- -- Internal photo revision reconciliation has no user content; complete snapshots
- -- and original membership are already exported through entry_versions/attachments.
  -- Pending Storage removals belong to permanently deleted media, never to the archive,
  -- and tombstones only keep permanently deleted Entries from being created again.
- $$select tablename from pg_tables where schemaname='public' and tablename not in ('export_snapshots','export_snapshot_rows','entry_photo_changes','entry_places','location_provider_usage','media_purges','entry_tombstones')
+ $$select tablename from pg_tables where schemaname='public' and tablename not in ('export_snapshots','export_snapshot_rows','entry_places','location_provider_usage','media_purges','entry_tombstones')
    union all select 'entry_locations'$$,
  'Explicit export inventory covers every canonical table and requires updates for new tables');
 set local role authenticated;
@@ -35,7 +33,6 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000095'
 select throws_ok($$select pg_temp.capture(null)$$,'22023','invalid_export_request','A stable request ID is required');
 select is(pg_temp.capture()->>'schema_version','1','Snapshot creation succeeds without enabling AI');
 select is(pg_temp.capture()->'datasets'->>'entries','1006','Complete source contains more than the default 1000-row REST limit');
-select is(pg_temp.capture()->'datasets'->>'entry_versions','1','Earlier Entry writing is included');
 select is(pg_temp.capture()->'datasets'->>'ai_exploration_turns','1','AI conversations are canonical export content');
 select is(pg_temp.capture()->'datasets'->>'ai_preferences','1','Consent settings are preserved');
 select is(pg_temp.capture()->'datasets'->>'media_objects','2','Every attachment has a frozen media manifest record');
@@ -62,7 +59,7 @@ select is((select value->>'available' from public.export_snapshot_rows where dat
 select is((select value->>'storage_version' from public.export_snapshot_rows where dataset='media_objects' and value->>'attachment_id'='87000000-0000-4000-8000-000000000011'),null::text,'Other-owner storage identity never leaks');
 update public.entries set body='Changed after capture',revision=3 where id='87000000-0000-4000-8000-000000000001';
 select is((select value->>'body' from public.export_snapshot_rows where dataset='entries' and value->>'id'='87000000-0000-4000-8000-000000000001'),'Preserved writing','Concurrent later edits cannot change snapshot pages');
-select is(pg_temp.capture()->'datasets'->>'entry_versions','1','Creation retries do not silently capture new history');
+select is((select count(*) from (select pg_temp.capture()) as retry, public.export_snapshots),1::bigint,'Creation retries after later edits reuse the frozen snapshot');
 select lives_ok($$select pg_temp.capture('87000000-0000-4000-8000-000000000021')$$,'A second distinct snapshot may be active');
 select throws_ok($$select pg_temp.capture('87000000-0000-4000-8000-000000000022')$$,'P0001','export_limit_reached','Bound concurrent snapshot storage');
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000096',true);

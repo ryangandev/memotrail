@@ -146,7 +146,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
     await page.reload();
     await expect(occurrenceStartField(capture)).toHaveValue("20");
     await capture
-      .getByRole("button", { name: "Save to Inbox", exact: true })
+      .getByRole("button", { name: "Save to Library", exact: true })
       .click();
     await expect(capture).toContainText("Choose a valid calendar date");
     expect((await client.from("entries").select("id")).data).toHaveLength(0);
@@ -212,7 +212,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
         });
       }
       await capture
-        .getByRole("button", { name: "Save to Inbox", exact: true })
+        .getByRole("button", { name: "Save to Library", exact: true })
         .click();
       if (item.precision === "age") {
         await expect(
@@ -237,9 +237,11 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
           occurredLabel: "At age 17",
         });
         await context.setOffline(false);
-        // Let the online listener finish its retry/refresh before exercising
-        // reload recovery, rather than aborting its in-flight RSC stream.
-        await page.waitForLoadState("networkidle");
+        // Let the online retry finish before exercising reload recovery,
+        // rather than aborting its in-flight render.
+        await expect(
+          page.getByRole("region", { name: "Recent Entries", exact: true }),
+        ).toContainText("Capture age");
         await page.reload();
       }
       await expect
@@ -272,7 +274,6 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       expect(saved).toMatchObject({
         body: `Capture ${item.precision}`,
         date_precision: item.precision,
-        inbox_status: "unreviewed",
         occurred_timezone: "Asia/Kathmandu",
         occurred_label: item.label || null,
         title: null,
@@ -289,7 +290,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
         item.end ? "2017-08-12T06:15:00+00:00" : null,
       );
       await expect(
-        capture.getByRole("button", { name: "Save to Inbox", exact: true }),
+        capture.getByRole("button", { name: "Save to Library", exact: true }),
       ).toBeEnabled();
     }
 
@@ -304,7 +305,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       .fill("Default capture time");
     const beforeDefault = Date.now();
     await capture
-      .getByRole("button", { name: "Save to Inbox", exact: true })
+      .getByRole("button", { name: "Save to Library", exact: true })
       .click();
     await expect
       .poll(
@@ -356,7 +357,7 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       await route.continue();
     });
     await newCapture
-      .getByRole("button", { name: "Save to Inbox", exact: true })
+      .getByRole("button", { name: "Save to Library", exact: true })
       .click();
     await expect(
       newCapture.getByRole("button", { name: "Saving…", exact: true }),
@@ -378,11 +379,14 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
     ).toBe("no");
     await page.unroute("**/*");
     await expect(
-      newCapture.getByRole("button", { name: "Save to Inbox", exact: true }),
+      newCapture.getByRole("button", { name: "Save to Library", exact: true }),
     ).toBeEnabled();
     await newCapture
       .getByRole("button", { name: "Close quick capture" })
       .click();
+    await expect(
+      page.getByRole("region", { name: "Recent Entries", exact: true }),
+    ).toContainText("Capture from New");
 
     // Old pending payloads retain their UUID/date and are not duplicated on replay.
     const legacyId = randomUUID();
@@ -425,6 +429,10 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       date_precision: "exact",
       occurred_start: "2017-07-08T12:34:56.123456+00:00",
     });
+    // The replay finishes once the Dashboard shows the Entry.
+    await expect(
+      page.getByRole("region", { name: "Recent Entries", exact: true }),
+    ).toContainText("Legacy capture");
   } finally {
     await context.setOffline(false);
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();

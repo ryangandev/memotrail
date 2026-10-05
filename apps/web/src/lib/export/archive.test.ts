@@ -52,7 +52,10 @@ const media = {
   etag: "original-etag",
   byte_size: "3",
 };
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 describe("complete ZIP streaming", () => {
   it("ends an owner-scoped archive with the completion record only after all files", async () => {
     const f = fixture(media);
@@ -90,6 +93,7 @@ describe("complete ZIP streaming", () => {
       const f = fixture(record);
       const fetch = vi.fn();
       vi.stubGlobal("fetch", fetch);
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
       await expect(
         new Response(
           createExportArchive(
@@ -101,6 +105,9 @@ describe("complete ZIP streaming", () => {
         ).arrayBuffer(),
       ).rejects.toThrow("Export interrupted");
       expect(fetch).not.toHaveBeenCalled();
+      expect(warn).toHaveBeenCalledWith("Export stopped before completion", {
+        reason: "Original media is missing or cannot be verified.",
+      });
     },
   );
   it.each([
@@ -118,6 +125,7 @@ describe("complete ZIP streaming", () => {
             new Response(new Uint8Array(bytes), { headers: { etag } }),
         ),
       );
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
       await expect(
         new Response(
           createExportArchive(
@@ -128,16 +136,23 @@ describe("complete ZIP streaming", () => {
           ),
         ).arrayBuffer(),
       ).rejects.toThrow();
+      expect(warn).toHaveBeenCalledWith("Export stopped before completion", {
+        reason: expect.stringMatching(
+          /^Original media (size )?changed after capture\.$/,
+        ),
+      });
     },
   );
   it("does not hang when the request is already cancelled", async () => {
     const f = fixture();
+    const warn = vi.spyOn(console, "warn");
     await expect(
       new Response(
         createExportArchive(f.client, owner, f.snapshot, AbortSignal.abort()),
       ).arrayBuffer(),
     ).rejects.toThrow();
     expect(f.rpc).not.toHaveBeenCalled();
+    expect(warn).not.toHaveBeenCalled();
   });
   it("stops pagination when the consumer cancels", async () => {
     const f = fixture();
@@ -148,16 +163,19 @@ describe("complete ZIP streaming", () => {
       f.snapshot,
       controller.signal,
     ).getReader();
+    const warn = vi.spyOn(console, "warn");
     await reader.read();
     await reader.cancel();
     await new Promise((resolve) => setTimeout(resolve, 10));
     const calls = f.rpc.mock.calls.length;
     await new Promise((resolve) => setTimeout(resolve, 10));
     expect(f.rpc).toHaveBeenCalledTimes(calls);
+    expect(warn).not.toHaveBeenCalled();
   });
   it("refuses incomplete pagination instead of silently dropping rows", async () => {
     const f = fixture();
     f.rows[0].position = 2;
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     await expect(
       new Response(
         createExportArchive(
@@ -168,6 +186,9 @@ describe("complete ZIP streaming", () => {
         ),
       ).arrayBuffer(),
     ).rejects.toThrow();
+    expect(warn).toHaveBeenCalledWith("Export stopped before completion", {
+      reason: "Export page is incomplete.",
+    });
   });
   it("validates snapshot counts and owner-scoped availability before sending headers", async () => {
     const f = fixture();

@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(28);
+select plan(27);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -84,7 +84,6 @@ insert into public.entries (
   body,
   item_kind,
   item_subtype,
-  inbox_status,
   occurred_start,
   occurred_end,
   date_precision,
@@ -98,8 +97,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Recent anniversary',
     'The most recent matching organized memory.',
-    'entry','first_time',
-    'organized',
+    'entry','entry',
     '2025-09-03T17:00:00Z',
     null,
     'day',
@@ -113,7 +111,6 @@ values
     'Older anniversary',
     'A matching but older memory.',
     'entry','entry',
-    'organized',
     '2020-09-03T17:00:00Z',
     null,
     'day',
@@ -127,7 +124,6 @@ values
     'Tokyo fourth',
     'This instant is September fourth in its original timezone.',
     'entry','entry',
-    'organized',
     '2025-09-04T02:00:00Z',
     null,
     'exact',
@@ -141,7 +137,6 @@ values
     'Unreviewed anniversary',
     'Inbox material must not resurface.',
     'entry','entry',
-    'unreviewed',
     '2025-09-03T18:00:00Z',
     null,
     'day',
@@ -154,8 +149,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'Life stage anniversary',
     'Current stages already have their own Home context.',
-    'entry','period',
-    'organized',
+    'entry','entry',
     '2025-09-03T19:00:00Z',
     null,
     'year',
@@ -169,7 +163,6 @@ values
     'Deleted anniversary',
     'Trash must stay out of resurfacing.',
     'entry','entry',
-    'organized',
     '2025-09-03T20:00:00Z',
     null,
     'day',
@@ -183,7 +176,6 @@ values
     'Archive alpha',
     'The first fallback candidate.',
     'entry','entry',
-    'organized',
     '2020-06-01T12:00:00Z',
     null,
     'day',
@@ -197,7 +189,6 @@ values
     'Archive beta',
     'The second fallback candidate.',
     'entry','entry',
-    'organized',
     '2020-07-01T12:00:00Z',
     null,
     'day',
@@ -211,7 +202,6 @@ values
     'Too recent for fallback',
     'Fallback waits until an Entry is at least thirty days old.',
     'entry','entry',
-    'organized',
     '2026-08-20T12:00:00Z',
     null,
     'day',
@@ -220,26 +210,16 @@ values
     null
   );
 
-insert into public.collections (id, owner_id, name, sort_order)
-values (
-  '88000000-0000-0000-0000-000000000001',
-  '10000000-0000-0000-0000-000000000001',
-  'Anniversaries',
-  90
-);
+insert into public.milestones (entry_id, owner_id, shape, lane, is_first_time)
+values
+  ('87000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'moment', 'other', true),
+  ('87000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000001', 'period', 'other', false);
 
 insert into public.tags (id, owner_id, name)
 values (
   '89000000-0000-0000-0000-000000000001',
   '10000000-0000-0000-0000-000000000001',
   'remember-this'
-);
-
-insert into public.entry_collections (entry_id, collection_id, owner_id)
-values (
-  '87000000-0000-0000-0000-000000000001',
-  '88000000-0000-0000-0000-000000000001',
-  '10000000-0000-0000-0000-000000000001'
 );
 
 insert into public.entry_tags (entry_id, tag_id, owner_id)
@@ -293,14 +273,9 @@ select is(
   'An anniversary includes its elapsed year count'
 );
 select is(
-  (select item_subtype from public.home_resurfaced_memory('2026-09-03', 'America/Los_Angeles')),
-  'first_time',
-  'The selected memory preserves its Wiki Item subtype'
-);
-select is(
-  (select collection_names ->> 0 from public.home_resurfaced_memory('2026-09-03', 'America/Los_Angeles')),
-  'Anniversaries',
-  'The selected memory includes active Collections'
+  (select item_kind || ':' || item_subtype from public.home_resurfaced_memory('2026-09-03', 'America/Los_Angeles')),
+  'entry:entry',
+  'The selected memory keeps its record type'
 );
 select is(
   (select tag_names ->> 0 from public.home_resurfaced_memory('2026-09-03', 'America/Los_Angeles')),
@@ -325,7 +300,7 @@ select isnt(
 select isnt(
   (select title from public.home_resurfaced_memory('2026-09-03', 'America/Los_Angeles')),
   'Life stage anniversary',
-  'Life stages stay in their dedicated Home context'
+  'Periods stay in Now on Home'
 );
 select isnt(
   (select title from public.home_resurfaced_memory('2026-09-03', 'America/Los_Angeles')),

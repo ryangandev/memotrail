@@ -7,39 +7,41 @@ import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
 const scenarios = [
-  { name: "Goal from a Capture", kind: "goal", capture: true, provider: false },
-  { name: "Home from a Capture", kind: "home", capture: true, provider: false },
+  { name: "Want to Do item", kind: "goal", provider: false },
+  { name: "Home", kind: "home", provider: false },
+  { name: "Vehicle", kind: "vehicle", provider: false },
+  { name: "Home with a provider address", kind: "home", provider: true },
   {
-    name: "Vehicle from a Capture",
+    name: "Vehicle with a provider Location",
     kind: "vehicle",
-    capture: true,
-    provider: false,
-  },
-  {
-    name: "Home with a provider address",
-    kind: "home",
-    capture: false,
-    provider: true,
-  },
-  {
-    name: "Home from a Capture with a provider address",
-    kind: "home",
-    capture: true,
-    provider: true,
-  },
-  {
-    name: "Vehicle from a Capture with a provider Location",
-    kind: "vehicle",
-    capture: true,
     provider: true,
   },
 ] as const;
 
 const records = {
-  goal: { label: "Goal", path: "/goals", itemKind: "goal", subtype: "goal" },
-  home: { label: "Home", path: "/homes", itemKind: "entity", subtype: "home" },
+  goal: {
+    add: "Add to Want to Do",
+    nameField: "Title",
+    partial: "Saved",
+    saved: "Changes saved.",
+    path: "/goals",
+    itemKind: "goal",
+    subtype: "goal",
+  },
+  home: {
+    add: "Add Home",
+    nameField: "Home name",
+    partial: "The Home was saved",
+    saved: "Home saved.",
+    path: "/homes",
+    itemKind: "entity",
+    subtype: "home",
+  },
   vehicle: {
-    label: "Vehicle",
+    add: "Add Vehicle",
+    nameField: "Name or nickname",
+    partial: "The Vehicle was saved",
+    saved: "Vehicle saved.",
     path: "/vehicles",
     itemKind: "entity",
     subtype: "vehicle",
@@ -74,7 +76,7 @@ for (const scenario of scenarios) {
     expect(created.error).toBeNull();
     const owner = created.data.user!.id;
     const record = records[scenario.kind];
-    const title = `Retry ${record.label} fixture`;
+    const title = `Retry ${record.subtype} fixture`;
 
     try {
       const cookies: { name: string; value: string }[] = [];
@@ -109,51 +111,18 @@ for (const scenario of scenarios) {
       );
       if (scenario.provider) await mockProviderSearch(page);
 
-      const captureID = randomUUID();
-      const capturedAt = "2024-03-05T08:31:00+00:00";
       const editor = page.getByRole("dialog");
-      if (scenario.capture) {
-        expect(
-          (
-            await client.from("entries").insert({
-              id: captureID,
-              owner_id: owner,
-              title,
-              body: "Started as an Inbox Capture.",
-              item_kind: "entry",
-              item_subtype: "entry",
-              inbox_status: "unreviewed",
-              // A day-precision date keeps its captured time unless it is edited.
-              date_precision: "day",
-              occurred_start: capturedAt,
-              occurred_timezone: "UTC",
-            })
-          ).error,
-        ).toBeNull();
-        await page.goto(`${record.path}?source=${captureID}`);
-        // The shared Dialog mounts only on the client, so it appears once the page hydrates.
-        await expect(
-          page.getByRole("dialog", {
-            name: `Create a ${record.label} from this Capture`,
-          }),
-        ).toBeVisible(slow);
-        await expect(
-          editor.getByText("Starting from an Inbox Capture"),
-        ).toBeVisible();
-      } else {
-        await page.goto(record.path);
-        // The page is server rendered, so a click before hydration opens nothing.
-        await expect(async () => {
-          if (!(await editor.isVisible())) {
-            await page
-              .getByRole("button", { name: `Add ${record.label}` })
-              .first()
-              .click();
-          }
-          await expect(editor).toBeVisible({ timeout: 2_000 });
-        }).toPass(slow);
-        await editor.getByRole("textbox", { name: "Home name" }).fill(title);
-      }
+      await page.goto(record.path);
+      // The page is server rendered, so a click before hydration opens nothing.
+      await expect(async () => {
+        if (!(await editor.isVisible())) {
+          await page.getByRole("button", { name: record.add }).first().click();
+        }
+        await expect(editor).toBeVisible({ timeout: 2_000 });
+      }).toPass(slow);
+      await editor
+        .getByRole("textbox", { name: record.nameField, exact: true })
+        .fill(title);
       if (scenario.provider) {
         await editor
           .getByRole("combobox", { name: "Find a Location" })
@@ -186,11 +155,11 @@ for (const scenario of scenarios) {
         } else await route.continue();
       });
       await editor
-        .getByRole("button", { name: `Add ${record.label}`, exact: true })
+        .getByRole("button", { name: record.add, exact: true })
         .click();
       await expect(
         editor.getByText(
-          `The ${record.label} was saved, but 1 photo could not be attached. Select Save again to retry.`,
+          `${record.partial}, but 1 photo could not be attached. Select Save again to retry.`,
         ),
       ).toBeVisible(slow);
       expect(failedUploads).toBe(1);
@@ -211,19 +180,20 @@ for (const scenario of scenarios) {
       );
       expect(createdLocations).toHaveLength(scenario.provider ? 1 : 0);
 
-      // A record that exists is updated; the Capture handoff and provider choice belong only to creation.
+      // A record that exists is updated; the provider choice belongs only to creation.
       await expect(
         editor.getByRole("heading", { name: title, exact: true }),
       ).toBeVisible();
-      await expect(
-        editor.getByText("Starting from an Inbox Capture"),
-      ).toHaveCount(0);
       await expect(editor.locator('img[alt^="Selected "]')).toHaveCount(1);
       await editor
         .getByRole("button", { name: "Save changes", exact: true })
         .click();
       await expect(editor).not.toBeVisible(slow);
-      await expect(page.getByText(`${record.label} saved.`)).toBeVisible();
+      await expect(page.getByText(record.saved)).toBeVisible();
+      // The refreshed card shows both photos.
+      await expect(
+        page.locator("main").getByText("2 photos", { exact: true }),
+      ).toBeVisible();
 
       const entries = await client
         .from("entries")
@@ -232,12 +202,7 @@ for (const scenario of scenarios) {
         .eq("item_kind", record.itemKind)
         .eq("item_subtype", record.subtype);
       expect(entries.data).toEqual([
-        {
-          id: entryID,
-          title,
-          occurred_start:
-            scenario.capture && scenario.kind !== "goal" ? capturedAt : null,
-        },
+        { id: entryID, title, occurred_start: null },
       ]);
       const attached = await client
         .from("attachments")
@@ -259,38 +224,6 @@ for (const scenario of scenarios) {
         expect(Buffer.from(await original.data!.arrayBuffer())).toEqual(
           photos.find((item) => item.name === photo.original_filename)!.buffer,
         );
-      }
-
-      if (scenario.capture) {
-        const capture = await client
-          .from("entries")
-          .select("inbox_status,item_subtype")
-          .eq("id", captureID)
-          .single();
-        expect(capture.data).toEqual({
-          inbox_status: "organized",
-          item_subtype: "source_capture",
-        });
-        const provenance = await client
-          .from("entry_links")
-          .select("source_entry_id,target_entry_id,relationship")
-          .eq("owner_id", owner)
-          .in("relationship", ["derived", "derived_from"])
-          .order("relationship");
-        expect(provenance.data).toEqual([
-          {
-            source_entry_id: captureID,
-            target_entry_id: entryID,
-            relationship: "derived",
-          },
-          {
-            source_entry_id: entryID,
-            target_entry_id: captureID,
-            relationship: "derived_from",
-          },
-        ]);
-        // Closing the editor consumes the handoff instead of leaving it in the URL.
-        await expect(page).toHaveURL(record.path, slow);
       }
 
       // The retry keeps the provider snapshot made on creation instead of copying it.
@@ -327,18 +260,13 @@ async function savedLocations(
   entryID: string,
 ) {
   if (kind === "goal") return [];
-  const links =
-    kind === "home"
-      ? await client.from("homes").select("place_id").eq("entry_id", entryID)
-      : await client
-          .from("entry_places")
-          .select("place_id")
-          .eq("entry_id", entryID)
-          .eq("relationship", "primary");
+  const links = await client
+    .from("entry_locations")
+    .select("location_id")
+    .eq("entry_id", entryID)
+    .eq("relationship", "primary");
   expect(links.error).toBeNull();
-  return links
-    .data!.map((link) => link.place_id as string | null)
-    .filter((id): id is string => id !== null);
+  return links.data!.map((link) => link.location_id as string);
 }
 
 async function mockProviderSearch(page: Page) {
@@ -353,7 +281,6 @@ async function mockProviderSearch(page: Page) {
             kind: "provider",
             provider: "geoapify",
             providerLocationId: "synthetic-retry-address",
-            name: "10 Pine Street, Philadelphia, PA",
             formattedAddress: "10 Pine Street, Philadelphia, PA",
             address: "10 Pine Street",
             city: "Philadelphia",

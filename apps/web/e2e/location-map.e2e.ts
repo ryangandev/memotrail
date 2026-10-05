@@ -75,8 +75,7 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
             title: "A day at Pine Street",
             body: "An event",
             item_kind: "entry",
-            item_subtype: "first_time",
-            inbox_status: "organized",
+            item_subtype: "entry",
             date_precision: "day",
             occurred_start: "2020-06-01T00:00:00Z",
           },
@@ -87,7 +86,6 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
             body: "A memory",
             item_kind: "entry",
             item_subtype: "entry",
-            inbox_status: "organized",
             date_precision: "year",
             occurred_start: "2022-01-01T00:00:00Z",
           },
@@ -98,11 +96,21 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
             body: "Hidden from map",
             item_kind: "entry",
             item_subtype: "entry",
-            inbox_status: "organized",
             date_precision: "unknown",
             deleted_at: new Date().toISOString(),
           },
         ])
+      ).error,
+    ).toBeNull();
+    expect(
+      (
+        await client.from("milestones").insert({
+          entry_id: eventId,
+          owner_id: owner,
+          shape: "moment",
+          lane: "other",
+          is_first_time: true,
+        })
       ).error,
     ).toBeNull();
     expect(
@@ -116,7 +124,6 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
             id,
             owner_id: owner,
             bound_entry_id: entryId,
-            name: "10 Pine Street",
             formatted_address: "10 Pine Street, Philadelphia, PA",
             address: "10 Pine Street",
             city: "Philadelphia",
@@ -128,29 +135,29 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
     ).toBeNull();
     expect(
       (
-        await client.from("entry_places").insert([
+        await client.from("entry_locations").insert([
           {
             owner_id: owner,
             entry_id: eventId,
-            place_id: eventLocationId,
+            location_id: eventLocationId,
             relationship: "primary",
           },
           {
             owner_id: owner,
             entry_id: eventId,
-            place_id: eventLocationId,
-            relationship: "related",
+            location_id: eventLocationId,
+            relationship: "photo",
           },
           {
             owner_id: owner,
             entry_id: writingId,
-            place_id: writingLocationId,
-            relationship: "related",
+            location_id: writingLocationId,
+            relationship: "photo",
           },
           {
             owner_id: owner,
             entry_id: deletedId,
-            place_id: deletedLocationId,
+            location_id: deletedLocationId,
             relationship: "primary",
           },
         ])
@@ -289,7 +296,6 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
           body: "A San Francisco memory",
           item_kind: "entry",
           item_subtype: "entry",
-          inbox_status: "organized",
           date_precision: "year",
           occurred_start: "2024-01-01T00:00:00Z",
         })
@@ -301,7 +307,6 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
           id: westLocationId,
           owner_id: owner,
           bound_entry_id: westEntryId,
-          name: "San Francisco Bay",
           formatted_address: "San Francisco, California",
           city: "San Francisco",
           region: "California",
@@ -313,10 +318,10 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
     ).toBeNull();
     expect(
       (
-        await client.from("entry_places").insert({
+        await client.from("entry_locations").insert({
           owner_id: owner,
           entry_id: westEntryId,
-          place_id: westLocationId,
+          location_id: westLocationId,
           relationship: "primary",
         })
       ).error,

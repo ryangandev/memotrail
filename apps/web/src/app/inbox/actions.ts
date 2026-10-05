@@ -4,12 +4,11 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { AI_CAPABILITIES_AVAILABLE } from "@/lib/ai/availability";
 import { suggestForEntry } from "@/lib/ai/suggestions-server";
-import { writingRevision } from "@/lib/media/writing-revision";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
-  parseFirstTimeAttachmentInput,
-  type FirstTimeAttachmentInput,
-} from "@/lib/data/first-time-input";
+  parseEntryAttachmentInput,
+  type EntryAttachmentInput,
+} from "@/lib/data/entry-photo-input";
 import {
   isQueuedInboxEntry,
   queuedOccurrence,
@@ -33,6 +32,7 @@ import {
   trashedPhotoMessage,
 } from "@/lib/data/capture-sync-messages";
 import { classifySyncFailure, type SyncFailure } from "@/lib/data/sync-failure";
+import { milestoneRow } from "@/lib/data/milestone";
 
 /**
  * `retry` keeps a capture waiting for a later attempt; `rejected` means
@@ -61,7 +61,7 @@ const isOriginalMissing = (error: MemoTrailError) =>
 
 export type ReviewInboxEntryResult =
   | { message: string; status: "conflict" | "error" }
-  | { message: string; status: "done" | "saved"; revision: number };
+  | { message: string; status: "saved"; revision: number };
 
 /**
  * Registers an uploaded original. Pass `originalOnDevice: false` when this
@@ -69,11 +69,11 @@ export type ReviewInboxEntryResult =
  * is final instead of waiting for an upload that cannot happen.
  */
 export async function registerEntryAttachment(
-  input: FirstTimeAttachmentInput,
+  input: EntryAttachmentInput,
   options?: { originalOnDevice?: boolean },
 ): Promise<SyncInboxEntryResult> {
   const originalOnDevice = options?.originalOnDevice !== false;
-  const parsed = parseFirstTimeAttachmentInput(input);
+  const parsed = parseEntryAttachmentInput(input);
 
   if (!parsed.success) {
     return { message: rejectedPhotoMessage, status: "rejected" };
@@ -120,7 +120,7 @@ export async function registerEntryAttachment(
   }
 
   revalidatePath("/");
-  revalidatePath("/inbox");
+  revalidatePath("/library");
   revalidatePath("/search");
 
   return { message: "Photo attached.", status: "synced" };
@@ -157,7 +157,6 @@ export async function syncInboxEntry(
     item_kind: "entry",
     item_subtype: "entry",
     id: entry.id,
-    inbox_status: "unreviewed",
     occurred_start: entry.occurredAt,
     occurred_timezone: entry.occurredTimezone,
     owner_id: context.userId,
@@ -191,10 +190,11 @@ export async function syncInboxEntry(
   }
 
   revalidatePath("/");
+  revalidatePath("/library");
 
   if (entry.attachments.length === 0) await finishInboxCapture(entry.id);
   return {
-    message: "Saved to Inbox.",
+    message: "Saved to Library.",
     status: "synced",
   };
 }
@@ -205,30 +205,21 @@ export async function finishInboxCapture(entryId: string) {
   if (!AI_CAPABILITIES_AVAILABLE) return;
   const context = await getAuthenticatedContext();
   if (!context) return;
-  const revision = await writingRevision(context.client, entryId, 1);
+  // Registering photos leaves the Entry at the revision its capture made.
   after(async () => {
-    await suggestForEntry(
-      context.client,
-      context.userId,
-      entryId,
-      revision ?? 1,
-    ).catch(() => undefined);
+    await suggestForEntry(context.client, context.userId, entryId, 1).catch(
+      () => undefined,
+    );
   });
 }
 
 export async function reviewInboxEntry(
   input: InboxReviewInput,
-  intent: "done" | "save",
 ): Promise<ReviewInboxEntryResult> {
   const parsedInput = parseInboxReviewInput(input);
 
-  if (!parsedInput.success || (intent !== "save" && intent !== "done")) {
-    return {
-      message: parsedInput.success
-        ? "Choose a valid review action."
-        : parsedInput.message,
-      status: "error",
-    };
+  if (!parsedInput.success) {
+    return { message: parsedInput.message, status: "error" };
   }
 
   const context = await getAuthenticatedContext();
@@ -240,34 +231,28 @@ export async function reviewInboxEntry(
     };
   }
 
-  const { data, error } = await context.client.rpc(
-    "review_wiki_item_with_location_rich",
-    {
-      p_body_rich: parsedInput.data.bodyRich ?? null,
-      p_photo_place: parsedInput.data.photoPlace ?? null,
-      p_primary_location: parsedInput.data.location,
-      p_body: parsedInput.data.body,
-      p_collection_names: parsedInput.data.collectionNames,
-      p_entry_id: parsedInput.data.id,
-      p_item_kind: "entry",
-      p_item_subtype: "entry",
-      p_expected_revision: parsedInput.data.revision,
-      p_mark_done: intent === "done",
-      p_occurred_start: parsedInput.data.occurredAt,
-      p_occurred_end: parsedInput.data.occurredEnd ?? null,
-      p_occurred_label: parsedInput.data.occurredLabel ?? null,
-      p_date_precision: parsedInput.data.datePrecision ?? "exact",
-      p_occurred_timezone: parsedInput.data.occurredTimezone,
-      p_tag_names: parsedInput.data.tagNames,
-      p_title: parsedInput.data.title,
-    },
-  );
+  const { data, error } = await context.client.rpc("save_entry", {
+    p_body_rich: parsedInput.data.bodyRich ?? null,
+    p_photo_location: parsedInput.data.photoLocation ?? null,
+    p_primary_location: parsedInput.data.location,
+    p_body: parsedInput.data.body,
+    p_entry_id: parsedInput.data.id,
+    p_expected_revision: parsedInput.data.revision,
+    p_occurred_start: parsedInput.data.occurredAt,
+    p_occurred_end: parsedInput.data.occurredEnd ?? null,
+    p_occurred_label: parsedInput.data.occurredLabel ?? null,
+    p_date_precision: parsedInput.data.datePrecision ?? "exact",
+    p_occurred_timezone: parsedInput.data.occurredTimezone,
+    p_tag_names: parsedInput.data.tagNames,
+    p_title: parsedInput.data.title,
+    p_milestone: milestoneRow(parsedInput.data.milestone ?? null),
+  });
 
   if (error?.code === "40001")
     return {
       status: "conflict",
       message:
-        "The photo or Location changed. Close this review, refresh, and confirm the latest version before saving.",
+        "The photo or Location changed. Close this editor, refresh, and confirm the latest version before saving.",
     };
 
   if (error) {
@@ -282,28 +267,28 @@ export async function reviewInboxEntry(
     data.length === 0 ||
     typeof data[0]?.revision !== "number"
   ) {
-    return {
-      message:
-        "This Entry changed on another device. Close it, refresh, and review the latest version.",
-      status: "conflict",
-    };
+    return parsedInput.data.revision === null
+      ? {
+          // The create may have landed before its response was lost.
+          message:
+            "MemoTrail could not confirm this Entry was added. Refresh to check before adding it again.",
+          status: "conflict",
+        }
+      : {
+          message:
+            "This Entry changed on another device. Close it, refresh, and edit the latest version.",
+          status: "conflict",
+        };
   }
 
   revalidatePath("/");
-
-  revalidatePath("/inbox");
+  revalidatePath("/library");
   revalidatePath("/search");
-  return intent === "done"
-    ? {
-        message: "Entry organized.",
-        status: "done",
-        revision: data[0].revision,
-      }
-    : {
-        message: "Changes saved.",
-        status: "saved",
-        revision: data[0].revision,
-      };
+  return {
+    message: "Changes saved.",
+    status: "saved",
+    revision: data[0].revision,
+  };
 }
 
 function entrySyncFailure(failure: SyncFailure): SyncInboxEntryResult {

@@ -50,7 +50,7 @@ describe("confirmed Empty Trash", () => {
   it("deletes only the supplied targets and reports each confirmed success", async () => {
     const targets = parseEmptyTrashSnapshot([
       row,
-      { ...row, item_kind: "collection" },
+      { ...row, item_kind: "attachment", revision: null },
     ])!;
     const remove = vi.fn(async () => true),
       progress = vi.fn();
@@ -67,8 +67,8 @@ describe("confirmed Empty Trash", () => {
     async (mode) => {
       const targets = parseEmptyTrashSnapshot([
         row,
-        { ...row, item_kind: "collection" },
-        { ...row, item_kind: "person" },
+        { ...row, item_kind: "attachment", revision: null },
+        { ...row, item_id: "95000000-0000-4000-8000-000000000002" },
       ])!;
       const remove = vi
         .fn()

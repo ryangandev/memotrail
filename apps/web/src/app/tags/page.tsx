@@ -3,10 +3,10 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/button";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
-import { OrganizationControl } from "@/components/organization-control";
+import { TagControl } from "@/components/tag-control";
 import { PageFrame } from "@/components/page-frame";
 import { SearchField } from "@/components/search-field";
-import { getOrganizationWorkspace } from "@/lib/data/organization-workspace";
+import { getTagsWorkspace } from "@/lib/data/organization-workspace";
 import styles from "./page.module.css";
 import { countLabel } from "@/lib/count-label";
 
@@ -24,28 +24,24 @@ export default async function TagsPage({
     Number.isSafeInteger(candidatePage) && candidatePage > 0
       ? candidatePage
       : 1;
-  const workspace = await getOrganizationWorkspace({
-    kind: "tag",
-    page,
-    query,
-  });
+  const workspace = await getTagsWorkspace({ page, query });
   if (!workspace) return null;
 
   return (
     <PageFrame variant="standard">
       <PageHeader
         title={<>Tags</>}
-        eyebrow={<>Filter across your archive</>}
+        eyebrow={<>Group across your archive</>}
         description={
           <>
-            Tags are lightweight descriptors such as travel, family, or funny.
-            Use them across Entry types when you want a flexible filter, not a
-            curated chapter.
+            Tags group related Entries, such as travel, family, or a trip you
+            want to keep together. Use them across Entry types and filter by
+            them anywhere.
           </>
         }
         actions={
           <>
-            <OrganizationControl items={workspace.items} kind="tag" />
+            <TagControl items={workspace.items} />
           </>
         }
       />
@@ -97,10 +93,9 @@ export default async function TagsPage({
           <div className={styles.tagCloud}>
             {workspace.items.map((item) => (
               <article className={styles.tagBadge} key={item.id}>
-                <OrganizationControl
+                <TagControl
                   item={item}
                   items={workspace.items}
-                  kind="tag"
                   trigger={
                     <>
                       <span className={styles.tagMark} aria-hidden="true">

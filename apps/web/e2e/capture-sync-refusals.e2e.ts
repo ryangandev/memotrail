@@ -49,7 +49,7 @@ for (const { body, label, message } of [
       code: "EntityTooLarge",
     },
     message:
-      "This Entry is in your Inbox, but one of its photos is too large for MemoTrail, so they will not sync. Discard to remove them from this device.",
+      "This Entry is in your Library, but one of its photos is too large for MemoTrail, so they will not sync. Discard to remove them from this device.",
   },
   {
     // Storage reports an expired session the same way, so the client checks
@@ -62,7 +62,7 @@ for (const { body, label, message } of [
       code: "AccessDenied",
     },
     message:
-      "This Entry is in your Inbox, but MemoTrail cannot accept one of its photos, so they will not sync. Discard to remove them from this device.",
+      "This Entry is in your Library, but MemoTrail cannot accept one of its photos, so they will not sync. Discard to remove them from this device.",
   },
 ]) {
   test(`a photo Storage refuses as ${label} is not accepted and never retried`, async ({
@@ -88,7 +88,7 @@ for (const { body, label, message } of [
       await expect(pendingIndicator(page)).toHaveText("1 not accepted");
       await expect(retryButton(page)).toHaveCount(0);
 
-      // The Entry reached the Inbox; only its photo was refused, unregistered.
+      // The Entry reached the Library; only its photo was refused, unregistered.
       const [entry] = await entries(client, `Refused photo ${label}`);
       expect(entry.deleted_at).toBeNull();
       expect(await attachmentCount(client, entry.id)).toBe(0);
@@ -155,11 +155,20 @@ test("a photo upload whose response was lost waits, then attaches the stored ori
     // Storage reports the stored original as a duplicate, which still attaches.
     await clickUnlessSynced(retryButton(page));
     await expect(
-      page.getByText("Saved to Inbox with 1 photo.", { exact: true }),
+      page.getByText("Saved to Library with 1 photo.", { exact: true }),
     ).toBeVisible({ timeout: 30_000 });
     await expect(card).toHaveCount(0);
     expect(uploads).toEqual([400]);
     expect(await attachmentCount(client, entry.id)).toBe(1);
+    // The Dashboard finishes once the attached photo's preview has loaded.
+    const preview = page.locator('main img[src*="/api/media/image"]').first();
+    await expect
+      .poll(() =>
+        preview.evaluate(
+          (img: HTMLImageElement) => img.complete && img.naturalWidth > 0,
+        ),
+      )
+      .toBe(true);
   });
 });
 
@@ -373,7 +382,7 @@ async function saveCapture(
         .toBuffer(),
     });
   const save = composer.getByRole("button", {
-    name: "Save to Inbox",
+    name: "Save to Library",
     exact: true,
   });
   await expect(save).toBeEnabled({ timeout: 60_000 });
@@ -444,7 +453,7 @@ async function attachmentCount(client: SupabaseClient, entryId: string) {
   return data?.length ?? 0;
 }
 
-/** Moves the Entry to Trash the way History does. */
+/** Moves the Entry to Trash the way the Item page does. */
 async function moveToTrash(client: SupabaseClient, body: string) {
   await expect.poll(async () => entries(client, body)).toHaveLength(1);
   const [entry] = await entries(client, body);

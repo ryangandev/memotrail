@@ -34,7 +34,7 @@ describe("Trash route input", () => {
 });
 
 describe("Trash item input", () => {
-  it("accepts revisioned Entry, Person, and Place identities", () => {
+  it("accepts revisioned Entry identities and refuses retired kinds", () => {
     expect(
       parseTrashItemInput({
         deletedAt,
@@ -43,22 +43,16 @@ describe("Trash item input", () => {
         revision: 2,
       }),
     ).toMatchObject({ success: true });
-    expect(
-      parseTrashItemInput({
-        deletedAt,
-        itemId,
-        itemKind: "person",
-        revision: 1,
-      }),
-    ).toMatchObject({ success: true });
-    expect(
-      parseTrashItemInput({
-        deletedAt,
-        itemId,
-        itemKind: "place",
-        revision: 1,
-      }).success,
-    ).toBe(false);
+    for (const itemKind of ["person", "place", "collection"]) {
+      expect(
+        parseTrashItemInput({
+          deletedAt,
+          itemId,
+          itemKind,
+          revision: 1,
+        }).success,
+      ).toBe(false);
+    }
   });
 
   it("accepts a revision-free attachment identity", () => {

@@ -23,7 +23,6 @@ describe("parseSearchRequest", () => {
 
   it("preserves filters and de-duplicates them case-insensitively", () => {
     const parsed = parseSearchRequest({
-      collection: [" Travel ", "travel"],
       from: "2026-01-01",
       tag: ["Snow", "snow"],
       to: "2026-12-31",
@@ -32,13 +31,25 @@ describe("parseSearchRequest", () => {
 
     expect(parsed.error).toBeNull();
     expect(parsed.request).toMatchObject({
-      collectionNames: ["Travel"],
       dateFrom: "2026-01-01",
       dateTo: "2026-12-31",
       itemClassifications: ["first_time"],
       hasCriteria: true,
       tagNames: ["Snow"],
     });
+  });
+
+  it("reads older Collection links as tag filters", () => {
+    const parsed = parseSearchRequest({
+      collection: [" Travel ", "snow"],
+      tag: "Snow",
+    });
+
+    expect(parsed.error).toBeNull();
+    expect(parsed.request.tagNames).toEqual(["Snow", "Travel"]);
+    expect(librarySearchHref(parsed.request, 1)).toBe(
+      "/library?tag=Snow&tag=Travel",
+    );
   });
 
   it("uses a bounded page to calculate the database offset", () => {
@@ -75,7 +86,6 @@ describe("parseSearchRequest", () => {
 describe("librarySearchHref", () => {
   it("preserves the full search while changing pages", () => {
     const request = parseSearchRequest({
-      collection: "Travel",
       from: "2026-01-01",
       q: "first snow",
       tag: "skiing",
@@ -83,7 +93,7 @@ describe("librarySearchHref", () => {
     }).request;
 
     expect(librarySearchHref(request, 2)).toBe(
-      "/library?q=first+snow&type=first_time&collection=Travel&tag=skiing&from=2026-01-01&page=2",
+      "/library?q=first+snow&type=first_time&tag=skiing&from=2026-01-01&page=2",
     );
   });
 });
@@ -95,9 +105,8 @@ describe("parseQuickSearchResult", () => {
         error: null,
         items: [
           {
-            href: "/history?entry=123",
+            href: "/items/123",
             id: "123",
-            kind: "entry",
             label: "Entry",
             subtitle: "A saved note",
             title: "Remember this",
@@ -115,7 +124,6 @@ describe("parseQuickSearchResult", () => {
           {
             href: "https://example.com",
             id: "123",
-            kind: "entry",
             label: "Entry",
             subtitle: "A saved note",
             title: "Remember this",

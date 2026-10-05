@@ -1,94 +1,78 @@
 import "server-only";
 
-import { displayImageURLs } from "@/lib/media/urls";
 import { getAuthenticatedContext, type Viewer } from "@/lib/data/inbox";
-import { parseHomeRows, type HomeRecord } from "@/lib/data/home-record";
-import {
-  parseVehicleRows,
-  type VehicleRecord,
-} from "@/lib/data/vehicle-record";
-import {
-  parseFirstTimeRows,
-  type FirstTimeEntry,
-} from "@/lib/data/first-times";
-import type {
-  TimelineDatePrecision,
-  TimelineKind,
-} from "@/lib/data/timeline-input";
 import {
   storedBirthDate,
   storedProfileTimezone,
 } from "@/lib/data/profile-input";
 import { isWikiItemKind, type WikiItemKind } from "@/lib/data/wiki-item";
-import { includeUnplacedFirstTimes } from "@/lib/data/timeline-first-times";
+import {
+  isMilestoneShape,
+  isTimelineLane,
+  timelineLaneLabels,
+  timelineLanes,
+  type MilestoneShape,
+  type TimelineLane,
+} from "@/lib/data/milestone";
+import {
+  occurrencePrecisions,
+  type OccurrencePrecision,
+} from "@/lib/data/occurrence";
 
 export type TimelineEntry = {
   body: string;
-  collectionNames: string[];
-  datePrecision: TimelineDatePrecision;
+  datePrecision: OccurrencePrecision;
   id: string;
+  isFirstTime: boolean;
   itemKind: WikiItemKind;
   itemSubtype: string;
-  kind: TimelineKind;
+  lane: TimelineLane;
   occurredEnd: string | null;
   occurredLabel: string | null;
   occurredStart: string | null;
   occurredTimezone: string;
   revision: number;
+  shape: MilestoneShape;
   tagNames: string[];
   title: string;
-  trackId: string;
   updatedAt: string;
 };
 
-export type TimelineTrack = {
-  id: string;
-  isHidden: boolean;
+export type TimelineLaneGroup = {
   items: TimelineEntry[];
+  key: TimelineLane;
   name: string;
-  sortOrder: number;
-  systemKey: string | null;
 };
 
 export type TimelineWorkspace = {
   birthDate: string | null;
   birthDateAvailable: boolean;
-  collectionOptions: string[];
   defaultTimezone: string;
-  firstTimes: FirstTimeEntry[];
-  homes: HomeRecord[];
-  inboxCount: number | undefined;
+  lanes: TimelineLaneGroup[];
   loadError: string | null;
   tagOptions: string[];
-  tracks: TimelineTrack[];
-  vehicles: VehicleRecord[];
   viewer: Viewer;
 };
 
 type NameRow = { name: string };
 
 type TimelineRow = {
-  body: string | null;
-  collection_names: string[];
-  date_precision: TimelineDatePrecision | null;
-  entry_id: string | null;
-  item_kind: WikiItemKind | null;
-  item_subtype: string | null;
-  item_sort_order: number | null;
+  body: string;
+  date_precision: string;
+  entry_id: string;
+  is_first_time: boolean;
+  item_kind: WikiItemKind;
+  item_subtype: string;
+  lane: TimelineLane;
   occurred_end: string | null;
   occurred_label: string | null;
   occurred_start: string | null;
-  occurred_timezone: string | null;
-  revision: number | null;
+  occurred_timezone: string;
+  revision: number;
+  shape: MilestoneShape;
   tag_names: string[];
-  timeline_kind: TimelineKind | null;
-  title: string | null;
-  track_id: string;
-  track_is_hidden: boolean;
-  track_name: string;
-  track_sort_order: number;
-  track_system_key: string | null;
-  updated_at: string | null;
+  title: string;
+  updated_at: string;
 };
 
 export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> {
@@ -98,40 +82,13 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
     return null;
   }
 
-  const [
-    timeline,
-    inbox,
-    profile,
-    homes,
-    vehicles,
-    firstTimes,
-    collections,
-    tags,
-  ] = await Promise.all([
-    context.client.rpc("timeline_workspace_with_organization", {
-      p_include_hidden: false,
-    }),
-    context.client
-      .from("entries")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", context.userId)
-      .eq("inbox_status", "unreviewed")
-      .is("deleted_at", null),
+  const [timeline, profile, tags] = await Promise.all([
+    context.client.rpc("timeline_workspace"),
     context.client
       .from("profiles")
       .select("*")
       .eq("user_id", context.userId)
       .single(),
-    context.client.rpc("homes_workspace", { p_limit: 100, p_offset: 0 }),
-    context.client.rpc("vehicles_workspace", { p_limit: 100, p_offset: 0 }),
-    context.client.rpc("first_times_workspace_with_occurrence"),
-    context.client
-      .from("collections")
-      .select("name")
-      .eq("owner_id", context.userId)
-      .is("archived_at", null)
-      .order("name")
-      .returns<NameRow[]>(),
     context.client
       .from("tags")
       .select("name")
@@ -140,143 +97,65 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
       .returns<NameRow[]>(),
   ]);
   const rows = timeline.error ? null : timelineRows(timeline.data);
-  const timelineEntryIds = new Set(
-    (rows ?? []).flatMap((row) => (row.entry_id ? [row.entry_id] : [])),
-  );
-  const firstTimesTrackVisible = rows?.some(
-    (row) => row.track_system_key === "first_times",
-  );
-  const homeRows = (
-    homes.error ? [] : (parseHomeRows(homes.data) ?? [])
-  ).filter((home) => timelineEntryIds.has(home.id));
-  const vehicleRows = (
-    vehicles.error ? [] : (parseVehicleRows(vehicles.data) ?? [])
-  ).filter((vehicle) => timelineEntryIds.has(vehicle.id));
-  const firstTimeRows = (
-    firstTimes.error ? [] : (parseFirstTimeRows(firstTimes.data) ?? [])
-  ).filter(
-    (entry) =>
-      timelineEntryIds.has(entry.entry_id) ||
-      (firstTimesTrackVisible && Boolean(entry.occurred_start)),
-  );
-  const imageUrls = await displayImageURLs(
-    context.client,
-    [
-      ...homeRows.flatMap((home) => home.attachments),
-      ...vehicleRows.flatMap((vehicle) => vehicle.attachments),
-      ...firstTimeRows.flatMap((entry) => entry.attachments),
-    ].map((attachment) => attachment.objectPath),
-  );
   const profileBirthDate = storedBirthDate(profile.error ? null : profile.data);
   const profileTimezone = storedProfileTimezone(
     profile.error ? null : profile.data,
   );
-  const firstTimeEntries: FirstTimeEntry[] = firstTimeRows.map((entry) => ({
-    attachments: entry.attachments.map((attachment) => ({
-      ...attachment,
-      imageUrl: imageUrls.get(attachment.objectPath) ?? null,
-    })),
-    body: entry.body,
-    collectionNames: entry.collection_names,
-    datePrecision: entry.date_precision,
-    id: entry.entry_id,
-    inboxStatus: entry.inbox_status,
-    occurredEnd: entry.occurred_end,
-    occurredLabel: entry.occurred_label,
-    occurredStart: entry.occurred_start,
-    occurredTimezone: entry.occurred_timezone,
-    revision: entry.revision,
-    tagNames: entry.tag_names,
-    title: entry.title,
-    updatedAt: entry.updated_at,
-  }));
 
   return {
     birthDate: profileBirthDate.birthDate,
     birthDateAvailable: profileBirthDate.available,
-    collectionOptions: collections.error
-      ? []
-      : (collections.data ?? []).map((item) => item.name),
     defaultTimezone: profileTimezone.timezone,
-    firstTimes: firstTimeEntries,
-    homes: homeRows.map((home) => ({
-      ...home,
-      attachments: home.attachments.map((attachment) => ({
-        ...attachment,
-        imageUrl: imageUrls.get(attachment.objectPath) ?? null,
-      })),
-    })),
-    inboxCount: inbox.error ? undefined : (inbox.count ?? 0),
-    loadError:
-      timeline.error || !rows
-        ? "MemoTrail could not load your Timeline. Refresh to try again."
-        : null,
+    lanes: timelineLaneGroups((rows ?? []).map(timelineEntryFromRow)),
+    loadError: rows
+      ? null
+      : "MemoTrail could not load your Timeline. Refresh to try again.",
     tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
-    tracks: rows
-      ? includeUnplacedFirstTimes(tracksFromRows(rows), firstTimeEntries)
-      : [],
-    vehicles: vehicleRows.map((vehicle) => ({
-      ...vehicle,
-      attachments: vehicle.attachments.map((attachment) => ({
-        ...attachment,
-        imageUrl: imageUrls.get(attachment.objectPath) ?? null,
-      })),
-    })),
     viewer: context.viewer,
   };
 }
 
-function tracksFromRows(rows: TimelineRow[]) {
-  const tracks = new Map<string, TimelineTrack>();
-
-  for (const row of rows) {
-    let track = tracks.get(row.track_id);
-
-    if (!track) {
-      track = {
-        id: row.track_id,
-        isHidden: row.track_is_hidden,
-        items: [],
-        name: row.track_name,
-        sortOrder: row.track_sort_order,
-        systemKey: row.track_system_key,
-      };
-      tracks.set(row.track_id, track);
-    }
-
-    if (row.entry_id) {
-      track.items.push({
-        body: row.body ?? "",
-        collectionNames: row.collection_names,
-        datePrecision: row.date_precision ?? "unknown",
-        id: row.entry_id,
-        itemKind: row.item_kind ?? "entry",
-        itemSubtype: row.item_subtype ?? "entry",
-        kind: row.timeline_kind ?? "event",
-        occurredEnd: row.occurred_end,
-        occurredLabel: row.occurred_label,
-        occurredStart: row.occurred_start,
-        occurredTimezone: row.occurred_timezone ?? "UTC",
-        revision: row.revision ?? 1,
-        tagNames: row.tag_names,
-        title: row.title ?? "Untitled moment",
-        trackId: row.track_id,
-        updatedAt: row.updated_at ?? "",
-      });
-    }
-  }
-
-  return [...tracks.values()]
-    .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
-    .map((track) => ({
-      ...track,
-      items: track.items.sort(
+// Every lane appears, in a fixed order, even when it is empty.
+export function timelineLaneGroups(
+  entries: TimelineEntry[],
+): TimelineLaneGroup[] {
+  return timelineLanes.map((key) => ({
+    items: entries
+      .filter((entry) => entry.lane === key)
+      .sort(
         (a, b) =>
           (a.occurredStart ? Date.parse(a.occurredStart) : Infinity) -
             (b.occurredStart ? Date.parse(b.occurredStart) : Infinity) ||
           a.title.localeCompare(b.title),
       ),
-    }));
+    key,
+    name: timelineLaneLabels[key],
+  }));
+}
+
+function timelineEntryFromRow(row: TimelineRow): TimelineEntry {
+  return {
+    body: row.body,
+    datePrecision: occurrencePrecisions.includes(
+      row.date_precision as OccurrencePrecision,
+    )
+      ? (row.date_precision as OccurrencePrecision)
+      : "unknown",
+    id: row.entry_id,
+    isFirstTime: row.is_first_time,
+    itemKind: row.item_kind,
+    itemSubtype: row.item_subtype,
+    lane: row.lane,
+    occurredEnd: row.occurred_end,
+    occurredLabel: row.occurred_label,
+    occurredStart: row.occurred_start,
+    occurredTimezone: row.occurred_timezone,
+    revision: row.revision,
+    shape: row.shape,
+    tagNames: row.tag_names,
+    title: row.title,
+    updatedAt: row.updated_at,
+  };
 }
 
 function timelineRows(value: unknown): TimelineRow[] | null {
@@ -292,33 +171,19 @@ function isTimelineRow(value: unknown): value is TimelineRow {
     return false;
   }
 
-  const hasTrack =
-    typeof value.track_id === "string" &&
-    typeof value.track_name === "string" &&
-    nullableString(value.track_system_key) &&
-    typeof value.track_sort_order === "number" &&
-    typeof value.track_is_hidden === "boolean";
-
-  if (!hasTrack) {
-    return false;
-  }
-
-  if (value.entry_id === null) {
-    return true;
-  }
-
   return (
     typeof value.entry_id === "string" &&
     typeof value.body === "string" &&
     isWikiItemKind(value.item_kind) &&
     typeof value.item_subtype === "string" &&
     typeof value.title === "string" &&
-    (value.timeline_kind === "stage" || value.timeline_kind === "event") &&
+    isTimelineLane(value.lane) &&
+    isMilestoneShape(value.shape) &&
+    typeof value.is_first_time === "boolean" &&
     nullableString(value.occurred_start) &&
     nullableString(value.occurred_end) &&
     nullableString(value.occurred_label) &&
-    nullableString(value.occurred_timezone) &&
-    stringArray(value.collection_names) &&
+    typeof value.occurred_timezone === "string" &&
     stringArray(value.tag_names) &&
     typeof value.revision === "number" &&
     typeof value.updated_at === "string" &&

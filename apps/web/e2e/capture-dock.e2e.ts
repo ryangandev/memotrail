@@ -102,16 +102,18 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
     path: "/private/tmp/memotrail-capture-dock-expanded.png",
   });
   await dialog
-    .getByRole("button", { name: "Save to Inbox", exact: true })
+    .getByRole("button", { name: "Save to Library", exact: true })
     .click();
   await expect(
-    page.locator("[data-sonner-toast]").filter({ hasText: "Saved to Inbox." }),
+    page
+      .locator("[data-sonner-toast]")
+      .filter({ hasText: "Saved to Library." }),
   ).toBeVisible();
   await expect
     .poll(async () => {
       const result = await workspace.client
         .from("entries")
-        .select("body,inbox_status")
+        .select("body")
         .eq("owner_id", workspace.owner);
       expect(result.error).toBeNull();
       return result.data;
@@ -119,7 +121,6 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
     .toEqual([
       expect.objectContaining({
         body: "A quiet moment worth keeping.",
-        inbox_status: "unreviewed",
       }),
     ]);
   await dialog.getByRole("button", { name: "Close quick capture" }).click();
@@ -178,7 +179,7 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
     await expect(editor).toBeFocused();
     await expect(dialog).toHaveCSS("animation-name", "none");
     await expect(
-      dialog.getByRole("button", { name: "Save to Inbox", exact: true }),
+      dialog.getByRole("button", { name: "Save to Library", exact: true }),
     ).toBeInViewport();
     const box = (await dialog.boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(12);
@@ -191,10 +192,10 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
     });
     await page.setViewportSize({ width, height: 430 });
     await dialog
-      .getByRole("button", { name: "Save to Inbox", exact: true })
+      .getByRole("button", { name: "Save to Library", exact: true })
       .scrollIntoViewIfNeeded();
     await expect(
-      dialog.getByRole("button", { name: "Save to Inbox", exact: true }),
+      dialog.getByRole("button", { name: "Save to Library", exact: true }),
     ).toBeInViewport();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),

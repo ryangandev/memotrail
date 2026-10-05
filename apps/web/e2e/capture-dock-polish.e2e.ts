@@ -108,7 +108,7 @@ test("a retained composer picks up dashboard edits and can interrupt collapse", 
   await editor.click();
   await expect(dialog).toBeVisible();
   await dialog
-    .getByRole("button", { name: "Save to Inbox", exact: true })
+    .getByRole("button", { name: "Save to Library", exact: true })
     .click();
   await expect(editor).toBeEmpty();
   await editor.press("Escape");

@@ -6,11 +6,11 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000111','semantic-search-owner@memotrail.local'),
   ('10000000-0000-0000-0000-000000000112','semantic-search-other@memotrail.local');
 
-insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,inbox_status,date_precision) values
-  ('98300000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000111','Morning pages','A quiet record.','entry','entry','organized','unknown'),
-  ('98300000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000111','A good day','I felt happy.','entry','entry','organized','unknown'),
-  ('98300000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000111','A long story','A deliberately authored narrative.','entry','entry','organized','unknown'),
-  ('98300000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000112','Foreign reflection','Private.','entry','entry','organized','unknown');
+insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,date_precision) values
+  ('98300000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000111','Morning pages','A quiet record.','entry','entry','unknown'),
+  ('98300000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000111','A good day','I felt happy.','entry','entry','unknown'),
+  ('98300000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000111','A long story','A deliberately authored narrative.','entry','entry','unknown'),
+  ('98300000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000112','Foreign reflection','Private.','entry','entry','unknown');
 
 insert into public.tags(id,owner_id,name) values
   ('98300000-0000-4000-8000-000000000011','10000000-0000-0000-0000-000000000111','Reflection'),
@@ -23,8 +23,10 @@ insert into public.entry_tags(entry_id,tag_id,owner_id) values
   ('98300000-0000-4000-8000-000000000003','98300000-0000-4000-8000-000000000013','10000000-0000-0000-0000-000000000111'),
   ('98300000-0000-4000-8000-000000000004','98300000-0000-4000-8000-000000000014','10000000-0000-0000-0000-000000000112');
 
-insert into public.people(id,owner_id,name,notes) values
-  ('98300000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000111','Marina mentor','Helped at the marina.');
+insert into public.entries(id,owner_id,title,body,item_kind,item_subtype) values
+  ('98300000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000111','Harbor flat','Lived by the marina.','entity','home');
+insert into public.homes(entry_id,owner_id) values
+  ('98300000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000111');
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000111',true);
@@ -35,7 +37,7 @@ select is(
   'Entry filtering returns every ordinary Entry'
 );
 select is(
-  (select title from public.search_wiki_items('',array[]::text[],array[]::text[],array['Memory'])),
+  (select title from public.search_wiki_items('',array[]::text[],array['Memory'])),
   'A good day',
   'Tag filtering finds a Memory Entry'
 );
@@ -45,7 +47,7 @@ select is(
   'Entry filtering and keyword search find the dated memory'
 );
 select is(
-  (select count(*) from public.search_wiki_items('',array[]::text[],array[]::text[],array['Story'])),
+  (select count(*) from public.search_wiki_items('',array[]::text[],array['Story'])),
   1::bigint,
   'Story is searchable as a tag'
 );
@@ -55,9 +57,9 @@ select is(
   'Keyword search indexes descriptive tags'
 );
 select is(
-  jsonb_array_length(public.archive_wiki_search_evidence(array['marina'],array['entity'])->'people'),
-  1,
-  'AI Entity evidence includes matching People'
+  public.archive_wiki_search_evidence(array['marina'],array['entity'])->'entries'->0->>'title',
+  'Harbor flat',
+  'AI Entity evidence includes matching Entities'
 );
 select ok(
   not (public.archive_wiki_search_evidence(array['marina'],array['entity']) ? 'places'),
@@ -75,7 +77,7 @@ reset role;
 select ok(
   not has_function_privilege(
     'anon',
-    'public.search_wiki_items(text,text[],text[],text[],date,date,integer,integer,text)',
+    'public.search_wiki_items(text,text[],text[],date,date,integer,integer,text)',
     'execute'
   ),
   'Anonymous semantic search is denied'

@@ -216,8 +216,7 @@ export function ExportSettings({
         <h2>Everything, in one ZIP</h2>
         <p>
           Complete JSON, readable Entry Markdown, structured CSV tables, and
-          original photos. Includes Trash, edit history, relationships, and AI
-          conversations.
+          original photos. Includes Trash, relationships, and AI conversations.
         </p>
         <p>
           The ZIP is not encrypted. Anyone you share it with can read it.

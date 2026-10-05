@@ -3,9 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
-  validOrganizationInput,
-  type OrganizationInput,
+  tagNameLengthLimit,
+  validTagInput,
   type TagEntryPreviewResult,
+  type TagInput,
 } from "@/lib/data/organization";
 import { getTagEntryPreviews } from "@/lib/data/search";
 
@@ -17,22 +18,16 @@ export async function loadTagEntryPreviews(
   return getTagEntryPreviews(tagName);
 }
 
-export async function saveOrganization(
-  input: OrganizationInput,
-): Promise<string | null> {
-  if (!validOrganizationInput(input)) {
-    return input.kind === "tag"
-      ? "Use a tag name up to 60 characters."
-      : "Use a Collection name up to 80 characters and a valid whole-number order.";
+export async function saveTag(input: TagInput): Promise<string | null> {
+  if (!validTagInput(input)) {
+    return `Use a tag name up to ${tagNameLengthLimit} characters.`;
   }
   const context = await getAuthenticatedContext();
   if (!context) return "Sign in again to organize your archive.";
-  const result = await context.client.rpc("save_organization", {
+  const result = await context.client.rpc("save_tag", {
     p_expected_revision: input.revision,
     p_id: input.id,
-    p_kind: input.kind,
     p_name: input.name.trim(),
-    p_sort_order: input.order,
   });
   if (result.error?.code === "23505") {
     return "This name already exists. Choose a different name; nothing was merged or overwritten.";
@@ -40,32 +35,7 @@ export async function saveOrganization(
   if (result.error)
     return "Could not save. Your edits are still here to retry.";
   if (!result.data) {
-    return "This item changed on another device or moved to Trash. Refresh before editing again.";
-  }
-  refreshOrganizationPaths();
-  return null;
-}
-
-export async function trashCollection(
-  input: OrganizationInput,
-): Promise<string | null> {
-  if (
-    !validOrganizationInput(input) ||
-    input.kind !== "collection" ||
-    !input.id
-  ) {
-    return "Choose a valid Collection.";
-  }
-  const context = await getAuthenticatedContext();
-  if (!context) return "Sign in again to organize your archive.";
-  const result = await context.client.rpc("trash_collection", {
-    p_expected_revision: input.revision,
-    p_id: input.id,
-  });
-  if (result.error)
-    return "Could not move this Collection to Trash. Try again.";
-  if (!result.data) {
-    return "This Collection changed on another device. Refresh before trying again.";
+    return "This tag changed on another device. Refresh before editing again.";
   }
   refreshOrganizationPaths();
   return null;
@@ -127,8 +97,6 @@ function validTagIdentity(value: TagIdentity) {
 }
 
 function refreshOrganizationPaths() {
-  revalidatePath("/collections");
-  revalidatePath("/inbox");
   revalidatePath("/search");
   revalidatePath("/tags");
   revalidatePath("/timeline");

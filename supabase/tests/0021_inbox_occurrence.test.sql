@@ -3,22 +3,17 @@ create extension if not exists pgtap with schema extensions;
 select no_plan();
 insert into public.entries(id,owner_id,title,body,date_precision,occurred_start) values
  ('97000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Undated memory','A feeling','unknown',null);
-insert into public.collections(id,owner_id,name,archived_at) values
- ('97000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000001','Archived memory group',now());
-insert into public.entry_collections(entry_id,owner_id,collection_id) values
- ('97000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','97000000-0000-4000-8000-000000000002');
 create function pg_temp.review(p_precision text, p_start timestamptz default null, p_end timestamptz default null, p_label text default null, p_rev integer default null, p_zone text default 'UTC') returns bigint language sql as $$
- select count(*) from public.review_wiki_item_with_photo_place(
+ select count(*) from public.save_entry(
  '97000000-0000-4000-8000-000000000001',coalesce(p_rev,(select revision from public.entries where id='97000000-0000-4000-8000-000000000001'),1),
- 'Reviewed memory','My words','entry','entry',p_start,p_zone,array['Active group'],array['memory'],false,p_end,p_label,p_precision,null);
+ 'Reviewed memory','My words', null,p_start,p_end,p_zone,p_label,p_precision,array['memory'],null, null, null);
 $$;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
 select is(pg_temp.review('unknown'),1::bigint,'Unknown occurrence can be reviewed without manufacturing a date');
 select is((select occurred_start from public.entries where id='97000000-0000-4000-8000-000000000001'),null::timestamptz,'Unknown start stays null');
 select is((select revision from public.entries where id='97000000-0000-4000-8000-000000000001'),2,'One atomic revision per review');
-select is((select count(*) from public.entry_collections where entry_id='97000000-0000-4000-8000-000000000001'),2::bigint,'Archived grouping survives review while active group is added');
-select is((select snapshot->>'date_precision' from public.entry_versions where entry_id='97000000-0000-4000-8000-000000000001' and version=1),'unknown','History preserves original precision');
+select is((select count(*) from public.entry_tags where entry_id='97000000-0000-4000-8000-000000000001'),1::bigint,'Review links its tags');
 select is(pg_temp.review('age',null,null,'17岁'),1::bigint,'Age-only accepted');
 select is((select occurred_label from public.entries where id='97000000-0000-4000-8000-000000000001'),'17岁','Bilingual age label retained');
 select is(pg_temp.review('approximate',null,null,'Summer before college'),1::bigint,'Approximate description needs no invented date');
@@ -44,7 +39,7 @@ select is(pg_temp.review('unknown',null,null,null,1),0::bigint,'Stale revision r
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000099',true);
 select is(pg_temp.review('unknown'),0::bigint,'Another owner cannot review');
 reset role;
-select ok(not has_function_privilege('anon','public.review_wiki_item_with_photo_place(uuid,integer,text,text,text,text,timestamp with time zone,text,text[],text[],boolean,timestamp with time zone,text,text,jsonb)','execute'),'Anonymous review denied');
+select ok(not has_function_privilege('anon','public.save_entry(uuid,integer,text,text,jsonb,timestamptz,timestamptz,text,text,text,text[],jsonb,jsonb,jsonb)','execute'),'Anonymous review denied');
 select hasnt_function('public','review_entry',array['uuid','integer','text','text','text','timestamp with time zone','text','text[]','text[]','boolean'],'Legacy review contract is removed');
 select * from finish();
 rollback;

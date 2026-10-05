@@ -8,9 +8,9 @@ import {
 
 const validInput = {
   body: "Small forces trigger bone remodeling.",
-  collectionNames: ["Learning", "Health"],
   id: "f4d2df16-a506-4be6-a63e-b7b18afe3468",
   location: null,
+  milestone: null,
   occurredAt: "2026-09-01T15:00:00.000Z",
   occurredTimezone: "America/Los_Angeles",
   occurredEnd: null,
@@ -97,6 +97,70 @@ describe("Inbox Entry review", () => {
     expect(parseInboxReviewInput({ ...validInput, revision: 0 }).success).toBe(
       false,
     );
+    expect(
+      parseInboxReviewInput({ ...validInput, revision: undefined }).success,
+    ).toBe(false);
+  });
+
+  it("adds a new Entry without photos", () => {
+    expect(
+      parseInboxReviewInput({ ...validInput, revision: null }),
+    ).toMatchObject({ data: { revision: null }, success: true });
+    expect(
+      parseInboxReviewInput({
+        ...validInput,
+        photoLocation: {
+          attachmentId: "a4d2df16-a506-4be6-a63e-b7b18afe3468",
+          latitude: 39.95,
+          longitude: -75.16,
+        },
+        revision: null,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("marks an Entry as a Timeline milestone", () => {
+    const period = {
+      isFirstTime: false,
+      lane: "work_study",
+      shape: "period",
+    } as const;
+    expect(
+      parseInboxReviewInput({
+        ...validInput,
+        datePrecision: "year",
+        milestone: period,
+        occurredAt: "2013-01-01T00:00:00.000Z",
+        occurredEnd: "2017-01-01T00:00:00.000Z",
+      }),
+    ).toMatchObject({ data: { milestone: period }, success: true });
+    expect(
+      parseInboxReviewInput({
+        ...validInput,
+        milestone: { isFirstTime: true, lane: "other", shape: "moment" },
+      }),
+    ).toMatchObject({ data: { milestone: { isFirstTime: true } } });
+    expect(
+      parseInboxReviewInput({
+        ...validInput,
+        milestone: { isFirstTime: false, lane: "homes", shape: "period" },
+      }),
+    ).toEqual({
+      message: "Choose how this Entry appears on Timeline.",
+      success: false,
+    });
+    expect(
+      parseInboxReviewInput({
+        ...validInput,
+        datePrecision: "range",
+        milestone: { isFirstTime: false, lane: "other", shape: "moment" },
+        occurredEnd: "2026-09-03T15:00:00.000Z",
+      }),
+    ).toEqual({
+      message:
+        "A Moment is one point in time. Remove the end date, or make it a Period.",
+      success: false,
+    });
   });
 
   it("accepts a provider Location and rejects incomplete coordinates", () => {
@@ -141,16 +205,14 @@ describe("Inbox Entry review", () => {
     ).toBe(false);
   });
 
-  it("trims and de-duplicates Collections and tags case-insensitively", () => {
+  it("trims and de-duplicates tags case-insensitively", () => {
     expect(
       parseInboxReviewInput({
         ...validInput,
-        collectionNames: [" Learning ", "learning", "Health"],
         tagNames: [" Teeth ", "teeth", "science"],
       }),
     ).toMatchObject({
       data: {
-        collectionNames: ["Learning", "Health"],
         tagNames: ["Teeth", "science"],
       },
       success: true,
@@ -159,16 +221,16 @@ describe("Inbox Entry review", () => {
 
   it("rejects blank, oversized, and excessive organization names", () => {
     expect(
-      parseInboxReviewInput({ ...validInput, collectionNames: [" "] }).success,
+      parseInboxReviewInput({ ...validInput, tagNames: [" "] }).success,
     ).toBe(false);
     expect(
-      parseInboxReviewInput({ ...validInput, tagNames: ["t".repeat(61)] })
+      parseInboxReviewInput({ ...validInput, tagNames: ["t".repeat(81)] })
         .success,
     ).toBe(false);
     expect(
       parseInboxReviewInput({
         ...validInput,
-        collectionNames: Array.from({ length: 21 }, (_, index) => `C${index}`),
+        tagNames: Array.from({ length: 71 }, (_, index) => `T${index}`),
       }).success,
     ).toBe(false);
   });

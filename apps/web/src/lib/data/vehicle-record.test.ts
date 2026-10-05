@@ -21,7 +21,6 @@ const row = {
     },
   ],
   body: "The electric road-trip years.",
-  collection_names: ["Vehicles"],
   color: "Midnight Silver",
   date_precision: "month",
   entry_id: "40000000-0000-4000-8000-000000000001",
@@ -34,8 +33,6 @@ const row = {
   occurred_timezone: "America/New_York",
   revision: 2,
   tag_names: ["electric"],
-  timeline_track_id: "70000000-0000-4000-8000-000000000001",
-  timeline_track_name: "Vehicles",
   title: "Bluebird EV",
   total_count: 1,
   updated_at: "2026-09-03T10:00:00Z",
@@ -68,7 +65,6 @@ describe("Vehicle records", () => {
       attachments: [{ imageUrl: null, mimeType: "image/jpeg" }],
       make: "Tesla",
       model: "Model Y",
-      timelineTrackName: "Vehicles",
     });
   });
 

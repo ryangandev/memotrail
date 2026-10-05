@@ -110,12 +110,9 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
     const goalParameters = {
       p_title: "Try skiing",
       p_body: "Keep the intention here",
-      p_horizon: "someday",
       p_status: "active",
       p_target_date: null,
-      p_collection_names: ["Bucket List"],
       p_tag_names: [],
-      p_related_entry_ids: [],
       p_entry_id: null,
       p_expected_revision: null,
     };
@@ -124,7 +121,7 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
       expect(saved.error).toBeNull();
       const id = saved.data[0].entry_id;
       await page.goto("/goals/" + id);
-      await page.getByRole("button", { name: "Edit Goal" }).click();
+      await page.getByRole("button", { name: "Edit Want to Do" }).click();
       const dialog = page.getByRole("main");
       await dialog
         .getByRole("combobox", { name: "Date type", exact: true })
@@ -146,7 +143,7 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
       ).toHaveValue("Try skiing");
       if (value.precision === "age") {
         const achieveButton = dialog.getByRole("button", {
-          name: "Mark achieved and create First Time",
+          name: "Mark done and add First Time",
           exact: true,
         });
         await expect(achieveButton).toBeVisible();
@@ -160,7 +157,7 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
         await page.emulateMedia({ colorScheme: "dark" });
         await dialog
           .getByRole("button", {
-            name: "Mark achieved and create First Time",
+            name: "Mark done and add First Time",
             exact: true,
           })
           .scrollIntoViewIfNeeded();
@@ -174,13 +171,13 @@ test("Goal achievements preserve all eight date precisions and reject duplicate 
       }
       await dialog
         .getByRole("button", {
-          name: "Mark achieved and create First Time",
+          name: "Mark done and add First Time",
           exact: true,
         })
         .click();
       await expect(
         dialog.getByRole("button", {
-          name: "Mark achieved and create First Time",
+          name: "Mark done and add First Time",
           exact: true,
         }),
       ).not.toBeVisible();

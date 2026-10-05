@@ -83,16 +83,17 @@ export function CaptureProvider({
       isSyncing: () => queue.getSnapshot().isSyncing,
       retry: () => void queue.synchronize(),
     });
+    // The sync Server Actions revalidate, so this tab's page already shows
+    // what it synced and needs no refresh of its own.
     const stopWatchingRuns = queue.onRunFinished((run) => {
       retry.afterRun(run);
-      const { rejected, result, synced } = run;
+      const { rejected, result } = run;
       if (result?.status === "synced") notify.success(result.message);
       // A rejected capture may come from a composer that is already closed.
       if (rejected > 0)
         notify.error(
           `MemoTrail did not accept ${countLabel(rejected, "Entry")}. Review ${rejected === 1 ? "it" : "them"} in Pending sync.`,
         );
-      if (synced > 0) router.refresh();
     });
     function handleOnline() {
       void queue.synchronize();
@@ -104,7 +105,7 @@ export function CaptureProvider({
       if (event.key === null || event.key === inboxDraftKey(ownerId))
         draft.reload();
       if (event.key !== null && event.key !== inboxQueueKey(ownerId)) return;
-      // Another tab synced captures, so this page's Inbox counts are stale.
+      // Another tab synced captures, so this page's Library is stale.
       if (queue.reload() > 0) router.refresh();
     }
     function handlePageShow(event: PageTransitionEvent) {

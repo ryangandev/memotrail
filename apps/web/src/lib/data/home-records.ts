@@ -1,6 +1,7 @@
 import "server-only";
 import { displayImageURLs } from "@/lib/media/urls";
 
+import { getPrimaryEntryLocations } from "./entry-locations";
 import { getAuthenticatedContext, type Viewer } from "./inbox";
 import {
   parseHomeRows,
@@ -9,9 +10,7 @@ import {
 } from "./home-record";
 
 export type HomesWorkspace = {
-  collectionOptions: string[];
   homes: HomeRecord[];
-  inboxCount: number | undefined;
   loadError: string | null;
   tagOptions: string[];
   viewer: Viewer;
@@ -28,32 +27,19 @@ export async function getHomesWorkspace(
     return null;
   }
 
-  const [homes, collections, tags, inbox] = await Promise.all([
+  const [homes, tags] = await Promise.all([
     context.client.rpc("homes_workspace", { p_limit: 100, p_offset: 0 }),
-    context.client
-      .from("collections")
-      .select("name")
-      .eq("owner_id", context.userId)
-      .is("archived_at", null)
-      .order("name")
-      .returns<NameRow[]>(),
     context.client
       .from("tags")
       .select("name")
       .eq("owner_id", context.userId)
       .order("name")
       .returns<NameRow[]>(),
-    context.client
-      .from("entries")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", context.userId)
-      .eq("inbox_status", "unreviewed")
-      .is("deleted_at", null),
   ]);
   const rows = homes.error ? null : parseHomeRows(homes.data);
 
   if (!rows) {
-    return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+    return unavailableWorkspace(context.viewer);
   }
 
   if (targetId && !rows.some((record) => record.id === targetId)) {
@@ -63,8 +49,7 @@ export async function getHomesWorkspace(
         p_offset: offset,
       });
       const more = page.error ? null : parseHomeRows(page.data);
-      if (!more)
-        return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+      if (!more) return unavailableWorkspace(context.viewer);
       rows.push(...more);
       if (more.length < 100 || more.some((record) => record.id === targetId))
         break;
@@ -74,21 +59,26 @@ export async function getHomesWorkspace(
     ? rows.filter((record) => record.id === targetId)
     : rows;
 
+  const locations = await getPrimaryEntryLocations(
+    context,
+    visibleRows.map((row) => row.id),
+  );
+  if (!locations) {
+    return unavailableWorkspace(context.viewer);
+  }
+
   const attachments = visibleRows.flatMap((home) => home.attachments);
   const signedUrls = await signedImageUrls(context.client, attachments);
 
   return {
-    collectionOptions: collections.error
-      ? []
-      : (collections.data ?? []).map((item) => item.name),
     homes: visibleRows.map((home) => ({
       ...home,
+      location: locations.get(home.id) ?? null,
       attachments: home.attachments.map((attachment) => ({
         ...attachment,
         imageUrl: signedUrls.get(attachment.objectPath) ?? null,
       })),
     })),
-    inboxCount: inbox.error ? undefined : (inbox.count ?? 0),
     loadError: null,
     tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
     viewer: context.viewer,
@@ -105,14 +95,9 @@ async function signedImageUrls(
   return displayImageURLs(client, paths);
 }
 
-function unavailableWorkspace(
-  viewer: Viewer,
-  inboxCount: number | undefined,
-): HomesWorkspace {
+function unavailableWorkspace(viewer: Viewer): HomesWorkspace {
   return {
-    collectionOptions: [],
     homes: [],
-    inboxCount,
     loadError: "MemoTrail could not load your Homes. Refresh to try again.",
     tagOptions: [],
     viewer,

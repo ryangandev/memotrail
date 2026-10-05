@@ -60,7 +60,6 @@ export function parseGeoapifyResponse(value: unknown): ProviderLocation[] {
         kind: "provider" as const,
         provider: "geoapify" as const,
         providerLocationId,
-        name: formattedAddress.slice(0, 200),
         formattedAddress: formattedAddress.slice(0, 1000),
         address: optionalString(candidate.address_line1, 500),
         city:

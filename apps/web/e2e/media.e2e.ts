@@ -79,8 +79,19 @@ test("Private photo previews preserve originals across Web, native bearer access
           title: "Photo archive",
           body: "Original writing",
           item_kind: "entry",
-          item_subtype: "first_time",
+          item_subtype: "entry",
           date_precision: "unknown",
+        })
+      ).error,
+    ).toBeNull();
+    expect(
+      (
+        await client.from("milestones").insert({
+          entry_id: entry,
+          owner_id: owner,
+          shape: "moment",
+          lane: "other",
+          is_first_time: true,
         })
       ).error,
     ).toBeNull();
@@ -203,7 +214,7 @@ test("Private photo previews preserve originals across Web, native bearer access
       (await client.from("attachments").select("id").eq("entry_id", entry))
         .data,
     ).toHaveLength(6);
-    const workspace = await client.rpc("first_times_workspace_with_occurrence");
+    const workspace = await client.rpc("first_times_workspace");
     expect(workspace.error).toBeNull();
     expect(workspace.data[0].attachments).toHaveLength(2);
     const display = variants.data!.find(

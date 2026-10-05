@@ -187,7 +187,6 @@ it("retains manual filters and explains an unavailable Home boundary", async () 
     parameters: {
       q: "Before my last move?",
       type: "entry",
-      collection: "Thoughts",
       tag: "life",
       from: "2020-01-01",
       to: "2026-01-01",
@@ -197,7 +196,6 @@ it("retains manual filters and explains an unavailable Home boundary", async () 
     "archive_wiki_search_evidence",
     expect.objectContaining({
       p_item_classifications: ["entry"],
-      p_collection_names: ["Thoughts"],
       p_tag_names: ["life"],
       p_date_from: "2020-01-01",
       p_date_to: "2026-01-01",

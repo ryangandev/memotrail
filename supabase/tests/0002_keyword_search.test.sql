@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(21);
+select plan(20);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -60,7 +60,6 @@ insert into public.entries (
   body,
   item_kind,
   item_subtype,
-  inbox_status,
   occurred_start,
   occurred_timezone,
   metadata,
@@ -72,8 +71,7 @@ values
     '10000000-0000-0000-0000-000000000001',
     'First time skiing',
     'A cold and brilliant day in the mountains.',
-    'entry','first_time',
-    'organized',
+    'entry','entry',
     '2026-07-04T02:00:00Z',
     'America/Los_Angeles',
     '{"weather":"snowy"}'::jsonb,
@@ -85,7 +83,6 @@ values
     '今天学到的事情',
     '为什么塑料牙套可以慢慢移动坚硬的牙齿',
     'entry','entry',
-    'organized',
     '2025-05-04T08:00:00Z',
     'Asia/Shanghai',
     '{}'::jsonb,
@@ -98,7 +95,6 @@ values
     'A practical daily driver.',
     'entity',
     'vehicle',
-    'organized',
     '2020-03-12T12:00:00Z',
     'America/New_York',
     '{}'::jsonb,
@@ -110,7 +106,6 @@ values
     'Deleted skiing note',
     'This should stay in Trash.',
     'entry','entry',
-    'organized',
     '2024-01-01T12:00:00Z',
     'UTC',
     '{}'::jsonb,
@@ -122,25 +117,10 @@ values
     'Private skiing note',
     'A different owner must never see this.',
     'entry','entry',
-    'organized',
     '2026-07-03T18:30:00Z',
     'UTC',
     '{}'::jsonb,
     null
-  )
-on conflict (id) do nothing;
-
-insert into public.collections (id, owner_id, name)
-values
-  (
-    '20000000-0000-0000-0000-000000000010',
-    '10000000-0000-0000-0000-000000000001',
-    'Travel'
-  ),
-  (
-    '20000000-0000-0000-0000-000000000011',
-    '10000000-0000-0000-0000-000000000001',
-    'Dental Learning'
   )
 on conflict (id) do nothing;
 
@@ -157,20 +137,6 @@ values
     'orthodontics'
   )
 on conflict (id) do nothing;
-
-insert into public.entry_collections (entry_id, collection_id, owner_id)
-values
-  (
-    '50000000-0000-0000-0000-000000000001',
-    '20000000-0000-0000-0000-000000000010',
-    '10000000-0000-0000-0000-000000000001'
-  ),
-  (
-    '50000000-0000-0000-0000-000000000002',
-    '20000000-0000-0000-0000-000000000011',
-    '10000000-0000-0000-0000-000000000001'
-  )
-on conflict do nothing;
 
 insert into public.entry_tags (entry_id, tag_id, owner_id)
 values
@@ -196,6 +162,15 @@ values (
   'Blue'
 )
 on conflict (entry_id) do nothing;
+
+insert into public.milestones (entry_id, owner_id, shape, lane, is_first_time)
+values (
+  '50000000-0000-0000-0000-000000000001',
+  '10000000-0000-0000-0000-000000000001',
+  'moment',
+  'other',
+  true
+);
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
@@ -254,15 +229,6 @@ select ok(
 
 select ok(
   (
-    select match_reasons @> array['Collection']::text[]
-    from public.search_wiki_items(p_query => 'Dental Learning')
-    where entry_id = '50000000-0000-0000-0000-000000000002'
-  ),
-  'Search matches and explains a Collection'
-);
-
-select ok(
-  (
     select match_reasons @> array['Date']::text[]
     from public.search_wiki_items(p_query => '2026-07-03')
     where entry_id = '50000000-0000-0000-0000-000000000001'
@@ -290,12 +256,12 @@ select is(
     select count(*)::integer
     from public.search_wiki_items(
       p_query => '',
-      p_collection_names => array['travel']
+      p_tag_names => array['SNOW']
     )
     where entry_id = '50000000-0000-0000-0000-000000000001'
   ),
   1,
-  'A Collection filter works without a keyword query'
+  'A tag filter works without a keyword query'
 );
 
 select is(
@@ -303,7 +269,7 @@ select is(
     select match_reasons
     from public.search_wiki_items(
       p_query => '',
-      p_collection_names => array['Travel']
+      p_tag_names => array['SNOW']
     )
     where entry_id = '50000000-0000-0000-0000-000000000001'
   ),

@@ -10,7 +10,7 @@ import {
 import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
-test("Camera dates are private, read-only suggestions until explicit Inbox save", async ({
+test("Camera dates are private, read-only suggestions until an explicit Entry save", async ({
   baseURL,
   page,
   context,
@@ -205,11 +205,8 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       ).status(),
     ).toBe(404);
     expect(await snapshot()).toEqual(before);
-    await page.goto("/inbox");
-    await page
-      .getByRole("button", { name: "Organize", exact: true })
-      .first()
-      .click();
+    await page.goto(`/items/${entry}`);
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await dialog
       .getByRole("button", { name: "Show photos", exact: true })
@@ -251,12 +248,9 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       path: "/private/tmp/memotrail-photo-dates-mobile.png",
       fullPage: true,
     });
-    await dialog.getByRole("button", { name: "Close Inbox review" }).click();
+    await dialog.getByRole("button", { name: "Close Entry editor" }).click();
     expect(await snapshot()).toEqual(before);
-    await page
-      .getByRole("button", { name: "Organize", exact: true })
-      .first()
-      .click();
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     await expect(dialog.getByLabel("Date type")).toHaveValue("range");
     await dialog
       .getByRole("button", { name: "Show photos", exact: true })
@@ -282,10 +276,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     expect(saved.body).toBe(before.body);
     expect(saved.occurred_timezone).toBe(before.occurred_timezone);
     await expect(dialog).not.toBeVisible();
-    await page
-      .getByRole("button", { name: "Organize", exact: true })
-      .first()
-      .click();
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     await fillOccurrenceStart(dialog, "2018-02-03");
     await dialog
       .getByRole("button", { name: "Save changes", exact: true })
@@ -298,14 +289,13 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       true,
     );
     expect(
-      (await client.from("entry_places").select("*").eq("entry_id", entry))
+      (await client.from("entry_locations").select("*").eq("entry_id", entry))
         .data,
     ).toEqual([]);
     async function openPlaceDraft() {
       await expect(dialog).not.toBeVisible();
       await page
-        .getByRole("button", { name: "Organize", exact: true })
-        .first()
+        .getByRole("button", { name: "Edit Entry", exact: true })
         .click();
       await dialog
         .getByRole("button", { name: "Show photos", exact: true })
@@ -323,7 +313,7 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     expect(
       (await client.from("locations").select("id").eq("owner_id", owner)).data,
     ).toEqual([]);
-    await dialog.getByRole("button", { name: "Close Inbox review" }).click();
+    await dialog.getByRole("button", { name: "Close Entry editor" }).click();
     expect(
       (await client.from("locations").select("id").eq("owner_id", owner)).data,
     ).toEqual([]);
@@ -358,7 +348,9 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       .eq("owner_id", owner)
       .single();
     expect(newLocation.data).toMatchObject({
-      name: "Location not set",
+      formatted_address: null,
+      coordinate_source: "photo_gps",
+      source_attachment_id: attachment,
       latitude: 39.95,
       longitude: -75.166667,
       bound_entry_id: entry,
@@ -366,11 +358,11 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
     expect(
       (
         await client
-          .from("entry_places")
-          .select("place_id")
+          .from("entry_locations")
+          .select("location_id,relationship")
           .eq("entry_id", entry)
       ).data,
-    ).toEqual([{ place_id: newLocation.data!.id }]);
+    ).toEqual([{ location_id: newLocation.data!.id, relationship: "photo" }]);
     const nativeOptions = await page.request.post(
       "/api/media/place-options?query=anything",
       { headers: bearer },
@@ -382,27 +374,24 @@ test("Camera dates are private, read-only suggestions until explicit Inbox save"
       p_expected_revision: raceBefore.revision,
       p_title: raceBefore.title,
       p_body: raceBefore.body,
-      p_item_kind: "entry",
-      p_item_subtype: "entry",
       p_occurred_start: raceBefore.occurred_start,
       p_occurred_timezone: raceBefore.occurred_timezone,
-      p_collection_names: [],
       p_tag_names: [],
-      p_mark_done: false,
       p_occurred_end: null,
       p_occurred_label: null,
       p_date_precision: "day",
-      p_photo_place: {
-        kind: "new",
+      p_photo_location: {
         attachmentId: attachment,
-        name: "Concurrent photo Location",
         latitude: 30,
         longitude: 40,
       },
+      p_primary_location: null,
+      p_body_rich: null,
+      p_milestone: null,
     };
     const race = await Promise.all([
-      client.rpc("review_wiki_item_with_photo_place", raceInput),
-      client.rpc("review_wiki_item_with_photo_place", raceInput),
+      client.rpc("save_entry", raceInput),
+      client.rpc("save_entry", raceInput),
     ]);
     expect(race.map((v) => v.error)).toEqual([null, null]);
     expect(race.map((v) => v.data.length).sort()).toEqual([0, 1]);

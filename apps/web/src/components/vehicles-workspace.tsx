@@ -30,10 +30,10 @@ import {
   RecordCardVisual,
 } from "@/components/record-card";
 import {
-  firstTimePhotoLimit,
-  firstTimePhotoSizeLimit,
-  inferFirstTimeImageMimeType,
-} from "@/lib/data/first-time-input";
+  entryPhotoLimit,
+  entryPhotoSizeLimit,
+  inferEntryImageMimeType,
+} from "@/lib/data/entry-photo-input";
 import { OccurrenceEditor } from "@/components/occurrence-editor";
 import {
   occurrenceDraft,
@@ -62,26 +62,19 @@ import {
   type PhotoUploadProgress as PhotoUploadProgressValue,
 } from "@/lib/media/upload";
 import {
-  pendingCaptureReference,
-  type CaptureExtractionSource,
-} from "@/lib/data/capture-extraction-input";
-import type { LocationSelection } from "@/lib/locations/location";
+  locationDisplayLabel,
+  type LocationSelection,
+} from "@/lib/locations/location";
 import { countLabel } from "@/lib/count-label";
 
 export function VehiclesWorkspace({
-  collectionOptions,
-  initialVehicleId,
   loadError,
   ownerId,
-  sourceCapture,
   tagOptions,
   vehicles: serverRecords,
 }: {
-  collectionOptions: string[];
-  initialVehicleId: string | null;
   loadError: string | null;
   ownerId: string;
-  sourceCapture: CaptureExtractionSource | null;
   tagOptions: string[];
   vehicles: VehicleRecord[];
 }) {
@@ -91,16 +84,9 @@ export function VehiclesWorkspace({
     confirm,
     forget,
   } = useConfirmedRecords(serverRecords);
-  // Creating the Vehicle organizes the Capture, so the revalidated page no
-  // longer returns it. The open editor keeps the handoff it started with.
-  const [captureHandoff, setCaptureHandoff] = useState(sourceCapture);
   const [selectedVehicle, setSelectedVehicle] = useState<
     VehicleRecord | null | undefined
-  >(
-    sourceCapture
-      ? null
-      : vehicles.find((vehicle) => vehicle.id === initialVehicleId),
-  );
+  >();
   const currentVehicles = vehicles.filter((vehicle) => !vehicle.occurredEnd);
   const earlierVehicles = vehicles.filter((vehicle) => vehicle.occurredEnd);
   const orderedVehicles = [...currentVehicles, ...earlierVehicles];
@@ -174,19 +160,11 @@ export function VehiclesWorkspace({
 
       {selectedVehicle !== undefined ? (
         <VehicleEditor
-          collectionOptions={collectionOptions}
           key={selectedVehicle?.id ?? "new-vehicle"}
           onSaved={confirm}
           onTrashed={forget}
-          onClose={() => {
-            setSelectedVehicle(undefined);
-            setCaptureHandoff(null);
-            if (initialVehicleId || captureHandoff)
-              router.replace("/vehicles", { scroll: false });
-            else router.refresh();
-          }}
+          onClose={() => setSelectedVehicle(undefined)}
           ownerId={ownerId}
-          sourceCapture={selectedVehicle === null ? captureHandoff : null}
           tagOptions={tagOptions}
           vehicle={selectedVehicle}
         />
@@ -294,7 +272,7 @@ function VehicleCard({
         {vehicle.location ? (
           <p className={styles.location}>
             <Icon name="map" size={14} />
-            {vehicle.location.name}
+            {locationDisplayLabel(vehicle.location)}
           </p>
         ) : null}
         {vehicle.body ? (
@@ -302,15 +280,6 @@ function VehicleCard({
         ) : null}
         <footer>
           <div>
-            {vehicle.collectionNames.slice(0, 2).map((name) => (
-              <Badge
-                key={`collection:${name.toLocaleLowerCase()}`}
-                size="micro"
-                tone="neutral"
-              >
-                {name}
-              </Badge>
-            ))}
             {vehicle.tagNames.slice(0, 2).map((name) => (
               <Badge
                 key={`tag:${name.toLocaleLowerCase()}`}
@@ -329,25 +298,21 @@ function VehicleCard({
 }
 
 export function VehicleEditor({
-  collectionOptions,
   defaultTimezone,
   onClose,
   onSaved,
   onTrashed,
   ownerId,
   presentation = "dialog",
-  sourceCapture = null,
   tagOptions,
   vehicle,
 }: {
-  collectionOptions: string[];
   defaultTimezone?: string;
   onClose: () => void;
   onSaved: (record: VehicleRecord) => void;
   onTrashed: (id: string) => void;
   ownerId: string;
   presentation?: "dialog" | "page";
-  sourceCapture?: CaptureExtractionSource | null;
   tagOptions: string[];
   vehicle: VehicleRecord | null;
 }) {
@@ -364,7 +329,7 @@ export function VehicleEditor({
         occurredTimezone: initialTimezone,
         datePrecision: vehicle.datePrecision,
       }
-    : (sourceCapture ?? undefined);
+    : undefined;
   const [occurrence, setOccurrence] = useState(() =>
     occurrenceDraft(
       originalOccurrence ?? {
@@ -376,11 +341,7 @@ export function VehicleEditor({
       },
     ),
   );
-  const [body, setBody] = useState(vehicle?.body ?? sourceCapture?.body ?? "");
-  const [collectionInput, setCollectionInput] = useState("");
-  const [collectionNames, setCollectionNames] = useState(
-    vehicle?.collectionNames ?? sourceCapture?.collectionNames ?? [],
-  );
+  const [body, setBody] = useState(vehicle?.body ?? "");
   const [color, setColor] = useState(vehicle?.color ?? "");
   const [currentId, setCurrentId] = useState(vehicle?.id ?? null);
   const [currentRevision, setCurrentRevision] = useState(
@@ -404,13 +365,8 @@ export function VehicleEditor({
   const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
   const [result, setResult] = useState<VehicleActionResult | null>(null);
   const [tagInput, setTagInput] = useState("");
-  const [tagNames, setTagNames] = useState(
-    vehicle?.tagNames ?? sourceCapture?.tagNames ?? [],
-  );
-  const [title, setTitle] = useState(
-    vehicle?.title ?? sourceCapture?.title ?? "",
-  );
-  const captureReference = pendingCaptureReference(sourceCapture, currentId);
+  const [tagNames, setTagNames] = useState(vehicle?.tagNames ?? []);
+  const [title, setTitle] = useState(vehicle?.title ?? "");
 
   useEffect(() => {
     titleRef.current?.focus();
@@ -419,22 +375,22 @@ export function VehicleEditor({
   function handlePhotoSelection(selected: File[]) {
     const available = Math.max(
       0,
-      firstTimePhotoLimit - existingPhotos.length - pendingPhotos.length,
+      entryPhotoLimit - existingPhotos.length - pendingPhotos.length,
     );
     const accepted: File[] = [];
     let errorMessage = "";
 
     for (const file of selected.slice(0, available)) {
-      if (!inferFirstTimeImageMimeType(file.name, file.type)) {
+      if (!inferEntryImageMimeType(file.name, file.type)) {
         errorMessage = "Use JPEG, PNG, WebP, HEIC, or HEIF photos.";
-      } else if (file.size < 1 || file.size > firstTimePhotoSizeLimit) {
+      } else if (file.size < 1 || file.size > entryPhotoSizeLimit) {
         errorMessage = "Each photo must be no larger than 50 MB.";
       } else {
         accepted.push(file);
       }
     }
     if (selected.length > available) {
-      errorMessage = `Keep up to ${firstTimePhotoLimit} photos on a Vehicle.`;
+      errorMessage = `Keep up to ${entryPhotoLimit} photos on a Vehicle.`;
     }
 
     setPendingPhotos((current) => [...current, ...accepted]);
@@ -454,7 +410,6 @@ export function VehicleEditor({
     }
     const input: VehicleEntryInput = {
       body,
-      collectionNames: namesIncludingDraft(collectionNames, collectionInput),
       color: color || null,
       datePrecision: resolved.value.datePrecision,
       id: currentId,
@@ -480,7 +435,6 @@ export function VehicleEditor({
     try {
       const saved = await saveVehicleEntry(
         parsed.data,
-        captureReference,
         locationDirty ? location : undefined,
       );
       if (
@@ -496,8 +450,6 @@ export function VehicleEditor({
         ...saved.entry,
         attachments: existingPhotos,
         location,
-        timelineTrackId: vehicle?.timelineTrackId ?? null,
-        timelineTrackName: vehicle?.timelineTrackName ?? "Vehicles",
         totalCount: vehicle?.totalCount ?? 1,
         updatedAt: new Date().toISOString(),
       });
@@ -521,6 +473,7 @@ export function VehicleEditor({
         return;
       }
 
+      router.refresh();
       notify.success(
         saved.status === "created" ? "Vehicle created." : "Vehicle saved.",
       );
@@ -574,7 +527,7 @@ export function VehicleEditor({
     if (!currentId || currentRevision === null) return;
     const confirmed = await requestConfirmation({
       title: <>Move “{title.trim() || "this Vehicle"}” to Trash?</>,
-      description: <>Its history and private photos will be preserved.</>,
+      description: <>It and its private photos can be restored from Trash.</>,
       confirmLabel: "Move to Trash",
       eyebrow: <>Recoverable action</>,
       variant: "danger",
@@ -607,11 +560,7 @@ export function VehicleEditor({
       presentation={presentation}
       title={
         <>
-          {currentId
-            ? title || "Vehicle"
-            : sourceCapture
-              ? "Create a Vehicle from this Capture"
-              : "Keep a Vehicle in your Life Wiki"}
+          {currentId ? title || "Vehicle" : "Keep a Vehicle in your Life Wiki"}
         </>
       }
       titleId="vehicle-editor-title"
@@ -657,21 +606,8 @@ export function VehicleEditor({
         </div>
       }
     >
-      {" "}
       <form id="vehicles-workspace-form" onSubmit={handleSubmit}>
         <div className={styles.formGrid}>
-          {captureReference ? (
-            <div className={styles.extractionNotice}>
-              <Icon name="inbox" size={18} />
-              <div>
-                <strong>Starting from an Inbox Capture</strong>
-                <p>
-                  Saving creates a separate Vehicle and links it to the
-                  preserved source Capture.
-                </p>
-              </div>
-            </div>
-          ) : null}
           <fieldset className={styles.formSection}>
             <legend>Vehicle details</legend>
             <label className={styles.fullField}>
@@ -765,17 +701,7 @@ export function VehicleEditor({
             </label>
             <EntryOrganizationEditor
               disabled={isPending}
-              input={collectionInput}
-              kind="collection"
-              names={collectionNames}
-              onChange={setCollectionNames}
-              onInputChange={setCollectionInput}
-              options={collectionOptions}
-            />
-            <EntryOrganizationEditor
-              disabled={isPending}
               input={tagInput}
-              kind="tag"
               names={tagNames}
               onChange={setTagNames}
               onInputChange={setTagInput}
@@ -786,7 +712,7 @@ export function VehicleEditor({
           <EntryPhotoField
             disabled={isPending}
             existingPhotos={existingPhotos}
-            limit={firstTimePhotoLimit}
+            limit={entryPhotoLimit}
             onRemoveExisting={(photo) => void handleRemovePhoto(photo)}
             onRemovePending={(index) =>
               setPendingPhotos((current) =>

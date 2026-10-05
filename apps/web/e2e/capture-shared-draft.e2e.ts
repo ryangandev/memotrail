@@ -22,7 +22,7 @@ test("saving in Quick Capture clears the Dashboard composer, so the draft is cap
   await expect(dialogEditor).toHaveText("Shared draft text");
 
   await dialog
-    .getByRole("button", { name: "Save to Inbox", exact: true })
+    .getByRole("button", { name: "Save to Library", exact: true })
     .click();
   await expect(dialogEditor).toBeEmpty();
   await expectEntryCount(workspace.client, "Shared draft text", 1);
@@ -33,7 +33,7 @@ test("saving in Quick Capture clears the Dashboard composer, so the draft is cap
   await expect.soft(dashboard).not.toContainText("Draft saved on this device.");
   // A second save of the same composer must not capture the text again.
   await dashboard
-    .getByRole("button", { name: "Save to Inbox", exact: true })
+    .getByRole("button", { name: "Save to Library", exact: true })
     .click();
   await expect
     .soft(dashboard)
@@ -162,7 +162,7 @@ test("a draft photo is shared by both composers and queued once", async ({
   await trigger.click();
   await dialogEditor.fill("A photo worth keeping");
   await dialog
-    .getByRole("button", { name: "Save to Inbox", exact: true })
+    .getByRole("button", { name: "Save to Library", exact: true })
     .click();
   await expect(dialogEditor).toBeEmpty();
   await expect(dialog.getByLabel("Draft photos")).toHaveCount(0);
@@ -171,7 +171,7 @@ test("a draft photo is shared by both composers and queued once", async ({
 
   await expect.soft(dashboard.getByLabel("Draft photos")).toHaveCount(0);
   await dashboard
-    .getByRole("button", { name: "Save to Inbox", exact: true })
+    .getByRole("button", { name: "Save to Library", exact: true })
     .click();
   const queue = await queuedCaptures(page, workspace.owner);
   expect(queue).toHaveLength(1);
@@ -210,13 +210,13 @@ test("another tab follows the draft and its save", async ({
   await expect(photoButton(other.dashboard, "tab-photo.png")).toBeVisible();
 
   await first.dashboard
-    .getByRole("button", { name: "Save to Inbox", exact: true })
+    .getByRole("button", { name: "Save to Library", exact: true })
     .click();
   await expect(first.dashboardEditor).toBeEmpty();
   await expect(other.dashboardEditor).toBeEmpty();
   await expect(other.dashboard.getByLabel("Draft photos")).toHaveCount(0);
   await other.dashboard
-    .getByRole("button", { name: "Save to Inbox", exact: true })
+    .getByRole("button", { name: "Save to Library", exact: true })
     .click();
   await expect(other.dashboard).toContainText(
     "Write a title, a note, or add a photo before saving.",
@@ -303,7 +303,7 @@ test("voice capture follows the draft into Quick Capture and stops when it close
     "Listening… Tap Stop when done. Audio is not saved.",
   );
   await expect(
-    dialog.getByRole("button", { name: "Save to Inbox", exact: true }),
+    dialog.getByRole("button", { name: "Save to Library", exact: true }),
   ).toBeDisabled();
   await speak("and more");
   await expect(dialogEditor).toContainText("first words and more");
@@ -340,7 +340,7 @@ test("voice capture follows the draft into Quick Capture and stops when it close
   await expect(dialog).toContainText("Transcription added to this draft.");
   await expect(dialogEditor).toContainText("from the dialog");
   await dialog
-    .getByRole("button", { name: "Save to Inbox", exact: true })
+    .getByRole("button", { name: "Save to Library", exact: true })
     .click();
   await expect(dialogEditor).toBeEmpty();
   await expect(dialog).not.toContainText("Transcription added");
@@ -351,6 +351,10 @@ test("voice capture follows the draft into Quick Capture and stops when it close
     "Before speaking.\nfirst words and more\nfrom the dialog",
     1,
   );
+  // The save finishes once the Dashboard shows the new Entry.
+  await expect(
+    page.getByRole("region", { name: "Recent Entries", exact: true }),
+  ).toContainText("Before speaking.");
 });
 
 async function openDashboard(page: Page) {

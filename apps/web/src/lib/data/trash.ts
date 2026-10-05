@@ -19,7 +19,6 @@ export type TrashItem = {
 };
 
 export type TrashWorkspace = {
-  inboxCount: number | undefined;
   items: TrashItem[];
   loadError: string | null;
   page: number;
@@ -51,17 +50,11 @@ export async function getTrashWorkspace(
     return null;
   }
 
-  const [trashResult, inboxResult] = await Promise.all([
+  const [trashResult] = await Promise.all([
     context.client.rpc("trash_workspace", {
       p_limit: TRASH_PAGE_SIZE,
       p_offset: (page - 1) * TRASH_PAGE_SIZE,
     }),
-    context.client
-      .from("entries")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", context.userId)
-      .eq("inbox_status", "unreviewed")
-      .is("deleted_at", null),
   ]);
   const rows = trashResult.error ? null : parseTrashRows(trashResult.data);
   const imageUrls = rows
@@ -72,7 +65,6 @@ export async function getTrashWorkspace(
     : new Map<string, string>();
 
   return {
-    inboxCount: inboxResult.error ? undefined : (inboxResult.count ?? 0),
     items: (rows ?? []).map((row) => itemFromRow(row, imageUrls)),
     loadError:
       rows && !trashResult.error
@@ -123,10 +115,7 @@ function isTrashRow(value: unknown): value is TrashRow {
   }
 
   return (
-    (value.item_kind === "entry" ||
-      value.item_kind === "person" ||
-      value.item_kind === "collection" ||
-      value.item_kind === "attachment") &&
+    (value.item_kind === "entry" || value.item_kind === "attachment") &&
     typeof value.item_id === "string" &&
     typeof value.title === "string" &&
     nullableString(value.detail) &&

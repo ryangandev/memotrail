@@ -50,7 +50,7 @@ test("a rejected capture can be copied and discarded while later captures sync",
   await saveCapture(page, composer, "A valid later capture");
   await expectEntryCount(workspace.client, "A valid later capture", 1);
   await expect(
-    page.getByText("Saved to Inbox.", { exact: true }),
+    page.getByText("Saved to Library.", { exact: true }),
   ).toBeVisible();
   await expect(rejected).toHaveCount(1);
   expect(attempts.for(rejectedPrefix)).toBe(1);
@@ -169,7 +169,7 @@ async function openDashboardComposer(page: Page) {
 
 async function saveCapture(page: Page, composer: Locator, text: string) {
   const save = composer.getByRole("button", {
-    name: "Save to Inbox",
+    name: "Save to Library",
     exact: true,
   });
   await expect(save).toBeEnabled({ timeout: 60_000 });

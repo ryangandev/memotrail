@@ -1,33 +1,21 @@
 import { describe, it, expect } from "vitest";
-import { validOrganizationInput, type OrganizationInput } from "./organization";
-describe("Organization settings", () => {
-  const input: OrganizationInput = {
-    kind: "collection",
-    name: " 学习 ",
-    id: null,
-    revision: null,
-    order: -1,
-  };
-  it("accepts bilingual Collections and alphabetic tags", () => {
-    expect(validOrganizationInput(input)).toBe(true);
-    expect(validOrganizationInput({ ...input, kind: "tag", order: 0 })).toBe(
-      true,
-    );
-    expect(validOrganizationInput({ ...input, kind: "tag" })).toBe(false);
+import { validTagInput, type TagInput } from "./organization";
+describe("Tag settings", () => {
+  const input: TagInput = { name: " 学习 ", id: null, revision: null };
+  it("accepts bilingual tags", () => {
+    expect(validTagInput(input)).toBe(true);
   });
-  it("bounds names, order and identity", () => {
+  it("bounds names and identity", () => {
+    expect(validTagInput({ ...input, name: "x".repeat(80) })).toBe(true);
     for (const change of [
       { name: " " },
       { name: "x".repeat(81) },
-      { order: NaN },
-      { order: 1000001 },
-      { order: 0.1 },
       { revision: 1 },
       { id: "x", revision: 1 },
     ])
-      expect(validOrganizationInput({ ...input, ...change })).toBe(false);
+      expect(validTagInput({ ...input, ...change })).toBe(false);
     expect(
-      validOrganizationInput({
+      validTagInput({
         ...input,
         id: "96000000-0000-4000-8000-000000000002",
         revision: 2,

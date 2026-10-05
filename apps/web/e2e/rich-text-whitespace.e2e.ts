@@ -46,10 +46,12 @@ test("capture keeps formatting when the note ends with a new line", async ({
     });
 
   await capture
-    .getByRole("button", { name: "Save to Inbox", exact: true })
+    .getByRole("button", { name: "Save to Library", exact: true })
     .click();
   await expect(
-    page.locator("[data-sonner-toast]").filter({ hasText: "Saved to Inbox." }),
+    page
+      .locator("[data-sonner-toast]")
+      .filter({ hasText: "Saved to Library." }),
   ).toBeVisible();
   await expect(editor).toBeEmpty();
   await expect
@@ -74,12 +76,15 @@ test("capture keeps formatting when the note ends with a new line", async ({
       },
     ]);
 
-  await page.goto("/inbox");
-  const card = page
-    .getByRole("article")
-    .filter({ has: page.getByRole("heading", { name: "Bold capture" }) });
-  await card.getByRole("button", { name: "Organize", exact: true }).click();
-  const review = page.getByRole("dialog", { name: "Review Entry" });
+  const captured = await workspace.client
+    .from("entries")
+    .select("id")
+    .eq("owner_id", workspace.owner)
+    .single();
+  expect(captured.error).toBeNull();
+  await page.goto(`/items/${captured.data!.id}`);
+  await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
+  const review = page.getByRole("dialog", { name: "Edit Entry" });
   await expect(
     review
       .getByRole("textbox", { name: "Note", exact: true })
@@ -87,7 +92,7 @@ test("capture keeps formatting when the note ends with a new line", async ({
   ).toHaveText("Bold capture");
 });
 
-test("Inbox review saves a formatted note with surrounding whitespace", async ({
+test("Entry editing saves a formatted note with surrounding whitespace", async ({
   page,
   workspace,
 }) => {
@@ -96,7 +101,6 @@ test("Inbox review saves a formatted note with surrounding whitespace", async ({
     body: "Bold review note",
     date_precision: "exact",
     id,
-    inbox_status: "unreviewed",
     item_kind: "entry",
     item_subtype: "entry",
     metadata: {
@@ -113,12 +117,10 @@ test("Inbox review saves a formatted note with surrounding whitespace", async ({
   });
   expect(inserted.error).toBeNull();
 
-  await page.goto("/inbox");
-  const card = page
-    .getByRole("article")
-    .filter({ has: page.getByRole("heading", { name: "Formatted review" }) });
-  await card.getByRole("button", { name: "Organize", exact: true }).click();
-  const review = page.getByRole("dialog", { name: "Review Entry" });
+  await page.goto(`/items/${id}`);
+  const edit = page.getByRole("button", { name: "Edit Entry", exact: true });
+  await edit.click();
+  const review = page.getByRole("dialog", { name: "Edit Entry" });
   const note = review.getByRole("textbox", { name: "Note", exact: true });
   await expect(note.locator("strong")).toHaveText("Bold review note");
   await note.click();
@@ -138,13 +140,12 @@ test("Inbox review saves a formatted note with surrounding whitespace", async ({
   ).toBeVisible();
   const saved = await workspace.client
     .from("entries")
-    .select("body,inbox_status,metadata,revision")
+    .select("body,metadata,revision")
     .eq("id", id)
     .single();
   expect(saved.error).toBeNull();
   expect(saved.data).toEqual({
     body: "Bold review note",
-    inbox_status: "unreviewed",
     metadata: {
       body_rich: {
         document: boldDocument("Bold review note"),
@@ -155,7 +156,7 @@ test("Inbox review saves a formatted note with surrounding whitespace", async ({
     revision: 2,
   });
 
-  await card.getByRole("button", { name: "Organize", exact: true }).click();
+  await edit.click();
   await expect(note.locator("strong")).toHaveText("Bold review note");
   await expect(note.locator("p")).toHaveCount(1);
 });

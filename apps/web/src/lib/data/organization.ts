@@ -1,19 +1,18 @@
-export type OrganizationKind = "collection" | "tag";
-export type OrganizationItem = {
+export const tagNameCountLimit = 70;
+export const tagNameLengthLimit = 80;
+export const tagNamesLimitMessage = `Use up to ${tagNameCountLimit} tags with names up to ${tagNameLengthLimit} characters.`;
+
+export type TagItem = {
   id: string;
   name: string;
-  system_key: string | null;
-  sort_order: number;
   revision: number;
   entry_count: number;
   total_count: number;
 };
-export type OrganizationInput = {
-  kind: OrganizationKind;
+export type TagInput = {
   id: string | null;
   revision: number | null;
   name: string;
-  order: number;
 };
 export type TagEntryPreview = {
   date: string;
@@ -27,39 +26,31 @@ export type TagEntryPreviewResult = {
   error: string | null;
 };
 
-export function parseOrganizationItems(
-  value: unknown,
-): OrganizationItem[] | null {
+export function parseTagItems(value: unknown): TagItem[] | null {
   if (!Array.isArray(value)) return null;
-  return value.every(isOrganizationItem) ? value : null;
+  return value.every(isTagItem) ? value : null;
 }
 
-function isOrganizationItem(value: unknown): value is OrganizationItem {
+function isTagItem(value: unknown): value is TagItem {
   return (
     typeof value === "object" &&
     value !== null &&
-    typeof (value as OrganizationItem).id === "string" &&
-    typeof (value as OrganizationItem).name === "string" &&
-    ((value as OrganizationItem).system_key === null ||
-      typeof (value as OrganizationItem).system_key === "string") &&
-    typeof (value as OrganizationItem).sort_order === "number" &&
-    typeof (value as OrganizationItem).revision === "number" &&
-    (typeof (value as OrganizationItem).entry_count === "number" ||
-      typeof (value as OrganizationItem).entry_count === "string") &&
-    (typeof (value as OrganizationItem).total_count === "number" ||
-      typeof (value as OrganizationItem).total_count === "string")
+    typeof (value as TagItem).id === "string" &&
+    typeof (value as TagItem).name === "string" &&
+    typeof (value as TagItem).revision === "number" &&
+    (typeof (value as TagItem).entry_count === "number" ||
+      typeof (value as TagItem).entry_count === "string") &&
+    (typeof (value as TagItem).total_count === "number" ||
+      typeof (value as TagItem).total_count === "string")
   );
 }
-export function validOrganizationInput(value: OrganizationInput) {
+
+export function validTagInput(value: TagInput) {
   return (
     value &&
-    (value.kind === "collection" || value.kind === "tag") &&
     typeof value.name === "string" &&
     value.name.trim().length > 0 &&
-    [...value.name.trim()].length <= (value.kind === "tag" ? 60 : 80) &&
-    Number.isInteger(value.order) &&
-    Math.abs(value.order) <= 1000000 &&
-    (value.kind !== "tag" || value.order === 0) &&
+    [...value.name.trim()].length <= tagNameLengthLimit &&
     (value.id === null
       ? value.revision === null
       : typeof value.id === "string" &&

@@ -17,7 +17,6 @@ select throws_ok($$insert into storage.objects(bucket_id,name) select 'entry-med
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000093',true);
 select lives_ok($$select public.trash_entry_attachment('93000000-0000-4000-8000-000000000002')$$,'Original remains recoverable in Trash');
-select is(count(*),0::bigint,'Nothing is removed before the record is deleted') from public.trash_item_storage_paths('attachment','93000000-0000-4000-8000-000000000002',null,(select deleted_at from public.attachments where id='93000000-0000-4000-8000-000000000002'));
 select is((select count(*) from public.delete_trash_item_forever('attachment','93000000-0000-4000-8000-000000000002',null,(select deleted_at from public.attachments where id='93000000-0000-4000-8000-000000000002'))),1::bigint,'A late unregistered artifact no longer blocks permanent deletion');
 select is((select array_agg(object_path) from public.pending_media_purge_paths()),(select array_agg(path) from cleanup_fixture),'The interrupted preview is recorded with the deletion');
 select is(count(*),0::bigint,'The photo record is gone') from public.attachments where id='93000000-0000-4000-8000-000000000002';

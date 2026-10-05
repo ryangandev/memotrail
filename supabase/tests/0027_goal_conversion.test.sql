@@ -7,14 +7,13 @@ insert into auth.users(id,email,raw_user_meta_data) values
   ('10000000-0000-0000-0000-000000000094','goal-extraction-other@memotrail.local','{}');
 
 insert into public.entries(
-  id,owner_id,title,body,item_kind,item_subtype,inbox_status,date_precision,occurred_label,metadata
+  id,owner_id,title,body,item_kind,item_subtype,date_precision,occurred_label,metadata
 ) values (
   '20000000-0000-0000-0000-000000000093',
   '10000000-0000-0000-0000-000000000093',
   'An idea',
   E'  Original\nwriting  ',
   'entry','entry',
-  'unreviewed',
   'age',
   '17岁',
   '{"original":true,"body_rich":{"version":1,"text":"  Original\nwriting  ","document":{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"  Original\nwriting  "}]}]}}}'
@@ -29,8 +28,7 @@ select is(
     1,
     '20000000-0000-0000-0000-000000000096',
     'An idea',
-    'someday',
-    'considering',
+    'active',
     null
   )),
   '20000000-0000-0000-0000-000000000096'::uuid,
@@ -48,11 +46,6 @@ select is(
   'The source keeps its exact writing'
 );
 select is(
-  (select inbox_status from public.entries where id='20000000-0000-0000-0000-000000000093'),
-  'unreviewed',
-  'Extraction does not silently file the source Capture'
-);
-select is(
   (select occurred_label from public.entries where id='20000000-0000-0000-0000-000000000093'),
   '17岁',
   'Extraction does not rewrite source occurrence context'
@@ -63,8 +56,8 @@ select is(
   'The extracted item has canonical Goal identity'
 );
 select is(
-  (select horizon || ':' || status from public.goals where entry_id='20000000-0000-0000-0000-000000000096'),
-  'someday:considering',
+  (select status from public.goals where entry_id='20000000-0000-0000-0000-000000000096'),
+  'active',
   'Goal-specific facts live in the Goal record'
 );
 select is(
@@ -88,7 +81,7 @@ select is(
   (select goal_entry_id from public.extract_goal_from_item(
     '20000000-0000-0000-0000-000000000093',1,
     '20000000-0000-0000-0000-000000000096',
-    'An idea','someday','considering',null
+    'An idea','active',null
   )),
   '20000000-0000-0000-0000-000000000096'::uuid,
   'A lost-response retry returns the same Goal'
@@ -102,7 +95,7 @@ select is(
   (select count(*) from public.extract_goal_from_item(
     '20000000-0000-0000-0000-000000000093',1,
     '20000000-0000-0000-0000-000000000096',
-    'Changed intention','someday','active',null
+    'Changed intention','let_go',null
   )),
   0::bigint,
   'A reused request id cannot confirm a different payload'
@@ -113,7 +106,7 @@ select is(
   (select count(*) from public.extract_goal_from_item(
     '20000000-0000-0000-0000-000000000093',1,
     '20000000-0000-0000-0000-000000000097',
-    'Other user','someday','considering',null
+    'Other user','active',null
   )),
   0::bigint,
   'Another account cannot extract from the source'
@@ -129,7 +122,7 @@ select hasnt_function(
 select ok(
   has_function_privilege(
     'authenticated',
-    'public.extract_goal_from_item(uuid,integer,uuid,text,text,text,date)',
+    'public.extract_goal_from_item(uuid,integer,uuid,text,text,date)',
     'execute'
   ),
   'Authenticated clients may extract a separate linked Goal'
@@ -137,7 +130,7 @@ select ok(
 select ok(
   not has_function_privilege(
     'anon',
-    'public.extract_goal_from_item(uuid,integer,uuid,text,text,text,date)',
+    'public.extract_goal_from_item(uuid,integer,uuid,text,text,date)',
     'execute'
   ),
   'Anonymous extraction is denied'

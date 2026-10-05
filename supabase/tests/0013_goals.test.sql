@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(64);
+select plan(49);
 
 create or replace function pg_temp.capture_sqlstate(statement text)
 returns text
@@ -47,13 +47,12 @@ select is(
   'The Goals workspace rejects an invalid page'
 );
 
-insert into public.entries (title, body, owner_id, item_kind, item_subtype, inbox_status)
+insert into public.entries (title, body, owner_id, item_kind, item_subtype)
 values (
   'Learning journal',
   'Notes from language practice.',
   '10000000-0000-0000-0000-000000000001',
-  'entry','entry',
-  'organized'
+  'entry','entry'
 );
 
 select lives_ok(
@@ -62,17 +61,14 @@ select lives_ok(
     from public.save_goal_entry(
       'Learn Japanese',
       'Build a patient daily practice.',
-      'long_term',
       'active',
       '2028-12-31',
-      array['Goals', 'Learning', 'goals'],
       array['Language', 'growth', 'LANGUAGE'],
-      array[(select id from public.entries where title = 'Learning journal')],
       null,
       null
     )
   $$,
-  'An owner can create an organized Goal with reflective structure'
+  'An owner can create an organized Goal'
 );
 
 select is(
@@ -82,20 +78,14 @@ select is(
 );
 
 select is(
-  (select inbox_status from public.entries where title = 'Learn Japanese'),
-  'organized',
-  'Direct Goal creation produces an organized Entry'
-);
-
-select is(
   (
-    select concat_ws('|', goals.horizon, goals.status, goals.target_date::text)
+    select concat_ws('|', goals.status, goals.target_date::text)
     from public.goals
     join public.entries on entries.id = goals.entry_id
     where entries.title = 'Learn Japanese'
   ),
-  'long_term|active|2028-12-31',
-  'Goal horizon, status, and optional target date are preserved'
+  'active|2028-12-31',
+  'Goal status and optional target date are preserved'
 );
 
 select is(
@@ -109,12 +99,6 @@ select is(
 );
 
 select is(
-  (select collection_names::text from public.goals_workspace() where title = 'Learn Japanese'),
-  '{goals,Learning}',
-  'Goal Collections are normalized and de-duplicated case-insensitively'
-);
-
-select is(
   (select tag_names::text from public.goals_workspace() where title = 'Learn Japanese'),
   '{growth,Language}',
   'Goal tags are normalized and de-duplicated case-insensitively'
@@ -122,22 +106,19 @@ select is(
 
 select is(
   (
-    select related_entries -> 0 ->> 'title'
-    from public.goals_workspace()
-    where title = 'Learn Japanese'
+    select count(*)::integer
+    from public.entry_links
+    join public.entries on entries.id = entry_links.source_entry_id
+    where entries.title = 'Learn Japanese'
   ),
-  'Learning journal',
-  'The Goals workspace returns linked progress context'
+  0,
+  'Saving a Goal creates no related links'
 );
 
 select is(
-  (
-    select related_entries -> 0 ->> 'relationship'
-    from public.goals_workspace()
-    where title = 'Learn Japanese'
-  ),
-  'related',
-  'Related progress context preserves its link relationship'
+  (select status from public.goals_workspace() where title = 'Learn Japanese'),
+  'active',
+  'The Goals workspace returns the Goal state'
 );
 
 select is(
@@ -150,8 +131,7 @@ select lives_ok(
   $$
     select *
     from public.save_goal_entry(
-      'Visit Iceland', '', 'someday', 'considering', null,
-      array['Bucket List'], array['Travel'], array[]::uuid[], null, null
+      'Visit Iceland', '', 'active', null, array['Travel'], null, null
     )
   $$,
   'A Goal may omit its description and target date'
@@ -161,23 +141,22 @@ select lives_ok(
   $$
     select *
     from public.save_goal_entry(
-      'Pause running', 'Rest without pressure.', 'short_term', 'paused', null,
-      array['Health'], array[]::text[], array[]::uuid[], null, null
+      'Pause running', 'Rest without pressure.', 'let_go', null, array[]::text[], null, null
     )
   $$,
-  'A paused short-term Goal remains a valid reflective state'
+  'A Goal may be saved as let go'
 );
 
 select is(
   (select title from public.goals_workspace(1, 0)),
   'Learn Japanese',
-  'Active Goals sort before other states'
+  'Dated active Goals sort first'
 );
 
 select is(
   (select title from public.goals_workspace(1, 1)),
   'Visit Iceland',
-  'Considering Goals sort after active Goals'
+  'Undated active Goals sort before let-go Goals'
 );
 
 select is(
@@ -188,7 +167,7 @@ select is(
 
 select is(
   pg_temp.capture_sqlstate(
-    $$select * from public.save_goal_entry('', '', 'someday', 'active', null, '{}', '{}', '{}', null, null)$$
+    $$select * from public.save_goal_entry('', '', 'active', null, '{}', null, null)$$
   ),
   '22023',
   'Goal creation rejects an empty title'
@@ -196,15 +175,15 @@ select is(
 
 select is(
   pg_temp.capture_sqlstate(
-    $$select * from public.save_goal_entry('Bad', '', 'soon', 'active', null, '{}', '{}', '{}', null, null)$$
+    $$select * from public.save_goal_entry('Bad', '', 'considering', null, '{}', null, null)$$
   ),
   '22023',
-  'Goal creation rejects an unsupported horizon'
+  'Goal creation rejects the retired Considering state'
 );
 
 select is(
   pg_temp.capture_sqlstate(
-    $$select * from public.save_goal_entry('Bad', '', 'someday', 'done', null, '{}', '{}', '{}', null, null)$$
+    $$select * from public.save_goal_entry('Bad', '', 'done', null, '{}', null, null)$$
   ),
   '22023',
   'Goal creation rejects a task-style unsupported status'
@@ -212,15 +191,7 @@ select is(
 
 select is(
   pg_temp.capture_sqlstate(
-    $$select * from public.save_goal_entry('Bad', '', 'someday', 'active', null, array[''], '{}', '{}', null, null)$$
-  ),
-  '22023',
-  'Goal creation rejects blank Collection names'
-);
-
-select is(
-  pg_temp.capture_sqlstate(
-    $$select * from public.save_goal_entry('Bad', '', 'someday', 'active', null, '{}', array[''], '{}', null, null)$$
+    $$select * from public.save_goal_entry('Bad', '', 'active', null, array[''], null, null)$$
   ),
   '22023',
   'Goal creation rejects blank tags'
@@ -228,56 +199,36 @@ select is(
 
 select is(
   pg_temp.capture_sqlstate(
-    $$select * from public.save_goal_entry(
-      'Bad', '', 'someday', 'active', null, '{}', '{}',
-      array['ffffffff-ffff-4fff-8fff-ffffffffffff'::uuid], null, null
-    )$$
+    $$select * from public.save_goal_entry('Bad', '', 'active', 'infinity', '{}', null, null)$$
   ),
   '22023',
-  'Goal creation rejects a missing related Entry'
-);
-
-reset role;
-
-insert into public.entries (owner_id, title, body, item_kind, item_subtype, inbox_status)
-values (
-  '10000000-0000-0000-0000-000000000013',
-  'Other private progress', '', 'entry','entry', 'organized'
-);
-
-set local role authenticated;
-select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
-
-select is(
-  pg_temp.capture_sqlstate(
-    $$select * from public.save_goal_entry(
-      'Bad', '', 'someday', 'active', null, '{}', '{}',
-      array[(select id from public.entries where title = 'Other private progress')], null, null
-    )$$
-  ),
-  '22023',
-  'Goal creation rejects another owner''s related Entry'
+  'Goal creation rejects an unbounded target date'
 );
 
 select is(
   pg_temp.capture_sqlstate(
-    format(
-      $$select * from public.save_goal_entry(
-        'Self', '', 'someday', 'active', null, '{}', '{}', array[%L::uuid], %L::uuid, 1
-      )$$,
-      (select id from public.entries where title = 'Learn Japanese'),
-      (select id from public.entries where title = 'Learn Japanese')
+    $$select * from public.save_goal_entry('Bad', '', null, null, '{}', null, null)$$
+  ),
+  '22023',
+  'Goal creation requires a state'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from public.save_goal_entry(
+      'Not a Goal', '', 'active', null, '{}',
+      (select id from public.entries where title = 'Learning journal'), 1
     )
   ),
-  '22023',
-  'A Goal cannot link to itself'
+  0,
+  'Saving a Goal cannot rewrite another kind of Entry'
 );
 
 select lives_ok(
   format(
     $$select * from public.save_goal_entry(
-      'Learn Japanese well', 'Updated reflection.', 'long_term', 'paused', null,
-      array['Learning'], array['language'], '{}', %L::uuid, 1
+      'Learn Japanese well', 'Updated reflection.', 'let_go', null, array['language'], %L::uuid, 1
     )$$,
     (select id from public.entries where title = 'Learn Japanese')
   ),
@@ -291,38 +242,16 @@ select is(
 );
 
 select is(
-  (
-    select snapshot -> 'goal' ->> 'status'
-    from public.entry_versions
-    join public.entries on entries.id = entry_versions.entry_id
-    where entries.title = 'Learn Japanese well' and entry_versions.version = 1
-  ),
-  'active',
-  'Goal history preserves the prior reflective status'
-);
-
-select is(
-  (
-    select jsonb_array_length(snapshot -> 'related_entry_ids')
-    from public.entry_versions
-    join public.entries on entries.id = entry_versions.entry_id
-    where entries.title = 'Learn Japanese well' and entry_versions.version = 1
-  ),
-  1,
-  'Goal history preserves the prior related Entry links'
-);
-
-select is(
-  (select jsonb_array_length(related_entries) from public.goals_workspace() where title = 'Learn Japanese well'),
-  0,
-  'Editing a Goal can intentionally clear its related progress context'
+  (select status from public.goals_workspace() where title = 'Learn Japanese well'),
+  'let_go',
+  'An edited Goal keeps its new state'
 );
 
 select is(
   (
     select count(*)::integer
     from public.save_goal_entry(
-      'Stale', '', 'someday', 'active', null, '{}', '{}', '{}',
+      'Stale', '', 'active', null, '{}',
       (select id from public.entries where title = 'Learn Japanese well'), 1
     )
   ),
@@ -333,146 +262,21 @@ select is(
 select is(
   (
     select title
-    from public.search_wiki_items('long term', array['goal'], '{}', '{}', null, null, 20, 0)
+    from public.search_wiki_items('Japanese', array['goal'], '{}', null, null, 20, 0)
     where title = 'Learn Japanese well'
   ),
   'Learn Japanese well',
-  'Global search matches a Goal horizon'
+  'Global search finds a Goal'
 );
 
 select is(
   (
     select title
-    from public.search_wiki_items('2028-12-31', array['goal'], '{}', '{}', null, null, 20, 0)
+    from public.search_wiki_items('2028-12-31', array['goal'], '{}', null, null, 20, 0)
     where title = 'Learn Japanese well'
   ),
   null,
   'Clearing a target date removes its structured search value'
-);
-
-select is(
-  (
-    select count(*)::integer
-    from public.mark_goal_achieved_with_first_time(
-      (select id from public.entries where title = 'Learn Japanese well'),
-      2, '2026-09-03T19:00:00Z', 'day', null, 'America/Los_Angeles'
-    )
-  ),
-  0,
-  'Only a Bucket List Goal can create an achieved First Time'
-);
-
-select is(
-  (
-    select count(*)::integer
-    from public.mark_goal_achieved_with_first_time(
-      (select id from public.entries where title = 'Visit Iceland'),
-      1, '2026-09-03T19:00:00Z', 'day', 'First Iceland trip', 'America/Los_Angeles'
-    )
-  ),
-  1,
-  'A Bucket List Goal can atomically create an achieved First Time'
-);
-
-select is(
-  (
-    select goals.status
-    from public.goals
-    join public.entries on entries.id = goals.entry_id
-    where entries.title = 'Visit Iceland' and entries.item_kind = 'goal'
-  ),
-  'achieved',
-  'The Bucket List action marks the Goal achieved'
-);
-
-select is(
-  (
-    select revision
-    from public.entries
-    where title = 'Visit Iceland' and item_kind = 'goal'
-  ),
-  2,
-  'The Bucket List action revision-safely updates the Goal'
-);
-
-select is(
-  (
-    select body
-    from public.entries
-    where title = 'Visit Iceland' and item_kind = 'entry' and item_subtype = 'first_time'
-  ),
-  '',
-  'The created First Time does not copy the Goal description'
-);
-
-select is(
-  (
-    select concat_ws('|', item_kind, item_subtype, inbox_status, date_precision, occurred_label)
-    from public.entries
-    where title = 'Visit Iceland' and item_kind = 'entry' and item_subtype = 'first_time'
-  ),
-  'entry|first_time|organized|day|First Iceland trip',
-  'The created First Time preserves organized occurrence context'
-);
-
-select is(
-  (
-    select relationship
-    from public.entry_links
-    join public.entries as source on source.id = entry_links.source_entry_id
-    where source.title = 'Visit Iceland' and relationship = 'achievement'
-  ),
-  'achievement',
-  'The achieved Goal links to its First Time'
-);
-
-select is(
-  (
-    select snapshot -> 'goal' ->> 'status'
-    from public.entry_versions
-    join public.entries on entries.id = entry_versions.entry_id
-    where entries.title = 'Visit Iceland' and entry_versions.version = 1
-  ),
-  'considering',
-  'The achievement action preserves the previous Goal status in history'
-);
-
-select is(
-  (
-    select count(*)::integer
-    from public.mark_goal_achieved_with_first_time(
-      (select id from public.entries where title = 'Visit Iceland' and item_kind = 'goal'),
-      1, '2026-09-04T19:00:00Z', 'day', null, 'America/Los_Angeles'
-    )
-  ),
-  0,
-  'A stale achievement action cannot create another First Time'
-);
-
-select is(
-  pg_temp.capture_sqlstate(
-    format(
-      $$select * from public.mark_goal_achieved_with_first_time(
-        %L::uuid, 2, '2026-09-03T19:00:00Z', 'unknown', null, 'America/Los_Angeles'
-      )$$,
-      (select id from public.entries where title = 'Visit Iceland' and item_kind = 'goal')
-    )
-  ),
-  '22023',
-  'The achievement action rejects unknown completion precision'
-);
-
-select is(
-  pg_temp.capture_sqlstate(
-    format(
-      $$select * from public.mark_goal_achieved_with_first_time(
-        %L::uuid, 2, '2026-09-03T19:00:00Z', 'day', null, 'Not/A-Timezone'
-      )$$,
-      (select id from public.entries where title = 'Visit Iceland' and item_kind = 'goal')
-    )
-  ),
-  '22023',
-  'The achievement action rejects an invalid timezone'
 );
 
 select is(
@@ -515,7 +319,7 @@ select is(
 
 select is(
   (select status from public.goals_workspace() where title = 'Pause running'),
-  'paused',
+  'let_go',
   'Restoration preserves Goal structure'
 );
 
@@ -559,15 +363,27 @@ select is(
 );
 
 select is(
-  (select prosecdef from pg_proc where oid = 'public.save_goal_entry(text,text,text,text,date,text[],text[],uuid[],uuid,integer)'::regprocedure),
+  (select prosecdef from pg_proc where oid = 'public.save_goal_entry(text,text,text,date,text[],uuid,integer)'::regprocedure),
   true,
-  'The owner-checked Goal save boundary supports protected relationship writes'
+  'The owner-checked Goal save boundary writes tags through the shared writer'
 );
 
 select is(
-  (select prosecdef from pg_proc where oid = 'public.mark_goal_achieved_with_first_time(uuid,integer,timestamptz,text,text,text)'::regprocedure),
-  false,
-  'The Bucket List action uses invoker rights'
+  to_regprocedure('public.save_goal_entry(text,text,text,text,date,text[],uuid[],uuid,integer)'),
+  null,
+  'The Goal save with horizons and related Items is retired'
+);
+
+select hasnt_column('public', 'goals', 'horizon', 'Goals have no horizon');
+
+select col_default_is('public', 'goals', 'status', 'active'::text, 'New Goals start as wanted');
+
+select throws_ok(
+  $$insert into public.goals (entry_id, owner_id, status)
+    select id, owner_id, 'paused' from public.entries where title = 'Learning journal'$$,
+  '23514',
+  null,
+  'The retired Paused state is refused'
 );
 
 select is(
@@ -585,24 +401,6 @@ select ok(
   not has_function_privilege('anon', 'public.goals_workspace(integer,integer)', 'EXECUTE')
     and not has_function_privilege('public', 'public.goals_workspace(integer,integer)', 'EXECUTE'),
   'Anonymous and PUBLIC roles cannot execute the Goals workspace'
-);
-
-select ok(
-  has_function_privilege(
-    'authenticated',
-    'public.mark_goal_achieved_with_first_time(uuid,integer,timestamptz,text,text,text)',
-    'EXECUTE'
-  ),
-  'Authenticated users can execute the Bucket List achievement action'
-);
-
-select ok(
-  not has_function_privilege(
-    'anon',
-    'public.mark_goal_achieved_with_first_time(uuid,integer,timestamptz,text,text,text)',
-    'EXECUTE'
-  ),
-  'Anonymous users cannot execute the Bucket List achievement action'
 );
 
 select ok(

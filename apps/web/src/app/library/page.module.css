@@ -22,6 +22,38 @@
   font-size: var(--mt-font-size-caption);
 }
 
+.sectionMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: var(--mt-space-1) var(--mt-space-3);
+}
+
+.sectionMeta a {
+  color: var(--mt-color-accent);
+  font-size: var(--mt-font-size-caption);
+  font-weight: var(--mt-font-weight-medium);
+  text-decoration: none;
+}
+
+.sectionMeta a:hover {
+  color: var(--mt-color-accent-hover);
+  text-decoration: underline;
+}
+
+.sectionMeta a:focus-visible {
+  border-radius: var(--mt-radius-small);
+  outline: 2px solid var(--mt-color-accent);
+  outline-offset: 2px;
+}
+
+.sectionNote {
+  margin-bottom: var(--mt-space-4);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+}
+
 .wikiList {
   display: grid;
   margin: 0;
@@ -126,34 +158,6 @@
 
 .pagination a {
   color: var(--mt-color-accent);
-}
-
-.libraryFooter {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: var(--mt-space-8);
-  padding-top: var(--mt-space-4);
-  border-top: 1px solid var(--mt-color-border);
-}
-
-.libraryFooter a {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--mt-space-2);
-  color: var(--mt-color-accent);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-medium);
-  text-decoration: none;
-}
-
-.libraryFooter a:hover {
-  color: var(--mt-color-accent-hover);
-}
-
-.libraryFooter a:focus-visible {
-  border-radius: var(--mt-radius-small);
-  outline: 2px solid var(--mt-color-accent);
-  outline-offset: 4px;
 }
 
 @media (max-width: 390px) {

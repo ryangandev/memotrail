@@ -71,7 +71,6 @@ test("repeating an address creates independent Entry and Home Locations", async 
             body: "First memory",
             item_kind: "entry",
             item_subtype: "entry",
-            inbox_status: "organized",
             date_precision: "unknown",
           },
           {
@@ -81,7 +80,6 @@ test("repeating an address creates independent Entry and Home Locations", async 
             body: "Second memory",
             item_kind: "entry",
             item_subtype: "entry",
-            inbox_status: "organized",
             date_precision: "unknown",
           },
         ])
@@ -98,7 +96,6 @@ test("repeating an address creates independent Entry and Home Locations", async 
               kind: "provider",
               provider: "geoapify",
               providerLocationId: "synthetic-market-street",
-              name: "1136 Arch Street, Philadelphia, PA 19107, United States",
               formattedAddress:
                 "1136 Arch Street, Philadelphia, PA 19107, United States",
               address: "1136 Arch Street",
@@ -120,7 +117,7 @@ test("repeating an address creates independent Entry and Home Locations", async 
       });
     });
 
-    await page.goto(`/history?entry=${firstEntryId}`);
+    await page.goto(`/items/${firstEntryId}`);
     await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByPlaceholder("Search for an address")).toHaveCSS(
@@ -165,13 +162,16 @@ test("repeating an address creates independent Entry and Home Locations", async 
     const firstLocation = (
       await client
         .from("locations")
-        .select("id,name,provider,provider_location_id,bound_entry_id")
+        .select(
+          "id,formatted_address,provider,provider_location_id,bound_entry_id",
+        )
         .eq("provider", "geoapify")
         .eq("provider_location_id", "synthetic-market-street")
         .single()
     ).data!;
     expect(firstLocation).toMatchObject({
-      name: "1136 Arch Street, Philadelphia, PA 19107, United States",
+      formatted_address:
+        "1136 Arch Street, Philadelphia, PA 19107, United States",
       provider: "geoapify",
       bound_entry_id: firstEntryId,
     });
@@ -185,9 +185,12 @@ test("repeating an address creates independent Entry and Home Locations", async 
       providerUnavailable: false,
     });
 
-    await page.goto(`/history?entry=${secondEntryId}`);
+    await page.goto(`/items/${secondEntryId}`);
     await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     const secondDialog = page.getByRole("dialog");
+    await expect(
+      secondDialog.getByRole("textbox", { name: "Title" }),
+    ).toBeFocused();
     await secondDialog
       .getByRole("combobox", { name: "Find a Location" })
       .fill("Reading Terminal");
@@ -212,11 +215,11 @@ test("repeating an address creates independent Entry and Home Locations", async 
     ).toEqual([firstEntryId, secondEntryId].sort());
     expect(
       (
-        await client.from("entry_places").insert({
+        await client.from("entry_locations").insert({
           entry_id: secondEntryId,
           owner_id: owner,
-          place_id: firstLocation.id,
-          relationship: "related",
+          location_id: firstLocation.id,
+          relationship: "photo",
         })
       ).error?.message,
     ).toContain("location_belongs_to_another_entry");
@@ -262,16 +265,25 @@ test("repeating an address creates independent Entry and Home Locations", async 
     await homeDialog.getByRole("button", { name: "Add Home" }).click();
     await expect(homeDialog).not.toBeVisible();
 
-    const homeLocation = (
+    const home = (
       await client
         .from("homes")
-        .select("place_id")
+        .select("entry_id")
         .eq("owner_id", owner)
         .single()
+    ).data!;
+    const homeLocation = (
+      await client
+        .from("entry_locations")
+        .select("location_id")
+        .eq("entry_id", home.entry_id)
+        .eq("relationship", "primary")
+        .single()
     ).data;
-    expect(homeLocation?.place_id).not.toBe(firstLocation.id);
+    expect(homeLocation?.location_id).toBeTruthy();
+    expect(homeLocation?.location_id).not.toBe(firstLocation.id);
     expect(entryLocations.map((location) => location.id)).not.toContain(
-      homeLocation?.place_id,
+      homeLocation?.location_id,
     );
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();

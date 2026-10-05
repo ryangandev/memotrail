@@ -67,7 +67,7 @@ describe("Automatic capture sync retries", () => {
 
     scheduler.afterRun({
       rejected: 0,
-      result: { message: "Saved to Inbox.", status: "synced" },
+      result: { message: "Saved to Library.", status: "synced" },
       synced: 1,
     });
     retry.mockClear();

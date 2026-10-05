@@ -34,24 +34,6 @@ values (
 )
 on conflict (id) do nothing;
 
-insert into public.collections (id, owner_id, name, system_key, sort_order)
-values
-  (
-    '20000000-0000-0000-0000-000000000001',
-    '10000000-0000-0000-0000-000000000001',
-    'Reflection',
-    'reflection',
-    10
-  ),
-  (
-    '20000000-0000-0000-0000-000000000002',
-    '10000000-0000-0000-0000-000000000001',
-    'Learning',
-    'learning',
-    20
-  )
-on conflict (id) do nothing;
-
 insert into public.tags (id, owner_id, name)
 values
   (
@@ -87,20 +69,6 @@ values (
   'en'
 )
 on conflict (id) do nothing;
-
-insert into public.entry_collections (entry_id, collection_id, owner_id)
-values
-  (
-    '40000000-0000-0000-0000-000000000001',
-    '20000000-0000-0000-0000-000000000001',
-    '10000000-0000-0000-0000-000000000001'
-  ),
-  (
-    '40000000-0000-0000-0000-000000000001',
-    '20000000-0000-0000-0000-000000000002',
-    '10000000-0000-0000-0000-000000000001'
-  )
-on conflict do nothing;
 
 insert into public.entry_tags (entry_id, tag_id, owner_id)
 values

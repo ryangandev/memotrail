@@ -29,10 +29,10 @@ import {
   RecordCardVisual,
 } from "@/components/record-card";
 import {
-  firstTimePhotoLimit,
-  firstTimePhotoSizeLimit,
-  inferFirstTimeImageMimeType,
-} from "@/lib/data/first-time-input";
+  entryPhotoLimit,
+  entryPhotoSizeLimit,
+  inferEntryImageMimeType,
+} from "@/lib/data/entry-photo-input";
 import {
   homeBodyLimit,
   homeTitleLimit,
@@ -50,6 +50,8 @@ import { OccurrenceEditor } from "@/components/occurrence-editor";
 import { LocationPicker } from "@/components/location-picker";
 import {
   savedLocationSelection,
+  type ExistingLocation,
+  type LocationInput,
   type LocationSelection,
 } from "@/lib/locations/location";
 import {
@@ -62,27 +64,17 @@ import {
   uploadEntryPhotos,
   type PhotoUploadProgress as PhotoUploadProgressValue,
 } from "@/lib/media/upload";
-import {
-  pendingCaptureReference,
-  type CaptureExtractionSource,
-} from "@/lib/data/capture-extraction-input";
 import { countLabel } from "@/lib/count-label";
 
 export function HomesWorkspace({
-  collectionOptions,
   homes: serverRecords,
-  initialHomeId,
   loadError,
   ownerId,
-  sourceCapture,
   tagOptions,
 }: {
-  collectionOptions: string[];
   homes: HomeRecord[];
-  initialHomeId: string | null;
   loadError: string | null;
   ownerId: string;
-  sourceCapture: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
   const router = useRouter();
@@ -91,12 +83,9 @@ export function HomesWorkspace({
     confirm,
     forget,
   } = useConfirmedRecords(serverRecords);
-  // Creating the Home organizes the Capture, so the revalidated page no longer
-  // returns it. The open editor keeps the handoff it started with.
-  const [captureHandoff, setCaptureHandoff] = useState(sourceCapture);
   const [selectedHome, setSelectedHome] = useState<
     HomeRecord | null | undefined
-  >(sourceCapture ? null : homes.find((home) => home.id === initialHomeId));
+  >();
   const currentHomes = homes.filter((home) => !home.occurredEnd);
   const earlierHomes = homes.filter((home) => home.occurredEnd);
 
@@ -178,20 +167,12 @@ export function HomesWorkspace({
 
       {selectedHome !== undefined ? (
         <HomeEditor
-          collectionOptions={collectionOptions}
           home={selectedHome}
           key={selectedHome?.id ?? "new-home"}
           onSaved={confirm}
           onTrashed={forget}
-          onClose={() => {
-            setSelectedHome(undefined);
-            setCaptureHandoff(null);
-            if (initialHomeId || captureHandoff)
-              router.replace("/homes", { scroll: false });
-            else router.refresh();
-          }}
+          onClose={() => setSelectedHome(undefined)}
           ownerId={ownerId}
-          sourceCapture={selectedHome === null ? captureHandoff : null}
           tagOptions={tagOptions}
         />
       ) : null}
@@ -257,12 +238,14 @@ function HomeCard({
               <div className={styles.homeMark}>
                 <Icon name="home" size={24} />
                 <span>
-                  {home.city ?? home.country ?? "A place in your trail"}
+                  {home.location?.city ??
+                    home.location?.country ??
+                    "A place in your trail"}
                 </span>
               </div>
             }
-            latitude={home.latitude}
-            longitude={home.longitude}
+            latitude={home.location?.latitude}
+            longitude={home.location?.longitude}
           />
         )}
         <Badge
@@ -300,15 +283,6 @@ function HomeCard({
         ) : null}
         <footer>
           <div>
-            {home.collectionNames.slice(0, 2).map((name) => (
-              <Badge
-                key={`collection:${name.toLocaleLowerCase()}`}
-                size="micro"
-                tone="neutral"
-              >
-                {name}
-              </Badge>
-            ))}
             {home.tagNames.slice(0, 2).map((name) => (
               <Badge
                 key={`tag:${name.toLocaleLowerCase()}`}
@@ -327,7 +301,6 @@ function HomeCard({
 }
 
 export function HomeEditor({
-  collectionOptions,
   defaultTimezone,
   home,
   onClose,
@@ -335,10 +308,8 @@ export function HomeEditor({
   onTrashed,
   ownerId,
   presentation = "dialog",
-  sourceCapture = null,
   tagOptions,
 }: {
-  collectionOptions: string[];
   defaultTimezone?: string;
   home: HomeRecord | null;
   onClose: () => void;
@@ -346,7 +317,6 @@ export function HomeEditor({
   onTrashed: (id: string) => void;
   ownerId: string;
   presentation?: "dialog" | "page";
-  sourceCapture?: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
   const router = useRouter();
@@ -362,7 +332,7 @@ export function HomeEditor({
         occurredTimezone: initialTimezone,
         datePrecision: home.datePrecision,
       }
-    : (sourceCapture ?? undefined);
+    : undefined;
   const [occurrence, setOccurrence] = useState(() =>
     occurrenceDraft(
       originalOccurrence ?? {
@@ -374,14 +344,10 @@ export function HomeEditor({
       },
     ),
   );
-  const [address, setAddress] = useState(home?.address ?? "");
-  const [body, setBody] = useState(home?.body ?? sourceCapture?.body ?? "");
-  const [city, setCity] = useState(home?.city ?? "");
-  const [collectionInput, setCollectionInput] = useState("");
-  const [collectionNames, setCollectionNames] = useState(
-    home?.collectionNames ?? sourceCapture?.collectionNames ?? [],
-  );
-  const [country, setCountry] = useState(home?.country ?? "");
+  const [address, setAddress] = useState(home?.location?.address ?? "");
+  const [body, setBody] = useState(home?.body ?? "");
+  const [city, setCity] = useState(home?.location?.city ?? "");
+  const [country, setCountry] = useState(home?.location?.country ?? "");
   const [currentId, setCurrentId] = useState(home?.id ?? null);
   const [currentRevision, setCurrentRevision] = useState(
     home?.revision ?? null,
@@ -390,61 +356,51 @@ export function HomeEditor({
   const [isPending, setIsPending] = useState(false);
   const [photoUploadProgress, setPhotoUploadProgress] =
     useState<PhotoUploadProgressValue | null>(null);
-  const [latitude, setLatitude] = useState(home?.latitude?.toString() ?? "");
-  const [longitude, setLongitude] = useState(home?.longitude?.toString() ?? "");
   const [moveInReason, setMoveInReason] = useState(home?.moveInReason ?? "");
   const [moveOutReason, setMoveOutReason] = useState(home?.moveOutReason ?? "");
   const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
-  const [placeId, setPlaceId] = useState(home?.placeId ?? null);
-  const [locationPreview, setLocationPreview] =
-    useState<LocationSelection | null>(home ? homeLocationPreview(home) : null);
-  const [region, setRegion] = useState(home?.region ?? "");
+  const [location, setLocation] = useState<LocationSelection | null>(
+    home?.location ?? null,
+  );
+  const [locationDirty, setLocationDirty] = useState(false);
+  const [region, setRegion] = useState(home?.location?.region ?? "");
   const [result, setResult] = useState<HomeActionResult | null>(null);
   const [tagInput, setTagInput] = useState("");
-  const [tagNames, setTagNames] = useState(
-    home?.tagNames ?? sourceCapture?.tagNames ?? [],
-  );
-  const [title, setTitle] = useState(home?.title ?? sourceCapture?.title ?? "");
-  const captureReference = pendingCaptureReference(sourceCapture, currentId);
+  const [tagNames, setTagNames] = useState(home?.tagNames ?? []);
+  const [title, setTitle] = useState(home?.title ?? "");
 
   useEffect(() => {
     titleRef.current?.focus();
   }, []);
 
-  function chooseLocation(location: LocationSelection | null) {
-    if (!location) {
-      setLocationPreview(null);
-      setPlaceId(null);
-      setAddress("");
-      setCity("");
-      setRegion("");
-      setCountry("");
-      setLatitude("");
-      setLongitude("");
-      return;
-    }
-    setLocationPreview(location);
-    setPlaceId(location.kind === "existing" ? location.id : null);
-    setAddress(location.address ?? "");
-    setCity(location.city ?? "");
-    setRegion(location.region ?? "");
-    setCountry(location.country ?? "");
-    setLatitude(location.latitude?.toString() ?? "");
-    setLongitude(location.longitude?.toString() ?? "");
+  function chooseLocation(selection: LocationSelection | null) {
+    setLocation(selection);
+    setLocationDirty(true);
+    setAddress(selection?.address ?? "");
+    setCity(selection?.city ?? "");
+    setRegion(selection?.region ?? "");
+    setCountry(selection?.country ?? "");
+  }
+
+  /** Typing an address part replaces any chosen search result. */
+  function typeAddressPart(setPart: (value: string) => void, value: string) {
+    setLocation(null);
+    setLocationDirty(true);
+    setPart(value);
   }
 
   function handlePhotoSelection(selected: File[]) {
     const available = Math.max(
       0,
-      firstTimePhotoLimit - existingPhotos.length - pendingPhotos.length,
+      entryPhotoLimit - existingPhotos.length - pendingPhotos.length,
     );
     const accepted: File[] = [];
     let errorMessage = "";
 
     for (const file of selected.slice(0, available)) {
-      if (!inferFirstTimeImageMimeType(file.name, file.type)) {
+      if (!inferEntryImageMimeType(file.name, file.type)) {
         errorMessage = "Use JPEG, PNG, WebP, HEIC, or HEIF photos.";
-      } else if (file.size < 1 || file.size > firstTimePhotoSizeLimit) {
+      } else if (file.size < 1 || file.size > entryPhotoSizeLimit) {
         errorMessage = "Each photo must be no larger than 50 MB.";
       } else {
         accepted.push(file);
@@ -452,7 +408,7 @@ export function HomeEditor({
     }
 
     if (selected.length > available) {
-      errorMessage = `Keep up to ${firstTimePhotoLimit} photos on a Home.`;
+      errorMessage = `Keep up to ${entryPhotoLimit} photos on a Home.`;
     }
 
     setPendingPhotos((current) => [...current, ...accepted]);
@@ -471,31 +427,15 @@ export function HomeEditor({
       return;
     }
     const input: HomeEntryInput = {
-      address: address || null,
       body,
-      city: city || null,
-      collectionNames: namesIncludingDraft(collectionNames, collectionInput),
-      country: country || null,
       datePrecision: resolved.value.datePrecision,
       id: currentId,
-      latitude: coordinateValue(latitude),
-      longitude: coordinateValue(longitude),
       moveInReason: moveInReason || null,
       moveOutReason: moveOutReason || null,
       occurredEnd: resolved.value.occurredEnd,
       occurredLabel: resolved.value.occurredLabel,
       occurredStart: resolved.value.occurredAt,
       occurredTimezone: resolved.value.occurredTimezone,
-      placeId,
-      placeName: homeAddressLabel(
-        locationPreview?.kind === "provider" ? locationPreview.name : null,
-        address,
-        city,
-        region,
-        country,
-      ),
-      placeNotes: null,
-      region: region || null,
       revision: currentRevision,
       tagNames: namesIncludingDraft(tagNames, tagInput),
       title,
@@ -511,11 +451,10 @@ export function HomeEditor({
     setResult(null);
 
     try {
-      const saved = await saveHomeEntry(
-        parsed.data,
-        captureReference,
-        locationPreview?.kind === "provider" ? locationPreview : null,
-      );
+      const locationInput = locationDirty
+        ? (location ?? manualLocation(address, city, region, country))
+        : undefined;
+      const saved = await saveHomeEntry(parsed.data, locationInput);
       if (
         (saved.status !== "created" && saved.status !== "saved") ||
         !saved.entry
@@ -524,21 +463,23 @@ export function HomeEditor({
         return;
       }
 
+      const savedLocation =
+        locationInput === undefined
+          ? (home?.location ?? null)
+          : savedHomeLocation(locationInput, saved.entry.locationId ?? null);
       onSaved({
         ...parsed.data,
-        ...saved.entry,
+        id: saved.entry.id,
+        revision: saved.entry.revision,
         attachments: existingPhotos,
-        timelineTrackId: home?.timelineTrackId ?? null,
-        timelineTrackName: home?.timelineTrackName ?? "Homes",
+        location: savedLocation,
         totalCount: home?.totalCount ?? 1,
         updatedAt: new Date().toISOString(),
       });
       setCurrentId(saved.entry.id);
       setCurrentRevision(saved.entry.revision);
-      setPlaceId(saved.entry.placeId);
-      setLocationPreview(
-        savedLocationSelection(locationPreview, saved.entry.placeId),
-      );
+      setLocation(savedLocation);
+      setLocationDirty(false);
       const failedPhotos = await uploadPhotos(
         ownerId,
         saved.entry.id,
@@ -557,6 +498,7 @@ export function HomeEditor({
         return;
       }
 
+      router.refresh();
       notify.success(
         saved.status === "created" ? "Home created." : "Home saved.",
       );
@@ -610,7 +552,9 @@ export function HomeEditor({
     const confirmed = await requestConfirmation({
       title: <>Move “{title.trim() || "this Home"}” to Trash?</>,
       description: (
-        <>Its history, Location, and private photos will be preserved.</>
+        <>
+          It, its Location, and its private photos can be restored from Trash.
+        </>
       ),
       confirmLabel: "Move to Trash",
       eyebrow: <>Recoverable action</>,
@@ -644,13 +588,7 @@ export function HomeEditor({
       onClose={onClose}
       presentation={presentation}
       title={
-        <>
-          {currentId
-            ? title || "Home"
-            : sourceCapture
-              ? "Create a Home from this Capture"
-              : "Keep a Home in your Life Wiki"}
-        </>
+        <>{currentId ? title || "Home" : "Keep a Home in your Life Wiki"}</>
       }
       titleId="home-editor-title"
       eyebrow={<>{currentId ? "Edit Home" : "New Home"}</>}
@@ -703,21 +641,8 @@ export function HomeEditor({
         </div>
       }
     >
-      {" "}
       <form id="homes-workspace-form" onSubmit={handleSubmit}>
         <div className={styles.formGrid}>
-          {captureReference ? (
-            <div className={styles.extractionNotice}>
-              <Icon name="inbox" size={18} />
-              <div>
-                <strong>Starting from an Inbox Capture</strong>
-                <p>
-                  Saving creates a separate Home and links it to the preserved
-                  source Capture.
-                </p>
-              </div>
-            </div>
-          ) : null}
           <fieldset className={styles.formSection}>
             <legend>Home details</legend>
             <label className={styles.fullField}>
@@ -767,7 +692,7 @@ export function HomeEditor({
                 disabled={isPending}
                 onChange={chooseLocation}
                 subject="Home"
-                value={locationPreview}
+                value={location}
               />
             </div>
             <p className={styles.fullField}>
@@ -778,13 +703,9 @@ export function HomeEditor({
               <span>City</span>
               <input
                 maxLength={200}
-                onChange={(event) => {
-                  setLocationPreview(null);
-                  setPlaceId(null);
-                  setLatitude("");
-                  setLongitude("");
-                  setCity(event.target.value);
-                }}
+                onChange={(event) =>
+                  typeAddressPart(setCity, event.target.value)
+                }
                 value={city}
               />
             </label>
@@ -792,13 +713,9 @@ export function HomeEditor({
               <span>Region</span>
               <input
                 maxLength={200}
-                onChange={(event) => {
-                  setLocationPreview(null);
-                  setPlaceId(null);
-                  setLatitude("");
-                  setLongitude("");
-                  setRegion(event.target.value);
-                }}
+                onChange={(event) =>
+                  typeAddressPart(setRegion, event.target.value)
+                }
                 value={region}
               />
             </label>
@@ -806,13 +723,9 @@ export function HomeEditor({
               <span>Country</span>
               <input
                 maxLength={200}
-                onChange={(event) => {
-                  setLocationPreview(null);
-                  setPlaceId(null);
-                  setLatitude("");
-                  setLongitude("");
-                  setCountry(event.target.value);
-                }}
+                onChange={(event) =>
+                  typeAddressPart(setCountry, event.target.value)
+                }
                 value={country}
               />
             </label>
@@ -822,13 +735,9 @@ export function HomeEditor({
               </span>
               <input
                 maxLength={500}
-                onChange={(event) => {
-                  setLocationPreview(null);
-                  setPlaceId(null);
-                  setLatitude("");
-                  setLongitude("");
-                  setAddress(event.target.value);
-                }}
+                onChange={(event) =>
+                  typeAddressPart(setAddress, event.target.value)
+                }
                 value={address}
               />
             </label>
@@ -848,17 +757,7 @@ export function HomeEditor({
             </label>
             <EntryOrganizationEditor
               disabled={isPending}
-              input={collectionInput}
-              kind="collection"
-              names={collectionNames}
-              onChange={setCollectionNames}
-              onInputChange={setCollectionInput}
-              options={collectionOptions}
-            />
-            <EntryOrganizationEditor
-              disabled={isPending}
               input={tagInput}
-              kind="tag"
               names={tagNames}
               onChange={setTagNames}
               onInputChange={setTagInput}
@@ -869,7 +768,7 @@ export function HomeEditor({
           <EntryPhotoField
             disabled={isPending}
             existingPhotos={existingPhotos}
-            limit={firstTimePhotoLimit}
+            limit={entryPhotoLimit}
             onRemoveExisting={(photo) => void handleRemovePhoto(photo)}
             onRemovePending={(index) =>
               setPendingPhotos((current) =>
@@ -902,61 +801,46 @@ async function uploadPhotos(
   );
 }
 
-function homeLocationPreview(home: HomeRecord): LocationSelection | null {
-  if (!home.placeId || !home.placeName) return null;
-  return locationPreviewFromFields(
-    home.placeId,
-    home.placeName,
-    home.address,
-    home.city,
-    home.region,
-    home.country,
-    home.latitude,
-    home.longitude,
-  );
-}
-
-function homeAddressLabel(
-  providerLabel: string | null,
+function manualLocation(
   address: string,
   city: string,
   region: string,
   country: string,
-) {
-  return (
-    providerLabel ||
-    [address, city, region, country]
-      .map((part) => part.trim())
-      .filter(Boolean)
-      .join(", ") ||
-    ""
-  ).slice(0, 200);
+): LocationInput | null {
+  const parts = {
+    address: address.trim() || null,
+    city: city.trim() || null,
+    region: region.trim() || null,
+    country: country.trim() || null,
+  };
+  return Object.values(parts).some(Boolean)
+    ? { kind: "manual", ...parts }
+    : null;
 }
 
-function locationPreviewFromFields(
-  id: string,
-  name: string,
-  address: string | null,
-  city: string | null,
-  region: string | null,
-  country: string | null,
-  latitude: number | null,
-  longitude: number | null,
-): LocationSelection {
+/** The snapshot a save stored, so the card shows it before the page refreshes. */
+function savedHomeLocation(
+  input: LocationInput | null,
+  savedId: string | null,
+): ExistingLocation | null {
+  if (!input || !savedId) return null;
+  if (input.kind !== "manual") return savedLocationSelection(input, savedId);
   return {
     kind: "existing",
-    id,
+    id: savedId,
     revision: 1,
-    name,
-    formattedAddress: null,
-    address,
-    city,
-    region,
+    formattedAddress:
+      [input.address, input.city, input.region, input.country]
+        .filter(Boolean)
+        .join(", ") || null,
+    address: input.address,
+    city: input.city,
+    region: input.region,
     postalCode: null,
-    country,
+    country: input.country,
     countryCode: null,
-    latitude,
-    longitude,
+    latitude: null,
+    longitude: null,
     timezone: null,
     resultType: null,
   };
@@ -965,10 +849,6 @@ function locationPreviewFromFields(
 function namesIncludingDraft(names: string[], draft: string) {
   const name = draft.trim();
   return name ? [...names, name] : names;
-}
-
-function coordinateValue(value: string) {
-  return value.trim() ? Number(value) : null;
 }
 
 function localTimezone() {

@@ -58,9 +58,11 @@ test("specialized forms share photo fields and required-label conventions", asyn
     );
 
     await page.goto("/goals");
-    await page.getByRole("button", { name: "Add Goal", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Add to Want to Do", exact: true })
+      .click();
     const goalDialog = page.getByRole("dialog", {
-      name: "Keep an intention close",
+      name: "What do you want to do?",
       exact: true,
     });
     await expect(
@@ -102,10 +104,7 @@ test("specialized forms share photo fields and required-label conventions", asyn
         name: "Preview selected goal-preview.png",
       }),
     ).toHaveCount(0);
-    for (const [legendText, kind] of [
-      ["Collections", "Collection"],
-      ["Tags", "tag"],
-    ] as const) {
+    for (const [legendText, kind] of [["Tags", "tag"]] as const) {
       const legend = goalDialog.getByText(legendText, { exact: true });
       await goalDialog
         .getByRole("button", { name: `Add ${kind}`, exact: true })
@@ -127,52 +126,8 @@ test("specialized forms share photo fields and required-label conventions", asyn
       await input.press("Escape");
     }
     await goalDialog
-      .getByRole("button", { name: "Close Goal editor", exact: true })
+      .getByRole("button", { name: "Close Want to Do editor", exact: true })
       .click();
-
-    await page.goto("/first-times");
-    await page
-      .getByRole("button", { name: "Add First Time", exact: true })
-      .click();
-    const firstTimeDialog = page.getByRole("dialog", {
-      name: "Keep a beginning",
-      exact: true,
-    });
-    const firstTimePhotos = firstTimeDialog.locator(
-      '[data-entry-photo-field="true"]',
-    );
-    await expect(firstTimePhotos).toBeVisible();
-    expect(await photoFieldStyle(firstTimePhotos)).toEqual(goalPhotoStyle);
-    await firstTimeDialog
-      .getByRole("button", { name: "Close First Time editor", exact: true })
-      .click();
-
-    await page.goto("/people");
-    await page.getByRole("button", { name: "Add Person", exact: true }).click();
-    const personDialog = page.getByRole("dialog", {
-      name: "Keep someone in your story",
-      exact: true,
-    });
-    await expect(
-      personDialog.getByText("Name *", { exact: true }),
-    ).toBeVisible();
-    await expect(personDialog.getByText(/Optional/i)).toHaveCount(0);
-    const close = personDialog.getByRole("button", {
-      name: "Close Person editor",
-      exact: true,
-    });
-    await expect(close.locator("svg")).toHaveCount(1);
-    const personPanel = personDialog.locator(":scope > div");
-    await expect
-      .poll(() => personPanel.evaluate((element) => element.scrollLeft))
-      .toBe(0);
-    await page.screenshot({
-      caret: "initial",
-      path: "/private/tmp/memotrail-person-editor.png",
-      animations: "disabled",
-    });
-    await close.click();
-    await expect(personDialog).not.toBeVisible();
   } finally {
     await admin.auth.admin.deleteUser(owner);
   }

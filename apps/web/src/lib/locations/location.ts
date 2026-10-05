@@ -2,7 +2,6 @@ export type ExistingLocation = {
   kind: "existing";
   id: string;
   revision: number;
-  name: string;
   formattedAddress: string | null;
   address: string | null;
   city: string | null;
@@ -20,7 +19,6 @@ export type ProviderLocation = {
   kind: "provider";
   provider: "geoapify";
   providerLocationId: string;
-  name: string;
   formattedAddress: string;
   address: string | null;
   city: string | null;
@@ -38,6 +36,17 @@ export type ProviderLocation = {
 };
 
 export type LocationSelection = ExistingLocation | ProviderLocation;
+
+/** An address typed by hand. It has no coordinates. */
+export type ManualLocation = {
+  kind: "manual";
+  address: string | null;
+  city: string | null;
+  region: string | null;
+  country: string | null;
+};
+
+export type LocationInput = LocationSelection | ManualLocation;
 
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -77,6 +86,20 @@ export function validLocationSelection(
   );
 }
 
+export function validLocationInput(value: unknown): value is LocationInput {
+  if (isRecord(value) && value.kind === "manual") {
+    const parts = [value.address, value.city, value.region, value.country];
+    return (
+      nullableBoundedString(value.address, 500) &&
+      nullableBoundedString(value.city, 200) &&
+      nullableBoundedString(value.region, 200) &&
+      nullableBoundedString(value.country, 200) &&
+      parts.some((part) => typeof part === "string" && part.trim() !== "")
+    );
+  }
+  return validLocationSelection(value);
+}
+
 export function existingLocationFromRow(
   value: unknown,
 ): ExistingLocation | null {
@@ -85,7 +108,6 @@ export function existingLocationFromRow(
     kind: "existing",
     id: stringValue(value.id) ?? "",
     revision: numberValue(value.revision) ?? 0,
-    name: stringValue(value.name) ?? "",
     formattedAddress: nullableStringValue(value.formatted_address),
     address: nullableStringValue(value.address),
     city: nullableStringValue(value.city),
@@ -115,7 +137,6 @@ export function savedLocationSelection(
     kind: "existing",
     id: savedId,
     revision: 1,
-    name: selection.name,
     formattedAddress: selection.formattedAddress,
     address: selection.address,
     city: selection.city,
@@ -130,19 +151,31 @@ export function savedLocationSelection(
   };
 }
 
-export function locationDisplayLabel(location: LocationSelection) {
+type LocationLabelFields = {
+  formattedAddress: string | null;
+  address?: string | null;
+  city?: string | null;
+  region?: string | null;
+  country?: string | null;
+  latitude: number | null;
+  longitude: number | null;
+};
+
+/** A Location from photo GPS has coordinates but no address, so it reads as its coordinates. */
+export function locationDisplayLabel(location: LocationLabelFields) {
   return (
     location.formattedAddress ||
     [location.address, location.city, location.region, location.country]
       .filter((part): part is string => Boolean(part))
       .join(", ") ||
-    "Location not set"
+    (location.latitude !== null && location.longitude !== null
+      ? `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}`
+      : "Location not set")
   );
 }
 
 function validLocationFields(value: Record<string, unknown>) {
   return (
-    validBoundedString(value.name, 200) &&
     nullableBoundedString(value.formattedAddress, 1000) &&
     nullableBoundedString(value.address, 500) &&
     nullableBoundedString(value.city, 200) &&

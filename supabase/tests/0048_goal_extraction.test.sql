@@ -7,7 +7,7 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000108','goal-extraction-other@memotrail.local');
 
 insert into public.entries(
-  id,owner_id,title,body,metadata,source_language,item_kind,item_subtype,inbox_status
+  id,owner_id,title,body,metadata,source_language,item_kind,item_subtype
 ) values (
   '98100000-0000-4000-8000-000000000001',
   '10000000-0000-0000-0000-000000000107',
@@ -15,8 +15,7 @@ insert into public.entries(
   'I want to spend more time on the water.',
   '{"body_rich":{"version":1,"text":"I want to spend more time on the water.","document":{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"I want to spend more time on the water."}]}]}},"private_draft":"do not copy"}',
   'en',
-  'entry','entry',
-  'organized'
+  'entry','entry'
 );
 
 set local role authenticated;
@@ -26,7 +25,7 @@ select is(
   (select goal_entry_id from public.extract_goal_from_item(
     '98100000-0000-4000-8000-000000000001',1,
     '98100000-0000-4000-8000-000000000002',
-    'Learn to sail','long_term','active','2030-06-15'
+    'Learn to sail','active','2030-06-15'
   )),
   '98100000-0000-4000-8000-000000000002'::uuid,
   'Extracting creates the caller-identified Goal'
@@ -54,9 +53,9 @@ select ok(
   'Only portable rich-text metadata is copied to the Goal'
 );
 select is(
-  (select horizon || ':' || status || ':' || target_date
+  (select status || ':' || target_date
    from public.goals where entry_id='98100000-0000-4000-8000-000000000002'),
-  'long_term:active:2030-06-15',
+  'active:2030-06-15',
   'Goal-specific fields are saved on the Goal entity'
 );
 select is(
@@ -72,7 +71,7 @@ select is(
   (select goal_entry_id from public.extract_goal_from_item(
     '98100000-0000-4000-8000-000000000001',1,
     '98100000-0000-4000-8000-000000000002',
-    'Learn to sail','long_term','active','2030-06-15'
+    'Learn to sail','active','2030-06-15'
   )),
   '98100000-0000-4000-8000-000000000002'::uuid,
   'A lost-response retry returns the existing Goal'
@@ -86,7 +85,7 @@ select is(
   (select count(*) from public.extract_goal_from_item(
     '98100000-0000-4000-8000-000000000001',1,
     '98100000-0000-4000-8000-000000000002',
-    'Changed payload','someday','considering',null
+    'Changed payload','let_go',null
   )),
   0::bigint,
   'The same request id cannot confirm a different payload'
@@ -95,7 +94,7 @@ select throws_ok(
   $$select * from public.extract_goal_from_item(
     '98100000-0000-4000-8000-000000000001',0,
     '98100000-0000-4000-8000-000000000003',
-    'Stale source','someday','considering',null
+    'Stale source','active',null
   )$$,
   '22023',
   'invalid_goal_extraction',
@@ -105,7 +104,7 @@ select is(
   (select count(*) from public.extract_goal_from_item(
     '98100000-0000-4000-8000-000000000002',1,
     '98100000-0000-4000-8000-000000000004',
-    'Goal from Goal','someday','considering',null
+    'Goal from Goal','active',null
   )),
   0::bigint,
   'A Goal cannot be extracted from another Goal'
@@ -116,7 +115,7 @@ select is(
   (select count(*) from public.extract_goal_from_item(
     '98100000-0000-4000-8000-000000000001',1,
     '98100000-0000-4000-8000-000000000005',
-    'Foreign source','someday','considering',null
+    'Foreign source','active',null
   )),
   0::bigint,
   'Another owner cannot extract from the source'
@@ -126,7 +125,7 @@ reset role;
 select ok(
   not has_function_privilege(
     'anon',
-    'public.extract_goal_from_item(uuid,integer,uuid,text,text,text,date)',
+    'public.extract_goal_from_item(uuid,integer,uuid,text,text,date)',
     'execute'
   ),
   'Anonymous Goal extraction is denied'

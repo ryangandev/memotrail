@@ -2,14 +2,14 @@ import "server-only";
 import { displayImageURLs } from "@/lib/media/urls";
 
 import { getAuthenticatedContext, type Viewer } from "./inbox";
+import { storedProfileTimezone } from "./profile-input";
 import { getPrimaryEntryLocations } from "./entry-locations";
 import type { LocationSelection } from "@/lib/locations/location";
 import {
-  firstTimeDatePrecisions,
-  firstTimeImageMimeTypes,
-  type FirstTimeDatePrecision,
-  type FirstTimeImageMimeType,
-} from "./first-time-input";
+  entryImageMimeTypes,
+  type EntryImageMimeType,
+} from "./entry-photo-input";
+import { occurrencePrecisions, type OccurrencePrecision } from "./occurrence";
 
 export type FirstTimeAttachment = {
   bucketId: string;
@@ -17,7 +17,7 @@ export type FirstTimeAttachment = {
   createdAt: string;
   id: string;
   imageUrl: string | null;
-  mimeType: FirstTimeImageMimeType;
+  mimeType: EntryImageMimeType;
   objectPath: string;
   originalFilename: string | null;
   parentAttachmentId: string | null;
@@ -29,10 +29,8 @@ export type FirstTimeAttachment = {
 export type FirstTimeEntry = {
   attachments: FirstTimeAttachment[];
   body: string;
-  collectionNames: string[];
-  datePrecision: FirstTimeDatePrecision;
+  datePrecision: OccurrencePrecision;
   id: string;
-  inboxStatus: "organized" | "unreviewed";
   location?: LocationSelection | null;
   occurredLabel: string | null;
   occurredStart: string | null;
@@ -45,21 +43,20 @@ export type FirstTimeEntry = {
 };
 
 export type FirstTimesWorkspace = {
-  collectionOptions: string[];
+  defaultTimezone: string;
   entries: FirstTimeEntry[];
-  inboxCount: number | undefined;
   loadError: string | null;
   tagOptions: string[];
   viewer: Viewer;
 };
 
+type NameRow = { name: string };
+
 type FirstTimeRow = {
   attachments: unknown;
   body: string;
-  collection_names: string[];
-  date_precision: FirstTimeDatePrecision;
+  date_precision: OccurrencePrecision;
   entry_id: string;
-  inbox_status: "organized" | "unreviewed";
   occurred_label: string | null;
   occurred_start: string | null;
   occurred_end: string | null;
@@ -70,87 +67,56 @@ type FirstTimeRow = {
   updated_at: string;
 };
 
-type NameRow = { name: string };
-
-export async function getFirstTimesWorkspace(
-  targetId?: string,
-): Promise<FirstTimesWorkspace | null> {
+// First Times are the milestones marked as a First Time.
+export async function getFirstTimesWorkspace(): Promise<FirstTimesWorkspace | null> {
   const context = await getAuthenticatedContext();
 
   if (!context) {
     return null;
   }
 
-  const [firstTimes, collections, tags, inbox] = await Promise.all([
-    context.client.rpc("first_times_workspace_with_occurrence"),
+  const [firstTimes, profile, tags] = await Promise.all([
+    context.client.rpc("first_times_workspace"),
     context.client
-      .from("collections")
-      .select("name")
-      .eq("owner_id", context.userId)
-      .is("archived_at", null)
-      .order("name")
-      .returns<NameRow[]>(),
+      .from("profiles")
+      .select("*")
+      .eq("user_id", context.userId)
+      .single(),
     context.client
       .from("tags")
       .select("name")
       .eq("owner_id", context.userId)
       .order("name")
       .returns<NameRow[]>(),
-    context.client
-      .from("entries")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", context.userId)
-      .eq("inbox_status", "unreviewed")
-      .is("deleted_at", null),
   ]);
   const rows = firstTimes.error ? null : parseFirstTimeRows(firstTimes.data);
 
   if (!rows) {
-    return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+    return unavailableWorkspace(context.viewer);
   }
-
-  if (targetId && !rows.some((row) => row.entry_id === targetId)) {
-    for (let offset = 1000; rows.length >= offset; offset += 1000) {
-      const page = await context.client
-        .rpc("first_times_workspace_with_occurrence")
-        .range(offset, offset + 999);
-      const more = page.error ? null : parseFirstTimeRows(page.data);
-      if (!more)
-        return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
-      rows.push(...more);
-      if (more.length < 1000 || more.some((row) => row.entry_id === targetId))
-        break;
-    }
-  }
-  const visibleRows = targetId
-    ? rows.filter((row) => row.entry_id === targetId)
-    : rows;
 
   const locations = await getPrimaryEntryLocations(
     context,
-    visibleRows.map((row) => row.entry_id),
+    rows.map((row) => row.entry_id),
   );
   if (!locations) {
-    return unavailableWorkspace(context.viewer, inbox.count ?? undefined);
+    return unavailableWorkspace(context.viewer);
   }
 
-  const attachments = visibleRows.flatMap((row) => row.attachments);
+  const attachments = rows.flatMap((row) => row.attachments);
   const signedUrls = await signedImageUrls(context.client, attachments);
 
   return {
-    collectionOptions: collections.error
-      ? []
-      : (collections.data ?? []).map((item) => item.name),
-    entries: visibleRows.map((row) => ({
+    defaultTimezone: storedProfileTimezone(profile.error ? null : profile.data)
+      .timezone,
+    entries: rows.map((row) => ({
       attachments: row.attachments.map((attachment) => ({
         ...attachment,
         imageUrl: signedUrls.get(attachment.objectPath) ?? null,
       })),
       body: row.body,
-      collectionNames: row.collection_names,
       datePrecision: row.date_precision,
       id: row.entry_id,
-      inboxStatus: row.inbox_status,
       location: locations.get(row.entry_id) ?? null,
       occurredLabel: row.occurred_label,
       occurredStart: row.occurred_start,
@@ -161,7 +127,6 @@ export async function getFirstTimesWorkspace(
       title: row.title,
       updatedAt: row.updated_at,
     })),
-    inboxCount: inbox.error ? undefined : (inbox.count ?? 0),
     loadError: null,
     tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
     viewer: context.viewer,
@@ -201,11 +166,9 @@ export function parseFirstTimeRows(value: unknown):
       typeof item.entry_id !== "string" ||
       typeof item.title !== "string" ||
       typeof item.body !== "string" ||
-      (item.inbox_status !== "organized" &&
-        item.inbox_status !== "unreviewed") ||
       typeof item.date_precision !== "string" ||
-      !firstTimeDatePrecisions.includes(
-        item.date_precision as FirstTimeDatePrecision,
+      !occurrencePrecisions.includes(
+        item.date_precision as OccurrencePrecision,
       ) ||
       !nullableString(item.occurred_start) ||
       !nullableString(item.occurred_end) ||
@@ -213,7 +176,6 @@ export function parseFirstTimeRows(value: unknown):
       !nullableString(item.occurred_timezone) ||
       typeof item.revision !== "number" ||
       typeof item.updated_at !== "string" ||
-      !stringArray(item.collection_names) ||
       !stringArray(item.tag_names)
     ) {
       return null;
@@ -222,10 +184,8 @@ export function parseFirstTimeRows(value: unknown):
     rows.push({
       attachments,
       body: item.body,
-      collection_names: item.collection_names,
-      date_precision: item.date_precision as FirstTimeDatePrecision,
+      date_precision: item.date_precision as OccurrencePrecision,
       entry_id: item.entry_id,
-      inbox_status: item.inbox_status,
       occurred_label: item.occurred_label,
       occurred_start: item.occurred_start,
       occurred_end: item.occurred_end,
@@ -254,9 +214,7 @@ function parseAttachments(value: unknown): FirstTimeAttachment[] | null {
       typeof item.bucketId !== "string" ||
       typeof item.objectPath !== "string" ||
       typeof item.mimeType !== "string" ||
-      !firstTimeImageMimeTypes.includes(
-        item.mimeType as FirstTimeImageMimeType,
-      ) ||
+      !entryImageMimeTypes.includes(item.mimeType as EntryImageMimeType) ||
       typeof item.byteSize !== "number" ||
       typeof item.createdAt !== "string" ||
       !nullableString(item.parentAttachmentId) ||
@@ -276,7 +234,7 @@ function parseAttachments(value: unknown): FirstTimeAttachment[] | null {
       createdAt: item.createdAt,
       id: item.id,
       imageUrl: null,
-      mimeType: item.mimeType as FirstTimeImageMimeType,
+      mimeType: item.mimeType as EntryImageMimeType,
       objectPath: item.objectPath,
       originalFilename: item.originalFilename,
       parentAttachmentId: item.parentAttachmentId,
@@ -289,14 +247,10 @@ function parseAttachments(value: unknown): FirstTimeAttachment[] | null {
   return attachments;
 }
 
-function unavailableWorkspace(
-  viewer: Viewer,
-  inboxCount: number | undefined,
-): FirstTimesWorkspace {
+function unavailableWorkspace(viewer: Viewer): FirstTimesWorkspace {
   return {
-    collectionOptions: [],
+    defaultTimezone: "UTC",
     entries: [],
-    inboxCount,
     loadError:
       "MemoTrail could not load your First Times. Refresh to try again.",
     tagOptions: [],

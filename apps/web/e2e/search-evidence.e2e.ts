@@ -64,7 +64,6 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
           owner_id: ownerID,
           title: "How an electric lighter works",
           body: "今天学了电打火机使用电弧点燃蜡烛。Electric arcs produce heat.",
-          inbox_status: "organized",
           item_kind: "entry",
           item_subtype: "entry",
           date_precision: "day",
@@ -187,10 +186,10 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
     ).toBe(true);
     const unchanged = await client
       .from("entries")
-      .select("revision,inbox_status")
+      .select("revision")
       .eq("id", entryID)
       .single();
-    expect(unchanged.data).toEqual({ revision: 1, inbox_status: "organized" });
+    expect(unchanged.data).toEqual({ revision: 1 });
   } finally {
     expect((await admin.auth.admin.deleteUser(ownerID)).error).toBeNull();
   }

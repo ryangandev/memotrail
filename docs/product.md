@@ -1,6 +1,6 @@
 # MemoTrail Product Contract
 
-Last reviewed: 2026-09-24.
+Last reviewed: 2026-10-04.
 
 ## Product in one minute
 
@@ -25,17 +25,17 @@ The interface is initially English, while Entry content and search support Engli
 ## Core information model
 
 MemoTrail centers on Entries.
-Quick Capture creates an unreviewed Entry in Inbox; organizing it saves that Entry to Library without asking for a type.
-Notes, journals, reflections, lessons, ideas, stories, memories, milestones, and trips are descriptive tags or Collections when the user wants them.
+Quick Capture saves an Entry straight to Library without asking for a type; a title and tags can be added then or later.
+Notes, journals, reflections, lessons, ideas, stories, memories, milestones, and trips are descriptive tags when the user wants them.
 They do not change the Entry's structure.
 
 Focused records keep structure only when the experience needs specific fields or actions.
-Home and Vehicle are Entities; Goal has its own lifecycle; First Time has a focused Entry form.
-Timeline has an intentional point Moment and an interval Period, plus spans from focused records.
+Home and Vehicle are Entities, and a Want to Do item (a Goal in data) has its own lifecycle.
+A milestone is a mark on an ordinary Entry, not a record type: it puts that Entry on Timeline as a Moment or a Period.
+First Time is a flag on a milestone, so a First Time is an Entry like any other.
 An Entry's date alone does not put it on Timeline.
-Timeline tracks control presentation, not the record's identity.
 
-Every Entry may have writing, best-known time, media, Collections, tags, links, history, and retrieval behavior where those capabilities make sense.
+Every Entry may have writing, best-known time, media, tags, links, and retrieval behavior where those capabilities make sense.
 Focused forms add typed facts to the same record without duplicating its common content.
 Cross-form actions create and link another record rather than silently changing an existing record's identity.
 
@@ -48,10 +48,10 @@ An exact Timeline timestamp shows a directly editable timezone select, may overr
 Date-only and uncertain Timeline forms keep timezone controls out of the primary form.
 Changing the default never rewrites an existing Entry's recorded timezone.
 
-## Capture and Inbox
+## Capture
 
 - Global capture starts with one flexible writing field and may include photos, voice-to-text, and a best-known date.
-- New captures remain untitled until Inbox review or later editing adds a title.
+- New captures remain untitled until later editing adds a title.
 - The Web New Entry composer expands from a floating input-style control at the bottom center of the workspace; its writing field grows with its content and does not expose native resize controls.
 - Entry writing offers lightweight rich text for emphasis, links, lists, quotes, inline code, and code blocks without turning capture into a document editor.
   Formatting survives later edits in the rich Entry editor and appears on full note surfaces.
@@ -68,7 +68,7 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - A capture MemoTrail cannot accept, such as text with a character Postgres cannot store, is never reported as offline and never retried automatically.
   It stays in Pending sync on that device with its original content, marked Not accepted with a reason, and later captures still sync.
   Copy text keeps its title and note, and Discard asks for confirmation before removing it and its photos from the device.
-  If only its photos were refused, the Entry is already in the Inbox and Discard removes only the local copy.
+  If only its photos were refused, the Entry is already in the Library and Discard removes only the local copy.
 - A capture is also not accepted when its Entry was moved to Trash or deleted forever on another device.
   An Entry in Trash is never overwritten or given new photos; restoring it from Trash keeps it, and Discard removes only this device's copy.
   An Entry deleted forever is never created again, so Copy text is the way to keep its writing.
@@ -76,70 +76,74 @@ Changing the default never rewrites an existing Entry's recorded timezone.
   A photo whose upload reached MemoTrail but whose answer was lost keeps waiting and attaches on the next retry.
 - An expired session keeps captures waiting and asks the person to sign in again instead of reporting them as offline.
 - On Web, the workspace header counts the captures waiting on this device and, separately, the ones not accepted, on desktop and mobile; selecting it retries now and lists them with the latest sync problem.
-- On iOS, the Inbox lists the same Pending sync captures, and the Dashboard and Quick Capture say how many wait and how many were not accepted.
+- On iOS, the retired Inbox screen still lists the same Pending sync captures until native follows Web, and the Dashboard and Quick Capture say how many wait and how many were not accepted.
 - Every open tab in a browser shows the same pending captures, and each capture is saved once.
 - An ordinary online save shows progress in the composer; its brief local queue stage does not open a Pending sync list or the header count.
 - Voice capture produces editable text and never retains the original audio.
-- Every new free-form Capture enters Inbox, even when AI suggestions are available.
-- Inbox review keeps AI suggestions hidden for now; people organize the Entry manually.
-- AI suggestions are paused; retained implementation may suggest title, Collections, tags, date, and photo-derived date or Location context when the product is re-enabled.
+- Every new free-form Capture is saved straight to Library; MemoTrail has no Inbox or review step.
+  Separate review made every capture a chore, so organizing is optional and happens whenever the Entry is edited.
+- AI suggestions are hidden for now; people organize Entries manually.
+- AI suggestions are paused; retained implementation may suggest title, tags, date, and photo-derived date or Location context when the product is re-enabled.
 - While paused, new Captures and their photos are not processed for suggestions, even when earlier AI consent remains saved.
 - Suggestions remain editable and require explicit adoption.
-- AI may propose a Collection but cannot create it without confirmation.
-- The Capture remains in Inbox until the user selects `Save to Library`, completes another explicit organization action, or moves it to Trash.
-- An unwanted Capture can move directly from Inbox review to Trash before it is organized, with confirmation and the normal restore path.
-- Dashboard owns the persistent Quick Capture surface and shows up to three recent captures waiting for organization. Inbox is the dedicated review workspace and relies on the global New Entry action for additional capture.
-- `Save to Library` marks organization complete but never prevents later editing.
-- Inbox review saves the same Entry without a Kind or subtype choice.
+- AI may propose a tag but cannot add it without confirmation.
+- An Entry needs organizing while it has neither a title nor a tag; giving it either takes it off that list.
+  Library offers a Needs organizing view of those Entries, and Dashboard shows up to three of them beside Quick Capture.
+  Needs organizing is a derived view, not a stored state, and Entries on it already belong to the Library.
+- An unwanted Capture moves to Trash from its Item page, with confirmation and the normal restore path.
+- Editing an Entry saves the same Entry without a Kind or subtype choice.
+- Links saved before Inbox was retired still work: an Inbox link opens Needs organizing, and an Inbox review link opens that Entry's Item page.
 - Focused forms are reached from Timeline or their focused views rather than the Quick Capture chooser.
+- Any Entry's editor can mark it as a milestone, unmark it, or change its shape, lane, and First Time flag.
 - An existing Entry may still be linked as source material for a new focused record through an explicit action.
 
 Original photos remain private and unchanged.
 Photo metadata may be offered as a date or Location suggestion but is never adopted automatically.
 
-## Organization, history, and relationships
+## Organization and relationships
 
-- An Entry may belong to several Collections and tags.
-- Collections are curated, browsable groupings of records.
-- Tags are lightweight descriptors for filtering and discovery.
-- People are reusable Entities linked to other Wiki Items, not alternate tags.
+- An Entry may have several tags.
+- Tags are the one organization label: they group related Entries, such as travel, family, or a trip, for browsing, filtering, and discovery.
+- MemoTrail has no separate Collections.
+  Each earlier Collection became a tag with the same name and kept its Entries; older Collection links open Tags, and an older Library Collection filter reads as a tag filter.
+- MemoTrail does not keep People records.
+  Maintaining people as structured records cost more than it gave back, so earlier People and their links were deleted; older People links open Library.
 - Locations are private address and coordinate snapshots owned by individual Entries, not Library items or reusable personal records.
 - A Location does not require a personal name; an Entry, Home, Vehicle, or First Time can carry its address or coordinates.
-- Inbox, Timeline, Dashboard, and Library are views or workflow states, not organization labels.
+- Timeline, Dashboard, Library, and Needs organizing are views, not organization labels.
 - Library is the primary all-items entry point for the Life Wiki.
-  Its default browser presents organized Entries, Entities, and Goals as paginated rows and opens focused records in their own views.
-  Unreviewed captures remain in Inbox and do not appear in the default Library browser or its item count until `Save to Library`.
-  Library search also finds Inbox captures, labels them clearly, and supports record, date, Collection, and tag filters with match context.
-  Library avoids duplicating the sidebar's focused and organizing destinations; the global Version history index has a link below Library results.
-- Opening a general Wiki Item shows its current content and primary actions first.
-  Version history is an explicit secondary action, while focused records open their own read-only detail pages.
+  Its default browser presents Entries, Entities, and Want to Do items as paginated rows and opens focused records in their own views.
+  A new capture appears there, and in its item count, as soon as it is saved.
+  Library search supports record, date, and tag filters with match context.
+  Library avoids duplicating the sidebar's focused and organizing destinations.
+- Opening a general Wiki Item shows its current content and primary actions, while focused records open their own read-only detail pages.
   A pencil-and-Edit action changes the fields on that detail page into an inline form; Add remains a modal creation flow.
 - Current Wiki Item detail supports moving the item to Trash, where it remains restorable.
-- Collections and tags are created and managed from separate Library destinations without a second in-page switcher, and remain available in every compatible Wiki Item editor.
-- Collection and tag management opens in viewport-level dialogs. The Tags Library uses compact usage-count badges that open tag management, recent linked Entries, and a path to the complete filtered result set.
-- Renaming a Collection or tag preserves its identity and linked Wiki Items.
-- Moving a Collection to Trash never deletes its Wiki Items or photos.
+- Tags are created and managed from the Tags destination and remain available in every compatible Wiki Item editor.
+- Tag management opens in viewport-level dialogs. The Tags Library uses compact usage-count badges that open tag management, recent linked Entries, and a path to the complete filtered result set.
+- Renaming a tag preserves its identity and linked Wiki Items.
 - A used tag must be merged into another tag or removed from its Entries before deletion, so organization is never silently lost.
-- Entries may link to other Entries and expose incoming backlinks without copying writing.
-- Reusable People are canonical Entity Wiki Items with typed detail records and may link to many other Wiki Items.
-- Important content, organization, relationship, specialized-field, and photo-membership changes remain recoverable through version history.
-- Adding or removing photos never makes an open First Time, Home, Vehicle, or Goal editor stale: its Save, Move to Trash, and Bucket List achievement still apply.
+- Web does not offer general links between Entries, because tags already connect related records.
+  Entries stay connected only through purpose-specific links: the source link of an item added to Want to Do and the First Time that marking an item done creates.
+  General links saved earlier, including those older Goals carried, are deleted.
+- MemoTrail keeps only the current version of each Entry.
+  It has no version history: an edit replaces the earlier writing, and Trash is the only way to undo, for a whole Entry or one photo.
+  Earlier versions saved before this change were deleted, and older version history links open the Item page or Library.
+- Adding or removing photos never makes an open Entry, Home, Vehicle, or Want to Do editor stale: its Save, Move to Trash, and Mark done still apply.
   Writing or other content changed elsewhere since the editor opened still reports a conflict instead of being overwritten.
-- Restoring history creates a new revision and does not erase later history.
-- Historical versions with an unsupported format remain viewable, with an explanation that they cannot be restored.
 
 ## Retrieval and AI
 
 Earlier AI requirements and exploratory directions remain in the [AI direction record](./ai-direction-record.md) for future reconsideration; they do not reactivate the retired UI.
 
 - One search experience supports literal keyword search; the AI question action is paused.
-- Keyword search covers canonical Wiki Items, including People, and uses linked Location data as searchable context.
-- Filters include date, record category, focused form, Collection, and tag where each applies.
+- Keyword search covers canonical Wiki Items and uses linked Location data as searchable context.
+- Filters include date, record category, focused form, and tag where each applies.
 - Search results explain matches and open the original source.
 - AI answers are grounded in bounded source evidence and cite the Entries used.
 - The original Entry is never changed by an AI answer.
 - The retained `Explore with AI` implementation creates a separate conversation attached to its source Entry, but is not exposed while AI is paused.
-- `Save as Entry` creates an editable, independent Inbox Entry with a bidirectional source link.
+- `Save as Entry` creates an editable, independent Library Entry with a bidirectional source link.
 - AI defaults off, and manual capture, organization, browsing, and keyword search continue without it.
 - Web AI capabilities are Beta, off, and unavailable to enable while their use cases and UI are reconsidered.
 - Settings retains only a paused AI status; organizing, AI search, photo understanding, and Explore entry points are hidden.
@@ -150,68 +154,79 @@ Earlier AI requirements and exploratory directions remain in the [AI direction r
 
 ## Timeline and Dashboard
 
-Timeline shows deliberately created Moments and Periods, plus contextual focused-record spans, on customizable tracks.
-Web Timeline opens in the existing track view by default and offers Vertical Spine and Sticky Year styles through Settings; the chosen style is remembered for the signed-in account in that browser.
+Timeline shows the milestones of the user's life: Entries marked as milestones, every Home, and every Vehicle.
+A milestone is a Moment, one point in time, or a Period, a stretch of time that may still be going on.
+Homes and Vehicles appear as Periods without being marked, from when they became part of the user's life.
+Timeline has four fixed lanes, in this order: Places lived, Vehicles, Work and study, and Other milestones.
+Homes fill Places lived and Vehicles fill Vehicles; each milestone chooses Work and study or Other milestones.
+There are no custom tracks, and lanes cannot be renamed, reordered, or hidden.
+Web Timeline opens in the lane view by default and offers Vertical Spine and Sticky Year styles through Settings; the chosen style is remembered for the signed-in account in that browser.
 The first Timeline visit asks for a private birth date, uses it as the story's starting point, and keeps it editable in Settings.
-Default tracks cover Education, Career, Homes, Vehicles, Relationships, Health, First Times, and Other Moments.
-The user can create, order, rename, hide, and restore tracks without deleting content.
-Timeline's global Add moment flow asks what the user is recording before opening the matching focused editor.
-The record form determines its fields, while Track only determines presentation.
-The Homes, Vehicles, and First Times track shortcuts open their specialized editors directly; other track shortcuts open the generic Moment editor with that track preselected.
-Opening an existing Home, Vehicle, or First Time from Timeline navigates to its read-only focused detail page.
-Unanchored Age, Approximate, and Unknown moments remain visible without a fabricated calendar position.
+Add to Timeline asks whether the user is adding a milestone, a First Time, a Home, or a Vehicle.
+A milestone or First Time opens the Entry editor with the milestone already marked; a Home or Vehicle opens its focused editor.
+Each lane's add shortcut does the same for that lane, and a milestone added to Work and study starts as a Period.
+Selecting anything on Timeline opens its Item page.
+Unanchored Age, Approximate, and Unknown milestones remain visible without a fabricated calendar position.
 
 Dashboard is ordered around:
 
 1. A personal greeting and compact archive counts linking to their destinations.
-2. Quick Capture alongside up to three captures ready to organize.
-3. A quiet resurfaced memory alongside current life chapters.
-4. Full-width Recent Entries with single-line titles and summaries, Collection prefixes, and optional tags.
+2. Quick Capture alongside up to three Entries that need organizing.
+3. A quiet resurfaced memory alongside Now.
+4. Full-width Recent Entries with single-line titles and summaries and optional tags.
 
 Narrow screens and iOS stack these sections in the same reading order.
 Search stays available in the Web bottom dock, and in the header of each iOS primary tab as a shortcut to Library.
-Archive counts open Timeline, Library, First Times, Collections, or Inbox; a capture ready to organize opens its review, and a current chapter opens its Timeline record.
+Archive counts open Timeline, Library, First Times, Tags, or Needs organizing; an Entry that needs organizing opens its Item page.
+Now lists what is still going on: Periods, Homes, and Vehicles that have started and have no end.
+Each shows its lane and how long it has been going on, opens its Item page, and Now links to Timeline.
 
-Resurfacing uses organized, active, dated Entries only.
+Resurfacing uses active, dated Entries only.
 It prefers the nearest prior On This Day match and otherwise uses a stable daily rotation of older Entries.
-Inbox content, Trash, and Life Stages do not appear as resurfaced memory cards.
+Trashed Entries and Periods do not appear as resurfaced memory cards.
 
 ## Specialized areas
 
 ### First Times
 
-A First Time is a focused Entry form.
-It requires only a title and accepts the full date-precision model, optional writing, photos, Location, People, Goal, Collections, tags, and Timeline context.
-It is created intentionally from Timeline or the First Times view.
-An existing Entry may be linked as source material without changing that Entry.
+A First Time is an Entry whose milestone is flagged as a First Time.
+The First Times view lists those Entries, and adding one there opens the Entry editor as a First Time Moment in Other milestones.
+Unchecking First Time, or removing the milestone, takes the Entry out of First Times without changing anything else about it.
+Older First Time links open the Entry's Item page.
 
 ### Homes and Vehicles
 
 Homes and Vehicles are Entity presets with the full date-precision model, optional facts, writing, photos, Location, relationships, and Timeline context.
 Their dates describe when the Entity was part of the user's life.
-An absent end means that relationship is current, not that the Entity is automatically a Chapter.
+An absent end means that relationship is current, so the Home or Vehicle appears in Now.
 Duration labels must not imply more precision than the recorded dates.
 Property operations, vehicle maintenance, fuel, expenses, insurance, and document storage are outside the current scope.
 
-### Goals, Bucket List, and Ideas
+### Want to Do
 
-Goals are low-pressure Entries with Short-term, Long-term, or Someday horizons and Considering, Active, Paused, Achieved, or Let Go states.
-They may have a target date, progress notes, and related Entries, but never require a percentage, subtasks, deadlines, overdue warnings, or productivity scores.
+Want to Do is a low-pressure list of things the user wants to do someday.
+Each item needs only a title; a target date, notes, tags, and photos are optional.
+An item is Want to do, Done, or Let go, and every new item starts as Want to do.
+There are no horizons, Bucket List, percentages, subtasks, deadlines, overdue warnings, or productivity scores.
+In data and routes an item is still a Goal (`item_kind = 'goal'`, `/goals`); Want to Do is its user-facing name.
 
-An idea remains an Entry until the user explicitly creates a linked Goal from it.
-The Entry remains intact as the source.
+An idea remains an Entry until the user explicitly adds it to Want to Do from its Item page.
+That secondary action creates a separate item linked back to its source, and the Entry remains intact.
 
-Bucket List items are Goals with a stable Collection role and Someday default.
-An explicit achievement action may atomically mark one Achieved and create a linked First Time using the best-known date without copying the Goal writing.
+Marking an item done is the moment it can become a First Time.
+That action atomically marks the item Done and creates a linked First Time using the best-known date without copying the notes.
+Changing the status to Done in the editor records it without a First Time.
 
-### Locations and People
+Want to Do items do not keep general links to other Entries.
+
+### Locations
 
 On Web, First Time, Home, and Vehicle cards prefer a photo, then a map when their Location has coordinates, then their original fallback.
 
 Locations store address context, optional provider provenance, and private coordinates for one Wiki Item at a time.
 The same physical address may appear in several Items, but each Item keeps an independent snapshot so later edits never change another Item.
 Locations have no user-authored name or notes, no Saved Location catalog, and no Library destination.
-Replaced Location snapshots remain private history for their owning Item, while permanently deleting the Item also deletes all of its Location snapshots.
+A replaced or removed Location snapshot is deleted, and permanently deleting the Item also deletes all of its Location snapshots.
 Editors show a formatted address and map preview when coordinates exist; a photo's GPS position may be saved without an inferred address.
 Homes may be saved without a Location; manually editing an address clears any provider-backed coordinate preview until another address is selected.
 Both maps cluster current Entry coordinates, filter by Kind and occurred year, and open the records associated with a selected point.
@@ -220,9 +235,7 @@ When records span several cities, both maps offer shortcuts to the most recorded
 The Web Map and Location previews follow the effective Web appearance, including System mode and changes while a map is open.
 The iOS Map follows the app's System, Light, or Dark appearance.
 Photo GPS Locations retain their source photo identity as provenance after explicit adoption.
-People contain a name plus optional relationship label and notes.
-People remain reusable across Entries.
-Web Entry, Home, Vehicle, and First Time editors can search Geoapify for an address, preview its coordinates, and save it as that record's Location.
+Web Entry, Home, and Vehicle editors can search Geoapify for an address, preview its coordinates, and save it as that record's Location.
 Web address search supports keyboard selection and authenticated server-side usage limits.
 Provider-backed Location editing on native iOS remains deferred until the Web flow is accepted.
 Until then, native Home, Vehicle, and First Time editors show the saved Location with its map and can remove it.
@@ -234,34 +247,34 @@ Both clients support light and dark appearance, share semantic design intent, an
 Web appearance is a per-browser choice between System, Light, and Dark; System remains the default and follows operating-system changes.
 iOS appearance is an app-local choice with the same three options.
 
-Mobile uses Dashboard, Inbox, Timeline, Library, and More in its bottom navigation.
+Mobile uses Dashboard, Timeline, Library, Map, and More in its bottom navigation.
 Library opens with the same all-items Life Wiki browser as Web, including debounced keyword search and Kind filters.
-More opens a compact menu for Map, focused record views, Collections, tags, archive tools, and Settings.
+More opens a compact menu for focused record views, Tags, archive tools, and Settings.
 Settings is also reached from the profile control.
 Settings lets the user choose a preferred name for Dashboard greetings, or clear it to use the Google account name.
 
 Desktop treats Library as a primary destination beside Dashboard, Timeline, and Map; Search is part of Library.
-Its sidebar omits Inbox, keeps optional focused views separate from Collections, tags, Trash, and the single Settings entry point.
+Its sidebar keeps optional focused views separate from Tags, Trash, and the single Settings entry point.
 The desktop sidebar can collapse to a compact icon rail from the top-bar panel control; the width change animates, and the choice persists in this browser without changing mobile navigation.
 Command B (Control B on Windows) also toggles the desktop sidebar when focus is outside text inputs and editors; inside the rich-text editor it retains its Bold behavior.
 The collapsed rail shows the MemoTrail logo without its wordmark above square navigation targets and keeps keyboard focus indicators inside the controls.
 On collapse, the logo's outer ring and accent rotate 90 degrees together while the inner ring turns in the opposite direction over 320ms; expanding reverses the rotation, and reduced motion keeps the mark still.
 The persistent top bar places Back and Forward history controls, then the desktop sidebar panel control; unavailable history directions are disabled.
-An icon-only Inbox control sits at the far right; Inbox shows a notification count only when captures are waiting.
-A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry and People results in place, supports keyboard navigation, and opens Library for full search with filters.
+The profile control sits at the far right, after the pending sync count when captures are waiting on this device.
+A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry results in place, supports keyboard navigation, and opens Library for full search with filters.
 On Web, the glass-effect bottom dock places the New Entry control labeled `What’s on your mind?` with a sparkle icon on the left and global Search on the right.
 The controls keep text and shortcut hints readable over page content, and hovering highlights the border with a subtle accent glow that fades back when the pointer leaves without changing the background color.
 New Entry also opens with Command J (Control J on Windows) when focus is outside a text input or editor.
-It expands into a bottom-anchored composer with the editor below the prompt, keeping rich text, photos, dates, local drafts, and Save to Inbox.
+It expands into a bottom-anchored composer with the editor below the prompt, keeping rich text, photos, dates, local drafts, and Save to Library.
 The expanded composer uses one consistent frosted surface across its header, writing area, and action row.
-Web Capture saves to Inbox with Command Return (Control Enter on Windows), using the same validation and offline behavior as the Save button.
-Hovering or focusing Save to Inbox displays a tooltip with the Command Return shortcut.
+Web Capture saves to Library with Command Return (Control Enter on Windows), using the same validation and offline behavior as the Save button.
+Hovering or focusing Save to Library displays a tooltip with the Command Return shortcut.
 Enter starts a new paragraph, and Shift+Enter inserts a line break; input method composition and nested editing controls do not trigger the save shortcut.
 Escape or the close control collapses it and restores focus to the bottom control without discarding the draft.
 On mobile Web the collapsed control sits above navigation; the expanded composer stays within the visible viewport and scrolls when needed.
 Home, Vehicle, and First Time results share one reusable card shell while preserving subtype-specific content and responsive layouts.
 Specialized editors share one unboxed photo field with consistent previews, progress, limits, and controls.
-When a record saves but some photos do not attach, the editor stays open with those photos selected, and Save again updates that record and retries them, even when it was created from a Capture or with a chosen address.
+When a record saves but some photos do not attach, the editor stays open with those photos selected, and Save again updates that record and retries them, even when it was created with a chosen address.
 On Web, selecting a photo thumbnail in an editor or capture draft opens a single-photo dialog without removing it; the separate X control removes the photo.
 Form labels mark required fields with `*` and leave optional fields unmarked.
 
@@ -287,9 +300,9 @@ Deferred or undecided work includes:
 
 - Habits and reminders;
 - a native iOS Share Extension;
-- bulk Inbox review;
+- bulk organizing of Entries that need it;
 - optional PWA enhancements;
 - Chinese interface localization;
 - Sign in with Apple and App Store distribution;
 - a native macOS client;
-- the default Collection set, which should evolve from real use rather than an invented taxonomy.
+- a starter tag set, which should evolve from real use rather than an invented taxonomy.

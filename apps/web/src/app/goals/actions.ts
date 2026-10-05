@@ -1,12 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { writingRevision } from "@/lib/media/writing-revision";
 import {
-  isFirstTimeUuid,
-  parseFirstTimeAttachmentInput,
-  type FirstTimeAttachmentInput,
-} from "@/lib/data/first-time-input";
+  isEntryUuid,
+  parseEntryAttachmentInput,
+  type EntryAttachmentInput,
+} from "@/lib/data/entry-photo-input";
 import {
   isGoalEntryIdentity,
   parseGoalAchievementInput,
@@ -14,10 +13,6 @@ import {
   type GoalAchievementInput,
   type GoalEntryInput,
 } from "@/lib/data/goal-record-input";
-import {
-  parseCaptureExtractionReference,
-  type CaptureExtractionReference,
-} from "@/lib/data/capture-extraction-input";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 
 export type GoalActionResult = {
@@ -29,7 +24,6 @@ export type GoalActionResult = {
 
 export async function saveGoalEntry(
   input: GoalEntryInput,
-  sourceCapture: CaptureExtractionReference | null = null,
 ): Promise<GoalActionResult> {
   const parsed = parseGoalEntryInput(input);
   if (!parsed.success) return result("error", parsed.message);
@@ -37,54 +31,26 @@ export async function saveGoalEntry(
   const context = await getAuthenticatedContext();
   if (!context) return expiredSession();
 
-  const source = sourceCapture
-    ? parseCaptureExtractionReference(sourceCapture)
-    : null;
-  if (sourceCapture && (!source || parsed.data.id !== null)) {
-    return result(
-      "error",
-      "This Capture handoff is invalid. Return to Inbox and try again.",
-    );
-  }
-
-  const parameters = {
+  const { data, error } = await context.client.rpc("save_goal_entry", {
     p_body: parsed.data.body,
-    p_collection_names: parsed.data.collectionNames,
-    p_horizon: parsed.data.horizon,
-    p_related_entry_ids: parsed.data.relatedEntryIds,
+    p_entry_id: parsed.data.id,
+    p_expected_revision: parsed.data.revision,
     p_status: parsed.data.status,
     p_tag_names: parsed.data.tagNames,
     p_target_date: parsed.data.targetDate,
     p_title: parsed.data.title,
-  };
-  const { data, error } = source
-    ? await context.client.rpc("extract_capture_to_goal", {
-        ...parameters,
-        p_capture_id: source.id,
-        p_capture_revision: source.revision,
-      })
-    : await context.client.rpc("save_goal_entry", {
-        ...parameters,
-        p_entry_id: parsed.data.id,
-        p_expected_revision: await writingRevision(
-          context.client,
-          parsed.data.id,
-          parsed.data.revision,
-        ),
-      });
+  });
   if (error) {
-    return result("error", "MemoTrail could not save this Goal. Try again.");
+    return result("error", "MemoTrail could not save this item. Try again.");
   }
 
-  const saved = source ? extractedGoal(data) : savedGoal(data);
+  const saved = savedGoal(data);
   if (!saved) {
     return result(
       "conflict",
       parsed.data.id
-        ? "This Goal changed on another device. Close it, refresh, and try again."
-        : source
-          ? "This Capture changed or was already organized. Return to Inbox and refresh."
-          : "MemoTrail could not create this Goal. Refresh and try again.",
+        ? "This item changed on another device. Close it, refresh, and try again."
+        : "MemoTrail could not add this item. Refresh and try again.",
     );
   }
 
@@ -92,11 +58,7 @@ export async function saveGoalEntry(
   return {
     entry: saved,
     firstTimeEntryId: null,
-    message: parsed.data.id
-      ? "Goal saved."
-      : source
-        ? "Goal created from Capture."
-        : "Goal added.",
+    message: parsed.data.id ? "Changes saved." : "Added to Want to Do.",
     status: parsed.data.id ? "saved" : "created",
   };
 }
@@ -123,16 +85,13 @@ export async function markGoalAchieved(
     },
   );
   if (error) {
-    return result(
-      "error",
-      "MemoTrail could not record this achievement. Try again.",
-    );
+    return result("error", "MemoTrail could not mark this done. Try again.");
   }
   const achieved = achievedGoal(data);
   if (!achieved) {
     return result(
       "conflict",
-      "This Goal changed or is no longer in Bucket List. Close it, refresh, and try again.",
+      "This item changed or is already done. Close it, refresh, and try again.",
     );
   }
 
@@ -140,15 +99,15 @@ export async function markGoalAchieved(
   return {
     entry: { id: achieved.id, revision: achieved.revision },
     firstTimeEntryId: achieved.firstTimeEntryId,
-    message: "Achievement saved, with a linked First Time.",
+    message: "Marked done, with a linked First Time.",
     status: "achieved",
   };
 }
 
 export async function registerGoalAttachment(
-  input: FirstTimeAttachmentInput,
+  input: EntryAttachmentInput,
 ): Promise<GoalActionResult> {
-  const parsed = parseFirstTimeAttachmentInput(input);
+  const parsed = parseEntryAttachmentInput(input);
   if (!parsed.success) return result("error", parsed.message);
 
   const context = await getAuthenticatedContext();
@@ -186,7 +145,7 @@ export async function registerGoalAttachment(
 export async function trashGoalAttachment(input: {
   attachmentId: string;
 }): Promise<GoalActionResult> {
-  if (!isFirstTimeUuid(input.attachmentId)) {
+  if (!isEntryUuid(input.attachmentId)) {
     return result(
       "error",
       "This photo reference is invalid. Refresh and try again.",
@@ -218,10 +177,7 @@ export async function trashGoalEntry(input: {
   revision: number;
 }): Promise<GoalActionResult> {
   if (!isGoalEntryIdentity(input.id, input.revision)) {
-    return result(
-      "error",
-      "This Goal version is invalid. Refresh and try again.",
-    );
+    return result("error", "This version is invalid. Refresh and try again.");
   }
 
   const context = await getAuthenticatedContext();
@@ -234,18 +190,18 @@ export async function trashGoalEntry(input: {
   if (error) {
     return result(
       "error",
-      "MemoTrail could not move this Goal to Trash. Try again.",
+      "MemoTrail could not move this item to Trash. Try again.",
     );
   }
   if (!Array.isArray(data) || data.length === 0) {
     return result(
       "conflict",
-      "This Goal changed on another device. Close it, refresh, and try again.",
+      "This item changed on another device. Close it, refresh, and try again.",
     );
   }
 
   refreshGoalPaths();
-  return result("trashed", "Goal moved to Trash.");
+  return result("trashed", "Moved to Trash.");
 }
 
 function savedGoal(value: unknown) {
@@ -258,19 +214,6 @@ function savedGoal(value: unknown) {
     typeof item.entry_id === "string" &&
     typeof item.revision === "number"
     ? { id: item.entry_id, revision: item.revision }
-    : null;
-}
-
-function extractedGoal(value: unknown) {
-  if (!Array.isArray(value) || value.length === 0) return null;
-  const item = value[0];
-  return typeof item === "object" &&
-    item !== null &&
-    "goal_entry_id" in item &&
-    "goal_revision" in item &&
-    typeof item.goal_entry_id === "string" &&
-    typeof item.goal_revision === "number"
-    ? { id: item.goal_entry_id, revision: item.goal_revision }
     : null;
 }
 
@@ -309,10 +252,8 @@ function expiredSession(): GoalActionResult {
 
 function refreshGoalPaths() {
   revalidatePath("/");
-  revalidatePath("/collections");
   revalidatePath("/first-times");
   revalidatePath("/goals");
-  revalidatePath("/inbox");
   revalidatePath("/library");
   revalidatePath("/search");
   revalidatePath("/trash");

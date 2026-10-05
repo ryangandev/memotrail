@@ -3,7 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
-test("Complete export snapshot pages preserve original media and history across concurrent devices", async () => {
+test("Complete export snapshot pages preserve original media across concurrent devices", async () => {
   const env = JSON.parse(
     execFileSync("supabase", ["status", "-o", "json"], {
       encoding: "utf8",
@@ -95,7 +95,8 @@ test("Complete export snapshot pages preserve original media and history across 
     const snapshot = snapshots[0].data;
     expect(new Set(snapshots.map((s) => s.data.captured_at)).size).toBe(1);
     expect(snapshot.datasets.entries).toBe(1005);
-    expect(Object.keys(snapshot.datasets)).toHaveLength(25);
+    expect(Object.keys(snapshot.datasets)).toHaveLength(18);
+    expect(snapshot.datasets).toHaveProperty("milestones");
     const current = (
       await first.from("entries").select("revision").eq("id", entryID).single()
     ).data!;
@@ -139,9 +140,6 @@ test("Complete export snapshot pages preserve original media and history across 
       rows.find((r) => r.dataset === "entries" && r.value.id === entryID)?.value
         .body,
     ).toBe("原始的生活记录");
-    expect(rows.filter((r) => r.dataset === "entry_versions")).toHaveLength(
-      snapshot.datasets.entry_versions,
-    );
     const media = rows.find((r) => r.dataset === "media_objects")!.value;
     expect(media.available).toBe(true);
     expect(media.storage_version).toEqual(expect.any(String));

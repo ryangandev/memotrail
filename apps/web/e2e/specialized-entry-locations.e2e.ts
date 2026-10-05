@@ -74,7 +74,6 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
               kind: "provider",
               provider: "geoapify",
               providerLocationId: "pine-street-provider-id",
-              name: "10 Pine Street, Philadelphia, PA",
               formattedAddress: "10 Pine Street, Philadelphia, PA",
               address: "10 Pine Street",
               city: "Philadelphia",
@@ -97,7 +96,9 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
 
     await page.goto("/first-times");
     await page.getByRole("button", { name: "Add First Time" }).first().click();
-    const firstTimeEditor = page.getByRole("dialog");
+    const firstTimeEditor = page.getByRole("dialog", {
+      name: "Add a First Time",
+    });
     await firstTimeEditor
       .getByRole("textbox", { name: "Title" })
       .fill("First hike");
@@ -130,7 +131,7 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
       path: "/private/tmp/memotrail-first-time-location-form.png",
     });
     await firstTimeEditor
-      .getByRole("button", { name: "Add First Time" })
+      .getByRole("button", { name: "Add", exact: true })
       .click();
     await expect(firstTimeEditor).not.toBeVisible();
     const firstTimeCard = page.getByRole("button", { name: /First hike/ });
@@ -191,19 +192,19 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
     const vehicleId = entries.find((entry) => entry.title === "Blue Civic")!.id;
     const links = (
       await client
-        .from("entry_places")
-        .select("entry_id,place_id")
+        .from("entry_locations")
+        .select("entry_id,location_id")
         .in("entry_id", [firstTimeId, vehicleId])
         .eq("relationship", "primary")
     ).data!;
     expect(links).toHaveLength(2);
-    expect(links[0].place_id).not.toBe(links[1].place_id);
+    expect(links[0].location_id).not.toBe(links[1].location_id);
     const firstTimeLocationId = links.find(
       (link) => link.entry_id === firstTimeId,
-    )!.place_id;
+    )!.location_id;
     const vehicleLocationId = links.find(
       (link) => link.entry_id === vehicleId,
-    )!.place_id;
+    )!.location_id;
     expect(
       (
         await client
@@ -230,16 +231,15 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
       firstTimeCard.locator('[data-record-card-map="true"]'),
     ).toBeVisible();
     await firstTimeCard.click();
-    await page.getByRole("button", { name: "Edit First Time" }).click();
-    const editDialog = page.getByRole("main");
+    await expect(page).toHaveURL(`/items/${firstTimeId}`);
+    await page.getByRole("button", { name: "Edit Entry" }).click();
+    const editDialog = page.getByRole("dialog", { name: "Edit Entry" });
     await expect(
       editDialog.getByRole("img", { name: /Map showing 10 Pine Street/ }),
     ).toBeVisible();
     await editDialog.getByRole("button", { name: "Remove" }).click();
     await editDialog.getByRole("button", { name: "Save changes" }).click();
-    await expect(
-      page.getByRole("button", { name: "Edit First Time" }),
-    ).toBeVisible();
+    await expect(editDialog).not.toBeVisible();
     await page.goto("/first-times");
     await expect(
       page
@@ -248,13 +248,13 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
     ).toHaveCount(0);
     const remaining = (
       await client
-        .from("entry_places")
-        .select("entry_id,place_id")
+        .from("entry_locations")
+        .select("entry_id,location_id")
         .in("entry_id", [firstTimeId, vehicleId])
         .eq("relationship", "primary")
     ).data!;
     expect(remaining).toEqual([
-      { entry_id: vehicleId, place_id: vehicleLocationId },
+      { entry_id: vehicleId, location_id: vehicleLocationId },
     ]);
     expect(errors).toEqual([]);
   } finally {

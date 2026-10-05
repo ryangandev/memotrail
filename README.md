@@ -25,7 +25,7 @@ packages/
   design-tokens/        Cross-platform Soft Ledger token source and generator
   media-runtime/        Shared server-side image and metadata runtime
 supabase/
-  migrations/           Database, RLS, Storage, and history schema
+  migrations/           Database, RLS, and Storage schema
   tests/                Database security and behavior tests
   seed.sql              Synthetic local development data
 ```
@@ -165,9 +165,9 @@ Include every affected layer when shared behavior changes, and run the full appl
 For example:
 
 ```bash
-pnpm --filter @memotrail/web test src/lib/data/history.test.ts
+pnpm --filter @memotrail/web test src/lib/data/entry-detail.test.ts
 pnpm --filter @memotrail/web test:contracts media-race
-MEMOTRAIL_E2E_PORT=3101 pnpm --filter @memotrail/web test:e2e history.e2e.ts
+MEMOTRAIL_E2E_PORT=3101 pnpm --filter @memotrail/web test:e2e wiki-library.e2e.ts
 ```
 
 The product browser suite starts its own isolated server and defaults to port 3100.

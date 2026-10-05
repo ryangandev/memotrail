@@ -12,7 +12,7 @@ as $$
   select jsonb_build_object(
     'kind','provider','provider','geoapify',
     'providerLocationId',provider_id,
-    'name',formatted,'formattedAddress',formatted,
+    'formattedAddress',formatted,
     'address','10 Pine Street','city','Philadelphia','region','Pennsylvania',
     'postalCode',null,'country','United States','countryCode','us',
     'latitude',39.9526,'longitude',-75.1652,'timezone','America/New_York',
@@ -21,15 +21,22 @@ as $$
   );
 $$;
 
+create function pg_temp.save_first_time(p_id uuid, p_revision integer, p_title text, p_body text, p_location jsonb)
+returns table(entry_id uuid, revision integer)
+language sql
+as $$
+  select * from public.save_entry(
+    p_id, p_revision, p_title, p_body, null, null, null, 'UTC', null, 'unknown', '{}',
+    p_location, null, '{"shape":"moment","lane":"other","isFirstTime":true}'
+  );
+$$;
+
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000125',true);
 
 select is(
-  (select count(*) from public.save_first_time_with_location(
-    jsonb_build_object(
-      'title','First hike','body','A memory','datePrecision','unknown',
-      'collectionNames',jsonb_build_array(),'tagNames',jsonb_build_array()
-    ),
+  (select count(*) from pg_temp.save_first_time(
+    '99620000-0000-4000-8000-000000000001', null, 'First hike', 'A memory',
     pg_temp.provider('specialized-pine-10','10 Pine Street, Philadelphia')
   )),
   1::bigint,
@@ -40,9 +47,8 @@ select is(
   (select count(*) from public.save_vehicle_with_location(
     jsonb_build_object(
       'title','Blue Civic','body','A memory','datePrecision','unknown',
-      'collectionNames',jsonb_build_array(),'tagNames',jsonb_build_array()
+      'tagNames',jsonb_build_array()
     ),
-    null,
     pg_temp.provider('specialized-pine-10','10 Pine Street, Philadelphia')
   )),
   1::bigint,
@@ -50,8 +56,8 @@ select is(
 );
 
 select is(
-  (select count(distinct link.place_id)
-   from public.entry_places as link
+  (select count(distinct link.location_id)
+   from public.entry_locations as link
    join public.entries as entry on entry.id=link.entry_id
    where entry.title in ('First hike','Blue Civic')
      and link.relationship='primary'),
@@ -71,14 +77,10 @@ select is(
 );
 
 select is(
-  (select count(*) from public.save_first_time_with_location(
-    jsonb_build_object(
-      'title','First hike','body','A changed memory',
-      'datePrecision','unknown',
-      'collectionNames',jsonb_build_array(),'tagNames',jsonb_build_array(),
-      'id',(select id from public.entries where title='First hike'),
-      'revision',(select revision from public.entries where title='First hike')
-    ),
+  (select count(*) from pg_temp.save_first_time(
+    (select id from public.entries where title='First hike'),
+    (select revision from public.entries where title='First hike'),
+    'First hike', 'A changed memory',
     pg_temp.provider('specialized-market-1','Market Street, Philadelphia')
   )),
   1::bigint,
@@ -88,31 +90,32 @@ select is(
 select is(
   (
     select location.provider_location_id
-    from public.entry_places as link
+    from public.entry_locations as link
     join public.entries as entry on entry.id=link.entry_id
-    join public.locations as location on location.id=link.place_id
+    join public.locations as location on location.id=link.location_id
     where entry.title='Blue Civic' and link.relationship='primary'
   ),
   'specialized-pine-10',
   'The Vehicle retains its independent original snapshot'
 );
 
+set constraints all immediate;
+set constraints all deferred;
 select is(
   (select count(*) from public.locations
    where bound_entry_id=(select id from public.entries where title='First hike')),
-  2::bigint,
-  'The First Time keeps its earlier snapshot for history restoration'
+  1::bigint,
+  'The First Time drops its replaced snapshot'
 );
 
 select is(
   (select count(*) from public.save_vehicle_with_location(
     jsonb_build_object(
       'title','Blue Civic','body','A later memory','datePrecision','unknown',
-      'collectionNames',jsonb_build_array(),'tagNames',jsonb_build_array(),
+      'tagNames',jsonb_build_array(),
       'id',(select id from public.entries where title='Blue Civic'),
       'revision',(select revision from public.entries where title='Blue Civic')
     ),
-    null,
     null
   )),
   1::bigint,
@@ -120,27 +123,26 @@ select is(
 );
 
 select is(
-  (select count(*) from public.entry_places as link
+  (select count(*) from public.entry_locations as link
    join public.entries as entry on entry.id=link.entry_id
    where entry.title='Blue Civic' and link.relationship='primary'),
   0::bigint,
   'Removing the active association clears the Vehicle primary link'
 );
 
+set constraints all immediate;
+set constraints all deferred;
 select is(
   (select count(*) from public.locations
    where bound_entry_id=(select id from public.entries where title='Blue Civic')),
-  1::bigint,
-  'The removed Vehicle snapshot remains available to history'
+  0::bigint,
+  'The removed Vehicle snapshot is dropped'
 );
 
 select throws_ok(
   $sql$
-    select * from public.save_first_time_with_location(
-      jsonb_build_object(
-        'title','Should roll back','body','','datePrecision','unknown',
-        'collectionNames',jsonb_build_array(),'tagNames',jsonb_build_array()
-      ),
+    select * from pg_temp.save_first_time(
+      '99620000-0000-4000-8000-000000000002', null, 'Should roll back', '',
       jsonb_build_object(
         'kind','existing','id','99200000-0000-4000-8000-000000000099',
         'revision',1

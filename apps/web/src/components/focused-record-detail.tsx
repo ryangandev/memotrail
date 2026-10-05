@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ButtonLink } from "@/components/button";
 import { Badge } from "@/components/badge";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
@@ -10,9 +9,7 @@ import { PageHeader } from "@/components/page-header";
 import { ProgressiveImage } from "@/components/progressive-image";
 import { HomeEditor } from "@/components/homes-workspace";
 import { VehicleEditor } from "@/components/vehicles-workspace";
-import { FirstTimeEditor } from "@/components/first-times-workspace";
 import { GoalEditor } from "@/components/goals-workspace";
-import { PersonEditor } from "@/components/people-workspace";
 import {
   homeLocationLabel,
   homeRangeLabel,
@@ -24,61 +21,48 @@ import {
   type VehicleRecord,
 } from "@/lib/data/vehicle-record";
 import {
-  goalHorizonLabels,
   goalStatusLabels,
-  goalTargetLabel,
-  type GoalLinkOption,
+  goalTargetDate,
   type GoalRecord,
 } from "@/lib/data/goal-record";
-import { occurrenceLabel } from "@/lib/data/occurrence";
-import type { FirstTimeEntry } from "@/lib/data/first-times";
-import {
-  personEntryTitle,
-  type Person,
-  type PersonEntry,
-} from "@/lib/data/person";
 import { wikiEntryHref } from "@/lib/data/wiki-item";
+import {
+  locationDisplayLabel,
+  type LocationSelection,
+} from "@/lib/locations/location";
 import styles from "./focused-record-detail.module.css";
 
 type Shared = {
-  collectionOptions: string[];
   ownerId: string;
   tagOptions: string[];
 };
 type Props =
   | ({ kind: "home"; record: HomeRecord } & Shared)
   | ({ kind: "vehicle"; record: VehicleRecord } & Shared)
-  | ({ kind: "first-time"; record: FirstTimeEntry } & Shared)
-  | ({
-      kind: "goal";
-      record: GoalRecord;
-      linkOptions: GoalLinkOption[];
-    } & Shared)
-  | ({ kind: "person"; record: Person; entries: PersonEntry[] } & Shared);
+  | ({ kind: "goal"; record: GoalRecord } & Shared);
 
 const paths = {
   home: "/homes",
   vehicle: "/vehicles",
-  "first-time": "/first-times",
   goal: "/goals",
-  person: "/people",
 };
 const labels = {
   home: "Home",
   vehicle: "Vehicle",
-  "first-time": "First Time",
-  goal: "Goal",
-  person: "Person",
+  goal: "Want to Do",
 };
 
 export function FocusedRecordDetail(props: Props) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState<Props["record"] | null>(null);
+  // The saved copy bridges the wait for the refreshed page. Once the server
+  // reaches its revision, the server copy wins, since it also has the photos
+  // uploaded after the save, which leave the revision unchanged.
   const record =
     saved &&
     saved.id === props.record.id &&
-    saved.revision >= props.record.revision
+    saved.revision > props.record.revision
       ? saved
       : props.record;
   const back = paths[props.kind];
@@ -89,7 +73,6 @@ export function FocusedRecordDetail(props: Props) {
   }
 
   const sharedEditorProps = {
-    collectionOptions: props.collectionOptions,
     onClose: closeEdit,
     ownerId: props.ownerId,
     presentation: "page" as const,
@@ -113,26 +96,10 @@ export function FocusedRecordDetail(props: Props) {
             onSaved={setSaved}
             onTrashed={() => router.push(back)}
           />
-        ) : props.kind === "first-time" ? (
-          <FirstTimeEditor
-            {...sharedEditorProps}
-            entry={record as FirstTimeEntry}
-            onSaved={setSaved}
-            onTrashed={() => router.push(back)}
-          />
-        ) : props.kind === "goal" ? (
+        ) : (
           <GoalEditor
             {...sharedEditorProps}
             goal={record as GoalRecord}
-            linkOptions={props.linkOptions}
-            onTrashed={() => router.push(back)}
-          />
-        ) : (
-          <PersonEditor
-            entries={props.entries}
-            person={record as Person}
-            onClose={closeEdit}
-            presentation="page"
             onTrashed={() => router.push(back)}
           />
         )
@@ -140,11 +107,7 @@ export function FocusedRecordDetail(props: Props) {
         <>
           <PageHeader
             eyebrow={label}
-            title={
-              props.kind === "person"
-                ? (record as Person).name
-                : (record as HomeRecord).title
-            }
+            title={record.title}
             actions={
               <button
                 aria-label={`Edit ${label}`}
@@ -158,18 +121,14 @@ export function FocusedRecordDetail(props: Props) {
             }
           />
           <RecordContent kind={props.kind} record={record} />
-          {props.kind !== "person" ? (
-            <ButtonLink
-              href={`/history?entry=${record.id}`}
-              variant="secondary"
-            >
-              Version history
-            </ButtonLink>
-          ) : null}
         </>
       )}
     </PageFrame>
   );
+}
+
+function optionalLocationLabel(location: LocationSelection | null | undefined) {
+  return location ? locationDisplayLabel(location) : null;
 }
 
 function Fact({
@@ -195,17 +154,11 @@ function RecordContent({
   kind: Props["kind"];
   record: Props["record"];
 }) {
-  const common =
-    kind === "person"
-      ? null
-      : (record as HomeRecord | VehicleRecord | FirstTimeEntry | GoalRecord);
-  const photos =
-    common?.attachments.filter((photo) =>
-      "variant" in photo ? photo.variant === "original" : true,
-    ) ?? [];
-  const body = kind === "person" ? (record as Person).notes : common?.body;
-  const collections = common?.collectionNames ?? [];
-  const tags = common?.tagNames ?? [];
+  const photos = record.attachments.filter((photo) =>
+    "variant" in photo ? photo.variant === "original" : true,
+  );
+  const body = record.body;
+  const tags = record.tagNames;
   return (
     <article className={styles.content}>
       {photos.length > 0 ? (
@@ -231,7 +184,10 @@ function RecordContent({
               label="Location"
               value={homeLocationLabel(record as HomeRecord)}
             />
-            <Fact label="Address" value={(record as HomeRecord).address} />
+            <Fact
+              label="Address"
+              value={(record as HomeRecord).location?.address}
+            />
             <Fact
               label="Why you moved in"
               value={(record as HomeRecord).moveInReason}
@@ -239,10 +195,6 @@ function RecordContent({
             <Fact
               label="Why you left"
               value={(record as HomeRecord).moveOutReason}
-            />
-            <Fact
-              label="Place notes"
-              value={(record as HomeRecord).placeNotes}
             />
           </>
         ) : null}
@@ -258,26 +210,7 @@ function RecordContent({
             />
             <Fact
               label="Location"
-              value={(record as VehicleRecord).location?.name}
-            />
-          </>
-        ) : null}
-        {kind === "first-time" ? (
-          <>
-            <Fact
-              label="When"
-              value={occurrenceLabel({
-                occurredAt: (record as FirstTimeEntry).occurredStart,
-                occurredEnd: (record as FirstTimeEntry).occurredEnd,
-                occurredLabel: (record as FirstTimeEntry).occurredLabel,
-                occurredTimezone:
-                  (record as FirstTimeEntry).occurredTimezone ?? "UTC",
-                datePrecision: (record as FirstTimeEntry).datePrecision,
-              })}
-            />
-            <Fact
-              label="Location"
-              value={(record as FirstTimeEntry).location?.name}
+              value={optionalLocationLabel((record as VehicleRecord).location)}
             />
           </>
         ) : null}
@@ -288,37 +221,22 @@ function RecordContent({
               value={goalStatusLabels[(record as GoalRecord).status]}
             />
             <Fact
-              label="Horizon"
-              value={goalHorizonLabels[(record as GoalRecord).horizon]}
-            />
-            <Fact
-              label="Target"
-              value={goalTargetLabel(record as GoalRecord)}
+              label="Target date"
+              value={goalTargetDate(record as GoalRecord)}
             />
           </>
-        ) : null}
-        {kind === "person" ? (
-          <Fact
-            label="Relationship"
-            value={(record as Person).relationship_label}
-          />
         ) : null}
       </dl>
       {body ? (
         <section className={styles.section}>
-          <h2>{kind === "person" ? "Notes" : "Story"}</h2>
+          <h2>{kind === "goal" ? "Notes" : "Story"}</h2>
           <p className={styles.prose}>{body}</p>
         </section>
       ) : null}
-      {collections.length || tags.length ? (
+      {tags.length ? (
         <section className={styles.section}>
           <h2>Organize</h2>
           <div className={styles.chips}>
-            {collections.map((name) => (
-              <Badge key={`collection:${name}`} tone="neutral">
-                {name}
-              </Badge>
-            ))}
             {tags.map((name) => (
               <Badge key={`tag:${name}`} tone="neutral">
                 #{name}
@@ -327,37 +245,15 @@ function RecordContent({
           </div>
         </section>
       ) : null}
-      {kind === "person" && (record as Person).linked_entries.length ? (
-        <section className={styles.section}>
-          <h2>Connected Items</h2>
-          <ul>
-            {(record as Person).linked_entries.map((entry) => (
-              <li key={entry.id}>
-                <a
-                  href={wikiEntryHref({
-                    id: entry.id,
-                    inboxStatus: "organized",
-                    itemKind: entry.item_kind,
-                    itemSubtype: entry.item_subtype,
-                  })}
-                >
-                  {personEntryTitle(entry)}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
       {kind === "goal" && (record as GoalRecord).relatedEntries.length ? (
         <section className={styles.section}>
-          <h2>Connected Items</h2>
+          <h2>First Time</h2>
           <ul>
             {(record as GoalRecord).relatedEntries.map((entry) => (
               <li key={entry.id}>
                 <a
                   href={wikiEntryHref({
                     id: entry.id,
-                    inboxStatus: "organized",
                     itemKind: entry.itemKind,
                     itemSubtype: entry.itemSubtype,
                   })}

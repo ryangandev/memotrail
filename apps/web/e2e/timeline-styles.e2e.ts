@@ -80,9 +80,8 @@ test("Timeline style setting changes the real Timeline without changing its reco
             owner_id: owner,
             title: "First concert",
             body: "A night I still remember.",
-            inbox_status: "organized",
             item_kind: "entry",
-            item_subtype: "moment",
+            item_subtype: "entry",
             occurred_start: "2012-08-10T12:00:00Z",
             occurred_timezone: "America/Los_Angeles",
             date_precision: "day",
@@ -92,9 +91,8 @@ test("Timeline style setting changes the real Timeline without changing its reco
             owner_id: owner,
             title: "University years",
             body: "Learning and finding my people.",
-            inbox_status: "organized",
             item_kind: "entry",
-            item_subtype: "period",
+            item_subtype: "entry",
             occurred_start: "2008-09-01T12:00:00Z",
             occurred_end: "2012-06-01T12:00:00Z",
             occurred_timezone: "America/Los_Angeles",
@@ -105,9 +103,8 @@ test("Timeline style setting changes the real Timeline without changing its reco
             owner_id: owner,
             title: "Started sketching",
             body: "A quiet new habit.",
-            inbox_status: "organized",
             item_kind: "entry",
-            item_subtype: "moment",
+            item_subtype: "entry",
             occurred_label: "Around my twenties",
             occurred_timezone: "America/Los_Angeles",
             date_precision: "approximate",
@@ -115,30 +112,26 @@ test("Timeline style setting changes the real Timeline without changing its reco
         ])
       ).error,
     ).toBeNull();
-    const track = (
-      await client.from("timeline_tracks").select("id").limit(1).single()
-    ).data;
-    expect(track?.id).toBeTruthy();
     expect(
       (
-        await client.from("timeline_items").insert([
+        await client.from("milestones").insert([
           {
             entry_id: momentId,
             owner_id: owner,
-            track_id: track!.id,
-            timeline_kind: "event",
+            shape: "moment",
+            lane: "other",
           },
           {
             entry_id: periodId,
             owner_id: owner,
-            track_id: track!.id,
-            timeline_kind: "stage",
+            shape: "period",
+            lane: "work_study",
           },
           {
             entry_id: unanchoredId,
             owner_id: owner,
-            track_id: track!.id,
-            timeline_kind: "event",
+            shape: "moment",
+            lane: "other",
           },
         ])
       ).error,
@@ -158,7 +151,7 @@ test("Timeline style setting changes the real Timeline without changing its reco
 
     await page.goto("/timeline");
     await expect(
-      page.getByRole("region", { name: "Timeline by track" }).first(),
+      page.getByRole("region", { name: "Timeline by lane" }).first(),
     ).toBeVisible();
     await expect(
       page.getByRole("region", { name: "Vertical timeline" }),
@@ -183,16 +176,16 @@ test("Timeline style setting changes the real Timeline without changing its reco
       page.getByRole("region", { name: "Vertical timeline" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /First concert/ }),
+      page.getByRole("link", { name: /First concert/ }),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /University years/ }),
+      page.getByRole("link", { name: /University years/ }),
     ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Without a calendar date" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /Started sketching/ }),
+      page.getByRole("link", { name: /Started sketching/ }),
     ).toBeVisible();
     await page.reload();
     await expect(
@@ -204,11 +197,9 @@ test("Timeline style setting changes the real Timeline without changing its reco
         path: "/tmp/memotrail-timeline-vertical-desktop.png",
       });
     }
-    await page.getByRole("button", { name: /First concert/ }).click();
-    await expect(
-      page.getByRole("dialog", { name: "First concert" }),
-    ).toBeVisible();
-    await page.getByRole("button", { name: "Close Timeline editor" }).click();
+    await page.getByRole("link", { name: /First concert/ }).click();
+    await expect(page).toHaveURL(`/items/${momentId}`);
+    await page.goBack();
     await expect(
       page.getByRole("region", { name: "Vertical timeline" }),
     ).toBeVisible();
@@ -223,7 +214,7 @@ test("Timeline style setting changes the real Timeline without changing its reco
     await expect(page.getByRole("heading", { name: "2008" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "2012" })).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /Started sketching/ }),
+      page.getByRole("link", { name: /Started sketching/ }),
     ).toBeVisible();
     if (process.env.MEMOTRAIL_CAPTURE_TIMELINE_STYLES === "1") {
       await page.screenshot({
@@ -231,11 +222,11 @@ test("Timeline style setting changes the real Timeline without changing its reco
         path: "/tmp/memotrail-timeline-sticky-year-desktop.png",
       });
     }
-    await page.getByRole("button", { name: /University years/ }).click();
     await expect(
-      page.getByRole("dialog", { name: "University years" }),
-    ).toBeVisible();
-    await page.getByRole("button", { name: "Close Timeline editor" }).click();
+      page.getByRole("link", { name: /University years, .*Work and study/ }),
+    ).toContainText("Period");
+    await page.getByRole("link", { name: /University years/ }).click();
+    await expect(page).toHaveURL(`/items/${periodId}`);
 
     await page.setViewportSize({ width: 390, height: 844 });
     for (const [style, label] of [
@@ -280,19 +271,16 @@ test("Timeline style setting changes the real Timeline without changing its reco
     await expectStyleCookie("classic");
     await page.goto("/timeline");
     await expect(
-      page.getByRole("region", { name: "Timeline by track" }).first(),
+      page.getByRole("region", { name: "Timeline by lane" }).first(),
     ).toBeVisible();
     await expect(
       page.getByRole("region", { name: "Vertical timeline" }),
     ).toHaveCount(0);
-    await page.getByRole("button", { name: "Add moment", exact: true }).click();
+    await page.getByRole("button", { name: "Add to Timeline" }).click();
     await expect(
       page.getByRole("dialog", { name: "What are you adding?" }),
     ).toBeVisible();
-    await page
-      .getByRole("button", { name: "Close entry type chooser" })
-      .click();
-    expect(errors).toEqual([]);
+    await page.getByRole("button", { name: "Close Timeline chooser" }).click();
     expect(errors).toEqual([]);
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();

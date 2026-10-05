@@ -10,21 +10,22 @@ function source(
   overrides: Partial<TimelineLayoutSource> = {},
 ): TimelineLayoutSource {
   return {
-    id: "event-1",
-    kind: "event",
+    id: "moment-1",
+    labelWidthPixels: 80,
+    shape: "moment",
     occurredEnd: null,
     occurredStart: "2020-01-01T12:00:00.000Z",
-    trackId: "other_events",
+    lane: "other",
     ...overrides,
   };
 }
 
 describe("createTimelineLayout", () => {
-  it("never invents calendar positions for unanchored stages or events", () => {
+  it("never invents calendar positions for unanchored periods or moments", () => {
     const layout = createTimelineLayout(
       [
         source({ occurredStart: null }),
-        source({ id: "stage", kind: "stage", occurredStart: null }),
+        source({ id: "period", shape: "period", occurredStart: null }),
       ],
       reference,
     );
@@ -61,42 +62,46 @@ describe("createTimelineLayout", () => {
     expect(layout.positions[0]?.leftPercent).toBe(0);
   });
 
-  it("orders an event within padded bounds", () => {
+  it("orders a moment within padded bounds", () => {
     const layout = createTimelineLayout([source()], reference);
     const position = layout.positions[0];
 
     expect(position?.leftPercent).toBeGreaterThan(0);
     expect(position?.leftPercent).toBeLessThan(100);
-    expect(position?.widthPercent).toBe(0);
+    expect(position?.barWidthPixels).toBe(12);
+    expect(position?.labelPlacement).toBe("after");
   });
 
-  it("extends an open stage to the reference date", () => {
+  it("extends an open period to the reference date", () => {
     const layout = createTimelineLayout(
       [
         source({
-          id: "stage-1",
-          kind: "stage",
+          id: "period-1",
+          shape: "period",
           occurredStart: "2024-01-01T12:00:00.000Z",
         }),
       ],
       reference,
     );
 
-    expect(layout.positions[0]?.widthPercent).toBeGreaterThan(50);
+    expect(layout.positions[0]?.widthPixels).toBeGreaterThan(
+      layout.canvasWidth / 2,
+    );
+    expect(layout.positions[0]?.labelPlacement).toBe("inside");
   });
 
-  it("places overlapping periods in different lanes", () => {
+  it("stacks overlapping periods on different rows", () => {
     const layout = createTimelineLayout(
       [
         source({
-          id: "stage-1",
-          kind: "stage",
+          id: "period-1",
+          shape: "period",
           occurredEnd: "2024-12-01T12:00:00.000Z",
           occurredStart: "2020-01-01T12:00:00.000Z",
         }),
         source({
-          id: "stage-2",
-          kind: "stage",
+          id: "period-2",
+          shape: "period",
           occurredEnd: "2025-01-01T12:00:00.000Z",
           occurredStart: "2022-01-01T12:00:00.000Z",
         }),
@@ -104,21 +109,21 @@ describe("createTimelineLayout", () => {
       reference,
     );
 
-    expect(layout.positions.map((item) => item.lane)).toEqual([0, 1]);
-    expect(layout.laneCountByTrack.other_events).toBe(2);
+    expect(layout.positions.map((item) => item.row)).toEqual([0, 1]);
+    expect(layout.rowCountByLane.other).toBe(2);
   });
 
-  it("reuses a lane for periods that no longer overlap", () => {
+  it("reuses a row for periods that no longer overlap", () => {
     const layout = createTimelineLayout(
       [
         source({
-          id: "stage-1",
-          kind: "stage",
+          id: "period-1",
+          shape: "period",
           occurredEnd: "2021-01-01T12:00:00.000Z",
         }),
         source({
-          id: "stage-2",
-          kind: "stage",
+          id: "period-2",
+          shape: "period",
           occurredEnd: "2023-01-01T12:00:00.000Z",
           occurredStart: "2022-01-01T12:00:00.000Z",
         }),
@@ -126,44 +131,46 @@ describe("createTimelineLayout", () => {
       reference,
     );
 
-    expect(layout.positions.map((item) => item.lane)).toEqual([0, 0]);
-    expect(layout.laneCountByTrack.other_events).toBe(1);
+    expect(layout.positions.map((item) => item.row)).toEqual([0, 0]);
+    expect(layout.rowCountByLane.other).toBe(1);
   });
 
-  it("reuses a lane for short non-overlapping stages on a life-long Timeline", () => {
+  it("reuses a row for short non-overlapping periods on a life-long Timeline", () => {
     const layout = createTimelineLayout(
       [
         source({
           id: "walmart",
-          kind: "stage",
+          labelWidthPixels: 44,
+          shape: "period",
           occurredEnd: "2026-01-31T00:00:00.000Z",
           occurredStart: "2025-05-19T00:00:00.000Z",
-          trackId: "career",
+          lane: "work_study",
         }),
         source({
           id: "adobe",
-          kind: "stage",
+          labelWidthPixels: 34,
+          shape: "period",
           occurredStart: "2026-04-13T00:00:00.000Z",
-          trackId: "career",
+          lane: "work_study",
         }),
       ],
       reference,
       "2000-05-16",
     );
 
-    expect(layout.positions.map((item) => item.lane)).toEqual([0, 0]);
-    expect(layout.laneCountByTrack.career).toBe(1);
+    expect(layout.positions.map((item) => item.row)).toEqual([0, 0]);
+    expect(layout.rowCountByLane.work_study).toBe(1);
   });
 
-  it("separates point events whose rendered labels overlap", () => {
+  it("separates moments whose rendered labels overlap", () => {
     const layout = createTimelineLayout(
       [
         source({
-          id: "event-1",
+          id: "moment-1",
           occurredStart: "2026-01-01T00:00:00.000Z",
         }),
         source({
-          id: "event-2",
+          id: "moment-2",
           occurredStart: "2026-06-01T00:00:00.000Z",
         }),
       ],
@@ -171,24 +178,26 @@ describe("createTimelineLayout", () => {
       "2000-05-16",
     );
 
-    expect(layout.positions.map((item) => item.lane)).toEqual([0, 1]);
-    expect(layout.laneCountByTrack.other_events).toBe(2);
+    expect(layout.positions.map((item) => item.row)).toEqual([0, 1]);
+    expect(layout.rowCountByLane.other).toBe(2);
   });
 
-  it("aligns short ongoing stage labels to their shared present endpoint", () => {
+  it("aligns short ongoing period bars to their shared present endpoint", () => {
     const layout = createTimelineLayout(
       [
         source({
           id: "adobe",
-          kind: "stage",
+          labelWidthPixels: 30,
+          shape: "period",
           occurredStart: "2026-04-13T00:00:00.000Z",
-          trackId: "career",
+          lane: "work_study",
         }),
         source({
           id: "evergreen",
-          kind: "stage",
+          labelWidthPixels: 30,
+          shape: "period",
           occurredStart: "2026-09-01T00:00:00.000Z",
-          trackId: "homes",
+          lane: "homes",
         }),
       ],
       reference,
@@ -197,21 +206,109 @@ describe("createTimelineLayout", () => {
     const rightEdges = layout.positions.map(
       (position) =>
         (position.leftPercent / 100) * layout.canvasWidth +
-        position.stageLabelOffsetPixels +
-        Math.max(position.widthPixels, 54),
+        position.offsetPixels +
+        position.barWidthPixels,
     );
     const today = (layout.todayPercent / 100) * layout.canvasWidth;
+
+    expect(layout.positions.map((position) => position.labelPlacement)).toEqual(
+      ["after", "after"],
+    );
 
     expect(rightEdges[0]).toBeCloseTo(rightEdges[1]!, 5);
     expect(rightEdges[0]).toBeCloseTo(today, 5);
   });
 
-  it("calculates lanes independently for each track", () => {
+  it("puts a title beside a Period too short to hold it, never cut off", () => {
     const layout = createTimelineLayout(
-      [source(), source({ id: "event-2", trackId: "education" })],
+      [
+        source({
+          id: "ended",
+          labelWidthPixels: 64,
+          shape: "period",
+          occurredEnd: "2010-06-01T00:00:00.000Z",
+          occurredStart: "2010-01-01T00:00:00.000Z",
+        }),
+        source({
+          id: "ongoing",
+          labelWidthPixels: 40,
+          shape: "period",
+          occurredStart: "2026-04-13T00:00:00.000Z",
+          lane: "work_study",
+        }),
+        source({
+          id: "wide",
+          labelWidthPixels: 64,
+          shape: "period",
+          occurredEnd: "2020-01-01T00:00:00.000Z",
+          occurredStart: "2012-01-01T00:00:00.000Z",
+          lane: "homes",
+        }),
+      ],
+      reference,
+      "2000-05-16",
+    );
+    const [ended, ongoing, wide] = ["ended", "ongoing", "wide"].map((id) =>
+      layout.positions.find((position) => position.id === id),
+    );
+
+    expect(ended?.labelPlacement).toBe("after");
+    expect(ended?.offsetPixels).toBe(0);
+    expect(ended?.labelWidthPixels).toBe(64);
+    expect(ended?.widthPixels).toBeCloseTo(ended!.barWidthPixels + 7 + 64, 5);
+    // An ongoing bar still ends at today, with its title after the Today line.
+    expect(ongoing?.labelPlacement).toBe("after");
+    expect(ongoing?.offsetPixels).toBeLessThanOrEqual(0);
+    expect(wide?.labelPlacement).toBe("inside");
+    expect(wide?.offsetPixels).toBe(0);
+  });
+
+  it("keeps a short Period's bar visible and caps a long title beside it", () => {
+    const layout = createTimelineLayout(
+      [
+        source({
+          id: "week",
+          labelWidthPixels: 400,
+          shape: "period",
+          occurredEnd: "2010-01-08T00:00:00.000Z",
+          occurredStart: "2010-01-01T00:00:00.000Z",
+        }),
+      ],
+      reference,
+      "2000-05-16",
+    );
+
+    expect(layout.positions[0]?.barWidthPixels).toBe(10);
+    expect(layout.positions[0]?.labelWidthPixels).toBe(180);
+  });
+
+  it("puts a Moment's title before its dot only when it would pass the end", () => {
+    const layout = createTimelineLayout(
+      [
+        source({ id: "early", occurredStart: "2010-01-01T00:00:00.000Z" }),
+        source({
+          id: "late",
+          lane: "work_study",
+          occurredStart: "2026-08-01T00:00:00.000Z",
+        }),
+      ],
+      reference,
+      "2000-05-16",
+    );
+    const [early, late] = layout.positions;
+
+    expect(early?.labelPlacement).toBe("after");
+    expect(early?.offsetPixels).toBe(-6);
+    expect(late?.labelPlacement).toBe("before");
+    expect(late?.offsetPixels).toBe(-(7 + 80 + 6));
+  });
+
+  it("stacks rows independently in each lane", () => {
+    const layout = createTimelineLayout(
+      [source(), source({ id: "moment-2", lane: "work_study" })],
       reference,
     );
 
-    expect(layout.positions.map((item) => item.lane)).toEqual([0, 0]);
+    expect(layout.positions.map((item) => item.row)).toEqual([0, 0]);
   });
 });

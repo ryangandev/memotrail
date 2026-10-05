@@ -36,14 +36,6 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   const theme = explicitTheme(
     storedThemePreference(cookieStore.get(THEME_COOKIE_NAME)?.value),
   );
-  const inbox = context
-    ? await context.client
-        .from("entries")
-        .select("id", { count: "exact", head: true })
-        .eq("owner_id", context.userId)
-        .eq("inbox_status", "unreviewed")
-        .is("deleted_at", null)
-    : null;
 
   return (
     <html data-theme={theme} lang="en">
@@ -51,7 +43,6 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         <ConfirmationDialogProvider>
           <WorkspaceBoundary
             configured={configured}
-            inboxCount={inbox?.error ? undefined : (inbox?.count ?? undefined)}
             initialSidebarCollapsed={sidebarIsCollapsed(
               cookieStore.get(SIDEBAR_COOKIE_NAME)?.value,
             )}

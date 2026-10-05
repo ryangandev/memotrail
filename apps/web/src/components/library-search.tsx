@@ -32,18 +32,10 @@ export function LibrarySearch({
   browse: ReactNode;
   workspace: SearchWorkspace;
 }) {
-  const {
-    collectionOptions,
-    entries,
-    filtersError,
-    loadError,
-    request,
-    tagOptions,
-    totalCount,
-  } = workspace;
+  const { entries, filtersError, loadError, request, tagOptions, totalCount } =
+    workspace;
   const advancedFilterCount = [
     request.itemClassifications.length > 0,
-    request.collectionNames.length > 0,
     request.tagNames.length > 0,
     Boolean(request.dateFrom),
     Boolean(request.dateTo),
@@ -71,10 +63,7 @@ export function LibrarySearch({
 
           <div className={styles.searchScope}>
             <Badge size="medium">Keyword search</Badge>
-            <p>
-              Titles, notes, local dates, Collections, tags, and structured
-              details
-            </p>
+            <p>Titles, notes, local dates, tags, and structured details</p>
             {request.hasCriteria ? (
               <Link className={styles.clearSearch} href="/library">
                 Clear all
@@ -110,22 +99,6 @@ export function LibrarySearch({
                         </option>
                       ))}
                     </optgroup>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                <span>Collection</span>
-                <select
-                  defaultValue={request.collectionNames[0] ?? ""}
-                  disabled={collectionOptions.length === 0}
-                  name="collection"
-                >
-                  <option value="">All Collections</option>
-                  {collectionOptions.map((name) => (
-                    <option key={name.toLocaleLowerCase()} value={name}>
-                      {name}
-                    </option>
                   ))}
                 </select>
               </label>
@@ -256,11 +229,17 @@ function SearchResultCard({ entry }: { entry: SearchEntry }) {
       <header>
         <div className={styles.resultMeta}>
           <Badge tone="neutral">
-            {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
+            {wikiItemIdentityLabel(
+              entry.itemKind,
+              entry.itemSubtype,
+              entry.milestoneShape
+                ? {
+                    isFirstTime: entry.isFirstTime,
+                    shape: entry.milestoneShape,
+                  }
+                : null,
+            )}
           </Badge>
-          {entry.inboxStatus === "unreviewed" ? (
-            <Badge tone="warm">In Inbox</Badge>
-          ) : null}
           <time dateTime={entry.occurredAt ?? undefined}>
             {resultDateLabel(entry)}
           </time>
@@ -291,16 +270,8 @@ function SearchResultCard({ entry }: { entry: SearchEntry }) {
         </details>
       ) : null}
 
-      {entry.collectionNames.length || entry.tagNames.length ? (
+      {entry.tagNames.length ? (
         <div className={styles.organization} aria-label="Item organization">
-          {entry.collectionNames.map((name) => (
-            <Badge
-              key={`collection:${name.toLocaleLowerCase()}`}
-              tone="neutral"
-            >
-              {name}
-            </Badge>
-          ))}
           {entry.tagNames.map((name) => (
             <Badge key={`tag:${name.toLocaleLowerCase()}`} tone="neutral">
               #{name}
@@ -367,7 +338,7 @@ function resultDateLabel(entry: SearchEntry) {
   };
   return (entry.itemKind === "entity" &&
     ["home", "vehicle"].includes(entry.itemSubtype)) ||
-    entry.itemSubtype === "period"
+    entry.milestoneShape === "period"
     ? occurrenceSpanLabel(occurrence)
     : occurrenceLabel(occurrence);
 }

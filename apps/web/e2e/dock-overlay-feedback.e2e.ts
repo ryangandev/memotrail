@@ -114,10 +114,12 @@ test("expanded capture shares a glass surface and keeps its save hint inside nar
   const trigger = page.getByRole("button", { name: "New entry", exact: true });
   const dialog = page.getByRole("dialog", { name: "What’s on your mind?" });
   const save = dialog.getByRole("button", {
-    name: "Save to Inbox",
+    name: "Save to Library",
     exact: true,
   });
-  const hint = dialog.getByRole("tooltip", { name: "Save to Inbox ⌘ Return" });
+  const hint = dialog.getByRole("tooltip", {
+    name: "Save to Library ⌘ Return",
+  });
   for (const theme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme: theme });
     await page.locator("main").evaluate((element) => {

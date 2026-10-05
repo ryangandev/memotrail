@@ -25,6 +25,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
   });
   if (!created.data.user) throw new Error("Local Library fixture unavailable.");
   const ownerID = created.data.user.id;
+  const harborHome = randomUUID();
 
   try {
     const cookies: { name: string; value: string }[] = [];
@@ -69,7 +70,6 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       .insert([
         {
           body: "The quiet helped me notice what mattered.",
-          inbox_status: "organized",
           item_kind: "entry",
           item_subtype: "entry",
           owner_id: ownerID,
@@ -77,19 +77,17 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
         },
         {
           body: "A first glimpse of the Pacific.",
-          inbox_status: "organized",
           item_kind: "entry",
           item_subtype: "entry",
           owner_id: ownerID,
           title: "Ocean memory",
         },
         {
-          body: "Only saved to Inbox so far.",
-          inbox_status: "unreviewed",
+          body: "Saved straight from the capture dock.",
           item_kind: "entry",
           item_subtype: "entry",
           owner_id: ownerID,
-          title: "Inbox-only thought",
+          title: "Fresh thought",
         },
       ])
       .select("id,title");
@@ -97,11 +95,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     const reflectionID = inserted.data?.find(
       (entry) => entry.title === "Morning reflection",
     )?.id;
-    const inboxOnlyID = inserted.data?.find(
-      (entry) => entry.title === "Inbox-only thought",
-    )?.id;
     expect(reflectionID).toBeTruthy();
-    expect(inboxOnlyID).toBeTruthy();
     expect(
       (
         await client
@@ -112,12 +106,22 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     ).toBeNull();
     expect(
       (
-        await client.from("people").insert({
-          name: "Avery",
-          notes: "Met at the marina.",
+        await client.from("entries").insert({
+          id: harborHome,
+          title: "Avery Street flat",
+          body: "Lived by the marina.",
+          item_kind: "entity",
+          item_subtype: "home",
+          date_precision: "unknown",
           owner_id: ownerID,
-          relationship_label: "Friend",
         })
+      ).error,
+    ).toBeNull();
+    expect(
+      (
+        await client
+          .from("homes")
+          .insert({ entry_id: harborHome, owner_id: ownerID })
       ).error,
     ).toBeNull();
 
@@ -163,30 +167,30 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await page.getByText("Filters", { exact: true }).click();
     const showFilter = page.getByRole("combobox", { name: "Record" });
     await expect(showFilter).toHaveValue("");
-    for (const name of [
-      "People",
-      "Homes",
-      "Vehicles",
-      "First Times",
-      "Goals",
-    ]) {
+    await expect(
+      showFilter.getByRole("option", { name: "People" }),
+    ).toHaveCount(0);
+    for (const name of ["Homes", "Vehicles", "First Times", "Want to Do"]) {
       await expect(showFilter.getByRole("option", { name })).toHaveCount(1);
     }
     await expect(
       page.getByRole("combobox", { name: "Collection" }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await expect(page.getByRole("combobox", { name: "Tag" })).toBeVisible();
     await showFilter.selectOption("entity");
     await page.getByRole("button", { name: "Search", exact: true }).click();
     await expect(page).toHaveURL(/type=entity/);
     await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
-    await page.goto("/library");
+    for (const path of ["/people", `/people/${randomUUID()}`]) {
+      await page.goto(path);
+      await expect(page).toHaveURL(/\/library$/);
+    }
+    await expect(
+      page.getByRole("navigation").getByRole("link", { name: "People" }),
+    ).toHaveCount(0);
     await expect(
       page.getByText("More views and tools", { exact: true }),
     ).toHaveCount(0);
-    await expect(
-      page.getByRole("link", { name: "Version history", exact: true }),
-    ).toHaveAttribute("href", "/history");
     const reflectionLink = page.getByRole("link", {
       name: /Entry.*Morning reflection/,
     });
@@ -195,33 +199,25 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       "href",
       `/items/${reflectionID}`,
     );
+    // A capture belongs to the Library as soon as it is saved.
     await expect(
-      page.getByRole("link", { name: /Entry.*Inbox-only thought/ }),
-    ).toHaveCount(0);
-    await expect(
-      page.getByRole("link", { name: /Entity.*Person.*Avery/ }),
+      page.getByRole("link", { name: /Entry.*Fresh thought/ }),
     ).toBeVisible();
     await expect(
-      page.getByRole("main").getByText("3 items", { exact: true }),
-    ).toBeVisible();
-
-    await page.goto("/library?q=Inbox-only");
-    await expect(
-      page.getByRole("main").getByText("1 item", { exact: true }),
-    ).toBeVisible();
-    await expect(page.getByText("In Inbox", { exact: true })).toBeVisible();
-    await page.goto(`/inbox?entry=${inboxOnlyID}`);
-    const inboxReview = page.getByRole("dialog", { name: "Review Entry" });
-    await expect(inboxReview).toBeVisible();
-    await inboxReview.getByRole("button", { name: "Save to Library" }).click();
-    await expect(inboxReview).toHaveCount(0);
-    await page.goto("/library");
-    await expect(
-      page.getByRole("link", { name: /Entry.*Inbox-only thought/ }),
+      page.getByRole("link", { name: /Entity.*Home.*Avery Street flat/ }),
     ).toBeVisible();
     await expect(
       page.getByRole("main").getByText("4 items", { exact: true }),
     ).toBeVisible();
+
+    await page.goto("/library?q=Fresh");
+    await expect(
+      page.getByRole("main").getByText("1 item", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Fresh thought", exact: true }),
+    ).toBeVisible();
+    await page.goto("/library");
 
     await reflectionLink.click();
     await expect(page).toHaveURL(`/items/${reflectionID}`);
@@ -232,8 +228,8 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       page.getByRole("article", { name: "Current item" }),
     ).toContainText("The calm helped me notice what mattered.");
     await expect(
-      page.getByRole("link", { name: "View version history (1)" }),
-    ).toBeVisible();
+      page.getByRole("link", { name: /version history/i }),
+    ).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: "Move to Trash" }),
     ).toBeVisible();
@@ -243,16 +239,12 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       path: "/private/tmp/memotrail-wiki-item-detail-desktop.png",
     });
 
-    await page.getByRole("link", { name: "View version history (1)" }).click();
-    await expect(page).toHaveURL(`/history?entry=${reflectionID}`);
+    // Old version history links open the Item page.
+    await page.goto(`/history?entry=${reflectionID}`);
+    await expect(page).toHaveURL(new RegExp(`/items/${reflectionID}`));
     await expect(
-      page.getByRole("heading", { name: "Version history", exact: true }),
+      page.getByRole("heading", { name: "Morning reflection", exact: true }),
     ).toBeVisible();
-    await expect(
-      page.getByRole("region", { name: "Earlier version" }),
-    ).toContainText("The quiet helped me notice what mattered.");
-
-    await page.goto(`/items/${reflectionID}`);
     await page.getByRole("button", { name: "Move to Trash" }).click();
     await page
       .getByRole("dialog", {
@@ -284,7 +276,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await filters.getByRole("button", { name: "Search", exact: true }).click();
     await expect(page).toHaveURL(/type=entity/);
     await expect(
-      page.getByRole("link", { name: "Avery", exact: true }),
+      page.getByRole("link", { name: "Avery Street flat", exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: /Writing Reflection Morning reflection/ }),
@@ -294,7 +286,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await filters.locator('input[name="q"]').fill("marina");
     await filters.getByRole("button", { name: "Search", exact: true }).click();
     await expect(
-      page.getByRole("link", { name: "Avery", exact: true }),
+      page.getByRole("link", { name: "Avery Street flat", exact: true }),
     ).toBeVisible();
     await page.waitForLoadState("networkidle");
     await filters.locator('input[name="q"]').press("Tab");
@@ -319,7 +311,6 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
 
     const pageRows = Array.from({ length: 13 }, (_, index) => ({
       body: `A saved page item ${index + 1}.`,
-      inbox_status: "organized" as const,
       item_kind: "entry" as const,
       item_subtype: "entry",
       owner_id: ownerID,

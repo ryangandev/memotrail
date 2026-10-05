@@ -1,24 +1,18 @@
-import type { TimelineEntry } from "@/lib/data/timeline";
+import Link from "next/link";
 import type {
   TimelineDisplayItem,
   TimelineDisplayModel,
 } from "@/lib/data/timeline-presentation";
 import { timelineEntryTypeLabel } from "@/lib/data/timeline-presentation";
+import { wikiEntryHref } from "@/lib/data/wiki-item";
 import styles from "./vertical-spine.module.css";
 
-function SpineCard({
-  item,
-  onSelect,
-}: {
-  item: TimelineDisplayItem;
-  onSelect: (entry: TimelineEntry) => void;
-}) {
+function SpineCard({ item }: { item: TimelineDisplayItem }) {
   return (
-    <button
-      aria-label={`${item.entry.title}, ${item.dateLabel}, ${item.trackName}`}
-      className={`${styles.card} ${item.entry.kind === "stage" ? styles.period : ""}`}
-      onClick={() => onSelect(item.entry)}
-      type="button"
+    <Link
+      aria-label={`${item.entry.title}, ${item.dateLabel}, ${item.laneName}`}
+      className={`${styles.card} ${item.entry.shape === "period" ? styles.period : ""}`}
+      href={wikiEntryHref(item.entry)}
     >
       <span className={styles.date}>{item.dateLabel}</span>
       <strong>{item.entry.title}</strong>
@@ -26,22 +20,20 @@ function SpineCard({
         <span className={styles.body}>{item.entry.body}</span>
       ) : null}
       <span className={styles.cardFooter}>
-        <span>{item.trackName}</span>
+        <span>{item.laneName}</span>
         <span>{timelineEntryTypeLabel(item.entry)}</span>
       </span>
-    </button>
+    </Link>
   );
 }
 
 export function VerticalSpine({
   birthDate,
   model,
-  onSelect,
   referenceDate,
 }: {
   birthDate: string | null;
   model: TimelineDisplayModel;
-  onSelect: (entry: TimelineEntry) => void;
   referenceDate: string;
 }) {
   const now = Date.parse(referenceDate);
@@ -70,7 +62,7 @@ export function VerticalSpine({
               className={`${styles.row} ${index % 2 ? styles.left : styles.right}`}
             >
               <span className={styles.node} aria-hidden="true" />
-              <SpineCard item={item} onSelect={onSelect} />
+              <SpineCard item={item} />
             </div>
           </div>
         ))}
@@ -87,7 +79,7 @@ export function VerticalSpine({
           <p>These memories keep the date descriptions you recorded.</p>
           <div className={styles.undatedList}>
             {model.undated.map((item) => (
-              <SpineCard item={item} key={item.entry.id} onSelect={onSelect} />
+              <SpineCard item={item} key={item.entry.id} />
             ))}
           </div>
         </section>

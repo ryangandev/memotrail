@@ -13,7 +13,7 @@ import { SeparatedList } from "@/components/separated-list";
 import { Button } from "@/components/button";
 import { Badge } from "@/components/badge";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   markGoalAchieved,
@@ -31,28 +31,23 @@ import { EntryOrganizationEditor } from "@/components/entry-organization-editor"
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
 import {
-  firstTimePhotoLimit,
-  firstTimePhotoSizeLimit,
-  inferFirstTimeImageMimeType,
-} from "@/lib/data/first-time-input";
+  entryPhotoLimit,
+  entryPhotoSizeLimit,
+  inferEntryImageMimeType,
+} from "@/lib/data/entry-photo-input";
 import {
-  goalHorizonLabels,
   goalStatusLabels,
   goalTargetLabel,
-  isBucketListGoal,
   type GoalAttachment,
-  type GoalLinkOption,
   type GoalRecord,
 } from "@/lib/data/goal-record";
 import {
   goalBodyLimit,
-  goalHorizons,
   goalStatuses,
   goalTitleLimit,
   parseGoalAchievementInput,
   parseGoalEntryInput,
   type GoalEntryInput,
-  type GoalHorizon,
   type GoalStatus,
 } from "@/lib/data/goal-record-input";
 import { OccurrenceEditor } from "@/components/occurrence-editor";
@@ -64,106 +59,81 @@ import {
   uploadEntryPhotos,
   type PhotoUploadProgress as PhotoUploadProgressValue,
 } from "@/lib/media/upload";
-import {
-  pendingCaptureReference,
-  type CaptureExtractionSource,
-} from "@/lib/data/capture-extraction-input";
-import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 import { countLabel } from "@/lib/count-label";
 
 const goalSections: Array<{
   detail: string;
-  statuses: GoalStatus[];
+  status: GoalStatus;
   title: string;
 }> = [
   {
-    detail: "Intentions you are actively carrying",
-    statuses: ["active"],
-    title: "In motion",
+    detail: "Things you still want to do",
+    status: "active",
+    title: "Want to do",
   },
   {
-    detail: "Possibilities worth keeping near",
-    statuses: ["considering"],
-    title: "Considering",
+    detail: "Things you did",
+    status: "achieved",
+    title: "Done",
   },
   {
-    detail: "Ideas resting without pressure",
-    statuses: ["paused"],
-    title: "Paused",
-  },
-  {
-    detail: "What was achieved or consciously released",
-    statuses: ["achieved", "let_go"],
-    title: "Closed chapters",
+    detail: "Things you chose to set down",
+    status: "let_go",
+    title: "Let go",
   },
 ];
 
 export function GoalsWorkspace({
-  collectionOptions,
   goals,
-  initialGoalId,
-  linkOptions,
   loadError,
   ownerId,
-  sourceCapture,
   tagOptions,
 }: {
-  collectionOptions: string[];
   goals: GoalRecord[];
-  initialGoalId: string | null;
-  linkOptions: GoalLinkOption[];
   loadError: string | null;
   ownerId: string;
-  sourceCapture: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
   const router = useRouter();
-  // Creating the Goal organizes the Capture, so the revalidated page no longer
-  // returns it. The open editor keeps the handoff it started with.
-  const [captureHandoff, setCaptureHandoff] = useState(sourceCapture);
   const [selectedGoal, setSelectedGoal] = useState<
     GoalRecord | null | undefined
-  >(sourceCapture ? null : goals.find((goal) => goal.id === initialGoalId));
-  const openCount = goals.filter(
-    (goal) => !["achieved", "let_go"].includes(goal.status),
-  ).length;
-  const bucketCount = goals.filter(isBucketListGoal).length;
+  >();
+  const openCount = goals.filter((goal) => goal.status === "active").length;
 
   return (
     <FocusedViewLayout
       actions={
         <Button
           variant="primary"
-          aria-label="Add Goal"
+          aria-label="Add to Want to Do"
           onClick={() => setSelectedGoal(null)}
           type="button"
         >
           <Icon name="plus" />
-          <span>Add Goal</span>
+          <span>Add</span>
         </Button>
       }
       description={
         <>
-          Keep near-term plans, distant hopes, and someday ideas together as
-          part of your personal archive.
+          Keep the things you want to do, with or without a date. When you do
+          one, it can become a First Time.
         </>
       }
-      eyebrow={<>Intentions without pressure</>}
+      eyebrow={<>Someday, or soon</>}
       summary={
         <SeparatedList>
-          <span>{countLabel(goals.length, "goal")}</span>
-          <span>{openCount} open</span>
-          <span>{bucketCount} in Bucket List</span>
+          <span>{countLabel(goals.length, "item")}</span>
+          <span>{openCount} to do</span>
         </SeparatedList>
       }
-      summaryLabel="Goals summary"
-      title={<>Goals</>}
+      summaryLabel="Want to Do summary"
+      title={<>Want to Do</>}
     >
       {loadError ? (
         <div className={common.message} role="alert">
           <Icon name="sparkle" size={22} />
           <div>
-            <strong>Goals unavailable</strong>
+            <strong>Want to Do unavailable</strong>
             <p>{loadError}</p>
           </div>
         </div>
@@ -171,17 +141,14 @@ export function GoalsWorkspace({
 
       {!loadError && goals.length === 0 ? (
         <EmptyState
-          title={<>Keep one possibility close</>}
+          title={<>Keep one thing you want to do</>}
           icon={
             <>
               <Icon name="sparkle" size={24} />
             </>
           }
           description={
-            <>
-              Give it a name now. Its horizon, context, and meaning can evolve
-              with you.
-            </>
+            <>Give it a name now. Add a date or notes only if you want them.</>
           }
           onClick={() => setSelectedGoal(null)}
         />
@@ -189,8 +156,8 @@ export function GoalsWorkspace({
 
       {!loadError
         ? goalSections.map((section) => {
-            const sectionGoals = goals.filter((goal) =>
-              section.statuses.includes(goal.status),
+            const sectionGoals = goals.filter(
+              (goal) => goal.status === section.status,
             );
             return sectionGoals.length > 0 ? (
               <GoalSection
@@ -206,18 +173,10 @@ export function GoalsWorkspace({
 
       {selectedGoal !== undefined ? (
         <GoalEditor
-          collectionOptions={collectionOptions}
           goal={selectedGoal}
-          key={selectedGoal?.id ?? captureHandoff?.id ?? "new-goal"}
-          linkOptions={linkOptions}
-          onClose={() => {
-            setSelectedGoal(undefined);
-            setCaptureHandoff(null);
-            if (initialGoalId || captureHandoff)
-              router.replace("/goals", { scroll: false });
-          }}
+          key={selectedGoal?.id ?? "new-goal"}
+          onClose={() => setSelectedGoal(undefined)}
           ownerId={ownerId}
-          sourceCapture={selectedGoal === null ? captureHandoff : null}
           tagOptions={tagOptions}
         />
       ) : null}
@@ -259,9 +218,6 @@ function GoalCard({
   onSelect: () => void;
 }) {
   const cover = goal.attachments[0];
-  const relatedCount = goal.relatedEntries.filter(
-    (entry) => entry.relationship === "related",
-  ).length;
   const hasAchievement = goal.relatedEntries.some(
     (entry) => entry.relationship === "achievement",
   );
@@ -287,52 +243,18 @@ function GoalCard({
         </RecordCardVisual>
       ) : null}
       <RecordCardBody className={styles.goalCardBody}>
-        <div className={styles.goalMeta}>
-          <Badge
-            size="micro"
-            tone={
-              goal.status === "active" || goal.status === "achieved"
-                ? "accent"
-                : "neutral"
-            }
-            uppercase
-          >
-            {goalStatusLabels[goal.status]}
-          </Badge>
-          <Badge size="micro" tone="neutral" uppercase>
-            {goalHorizonLabels[goal.horizon]}
-          </Badge>
-        </div>
         <h3>{goal.title}</h3>
-        <p className={styles.target}>{goalTargetLabel(goal)}</p>
+        {goal.targetDate ? (
+          <p className={styles.target}>{goalTargetLabel(goal)}</p>
+        ) : null}
         {goal.body ? (
           <p className={styles.reflection}>{truncate(goal.body, 180)}</p>
         ) : null}
         <div className={styles.contextLine}>
-          {isBucketListGoal(goal) ? (
-            <span>
-              <Icon name="star" size={13} /> Bucket List
-            </span>
-          ) : null}
-          {relatedCount > 0 ? (
-            <span>{countLabel(relatedCount, "related Item")}</span>
-          ) : null}
           {hasAchievement ? <span>First Time linked</span> : null}
         </div>
         <footer>
           <div>
-            {goal.collectionNames
-              .filter((name) => name.toLocaleLowerCase() !== "bucket list")
-              .slice(0, 2)
-              .map((name) => (
-                <Badge
-                  key={`collection:${name.toLocaleLowerCase()}`}
-                  size="micro"
-                  tone="neutral"
-                >
-                  {name}
-                </Badge>
-              ))}
             {goal.tagNames.slice(0, 2).map((name) => (
               <Badge
                 key={`tag:${name.toLocaleLowerCase()}`}
@@ -351,103 +273,52 @@ function GoalCard({
 }
 
 export function GoalEditor({
-  collectionOptions,
   goal,
-  linkOptions,
   onClose,
   onTrashed,
   ownerId,
   presentation = "dialog",
-  sourceCapture = null,
   tagOptions,
 }: {
-  collectionOptions: string[];
   goal: GoalRecord | null;
-  linkOptions: GoalLinkOption[];
   onClose: () => void;
   onTrashed?: () => void;
   ownerId: string;
   presentation?: "dialog" | "page";
-  sourceCapture?: CaptureExtractionSource | null;
   tagOptions: string[];
 }) {
   const router = useRouter();
   const requestConfirmation = useConfirmationDialog();
   const titleRef = useRef<HTMLInputElement>(null);
-  const [body, setBody] = useState(goal?.body ?? sourceCapture?.body ?? "");
-  const [collectionInput, setCollectionInput] = useState("");
-  const [collectionNames, setCollectionNames] = useState(
-    goal?.collectionNames ?? sourceCapture?.collectionNames ?? [],
-  );
+  const [body, setBody] = useState(goal?.body ?? "");
   const [currentId, setCurrentId] = useState(goal?.id ?? null);
   const [currentRevision, setCurrentRevision] = useState(
     goal?.revision ?? null,
   );
   const [existingPhotos, setExistingPhotos] = useState(goal?.attachments ?? []);
-  const [horizon, setHorizon] = useState<GoalHorizon>(
-    goal?.horizon ?? "short_term",
-  );
   const [isPending, setIsPending] = useState(false);
   const [photoUploadProgress, setPhotoUploadProgress] =
     useState<PhotoUploadProgressValue | null>(null);
   const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
-  const [relatedEntryIds, setRelatedEntryIds] = useState(
-    goal?.relatedEntries
-      .filter((entry) => entry.relationship === "related")
-      .map((entry) => entry.id) ?? [],
-  );
-  const [relatedSelection, setRelatedSelection] = useState("");
   const [result, setResult] = useState<GoalActionResult | null>(null);
-  const [status, setStatus] = useState<GoalStatus>(
-    goal?.status ?? "considering",
-  );
+  const [status, setStatus] = useState<GoalStatus>(goal?.status ?? "active");
   const [tagInput, setTagInput] = useState("");
-  const [tagNames, setTagNames] = useState(
-    goal?.tagNames ?? sourceCapture?.tagNames ?? [],
-  );
+  const [tagNames, setTagNames] = useState(goal?.tagNames ?? []);
   const [targetDate, setTargetDate] = useState(goal?.targetDate ?? "");
-  const [title, setTitle] = useState(goal?.title ?? sourceCapture?.title ?? "");
-  const captureReference = pendingCaptureReference(sourceCapture, currentId);
+  const [title, setTitle] = useState(goal?.title ?? "");
 
   useEffect(() => {
     titleRef.current?.focus();
   }, []);
 
-  const selectableEntries = useMemo(
-    () =>
-      linkOptions.filter(
-        (entry) =>
-          entry.id !== currentId && !relatedEntryIds.includes(entry.id),
-      ),
-    [currentId, linkOptions, relatedEntryIds],
-  );
-  const selectedEntries = relatedEntryIds.map((id) => {
-    const option = linkOptions.find((entry) => entry.id === id);
-    const existing = goal?.relatedEntries.find((entry) => entry.id === id);
-    return {
-      id,
-      title: option?.title ?? existing?.title ?? "Related Item",
-    };
-  });
-  const savedBucketListGoal = Boolean(
-    goal && isBucketListGoal(goal) && status !== "achieved",
-  );
+  const canRecordAchievement = Boolean(goal && status !== "achieved");
   const hasUnsavedChanges = Boolean(
     goal &&
     (title !== goal.title ||
       body !== goal.body ||
-      horizon !== goal.horizon ||
       status !== goal.status ||
       (targetDate || null) !== goal.targetDate ||
-      !sameNames(collectionNames, goal.collectionNames) ||
       !sameNames(tagNames, goal.tagNames) ||
-      !sameNames(
-        relatedEntryIds,
-        goal.relatedEntries
-          .filter((entry) => entry.relationship === "related")
-          .map((entry) => entry.id),
-      ) ||
-      Boolean(collectionInput.trim()) ||
       Boolean(tagInput.trim()) ||
       pendingPhotos.length > 0),
   );
@@ -455,21 +326,21 @@ export function GoalEditor({
   function handlePhotoSelection(selected: File[]) {
     const available = Math.max(
       0,
-      firstTimePhotoLimit - existingPhotos.length - pendingPhotos.length,
+      entryPhotoLimit - existingPhotos.length - pendingPhotos.length,
     );
     const accepted: File[] = [];
     let errorMessage = "";
     for (const file of selected.slice(0, available)) {
-      if (!inferFirstTimeImageMimeType(file.name, file.type)) {
+      if (!inferEntryImageMimeType(file.name, file.type)) {
         errorMessage = "Use JPEG, PNG, WebP, HEIC, or HEIF photos.";
-      } else if (file.size < 1 || file.size > firstTimePhotoSizeLimit) {
+      } else if (file.size < 1 || file.size > entryPhotoSizeLimit) {
         errorMessage = "Each photo must be no larger than 50 MB.";
       } else {
         accepted.push(file);
       }
     }
     if (selected.length > available) {
-      errorMessage = `Keep up to ${firstTimePhotoLimit} photos on a Goal.`;
+      errorMessage = `Keep up to ${entryPhotoLimit} photos on each item.`;
     }
     setPendingPhotos((current) => [...current, ...accepted]);
     setResult(errorMessage ? actionError(errorMessage) : null);
@@ -479,10 +350,7 @@ export function GoalEditor({
     event.preventDefault();
     const input: GoalEntryInput = {
       body,
-      collectionNames: namesIncludingDraft(collectionNames, collectionInput),
-      horizon,
       id: currentId,
-      relatedEntryIds,
       revision: currentRevision,
       status,
       tagNames: namesIncludingDraft(tagNames, tagInput),
@@ -498,7 +366,7 @@ export function GoalEditor({
     setIsPending(true);
     setResult(null);
     try {
-      const saved = await saveGoalEntry(parsed.data, captureReference);
+      const saved = await saveGoalEntry(parsed.data);
       if (
         (saved.status !== "created" && saved.status !== "saved") ||
         !saved.entry
@@ -518,7 +386,7 @@ export function GoalEditor({
         setPendingPhotos(failedPhotos);
         setResult(
           actionError(
-            `The Goal was saved, but ${countLabel(failedPhotos.length, "photo")} could not be attached. Select Save again to retry.`,
+            `Saved, but ${countLabel(failedPhotos.length, "photo")} could not be attached. Select Save again to retry.`,
           ),
         );
         router.refresh();
@@ -526,7 +394,7 @@ export function GoalEditor({
       }
       router.refresh();
       notify.success(
-        saved.status === "created" ? "Goal created." : "Goal saved.",
+        saved.status === "created" ? "Added to Want to Do." : "Changes saved.",
       );
       onClose();
     } catch {
@@ -575,8 +443,8 @@ export function GoalEditor({
   async function handleTrashEntry() {
     if (!currentId || currentRevision === null) return;
     const confirmed = await requestConfirmation({
-      title: <>Move “{title.trim() || "this Goal"}” to Trash?</>,
-      description: <>Its history and private photos will be preserved.</>,
+      title: <>Move “{title.trim() || "this item"}” to Trash?</>,
+      description: <>It and its private photos can be restored from Trash.</>,
       confirmLabel: "Move to Trash",
       eyebrow: <>Recoverable action</>,
       variant: "danger",
@@ -593,12 +461,12 @@ export function GoalEditor({
         onTrashed?.();
         router.refresh();
         onClose();
-        notify.info("Goal moved to Trash.");
+        notify.info("Moved to Trash.");
       } else {
         setResult(nextResult);
       }
     } catch {
-      setResult(actionError("MemoTrail could not move this Goal to Trash."));
+      setResult(actionError("MemoTrail could not move this item to Trash."));
     } finally {
       setIsPending(false);
     }
@@ -609,17 +477,11 @@ export function GoalEditor({
       onClose={onClose}
       presentation={presentation}
       title={
-        <>
-          {currentId
-            ? title || "Goal"
-            : sourceCapture
-              ? "Create a Goal from this Capture"
-              : "Keep an intention close"}
-        </>
+        <>{currentId ? title || "Want to Do" : "What do you want to do?"}</>
       }
       titleId="goal-editor-title"
-      eyebrow={<>{currentId ? "Edit Goal" : "New Goal"}</>}
-      closeLabel="Close Goal editor"
+      eyebrow={<>{currentId ? "Edit Want to Do" : "Want to Do"}</>}
+      closeLabel="Close Want to Do editor"
       busy={isPending}
       footer={
         <div className={common.dialogFooter}>
@@ -654,29 +516,16 @@ export function GoalEditor({
                 ? "Saving..."
                 : currentId
                   ? "Save changes"
-                  : "Add Goal"}
+                  : "Add to Want to Do"}
             </Button>
           </div>
         </div>
       }
     >
-      {" "}
       <form id="goals-workspace-form" onSubmit={handleSubmit}>
         <div className={common.formGrid}>
-          {captureReference ? (
-            <div className={common.extractionNotice}>
-              <Icon name="inbox" size={18} />
-              <div>
-                <strong>Starting from an Inbox Capture</strong>
-                <p>
-                  Saving creates a separate Goal and links it to the preserved
-                  source Capture.
-                </p>
-              </div>
-            </div>
-          ) : null}
           <fieldset className={common.formSection}>
-            <legend>The intention</legend>
+            <legend>What you want to do</legend>
             <label className={common.fullField}>
               <span>
                 Title <span aria-hidden="true">*</span>
@@ -691,36 +540,23 @@ export function GoalEditor({
                 value={title}
               />
             </label>
-            <label>
-              <span>Horizon</span>
-              <select
-                onChange={(event) =>
-                  setHorizon(event.target.value as GoalHorizon)
-                }
-                value={horizon}
-              >
-                {goalHorizons.map((value) => (
-                  <option key={value} value={value}>
-                    {goalHorizonLabels[value]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Reflective state</span>
-              <select
-                onChange={(event) =>
-                  setStatus(event.target.value as GoalStatus)
-                }
-                value={status}
-              >
-                {goalStatuses.map((value) => (
-                  <option key={value} value={value}>
-                    {goalStatusLabels[value]}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {currentId ? (
+              <label>
+                <span>Status</span>
+                <select
+                  onChange={(event) =>
+                    setStatus(event.target.value as GoalStatus)
+                  }
+                  value={status}
+                >
+                  {goalStatuses.map((value) => (
+                    <option key={value} value={value}>
+                      {goalStatusLabels[value]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             <DatePickerField
               disabled={isPending}
               label="Target date"
@@ -728,32 +564,18 @@ export function GoalEditor({
               value={targetDate}
             />
             <label className={common.fullField}>
-              <span>Reflection</span>
+              <span>Notes</span>
               <textarea
                 maxLength={goalBodyLimit}
                 onChange={(event) => setBody(event.target.value)}
-                placeholder="Why does this matter? What would you like to remember about wanting it?"
+                placeholder="Why it matters, or anything you want to remember about it."
                 rows={6}
                 value={body}
               />
             </label>
-          </fieldset>
-
-          <fieldset className={common.formSection}>
-            <legend>Organization</legend>
-            <EntryOrganizationEditor
-              disabled={isPending}
-              input={collectionInput}
-              kind="collection"
-              names={collectionNames}
-              onChange={setCollectionNames}
-              onInputChange={setCollectionInput}
-              options={collectionOptions}
-            />
             <EntryOrganizationEditor
               disabled={isPending}
               input={tagInput}
-              kind="tag"
               names={tagNames}
               onChange={setTagNames}
               onInputChange={setTagInput}
@@ -761,74 +583,10 @@ export function GoalEditor({
             />
           </fieldset>
 
-          <fieldset
-            className={`${common.formSection} ${styles.relatedSection}`}
-          >
-            <legend>Related Items</legend>
-            <p>
-              Link memories, ideas, or learning that give this Goal context.
-            </p>
-            {selectedEntries.length > 0 ? (
-              <div className={styles.relatedChips}>
-                {selectedEntries.map((entry) => (
-                  <Button
-                    variant="secondary"
-                    aria-label={`Remove related Item ${entry.title}`}
-                    disabled={isPending}
-                    key={entry.id}
-                    onClick={() =>
-                      setRelatedEntryIds((current) =>
-                        current.filter((id) => id !== entry.id),
-                      )
-                    }
-                    type="button"
-                  >
-                    {entry.title}
-                    <span aria-hidden="true">×</span>
-                  </Button>
-                ))}
-              </div>
-            ) : null}
-            <div className={styles.relatedPicker}>
-              <select
-                aria-label="Choose a related Item"
-                disabled={isPending || selectableEntries.length === 0}
-                onChange={(event) => setRelatedSelection(event.target.value)}
-                value={relatedSelection}
-              >
-                <option value="">
-                  {selectableEntries.length > 0
-                    ? "Choose an Item"
-                    : "No more Items available"}
-                </option>
-                {selectableEntries.map((entry) => (
-                  <option key={entry.id} value={entry.id}>
-                    {entry.title} ·{" "}
-                    {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
-                  </option>
-                ))}
-              </select>
-              <Button
-                variant="secondary"
-                disabled={!relatedSelection || isPending}
-                onClick={() => {
-                  setRelatedEntryIds((current) => [
-                    ...current,
-                    relatedSelection,
-                  ]);
-                  setRelatedSelection("");
-                }}
-                type="button"
-              >
-                Add link
-              </Button>
-            </div>
-          </fieldset>
-
           <EntryPhotoField
             disabled={isPending}
             existingPhotos={existingPhotos}
-            limit={firstTimePhotoLimit}
+            limit={entryPhotoLimit}
             onRemoveExisting={(photo) => void handleRemovePhoto(photo)}
             onRemovePending={(index) =>
               setPendingPhotos((current) =>
@@ -838,10 +596,10 @@ export function GoalEditor({
             onSelect={handlePhotoSelection}
             pendingPhotos={pendingPhotos}
             progress={photoUploadProgress}
-            recordLabel="Goal"
+            recordLabel="Want to Do"
           />
 
-          {savedBucketListGoal && currentId && currentRevision !== null ? (
+          {canRecordAchievement && currentId && currentRevision !== null ? (
             <AchievementPanel
               disabled={isPending}
               goalId={currentId}
@@ -932,16 +690,16 @@ function AchievementPanel({
 
   return (
     <fieldset className={`${common.formSection} ${styles.achievementPanel}`}>
-      <legend>Bucket List milestone</legend>
+      <legend>Done it?</legend>
       <div className={styles.achievementIntro}>
         <span>
           <Icon name="star" size={18} />
         </span>
         <div>
-          <strong>Turn this achievement into a First Time</strong>
+          <strong>Mark it done and keep it as a First Time</strong>
           <p>
-            MemoTrail will mark the Goal Achieved and create a linked First Time
-            with the same title. Your private reflection stays here.
+            MemoTrail marks this Done and adds a linked First Time with the same
+            title. Your notes stay here.
           </p>
         </div>
       </div>
@@ -957,7 +715,7 @@ function AchievementPanel({
       ) : null}
       {unsavedChanges ? (
         <p className={styles.achievementNote}>
-          Save your other Goal changes before recording this milestone.
+          Save your other changes before marking this done.
         </p>
       ) : null}
       <Button
@@ -968,7 +726,7 @@ function AchievementPanel({
         type="button"
       >
         <Icon name="check" size={16} />
-        Mark achieved and create First Time
+        Mark done and add First Time
       </Button>
     </fieldset>
   );

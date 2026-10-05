@@ -1,7 +1,6 @@
-import { parseOrganizationNames } from "../data/inbox-review";
+import { parseTagNames } from "../data/inbox-review";
 export type EntryAISuggestions = {
   title: string | null;
-  collections: string[];
   tags: string[];
   dateText: string | null;
   rationale: string;
@@ -23,10 +22,8 @@ export function parseEntryAISuggestions(
 ): EntryAISuggestions | null {
   if (!raw || typeof raw !== "object") return null;
   const v = raw as Record<string, unknown>;
-  const collections = parseOrganizationNames(v.collections, 5, 80),
-    tags = parseOrganizationNames(v.tags, 10, 60);
+  const tags = parseTagNames(v.tags, 10);
   if (
-    !collections ||
     !tags ||
     (v.title !== null &&
       (typeof v.title !== "string" ||
@@ -44,7 +41,6 @@ export function parseEntryAISuggestions(
     return null;
   return {
     title: v.title === null ? null : (v.title as string).trim(),
-    collections,
     tags,
     dateText: v.dateText as string | null,
     rationale: v.rationale,

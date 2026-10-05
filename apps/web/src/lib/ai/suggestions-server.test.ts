@@ -41,11 +41,10 @@ const settings = {
 };
 const preferences = vi.fn();
 const entry = vi.fn();
-const collections = vi.fn();
+const tags = vi.fn();
 const entryRow = { id: "entry", title: "Visual note", body: "", revision: 1 };
 const proposal = {
   title: "Archery",
-  collections: [],
   tags: ["archery"],
   dateText: null,
   rationale: "Visible subject",
@@ -61,7 +60,8 @@ const client = {
       select: () => query,
       eq: () => query,
       is: () => query,
-      limit: collections,
+      order: () => query,
+      limit: tags,
       maybeSingle: name === "ai_preferences" ? preferences : entry,
     };
     return query;
@@ -71,7 +71,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   preferences.mockResolvedValue({ data: { ...settings }, error: null });
   entry.mockResolvedValue({ data: entryRow, error: null });
-  collections.mockResolvedValue({ data: [], error: null });
+  tags.mockResolvedValue({ data: [], error: null });
   mocks.rpc.mockResolvedValue({
     data: {
       claimed: true,

@@ -2,8 +2,8 @@
 import { Button } from "@/components/button";
 import { useState } from "react";
 import { ProgressiveImage } from "@/components/progressive-image";
-import type { PhotoPlaceDraft } from "@/lib/media/photo-place";
-import { PhotoPlaceEditor } from "./photo-place-draft";
+import type { PhotoLocationDraft } from "@/lib/media/photo-location";
+import { PhotoLocationEditor } from "./photo-location-draft";
 import type {
   EntryPhoto,
   PhotoMetadataResponse,
@@ -14,14 +14,14 @@ export function EntryPhotoDates({
   entryId,
   disabled,
   onUseDate,
-  place,
-  onPlaceChange,
+  photoLocation,
+  onPhotoLocationChange,
 }: {
   entryId: string;
   disabled: boolean;
   onUseDate: (date: string) => void;
-  place: PhotoPlaceDraft | null;
-  onPlaceChange: (value: PhotoPlaceDraft | null) => void;
+  photoLocation: PhotoLocationDraft | null;
+  onPhotoLocationChange: (value: PhotoLocationDraft | null) => void;
 }) {
   const [photos, setPhotos] = useState<EntryPhoto[] | null>(null);
   const [metadata, setMetadata] = useState<
@@ -140,14 +140,11 @@ export function EntryPhotoDates({
                         disabled={
                           disabled ||
                           busy ||
-                          (place?.attachmentId === photo.id &&
-                            place.kind === "new")
+                          photoLocation?.attachmentId === photo.id
                         }
                         onClick={() =>
-                          onPlaceChange({
-                            kind: "new",
+                          onPhotoLocationChange({
                             attachmentId: photo.id,
-                            name: "Photo GPS location",
                             latitude: info.latitude!,
                             longitude: info.longitude!,
                           })
@@ -164,11 +161,11 @@ export function EntryPhotoDates({
         );
       })}
       {error ? <p role="alert">{error}</p> : null}
-      {place ? (
-        <PhotoPlaceEditor
-          key={`${place.attachmentId}:${place.kind}`}
-          value={place}
-          onChange={onPlaceChange}
+      {photoLocation ? (
+        <PhotoLocationEditor
+          key={photoLocation.attachmentId}
+          value={photoLocation}
+          onChange={onPhotoLocationChange}
           disabled={disabled || busy}
         />
       ) : null}

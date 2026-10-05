@@ -27,11 +27,14 @@ test("capture saves with Command Return while Enter still writes another line", 
   });
   await expect(editor).toContainText("A continuation.");
   await expect(
-    page.getByRole("button", { name: "Save to Inbox", exact: true }),
+    page.getByRole("button", { name: "Save to Library", exact: true }),
   ).toHaveAttribute("aria-keyshortcuts", "Meta+Enter Control+Enter");
-  const save = page.getByRole("button", { name: "Save to Inbox", exact: true });
+  const save = page.getByRole("button", {
+    name: "Save to Library",
+    exact: true,
+  });
   const saveHint = page.getByRole("tooltip", {
-    name: "Save to Inbox ⌘ Return",
+    name: "Save to Library ⌘ Return",
   });
   await save.hover();
   await expect(saveHint).toBeVisible();
@@ -46,7 +49,7 @@ test("capture saves with Command Return while Enter still writes another line", 
     .poll(async () => {
       const saved = await workspace.client
         .from("entries")
-        .select("body,inbox_status")
+        .select("body")
         .eq("owner_id", workspace.owner);
       expect(saved.error).toBeNull();
       return saved.data;
@@ -56,7 +59,6 @@ test("capture saves with Command Return while Enter still writes another line", 
         body: expect.stringMatching(
           /First line\.\s+Second line\.\s+A continuation\./,
         ),
-        inbox_status: "unreviewed",
       }),
     ]);
   await expect(editor).toBeEmpty();
@@ -68,10 +70,10 @@ test("capture saves with Command Return while Enter still writes another line", 
     exact: true,
   });
   await dialog
-    .getByRole("button", { name: "Save to Inbox", exact: true })
+    .getByRole("button", { name: "Save to Library", exact: true })
     .hover();
   await expect(
-    dialog.getByRole("tooltip", { name: "Save to Inbox ⌘ Return" }),
+    dialog.getByRole("tooltip", { name: "Save to Library ⌘ Return" }),
   ).toBeVisible();
   await dockEditor.fill("A linked draft");
   await dockEditor.press("Meta+a");

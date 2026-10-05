@@ -17,44 +17,47 @@ import {
   type HomeResurfacedMemory,
 } from "./home-resurfacing";
 import { getAuthenticatedContext, type Viewer } from "./inbox";
+import { parseWikiItemRows, type WikiItemSummary } from "./wiki-items";
+import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
+import { isTimelineLane, type TimelineLane } from "./milestone";
 
 export type { HomeAttachment, HomeEntry } from "./home-entry";
 export type { HomeResurfacedMemory } from "./home-resurfacing";
 
-export type HomeStage = {
-  body: string;
+/** A Home, Vehicle, or Period that has started and has no end yet. */
+export type HomeNowItem = {
   datePrecision: string;
   entryId: string;
+  isFirstTime: boolean;
+  itemKind: WikiItemKind;
+  itemSubtype: string;
+  lane: TimelineLane;
   occurredEnd: string | null;
   occurredLabel: string | null;
   occurredStart: string;
   occurredTimezone: string | null;
   title: string;
-  trackId: string;
-  trackName: string;
 };
 
 export type HomeSnapshot = {
-  collectionCount: number;
-  currentStageCount: number;
-  currentStages: HomeStage[];
+  tagCount: number;
   entryCount: number;
   firstTimeCount: number;
-  inboxCount: number;
+  nowCount: number;
+  nowItems: HomeNowItem[];
   profileDisplayName: string | null;
   recentEntries: HomeEntry[];
   snapshotDate: string;
 };
 
-export type HomeInboxPreview = {
-  body: string;
-  createdAt: string;
-  id: string;
-  title: string | null;
-};
+/** The newest Entries without a title or tag, and how many there are. */
+export type HomeNeedsOrganizing = {
+  count: number;
+  items: WikiItemSummary[];
+} | null;
 
 export type HomeWorkspace = {
-  inboxPreview: HomeInboxPreview[];
+  needsOrganizing: HomeNeedsOrganizing;
   loadError: string | null;
   resurfacedMemory: HomeResurfacedMemory | null;
   snapshot: HomeSnapshot | null;
@@ -74,7 +77,7 @@ export async function getHomeWorkspace(): Promise<HomeWorkspace | null> {
     cookieStore.get(homeTimezoneCookieName)?.value,
   );
   const snapshotDate = localDateInTimezone(new Date(), timezone);
-  const [result, resurfacingResult, inboxPreviewResult] = await Promise.all([
+  const [result, resurfacingResult, needsOrganizingResult] = await Promise.all([
     context.client.rpc("home_workspace", {
       p_local_date: snapshotDate,
       p_recent_limit: 5,
@@ -84,17 +87,24 @@ export async function getHomeWorkspace(): Promise<HomeWorkspace | null> {
       p_local_date: snapshotDate,
       p_timezone: timezone,
     }),
-    context.client
-      .from("entries")
-      .select("id,title,body,created_at")
-      .eq("owner_id", context.userId)
-      .eq("inbox_status", "unreviewed")
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false })
-      .limit(3)
-      .returns<HomeInboxPreviewRow[]>(),
+    context.client.rpc("wiki_items_workspace", {
+      p_item_kinds: [],
+      p_item_subtypes: [],
+      p_limit: 3,
+      p_needs_organizing: true,
+      p_offset: 0,
+      p_query: "",
+    }),
   ]);
+  const needsOrganizingItems = needsOrganizingResult.error
+    ? null
+    : parseWikiItemRows(needsOrganizingResult.data);
+  const needsOrganizing = needsOrganizingItems
+    ? {
+        count: needsOrganizingItems[0]?.totalCount ?? 0,
+        items: needsOrganizingItems,
+      }
+    : null;
   const row = result.error ? null : parseHomeRow(result.data);
   const resurfacedMemory = resurfacingResult.error
     ? null
@@ -102,7 +112,7 @@ export async function getHomeWorkspace(): Promise<HomeWorkspace | null> {
 
   if (!row) {
     return {
-      inboxPreview: parseInboxPreview(inboxPreviewResult.data),
+      needsOrganizing,
       loadError: "MemoTrail could not load Home. Refresh to try again.",
       resurfacedMemory: null,
       snapshot: null,
@@ -118,7 +128,7 @@ export async function getHomeWorkspace(): Promise<HomeWorkspace | null> {
   const signedUrls = await signedImageUrls(context.client, attachments);
 
   return {
-    inboxPreview: parseInboxPreview(inboxPreviewResult.data),
+    needsOrganizing,
     loadError: null,
     resurfacedMemory: resurfacedMemory
       ? withSignedImageUrls(resurfacedMemory, signedUrls)
@@ -134,22 +144,6 @@ export async function getHomeWorkspace(): Promise<HomeWorkspace | null> {
   };
 }
 
-type HomeInboxPreviewRow = {
-  body: string;
-  created_at: string;
-  id: string;
-  title: string | null;
-};
-
-function parseInboxPreview(rows: HomeInboxPreviewRow[] | null) {
-  return (rows ?? []).map((row) => ({
-    body: row.body,
-    createdAt: row.created_at,
-    id: row.id,
-    title: row.title,
-  }));
-}
-
 function parseHomeRow(value: unknown): HomeSnapshot | null {
   if (!Array.isArray(value) || value.length !== 1 || !isRecord(value[0])) {
     return null;
@@ -157,19 +151,18 @@ function parseHomeRow(value: unknown): HomeSnapshot | null {
 
   const row = value[0];
   const recentEntries = parseHomeEntries(row.recent_entries);
-  const currentStages = parseCurrentStages(row.current_stages);
+  const nowItems = parseNowItems(row.now_items);
   const counts = [
-    row.collection_count,
-    row.current_stage_count,
+    row.now_count,
     row.entry_count,
     row.first_time_count,
-    row.inbox_count,
+    row.tag_count,
   ].map(safeCount);
 
   if (
     counts.some((count) => count === null) ||
     !recentEntries ||
-    !currentStages ||
+    !nowItems ||
     typeof row.snapshot_date !== "string" ||
     !nullableString(row.profile_display_name)
   ) {
@@ -177,33 +170,33 @@ function parseHomeRow(value: unknown): HomeSnapshot | null {
   }
 
   return {
-    collectionCount: counts[0]!,
-    currentStageCount: counts[1]!,
-    currentStages,
-    entryCount: counts[2]!,
-    firstTimeCount: counts[3]!,
-    inboxCount: counts[4]!,
+    entryCount: counts[1]!,
+    firstTimeCount: counts[2]!,
+    nowCount: counts[0]!,
+    nowItems,
     profileDisplayName: row.profile_display_name,
     recentEntries,
     snapshotDate: row.snapshot_date,
+    tagCount: counts[3]!,
   };
 }
 
-function parseCurrentStages(value: unknown): HomeStage[] | null {
+function parseNowItems(value: unknown): HomeNowItem[] | null {
   if (!Array.isArray(value)) {
     return null;
   }
 
-  const stages: HomeStage[] = [];
+  const items: HomeNowItem[] = [];
 
   for (const item of value) {
     if (
       !isRecord(item) ||
       typeof item.entry_id !== "string" ||
       typeof item.title !== "string" ||
-      typeof item.body !== "string" ||
-      typeof item.track_id !== "string" ||
-      typeof item.track_name !== "string" ||
+      !isWikiItemKind(item.item_kind) ||
+      typeof item.item_subtype !== "string" ||
+      !isTimelineLane(item.lane) ||
+      typeof item.is_first_time !== "boolean" ||
       typeof item.occurred_start !== "string" ||
       !nullableString(item.occurred_end) ||
       typeof item.date_precision !== "string" ||
@@ -213,21 +206,22 @@ function parseCurrentStages(value: unknown): HomeStage[] | null {
       return null;
     }
 
-    stages.push({
-      body: item.body,
+    items.push({
       datePrecision: item.date_precision,
       entryId: item.entry_id,
+      isFirstTime: item.is_first_time,
+      itemKind: item.item_kind,
+      itemSubtype: item.item_subtype,
+      lane: item.lane,
       occurredEnd: item.occurred_end,
       occurredLabel: item.occurred_label,
       occurredStart: item.occurred_start,
       occurredTimezone: item.occurred_timezone,
       title: item.title,
-      trackId: item.track_id,
-      trackName: item.track_name,
     });
   }
 
-  return stages;
+  return items;
 }
 
 async function signedImageUrls(

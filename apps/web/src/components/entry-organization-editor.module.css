@@ -8,10 +8,6 @@
   border: 0;
 }
 
-.editor[data-kind="collection"] {
-  --organization-control-icon-inset: 11px;
-}
-
 .editor legend {
   margin: 0 0 var(--mt-space-2);
   padding: 0;
@@ -52,7 +48,7 @@
   background: var(--mt-color-accent-subtle);
 }
 
-.editor[data-kind="tag"] .item > span:first-child {
+.editor .item > span:first-child {
   display: flex;
   align-items: center;
   line-height: 1;
@@ -74,7 +70,7 @@
   cursor: pointer;
 }
 
-.editor[data-kind="tag"] .removeButton {
+.editor .removeButton {
   margin-right: 1px;
 }
 
@@ -91,80 +87,6 @@
 .removeButton:focus-visible {
   color: var(--mt-color-ink);
   background: transparent;
-}
-
-.editor[data-kind="collection"] .item {
-  min-height: 40px;
-  padding: 7px var(--mt-space-6);
-  border: 1px solid color-mix(in srgb, var(--mt-color-warm) 48%, transparent);
-  border-right: 0;
-  border-left: 0;
-  border-radius: 1px;
-  color: var(--mt-color-ink);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--mt-color-surface-raised) 34%, transparent),
-      transparent 44% 58%,
-      color-mix(in srgb, var(--mt-color-warm) 12%, transparent)
-    ),
-    var(--mt-color-warm-subtle);
-  box-shadow: 0 3px 8px
-    color-mix(in srgb, var(--mt-color-warm) 12%, transparent);
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-label);
-}
-
-.editor[data-kind="collection"] .item::before,
-.editor[data-kind="collection"] .item::after {
-  position: absolute;
-  z-index: 1;
-  top: -3px;
-  bottom: -3px;
-  width: 8px;
-  border: 2px solid var(--mt-color-warm);
-  border-radius: 0;
-  background: var(--mt-color-warm-subtle);
-  box-shadow: none;
-  content: "";
-}
-
-.editor[data-kind="collection"] .item::before {
-  left: 0;
-}
-
-.editor[data-kind="collection"] .item::after {
-  right: 0;
-}
-
-.editor[data-kind="collection"] .item:hover {
-  color: var(--mt-color-ink);
-  border-color: var(--mt-color-warm);
-}
-
-.editor[data-kind="collection"] .removeButton {
-  position: absolute;
-  z-index: 3;
-  top: -10px;
-  right: -11px;
-  width: 24px;
-  height: 24px;
-  border: 1px solid var(--mt-color-border-strong);
-  color: var(--mt-color-ink-muted);
-  background: var(--mt-color-surface-raised);
-  box-shadow: var(--mt-shadow-raised);
-  opacity: 0;
-  transform: scale(0.86);
-  transition:
-    color var(--mt-motion-quick),
-    opacity var(--mt-motion-quick),
-    transform var(--mt-motion-quick);
-}
-
-.editor[data-kind="collection"] .item:hover .removeButton,
-.editor[data-kind="collection"] .item:focus-within .removeButton {
-  opacity: 1;
-  transform: scale(1);
 }
 
 .addButton {
@@ -216,29 +138,6 @@
   transform: translate(0, -50%);
 }
 
-.editor[data-kind="collection"] .addButton {
-  width: 40px;
-  min-width: 40px;
-  min-height: 38px;
-  border-color: color-mix(in srgb, var(--mt-color-warm) 54%, transparent);
-  border-radius: 0;
-  box-shadow: none;
-}
-
-.editor[data-kind="collection"] .addButton span {
-  left: 33px;
-}
-
-.editor[data-kind="collection"] .addButton:hover,
-.editor[data-kind="collection"] .addButton:focus-visible {
-  width: 128px;
-  color: var(--mt-color-warm);
-  border-color: var(--mt-color-warm);
-  border-radius: 0;
-  background: color-mix(in srgb, var(--mt-color-warm-subtle) 52%, transparent);
-  box-shadow: none;
-}
-
 .inlineEditor {
   position: relative;
   z-index: 4;
@@ -248,27 +147,12 @@
   flex: 0 1 220px;
 }
 
-.editor[data-kind="collection"] .inlineEditor {
-  width: 220px;
-  flex-basis: 220px;
-}
-
 .searchField :global([data-search-control]) {
   border: 1px solid var(--mt-color-accent);
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-accent);
   background: var(--mt-color-surface-raised);
   box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
-}
-
-.editor[data-kind="collection"] .searchField :global([data-search-control]) {
-  height: 40px;
-  border-color: var(--mt-color-warm);
-  border-radius: 2px;
-  color: var(--mt-color-warm);
-  box-shadow:
-    inset 4px 0 0 var(--mt-color-warm),
-    3px 3px 0 var(--mt-color-border-strong);
 }
 
 .suggestions {
@@ -368,17 +252,11 @@
   .addButton {
     width: 84px;
   }
-
-  .editor[data-kind="collection"] .addButton {
-    width: 128px;
-    border-radius: 0;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .addButton,
-  .addButton span,
-  .editor[data-kind="collection"] .removeButton {
+  .addButton span {
     transition: none;
   }
 }

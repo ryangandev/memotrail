@@ -15,12 +15,9 @@ $$;
 create function pg_temp.rich_text(p_id uuid) returns text language sql stable as $$
   select metadata->'body_rich'->>'text' from public.entries where id = p_id;
 $$;
-create function pg_temp.versions(p_id uuid) returns bigint language sql stable as $$
-  select count(*) from public.entry_versions where entry_id = p_id;
-$$;
 create function pg_temp.provider() returns jsonb language sql immutable as $$
   select jsonb_build_object('kind','provider','provider','geoapify',
-    'providerLocationId','rich-text-home','name','10 Pine Street','formattedAddress','10 Pine Street',
+    'providerLocationId','rich-text-home','formattedAddress','10 Pine Street',
     'address','10 Pine Street','city','Philadelphia','region','Pennsylvania','country','United States',
     'countryCode','us','latitude',39.95,'longitude',-75.16,'timezone','America/New_York');
 $$;
@@ -32,38 +29,24 @@ create function pg_temp.save(p_kind text, p_id uuid, p_body text) returns uuid l
 declare
   result uuid;
   current_revision integer := (select revision from public.entries where id = p_id);
-  track uuid := (select id from public.timeline_tracks where owner_id = auth.uid() and system_key = 'other_events');
   input jsonb := jsonb_build_object('title','Rich ' || p_kind,'body',p_body,
     'datePrecision','unknown',
-    'collectionNames','[]'::jsonb,'tagNames','[]'::jsonb,'id',p_id,'revision',current_revision);
+    'tagNames','[]'::jsonb,'id',p_id,'revision',current_revision);
 begin
   if p_kind = 'goal' then
     select entry_id into result from public.save_goal_entry(
-      'Rich goal',p_body,'long_term','active',null,'{}','{}','{}',p_id,current_revision);
-  elsif p_kind = 'moment' then
-    select entry_id into result from public.save_timeline_entry_with_organization(
-      track,'event','Rich moment',p_body,null,null,'unknown',null,'UTC','{}','{}',p_id,current_revision);
-  elsif p_kind = 'period' then
-    select entry_id into result from public.save_timeline_entry_with_occurrence(
-      track,'stage','Rich period',p_body,null,null,'unknown',null,'UTC',p_id,current_revision);
-  elsif p_kind = 'first_time' then
-    select entry_id into result from public.save_first_time_with_occurrence(
-      'Rich first time',p_body,null,'unknown',null,null,'{}','{}',p_id,current_revision,null);
-  elsif p_kind = 'first_time_location' then
-    select entry_id into result from public.save_first_time_with_location(input,null);
+      'Rich goal',p_body,'active',null,'{}',p_id,current_revision);
   elsif p_kind = 'home' then
     select entry_id into result from public.save_home_entry_with_occurrence(
-      'Rich home',p_body,null,null,'unknown',null,'UTC',null,null,null,null,null,null,null,null,
-      null,null,null,'{}','{}',p_id,current_revision);
-  elsif p_kind = 'home_geoapify' then
-    result := (public.save_home_entry_with_geoapify(input || '{"occurredTimezone":"UTC"}',null,
-      pg_temp.provider())->>'entry_id')::uuid;
+      'Rich home',p_body,null,null,'unknown',null,'UTC',null,null,'{}',p_id,current_revision);
+  elsif p_kind = 'home_location' then
+    select entry_id into result from public.save_home_with_location(input,pg_temp.provider());
   elsif p_kind = 'vehicle' then
     select entry_id into result from public.save_vehicle_entry_with_occurrence(
-      'Rich vehicle',p_body,null,null,'unknown',null,'UTC','Honda','Civic',2018,'Blue','{}','{}',
+      'Rich vehicle',p_body,null,null,'unknown',null,'UTC','Honda','Civic',2018,'Blue','{}',
       p_id,current_revision);
   elsif p_kind = 'vehicle_location' then
-    select entry_id into result from public.save_vehicle_with_location(input,null,null);
+    select entry_id into result from public.save_vehicle_with_location(input,null);
   end if;
   return result;
 end;
@@ -74,30 +57,28 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000141'
 
 -- The reported path: a linked Goal copies an Item's formatting, then its focused editor
 -- replaces the writing.
-insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,inbox_status,date_precision,metadata)
+insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,date_precision,metadata)
 values ('96600000-0000-4000-8000-000000000001',auth.uid(),'Marathon plan','Run zebrafinch marathon',
-  'entry','entry','organized','unknown',jsonb_build_object('body_rich',pg_temp.rich('Run zebrafinch marathon')));
+  'entry','entry','unknown',jsonb_build_object('body_rich',pg_temp.rich('Run zebrafinch marathon')));
 select is(
   (select goal_entry_id from public.extract_goal_from_item('96600000-0000-4000-8000-000000000001',1,
-    '96600000-0000-4000-8000-000000000002','Marathon goal','short_term','active',null)),
+    '96600000-0000-4000-8000-000000000002','Marathon goal','active',null)),
   '96600000-0000-4000-8000-000000000002'::uuid,
   'A formatted Item creates a linked Goal'
 );
 select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000002'),'Run zebrafinch marathon',
   'The linked Goal copies formatting that matches its writing');
 select is(
-  (select revision from public.save_goal_entry('Renamed goal','Run zebrafinch marathon','short_term','active',
-    null,'{}','{}','{}','96600000-0000-4000-8000-000000000002',1)),
+  (select revision from public.save_goal_entry('Renamed goal','Run zebrafinch marathon','active',
+    null,'{}','96600000-0000-4000-8000-000000000002',1)),
   2,
   'A Goal save with unchanged writing advances one revision'
 );
 select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000002'),'Run zebrafinch marathon',
   'A Goal save with unchanged writing keeps its formatting');
-select is(pg_temp.versions('96600000-0000-4000-8000-000000000002'),1::bigint,
-  'Keeping formatting adds no history version of its own');
 select is(
-  (select revision from public.save_goal_entry('Renamed goal','Run a half marathon','short_term','active',
-    null,'{}','{}','{}','96600000-0000-4000-8000-000000000002',2)),
+  (select revision from public.save_goal_entry('Renamed goal','Run a half marathon','active',
+    null,'{}','96600000-0000-4000-8000-000000000002',2)),
   3,
   'A Goal save with new writing advances one revision'
 );
@@ -105,14 +86,6 @@ select is((select body from public.entries where id = '96600000-0000-4000-8000-0
   'Run a half marathon','The Goal stores the new writing');
 select ok(not (select metadata ? 'body_rich' from public.entries where id = '96600000-0000-4000-8000-000000000002'),
   'The Goal drops formatting for writing it no longer has');
-select is(pg_temp.versions('96600000-0000-4000-8000-000000000002'),2::bigint,
-  'Dropping formatting adds no history version of its own');
-select is(
-  (select snapshot->'metadata'->'body_rich'->>'text' from public.entry_versions
-   where entry_id = '96600000-0000-4000-8000-000000000002' and version = 2),
-  'Run zebrafinch marathon',
-  'History keeps the formatting the Goal had before the edit'
-);
 select is(
   (select count(*) from public.search_wiki_items('zebrafinch') where entry_id = '96600000-0000-4000-8000-000000000002'),
   0::bigint,
@@ -129,28 +102,10 @@ select is(
   'Search finds the Goal by its new writing'
 );
 
--- Restoring replays a snapshot's metadata through the same rule.
-select is(public.restore_entry_version('96600000-0000-4000-8000-000000000002',2,3),4,
-  'Restoring the formatted version succeeds');
-select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000002'),'Run zebrafinch marathon',
-  'Restoring a version restores formatting that matches its writing');
-reset role;
-update public.entry_versions
-set snapshot = jsonb_set(snapshot,'{metadata,body_rich}',pg_temp.rich('Run zebrafinch marathon'))
-where entry_id = '96600000-0000-4000-8000-000000000002' and version = 3;
-set local role authenticated;
-select is(public.restore_entry_version('96600000-0000-4000-8000-000000000002',3,4),5,
-  'Restoring a version with outdated formatting succeeds');
-select is((select body from public.entries where id = '96600000-0000-4000-8000-000000000002'),
-  'Run a half marathon','The restored writing is canonical');
-select ok(not (select metadata ? 'body_rich' from public.entries where id = '96600000-0000-4000-8000-000000000002'),
-  'Restoring never revives formatting for different writing');
-
 -- Each focused writer keeps matching formatting and drops it once the writing changes.
 insert into writers
 select kind, pg_temp.save(kind,null,'Original words')
-from unnest(array['goal','moment','period','first_time','first_time_location','home','home_geoapify',
-  'vehicle','vehicle_location']) as kind;
+from unnest(array['goal','home','home_location','vehicle','vehicle_location']) as kind;
 select isnt(id,null,kind || ' is created') from writers;
 -- Record formatting the way Capture and Inbox review store it.
 update public.entries
@@ -183,44 +138,34 @@ update public.entries set body = 'Changed directly' where id = '96600000-0000-40
 select ok(not (select metadata ? 'body_rich' from public.entries where id = '96600000-0000-4000-8000-000000000003'),
   'A direct update that changes the writing drops its formatting');
 
--- Review RPCs still set, keep, and clear formatting.
-insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,inbox_status,date_precision,occurred_timezone,metadata)
+-- Reviews set, keep, and clear formatting.
+insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,date_precision,occurred_timezone,metadata)
 values ('96600000-0000-4000-8000-000000000005',auth.uid(),'Review','Review words','entry','entry',
-  'organized','unknown','UTC',jsonb_build_object('body_rich',pg_temp.rich('Review words')));
+  'unknown','UTC',jsonb_build_object('body_rich',pg_temp.rich('Review words')));
 select is(
-  (select revision from public.review_wiki_item_with_photo_place('96600000-0000-4000-8000-000000000005',1,
-    'Reviewed','Review words','entry','entry',null,'UTC','{}','{}',false,null,null,'unknown',null)),
+  (select revision from public.save_entry('96600000-0000-4000-8000-000000000005',1,
+    'Reviewed','Review words', pg_temp.rich('Review words'),null,null,'UTC',null,'unknown','{}',null, null, null)),
   2,
-  'A plaintext review with unchanged writing succeeds'
+  'A review with unchanged writing succeeds'
 );
 select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000005'),'Review words',
-  'A plaintext review keeps formatting it cannot author while the writing is unchanged');
+  'A review with unchanged writing keeps its formatting');
 select is(
-  (select revision from public.review_wiki_item_with_photo_place_rich('96600000-0000-4000-8000-000000000005',2,
-    'Reviewed','Formatted words','entry','entry',null,'UTC','{}','{}',false,null,null,'unknown',null,
-    pg_temp.rich('Formatted words'))),
+  (select revision from public.save_entry('96600000-0000-4000-8000-000000000005',2,
+    'Reviewed','Formatted words', pg_temp.rich('Formatted words'),null,null,'UTC',null,'unknown','{}',null, null, null)),
   3,
   'A rich review saves new writing with its formatting'
 );
 select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000005'),'Formatted words',
   'A rich review stores formatting for its new writing');
 select is(
-  (select revision from public.review_wiki_item_with_location_rich('96600000-0000-4000-8000-000000000005',3,
-    'Reviewed','Located words','entry','entry',null,'UTC','{}','{}',false,null,null,'unknown',null,null,
-    pg_temp.rich('Located words'))),
+  (select revision from public.save_entry('96600000-0000-4000-8000-000000000005',3,
+    'Reviewed','Plain edit', null,null,null,'UTC',null,'unknown','{}',null, null, null)),
   4,
-  'A Location review saves new writing with its formatting'
-);
-select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000005'),'Located words',
-  'A Location review stores formatting for its new writing');
-select is(
-  (select revision from public.review_wiki_item_with_photo_place('96600000-0000-4000-8000-000000000005',4,
-    'Reviewed','Plain edit','entry','entry',null,'UTC','{}','{}',false,null,null,'unknown',null)),
-  5,
-  'A plaintext review with new writing succeeds'
+  'A review without formatting saves new writing'
 );
 select ok(not (select metadata ? 'body_rich' from public.entries where id = '96600000-0000-4000-8000-000000000005'),
-  'A plaintext review drops formatting for writing it replaced');
+  'A review without formatting drops formatting for writing it replaced');
 
 select is(
   (select count(*) from public.entries

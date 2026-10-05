@@ -16,10 +16,9 @@ export type SearchPlan = {
 export type SearchSource = {
   id: string;
   recordID: string;
-  kind: "entry" | "person";
   title: string;
   text: string;
-  href: string | null;
+  href: string;
   truncated: boolean;
 };
 export type SearchFinding = {
@@ -91,9 +90,8 @@ const types = [
   "entry",
   "entity",
   "goal",
-  "person",
+  "milestone",
   "first_time",
-  "period",
   "home",
   "vehicle",
 ];
@@ -218,7 +216,6 @@ export function evidenceParameters(
     // All Types really means all types. Thoughts can live inside a First Time
     // or Home, so model-inferred labels must not silently narrow the archive.
     p_item_classifications: request.itemClassifications,
-    p_collection_names: request.collectionNames,
     p_tag_names: request.tagNames,
     p_date_from: request.dateFrom ?? plan.dateFrom,
     p_date_to: request.dateTo ?? plan.dateTo,
@@ -309,34 +306,27 @@ export function buildSearchSources(raw: unknown, queries: string[]) {
     notices: string[] = [];
   const rows = (v: unknown) => (Array.isArray(v) ? v.map(object) : []);
   let bytes = 0;
-  const add = (row: Record<string, unknown>, kind: SearchSource["kind"]) => {
+  const add = (row: Record<string, unknown>) => {
     if (
       typeof row.id !== "string" ||
       !uuid.test(row.id) ||
-      sources.some((s) => s.recordID === row.id && s.kind === kind)
+      sources.some((s) => s.recordID === row.id)
     )
       return;
-    const title = String(row.title || row.name || "Untitled Entry").slice(
-      0,
-      200,
+    const title = String(row.title || "Untitled Entry").slice(0, 200);
+    const selected = Object.fromEntries(
+      [
+        "item_kind",
+        "item_subtype",
+        "date_precision",
+        "occurred_start",
+        "occurred_end",
+        "occurred_label",
+        "occurred_timezone",
+        "tags",
+        "facts",
+      ].map((k) => [k, row[k]]),
     );
-    const selected =
-      kind === "entry"
-        ? Object.fromEntries(
-            [
-              "item_kind",
-              "item_subtype",
-              "date_precision",
-              "occurred_start",
-              "occurred_end",
-              "occurred_label",
-              "occurred_timezone",
-              "collections",
-              "tags",
-              "facts",
-            ].map((k) => [k, row[k]]),
-          )
-        : row;
     const facts = JSON.stringify(
       selected,
       (key, value) =>
@@ -363,17 +353,15 @@ export function buildSearchSources(raw: unknown, queries: string[]) {
     sources.push({
       id: `S${sources.length + 1}`,
       recordID: row.id,
-      kind,
       title,
       text,
-      href: kind === "entry" ? `/items/${row.id}` : null,
+      href: `/items/${row.id}`,
       truncated: body.length > 1800 || facts.length > 1800,
     });
   };
-  rows(evidence.entries).forEach((r) => add(r, "entry"));
+  rows(evidence.entries).forEach((r) => add(r));
   if (evidence.latest_home_reference)
-    add(object(evidence.latest_home_reference), "entry");
-  rows(evidence.people).forEach((r) => add(r, "person"));
+    add(object(evidence.latest_home_reference));
   if (evidence.query_truncated || Number(evidence.candidate_count) > 36)
     notices.push(
       "This answer uses a bounded selection of matches, not the complete archive. Narrow the question to improve coverage.",
@@ -382,8 +370,6 @@ export function buildSearchSources(raw: unknown, queries: string[]) {
     notices.push(
       "The latest Home has an uncertain date. A precise before-move boundary could not be applied.",
     );
-  if (rows(evidence.people).length === 25)
-    notices.push("People evidence may be limited to 25 matches.");
   if (sources.some((s) => s.truncated))
     notices.push(
       "Long sources use excerpts. Open the original record for full context.",

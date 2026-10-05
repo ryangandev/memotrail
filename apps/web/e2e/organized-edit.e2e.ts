@@ -3,10 +3,7 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
-test("Organized Entries stay editable without returning to Inbox", async ({
-  page,
-  context,
-}) => {
+test("Organized Entries stay editable in place", async ({ page, context }) => {
   const env = JSON.parse(
     execFileSync("supabase", ["status", "-o", "json"], {
       encoding: "utf8",
@@ -22,7 +19,7 @@ test("Organized Entries stay editable without returning to Inbox", async ({
   });
   const owner = created.data.user!.id,
     id = randomUUID(),
-    collectionId = randomUUID();
+    tagId = randomUUID();
   try {
     const cookies: { name: string; value: string }[] = [];
     const client = createServerClient(env.API_URL, env.ANON_KEY, {
@@ -65,7 +62,6 @@ test("Organized Entries stay editable without returning to Inbox", async ({
           body: "Original words",
           item_kind: "entry",
           item_subtype: "entry",
-          inbox_status: "organized",
           date_precision: "exact",
           metadata: {
             body_rich: {
@@ -95,8 +91,8 @@ test("Organized Entries stay editable without returning to Inbox", async ({
     ).toBeNull();
     expect(
       (
-        await client.from("collections").insert({
-          id: collectionId,
+        await client.from("tags").insert({
+          id: tagId,
           owner_id: owner,
           name: "Rich notes",
         })
@@ -104,20 +100,20 @@ test("Organized Entries stay editable without returning to Inbox", async ({
     ).toBeNull();
     expect(
       (
-        await client.from("entry_collections").insert({
-          collection_id: collectionId,
+        await client.from("entry_tags").insert({
+          tag_id: tagId,
           entry_id: id,
           owner_id: owner,
         })
       ).error,
     ).toBeNull();
-    await page.goto(`/history?entry=${id}`);
-    const currentVersion = page.getByRole("region", {
-      name: "Current version",
+    await page.goto(`/items/${id}`);
+    const currentItem = page.getByRole("article", {
+      name: "Current item",
       exact: true,
     });
     await expect(
-      currentVersion.locator("strong").filter({ hasText: /^Original words$/ }),
+      currentItem.locator("strong").filter({ hasText: /^Original words$/ }),
     ).toHaveText("Original words");
     await page
       .getByRole("button", { name: "Edit Entry", exact: true })
@@ -178,7 +174,6 @@ test("Organized Entries stay editable without returning to Inbox", async ({
     ).data!;
     expect(saved).toMatchObject({
       body: "Updated after organizing",
-      inbox_status: "organized",
       date_precision: "exact",
       metadata: {
         body_rich: {
@@ -189,20 +184,10 @@ test("Organized Entries stay editable without returning to Inbox", async ({
       occurred_start: "2017-07-08T12:34:56.123456+00:00",
       revision: 2,
     });
-    await expect(currentVersion.locator("em")).toHaveText(
+    await expect(currentItem.locator("em")).toHaveText(
       "Updated after organizing",
     );
-    expect(
-      (
-        await client
-          .from("entry_versions")
-          .select("snapshot")
-          .eq("entry_id", id)
-          .eq("version", 1)
-          .single()
-      ).data!.snapshot.body,
-    ).toBe("Original words");
-    await page.goto(`/collections/${collectionId}`);
+    await page.goto("/search?tag=Rich%20notes");
     await expect(
       page
         .locator("[data-entry-rich-text] em")
@@ -214,10 +199,14 @@ test("Organized Entries stay editable without returning to Inbox", async ({
         .locator("[data-entry-rich-text] em")
         .filter({ hasText: /^Updated after organizing$/ }),
     ).toHaveText("Updated after organizing");
-    await page.goto("/inbox");
+    // A tagged Entry already has a place, so it never needs organizing.
+    await page.goto("/library?show=needs-organizing");
     await expect(
-      page.getByRole("heading", { name: "Finished organizing", exact: true }),
-    ).toHaveCount(0);
+      page.getByRole("heading", { name: "Needs organizing", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Everything has a place", { exact: true }),
+    ).toBeVisible();
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }

@@ -65,7 +65,6 @@ for (const kind of ["home", "vehicle"] as const) {
       const common = {
         p_title: "Precision chapter",
         p_body: "Original writing",
-        p_collection_names: [],
         p_tag_names: [],
         p_entry_id: null,
         p_expected_revision: null,
@@ -79,26 +78,17 @@ for (const kind of ["home", "vehicle"] as const) {
       };
       const configs = {
         home: {
-          rpc: "save_home_entry",
+          rpc: "save_home_entry_with_occurrence",
           path: "/homes",
           args: {
             ...common,
             ...dates,
-            p_place_id: null,
-            p_place_name: "Test home",
-            p_address: null,
-            p_city: null,
-            p_region: null,
-            p_country: null,
-            p_latitude: null,
-            p_longitude: null,
-            p_place_notes: "",
             p_move_in_reason: "",
             p_move_out_reason: "A new chapter",
           },
         },
         vehicle: {
-          rpc: "save_vehicle_entry",
+          rpc: "save_vehicle_entry_with_occurrence",
           path: "/vehicles",
           args: {
             ...common,
@@ -266,7 +256,7 @@ for (const kind of ["home", "vehicle"] as const) {
         .select("revision")
         .eq("id", id)
         .single();
-      const remote = await client.rpc(config.rpc + "_with_occurrence", {
+      const remote = await client.rpc(config.rpc, {
         ...config.args,
         p_title: "Other device edit",
         p_entry_id: id,

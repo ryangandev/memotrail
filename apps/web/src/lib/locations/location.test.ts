@@ -13,7 +13,6 @@ describe("Location selections", () => {
       existingLocationFromRow({
         id: "95000000-0000-4000-8000-000000000001",
         revision: 2,
-        name: "Pine Street",
         formatted_address: "10 Pine Street, Philadelphia, PA",
         address: "10 Pine Street",
         city: "Philadelphia",
@@ -26,7 +25,11 @@ describe("Location selections", () => {
         timezone_id: "America/New_York",
         result_type: "building",
       }),
-    ).toMatchObject({ kind: "existing", name: "Pine Street", revision: 2 });
+    ).toMatchObject({
+      kind: "existing",
+      formattedAddress: "10 Pine Street, Philadelphia, PA",
+      revision: 2,
+    });
   });
 
   it("rejects incomplete coordinates and unknown providers", () => {
@@ -34,7 +37,6 @@ describe("Location selections", () => {
       kind: "provider",
       provider: "geoapify",
       providerLocationId: "provider-id",
-      name: "Pine Street",
       formattedAddress: "10 Pine Street",
       address: "10 Pine Street",
       city: null,
@@ -55,11 +57,10 @@ describe("Location selections", () => {
     expect(validLocationSelection({ ...base, longitude: null })).toBe(false);
   });
 
-  it("shows address facts instead of the legacy custom Location name", () => {
+  it("labels a Location by its address, or by coordinates from photo GPS", () => {
     const location = existingLocationFromRow({
       id: "95000000-0000-4000-8000-000000000001",
       revision: 1,
-      name: "The old personal label",
       formatted_address: "10 Pine Street, Philadelphia, PA",
       address: "10 Pine Street",
       city: "Philadelphia",
@@ -73,6 +74,13 @@ describe("Location selections", () => {
     expect(locationDisplayLabel({ ...location!, formattedAddress: null })).toBe(
       "10 Pine Street, Philadelphia",
     );
+    expect(
+      locationDisplayLabel({
+        formattedAddress: null,
+        latitude: 39.952612,
+        longitude: -75.165299,
+      }),
+    ).toBe("39.95261, -75.16530");
   });
 
   it("holds a saved provider choice as the record's own Location", () => {
@@ -80,7 +88,6 @@ describe("Location selections", () => {
       kind: "provider",
       provider: "geoapify",
       providerLocationId: "provider-id",
-      name: "10 Pine Street, Philadelphia, PA",
       formattedAddress: "10 Pine Street, Philadelphia, PA",
       address: "10 Pine Street",
       city: "Philadelphia",
@@ -105,7 +112,6 @@ describe("Location selections", () => {
       kind: "existing",
       id: "95000000-0000-4000-8000-000000000002",
       revision: 1,
-      name: "10 Pine Street, Philadelphia, PA",
       formattedAddress: "10 Pine Street, Philadelphia, PA",
       address: "10 Pine Street",
       city: "Philadelphia",
@@ -126,7 +132,6 @@ describe("Location selections", () => {
     const existing = existingLocationFromRow({
       id: "95000000-0000-4000-8000-000000000001",
       revision: 2,
-      name: "10 Pine Street",
       address: "10 Pine Street",
       latitude: null,
       longitude: null,

@@ -9,21 +9,21 @@ import {
 } from "./occurrence";
 import { entryRichTextFromMetadata, type EntryRichText } from "./rich-text";
 import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
-import {
-  existingLocationFromRow,
-  type ExistingLocation,
-  type LocationSelection,
+import type { Milestone } from "./milestone";
+import type {
+  ExistingLocation,
+  LocationSelection,
 } from "@/lib/locations/location";
 
 export type InboxEntry = Occurrence & {
   body: string;
   bodyRich: EntryRichText | null;
-  collectionNames: string[];
   createdAt: string;
   id: string;
   itemKind: WikiItemKind;
   itemSubtype: string;
   location?: LocationSelection | null;
+  milestone?: Milestone | null;
   revision: number;
   tagNames: string[];
   title: string | null;
@@ -34,14 +34,6 @@ export type Viewer = {
   id: string;
   initial: string;
   name: string;
-};
-
-export type InboxWorkspace = {
-  collectionOptions: string[];
-  entries: InboxEntry[];
-  loadError: string | null;
-  tagOptions: string[];
-  viewer: Viewer;
 };
 
 type Claims = Record<string, unknown>;
@@ -60,25 +52,6 @@ type EntryRow = {
   occurred_timezone: string | null;
   revision: number;
   title: string | null;
-};
-
-type EntryCollectionRow = {
-  collection: { name: string; archived_at: string | null } | null;
-  entry_id: string;
-};
-
-type EntryTagRow = {
-  entry_id: string;
-  tag: { name: string } | null;
-};
-
-type NameRow = {
-  name: string;
-};
-
-type EntryLocationRow = {
-  entry_id: string;
-  location: unknown;
 };
 
 export const getAuthenticatedContext = cache(
@@ -136,112 +109,14 @@ export async function loadEntryRichTextMap(
   return values;
 }
 
-export async function getInboxWorkspace(
-  focusedEntryId: string | null = null,
-): Promise<InboxWorkspace | null> {
-  const context = await getAuthenticatedContext();
-
-  if (!context) {
-    return null;
-  }
-
-  const entryColumns =
-    "id,title,body,metadata,item_kind,item_subtype,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision";
-  const inboxRequest = context.client
-    .from("entries")
-    .select(entryColumns)
-    .eq("owner_id", context.userId)
-    .eq("inbox_status", "unreviewed")
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false })
-    .limit(50)
-    .returns<EntryRow[]>();
-  const focusedRequest = focusedEntryId
-    ? context.client
-        .from("entries")
-        .select(entryColumns)
-        .eq("owner_id", context.userId)
-        .eq("id", focusedEntryId)
-        .eq("inbox_status", "unreviewed")
-        .is("deleted_at", null)
-        .limit(1)
-        .returns<EntryRow[]>()
-    : Promise.resolve({ data: [] as EntryRow[], error: null });
-  const [inbox, focused] = await Promise.all([inboxRequest, focusedRequest]);
-
-  if (inbox.error || focused.error) {
-    return unavailableWorkspace(context.viewer);
-  }
-
-  const rows = [...(focused.data ?? []), ...(inbox.data ?? [])].filter(
-    (entry, index, values) =>
-      values.findIndex((candidate) => candidate.id === entry.id) === index,
-  );
-  const entryIds = rows.map((entry) => entry.id);
-  const [entryCollections, entryTags, entryLocations, collections, tags] =
-    await Promise.all([
-      loadEntryCollections(context, entryIds),
-      loadEntryTags(context, entryIds),
-      loadEntryLocations(context, entryIds),
-      context.client
-        .from("collections")
-        .select("name")
-        .eq("owner_id", context.userId)
-        .is("archived_at", null)
-        .order("name")
-        .returns<NameRow[]>(),
-      context.client
-        .from("tags")
-        .select("name")
-        .eq("owner_id", context.userId)
-        .order("name")
-        .returns<NameRow[]>(),
-    ]);
-
-  if (entryCollections.error || entryTags.error || entryLocations.error) {
-    return unavailableWorkspace(context.viewer);
-  }
-
-  const collectionNamesByEntry = namesByEntry(
-    entryCollections.data ?? [],
-    "collection",
-  );
-  const tagNamesByEntry = namesByEntry(entryTags.data ?? [], "tag");
-  const locationsByEntry = new Map(
-    (entryLocations.data ?? []).flatMap((row) => {
-      const location = existingLocationFromRow(row.location);
-      return location ? [[row.entry_id, location] as const] : [];
-    }),
-  );
-
-  return {
-    collectionOptions: collections.error
-      ? []
-      : (collections.data ?? []).map((collection) => collection.name),
-    entries: rows.map((row) =>
-      entryFromRow(
-        row,
-        collectionNamesByEntry.get(row.id) ?? [],
-        tagNamesByEntry.get(row.id) ?? [],
-        locationsByEntry.get(row.id) ?? null,
-      ),
-    ),
-    loadError: null,
-    tagOptions: tags.error ? [] : (tags.data ?? []).map((tag) => tag.name),
-    viewer: context.viewer,
-  };
-}
-
 export function entryFromRow(
   row: EntryRow,
-  collectionNames: string[],
   tagNames: string[],
   location: ExistingLocation | null = null,
 ): InboxEntry {
   return {
     body: row.body,
     bodyRich: entryRichTextFromMetadata(row.metadata, row.body),
-    collectionNames,
     createdAt: row.created_at,
     id: row.id,
     itemKind: isWikiItemKind(row.item_kind) ? row.item_kind : "entry",
@@ -263,90 +138,6 @@ export function entryFromRow(
     revision: row.revision,
     tagNames,
     title: stringValue(row.title),
-  };
-}
-
-function loadEntryLocations(
-  context: NonNullable<Awaited<ReturnType<typeof getAuthenticatedContext>>>,
-  entryIds: string[],
-) {
-  if (entryIds.length === 0) {
-    return Promise.resolve({ data: [] as EntryLocationRow[], error: null });
-  }
-  return context.client
-    .from("entry_places")
-    .select(
-      "entry_id,location:locations!entry_places_location_id_owner_id_fkey(id,revision,name,formatted_address,address,city,region,postal_code,country,country_code,latitude,longitude,timezone_id,result_type)",
-    )
-    .eq("owner_id", context.userId)
-    .eq("relationship", "primary")
-    .in("entry_id", entryIds)
-    .returns<EntryLocationRow[]>();
-}
-
-function loadEntryCollections(
-  context: NonNullable<Awaited<ReturnType<typeof getAuthenticatedContext>>>,
-  entryIds: string[],
-) {
-  if (entryIds.length === 0) {
-    return Promise.resolve({ data: [] as EntryCollectionRow[], error: null });
-  }
-
-  return context.client
-    .from("entry_collections")
-    .select("entry_id,collection:collections(name,archived_at)")
-    .eq("owner_id", context.userId)
-    .in("entry_id", entryIds)
-    .returns<EntryCollectionRow[]>();
-}
-
-function loadEntryTags(
-  context: NonNullable<Awaited<ReturnType<typeof getAuthenticatedContext>>>,
-  entryIds: string[],
-) {
-  if (entryIds.length === 0) {
-    return Promise.resolve({ data: [] as EntryTagRow[], error: null });
-  }
-
-  return context.client
-    .from("entry_tags")
-    .select("entry_id,tag:tags(name)")
-    .eq("owner_id", context.userId)
-    .in("entry_id", entryIds)
-    .returns<EntryTagRow[]>();
-}
-
-function namesByEntry(
-  rows: EntryCollectionRow[] | EntryTagRow[],
-  relationship: "collection" | "tag",
-) {
-  const names = new Map<string, string[]>();
-
-  for (const row of rows) {
-    const item =
-      relationship === "collection"
-        ? (row as EntryCollectionRow).collection
-        : (row as EntryTagRow).tag;
-
-    if (!item || ("archived_at" in item && item.archived_at)) {
-      continue;
-    }
-
-    const currentNames = names.get(row.entry_id) ?? [];
-    currentNames.push(item.name);
-    names.set(row.entry_id, currentNames);
-  }
-
-  return names;
-}
-
-function unavailableWorkspace(viewer: Viewer): InboxWorkspace {
-  return {
-    collectionOptions: [],
-    entries: [],
-    loadError: "MemoTrail could not load your Inbox. Refresh to try again.",
-    tagOptions: [],
-    viewer,
   };
 }
 

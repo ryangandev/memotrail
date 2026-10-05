@@ -25,16 +25,12 @@ import type { Viewer } from "@/lib/data/inbox";
 import { SIDEBAR_COOKIE_NAME } from "@/lib/sidebar-preference";
 
 export type WorkspaceDestination =
-  | "collections"
   | "explore"
-  | "history"
   | "home"
   | "homes"
-  | "inbox"
   | "library"
   | "map"
   | "goals"
-  | "people"
   | "settings"
   | "tags"
   | "timeline"
@@ -74,7 +70,6 @@ const primaryNavigation: NavigationItem[] = [
 ];
 
 const recordNavigation: NavigationItem[] = [
-  { destination: "people", href: "/people", icon: "person", label: "People" },
   { destination: "homes", href: "/homes", icon: "home", label: "Homes" },
   {
     destination: "vehicles",
@@ -88,23 +83,16 @@ const recordNavigation: NavigationItem[] = [
     icon: "star",
     label: "First Times",
   },
-  { destination: "goals", href: "/goals", icon: "target", label: "Goals" },
+  { destination: "goals", href: "/goals", icon: "target", label: "Want to Do" },
 ];
 
 const organizationNavigation: NavigationItem[] = [
-  {
-    destination: "collections",
-    href: "/collections",
-    icon: "archive",
-    label: "Collections",
-  },
   { destination: "tags", href: "/tags", icon: "tag", label: "Tags" },
   { destination: "trash", href: "/trash", icon: "trash", label: "Trash" },
 ];
 
 const mobileNavigation: NavigationItem[] = [
   { destination: "home", href: "/", icon: "dashboard", label: "Dashboard" },
-  { destination: "inbox", href: "/inbox", icon: "inbox", label: "Inbox" },
   {
     destination: "timeline",
     href: "/timeline",
@@ -117,25 +105,16 @@ const mobileNavigation: NavigationItem[] = [
     icon: "archive",
     label: "Library",
   },
+  mapNavigation,
 ];
 
 const mobileMoreGroups: { label: string; items: NavigationItem[] }[] = [
-  {
-    label: "Explore",
-    items: [mapNavigation],
-  },
   { label: "Focused views", items: recordNavigation },
-  { label: "Organize", items: organizationNavigation.slice(0, 2) },
+  { label: "Organize", items: organizationNavigation.slice(0, 1) },
   {
-    label: "Archive and account",
+    label: "Trash and settings",
     items: [
-      {
-        destination: "history",
-        href: "/history",
-        icon: "clock",
-        label: "Version history",
-      },
-      organizationNavigation[2],
+      organizationNavigation[1],
       {
         destination: "settings",
         href: "/settings",
@@ -156,13 +135,11 @@ const settingsNavigation: NavigationItem = {
 export function WorkspaceBoundary({
   children,
   configured,
-  inboxCount,
   initialSidebarCollapsed,
   viewer,
 }: {
   children: ReactNode;
   configured: boolean;
-  inboxCount?: number;
   initialSidebarCollapsed: boolean;
   viewer: Viewer | null;
 }) {
@@ -183,7 +160,6 @@ export function WorkspaceBoundary({
   return (
     <CaptureProvider ownerId={viewer.id}>
       <WorkspaceShell
-        inboxCount={inboxCount}
         initialSidebarCollapsed={initialSidebarCollapsed}
         viewer={viewer}
       >
@@ -195,12 +171,10 @@ export function WorkspaceBoundary({
 
 export function WorkspaceShell({
   children,
-  inboxCount,
   initialSidebarCollapsed,
   viewer,
 }: {
   children: ReactNode;
-  inboxCount?: number;
   initialSidebarCollapsed: boolean;
   viewer: Viewer;
 }) {
@@ -282,7 +256,6 @@ export function WorkspaceShell({
       <Sidebar
         activeDestination={activeDestination}
         collapsed={sidebarCollapsed}
-        inboxCount={inboxCount}
       />
 
       <main className={workspaceShellStyles.workspace}>
@@ -317,22 +290,6 @@ export function WorkspaceShell({
           <div className={workspaceShellStyles.topActions}>
             <SyncStatus />
             <Link
-              aria-current={activeDestination === "inbox" ? "page" : undefined}
-              aria-label={
-                inboxCount
-                  ? `Open Inbox, ${inboxCount} ${inboxCount === 1 ? "item" : "items"}`
-                  : "Open Inbox"
-              }
-              className={`${workspaceShellStyles.topActionButton} ${workspaceShellStyles.inboxTopAction}`}
-              href="/inbox"
-            >
-              <Icon name="inbox" size={18} />
-              {inboxCount ? (
-                <small aria-hidden="true">{inboxCount}</small>
-              ) : null}
-              <NavigationPendingIndicator label="Inbox" />
-            </Link>
-            <Link
               aria-current={
                 activeDestination === "settings" ? "page" : undefined
               }
@@ -364,7 +321,6 @@ export function WorkspaceShell({
         {mobileNavigation.map((item) => (
           <NavigationControl
             active={item.destination === activeDestination}
-            inboxCount={item.destination === "inbox" ? inboxCount : undefined}
             item={item}
             key={item.destination}
             mobile
@@ -448,18 +404,14 @@ export function WorkspaceShell({
 
 function destinationForPathname(pathname: string): WorkspaceDestination {
   if (pathname === "/") return "home";
-  if (pathname.startsWith("/history")) return "history";
   if (pathname.startsWith("/explore")) return "explore";
   if (pathname.startsWith("/settings")) return "settings";
-  if (pathname.startsWith("/inbox")) return "inbox";
   if (pathname.startsWith("/timeline")) return "timeline";
   if (pathname.startsWith("/goals")) return "goals";
   if (pathname.startsWith("/homes")) return "homes";
   if (pathname.startsWith("/map")) return "map";
-  if (pathname.startsWith("/people")) return "people";
   if (pathname.startsWith("/vehicles")) return "vehicles";
   if (pathname.startsWith("/first-times")) return "first-times";
-  if (pathname.startsWith("/collections")) return "collections";
   if (pathname.startsWith("/tags")) return "tags";
   if (pathname.startsWith("/trash")) return "trash";
   return "library";
@@ -468,11 +420,9 @@ function destinationForPathname(pathname: string): WorkspaceDestination {
 function Sidebar({
   activeDestination,
   collapsed,
-  inboxCount,
 }: {
   activeDestination: WorkspaceDestination;
   collapsed: boolean;
-  inboxCount?: number;
 }) {
   return (
     <aside className={workspaceShellStyles.sidebar}>
@@ -500,7 +450,6 @@ function Sidebar({
           <NavGroup
             activeDestination={activeDestination}
             collapsed={collapsed}
-            inboxCount={inboxCount}
             items={primaryNavigation}
           />
           <div className={workspaceShellStyles.navDivider} role="separator" />
@@ -544,12 +493,10 @@ function Sidebar({
 function NavGroup({
   activeDestination,
   collapsed,
-  inboxCount,
   items,
 }: {
   activeDestination: WorkspaceDestination;
   collapsed: boolean;
-  inboxCount?: number;
   items: NavigationItem[];
 }) {
   return (
@@ -558,7 +505,6 @@ function NavGroup({
         <NavigationControl
           active={item.destination === activeDestination}
           collapsed={collapsed}
-          inboxCount={item.destination === "inbox" ? inboxCount : undefined}
           item={item}
           key={item.destination}
         />
@@ -570,14 +516,12 @@ function NavGroup({
 function NavigationControl({
   active,
   collapsed = false,
-  inboxCount,
   item,
   mobile = false,
   onNavigate,
 }: {
   active: boolean;
   collapsed?: boolean;
-  inboxCount?: number;
   item: NavigationItem;
   mobile?: boolean;
   onNavigate?: () => void;
@@ -588,9 +532,6 @@ function NavigationControl({
       <span className={workspaceShellStyles.navItemLabel}>
         {mobile && item.label === "First Times" ? "Firsts" : item.label}
       </span>
-      {inboxCount ? (
-        <small aria-hidden={mobile || undefined}>{inboxCount}</small>
-      ) : null}
     </>
   );
   const className = active

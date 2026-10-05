@@ -76,9 +76,8 @@ test("Vehicle cards share one grid row and keep their visual flush to the border
         title: "Earlier vehicle",
       },
     ]) {
-      const saved = await client.rpc("save_vehicle_entry", {
+      const saved = await client.rpc("save_vehicle_entry_with_occurrence", {
         p_body: "A vehicle chapter.",
-        p_collection_names: [],
         p_color: "Green",
         p_date_precision: vehicle.end ? "range" : "day",
         p_entry_id: null,

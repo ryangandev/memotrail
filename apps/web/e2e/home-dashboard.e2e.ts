@@ -80,7 +80,6 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
           owner_id: owner,
           title: "A kept memory",
           body: "A quiet afternoon worth returning to.",
-          inbox_status: "organized",
           item_kind: "entry",
           item_subtype: "entry",
           date_precision: "day",
@@ -90,7 +89,6 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
           owner_id: owner,
           title: "A longer kept entry ".repeat(6),
           body: "Long content that must not expand the recent row. ".repeat(30),
-          inbox_status: "organized",
           item_kind: "entry",
           item_subtype: "entry",
           date_precision: "unknown",
@@ -99,7 +97,6 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
           owner_id: owner,
           title: null,
           body: "Waiting for a little context",
-          inbox_status: "unreviewed",
           item_kind: "entry",
           item_subtype: "entry",
           date_precision: "unknown",
@@ -108,7 +105,6 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
           owner_id: owners[1],
           title: "Other owner private memory",
           body: "Must never appear",
-          inbox_status: "organized",
           item_kind: "entry",
           item_subtype: "entry",
           date_precision: "day",
@@ -141,7 +137,7 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
         page.getByRole("region", { name: "Recent Entries", exact: true }),
       ).toContainText("A kept memory");
       await expect(
-        page.getByRole("region", { name: "Ready to organize", exact: true }),
+        page.getByRole("region", { name: "Needs organizing", exact: true }),
       ).toContainText("Waiting for a little context");
       await expect(
         page.getByRole("region", { name: "A memory for today", exact: true }),
@@ -163,8 +159,8 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
         name: "Quick capture",
         exact: true,
       });
-      const inboxPanel = page
-        .getByRole("region", { name: "Ready to organize", exact: true })
+      const organizePanel = page
+        .getByRole("region", { name: "Needs organizing", exact: true })
         .locator("..");
       for (const width of [1440, 989]) {
         await page.setViewportSize({ width, height: 1000 });
@@ -172,7 +168,7 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
           .poll(async () => {
             const [left, right] = await Promise.all([
               capture.boundingBox(),
-              inboxPanel.boundingBox(),
+              organizePanel.boundingBox(),
             ]);
             return (
               Math.abs(left!.height - right!.height) +
@@ -180,31 +176,28 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
             );
           })
           .toBeLessThan(2);
-        const [heroBox, metricsBox, captureBox, inboxBox] = await Promise.all([
-          hero.boundingBox(),
-          metrics.boundingBox(),
-          capture.boundingBox(),
-          inboxPanel.boundingBox(),
-        ]);
+        const [heroBox, metricsBox, captureBox, organizeBox] =
+          await Promise.all([
+            hero.boundingBox(),
+            metrics.boundingBox(),
+            capture.boundingBox(),
+            organizePanel.boundingBox(),
+          ]);
         expect(metricsBox!.y).toBeGreaterThanOrEqual(
           heroBox!.y + heroBox!.height,
         );
-        expect(inboxBox!.x).toBeGreaterThan(captureBox!.x);
-        const [memoryBox, chaptersBox, recentBox] = await Promise.all([
+        expect(organizeBox!.x).toBeGreaterThan(captureBox!.x);
+        const [memoryBox, nowBox, recentBox] = await Promise.all([
           page
             .getByRole("region", { name: "A memory for today", exact: true })
             .boundingBox(),
-          page
-            .getByRole("region", { name: "Current chapters", exact: true })
-            .boundingBox(),
+          page.getByRole("region", { name: "Now", exact: true }).boundingBox(),
           page
             .getByRole("region", { name: "Recent Entries", exact: true })
             .boundingBox(),
         ]);
-        expect(Math.abs(memoryBox!.height - chaptersBox!.height)).toBeLessThan(
-          1,
-        );
-        expect(Math.abs(memoryBox!.y - chaptersBox!.y)).toBeLessThan(1);
+        expect(Math.abs(memoryBox!.height - nowBox!.height)).toBeLessThan(1);
+        expect(Math.abs(memoryBox!.y - nowBox!.y)).toBeLessThan(1);
         expect(Math.abs(recentBox!.width - metricsBox!.width)).toBeLessThan(1);
         expect(recentBox!.y).toBeGreaterThanOrEqual(
           memoryBox!.y + memoryBox!.height,
@@ -271,6 +264,13 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
         }
       }
       await page.setViewportSize({ width: 1440, height: 1000 });
+      // Let the page paint at the new size so the screenshot holds no stale tiles.
+      await page.evaluate(
+        () =>
+          new Promise((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(resolve)),
+          ),
+      );
       await page.screenshot({
         path: `/tmp/memotrail-home-dashboard-desktop.png`,
         animations: "disabled",
@@ -284,16 +284,16 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
             ),
           )
           .toBe(true);
-        const [captureBox, inboxBox] = await Promise.all([
+        const [captureBox, organizeBox] = await Promise.all([
           capture.boundingBox(),
-          inboxPanel.boundingBox(),
+          organizePanel.boundingBox(),
         ]);
-        expect(inboxBox!.y).toBeGreaterThanOrEqual(
+        expect(organizeBox!.y).toBeGreaterThanOrEqual(
           captureBox!.y + captureBox!.height,
         );
-        expect(Math.abs(inboxBox!.x - captureBox!.x)).toBeLessThan(1);
+        expect(Math.abs(organizeBox!.x - captureBox!.x)).toBeLessThan(1);
         const save = page.getByRole("button", {
-          name: "Save to Inbox",
+          name: "Save to Library",
           exact: true,
         });
         await expect(save).toBeVisible();
@@ -329,7 +329,7 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
       .getByRole("textbox", { name: "Entry text", exact: true })
       .fill("Captured from Home");
     await page
-      .getByRole("button", { name: "Save to Inbox", exact: true })
+      .getByRole("button", { name: "Save to Library", exact: true })
       .click();
     await expect(
       page
@@ -338,19 +338,11 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
         .first(),
     ).toBeVisible();
     await expect(
-      page.getByRole("region", { name: "Ready to organize", exact: true }),
+      page.getByRole("region", { name: "Needs organizing", exact: true }),
     ).toContainText("Captured from Home");
     await expect(
       page.getByRole("region", { name: "Recent Entries", exact: true }),
-    ).not.toContainText("Captured from Home");
-    const captured = await client
-      .from("entries")
-      .select("inbox_status")
-      .eq("owner_id", owner)
-      .eq("body", "Captured from Home")
-      .single();
-    expect(captured.error).toBeNull();
-    expect(captured.data!.inbox_status).toBe("unreviewed");
+    ).toContainText("Captured from Home");
 
     await page
       .getByRole("link", {
@@ -358,9 +350,9 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
         exact: true,
       })
       .click();
-    await expect(page).toHaveURL(`/inbox?entry=${pendingId}`);
+    await expect(page).toHaveURL(`/items/${pendingId}`);
     await expect(
-      page.getByRole("dialog", { name: "Review Entry" }),
+      page.getByRole("button", { name: "Edit Entry", exact: true }),
     ).toBeVisible();
     await page.goto("/");
     await page
