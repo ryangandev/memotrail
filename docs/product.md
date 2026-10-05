@@ -162,7 +162,7 @@ Homes and Vehicles appear as Periods without being marked, from when they became
 Timeline has four fixed lanes, in this order: Places lived, Vehicles, Work and study, and Other milestones.
 Homes fill Places lived and Vehicles fill Vehicles; each milestone chooses Work and study or Other milestones.
 There are no custom tracks, and lanes cannot be renamed, reordered, or hidden.
-Web Timeline opens in the lane view by default and offers Vertical Spine and Sticky Year styles through Settings; the chosen style is remembered for the signed-in account in that browser.
+Web Timeline has one view, the lanes; there is no style setting.
 The first Timeline visit asks for a private birth date, uses it as the story's starting point, and keeps it editable in Settings.
 Add to Timeline asks whether the user is adding a milestone, a First Time, a Home, or a Vehicle.
 A milestone or First Time opens the Entry editor with the milestone already marked; a Home or Vehicle opens its focused editor.

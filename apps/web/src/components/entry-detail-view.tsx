@@ -117,10 +117,8 @@ export function EntryDetailView({
             photos={editing.photos}
             tagOptions={editing.tagOptions}
             onClose={() => setEditing(null)}
-            onSaved={() => {
-              setEditing(null);
-              router.refresh();
-            }}
+            // The editor refreshes the page after it saves.
+            onSaved={() => setEditing(null)}
           />
         )}
         {active && entry.item_kind !== "goal" && (

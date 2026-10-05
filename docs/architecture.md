@@ -201,7 +201,7 @@ Pair it with the test file carrying the same feature name.
   New entry opens Quick Capture through `AppNavigator.startCapture()`, and Settings' Archive organization leaves the Settings sheet for Collections through `routeAfterSettings`, like Web's `/collections` link.
 - Native `Features/Trash` follows Web `/trash` over `TrashController`: the retention badge and note, Empty Trash, and cards that restore or delete forever through the Web RPCs and messages, with results as toasts.
   Delete forever and Empty Trash confirm in Web's Permanent action sheets, and Empty Trash keeps its prepared list and progress on screen until the run ends, like Web `EmptyTrashControl`.
-- Web Timeline style selection lives in Settings as an owner-scoped browser cookie. The lane view remains the default; Vertical Spine and Sticky Year are presentation components under `apps/web/src/components/timeline` that share the Timeline workspace data and link each card to its Item page. The original 20 HTML design studies remain under `timeline-ideas/`.
+- Web Timeline has only the lane view; the Vertical Spine and Sticky Year styles and their Settings cookie were removed so Timeline changes land in one layout. The original 20 HTML design studies remain under `timeline-ideas/`.
 - Web occurrence and profile date forms use `components/date-picker-field.tsx`; domain editors map their precision into its generic granularity, time, editability, and size props instead of duplicating picker UI.
 
 ## Offline rules

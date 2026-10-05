@@ -21,20 +21,14 @@ import { Icon } from "@/components/icon";
 import { DatePickerField } from "@/components/date-picker-field";
 import { PageFrame } from "@/components/page-frame";
 import { SeparatedList } from "@/components/separated-list";
-import { StickyYear } from "@/components/timeline/sticky-year";
-import { VerticalSpine } from "@/components/timeline/vertical-spine";
 import type { Milestone, MilestoneLane } from "@/lib/data/milestone";
 import type { TimelineLaneGroup } from "@/lib/data/timeline";
 import {
   createTimelineLayout,
   estimateLabelWidth,
 } from "@/lib/data/timeline-layout";
-import {
-  createTimelineDisplayModel,
-  timelineEntryDateLabel,
-} from "@/lib/data/timeline-presentation";
+import { timelineEntryDateLabel } from "@/lib/data/timeline-presentation";
 import { wikiEntryHref } from "@/lib/data/wiki-item";
-import type { TimelineStyle } from "@/lib/timeline-style";
 import styles from "@/components/timeline-workspace.module.css";
 
 const NewEntryDialog = dynamic(
@@ -88,7 +82,6 @@ export function TimelineWorkspace({
   ownerId,
   referenceDate,
   tagOptions,
-  timelineStyle,
 }: {
   birthDate: string | null;
   birthDateAvailable: boolean;
@@ -98,7 +91,6 @@ export function TimelineWorkspace({
   ownerId: string;
   referenceDate: string;
   tagOptions: string[];
-  timelineStyle: TimelineStyle;
 }) {
   const [selection, setSelection] = useState<EditorSelection | null>(null);
   const [birthDate, setBirthDate] = useState(serverBirthDate);
@@ -108,10 +100,6 @@ export function TimelineWorkspace({
   const items = useMemo(() => lanes.flatMap((lane) => lane.items), [lanes]);
   const labelProbe = useRef<HTMLSpanElement>(null);
   const measureLabel = useLabelMeasure(labelProbe);
-  const displayModel = useMemo(
-    () => createTimelineDisplayModel(lanes),
-    [lanes],
-  );
   const layout = useMemo(
     () =>
       createTimelineLayout(
@@ -156,23 +144,6 @@ export function TimelineWorkspace({
 
   function closeSelection() {
     setSelection(null);
-  }
-
-  function renderAlternativeTimeline() {
-    if (items.length === 0) {
-      return (
-        <TimelineEmptyState onAdd={() => setSelection({ type: "chooser" })} />
-      );
-    }
-    return timelineStyle === "vertical" ? (
-      <VerticalSpine
-        birthDate={birthDate}
-        model={displayModel}
-        referenceDate={referenceDate}
-      />
-    ) : (
-      <StickyYear model={displayModel} />
-    );
   }
 
   return (
@@ -223,11 +194,7 @@ export function TimelineWorkspace({
         </div>
       ) : null}
 
-      {!loadError && timelineStyle !== "classic"
-        ? renderAlternativeTimeline()
-        : null}
-
-      {!loadError && timelineStyle === "classic" ? (
+      {!loadError ? (
         <>
           <section
             className={styles.desktopTimeline}
@@ -410,21 +377,6 @@ function EditorLoading() {
       <div className={styles.editorLoading} role="status">
         <span />
         <strong>Opening editor</strong>
-      </div>
-    </div>
-  );
-}
-
-function TimelineEmptyState({ onAdd }: { onAdd: () => void }) {
-  return (
-    <div className={styles.message}>
-      <Icon name="timeline" size={22} />
-      <div>
-        <strong>Your Timeline is ready</strong>
-        <p>Add a place you lived, a vehicle, or a milestone to begin.</p>
-        <Button onClick={onAdd} type="button" variant="secondary">
-          Add to Timeline
-        </Button>
       </div>
     </div>
   );
