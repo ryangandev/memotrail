@@ -1,0 +1,59 @@
+{
+  "color": {
+    "$type": "color",
+    "canvas": {
+      "$value": "{palette.paper.100}"
+    },
+    "surface": {
+      "$value": "{palette.paper.50}"
+    },
+    "surfaceRaised": {
+      "$value": "{palette.white}"
+    },
+    "surfaceSubtle": {
+      "$value": "{palette.paper.200}"
+    },
+    "ink": {
+      "$value": "{palette.paper.950}"
+    },
+    "inkMuted": {
+      "$value": "{palette.paper.700}"
+    },
+    "inkFaint": {
+      "$value": "{palette.paper.600}"
+    },
+    "border": {
+      "$value": "{palette.paper.300}"
+    },
+    "borderStrong": {
+      "$value": "{palette.paper.400}"
+    },
+    "accent": {
+      "$value": "{palette.green.700}"
+    },
+    "accentHover": {
+      "$value": "{palette.green.800}"
+    },
+    "accentSubtle": {
+      "$value": "{palette.green.100}"
+    },
+    "accentInk": {
+      "$value": "{palette.green.50}"
+    },
+    "warm": {
+      "$value": "{palette.clay.600}"
+    },
+    "warmSubtle": {
+      "$value": "{palette.clay.100}"
+    },
+    "success": {
+      "$value": "{palette.green.600}"
+    },
+    "warning": {
+      "$value": "{palette.amber.700}"
+    },
+    "scrim": {
+      "$value": "{palette.paper.950}"
+    }
+  }
+}

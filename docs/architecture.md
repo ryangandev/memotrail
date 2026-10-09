@@ -11,7 +11,7 @@ Last reviewed: 2026-09-28.
 | Native client     | SwiftUI screens, controllers, device drafts and queues, native integrations | `apps/ios/MemoTrail/Features`, `apps/ios/MemoTrail/Models`, `apps/ios/MemoTrail/App`               |
 | Shared data       | Postgres schema, RLS, Storage policies, atomic RPCs, and search             | `supabase/migrations`                                                                              |
 | Data verification | Ownership, denial, concurrency, lifecycle, and contract tests               | `supabase/tests`                                                                                   |
-| Design tokens     | Semantic source tokens and generated Web and Swift outputs                  | `packages/design-tokens`                                                                           |
+| Design tokens     | DTCG token source and generated Web and Swift outputs                       | `packages/design-system`                                                                           |
 | Web design system | Reusable Web components and the development-only audit gallery              | `apps/web/src/components`, `apps/web/src/app/design-system`                                        |
 | Media runtime     | Deployable image and metadata decoder dependencies                          | `packages/media-runtime`                                                                           |
 | Delivery          | Web, iOS, and database CI                                                   | `.github/workflows/ci.yml`                                                                         |
@@ -36,7 +36,7 @@ Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/Me
 | Photos, metadata, or export                              | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                           | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, cleanup, and export migrations and tests                         |
 | Timeline, Homes, Vehicles, Goals, or First Times         | matching `app` route, workspace component, and `lib/data` module                                                                | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                   |
 | Tags, links, the Item page, or Trash                     | matching `app` route and component, shared Entry tag editor, `lib/data` organization, Entry detail, and Trash modules           | matching directory under `Features`                                                   | organization, relationship, Trash, and Empty Trash migrations and tests |
-| Visual system                                            | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                    | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-tokens/tokens.json` and generator                      |
+| Visual system                                            | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                    | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-system/tokens` and generator                           |
 
 Native destinations and shared detail routing live in `App/WorkspaceRoute.swift`; the primary tabs live in `App/RootTabView.swift`.
 The More tab lays out `WorkspaceRoute.groups` like Web's mobile More menu, with the same groups, order, and icons.
@@ -300,9 +300,11 @@ Pair it with the test file carrying the same feature name.
 
 ## Design-system rules
 
-- `packages/design-tokens/tokens.json` is the semantic source of truth.
-- Generated Web CSS and Swift values are never edited directly.
-- Token changes run `pnpm tokens:generate` and `pnpm tokens:check`.
+- `packages/design-system/tokens` is the token source of truth, written in the DTCG 2025.10 format.
+  `soft-ledger.resolver.json` merges the foundation files and selects the light or dark color file through its `theme` modifier.
+  The `palette` group holds raw colors that only semantic tokens reference; generated outputs never include it, so components use semantic roles.
+- Generated Web CSS, the Web gallery catalog in `apps/web/src/generated`, and Swift values are never edited directly.
+- Token changes run `pnpm design-system:generate` and `pnpm design-system:check`; the check also rejects invalid DTCG values, unresolved or circular references, and themes that define different tokens.
 - The SVGs in `assets/brand` are the source of the iOS app icon.
   `apps/ios/scripts/render-app-icon.swift` writes the light, dark, and tinted PNGs in `AppIcon.appiconset`, which are never exported by hand; `AppIconTests` checks their alpha layout.
 - The development-only `/design-system` route renders production Web components and current generated tokens for review; it is unavailable in Production.

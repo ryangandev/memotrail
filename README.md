@@ -22,7 +22,7 @@ assets/
   brand/                Brand mark and app icon SVG sources
 docs/                   Product contract, architecture map, and current status
 packages/
-  design-tokens/        Cross-platform Soft Ledger token source and generator
+  design-system/        Cross-platform Soft Ledger DTCG tokens and generator
   media-runtime/        Shared server-side image and metadata runtime
 supabase/
   migrations/           Database, RLS, and Storage schema
@@ -117,10 +117,10 @@ Do not link, migrate, or mutate a hosted Supabase project until the exact target
 
 ## Validation
 
-After changing `packages/design-tokens/tokens.json`, regenerate both platform outputs:
+After changing a token file in `packages/design-system/tokens`, regenerate both platform outputs:
 
 ```bash
-pnpm tokens:generate
+pnpm design-system:generate
 ```
 
 After changing an `assets/brand/memotrail-app-icon-*.svg` source, regenerate the iOS app icon PNGs with the macOS SVG renderer:
@@ -133,7 +133,7 @@ Run the Web and shared checks:
 
 ```bash
 pnpm format:check
-pnpm tokens:check
+pnpm design-system:check
 pnpm turbo run lint typecheck test
 pnpm build
 node apps/web/scripts/verify-media-trace.mjs

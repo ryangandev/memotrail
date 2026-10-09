@@ -1,0 +1,32 @@
+{
+  "version": "2025.10",
+  "name": "Soft Ledger",
+  "description": "MemoTrail's cross-platform design tokens. Generated Web CSS and Swift receive every semantic token; palette tokens stay private to this package.",
+  "sets": {
+    "foundation": {
+      "description": "Theme-independent palette, typography, spacing, radius, motion, and shadow tokens.",
+      "sources": [
+        { "$ref": "palette.json" },
+        { "$ref": "font.json" },
+        { "$ref": "space.json" },
+        { "$ref": "radius.json" },
+        { "$ref": "motion.json" },
+        { "$ref": "shadow.json" }
+      ]
+    }
+  },
+  "modifiers": {
+    "theme": {
+      "description": "Semantic colors for each appearance. Both contexts define the same token names.",
+      "contexts": {
+        "light": [{ "$ref": "color-light.json" }],
+        "dark": [{ "$ref": "color-dark.json" }]
+      },
+      "default": "light"
+    }
+  },
+  "resolutionOrder": [
+    { "$ref": "#/sets/foundation" },
+    { "$ref": "#/modifiers/theme" }
+  ]
+}

@@ -1,4 +1,4 @@
-// Generated from packages/design-tokens/tokens.json. Do not edit directly.
+// Generated from packages/design-system/tokens. Do not edit directly.
 
 import SwiftUI
 import UIKit

@@ -1,4 +1,4 @@
-/* Generated from packages/design-tokens/tokens.json. Do not edit directly. */
+/* Generated from packages/design-system/tokens. Do not edit directly. */
 
 :root {
   --mt-font-family-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -11,12 +11,12 @@
   --mt-font-size-title-small: 20px;
   --mt-font-size-title: 28px;
   --mt-font-size-display: 42px;
-  --mt-line-height-tight: 1.15;
-  --mt-line-height-body: 1.55;
-  --mt-line-height-relaxed: 1.7;
   --mt-font-weight-regular: 400;
   --mt-font-weight-medium: 500;
   --mt-font-weight-semibold: 600;
+  --mt-line-height-tight: 1.15;
+  --mt-line-height-body: 1.55;
+  --mt-line-height-relaxed: 1.7;
   --mt-space-1: 4px;
   --mt-space-2: 8px;
   --mt-space-3: 12px;
