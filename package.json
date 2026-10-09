@@ -7,14 +7,14 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "build": "pnpm tokens:check && turbo run build",
+    "build": "pnpm design-system:check && turbo run build",
+    "design-system:check": "pnpm --filter @memotrail/design-system check",
+    "design-system:generate": "pnpm --filter @memotrail/design-system generate",
     "dev": "turbo run dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "tokens:check": "pnpm --filter @memotrail/design-tokens check",
-    "tokens:generate": "pnpm --filter @memotrail/design-tokens generate",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {

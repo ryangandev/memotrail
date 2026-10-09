@@ -37,7 +37,7 @@ jobs:
         run: pnpm format:check
 
       - name: Check generated design tokens
-        run: pnpm tokens:check
+        run: pnpm design-system:check
 
       - name: Lint, type-check, and test Web contracts
         run: pnpm turbo run lint typecheck test

@@ -1,5 +1,6 @@
 # Prettier reads the ignore file in the directory it runs from, so runs inside apps/web
 # need their own copy of the root rules for generated files.
 src/styles/generated-tokens.css
+src/generated
 .next
 .next-e2e-*

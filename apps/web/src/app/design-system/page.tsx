@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import tokens from "../../../../../packages/design-tokens/tokens.json";
+import tokens from "@/generated/design-tokens.json";
 import { PageFrame } from "@/components/page-frame";
 import { DesignSystemGallery } from "./design-system-gallery";
 import styles from "./page.module.css";

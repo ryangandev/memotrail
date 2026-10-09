@@ -30,7 +30,7 @@ import { SharedPrimitivesGallery } from "./shared-primitives-gallery";
 import { BrandMotionPreview } from "./brand-motion-preview";
 
 type TokenSet = {
-  meta: { name: string; version: string };
+  name: string;
   color: {
     light: Record<string, string>;
     dark: Record<string, string>;
@@ -38,9 +38,9 @@ type TokenSet = {
   font: {
     family: Record<string, string>;
     size: Record<string, number>;
-    lineHeight: Record<string, number>;
     weight: Record<string, number>;
   };
+  lineHeight: Record<string, number>;
   space: Record<string, number>;
   radius: Record<string, number>;
   motion: Record<string, number>;
@@ -172,7 +172,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
         <SharedPrimitivesGallery />
       </GallerySection>
       <GallerySection
-        description="Values come directly from packages/design-tokens/tokens.json. The nested previews exercise the generated light and dark CSS variables."
+        description="Values are resolved from the DTCG tokens in packages/design-system/tokens. The nested previews exercise the generated light and dark CSS variables."
         id="foundations"
         index="01"
         title="Foundations"

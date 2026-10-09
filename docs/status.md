@@ -263,6 +263,17 @@ Migration `202610040006` already drops the `entry_relations` and `set_entry_rela
 - Re-enable the manually disabled CI workflow after the account issue is resolved.
 - Rerun all Web, iOS, and database jobs for current `main` and confirm they actually execute.
 
+### 8. Extend the design system before the UI redesign
+
+Tokens are now DTCG 2025.10 files in `packages/design-system/tokens`, with private palette colors behind the semantic roles and generated outputs unchanged.
+The UI redesign waits for the remaining steps:
+
+- Add token groups for the values both platforms still hardcode: text roles with their Dynamic Type styles, danger and info colors, interaction states, control and icon sizes, one icon vocabulary, elevation and glass materials, page widths and breakpoints, and easing curves.
+  Then migrate code to them and have Web lint and native tests reject the hardcoded forms.
+- Give each shared component a YAML spec that generates its variant types for both platforms, starting with Badge and Button, and check that both galleries show every specimen it lists.
+- Add the missing Web Checkbox, SectionHeader, and Skeleton components.
+- Publish a Claude Design System generated from the repository; values tried there return through pull requests.
+
 ## Watch list
 
 - A valid hosted media session previously returned intermittent HTTP 401 responses before a later run passed. Do not attribute recurrence to the decoder repair without evidence.

@@ -7,7 +7,7 @@
         GallerySpecimen(
           title: "Colors",
           description:
-            "\(MTColor.catalog.count) semantic colors with matched light and dark names, generated from tokens.json."
+            "\(MTColor.catalog.count) semantic colors with matched light and dark names, generated from shared tokens."
         ) {
           ViewThatFits(in: .horizontal) {
             HStack(alignment: .top, spacing: MTSpacing.s3) { themePreviews }

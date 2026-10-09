@@ -1,0 +1,98 @@
+{
+  "font": {
+    "family": {
+      "$type": "fontFamily",
+      "sans": {
+        "$value": [
+          "ui-sans-serif",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "sans-serif"
+        ]
+      },
+      "serif": {
+        "$value": [
+          "ui-serif",
+          "Iowan Old Style",
+          "Palatino Linotype",
+          "Palatino",
+          "Georgia",
+          "serif"
+        ]
+      },
+      "mono": {
+        "$value": ["ui-monospace", "SFMono-Regular", "Consolas", "monospace"]
+      }
+    },
+    "size": {
+      "$type": "dimension",
+      "caption": {
+        "$value": {
+          "value": 12,
+          "unit": "px"
+        }
+      },
+      "label": {
+        "$value": {
+          "value": 13,
+          "unit": "px"
+        }
+      },
+      "body": {
+        "$value": {
+          "value": 15,
+          "unit": "px"
+        }
+      },
+      "bodyLarge": {
+        "$value": {
+          "value": 17,
+          "unit": "px"
+        }
+      },
+      "titleSmall": {
+        "$value": {
+          "value": 20,
+          "unit": "px"
+        }
+      },
+      "title": {
+        "$value": {
+          "value": 28,
+          "unit": "px"
+        }
+      },
+      "display": {
+        "$value": {
+          "value": 42,
+          "unit": "px"
+        }
+      }
+    },
+    "weight": {
+      "$type": "fontWeight",
+      "regular": {
+        "$value": 400
+      },
+      "medium": {
+        "$value": 500
+      },
+      "semibold": {
+        "$value": 600
+      }
+    }
+  },
+  "lineHeight": {
+    "$type": "number",
+    "tight": {
+      "$value": 1.15
+    },
+    "body": {
+      "$value": 1.55
+    },
+    "relaxed": {
+      "$value": 1.7
+    }
+  }
+}
