@@ -115,6 +115,14 @@ describe("tokens.json", () => {
     }
   });
 
+  test("keeps one component's geometry apart from the shared size scale", () => {
+    const names = (family) => tokens[family].tokens.map(({ name }) => name);
+    assert.ok(names("size").includes("mt-size-icon-16"));
+    assert.ok(names("size").includes("mt-size-hit-target"));
+    assert.ok(names("componentSize").includes("mt-size-checkbox-small"));
+    assert.ok(!names("size").includes("mt-size-checkbox-small"));
+  });
+
   test("names match the copy's pattern, the Web variables, and are unique", async () => {
     const names = families().flatMap(([, value]) =>
       value.tokens.map((token) => token.name),

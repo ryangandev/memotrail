@@ -34,6 +34,13 @@ const familyRules = [
   ["fontSize", (path) => path.startsWith("font.size.")],
   ["fontWeight", (path) => path.startsWith("font.weight.")],
   ["lineHeight", (path) => path.startsWith("lineHeight.")],
+  // One component's geometry, such as size.recordCard.visualHeight, stays apart from the shared
+  // scale so neither family outgrows the copy's limit as more components are specified.
+  [
+    "componentSize",
+    (path) =>
+      path.startsWith("size.") && !sharedSizes.includes(path.split(".")[1]),
+  ],
   [
     "size",
     (path, type) =>
@@ -68,6 +75,9 @@ const familyRules = [
       path.startsWith("material.") && ["dimension", "number"].includes(type),
   ],
 ];
+
+// The size groups every component draws from; any other size group belongs to one component.
+const sharedSizes = ["control", "field", "hitTarget", "icon", "stroke"];
 
 const typeGroupNames = { serif: "Serif", sans: "Sans", mono: "Mono" };
 
