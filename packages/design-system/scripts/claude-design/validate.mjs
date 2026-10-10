@@ -28,6 +28,9 @@ export const lengthForm = new RegExp(
 export const cardMarker = new RegExp(
   String.raw`^<!-- @dsCard group="(${cardGroups.join("|")})" height=(\d+) -->$`,
 );
+// The cover sits above the brand book rather than in a group, at 240 to 360 px tall.
+export const coverMarker = /^<!-- @dsCard height=(\d+) -->$/;
+export const coverHeights = { minimum: 240, maximum: 360 };
 const bundleHeader = /^\/\* @ds-bundle: (\{.*\}) \*\/$/;
 
 export function isColor(value) {
@@ -189,7 +192,13 @@ export async function validateProject(projectDirectory) {
       continue;
     }
     const firstLine = (await readFile(preview, "utf8")).split("\n", 1)[0];
-    if (!cardMarker.test(firstLine))
+    if (folder === "Cover") {
+      const height = Number(firstLine.match(coverMarker)?.[1]);
+      if (!(height >= coverHeights.minimum && height <= coverHeights.maximum))
+        fail(
+          `Cover/preview.html needs <!-- @dsCard height=N --> with N from ${coverHeights.minimum} to ${coverHeights.maximum}.`,
+        );
+    } else if (!cardMarker.test(firstLine))
       fail(`${folder}/preview.html has no valid @dsCard marker.`);
   }
   return { problems, listed, folders, names, tokens };
