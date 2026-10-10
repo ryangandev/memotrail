@@ -23,7 +23,8 @@
     var detail: String {
       switch self {
       case .primitives: "Buttons, sheets, confirmations, page headers, and empty states."
-      case .foundations: "Semantic colors, type roles, spacing, radius, shadow, and motion."
+      case .foundations:
+        "Semantic colors, type roles, spacing, radius, shadow, motion, size, state, elevation, and materials."
       case .identity: "The MemoTrail mark, its motion, and the shared icon vocabulary."
       case .layout: "Page widths, gutters, and section rhythm."
       case .forms: "Text, search, select, and date fields, organization, photos, and labels."

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "check": "node ./scripts/generate.mjs --check",
-    "generate": "node ./scripts/generate.mjs"
+    "generate": "node ./scripts/generate.mjs",
+    "test": "node --test"
   }
 }

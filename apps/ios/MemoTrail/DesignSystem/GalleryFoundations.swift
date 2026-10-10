@@ -16,13 +16,14 @@
         }
         GallerySpecimen(
           title: "Typography",
+          api: "MTFont · mtTextRole(_:)",
           description:
-            "Text roles use the Web token names and the iOS text style of the same default size, so they follow Dynamic Type."
+            "\(MTTextRole.catalog.count) text roles shared with Web. Roles with a text style follow Dynamic Type; the rest keep a fixed size."
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s4) {
-            ForEach(TypeRole.all, id: \.name) { role in
+            ForEach(MTTextRole.catalog, id: \.name) { role in
               VStack(alignment: .leading, spacing: MTSpacing.s1) {
-                Text("A life in progress").font(role.font).foregroundStyle(MTColor.ink)
+                Text("A life in progress").mtTextRole(role).foregroundStyle(MTColor.ink)
                 Text("\(role.name) · \(role.detail)").font(MTFont.caption.monospaced())
                   .foregroundStyle(MTColor.inkMuted)
               }
@@ -78,11 +79,17 @@
         }
         GallerySpecimen(
           title: "Motion",
-          description: "Durations are shared with Web. Reduce Motion replaces movement with a fade."
+          api: "MTMotion · MTEasing.<curve>.animation(duration:)",
+          description:
+            "Durations and easing curves are shared with Web. Reduce Motion replaces movement with a fade."
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s3) {
             ForEach(MTMotion.catalog, id: \.name) { token in
-              MotionRow(name: token.name, seconds: token.seconds)
+              MotionRow(name: token.name, seconds: token.seconds, curve: MTEasing.inOut)
+            }
+            Rectangle().fill(MTColor.border).frame(height: 1)
+            ForEach(MTEasing.catalog, id: \.name) { curve in
+              MotionRow(name: curve.name, seconds: MTMotion.deliberate * 4, curve: curve)
             }
           }
         }
@@ -107,6 +114,10 @@
             }
           }
         }
+        SizeSpecimen()
+        StateSpecimen()
+        ElevationSpecimen()
+        MaterialSpecimen()
       }
     }
 
@@ -116,24 +127,17 @@
     }
   }
 
-  private struct TypeRole {
-    let name: String
-    let detail: String
-    let font: Font
-
-    static let all = [
-      TypeRole(name: "display", detail: "serif · Large Title · Web 42", font: MTFont.display),
-      TypeRole(name: "title", detail: "serif · Title · Web 28", font: MTFont.title),
-      TypeRole(name: "titleSmall", detail: "sans · Title 3 · Web 20", font: MTFont.titleSmall),
-      TypeRole(
-        name: "cardTitle", detail: "serif · Title 3 · record titles", font: MTFont.cardTitle),
-      TypeRole(name: "bodyLarge", detail: "sans · Body · Web 17", font: MTFont.bodyLarge),
-      TypeRole(name: "heading", detail: "sans · Headline · list titles", font: MTFont.heading),
-      TypeRole(name: "body", detail: "sans · Subheadline · Web 15", font: MTFont.body),
-      TypeRole(name: "label", detail: "sans · Footnote · Web 13", font: MTFont.label),
-      TypeRole(name: "caption", detail: "sans · Caption · Web 12", font: MTFont.caption),
-      TypeRole(name: "micro", detail: "sans · Caption 2 · eyebrows", font: MTFont.micro),
-    ]
+  extension MTTextRole {
+    fileprivate var detail: String {
+      let design =
+        switch design {
+        case .serif: "serif"
+        case .monospaced: "mono"
+        default: "sans"
+        }
+      let scaling = textStyle.map { String(describing: $0) } ?? "fixed"
+      return "\(design) · \(Int(size)) pt · \(scaling)"
+    }
   }
 
   private struct ThemeColorPreview: View {
@@ -153,7 +157,7 @@
                 .frame(width: 32, height: 32)
               VStack(alignment: .leading, spacing: 0) {
                 Text(token.name).font(MTFont.caption).foregroundStyle(MTColor.ink)
-                Text(scheme == .dark ? token.darkHex : token.lightHex)
+                Text(value(of: token))
                   .font(MTFont.caption.monospaced()).foregroundStyle(MTColor.inkMuted)
               }
               .lineLimit(1)
@@ -169,11 +173,18 @@
       .accessibilityElement(children: .contain)
       .accessibilityLabel(scheme == .dark ? "Dark colors" : "Light colors")
     }
+
+    private func value(of token: MTColorToken) -> String {
+      let hex = scheme == .dark ? token.darkHex : token.lightHex
+      let opacity = scheme == .dark ? token.darkOpacity : token.lightOpacity
+      return opacity < 1 ? "\(hex) \(Int((opacity * 100).rounded()))%" : hex
+    }
   }
 
   private struct MotionRow: View {
     let name: String
     let seconds: Double
+    let curve: MTEasingCurve
     @State private var moved = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -193,10 +204,281 @@
         .frame(height: 20)
         Text("\(Int(seconds * 1_000)) ms").font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
         Button("Play \(name) motion", systemImage: "play.fill") {
-          withAnimation(.easeInOut(duration: seconds)) { moved.toggle() }
+          withAnimation(curve.animation(duration: seconds)) { moved.toggle() }
         }
-        .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
+        .labelStyle(.iconOnly).frame(minWidth: MTSize.hitTarget, minHeight: MTSize.hitTarget)
       }
+    }
+  }
+
+  private struct SizeSpecimen: View {
+    private let controls: [(name: String, value: CGFloat, isField: Bool)] = [
+      ("control.small", MTSize.Control.small, false),
+      ("control.medium", MTSize.Control.medium, false),
+      ("control.large", MTSize.Control.large, false),
+      ("field.small", MTSize.Field.small, true),
+      ("field.medium", MTSize.Field.medium, true),
+      ("field.large", MTSize.Field.large, true),
+    ]
+    private let icons: [CGFloat] = [
+      MTSize.Icon.s7, MTSize.Icon.s8, MTSize.Icon.s10, MTSize.Icon.s11, MTSize.Icon.s12,
+      MTSize.Icon.s13, MTSize.Icon.s14, MTSize.Icon.s15, MTSize.Icon.s16, MTSize.Icon.s17,
+      MTSize.Icon.s18, MTSize.Icon.s19, MTSize.Icon.s20, MTSize.Icon.s21, MTSize.Icon.s22,
+      MTSize.Icon.s23, MTSize.Icon.s24, MTSize.Icon.s25, MTSize.Icon.s30,
+    ]
+    private let strokes: [(name: String, value: CGFloat)] = [
+      ("thin", MTSize.Stroke.thin), ("medium", MTSize.Stroke.medium),
+      ("thick", MTSize.Stroke.thick), ("icon", MTSize.Stroke.icon),
+    ]
+
+    var body: some View {
+      GallerySpecimen(
+        title: "Size",
+        api: "MTSize.Control · Field · hitTarget · Icon · Stroke",
+        description:
+          "Native control and field heights follow the 44 pt touch minimum, so they differ from Web."
+      ) {
+        VStack(alignment: .leading, spacing: MTSpacing.s5) {
+          LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: 96), spacing: MTSpacing.s3)],
+            alignment: .leading, spacing: MTSpacing.s3
+          ) {
+            ForEach(controls, id: \.name) { token in
+              VStack(spacing: MTSpacing.s1) {
+                RoundedRectangle(cornerRadius: MTRadius.small)
+                  .fill(token.isField ? MTColor.surfaceRaised : MTColor.accentSubtle)
+                  .overlay {
+                    RoundedRectangle(cornerRadius: MTRadius.small).stroke(MTColor.borderStrong)
+                  }
+                  .frame(height: token.value)
+                Text(token.name).font(MTFont.caption.monospaced()).foregroundStyle(MTColor.ink)
+                Text("\(Int(token.value)) pt").font(MTFont.caption).foregroundStyle(
+                  MTColor.inkMuted)
+              }
+              .frame(maxHeight: .infinity, alignment: .bottom)
+            }
+            VStack(spacing: MTSpacing.s1) {
+              RoundedRectangle(cornerRadius: MTRadius.small)
+                .strokeBorder(MTColor.accent, style: StrokeStyle(lineWidth: 1, dash: [3]))
+                .frame(width: MTSize.hitTarget, height: MTSize.hitTarget)
+              Text("hitTarget").font(MTFont.caption.monospaced()).foregroundStyle(MTColor.ink)
+              Text("\(Int(MTSize.hitTarget)) pt").font(MTFont.caption).foregroundStyle(
+                MTColor.inkMuted)
+            }
+            .frame(maxHeight: .infinity, alignment: .bottom)
+          }
+          LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: 52), spacing: MTSpacing.s2)],
+            alignment: .leading, spacing: MTSpacing.s3
+          ) {
+            ForEach(icons, id: \.self) { size in
+              VStack(spacing: MTSpacing.s1) {
+                Image(MTIcon.star).font(.system(size: size)).foregroundStyle(MTColor.ink)
+                  .frame(height: MTSize.Icon.s30)
+                Text("s\(Int(size))").font(MTFont.caption.monospaced()).foregroundStyle(
+                  MTColor.inkMuted)
+              }
+              .accessibilityElement(children: .combine)
+            }
+          }
+          VStack(alignment: .leading, spacing: MTSpacing.s3) {
+            ForEach(strokes, id: \.name) { stroke in
+              HStack(spacing: MTSpacing.s3) {
+                Text("stroke.\(stroke.name)").font(MTFont.caption.monospaced())
+                  .foregroundStyle(MTColor.ink).frame(width: 104, alignment: .leading)
+                Capsule().fill(MTColor.ink).frame(height: stroke.value)
+                Text("\(stroke.value.formatted()) pt").font(MTFont.caption).foregroundStyle(
+                  MTColor.inkMuted
+                )
+                .frame(width: 44, alignment: .trailing)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private struct StateSpecimen: View {
+    private let colors: [(name: String, color: Color)] = [
+      ("focus.ring", MTState.Focus.ring), ("focus.halo", MTState.Focus.halo),
+      ("hover.surface", MTState.Hover.surface), ("hover.ink", MTState.Hover.ink),
+      ("hover.accentSurface", MTState.Hover.accentSurface),
+      ("hover.primary", MTState.Hover.primary), ("hover.chipBorder", MTState.Hover.chipBorder),
+      ("hover.periodBar", MTState.Hover.periodBar),
+      ("selected.surface", MTState.Selected.surface), ("selected.ink", MTState.Selected.ink),
+      ("selected.fill", MTState.Selected.fill), ("selected.onFill", MTState.Selected.onFill),
+      ("disabled.codeSurface", MTState.Disabled.codeSurface),
+    ]
+    private let opacities: [(name: String, value: Double)] = [
+      ("button", MTState.Disabled.Opacity.button), ("field", MTState.Disabled.Opacity.field),
+      ("choice", MTState.Disabled.Opacity.choice), ("quiet", MTState.Disabled.Opacity.quiet),
+      ("navigation", MTState.Disabled.Opacity.navigation),
+      ("soft", MTState.Disabled.Opacity.soft), ("toolbar", MTState.Disabled.Opacity.toolbar),
+      ("calendarDay", MTState.Disabled.Opacity.calendarDay),
+    ]
+
+    var body: some View {
+      GallerySpecimen(
+        title: "State",
+        api: "MTState.Focus · Hover · Selected · Disabled",
+        description:
+          "Focus, hover, selected, and disabled treatments shared with Web. Hover applies to pointer input on iPad."
+      ) {
+        VStack(alignment: .leading, spacing: MTSpacing.s5) {
+          HStack(spacing: MTSpacing.s6) {
+            Text("Focus ring").font(MTFont.label).foregroundStyle(MTColor.ink)
+              .padding(.horizontal, MTSpacing.s4).padding(.vertical, MTSpacing.s2)
+              .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.small))
+              .overlay {
+                RoundedRectangle(cornerRadius: MTRadius.small).stroke(MTColor.borderStrong)
+              }
+              .padding(MTState.Focus.ringOffset)
+              .overlay {
+                RoundedRectangle(cornerRadius: MTRadius.small + MTState.Focus.ringOffset)
+                  .stroke(MTState.Focus.ring, lineWidth: MTState.Focus.ringWidth)
+              }
+            Text("Focus halo").font(MTFont.label).foregroundStyle(MTColor.ink)
+              .padding(.horizontal, MTSpacing.s4).padding(.vertical, MTSpacing.s2)
+              .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.small))
+              .overlay {
+                RoundedRectangle(cornerRadius: MTRadius.small).stroke(MTState.Focus.ring)
+              }
+              .padding(MTState.Focus.haloWidth)
+              .background(
+                MTState.Focus.halo,
+                in: RoundedRectangle(cornerRadius: MTRadius.small + MTState.Focus.haloWidth))
+          }
+          LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: 150), spacing: MTSpacing.s2)],
+            alignment: .leading, spacing: MTSpacing.s3
+          ) {
+            ForEach(colors, id: \.name) { token in
+              HStack(spacing: MTSpacing.s2) {
+                RoundedRectangle(cornerRadius: MTRadius.small).fill(token.color)
+                  .overlay {
+                    RoundedRectangle(cornerRadius: MTRadius.small).stroke(MTColor.border)
+                  }
+                  .frame(width: 32, height: 32)
+                Text(token.name).font(MTFont.caption).foregroundStyle(MTColor.ink)
+                  .lineLimit(1).minimumScaleFactor(0.8)
+              }
+            }
+          }
+          LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: 88), spacing: MTSpacing.s2)],
+            alignment: .leading, spacing: MTSpacing.s3
+          ) {
+            ForEach(opacities, id: \.name) { token in
+              VStack(spacing: MTSpacing.s1) {
+                Text("Disabled").font(MTFont.label).foregroundStyle(MTColor.accentInk)
+                  .frame(maxWidth: .infinity).padding(.vertical, MTSpacing.s2)
+                  .background(MTColor.accent, in: RoundedRectangle(cornerRadius: MTRadius.small))
+                  .opacity(token.value)
+                Text(token.name).font(MTFont.caption.monospaced()).foregroundStyle(MTColor.ink)
+                Text(token.value.formatted()).font(MTFont.caption).foregroundStyle(
+                  MTColor.inkMuted)
+              }
+              .accessibilityElement(children: .combine)
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private struct ElevationSpecimen: View {
+    var body: some View {
+      GallerySpecimen(
+        title: "Elevation",
+        api: "MTElevation.<level>.surface · shadow · scrim",
+        description:
+          "Each level pairs a surface with its shadow. Overlay adds the scrim behind it."
+      ) {
+        VStack(spacing: MTSpacing.s3) {
+          ForEach(MTElevation.catalog, id: \.name) { level in
+            Text(level.name).font(MTFont.caption.monospaced()).foregroundStyle(MTColor.inkMuted)
+              .frame(maxWidth: .infinity, minHeight: 56)
+              .background(level.surface, in: RoundedRectangle(cornerRadius: MTRadius.medium))
+              .overlay {
+                RoundedRectangle(cornerRadius: MTRadius.medium).stroke(MTColor.border)
+              }
+              .mtShadow(level.shadow)
+              .padding(MTSpacing.s4)
+              .background(
+                level.scrim ?? MTColor.canvas,
+                in: RoundedRectangle(cornerRadius: MTRadius.medium))
+          }
+        }
+      }
+    }
+  }
+
+  private struct MaterialSpecimen: View {
+    var body: some View {
+      GallerySpecimen(
+        title: "Material",
+        api: "MTMaterial.<name>.tint · border · systemMaterial",
+        description:
+          "Native materials layer a tint over a system material, shown over a busy backdrop. Web-only materials appear in the Web gallery."
+      ) {
+        VStack(spacing: MTSpacing.s3) {
+          ForEach(MTMaterial.catalog, id: \.name) { material in
+            VStack(alignment: .leading, spacing: MTSpacing.s1) {
+              Text(material.name).font(MTFont.caption.monospaced())
+              Text(
+                material.systemMaterial.map { "\(String(describing: $0)) material" } ?? "tint only"
+              )
+              .font(MTFont.caption)
+            }
+            .foregroundStyle(MTColor.ink)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(MTSpacing.s3)
+            .background {
+              ZStack {
+                if let system = material.systemMaterial {
+                  Rectangle().fill(system.material)
+                }
+                Rectangle().fill(material.tint)
+              }
+              .clipShape(RoundedRectangle(cornerRadius: MTRadius.small))
+            }
+            .overlay {
+              if let border = material.border {
+                RoundedRectangle(cornerRadius: MTRadius.small).stroke(border)
+              }
+            }
+          }
+        }
+        .padding(MTSpacing.s4)
+        .background { StripedBackdrop() }
+        .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
+      }
+    }
+  }
+
+  /// Diagonal stripes that make a material's blur and tint visible.
+  private struct StripedBackdrop: View {
+    private let colors = [MTColor.accent, MTColor.warmSubtle, MTColor.warm, MTColor.surface]
+    private let stripe: CGFloat = 12
+
+    var body: some View {
+      Canvas { context, size in
+        var x = -size.height
+        var index = 0
+        while x < size.width {
+          var path = Path()
+          path.move(to: CGPoint(x: x, y: size.height))
+          path.addLine(to: CGPoint(x: x + size.height, y: 0))
+          path.addLine(to: CGPoint(x: x + size.height + stripe, y: 0))
+          path.addLine(to: CGPoint(x: x + stripe, y: size.height))
+          path.closeSubpath()
+          context.fill(path, with: .color(colors[index % colors.count]))
+          x += stripe
+          index += 1
+        }
+      }
+      .accessibilityHidden(true)
     }
   }
 
@@ -244,17 +526,21 @@
           title: "Icons",
           api: "MTIcon · Image(_:) · Label(_:icon:)",
           description:
-            "The Web icon vocabulary mapped to SF Symbols so both clients name concepts the same way."
+            "The shared icon vocabulary from packages/design-system/icons.json, drawn as SF Symbols. Icons marked iOS only have no Web glyph yet."
         ) {
           LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: MTSpacing.s2)]) {
             ForEach(MTIcon.allCases, id: \.self) { icon in
               VStack(spacing: MTSpacing.s2) {
-                Image(icon).font(.system(size: 20)).foregroundStyle(MTColor.ink)
-                  .frame(height: 24)
+                Image(icon).font(.system(size: MTSize.Icon.s20)).foregroundStyle(MTColor.ink)
+                  .frame(height: MTSize.Icon.s24)
                 Text(String(describing: icon)).font(MTFont.caption.monospaced())
                   .foregroundStyle(MTColor.inkMuted).lineLimit(1).minimumScaleFactor(0.7)
+                // Every cell reserves the marker line so the grid rows stay even.
+                Text("iOS only").font(MTFont.micro).foregroundStyle(MTColor.warm)
+                  .opacity(MTIcon.iosOnly.contains(icon) ? 1 : 0)
+                  .accessibilityHidden(!MTIcon.iosOnly.contains(icon))
               }
-              .frame(maxWidth: .infinity, minHeight: 64)
+              .frame(maxWidth: .infinity, minHeight: 64, alignment: .top)
               .accessibilityElement(children: .combine)
             }
           }
@@ -264,13 +550,19 @@
   }
 
   struct LayoutSpecimens: View {
+    private let gutters: [(name: String, value: CGFloat, purpose: String)] = [
+      ("regular", MTLayout.PageGutter.regular, "Wide windows"),
+      ("compact", MTLayout.PageGutter.compact, "Phones and narrow windows"),
+      ("narrow", MTLayout.PageGutter.narrow, "The narrowest phones"),
+    ]
+
     var body: some View {
       VStack(alignment: .leading, spacing: MTSpacing.s4) {
         GallerySpecimen(
           title: "MTPage",
           api: "width: compact | standard | wide | canvas · spacing",
           description:
-            "The canonical outer geometry. Phones use the full width with 16 pt gutters; wider screens center the page at its variant width. This gallery uses canvas."
+            "The canonical outer geometry. Phones use the full width with page gutters; wider screens center the page at its variant width. This gallery uses canvas."
         ) {
           VStack(spacing: 0) {
             ForEach(MTPageWidth.allCases, id: \.self) { width in
@@ -288,6 +580,29 @@
           }
         }
         GallerySpecimen(
+          title: "Page gutters",
+          api: "MTLayout.PageGutter",
+          description: "Horizontal page padding at each window class, shared with Web."
+        ) {
+          VStack(alignment: .leading, spacing: MTSpacing.s3) {
+            ForEach(gutters, id: \.name) { gutter in
+              HStack {
+                VStack(alignment: .leading, spacing: 0) {
+                  Text(gutter.name).font(MTFont.label).foregroundStyle(MTColor.ink)
+                  Text(gutter.purpose).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
+                }
+                Spacer()
+                RoundedRectangle(cornerRadius: 2).fill(MTColor.warm)
+                  .frame(width: gutter.value, height: 8)
+                Text("\(Int(gutter.value)) pt").font(MTFont.caption).foregroundStyle(
+                  MTColor.inkMuted
+                )
+                .frame(width: 44, alignment: .trailing)
+              }
+            }
+          }
+        }
+        GallerySpecimen(
           title: "Rhythm",
           description:
             "Pages stack sections 32 pt apart; related content inside a section uses 12 to 16 pt."
@@ -295,8 +610,7 @@
           VStack(alignment: .leading, spacing: MTSpacing.s2) {
             ForEach(
               [
-                ("Page gutter", MTSpacing.s4), ("Section gap", MTSpacing.s8),
-                ("Group gap", MTSpacing.s3),
+                ("Section gap", MTSpacing.s8), ("Group gap", MTSpacing.s3),
               ],
               id: \.0
             ) { name, value in

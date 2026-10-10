@@ -379,7 +379,8 @@ final class NativeWorkspaceUITests: XCTestCase {
       XCTAssertTrue(app.staticTexts["design-preview-status"].waitForExistence(timeout: 5))
       var previous = app.screenshot().pngRepresentation
       attach(app, "\(section) 1")
-      for page in 2...8 {
+      // Foundations is the longest section; the tour stops once a swipe no longer scrolls.
+      for page in 2...20 {
         app.swipeUp()
         let current = app.screenshot().pngRepresentation
         guard current != previous else { break }

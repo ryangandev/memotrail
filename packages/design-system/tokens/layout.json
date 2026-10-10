@@ -1,0 +1,270 @@
+{
+  "layout": {
+    "pageWidth": {
+      "$type": "dimension",
+      "$description": "Maximum widths of page content. Phones use the full width with page gutters.",
+      "compact": {
+        "$description": "Forms and focused reading",
+        "$value": {
+          "value": 880,
+          "unit": "px"
+        }
+      },
+      "standard": {
+        "$description": "Lists and search",
+        "$value": {
+          "value": 960,
+          "unit": "px"
+        }
+      },
+      "wide": {
+        "$description": "Dashboards and card grids",
+        "$value": {
+          "value": 1080,
+          "unit": "px"
+        }
+      },
+      "canvas": {
+        "$description": "Dense spatial views",
+        "$value": {
+          "value": 1180,
+          "unit": "px"
+        }
+      }
+    },
+    "pageGutter": {
+      "$type": "dimension",
+      "$description": "Horizontal page padding.",
+      "regular": {
+        "$description": "Wide windows.",
+        "$value": {
+          "value": 32,
+          "unit": "px"
+        }
+      },
+      "compact": {
+        "$description": "Phones and narrow windows.",
+        "$value": {
+          "value": 16,
+          "unit": "px"
+        }
+      },
+      "narrow": {
+        "$description": "The narrowest phones.",
+        "$value": {
+          "value": 12,
+          "unit": "px"
+        }
+      }
+    },
+    "breakpoint": {
+      "390": {
+        "$value": {
+          "value": 390,
+          "unit": "px"
+        }
+      },
+      "430": {
+        "$value": {
+          "value": 430,
+          "unit": "px"
+        }
+      },
+      "480": {
+        "$value": {
+          "value": 480,
+          "unit": "px"
+        }
+      },
+      "520": {
+        "$value": {
+          "value": 520,
+          "unit": "px"
+        }
+      },
+      "540": {
+        "$value": {
+          "value": 540,
+          "unit": "px"
+        }
+      },
+      "560": {
+        "$value": {
+          "value": 560,
+          "unit": "px"
+        }
+      },
+      "600": {
+        "$value": {
+          "value": 600,
+          "unit": "px"
+        }
+      },
+      "640": {
+        "$value": {
+          "value": 640,
+          "unit": "px"
+        }
+      },
+      "700": {
+        "$value": {
+          "value": 700,
+          "unit": "px"
+        }
+      },
+      "720": {
+        "$value": {
+          "value": 720,
+          "unit": "px"
+        }
+      },
+      "780": {
+        "$value": {
+          "value": 780,
+          "unit": "px"
+        }
+      },
+      "800": {
+        "$value": {
+          "value": 800,
+          "unit": "px"
+        }
+      },
+      "820": {
+        "$value": {
+          "value": 820,
+          "unit": "px"
+        }
+      },
+      "900": {
+        "$value": {
+          "value": 900,
+          "unit": "px"
+        }
+      },
+      "1050": {
+        "$value": {
+          "value": 1050,
+          "unit": "px"
+        }
+      },
+      "1100": {
+        "$value": {
+          "value": 1100,
+          "unit": "px"
+        }
+      },
+      "1300": {
+        "$value": {
+          "value": 1300,
+          "unit": "px"
+        }
+      },
+      "$type": "dimension",
+      "$description": "Viewport widths where Web layouts change, named by value. Media queries use max-width at the value and min-width one pixel above it. CSS cannot read variables in media queries, so these document and check the literals.",
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "container": {
+      "440": {
+        "$value": {
+          "value": 440,
+          "unit": "px"
+        }
+      },
+      "620": {
+        "$value": {
+          "value": 620,
+          "unit": "px"
+        }
+      },
+      "1000": {
+        "$value": {
+          "value": 1000,
+          "unit": "px"
+        }
+      },
+      "$type": "dimension",
+      "$description": "Container query widths, named by value.",
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "layer": {
+      "$type": "number",
+      "$description": "Web stacking order (z-index). Local layers order siblings inside one component.",
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      },
+      "local1": {
+        "$value": 1
+      },
+      "local2": {
+        "$value": 2
+      },
+      "local3": {
+        "$value": 3
+      },
+      "local4": {
+        "$value": 4
+      },
+      "local5": {
+        "$value": 5
+      },
+      "header": {
+        "$description": "The sticky top bar.",
+        "$value": 5
+      },
+      "sidebar": {
+        "$value": 10
+      },
+      "dock": {
+        "$description": "The floating workspace action dock.",
+        "$value": 12
+      },
+      "menuScrim": {
+        "$value": 18
+      },
+      "menu": {
+        "$value": 19
+      },
+      "mobileNavigation": {
+        "$value": 20
+      },
+      "progress": {
+        "$description": "Upload progress over the workspace.",
+        "$value": 30
+      },
+      "panel": {
+        "$description": "In-page dialogs, such as the timeline detail panel.",
+        "$value": 50
+      },
+      "dialog": {
+        "$value": 70
+      },
+      "popover": {
+        "$description": "Menus and pickers above dialogs.",
+        "$value": 80
+      },
+      "palette": {
+        "$description": "The command palette.",
+        "$value": 80
+      },
+      "nestedPopover": {
+        "$description": "Popovers opened from popovers.",
+        "$value": 90
+      },
+      "mapOverlay": {
+        "$description": "Overlays above the map library's own panes.",
+        "$value": 500
+      }
+    }
+  }
+}

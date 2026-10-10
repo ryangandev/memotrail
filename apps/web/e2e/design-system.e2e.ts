@@ -1,9 +1,180 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
+import tokens from "../src/generated/design-tokens.json";
 import {
   expectSeparatorsBetweenWords,
   expectUnclippedFocusRing,
 } from "./helpers/separators";
+
+/** Flattens nested token groups into dotted names, as the gallery labels them. */
+function leaves(group: object, prefix = ""): [string, string | number][] {
+  return Object.entries(group).flatMap(([key, value]) =>
+    value !== null && typeof value === "object"
+      ? leaves(value, `${prefix}${key}.`)
+      : [[`${prefix}${key}`, value] as [string, string | number]],
+  );
+}
+
+/** Converts a catalog color to the form getComputedStyle reports. */
+function computedColor(value: string | number) {
+  const hex = /^#([0-9A-F]{6})$/i.exec(String(value));
+  if (hex) {
+    const n = Number.parseInt(hex[1], 16);
+    return `rgb(${n >> 16}, ${(n >> 8) & 255}, ${n & 255})`;
+  }
+  const rgb = /^rgb\((\d+) (\d+) (\d+) \/ ([\d.]+)\)$/.exec(String(value));
+  if (rgb) return `rgba(${rgb[1]}, ${rgb[2]}, ${rgb[3]}, ${rgb[4]})`;
+  throw new Error(`Unexpected catalog color ${value}`);
+}
+
+const descriptions: Record<string, string | undefined> = tokens.descriptions;
+
+const colorMap = (group: object) =>
+  Object.fromEntries(
+    leaves(group)
+      .filter(([, value]) => typeof value === "string")
+      .map(([name, value]) => [name, computedColor(value)]),
+  );
+
+test("Foundations draw every generated token in both themes", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/design-system#foundations");
+  const foundations = page.locator("#foundations");
+
+  // Each nested theme preview draws its own resolved colors.
+  for (const theme of ["light", "dark"] as const) {
+    const drawn = await foundations
+      .locator(`#colors [data-theme="${theme}"] [data-color]`)
+      .evaluateAll((swatches) =>
+        Object.fromEntries(
+          swatches.map((swatch) => [
+            swatch.getAttribute("data-color"),
+            getComputedStyle(swatch.querySelector("span")!).backgroundColor,
+          ]),
+        ),
+      );
+    expect(drawn).toEqual(colorMap(tokens.color[theme]));
+  }
+
+  // Text roles resolve their whole typography through the role variables.
+  const roles = await foundations
+    .locator("[data-type-role]")
+    .evaluateAll((rows) =>
+      rows.map((row) => {
+        const style = getComputedStyle(row.querySelector("p")!);
+        return {
+          name: row.getAttribute("data-type-role")!,
+          fontSize: Number.parseFloat(style.fontSize),
+          fontWeight: Number(style.fontWeight),
+          letterSpacing: Number.parseFloat(style.letterSpacing) || 0,
+          lineHeight: Number.parseFloat(style.lineHeight),
+          textTransform: style.textTransform,
+        };
+      }),
+    );
+  expect(roles.map((role) => role.name)).toEqual(Object.keys(tokens.type));
+  for (const drawn of roles) {
+    const role = tokens.type[drawn.name as keyof typeof tokens.type];
+    expect(drawn.fontSize, drawn.name).toBe(role.fontSize);
+    expect(drawn.fontWeight, drawn.name).toBe(role.fontWeight);
+    expect(drawn.letterSpacing, drawn.name).toBeCloseTo(role.letterSpacing, 2);
+    expect(drawn.lineHeight, drawn.name).toBeCloseTo(
+      role.fontSize * role.lineHeight,
+      1,
+    );
+    expect(drawn.textTransform, drawn.name).toBe(
+      role.textCase === "uppercase" ? "uppercase" : "none",
+    );
+  }
+
+  // Every Web icon is drawn; single-platform icons are marked as such.
+  const icons = Object.entries(tokens.icon);
+  const webIcons = icons.filter(([, icon]) => icon.platforms.includes("web"));
+  await expect(page.locator("#identity [data-icon] svg")).toHaveCount(
+    webIcons.length,
+  );
+  await expect(
+    page.locator("#identity [data-icon]").filter({ hasText: "Web only" }),
+  ).toHaveText(
+    webIcons
+      .filter(([, icon]) => !icon.platforms.includes("ios"))
+      .map(([name]) => new RegExp(`^${name}`)),
+  );
+  await expect(page.locator("#native-icons code")).toHaveText(
+    icons
+      .filter(([, icon]) => !icon.platforms.includes("web"))
+      .map(([name]) => name),
+  );
+
+  // Layout reads page widths and layers from the tokens.
+  for (const [name, width] of Object.entries(tokens.layout.pageWidth)) {
+    await expect(
+      page.locator(`#layout [data-page-width="${name}"]`),
+    ).toContainText(`${width}px · ${descriptions[`layout.pageWidth.${name}`]}`);
+  }
+  await expect(page.locator("#layers code")).toHaveText(
+    Object.keys(tokens.layout.layer),
+  );
+  await expect(page.locator("#breakpoints [data-breakpoint]")).toHaveCount(
+    Object.keys(tokens.layout.breakpoint).length,
+  );
+
+  for (const theme of ["light", "dark"] as const) {
+    for (const width of [1280, 390, 320]) {
+      await test.step(`${theme} at ${width}px`, async () => {
+        await page.setViewportSize({ width, height: 900 });
+        await expect(async () => {
+          await page.getByLabel("Gallery theme").selectOption(theme);
+          await expect(
+            page.locator("[data-theme]").filter({ has: foundations }),
+          ).toHaveAttribute("data-theme", theme);
+        }).toPass();
+        const states = await page
+          .locator("#state [data-state]")
+          .evaluateAll((swatches) =>
+            Object.fromEntries(
+              swatches.map((swatch) => [
+                swatch.getAttribute("data-state"),
+                getComputedStyle(swatch.querySelector("span")!).backgroundColor,
+              ]),
+            ),
+          );
+        expect(states).toEqual(colorMap(tokens.state[theme]));
+        await expect(
+          page.locator('#elevation [data-elevation="overlay"]'),
+        ).toHaveCSS(
+          "background-color",
+          computedColor(tokens.elevation[theme].overlay.scrim),
+        );
+        for (const material of await page
+          .locator("#material [data-material]")
+          .all()) {
+          await expect(material).not.toHaveCSS("backdrop-filter", "none");
+        }
+        expect(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= window.innerWidth,
+          ),
+        ).toBe(true);
+        await foundations.screenshot({
+          animations: "disabled",
+          caret: "initial",
+          path: `/private/tmp/memotrail-foundations-${theme}-${width}.png`,
+        });
+        await page.locator("#layout").screenshot({
+          animations: "disabled",
+          path: `/private/tmp/memotrail-layout-tokens-${theme}-${width}.png`,
+        });
+      });
+    }
+  }
+  expect(errors).toEqual([]);
+});
 
 test("selected brand motion previews both panel directions and respects reduced motion", async ({
   page,

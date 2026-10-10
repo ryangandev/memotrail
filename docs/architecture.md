@@ -303,8 +303,19 @@ Pair it with the test file carrying the same feature name.
 - `packages/design-system/tokens` is the token source of truth, written in the DTCG 2025.10 format.
   `soft-ledger.resolver.json` merges the foundation files and selects the light or dark color file through its `theme` modifier.
   The `palette` group holds raw colors that only semantic tokens reference; generated outputs never include it, so components use semantic roles.
-- Generated Web CSS, the Web gallery catalog in `apps/web/src/generated`, and Swift values are never edited directly.
-- Token changes run `pnpm design-system:generate` and `pnpm design-system:check`; the check also rejects invalid DTCG values, unresolved or circular references, and themes that define different tokens.
+  The semantic groups are `color`, `font`, `lineHeight`, `type` text roles, `space`, `size`, `radius`, `layout`, `motion` durations and easing, `shadow`, `state`, `material`, and `elevation`.
+  Values reproduce what each platform renders today, so a group may hold several near values rather than a snapped scale.
+- `$extensions["com.memotrail"]` carries what DTCG cannot express.
+  `platforms` limits a token or group to Web or iOS, and the generator emits it only there; `web` and `ios` override a value on one platform.
+  A text role names its iOS Dynamic Type style in `ios.textStyle`, and a material names its iOS system material in `ios.material`.
+  `mix` records the colors a translucent or mixed color comes from, and the generator verifies the value against them.
+- `packages/design-system/icons.json` names each icon once, with its Web SVG and its SF Symbol.
+  The generator writes the Web `IconName` type and the Swift `MTIcon` enum from it; an icon drawn on only one platform lists that platform.
+- `packages/design-system/contrast.json` lists the text and background pairs held to WCAG AA in both themes on both platforms: 4.5:1 for body text and 3:1 for large text, judged from each pair's text role.
+  A pair that fails today needs a named exception with a reason, and an exception that no longer fails is reported as stale.
+- Generated Web CSS variables, the Web gallery catalog and typed `design-system.ts` in `apps/web/src/generated`, and Swift values are never edited directly.
+- Token changes run `pnpm design-system:generate` and `pnpm design-system:check`; the check also rejects invalid DTCG values, unresolved or circular references, themes that define different tokens, and contrast failures without an exception.
+  `pnpm --filter @memotrail/design-system test` covers the generator.
 - The SVGs in `assets/brand` are the source of the iOS app icon.
   `apps/ios/scripts/render-app-icon.swift` writes the light, dark, and tinted PNGs in `AppIcon.appiconset`, which are never exported by hand; `AppIconTests` checks their alpha layout.
 - The development-only `/design-system` route renders production Web components and current generated tokens for review; it is unavailable in Production.
@@ -347,8 +358,8 @@ Pair it with the test file carrying the same feature name.
   Unnamed domain date fields retain the editor's contextual submit validation rather than introducing native custom-validity interception.
 - Cross-platform components preserve meaning and state while allowing native interaction differences.
 - Native `DesignSystem/Components` owns reusable presentation components.
-  `MTFoundations.swift` maps each Web text role to the iOS Dynamic Type style with the same default size and defines the shared icon vocabulary, page widths, shadow, and line-height helpers.
-  Generated Swift tokens supply semantic colors, spacing, radius, motion, line heights, shadow layers, and the catalogs the gallery lists.
+  Generated `DesignTokens.swift` supplies semantic colors, the `MTTextRole` and `MTFont` text roles that follow Dynamic Type, `MTIcon`, `MTPageWidth`, spacing, sizes, layout, radius, motion and easing, line heights, shadow layers, state, materials, elevation, and the catalogs the gallery lists.
+  `MTFoundations.swift` holds the view helpers that apply them, such as `mtTextRole`, `mtShadow`, `mtLineSpacing`, and the `MTIcon` image and label initializers.
   Native actions use `mtButtonStyle` variants and sizes or `MTIconButton`; `MTBadge`, `MTPageHeader`, `MTSectionHeader`, and `MTEmptyState` mirror the Web Badge, PageHeader, SectionHeader, and EmptyState.
   `MTLoadMore` loads a list's next page as its end scrolls into view, or offers a retry, for Library and People.
   `MTListHeader` and `MTListSurface` are the uppercase list heading and bordered row surface that the Inbox and Library share, and `MTListRowButtonStyle` gives whole-row links their pressed surface.

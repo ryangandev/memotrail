@@ -18,6 +18,33 @@
         "value": 280,
         "unit": "ms"
       }
+    },
+    "easing": {
+      "$type": "cubicBezier",
+      "standard": {
+        "$description": "The CSS ease curve, the Web transition default.",
+        "$value": [0.25, 0.1, 0.25, 1]
+      },
+      "enter": {
+        "$description": "Ease out, for elements that appear. The native default.",
+        "$value": [0, 0, 0.58, 1]
+      },
+      "exit": {
+        "$description": "Ease in, for elements that leave.",
+        "$value": [0.42, 0, 1, 1]
+      },
+      "emphasized": {
+        "$description": "A quick start with a long settle, for sheets and reveals.",
+        "$value": [0.22, 1, 0.36, 1]
+      },
+      "inOut": {
+        "$description": "Ease in and out, for looping and symmetric motion.",
+        "$value": [0.42, 0, 0.58, 1]
+      },
+      "linear": {
+        "$description": "Constant speed, for progress and shimmer.",
+        "$value": [0, 0, 1, 1]
+      }
     }
   }
 }

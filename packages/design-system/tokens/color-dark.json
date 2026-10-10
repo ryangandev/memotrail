@@ -54,6 +54,1202 @@
     },
     "scrim": {
       "$value": "{palette.black}"
+    },
+    "danger": {
+      "$description": "Errors and destructive actions. Uses the warm palette, as errors do today.",
+      "$value": "{palette.clay.400}"
+    },
+    "dangerSubtle": {
+      "$description": "Background of danger buttons and error panels.",
+      "$value": "{palette.clay.900}"
+    },
+    "dangerBorder": {
+      "$description": "Border of danger buttons.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/clay/400/$value/components"
+        },
+        "alpha": 0.34
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.danger}"],
+            "weight": 0.34
+          }
+        }
+      }
+    },
+    "dangerTint": {
+      "$description": "Background of inline form errors.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/clay/400/$value/components"
+        },
+        "alpha": 0.1
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.danger}"],
+            "weight": 0.1
+          }
+        }
+      }
+    },
+    "info": {
+      "$description": "Neutral notices, such as an informational toast. Uses the accent palette.",
+      "$value": "{palette.green.400}"
+    },
+    "infoSubtle": {
+      "$description": "Background of informational notices.",
+      "$value": "{palette.green.900}"
+    },
+    "successSubtle": {
+      "$description": "Background of success notices.",
+      "$value": "{palette.green.900}"
+    },
+    "warningSubtle": {
+      "$description": "Background of setup warnings. Uses the warm subtle palette.",
+      "$value": "{palette.clay.900}"
+    },
+    "warningBorder": {
+      "$description": "Border of setup warnings.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/amber/400/$value/components"
+        },
+        "alpha": 0.35
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.warning}"],
+            "weight": 0.35
+          }
+        }
+      }
+    },
+    "inverseSurface": {
+      "$description": "Dark translucent chips and controls over photos, in both themes.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/charcoal/$value/components"
+        },
+        "alpha": 0.72
+      }
+    },
+    "inverseInk": {
+      "$description": "Text and glyphs on the inverse surface.",
+      "$value": "{palette.white}"
+    },
+    "accentWash": {
+      "$description": "Faint accent wash behind a hovered result.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/green/400/$value/components"
+        },
+        "alpha": 0.07
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.accent}"],
+            "weight": 0.07
+          }
+        }
+      }
+    },
+    "accentTint": {
+      "$description": "Accent tint behind selected rows and icon wells.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/green/400/$value/components"
+        },
+        "alpha": 0.1
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.accent}"],
+            "weight": 0.1
+          }
+        }
+      }
+    },
+    "accentBorderFaint": {
+      "$description": "Hairline accent borders on accent halos.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/green/400/$value/components"
+        },
+        "alpha": 0.15
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.accent}"],
+            "weight": 0.15
+          }
+        }
+      }
+    },
+    "accentBorder": {
+      "$description": "Borders of accent chips.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/green/400/$value/components"
+        },
+        "alpha": 0.34
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.accent}"],
+            "weight": 0.34
+          }
+        }
+      }
+    },
+    "accentBorderStrong": {
+      "$description": "Borders of selected accent cards.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/green/400/$value/components"
+        },
+        "alpha": 0.42
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.accent}"],
+            "weight": 0.42
+          }
+        }
+      }
+    },
+    "accentStripe": {
+      "$description": "Dashed accent stripes, such as the timeline today rail.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/green/400/$value/components"
+        },
+        "alpha": 0.62
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.accent}"],
+            "weight": 0.62
+          }
+        }
+      }
+    },
+    "accentHalo": {
+      "$description": "Soft accent halo behind an icon.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/green/900/$value/components"
+        },
+        "alpha": 0.55
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.accentSubtle}"],
+            "weight": 0.55
+          }
+        }
+      }
+    },
+    "accentNotice": {
+      "$description": "Native Home pending summary background.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/green/900/$value/components"
+        },
+        "alpha": 0.42
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"],
+          "mix": {
+            "colors": ["{color.accentSubtle}"],
+            "weight": 0.42
+          }
+        }
+      }
+    },
+    "accentPanel": {
+      "$description": "Opaque accent panel, such as a selected goal section.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.1333, 0.1725, 0.149],
+        "hex": "#222C26"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.accentSubtle}", "{color.surface}"],
+            "weight": 0.42
+          }
+        }
+      }
+    },
+    "accentPanelBorder": {
+      "$description": "Border of the accent panel.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.3333, 0.4, 0.3569],
+        "hex": "#55665B"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.accent}", "{color.border}"],
+            "weight": 0.38
+          }
+        }
+      }
+    },
+    "warmNotice": {
+      "$description": "Native Home summary background when a capture was refused.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/clay/900/$value/components"
+        },
+        "alpha": 0.42
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"],
+          "mix": {
+            "colors": ["{color.warmSubtle}"],
+            "weight": 0.42
+          }
+        }
+      }
+    },
+    "warmGlow": {
+      "$description": "Warm radial glow behind the sign-in story.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/clay/900/$value/components"
+        },
+        "alpha": 0.78
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.warmSubtle}"],
+            "weight": 0.78
+          }
+        }
+      }
+    },
+    "warmGlowFade": {
+      "$description": "Transparent end of the warm glow, so the gradient fades without darkening.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/clay/900/$value/components"
+        },
+        "alpha": 0
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"],
+          "mix": {
+            "colors": ["{color.warmSubtle}"],
+            "weight": 0
+          }
+        }
+      }
+    },
+    "warmWash": {
+      "$description": "Warm wash behind Trash previews.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/clay/900/$value/components"
+        },
+        "alpha": 0.65
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.warmSubtle}"],
+            "weight": 0.65
+          }
+        }
+      }
+    },
+    "captureQueued": {
+      "$description": "Background of a queued capture.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.1255, 0.1529, 0.1333],
+        "hex": "#202722"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.accentSubtle}", "{color.surface}"],
+            "weight": 0.24
+          }
+        }
+      }
+    },
+    "captureRefused": {
+      "$description": "Background of a refused capture.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.1647, 0.1412, 0.1255],
+        "hex": "#2A2420"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.warmSubtle}", "{color.surface}"],
+            "weight": 0.32
+          },
+          "ios": {
+            "value": {
+              "colorSpace": "srgb",
+              "components": {
+                "$ref": "#/palette/clay/900/$value/components"
+              },
+              "alpha": 0.32
+            }
+          }
+        }
+      }
+    },
+    "chipSurface": {
+      "$description": "Background of tag chips.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.1255, 0.1333, 0.1216],
+        "hex": "#20221F"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.surface}", "{color.surfaceRaised}"],
+            "weight": 0.72
+          }
+        }
+      }
+    },
+    "laneSurface": {
+      "$description": "Background of timeline lanes, raised with a trace of accent.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.149, 0.1608, 0.1451],
+        "hex": "#262925"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.surfaceRaised}", "{color.accentSubtle}"],
+            "weight": 0.94
+          }
+        }
+      }
+    },
+    "surfaceWash": {
+      "$description": "Faint wash behind grouped search results.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/night/800/$value/components"
+        },
+        "alpha": 0.42
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.surfaceSubtle}"],
+            "weight": 0.42
+          }
+        }
+      }
+    },
+    "surfaceRaisedTranslucent": {
+      "$description": "Nearly opaque raised surface, such as the sign-in card.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/night/850/$value/components"
+        },
+        "alpha": 0.94
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.surfaceRaised}"],
+            "weight": 0.94
+          }
+        }
+      }
+    },
+    "skeletonHighlight": {
+      "$description": "Moving highlight of loading placeholders.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/night/850/$value/components"
+        },
+        "alpha": 0.72
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.surfaceRaised}"],
+            "weight": 0.72
+          }
+        }
+      }
+    },
+    "borderFaint": {
+      "$description": "Dividers lighter than the default border.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/night/700/$value/components"
+        },
+        "alpha": 0.7
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.border}"],
+            "weight": 0.7
+          }
+        }
+      }
+    },
+    "inkUnderline": {
+      "$description": "Underlines of inline links.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/paper/150/$value/components"
+        },
+        "alpha": 0.7
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.ink}"],
+            "weight": 0.7
+          }
+        }
+      }
+    },
+    "scrollbar": {
+      "$description": "Scrollbar thumbs.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/paper/500/$value/components"
+        },
+        "alpha": 0.38
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"],
+          "mix": {
+            "colors": ["{color.inkMuted}"],
+            "weight": 0.38
+          }
+        }
+      }
+    },
+    "scrimFaint": {
+      "$description": "Faint scrim behind a light popover.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/black/$value/components"
+        },
+        "alpha": 0.12
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.scrim}"],
+            "weight": 0.12
+          }
+        }
+      }
+    },
+    "scrimMedium": {
+      "$description": "Scrim behind the command palette and over uploading photos.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/black/$value/components"
+        },
+        "alpha": 0.34
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.scrim}"],
+            "weight": 0.34
+          }
+        }
+      }
+    },
+    "scrimStrong": {
+      "$description": "Scrim behind dialogs and sheets.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/black/$value/components"
+        },
+        "alpha": 0.48
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "mix": {
+            "colors": ["{color.scrim}"],
+            "weight": 0.48
+          }
+        }
+      }
+    },
+    "menuScrim": {
+      "$description": "Scrim behind the mobile navigation menu.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/black/$value/components"
+        },
+        "alpha": 0.48
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"],
+          "mix": {
+            "colors": ["{palette.black}"],
+            "weight": 0.48
+          }
+        }
+      }
+    },
+    "mediaControl": {
+      "$description": "Controls over a selected photo before upload.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/black/$value/components"
+        },
+        "alpha": 0.64
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"],
+          "mix": {
+            "colors": ["{palette.black}"],
+            "weight": 0.64
+          }
+        }
+      }
+    },
+    "mediaControlBorder": {
+      "$description": "Border of controls over a selected photo.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/white/$value/components"
+        },
+        "alpha": 0.4
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"],
+          "mix": {
+            "colors": ["{palette.white}"],
+            "weight": 0.4
+          }
+        }
+      }
+    },
+    "onInkKey": {
+      "$description": "Keyboard key inside a dark tooltip.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/night/850/$value/components"
+        },
+        "alpha": 0.1
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"],
+          "mix": {
+            "colors": ["{color.surfaceRaised}"],
+            "weight": 0.1
+          }
+        }
+      }
+    },
+    "onInkKeyBorder": {
+      "$description": "Border of a keyboard key inside a dark tooltip.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/night/850/$value/components"
+        },
+        "alpha": 0.35
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"],
+          "mix": {
+            "colors": ["{color.surfaceRaised}"],
+            "weight": 0.35
+          }
+        }
+      }
+    },
+    "map": {
+      "$description": "Colors of the server-rendered location map and its pins.",
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      },
+      "marker": {
+        "$value": "{palette.map.markerDark}"
+      },
+      "canvas": {
+        "$value": "{palette.map.canvasDark}"
+      },
+      "grid": {
+        "$value": "{palette.map.gridDark}"
+      },
+      "labelSurface": {
+        "$value": "{palette.map.labelDark}"
+      },
+      "labelInk": {
+        "$value": "{palette.map.labelInkDark}"
+      },
+      "pin": {
+        "$description": "Interactive map pins and clusters.",
+        "$value": "{palette.map.pin}"
+      },
+      "pinInk": {
+        "$description": "Pin borders and counts.",
+        "$value": "{palette.white}"
+      }
+    }
+  },
+  "state": {
+    "hover": {
+      "$type": "color",
+      "chipBorder": {
+        "$description": "Border of a hovered tag chip.",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.3843, 0.4627, 0.4078],
+          "hex": "#627668"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.accent}", "{color.borderStrong}"],
+              "weight": 0.42
+            }
+          }
+        }
+      },
+      "periodBar": {
+        "$description": "A hovered timeline period bar.",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.251, 0.3608, 0.3098],
+          "hex": "#405C4F"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.accentSubtle}", "{color.accent}"],
+              "weight": 0.72
+            }
+          }
+        }
+      }
+    },
+    "disabled": {
+      "codeSurface": {
+        "$type": "color",
+        "$description": "Background of a disabled code block.",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.1529, 0.1608, 0.1412],
+          "hex": "#272924"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.surfaceSubtle}", "{color.canvas}"],
+              "weight": 0.76
+            }
+          }
+        }
+      }
+    }
+  },
+  "material": {
+    "glass": {
+      "tint": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/night/850/$value/components"
+          },
+          "alpha": 0.72
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.surfaceRaised}"],
+              "weight": 0.72
+            }
+          }
+        }
+      },
+      "border": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/night/600/$value/components"
+          },
+          "alpha": 0.72
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.borderStrong}"],
+              "weight": 0.72
+            }
+          }
+        }
+      },
+      "hoverBorder": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/green/400/$value/components"
+          },
+          "alpha": 0.58
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.accent}"],
+              "weight": 0.58
+            }
+          }
+        }
+      },
+      "key": {
+        "$type": "color",
+        "$description": "A key cap inside a glass control.",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/night/850/$value/components"
+          },
+          "alpha": 0.32
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.surfaceRaised}"],
+              "weight": 0.32
+            }
+          }
+        }
+      },
+      "keyBorder": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/night/600/$value/components"
+          },
+          "alpha": 0.55
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.borderStrong}"],
+              "weight": 0.55
+            }
+          }
+        }
+      },
+      "shadow": {
+        "$type": "shadow",
+        "$description": "Top sheen, bottom sheen, and a soft ink drop shadow.",
+        "$value": [
+          {
+            "color": {
+              "colorSpace": "srgb",
+              "components": {
+                "$ref": "#/palette/white/$value/components"
+              },
+              "alpha": 0.2
+            },
+            "offsetX": {
+              "value": 0,
+              "unit": "px"
+            },
+            "offsetY": {
+              "value": 1,
+              "unit": "px"
+            },
+            "blur": {
+              "value": 0,
+              "unit": "px"
+            },
+            "spread": {
+              "value": 0,
+              "unit": "px"
+            },
+            "inset": true
+          },
+          {
+            "color": {
+              "colorSpace": "srgb",
+              "components": {
+                "$ref": "#/palette/white/$value/components"
+              },
+              "alpha": 0.04
+            },
+            "offsetX": {
+              "value": 0,
+              "unit": "px"
+            },
+            "offsetY": {
+              "value": -1,
+              "unit": "px"
+            },
+            "blur": {
+              "value": 0,
+              "unit": "px"
+            },
+            "spread": {
+              "value": 0,
+              "unit": "px"
+            },
+            "inset": true
+          },
+          {
+            "color": {
+              "colorSpace": "srgb",
+              "components": {
+                "$ref": "#/palette/paper/150/$value/components"
+              },
+              "alpha": 0.12
+            },
+            "offsetX": {
+              "value": 0,
+              "unit": "px"
+            },
+            "offsetY": {
+              "value": 8,
+              "unit": "px"
+            },
+            "blur": {
+              "value": 28,
+              "unit": "px"
+            },
+            "spread": {
+              "value": 0,
+              "unit": "px"
+            }
+          }
+        ]
+      },
+      "hoverShadow": {
+        "$type": "shadow",
+        "$value": [
+          {
+            "color": {
+              "colorSpace": "srgb",
+              "components": {
+                "$ref": "#/palette/white/$value/components"
+              },
+              "alpha": 0.25
+            },
+            "offsetX": {
+              "value": 0,
+              "unit": "px"
+            },
+            "offsetY": {
+              "value": 1,
+              "unit": "px"
+            },
+            "blur": {
+              "value": 0,
+              "unit": "px"
+            },
+            "spread": {
+              "value": 0,
+              "unit": "px"
+            },
+            "inset": true
+          },
+          {
+            "color": {
+              "colorSpace": "srgb",
+              "components": {
+                "$ref": "#/palette/white/$value/components"
+              },
+              "alpha": 0.04
+            },
+            "offsetX": {
+              "value": 0,
+              "unit": "px"
+            },
+            "offsetY": {
+              "value": -1,
+              "unit": "px"
+            },
+            "blur": {
+              "value": 0,
+              "unit": "px"
+            },
+            "spread": {
+              "value": 0,
+              "unit": "px"
+            },
+            "inset": true
+          },
+          {
+            "color": {
+              "colorSpace": "srgb",
+              "components": {
+                "$ref": "#/palette/green/400/$value/components"
+              },
+              "alpha": 0.12
+            },
+            "offsetX": {
+              "value": 0,
+              "unit": "px"
+            },
+            "offsetY": {
+              "value": 0,
+              "unit": "px"
+            },
+            "blur": {
+              "value": 0,
+              "unit": "px"
+            },
+            "spread": {
+              "value": 1,
+              "unit": "px"
+            }
+          },
+          {
+            "color": {
+              "colorSpace": "srgb",
+              "components": {
+                "$ref": "#/palette/green/400/$value/components"
+              },
+              "alpha": 0.16
+            },
+            "offsetX": {
+              "value": 0,
+              "unit": "px"
+            },
+            "offsetY": {
+              "value": 0,
+              "unit": "px"
+            },
+            "blur": {
+              "value": 16,
+              "unit": "px"
+            },
+            "spread": {
+              "value": 0,
+              "unit": "px"
+            }
+          },
+          {
+            "color": {
+              "colorSpace": "srgb",
+              "components": {
+                "$ref": "#/palette/paper/150/$value/components"
+              },
+              "alpha": 0.15
+            },
+            "offsetX": {
+              "value": 0,
+              "unit": "px"
+            },
+            "offsetY": {
+              "value": 10,
+              "unit": "px"
+            },
+            "blur": {
+              "value": 32,
+              "unit": "px"
+            },
+            "spread": {
+              "value": 0,
+              "unit": "px"
+            }
+          }
+        ]
+      }
+    },
+    "glassPanel": {
+      "tint": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/night/850/$value/components"
+          },
+          "alpha": 0.76
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.surfaceRaised}"],
+              "weight": 0.76
+            },
+            "ios": {
+              "value": {
+                "colorSpace": "srgb",
+                "components": {
+                  "$ref": "#/palette/night/850/$value/components"
+                },
+                "alpha": 0.94
+              }
+            }
+          }
+        }
+      },
+      "border": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/night/600/$value/components"
+          },
+          "alpha": 0.8
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.borderStrong}"],
+              "weight": 0.8
+            }
+          }
+        }
+      }
+    },
+    "topBar": {
+      "tint": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/night/950/$value/components"
+          },
+          "alpha": 0.88
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.canvas}"],
+              "weight": 0.88
+            }
+          }
+        }
+      },
+      "border": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/night/700/$value/components"
+          },
+          "alpha": 0.82
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.border}"],
+              "weight": 0.82
+            }
+          }
+        }
+      }
+    },
+    "bottomBar": {
+      "tint": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/night/900/$value/components"
+          },
+          "alpha": 0.94
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.surface}"],
+              "weight": 0.94
+            }
+          }
+        }
+      }
+    },
+    "chip": {
+      "tint": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/night/850/$value/components"
+          },
+          "alpha": 0.86
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.surfaceRaised}"],
+              "weight": 0.86
+            }
+          }
+        }
+      }
     }
   }
 }

@@ -249,6 +249,87 @@
           "hex": "#9B6A2F"
         }
       }
+    },
+    "charcoal": {
+      "$description": "Translucent dark chips and controls that sit over photos in both themes.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.0941, 0.0941, 0.0784],
+        "hex": "#181814"
+      }
+    },
+    "map": {
+      "$description": "Colors of the server-rendered location map image, which cannot read CSS variables.",
+      "canvasLight": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.9529, 0.9451, 0.9216],
+          "hex": "#F3F1EB"
+        }
+      },
+      "canvasDark": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.1451, 0.1569, 0.1412],
+          "hex": "#252824"
+        }
+      },
+      "gridLight": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.851, 0.8353, 0.7922],
+          "hex": "#D9D5CA"
+        }
+      },
+      "gridDark": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.2431, 0.2627, 0.2471],
+          "hex": "#3E433F"
+        }
+      },
+      "labelDark": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.2039, 0.2275, 0.2078],
+          "hex": "#343A35"
+        }
+      },
+      "labelInkLight": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.298, 0.3176, 0.2941],
+          "hex": "#4C514B"
+        }
+      },
+      "labelInkDark": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.8941, 0.9059, 0.8745],
+          "hex": "#E4E7DF"
+        }
+      },
+      "markerLight": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.3608, 0.4353, 0.3647],
+          "hex": "#5C6F5D"
+        }
+      },
+      "markerDark": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.6118, 0.7137, 0.6471],
+          "hex": "#9CB6A5"
+        }
+      },
+      "pin": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.3216, 0.4353, 0.3765],
+          "hex": "#526F60"
+        }
+      }
     }
   }
 }
