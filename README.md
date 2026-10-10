@@ -129,7 +129,7 @@ After changing an `assets/brand/memotrail-app-icon-*.svg` source, regenerate the
 swift apps/ios/scripts/render-app-icon.swift
 ```
 
-Run the Web and shared checks:
+The Web and shared checks, which CI runs on every pull request, are:
 
 ```bash
 pnpm format:check
@@ -139,14 +139,15 @@ pnpm build
 node apps/web/scripts/verify-media-trace.mjs
 ```
 
-The CI Web job runs these independent checks concurrently before the build.
+A second CI job starts local Supabase and runs every database test, every data contract, and the full product browser suite against a production build.
+Pull requests that change only documentation or `apps/ios` skip both jobs, merges to `main` are not tested again, and a new push cancels the branch's running checks.
+Run only the focused layers below locally and leave the full suites to CI.
 `pnpm design-system:check` also holds the text and background pairs in `packages/design-system/contrast.json` to WCAG AA in both themes; `node packages/design-system/scripts/generate.mjs --contrast` prints every ratio.
 Web type checking runs `next typegen` before TypeScript so a fresh checkout generates the required Next.js declarations.
 The generated `apps/web/next-env.d.ts` stays local and is ignored by Git.
-Playwright browser tests are a separate local acceptance suite that requires the local Supabase stack; they are not part of the current GitHub CI job.
 GitHub CI does not build or test the iOS app.
 Each macOS runner minute costs this private repository ten Linux minutes, and the native contract and interaction suites need the Docker-based local Supabase stack, which GitHub's Apple silicon macOS runners cannot start.
-Before merging a change to `apps/ios`, design tokens, migrations, or a contract both clients share, run the affected native layers below locally.
+Before merging a change to `apps/ios` or generated design-system output that iOS consumes, run the affected native layers below locally.
 
 ### Choose the relevant test layer
 
@@ -163,7 +164,7 @@ Before merging a change to `apps/ios`, design tokens, migrations, or a contract 
 | Native interaction acceptance                     | `apps/ios/MemoTrailUITests`                             | `MemoTrailUI` scheme or `review-local-session.py`                                    | iOS Simulator; signed-in flows also need local Supabase |
 
 For a focused change, select the affected files or XCTest identifiers first.
-Include every affected layer when shared behavior changes, and run the full applicable suites before merging broad changes or releasing.
+Include every affected layer when shared behavior changes; CI runs the full Web and Supabase suites before merge.
 For example:
 
 ```bash
@@ -173,6 +174,7 @@ MEMOTRAIL_E2E_PORT=3101 pnpm --filter @memotrail/web test:e2e wiki-library.e2e.t
 ```
 
 The product browser suite starts its own isolated server and defaults to port 3100.
+Every scenario signs in as its own disposable account, so the suite runs two workers by default; set `MEMOTRAIL_E2E_WORKERS` to change that.
 Set `MEMOTRAIL_E2E_PORT` to an available port if another project is using it; the server, browser base URL, and request Origin checks use the same value.
 The native review script's `--web` option honors this variable as well.
 Test server build output is isolated by port, so independent test servers do not share Next.js build state.
