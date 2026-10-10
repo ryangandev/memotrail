@@ -2,6 +2,7 @@
   "shadow": {
     "$type": "shadow",
     "raised": {
+      "$description": "Cards and panels lifted off the page, such as record cards and the capture composer.",
       "$value": [
         {
           "color": {
@@ -54,6 +55,7 @@
       ]
     },
     "floating": {
+      "$description": "Menus, popovers, toasts, and dialogs.",
       "$value": [
         {
           "color": {

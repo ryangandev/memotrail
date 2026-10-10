@@ -13,6 +13,7 @@
       },
       "ringWidth": {
         "$type": "dimension",
+        "$description": "Width of the keyboard focus outline.",
         "$value": {
           "value": 2,
           "unit": "px"
@@ -93,6 +94,7 @@
       },
       "haloWidth": {
         "$type": "dimension",
+        "$description": "Width of the soft focus halo around fields.",
         "$value": {
           "value": 3,
           "unit": "px"

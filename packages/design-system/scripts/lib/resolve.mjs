@@ -97,7 +97,11 @@ export async function resolveSystem({ resolverPath, tokenDirectory, root }) {
     );
     const merged = resolvePointers(documents.reduce(mergeDocuments, {}));
     const groups = new Map();
-    definitions[theme] = { tokens: flatten(merged, groups), groups };
+    definitions[theme] = {
+      tokens: flatten(merged, groups),
+      groups,
+      groupDescriptions: groupDescriptions(merged),
+    };
     themedPaths[theme] = tokenPaths(
       contextDocuments.reduce(mergeDocuments, {}),
     );
@@ -135,6 +139,7 @@ export async function resolveSystem({ resolverPath, tokenDirectory, root }) {
   return {
     name: document.name,
     groups: definitions[first].groups,
+    groupDescriptions: definitions[first].groupDescriptions,
     themedPaths: new Set(themedPaths[first]),
     platforms: resolved,
   };
@@ -392,6 +397,18 @@ export function flatten(node, groups = new Map(), path = [], inherited = {}) {
   }
 
   return tokens;
+}
+
+// Maps each group path to its $description, so outputs can describe tokens that have none.
+function groupDescriptions(node, path = [], descriptions = new Map()) {
+  if (path.length > 0 && typeof node.$description === "string") {
+    descriptions.set(path.join("."), node.$description);
+  }
+  for (const [name, child] of Object.entries(node)) {
+    if (name.startsWith("$") || !isObject(child) || "$value" in child) continue;
+    groupDescriptions(child, [...path, name], descriptions);
+  }
+  return descriptions;
 }
 
 function tokenPaths(node, path = []) {

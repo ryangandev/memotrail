@@ -1,0 +1,74 @@
+# A test fixture in the shape of packages/design-system/components/*.yaml.
+name: Badge
+
+platforms:
+  web:
+    path: apps/web/src/components/badge.tsx
+    symbols: [Badge]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTLabels.swift
+    symbols: [MTBadge]
+
+purpose: A single-line, noninteractive label for a record's kind, a status, or a tag.
+
+use:
+  - Record kinds, statuses, and tags on cards, rows, and page headers.
+
+avoid:
+  - Anything people press or select. Use Button for actions.
+
+anatomy:
+  container: The pill that carries the tone's fill.
+  label: The single line of text.
+
+props:
+  tone:
+    description: The badge's color treatment.
+    values: [accent, neutral, warm, outline]
+    default: accent
+  uppercase:
+    description: Draws the label in uppercase.
+    type: boolean
+    default: false
+    platformNames: { ios: isUppercase }
+
+states: [default]
+
+tokens:
+  - container:
+      radius: "{radius.pill}"
+      paddingInline: "{space.2}"
+  - when: { tone: [accent, neutral] }
+    container: { material: { web: "{material.chip}" } }
+    label: { color: "{color.accent}" }
+
+content:
+  lines: 1
+  overflow: truncateTail
+  casing: asWritten
+  length: One to three words.
+  notes:
+    - "Write tags with a leading #, such as #travel."
+
+accessibility:
+  role: Static text.
+  label: The visible text.
+  focus: Never focusable.
+  minimumHitTarget: notInteractive
+  dynamicType: iOS scales with caption2.
+
+platformDifferences:
+  - difference: Micro and small look alike on iOS.
+    reason: 11 pt is the smallest Dynamic Type size.
+
+specimens:
+  - id: badge-tones
+    description: Every tone at the default small size.
+  - id: badge-sizes
+    description: Every size beside its uppercase treatment.
+  - id: badge-tags
+    description: Tags in Latin and CJK scripts.
+  - id: badge-truncation
+    description: Long labels truncate at the tail.
+  - id: badge-photo-overlay
+    description: Glass and inverse tones over a photo.

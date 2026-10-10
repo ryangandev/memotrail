@@ -60,6 +60,7 @@
         "unit": "px"
       }
     },
+    "$description": "Spacing for padding, gaps, and margins, named by 4px step.",
     "$type": "dimension"
   }
 }

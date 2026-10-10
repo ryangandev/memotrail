@@ -2,57 +2,75 @@
   "color": {
     "$type": "color",
     "canvas": {
+      "$description": "Page background behind every surface.",
       "$value": "{palette.paper.100}"
     },
     "surface": {
+      "$description": "Default background of cards, panels, and fields.",
       "$value": "{palette.paper.50}"
     },
     "surfaceRaised": {
+      "$description": "Raised cards, dialogs, menus, and popovers.",
       "$value": "{palette.white}"
     },
     "surfaceSubtle": {
+      "$description": "Quiet fills, such as hovered rows, secondary buttons, and inset panels.",
       "$value": "{palette.paper.200}"
     },
     "ink": {
+      "$description": "Primary text and icons.",
       "$value": "{palette.paper.950}"
     },
     "inkMuted": {
+      "$description": "Secondary text, such as descriptions, helper text, and metadata.",
       "$value": "{palette.paper.700}"
     },
     "inkFaint": {
+      "$description": "The quietest text, for placeholders, timestamps, and decorative metadata.",
       "$value": "{palette.paper.600}"
     },
     "border": {
+      "$description": "Default borders and dividers.",
       "$value": "{palette.paper.300}"
     },
     "borderStrong": {
+      "$description": "Borders of controls, such as fields, checkboxes, and secondary buttons.",
       "$value": "{palette.paper.400}"
     },
     "accent": {
+      "$description": "The brand green, for primary buttons, links, selection, and focus.",
       "$value": "{palette.green.700}"
     },
     "accentHover": {
+      "$description": "Hovered primary buttons.",
       "$value": "{palette.green.800}"
     },
     "accentSubtle": {
+      "$description": "Accent-tinted backgrounds, such as accent badges, selected choices, and the focus halo.",
       "$value": "{palette.green.100}"
     },
     "accentInk": {
+      "$description": "Text and icons on an accent fill.",
       "$value": "{palette.green.50}"
     },
     "warm": {
+      "$description": "The clay accent, for eyebrows, dates, and warm badges.",
       "$value": "{palette.clay.600}"
     },
     "warmSubtle": {
+      "$description": "Background of warm badges and highlights.",
       "$value": "{palette.clay.100}"
     },
     "success": {
+      "$description": "Success text and marks, such as a synced capture.",
       "$value": "{palette.green.600}"
     },
     "warning": {
+      "$description": "Text of setup warnings.",
       "$value": "{palette.amber.700}"
     },
     "scrim": {
+      "$description": "Base color of the scrims behind dialogs and sheets.",
       "$value": "{palette.paper.950}"
     },
     "danger": {
