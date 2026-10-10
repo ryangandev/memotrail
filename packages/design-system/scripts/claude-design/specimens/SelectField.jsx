@@ -2,24 +2,43 @@ import { Stack } from "./runtime.jsx";
 
 const { SelectField } = MemoTrail;
 
-const options = (
-  <>
-    <option value="system">System</option>
-    <option value="light">Light</option>
-    <option value="dark">Dark</option>
-  </>
-);
-
 export const specimens = {
-  "select-field-default": {
-    title: "Default and small",
+  "select-field-sizes": {
+    title: "Small, medium, and large",
     render: () => (
       <Stack width="320px">
-        <SelectField defaultValue="system" label="Appearance">
-          {options}
+        <SelectField defaultValue="newest" label="Sort by" size="small">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
         </SelectField>
-        <SelectField defaultValue="light" label="Appearance" size="small">
-          {options}
+        <SelectField defaultValue="all" label="Show records">
+          <option value="all">All records</option>
+          <option value="entries">Entries</option>
+          <option value="entities">Homes & vehicles</option>
+        </SelectField>
+        <SelectField defaultValue="timeline" label="Default view" size="large">
+          <option value="dashboard">Dashboard</option>
+          <option value="timeline">Timeline</option>
+          <option value="library">Library</option>
+        </SelectField>
+      </Stack>
+    ),
+  },
+  "select-field-groups": {
+    title: "Required, with titled groups",
+    render: () => (
+      <Stack width="320px">
+        <SelectField defaultValue="all" label="Record" required>
+          <option value="all">All records</option>
+          <optgroup label="Records">
+            <option value="entries">Entries</option>
+            <option value="entities">Entities</option>
+            <option value="goals">Goals</option>
+          </optgroup>
+          <optgroup label="Focused records">
+            <option value="first-times">First Times</option>
+            <option value="people">People</option>
+          </optgroup>
         </SelectField>
       </Stack>
     ),
@@ -28,8 +47,8 @@ export const specimens = {
     title: "Disabled",
     render: () => (
       <Stack width="320px">
-        <SelectField defaultValue="dark" disabled label="Appearance">
-          {options}
+        <SelectField disabled label="Unavailable filter" size="small">
+          <option>Unavailable</option>
         </SelectField>
       </Stack>
     ),

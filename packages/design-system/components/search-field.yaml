@@ -1,0 +1,126 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: SearchField
+
+platforms:
+  web:
+    path: apps/web/src/components/search-field.tsx
+    symbols: [SearchField]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTFields.swift
+    symbols: [MTSearchField]
+
+purpose: A labeled search input with one focus surface for the search icon, the query, and any trailing content.
+
+use:
+  - Searching or filtering a list in place, such as Library, Tags, item relations, or an address lookup.
+  - The query field of the Web command palette, with its shortcut hint as trailing content.
+  - A hidden label where the page title already says what is searched, as in Library.
+
+avoid:
+  - Plain text that is not a query. Use TextField.
+  - Choosing one of a few known values. Use SelectField or filter chips.
+
+anatomy:
+  label: The visible name above the control.
+  control: The bordered surface that holds the icon, the query, and trailing content, and draws focus.
+  focusHalo: The soft accent halo outside the control while it has focus.
+  icon: The search icon at the leading edge.
+  input: The editable query.
+  placeholder: The faint example shown while the query is empty.
+  trailing: Optional content after the query, such as a shortcut hint or an action.
+
+props:
+  size:
+    description: The control's height and corner radius, from the size.field scale. Small fits filter panels, and large leads a page or the command palette.
+    values: [small, medium, large]
+    default: medium
+  hideLabel:
+    description: Hides the visible label and keeps it as the accessible name, for a search whose purpose the page already shows.
+    type: boolean
+    default: false
+    platformNames: { ios: hidesLabel }
+
+states: [default, focus, disabled]
+
+tokens:
+  - label:
+      color: "{color.inkMuted}"
+      type: { ios: "{type.label}" }
+      fontSize: { web: "{font.size.label}" }
+      fontWeight: { web: "{font.weight.medium}" }
+    control:
+      minHeight: "{size.field.medium}"
+      radius: "{radius.medium}"
+      paddingInline: "{space.3}"
+      gap: "{space.2}"
+      background: "{color.surface}"
+      border: "{color.borderStrong}"
+      borderWidth: "{size.stroke.thin}"
+      duration: "{motion.quick}"
+    icon:
+      color: "{color.inkFaint}"
+      size: { web: "{size.icon.17}", ios: "{size.icon.16}" }
+    input:
+      color: "{color.ink}"
+      type: { ios: "{type.body}" }
+      fontFamily: { web: "{font.family.sans}" }
+      fontSize: { web: "{font.size.label}" }
+      fontWeight: { web: "{font.weight.regular}" }
+    placeholder:
+      color: "{color.inkFaint}"
+  - when: { size: small }
+    control:
+      minHeight: "{size.field.small}"
+      radius: "{radius.small}"
+    icon:
+      size: { web: "{size.icon.15}", ios: "{size.icon.14}" }
+  - when: { size: large }
+    control:
+      minHeight: "{size.field.large}"
+  - when: { state: focus }
+    control:
+      border: "{color.accent}"
+    focusHalo:
+      color: "{state.focus.halo}"
+      borderWidth:
+        { web: "{state.focus.haloWidth}", ios: "{state.focus.haloStroke}" }
+  - when: { state: disabled }
+    control:
+      background: "{color.surfaceSubtle}"
+      opacity: "{state.disabled.opacity.field}"
+
+content:
+  lines: 1
+  overflow: truncateTail
+  casing: sentence
+  length: The label names what is searched, such as Search Locations. The placeholder gives an example query, such as Search for an address.
+  notes:
+    - Submitting is the feature's choice. Pair the field with a Search button, search as the person types, or submit on Return.
+
+accessibility:
+  role: A search field. Web renders an input of type search, so Return submits its form and assistive technology announces a search box; iOS sets the search submit label.
+  label: The visible label, which stays the accessible name when hidden. The icon is decorative.
+  focus: The control draws the accent border and halo while it has focus, wherever it is tapped or clicked.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: iOS text follows Dynamic Type through the body role and the control grows past its minimum height. Web uses fixed pixel sizes that grow with browser zoom.
+
+platformDifferences:
+  - difference: Controls are 34, 42, and 48 px tall on Web and 36, 44, and 50 pt on iOS.
+    reason: The size.field tokens raise iOS toward the 44 pt touch target while keeping the Web proportions.
+  - difference: The search icon is 17 px, or 15 px when small, on Web and 16 pt, or 14 pt, on iOS.
+    reason: An SF Symbol fills more of its point size than the stroked SVG fills its box, so one step smaller draws the same glyph size.
+  - difference: The query is 13 px on Web and the 15 pt body role on iOS.
+    reason: As with TextField, Web fields share the dense desktop form typography and native fields keep typing readable with Dynamic Type.
+  - difference: iOS adds a clear button while the query has text and takes a maxLength and a focus request; Web passes native input attributes, such as maxLength and autoFocus, through to its search input.
+    reason: A SwiftUI TextField has no input attributes and no clear action of its own, so MTSearchField provides them; a Web search input already clears with Escape.
+
+specimens:
+  - id: search-field-sizes
+    description: Every size, from the compact filter search to the large page search.
+    covers: { size: all }
+  - id: search-field-hidden-label
+    description: A large search whose label is hidden because the page title names it, with trailing content after the query, a shortcut hint on Web and a count on iOS.
+    covers: { size: [large] }
+  - id: search-field-disabled
+    description: A disabled search, faded to the field opacity.
+    covers: { size: [medium] }

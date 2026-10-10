@@ -3,7 +3,8 @@ import type tokenCatalog from "@/generated/design-tokens.json";
 import { Icon, iconNames } from "@/components/icon";
 import { iconSizes } from "@/generated/design-system";
 import styles from "./page.module.css";
-import { capitalize, kebab, Specimen } from "./specimen";
+import controls from "./controls-gallery.module.css";
+import { capitalize, kebab, Specimen, SpecimenCase } from "./specimen";
 
 export type TokenSet = typeof tokenCatalog;
 
@@ -418,22 +419,61 @@ export function IconTokens({ tokens }: { tokens: TokenSet }) {
   );
   return (
     <>
-      <div className={styles.iconGrid}>
-        {iconNames.map((name) => {
-          const icon = tokens.icon[name];
-          return (
-            <div
-              data-icon={name}
-              key={name}
-              title={`${icon.description} SF Symbol: ${icon.sfSymbol}`}
-            >
-              <Icon name={name} size={20} />
-              <code>{name}</code>
-              {icon.platforms.includes("ios") ? null : <small>Web only</small>}
+      <Specimen
+        api="name · size: a size.icon value, 18 by default"
+        description="Icons are aria-hidden and take the color of the text around them, so the label beside them names the action."
+        title="Icon"
+      >
+        <div className={styles.specimenCases}>
+          <SpecimenCase id="icon-set">
+            <div className={`${styles.iconGrid} ${controls.iconSet}`}>
+              {iconNames.map((name) => {
+                const icon = tokens.icon[name];
+                return (
+                  <div
+                    data-icon={name}
+                    key={name}
+                    title={`${icon.description} SF Symbol: ${icon.sfSymbol}`}
+                  >
+                    <Icon name={name} size={20} />
+                    <code>{name}</code>
+                    {icon.platforms.includes("ios") ? null : (
+                      <small>Web only</small>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
-      </div>
+          </SpecimenCase>
+          <SpecimenCase id="icon-sizes">
+            <div className={controls.iconRow}>
+              {([14, 16, 18, 24] as const).map((size) => (
+                <div key={size}>
+                  <Icon name="calendar" size={size} />
+                  <code>{size}</code>
+                </div>
+              ))}
+            </div>
+          </SpecimenCase>
+          <SpecimenCase id="icon-color">
+            <div className={controls.iconColors}>
+              {(
+                [
+                  ["ink", "timeline", "Timeline"],
+                  ["muted", "archive", "Library"],
+                  ["accent", "plus", "Add entry"],
+                  ["warm", "refresh", "Retry sync"],
+                ] as const
+              ).map(([color, icon, label]) => (
+                <span data-color={color} key={color}>
+                  <Icon name={icon} size={18} />
+                  {label}
+                </span>
+              ))}
+            </div>
+          </SpecimenCase>
+        </div>
+      </Specimen>
       <Specimen
         description="These names draw only on iOS, as the SF Symbol shown. Web has no glyph for them yet."
         id="native-icons"

@@ -293,6 +293,67 @@
           "unit": "px"
         }
       }
+    },
+    "checkbox": {
+      "$description": "Checkbox squares: Web Checkbox and iOS MTCheckbox share them.",
+      "small": {
+        "$description": "The box of a small checkbox, for dense option rows.",
+        "$value": {
+          "value": 16,
+          "unit": "px"
+        }
+      },
+      "medium": {
+        "$description": "The box of a medium checkbox.",
+        "$value": {
+          "value": 20,
+          "unit": "px"
+        }
+      }
+    },
+    "toast": {
+      "$description": "Toast geometry: Web AppToaster and iOS MTToastCenter share it.",
+      "width": {
+        "$description": "The widest a toast gets.",
+        "$value": {
+          "value": 360,
+          "unit": "px"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "ios": {
+              "value": {
+                "value": 420,
+                "unit": "px"
+              }
+            }
+          }
+        }
+      },
+      "minHeight": {
+        "$description": "The shortest a toast gets.",
+        "$value": {
+          "value": 52,
+          "unit": "px"
+        }
+      },
+      "icon": {
+        "$description": "The tone icon column.",
+        "$value": {
+          "value": 18,
+          "unit": "px"
+        }
+      }
+    },
+    "datePicker": {
+      "$description": "Date picker geometry: Web DatePickerField and iOS MTDateField share it.",
+      "width": {
+        "$description": "The calendar's width, narrowed to fit small screens.",
+        "$value": {
+          "value": 320,
+          "unit": "px"
+        }
+      }
     }
   }
 }

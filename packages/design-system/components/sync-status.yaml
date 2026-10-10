@@ -1,0 +1,77 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: SyncStatus
+
+platforms:
+  web:
+    path: apps/web/src/components/sync-status.tsx
+    symbols: [SyncStatus, SyncStatusButton]
+  ios:
+    unavailable: Native screens show pending captures where people already look for them, as a notice on Home and a Pending sync section with Retry now at the top of the Inbox, rather than as an indicator in a top bar that iOS does not have.
+
+purpose: A quiet top-bar indicator of Entries captured on this device that have not reached MemoTrail yet, which syncs them and opens the list of what is waiting.
+
+use:
+  - The workspace top bar, while captures wait to sync or MemoTrail refused one.
+
+avoid:
+  - Progress for an action people just took. Show a busy Button.
+  - Any other status. The indicator appears only while captures wait, and disappears once they sync or are discarded.
+
+anatomy:
+  indicator: The pill-shaped button in the top bar.
+  dot: The warm dot before the label, which pulses while a sync runs.
+  label: The counts, such as 2 pending or 1 not accepted.
+  dialog: The compact Pending sync Dialog that lists each waiting capture, with Retry now.
+
+props: {}
+
+states: [default, hover, focus, loading]
+
+tokens:
+  - indicator:
+      radius: "{radius.pill}"
+      paddingInline: "{space.2}"
+      gap: "{space.1-5}"
+      color: "{color.inkFaint}"
+      fontSize: "{font.size.micro}"
+      duration: "{motion.quick}"
+    dot:
+      background: "{color.warm}"
+  - when: { state: hover }
+    indicator:
+      color: "{color.ink}"
+      background: "{color.surfaceSubtle}"
+  - when: { state: focus }
+    indicator:
+      color: "{color.ink}"
+      background: "{color.surfaceSubtle}"
+      border: "{state.focus.ring}"
+      borderWidth: "{state.focus.ringWidth}"
+  - when: { state: loading }
+    dot:
+      duration: "{motion.pulse}"
+      easing: "{motion.easing.inOut}"
+      opacity: "{state.muted.opacity.pulseLow}"
+
+content:
+  lines: 1
+  overflow: truncateTail
+  casing: sentence
+  length: The label counts what waits, such as 3 pending, and adds refused captures after a middle dot, such as 3 pending · 1 not accepted.
+  notes:
+    - When MemoTrail refused a capture, the label turns warm, because only the person can resolve it.
+
+accessibility:
+  role: A button that syncs now and opens the Pending sync dialog. While a sync runs it carries aria-busy.
+  label: The counts, with a title that says what pressing it does, such as Sync now and review captures waiting on this device.
+  focus: Keyboard focus draws an inset accent ring. The dialog returns focus to the indicator when it closes.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: Web uses fixed pixel sizes that grow with browser zoom. Below 720 px the indicator grows to a 44 px touch target.
+
+platformDifferences:
+  - difference: Web only. iOS has no sync indicator.
+    reason: iOS has no workspace top bar; its Home notice and the Inbox's Pending sync section show the same counts and Retry now where people review captures.
+
+specimens:
+  - id: sync-status-counts
+    description: Waiting captures, a refused capture beside waiting ones, and a sync in progress.

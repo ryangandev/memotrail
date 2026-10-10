@@ -1,0 +1,133 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: TextField
+
+platforms:
+  web:
+    path: apps/web/src/components/text-field.tsx
+    symbols: [TextField]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTFields.swift
+    symbols: [MTTextField]
+
+purpose: A labeled single-line text input on the shared field surface, with a required mark and an inline error.
+
+use:
+  - Short free text in a form or settings card, such as a preferred name, a title, or a city.
+  - Any field whose value fails validation, by passing the message that says how to fix it.
+
+avoid:
+  - Searching. Use SearchField, which adds the search icon and search keyboard.
+  - Choosing from a fixed list. Use SelectField, or TimeZoneField for a time zone.
+  - Dates. Use DateField.
+  - Long writing. Use the rich-text editor, or a multi-line field where the platform offers one.
+
+anatomy:
+  label: The visible name above the control.
+  requiredMark: The warm asterisk after a required field's label.
+  control: The bordered surface that holds the text and draws focus.
+  focusHalo: The soft accent halo outside the control while it has focus.
+  input: The editable text.
+  placeholder: The faint hint shown while the field is empty.
+  message: The error below the control while the value is invalid.
+
+props:
+  size:
+    description: The control's height and corner radius, from the size.field scale. Small fits filter rows and compact panels, and large stands alone.
+    values: [small, medium, large]
+    default: medium
+  required:
+    description: Marks the label with a warm asterisk and tells assistive technology the field is required.
+    type: boolean
+    default: false
+    platformNames: { ios: isRequired }
+  hideLabel:
+    description: Hides the visible label and keeps it as the accessible name, for a field whose purpose its surroundings already show.
+    type: boolean
+    default: false
+    platformNames: { ios: hidesLabel }
+
+states: [default, focus, disabled, invalid]
+
+tokens:
+  - label:
+      color: "{color.inkMuted}"
+      type: { ios: "{type.label}" }
+      fontSize: { web: "{font.size.label}" }
+      fontWeight: { web: "{font.weight.medium}" }
+    requiredMark:
+      color: "{color.warm}"
+    control:
+      minHeight: "{size.field.medium}"
+      radius: "{radius.medium}"
+      paddingInline: "{space.3}"
+      background: "{color.surface}"
+      border: "{color.borderStrong}"
+      borderWidth: "{size.stroke.thin}"
+      duration: "{motion.quick}"
+    input:
+      color: "{color.ink}"
+      type: { ios: "{type.body}" }
+      fontFamily: { web: "{font.family.sans}" }
+      fontSize: { web: "{font.size.label}" }
+      fontWeight: { web: "{font.weight.regular}" }
+    placeholder:
+      color: "{color.inkFaint}"
+    message:
+      color: "{color.warm}"
+      type: { ios: "{type.caption}" }
+      fontSize: { web: "{font.size.caption}" }
+  - when: { size: small }
+    control:
+      minHeight: "{size.field.small}"
+      radius: "{radius.small}"
+  - when: { size: large }
+    control:
+      minHeight: "{size.field.large}"
+  - when: { state: focus }
+    control:
+      border: "{color.accent}"
+    focusHalo:
+      color: "{state.focus.halo}"
+      borderWidth:
+        { web: "{state.focus.haloWidth}", ios: "{state.focus.haloStroke}" }
+  - when: { state: disabled }
+    control:
+      background: "{color.surfaceSubtle}"
+      opacity: "{state.disabled.opacity.field}"
+  - when: { state: invalid }
+    control:
+      border: "{color.warm}"
+
+content:
+  lines: 1
+  overflow: truncateTail
+  casing: sentence
+  length: Labels name the value in one to three words, such as Preferred name. Error messages say what to change in one sentence, such as Add a title before saving.
+  notes:
+    - Leave the placeholder empty when the label already says what to enter; use it for an example, such as Add a name.
+    - Mark only required fields; optional fields stay unmarked.
+
+accessibility:
+  role: A text field. Web renders an input of type text with a label element; iOS renders a SwiftUI TextField.
+  label: The visible label, which stays the accessible name when hidden. Required fields add required, Web through the required attribute and iOS by reading the label as Name, required. An invalid field reads its message, Web through aria-invalid and aria-describedby and iOS as the field's hint.
+  focus: The control draws the accent border and halo while it has focus. Web follows document order; on iOS tapping anywhere on the surface focuses the text.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: iOS text and label follow Dynamic Type through the body and label roles, and the control grows past its minimum height. Web uses fixed pixel sizes that grow with browser zoom.
+
+platformDifferences:
+  - difference: Controls are 34, 42, and 48 px tall on Web and 36, 44, and 50 pt on iOS.
+    reason: The size.field tokens raise iOS toward the 44 pt touch target while keeping the Web proportions.
+  - difference: The entered text is 13 px on Web and the 15 pt body role on iOS.
+    reason: Web fields match the dense desktop form typography, which DateField and SelectField share; native fields use the body role so typing on a phone stays readable and follows Dynamic Type.
+  - difference: The focus halo is a 3 px box shadow on Web and a 6 pt stroke centered on the edge on iOS.
+    reason: SwiftUI strokes a shape on its edge, so drawing twice the halo width puts the same 3 pt halo outside the border.
+  - difference: iOS MTTextField also takes a note beside the label, a maxLength, and a vertical axis that grows into a textarea; Web passes native input attributes such as maxLength and autoComplete through, and composes notes and textareas in the enclosing editor.
+    reason: SwiftUI has no input attributes to pass through, so the native field takes these as parameters; Web keeps the field a plain input element.
+
+specimens:
+  - id: text-field-sizes
+    description: Every size, holding a nickname, a preferred name, and a full name.
+    covers: { size: all }
+  - id: text-field-states
+    description: Empty with a placeholder, required, disabled, and invalid with its message.
+    covers: { size: [medium] }

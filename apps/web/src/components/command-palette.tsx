@@ -73,6 +73,10 @@ const emptySearchState: SearchState = {
   query: "",
 };
 
+/**
+ * The keyboard-first search over the archive and the workspace's destinations.
+ * Specified in packages/design-system/components/command-palette.yaml.
+ */
 export function CommandPalette({
   onClose,
   open,
@@ -246,6 +250,7 @@ export function CommandPalette({
         aria-labelledby="command-palette-title"
         aria-modal="true"
         className={styles.dialog}
+        data-ui-command-palette
         role="dialog"
       >
         <h2 id="command-palette-title" className={styles.visuallyHidden}>

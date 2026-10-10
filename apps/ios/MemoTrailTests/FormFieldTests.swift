@@ -31,7 +31,7 @@ final class FormFieldTests: XCTestCase {
 
   func testDateTextRoundTripsEachGranularityAndRejectsImpossibleDates() throws {
     for (text, granularity, includesTime) in [
-      ("2026-09-17", MTDateGranularity.day, false), ("2026-09", .month, false),
+      ("2026-09-17", MTDateFieldGranularity.day, false), ("2026-09", .month, false),
       ("2026", .year, false), ("2026-09-17T14:30:27", .day, true),
     ] {
       let date = try XCTUnwrap(

@@ -153,7 +153,7 @@
 
 .datePickerControl {
   display: flex;
-  height: 42px;
+  height: var(--mt-size-field-medium);
   min-width: 0;
   align-items: center;
   overflow: hidden;
@@ -166,12 +166,12 @@
 }
 
 .datePickerControl[data-size="small"] {
-  height: 36px;
+  height: var(--mt-size-field-small);
   border-radius: var(--mt-radius-small);
 }
 
 .datePickerControl[data-size="large"] {
-  height: 48px;
+  height: var(--mt-size-field-large);
 }
 
 .datePickerControl:focus-within {
@@ -295,7 +295,7 @@
 }
 
 .datePickerContent {
-  width: min(320px, calc(100vw - 24px));
+  width: min(var(--mt-size-date-picker-width), calc(100vw - 24px));
   padding: var(--mt-space-3);
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-large);

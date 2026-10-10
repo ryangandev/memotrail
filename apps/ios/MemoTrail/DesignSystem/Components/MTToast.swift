@@ -1,9 +1,9 @@
 import SwiftUI
 import UIKit
 
-enum MTToastTone: Sendable {
-  case success, info, error
-
+// MTToastTone and MTToastDefaults are generated from
+// packages/design-system/components/toast.yaml, which also lists each tone's tokens.
+extension MTToastTone {
   fileprivate var systemImage: String {
     switch self {
     case .success: "checkmark.circle.fill"
@@ -13,6 +13,11 @@ enum MTToastTone: Sendable {
   }
 
   fileprivate var color: Color { self == .error ? MTColor.warm : MTColor.accent }
+
+  /// How long a toast in this tone stays: errors stay longer, so there is time to read them.
+  var duration: Duration {
+    .seconds(self == .error ? MTMotion.toastError : MTMotion.toast)
+  }
 }
 
 struct MTToast: Identifiable, Equatable, Sendable {
@@ -22,7 +27,7 @@ struct MTToast: Identifiable, Equatable, Sendable {
 }
 
 /// Transient action feedback matching the Web `notify` helpers: success and info stay for
-/// 4.5 seconds, errors for 8, and at most three are visible. Like Web, toasts rise from the
+/// `MTMotion.toast`, errors for `MTMotion.toastError`, and at most three are visible. Like Web, toasts rise from the
 /// bottom, in a pass-through window above sheets. They sit clear of the tab bar, a sheet's
 /// actions, and the keyboard, and leave the top free for back and close buttons.
 @MainActor
@@ -83,9 +88,8 @@ final class MTToastCenter {
       if toasts.count > 3 { toasts.removeFirst(toasts.count - 3) }
     }
     UIAccessibility.post(notification: .announcement, argument: message)
-    let duration: Duration = tone == .error ? .seconds(8) : .milliseconds(4_500)
     Task {
-      try? await Task.sleep(for: duration)
+      try? await Task.sleep(for: tone.duration)
       dismiss(toast.id)
     }
   }
@@ -160,12 +164,14 @@ private struct MTToastStack: View {
           .transition(.move(edge: .bottom).combined(with: .opacity))
       }
     }
-    .frame(maxWidth: MTLayout.Toast.width)
+    .frame(maxWidth: MTSize.Toast.width)
     .padding(.horizontal, MTSpacing.s4)
   }
 }
 
-private struct MTToastView: View {
+/// One toast. The toast center stacks them; the design-system gallery draws them in place.
+/// Specified in packages/design-system/components/toast.yaml.
+struct MTToastView: View {
   let toast: MTToast
   let dismiss: () -> Void
   @State private var drag: CGFloat = 0
@@ -175,7 +181,7 @@ private struct MTToastView: View {
       Image(systemName: toast.tone.systemImage)
         .font(.mtIcon(MTSize.Icon.s15))
         .foregroundStyle(toast.tone.color)
-        .frame(width: MTLayout.Toast.icon)
+        .frame(width: MTSize.Toast.icon)
         .accessibilityHidden(true)
       Text(toast.message)
         .font(MTFont.label)
@@ -196,12 +202,12 @@ private struct MTToastView: View {
     .padding(.leading, MTSpacing.s4)
     .padding(.trailing, MTSpacing.s2)
     .padding(.vertical, MTSpacing.s3)
-    .frame(minHeight: MTLayout.Toast.minHeight)
+    .frame(minHeight: MTSize.Toast.minHeight)
     .background {
       // The Web toast's 3 point tone border on the leading edge, inside the rounded card.
       ZStack(alignment: .leading) {
         MTColor.surfaceRaised
-        toast.tone.color.frame(width: MTLayout.Toast.stripe)
+        toast.tone.color.frame(width: MTSize.Stroke.thick)
       }
       .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
     }

@@ -11,11 +11,25 @@
     var body: some View {
       VStack(alignment: .leading, spacing: MTSpacing.s4) {
         GallerySpecimen(
-          title: "Toast", api: "MTToastCenter.shared · success · info · error",
+          title: "Toast", api: "MTToastCenter.shared · success · info · error · tone",
           description:
             "Like Web, toasts rise from the bottom, above sheets and clear of the tab bar, sheet actions, and keyboard. Errors stay longer, and swiping down dismisses one early."
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s3) {
+            GalleryCase(.toastTones) {
+              GalleryToasts(
+                toasts: MTToastTone.allCases.map { MTToast(message: $0.sampleMessage, tone: $0) })
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.toastLongMessage) {
+              GalleryToasts(toasts: [
+                MTToast(
+                  message:
+                    "Could not upload 3 photos. They stay on this device and upload when MemoTrail can be reached.",
+                  tone: .error)
+              ])
+            }
+            GalleryCaseSeparator()
             // A custom message previews wrapping, and typing it shows toasts over the keyboard.
             MTTextField(
               label: "Message", text: $toastMessage, prompt: "Each button's sample message"
@@ -105,6 +119,35 @@
         Text(title).font(MTFont.note).foregroundStyle(MTColor.inkMuted)
       }
       .frame(maxWidth: .infinity)
+    }
+  }
+
+  extension MTToastTone {
+    /// The Web gallery's sample message for each tone.
+    fileprivate var sampleMessage: String {
+      switch self {
+      case .success: "Entry saved."
+      case .info: "Pending Entry discarded."
+      case .error: "Could not move to Trash. Try again."
+      }
+    }
+  }
+
+  /// Toasts drawn in place, at the toast center's width. Each reads as one element, so VoiceOver
+  /// and UI tests reach only the live toasts' dismiss actions.
+  private struct GalleryToasts: View {
+    let toasts: [MTToast]
+
+    var body: some View {
+      VStack(spacing: MTSpacing.s2) {
+        ForEach(toasts) { toast in
+          MTToastView(toast: toast) {}
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(toast.tone.rawValue.capitalized) toast: \(toast.message)")
+        }
+      }
+      .frame(maxWidth: MTSize.Toast.width)
+      .padding(.vertical, MTSpacing.s2)
     }
   }
 

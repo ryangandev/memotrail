@@ -4,17 +4,34 @@
   gap: var(--mt-space-2);
 }
 
-.field label {
+.label {
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-label);
   font-weight: var(--mt-font-weight-medium);
+}
+
+.label[data-hidden="true"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: calc(var(--mt-space-0-25) * -1);
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.requiredMark {
+  margin-left: var(--mt-space-0-75);
+  color: var(--mt-color-warm);
 }
 
 .control {
   display: flex;
   width: 100%;
   min-width: 0;
-  height: 42px;
+  height: var(--mt-size-field-medium);
   align-items: center;
   padding: 0 var(--mt-space-3);
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
@@ -54,15 +71,27 @@
 }
 
 .field[data-size="small"] .control {
-  height: 34px;
+  height: var(--mt-size-field-small);
   border-radius: var(--mt-radius-small);
 }
 
 .field[data-size="large"] .control {
-  height: 48px;
+  height: var(--mt-size-field-large);
 }
 
 .field[data-disabled="true"] .control {
   background: var(--mt-color-surface-subtle);
   opacity: var(--mt-state-disabled-opacity-field);
+}
+
+.field[data-invalid="true"] .control:not(:focus-within) {
+  border-color: var(--mt-color-warm);
+}
+
+/* Scoped to the field, so an enclosing card's paragraph styles never restyle the error. */
+.field .message {
+  margin: 0;
+  color: var(--mt-color-warm);
+  font-size: var(--mt-font-size-caption);
+  line-height: var(--mt-line-height-body);
 }

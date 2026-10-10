@@ -684,6 +684,7 @@ enum MTSpacing {
 }
 
 enum MTRadius {
+  static let xxsmall: CGFloat = 4
   static let checkbox: CGFloat = 5
   static let small: CGFloat = 8
   static let notice: CGFloat = 10
@@ -693,6 +694,7 @@ enum MTRadius {
   static let pill: CGFloat = 999
 
   static let catalog: [(name: String, value: CGFloat)] = [
+    ("xxsmall", xxsmall),
     ("checkbox", checkbox),
     ("small", small),
     ("notice", notice),
@@ -709,6 +711,8 @@ enum MTMotion {
   static let deliberate = Double(280) / 1_000
   static let markTurn = Double(320) / 1_000
   static let shimmer = Double(1250) / 1_000
+  static let toast = Double(4500) / 1_000
+  static let toastError = Double(8000) / 1_000
   static let photoPage = Double(200) / 1_000
   static let markRing = Double(580) / 1_000
   static let markTrail = Double(340) / 1_000
@@ -724,6 +728,8 @@ enum MTMotion {
     ("deliberate", deliberate),
     ("markTurn", markTurn),
     ("shimmer", shimmer),
+    ("toast", toast),
+    ("toastError", toastError),
     ("photoPage", photoPage),
     ("markRing", markRing),
     ("markTrail", markTrail),
@@ -819,6 +825,21 @@ enum MTSize {
     static let paddingBlock: CGFloat = 3
     static let minHeight: CGFloat = 22
   }
+
+  enum Checkbox {
+    static let small: CGFloat = 16
+    static let medium: CGFloat = 20
+  }
+
+  enum Toast {
+    static let width: CGFloat = 420
+    static let minHeight: CGFloat = 52
+    static let icon: CGFloat = 18
+  }
+
+  enum DatePicker {
+    static let width: CGFloat = 320
+  }
 }
 
 enum MTLayout {
@@ -843,7 +864,6 @@ enum MTLayout {
   }
 
   enum Checkbox {
-    static let box: CGFloat = 20
     static let baselineOffset: CGFloat = 5
   }
 
@@ -1037,10 +1057,6 @@ enum MTLayout {
   }
 
   enum Toast {
-    static let width: CGFloat = 420
-    static let minHeight: CGFloat = 52
-    static let icon: CGFloat = 18
-    static let stripe: CGFloat = 3
     static let bottomClearance: CGFloat = 76
   }
 
@@ -1053,7 +1069,6 @@ enum MTLayout {
   }
 
   enum DatePicker {
-    static let width: CGFloat = 320
     static let yearWidth: CGFloat = 240
   }
 

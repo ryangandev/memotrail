@@ -6,7 +6,9 @@
 //
 // `group` places the preview card, `height` is the card height in px at the preview width, and
 // its specimens live in ./specimens/<name>.jsx. `parts` are further exports documented with the
-// component, sharing its README and preview, each with a note on how it relates.
+// component, sharing its README and preview, each with a note on how it relates. `spec` names the
+// component spec it follows when that differs from its own name, as when one spec names the shared
+// component on both platforms.
 
 export const cardGroups = [
   "Foundations",
@@ -23,7 +25,7 @@ export const bundled = [
     name: "Icon",
     source: "icon.tsx",
     group: "Foundations",
-    height: 620,
+    height: 720,
     summary:
       "Icon draws one line icon from the shared icon set at a given pixel size.",
   },
@@ -53,7 +55,7 @@ export const bundled = [
     name: "IconButton",
     source: "button.tsx",
     group: "Actions",
-    height: 240,
+    height: 350,
     summary:
       "IconButton is a Button that shows only an icon and names its action with a required label.",
   },
@@ -61,14 +63,15 @@ export const bundled = [
     name: "TextField",
     source: "text-field.tsx",
     group: "Inputs",
-    height: 540,
-    summary: "TextField is a labeled single-line text input in three sizes.",
+    height: 710,
+    summary:
+      "TextField is a labeled single-line text input in three sizes, with an inline error that says how to fix the value.",
   },
   {
     name: "SearchField",
     source: "search-field.tsx",
     group: "Inputs",
-    height: 320,
+    height: 560,
     summary:
       "SearchField is a labeled search input with a leading search icon and an optional trailing element.",
   },
@@ -76,7 +79,7 @@ export const bundled = [
     name: "SelectField",
     source: "select-field.tsx",
     group: "Inputs",
-    height: 360,
+    height: 550,
     summary:
       "SelectField is a labeled native select with the shared field surface and a chevron.",
   },
@@ -84,15 +87,16 @@ export const bundled = [
     name: "Checkbox",
     source: "checkbox.tsx",
     group: "Inputs",
-    height: 340,
+    height: 470,
     summary:
-      "Checkbox is a native checkbox with a visible label and an optional explanation.",
+      "Checkbox is a native checkbox in two sizes with a visible label and an optional explanation.",
   },
   {
     name: "DatePickerField",
+    spec: "DateField",
     source: "date-picker-field.tsx",
     group: "Inputs",
-    height: 420,
+    height: 1060,
     summary:
       "DatePickerField is the shared calendar date field, with day, month, and year precision and an optional time.",
   },
@@ -290,7 +294,22 @@ export const excluded = {
 // The card group of each component that has a spec but stays out of the bundle. Its card shows the
 // spec in place of the component, and a spec for a component missing here stops the export.
 export const specOnlyGroups = {
-  ConfirmationDialog: "Patterns",
+  CommandPalette: "Patterns",
   Dialog: "Patterns",
+  SyncStatus: "Feedback",
+  TimeZoneField: "Inputs",
   Toast: "Feedback",
+  WorkspaceActionDock: "Patterns",
 };
+
+/** The name of the spec a bundled component follows. */
+export function specName(component) {
+  return component.spec ?? component.name;
+}
+
+/** The card that shows a spec: its bundled component's, or its own when the bundle leaves it out. */
+export function cardName(spec) {
+  return (
+    bundled.find((component) => specName(component) === spec)?.name ?? spec
+  );
+}

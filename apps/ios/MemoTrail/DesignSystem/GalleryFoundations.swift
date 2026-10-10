@@ -533,25 +533,56 @@
           }
         }
         GallerySpecimen(
-          title: "Icons",
-          api: "MTIcon · Image(_:) · Label(_:icon:)",
+          title: "Icon",
+          api: "MTIcon · Image(_:) · Label(_:icon:) · .mtIcon(size)",
           description:
-            "The shared icon vocabulary from packages/design-system/icons.json, drawn as SF Symbols. Icons marked iOS only have no Web glyph yet."
+            "The shared icon vocabulary from packages/design-system/icons.json, drawn as SF Symbols. Icons are hidden from VoiceOver and take the color of the text around them, so the label beside them names the action."
         ) {
-          LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: MTSpacing.s2)]) {
-            ForEach(MTIcon.allCases, id: \.self) { icon in
-              VStack(spacing: MTSpacing.s2) {
-                Image(icon).font(.mtIcon(MTSize.Icon.s20)).foregroundStyle(MTColor.ink)
-                  .frame(height: MTSize.Icon.s24)
-                Text(String(describing: icon)).font(MTFont.identifier)
-                  .foregroundStyle(MTColor.inkMuted).lineLimit(1).minimumScaleFactor(0.7)
-                // Every cell reserves the marker line so the grid rows stay even.
-                Text("iOS only").font(MTFont.micro).foregroundStyle(MTColor.warm)
-                  .opacity(MTIcon.iosOnly.contains(icon) ? 1 : 0)
-                  .accessibilityHidden(!MTIcon.iosOnly.contains(icon))
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            GalleryCase(.iconSet) {
+              LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: MTSpacing.s2)]) {
+                ForEach(MTIcon.allCases, id: \.self) { icon in
+                  VStack(spacing: MTSpacing.s2) {
+                    Image(icon).font(.mtIcon(MTSize.Icon.s20)).foregroundStyle(MTColor.ink)
+                      .frame(height: MTSize.Icon.s24)
+                    Text(String(describing: icon)).font(MTFont.identifier)
+                      .foregroundStyle(MTColor.inkMuted).lineLimit(1).minimumScaleFactor(0.7)
+                    // Every cell reserves the marker line so the grid rows stay even.
+                    Text("iOS only").font(MTFont.micro).foregroundStyle(MTColor.warm)
+                      .opacity(MTIcon.iosOnly.contains(icon) ? 1 : 0)
+                      .accessibilityHidden(!MTIcon.iosOnly.contains(icon))
+                  }
+                  .frame(maxWidth: .infinity, minHeight: 64, alignment: .top)
+                  .accessibilityElement(children: .combine)
+                }
               }
-              .frame(maxWidth: .infinity, minHeight: 64, alignment: .top)
-              .accessibilityElement(children: .combine)
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.iconSizes) {
+              HStack(alignment: .bottom, spacing: MTSpacing.s6) {
+                ForEach(
+                  [
+                    ("14", MTSize.Icon.s14), ("16", MTSize.Icon.s16), ("18", MTSize.Icon.s18),
+                    ("24", MTSize.Icon.s24),
+                  ], id: \.0
+                ) { name, size in
+                  VStack(spacing: MTSpacing.s2) {
+                    Image(MTIcon.calendar).font(.mtIcon(size)).foregroundStyle(MTColor.inkMuted)
+                    Text(name).font(MTFont.code).foregroundStyle(MTColor.inkMuted)
+                  }
+                  .accessibilityElement(children: .combine)
+                }
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.iconColor) {
+              MTFlowLayout(spacing: MTSpacing.s5) {
+                Label("Timeline", icon: .timeline).foregroundStyle(MTColor.ink)
+                Label("Library", icon: .archive).foregroundStyle(MTColor.inkMuted)
+                Label("Add entry", icon: .plus).foregroundStyle(MTColor.accent)
+                Label("Retry sync", icon: .refresh).foregroundStyle(MTColor.warm)
+              }
+              .font(MTFont.label)
             }
           }
         }

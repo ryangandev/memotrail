@@ -7,18 +7,32 @@ export const specimens = {
     title: "Small, medium, and large",
     render: () => (
       <Stack width="360px">
-        <TextField label="Title" placeholder="Add a title" size="small" />
-        <TextField label="Title" placeholder="Add a title" />
-        <TextField label="Title" placeholder="Add a title" size="large" />
+        <TextField defaultValue="Alex" label="Nickname" size="small" />
+        <TextField defaultValue="Alex Morgan" label="Preferred name" />
+        <TextField
+          defaultValue="Alexandra Morgan"
+          label="Full name"
+          size="large"
+        />
       </Stack>
     ),
   },
   "text-field-states": {
-    title: "Filled and disabled",
+    title: "Empty, required, disabled, and invalid",
     render: () => (
       <Stack width="360px">
-        <TextField defaultValue="Learn to sail" label="Someday" />
-        <TextField disabled defaultValue="Blue Civic" label="Vehicle name" />
+        <TextField label="Empty text field" placeholder="Add a name" />
+        <TextField
+          defaultValue="A moment worth keeping"
+          label="Title"
+          required
+        />
+        <TextField
+          disabled
+          label="Disabled text field"
+          placeholder="Unavailable"
+        />
+        <TextField error="Add a city before saving." label="City" />
       </Stack>
     ),
   },

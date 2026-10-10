@@ -26,7 +26,7 @@
   display: flex;
   width: 100%;
   min-width: 0;
-  height: 42px;
+  height: var(--mt-size-field-medium);
   align-items: center;
   gap: var(--mt-space-2);
   padding: 0 var(--mt-space-3);
@@ -78,12 +78,12 @@
 }
 
 .field[data-size="small"] .control {
-  height: 34px;
+  height: var(--mt-size-field-small);
   border-radius: var(--mt-radius-small);
 }
 
 .field[data-size="large"] .control {
-  height: 48px;
+  height: var(--mt-size-field-large);
 }
 
 .field[data-disabled="true"] .control {

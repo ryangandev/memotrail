@@ -13,14 +13,20 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { after, before, describe, test } from "node:test";
 import vm from "node:vm";
-import { bundled, cardGroups, excluded } from "./claude-design/catalog.mjs";
+import {
+  bundled,
+  cardGroups,
+  cardName,
+  excluded,
+  specName,
+} from "./claude-design/catalog.mjs";
 import { componentNames } from "./claude-design/declarations.mjs";
 import {
   checkSpecAgainstComponent,
   loadSpecs,
   normalizeSpec,
 } from "./claude-design/docs.mjs";
-import { specimenOrder } from "./claude-design/previews.mjs";
+import { specimenOrder, specPreviewHeight } from "./claude-design/previews.mjs";
 import { tokenNamePattern } from "./claude-design/tokens.mjs";
 import {
   cardMarker,
@@ -462,7 +468,7 @@ test("exports with the repository's own component specs", async () => {
     assert.ok(specs.length > 0);
     for (const spec of specs) {
       const readme = await readFile(
-        join(exported.project, `components/${spec.name}/README.md`),
+        join(exported.project, `components/${cardName(spec.name)}/README.md`),
         "utf8",
       );
       for (const specimen of spec.specimens) {
@@ -470,13 +476,20 @@ test("exports with the repository's own component specs", async () => {
       }
       // The spec's props, then the Web props of the component and each part that takes the prop,
       // list every value, and Web defaults show the literal read from the generated constants.
+      // A spec-only card has no bundled component, so it lists only the spec's rows.
+      const specOnly = exported.specOnly.includes(spec.name);
       for (const [name, prop] of Object.entries(spec.props)) {
         if (!prop.values || prop.platforms?.includes("web") === false) continue;
         const rows = readme
           .split("\n")
           .filter((line) => line.startsWith(`| \`${name}\` |`));
         const [specRow, ...webRows] = rows;
-        assert.ok(webRows.length > 0, `${spec.name} ${name} has Web rows`);
+        assert.ok(specRow, `${spec.name} ${name} has a spec row`);
+        assert.equal(
+          webRows.length > 0,
+          !specOnly,
+          `${spec.name} ${name} has Web rows only when bundled`,
+        );
         for (const value of prop.values) {
           assert.ok(specRow.includes(`\`${value}\``), `${name} ${value}`);
           for (const row of webRows) {
@@ -488,6 +501,29 @@ test("exports with the repository's own component specs", async () => {
         }
       }
     }
+  } finally {
+    await rm(own, { recursive: true, force: true });
+  }
+});
+
+test("a bundled component can follow a spec with another name", async () => {
+  // DatePickerField is the Web side of the DateField spec, so its card shows that spec.
+  const datePicker = bundled.find(({ name }) => name === "DatePickerField");
+  assert.equal(specName(datePicker), "DateField");
+  assert.equal(cardName("DateField"), "DatePickerField");
+  assert.equal(cardName("Badge"), "Badge");
+  assert.equal(cardName("Toast"), "Toast");
+  const own = await mkdtemp(
+    join(tmpdir(), "memotrail-claude-design-spec-name-"),
+  );
+  try {
+    const exported = await exportClaudeDesign({ output: own });
+    assert.ok(!exported.specOnly.includes("DateField"));
+    const readme = await readFile(
+      join(exported.project, "components/DatePickerField/README.md"),
+      "utf8",
+    );
+    assert.match(readme, /^- `date-field-precision`: /m);
   } finally {
     await rm(own, { recursive: true, force: true });
   }
@@ -531,6 +567,22 @@ describe("spec checks", () => {
         specimenOrder("Badge", [{ id: "badge-sizes", title: "Sizes" }], spec()),
       /list different specimens\. Render these in specimens\/Badge\.jsx: badge-tones\. List these in the spec, or remove them: badge-sizes\./,
     );
+  });
+
+  test("sizes a spec-only card to the lines its text wraps to", () => {
+    const card = (purpose, reason, ...descriptions) =>
+      specPreviewHeight({
+        purpose,
+        reason,
+        specimens: descriptions.map((description) => ({ description })),
+      });
+    const short = card("Short.", "Short.", "One.");
+    assert.equal(short, 112 + 22 + 2 * 18);
+    // A purpose that wraps adds a body line, and a reason or specimen that wraps adds a caption line.
+    assert.equal(card("x".repeat(79), "Short.", "One."), short + 22);
+    assert.equal(card("Short.", "x".repeat(91), "One."), short + 18);
+    assert.equal(card("Short.", "Short.", "x".repeat(87)), short + 18);
+    assert.equal(card("Short.", "Short.", "One.", "Two."), short + 18);
   });
 
   test("follows the spec's specimen order and descriptions", () => {

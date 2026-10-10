@@ -1,0 +1,160 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: DateField
+
+platforms:
+  web:
+    path: apps/web/src/components/date-picker-field.tsx
+    symbols: [DatePickerField]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTDateField.swift
+    symbols: [MTDateField]
+
+purpose: A labeled, optional calendar value at day, month, or year precision, with an optional time, chosen from a calendar.
+
+use:
+  - Any date an Entry, Moment, or record keeps, such as a memory date, a birth date, or a Home's start date.
+  - Month or year precision when the person remembers only roughly when something happened.
+  - Date filters, such as Library's From and To fields, at the small size.
+
+avoid:
+  - Choosing the precision itself. The occurrence editor offers Day, Month, Year, and Not sure, and sets the DateField's granularity.
+  - Time zones. Use TimeZoneField beside the date.
+  - Relative or recurring dates. The value is one calendar date stored as wall-time text.
+
+anatomy:
+  label: The visible name above the control.
+  requiredMark: The warm asterisk after a required field's label.
+  control: The bordered surface that shows the date and opens the calendar.
+  focusHalo: The soft accent halo outside the control while it has focus or its calendar is open.
+  calendarIcon: The calendar icon that opens the picker.
+  value: The date text, or its placeholder while empty.
+  time: The time and its clock icon, when the field includes a time.
+  clear: The action that empties the field, shown while it has a value.
+  calendar: The popover with the day, month, or year view.
+
+props:
+  granularity:
+    description: The precision of the value. Day stores yyyy-MM-dd, month yyyy-MM, and year yyyy, and the calendar opens at that view.
+    values: [day, month, year]
+    default: day
+  size:
+    description: The control's height and corner radius, from the size.field scale. Small fits filter rows, and large stands alone, as the birth date does.
+    values: [small, medium, large]
+    default: medium
+  includeTime:
+    description: Adds a time of day after the date, stored as yyyy-MM-ddTHH:mm, for day precision.
+    type: boolean
+    default: false
+    platformNames: { ios: includesTime }
+  required:
+    description: Marks the label with a warm asterisk and tells assistive technology a date is required.
+    type: boolean
+    default: false
+    platformNames: { ios: isRequired }
+  editable:
+    description: Lets people type the date as well as pick it. Off, the text only opens the calendar, as on the Timeline.
+    type: boolean
+    default: true
+    platforms: [web]
+  hideLabel:
+    description: Hides the visible label and keeps it as the accessible name.
+    type: boolean
+    default: false
+    platforms: [web]
+
+states: [default, focus, disabled]
+
+tokens:
+  - label:
+      color: "{color.inkMuted}"
+      type: { ios: "{type.label}" }
+      fontSize: { web: "{font.size.label}" }
+      fontWeight: { web: "{font.weight.medium}" }
+    requiredMark:
+      color: "{color.warm}"
+    control:
+      minHeight: "{size.field.medium}"
+      radius: "{radius.medium}"
+      background: "{color.surface}"
+      border: { web: "{color.border}", ios: "{color.borderStrong}" }
+      borderWidth: "{size.stroke.thin}"
+      duration: "{motion.quick}"
+    calendarIcon:
+      color: { web: "{color.inkMuted}", ios: "{color.inkFaint}" }
+      size: { web: "{size.icon.17}" }
+    value:
+      color: "{color.ink}"
+      type: { ios: "{type.body}" }
+      fontFamily: { web: "{font.family.sans}" }
+      fontSize: { web: "{font.size.label}" }
+      fontWeight: { web: "{font.weight.regular}" }
+    clear:
+      color: "{color.inkMuted}"
+      size: { web: "{size.icon.16}", ios: "{size.icon.12}" }
+    calendar:
+      width: "{size.datePicker.width}"
+      radius: { web: "{radius.large}" }
+      background: { web: "{color.surfaceRaised}" }
+      border: { web: "{color.borderStrong}" }
+      shadow: { web: "{shadow.floating}" }
+  - when: { size: small }
+    control:
+      minHeight: "{size.field.small}"
+      radius: "{radius.small}"
+  - when: { size: large }
+    control:
+      minHeight: "{size.field.large}"
+  - when: { state: focus }
+    control:
+      border: "{color.accent}"
+    focusHalo:
+      color: "{state.focus.halo}"
+      borderWidth:
+        { web: "{state.focus.haloWidth}", ios: "{state.focus.haloStroke}" }
+  - when: { state: disabled }
+    control:
+      background: "{color.surfaceSubtle}"
+      opacity: "{state.disabled.opacity.field}"
+
+content:
+  lines: 1
+  overflow: truncateTail
+  casing: sentence
+  length: The label names the date in one to three words, such as Memory date or From. Dates display in the platform's medium format at the chosen precision, such as Sep 17, 2026, Sep 2026, or 2026.
+  notes:
+    - Empty fields say what to choose, such as Select date, Select month, or Select year on iOS, and show the expected format on Web.
+
+accessibility:
+  role: On Web, a text input with a calendar button and a clear button; on iOS, a button that opens the picker, with the hint Opens a day picker, or the month, year, or date and time picker.
+  label: The visible label, with required when it applies. The value is the date and time, or Not set while empty. The clear action reads Clear and the label.
+  focus: The control draws the accent border and halo while it has focus or its calendar is open. Escape closes the calendar on Web, and tapping outside closes the popover on iOS.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: iOS text follows Dynamic Type through the body and label roles, and the control grows past its minimum height. Web uses fixed pixel sizes that grow with browser zoom.
+
+platformDifferences:
+  - difference: Controls are 34, 42, and 48 px tall on Web and 36, 44, and 50 pt on iOS.
+    reason: The size.field tokens raise iOS toward the 44 pt touch target while keeping the Web proportions.
+  - difference: Web lets people type the date unless editable is off and can hide its label; iOS always opens the picker and always shows its label.
+    reason: Typing digits is fast with a keyboard and a mouse; on a phone the native wheel and graphical pickers are faster than the number pad, and every native date field sits in a labeled form.
+  - difference: The Web control draws its border in color.border, like the occurrence editor's other inputs; iOS uses the shared field surface and its borderStrong border.
+    reason: The Web occurrence editor still styles its time zone and description inputs itself, and the date fields there keep its lighter border until those inputs move to the shared fields.
+  - difference: Web shows a calendar grid for every precision and closes it once a date is chosen; iOS shows the graphical calendar for days and wheels for months and years, above a Done button.
+    reason: The native graphical picker has no month or year view, so iOS uses wheels for those precisions, and because every turn of a wheel commits at once, Done is what closes the popover.
+  - difference: The Web calendar and clear buttons are 28 px, or 24 and 32 px at the small and large sizes; the iOS clear action is 32 pt at every size.
+    reason: The Web controls scale with the field inside a pointer-sized control; the native clear action keeps one comfortable touch size.
+  - difference: The date text is 13 px on Web and the 15 pt body role on iOS.
+    reason: As with TextField, Web fields share the dense desktop form typography and native fields follow Dynamic Type.
+
+specimens:
+  - id: date-field-precision
+    description: Day, month, and year precision, each with a value from the same September.
+    covers: { granularity: all }
+  - id: date-field-with-time
+    description: A date with its time of day, which opens a separate time picker.
+    covers: { granularity: [day] }
+  - id: date-field-sizes
+    description: Every size, from the small filter date to the large birth date.
+    covers: { size: all }
+  - id: date-field-states
+    description: Empty with its placeholder, required, and disabled, and on Web a picker-only field that opens the calendar instead of taking typing.
+    covers: { size: [medium] }

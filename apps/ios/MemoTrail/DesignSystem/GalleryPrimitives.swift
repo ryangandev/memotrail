@@ -17,7 +17,7 @@
       VStack(alignment: .leading, spacing: MTSpacing.s4) {
         GallerySpecimen(
           title: "Button",
-          api: "mtButtonStyle · variant · size · isLoading · fillsWidth · MTIconButton"
+          api: "mtButtonStyle · variant · size · isLoading · fillsWidth"
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s5) {
             GalleryCase(.buttonVariants) {
@@ -67,21 +67,7 @@
               }
             }
             GalleryCaseSeparator()
-            Text("MTIconButton · fillsWidth").font(MTFont.identifier)
-              .foregroundStyle(MTColor.ink)
-            HStack(spacing: MTSpacing.s2) {
-              MTIconButton(label: "Add demo entry", icon: .plus, variant: .primary) {
-                message = "Add icon activated."
-              }
-              MTIconButton(label: "Edit demo entry", icon: .edit, variant: .secondary) {
-                message = "Edit icon activated."
-              }
-              MTIconButton(label: "More demo actions", icon: .more) {
-                message = "More icon activated."
-              }
-              MTIconButton(label: "Saving entry", icon: .plus, variant: .primary, isLoading: true) {
-              }
-            }
+            Text("fillsWidth").font(MTFont.identifier).foregroundStyle(MTColor.ink)
             Button {
               save()
             } label: {
@@ -95,15 +81,73 @@
         }
 
         GallerySpecimen(
-          title: "Sheets & confirmations",
-          api:
-            "MTSheet · form · fitted · message · footer · MTSheetFooter · MTSheetOption · confirmationDialog",
-          description:
-            "MTSheet is the Web Dialog: a form sheet for editors, a fitted sheet for short choices, and confirmations for destructive actions."
+          title: "IconButton",
+          api: "MTIconButton · label · icon · variant · size · isLoading · disabled"
         ) {
-          ViewThatFits(in: .horizontal) {
-            HStack(spacing: MTSpacing.s2) { presentationButtons }
-            VStack(alignment: .leading, spacing: MTSpacing.s2) { presentationButtons }
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            GalleryCase(.iconButtonVariants) {
+              MTFlowLayout(spacing: MTSpacing.s2) {
+                ForEach(MTIconButtonVariant.allCases, id: \.self) { variant in
+                  let sample = IconButtonSample(variant)
+                  MTIconButton(label: sample.label, icon: sample.icon, variant: variant) {
+                    message = "\(sample.label) activated."
+                  }
+                }
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.iconButtonSizes) {
+              HStack(alignment: .bottom, spacing: MTSpacing.s6) {
+                ForEach(MTIconButtonSize.allCases, id: \.self) { size in
+                  VStack(spacing: MTSpacing.s2) {
+                    MTIconButton(label: "Close entry editor, \(size.rawValue)", icon: .close, size: size)
+                    {
+                      message = "\(size.rawValue.capitalized) close activated."
+                    }
+                    Text(size.rawValue).font(MTFont.code).foregroundStyle(MTColor.inkMuted)
+                      .accessibilityHidden(true)
+                  }
+                }
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.iconButtonStates) {
+              HStack(spacing: MTSpacing.s2) {
+                MTIconButton(label: "Add demo entry", icon: .plus) {
+                  message = "Add icon activated."
+                }
+                MTIconButton(label: "Disabled add entry", icon: .plus) {}.disabled(true)
+                MTIconButton(label: "Saving entry", icon: .plus, isLoading: true) {}
+              }
+            }
+          }
+        }
+
+        GallerySpecimen(
+          title: "Dialog",
+          api:
+            "MTSheet · size: form | fitted · isBusy · eyebrow · description · message · footer · MTSheetFooter · MTSheetOption · confirmationDialog",
+          description:
+            "MTSheet is the Web Dialog: a form sheet for editors and long reading, a fitted sheet for short choices, and a system confirmation for destructive actions."
+        ) {
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            GalleryCase(.dialogConfirmation) {
+              Button("Open confirmation") { showingConfirmation = true }.mtButtonStyle(.danger)
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.dialogForm) {
+              Button("Open form sheet") { sheet = .form }.mtButtonStyle(.secondary)
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.dialogShortChoice) {
+              Button("Open fitted sheet") { sheet = .compact }.mtButtonStyle(.secondary)
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.dialogLongContent) {
+              Button("Open long content") { sheet = .long }.mtButtonStyle(.secondary)
+            }
+            Text("Saving is simulated for 1.5 seconds. While saving, dismissal and duplicate saves are disabled.")
+              .font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
           }
         }
 
@@ -189,7 +233,7 @@
         }
         Button("Cancel", role: .cancel) {}
       } message: {
-        Text("The memory will move to Trash, where it can be restored.")
+        Text("It moves to Trash, where you can restore it later. This demo does not delete anything.")
       }
       .sheet(item: $sheet) { presented in
         switch presented {
@@ -216,13 +260,6 @@
       }
     }
 
-    @ViewBuilder private var presentationButtons: some View {
-      Button("Open confirmation") { showingConfirmation = true }.mtButtonStyle(.danger)
-      Button("Open form sheet") { sheet = .form }.mtButtonStyle(.secondary)
-      Button("Open fitted sheet") { sheet = .compact }.mtButtonStyle(.secondary)
-      Button("Open long content") { sheet = .long }.mtButtonStyle(.secondary)
-    }
-
     private func save() {
       isSaving = true
       message = "Saving preview..."
@@ -230,6 +267,21 @@
         try? await Task.sleep(for: .seconds(1))
         isSaving = false
         message = "Preview saved to Library."
+      }
+    }
+  }
+
+  /// The Web gallery's icon button samples: each variant with the action it suits.
+  private struct IconButtonSample {
+    let icon: MTIcon
+    let label: String
+
+    init(_ variant: MTIconButtonVariant) {
+      switch variant {
+      case .primary: (icon, label) = (.plus, "Add entry")
+      case .secondary: (icon, label) = (.edit, "Edit entry")
+      case .ghost: (icon, label) = (.more, "More actions for Travel")
+      case .danger: (icon, label) = (.trash, "Move entry to Trash")
       }
     }
   }
@@ -261,11 +313,10 @@
         closeLabel: "Close memory editor", isBusy: isSaving, message: failure
       ) {
         MTTextField(label: "Title", text: $title, prompt: "First ski day", isRequired: true)
-        MTDateField(label: "Memory date", value: $date)
+        MTDateField(label: "Memory date", value: $date, isRequired: true)
       } footer: {
         MTSheetFooter {
-          Button("Move to Trash") { failure = "Preview only. Nothing was moved to Trash." }
-            .mtButtonStyle(.danger)
+          EmptyView()
         } cancel: {
           Button("Cancel") { dismiss() }
             .mtButtonStyle(.secondary)
@@ -295,23 +346,25 @@
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-      NavigationStack {
-        ScrollView {
-          VStack(alignment: .leading, spacing: MTSpacing.s4) {
-            ForEach(1...12, id: \.self) { index in
-              Text(
-                "**Chapter \(index).** Small details give a memory its shape: the place, the people, and the things we noticed along the way."
-              )
-              .font(MTFont.bodyLarge).foregroundStyle(MTColor.ink)
-              .mtLineSpacing(MTLineHeight.body, textStyle: .body)
-            }
+      MTSheet(
+        title: "A longer story",
+        description: "A form sheet with a scrolling body and a footer that stays visible.",
+        closeLabel: "Close story"
+      ) {
+        VStack(alignment: .leading, spacing: MTSpacing.s4) {
+          ForEach(1...12, id: \.self) { index in
+            Text(
+              "**Chapter \(index).** Small details give a memory its shape: the place, the people, and the things we noticed along the way. This sample exercises long content without changing the page behind it."
+            )
+            .font(MTFont.bodyLarge).foregroundStyle(MTColor.ink)
+            .mtLineSpacing(MTLineHeight.body, textStyle: .body)
           }
-          .padding(MTSpacing.s4)
         }
-        .background(MTColor.canvas)
-        .navigationTitle("A longer story").navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-          ToolbarItem(placement: .confirmationAction) { Button("Done reading") { dismiss() } }
+      } footer: {
+        // Like MTSheetFooter, the primary action sits at the trailing edge.
+        HStack {
+          Spacer(minLength: 0)
+          Button("Done reading") { dismiss() }.mtButtonStyle()
         }
       }
     }

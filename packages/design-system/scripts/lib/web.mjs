@@ -469,6 +469,11 @@ export function makeTypeScript(system, icons, sourceLabel, components = []) {
     }),
   );
   const typeRoles = children("type").map(([name]) => name);
+  const durations = Object.fromEntries(
+    children("motion")
+      .filter(([, token]) => token.type === "duration")
+      .map(([name, token]) => [name, token.value]),
+  );
 
   return `// Generated from ${sourceLabel}. Do not edit directly.
 
@@ -518,6 +523,9 @@ ${tsConst("breakpoints", numbers("layout.breakpoint"))}
 /** Container query widths in px. */
 ${tsConst("containerWidths", numbers("layout.container"))}
 
+/** Durations in ms, for code that times itself rather than reading a CSS variable, such as a toast. */
+${tsConst("durations", durations)}
+
 /** Stacking order (z-index) by layer. */
 ${tsConst("layers", numbers("layout.layer"))}
 
@@ -527,11 +535,17 @@ ${componentTypeScript(components, sourceLabel)}`;
 }
 
 // Each enum prop becomes a value list and a union type, each spec a defaults object, and every
-// spec's specimens join one list that the gallery and its e2e test share.
-function componentTypeScript(components, sourceLabel) {
+// spec's specimens join one list that the gallery and its e2e test share. A spec Web does not
+// implement emits nothing, so its specimens never reach the Web gallery's list.
+function componentTypeScript(allComponents, sourceLabel) {
+  const components = allComponents.filter((spec) =>
+    spec.implemented.includes("web"),
+  );
   if (components.length === 0) return "";
-  const blocks = components.map((spec) => {
+  // A spec without props on this platform has no types, only specimens.
+  const blocks = components.flatMap((spec) => {
     const props = spec.props.filter((prop) => prop.platforms.includes("web"));
+    if (props.length === 0) return [];
     const lines = [
       `// ${spec.name}, from ${sourceLabel}/components/${spec.file}.`,
     ];
@@ -556,12 +570,19 @@ function componentTypeScript(components, sourceLabel) {
     );
     return lines.join("\n");
   });
+  // A specimen covers only the props Web has, so the e2e test never looks for an iOS-only value.
   const specimens = components.flatMap((spec) =>
     spec.specimens.map((specimen) => ({
       component: spec.name,
       id: specimen.id,
       description: specimen.description,
-      covers: specimen.covers,
+      covers: Object.fromEntries(
+        Object.entries(specimen.covers).filter(([name]) =>
+          spec.props
+            .find((prop) => prop.name === name)
+            .platforms.includes("web"),
+        ),
+      ),
     })),
   );
   return `

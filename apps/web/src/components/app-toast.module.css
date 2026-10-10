@@ -1,7 +1,7 @@
 .toast {
   display: flex;
-  width: min(360px, calc(100vw - 32px));
-  min-height: 52px;
+  width: min(var(--mt-size-toast-width), calc(100vw - 32px));
+  min-height: var(--mt-size-toast-min-height);
   align-items: flex-start;
   gap: var(--mt-space-3);
   padding: var(--mt-space-3) var(--mt-space-10) var(--mt-space-3)
@@ -39,8 +39,8 @@
 
 .icon {
   display: grid;
-  width: 18px;
-  height: 18px;
+  width: var(--mt-size-toast-icon);
+  height: var(--mt-size-toast-icon);
   flex: 0 0 auto;
   place-items: center;
   color: var(--mt-color-accent);

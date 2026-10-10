@@ -6,11 +6,16 @@ import { Portal } from "@ark-ui/react/portal";
 import { parseDate, type CalendarDate } from "@internationalized/date";
 import { useEffect, useId, useRef, useState, type RefObject } from "react";
 import { Icon } from "@/components/icon";
+import {
+  dateFieldDefaults,
+  type DateFieldGranularity,
+  type DateFieldSize,
+} from "@/generated/design-system";
 import { useOverlayContainer } from "./overlay-container";
 import styles from "./date-fields.module.css";
 
-export type DatePickerGranularity = "day" | "month" | "year";
-export type DatePickerFieldSize = "small" | "medium" | "large";
+export type DatePickerGranularity = DateFieldGranularity;
+export type DatePickerFieldSize = DateFieldSize;
 export type DatePickerFieldProps = {
   disabled?: boolean;
   editable?: boolean;
@@ -29,17 +34,21 @@ export type DatePickerFieldProps = {
   portalContainer?: RefObject<HTMLElement | null>;
 };
 
+/**
+ * A labeled, optional calendar value at day, month, or year precision, with an optional time.
+ * Specified in packages/design-system/components/date-field.yaml.
+ */
 export function DatePickerField({
   disabled = false,
-  editable = true,
-  granularity = "day",
+  editable = dateFieldDefaults.editable,
+  granularity = dateFieldDefaults.granularity,
   label,
-  hideLabel = false,
-  includeTime = false,
+  hideLabel = dateFieldDefaults.hideLabel,
+  includeTime = dateFieldDefaults.includeTime,
   initialView,
   maxValue,
-  required = false,
-  size = "medium",
+  required = dateFieldDefaults.required,
+  size = dateFieldDefaults.size,
   name,
   defaultValue = "",
   value: controlledValue,
@@ -97,6 +106,9 @@ export function DatePickerField({
     <div
       className={styles.datePickerField}
       data-date-picker-field
+      data-granularity={granularity}
+      data-size={size}
+      data-ui-date-field
       data-ui-field
     >
       {hideLabel ? null : (

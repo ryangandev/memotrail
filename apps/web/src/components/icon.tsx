@@ -21,10 +21,15 @@ type IconProps = {
   size?: IconSize;
 };
 
+/**
+ * One glyph from icons.json, aria-hidden and drawn in the current text color.
+ * Specified in packages/design-system/components/icon.yaml.
+ */
 export function Icon({ name, size = 18 }: IconProps) {
   return (
     <svg
       aria-hidden="true"
+      data-ui-icon
       fill="none"
       height={size}
       viewBox={iconViewBox}
